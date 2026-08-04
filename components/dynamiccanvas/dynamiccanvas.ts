@@ -43,6 +43,15 @@
  * intentionally minimal — only what this component touches.
  */
 
+/** How a component's factory is called and how it attaches. */
+interface FactoryShape
+{
+    readonly factoryStyle?: string;
+    readonly containerOption?: string;
+    readonly containerAs?: string;
+    readonly mountMethod?: string;
+}
+
 /** Pan offset and zoom. */
 interface Viewport
 {
@@ -112,12 +121,10 @@ interface RuntimeApi
     applyPatch(doc: CanvasDocument, patch: CanvasPatch): CanvasDocument;
     fold(patches: readonly CanvasPatch[]): CanvasDocument;
     packDocument(doc: CanvasDocument): Map<string, PackedRect>;
-    getManifest(component: string): {
+    getManifest(component: string): (FactoryShape & {
         label: string;
         defaultOptions: Record<string, unknown>;
-        factoryStyle?: string;
-        containerOption?: string;
-    } | null;
+    }) | null;
     lookupFactory(
         component: string,
         scope: Record<string, unknown>): (...args: unknown[]) => unknown;
@@ -869,7 +876,7 @@ function build(
  */
 function invokeFactory(
     factory: (...args: unknown[]) => unknown,
-    manifest: { factoryStyle?: string; containerOption?: string },
+    manifest: FactoryShape,
     body: HTMLElement,
     opts: Record<string, unknown>): unknown
 {
@@ -878,10 +885,38 @@ function invokeFactory(
         body.id = `${CLS}-body-${Math.abs(hashCode(String(Date.now())))}`;
     }
 
+    const handle = construct(factory, manifest, body, opts);
+
+    attachHandle(handle, manifest, body);
+
+    return handle;
+}
+
+/**
+ * Calls the factory with the argument order the manifest declares.
+ *
+ * @param factory  - The resolved factory function.
+ * @param manifest - Declares factoryStyle, containerOption and containerAs.
+ * @param body     - The element to mount into.
+ * @param opts     - Merged options.
+ * @returns The component handle.
+ */
+function construct(
+    factory: (...args: unknown[]) => unknown,
+    manifest: FactoryShape,
+    body: HTMLElement,
+    opts: Record<string, unknown>): unknown
+{
     if (manifest.factoryStyle === "options-only")
     {
         const key = manifest.containerOption ?? "container";
-        return factory({ ...opts, [key]: body });
+
+        // Some options-only factories want the host ELEMENT, others its ID.
+        // Guessing wrong yields a component that constructs cleanly and
+        // renders nothing, so the manifest states it.
+        const value = manifest.containerAs === "id" ? body.id : body;
+
+        return factory({ ...opts, [key]: value });
     }
 
     if (manifest.factoryStyle === "options-first")
@@ -890,6 +925,47 @@ function invokeFactory(
     }
 
     return factory(body.id, opts);
+}
+
+/**
+ * Attaches a component that does not attach itself.
+ *
+ * factoryStyle describes ARGUMENT ORDER; mountMethod describes ATTACHMENT,
+ * and the fleet varies independently on both.
+ *
+ * @param handle   - The freshly constructed handle.
+ * @param manifest - Declares mountMethod.
+ * @param body     - The host element.
+ */
+function attachHandle(
+    handle: unknown,
+    manifest: FactoryShape,
+    body: HTMLElement): void
+{
+    if (!handle || typeof handle !== "object"
+        || !manifest.mountMethod || manifest.mountMethod === "auto")
+    {
+        return;
+    }
+
+    const h = handle as Record<string, unknown>;
+
+    if (manifest.mountMethod === "show" && typeof h.show === "function")
+    {
+        (h.show as (host: HTMLElement) => void).call(h, body);
+        return;
+    }
+
+    if (manifest.mountMethod === "getElement"
+        && typeof h.getElement === "function")
+    {
+        const el = (h.getElement as () => unknown).call(h);
+
+        if (el instanceof Element)
+        {
+            body.appendChild(el);
+        }
+    }
 }
 
 /**

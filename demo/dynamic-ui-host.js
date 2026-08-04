@@ -68,116 +68,63 @@
     // MANIFEST REGISTRATION (ALLOWLIST)
     // ========================================================================
 
+    /** Components this demo lets the canvas mount. */
+    var ALLOWED = ["treeview", "datagrid", "stickynote", "annotation"];
+
     /**
-     * Registers the components this canvas may mount.
+     * Registers components from the BUILT capability manifest.
      *
-     * Allowlist-only (ADR-143): a component that is not registered here can
-     * never be mounted, however plausible its name looks in a document. The
-     * manifests are inlined rather than imported because this demo runs from
-     * built assets with no module loader.
+     * Deliberately fetched rather than inlined. An earlier version of this file
+     * carried hand-written copies of each manifest, and they immediately drifted
+     * — the inline TreeView copy repeated a containerOption bug that had already
+     * been fixed in the real manifest. Two sources of truth for the same fact is
+     * one too many, and the aggregated artefact exists precisely so consumers do
+     * not have to restate it.
+     *
+     * Allowlist-only (ADR-143): a component absent from this list can never be
+     * mounted, however plausible its name looks in a document.
+     *
+     * @returns {Promise<void>} Resolves once the registry is populated.
      */
     function registerComponents()
     {
-        EnterpriseRuntime.registerComponents([
+        return fetch("../dist/capability-manifest.json")
+            .then(function (res)
             {
-                name: "treeview",
-                factory: "createTreeView",
-                factoryStyle: "options-only",
-                containerOption: "container",
-                label: "Schema",
-                icon: "bi-list-nested",
-                category: "data",
-                affords: [{
-                    shape: "hierarchy",
-                    intents: ["browse", "navigate", "inspect"],
-                    cardinality: { min: 1, max: 20000 },
-                    minViewport: { w: 220, h: 200 }
-                }],
-                emits: [
-                    { name: "selection", payload: "record", multi: true, legacyOption: "onSelectionChange" }
-                ],
-                accepts: [{ name: "roots", payload: "hierarchy", required: true }],
-                actions: [],
-                stateKeys: ["expanded", "selection"],
-                weight: { js: 60000, mountCost: "moderate", holdsResources: false },
-                defaultSize: { w: 280, h: 340 },
-                defaultOptions: { roots: [] },
-                conformance: "surface",
-                priority: 70
-            },
+                if (!res.ok)
+                {
+                    throw new Error(
+                        "capability-manifest.json returned " + res.status
+                        + ". Run `npm run build` before opening this demo.");
+                }
+
+                return res.json();
+            })
+            .then(function (doc)
             {
-                name: "datagrid",
-                factory: "createDataGrid",
-                factoryStyle: "options-first",
-                label: "Columns",
-                icon: "bi-table",
-                category: "data",
-                affords: [{
-                    shape: "collection",
-                    intents: ["browse", "compare", "edit"],
-                    cardinality: { min: 2, max: 100000 },
-                    density: { min: 2, max: 60 },
-                    minViewport: { w: 320, h: 200 }
-                }],
-                emits: [
-                    { name: "selection", payload: "record", multi: true, legacyOption: "onRowSelect" }
-                ],
-                accepts: [{ name: "rows", payload: "collection", required: true }],
-                actions: [],
-                stateKeys: ["sort", "page", "pageSize", "selection"],
-                weight: { js: 34000, mountCost: "moderate", holdsResources: false },
-                defaultSize: { w: 420, h: 300 },
-                defaultOptions: { columns: [] },
-                conformance: "surface",
-                priority: 70
-            },
-            {
-                name: "stickynote",
-                factory: "createStickyNote",
-                factoryStyle: "container-first",
-                label: "Note",
-                icon: "bi-sticky",
-                category: "annotation",
-                affords: [{
-                    shape: "document",
-                    intents: ["author", "summarize"],
-                    cardinality: { min: 1, max: 1 },
-                    minViewport: { w: 120, h: 80 }
-                }],
-                emits: [{ name: "change", payload: "scalar", multi: false, legacyOption: "onChange" }],
-                accepts: [{ name: "text", payload: "scalar", required: false }],
-                actions: [],
-                stateKeys: ["text", "color", "collapsed"],
-                weight: { js: 6000, mountCost: "trivial", holdsResources: false },
-                defaultSize: { w: 220, h: 180 },
-                defaultOptions: {},
-                conformance: "surface",
-                priority: 30
-            },
-            {
-                name: "annotation",
-                factory: "createAnnotation",
-                factoryStyle: "container-first",
-                label: "Annotation",
-                icon: "bi-pencil",
-                category: "annotation",
-                affords: [{
-                    shape: "document",
-                    intents: ["author"],
-                    cardinality: { min: 1, max: 1 },
-                    minViewport: { w: 80, h: 60 }
-                }],
-                emits: [{ name: "change", payload: "record", multi: false, legacyOption: "onChange" }],
-                accepts: [{ name: "label", payload: "scalar", required: false }],
-                actions: [],
-                stateKeys: ["kind", "label", "color"],
-                weight: { js: 7000, mountCost: "trivial", holdsResources: false },
-                defaultSize: { w: 200, h: 140 },
-                defaultOptions: {},
-                conformance: "surface",
-                priority: 25
-            }
-        ]);
+                var wanted = doc.components.filter(function (m)
+                {
+                    return ALLOWED.indexOf(m.name) !== -1;
+                });
+
+                EnterpriseRuntime.registerComponents(wanted);
+
+                var missing = ALLOWED.filter(function (name)
+                {
+                    return !EnterpriseRuntime.isRegistered(name);
+                });
+
+                if (missing.length > 0)
+                {
+                    throw new Error(
+                        "Not in the built manifest: " + missing.join(", ")
+                        + ". They may be EXEMPT or NOT_MOUNTABLE in the fleet "
+                        + "gate.");
+                }
+
+                console.log(LOG_PREFIX, "registered", wanted.length,
+                    "components from the built manifest");
+            });
     }
 
     // ========================================================================
@@ -329,7 +276,7 @@
         el.textContent = value;
     }
 
-    /** Starts the demo. */
+    /** Starts the demo once the built manifest has been registered. */
     function startDynamicUiDemo()
     {
         if (!window.EnterpriseRuntime)
@@ -338,7 +285,23 @@
             return;
         }
 
-        registerComponents();
+        registerComponents()
+            .then(boot)
+            .catch(function (err)
+            {
+                console.error(LOG_PREFIX, err.message);
+                var panel = document.getElementById("dui-explain");
+
+                if (panel)
+                {
+                    panel.textContent = "Could not start: " + err.message;
+                }
+            });
+    }
+
+    /** Builds the canvas and wires the page controls. */
+    function boot()
+    {
 
         // A named transform, not an inline expression. The document may only
         // reference a transform by name (ADR-143), so a scene document can
