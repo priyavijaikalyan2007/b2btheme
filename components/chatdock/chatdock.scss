@@ -1,0 +1,162 @@
+// SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+// SPDX-License-Identifier: MIT
+//
+// ⚓ COMPONENT: ChatDock
+// 📜 PURPOSE: Styles for the bottom-docked conversation surface. It hovers
+//    over the canvas, which slides behind it — deliberately not a pinned
+//    sidebar, because the canvas is the work and chat is how you steer it.
+// 🔗 RELATES: [[DynamicCanvas]], [[WorkspaceShell]]
+
+@use "../../src/scss/variables" as *;
+
+.chatdock
+{
+    display: flex;
+    flex-direction: column;
+    background-color: var(--theme-surface, #{$gray-50});
+    border-top: 1px solid var(--theme-border, #{$gray-300});
+    // Sits above canvas content; the canvas scrolls behind it.
+    box-shadow: 0 -2px 8px rgba($gray-900, 0.08);
+}
+
+.chatdock-turns
+{
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: $spacer * 0.5;
+
+    &:empty
+    {
+        display: none;
+    }
+}
+
+.chatdock-turn
+{
+    display: flex;
+    align-items: flex-start;
+    gap: $spacer * 0.5;
+    padding: $spacer * 0.25 $spacer * 0.5;
+    font-size: $font-size-sm;
+    line-height: $line-height-relaxed;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+
+    &:hover,
+    &:focus-visible
+    {
+        background-color: var(--theme-hover, #{$gray-100});
+        border-left-color: var(--theme-accent, #{$blue-600});
+    }
+}
+
+.chatdock-turn-user
+{
+    color: var(--theme-text, #{$gray-900});
+    font-weight: $font-weight-medium;
+}
+
+.chatdock-turn-assistant
+{
+    color: var(--theme-text-muted, #{$gray-600});
+}
+
+.chatdock-turn-text
+{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.chatdock-branch
+{
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--theme-text-muted, #{$gray-600});
+    font-size: $font-size-sm;
+    line-height: 1;
+    padding: 0 2px;
+    cursor: pointer;
+    // Revealed on hover so the transcript stays quiet at rest.
+    opacity: 0;
+
+    .chatdock-turn:hover &,
+    &:focus-visible
+    {
+        opacity: 1;
+    }
+}
+
+.chatdock-bar
+{
+    display: flex;
+    gap: $spacer * 0.5;
+    padding: $spacer * 0.5;
+    border-top: 1px solid var(--theme-border, #{$gray-300});
+}
+
+.chatdock-input
+{
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: $input-btn-padding-y $input-btn-padding-x;
+    border: 1px solid var(--theme-border, #{$gray-300});
+    border-radius: 0;
+    background-color: var(--theme-input-bg, #{$gray-50});
+    color: var(--theme-text, #{$gray-900});
+    font-family: inherit;
+    font-size: $font-size-base;
+
+    &:focus-visible
+    {
+        outline: none;
+        border-color: var(--theme-accent, #{$blue-600});
+    }
+
+    &:disabled
+    {
+        background-color: var(--theme-disabled-bg, #{$gray-200});
+        cursor: not-allowed;
+    }
+}
+
+.chatdock-send
+{
+    flex-shrink: 0;
+    padding: $input-btn-padding-y $spacer;
+    border: 1px solid var(--theme-accent, #{$blue-600});
+    border-radius: 0;
+    background-color: var(--theme-accent, #{$blue-600});
+    color: $gray-50;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+
+    &:disabled
+    {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+// On coarse pointers the branch control cannot rely on hover.
+@media (pointer: coarse)
+{
+    .chatdock-branch
+    {
+        opacity: 1;
+        min-width: 40px;
+        min-height: 40px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce)
+{
+    .chatdock-branch
+    {
+        transition: none;
+    }
+}

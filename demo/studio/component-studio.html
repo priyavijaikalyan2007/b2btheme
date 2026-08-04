@@ -116,6 +116,8 @@
     <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
     <link rel="stylesheet" href="../../dist/components/metriccard/metriccard.css">
     <link rel="stylesheet" href="../../dist/components/stickynote/stickynote.css">
+    <link rel="stylesheet" href="../../dist/components/chatdock/chatdock.css">
+    <link rel="stylesheet" href="../../dist/components/workspaceshell/workspaceshell.css">
     <link rel="stylesheet" href="../../dist/components/annotation/annotation.css">
     <link rel="stylesheet" href="../../dist/components/chartpanel/chartpanel.css">
     <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
@@ -614,6 +616,8 @@
     <script src="../../dist/vendor/chart.js/chart.umd.min.js"></script>
     <script src="../../dist/components/metriccard/metriccard.js"></script>
     <script src="../../dist/components/stickynote/stickynote.js"></script>
+    <script src="../../dist/components/chatdock/chatdock.js"></script>
+    <script src="../../dist/components/workspaceshell/workspaceshell.js"></script>
     <script src="../../dist/components/annotation/annotation.js"></script>
     <script src="../../dist/components/chartpanel/chartpanel.js"></script>
     <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
@@ -1027,6 +1031,20 @@
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
+            { name: "chatdock", label: "ChatDock", icon: "bi-chat-dots",
+              category: "Navigation", factory: "createChatDock",
+              width: 520, height: 200, pattern: "id-opts",
+              defaults: { placeholder: "Ask the canvas\u2026", turns: [
+                  { id: "t1", role: "user", text: "show me the tables" },
+                  { id: "t2", role: "assistant", text: "Here are four tables." }
+              ] } },
+            { name: "workspaceshell", label: "WorkspaceShell", icon: "bi-window-stack",
+              category: "Navigation", factory: "createWorkspaceShell",
+              width: 800, height: 400, pattern: "id-opts",
+              defaults: { activeCanvasId: "c1", canvases: [
+                  { id: "c1", title: "Project status", pinned: true },
+                  { id: "c2", title: "Action items" }
+              ] } },
             { name: "stickynote", label: "StickyNote", icon: "bi-sticky",
               category: "Interactive", factory: "createStickyNote",
               width: 220, height: 180, pattern: "id-opts",

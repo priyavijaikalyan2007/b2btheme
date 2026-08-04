@@ -1521,6 +1521,108 @@ function renderAnnotationStencil(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+
+/**
+ * ⚓ FUNCTION: renderChatDockStencil
+ * Wireframe for the bottom-docked conversation surface: a short transcript
+ * with alternating turn alignment, then the input row.
+ */
+function renderChatDockStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const barH = 30;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+
+    // Transcript: user turns emphasised, assistant turns muted.
+    const rows = Math.max(1, Math.floor((b.height - barH - 12) / 16));
+
+    for (let i = 0; i < Math.min(rows, 4); i += 1)
+    {
+        const y = b.y + 12 + i * 16;
+        const user = i % 2 === 0;
+        const w = user ? b.width * 0.55 : b.width * 0.72;
+
+        uiLine(g, b.x + 10, y, b.x + 10 + w, y,
+            user ? C_TEXT_SEC : C_TEXT_MUT, user ? 2 : 1);
+    }
+
+    // Input row.
+    const barY = b.y + b.height - barH;
+    uiDivider(g, b.x, barY, b.width);
+    uiRect(g, b.x + 8, barY + 7, b.width - 76, 16, C_INPUT_BG, C_BORDER);
+    uiText(g, b.x + 13, barY + 18, "Ask the canvas\u2026",
+        { size: 8, fill: C_TEXT_MUT });
+    uiButton(g, b.x + b.width - 62, barY + 7, 54, 16, "Send",
+        { fill: C_PRIMARY, textFill: C_BG });
+
+    return g;
+}
+
+/**
+ * ⚓ FUNCTION: renderWorkspaceShellStencil
+ * Wireframe for the workspace tier: canvas tabs with one active and one
+ * pinned, the content region, and the history scrubber.
+ */
+function renderWorkspaceShellStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const tabH = 20;
+    const scrubH = 14;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_BG, C_BORDER);
+
+    // Tab strip.
+    uiRect(g, b.x, b.y, b.width, tabH, C_HEADER_BG, C_BORDER);
+
+    const tabW = Math.min(90, (b.width - 30) / 3);
+
+    drawShellTab(g, b.x + 1, b.y, tabW, tabH, "Status", true, true);
+    drawShellTab(g, b.x + 2 + tabW, b.y, tabW, tabH, "Actions", false, false);
+    drawShellTab(g, b.x + 3 + tabW * 2, b.y, tabW, tabH, "Decisions", false, false);
+    uiText(g, b.x + 8 + tabW * 3, b.y + 14, "+", { size: 12, fill: C_TEXT_SEC });
+
+    // Content region, shown as an empty canvas the shell hosts.
+    const contentY = b.y + tabH;
+    const contentH = b.height - tabH - scrubH;
+    uiRect(g, b.x, contentY, b.width, contentH, C_STRIPE, C_BORDER);
+    uiText(g, b.x + b.width / 2, contentY + contentH / 2, "canvas",
+        { size: 10, fill: C_TEXT_MUT, anchor: "middle" });
+
+    // History scrubber.
+    const scrubY = b.y + b.height - scrubH;
+    uiRect(g, b.x, scrubY, b.width, scrubH, C_HEADER_BG, C_BORDER);
+    uiLine(g, b.x + 8, scrubY + 7, b.x + b.width - 8, scrubY + 7, C_BORDER, 2);
+    uiCircle(g, b.x + b.width * 0.7, scrubY + 7, 4, C_PRIMARY, C_PRIMARY);
+
+    return g;
+}
+
+/** Draws one canvas tab in the workspace shell stencil. */
+function drawShellTab(
+    g: SVGElement, x: number, y: number, w: number, h: number,
+    label: string, active: boolean, pinned: boolean): void
+{
+    uiRect(g, x, y, w, h, active ? C_BG : C_HEADER_BG, C_BORDER);
+
+    if (active)
+    {
+        uiRect(g, x, y, w, 2, C_PRIMARY, C_PRIMARY);
+    }
+
+    uiText(g, x + 5, y + 13, label,
+        { size: 8, fill: active ? C_TEXT : C_TEXT_SEC });
+
+    if (pinned)
+    {
+        uiText(g, x + w - 20, y + 13, "\u2605", { size: 8, fill: C_PRIMARY });
+    }
+
+    uiText(g, x + w - 9, y + 13, "\u00D7", { size: 8, fill: C_TEXT_MUT });
+}
+
 // ============================================================================
 // TIER A SHAPE MAP — name -> render function
 // ============================================================================
@@ -1539,6 +1641,8 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["dynamiccanvas",     "Dynamic Canvas",     "\u229E", 560, 400, renderDynamicCanvasStencil],
     ["stickynote",        "Sticky Note",        "\u270E", 220, 180, renderStickyNoteStencil],
     ["annotation",        "Annotation",         "\u2710", 200, 140, renderAnnotationStencil],
+    ["chatdock",          "Chat Dock",          "\u2328", 520, 200, renderChatDockStencil],
+    ["workspaceshell",    "Workspace Shell",    "\u25A6", 800, 560, renderWorkspaceShellStencil],
     // Auth
     ["authcard",          "Auth Card",          "\u26BF", 340, 400, renderAuthCardStencil],
     // Input

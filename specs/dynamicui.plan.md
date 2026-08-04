@@ -34,7 +34,7 @@
 | **9** | Surface retrofit burn-down, promoting each manifest to `surface` | Tier started (2 of 94) |
 | **10** | Runtime bundle + build wiring (registry extraction deferred) | Complete |
 | **11** | `components/dynamiccanvas` — packer, viewport, chrome, virtualization | Complete |
-| **12** | `components/workspaceshell` + `components/chatdock` | Not started |
+| **12** | `components/workspaceshell` + `components/chatdock` | Complete |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Complete |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Complete |
 | **15** | Documentation — guide, contract, manifest, migration; generated README tables | Complete (generated tables deferred) |
@@ -557,6 +557,38 @@ it would be an empty box. It is exercised by `demo/dynamic-ui.html`, which suppl
 
 ---
 
+### 2026-08-04 — Phase 12, the workspace tier
+
+`ChatDock` (25 tests) and `WorkspaceShell` (23 tests) complete the three-tier model.
+Both are `surface`-conformant from their first commit, written against the public contract.
+**Verified:** 4728 tests across 139 files; both typecheck configs clean.
+
+Design decisions worth carrying forward:
+
+- **ChatDock docks to the bottom, not the side.** A pinned side panel permanently costs a
+  third of the working area to a control surface that is idle most of the time. The canvas is
+  the work; chat is how you steer it.
+- **Select and branch are separate controls**, in ChatDock on turns and in WorkspaceShell on
+  tabs. Selecting *navigates* (rewind the canvas); branching *creates* (fork it). Folding both
+  into one click would make an exploratory glance destructive. Same reasoning puts pin and
+  close outside the tab body rather than inside it.
+- **Both are presentation only.** Neither holds storage or model integration; every control
+  emits and the host decides. That keeps the workspace tier as substitutable as the canvas.
+- **`affords: []` on both.** Chrome is placed by the application, never reached for by the
+  resolver to display data — but they are still `surface` because the canvas must feed,
+  subscribe to, and restore them.
+- **The scrubber is conditional**, rendering nothing until the host reports a real revision
+  range. An inert slider is worse than no slider.
+- **Naming collision documented, not resolved.** `WorkspaceSwitcher` switches *tenants*;
+  `WorkspaceShell` switches *canvases within a workspace*. Genuinely different concepts that
+  collided on one English word. ADR-136's rename policy makes renaming the existing component
+  expensive, so both READMEs disambiguate explicitly instead.
+
+Studio obligations discharged for both: Tier A stencils (ui-component count 115 → 117) and
+Component Studio entries.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -566,8 +598,8 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4676 passing across 137 files |
+| Full suite | 4728 passing across 139 files |
 | Components with manifests | **96 of 112** in scope (9 permanently excluded, 16 exempt) |
-| Conformance levels | 4 `surface` (DataGrid, TreeView, StickyNote, Annotation), 1 `field`, 91 `display` |
+| Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
 | ADRs landed | ADR-140 … ADR-144 |
