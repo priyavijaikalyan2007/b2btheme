@@ -115,6 +115,8 @@
     <link rel="stylesheet" href="../../dist/components/dynamicformswitcher/dynamicformswitcher.css">
     <link rel="stylesheet" href="../../dist/components/gauge/gauge.css">
     <link rel="stylesheet" href="../../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="../../dist/components/stickynote/stickynote.css">
+    <link rel="stylesheet" href="../../dist/components/annotation/annotation.css">
     <link rel="stylesheet" href="../../dist/components/chartpanel/chartpanel.css">
     <link rel="stylesheet" href="../../dist/components/gradientpicker/gradientpicker.css">
     <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
@@ -611,6 +613,8 @@
     <!-- Vendored from node_modules/chart.js by `npm run copy:js`. -->
     <script src="../../dist/vendor/chart.js/chart.umd.min.js"></script>
     <script src="../../dist/components/metriccard/metriccard.js"></script>
+    <script src="../../dist/components/stickynote/stickynote.js"></script>
+    <script src="../../dist/components/annotation/annotation.js"></script>
     <script src="../../dist/components/chartpanel/chartpanel.js"></script>
     <script src="../../dist/components/gradientpicker/gradientpicker.js"></script>
     <script src="../../dist/components/graphcanvas/graphcanvas.js"></script>
@@ -1023,6 +1027,14 @@
               category: "Navigation", factory: "createRuler", width: 400, height: 24,
               pattern: "id-opts",
               defaults: { orientation: "horizontal" } },
+            { name: "stickynote", label: "StickyNote", icon: "bi-sticky",
+              category: "Interactive", factory: "createStickyNote",
+              width: 220, height: 180, pattern: "id-opts",
+              defaults: { text: "Check whether placed_at is indexed.", color: "yellow" } },
+            { name: "annotation", label: "Annotation", icon: "bi-pencil",
+              category: "Interactive", factory: "createAnnotation",
+              width: 200, height: 140, pattern: "id-opts",
+              defaults: { kind: "callout", label: "Largest table", color: "amber" } },
             { name: "hovercard", label: "HoverCard", icon: "bi-info-circle",
               category: "Interactive", factory: null, width: 160, height: 38, pattern: "trigger",
               defaults: { label: "Hover me", variant: "primary", action: "hovercard",

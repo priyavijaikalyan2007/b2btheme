@@ -535,6 +535,28 @@ Governance now matches the live gate rather than contradicting it:
 
 ---
 
+### 2026-08-03 — Studio obligations discharged
+
+`AGENTS.md` requires every new component to register a Layout Studio stencil and a Component
+Studio entry. I had flagged this as unmet; it is now done.
+
+- **Three Tier A stencils** in `stencils-ui-components.ts`: DynamicCanvas (framed nodes with
+  title chrome, one pinned, a binding arrow between two of them, and the decay chip rail —
+  the things that distinguish a canvas from a dashboard), StickyNote (folded corner and grip
+  bar so it reads as a note rather than a panel), and Annotation (callout box with a tail).
+- **The hard-coded stencil counts moved**, as expected: 112 → 115 ui-component shapes, and
+  two combined-pack totals. Recorded because these assertions are a known coupling point
+  that catches every stencil addition.
+- **Component Studio** gains StickyNote and Annotation.
+
+**DynamicCanvas is deliberately NOT in the Component Studio.** It needs the runtime global
+and a registered manifest set before it renders anything; dropped into a studio with neither,
+it would be an empty box. It is exercised by `demo/dynamic-ui.html`, which supplies both.
+
+**Verified:** 4676 tests across 137 files; both typecheck configs clean.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._

@@ -1366,6 +1366,161 @@ function renderTimeline(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
+
+// ============================================================================
+// DYNAMIC UI STENCILS
+// ============================================================================
+
+/**
+ * ⚓ FUNCTION: renderDynamicCanvasStencil
+ * Wireframe for the DynamicCanvas host surface.
+ *
+ * Shows what makes the canvas legible at a glance: framed nodes with title
+ * chrome, one pinned (accent stripe), a binding arrow between two of them,
+ * and the decay chip rail along the bottom.
+ */
+function renderDynamicCanvasStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+
+    uiRect(g, b.x, b.y, b.width, b.height, C_HEADER_BG, C_BORDER);
+
+    const pad = 10;
+    const railH = 18;
+    const nodeH = Math.max(40, (b.height - railH - pad * 3) / 2);
+    const nodeW = Math.max(60, (b.width - pad * 3) / 2);
+
+    // Two packed nodes on the top shelf, the left one pinned.
+    drawCanvasNode(g, b.x + pad, b.y + pad, nodeW, nodeH, "Schema", true);
+    drawCanvasNode(g, b.x + pad * 2 + nodeW, b.y + pad, nodeW, nodeH, "Columns", false);
+
+    // The binding between them — the thing a canvas has that a dashboard does not.
+    const arrowY = b.y + pad + nodeH / 2;
+    uiLine(g, b.x + pad + nodeW, arrowY, b.x + pad * 2 + nodeW, arrowY,
+        C_PRIMARY, 1.5);
+    g.appendChild(svgCreate("polygon", {
+        points: [
+            `${b.x + pad * 2 + nodeW},${arrowY}`,
+            `${b.x + pad * 2 + nodeW - 5},${arrowY - 3}`,
+            `${b.x + pad * 2 + nodeW - 5},${arrowY + 3}`
+        ].join(" "),
+        fill: C_PRIMARY
+    }));
+
+    // A user-placed node on the second shelf.
+    drawCanvasNode(g, b.x + pad, b.y + pad * 2 + nodeH, nodeW, nodeH,
+        "Note", false);
+
+    // Decay chip rail.
+    const railY = b.y + b.height - railH;
+    uiRect(g, b.x, railY, b.width, railH, C_BG, C_BORDER);
+    uiButton(g, b.x + 6, railY + 3, 46, 12, "chart");
+    uiButton(g, b.x + 58, railY + 3, 46, 12, "audit");
+
+    return g;
+}
+
+/** Draws one framed canvas node with its title chrome. */
+function drawCanvasNode(
+    g: SVGElement, x: number, y: number, w: number, h: number,
+    title: string, pinned: boolean): void
+{
+    uiRect(g, x, y, w, h, C_BG, C_BORDER);
+    uiRect(g, x, y, w, 14, C_HEADER_BG, C_BORDER);
+    uiText(g, x + 5, y + 10, title, { size: 8, fill: C_TEXT, weight: 500 });
+
+    // Chrome buttons: why? / pin / close.
+    uiText(g, x + w - 26, y + 10, "\u24D8", { size: 8, fill: C_TEXT_MUT });
+    uiText(g, x + w - 17, y + 10, "\u2691", { size: 8, fill: C_TEXT_MUT });
+    uiText(g, x + w - 8, y + 10, "\u00D7", { size: 8, fill: C_TEXT_MUT });
+
+    if (pinned)
+    {
+        uiRect(g, x, y, 2, h, C_PRIMARY, C_PRIMARY);
+    }
+
+    uiDots(g, x + 6, y + 26);
+    uiDots(g, x + 6, y + 36);
+}
+
+/**
+ * ⚓ FUNCTION: renderStickyNoteStencil
+ * Wireframe for a sticky note: grip bar, text lines, and a folded corner so
+ * the shape reads as a note rather than a generic panel.
+ */
+function renderStickyNoteStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const fold = Math.min(16, b.width / 5, b.height / 5);
+
+    // Body with a folded lower-right corner.
+    g.appendChild(svgCreate("polygon", {
+        points: [
+            `${b.x},${b.y}`,
+            `${b.x + b.width},${b.y}`,
+            `${b.x + b.width},${b.y + b.height - fold}`,
+            `${b.x + b.width - fold},${b.y + b.height}`,
+            `${b.x},${b.y + b.height}`
+        ].join(" "),
+        fill: "#fff8dc", stroke: C_BORDER, "stroke-width": "1"
+    }));
+
+    g.appendChild(svgCreate("polygon", {
+        points: [
+            `${b.x + b.width - fold},${b.y + b.height}`,
+            `${b.x + b.width},${b.y + b.height - fold}`,
+            `${b.x + b.width - fold},${b.y + b.height - fold}`
+        ].join(" "),
+        fill: C_BORDER, stroke: C_BORDER, "stroke-width": "1"
+    }));
+
+    // Grip bar.
+    uiRect(g, b.x + b.width / 2 - 12, b.y + 5, 24, 3, C_TEXT_MUT, C_TEXT_MUT);
+
+    // Text lines.
+    const lines = Math.max(1, Math.floor((b.height - 20 - fold) / 11));
+
+    for (let i = 0; i < Math.min(lines, 5); i += 1)
+    {
+        const w = i === Math.min(lines, 5) - 1 ? b.width * 0.5 : b.width - 16;
+        uiLine(g, b.x + 8, b.y + 20 + i * 11, b.x + 8 + w, b.y + 20 + i * 11,
+            C_TEXT_MUT, 1);
+    }
+
+    return g;
+}
+
+/**
+ * ⚓ FUNCTION: renderAnnotationStencil
+ * Wireframe for an annotation callout — box, tail, and label — matching the
+ * default kind the component renders.
+ */
+function renderAnnotationStencil(ctx: ShapeRenderContext): SVGElement
+{
+    const g = svgCreate("g");
+    const b = ctx.bounds;
+    const boxH = b.height * 0.7;
+
+    uiRect(g, b.x + 1, b.y + 1, b.width - 2, boxH, C_BG, C_WARNING);
+
+    // Tail, pointing down-left at whatever is being called out.
+    g.appendChild(svgCreate("polygon", {
+        points: [
+            `${b.x + 18},${b.y + boxH}`,
+            `${b.x + 18},${b.y + b.height - 2}`,
+            `${b.x + 40},${b.y + boxH}`
+        ].join(" "),
+        fill: C_BG, stroke: C_WARNING, "stroke-width": "1"
+    }));
+
+    uiText(g, b.x + b.width / 2, b.y + boxH / 2 + 4, "Annotation",
+        { size: 10, anchor: "middle", fill: C_TEXT, weight: 500 });
+
+    return g;
+}
+
 // ============================================================================
 // TIER A SHAPE MAP — name -> render function
 // ============================================================================
@@ -1380,6 +1535,10 @@ const TIER_A_SHAPES: TierAEntry[] = [
     ["treeview",          "Tree View",          "\u2261", 280, 350, renderTreeView],
     ["propertyinspector", "Property Inspector", "\u2261", 300, 400, renderPropertyInspector],
     ["hovercard",         "Hover Card",         "\u24D8", 300, 220, renderHoverCardStencil],
+    // Dynamic UI
+    ["dynamiccanvas",     "Dynamic Canvas",     "\u229E", 560, 400, renderDynamicCanvasStencil],
+    ["stickynote",        "Sticky Note",        "\u270E", 220, 180, renderStickyNoteStencil],
+    ["annotation",        "Annotation",         "\u2710", 200, 140, renderAnnotationStencil],
     // Auth
     ["authcard",          "Auth Card",          "\u26BF", 340, 400, renderAuthCardStencil],
     // Input
