@@ -28,6 +28,7 @@ export const LOGCONSOLE_MANIFEST: CapabilityManifest =
 {
     name: "logconsole",
     factory: "createLogConsole",
+    mountMethod: "getElement",
     factoryStyle: "options-only",
     containerOption: "container",
     label: "Log Console",

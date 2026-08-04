@@ -28,6 +28,7 @@ export const PILL_MANIFEST: CapabilityManifest =
 {
     name: "pill",
     factory: "createPill",
+    mountMethod: "getElement",
     factoryStyle: "options-only",
     containerOption: "container",
     label: "Pill",

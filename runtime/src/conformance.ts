@@ -114,6 +114,7 @@ export const CONFORMANCE_CHECKS: readonly CheckDeclaration[] =
     { id: "state-round-trips", minLevel: "surface", description: "setState(getState()) restores the captured state." },
     { id: "channel-observable", minLevel: "surface", description: "Every declared channel reaches an on() subscriber." },
     { id: "legacy-callback-fires", minLevel: "surface", description: "The pre-existing constructor callback still fires, and fires first." },
+    { id: "renders-content", minLevel: "display", description: "Mounting puts something in the host." },
     { id: "destroy-clears-dom", minLevel: "display", description: "destroy() removes everything the component added." },
     { id: "destroy-idempotent", minLevel: "display", description: "A second destroy() is a no-op." },
 ];
@@ -290,6 +291,7 @@ function runMounted(
         }
 
         checkMethods(target, handle, out);
+        checkRendered(target, host, out);
         checkSurface(target, handle, spies, out);
         checkTeardown(handle, host, out);
     }
@@ -339,6 +341,11 @@ function mount(
 
         if (handle && typeof handle === "object")
         {
+            attachHandle(
+                handle as Record<string, unknown>,
+                target.manifest,
+                document.getElementById(hostId));
+
             return handle as Record<string, unknown>;
         }
 
@@ -352,6 +359,41 @@ function mount(
             ? `${err.message}\n${(err.stack ?? "").split("\n").slice(1, 4).join("\n")}`
             : String(err);
         return null;
+    }
+}
+
+/**
+ * Attaches a component that does not attach itself.
+ *
+ * @param handle   - The freshly constructed handle.
+ * @param manifest - Declares how attachment works.
+ * @param host     - The host element.
+ */
+function attachHandle(
+    handle: Record<string, unknown>,
+    manifest: CapabilityManifest,
+    host: HTMLElement | null): void
+{
+    if (!host || !manifest.mountMethod || manifest.mountMethod === "auto")
+    {
+        return;
+    }
+
+    if (manifest.mountMethod === "show" && typeof handle.show === "function")
+    {
+        (handle.show as (h: HTMLElement) => void).call(handle, host);
+        return;
+    }
+
+    if (manifest.mountMethod === "getElement"
+        && typeof handle.getElement === "function")
+    {
+        const el = (handle.getElement as () => unknown).call(handle);
+
+        if (el instanceof Element)
+        {
+            host.appendChild(el);
+        }
     }
 }
 
@@ -378,13 +420,50 @@ function defaultInvoke(
     if (manifest.factoryStyle === "options-only")
     {
         const key = manifest.containerOption ?? "container";
+        const asId = manifest.containerAs === "id";
 
         return (f, id, o) => (f as (a: unknown) => unknown)(
-            { ...o, [key]: document.getElementById(id) });
+            { ...o, [key]: asId ? id : document.getElementById(id) });
     }
 
     return (f, id, o) =>
         (f as (a: string, b: unknown) => unknown)(id, o);
+}
+
+/**
+ * Asserts that mounting actually put something in the host.
+ *
+ * Without this, a component handed the wrong container option constructs
+ * successfully, renders nothing, and passes every other check — including
+ * destroy-clears-dom, which is trivially satisfied when nothing was added.
+ * That exact failure hid a wrong `containerOption` on TreeView.
+ *
+ * @param target - The component under test.
+ * @param host   - The host element it was mounted into.
+ * @param out    - Findings accumulator.
+ */
+function checkRendered(
+    target: ConformanceTarget,
+    host: HTMLElement,
+    out: ConformanceFailure[]): void
+{
+    if (host.childNodes.length > 0)
+    {
+        return;
+    }
+
+    const m = target.manifest;
+    const hint = m.factoryStyle === "options-only"
+        ? ` Check containerOption ("${m.containerOption ?? "container"}"), `
+            + `containerAs ("${m.containerAs ?? "element"}") and mountMethod `
+            + `("${m.mountMethod ?? "auto"}") — the component `
+            + "may be reading a different option, expecting an id where an "
+            + "element was passed, or needing show()/getElement() to attach."
+        : ` Check factoryStyle ("${m.factoryStyle ?? "container-first"}") and `
+            + `mountMethod ("${m.mountMethod ?? "auto"}").`;
+
+    fail(out, "renders-content",
+        `Mounting produced a handle but left the host empty.${hint}`);
 }
 
 /**

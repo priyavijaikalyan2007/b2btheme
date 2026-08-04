@@ -53,6 +53,9 @@ const CONFORMANCE_LEVELS: readonly string[] = ["display", "field", "surface"];
 const FACTORY_STYLES: readonly string[] =
     ["container-first", "options-first", "options-only"];
 
+/** Legal attachment methods. */
+const MOUNT_METHODS: readonly string[] = ["auto", "show", "getElement"];
+
 /** Legal mount cost classes. */
 const MOUNT_COSTS: readonly string[] = ["trivial", "light", "moderate", "heavy"];
 
@@ -111,6 +114,18 @@ function validateIdentity(
         && !FACTORY_STYLES.includes(m.factoryStyle as string))
     {
         issues.push(enumIssue("factoryStyle", m.factoryStyle, FACTORY_STYLES));
+    }
+
+    if (m.containerAs !== undefined
+        && m.containerAs !== "element" && m.containerAs !== "id")
+    {
+        issues.push(enumIssue("containerAs", m.containerAs, ["element", "id"]));
+    }
+
+    if (m.mountMethod !== undefined
+        && !MOUNT_METHODS.includes(m.mountMethod as string))
+    {
+        issues.push(enumIssue("mountMethod", m.mountMethod, MOUNT_METHODS));
     }
 }
 

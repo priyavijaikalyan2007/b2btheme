@@ -28,8 +28,9 @@ export const TREEVIEW_MANIFEST: CapabilityManifest =
 {
     name: "treeview",
     factory: "createTreeView",
+    containerOption: "containerId",
+    containerAs: "id",
     factoryStyle: "options-only",
-    containerOption: "container",
     label: "Tree View",
     icon: "bi-list-nested",
     category: "data",

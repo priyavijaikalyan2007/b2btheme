@@ -220,10 +220,35 @@ export interface CapabilityManifest
         | "options-only";
 
     /**
-     * For `options-only` factories, the option key carrying the host ELEMENT
-     * (not its id). Defaults to "container".
+     * For `options-only` factories, the option key carrying the host.
+     * Defaults to "container".
      */
     readonly containerOption?: string;
+
+    /**
+     * How the component attaches to its host.
+     *
+     * `factoryStyle` describes ARGUMENT ORDER; this describes ATTACHMENT, and
+     * the fleet varies independently on both. Most factories attach
+     * themselves ("auto"). Some construct detached and attach when told
+     * ("show"). Some build an element for the caller to place
+     * ("getElement"). Guessing wrong yields a component that constructs
+     * cleanly and renders nothing — see the renders-content conformance check.
+     *
+     * Defaults to "auto".
+     */
+    readonly mountMethod?: "auto" | "show" | "getElement";
+
+    /**
+     * Whether `containerOption` expects the host ELEMENT or its ID STRING.
+     *
+     * Both exist in the fleet — TreeView takes `options.containerId` (a
+     * string) while GraphCanvas takes `options.container` (an element) — and
+     * guessing wrong produces a component that constructs successfully and
+     * renders nothing, which is far harder to spot than a thrown error.
+     * Declared explicitly for that reason. Defaults to "element".
+     */
+    readonly containerAs?: "element" | "id";
 
     /** Human-readable label. */
     readonly label: string;

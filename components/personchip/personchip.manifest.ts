@@ -28,6 +28,7 @@ export const PERSONCHIP_MANIFEST: CapabilityManifest =
 {
     name: "personchip",
     factory: "createPersonChip",
+    mountMethod: "getElement",
     factoryStyle: "options-only",
     containerOption: "container",
     label: "Person Chip",

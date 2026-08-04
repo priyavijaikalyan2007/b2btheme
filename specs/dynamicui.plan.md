@@ -623,6 +623,49 @@ highest-value first action for the next session.
 
 ---
 
+### 2026-08-04 — The renders-content check, and what it found
+
+Before writing the manual test plan I checked one thing I was uneasy about: whether
+TreeView's auto-detected `containerOption` was right. It was not — and the consequences ran
+much wider than one manifest.
+
+**TreeView takes `options.containerId` (a string), not `options.container` (an element).**
+My Phase 8 detection script defaulted to `"container"` whenever it could not find a match,
+so the wrong value was recorded silently. Given the element it expected an id for, TreeView
+constructed successfully and rendered **nothing**.
+
+**The gate passed it.** A component that mounts but renders nothing satisfies every check —
+including `destroy-clears-dom`, which is trivially true when nothing was added. That is a
+hole in a gate I had described as adversarial, and it was hiding real breakage.
+
+A new `renders-content` check — mounting must put something in the host — found **17
+components in that state**. Triage produced a finding bigger than the bug:
+
+- **The fleet has four ATTACHMENT patterns, and `factoryStyle` only described argument
+  order.** Some factories attach themselves; some construct detached and attach on
+  `show(host)`; some build an element for the caller to place via `getElement()`; and some
+  take an id string where others take an element. `mountMethod` (`auto`/`show`/`getElement`)
+  and `containerAs` (`element`/`id`) now record attachment as data, the same way ADR-144
+  records argument order. Eleven manifests corrected.
+- **Nine components are not canvas-mountable at all**, and saying so is more honest than
+  making them mount. `createToolbar()` calls `show()` with no argument and attaches to
+  `document.body` — it docks to the window edge, and a toolbar inside a canvas node is
+  meaningless. Same for Sidebar and BannerBar. ContextMenu, HoverCard, Magnifier, FormDialog
+  and ShareDialog are transient or modal overlays; SmartTextInput is ADR-134's multi-shape
+  exclusion and builds no DOM of its own. ADR-134 had excluded most of these as chrome
+  already; widening the contract over them was my error, now reversed.
+- **The gate then caught me**: one of my new exclusion rationales was under the required
+  length, and the hygiene test rejected it.
+
+**Verified:** 4710 tests across 139 files; both typecheck configs clean; `npm run build`
+exit 0; 89 manifests aggregated.
+
+Final standing: **89 of 105 in-scope components migrated, 16 exempt, 18 permanently
+excluded.** The numbers moved down from 98 because nine components were reclassified as
+genuinely unmountable — a more accurate count, not a regression.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -632,8 +675,8 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4728 passing across 139 files |
-| Components with manifests | **98** aggregated into `dist/capability-manifest.json` |
+| Full suite | 4710 passing across 139 files |
+| Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
 | ADRs landed | ADR-140 … ADR-144 |

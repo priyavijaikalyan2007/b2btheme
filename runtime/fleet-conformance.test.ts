@@ -135,6 +135,36 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
     progressmodal:
         "Modal workflow surface. See confirmdialog.",
 
+
+    bannerbar:
+        "Viewport-docked app chrome. See toolbar.",
+
+    contextmenu:
+        "Transient overlay positioned at the pointer. Opened on demand and self-dismissing, so it is never placed on a canvas.",
+
+    formdialog:
+        "Modal workflow surface. See confirmdialog.",
+
+    hovercard:
+        "Transient hover overlay anchored to another element (ADR-125). It decorates a component rather than being one.",
+
+    magnifier:
+        "Transient pointer-following overlay. It magnifies whatever is beneath "
+        + "the pointer rather than rendering content of its own, so there is "
+        + "nothing for a canvas to mount or restore.",
+
+    sharedialog:
+        "Modal workflow surface. See confirmdialog.",
+
+    sidebar:
+        "Viewport-docked app chrome. See toolbar.",
+
+    smarttextinput:
+        "Multi-shape AI input excluded by ADR-134: it carries several content formats (plain, serialized, cursor-context) so the right 'value' is consumer-dependent. Its factory also builds no DOM of its own.",
+
+    toolbar:
+        "Viewport-docked app chrome. createToolbar() calls show() with no argument, attaching to document.body — it docks to the window edge, not into a container. A toolbar inside a canvas node is meaningless. ADR-134 already excludes it as chrome rather than a field.",
+
     dynamiccanvas:
         "The canvas HOST, not a canvas citizen — it is the surface other "
         + "components are mounted onto. Mounting a canvas inside a canvas is "

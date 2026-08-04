@@ -28,6 +28,7 @@ export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
 {
     name: "richtextinput",
     factory: "createRichTextInput",
+    mountMethod: "show",
     factoryStyle: "options-only",
     containerOption: "container",
     label: "Rich Text Input",

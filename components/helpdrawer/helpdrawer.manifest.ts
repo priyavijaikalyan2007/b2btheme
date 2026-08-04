@@ -28,6 +28,7 @@ export const HELPDRAWER_MANIFEST: CapabilityManifest =
 {
     name: "helpdrawer",
     factory: "createHelpDrawer",
+    mountMethod: "getElement",
     factoryStyle: "options-only",
     containerOption: "container",
     label: "Help Drawer",

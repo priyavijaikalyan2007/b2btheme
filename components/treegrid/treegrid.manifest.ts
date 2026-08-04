@@ -28,8 +28,9 @@ export const TREEGRID_MANIFEST: CapabilityManifest =
 {
     name: "treegrid",
     factory: "createTreeGrid",
+    containerOption: "containerId",
+    containerAs: "id",
     factoryStyle: "options-only",
-    containerOption: "container",
     label: "Tree Grid",
     icon: "bi-diagram-3",
     category: "data",
