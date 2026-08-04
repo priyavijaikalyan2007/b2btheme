@@ -37,7 +37,7 @@
 | **12** | `components/workspaceshell` + `components/chatdock` | Not started |
 | **13** | `components/stickynote` + `components/annotation` (public API only) | Complete |
 | **14** | Demo — scripted host, `demo/dynamic-ui.html`, inspector, resolver explorer | Complete |
-| **15** | Documentation — guide, contract, manifest, migration; generated README tables | Guide + migration done |
+| **15** | Documentation — guide, contract, manifest, migration; generated README tables | Complete (generated tables deferred) |
 | **16** | Governance — AGENTS.md, SECURITY_GUIDELINES.md, PERFORMANCE.md, TESTING.md, ADRs | Complete |
 
 ### Phase ordering constraint (CRITICAL)
