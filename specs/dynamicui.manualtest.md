@@ -8,6 +8,20 @@
 
 ---
 
+## Run the automated browser pass first
+
+```bash
+npm run build
+npm run test:e2e:dynamicui
+```
+
+Seven Playwright checks cover §1–§5 — including the one thing reasoning kept getting wrong:
+that a node is **actually on screen**, asserted from its bounding box rather than its
+internal state. If those pass, the manual pass below is about judgement — does it look
+right, does it feel right — rather than about whether it works.
+
+---
+
 ## Setup
 
 ```bash
@@ -45,8 +59,8 @@ Click **"show me the tables in the sales database"**.
 | # | Expect |
 |---|---|
 | 2.1 | Two framed panels appear side by side, each with a title bar |
-| 2.2 | Left panel titled **Schema**, containing a **visible list of four table names** — orders, customers, products, regions |
-| 2.3 | Right panel titled **Columns**, an empty grid with headers Column / Type / Nullable |
+| 2.2 | Left panel titled **Tree View**, containing a **visible list of four table names** — orders, customers, products, regions |
+| 2.3 | Right panel titled **Data Grid**, an empty grid with headers Column / Type / Nullable |
 | 2.4 | Each title bar shows three small controls at the right: **?**, a pin, and **×** |
 | 2.5 | The document panel shows two nodes and one binding |
 | 2.6 | The patch-log panel shows one line, `r1  addNode, addNode, addBinding` |

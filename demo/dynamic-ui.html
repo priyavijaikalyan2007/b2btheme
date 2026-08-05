@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="../dist/components/stickynote/stickynote.css">
     <link rel="stylesheet" href="../dist/components/annotation/annotation.css">
     <link rel="stylesheet" href="../dist/components/metriccard/metriccard.css">
+    <link rel="stylesheet" href="../dist/components/chatdock/chatdock.css">
     <link rel="stylesheet" href="shared/demo-shell.css">
 
     <style>
@@ -104,6 +105,7 @@
         display: flex;
         gap: 6px;
         margin-top: 10px;
+        align-items: stretch;
     }
 
     .dui-prompts
@@ -184,12 +186,17 @@
             </div>
 
             <div class="dui-chat">
-                <input type="text" class="form-control form-control-sm" id="dui-input"
-                       placeholder="Try: show me the tables in the sales database"
-                       aria-label="Ask the canvas">
-                <button class="btn btn-sm btn-primary" id="dui-send">Send</button>
-                <button class="btn btn-sm btn-outline-secondary" id="dui-clear">Clear</button>
+                <div id="dui-dock" style="flex: 1 1 auto; min-width: 0;"></div>
+                <button class="btn btn-sm btn-outline-secondary align-self-end"
+                        id="dui-clear">Clear canvas</button>
             </div>
+            <p class="text-muted small mt-2 mb-0">
+                <i class="bi bi-info-circle"></i>
+                This is the real <a href="components/chatdock.html">ChatDock</a> component,
+                not a plain input. The transcript scrolls at a fixed height rather than
+                growing the page; <kbd>↑</kbd>/<kbd>↓</kbd> recall past messages, and
+                <strong>⑂</strong> on a turn branches from it.
+            </p>
         </div>
 
     </main>
@@ -205,6 +212,7 @@
     <script src="../dist/components/stickynote/stickynote.js"></script>
     <script src="../dist/components/annotation/annotation.js"></script>
     <script src="../dist/components/metriccard/metriccard.js"></script>
+    <script src="../dist/components/chatdock/chatdock.js"></script>
     <script src="../dist/components/dynamiccanvas/dynamiccanvas.js"></script>
 
     <script src="dynamic-ui-host.js"></script>

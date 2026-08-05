@@ -95,6 +95,18 @@ if [ -d "$DEMO_SRC" ]; then
         fi
     done
 
+    # Copy top-level demo JS siblings (e.g. dynamic-ui-host.js).
+    # A demo page may ship its own script beside it; without this the dist
+    # copy of that page 404s on load while the root-served copy works, which
+    # is a difference nobody notices until the packaged demo is opened.
+    for top_js in "$DEMO_SRC"/*.js; do
+        if [ -f "$top_js" ]; then
+            base="$(basename "$top_js")"
+            sed 's|\.\./dist/|../|g' "$top_js" > "$DIST_DEMO/$base"
+            echo "[CopyDocs] copied demo/$base (paths rewritten)"
+        fi
+    done
+
     # Copy shared assets (CSS/JS)
     for shared_file in "$DEMO_SRC/shared"/*; do
         if [ -f "$shared_file" ]; then

@@ -165,9 +165,39 @@
      * and the return type stay exactly the same, which is the boundary
      * holding.
      */
+    // ORDER MATTERS. Patterns are tried in sequence, so the most specific
+    // intent must come first. An earlier version listed the schema prompt
+    // first with the pattern /table|schema|database/, which swallowed BOTH
+    // "leave a note on the orders table" and "call out the orders table" —
+    // they matched on the word "table", hit the schema builder, found the tree
+    // already present, and returned no operations. Two prompts silently did
+    // nothing.
     var SCRIPT = [
         {
-            match: /table|schema|database/i,
+            match: /note|remind|remember/i,
+            label: "leave a note on the orders table",
+            build: function ()
+            {
+                return [{ op: "addNode", node: node(id("note"), "stickynote", "main", "compact", {
+                    text: "Check whether placed_at is indexed before the demo.",
+                    color: "yellow"
+                }) }];
+            }
+        },
+        {
+            match: /highlight|annotate|call ?out/i,
+            label: "call out the orders table",
+            build: function ()
+            {
+                return [{ op: "addNode", node: node(id("annot"), "annotation", "main", "compact", {
+                    kind: "callout",
+                    label: "Largest table",
+                    color: "amber"
+                }) }];
+            }
+        },
+        {
+            match: /\b(show|list|browse|what|which)\b.*\b(table|schema|database)\b/i,
             label: "show me the tables in the sales database",
             build: function (doc)
             {
@@ -203,29 +233,6 @@
                         transform: "tableColumns"
                     } }
                 ];
-            }
-        },
-        {
-            match: /note|remind|remember/i,
-            label: "leave a note on the orders table",
-            build: function ()
-            {
-                return [{ op: "addNode", node: node(id("note"), "stickynote", "main", "compact", {
-                    text: "Check whether placed_at is indexed before the demo.",
-                    color: "yellow"
-                }) }];
-            }
-        },
-        {
-            match: /highlight|annotate|call ?out/i,
-            label: "call out the orders table",
-            build: function ()
-            {
-                return [{ op: "addNode", node: node(id("annot"), "annotation", "main", "compact", {
-                    kind: "callout",
-                    label: "Largest table",
-                    color: "amber"
-                }) }];
             }
         }
     ];
@@ -320,9 +327,9 @@
         });
 
         var docEl = document.getElementById("dui-doc");
+        var turns = [];
         var logEl = document.getElementById("dui-log");
         var explainEl = document.getElementById("dui-explain");
-        var inputEl = document.getElementById("dui-input");
         var log = [];
 
         var canvas = createDynamicCanvas("dui-canvas", {
@@ -458,9 +465,11 @@
 
             if (ops.length === 0)
             {
-                setText(explainEl,
-                    "That prompt matched, but the canvas already has what it "
-                    + "asks for, so nothing changed.");
+                var msg = "That prompt matched, but the canvas already has "
+                    + "what it asks for, so nothing changed.";
+
+                setText(explainEl, msg);
+                addTurn("assistant", msg);
                 return;
             }
 
@@ -479,11 +488,53 @@
             var added = ops.filter(function (o) { return o.op === "addNode"; });
             var mounted = canvas.getMountedIds().length;
 
-            setText(explainEl,
-                "Applied revision " + patch.revision + ": "
+            var report = "Applied revision " + patch.revision + ": "
                 + ops.map(function (o) { return o.op; }).join(", ")
                 + ". " + added.length + " node(s) added; "
-                + mounted + " currently mounted.");
+                + mounted + " currently mounted.";
+
+            setText(explainEl, report);
+            addTurn("assistant", report);
+        }
+
+        // -- The conversation surface is the real ChatDock component. Its
+        //    transcript scrolls at a fixed height, so a long session never
+        //    grows the page.
+        var dock = createChatDock("dui-dock", {
+            placeholder: "Try: show me the tables in the sales database"
+        });
+
+        dock.on("submit", function (utterance)
+        {
+            addTurn("user", utterance);
+            send(utterance);
+        });
+
+        dock.on("selectTurn", function (turn)
+        {
+            setText(explainEl,
+                "Selected turn " + turn.id + ". A full host would scrub the "
+                + "canvas back to the revision this turn produced.");
+        });
+
+        dock.on("branch", function (turn)
+        {
+            setText(explainEl,
+                "Branch from turn " + turn.id + ". A full host would fork a "
+                + "new canvas seeded with the patch log up to this point.");
+        });
+
+        /** Appends one turn to the transcript. */
+        function addTurn(role, text)
+        {
+            turns = turns.concat([{
+                id: "t" + (turns.length + 1),
+                role: role,
+                text: text,
+                revision: canvas.getDocument().revision
+            }]);
+
+            dock.setData("turns", turns);
         }
 
         // -- Suggested prompts, driven from the script itself so they cannot
@@ -498,29 +549,18 @@
             btn.textContent = entry.label;
             btn.addEventListener("click", function ()
             {
-                inputEl.value = entry.label;
+                addTurn("user", entry.label);
                 send(entry.label);
             });
             promptBar.appendChild(btn);
-        });
-
-        document.getElementById("dui-send").addEventListener("click", function ()
-        {
-            send(inputEl.value.trim());
-        });
-
-        inputEl.addEventListener("keydown", function (e)
-        {
-            if (e.key === "Enter")
-            {
-                send(inputEl.value.trim());
-            }
         });
 
         document.getElementById("dui-clear").addEventListener("click", function ()
         {
             canvas.clear();
             log = [];
+            turns = [];
+            dock.setData("turns", turns);
             refresh();
         });
 
