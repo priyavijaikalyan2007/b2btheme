@@ -666,6 +666,40 @@ genuinely unmountable — a more accurate count, not a regression.
 
 ---
 
+### 2026-08-05 — First browser run: two failures, both mine
+
+The user opened the demo. It did not work, and a second gap was spotted immediately.
+
+**1. The demo threw on load.** `createThemeToggle` takes a single options object carrying the
+host ELEMENT; the page called it `(id, options)`. Thrown before anything else ran, so the
+canvas never initialised. Fixed, and every other page in `demo/` was checked for the same
+mistake — none had it, because they were written by someone reading the component's actual
+signature rather than assuming the convention.
+
+That is the third instance in two days of the same root cause: **assuming a factory signature
+instead of checking it.** It is also exactly what ADR-144 exists to record, which makes
+assuming it a self-inflicted wound.
+
+**2. No demo pages for any of the five new components.** AGENTS.md requires a demo page per
+component, and I built none — I had reported the studio obligations as "discharged" having
+done only the Layout Studio stencil and Component Studio entry, which is two of three. The
+demo index had a Dynamic UI card and nothing else, so StickyNote was genuinely unreachable
+from the demo site.
+
+Now added: `demo/components/{stickynote,annotation,chatdock,workspaceshell,dynamiccanvas}.html`
+plus five index cards. Each exercises the component rather than describing it — StickyNote's
+page captures and restores real state, Annotation's proves click-through with a live button
+underneath the overlay, ChatDock's echoes turns and shows which channel fired, and
+DynamicCanvas's mounts real components from the built manifest.
+
+Every inline script block was syntax-checked with `vm.Script` before commit, since a typo in
+generated HTML fails only in the browser.
+
+**Verified:** 4710 tests across 139 files; `npm run build` exit 0; five pages present in
+`dist/demo/components/`.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._

@@ -1,0 +1,209 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-DynamicCanvas
+  PURPOSE: Standalone demo page for the DynamicCanvas component.
+  RELATES: [[DynamicCanvas]], [[DemoShell]], [[DynamicCanvas]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DynamicCanvas - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/dynamiccanvas/dynamiccanvas.css">
+    <link rel="stylesheet" href="../../dist/components/stickynote/stickynote.css">
+    <link rel="stylesheet" href="../../dist/components/annotation/annotation.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            DynamicCanvas
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>DynamicCanvas</h2>
+            <p class="text-muted mb-3">
+                The rendered surface of the Dynamic UI layer. It renders; the runtime decides
+                — placement from the packer, mounting from lifecycle, delivery from the wiring
+                engine, identity from the allowlisted registry.
+            </p>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
+                This page shows the canvas in isolation. For the full experience — natural
+                language, live bindings, the document inspector and the resolver explainer —
+                see the <a href="../dynamic-ui.html"><strong>Dynamic UI demo</strong></a>.
+            </p>
+
+            <div class="mb-2">
+                <button class="btn btn-sm btn-primary" id="dc-note">Add note</button>
+                <button class="btn btn-sm btn-primary" id="dc-annot">Add annotation</button>
+                <button class="btn btn-sm btn-outline-secondary" id="dc-clear">Clear</button>
+                <span class="small text-muted ms-2">
+                    Drag a panel by its title bar — it is promoted to fixed coordinates and the
+                    packer flows around it.
+                </span>
+            </div>
+
+            <div style="height: 460px; border: 1px solid var(--bs-border-color);">
+                <div id="dc-canvas" style="width: 100%; height: 100%;"></div>
+            </div>
+
+            <h3 class="h6 mt-3">Canvas document</h3>
+            <pre id="dc-doc" class="small"
+                 style="font-family: 'JetBrains Mono', monospace; max-height: 200px; overflow: auto;">{}</pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <!-- The runtime MUST load before any component that consumes it. -->
+    <script src="../../dist/runtime/runtime.js"></script>
+    <script src="../../dist/components/stickynote/stickynote.js"></script>
+    <script src="../../dist/components/annotation/annotation.js"></script>
+    <script src="../../dist/components/dynamiccanvas/dynamiccanvas.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function()
+    {
+        if (window.createThemeToggle)
+        {
+            // Single options object carrying the host ELEMENT — not (id, options).
+            window.createThemeToggle({
+                container: document.getElementById("demo-theme-toggle"),
+                defaultTheme: "auto",
+                onChange: function(theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                }
+            });
+        }
+
+        if (!window.EnterpriseRuntime)
+        {
+            document.getElementById("dc-doc").textContent =
+                "runtime.js did not load — run `npm run build`.";
+            return;
+        }
+
+        var ALLOWED = ["stickynote", "annotation"];
+
+        fetch("../../dist/capability-manifest.json")
+            .then(function(res) { return res.json(); })
+            .then(function(doc)
+            {
+                EnterpriseRuntime.registerComponents(
+                    doc.components.filter(function(m)
+                    {
+                        return ALLOWED.indexOf(m.name) !== -1;
+                    }));
+
+                start();
+            })
+            .catch(function(err)
+            {
+                document.getElementById("dc-doc").textContent =
+                    "Could not load capability-manifest.json: " + err.message;
+            });
+
+        function start()
+        {
+            var seq = 0;
+            var docEl = document.getElementById("dc-doc");
+
+            var canvas = createDynamicCanvas("dc-canvas", {
+                onPatch: function() { render(); }
+            });
+
+            function render()
+            {
+                var d = canvas.getDocument();
+                docEl.textContent = JSON.stringify({
+                    revision: d.revision,
+                    nodes: Object.keys(d.nodes).map(function(k)
+                    {
+                        return { id: k, component: d.nodes[k].component,
+                                 placement: d.nodes[k].placement };
+                    })
+                }, null, 2);
+            }
+
+            function add(component, options, size)
+            {
+                seq += 1;
+                canvas.apply({
+                    turnId: "t" + seq,
+                    revision: canvas.getDocument().revision + 1,
+                    ops: [{ op: "addNode", node: {
+                        id: component + "-" + seq,
+                        component: component,
+                        placement: { kind: "intent", region: "main", size: size },
+                        options: options,
+                        source: null,
+                        state: {},
+                        anchor: { kind: "canvas" },
+                        provenance: { turnId: "t" + seq, lastTouched: seq },
+                        pinned: false,
+                        grants: []
+                    } }]
+                });
+                render();
+            }
+
+            document.getElementById("dc-note").addEventListener("click", function()
+            {
+                add("stickynote", { text: "Note " + (seq + 1) }, "compact");
+            });
+
+            document.getElementById("dc-annot").addEventListener("click", function()
+            {
+                add("annotation", { kind: "callout", label: "Callout " + (seq + 1) }, "compact");
+            });
+
+            document.getElementById("dc-clear").addEventListener("click", function()
+            {
+                canvas.clear();
+                render();
+            });
+
+            render();
+        }
+    });
+    </script>
+
+</body>
+</html>

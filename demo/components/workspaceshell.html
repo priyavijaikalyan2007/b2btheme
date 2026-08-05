@@ -1,0 +1,156 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-WorkspaceShell
+  PURPOSE: Standalone demo page for the WorkspaceShell component.
+  RELATES: [[WorkspaceShell]], [[DemoShell]], [[DynamicCanvas]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkspaceShell - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/workspaceshell/workspaceshell.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            WorkspaceShell
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>WorkspaceShell</h2>
+            <p class="text-muted mb-3">
+                Chrome for the workspace tier — canvas tabs with pinning, a new-canvas
+                control, a content region the canvas mounts into, and a history scrubber.
+                Presentation only: every control emits and the host decides.
+            </p>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
+                Not to be confused with <a href="workspaceswitcher.html">WorkspaceSwitcher</a>,
+                which switches <em>tenants</em>. This switches <em>canvases within one
+                workspace</em>.
+            </p>
+
+            <div style="height: 380px; border: 1px solid var(--bs-border-color);">
+                <div id="shell-host" style="height: 100%;"></div>
+            </div>
+
+            <div class="small text-muted mt-2" id="shell-events">No events yet.</div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../../dist/components/workspaceshell/workspaceshell.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function()
+    {
+        if (window.createThemeToggle)
+        {
+            // Single options object carrying the host ELEMENT — not (id, options).
+            window.createThemeToggle({
+                container: document.getElementById("demo-theme-toggle"),
+                defaultTheme: "auto",
+                onChange: function(theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                }
+            });
+        }
+
+        var canvases = [
+            { id: "c1", title: "Project status", pinned: true },
+            { id: "c2", title: "Action items" },
+            { id: "c3", title: "Decisions" }
+        ];
+
+        var shell = createWorkspaceShell("shell-host", { activeCanvasId: "c1" });
+        var events = document.getElementById("shell-events");
+
+        shell.setData("canvases", canvases);
+        shell.setRevisionRange(0, 12);
+
+        var content = shell.getContentElement();
+        content.style.display = "flex";
+        content.style.alignItems = "center";
+        content.style.justifyContent = "center";
+        content.style.color = "var(--bs-secondary-color)";
+        content.textContent = "A DynamicCanvas would mount here.";
+
+        shell.on("selectCanvas", function(c)
+        {
+            content.textContent = "Canvas: " + c.title;
+            events.textContent = "selectCanvas: " + c.id;
+        });
+
+        shell.on("pinCanvas", function(c)
+        {
+            canvases = canvases.map(function(x)
+            {
+                return x.id === c.id ? { id: x.id, title: x.title, pinned: !x.pinned } : x;
+            });
+            shell.setData("canvases", canvases);
+            events.textContent = "pinCanvas: " + c.id;
+        });
+
+        shell.on("closeCanvas", function(c)
+        {
+            canvases = canvases.filter(function(x) { return x.id !== c.id; });
+            shell.setData("canvases", canvases);
+            events.textContent = "closeCanvas: " + c.id;
+        });
+
+        shell.on("newCanvas", function()
+        {
+            var n = canvases.length + 1;
+            canvases = canvases.concat([{ id: "c" + n, title: "Canvas " + n }]);
+            shell.setData("canvases", canvases);
+            events.textContent = "newCanvas";
+        });
+
+        shell.on("scrub", function(revision)
+        {
+            events.textContent = "scrub: revision " + revision;
+        });
+    });
+    </script>
+
+</body>
+</html>

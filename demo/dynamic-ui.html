@@ -214,7 +214,16 @@
     {
         if (window.createThemeToggle)
         {
-            window.createThemeToggle("demo-theme-toggle", { showLabel: false });
+            // createThemeToggle takes a single options object carrying the
+            // host ELEMENT — not (id, options).
+            window.createThemeToggle({
+                container: document.getElementById("demo-theme-toggle"),
+                defaultTheme: "auto",
+                onChange: function(theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                }
+            });
         }
 
         window.startDynamicUiDemo();

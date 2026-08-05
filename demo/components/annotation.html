@@ -1,0 +1,141 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-Annotation
+  PURPOSE: Standalone demo page for the Annotation component.
+  RELATES: [[Annotation]], [[DemoShell]], [[DynamicCanvas]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotation - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/annotation/annotation.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Annotation
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>Annotation</h2>
+            <p class="text-muted mb-3">
+                Callout, arrow and highlight overlays for the dynamic canvas. Inline SVG —
+                no canvas context, no observer, no engine — so an annotation stays trivial
+                under the mount budget.
+            </p>
+
+            <h3 class="h6">Kinds</h3>
+            <div class="d-flex flex-wrap gap-4 mb-4">
+                <div><div id="an-callout"   style="width: 200px; height: 140px;"></div>
+                     <div class="small text-muted text-center">callout</div></div>
+                <div><div id="an-arrow"     style="width: 140px; height: 140px;"></div>
+                     <div class="small text-muted text-center">arrow</div></div>
+                <div><div id="an-highlight" style="width: 200px; height: 140px;"></div>
+                     <div class="small text-muted text-center">highlight</div></div>
+            </div>
+
+            <h3 class="h6">Colours</h3>
+            <div class="d-flex flex-wrap gap-3 mb-4">
+                <div id="an-amber" style="width: 150px; height: 110px;"></div>
+                <div id="an-blue"  style="width: 150px; height: 110px;"></div>
+                <div id="an-green" style="width: 150px; height: 110px;"></div>
+                <div id="an-red"   style="width: 150px; height: 110px;"></div>
+                <div id="an-grey"  style="width: 150px; height: 110px;"></div>
+            </div>
+
+            <h3 class="h6">Click-through</h3>
+            <p class="text-muted small mb-2">
+                An overlay must never swallow a click meant for the content beneath it.
+                The annotation below sits on top of the button — the button still works.
+            </p>
+            <div style="position: relative; width: 260px; height: 120px;">
+                <button class="btn btn-primary" id="an-under"
+                        style="position: absolute; inset: 30px 60px;">Click me</button>
+                <div id="an-over"
+                     style="position: absolute; inset: 0; pointer-events: none;"></div>
+            </div>
+            <div class="small text-muted mt-2" id="an-clicks">Clicks: 0</div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../../dist/components/annotation/annotation.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function()
+    {
+        if (window.createThemeToggle)
+        {
+            // Single options object carrying the host ELEMENT — not (id, options).
+            window.createThemeToggle({
+                container: document.getElementById("demo-theme-toggle"),
+                defaultTheme: "auto",
+                onChange: function(theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                }
+            });
+        }
+
+        createAnnotation("an-callout",   { kind: "callout", label: "Largest table" });
+        createAnnotation("an-arrow",     { kind: "arrow", label: "Look here" });
+        createAnnotation("an-highlight", { kind: "highlight", label: "Region of interest" });
+
+        ["amber", "blue", "green", "red", "grey"].forEach(function(color)
+        {
+            createAnnotation("an-" + color, {
+                kind: "callout", color: color, label: color
+            });
+        });
+
+        createAnnotation("an-over", { kind: "highlight" });
+
+        var clicks = 0;
+        document.getElementById("an-under").addEventListener("click", function()
+        {
+            clicks += 1;
+            document.getElementById("an-clicks").textContent = "Clicks: " + clicks;
+        });
+    });
+    </script>
+
+</body>
+</html>

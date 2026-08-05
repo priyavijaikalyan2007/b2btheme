@@ -1,0 +1,140 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-ChatDock
+  PURPOSE: Standalone demo page for the ChatDock component.
+  RELATES: [[ChatDock]], [[DemoShell]], [[DynamicCanvas]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatDock - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/chatdock/chatdock.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ChatDock
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>ChatDock</h2>
+            <p class="text-muted mb-3">
+                The conversation surface for a dynamic UI. Docks to the bottom and hovers
+                over the canvas, which slides behind it — deliberately not a pinned sidebar,
+                because the canvas is the work and chat is how you steer it.
+            </p>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
+                Submit a message to add a turn. Click a turn to select it (the host would
+                rewind the canvas); hover a turn and use <strong>⑂</strong> to branch. The two
+                are separate controls because one navigates and the other creates.
+            </p>
+
+            <div style="max-width: 640px; border: 1px solid var(--bs-border-color);">
+                <div id="dock-host"></div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-sm btn-outline-secondary" id="dock-busy">Toggle busy</button>
+                <span class="small text-muted ms-2" id="dock-events">No events yet.</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../../dist/components/chatdock/chatdock.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function()
+    {
+        if (window.createThemeToggle)
+        {
+            // Single options object carrying the host ELEMENT — not (id, options).
+            window.createThemeToggle({
+                container: document.getElementById("demo-theme-toggle"),
+                defaultTheme: "auto",
+                onChange: function(theme, mode)
+                {
+                    sessionStorage.setItem("theme-mode", mode);
+                }
+            });
+        }
+
+        var turns = [
+            { id: "t1", role: "user", text: "show me the tables in the sales database" },
+            { id: "t2", role: "assistant", text: "Four tables: orders, customers, products, regions." }
+        ];
+
+        var dock = createChatDock("dock-host", { turns: turns });
+        var events = document.getElementById("dock-events");
+        var busy = false;
+
+        dock.on("submit", function(utterance)
+        {
+            turns = turns.concat([
+                { id: "u" + turns.length, role: "user", text: utterance },
+                { id: "a" + turns.length, role: "assistant", text: "Echo: " + utterance }
+            ]);
+            dock.setData("turns", turns);
+            events.textContent = "submit: " + utterance;
+        });
+
+        dock.on("selectTurn", function(turn)
+        {
+            events.textContent = "selectTurn: " + turn.id + " (host would rewind the canvas)";
+        });
+
+        dock.on("branch", function(turn)
+        {
+            events.textContent = "branch: " + turn.id + " (host would fork a new canvas)";
+        });
+
+        document.getElementById("dock-busy").addEventListener("click", function()
+        {
+            busy = !busy;
+            dock.setBusy(busy);
+            events.textContent = busy ? "busy — input disabled" : "ready";
+        });
+    });
+    </script>
+
+</body>
+</html>
