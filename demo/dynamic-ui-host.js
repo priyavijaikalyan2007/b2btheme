@@ -210,7 +210,7 @@
             label: "leave a note on the orders table",
             build: function ()
             {
-                return [{ op: "addNode", node: node(id("note"), "stickynote", "side", "compact", {
+                return [{ op: "addNode", node: node(id("note"), "stickynote", "main", "compact", {
                     text: "Check whether placed_at is indexed before the demo.",
                     color: "yellow"
                 }) }];
@@ -221,7 +221,7 @@
             label: "call out the orders table",
             build: function ()
             {
-                return [{ op: "addNode", node: node(id("annot"), "annotation", "side", "compact", {
+                return [{ op: "addNode", node: node(id("annot"), "annotation", "main", "compact", {
                     kind: "callout",
                     label: "Largest table",
                     color: "amber"
@@ -458,6 +458,9 @@
 
             if (ops.length === 0)
             {
+                setText(explainEl,
+                    "That prompt matched, but the canvas already has what it "
+                    + "asks for, so nothing changed.");
                 return;
             }
 
@@ -469,6 +472,18 @@
 
             canvas.apply(patch);
             record(patch);
+
+            // Report what happened. Earlier, a prompt whose node landed
+            // off-screen produced no error and no visible change, which is
+            // indistinguishable from a broken demo.
+            var added = ops.filter(function (o) { return o.op === "addNode"; });
+            var mounted = canvas.getMountedIds().length;
+
+            setText(explainEl,
+                "Applied revision " + patch.revision + ": "
+                + ops.map(function (o) { return o.op; }).join(", ")
+                + ". " + added.length + " node(s) added; "
+                + mounted + " currently mounted.");
         }
 
         // -- Suggested prompts, driven from the script itself so they cannot

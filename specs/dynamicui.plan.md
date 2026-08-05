@@ -700,6 +700,53 @@ generated HTML fails only in the browser.
 
 ---
 
+### 2026-08-05 — Second browser run: two functional bugs, both invisible
+
+The user ran the demo and reported seven things. Two were genuine bugs that produced
+**no error and no log**, which is why nothing pointed at them.
+
+**Prompts 2 and 3 did nothing.** Notes and annotations were placed in the `side` region, and
+region origins were fixed constants — `side` began at x=1160 regardless of canvas width. On
+a ~1000px canvas the node mounted correctly, wired correctly, and rendered off-screen.
+Nothing failed, so nothing was reported. The packer now derives region geometry from the
+actual canvas width, collapsing `side` onto `main` below 900px so nothing can be stranded,
+and `DynamicCanvas` passes its real `clientWidth`. Four regression tests assert no node
+overflows the canvas at any of five widths.
+
+**Unpinning did nothing.** The pin handler closed over the node captured when its frame was
+BUILT, and frames are built once and reused — so `!node.pinned` was permanently `true`. A
+node could be pinned and never unpinned, and the icon never changed either. The handler now
+reads current node state at click time, and `refreshChrome()` updates icon, label and stripe
+on every render. Three regression tests, in a new `dynamiccanvas.test.ts`.
+
+Both bugs share a shape worth remembering: **the failure was silence.** The user's seventh
+observation — "no errors or logs even though the commands did not work" — was the most useful
+thing in the report, because it ruled out everything that would have logged. The demo now
+reports what each turn did, including "matched but changed nothing".
+
+Visual and behavioural fixes in the same pass:
+
+- **Annotations looked wrong because the label was SVG text inside a `preserveAspectRatio="none"`
+  viewBox** — stretched to the node box, so glyphs distorted. The label is now real HTML in
+  the theme font at a real size; only shapes stay SVG, with `non-scaling-stroke` so line
+  weights survive the stretch. Colours moved to `--theme-*` tokens with palette fallbacks.
+- **`$radius-affordance: 2px`** added to `_variables.scss`. `$border-radius` is `0` in this
+  theme, so the requested curves would have been invisible had they reused it. AGENTS.md
+  permits "0-2px", so 2 is the sanctioned maximum — used for ChatDock's dock and input and
+  WorkspaceShell's tab tops, where a corner is a deliberate affordance. Material 3's larger
+  radii would be a house-style change, not a component one.
+- **StickyNote is resizable** via the native textarea grip — keyboard-reachable and needing
+  no pointer maths of ours. Disabled when read-only.
+- **ChatDock recalls submitted messages with Up/Down**, shell style, stashing the in-progress
+  draft so arrowing away and back never loses it. The demo's echo is now opt-in.
+- **WorkspaceShell's demo** marks its content region with a hatched placeholder and says
+  plainly that a DynamicCanvas mounts there; tabs gained roomier padding and a minimum height.
+
+**Verified:** 4717 tests across 140 files; both typecheck configs clean; `npm run build`
+exit 0.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -709,7 +756,7 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4710 passing across 139 files |
+| Full suite | 4717 passing across 140 files |
 | Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |

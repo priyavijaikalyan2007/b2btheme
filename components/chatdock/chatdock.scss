@@ -13,6 +13,10 @@
 {
     display: flex;
     flex-direction: column;
+    // AGENTS.md sets the house style at 0-2px radius, so this is the softest
+    // corner the theme allows. Material 3 uses far larger radii; raising this
+    // is a house-style decision rather than a component one.
+    border-radius: $radius-affordance;
     background-color: var(--theme-surface, #{$gray-50});
     border-top: 1px solid var(--theme-border, #{$gray-300});
     // Sits above canvas content; the canvas scrolls behind it.
@@ -104,7 +108,7 @@
     min-width: 0;
     padding: $input-btn-padding-y $input-btn-padding-x;
     border: 1px solid var(--theme-border, #{$gray-300});
-    border-radius: 0;
+    border-radius: $radius-affordance;
     background-color: var(--theme-input-bg, #{$gray-50});
     color: var(--theme-text, #{$gray-900});
     font-family: inherit;
@@ -128,7 +132,7 @@
     flex-shrink: 0;
     padding: $input-btn-padding-y $spacer;
     border: 1px solid var(--theme-accent, #{$blue-600});
-    border-radius: 0;
+    border-radius: $radius-affordance;
     background-color: var(--theme-accent, #{$blue-600});
     color: $gray-50;
     font-size: $font-size-sm;

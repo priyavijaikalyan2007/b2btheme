@@ -11,6 +11,7 @@
 
 .annotation
 {
+    position: relative;
     width: 100%;
     height: 100%;
     // Overlays sit above content but must never swallow its clicks.
@@ -19,6 +20,8 @@
 
 .annotation-svg
 {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: block;
@@ -29,8 +32,17 @@
 {
     fill: none;
     stroke: currentColor;
-    stroke-width: 2;
+    stroke-width: 1.5;
+    // The viewBox is stretched to the node box, so stroke width must be
+    // exempted from that scaling or horizontal and vertical edges end up
+    // visibly different weights.
     vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+}
+
+.annotation-tail
+{
+    fill: var(--theme-surface, #{$gray-50});
 }
 
 .annotation-head
@@ -39,14 +51,26 @@
     stroke: none;
 }
 
+// The label is real HTML, not SVG text: inside a stretched viewBox glyphs
+// distort, which is most of why these looked wrong. Here it uses the theme
+// font at a real size and wraps normally.
 .annotation-label
 {
-    fill: currentColor;
-    font-family: inherit;
-    font-size: 14px;
-    // The viewBox is stretched by preserveAspectRatio="none", so the text is
-    // counter-scaled by keeping it in user units and never scaling strokes.
-    dominant-baseline: middle;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 72%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacer * 0.5;
+    color: var(--theme-text, #{$gray-900});
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    line-height: $line-height-base;
+    text-align: center;
+    overflow: hidden;
 }
 
 // ============================================================================
@@ -54,18 +78,26 @@
 // ============================================================================
 //
 // currentColor drives every stroke and fill, so one rule per colour is enough.
+// Theme tokens first, palette values as the fallback, so an annotation follows
+// the theme where one is defined.
 
-.annotation-amber { color: $yellow-500; }
-.annotation-blue  { color: $blue-600; }
-.annotation-green { color: $green-600; }
-.annotation-red   { color: $red-600; }
-.annotation-grey  { color: $gray-600; }
+.annotation-amber { color: var(--theme-warning, #{$yellow-500}); }
+.annotation-blue  { color: var(--theme-accent, #{$blue-600}); }
+.annotation-green { color: var(--theme-success, #{$green-600}); }
+.annotation-red   { color: var(--theme-danger, #{$red-600}); }
+.annotation-grey  { color: var(--theme-text-muted, #{$gray-600}); }
 
-// A highlight reads as a translucent wash rather than an outline.
-.annotation-highlight .annotation-shape
+// A callout reads as a filled card so its label stays legible over content.
+.annotation-kind-callout .annotation-shape
+{
+    fill: var(--theme-surface, #{$gray-50});
+}
+
+// A highlight is a translucent wash rather than an outline.
+.annotation-kind-highlight .annotation-shape
 {
     fill: currentColor;
-    fill-opacity: 0.15;
+    fill-opacity: 0.14;
 }
 
 @media (prefers-reduced-motion: reduce)

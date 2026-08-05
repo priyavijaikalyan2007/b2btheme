@@ -70,6 +70,15 @@ export interface StickyNoteOptions
     /** Render the note but disallow editing. */
     readOnly?: boolean;
 
+    /**
+     * Allow the user to resize the note from its corner. Default true.
+     *
+     * A note is the one canvas citizen whose right size is unknowable in
+     * advance — it depends entirely on what gets written in it — so it is
+     * resizable unless a host says otherwise.
+     */
+    resizable?: boolean;
+
     /** What the note is attached to. Defaults to the canvas. */
     anchor?: NoteAnchor;
 
@@ -267,6 +276,12 @@ function build(
     area.className = `${CLS}-text`;
     area.value = text;
     area.readOnly = options.readOnly === true;
+
+    // The textarea's own resize grip is the honest control here: it is native,
+    // keyboard-reachable, and needs no pointer maths of ours.
+    area.style.resize = options.resizable === false || options.readOnly === true
+        ? "none"
+        : "vertical";
     setAttr(area, "aria-label", options.ariaLabel ?? "Sticky note");
     setAttr(root, "role", "note");
 

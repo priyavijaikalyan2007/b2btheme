@@ -21,7 +21,6 @@
 
 import {
     PACK_GUTTER,
-    REGION_ORIGIN_X,
     SIZE_HINT_HEIGHT,
     SIZE_HINT_WIDTH,
 } from "./constants";
@@ -37,6 +36,16 @@ import type {
 // TYPES
 // ============================================================================
 
+/** Tuning for one packing pass. */
+export interface PackOptions
+{
+    /**
+     * Visible canvas width in canvas pixels. Region geometry follows it, so a
+     * narrow canvas never strands a node in an off-screen region.
+     */
+    readonly width?: number;
+}
+
 /** A resolved rectangle in canvas coordinates. */
 export interface PackedRect
 {
@@ -47,15 +56,65 @@ export interface PackedRect
     readonly z: number;
 }
 
-/** Width available to a region's shelf before it wraps. */
-const REGION_WIDTH: Readonly<Record<Region, number>> =
+/** Canvas width assumed when the caller does not supply one. */
+const DEFAULT_CANVAS_WIDTH = 1600;
+
+/** Narrowest canvas at which a side region is still worth reserving. */
+const SIDE_REGION_MIN_CANVAS = 900;
+
+/** Fraction of the canvas the main region takes when a side region exists. */
+const MAIN_FRACTION = 0.68;
+
+/** Geometry of every region for one canvas width. */
+interface RegionGeometry
 {
-    main: 1120,
-    side: 420,
-    detail: 1120,
-    strip: 1120,
-    overlay: 1120,
-};
+    readonly width: Readonly<Record<Region, number>>;
+    readonly originX: Readonly<Record<Region, number>>;
+}
+
+/**
+ * Computes region geometry for the available canvas width.
+ *
+ * Region origins used to be fixed constants, which put the side region at
+ * x=1160 regardless of how wide the canvas actually was. On a narrower canvas
+ * anything placed there mounted correctly and rendered off-screen — no error,
+ * nothing visible, which is the worst kind of failure. Geometry now follows
+ * the canvas, and below SIDE_REGION_MIN_CANVAS the side region collapses onto
+ * main so nothing can be stranded.
+ *
+ * @param canvasWidth - Visible canvas width in canvas pixels.
+ * @returns Width and origin for every region.
+ */
+function geometryFor(canvasWidth: number): RegionGeometry
+{
+    const usable = Math.max(320, canvasWidth - PACK_GUTTER * 2);
+    const hasSide = usable >= SIDE_REGION_MIN_CANVAS;
+
+    const mainWidth = hasSide
+        ? Math.floor(usable * MAIN_FRACTION)
+        : usable;
+    const sideWidth = hasSide
+        ? usable - mainWidth - PACK_GUTTER
+        : usable;
+    const sideOrigin = hasSide ? mainWidth + PACK_GUTTER : 0;
+
+    return {
+        width: {
+            main: mainWidth,
+            side: sideWidth,
+            detail: mainWidth,
+            strip: usable,
+            overlay: usable,
+        },
+        originX: {
+            main: 0,
+            side: sideOrigin,
+            detail: 0,
+            strip: 0,
+            overlay: 0,
+        },
+    };
+}
 
 /** Base stacking order per region. Overlay always wins. */
 const REGION_Z: Readonly<Record<Region, number>> =
@@ -93,8 +152,11 @@ const REGION_ORIGIN_Y: Readonly<Record<Region, number>> =
  * @returns Rectangles keyed by node id.
  */
 export function packDocument(
-    doc: CanvasDocument): Map<string, PackedRect>
+    doc: CanvasDocument,
+    options: PackOptions = {}): Map<string, PackedRect>
 {
+    const geometry = geometryFor(options.width ?? DEFAULT_CANVAS_WIDTH);
+
     const out = new Map<string, PackedRect>();
     const nodes = Object.values(doc.nodes);
     const obstacles: PackedRect[] = [];
@@ -118,7 +180,7 @@ export function packDocument(
             continue;
         }
 
-        const rect = placeIntent(node, shelves, obstacles);
+        const rect = placeIntent(node, shelves, obstacles, geometry);
         out.set(node.id, rect);
         obstacles.push(rect);
     }
@@ -188,22 +250,24 @@ function orderForPacking(nodes: readonly CanvasNode[]): CanvasNode[]
 function placeIntent(
     node: CanvasNode,
     shelves: Map<Region, Shelf>,
-    obstacles: readonly PackedRect[]): PackedRect
+    obstacles: readonly PackedRect[],
+    geometry: RegionGeometry): PackedRect
 {
     const p = node.placement as Extract<CanvasNode["placement"], { kind: "intent" }>;
-    const shelf = shelfFor(p.region, shelves);
-    const size = sizeOf(p.region, p.size);
+    const shelf = shelfFor(p.region, shelves, geometry);
+    const size = sizeOf(p.region, p.size, geometry);
 
-    if (shelf.x + size.w > REGION_ORIGIN_X[p.region] + REGION_WIDTH[p.region])
+    if (shelf.x + size.w
+        > geometry.originX[p.region] + geometry.width[p.region])
     {
-        wrap(shelf, p.region);
+        wrap(shelf, p.region, geometry);
     }
 
     let rect: PackedRect = {
         x: shelf.x, y: shelf.y, w: size.w, h: size.h, z: REGION_Z[p.region],
     };
 
-    rect = avoid(rect, obstacles, p.region);
+    rect = avoid(rect, obstacles, p.region, geometry);
 
     shelf.x = rect.x + rect.w + PACK_GUTTER;
     shelf.y = rect.y;
@@ -221,14 +285,15 @@ function placeIntent(
  */
 function shelfFor(
     region: Region,
-    shelves: Map<Region, Shelf>): Shelf
+    shelves: Map<Region, Shelf>,
+    geometry: RegionGeometry): Shelf
 {
     let shelf = shelves.get(region);
 
     if (!shelf)
     {
         shelf = {
-            x: REGION_ORIGIN_X[region],
+            x: geometry.originX[region],
             y: REGION_ORIGIN_Y[region],
             rowHeight: 0,
         };
@@ -244,9 +309,9 @@ function shelfFor(
  * @param shelf  - Cursor, mutated in place.
  * @param region - The region it belongs to.
  */
-function wrap(shelf: Shelf, region: Region): void
+function wrap(shelf: Shelf, region: Region, geometry: RegionGeometry): void
 {
-    shelf.x = REGION_ORIGIN_X[region];
+    shelf.x = geometry.originX[region];
     shelf.y += shelf.rowHeight + PACK_GUTTER;
     shelf.rowHeight = 0;
 }
@@ -265,7 +330,8 @@ function wrap(shelf: Shelf, region: Region): void
 function avoid(
     rect: PackedRect,
     obstacles: readonly PackedRect[],
-    region: Region): PackedRect
+    region: Region,
+    geometry: RegionGeometry): PackedRect
 {
     let current = rect;
     let guard = 0;
@@ -281,7 +347,7 @@ function avoid(
 
         current = {
             ...current,
-            x: REGION_ORIGIN_X[region],
+            x: geometry.originX[region],
             y: hit.y + hit.h + PACK_GUTTER,
         };
     }
@@ -311,10 +377,11 @@ function intersects(a: PackedRect, b: PackedRect): boolean
  */
 function sizeOf(
     region: Region,
-    hint: SizeHint): { w: number; h: number }
+    hint: SizeHint,
+    geometry: RegionGeometry): { w: number; h: number }
 {
     return {
-        w: Math.min(SIZE_HINT_WIDTH[hint], REGION_WIDTH[region]),
+        w: Math.min(SIZE_HINT_WIDTH[hint], geometry.width[region]),
         h: SIZE_HINT_HEIGHT[hint],
     };
 }

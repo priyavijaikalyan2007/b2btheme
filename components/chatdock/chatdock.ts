@@ -230,6 +230,15 @@ function build(
 
     let turns = toTurns(options.turns);
     let busy = options.busy === true;
+
+    /** Utterances submitted this session, oldest first. */
+    const submitted: string[] = [];
+
+    /** Cursor into `submitted` while arrow-navigating; -1 means "at the draft". */
+    let recallIndex = -1;
+
+    /** The in-progress draft, preserved while recalling older utterances. */
+    let stashedDraft = "";
     let historyOpen = false;
     let destroyed = false;
 
@@ -352,7 +361,52 @@ function build(
         }
 
         field.value = "";
+        submitted.push(utterance);
+        recallIndex = -1;
+        stashedDraft = "";
+
         emit("submit", () => options.onSubmit?.(utterance), utterance);
+    }
+
+    /**
+     * Walks the submitted-utterance history, shell style.
+     *
+     * Up from the draft stashes it first, so arrowing away and back never
+     * loses what the user was midway through typing.
+     *
+     * @param delta - -1 for older, +1 for newer.
+     */
+    function recall(delta: number): void
+    {
+        if (submitted.length === 0)
+        {
+            return;
+        }
+
+        if (recallIndex === -1)
+        {
+            if (delta > 0)
+            {
+                return;
+            }
+
+            stashedDraft = field.value;
+            recallIndex = submitted.length - 1;
+        }
+        else
+        {
+            recallIndex += delta;
+        }
+
+        if (recallIndex >= submitted.length || recallIndex < 0)
+        {
+            recallIndex = -1;
+            field.value = stashedDraft;
+            return;
+        }
+
+        field.value = submitted[recallIndex];
+        field.setSelectionRange(field.value.length, field.value.length);
     }
 
     const onKeyDown = (e: KeyboardEvent): void =>
@@ -360,6 +414,20 @@ function build(
         if (e.key === "Enter")
         {
             submit();
+            return;
+        }
+
+        if (e.key === "ArrowUp")
+        {
+            e.preventDefault();
+            recall(-1);
+            return;
+        }
+
+        if (e.key === "ArrowDown")
+        {
+            e.preventDefault();
+            recall(1);
         }
     };
 

@@ -72,6 +72,9 @@
 
             <div class="mt-3">
                 <button class="btn btn-sm btn-outline-secondary" id="dock-busy">Toggle busy</button>
+                <label class="form-check-label small ms-2">
+                    <input type="checkbox" id="dock-echo" class="form-check-input"> Echo replies
+                </label>
                 <span class="small text-muted ms-2" id="dock-events">No events yet.</span>
             </div>
         </div>
@@ -109,12 +112,23 @@
 
         dock.on("submit", function(utterance)
         {
-            turns = turns.concat([
-                { id: "u" + turns.length, role: "user", text: utterance },
-                { id: "a" + turns.length, role: "assistant", text: "Echo: " + utterance }
-            ]);
+            var next = [{ id: "u" + turns.length, role: "user", text: utterance }];
+
+            // Echo is off by default: a canned reply to every message makes the
+            // transcript grow without saying anything.
+            if (document.getElementById("dock-echo").checked)
+            {
+                next.push({
+                    id: "a" + turns.length,
+                    role: "assistant",
+                    text: "Echo: " + utterance
+                });
+            }
+
+            turns = turns.concat(next);
             dock.setData("turns", turns);
-            events.textContent = "submit: " + utterance;
+            events.textContent = "submit: " + utterance
+                + "  (\u2191/\u2193 recalls past messages)";
         });
 
         dock.on("selectTurn", function(turn)

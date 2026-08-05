@@ -120,7 +120,9 @@ interface RuntimeApi
     createEmptyDocument(id: string, workspaceId: string): CanvasDocument;
     applyPatch(doc: CanvasDocument, patch: CanvasPatch): CanvasDocument;
     fold(patches: readonly CanvasPatch[]): CanvasDocument;
-    packDocument(doc: CanvasDocument): Map<string, PackedRect>;
+    packDocument(
+        doc: CanvasDocument,
+        options?: { width?: number }): Map<string, PackedRect>;
     getManifest(component: string): (FactoryShape & {
         label: string;
         defaultOptions: Record<string, unknown>;
@@ -477,7 +479,12 @@ function build(
             return;
         }
 
-        const packed = rt().packDocument(doc);
+        // Pack against the real canvas width. With a fixed assumption a node
+        // placed in the side region landed off-screen on a narrower canvas —
+        // mounted, correct, and invisible, with nothing logged.
+        const packed = rt().packDocument(doc, {
+            width: root.clientWidth || undefined,
+        });
 
         removeDepartedFrames();
 
@@ -534,6 +541,7 @@ function build(
         frame.style.height = `${rect.h}px`;
         frame.style.zIndex = String(rect.z);
         frame.classList.toggle(`${CLS}-frame-pinned`, node.pinned);
+        refreshChrome(frame, node);
     }
 
     /**
@@ -572,21 +580,59 @@ function build(
     function buildChromeButtons(node: CanvasNode): HTMLElement
     {
         const group = el("div", `${CLS}-actions`);
+        const id = node.id;
 
         group.appendChild(chromeButton("bi-question-circle", "Why this component?",
-            () => options.onExplain?.(node.id)));
+            () => options.onExplain?.(id)));
 
-        group.appendChild(chromeButton(
-            node.pinned ? "bi-pin-fill" : "bi-pin", "Pin",
-            () => emitPatch([{
-                op: "updateNode", id: node.id,
-                changes: { pinned: !node.pinned },
-            }])));
+        // Reads the CURRENT node at click time. Closing over the node captured
+        // when the frame was built meant `!node.pinned` was always true, so a
+        // node could be pinned but never unpinned.
+        const pin = chromeButton("bi-pin", "Pin", () =>
+        {
+            const current = doc.nodes[id];
+
+            if (current)
+            {
+                emitPatch([{
+                    op: "updateNode", id,
+                    changes: { pinned: !current.pinned },
+                }]);
+            }
+        });
+
+        pin.setAttribute("data-role", "pin");
+        group.appendChild(pin);
 
         group.appendChild(chromeButton("bi-x-lg", "Close",
-            () => emitPatch([{ op: "removeNode", id: node.id }])));
+            () => emitPatch([{ op: "removeNode", id }])));
 
         return group;
+    }
+
+    /**
+     * Refreshes chrome that depends on node state, on every render.
+     *
+     * The frame itself is built once and reused, so anything reflecting state
+     * has to be updated here or it silently goes stale.
+     *
+     * @param frame - The node's frame element.
+     * @param node  - Current node state.
+     */
+    function refreshChrome(frame: HTMLElement, node: CanvasNode): void
+    {
+        const pin = frame.querySelector(`[data-role="pin"] i`);
+
+        if (pin)
+        {
+            pin.className = node.pinned ? "bi-pin-fill" : "bi-pin";
+        }
+
+        const label = node.pinned ? "Unpin" : "Pin";
+        const btn = frame.querySelector(`[data-role="pin"]`);
+
+        btn?.setAttribute("aria-label", label);
+        btn?.setAttribute("title", label);
     }
 
     /**

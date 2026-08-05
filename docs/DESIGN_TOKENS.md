@@ -112,6 +112,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$border-radius-lg` | `0` | No rounding |
 | `$border-radius-xl` | `0` | No rounding |
 | `$border-radius-pill` | `0` | No rounding (pills become rectangles) |
+| `$radius-affordance` | `2px` | general softening. Set to 0 to return the whole theme to hard corners. |
 
 ## COMPONENTS - Compact sizing
 

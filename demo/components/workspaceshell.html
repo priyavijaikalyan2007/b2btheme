@@ -61,6 +61,13 @@
             </p>
             <p class="text-muted small mb-3">
                 <i class="bi bi-info-circle"></i>
+                The hatched area is the <strong>content region</strong> — a real
+                DynamicCanvas mounts there. This page leaves it empty on purpose so the
+                chrome is the subject. Try the tabs, the pin stars, close, <strong>+</strong>,
+                and the history scrubber along the bottom; every action is reported below.
+            </p>
+            <p class="text-muted small mb-3">
+                <i class="bi bi-info-circle"></i>
                 Not to be confused with <a href="workspaceswitcher.html">WorkspaceSwitcher</a>,
                 which switches <em>tenants</em>. This switches <em>canvases within one
                 workspace</em>.
@@ -109,14 +116,31 @@
 
         var content = shell.getContentElement();
         content.style.display = "flex";
+        content.style.flexDirection = "column";
         content.style.alignItems = "center";
         content.style.justifyContent = "center";
-        content.style.color = "var(--bs-secondary-color)";
-        content.textContent = "A DynamicCanvas would mount here.";
+        content.style.gap = "6px";
+        content.style.background =
+            "repeating-linear-gradient(45deg, transparent, transparent 10px, "
+            + "var(--bs-tertiary-bg) 10px, var(--bs-tertiary-bg) 20px)";
+
+        var title = document.createElement("strong");
+        var hint = document.createElement("span");
+        hint.className = "small text-muted";
+        hint.textContent = "A DynamicCanvas mounts into this region.";
+        content.appendChild(title);
+        content.appendChild(hint);
+
+        function showActive(name)
+        {
+            title.textContent = name;
+        }
+
+        showActive("Project status");
 
         shell.on("selectCanvas", function(c)
         {
-            content.textContent = "Canvas: " + c.title;
+            showActive(c.title);
             events.textContent = "selectCanvas: " + c.id;
         });
 

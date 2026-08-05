@@ -293,3 +293,68 @@ describe("packDocument — pinned nodes", () =>
             .toBeLessThanOrEqual(packed.get("plain")!.x);
     });
 });
+
+// ============================================================================
+// CANVAS WIDTH (REGRESSION)
+// ============================================================================
+
+describe("packDocument — canvas width", () =>
+{
+    test("a side-region node lands inside a narrow canvas", () =>
+    {
+        // Region origins were once fixed constants, putting `side` at x=1160.
+        // On a narrower canvas the node mounted correctly and rendered
+        // off-screen: no error, nothing visible, nothing logged.
+        const doc = docOf([node("s", intent("side", "compact"))]);
+        const rect = packDocument(doc, { width: 900 }).get("s")!;
+
+        expect(rect.x + rect.w).toBeLessThanOrEqual(900);
+    });
+
+    test("side collapses onto main when the canvas is too narrow for both", () =>
+    {
+        const doc = docOf([
+            node("m", intent("main", "compact")),
+            node("s", intent("side", "compact")),
+        ]);
+
+        const packed = packDocument(doc, { width: 500 });
+
+        expect(packed.get("s")!.x).toBe(packed.get("m")!.x);
+        expect(packed.get("s")!.x + packed.get("s")!.w)
+            .toBeLessThanOrEqual(500);
+    });
+
+    test("every node stays within the canvas at several widths", () =>
+    {
+        const doc = docOf([
+            node("a", intent("main", "wide")),
+            node("b", intent("side", "compact")),
+            node("c", intent("main", "standard")),
+            node("d", intent("side", "standard")),
+        ]);
+
+        for (const width of [480, 700, 1000, 1400, 1920])
+        {
+            for (const [id, r] of packDocument(doc, { width }))
+            {
+                expect(
+                    r.x + r.w,
+                    `${id} overflows a ${width}px canvas`)
+                    .toBeLessThanOrEqual(width);
+            }
+        }
+    });
+
+    test("a wider canvas still separates main from side", () =>
+    {
+        const doc = docOf([
+            node("m", intent("main", "compact")),
+            node("s", intent("side", "compact")),
+        ]);
+
+        const packed = packDocument(doc, { width: 1600 });
+
+        expect(packed.get("s")!.x).toBeGreaterThan(packed.get("m")!.x);
+    });
+});

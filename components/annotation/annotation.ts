@@ -236,6 +236,10 @@ function draw(kind: AnnotationKind, label: string): SVGElement
     const root = svg("svg", {
         class: `${CLS}-svg`,
         viewBox: "0 0 100 100",
+        // Stretched to fill the node box. Every stroke uses
+        // vector-effect: non-scaling-stroke so the distortion never reaches
+        // line weights, and callout TEXT is rendered as HTML rather than SVG
+        // for the same reason — stretched glyphs look broken.
         preserveAspectRatio: "none",
     });
 
@@ -247,12 +251,12 @@ function draw(kind: AnnotationKind, label: string): SVGElement
     {
         root.appendChild(svg("rect", {
             class: `${CLS}-shape`,
-            x: "2", y: "2", width: "96", height: "96",
+            x: "1", y: "1", width: "98", height: "98",
         }));
     }
     else
     {
-        drawCallout(root, label);
+        drawCallout(root);
     }
 
     applyAccessibleName(root, label);
@@ -284,27 +288,17 @@ function drawArrow(root: SVGElement): void
  * @param root  - SVG root to append into.
  * @param label - Text to render.
  */
-function drawCallout(root: SVGElement, label: string): void
+function drawCallout(root: SVGElement): void
 {
     root.appendChild(svg("rect", {
         class: `${CLS}-shape`,
-        x: "2", y: "2", width: "96", height: "70",
+        x: "1", y: "1", width: "98", height: "72",
     }));
 
     root.appendChild(svg("polygon", {
-        class: `${CLS}-shape`,
-        points: "18,72 18,94 40,72",
+        class: `${CLS}-shape ${CLS}-tail`,
+        points: "16,73 16,97 40,73",
     }));
-
-    const text = svg("text", {
-        class: `${CLS}-label`,
-        x: "50", y: "40",
-        "text-anchor": "middle",
-    });
-
-    // User content: assigned as text, never assembled into markup.
-    text.textContent = label;
-    root.appendChild(text);
 }
 
 /**
@@ -385,7 +379,27 @@ function build(
     /** Replaces the SVG with one drawn for the current state. */
     function repaint(): void
     {
-        root.replaceChildren(draw(kind, label));
+        const layers: Node[] = [draw(kind, label)];
+
+        // The label is real HTML in the theme font at a real size. Drawing it
+        // as SVG text inside a stretched viewBox distorted the glyphs, which
+        // was most of why annotations looked wrong.
+        if (kind === "callout" && label.length > 0)
+        {
+            const text = document.createElement("span");
+            text.className = `${CLS}-label`;
+            text.textContent = label;
+            layers.push(text);
+        }
+
+        root.replaceChildren(...layers);
+        root.classList.toggle(`${CLS}-labelled`, label.length > 0);
+        root.classList.toggle(`${CLS}-kind-${kind}`, true);
+
+        for (const candidate of KINDS)
+        {
+            root.classList.toggle(`${CLS}-kind-${candidate}`, candidate === kind);
+        }
 
         for (const candidate of COLORS)
         {

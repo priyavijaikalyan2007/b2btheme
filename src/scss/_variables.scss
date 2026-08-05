@@ -153,6 +153,12 @@ $border-radius-lg:      0 !default;        // No rounding
 $border-radius-xl:      0 !default;        // No rounding
 $border-radius-pill:    0 !default;        // No rounding (pills become rectangles)
 
+// The one sanctioned exception. AGENTS.md allows "0-2 border radius"; this is
+// the 2. Reserved for surfaces where a corner is a deliberate AFFORDANCE —
+// a tab lifting off its strip, a dock reading as a raised panel — not for
+// general softening. Set to 0 to return the whole theme to hard corners.
+$radius-affordance:     2px !default;
+
 // =============================================================================
 // COMPONENTS - Compact sizing
 // =============================================================================

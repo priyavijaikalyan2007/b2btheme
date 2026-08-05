@@ -21,7 +21,8 @@
 {
     display: flex;
     align-items: stretch;
-    gap: 1px;
+    gap: 2px;
+    padding: 3px 4px 0;
     flex-shrink: 0;
     overflow-x: auto;
     background-color: var(--theme-surface-alt, #{$gray-100});
@@ -32,8 +33,12 @@
 {
     display: flex;
     align-items: center;
-    gap: $spacer * 0.25;
-    padding: $spacer * 0.25 $spacer * 0.5;
+    gap: $spacer * 0.375;
+    // Rounded top corners only — the tab reads as a card lifting off the
+    // strip. Kept to the house 0-2px range from AGENTS.md.
+    border-radius: $radius-affordance $radius-affordance 0 0;
+    padding: $spacer * 0.375 $spacer * 0.625;
+    min-height: 30px;
     background-color: var(--theme-surface-alt, #{$gray-100});
     color: var(--theme-text-muted, #{$gray-600});
     font-size: $font-size-sm;

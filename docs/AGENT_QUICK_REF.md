@@ -351,6 +351,7 @@ $border-radius-sm=0
 $border-radius-lg=0
 $border-radius-xl=0
 $border-radius-pill=0
+$radius-affordance=2px
 # COMPONENTS - Compact sizing
 $padding-y-sm=0.25rem
 $padding-x-sm=0.5rem
