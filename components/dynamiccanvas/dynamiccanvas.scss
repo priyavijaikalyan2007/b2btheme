@@ -128,6 +128,33 @@
 }
 
 // ============================================================================
+// ANCHORED OVERLAYS
+// ============================================================================
+//
+// An overlay annotates the node it is anchored to: it sits ON that node rather
+// than beside it, gets no frame furniture, and is never treated as an obstacle
+// by the packer. Twenty annotations must not rearrange the canvas.
+
+.dyncanvas-overlay
+{
+    position: absolute;
+    // Content escapes this box when expanded.
+    overflow: visible;
+    // Only the marker inside is interactive; the rest lets clicks through to
+    // whatever is being annotated.
+    pointer-events: none;
+    background: transparent;
+    border: 0;
+}
+
+.dyncanvas-overlay > .dyncanvas-body
+{
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+// ============================================================================
 // MOUNT ERROR
 // ============================================================================
 

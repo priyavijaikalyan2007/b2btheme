@@ -39,6 +39,18 @@ function make(options = {}): AnnotationHandle
     return annotation;
 }
 
+/**
+ * An annotation in its EXPANDED state.
+ *
+ * The resting state is a marker — an annotation is a mark on something, and
+ * twenty expanded callouts would bury what they annotate. Tests about drawn
+ * content therefore have to open it first.
+ */
+function makeOpen(options = {}): AnnotationHandle
+{
+    return make({ ...options, expanded: true });
+}
+
 // ============================================================================
 // LIFECYCLE
 // ============================================================================
@@ -50,6 +62,14 @@ describe("Annotation — lifecycle", () =>
         make();
 
         expect(host.querySelector(".annotation")).toBeTruthy();
+    });
+
+    test("rests as a marker, not an expanded callout", () =>
+    {
+        make({ label: "Largest table" });
+
+        expect(host.querySelector(".annotation-marker")).toBeTruthy();
+        expect(host.querySelector("svg")).toBeNull();
     });
 
     test("throws a literate error for a missing container", () =>
@@ -74,7 +94,7 @@ describe("Annotation — lifecycle", () =>
 
     test("renders an SVG rather than a canvas element", () =>
     {
-        make();
+        makeOpen();
 
         // A canvas context would make the component resource-holding and
         // change its budget class; an SVG keeps it trivial.
@@ -96,21 +116,21 @@ describe("Annotation — kinds", () =>
 
     test("renders an arrow with a line", () =>
     {
-        make({ kind: "arrow" });
+        makeOpen({ kind: "arrow" });
 
         expect(host.querySelector("line")).toBeTruthy();
     });
 
     test("renders a highlight with a rect", () =>
     {
-        make({ kind: "highlight" });
+        makeOpen({ kind: "highlight" });
 
         expect(host.querySelector("rect")).toBeTruthy();
     });
 
     test("renders a callout with text", () =>
     {
-        make({ kind: "callout", label: "Look here" });
+        makeOpen({ kind: "callout", label: "Look here" });
 
         expect(host.textContent).toContain("Look here");
     });
@@ -122,7 +142,7 @@ describe("Annotation — kinds", () =>
 
     test("label is set as text, never as markup", () =>
     {
-        make({ label: "<b>bold</b>" });
+        makeOpen({ label: "<b>bold</b>" });
 
         expect(host.querySelector("b")).toBeNull();
         expect(host.textContent).toContain("<b>bold</b>");
@@ -137,7 +157,7 @@ describe("Annotation — Surface contract", () =>
 {
     test("setData fills the label slot", () =>
     {
-        make().setData("label", "Updated");
+        makeOpen().setData("label", "Updated");
 
         expect(host.textContent).toContain("Updated");
     });
@@ -176,7 +196,7 @@ describe("Annotation — Surface contract", () =>
 
     test("setState can change the kind and re-render", () =>
     {
-        const handle = make({ kind: "callout" });
+        const handle = makeOpen({ kind: "callout" });
 
         handle.setState({ kind: "highlight" });
 
@@ -259,7 +279,7 @@ describe("Annotation — accessibility", () =>
 {
     test("exposes the label as an accessible name", () =>
     {
-        make({ label: "Revenue spike" });
+        makeOpen({ label: "Revenue spike" });
 
         const svg = host.querySelector("svg");
 
@@ -268,10 +288,152 @@ describe("Annotation — accessibility", () =>
 
     test("an unlabelled annotation is hidden from assistive tech", () =>
     {
-        make({ kind: "highlight" });
+        makeOpen({ kind: "highlight" });
 
         const svg = host.querySelector("svg");
 
         expect(svg?.getAttribute("aria-hidden")).toBe("true");
+    });
+});
+
+// ============================================================================
+// COLLAPSE AND EXPAND
+// ============================================================================
+
+describe("Annotation — collapse and expand", () =>
+{
+    test("starts collapsed", () =>
+    {
+        expect(make().isExpanded()).toBe(false);
+    });
+
+    test("the marker carries the label as its accessible name", () =>
+    {
+        make({ label: "Revenue spike" });
+
+        const marker = host.querySelector(".annotation-marker");
+
+        expect(marker?.getAttribute("aria-label")).toBe("Revenue spike");
+        expect(marker?.getAttribute("title")).toBe("Revenue spike");
+    });
+
+    test("clicking the marker expands it", () =>
+    {
+        const handle = make({ label: "x" });
+
+        (host.querySelector(".annotation-marker") as HTMLButtonElement).click();
+
+        expect(handle.isExpanded()).toBe(true);
+        expect(host.querySelector("svg")).toBeTruthy();
+    });
+
+    test("expanding emits on the toggle channel", () =>
+    {
+        const seen: unknown[] = [];
+        const handle = make();
+
+        handle.on("toggle", (v) => seen.push(v));
+        handle.setExpanded(true);
+
+        expect(seen).toEqual([true]);
+    });
+
+    test("fires the constructor callback FIRST on toggle", () =>
+    {
+        const order: string[] = [];
+
+        annotation = createAnnotation(host.id, {
+            onToggle: () => order.push("legacy"),
+        });
+        annotation.on("toggle", () => order.push("channel"));
+        annotation.setExpanded(true);
+
+        expect(order).toEqual(["legacy", "channel"]);
+    });
+
+    test("setting the same state twice emits once", () =>
+    {
+        const seen: unknown[] = [];
+        const handle = make();
+
+        handle.on("toggle", (v) => seen.push(v));
+        handle.setExpanded(true);
+        handle.setExpanded(true);
+
+        expect(seen).toHaveLength(1);
+    });
+
+    test("collapsing returns it to a marker", () =>
+    {
+        const handle = makeOpen({ label: "x" });
+
+        handle.setExpanded(false);
+
+        expect(host.querySelector(".annotation-marker")).toBeTruthy();
+        expect(host.querySelector("svg")).toBeNull();
+    });
+
+    test("state survives a collapse and re-expand", () =>
+    {
+        const handle = makeOpen({ label: "kept", kind: "arrow" });
+        const captured = handle.getState();
+
+        handle.setExpanded(false);
+        handle.setExpanded(true);
+
+        expect(handle.getState()).toEqual(captured);
+    });
+
+    test("a brief hover does NOT expand it", async () =>
+    {
+        const handle = make();
+
+        host.querySelector(".annotation")!
+            .dispatchEvent(new Event("pointerenter", { bubbles: true }));
+
+        await new Promise((r) => setTimeout(r, 120));
+
+        // Sweeping across twenty annotations must open none of them.
+        expect(handle.isExpanded()).toBe(false);
+    });
+
+    test("a sustained hover expands it", async () =>
+    {
+        const handle = make();
+
+        host.querySelector(".annotation")!
+            .dispatchEvent(new Event("pointerenter", { bubbles: true }));
+
+        await new Promise((r) => setTimeout(r, 520));
+
+        expect(handle.isExpanded()).toBe(true);
+    });
+
+    test("leaving before the dwell cancels the expansion", async () =>
+    {
+        const handle = make();
+        const root = host.querySelector(".annotation")!;
+
+        root.dispatchEvent(new Event("pointerenter", { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 100));
+        root.dispatchEvent(new Event("pointerleave", { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 450));
+
+        expect(handle.isExpanded()).toBe(false);
+    });
+
+    test("expandOnHover false leaves click as the only route", async () =>
+    {
+        const handle = make({ expandOnHover: false });
+
+        host.querySelector(".annotation")!
+            .dispatchEvent(new Event("pointerenter", { bubbles: true }));
+
+        await new Promise((r) => setTimeout(r, 520));
+
+        expect(handle.isExpanded()).toBe(false);
+
+        (host.querySelector(".annotation-marker") as HTMLButtonElement).click();
+        expect(handle.isExpanded()).toBe(true);
     });
 });

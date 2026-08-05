@@ -141,16 +141,16 @@
     }
 
     /** Builds a node with sensible defaults. */
-    function node(nodeId, component, region, size, options, source)
+    function node(nodeId, component, region, size, options, anchor)
     {
         return {
             id: nodeId,
             component: component,
             placement: { kind: "intent", region: region, size: size },
             options: options || {},
-            source: source || null,
+            source: null,
             state: {},
-            anchor: { kind: "canvas" },
+            anchor: anchor || { kind: "canvas" },
             provenance: { turnId: "t", lastTouched: 0 },
             pinned: false,
             grants: []
@@ -187,13 +187,22 @@
         {
             match: /highlight|annotate|call ?out/i,
             label: "call out the orders table",
-            build: function ()
+            build: function (doc)
             {
-                return [{ op: "addNode", node: node(id("annot"), "annotation", "main", "compact", {
-                    kind: "callout",
-                    label: "Largest table",
-                    color: "amber"
-                }) }];
+                // An annotation is a mark ON something. Anchoring it to the
+                // grid makes the canvas overlay it there rather than packing
+                // it as another widget that shoves the layout around.
+                var target = findByComponent(doc, "datagrid");
+
+                if (!target)
+                {
+                    return null;
+                }
+
+                return [{ op: "addNode", node: node(
+                    id("annot"), "annotation", "main", "compact",
+                    { kind: "callout", label: "Largest table", color: "amber" },
+                    { kind: "node", nodeId: target.id }) }];
             }
         },
         {
@@ -456,7 +465,7 @@
             var doc = canvas.getDocument();
             var ops = resolveUtterance(utterance, doc);
 
-            if (!ops)
+            if (ops === null)
             {
                 setText(explainEl, "No canned session matches “" + utterance
                     + "”. Try one of the suggested prompts.");

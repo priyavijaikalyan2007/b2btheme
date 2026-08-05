@@ -53,7 +53,9 @@ async function open(page: Page): Promise<void>
 /** Clicks a suggested prompt by its visible label. */
 async function runPrompt(page: Page, label: string): Promise<void>
 {
-    await page.getByRole("button", { name: label }).click();
+    // Scoped to the prompt bar: the transcript echoes the same text as a
+    // role=button turn, so an unscoped lookup is ambiguous.
+    await page.locator("#dui-prompts").getByRole("button", { name: label }).click();
     await page.waitForTimeout(250);
 }
 
@@ -123,30 +125,74 @@ test.describe("Dynamic UI demo", () =>
         await expect(page.locator(".stickynote")).toHaveCount(1);
     });
 
-    test("prompt 3 adds a visible annotation", async ({ page }) =>
+    test("prompt 3 overlays an annotation ON the grid, displacing nothing",
+        async ({ page }) =>
     {
         await open(page);
         await runPrompt(page, "show me the tables in the sales database");
+
+        // Capture the grid's position BEFORE annotating it.
+        const gridBefore = await page.locator(".dyncanvas-frame")
+            .nth(1).boundingBox();
+        const framesBefore = await page.locator(".dyncanvas-frame").count();
+
         await runPrompt(page, "call out the orders table");
 
-        await expect(page.locator(".dyncanvas-frame")).toHaveCount(3);
-        await expectOnScreen(page, 2);
-        await expect(page.locator(".annotation")).toHaveCount(1);
+        // An annotation is NOT another widget: no new frame appears.
+        await expect(page.locator(".dyncanvas-frame")).toHaveCount(framesBefore);
+        await expect(page.locator(".dyncanvas-overlay")).toHaveCount(1);
+
+        // And it must not have moved what it annotates.
+        const gridAfter = await page.locator(".dyncanvas-frame")
+            .nth(1).boundingBox();
+
+        expect(gridAfter!.x, "the grid moved when annotated")
+            .toBeCloseTo(gridBefore!.x, 0);
+        expect(gridAfter!.y, "the grid moved when annotated")
+            .toBeCloseTo(gridBefore!.y, 0);
+
+        // The overlay sits on top of its target.
+        const overlay = await page.locator(".dyncanvas-overlay").boundingBox();
+
+        expect(overlay!.x).toBeGreaterThanOrEqual(gridAfter!.x - 1);
+        expect(overlay!.x + overlay!.width)
+            .toBeLessThanOrEqual(gridAfter!.x + gridAfter!.width + 1);
     });
 
-    test("all three prompts together stay on screen", async ({ page }) =>
+    test("an annotation rests as a marker and expands on click", async ({ page }) =>
     {
         await open(page);
         await runPrompt(page, "show me the tables in the sales database");
-        await runPrompt(page, "leave a note on the orders table");
         await runPrompt(page, "call out the orders table");
 
-        await expect(page.locator(".dyncanvas-frame")).toHaveCount(4);
+        // Resting state: a marker, not a callout burying the grid.
+        await expect(page.locator(".annotation-marker")).toHaveCount(1);
+        await expect(page.locator(".annotation svg")).toHaveCount(0);
 
-        for (let i = 0; i < 4; i += 1)
+        await page.locator(".annotation-marker").click();
+
+        await expect(page.locator(".annotation svg")).toHaveCount(1);
+        await expect(page.getByText("Largest table")).toBeVisible();
+    });
+
+    test("many annotations do not rearrange the canvas", async ({ page }) =>
+    {
+        await open(page);
+        await runPrompt(page, "show me the tables in the sales database");
+
+        const before = await page.locator(".dyncanvas-frame").nth(1).boundingBox();
+
+        for (let i = 0; i < 6; i += 1)
         {
-            await expectOnScreen(page, i);
+            await runPrompt(page, "call out the orders table");
         }
+
+        await expect(page.locator(".dyncanvas-overlay")).toHaveCount(6);
+
+        const after = await page.locator(".dyncanvas-frame").nth(1).boundingBox();
+
+        expect(after!.x, "six annotations moved the grid").toBeCloseTo(before!.x, 0);
+        expect(after!.y, "six annotations moved the grid").toBeCloseTo(before!.y, 0);
     });
 
     test("selecting a table repaints the grid through the binding", async ({ page }) =>

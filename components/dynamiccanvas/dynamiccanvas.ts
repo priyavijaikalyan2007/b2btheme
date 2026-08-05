@@ -90,6 +90,7 @@ interface CanvasNode
     readonly state: Record<string, unknown>;
     readonly provenance: { readonly turnId: string; readonly lastTouched: number };
     readonly pinned: boolean;
+    readonly anchor?: { readonly kind: string; readonly nodeId?: string };
 }
 
 /** The materialised scene. */
@@ -540,8 +541,12 @@ function build(
         frame.style.width = `${rect.w}px`;
         frame.style.height = `${rect.h}px`;
         frame.style.zIndex = String(rect.z);
-        frame.classList.toggle(`${CLS}-frame-pinned`, node.pinned);
-        refreshChrome(frame, node);
+
+        if (!isOverlay(node))
+        {
+            frame.classList.toggle(`${CLS}-frame-pinned`, node.pinned);
+            refreshChrome(frame, node);
+        }
     }
 
     /**
@@ -553,6 +558,11 @@ function build(
      */
     function buildFrame(node: CanvasNode): HTMLElement
     {
+        if (isOverlay(node))
+        {
+            return buildOverlayFrame(node);
+        }
+
         const manifest = rt().getManifest(node.component);
         const frame = el("div", `${CLS}-frame`);
         frame.setAttribute("data-node-id", node.id);
@@ -567,6 +577,40 @@ function build(
         frame.appendChild(bar);
         frame.appendChild(body);
         attachDrag(frame, bar, node.id);
+
+        return frame;
+    }
+
+    /**
+     * True when a node is an overlay bound to another node.
+     *
+     * @param node - The node to classify.
+     * @returns Whether it annotates another node.
+     */
+    function isOverlay(node: CanvasNode): boolean
+    {
+        return node.anchor?.kind === "node"
+            && Boolean(doc.nodes[(node.anchor as { nodeId: string }).nodeId]);
+    }
+
+    /**
+     * Builds a bare overlay container — no title bar, no chrome.
+     *
+     * An annotation is a mark ON something, not a widget beside it, so it gets
+     * no frame furniture. Removal is the component's own affair; the canvas
+     * offers no close button on a 30px marker.
+     *
+     * @param node - The overlay node.
+     * @returns The container element.
+     */
+    function buildOverlayFrame(node: CanvasNode): HTMLElement
+    {
+        const frame = el("div", `${CLS}-overlay`);
+        frame.setAttribute("data-node-id", node.id);
+
+        const body = el("div", `${CLS}-body`);
+        bodies.set(node.id, body);
+        frame.appendChild(body);
 
         return frame;
     }

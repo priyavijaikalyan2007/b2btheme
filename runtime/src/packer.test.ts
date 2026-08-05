@@ -28,7 +28,8 @@ import type {
 function node(
     id: string,
     placement: Placement,
-    pinned = false): CanvasNode
+    pinned = false,
+    anchor: CanvasNode["anchor"] = { kind: "canvas" }): CanvasNode
 {
     return {
         id,
@@ -37,7 +38,7 @@ function node(
         options: {},
         source: null,
         state: {},
-        anchor: { kind: "canvas" },
+        anchor,
         provenance: { turnId: "t1", lastTouched: 1 },
         pinned,
         grants: [],
@@ -356,5 +357,118 @@ describe("packDocument — canvas width", () =>
         const packed = packDocument(doc, { width: 1600 });
 
         expect(packed.get("s")!.x).toBeGreaterThan(packed.get("m")!.x);
+    });
+});
+
+// ============================================================================
+// ANCHORED OVERLAYS
+// ============================================================================
+
+describe("packDocument — anchored overlays", () =>
+{
+    /** A grid with an annotation anchored to it. */
+    function anchoredDoc()
+    {
+        return docOf([
+            node("target", intent("main", "wide")),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target" }),
+        ]);
+    }
+
+    test("an anchored node overlaps the node it annotates", () =>
+    {
+        const packed = packDocument(anchoredDoc(), { width: 1200 });
+        const target = packed.get("target")!;
+        const pin = packed.get("pin")!;
+
+        // The whole point: it sits ON its target, not beside it.
+        expect(overlaps(pin, target)).toBe(true);
+    });
+
+    test("an anchored node stacks above its target", () =>
+    {
+        const packed = packDocument(anchoredDoc(), { width: 1200 });
+
+        expect(packed.get("pin")!.z)
+            .toBeGreaterThan(packed.get("target")!.z);
+    });
+
+    test("an anchored node does NOT displace other nodes", () =>
+    {
+        // Same document with and without the annotation. Every other node
+        // must land in exactly the same place — an annotation annotates, it
+        // does not rearrange the canvas.
+        const without = packDocument(docOf([
+            node("target", intent("main", "wide")),
+            node("other", intent("main", "standard")),
+        ]), { width: 1200 });
+
+        const withPin = packDocument(docOf([
+            node("target", intent("main", "wide")),
+            node("other", intent("main", "standard")),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target" }),
+        ]), { width: 1200 });
+
+        expect(withPin.get("target")).toEqual(without.get("target"));
+        expect(withPin.get("other")).toEqual(without.get("other"));
+    });
+
+    test("many anchored nodes still displace nothing", () =>
+    {
+        const base = [
+            node("a", intent("main", "standard")),
+            node("b", intent("main", "standard")),
+        ];
+
+        const pins = Array.from({ length: 20 }, (_, i) =>
+            node(`p${i}`, intent("main", "compact"), false,
+                { kind: "node", nodeId: i % 2 === 0 ? "a" : "b" }));
+
+        const without = packDocument(docOf(base), { width: 1200 });
+        const withPins = packDocument(docOf([...base, ...pins]), { width: 1200 });
+
+        expect(withPins.get("a")).toEqual(without.get("a"));
+        expect(withPins.get("b")).toEqual(without.get("b"));
+    });
+
+    test("anchored nodes on the same target fan out rather than stack", () =>
+    {
+        const doc = docOf([
+            node("t", intent("main", "wide")),
+            node("p1", intent("main", "compact"), false,
+                { kind: "node", nodeId: "t" }),
+            node("p2", intent("main", "compact"), false,
+                { kind: "node", nodeId: "t" }),
+        ]);
+
+        const packed = packDocument(doc, { width: 1200 });
+
+        expect(packed.get("p1")).not.toEqual(packed.get("p2"));
+    });
+
+    test("an anchor pointing at a missing node falls back to shelf packing", () =>
+    {
+        const doc = docOf([
+            node("orphan", intent("main", "compact"), false,
+                { kind: "node", nodeId: "gone" }),
+        ]);
+
+        // Must still be placed somewhere sane rather than dropped.
+        expect(packDocument(doc, { width: 1200 }).get("orphan")).toBeDefined();
+    });
+
+    test("entity and canvas anchors are packed normally", () =>
+    {
+        const doc = docOf([
+            node("e", intent("main", "compact"), false,
+                { kind: "entity", entityId: "table:orders" }),
+            node("c", intent("main", "compact")),
+        ]);
+
+        const packed = packDocument(doc, { width: 1200 });
+
+        expect(overlaps(packed.get("e")!, packed.get("c")!)).toBe(false);
     });
 });

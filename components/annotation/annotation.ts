@@ -42,6 +42,26 @@ const KINDS = ["callout", "arrow", "highlight"] as const;
 /** Palette an annotation may use. */
 const COLORS = ["amber", "blue", "green", "red", "grey"] as const;
 
+/**
+ * Hover dwell before an annotation expands, in milliseconds.
+ *
+ * Long enough that sweeping the pointer across a canvas of twenty annotations
+ * opens none of them; short enough that deliberately resting on one feels
+ * immediate. Matches the HoverCard convention (ADR-125).
+ */
+const HOVER_OPEN_MS = 400;
+
+/** Grace period before collapsing again, so a wobbling pointer does not flicker. */
+const HOVER_CLOSE_MS = 150;
+
+/** Resting-state glyph per kind. */
+const MARKER_GLYPH: Readonly<Record<string, string>> =
+{
+    callout: "\u201C",
+    arrow: "\u2197",
+    highlight: "\u25A3",
+};
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -75,6 +95,25 @@ export interface AnnotationOptions
 
     /** What the annotation is attached to. Defaults to the canvas. */
     anchor?: AnnotationAnchor;
+
+    /**
+     * Start expanded rather than collapsed to a marker. Default false.
+     *
+     * An annotation is a mark ON something. Twenty expanded callouts would
+     * bury the very thing they annotate, so the resting state is a marker and
+     * the content appears on demand.
+     */
+    expanded?: boolean;
+
+    /**
+     * Expand on sustained hover as well as on click. Default true.
+     *
+     * Set false where hover is unavailable or unwanted; click always works.
+     */
+    expandOnHover?: boolean;
+
+    /** Fires when the annotation expands or collapses. */
+    onToggle?: (expanded: boolean) => void;
 
     /** Fires whenever the label, kind or colour changes. */
     onChange?: (state: Record<string, unknown>) => void;
@@ -118,6 +157,12 @@ export interface AnnotationHandle
 
     /** Re-attaches the annotation and emits on the "anchor" channel. */
     setAnchor(anchor: AnnotationAnchor): void;
+
+    /** Whether the annotation is currently showing its content. */
+    isExpanded(): boolean;
+
+    /** Expands or collapses, emitting on the "toggle" channel. */
+    setExpanded(expanded: boolean): void;
 
     /** Root element, or null once destroyed. */
     getElement(): HTMLElement | null;
@@ -368,17 +413,28 @@ function build(
     let label = String(options.label ?? options.value ?? "");
     let anchor: AnnotationAnchor =
         assertAnchor(options.anchor ?? { kind: "canvas" });
+    let expanded = options.expanded === true;
     let destroyed = false;
+    let openTimer = 0;
+    let closeTimer = 0;
 
     const root = document.createElement("div");
     root.className = `${CLS} ${CLS}-${color}`;
     host.appendChild(root);
 
     repaint();
+    attachHoverBehaviour();
 
     /** Replaces the SVG with one drawn for the current state. */
     function repaint(): void
     {
+        if (!expanded)
+        {
+            root.replaceChildren(buildMarker());
+            applyClasses();
+            return;
+        }
+
         const layers: Node[] = [draw(kind, label)];
 
         // The label is real HTML in the theme font at a real size. Drawing it
@@ -393,8 +449,15 @@ function build(
         }
 
         root.replaceChildren(...layers);
+        applyClasses();
+    }
+
+    /** Reflects kind, colour and expansion in the class list. */
+    function applyClasses(): void
+    {
         root.classList.toggle(`${CLS}-labelled`, label.length > 0);
-        root.classList.toggle(`${CLS}-kind-${kind}`, true);
+        root.classList.toggle(`${CLS}-expanded`, expanded);
+        root.classList.toggle(`${CLS}-collapsed`, !expanded);
 
         for (const candidate of KINDS)
         {
@@ -405,6 +468,81 @@ function build(
         {
             root.classList.toggle(`${CLS}-${candidate}`, candidate === color);
         }
+    }
+
+    /**
+     * Builds the resting-state marker: a small, focusable dot carrying the
+     * label as its accessible name and tooltip, so the annotation is readable
+     * without expanding anything.
+     */
+    function buildMarker(): HTMLElement
+    {
+        const marker = document.createElement("button");
+        marker.type = "button";
+        marker.className = `${CLS}-marker`;
+        marker.textContent = MARKER_GLYPH[kind];
+        marker.setAttribute("aria-expanded", "false");
+
+        const name = label.length > 0 ? label : `${kind} annotation`;
+        marker.setAttribute("aria-label", name);
+        marker.setAttribute("title", name);
+
+        marker.addEventListener("click", (e) =>
+        {
+            e.stopPropagation();
+            setExpandedState(true);
+        });
+
+        return marker;
+    }
+
+    /** Wires hover-to-expand with a dwell, and click-away to collapse. */
+    function attachHoverBehaviour(): void
+    {
+        root.addEventListener("pointerenter", () =>
+        {
+            window.clearTimeout(closeTimer);
+
+            if (options.expandOnHover === false || expanded)
+            {
+                return;
+            }
+
+            // A dwell, not a hover: sweeping across twenty annotations must
+            // open none of them.
+            openTimer = window.setTimeout(
+                () => setExpandedState(true), HOVER_OPEN_MS);
+        });
+
+        root.addEventListener("pointerleave", () =>
+        {
+            window.clearTimeout(openTimer);
+
+            if (!expanded || root.contains(document.activeElement))
+            {
+                return;
+            }
+
+            closeTimer = window.setTimeout(
+                () => setExpandedState(false), HOVER_CLOSE_MS);
+        });
+    }
+
+    /**
+     * Applies an expansion change and announces it.
+     *
+     * @param next - Whether the annotation should show its content.
+     */
+    function setExpandedState(next: boolean): void
+    {
+        if (destroyed || expanded === next)
+        {
+            return;
+        }
+
+        expanded = next;
+        repaint();
+        emit("toggle", () => options.onToggle?.(expanded), expanded);
     }
 
     /** Delivers a payload: legacy callback first, then channel subscribers. */
@@ -500,6 +638,10 @@ function build(
             changed();
         },
 
+        isExpanded: () => expanded,
+
+        setExpanded: (next) => setExpandedState(next === true),
+
         getAnchor: () => anchor,
 
         setAnchor(next)
@@ -518,6 +660,8 @@ function build(
             }
 
             destroyed = true;
+            window.clearTimeout(openTimer);
+            window.clearTimeout(closeTimer);
             handlers.clear();
             root.remove();
             logInfo("Destroyed");

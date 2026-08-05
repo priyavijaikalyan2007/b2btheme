@@ -747,6 +747,46 @@ exit 0.
 
 ---
 
+### 2026-08-05 — Annotations are overlays, not widgets
+
+The user's sharpest observation yet: *"annotations are blocks that nudge out other items…
+a sticky is not bound to anything; an annotation is."* That is a design error, and it was mine.
+
+I had built Annotation as an ordinary canvas citizen and even defended it in the README —
+arguing that pooling annotations into a shared layer would make them second-class. I had
+conflated two separate things:
+
+- **First-class in the DOCUMENT model** — mountable, virtualizable, wired, restorable. Right,
+  and kept.
+- **Laid out by the packer as an opaque block.** Wrong. An annotation annotates; it must not
+  rearrange what it annotates.
+
+The anchoring model needed for this already existed — `anchor: { kind: "node", nodeId }` has
+been in the schema since Phase 1 — the packer and canvas simply never honoured it. And the
+precedent was already in the repo: CommentOverlay pins to a target's bounding rect, HoverCard
+established the dwell convention.
+
+What changed:
+
+- **Packer**: a node anchored to another node is no longer shelf-packed. A third pass places
+  it against its target's rectangle, lifted in z, and it is added to **no obstacle list** —
+  which is what guarantees it displaces nothing. Several overlays on one target fan along its
+  top edge. Seven tests, including "twenty anchored nodes displace nothing".
+- **Canvas**: overlays render as bare positioned containers — no title bar, no pin, no close.
+  Chrome around a 22px marker is absurd, and the point is that it hovers over its target.
+- **Annotation**: rests as a **marker**, expanding on click or a **400ms hover dwell** with a
+  150ms close grace. Sweeping across twenty annotations opens none of them. Eleven new tests
+  cover collapse, expand, dwell, cancel-on-early-leave, and `expandOnHover: false`.
+- **Demo**: the annotation prompt now anchors to the grid it is annotating, so the behaviour
+  is visible rather than theoretical.
+
+Three browser tests now assert the property directly: no new frame appears, the grid does not
+move, and **six annotations leave the layout untouched**.
+
+**Verified:** 8/8 Playwright; 4737 unit tests across 140 files; typechecks clean; build exit 0.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -756,7 +796,7 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4717 passing across 140 files |
+| Full suite | 4737 passing across 140 files, plus 8 Playwright |
 | Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |

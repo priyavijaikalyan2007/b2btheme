@@ -59,6 +59,12 @@ export interface PackedRect
 /** Canvas width assumed when the caller does not supply one. */
 const DEFAULT_CANVAS_WIDTH = 1600;
 
+/** Edge length of an anchored overlay marker, in canvas pixels. */
+const MARKER_SIZE = 30;
+
+/** Stacking offset that lifts an overlay above whatever it annotates. */
+const OVERLAY_Z_LIFT = 10;
+
 /** Narrowest canvas at which a side region is still worth reserving. */
 const SIDE_REGION_MIN_CANVAS = 900;
 
@@ -175,7 +181,7 @@ export function packDocument(
 
     for (const node of orderForPacking(nodes))
     {
-        if (node.placement.kind !== "intent")
+        if (node.placement.kind !== "intent" || isAnchoredOverlay(node, doc))
         {
             continue;
         }
@@ -185,7 +191,96 @@ export function packDocument(
         obstacles.push(rect);
     }
 
+    placeOverlays(doc, out);
+
     return out;
+}
+
+/**
+ * True when a node is an overlay bound to another node.
+ *
+ * An overlay ANNOTATES its target: it sits on top of it, and it must not
+ * displace anything. A sticky note is unbound and behaves like any other
+ * widget; an annotation attached to a grid is not a widget at all, it is a
+ * mark on that grid. Treating the two the same made twenty annotations
+ * rearrange the whole canvas.
+ *
+ * @param node - The node to classify.
+ * @param doc  - The document, used to confirm the target exists.
+ * @returns Whether the node is an anchored overlay.
+ */
+function isAnchoredOverlay(node: CanvasNode, doc: CanvasDocument): boolean
+{
+    return node.anchor.kind === "node"
+        && Boolean(doc.nodes[node.anchor.nodeId]);
+}
+
+/**
+ * Positions every anchored overlay against its target.
+ *
+ * Runs last, reads the already-packed rectangles, and adds NOTHING to the
+ * obstacle list — which is what guarantees an annotation never moves the thing
+ * it annotates, or anything near it.
+ *
+ * Several overlays on one target fan along its top edge rather than stacking
+ * on top of each other.
+ *
+ * @param doc - The document being laid out.
+ * @param out - Packed rectangles, mutated in place.
+ */
+function placeOverlays(
+    doc: CanvasDocument,
+    out: Map<string, PackedRect>): void
+{
+    const perTarget = new Map<string, number>();
+
+    for (const node of Object.values(doc.nodes).slice()
+        .sort((a, b) => a.id.localeCompare(b.id)))
+    {
+        if (!isAnchoredOverlay(node, doc))
+        {
+            continue;
+        }
+
+        const targetId = (node.anchor as { nodeId: string }).nodeId;
+        const target = out.get(targetId);
+
+        if (!target)
+        {
+            continue;
+        }
+
+        const index = perTarget.get(targetId) ?? 0;
+        perTarget.set(targetId, index + 1);
+
+        out.set(node.id, overlayRect(target, index));
+    }
+}
+
+/**
+ * Computes an overlay's rectangle from its target's.
+ *
+ * Markers sit inside the target's top-right corner and march leftwards, so
+ * they read as belonging to it without covering its content.
+ *
+ * @param target - The target's packed rectangle.
+ * @param index  - Position among overlays sharing this target.
+ * @returns The overlay's rectangle.
+ */
+function overlayRect(target: PackedRect, index: number): PackedRect
+{
+    const step = MARKER_SIZE + 4;
+    const perRow = Math.max(1, Math.floor(target.w / step));
+    const column = index % perRow;
+    const row = Math.floor(index / perRow);
+
+    return {
+        x: target.x + target.w - step * (column + 1),
+        y: target.y + row * step,
+        w: MARKER_SIZE,
+        h: MARKER_SIZE,
+        z: target.z + OVERLAY_Z_LIFT,
+    };
 }
 
 // ============================================================================
