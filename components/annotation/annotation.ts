@@ -270,92 +270,139 @@ function assertAnchor(anchor: AnnotationAnchor): AnnotationAnchor
 // ============================================================================
 
 /**
- * Draws the overlay for a kind into a fresh SVG root.
+ * Builds the expanded body for a kind.
+ *
+ * Callout and highlight are HTML, not SVG. An SVG box stretched to the node's
+ * aspect ratio distorts its own corners and any text inside it, which is what
+ * made these look crude. Only the arrow is genuinely a drawing.
  *
  * @param kind  - Overlay kind.
- * @param label - Label text, drawn only by a callout.
- * @returns The SVG root.
+ * @param label - Label text.
+ * @returns The body element.
  */
-function draw(kind: AnnotationKind, label: string): SVGElement
+function buildBody(kind: AnnotationKind, label: string): HTMLElement
 {
-    const root = svg("svg", {
-        class: `${CLS}-svg`,
-        viewBox: "0 0 100 100",
-        // Stretched to fill the node box. Every stroke uses
-        // vector-effect: non-scaling-stroke so the distortion never reaches
-        // line weights, and callout TEXT is rendered as HTML rather than SVG
-        // for the same reason — stretched glyphs look broken.
-        preserveAspectRatio: "none",
-    });
-
     if (kind === "arrow")
     {
-        drawArrow(root);
-    }
-    else if (kind === "highlight")
-    {
-        root.appendChild(svg("rect", {
-            class: `${CLS}-shape`,
-            x: "1", y: "1", width: "98", height: "98",
-        }));
-    }
-    else
-    {
-        drawCallout(root);
+        return buildArrow(label);
     }
 
-    applyAccessibleName(root, label);
+    if (kind === "highlight")
+    {
+        return buildHighlight(label);
+    }
 
-    return root;
+    return buildCallout(label);
 }
 
 /**
- * Draws an arrow with a head.
+ * A popover card, modelled on the CommentOverlay thread popover: surface
+ * background, hairline border, theme shadow, and a small tail pointing back at
+ * whatever is being annotated.
  *
- * @param root - SVG root to append into.
+ * @param label - Label text.
+ * @returns The card element.
  */
-function drawArrow(root: SVGElement): void
+function buildCallout(label: string): HTMLElement
 {
+    const card = document.createElement("div");
+    card.className = `${CLS}-card`;
+
+    const text = document.createElement("div");
+    text.className = `${CLS}-card-text`;
+    text.textContent = label;
+
+    card.appendChild(text);
+    card.appendChild(elementWithClass("div", `${CLS}-card-tail`));
+
+    return card;
+}
+
+/**
+ * A translucent wash over the region being marked.
+ *
+ * @param label - Label text, shown as a small caption when present.
+ * @returns The highlight element.
+ */
+function buildHighlight(label: string): HTMLElement
+{
+    const wash = document.createElement("div");
+    wash.className = `${CLS}-wash`;
+
+    if (label.length > 0)
+    {
+        const caption = document.createElement("span");
+        caption.className = `${CLS}-caption`;
+        caption.textContent = label;
+        wash.appendChild(caption);
+    }
+
+    return wash;
+}
+
+/**
+ * An arrow drawn as SVG, with its stroke exempted from scaling so the line
+ * weight stays even however the box is stretched.
+ *
+ * @param label - Label text, shown beside the arrow when present.
+ * @returns The arrow element.
+ */
+function buildArrow(label: string): HTMLElement
+{
+    const wrap = elementWithClass("div", `${CLS}-arrow`);
+
+    const root = svg("svg", {
+        class: `${CLS}-svg`,
+        viewBox: "0 0 100 100",
+        preserveAspectRatio: "none",
+    });
+
     root.appendChild(svg("line", {
         class: `${CLS}-shape`,
-        x1: "6", y1: "94", x2: "84", y2: "16",
+        x1: "6", y1: "94", x2: "82", y2: "18",
     }));
 
     root.appendChild(svg("polygon", {
         class: `${CLS}-head`,
         points: "94,6 74,14 86,26",
     }));
+
+    applyAccessibleName(root, label);
+    wrap.appendChild(root);
+
+    if (label.length > 0)
+    {
+        const caption = document.createElement("span");
+        caption.className = `${CLS}-caption`;
+        caption.textContent = label;
+        wrap.appendChild(caption);
+    }
+
+    return wrap;
 }
 
 /**
- * Draws a callout box with its text.
+ * Creates an element with a class name.
  *
- * @param root  - SVG root to append into.
- * @param label - Text to render.
+ * @param tag - Tag name.
+ * @param cls - Class name.
+ * @returns The element.
  */
-function drawCallout(root: SVGElement): void
+function elementWithClass(tag: string, cls: string): HTMLElement
 {
-    root.appendChild(svg("rect", {
-        class: `${CLS}-shape`,
-        x: "1", y: "1", width: "98", height: "72",
-    }));
+    const node = document.createElement(tag);
+    node.className = cls;
 
-    root.appendChild(svg("polygon", {
-        class: `${CLS}-shape ${CLS}-tail`,
-        points: "16,73 16,97 40,73",
-    }));
+    return node;
 }
 
 /**
- * Gives the overlay an accessible name, or hides it when it carries no text.
+ * Gives an overlay an accessible name, or hides it when it carries no text.
  *
- * A purely decorative highlight with no label is noise to a screen reader, so
- * it is hidden rather than announced as an unnamed graphic.
- *
- * @param root  - SVG root.
+ * @param root  - Element to name.
  * @param label - Label text.
  */
-function applyAccessibleName(root: SVGElement, label: string): void
+function applyAccessibleName(root: Element, label: string): void
 {
     if (label.length > 0)
     {
@@ -435,20 +482,7 @@ function build(
             return;
         }
 
-        const layers: Node[] = [draw(kind, label)];
-
-        // The label is real HTML in the theme font at a real size. Drawing it
-        // as SVG text inside a stretched viewBox distorted the glyphs, which
-        // was most of why annotations looked wrong.
-        if (kind === "callout" && label.length > 0)
-        {
-            const text = document.createElement("span");
-            text.className = `${CLS}-label`;
-            text.textContent = label;
-            layers.push(text);
-        }
-
-        root.replaceChildren(...layers);
+        root.replaceChildren(buildBody(kind, label));
         applyClasses();
     }
 

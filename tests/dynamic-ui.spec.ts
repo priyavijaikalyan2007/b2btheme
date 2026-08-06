@@ -167,11 +167,12 @@ test.describe("Dynamic UI demo", () =>
 
         // Resting state: a marker, not a callout burying the grid.
         await expect(page.locator(".annotation-marker")).toHaveCount(1);
-        await expect(page.locator(".annotation svg")).toHaveCount(0);
+        await expect(page.locator(".annotation-card")).toHaveCount(0);
 
         await page.locator(".annotation-marker").click();
 
-        await expect(page.locator(".annotation svg")).toHaveCount(1);
+        // Expanded state is an HTML popover card, not stretched SVG.
+        await expect(page.locator(".annotation-card")).toHaveCount(1);
         await expect(page.getByText("Largest table")).toBeVisible();
     });
 

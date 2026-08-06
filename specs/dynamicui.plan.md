@@ -787,6 +787,49 @@ move, and **six annotations leave the layout untouched**.
 
 ---
 
+### 2026-08-06 — Screenshots settled four arguments
+
+The user sent screenshots. Every one showed something I had reasoned my way past.
+
+**1. The ChatDock grew as the conversation grew.** `max-height: 180px` meant it expanded from
+nothing up to its cap — capped, but not constant. For a dock hovering over a canvas the height
+must never change at all. Now a FIXED height (`--chatdock-transcript-height`, default 132px),
+tighter rows, and a `showTranscript: false` option for a pure input bar. A browser test measures
+the dock before and after six messages and fails on any difference.
+
+**2. An annotation rendered as a framed widget containing a dot.** The screenshot showed a panel
+titled "Annotation" with title-bar chrome, and inside it a tiny circular button that expanded on
+click. Absurd, and exactly the user's complaint.
+
+The cause was that my previous fix keyed overlay behaviour off the ANCHOR — so an annotation not
+bound to a node still got full widget furniture. Presentation is a property of the **component**,
+not of its anchor: `presentation: "overlay"` now lives on the manifest, and the packer and canvas
+honour it regardless of anchoring. An annotation is an overlay, full stop.
+
+**3. "The annotation looks ugly — the comment overlay was beautiful."** Fair. CommentOverlay uses
+a solid filled pin that lifts and glows on hover, and a proper popover card with surface
+background, hairline border and theme shadow. Mine was an outlined dot and a stretched SVG box.
+Rebuilt on that model: the marker is a filled disc, and callout and highlight are now **HTML**
+rather than SVG — a viewBox stretched to the node's aspect ratio distorts its own corners and any
+text inside it, which was most of the ugliness. Only the arrow is still a drawing.
+
+**4. The grid appeared only on the third message.** Two compounding bugs. The prompt buttons
+rendered in MATCHER order — most-specific-first, which I had reordered for correctness — so
+clicking left to right ran the demo backwards and fired the annotation prompt before the grid it
+annotates existed. Display order is a narrative choice and is now explicit. And the
+"nothing to do" reply never appeared, because an earlier edit of mine had failed to apply
+silently: it matched on `\u201C` escapes while the source held literal curly quotes. So the
+second prompt did nothing AND said nothing.
+
+`tests/dynamic-ui-visual.spec.ts` — eight browser checks measuring the properties the screenshots
+revealed: the dock's height across six messages, no title bar on an annotation, five annotations
+not moving a note, and prompt order. Wired into `npm run test:e2e:dynamicui`, and it writes
+screenshots to `test-results/review/` for human judgement.
+
+**Verified:** 16/16 Playwright; 4739 unit tests across 140 files; typechecks clean; build exit 0.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -796,7 +839,7 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4737 passing across 140 files, plus 8 Playwright |
+| Full suite | 4739 passing across 140 files, plus 16 Playwright |
 | Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |

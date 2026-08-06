@@ -70,6 +70,15 @@ export interface ChatDockOptions
     /** Start with the input disabled. */
     busy?: boolean;
 
+    /**
+     * Show the transcript above the input. Default true.
+     *
+     * The transcript is a FIXED-height scrolling region, so the dock never
+     * changes size as the conversation grows. Set false for a pure input bar
+     * where history lives in a separate panel.
+     */
+    showTranscript?: boolean;
+
     /** Fires when the user submits an utterance. */
     onSubmit?: (utterance: string) => void;
 
@@ -261,6 +270,11 @@ function build(
 
     bar.appendChild(field);
     bar.appendChild(send);
+    if (options.showTranscript === false)
+    {
+        root.classList.add(`${CLS}-no-transcript`);
+    }
+
     root.appendChild(turnList);
     root.appendChild(bar);
     host.appendChild(root);

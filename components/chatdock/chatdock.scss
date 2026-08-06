@@ -25,16 +25,20 @@
 
 .chatdock-turns
 {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: 180px;
+    // FIXED height, not max-height. A docked chat hovering over a canvas must
+    // never change size as the conversation grows — it grew from nothing up to
+    // its cap, which is exactly the behaviour a dock should not have.
+    // Override with --chatdock-transcript-height, or hide it entirely with
+    // the showTranscript option for a pure input bar.
+    flex: 0 0 auto;
+    height: var(--chatdock-transcript-height, 132px);
     overflow-y: auto;
-    padding: $spacer * 0.5;
+    padding: $spacer * 0.375 $spacer * 0.5;
+}
 
-    &:empty
-    {
-        display: none;
-    }
+.chatdock-no-transcript .chatdock-turns
+{
+    display: none;
 }
 
 .chatdock-turn
@@ -42,9 +46,10 @@
     display: flex;
     align-items: flex-start;
     gap: $spacer * 0.5;
-    padding: $spacer * 0.25 $spacer * 0.5;
+    // Tighter rows: single-line turns were taking three times their ink.
+    padding: 2px $spacer * 0.375;
     font-size: $font-size-sm;
-    line-height: $line-height-relaxed;
+    line-height: $line-height-base;
     cursor: pointer;
     border-left: 2px solid transparent;
 

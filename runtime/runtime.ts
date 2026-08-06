@@ -248,6 +248,20 @@ interface CapabilityManifest
     readonly containerOption?: string;
 
     /**
+     * How the component occupies the canvas.
+     *
+     * `framed` (default) is an ordinary widget: title bar, chrome, packed into
+     * the layout, treated as an obstacle. `overlay` is a mark ON the canvas —
+     * no chrome, never an obstacle, never displaces anything.
+     *
+     * This is a property of the COMPONENT, not of its anchor. An annotation is
+     * an overlay whether or not it is bound to a node; rendering one as a
+     * framed widget produced a titled box containing a dot, which is nobody's
+     * idea of an annotation.
+     */
+    readonly presentation?: "framed" | "overlay";
+
+    /**
      * How the component attaches to its host.
      *
      * `factoryStyle` describes ARGUMENT ORDER; this describes ATTACHMENT, and
@@ -2104,6 +2118,13 @@ function validateIdentity(
         issues.push(enumIssue("containerAs", m.containerAs, ["element", "id"]));
     }
 
+    if (m.presentation !== undefined
+        && m.presentation !== "framed" && m.presentation !== "overlay")
+    {
+        issues.push(enumIssue("presentation", m.presentation,
+            ["framed", "overlay"]));
+    }
+
     if (m.mountMethod !== undefined
         && !MOUNT_METHODS.includes(m.mountMethod as string))
     {
@@ -3702,6 +3723,15 @@ interface PackOptions
      * narrow canvas never strands a node in an off-screen region.
      */
     readonly width?: number;
+
+    /**
+     * Reports whether a component presents as an overlay.
+     *
+     * Supplied by the host because the packer holds no registry. An overlay is
+     * never an obstacle and never displaces anything, regardless of what it is
+     * anchored to.
+     */
+    readonly isOverlay?: (component: string) => boolean;
 }
 
 /** A resolved rectangle in canvas coordinates. */
@@ -3819,6 +3849,8 @@ function packDocument(
     doc: CanvasDocument,
     options: PackOptions = {}): Map<string, PackedRect>
 {
+    const isOverlayComponent = options.isOverlay ?? (() => false);
+
     const geometry = geometryFor(options.width ?? DEFAULT_CANVAS_WIDTH);
 
     const out = new Map<string, PackedRect>();
@@ -3839,7 +3871,12 @@ function packDocument(
 
     for (const node of orderForPacking(nodes))
     {
-        if (node.placement.kind !== "intent" || isAnchoredOverlay(node, doc))
+        if (node.placement.kind !== "intent")
+        {
+            continue;
+        }
+
+        if (isAnchoredOverlay(node, doc) || isOverlayComponent(node.component))
         {
             continue;
         }
@@ -3849,7 +3886,7 @@ function packDocument(
         obstacles.push(rect);
     }
 
-    placeOverlays(doc, out);
+    placeOverlays(doc, out, geometry, isOverlayComponent);
 
     return out;
 }
@@ -3888,31 +3925,65 @@ function isAnchoredOverlay(node: CanvasNode, doc: CanvasDocument): boolean
  */
 function placeOverlays(
     doc: CanvasDocument,
-    out: Map<string, PackedRect>): void
+    out: Map<string, PackedRect>,
+    geometry: RegionGeometry,
+    isOverlayComponent: (component: string) => boolean): void
 {
     const perTarget = new Map<string, number>();
+    let free = 0;
 
     for (const node of Object.values(doc.nodes).slice()
         .sort((a, b) => a.id.localeCompare(b.id)))
     {
-        if (!isAnchoredOverlay(node, doc))
+        const anchored = isAnchoredOverlay(node, doc);
+
+        if (!anchored && !isOverlayComponent(node.component))
         {
             continue;
         }
 
-        const targetId = (node.anchor as { nodeId: string }).nodeId;
-        const target = out.get(targetId);
-
-        if (!target)
+        if (anchored)
         {
-            continue;
+            const targetId = (node.anchor as { nodeId: string }).nodeId;
+            const target = out.get(targetId);
+
+            if (target)
+            {
+                const index = perTarget.get(targetId) ?? 0;
+                perTarget.set(targetId, index + 1);
+                out.set(node.id, overlayRect(target, index));
+                continue;
+            }
         }
 
-        const index = perTarget.get(targetId) ?? 0;
-        perTarget.set(targetId, index + 1);
-
-        out.set(node.id, overlayRect(target, index));
+        // An unanchored overlay still floats rather than being packed: it
+        // marches along the top of the main region without pushing anything.
+        out.set(node.id, freeOverlayRect(geometry, free));
+        free += 1;
     }
+}
+
+/**
+ * Places an overlay that is not bound to any node.
+ *
+ * @param geometry - Region geometry for the current canvas width.
+ * @param index    - Position among unanchored overlays.
+ * @returns The overlay's rectangle.
+ */
+function freeOverlayRect(
+    geometry: RegionGeometry,
+    index: number): PackedRect
+{
+    const step = MARKER_SIZE + 8;
+    const perRow = Math.max(1, Math.floor(geometry.width.main / step));
+
+    return {
+        x: geometry.originX.main + (index % perRow) * step,
+        y: Math.floor(index / perRow) * step,
+        w: MARKER_SIZE,
+        h: MARKER_SIZE,
+        z: 50,
+    };
 }
 
 /**

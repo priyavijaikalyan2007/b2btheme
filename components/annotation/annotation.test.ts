@@ -69,7 +69,7 @@ describe("Annotation — lifecycle", () =>
         make({ label: "Largest table" });
 
         expect(host.querySelector(".annotation-marker")).toBeTruthy();
-        expect(host.querySelector("svg")).toBeNull();
+        expect(host.querySelector(".annotation-card")).toBeNull();
     });
 
     test("throws a literate error for a missing container", () =>
@@ -92,13 +92,12 @@ describe("Annotation — lifecycle", () =>
         expect(() => handle.destroy()).not.toThrow();
     });
 
-    test("renders an SVG rather than a canvas element", () =>
+    test("never uses a canvas element", () =>
     {
-        makeOpen();
+        makeOpen({ kind: "arrow" });
 
         // A canvas context would make the component resource-holding and
-        // change its budget class; an SVG keeps it trivial.
-        expect(host.querySelector("svg")).toBeTruthy();
+        // change its budget class.
         expect(host.querySelector("canvas")).toBeNull();
     });
 });
@@ -121,11 +120,21 @@ describe("Annotation — kinds", () =>
         expect(host.querySelector("line")).toBeTruthy();
     });
 
-    test("renders a highlight with a rect", () =>
+    test("renders a highlight as a translucent wash", () =>
     {
         makeOpen({ kind: "highlight" });
 
-        expect(host.querySelector("rect")).toBeTruthy();
+        expect(host.querySelector(".annotation-wash")).toBeTruthy();
+    });
+
+    test("renders a callout as an HTML card, not stretched SVG text", () =>
+    {
+        makeOpen({ kind: "callout", label: "Largest table" });
+
+        // SVG text inside a stretched viewBox distorts its glyphs, which is
+        // what made these look wrong.
+        expect(host.querySelector(".annotation-card")).toBeTruthy();
+        expect(host.querySelector("text")).toBeNull();
     });
 
     test("renders a callout with text", () =>
@@ -200,7 +209,7 @@ describe("Annotation — Surface contract", () =>
 
         handle.setState({ kind: "highlight" });
 
-        expect(host.querySelector("rect")).toBeTruthy();
+        expect(host.querySelector(".annotation-wash")).toBeTruthy();
     });
 
     test("on returns a working unsubscribe", () =>
@@ -277,22 +286,28 @@ describe("Annotation — anchoring", () =>
 
 describe("Annotation — accessibility", () =>
 {
-    test("exposes the label as an accessible name", () =>
+    test("the marker carries the label for assistive tech", () =>
     {
-        makeOpen({ label: "Revenue spike" });
+        make({ label: "Revenue spike" });
 
-        const svg = host.querySelector("svg");
-
-        expect(svg?.getAttribute("aria-label")).toContain("Revenue spike");
+        expect(host.querySelector(".annotation-marker")
+            ?.getAttribute("aria-label")).toBe("Revenue spike");
     });
 
-    test("an unlabelled annotation is hidden from assistive tech", () =>
+    test("an arrow with a label is named", () =>
     {
-        makeOpen({ kind: "highlight" });
+        makeOpen({ kind: "arrow", label: "Revenue spike" });
 
-        const svg = host.querySelector("svg");
+        expect(host.querySelector("svg")?.getAttribute("aria-label"))
+            .toContain("Revenue spike");
+    });
 
-        expect(svg?.getAttribute("aria-hidden")).toBe("true");
+    test("an unlabelled arrow is hidden from assistive tech", () =>
+    {
+        makeOpen({ kind: "arrow" });
+
+        expect(host.querySelector("svg")?.getAttribute("aria-hidden"))
+            .toBe("true");
     });
 });
 
@@ -324,7 +339,7 @@ describe("Annotation — collapse and expand", () =>
         (host.querySelector(".annotation-marker") as HTMLButtonElement).click();
 
         expect(handle.isExpanded()).toBe(true);
-        expect(host.querySelector("svg")).toBeTruthy();
+        expect(host.querySelector(".annotation-card")).toBeTruthy();
     });
 
     test("expanding emits on the toggle channel", () =>
@@ -370,7 +385,7 @@ describe("Annotation — collapse and expand", () =>
         handle.setExpanded(false);
 
         expect(host.querySelector(".annotation-marker")).toBeTruthy();
-        expect(host.querySelector("svg")).toBeNull();
+        expect(host.querySelector(".annotation-card")).toBeNull();
     });
 
     test("state survives a collapse and re-expand", () =>

@@ -32,6 +32,7 @@ export const ANNOTATION_MANIFEST: CapabilityManifest =
     name: "annotation",
     factory: "createAnnotation",
     factoryStyle: "container-first",
+    presentation: "overlay",
     label: "Annotation",
     icon: "bi-pencil",
     category: "annotation",

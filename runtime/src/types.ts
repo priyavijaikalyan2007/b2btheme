@@ -226,6 +226,20 @@ export interface CapabilityManifest
     readonly containerOption?: string;
 
     /**
+     * How the component occupies the canvas.
+     *
+     * `framed` (default) is an ordinary widget: title bar, chrome, packed into
+     * the layout, treated as an obstacle. `overlay` is a mark ON the canvas —
+     * no chrome, never an obstacle, never displaces anything.
+     *
+     * This is a property of the COMPONENT, not of its anchor. An annotation is
+     * an overlay whether or not it is bound to a node; rendering one as a
+     * framed widget produced a titled box containing a dot, which is nobody's
+     * idea of an annotation.
+     */
+    readonly presentation?: "framed" | "overlay";
+
+    /**
      * How the component attaches to its host.
      *
      * `factoryStyle` describes ARGUMENT ORDER; this describes ATTACHMENT, and

@@ -174,6 +174,7 @@
     // nothing.
     var SCRIPT = [
         {
+            key: "note",
             match: /note|remind|remember/i,
             label: "leave a note on the orders table",
             build: function ()
@@ -185,6 +186,7 @@
             }
         },
         {
+            key: "annotation",
             match: /highlight|annotate|call ?out/i,
             label: "call out the orders table",
             build: function (doc)
@@ -206,6 +208,7 @@
             }
         },
         {
+            key: "schema",
             match: /\b(show|list|browse|what|which)\b.*\b(table|schema|database)\b/i,
             label: "show me the tables in the sales database",
             build: function (doc)
@@ -467,8 +470,17 @@
 
             if (ops === null)
             {
-                setText(explainEl, "No canned session matches “" + utterance
-                    + "”. Try one of the suggested prompts.");
+                // Every turn must produce a reply. A prompt that silently does
+                // nothing is indistinguishable from a broken demo — which is
+                // exactly how this read when the annotation prompt fired
+                // before the grid it annotates existed.
+                var miss = "Nothing to do for “" + utterance
+                    + "” — either no canned session matches, or the "
+                    + "prompt needs something on the canvas first. An "
+                    + "annotation needs a grid to annotate.";
+
+                setText(explainEl, miss);
+                addTurn("assistant", miss);
                 return;
             }
 
@@ -550,7 +562,16 @@
         //    drift from what actually works.
         var promptBar = document.getElementById("dui-prompts");
 
-        SCRIPT.forEach(function (entry)
+        // Matcher order puts the most specific pattern first; the narrative
+        // order a visitor should click in is different. Conflating the two made
+        // the buttons run the demo backwards — the annotation prompt fired
+        // before the grid it annotates existed.
+        var NARRATIVE = ["schema", "note", "annotation"];
+
+        NARRATIVE.map(function (key)
+        {
+            return SCRIPT.filter(function (e) { return e.key === key; })[0];
+        }).filter(Boolean).forEach(function (entry)
         {
             var btn = document.createElement("button");
             btn.type = "button";

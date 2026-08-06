@@ -122,6 +122,13 @@ function validateIdentity(
         issues.push(enumIssue("containerAs", m.containerAs, ["element", "id"]));
     }
 
+    if (m.presentation !== undefined
+        && m.presentation !== "framed" && m.presentation !== "overlay")
+    {
+        issues.push(enumIssue("presentation", m.presentation,
+            ["framed", "overlay"]));
+    }
+
     if (m.mountMethod !== undefined
         && !MOUNT_METHODS.includes(m.mountMethod as string))
     {

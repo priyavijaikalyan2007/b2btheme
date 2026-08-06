@@ -14,73 +14,144 @@
     position: relative;
     width: 100%;
     height: 100%;
-    // The expanded body never swallows clicks meant for what it annotates;
-    // only the marker itself is interactive.
+    // Only the marker and the card are interactive; the rest lets clicks
+    // through to whatever is being annotated.
     pointer-events: none;
-}
-
-// ============================================================================
-// RESTING STATE — THE MARKER
-// ============================================================================
-//
-// An annotation is a mark ON something, so its resting state is a small dot,
-// not a callout. Twenty expanded callouts would bury exactly the content they
-// annotate.
-
-.annotation-collapsed
-{
-    // The expanded body escapes this box, so it must not be clipped.
     overflow: visible;
 }
+
+// ============================================================================
+// RESTING STATE — THE PIN
+// ============================================================================
+//
+// Modelled on the CommentOverlay pin (a solid filled circle that lifts on
+// hover) rather than an outlined dot. An annotation at rest should read as a
+// deliberate mark, not as an empty control.
 
 .annotation-marker
 {
     pointer-events: auto;
-    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 22px;
     height: 22px;
     padding: 0;
-    border: 1px solid currentColor;
+    border: none;
     border-radius: 50%;
-    background-color: var(--theme-surface, #{$gray-50});
+    background-color: currentColor;
     color: inherit;
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgba($gray-900, 0.2);
+    box-shadow: 0 1px 3px rgba($gray-900, 0.3);
+    transition: transform 150ms ease, box-shadow 150ms ease;
 
-    &:hover,
-    &:focus-visible
+    // The glyph sits on the filled disc, so it takes the surface colour.
+    color: var(--theme-surface, #{$gray-50});
+
+    &:hover
     {
-        background-color: currentColor;
+        transform: scale(1.15);
+        box-shadow: 0 0 8px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.28));
     }
 
-    &:hover::first-letter,
-    &:focus-visible::first-letter
+    &:focus-visible
     {
-        color: var(--theme-surface, #{$gray-50});
+        outline: none;
+        box-shadow: 0 0 0 3px rgba($blue-600, 0.3);
     }
 }
 
-// Expanded content escapes the marker's footprint and floats above the canvas.
+// The disc itself is the annotation's colour; the palette classes set
+// `color`, so the marker paints its background from a sibling custom property.
+.annotation-amber .annotation-marker { background-color: $yellow-500; }
+.annotation-blue  .annotation-marker { background-color: $blue-600; }
+.annotation-green .annotation-marker { background-color: $green-600; }
+.annotation-red   .annotation-marker { background-color: $red-600; }
+.annotation-grey  .annotation-marker { background-color: $gray-600; }
+
+// ============================================================================
+// EXPANDED — A POPOVER CARD
+// ============================================================================
+//
+// Same construction as the CommentOverlay thread popover: surface background,
+// hairline border, theme shadow. Real HTML in the theme font, because SVG text
+// inside a stretched viewBox distorts.
+
 .annotation-expanded
 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 220px;
-    height: 150px;
-    overflow: visible;
+    z-index: 1;
+}
+
+.annotation-card
+{
     pointer-events: auto;
-    filter: drop-shadow(0 2px 6px rgba($gray-900, 0.25));
+    position: relative;
+    min-width: 160px;
+    max-width: 260px;
+    padding: $spacer * 0.5 $spacer * 0.625;
+    background-color: var(--theme-surface, #{$gray-50});
+    border: 1px solid var(--theme-border, #{$gray-300});
+    border-left: 3px solid currentColor;
+    border-radius: $radius-affordance;
+    box-shadow: var(--theme-shadow-md, 0 4px 12px rgba($gray-900, 0.18));
+}
+
+.annotation-card-text
+{
+    color: var(--theme-text, #{$gray-900});
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+    word-break: break-word;
+}
+
+// A small tail anchoring the card to what it marks.
+.annotation-card-tail
+{
+    position: absolute;
+    left: 14px;
+    bottom: -6px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--theme-surface, #{$gray-50});
+    border-right: 1px solid var(--theme-border, #{$gray-300});
+    border-bottom: 1px solid var(--theme-border, #{$gray-300});
+    transform: rotate(45deg);
+}
+
+// ============================================================================
+// HIGHLIGHT AND ARROW
+// ============================================================================
+
+.annotation-wash
+{
+    pointer-events: auto;
+    position: relative;
+    width: 200px;
+    height: 90px;
+    background-color: currentColor;
+    opacity: 0.18;
+    border: 1px solid currentColor;
+    border-radius: $radius-affordance;
+}
+
+.annotation-arrow
+{
+    pointer-events: auto;
+    position: relative;
+    width: 120px;
+    height: 90px;
 }
 
 .annotation-svg
 {
-    position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
     display: block;
@@ -91,17 +162,11 @@
 {
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.5;
-    // The viewBox is stretched to the node box, so stroke width must be
-    // exempted from that scaling or horizontal and vertical edges end up
-    // visibly different weights.
+    stroke-width: 2;
+    // The viewBox is stretched, so stroke width must be exempted or horizontal
+    // and vertical edges end up different weights.
     vector-effect: non-scaling-stroke;
-    stroke-linejoin: round;
-}
-
-.annotation-tail
-{
-    fill: var(--theme-surface, #{$gray-50});
+    stroke-linecap: round;
 }
 
 .annotation-head
@@ -110,35 +175,23 @@
     stroke: none;
 }
 
-// The label is real HTML, not SVG text: inside a stretched viewBox glyphs
-// distort, which is most of why these looked wrong. Here it uses the theme
-// font at a real size and wraps normally.
-.annotation-label
+.annotation-caption
 {
     position: absolute;
-    top: 0;
     left: 0;
-    right: 0;
-    height: 72%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $spacer * 0.5;
+    bottom: -18px;
     color: var(--theme-text, #{$gray-900});
-    font-size: $font-size-sm;
+    font-size: $font-size-xs;
     font-weight: $font-weight-medium;
-    line-height: $line-height-base;
-    text-align: center;
-    overflow: hidden;
+    white-space: nowrap;
 }
 
 // ============================================================================
 // PALETTE
 // ============================================================================
 //
-// currentColor drives every stroke and fill, so one rule per colour is enough.
-// Theme tokens first, palette values as the fallback, so an annotation follows
-// the theme where one is defined.
+// currentColor drives strokes, the card's accent edge and the wash, so one
+// rule per colour is enough. Theme tokens first, palette values as fallback.
 
 .annotation-amber { color: var(--theme-warning, #{$yellow-500}); }
 .annotation-blue  { color: var(--theme-accent, #{$blue-600}); }
@@ -146,23 +199,12 @@
 .annotation-red   { color: var(--theme-danger, #{$red-600}); }
 .annotation-grey  { color: var(--theme-text-muted, #{$gray-600}); }
 
-// A callout reads as a filled card so its label stays legible over content.
-.annotation-kind-callout .annotation-shape
-{
-    fill: var(--theme-surface, #{$gray-50});
-}
-
-// A highlight is a translucent wash rather than an outline.
-.annotation-kind-highlight .annotation-shape
-{
-    fill: currentColor;
-    fill-opacity: 0.14;
-}
-
 @media (prefers-reduced-motion: reduce)
 {
-    .annotation-svg
+    .annotation-marker
     {
         transition: none;
+
+        &:hover { transform: none; }
     }
 }

@@ -123,10 +123,14 @@ interface RuntimeApi
     fold(patches: readonly CanvasPatch[]): CanvasDocument;
     packDocument(
         doc: CanvasDocument,
-        options?: { width?: number }): Map<string, PackedRect>;
+        options?: {
+            width?: number;
+            isOverlay?: (component: string) => boolean;
+        }): Map<string, PackedRect>;
     getManifest(component: string): (FactoryShape & {
         label: string;
         defaultOptions: Record<string, unknown>;
+        presentation?: string;
     }) | null;
     lookupFactory(
         component: string,
@@ -485,6 +489,8 @@ function build(
         // mounted, correct, and invisible, with nothing logged.
         const packed = rt().packDocument(doc, {
             width: root.clientWidth || undefined,
+            isOverlay: (component: string) =>
+                rt().getManifest(component)?.presentation === "overlay",
         });
 
         removeDepartedFrames();
@@ -589,6 +595,14 @@ function build(
      */
     function isOverlay(node: CanvasNode): boolean
     {
+        // Presentation is a property of the COMPONENT. An annotation is an
+        // overlay whether or not it is bound to a node; rendering one as a
+        // framed widget produced a titled box containing a dot.
+        if (rt().getManifest(node.component)?.presentation === "overlay")
+        {
+            return true;
+        }
+
         return node.anchor?.kind === "node"
             && Boolean(doc.nodes[(node.anchor as { nodeId: string }).nodeId]);
     }

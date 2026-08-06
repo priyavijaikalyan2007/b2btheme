@@ -73,8 +73,9 @@
                 <button class="btn btn-sm btn-primary" id="dc-annot">Add annotation</button>
                 <button class="btn btn-sm btn-outline-secondary" id="dc-clear">Clear</button>
                 <span class="small text-muted ms-2">
-                    Drag a panel by its title bar — it is promoted to fixed coordinates and the
-                    packer flows around it.
+                    Add a note first, then annotate it — the annotation anchors to the note,
+                    overlays it as a marker, and displaces nothing. Click a marker to expand
+                    it. Drag a panel by its title bar to pin it to fixed coordinates.
                 </span>
             </div>
 
@@ -162,7 +163,7 @@
                 }, null, 2);
             }
 
-            function add(component, options, size)
+            function add(component, options, size, anchor)
             {
                 seq += 1;
                 canvas.apply({
@@ -175,13 +176,25 @@
                         options: options,
                         source: null,
                         state: {},
-                        anchor: { kind: "canvas" },
+                        anchor: anchor || { kind: "canvas" },
                         provenance: { turnId: "t" + seq, lastTouched: seq },
                         pinned: false,
                         grants: []
                     } }]
                 });
                 render();
+            }
+
+            /** The most recent non-overlay node, for an annotation to mark. */
+            function lastFramedNode()
+            {
+                var nodes = canvas.getDocument().nodes;
+                var ids = Object.keys(nodes).filter(function (id)
+                {
+                    return nodes[id].component !== "annotation";
+                });
+
+                return ids.length > 0 ? ids[ids.length - 1] : null;
             }
 
             document.getElementById("dc-note").addEventListener("click", function()
@@ -191,7 +204,15 @@
 
             document.getElementById("dc-annot").addEventListener("click", function()
             {
-                add("annotation", { kind: "callout", label: "Callout " + (seq + 1) }, "compact");
+                // An annotation MARKS something. Anchor it to the most recent
+                // node so it overlays that node rather than floating loose;
+                // an unanchored annotation is the exception, not the norm.
+                var target = lastFramedNode();
+
+                add("annotation",
+                    { kind: "callout", label: "Callout " + (seq + 1) },
+                    "compact",
+                    target ? { kind: "node", nodeId: target } : null);
             });
 
             document.getElementById("dc-clear").addEventListener("click", function()
