@@ -167,12 +167,16 @@ test.describe("Dynamic UI demo", () =>
 
         // Resting state: a marker, not a callout burying the grid.
         await expect(page.locator(".annotation-marker")).toHaveCount(1);
-        await expect(page.locator(".annotation-card")).toHaveCount(0);
+
+        // The card stays mounted and hidden — rebuilding it under the pointer
+        // caused expand/collapse to oscillate — so assert the STATE, and that
+        // the content is not visible yet.
+        await expect(page.locator(".annotation-collapsed")).toHaveCount(1);
+        await expect(page.getByText("Largest table")).toBeHidden();
 
         await page.locator(".annotation-marker").click();
 
-        // Expanded state is an HTML popover card, not stretched SVG.
-        await expect(page.locator(".annotation-card")).toHaveCount(1);
+        await expect(page.locator(".annotation-expanded")).toHaveCount(1);
         await expect(page.getByText("Largest table")).toBeVisible();
     });
 

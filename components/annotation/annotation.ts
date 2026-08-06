@@ -467,6 +467,21 @@ function build(
 
     const root = document.createElement("div");
     root.className = `${CLS} ${CLS}-${color}`;
+
+    // The pin is permanent, like CommentOverlay's. The body opens beside it.
+    const markerEl = document.createElement("button");
+    markerEl.type = "button";
+    markerEl.className = `${CLS}-marker`;
+    markerEl.addEventListener("click", (e) =>
+    {
+        e.stopPropagation();
+        setExpandedState(!expanded);
+    });
+
+    const bodyEl = elementWithClass("div", `${CLS}-body`);
+
+    root.appendChild(markerEl);
+    root.appendChild(bodyEl);
     host.appendChild(root);
 
     repaint();
@@ -475,14 +490,18 @@ function build(
     /** Replaces the SVG with one drawn for the current state. */
     function repaint(): void
     {
-        if (!expanded)
-        {
-            root.replaceChildren(buildMarker());
-            applyClasses();
-            return;
-        }
+        // Content only. The marker element is NEVER rebuilt — replacing the
+        // element under the pointer made pointerleave fire, which collapsed,
+        // which put the marker back under the pointer, which re-expanded. A
+        // self-sustaining flicker.
+        bodyEl.replaceChildren(buildBody(kind, label));
+        markerEl.textContent = MARKER_GLYPH[kind];
 
-        root.replaceChildren(buildBody(kind, label));
+        const name = label.length > 0 ? label : `${kind} annotation`;
+        markerEl.setAttribute("aria-label", name);
+        markerEl.setAttribute("title", name);
+        markerEl.setAttribute("aria-expanded", String(expanded));
+
         applyClasses();
     }
 
@@ -505,32 +524,11 @@ function build(
     }
 
     /**
-     * Builds the resting-state marker: a small, focusable dot carrying the
-     * label as its accessible name and tooltip, so the annotation is readable
-     * without expanding anything.
+     * Wires hover-to-expand with a dwell, and pointer-out to collapse.
+     *
+     * Handlers live on the ROOT and the marker persists across states, so the
+     * pointer never loses its target mid-interaction.
      */
-    function buildMarker(): HTMLElement
-    {
-        const marker = document.createElement("button");
-        marker.type = "button";
-        marker.className = `${CLS}-marker`;
-        marker.textContent = MARKER_GLYPH[kind];
-        marker.setAttribute("aria-expanded", "false");
-
-        const name = label.length > 0 ? label : `${kind} annotation`;
-        marker.setAttribute("aria-label", name);
-        marker.setAttribute("title", name);
-
-        marker.addEventListener("click", (e) =>
-        {
-            e.stopPropagation();
-            setExpandedState(true);
-        });
-
-        return marker;
-    }
-
-    /** Wires hover-to-expand with a dwell, and click-away to collapse. */
     function attachHoverBehaviour(): void
     {
         root.addEventListener("pointerenter", () =>
@@ -575,7 +573,8 @@ function build(
         }
 
         expanded = next;
-        repaint();
+        applyClasses();
+        markerEl.setAttribute("aria-expanded", String(expanded));
         emit("toggle", () => options.onToggle?.(expanded), expanded);
     }
 

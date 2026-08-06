@@ -34,6 +34,59 @@
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/annotation/annotation.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <style>
+    /* A slot is just somewhere for an annotation to sit; the annotation itself
+       positions its pin at the slot's top-left. */
+    .annot-slot
+    {
+        position: relative;
+        width: 24px;
+        height: 24px;
+    }
+
+    .annot-demo-target
+    {
+        position: relative;
+        max-width: 620px;
+        padding: 14px 16px;
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    .annot-pin
+    {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+    }
+
+    /* Each kind gets its own row with room for the expanded body, which is
+       ~260px wide — adjacent slots made them collide. */
+    .annot-kinds
+    {
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+    }
+
+    .annot-kind-row
+    {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-height: 110px;
+    }
+
+    .annot-kind-name
+    {
+        width: 72px;
+        flex-shrink: 0;
+        font-size: 12px;
+        color: var(--bs-secondary-color);
+        padding-top: 3px;
+    }
+    </style>
 </head>
 <body class="demo-shell-body">
 
@@ -55,28 +108,63 @@
         <div class="demo-section">
             <h2>Annotation</h2>
             <p class="text-muted mb-3">
-                Callout, arrow and highlight overlays for the dynamic canvas. Inline SVG —
-                no canvas context, no observer, no engine — so an annotation stays trivial
-                under the mount budget.
+                A mark <em>on</em> something, not a widget beside it. An annotation overlays
+                what it annotates, never displaces it, and rests as a small pin — twenty
+                expanded callouts would bury exactly the content they mark.
+            </p>
+            <p class="text-muted small mb-4">
+                <i class="bi bi-info-circle"></i>
+                Click a pin to expand it, or rest the pointer on one for 400ms. Sweeping
+                across them opens none. The pin never disappears — the card opens beside it.
             </p>
 
+            <h3 class="h6">Resting state</h3>
+            <p class="text-muted small mb-2">
+                Five annotations marking a paragraph. This is what a canvas full of them
+                looks like: present, countable, and out of the way.
+            </p>
+            <div class="annot-demo-target mb-4">
+                <p class="mb-0">
+                    Orders grew 24% quarter over quarter, driven almost entirely by the
+                    enterprise tier. Self-serve conversion was flat. The EMEA region
+                    under-performed against plan for the third consecutive quarter.
+                </p>
+                <div id="an-pin-1" class="annot-pin" style="top: 6px; left: 40%;"></div>
+                <div id="an-pin-2" class="annot-pin" style="top: 30px; left: 12%;"></div>
+                <div id="an-pin-3" class="annot-pin" style="top: 30px; left: 62%;"></div>
+                <div id="an-pin-4" class="annot-pin" style="top: 54px; left: 30%;"></div>
+                <div id="an-pin-5" class="annot-pin" style="top: 54px; left: 78%;"></div>
+            </div>
+
             <h3 class="h6">Kinds</h3>
-            <div class="d-flex flex-wrap gap-4 mb-4">
-                <div><div id="an-callout"   style="width: 200px; height: 140px;"></div>
-                     <div class="small text-muted text-center">callout</div></div>
-                <div><div id="an-arrow"     style="width: 140px; height: 140px;"></div>
-                     <div class="small text-muted text-center">arrow</div></div>
-                <div><div id="an-highlight" style="width: 200px; height: 140px;"></div>
-                     <div class="small text-muted text-center">highlight</div></div>
+            <p class="text-muted small mb-2">
+                Shown expanded so you can see each one. Click a pin to collapse it again.
+            </p>
+            <div class="annot-kinds mb-4">
+                <div class="annot-kind-row">
+                    <span class="annot-kind-name">callout</span>
+                    <div id="an-callout" class="annot-slot"></div>
+                </div>
+                <div class="annot-kind-row">
+                    <span class="annot-kind-name">arrow</span>
+                    <div id="an-arrow" class="annot-slot"></div>
+                </div>
+                <div class="annot-kind-row">
+                    <span class="annot-kind-name">highlight</span>
+                    <div id="an-highlight" class="annot-slot"></div>
+                </div>
             </div>
 
             <h3 class="h6">Colours</h3>
-            <div class="d-flex flex-wrap gap-3 mb-4">
-                <div id="an-amber" style="width: 150px; height: 110px;"></div>
-                <div id="an-blue"  style="width: 150px; height: 110px;"></div>
-                <div id="an-green" style="width: 150px; height: 110px;"></div>
-                <div id="an-red"   style="width: 150px; height: 110px;"></div>
-                <div id="an-grey"  style="width: 150px; height: 110px;"></div>
+            <p class="text-muted small mb-2">
+                Collapsed, as they rest. Hover or click any of them.
+            </p>
+            <div class="d-flex flex-wrap gap-4 mb-5" style="height: 30px;">
+                <div id="an-amber" class="annot-slot"></div>
+                <div id="an-blue"  class="annot-slot"></div>
+                <div id="an-green" class="annot-slot"></div>
+                <div id="an-red"   class="annot-slot"></div>
+                <div id="an-grey"  class="annot-slot"></div>
             </div>
 
             <h3 class="h6">Click-through</h3>
@@ -84,11 +172,12 @@
                 An overlay must never swallow a click meant for the content beneath it.
                 The annotation below sits on top of the button — the button still works.
             </p>
-            <div style="position: relative; width: 260px; height: 120px;">
+            <div style="position: relative; width: 320px; height: 80px;">
                 <button class="btn btn-primary" id="an-under"
-                        style="position: absolute; inset: 30px 60px;">Click me</button>
+                        style="position: absolute; left: 0; top: 20px;
+                               width: 220px;">Click me</button>
                 <div id="an-over"
-                     style="position: absolute; inset: 0; pointer-events: none;"></div>
+                     style="position: absolute; left: 60px; top: 14px;"></div>
             </div>
             <div class="small text-muted mt-2" id="an-clicks">Clicks: 0</div>
         </div>
@@ -115,9 +204,34 @@
             });
         }
 
-        createAnnotation("an-callout",   { kind: "callout", label: "Largest table" });
-        createAnnotation("an-arrow",     { kind: "arrow", label: "Look here" });
-        createAnnotation("an-highlight", { kind: "highlight", label: "Region of interest" });
+        // Five pins marking a paragraph — the resting state of a real canvas.
+        var MARKS = [
+            { id: "an-pin-1", label: "Verify against the finance cut", color: "amber" },
+            { id: "an-pin-2", label: "Enterprise tier only", color: "blue" },
+            { id: "an-pin-3", label: "Flat since March", color: "grey" },
+            { id: "an-pin-4", label: "Third quarter in a row", color: "red" },
+            { id: "an-pin-5", label: "Plan was revised in Q2", color: "green" }
+        ];
+
+        MARKS.forEach(function(mark)
+        {
+            createAnnotation(mark.id, {
+                kind: "callout",
+                label: mark.label,
+                color: mark.color
+            });
+        });
+
+        // Expanded so each kind is visible without interaction.
+        createAnnotation("an-callout", {
+            kind: "callout", label: "Largest table", expanded: true
+        });
+        createAnnotation("an-arrow", {
+            kind: "arrow", label: "Look here", expanded: true
+        });
+        createAnnotation("an-highlight", {
+            kind: "highlight", label: "Region of interest", expanded: true
+        });
 
         ["amber", "blue", "green", "red", "grey"].forEach(function(color)
         {

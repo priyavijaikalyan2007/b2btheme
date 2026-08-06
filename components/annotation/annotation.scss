@@ -34,6 +34,7 @@
     position: absolute;
     top: 0;
     left: 0;
+    z-index: 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -82,12 +83,20 @@
 // hairline border, theme shadow. Real HTML in the theme font, because SVG text
 // inside a stretched viewBox distorts.
 
-.annotation-expanded
+.annotation-body
 {
     position: absolute;
+    // Offset clear of the 22px pin so the pin stays visible and hoverable —
+    // it is the pointer's stable target, which is what stops expand/collapse
+    // from oscillating.
     top: 0;
-    left: 0;
+    left: 28px;
     z-index: 1;
+}
+
+.annotation-collapsed .annotation-body
+{
+    display: none;
 }
 
 .annotation-card

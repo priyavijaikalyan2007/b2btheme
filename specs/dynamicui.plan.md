@@ -830,6 +830,36 @@ screenshots to `test-results/review/` for human judgement.
 
 ---
 
+### 2026-08-06 — The flicker was self-sustaining
+
+Reported: on the standalone demo page annotations sat in the top-left corner of empty boxes,
+and flickered badly. Both traced to one line.
+
+`repaint()` called `replaceChildren()` on every state change, **destroying the element the
+pointer was on**. The loop: pointer rests on the pin → 400ms → expand → the pin is destroyed →
+`pointerleave` fires → 150ms → collapse → a new pin appears under the pointer →
+`pointerenter` → 400ms → expand. Forever.
+
+The fix is also the better design, and CommentOverlay had it already: **the pin is permanent.**
+It is built once and never rebuilt; the card opens beside it. The pointer therefore always has
+a stable target, and expansion is a class toggle rather than a DOM rebuild. The card stays
+mounted and hidden, which is why the collapsed-state tests now assert the state CLASS rather
+than the card's absence.
+
+The corner positioning was the demo page, not the component: it was written for the old
+always-expanded rendering, so 200×140 boxes each held one small pin. Rebuilt around the pin
+model — five pins marking a real paragraph to show the resting state, then each kind on its own
+row with room for its body, since an expanded card is ~260px wide and adjacent 24px slots made
+them collide.
+
+A browser test now samples expansion state eight times while the pointer sits still and fails
+on any change. It would have caught this immediately; nothing in jsdom could, because the
+oscillation is driven by real pointer events against real layout.
+
+**Verified:** 19/19 Playwright; 4741 unit tests across 140 files; typechecks clean; build 0.
+
+---
+
 ## Current Stats
 
 _Last verified 2026-08-03._
@@ -839,7 +869,7 @@ _Last verified 2026-08-03._
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
 | Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4739 passing across 140 files, plus 16 Playwright |
+| Full suite | 4741 passing across 140 files, plus 19 Playwright |
 | Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |

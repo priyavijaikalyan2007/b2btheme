@@ -183,3 +183,85 @@ test.describe("Prompt order matches the narrative", () =>
         });
     });
 });
+
+test.describe("Annotation standalone page", () =>
+{
+    test("hovering a pin does not oscillate", async ({ page }) =>
+    {
+        await page.goto("/demo/components/annotation.html");
+        await page.waitForTimeout(400);
+
+        const pin = page.locator("#an-pin-1 .annotation-marker");
+        const root = page.locator("#an-pin-1 .annotation");
+
+        await pin.hover();
+
+        // Rebuilding the element under the pointer used to fire pointerleave,
+        // which collapsed, which put the marker back under the pointer, which
+        // re-expanded. Sample the state repeatedly: it must settle, not flip.
+        await page.waitForTimeout(700);
+
+        const samples: boolean[] = [];
+
+        for (let i = 0; i < 8; i += 1)
+        {
+            samples.push(await root.evaluate === undefined
+                ? false
+                : (await root.getAttribute("class") ?? "")
+                    .includes("annotation-expanded"));
+            await page.waitForTimeout(120);
+        }
+
+        const flips = samples.filter((v, i) => i > 0 && v !== samples[i - 1]).length;
+
+        expect(flips,
+            `expansion state changed ${flips} times while the pointer sat `
+            + `still: ${samples.join(",")}`)
+            .toBe(0);
+
+        expect(samples[0], "a sustained hover should have expanded it")
+            .toBe(true);
+    });
+
+    test("the pin stays put and the card opens beside it", async ({ page }) =>
+    {
+        await page.goto("/demo/components/annotation.html");
+        await page.waitForTimeout(400);
+
+        const pin = page.locator("#an-pin-1 .annotation-marker");
+        const before = await pin.boundingBox();
+
+        await pin.click();
+        await page.waitForTimeout(200);
+
+        const after = await pin.boundingBox();
+
+        // The pin is the pointer's stable target; it must not move or vanish.
+        // A couple of pixels of slack for the hover scale, which is intended.
+        expect(Math.abs(after!.x - before!.x),
+            "the pin moved when expanded").toBeLessThan(3);
+        expect(Math.abs(after!.y - before!.y),
+            "the pin moved when expanded").toBeLessThan(3);
+
+        const card = await page.locator("#an-pin-1 .annotation-card")
+            .boundingBox();
+
+        expect(card!.x, "the card should open beside the pin")
+            .toBeGreaterThan(before!.x);
+
+        await page.screenshot({ path: `${SHOTS}/annotation-standalone.png` });
+    });
+
+    test("five pins rest without covering the text they mark", async ({ page }) =>
+    {
+        await page.goto("/demo/components/annotation.html");
+        await page.waitForTimeout(400);
+
+        await expect(page.locator(".annot-demo-target .annotation-marker"))
+            .toHaveCount(5);
+
+        // None expanded at rest.
+        await expect(page.locator(".annot-demo-target .annotation-expanded"))
+            .toHaveCount(0);
+    });
+});

@@ -68,8 +68,24 @@ describe("Annotation — lifecycle", () =>
     {
         make({ label: "Largest table" });
 
+        // The card lives in the DOM but is hidden by the collapsed class.
+        // Keeping it mounted is deliberate: rebuilding the element under the
+        // pointer made expand/collapse oscillate.
         expect(host.querySelector(".annotation-marker")).toBeTruthy();
-        expect(host.querySelector(".annotation-card")).toBeNull();
+        expect(host.querySelector(".annotation-collapsed")).toBeTruthy();
+        expect(host.querySelector(".annotation-expanded")).toBeNull();
+    });
+
+    test("the marker element survives expand and collapse", () =>
+    {
+        const handle = make({ label: "x" });
+        const before = host.querySelector(".annotation-marker");
+
+        handle.setExpanded(true);
+        handle.setExpanded(false);
+
+        // Same node, not a replacement — this is what prevents the flicker.
+        expect(host.querySelector(".annotation-marker")).toBe(before);
     });
 
     test("throws a literate error for a missing container", () =>
@@ -339,7 +355,19 @@ describe("Annotation — collapse and expand", () =>
         (host.querySelector(".annotation-marker") as HTMLButtonElement).click();
 
         expect(handle.isExpanded()).toBe(true);
+        expect(host.querySelector(".annotation-expanded")).toBeTruthy();
         expect(host.querySelector(".annotation-card")).toBeTruthy();
+    });
+
+    test("clicking the marker again collapses it", () =>
+    {
+        const handle = make({ label: "x" });
+        const marker = host.querySelector(".annotation-marker") as HTMLButtonElement;
+
+        marker.click();
+        marker.click();
+
+        expect(handle.isExpanded()).toBe(false);
     });
 
     test("expanding emits on the toggle channel", () =>
@@ -384,8 +412,9 @@ describe("Annotation — collapse and expand", () =>
 
         handle.setExpanded(false);
 
+        expect(handle.isExpanded()).toBe(false);
         expect(host.querySelector(".annotation-marker")).toBeTruthy();
-        expect(host.querySelector(".annotation-card")).toBeNull();
+        expect(host.querySelector(".annotation-collapsed")).toBeTruthy();
     });
 
     test("state survives a collapse and re-expand", () =>
