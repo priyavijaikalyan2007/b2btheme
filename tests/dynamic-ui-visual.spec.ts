@@ -205,10 +205,8 @@ test.describe("Annotation standalone page", () =>
 
         for (let i = 0; i < 8; i += 1)
         {
-            samples.push(await root.evaluate === undefined
-                ? false
-                : (await root.getAttribute("class") ?? "")
-                    .includes("annotation-expanded"));
+            samples.push((await root.getAttribute("class") ?? "")
+                .includes("annotation-expanded"));
             await page.waitForTimeout(120);
         }
 
@@ -250,6 +248,56 @@ test.describe("Annotation standalone page", () =>
             .toBeGreaterThan(before!.x);
 
         await page.screenshot({ path: `${SHOTS}/annotation-standalone.png` });
+    });
+
+    test("the editing examples do not overlap each other", async ({ page }) =>
+    {
+        await page.goto("/demo/components/annotation.html");
+        await page.waitForTimeout(400);
+
+        // Two expanded cards laid out in one flex ROW put the second pin
+        // underneath the first card. Cards open sideways, so examples must
+        // stack. Nothing but a real box measurement can see this.
+        const first = await page.locator("#an-edit .annotation-card")
+            .boundingBox();
+        const second = await page.locator("#an-readonly .annotation-card")
+            .boundingBox();
+
+        const overlaps = first!.x < second!.x + second!.width
+            && second!.x < first!.x + first!.width
+            && first!.y < second!.y + second!.height
+            && second!.y < first!.y + first!.height;
+
+        expect(overlaps,
+            `the editing cards overlap: ${JSON.stringify(first)} vs `
+            + `${JSON.stringify(second)}`).toBe(false);
+
+        await page.screenshot({
+            path: `${SHOTS}/annotation-editing.png`, fullPage: true,
+        });
+    });
+
+    test("typing in a callout reports through the change channel",
+        async ({ page }) =>
+    {
+        await page.goto("/demo/components/annotation.html");
+        await page.waitForTimeout(400);
+
+        const field = page.locator("#an-edit .annotation-card-input");
+
+        await field.fill("Revenue spike");
+
+        await expect(page.locator("#an-edit-log span"))
+            .toHaveText("Revenue spike");
+
+        // The caret must survive the edit — a repaint would drop focus.
+        await expect(field).toBeFocused();
+
+        // read-only renders text, not a field.
+        await expect(page.locator("#an-readonly .annotation-card-input"))
+            .toHaveCount(0);
+        await expect(page.locator("#an-readonly .annotation-card"))
+            .toContainText("Set by the application");
     });
 
     test("five pins rest without covering the text they mark", async ({ page }) =>

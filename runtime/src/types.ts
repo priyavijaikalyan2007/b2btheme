@@ -332,7 +332,20 @@ export type Placement =
 /** What a node is attached to. */
 export type Anchor =
     | { readonly kind: "canvas" }
-    | { readonly kind: "node"; readonly nodeId: string }
+    | {
+        readonly kind: "node";
+        readonly nodeId: string;
+
+        /**
+         * Where within the target to attach, as fractions of its box
+         * (0..1 from its top-left). Omitted means the top-right corner, which
+         * is the right default for "this node" but wrong for "this cell".
+         *
+         * This is what lets an annotation mark a PLACE rather than a whole
+         * node. A canvas placement gesture supplies it from the pointer.
+         */
+        readonly spot?: { readonly x: number; readonly y: number };
+    }
     | { readonly kind: "entity"; readonly entityId: string };
 
 /**

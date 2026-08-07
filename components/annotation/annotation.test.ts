@@ -155,9 +155,12 @@ describe("Annotation — kinds", () =>
 
     test("renders a callout with text", () =>
     {
+        // Editable by default, so the text lives in the editor's value.
         makeOpen({ kind: "callout", label: "Look here" });
 
-        expect(host.textContent).toContain("Look here");
+        expect((host.querySelector(
+            ".annotation-card-input") as HTMLTextAreaElement).value)
+            .toBe("Look here");
     });
 
     test("falls back to callout for an unknown kind", () =>
@@ -168,6 +171,16 @@ describe("Annotation — kinds", () =>
     test("label is set as text, never as markup", () =>
     {
         makeOpen({ label: "<b>bold</b>" });
+
+        expect(host.querySelector("b")).toBeNull();
+        expect((host.querySelector(
+            ".annotation-card-input") as HTMLTextAreaElement).value)
+            .toBe("<b>bold</b>");
+    });
+
+    test("a read-only callout renders its label as text", () =>
+    {
+        makeOpen({ label: "<b>bold</b>", editable: false });
 
         expect(host.querySelector("b")).toBeNull();
         expect(host.textContent).toContain("<b>bold</b>");
@@ -182,7 +195,7 @@ describe("Annotation — Surface contract", () =>
 {
     test("setData fills the label slot", () =>
     {
-        makeOpen().setData("label", "Updated");
+        makeOpen({ editable: false }).setData("label", "Updated");
 
         expect(host.textContent).toContain("Updated");
     });
@@ -479,5 +492,96 @@ describe("Annotation — collapse and expand", () =>
 
         (host.querySelector(".annotation-marker") as HTMLButtonElement).click();
         expect(handle.isExpanded()).toBe(true);
+    });
+});
+
+// ============================================================================
+// INLINE EDITING
+// ============================================================================
+
+describe("Annotation — editing", () =>
+{
+    test("an expanded callout offers an editor", () =>
+    {
+        makeOpen({ label: "before" });
+
+        const field = host.querySelector(".annotation-card-input") as HTMLTextAreaElement;
+
+        expect(field).toBeTruthy();
+        expect(field.value).toBe("before");
+    });
+
+    test("the editor is a textarea, never contenteditable", () =>
+    {
+        makeOpen({ label: "x" });
+
+        // Pasting into contenteditable inserts MARKUP, which would breach the
+        // library's textContent-only rule. A textarea cannot carry markup.
+        expect(host.querySelector("[contenteditable]")).toBeNull();
+        expect(host.querySelector("textarea")).toBeTruthy();
+    });
+
+    test("typing updates the value and emits on change", () =>
+    {
+        const seen: unknown[] = [];
+        const handle = makeOpen({ label: "before" });
+
+        handle.on("change", (v) => seen.push(v));
+
+        const field = host.querySelector(".annotation-card-input") as HTMLTextAreaElement;
+        field.value = "after";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect(handle.getValue()).toBe("after");
+        expect(seen).toHaveLength(1);
+    });
+
+    test("typing does not destroy the editor under the caret", () =>
+    {
+        const handle = makeOpen({ label: "a" });
+        const before = host.querySelector(".annotation-card-input");
+
+        const field = before as HTMLTextAreaElement;
+        field.value = "ab";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+
+        // Repainting here would replace the textarea and lose the caret.
+        expect(host.querySelector(".annotation-card-input")).toBe(before);
+        expect(handle.getValue()).toBe("ab");
+    });
+
+    test("an edit survives collapse and re-expand", () =>
+    {
+        const handle = makeOpen({ label: "first" });
+
+        const field = host.querySelector(".annotation-card-input") as HTMLTextAreaElement;
+        field.value = "edited";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+
+        handle.setExpanded(false);
+        handle.setExpanded(true);
+
+        const after = host.querySelector(
+            ".annotation-card-input") as HTMLTextAreaElement;
+
+        expect(after.value).toBe("edited");
+    });
+
+    test("editable false renders static text", () =>
+    {
+        makeOpen({ label: "fixed", editable: false });
+
+        expect(host.querySelector(".annotation-card-input")).toBeNull();
+        expect(host.querySelector(".annotation-card-text")?.textContent)
+            .toBe("fixed");
+    });
+
+    test("the card no longer draws a tail", () =>
+    {
+        makeOpen({ label: "x" });
+
+        // The pin marks the spot. A tail pointing down while the card opens
+        // rightwards pointed at nothing.
+        expect(host.querySelector(".annotation-card-tail")).toBeNull();
     });
 });

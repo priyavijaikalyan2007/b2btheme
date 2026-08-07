@@ -354,7 +354,20 @@ type Placement =
 /** What a node is attached to. */
 type Anchor =
     | { readonly kind: "canvas" }
-    | { readonly kind: "node"; readonly nodeId: string }
+    | {
+        readonly kind: "node";
+        readonly nodeId: string;
+
+        /**
+         * Where within the target to attach, as fractions of its box
+         * (0..1 from its top-left). Omitted means the top-right corner, which
+         * is the right default for "this node" but wrong for "this cell".
+         *
+         * This is what lets an annotation mark a PLACE rather than a whole
+         * node. A canvas placement gesture supplies it from the pointer.
+         */
+        readonly spot?: { readonly x: number; readonly y: number };
+    }
     | { readonly kind: "entity"; readonly entityId: string };
 
 /**
@@ -3949,6 +3962,16 @@ function placeOverlays(
 
             if (target)
             {
+                const spot = (node.anchor as {
+                    spot?: { x: number; y: number };
+                }).spot;
+
+                if (spot)
+                {
+                    out.set(node.id, spotRect(target, spot));
+                    continue;
+                }
+
                 const index = perTarget.get(targetId) ?? 0;
                 perTarget.set(targetId, index + 1);
                 out.set(node.id, overlayRect(target, index));
@@ -3961,6 +3984,32 @@ function placeOverlays(
         out.set(node.id, freeOverlayRect(geometry, free));
         free += 1;
     }
+}
+
+/**
+ * Places an overlay at a specific spot within its target.
+ *
+ * The spot is a fraction of the target's box, so it survives the target being
+ * moved or resized — which a pixel offset would not.
+ *
+ * @param target - The target's packed rectangle.
+ * @param spot   - Fractional position within the target.
+ * @returns The overlay's rectangle.
+ */
+function spotRect(
+    target: PackedRect,
+    spot: { x: number; y: number }): PackedRect
+{
+    const clampedX = Math.min(Math.max(spot.x, 0), 1);
+    const clampedY = Math.min(Math.max(spot.y, 0), 1);
+
+    return {
+        x: target.x + clampedX * target.w - MARKER_SIZE / 2,
+        y: target.y + clampedY * target.h - MARKER_SIZE / 2,
+        w: MARKER_SIZE,
+        h: MARKER_SIZE,
+        z: target.z + OVERLAY_Z_LIFT,
+    };
 }
 
 /**

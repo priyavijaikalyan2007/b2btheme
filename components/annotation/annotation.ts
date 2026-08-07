@@ -97,6 +97,14 @@ export interface AnnotationOptions
     anchor?: AnnotationAnchor;
 
     /**
+     * Allow the text to be edited in place when expanded. Default true.
+     *
+     * An annotation carries user-authored text, so it is editable for the same
+     * reason a sticky note is. Set false for a read-only or shared canvas.
+     */
+    editable?: boolean;
+
+    /**
      * Start expanded rather than collapsed to a marker. Default false.
      *
      * An annotation is a mark ON something. Twenty expanded callouts would
@@ -280,7 +288,11 @@ function assertAnchor(anchor: AnnotationAnchor): AnnotationAnchor
  * @param label - Label text.
  * @returns The body element.
  */
-function buildBody(kind: AnnotationKind, label: string): HTMLElement
+function buildBody(
+    kind: AnnotationKind,
+    label: string,
+    editable: boolean,
+    onEdit: (text: string) => void): HTMLElement
 {
     if (kind === "arrow")
     {
@@ -292,7 +304,7 @@ function buildBody(kind: AnnotationKind, label: string): HTMLElement
         return buildHighlight(label);
     }
 
-    return buildCallout(label);
+    return buildCallout(label, editable, onEdit);
 }
 
 /**
@@ -303,17 +315,38 @@ function buildBody(kind: AnnotationKind, label: string): HTMLElement
  * @param label - Label text.
  * @returns The card element.
  */
-function buildCallout(label: string): HTMLElement
+function buildCallout(
+    label: string,
+    editable: boolean,
+    onEdit: (text: string) => void): HTMLElement
 {
     const card = document.createElement("div");
     card.className = `${CLS}-card`;
 
-    const text = document.createElement("div");
-    text.className = `${CLS}-card-text`;
-    text.textContent = label;
+    if (!editable)
+    {
+        const text = elementWithClass("div", `${CLS}-card-text`);
+        text.textContent = label;
+        card.appendChild(text);
 
-    card.appendChild(text);
-    card.appendChild(elementWithClass("div", `${CLS}-card-tail`));
+        return card;
+    }
+
+    // A textarea, not contenteditable. Pasting into contenteditable inserts
+    // MARKUP, which would drive a hole straight through this library's
+    // textContent-only discipline. A textarea cannot carry markup at all.
+    const field = document.createElement("textarea");
+    field.className = `${CLS}-card-input`;
+    field.value = label;
+    field.rows = 2;
+    field.setAttribute("aria-label", "Annotation text");
+
+    field.addEventListener("input", () => onEdit(field.value));
+
+    // Clicks inside the editor must not reach the marker's toggle.
+    field.addEventListener("click", (e) => e.stopPropagation());
+
+    card.appendChild(field);
 
     return card;
 }
@@ -494,7 +527,8 @@ function build(
         // element under the pointer made pointerleave fire, which collapsed,
         // which put the marker back under the pointer, which re-expanded. A
         // self-sustaining flicker.
-        bodyEl.replaceChildren(buildBody(kind, label));
+        bodyEl.replaceChildren(
+            buildBody(kind, label, options.editable !== false, onInlineEdit));
         markerEl.textContent = MARKER_GLYPH[kind];
 
         const name = label.length > 0 ? label : `${kind} annotation`;
@@ -576,6 +610,27 @@ function build(
         applyClasses();
         markerEl.setAttribute("aria-expanded", String(expanded));
         emit("toggle", () => options.onToggle?.(expanded), expanded);
+    }
+
+    /**
+     * Applies an inline edit without rebuilding the card.
+     *
+     * Repainting here would replace the textarea the user is typing into and
+     * lose the caret, so the label is updated in place and only announced.
+     *
+     * @param next - The edited text.
+     */
+    function onInlineEdit(next: string): void
+    {
+        label = next;
+
+        const name = label.length > 0 ? label : `${kind} annotation`;
+        markerEl.setAttribute("aria-label", name);
+        markerEl.setAttribute("title", name);
+        root.classList.toggle(`${CLS}-labelled`, label.length > 0);
+
+        const snapshot = { kind, label, color };
+        emit("change", () => options.onChange?.(snapshot), snapshot);
     }
 
     /** Delivers a payload: legacy callback first, then channel subscribers. */

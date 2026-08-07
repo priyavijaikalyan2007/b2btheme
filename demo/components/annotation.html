@@ -78,6 +78,13 @@
         min-height: 110px;
     }
 
+    /* A callout card is ~48px tall; the kind rows reserve room for the arrow
+       and highlight, which need far more. */
+    .annot-edit-row
+    {
+        min-height: 60px;
+    }
+
     .annot-kind-name
     {
         width: 72px;
@@ -115,7 +122,8 @@
             <p class="text-muted small mb-4">
                 <i class="bi bi-info-circle"></i>
                 Click a pin to expand it, or rest the pointer on one for 400ms. Sweeping
-                across them opens none. The pin never disappears — the card opens beside it.
+                across them opens none. The pin never disappears — the card opens beside
+                it, and its text is editable in place.
             </p>
 
             <h3 class="h6">Resting state</h3>
@@ -141,7 +149,7 @@
                 Shown expanded so you can see each one. Click a pin to collapse it again.
             </p>
             <div class="annot-kinds mb-4">
-                <div class="annot-kind-row">
+                <div class="annot-kind-row annot-edit-row">
                     <span class="annot-kind-name">callout</span>
                     <div id="an-callout" class="annot-slot"></div>
                 </div>
@@ -165,6 +173,27 @@
                 <div id="an-green" class="annot-slot"></div>
                 <div id="an-red"   class="annot-slot"></div>
                 <div id="an-grey"  class="annot-slot"></div>
+            </div>
+
+            <h3 class="h6">Editing</h3>
+            <p class="text-muted small mb-2">
+                An expanded callout is a text field, not a read-only label — type into
+                the first one and watch the <code>change</code> channel fire. Pass
+                <code>editable: false</code> for the second, where the text is set by
+                the application rather than the reader.
+            </p>
+            <div class="annot-kinds mb-3">
+                <div class="annot-kind-row annot-edit-row">
+                    <span class="annot-kind-name">editable</span>
+                    <div id="an-edit" class="annot-slot"></div>
+                </div>
+                <div class="annot-kind-row annot-edit-row">
+                    <span class="annot-kind-name">read-only</span>
+                    <div id="an-readonly" class="annot-slot"></div>
+                </div>
+            </div>
+            <div class="small text-muted mb-5" id="an-edit-log">
+                Last change: <span>(none yet)</span>
             </div>
 
             <h3 class="h6">Click-through</h3>
@@ -238,6 +267,28 @@
             createAnnotation("an-" + color, {
                 kind: "callout", color: color, label: color
             });
+        });
+
+        // Editing: the label is the field's value, so the readout below is the
+        // only place the text appears as page content.
+        var editable = createAnnotation("an-edit", {
+            kind: "callout",
+            label: "Edit me",
+            color: "blue",
+            expanded: true
+        });
+
+        editable.on("change", function(state)
+        {
+            document.querySelector("#an-edit-log span").textContent = state.label;
+        });
+
+        createAnnotation("an-readonly", {
+            kind: "callout",
+            label: "Set by the application",
+            color: "grey",
+            expanded: true,
+            editable: false
         });
 
         createAnnotation("an-over", { kind: "highlight" });

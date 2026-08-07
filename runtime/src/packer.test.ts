@@ -472,3 +472,86 @@ describe("packDocument — anchored overlays", () =>
         expect(overlaps(packed.get("e")!, packed.get("c")!)).toBe(false);
     });
 });
+
+// ============================================================================
+// ANCHOR SPOT
+// ============================================================================
+
+describe("packDocument — anchor spot", () =>
+{
+    /** A target with an overlay pinned to a fractional spot inside it. */
+    function spotDoc(spot: { x: number; y: number })
+    {
+        return docOf([
+            node("target", { kind: "fixed", x: 100, y: 100, w: 400, h: 200, z: 1 }),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target", spot }),
+        ]);
+    }
+
+    test("centres the marker on the requested spot", () =>
+    {
+        const packed = packDocument(spotDoc({ x: 0.5, y: 0.5 }), { width: 1200 });
+        const pin = packed.get("pin")!;
+
+        // Target spans 100..500 x 100..300, so the centre is (300, 200).
+        expect(pin.x + pin.w / 2).toBeCloseTo(300, 0);
+        expect(pin.y + pin.h / 2).toBeCloseTo(200, 0);
+    });
+
+    test("a spot is a fraction, so it survives the target resizing", () =>
+    {
+        const small = packDocument(docOf([
+            node("target", { kind: "fixed", x: 0, y: 0, w: 200, h: 100, z: 1 }),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target", spot: { x: 0.25, y: 0.5 } }),
+        ]), { width: 1200 }).get("pin")!;
+
+        const large = packDocument(docOf([
+            node("target", { kind: "fixed", x: 0, y: 0, w: 400, h: 200, z: 1 }),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target", spot: { x: 0.25, y: 0.5 } }),
+        ]), { width: 1200 }).get("pin")!;
+
+        expect(small.x + small.w / 2).toBeCloseTo(50, 0);
+        expect(large.x + large.w / 2).toBeCloseTo(100, 0);
+    });
+
+    test("clamps a spot outside the target", () =>
+    {
+        const packed = packDocument(spotDoc({ x: 5, y: -2 }), { width: 1200 });
+        const pin = packed.get("pin")!;
+
+        expect(pin.x + pin.w / 2).toBeCloseTo(500, 0);
+        expect(pin.y + pin.h / 2).toBeCloseTo(100, 0);
+    });
+
+    test("without a spot it still corners, as before", () =>
+    {
+        const packed = packDocument(docOf([
+            node("target", { kind: "fixed", x: 0, y: 0, w: 400, h: 200, z: 1 }),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "target" }),
+        ]), { width: 1200 });
+
+        const pin = packed.get("pin")!;
+
+        expect(pin.x).toBeGreaterThan(300);
+        expect(pin.y).toBe(0);
+    });
+
+    test("a spot-anchored overlay still displaces nothing", () =>
+    {
+        const without = packDocument(docOf([
+            node("a", intent("main", "standard")),
+        ]), { width: 1200 });
+
+        const withPin = packDocument(docOf([
+            node("a", intent("main", "standard")),
+            node("pin", intent("main", "compact"), false,
+                { kind: "node", nodeId: "a", spot: { x: 0.5, y: 0.5 } }),
+        ]), { width: 1200 });
+
+        expect(withPin.get("a")).toEqual(without.get("a"));
+    });
+});

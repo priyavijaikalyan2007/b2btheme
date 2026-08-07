@@ -121,18 +121,27 @@
     word-break: break-word;
 }
 
-// A small tail anchoring the card to what it marks.
-.annotation-card-tail
+// Editing happens in place. Styled to read as text rather than as a form
+// control, so an annotation does not look like a field until you use it.
+.annotation-card-input
 {
-    position: absolute;
-    left: 14px;
-    bottom: -6px;
-    width: 10px;
-    height: 10px;
-    background-color: var(--theme-surface, #{$gray-50});
-    border-right: 1px solid var(--theme-border, #{$gray-300});
-    border-bottom: 1px solid var(--theme-border, #{$gray-300});
-    transform: rotate(45deg);
+    display: block;
+    width: 100%;
+    min-height: 34px;
+    padding: 0;
+    border: 0;
+    outline: none;
+    resize: vertical;
+    background: transparent;
+    color: var(--theme-text, #{$gray-900});
+    font-family: inherit;
+    font-size: $font-size-sm;
+    line-height: $line-height-base;
+
+    &:focus-visible
+    {
+        box-shadow: 0 2px 0 -1px var(--theme-accent, #{$blue-600});
+    }
 }
 
 // ============================================================================

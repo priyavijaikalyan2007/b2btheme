@@ -172,12 +172,16 @@ test.describe("Dynamic UI demo", () =>
         // caused expand/collapse to oscillate — so assert the STATE, and that
         // the content is not visible yet.
         await expect(page.locator(".annotation-collapsed")).toHaveCount(1);
-        await expect(page.getByText("Largest table")).toBeHidden();
+        await expect(page.locator(".annotation-card-input")).toBeHidden();
 
         await page.locator(".annotation-marker").click();
 
         await expect(page.locator(".annotation-expanded")).toHaveCount(1);
-        await expect(page.getByText("Largest table")).toBeVisible();
+
+        // The label is editable, so it lives in the editor's value rather
+        // than as page text.
+        await expect(page.locator(".annotation-card-input"))
+            .toHaveValue("Largest table");
     });
 
     test("many annotations do not rearrange the canvas", async ({ page }) =>

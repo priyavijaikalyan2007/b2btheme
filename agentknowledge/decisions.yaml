@@ -3512,3 +3512,56 @@
     - "runtime/src/registry.ts"
     - "runtime/src/conformance.ts"
     - "AGENTS.md"
+
+- id: "ADR-145"
+  title: "Overlay presentation and the annotation interaction model"
+  date: "2026-08-07"
+  status: "Accepted"
+  context: |
+    Annotations shipped as ordinary canvas nodes: the packer gave each one a
+    slot, so annotating a grid PUSHED the grid aside — a mark that displaces
+    what it marks. Browser testing then surfaced three further faults that all
+    trace to the same mistake of treating an overlay like a widget. Expanding
+    swapped the pin for a card, pulling the element out from under the pointer,
+    firing pointerleave, collapsing, and re-expanding — a self-sustaining
+    flicker. The card drew a tail pointing down while opening to the right, so
+    the tail pointed at nothing. And the label was read-only, leaving no way to
+    edit a note the reader had just placed.
+  decision: |
+    A capability manifest declares `presentation: "framed" | "overlay"`.
+    An overlay is positioned relative to its anchor's rect, lifted in z, and
+    excluded from the packer's occupancy — it can never move what it overlays,
+    and the canvas gives it no frame furniture (no titlebar, no chrome).
+
+    For annotations specifically: the pin is PERMANENT and is the pointer's
+    only target; the card opens beside it and is built once, hidden by class
+    rather than rebuilt, so nothing under the pointer is ever replaced. The
+    card is a plain box — the pin already carries the anchoring meaning a tail
+    was drawing, and a tail that points somewhere the card does not open is a
+    false claim. The expanded card is a `<textarea>`, not `contenteditable`:
+    a paste into contenteditable inserts MARKUP, which would breach this
+    library's textContent-only discipline (CODING_STYLE.md). Edits update the
+    label in place with no repaint, so the caret survives a keystroke.
+
+    An anchor may carry an optional fractional `spot: {x, y}` naming a place
+    WITHIN the target rather than its corner. Fractions, not pixels, so the
+    mark holds its position when the target is resized. The library exposes
+    the field; the GESTURE that sets it from a click is the host application's
+    to build (ADR-140's boundary — the repo ships capability, not application).
+  consequences: |
+    + An annotation can never rearrange the canvas; e2e asserts the bounding
+      box of an annotated node is unchanged after six annotations.
+    + Any future overlay-shaped component gets the same treatment by declaring
+      one manifest field, with no canvas changes.
+    + The flicker class of bug is structurally excluded: the hover target is
+      never rebuilt.
+    - The label is no longer page text, so tests must read the editor's value
+      rather than getByText. Recorded in the component README.
+    - `spot` is settable but has no built-in placement gesture. A host that
+      wants point-to-annotate must supply the click handling itself.
+  files:
+    - "runtime/src/types.ts"
+    - "runtime/src/packer.ts"
+    - "components/annotation/annotation.ts"
+    - "components/annotation/annotation.scss"
+    - "components/dynamiccanvas/dynamiccanvas.ts"

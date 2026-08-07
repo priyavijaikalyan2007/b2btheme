@@ -771,13 +771,21 @@ It also **rests as a marker**, expanding on click or a 400ms hover dwell. Twenty
 
 // Unbound: packed as an ordinary node, like a sticky note.
 { anchor: { kind: "canvas" } }
+
+// Bound to a PLACE within the grid: 40% across, 25% down. Fractions rather
+// than pixels, so the mark stays on the same cell when the grid is resized.
+{ anchor: { kind: "node", nodeId: "grid-1", spot: { x: 0.4, y: 0.25 } } }
 ```
+
+Omitting `spot` attaches to the target's top-right corner, which is the right default for "this whole thing" and the wrong one for "this cell". Supplying the gesture that *sets* `spot` from a click is the host application's job — the canvas exposes the field, not a point-here tool.
 
 ## Features
 
-- **Three kinds** — `callout` (boxed text with a tail), `arrow`, `highlight` (translucent wash)
+- **Three kinds** — `callout` (a boxed card), `arrow`, `highlight` (translucent wash)
 - **Collapsed by default** — a small marker; expands on click or sustained hover
+- **Editable in place** — the expanded callout is a text field, not a read-only label
 - **Overlays its target** when node-anchored, without displacing anything
+- **Anchors to a spot**, not just a corner — a fractional `spot` marks a place within the target
 - **Five-colour palette** — amber, blue, green, red, grey
 - **Three anchor modes** — canvas coordinates, another node, or a data entity
 - **Surface contract** — `setData` / `on` / `getState` / `setState` / `destroy`
@@ -823,6 +831,7 @@ const callout = createAnnotation("annot-host", {
 | `anchor` | `AnnotationAnchor` | `{ kind: "canvas" }` | What it annotates. A `node` anchor makes it an overlay. |
 | `expanded` | `boolean` | `false` | Start expanded instead of as a marker |
 | `expandOnHover` | `boolean` | `true` | Expand on a 400ms hover dwell as well as on click |
+| `editable` | `boolean` | `true` | Expanded callouts are a text field; `false` renders read-only text |
 | `onChange` | `(state) => void` | — | Fires when label, kind or colour changes |
 | `onToggle` | `(expanded) => void` | — | Fires when it expands or collapses |
 | `onAnchorChange` | `(anchor) => void` | — | Fires when the anchor changes |
@@ -858,6 +867,18 @@ The root is `pointer-events: none`, so an overlay drawn across a grid never inte
 ## Why a 400ms dwell
 
 Short enough that deliberately resting on a marker feels immediate; long enough that sweeping the pointer across a canvas of twenty annotations opens none of them. It matches the HoverCard convention (ADR-125), and click always works regardless — `expandOnHover: false` leaves click as the only route where hover is unavailable.
+
+## Why the pin never moves, and why there is no tail
+
+The marker is the pointer's target: expanding it used to swap it for a callout, which pulled the element out from under the cursor, fired `pointerleave`, collapsed it, and put the marker back — a self-sustaining flicker. The pin is now permanent and the card opens *beside* it.
+
+The card also has no tail. A tail claims to point at something, and a card that opens to the right while its tail points down is claiming something false. The pin already carries every bit of anchoring meaning the tail was drawing, so the card is a plain box.
+
+## Why a textarea rather than `contenteditable`
+
+Editing writes through `textContent` because the field's `value` is text by construction. `contenteditable` accepts a paste as **markup** — a single paste from a rich-text source would drive a hole straight through this library's textContent-only discipline. The cost is that the label is no longer page text, so tests read `input.value`, not `getByText`.
+
+Editing updates the label in place without repainting, so the caret survives a keystroke.
 
 ## Why not one shared SVG layer?
 
