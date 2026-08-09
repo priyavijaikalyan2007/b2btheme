@@ -555,3 +555,48 @@ describe("packDocument — anchor spot", () =>
         expect(withPin.get("a")).toEqual(without.get("a"));
     });
 });
+
+describe("packDocument — an overlay dropped on bare canvas", () =>
+{
+    /** An overlay component with no target, placed at explicit coordinates. */
+    function droppedDoc()
+    {
+        const dropped = {
+            ...node("pin", { kind: "fixed", x: 240, y: 160, w: 28, h: 28, z: 3 },
+                false, { kind: "canvas" }),
+            component: "annotation",
+        };
+
+        return docOf([node("a", intent("main", "standard")), dropped]);
+    }
+
+    /** Only the annotation is an overlay; the grid beside it is an ordinary node. */
+    const asOverlay = { width: 1200, isOverlay: (c: string) => c === "annotation" };
+
+    test("keeps the coordinates it was dropped at", () =>
+    {
+        // The bug: every unanchored overlay marched along the top of the main
+        // region regardless of its placement, so a mark dropped at a chosen
+        // point moved somewhere else — no error, nothing logged.
+        const pin = packDocument(droppedDoc(), asOverlay).get("pin")!;
+
+        expect(pin.x).toBe(240);
+        expect(pin.y).toBe(160);
+    });
+
+    test("is lifted above ordinary nodes", () =>
+    {
+        const packed = packDocument(droppedDoc(), asOverlay);
+
+        expect(packed.get("pin")!.z).toBeGreaterThan(packed.get("a")!.z);
+    });
+
+    test("still displaces nothing", () =>
+    {
+        const without = packDocument(docOf([node("a", intent("main", "standard"))]),
+            { width: 1200 });
+        const withPin = packDocument(droppedDoc(), asOverlay);
+
+        expect(withPin.get("a")).toEqual(without.get("a"));
+    });
+});

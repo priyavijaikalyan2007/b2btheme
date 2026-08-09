@@ -618,3 +618,91 @@ describe("branch", () =>
         expect(patches).toHaveLength(3);
     });
 });
+
+describe("validate — anchor spot", () =>
+{
+    /** A document whose single node carries the given anchor. */
+    function docWithAnchor(anchor: unknown): unknown
+    {
+        return {
+            ...createEmptyDocument("d", "w"),
+            nodes: {
+                a: {
+                    id: "a",
+                    component: "grid",
+                    placement: { kind: "intent", region: "main", size: "compact" },
+                    options: {},
+                    source: null,
+                    state: {},
+                    anchor,
+                    provenance: { turnId: "t1", lastTouched: 1 },
+                    pinned: false,
+                    grants: [],
+                },
+            },
+        };
+    }
+
+    test("accepts a well-formed spot", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: 0.5, y: 0.25 },
+        }));
+
+        expect(res.issues).toEqual([]);
+        expect(res.ok).toBe(true);
+    });
+
+    test("accepts an anchor with no spot at all", () =>
+    {
+        expect(validateDocument(docWithAnchor({ kind: "node", nodeId: "a" })).ok)
+            .toBe(true);
+    });
+
+    test("rejects a spot outside 0..1", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: 1.5, y: 0 },
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues[0].path).toContain("spot");
+    });
+
+    test("rejects a non-finite fraction", () =>
+    {
+        // A document may be authored by a model, and NaN reaching the packer
+        // places a mark at no coordinates rather than raising anything.
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: Number.NaN, y: 0 },
+        }));
+
+        expect(res.ok).toBe(false);
+    });
+
+    test("rejects a spot that is not a pair of numbers", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: "middle", y: "top" },
+        }));
+
+        expect(res.ok).toBe(false);
+    });
+
+    test("rejects a non-integer scrolling-region index", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: 0.5, y: 0.5 }, within: 1.5,
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues[0].path).toContain("within");
+    });
+
+    test("rejects a negative scrolling-region index", () =>
+    {
+        expect(validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", within: -1,
+        })).ok).toBe(false);
+    });
+});

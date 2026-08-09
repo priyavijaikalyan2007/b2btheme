@@ -90,7 +90,11 @@ interface CanvasNode
     readonly state: Record<string, unknown>;
     readonly provenance: { readonly turnId: string; readonly lastTouched: number };
     readonly pinned: boolean;
-    readonly anchor?: { readonly kind: string; readonly nodeId?: string };
+    readonly anchor?: {
+        readonly kind: string;
+        readonly nodeId?: string;
+        readonly spot?: { readonly x: number; readonly y: number };
+    };
 }
 
 /** The materialised scene. */
@@ -192,6 +196,15 @@ const ZOOM_STEP = 0.1;
 /** Extra margin, in canvas pixels, within which nodes stay mounted. */
 const MOUNT_MARGIN = 400;
 
+/**
+ * Marker box, in canvas pixels. MUST match the packer's MARKER_SIZE: the
+ * packer sizes the marker, and this is what the canvas centres on when it
+ * drops one at a chosen point. The e2e placement suite measures the centre
+ * against the click, so the two drifting apart fails loudly rather than
+ * quietly offsetting every mark by half a marker.
+ */
+const MARKER_BOX = 30;
+
 // ============================================================================
 // LOGGING
 // ============================================================================
@@ -239,6 +252,17 @@ function el(tag: string, cls: string, text?: string): HTMLElement
     return node;
 }
 
+/**
+ * Clamps a fraction into 0..1.
+ *
+ * @param v - The value to clamp.
+ * @returns The clamped value.
+ */
+function clamp01(v: number): number
+{
+    return Math.min(Math.max(v, 0), 1);
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -263,6 +287,26 @@ export interface DynamicCanvasOptions
 
     /** Called when a node's "why?" affordance is activated. */
     onExplain?: (nodeId: string) => void;
+}
+
+/**
+ * A placement armed by the host and completed by the user's next click.
+ *
+ * The host says WHAT to place; the canvas works out WHERE from the pointer and
+ * records it in the document. An application never converts screen coordinates
+ * into anchors — that translation is the library's job, and doing it in the app
+ * would mean every app re-derived the same zoom, scroll and pan arithmetic.
+ */
+export interface PlacementSpec
+{
+    /** Component to place. Defaults to "annotation". */
+    component?: string;
+
+    /** Options passed to the placed component's factory. */
+    options?: Record<string, unknown>;
+
+    /** Called once the node exists, with the anchor the click resolved to. */
+    onPlaced?: (nodeId: string, anchor: Record<string, unknown>) => void;
 }
 
 /** Handle returned by createDynamicCanvas. */
@@ -294,6 +338,18 @@ export interface DynamicCanvasHandle
 
     /** Current viewport. */
     getViewport(): { x: number; y: number; zoom: number };
+
+    /**
+     * Arms placement: the user's next click on the canvas places the component
+     * exactly where they clicked. Escape, or a second call to cancel, disarms.
+     */
+    startPlacement(spec?: PlacementSpec): void;
+
+    /** Disarms placement without placing anything. */
+    cancelPlacement(): void;
+
+    /** Whether a placement is currently armed. */
+    isPlacing(): boolean;
 
     /** Clears every node from the canvas via a patch. */
     clear(): void;
@@ -352,6 +408,12 @@ function build(
     const frames = new Map<string, HTMLElement>();
     const bodies = new Map<string, HTMLElement>();
 
+    /** Armed placement, or null. Set by startPlacement, cleared on the click. */
+    let placing: PlacementSpec | null = null;
+
+    /** Last packed layout, kept so a scroll can reposition without re-packing. */
+    let packedRects: ReadonlyMap<string, PackedRect> = new Map();
+
     const root = el("div", CLS);
     const world = el("div", `${CLS}-world`);
     const chipRail = el("div", `${CLS}-chiprail`);
@@ -359,6 +421,15 @@ function build(
     root.appendChild(world);
     root.appendChild(chipRail);
     host.appendChild(root);
+
+    // Capture phase: while a placement is armed, the click is the gesture and
+    // must not also reach the component underneath.
+    root.addEventListener("click", onCanvasClick, true);
+
+    // Scroll does not bubble, but capture still runs it past every ancestor —
+    // so one listener here tracks EVERY scrolling region, including the ones a
+    // mounted component creates for itself long after this line runs.
+    root.addEventListener("scroll", onRegionScroll, true);
 
     // ------------------------------------------------------------------
     // Runtime wiring
@@ -493,6 +564,7 @@ function build(
                 rt().getManifest(component)?.presentation === "overlay",
         });
 
+        packedRects = packed;
         removeDepartedFrames();
 
         for (const node of Object.values(doc.nodes))
@@ -509,6 +581,11 @@ function build(
         wiring.attach(doc);
         renderChips();
         applyViewport();
+
+        // After sync, not before: an unmounted body has no content and so no
+        // scroll extent, and refining against zero would collapse every mark
+        // onto its target's top-left corner.
+        refineOverlays();
     }
 
     /** Drops frames for nodes no longer in the document. */
@@ -832,6 +909,539 @@ function build(
     }
 
     // ------------------------------------------------------------------
+    // Placement: a click becomes an anchor
+    // ------------------------------------------------------------------
+    //
+    // captureSpot and spotOffset below are inverses of each other and are kept
+    // ADJACENT deliberately. Capture starts from client coordinates and must
+    // divide out zoom; restore works entirely in layout pixels. Housed apart,
+    // they would drift, and a drifted pair puts the pin somewhere plausible
+    // rather than throwing.
+
+    /** Arms placement so the next canvas click positions a component. */
+    function startPlacement(spec: PlacementSpec = {}): void
+    {
+        placing = spec;
+        root.classList.add(`${CLS}-placing`);
+        document.addEventListener("keydown", onPlacementKey);
+        logInfo("Placement armed for:", spec.component ?? "annotation");
+    }
+
+    /** Disarms placement, leaving the document untouched. */
+    function cancelPlacement(): void
+    {
+        placing = null;
+        root.classList.remove(`${CLS}-placing`);
+        document.removeEventListener("keydown", onPlacementKey);
+    }
+
+    /** Escape disarms, matching every other modal gesture in the library. */
+    function onPlacementKey(e: KeyboardEvent): void
+    {
+        if (e.key === "Escape")
+        {
+            cancelPlacement();
+        }
+    }
+
+    /**
+     * Completes an armed placement at the clicked point.
+     *
+     * Runs in the CAPTURE phase so the click lands as a placement rather than
+     * reaching the component underneath — clicking a grid row to annotate it
+     * must not also select that row.
+     */
+    function onCanvasClick(e: MouseEvent): void
+    {
+        if (!placing || destroyed)
+        {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const spec = placing;
+        cancelPlacement();
+        placeAt(spec, e.target, frameUnder(e.target), e.clientX, e.clientY);
+    }
+
+    /**
+     * Adds the armed component, anchored to whatever lies under the pointer.
+     *
+     * @param spec    - What to place.
+     * @param clientX - Pointer x, in client coordinates.
+     * @param clientY - Pointer y, in client coordinates.
+     */
+    function placeAt(
+        spec: PlacementSpec,
+        hit: EventTarget | null,
+        targetId: string | null,
+        clientX: number,
+        clientY: number): void
+    {
+        const component = spec.component ?? "annotation";
+        const id = `${component}-${doc.revision + 1}-${Object.keys(doc.nodes).length}`;
+        const anchor = targetId
+            ? nodeAnchor(targetId, hit, clientX, clientY)
+            : { kind: "canvas" };
+
+        emitPatch([{
+            op: "addNode",
+            node: {
+                id,
+                component,
+                placement: placementFor(targetId, clientX, clientY),
+                options: spec.options ?? {},
+                source: null,
+                state: {},
+                anchor,
+                pinned: false,
+                provenance: { turnId: doc.turnId || "placement", lastTouched: turn },
+            },
+        }]);
+
+        spec.onPlaced?.(id, anchor);
+    }
+
+    /**
+     * The id of the framed node the click landed in, or null for bare canvas.
+     *
+     * Reads the event's own target rather than probing coordinates: it is the
+     * element the browser already resolved, and overlays drop out of it for
+     * free because their boxes are click-through. Annotating an annotation is
+     * not the gesture.
+     *
+     * @param target - The click's target element.
+     * @returns The node id, or null.
+     */
+    function frameUnder(target: EventTarget | null): string | null
+    {
+        const frame = (target as HTMLElement | null)
+            ?.closest?.(`.${CLS}-frame`);
+
+        return frame?.getAttribute("data-node-id") ?? null;
+    }
+
+    /**
+     * Builds a node anchor carrying the exact spot clicked, when one can be
+     * measured, and falling back to the whole node when it cannot.
+     */
+    function nodeAnchor(
+        targetId: string,
+        hit: EventTarget | null,
+        clientX: number,
+        clientY: number): Record<string, unknown>
+    {
+        const scroller = scrollerFor(targetId, hit);
+        const spot = scroller
+            ? captureSpot(scroller.el, clientX, clientY)
+            : null;
+
+        if (!spot)
+        {
+            return { kind: "node", nodeId: targetId };
+        }
+
+        // `within` names WHICH scroller the fraction is measured against. A
+        // component may own its own scrolling region — a grid's rows, a
+        // document's text — and a fraction of the wrong box lands nowhere near
+        // what the user pointed at.
+        return scroller!.index === 0
+            ? { kind: "node", nodeId: targetId, spot }
+            : { kind: "node", nodeId: targetId, spot, within: scroller!.index };
+    }
+
+    /**
+     * The scrolling region a click landed in, and its index within the frame.
+     *
+     * The frame body is index 0 and is always the fallback. A component that
+     * scrolls internally contributes further regions in DOM order, which is
+     * stable for a given component and survives a reload.
+     *
+     * @param targetId - The node clicked.
+     * @param hit      - The clicked element.
+     * @returns The scroller and its index, or null.
+     */
+    function scrollerFor(
+        targetId: string,
+        hit: EventTarget | null): { el: HTMLElement; index: number } | null
+    {
+        const frame = frames.get(targetId);
+        const body = bodies.get(targetId);
+
+        if (!frame || !body)
+        {
+            return null;
+        }
+
+        const regions = scrollRegions(body);
+
+        // Walk out from the click to the first region that contains it. The
+        // innermost wins: a grid inside a document scrolls independently of it.
+        for (let el = hit as HTMLElement | null; el && el !== frame;
+            el = el.parentElement)
+        {
+            const index = regions.indexOf(el);
+
+            if (index >= 0)
+            {
+                return { el, index };
+            }
+        }
+
+        return { el: body, index: 0 };
+    }
+
+    /**
+     * Every scrolling region inside a frame body, the body first, in DOM order.
+     *
+     * The index into this list is what an anchor records, so it has to be
+     * derived the same way in both directions.
+     *
+     * @param body - The frame's body.
+     * @returns The regions, index 0 being the body.
+     */
+    function scrollRegions(body: HTMLElement): HTMLElement[]
+    {
+        return [body, ...Array.from(body.querySelectorAll<HTMLElement>("*"))
+            .filter(isScrollable)];
+    }
+
+    /** True when an element scrolls its own content. */
+    function isScrollable(el: HTMLElement): boolean
+    {
+        if (el.scrollHeight <= el.clientHeight
+            && el.scrollWidth <= el.clientWidth)
+        {
+            return false;
+        }
+
+        const style = getComputedStyle(el);
+
+        return /auto|scroll/.test(style.overflowY)
+            || /auto|scroll/.test(style.overflowX);
+    }
+
+    /**
+     * CAPTURE. Turns a pointer position into a fraction of a scrolling
+     * region's CONTENT box.
+     *
+     * Fractions of content, not of the visible box: the content is what the
+     * user pointed at, so a mark placed halfway down a document stays halfway
+     * down it after scrolling, and after the frame is resized.
+     *
+     * @param scroller - The region the click landed in.
+     * @param clientX  - Pointer x, in client coordinates.
+     * @param clientY  - Pointer y, in client coordinates.
+     * @returns Fractional spot, or null when the region cannot be measured.
+     */
+    function captureSpot(
+        scroller: HTMLElement,
+        clientX: number,
+        clientY: number): { x: number; y: number } | null
+    {
+        const metrics = scrollMetrics(scroller);
+
+        if (!metrics)
+        {
+            return null;
+        }
+
+        // getBoundingClientRect is measured AFTER the world's scale(); scroll
+        // offsets are not. Mixing the two without dividing out zoom puts the
+        // mark progressively further off the more the canvas is zoomed.
+        const box = scroller.getBoundingClientRect();
+        const zoom = doc.viewport.zoom || 1;
+        const cx = (clientX - box.left) / zoom + scroller.scrollLeft;
+        const cy = (clientY - box.top) / zoom + scroller.scrollTop;
+
+        return {
+            x: clamp01(cx / metrics.width),
+            y: clamp01(cy / metrics.height),
+        };
+    }
+
+    /**
+     * RESTORE. The inverse of captureSpot: turns a recorded fraction back into
+     * an offset within the target's frame, in layout pixels.
+     *
+     * @param targetId - Node the overlay is anchored to.
+     * @param spot     - The recorded fraction.
+     * @param within   - Index of the scrolling region it was measured against.
+     * @param regions  - The target's scrolling regions.
+     * @returns Offset and whether the point is scrolled into view, or null.
+     */
+    function spotOffset(
+        targetId: string,
+        spot: { x: number; y: number },
+        within: number,
+        regions: readonly HTMLElement[]):
+        { dx: number; dy: number; visible: boolean } | null
+    {
+        const frame = frames.get(targetId);
+        const body = bodies.get(targetId);
+
+        if (!frame || !body)
+        {
+            return null;
+        }
+
+        const scroller = regions[within] ?? body;
+        const metrics = scrollMetrics(scroller);
+
+        if (!metrics)
+        {
+            return null;
+        }
+
+        const cx = spot.x * metrics.width - scroller.scrollLeft;
+        const cy = spot.y * metrics.height - scroller.scrollTop;
+        const origin = originWithin(frame, scroller);
+
+        return {
+            dx: origin.x + cx,
+            dy: origin.y + cy,
+            visible: cx >= 0 && cx <= scroller.clientWidth
+                && cy >= 0 && cy <= scroller.clientHeight,
+        };
+    }
+
+    /**
+     * A scrolling region's top-left corner relative to its frame, in layout
+     * pixels.
+     *
+     * Measured rather than accumulated through offsetParent: both rectangles
+     * carry the same zoom, so dividing it out once gives untransformed pixels
+     * without caring how the component nested its own boxes.
+     *
+     * @param frame    - The node's frame.
+     * @param scroller - A scrolling region inside it.
+     * @returns The offset.
+     */
+    function originWithin(
+        frame: HTMLElement,
+        scroller: HTMLElement): { x: number; y: number }
+    {
+        const zoom = doc.viewport.zoom || 1;
+        const frameBox = frame.getBoundingClientRect();
+        const box = scroller.getBoundingClientRect();
+
+        return {
+            x: (box.left - frameBox.left) / zoom,
+            y: (box.top - frameBox.top) / zoom,
+        };
+    }
+
+    /**
+     * A body's content dimensions, or null when it has none to speak of.
+     *
+     * A demoted or not-yet-laid-out body reports zero, and dividing by that
+     * silently collapses every mark onto the target's top-left corner. Both
+     * directions bail instead, leaving the packer's own placement in force.
+     *
+     * @param body - The frame body to measure.
+     * @returns Content width and height, or null.
+     */
+    function scrollMetrics(
+        body: HTMLElement): { width: number; height: number } | null
+    {
+        const width = Math.max(body.scrollWidth, body.clientWidth);
+        const height = Math.max(body.scrollHeight, body.clientHeight);
+
+        if (width === 0 || height === 0)
+        {
+            return null;
+        }
+
+        return { width, height };
+    }
+
+    /**
+     * The placement for a newly placed node.
+     *
+     * A node-anchored overlay is positioned by its anchor, so it only needs a
+     * nominal placement. One dropped on bare canvas has nothing to anchor to
+     * and is pinned to the world coordinates under the pointer.
+     */
+    function placementFor(
+        targetId: string | null,
+        clientX: number,
+        clientY: number): Record<string, unknown>
+    {
+        if (targetId)
+        {
+            return { kind: "intent", region: "overlay", size: "compact" };
+        }
+
+        const box = root.getBoundingClientRect();
+        const zoom = doc.viewport.zoom || 1;
+
+        // Centred on the point, not hung below and right of it — the same
+        // relationship a spot-anchored mark has to the place it marks.
+        return {
+            kind: "fixed",
+            x: (clientX - box.left - doc.viewport.x) / zoom - MARKER_BOX / 2,
+            y: (clientY - box.top - doc.viewport.y) / zoom - MARKER_BOX / 2,
+            w: MARKER_BOX,
+            h: MARKER_BOX,
+            z: 5,
+        };
+    }
+
+    // ------------------------------------------------------------------
+    // Overlay refinement
+    // ------------------------------------------------------------------
+
+    /**
+     * Repositions every spot-anchored overlay against its target's live
+     * content box.
+     *
+     * The packer places a spot geometrically against the target's rectangle,
+     * which is all a headless layout can know. Only the DOM knows how far the
+     * content is scrolled, so the canvas refines afterwards — and this pass,
+     * not the packer, is what a browser test measures.
+     */
+    function refineOverlays(): void
+    {
+        const regions = new Map<string, HTMLElement[]>();
+
+        for (const node of Object.values(doc.nodes))
+        {
+            refineOverlay(node, regions);
+        }
+    }
+
+    /**
+     * Follows a scrolling region with the marks placed on its content.
+     *
+     * Repositioning only — never a render, which would re-pack, re-mount and
+     * re-attach wiring on every frame of a scroll.
+     *
+     * @param e - The scroll event, captured on its way down.
+     */
+    function onRegionScroll(e: Event): void
+    {
+        const targetId = frameUnder(e.target);
+
+        if (targetId)
+        {
+            refineOverlaysOf(targetId);
+        }
+    }
+
+    /**
+     * Repositions the overlays anchored to one target. Used by the scroll
+     * handler, which must never re-pack or re-mount.
+     *
+     * @param targetId - The scrolled node.
+     */
+    function refineOverlaysOf(targetId: string): void
+    {
+        // The region list is computed ONCE for the pass. Recomputing it per
+        // overlay walks the target's whole subtree per mark per scroll frame,
+        // which is the jank this handler exists to avoid.
+        const regions = new Map<string, HTMLElement[]>();
+
+        for (const node of Object.values(doc.nodes))
+        {
+            if (anchorTarget(node) === targetId)
+            {
+                refineOverlay(node, regions);
+            }
+        }
+    }
+
+    /**
+     * Positions one overlay against its target's content, hiding it when the
+     * content it marks has been scrolled out of view.
+     *
+     * @param node    - The candidate overlay node.
+     * @param regions  - Per-target scrolling regions, memoised for this pass.
+     */
+    function refineOverlay(
+        node: CanvasNode,
+        regions: Map<string, HTMLElement[]>): void
+    {
+        const spot = spotOf(node);
+        const targetId = anchorTarget(node);
+        const frame = frames.get(node.id);
+        const targetRect = targetId ? packedRects.get(targetId) : undefined;
+
+        if (!spot || !targetId || !frame || !targetRect)
+        {
+            return;
+        }
+
+        const offset = spotOffset(
+            targetId, spot, withinOf(node), regionsOf(targetId, regions));
+
+        if (!offset)
+        {
+            return;
+        }
+
+        // Half the marker's own box, so the mark is centred on the point that
+        // was clicked rather than hanging below and right of it.
+        const half = (packedRects.get(node.id)?.w ?? MARKER_BOX) / 2;
+
+        frame.style.left = `${targetRect.x + offset.dx - half}px`;
+        frame.style.top = `${targetRect.y + offset.dy - half}px`;
+        frame.classList.toggle(`${CLS}-overlay-hidden`, !offset.visible);
+    }
+
+    /** The node id an overlay is anchored to, or null. */
+    function anchorTarget(node: CanvasNode): string | null
+    {
+        return node.anchor?.kind === "node" && node.anchor.nodeId
+            ? node.anchor.nodeId
+            : null;
+    }
+
+    /**
+     * The scrolling regions of one target, computed once per refinement pass.
+     *
+     * @param targetId - The anchored node.
+     * @param cache    - The pass's memo.
+     * @returns The regions, or an empty list when the node has no body.
+     */
+    function regionsOf(
+        targetId: string,
+        cache: Map<string, HTMLElement[]>): HTMLElement[]
+    {
+        const cached = cache.get(targetId);
+
+        if (cached)
+        {
+            return cached;
+        }
+
+        const body = bodies.get(targetId);
+        const found = body ? scrollRegions(body) : [];
+
+        cache.set(targetId, found);
+
+        return found;
+    }
+
+    /** The scrolling region index a spot was measured against. */
+    function withinOf(node: CanvasNode): number
+    {
+        const within = (node.anchor as { within?: number } | undefined)?.within;
+
+        return typeof within === "number" && within >= 0 ? within : 0;
+    }
+
+    /** The fractional spot recorded on a node anchor, or null. */
+    function spotOf(node: CanvasNode): { x: number; y: number } | null
+    {
+        const spot = (node.anchor as { spot?: { x: number; y: number } } | undefined)
+            ?.spot;
+
+        return spot && isFinite(spot.x) && isFinite(spot.y) ? spot : null;
+    }
+
+    // ------------------------------------------------------------------
     // Viewport and virtualization
     // ------------------------------------------------------------------
 
@@ -858,6 +1468,40 @@ function build(
                 && r.y < bottom && r.y + r.h > top)
             {
                 visible.add(id);
+            }
+        }
+
+        return withOverlaysOfVisibleTargets(visible);
+    }
+
+    /**
+     * Ties an overlay's mounted-ness to its target's.
+     *
+     * An overlay's packed rectangle is a fallback that the refinement pass
+     * overrides, so testing it against the viewport answers the wrong question.
+     * A mark is worth mounting exactly when the thing it marks is.
+     *
+     * @param visible - Ids judged visible by their rectangles.
+     * @returns The corrected set.
+     */
+    function withOverlaysOfVisibleTargets(visible: Set<string>): Set<string>
+    {
+        for (const node of Object.values(doc.nodes))
+        {
+            const targetId = anchorTarget(node);
+
+            if (!targetId || !doc.nodes[targetId])
+            {
+                continue;
+            }
+
+            if (visible.has(targetId))
+            {
+                visible.add(node.id);
+            }
+            else
+            {
+                visible.delete(node.id);
             }
         }
 
@@ -945,6 +1589,10 @@ function build(
 
         getViewport: () => ({ ...doc.viewport }),
 
+        startPlacement,
+        cancelPlacement,
+        isPlacing: () => placing !== null,
+
         clear()
         {
             emitPatch(Object.keys(doc.nodes).map(
@@ -958,7 +1606,10 @@ function build(
                 return;
             }
 
+            cancelPlacement();
             destroyed = true;
+            root.removeEventListener("click", onCanvasClick, true);
+            root.removeEventListener("scroll", onRegionScroll, true);
             wiring.detach();
             lifecycle.destroy();
             frames.clear();

@@ -19,12 +19,24 @@ It also **rests as a marker**, expanding on click or a 400ms hover dwell. Twenty
 // Unbound: packed as an ordinary node, like a sticky note.
 { anchor: { kind: "canvas" } }
 
-// Bound to a PLACE within the grid: 40% across, 25% down. Fractions rather
-// than pixels, so the mark stays on the same cell when the grid is resized.
+// Bound to a PLACE within the grid: 40% across, 25% down its content.
+// Fractions rather than pixels, so the mark stays on the same cell when the
+// grid is scrolled or resized.
 { anchor: { kind: "node", nodeId: "grid-1", spot: { x: 0.4, y: 0.25 } } }
 ```
 
-Omitting `spot` attaches to the target's top-right corner, which is the right default for "this whole thing" and the wrong one for "this cell". Supplying the gesture that *sets* `spot` from a click is the host application's job — the canvas exposes the field, not a point-here tool.
+Omitting `spot` attaches to the target's top-right corner, which is the right default for "this whole thing" and the wrong one for "this cell".
+
+You do not compute `spot` yourself. [DynamicCanvas](../dynamiccanvas/README.md)'s `startPlacement()` arms the canvas so the user's next click places the mark where they pointed, works out what they pointed at, and records it in the document:
+
+```javascript
+canvas.startPlacement({
+    component: "annotation",
+    options: { kind: "callout", expanded: true },
+});
+```
+
+Persisting the resulting patch is the application's job. Translating a screen coordinate into an anchor is not.
 
 ## Features
 

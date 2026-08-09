@@ -3544,10 +3544,29 @@
     label in place with no repaint, so the caret survives a keystroke.
 
     An anchor may carry an optional fractional `spot: {x, y}` naming a place
-    WITHIN the target rather than its corner. Fractions, not pixels, so the
-    mark holds its position when the target is resized. The library exposes
-    the field; the GESTURE that sets it from a click is the host application's
-    to build (ADR-140's boundary — the repo ships capability, not application).
+    WITHIN the target rather than its corner, plus `within` naming which
+    scrolling region the fraction is measured against.
+
+    AMENDED 2026-08-09. This ADR first placed the GESTURE that sets `spot`
+    outside the library, on ADR-140's boundary. That reading was wrong and the
+    owner corrected it: an application must not have to do extra work to use a
+    component. Recording where a click landed is coordinate translation, and
+    every consuming app would re-derive the same zoom, scroll and pan
+    arithmetic to do it. Persisting the resulting document is the app's job;
+    producing it is not.
+
+    So DynamicCanvas ships the gesture: startPlacement() arms the canvas, the
+    user's next click resolves to a target and a spot, and the result is
+    emitted as an ordinary patch. Capture and restore are written adjacent as
+    explicit inverses — capture starts from client coordinates and divides out
+    zoom, restore works in layout pixels — because housed apart they drift, and
+    a drifted pair puts the mark somewhere plausible rather than throwing.
+
+    `spot` is a fraction of the target's scrollable CONTENT, not of its visible
+    box, so a mark holds its place through scrolling and resizing. The packer
+    places it geometrically as a headless fallback; the canvas refines it
+    against the live DOM afterwards, and that refinement is what a browser
+    measures.
   consequences: |
     + An annotation can never rearrange the canvas; e2e asserts the bounding
       box of an annotated node is unchanged after six annotations.
@@ -3557,8 +3576,18 @@
       never rebuilt.
     - The label is no longer page text, so tests must read the editor's value
       rather than getByText. Recorded in the component README.
-    - `spot` is settable but has no built-in placement gesture. A host that
-      wants point-to-annotate must supply the click handling itself.
+    + An overlay with fixed coordinates is excluded from the packer's obstacle
+      list as well as its occupancy, so a mark dropped on bare canvas no longer
+      pushes nearby nodes aside.
+    + `spot` and `within` are validated like everything else in a document: a
+      NaN fraction from a model-authored scene is rejected rather than placing
+      a mark at no coordinates at all.
+    - A geometric anchor survives scrolling and resizing but NOT reflow: the
+      same fraction covers different text once a document re-wraps at a new
+      width. Content anchoring (a text quote, a row id) is what the entity
+      anchor is for, and it remains unbuilt.
+    - The canvas now carries a modal gesture state. It is one-shot and Escape
+      cancels, but it is the first modal thing the canvas has.
   files:
     - "runtime/src/types.ts"
     - "runtime/src/packer.ts"

@@ -28,7 +28,7 @@
     "test:unit:watch": "vitest",
     "test:unit:coverage": "vitest run --coverage",
     "test:e2e": "npx playwright test",
-    "test:e2e:dynamicui": "npx playwright test tests/dynamic-ui.spec.ts tests/dynamic-ui-visual.spec.ts",
+    "test:e2e:dynamicui": "npx playwright test tests/dynamic-ui.spec.ts tests/dynamic-ui-visual.spec.ts tests/placement.spec.ts",
     "test:e2e:headed": "npx playwright test --headed",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",

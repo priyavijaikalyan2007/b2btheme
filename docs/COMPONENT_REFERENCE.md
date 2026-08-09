@@ -772,12 +772,24 @@ It also **rests as a marker**, expanding on click or a 400ms hover dwell. Twenty
 // Unbound: packed as an ordinary node, like a sticky note.
 { anchor: { kind: "canvas" } }
 
-// Bound to a PLACE within the grid: 40% across, 25% down. Fractions rather
-// than pixels, so the mark stays on the same cell when the grid is resized.
+// Bound to a PLACE within the grid: 40% across, 25% down its content.
+// Fractions rather than pixels, so the mark stays on the same cell when the
+// grid is scrolled or resized.
 { anchor: { kind: "node", nodeId: "grid-1", spot: { x: 0.4, y: 0.25 } } }
 ```
 
-Omitting `spot` attaches to the target's top-right corner, which is the right default for "this whole thing" and the wrong one for "this cell". Supplying the gesture that *sets* `spot` from a click is the host application's job — the canvas exposes the field, not a point-here tool.
+Omitting `spot` attaches to the target's top-right corner, which is the right default for "this whole thing" and the wrong one for "this cell".
+
+You do not compute `spot` yourself. [DynamicCanvas](../dynamiccanvas/README.md)'s `startPlacement()` arms the canvas so the user's next click places the mark where they pointed, works out what they pointed at, and records it in the document:
+
+```javascript
+canvas.startPlacement({
+    component: "annotation",
+    options: { kind: "callout", expanded: true },
+});
+```
+
+Persisting the resulting patch is the application's job. Translating a screen coordinate into an anchor is not.
 
 ## Features
 
@@ -5407,8 +5419,37 @@ canvas.load(await host.onLoad("canvas-1"));
 | `getMountedIds()` | Node ids currently mounted |
 | `getChipIds()` | Node ids collapsed to chips by decay |
 | `panBy(dx, dy)` / `setZoom(z)` / `getViewport()` | Viewport control |
+| `startPlacement(spec?)` | Arms placement: the next click places a component where the user points |
+| `cancelPlacement()` / `isPlacing()` | Disarms, and reports whether a placement is armed |
 | `clear()` | Removes every node via a patch |
 | `destroy()` | Tears down. Idempotent. |
+
+## Click to place
+
+An application says **what** to place. The canvas works out **where** from the pointer, records it in the document, and restores it later.
+
+```javascript
+canvas.startPlacement({
+    component: "annotation",
+    options: { kind: "callout", expanded: true },
+    onPlaced: function (id, anchor) { console.log(id, anchor); },
+});
+```
+
+The next click inside the canvas completes the gesture; Escape or `cancelPlacement()` abandons it. Placement is one-shot, not a mode that sticks. The click does not reach the component underneath — clicking a grid row to annotate it must not also select that row.
+
+What gets recorded depends on where the click landed:
+
+| Clicked | Anchor | Placement |
+|---------|--------|-----------|
+| Inside a node | `{ kind: "node", nodeId, spot, within? }` | `intent` — the anchor positions it |
+| Bare canvas | `{ kind: "canvas" }` | `fixed`, at the world coordinates clicked |
+
+`spot` is a **fraction of the target's scrollable content**, not of its visible box, so a mark placed on the thirtieth row stays on the thirtieth row after the reader scrolls and after the frame is resized. `within` names which scrolling region the fraction was measured against — index 0 is the node's own body, and a component that scrolls internally contributes further regions in DOM order.
+
+The application never converts a screen coordinate into an anchor. It persists the emitted patch and hands it back to `load()`; everything geometric is the canvas's problem.
+
+**What this does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text. Anchoring to content — a text quote, a row id — is what `{ kind: "entity", entityId }` is for, and it is the right anchor for anything that reflows or virtualizes.
 
 ## Behaviour worth knowing
 
@@ -5419,6 +5460,8 @@ canvas.load(await host.onLoad("canvas-1"));
 **Virtualization is automatic.** Nodes outside the viewport plus a margin are demoted: their state is captured, they are destroyed, and their frame is left in place. Scrolling back re-mounts them and replays any data that arrived while they were away — `setState()` restores the view, but only the wiring engine's replay cache can restore the *data*.
 
 **Decay is recoverable.** A node left untouched for `decayTurns` collapses to a chip on the canvas edge rather than being destroyed. Clicking the chip restores it with its state intact. Pinned nodes never decay and are never evicted.
+
+**Marks follow their content.** A spot-anchored overlay is repositioned against its target's live content box, and hidden — not destroyed — when the content it marks scrolls out of view. Scrolling repositions only that target's marks; it never re-packs or re-mounts anything.
 
 **A failed mount is legible.** If a component's factory throws, the frame renders a literate error naming the component and the likely cause, rather than sitting empty.
 
@@ -5433,7 +5476,7 @@ DynamicCanvas is registered `NOT_MOUNTABLE` in the fleet conformance gate: it is
 ## Related
 
 - [StickyNote](../stickynote/README.md), [Annotation](../annotation/README.md) — canvas citizens
-- `specs/dynamicui.prd.md` §9, ADR-140 through ADR-144
+- `specs/dynamicui.prd.md` §9, ADR-140 through ADR-145
 
 
 ---

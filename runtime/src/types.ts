@@ -337,14 +337,30 @@ export type Anchor =
         readonly nodeId: string;
 
         /**
-         * Where within the target to attach, as fractions of its box
-         * (0..1 from its top-left). Omitted means the top-right corner, which
-         * is the right default for "this node" but wrong for "this cell".
+         * Where within the target to attach, as fractions of its scrollable
+         * CONTENT (0..1 from the content's top-left). Omitted means the
+         * top-right corner, which is right for "this node" and wrong for
+         * "this cell".
          *
-         * This is what lets an annotation mark a PLACE rather than a whole
-         * node. A canvas placement gesture supplies it from the pointer.
+         * Fractions of content rather than of the visible box: a mark placed
+         * halfway down a document is still halfway down it after the reader
+         * scrolls, and after the frame is resized.
+         *
+         * The canvas's placement gesture supplies this from the pointer — an
+         * application never converts screen coordinates itself.
          */
         readonly spot?: { readonly x: number; readonly y: number };
+
+        /**
+         * Which scrolling region the spot is measured against: index 0 is the
+         * node's own body, and further indices are regions the mounted
+         * component created for itself, in DOM order.
+         *
+         * A component may scroll internally — a grid's rows, a document's
+         * text — and a fraction of the wrong box lands nowhere near what was
+         * pointed at. Absent means the body.
+         */
+        readonly within?: number;
     }
     | { readonly kind: "entity"; readonly entityId: string };
 

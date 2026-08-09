@@ -307,6 +307,8 @@ function validateAnchor(
                 `Anchored to node "${String(value.nodeId)}", which is not in this document.`,
                 "Anchor to an existing node, or use an entity or canvas anchor."));
         }
+
+        validateSpot(value, path, issues);
         return;
     }
 
@@ -320,6 +322,53 @@ function validateAnchor(
     }
 
     issues.push(enumIssue(`${path}.kind`, value.kind, ["canvas", "node", "entity"]));
+}
+
+/**
+ * Validates the optional spot and scrolling-region index on a node anchor.
+ *
+ * These come from a pointer gesture, but a document may equally be authored by
+ * a model — and a NaN fraction reaching the packer produces a mark at no
+ * coordinates at all rather than an error anyone can see.
+ *
+ * @param anchor - The node anchor.
+ * @param path   - JSON path for error reporting.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateSpot(
+    anchor: Record<string, unknown>,
+    path: string,
+    issues: ValidationIssue[]): void
+{
+    if (anchor.spot !== undefined)
+    {
+        const spot = anchor.spot;
+
+        if (!isObject(spot) || !isFraction(spot.x) || !isFraction(spot.y))
+        {
+            issues.push(typeIssue(
+                `${path}.spot`,
+                "a spot { x, y } with both between 0 and 1",
+                spot));
+        }
+    }
+
+    if (anchor.within !== undefined
+        && !(typeof anchor.within === "number"
+            && Number.isInteger(anchor.within) && anchor.within >= 0))
+    {
+        issues.push(typeIssue(
+            `${path}.within`,
+            "a scrolling-region index (a non-negative integer)",
+            anchor.within));
+    }
+}
+
+/** True for a finite number within 0..1. */
+function isFraction(value: unknown): boolean
+{
+    return typeof value === "number" && Number.isFinite(value)
+        && value >= 0 && value <= 1;
 }
 
 /**

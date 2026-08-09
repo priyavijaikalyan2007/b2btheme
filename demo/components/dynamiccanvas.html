@@ -70,14 +70,28 @@
 
             <div class="mb-2">
                 <button class="btn btn-sm btn-primary" id="dc-note">Add note</button>
+                <button class="btn btn-sm btn-primary" id="dc-doc-node">Add long document</button>
+                <button class="btn btn-sm btn-primary" id="dc-long-note">Add long note</button>
                 <button class="btn btn-sm btn-primary" id="dc-annot">Add annotation</button>
+                <button class="btn btn-sm btn-warning" id="dc-place">Place annotation…</button>
                 <button class="btn btn-sm btn-outline-secondary" id="dc-clear">Clear</button>
                 <span class="small text-muted ms-2">
-                    Add a note first, then annotate it — the annotation anchors to the note,
-                    overlays it as a marker, and displaces nothing. Click a marker to expand
-                    it. Drag a panel by its title bar to pin it to fixed coordinates.
+                    Drag a panel by its title bar to pin it to fixed coordinates.
                 </span>
             </div>
+
+            <p class="small text-muted mb-2" id="dc-hint">
+                <strong>Place annotation…</strong> arms the canvas: your next click lands a
+                mark exactly where you point, and the canvas works out what you pointed at.
+                Try it on a long document, then scroll — the mark travels with the content
+                it marks, because what is recorded is a position in the content, not on the
+                screen. Escape cancels.
+            </p>
+            <!-- Its own line, with height reserved. Writing the result into the
+                 paragraph above reflowed the page and moved the canvas under
+                 the user between clicking and seeing the mark. -->
+            <p class="small text-muted mb-2" id="dc-placed"
+               style="min-height: 1.5em; font-family: 'JetBrains Mono', monospace;"></p>
 
             <div style="height: 460px; border: 1px solid var(--bs-border-color);">
                 <div id="dc-canvas" style="width: 100%; height: 100%;"></div>
@@ -96,6 +110,12 @@
     <script src="../../dist/runtime/runtime.js"></script>
     <script src="../../dist/components/stickynote/stickynote.js"></script>
     <script src="../../dist/components/annotation/annotation.js"></script>
+    <!-- Content tall enough to scroll, which is what makes a mark placed on it
+         worth tracking. The STYLESHEET matters as much as the script: without
+         it the grid's scroll container has no overflow rule, so it renders
+         unstyled and overflows its frame instead of scrolling inside itself. -->
+    <link rel="stylesheet" href="../../dist/components/datagrid/datagrid.css">
+    <script src="../../dist/components/datagrid/datagrid.js"></script>
     <script src="../../dist/components/dynamiccanvas/dynamiccanvas.js"></script>
 
     <script>
@@ -121,7 +141,7 @@
             return;
         }
 
-        var ALLOWED = ["stickynote", "annotation"];
+        var ALLOWED = ["stickynote", "annotation", "datagrid"];
 
         fetch("../../dist/capability-manifest.json")
             .then(function(res) { return res.json(); })
@@ -146,9 +166,17 @@
             var seq = 0;
             var docEl = document.getElementById("dc-doc");
 
+            var log = [];
+
             var canvas = createDynamicCanvas("dc-canvas", {
-                onPatch: function() { render(); }
+                onPatch: function(patch) { log.push(patch); render(); }
             });
+
+            // Exposed so the page can be driven from outside — the patch log is
+            // exactly what an application would persist, and reloading from it
+            // is how you check that a placed mark really survives a restore.
+            window.dcCanvas = canvas;
+            window.dcLog = log;
 
             function render()
             {
@@ -166,7 +194,10 @@
             function add(component, options, size, anchor)
             {
                 seq += 1;
-                canvas.apply({
+
+                // Recorded in the same log as the canvas's own patches: an app
+                // persists ONE stream, whoever authored each entry.
+                var patch = {
                     turnId: "t" + seq,
                     revision: canvas.getDocument().revision + 1,
                     ops: [{ op: "addNode", node: {
@@ -181,7 +212,10 @@
                         pinned: false,
                         grants: []
                     } }]
-                });
+                };
+
+                log.push(patch);
+                canvas.apply(patch);
                 render();
             }
 
@@ -213,6 +247,69 @@
                     { kind: "callout", label: "Callout " + (seq + 1) },
                     "compact",
                     target ? { kind: "node", nodeId: target } : null);
+            });
+
+            // Content that OVERFLOWS its frame. Scrolling is the whole point:
+            // a mark placed on row 30 has to stay on row 30.
+            document.getElementById("dc-doc-node").addEventListener("click", function()
+            {
+                var rows = [];
+
+                for (var i = 1; i <= 40; i += 1)
+                {
+                    rows.push({
+                        id: String(i),
+                        data: { section: "Section " + i,
+                                body: "Paragraph " + i + " of the document." }
+                    });
+                }
+
+                // A grid scrolls INSIDE itself rather than scrolling its frame.
+                // The canvas handles both: an anchor records which scrolling
+                // region its fraction was measured against.
+                add("datagrid", {
+                    columns: [{ id: "section", label: "Section" },
+                              { id: "body", label: "Body" }],
+                    rows: rows,
+                    pageSize: 0,
+                    // An explicit height makes the grid scroll INSIDE itself
+                    // rather than growing to fit and letting the frame body
+                    // take the overflow. Both are real; this demo shows both.
+                    height: "220px"
+                }, "standard");
+            });
+
+            // A note longer than its card. Its text area scrolls INSIDE the
+            // component, so a mark placed on line 40 has to follow that inner
+            // scroller rather than the frame body — the canvas records which
+            // region it measured against, so both cases work.
+            document.getElementById("dc-long-note").addEventListener("click", function()
+            {
+                var lines = [];
+
+                for (var i = 1; i <= 60; i += 1)
+                {
+                    lines.push("Line " + i + " of a note longer than its card.");
+                }
+
+                add("stickynote", { text: lines.join("\n") }, "compact");
+            });
+
+            // The gesture. The app says WHAT to place; the canvas decides WHERE
+            // from the pointer and records it in the document. An app never
+            // converts screen coordinates into an anchor.
+            document.getElementById("dc-place").addEventListener("click", function()
+            {
+                canvas.startPlacement({
+                    component: "annotation",
+                    options: { kind: "callout", label: "New mark", expanded: true },
+                    onPlaced: function(id, anchor)
+                    {
+                        document.getElementById("dc-placed").textContent =
+                            "Placed " + id + " → " + JSON.stringify(anchor);
+                        render();
+                    }
+                });
             });
 
             document.getElementById("dc-clear").addEventListener("click", function()

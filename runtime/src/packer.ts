@@ -28,6 +28,7 @@ import {
 import type {
     CanvasDocument,
     CanvasNode,
+    Placement,
     Region,
     SizeHint,
 } from "./types";
@@ -180,12 +181,22 @@ export function packDocument(
 
     for (const node of nodes)
     {
-        if (node.placement.kind === "fixed")
+        if (node.placement.kind !== "fixed")
         {
-            const rect = fixedRect(node);
-            out.set(node.id, rect);
-            obstacles.push(rect);
+            continue;
         }
+
+        // An overlay with fixed coordinates is still an overlay. Adding it to
+        // the obstacle list made a mark dropped on bare canvas push the nodes
+        // near it aside — the exact displacement overlays exist to avoid.
+        if (isAnchoredOverlay(node, doc) || isOverlayComponent(node.component))
+        {
+            continue;
+        }
+
+        const rect = fixedRect(node);
+        out.set(node.id, rect);
+        obstacles.push(rect);
     }
 
     const shelves = new Map<Region, Shelf>();
@@ -287,6 +298,15 @@ function placeOverlays(
             }
         }
 
+        // A mark dropped on bare canvas carries the coordinates it was dropped
+        // at. Marching it along the top of the region regardless — which this
+        // did — moved it silently, with no error and nothing logged.
+        if (node.placement.kind === "fixed")
+        {
+            out.set(node.id, fixedOverlayRect(node.placement));
+            continue;
+        }
+
         // An unanchored overlay still floats rather than being packed: it
         // marches along the top of the main region without pushing anything.
         out.set(node.id, freeOverlayRect(geometry, free));
@@ -295,10 +315,33 @@ function placeOverlays(
 }
 
 /**
+ * Places an overlay the user dropped at specific canvas coordinates.
+ *
+ * @param placement - The node's fixed placement.
+ * @returns The overlay's rectangle, lifted above ordinary nodes.
+ */
+function fixedOverlayRect(
+    placement: Extract<Placement, { kind: "fixed" }>): PackedRect
+{
+    return {
+        x: placement.x,
+        y: placement.y,
+        w: MARKER_SIZE,
+        h: MARKER_SIZE,
+        z: placement.z + OVERLAY_Z_LIFT,
+    };
+}
+
+/**
  * Places an overlay at a specific spot within its target.
  *
- * The spot is a fraction of the target's box, so it survives the target being
- * moved or resized — which a pixel offset would not.
+ * HEADLESS FALLBACK. A pure layout cannot know how far a node's content is
+ * scrolled, so this places the mark against the target's rectangle. A canvas
+ * with a live DOM refines it against the content box afterwards, and that
+ * refinement — not this — is what a browser measures.
+ *
+ * The spot is a fraction rather than a pixel offset, so it survives the target
+ * being moved or resized.
  *
  * @param target - The target's packed rectangle.
  * @param spot   - Fractional position within the target.

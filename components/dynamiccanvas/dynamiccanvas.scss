@@ -154,6 +154,28 @@
     overflow: visible;
 }
 
+// The content this mark was placed on has been scrolled out of its node's
+// visible box. Hidden rather than removed: the node still exists, and the mark
+// reappears the moment its content scrolls back.
+.dyncanvas-overlay-hidden
+{
+    display: none;
+}
+
+// ============================================================================
+// PLACEMENT MODE
+// ============================================================================
+//
+// Armed by startPlacement(): the next click positions a component wherever the
+// user points. The cursor is the only affordance — the canvas keeps rendering
+// normally, because what is being pointed AT is the thing that matters.
+
+.dyncanvas-placing,
+.dyncanvas-placing *
+{
+    cursor: crosshair;
+}
+
 // ============================================================================
 // MOUNT ERROR
 // ============================================================================

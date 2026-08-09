@@ -359,14 +359,30 @@ type Anchor =
         readonly nodeId: string;
 
         /**
-         * Where within the target to attach, as fractions of its box
-         * (0..1 from its top-left). Omitted means the top-right corner, which
-         * is the right default for "this node" but wrong for "this cell".
+         * Where within the target to attach, as fractions of its scrollable
+         * CONTENT (0..1 from the content's top-left). Omitted means the
+         * top-right corner, which is right for "this node" and wrong for
+         * "this cell".
          *
-         * This is what lets an annotation mark a PLACE rather than a whole
-         * node. A canvas placement gesture supplies it from the pointer.
+         * Fractions of content rather than of the visible box: a mark placed
+         * halfway down a document is still halfway down it after the reader
+         * scrolls, and after the frame is resized.
+         *
+         * The canvas's placement gesture supplies this from the pointer — an
+         * application never converts screen coordinates itself.
          */
         readonly spot?: { readonly x: number; readonly y: number };
+
+        /**
+         * Which scrolling region the spot is measured against: index 0 is the
+         * node's own body, and further indices are regions the mounted
+         * component created for itself, in DOM order.
+         *
+         * A component may scroll internally — a grid's rows, a document's
+         * text — and a fraction of the wrong box lands nowhere near what was
+         * pointed at. Absent means the body.
+         */
+        readonly within?: number;
     }
     | { readonly kind: "entity"; readonly entityId: string };
 
@@ -1330,6 +1346,8 @@ function validateAnchor(
                 `Anchored to node "${String(value.nodeId)}", which is not in this document.`,
                 "Anchor to an existing node, or use an entity or canvas anchor."));
         }
+
+        validateSpot(value, path, issues);
         return;
     }
 
@@ -1343,6 +1361,53 @@ function validateAnchor(
     }
 
     issues.push(enumIssue(`${path}.kind`, value.kind, ["canvas", "node", "entity"]));
+}
+
+/**
+ * Validates the optional spot and scrolling-region index on a node anchor.
+ *
+ * These come from a pointer gesture, but a document may equally be authored by
+ * a model — and a NaN fraction reaching the packer produces a mark at no
+ * coordinates at all rather than an error anyone can see.
+ *
+ * @param anchor - The node anchor.
+ * @param path   - JSON path for error reporting.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateSpot(
+    anchor: Record<string, unknown>,
+    path: string,
+    issues: ValidationIssue[]): void
+{
+    if (anchor.spot !== undefined)
+    {
+        const spot = anchor.spot;
+
+        if (!isObject(spot) || !isFraction(spot.x) || !isFraction(spot.y))
+        {
+            issues.push(typeIssue(
+                `${path}.spot`,
+                "a spot { x, y } with both between 0 and 1",
+                spot));
+        }
+    }
+
+    if (anchor.within !== undefined
+        && !(typeof anchor.within === "number"
+            && Number.isInteger(anchor.within) && anchor.within >= 0))
+    {
+        issues.push(typeIssue(
+            `${path}.within`,
+            "a scrolling-region index (a non-negative integer)",
+            anchor.within));
+    }
+}
+
+/** True for a finite number within 0..1. */
+function isFraction(value: unknown): boolean
+{
+    return typeof value === "number" && Number.isFinite(value)
+        && value >= 0 && value <= 1;
 }
 
 /**
@@ -3872,12 +3937,22 @@ function packDocument(
 
     for (const node of nodes)
     {
-        if (node.placement.kind === "fixed")
+        if (node.placement.kind !== "fixed")
         {
-            const rect = fixedRect(node);
-            out.set(node.id, rect);
-            obstacles.push(rect);
+            continue;
         }
+
+        // An overlay with fixed coordinates is still an overlay. Adding it to
+        // the obstacle list made a mark dropped on bare canvas push the nodes
+        // near it aside — the exact displacement overlays exist to avoid.
+        if (isAnchoredOverlay(node, doc) || isOverlayComponent(node.component))
+        {
+            continue;
+        }
+
+        const rect = fixedRect(node);
+        out.set(node.id, rect);
+        obstacles.push(rect);
     }
 
     const shelves = new Map<Region, Shelf>();
@@ -3979,6 +4054,15 @@ function placeOverlays(
             }
         }
 
+        // A mark dropped on bare canvas carries the coordinates it was dropped
+        // at. Marching it along the top of the region regardless — which this
+        // did — moved it silently, with no error and nothing logged.
+        if (node.placement.kind === "fixed")
+        {
+            out.set(node.id, fixedOverlayRect(node.placement));
+            continue;
+        }
+
         // An unanchored overlay still floats rather than being packed: it
         // marches along the top of the main region without pushing anything.
         out.set(node.id, freeOverlayRect(geometry, free));
@@ -3987,10 +4071,33 @@ function placeOverlays(
 }
 
 /**
+ * Places an overlay the user dropped at specific canvas coordinates.
+ *
+ * @param placement - The node's fixed placement.
+ * @returns The overlay's rectangle, lifted above ordinary nodes.
+ */
+function fixedOverlayRect(
+    placement: Extract<Placement, { kind: "fixed" }>): PackedRect
+{
+    return {
+        x: placement.x,
+        y: placement.y,
+        w: MARKER_SIZE,
+        h: MARKER_SIZE,
+        z: placement.z + OVERLAY_Z_LIFT,
+    };
+}
+
+/**
  * Places an overlay at a specific spot within its target.
  *
- * The spot is a fraction of the target's box, so it survives the target being
- * moved or resized — which a pixel offset would not.
+ * HEADLESS FALLBACK. A pure layout cannot know how far a node's content is
+ * scrolled, so this places the mark against the target's rectangle. A canvas
+ * with a live DOM refines it against the content box afterwards, and that
+ * refinement — not this — is what a browser measures.
+ *
+ * The spot is a fraction rather than a pixel offset, so it survives the target
+ * being moved or resized.
  *
  * @param target - The target's packed rectangle.
  * @param spot   - Fractional position within the target.
