@@ -242,6 +242,15 @@ The PR is incomplete unless every box is ticked:
 - [ ] Everything already required elsewhere in this file: Layout Studio
       stencil, Component Studio entry, README, dark mode, keyboard, demo page.
 
+**If your component scrolls its own content**, know that the canvas records a
+mark's position as a fraction of a scrolling region plus `within` — the index
+of that region among the scrollable elements inside the frame body, in DOM
+order (ADR-145). Adding or removing an internally-scrolling region in a later
+version shifts previously recorded indices, so marks placed on the old version
+land in the wrong region. Treat your scrolling structure as part of your public
+shape, or say in the README that annotations on it are not durable across
+versions. Tracked as DEBT-DUI-5.
+
 A component that is genuinely not canvas-mountable — a service, an element
 builder, a boot script, a modal overlay — goes in `NOT_MOUNTABLE` in the gate
 **with a written rationale**, not in `EXEMPT`. `EXEMPT` means "migration

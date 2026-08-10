@@ -159,6 +159,27 @@ Any node attaches in one of three ways:
 
 `entity` is the powerful one: a note anchored to `table:orders` surfaces on **any** canvas in the workspace where that entity appears, travelling with the data rather than the layout.
 
+### Marking a place, not a whole node
+
+A node anchor may carry a `spot` — a fraction of the target's scrollable **content**, so a mark placed on the fortieth line is still on the fortieth line after the reader scrolls and after the frame is resized:
+
+```javascript
+{ kind: "node", nodeId: "doc-1", spot: { x: 0.4, y: 0.25 } }
+```
+
+You do not compute that. `canvas.startPlacement()` arms the canvas so the user's next click resolves the target, the fraction, and which scrolling region the fraction was measured against (`within`), then emits the whole thing as an ordinary patch:
+
+```javascript
+canvas.startPlacement({
+    component: "annotation",
+    options: { kind: "callout", expanded: true },
+});
+```
+
+**This is the boundary in miniature.** Persisting the patch is your job. Translating a screen coordinate into an anchor is not — it needs the canvas's own zoom, pan and scroll state, and every application would otherwise write the same arithmetic.
+
+**What a geometric anchor does not survive: reflow.** A fraction points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text. For anything that reflows or virtualizes, anchor to the data with `{ kind: "entity" }`.
+
 ---
 
 ## 7. Placement and virtualization

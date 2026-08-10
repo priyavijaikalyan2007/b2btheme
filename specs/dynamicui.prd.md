@@ -696,13 +696,26 @@ Any node may anchor in one of three modes:
 ```typescript
 export type Anchor =
     | { readonly kind: "canvas"; }                            // free-floating at its placement
-    | { readonly kind: "node";   readonly nodeId: string; }   // moves and demotes with its host
+    | {                                                       // moves and demotes with its host
+        readonly kind: "node";
+        readonly nodeId: string;
+        readonly spot?: { readonly x: number; readonly y: number };
+        readonly within?: number;
+      }
     | { readonly kind: "entity"; readonly entityId: string; };// follows a domain entity
 ```
 
 `entity` is the powerful one: a note anchored to `table:orders` surfaces on **any** canvas in the workspace where that entity appears, and travels with the entity rather than the layout. DiagramEngine's existing entity-anchored comments are precedent for the model.
 
 Anchoring applies to every component, not just notes — pinning a MetricCard to an entity is equally valid.
+
+### 10.1 Marking a place within a node (ADR-145, added 2026-08-09)
+
+`spot` is a fraction of the target's scrollable **content**, not of its visible box, so a mark holds its place through scrolling and resizing. `within` names which scrolling region the fraction was measured against — index 0 is the node's frame body, and a component that scrolls internally contributes further regions in DOM order. Both are validated by `validateDocument`; a NaN fraction places a mark at no coordinates rather than raising.
+
+The **gesture** ships with the canvas, not the application: `startPlacement(spec)` arms it, and the user's next click resolves the target and the fraction and emits an ordinary patch. This was originally specified the other way round — the field in the library, the gesture in the app — on the reasoning that the repo ships capability rather than application behaviour. That was wrong. Recording where a click landed is coordinate translation against the canvas's own zoom, pan and scroll state, and every consuming application would re-derive the same arithmetic. Persisting the document remains the application's job.
+
+**Limit.** A geometric anchor survives scrolling and resizing but **not reflow**: re-wrap a document at a different width and the same fraction covers different text. Content anchoring — a text-quote or offset selector surfaced through the entity anchor — is the answer and is not built.
 
 ---
 
@@ -817,7 +830,9 @@ Plain DOM note: text, colour from the palette, resize, all three anchor modes. `
 
 ### 15.2 Annotation
 
-Callout, arrow, and highlight overlays anchored per §10. SVG overlay in a single shared layer, so *n* annotations cost one element tree rather than *n* mounted components.
+Callout, arrow, and highlight overlays anchored per §10.
+
+**Amended during implementation.** This section specified one shared SVG layer, so that *n* annotations cost one element tree. That was dropped: pooling would have made annotations second-class citizens with their own coordinate system, unable to be mounted, virtualized, wired or restored like any other node. One small inline SVG per annotation keeps them ordinary canvas citizens at trivial cost, which matters more than the element count. Two further corrections from browser testing (ADR-145): the pin is permanent and the card opens beside it, because rebuilding the element under the pointer produced a self-sustaining expand/collapse flicker; and the expanded card is a `<textarea>`, never `contenteditable`, because a paste into contenteditable inserts markup and would breach the textContent-only discipline.
 
 Both require manifests, Layout Studio stencils, Component Studio entries, READMEs, and demo coverage like any other component.
 
