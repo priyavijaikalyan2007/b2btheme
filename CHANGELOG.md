@@ -12,6 +12,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-08-10
+
+### Fixed
+- **DiagramEngine e2e suite now runs.** All 67 tests failed on `createDiagramEngine not found on window` because the spec navigated to the component gallery index, which loads no component scripts. Repointed at the DiagramEngine demo page; all 67 pass with no engine changes — nothing was broken behind the broken harness.
+
 ## 2026-08-09
 
 ### Added

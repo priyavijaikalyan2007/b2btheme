@@ -257,6 +257,8 @@ listed here so future audits do not re-litigate them without the context.
 
 ---
 
-## MEDIUM — DiagramEngine e2e suite does not run (2026-08-09)
+## RESOLVED — DiagramEngine e2e suite did not run (2026-08-09, fixed 2026-08-10)
 
-- [ ] **DEBT-DE-1** All 67 tests in `tests/diagramengine.spec.ts` fail with `createDiagramEngine not found on window`. The spec navigates to `/docs/demo.html`, which is the component **gallery index** and never loads `diagramengine.js`; the bundle's `window.createDiagramEngine` assignment is present and correct. The suite has therefore been asserting nothing. Point it at a page that loads the engine (or give it a fixture page), then triage whatever the now-running assertions surface.
+- [x] **DEBT-DE-1** All 67 tests in `tests/diagramengine.spec.ts` failed with `createDiagramEngine not found on window`. The spec navigated to `/docs/demo.html`, the component **gallery index**, which links to every component page and loads none of them; the bundle's `window.createDiagramEngine` assignment was present and correct all along. The suite had therefore been asserting nothing. Repointed at `/demo/components/diagramengine.html`, which loads the engine and builds a canvas, and given a readiness wait on the global rather than a bare selector. All 67 pass with **no engine changes** — nothing was broken behind the broken harness.
+
+  Confirmed the suite has teeth by mutation rather than by trusting green: changing the built default-shape path (`shape: n.shape ?? "rectangle"` → `"ellipse"`) fails `addObject fills defaults` with the expected diff, and the bundle was restored byte-identical afterwards. A first mutation attempt hit two unrelated `shape:"rectangle"` literals and changed nothing — worth knowing that a passing mutation test can mean you mutated the wrong line.

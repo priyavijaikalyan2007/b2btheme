@@ -20,6 +20,16 @@
 
 import { test, expect, type Page } from "@playwright/test";
 
+/*
+ * The component demo page — it loads diagramengine.js and builds a canvas.
+ *
+ * This pointed at /docs/demo.html, which is the component GALLERY INDEX: it
+ * links to every component's page and loads none of them. Every test in this
+ * file therefore failed on `createDiagramEngine not found on window`, so the
+ * suite asserted nothing at all while appearing to be comprehensive cover.
+ */
+const DEMO = "/demo/components/diagramengine.html";
+
 // ---------------------------------------------------------------------------
 // HELPERS
 // ---------------------------------------------------------------------------
@@ -30,18 +40,23 @@ import { test, expect, type Page } from "@playwright/test";
  */
 async function createEngine(page: Page): Promise<void>
 {
-    await page.goto("/docs/demo.html");
+    await page.goto(DEMO);
     await page.waitForSelector(".de-canvas", { timeout: 10000 });
 }
 
 /**
- * Evaluates an expression against the global engine on the demo page.
- * The demo page creates `engine` in an IIFE — we need to find it.
- * Instead, we'll create our own engine in a test container.
+ * Creates a private engine in an off-screen container on the demo page.
+ *
+ * The page's own engine lives inside an IIFE and is not reachable, so each
+ * test builds its own rather than mutating a shared one.
  */
 async function createTestEngine(page: Page): Promise<void>
 {
-    await page.goto("/docs/demo.html");
+    await page.goto(DEMO);
+    await page.waitForFunction(
+        () => typeof (window as unknown as Record<string, unknown>)
+            .createDiagramEngine === "function",
+        undefined, { timeout: 10000 });
 
     await page.evaluate(() =>
     {

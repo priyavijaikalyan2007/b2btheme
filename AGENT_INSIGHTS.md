@@ -101,3 +101,8 @@ A placement test failed by 18px and the geometry was blamed twice. The actual ca
 The packer skipped overlays when *placing* nodes but still added a fixed-placement overlay to the *obstacle* list, so a mark dropped on bare canvas pushed nearby nodes aside — the exact displacement overlays exist to prevent. A second bug in the same function ignored `placement` entirely for unanchored overlays and marched them along the top of the region, discarding the coordinates they were given.
 
 **Principle**: A layout exemption has two halves — "does not get placed by the packer" and "is not treated as an obstacle by it". Assert both: compare a node's rectangle with and without the overlay present.
+
+### 5.7 A Test Suite That Cannot Reach Its Subject Fails Loudly and Means Nothing (2026-08-10)
+67 DiagramEngine e2e tests failed on `createDiagramEngine not found on window`. The engine was fine; the spec navigated to the component *gallery index*, which links to every component page and loads none of them. The failure looked like 67 broken features and was one broken URL. Repointing fixed all 67 with no engine change.
+
+**Principle**: When a whole suite fails identically, suspect the harness before the subject — and check what the page under test actually loads. Then prove the repaired suite is not vacuous by mutating the implementation and watching it fail. Mutate the *exact* line the assertion depends on: a first attempt here changed two unrelated `shape:"rectangle"` literals, nothing failed, and that reads precisely like a toothless suite.

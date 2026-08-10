@@ -2,6 +2,38 @@
 
 # Conversation Log
 
+## 2026-08-10 — Session-end records, standards pass, and the DiagramEngine harness
+
+**Trigger**: *"Update semantic markers, knowledge base files, repository indexes, conversation,
+status files, insights and tech debt data. Then make sure all changed / new code adheres to
+codebase standards. Finally, update the changelog. Then commit and push. Then Fix the diagramengine
+bugs and tests."*
+
+**Standards pass**: extracted `packCurrent`, `againstTarget`, `adrift` and `validateNodeAnchor` so
+every function touched by the placement work is back under the 30-line guidance; `attachDrag` (36)
+predates it and is tagged `@agent:refactor` rather than quietly rewritten. Canvas header gained a
+second `⚡ FLOW` line and a `[[ClickToPlace]]` relation; the placement section carries the
+`⚓ ClickToPlace` anchor. Line lengths, logging prefixes, `innerHTML` and whitespace all clean.
+
+**Records**: concepts `ClickToPlace` / `SpotAnchor`; entities `Anchor` / `PlacementSpec`;
+`DynamicCanvas` and `Annotation` cross-linked and Annotation's definition brought up to date;
+insights §5.1–5.7; `DEBT-DUI-1…5`; changelog entries for both days; plan checkpoint in
+`specs/dynamicui.plan.md`.
+
+**DiagramEngine**: the 67 failing e2e tests were one broken URL, not 67 broken features — the spec
+navigated to `/docs/demo.html`, the component *gallery index*, which links to every component page
+and loads none of them. Repointed at `/demo/components/diagramengine.html` with a readiness wait on
+the global. All 67 pass with **no engine changes**. Confirmed the repaired suite is not vacuous by
+mutating the built default-shape path and watching the defaults test fail with the expected diff,
+then restoring the bundle byte-identical. Worth recording: the first mutation attempt hit two
+unrelated `shape:"rectangle"` literals and nothing failed — which reads exactly like a toothless
+suite.
+
+**Verification**: 4773 unit tests across 140 files; **100** Playwright e2e (67 diagramengine +
+21 dynamic-ui + 12 placement); `npm run build` exit 0; both typecheck configs clean.
+
+---
+
 ## 2026-08-09 — Click-to-place: the canvas resolves a click into an anchor
 
 **Trigger**: Reviewing the annotation fixes, the user set the boundary explicitly: *"the app should
