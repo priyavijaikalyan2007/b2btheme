@@ -860,17 +860,72 @@ oscillation is driven by real pointer events against real layout.
 
 ---
 
+---
+
+## Checkpoint 2026-08-09 — Click-to-place: the canvas resolves a click into an anchor
+
+**Trigger.** After the annotation fixes landed, the owner set the boundary explicitly: *"the app
+should not have to do extra work to use the components... it's not the app's job to translate
+screen coordinates."* The `spot` field existed but nothing set it from a pointer, so annotations
+still landed on a target's corner. ADR-145 had recorded the gesture as the host application's to
+build; that was wrong and is now amended in place.
+
+**Built.** `startPlacement(spec)` / `cancelPlacement()` / `isPlacing()` on the canvas handle. The
+next click resolves to a target node and a fractional spot within its scrollable content, and is
+emitted as an ordinary patch. One-shot; Escape cancels; capture-phase so the click never reaches
+the component underneath.
+
+**The part that needed a second pass.** A fraction of *what* is not obvious. The frame body
+scrolls when a component renders taller than its frame — but a component may scroll INTERNALLY
+instead (a note longer than its card, a grid's rows). Anchoring only to the body would leave marks
+behind on internal scroll, silently. So an anchor also records `within`, the index of the scrolling
+region the fraction was measured against, and a single capture-phase `scroll` listener on the root
+tracks every region — including ones a component creates long after mount, because scroll does not
+bubble but capture still runs past every ancestor.
+
+**Two silent bugs found by measurement, not reasoning.**
+
+1. `placeOverlays` marched EVERY unanchored overlay along the top of the main region, discarding
+   the coordinates a dropped mark was given.
+2. A fixed-placement overlay was added to the packer's obstacle list, so a mark pushed the nodes
+   near it aside — the exact displacement overlays exist to avoid.
+
+Both produced a plausible-looking canvas and no error.
+
+**A third found by reading the debug probe rather than the test name.** The first placement test
+failed by 18px. The cause was not the geometry: the demo wrote its "Placed …" readout into the
+five-line instruction paragraph, collapsing it to one line, reflowing the page and moving the
+canvas 17px between the click and the measurement. The readout now has its own line with reserved
+height.
+
+**Coverage gap that nearly shipped.** The `within > 0` path had no coverage: the demo's grid did
+not scroll internally, because the page loaded `datagrid.js` without `datagrid.css`, so the
+scroll container had no overflow rule. Fixed by loading the stylesheet and adding a long-note case,
+whose textarea genuinely scrolls inside the component.
+
+**Validation.** `spot` and `within` are now checked by `validateDocument`. They were passing
+through unvalidated, and a NaN fraction places a mark at no coordinates rather than raising.
+
+**Known limit, recorded rather than papered over.** A geometric anchor survives scrolling and
+resizing but NOT reflow: re-wrap a document at a different width and the same fraction covers
+different text. Content anchoring is what the entity anchor is for, and it is unbuilt.
+
+**Verified 2026-08-09:** 4773 unit tests across 140 files; 33 Playwright (21 dynamic-ui + 12
+placement); `npm run build` exit 0; both typecheck configs clean.
+
+---
+
 ## Current Stats
 
-_Last verified 2026-08-03._
+_Last verified 2026-08-09._
 
 | Metric | Value |
 |---|---|
 | Runtime modules | 7 (`types`, `document`, `wiring`, `resolver`, `registry`, `lifecycle`, `conformance`) |
-| Runtime tests | 448 passing across 11 suites (197 gate, 38 bundle) |
+| Runtime tests | 448+ passing across 11 suites (197 gate, 38 bundle) |
 | Strict typecheck | Clean via `npm run typecheck:runtime` (adds noUnusedLocals/Parameters) |
-| Full suite | 4741 passing across 140 files, plus 19 Playwright |
+| Full suite | 4773 passing across 140 files, plus 33 Playwright |
 | Components with manifests | **89 of 105** in scope (18 excluded, 16 exempt) |
 | Conformance levels | 6 `surface`, 1 `field`, 91 `display` |
 | Existing component code modified | 3 (`datagrid.ts`, `treeview.ts`, `splitlayout.ts` fix) |
-| ADRs landed | ADR-140 … ADR-144 |
+| ADRs landed | ADR-140 … ADR-145 (145 amended 2026-08-09) |

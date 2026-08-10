@@ -244,3 +244,19 @@ listed here so future audits do not re-litigate them without the context.
 - [ ] **DEBT-PAR-2** AuthCard publishes generic class names (`.divider`, `.brand-logo`, `.auth-card`, …) on the shared CDN — collision risk for consumers that define the same names. Required verbatim by the parity contract (ADR-138); cannot be namespaced without breaking the FreeMarker mirror. Mitigation: authcard.css is opt-in (own `<link>`), never bundled into custom.css.
 - [ ] **DEBT-PAR-3** `Access-Control-Allow-Origin: *` on `/icons/fonts/*` is shipped but untested in the parity flow (Keycloak sources icons from public CDNs per spec R4.1). If self-hosted icons are ever adopted for auth.knobby.io, add an e2e check before relying on it.
 - [ ] **DEBT-PAR-4** The apps repo's `setTheme()` early-returns on unchanged mode, so an externally clobbered `knobby-theme` cookie is only rewritten on the next real change or page load. Cosmetic; owned by the apps team (noted in specs/keycloak-theme-parity.md handoff).
+
+---
+
+## ACCEPTED DEBT — Dynamic UI Layer (2026-08-09, ADR-140 … ADR-145)
+
+- [ ] **DEBT-DUI-1** Geometric anchors do not survive **reflow**. `spot` is a fraction of a target's scrollable content, so a mark holds its place through scrolling and resizing — but re-wrap a document at a different width and the same fraction covers different text. The fix is content anchoring (a text-quote or offset selector, in the spirit of the W3C annotation model) surfaced through the existing `{ kind: "entity" }` anchor. Not started. Affects any reflowing or virtualizing content; recorded in `components/dynamiccanvas/README.md` so consumers are not surprised.
+- [ ] **DEBT-DUI-2** `attachDrag` in `components/dynamiccanvas/dynamiccanvas.ts` is 36 lines, over the 30-line guidance in `CODING_STYLE.md`. Pre-dates the placement work; tagged `@agent:refactor` in place. Extract the pointer-capture bookkeeping.
+- [ ] **DEBT-DUI-3** `validatePatchShape` (35 lines) and `reduceOps` (51 lines) in `runtime/src/document.ts` exceed the length guidance. Both are dispatch-shaped — a switch over op kinds — so the extraction is per-op helpers rather than a mechanical split.
+- [ ] **DEBT-DUI-4** 16 components remain `EXEMPT` in the fleet conformance gate with recorded blockers, and 91 of 98 manifested components sit at `display` conformance. Raising a component to `surface` is per-component work; the gate keeps the count honest rather than letting it drift.
+- [ ] **DEBT-DUI-5** The scrolling-region index (`within`) is **positional** — the Nth scrollable element inside a frame body, in DOM order. Stable for a given component version; a component that gains or loses a scrolling region between sessions would shift previously recorded indices. Acceptable while regions are one-per-component in practice; if it bites, record a stable descriptor (a data attribute the component owns) instead of an index.
+
+---
+
+## MEDIUM — DiagramEngine e2e suite does not run (2026-08-09)
+
+- [ ] **DEBT-DE-1** All 67 tests in `tests/diagramengine.spec.ts` fail with `createDiagramEngine not found on window`. The spec navigates to `/docs/demo.html`, which is the component **gallery index** and never loads `diagramengine.js`; the bundle's `window.createDiagramEngine` assignment is present and correct. The suite has therefore been asserting nothing. Point it at a page that loads the engine (or give it a fixture page), then triage whatever the now-running assertions surface.

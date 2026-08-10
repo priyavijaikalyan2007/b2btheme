@@ -2,6 +2,75 @@
 
 # Conversation Log
 
+## 2026-08-09 — Click-to-place: the canvas resolves a click into an anchor
+
+**Trigger**: Reviewing the annotation fixes, the user set the boundary explicitly: *"the app should
+not have to do extra work to use the components. So, if I use the dynamic canvas in an app and I
+have something displayed such as a markdown file. When I click on something in there and add an
+annotation, I want the library to handle how to shows up there, record the coordinates, etc. This
+is part of the UI state which I can capture, record and restore. Writing that state to some
+persistent store and reloading etc. is the app's job; it's not the app's job to translate screen
+coordinates."* This overruled the boundary I had proposed (and prematurely recorded as Accepted in
+ADR-145) that the placement gesture belonged to the host application.
+
+**Changes**:
+- `DynamicCanvas` gained `startPlacement(spec)` / `cancelPlacement()` / `isPlacing()` and a
+  `PlacementSpec` type. The next click resolves to a target node and a fractional spot within its
+  scrollable content, emitted as an ordinary patch. One-shot; Escape cancels; capture-phase so the
+  click never reaches the component underneath.
+- `captureSpot` / `spotOffset` are written adjacent as explicit inverses, with a comment saying so.
+  Capture divides out the canvas zoom (`getBoundingClientRect` is post-transform, `scrollLeft` is
+  not); restore works in layout pixels.
+- Anchors gained `within` — the index of the scrolling region the fraction was measured against —
+  so a component that scrolls internally (a note longer than its card) is handled as well as one
+  whose frame body takes the overflow. One capture-phase `scroll` listener on the root tracks every
+  region, including ones created after mount.
+- Packer: fixed two silent bugs. Unanchored overlays were marched along the top of the main region
+  regardless of their `placement`, discarding dropped coordinates; and a fixed-placement overlay was
+  added to the obstacle list, so a dropped mark pushed nearby nodes aside.
+- `validateDocument` now checks `spot` (a pair of fractions in 0..1) and `within` (a non-negative
+  integer). Both were previously unvalidated.
+- Demo: *Place annotation…*, *Add long document*, *Add long note*; the missing `datagrid.css` link;
+  and the "Placed …" readout moved to its own line with reserved height, because writing it into
+  the instruction paragraph reflowed the page and moved the canvas 17px mid-gesture.
+- Standards pass: extracted `packCurrent`, `againstTarget`, `adrift`, `validateNodeAnchor` to bring
+  every function I touched back under 30 lines; added the `⚓ ClickToPlace` anchor and a second
+  `⚡ FLOW` line to the canvas header.
+
+**Verification**: 4773 unit tests across 140 files; 33 Playwright (21 dynamic-ui + 12 placement);
+`npm run build` exit 0; both typecheck configs clean.
+
+**Recorded**: ADR-145 amended in place (it had recorded the opposite decision); concepts
+`ClickToPlace` and `SpotAnchor`; entities `Anchor` and `PlacementSpec`; insights §5.1–5.6;
+`DEBT-DUI-1…5` and `DEBT-DE-1`.
+
+**Known limit stated to the user rather than papered over**: a geometric anchor survives scrolling
+and resizing but not **reflow** — their markdown example re-wraps, and the same fraction then covers
+different text. Content anchoring is unbuilt.
+
+---
+
+## 2026-08-07 — Annotation: no tail, editable in place, anchored to a spot
+
+**Trigger**: Browser testing of the annotation component. The user reported: the hover callout
+always rendered with its tail pointing down ("perhaps, we don't need the callout shape? Just make
+it a box?"); there was no way to edit an annotation ("Is that app controlled?"); and annotations
+always attached to the corner of an object ("Should it attach to whatever is under the cursor?").
+
+**Changes**:
+- Tail removed. The card opened to the right while the tail pointed down at nothing; the pin already
+  carries the anchoring meaning.
+- `editable` option (default true): the expanded callout is a `<textarea>`, deliberately not
+  `contenteditable`, because a paste into contenteditable inserts markup and would breach the
+  library's textContent-only discipline. Edits update the label in place so the caret survives.
+- `Anchor` gained optional fractional `spot: {x, y}`; the packer gained `spotRect`.
+- Demo gained an editing section, laid out as stacked rows after a browser measurement showed two
+  side-by-side pins put the second underneath the first card (cards open sideways).
+
+**Verification**: 4754 unit tests across 140 files; 19 Playwright; build clean.
+
+---
+
 ## 2026-04-26 (amendment) — ActionItems alpha sort moved to dropdown
 
 **Trigger**: After manual demo testing of the ADR-128 batch, the user observed that ActionItems already exposes a multi-mode sort dropdown (priority, due-date, assignee, created, modified, etc.). Adding alpha-sort buttons to the new InlineToolbar duplicated the sort surface and forced users to reason about a parallel "alpha overlay" stacked on top of the primary sort. The user asked to revert: drop the toolbar's sort buttons; add alpha-asc / alpha-desc to the existing dropdown's manual order list.

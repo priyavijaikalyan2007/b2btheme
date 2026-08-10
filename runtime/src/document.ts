@@ -300,15 +300,7 @@ function validateAnchor(
 
     if (value.kind === "node")
     {
-        if (!ids.has(String(value.nodeId)))
-        {
-            issues.push(issue(
-                `${path}.nodeId`,
-                `Anchored to node "${String(value.nodeId)}", which is not in this document.`,
-                "Anchor to an existing node, or use an entity or canvas anchor."));
-        }
-
-        validateSpot(value, path, issues);
+        validateNodeAnchor(value, path, ids, issues);
         return;
     }
 
@@ -322,6 +314,31 @@ function validateAnchor(
     }
 
     issues.push(enumIssue(`${path}.kind`, value.kind, ["canvas", "node", "entity"]));
+}
+
+/**
+ * Validates a node anchor: its target must exist in the document.
+ *
+ * @param anchor - The candidate node anchor.
+ * @param path   - JSON path for error reporting.
+ * @param ids    - Every node id in the document.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateNodeAnchor(
+    anchor: Record<string, unknown>,
+    path: string,
+    ids: ReadonlySet<string>,
+    issues: ValidationIssue[]): void
+{
+    if (!ids.has(String(anchor.nodeId)))
+    {
+        issues.push(issue(
+            `${path}.nodeId`,
+            `Anchored to node "${String(anchor.nodeId)}", which is not in this document.`,
+            "Anchor to an existing node, or use an entity or canvas anchor."));
+    }
+
+    validateSpot(anchor, path, issues);
 }
 
 /**

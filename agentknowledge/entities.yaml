@@ -310,3 +310,13 @@
   file: "components/navrail/navrail.ts"
   description: "Singleton that tracks mounted NavRail instances per edge and keeps --navrail-left-width / --navrail-right-width CSS custom properties on document.documentElement in sync. Rejects a second rail registered at the same edge unless the previous one is orphaned (its root is no longer connected to document). Accessed via NavRailManager.getInstance() and window.__navRailManager."
   related: ["NavRail", "SidebarManager"]
+
+- name: "Anchor"
+  file: "runtime/src/types.ts"
+  description: "What a canvas node is attached to. Three kinds: { kind: 'canvas' } (unbound, packed like any node); { kind: 'node', nodeId, spot?, within? } (an overlay bound to another node — spot is a fraction 0..1 of the target's scrollable content, within is the index of the scrolling region that fraction was measured against, 0 being the frame body); { kind: 'entity', entityId } (bound to data, so the node surfaces on any canvas showing that entity). spot and within are validated by validateDocument — a NaN fraction from a model-authored scene places a mark at no coordinates rather than raising."
+  related: ["SpotAnchor", "ClickToPlace", "CanvasNode", "Annotation"]
+
+- name: "PlacementSpec"
+  file: "components/dynamiccanvas/dynamiccanvas.ts"
+  description: "What an application hands to startPlacement(). Fields: component (defaults to 'annotation'), options (passed to the placed component's factory), onPlaced(nodeId, anchor) (fires once the node exists, with the anchor the click resolved to). The app says WHAT; the canvas decides WHERE."
+  related: ["ClickToPlace", "DynamicCanvas"]

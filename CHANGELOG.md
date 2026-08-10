@@ -12,6 +12,24 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-08-09
+
+### Added
+- **Click-to-place on `DynamicCanvas`** — `startPlacement(spec)` arms the canvas; the user's next click places a component exactly where they point. The canvas resolves what was clicked, records a fractional position within that node's scrollable content, and emits it as an ordinary patch. An application persists the patch; it never converts a screen coordinate into an anchor (ADR-145, amended). `cancelPlacement()` and `isPlacing()` complete the API; Escape cancels, and the click never reaches the component underneath.
+- **Spot anchoring** — a node anchor may carry `spot: {x, y}`, a fraction of the target's scrollable *content*, so a mark placed on the fortieth line stays there through scrolling and resizing. `within` records which scrolling region the fraction was measured against, so a component that scrolls internally is handled as well as one whose frame body takes the overflow.
+- **Inline editing on `Annotation`** — the expanded callout is a text field. `editable: false` restores read-only text for labels the application owns.
+- Demo: `demo/components/dynamiccanvas.html` gained *Place annotation…*, *Add long document* and *Add long note*, covering both scrolling shapes; `demo/components/annotation.html` gained an editing section.
+
+### Changed
+- **`Annotation` rests as a permanent pin** with its card opening beside it, and the card no longer draws a tail. Expanding used to swap the pin for a card, which pulled the element out from under the pointer and produced a self-sustaining expand/collapse flicker; a tail that points somewhere the card does not open was claiming something false.
+- **`ChatDock` transcript is fixed-height and scrolls** rather than growing with the conversation.
+- Node anchors are validated further: `spot` must be a pair of fractions in 0..1 and `within` a non-negative integer. A NaN fraction from a model-authored document was previously accepted, and places a mark at no coordinates rather than raising.
+
+### Fixed
+- The packer marched **every** unanchored overlay along the top of the main region, discarding the coordinates a dropped mark was given.
+- A fixed-placement overlay was added to the packer's obstacle list, so a mark dropped on bare canvas pushed nearby nodes aside — the displacement overlays exist to avoid.
+- `demo/components/dynamiccanvas.html` loaded `datagrid.js` without `datagrid.css`, so the grid rendered unstyled and overflowed its frame instead of scrolling inside it.
+
 ## 2026-08-03
 
 ### Added

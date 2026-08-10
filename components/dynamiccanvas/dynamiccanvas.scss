@@ -3,8 +3,9 @@
 //
 // ⚓ COMPONENT: DynamicCanvas
 // 📜 PURPOSE: Styles for the infinite dynamic canvas — the world layer, node
-//    chrome, decay chips, and mount errors.
-// 🔗 RELATES: [[DynamicUIRuntime]], [[DiagramEngine]]
+//    chrome, decay chips, mount errors, anchored overlays, and the crosshair
+//    of an armed placement.
+// 🔗 RELATES: [[DynamicUIRuntime]], [[DiagramEngine]], [[ClickToPlace]]
 
 @use "../../src/scss/variables" as *;
 

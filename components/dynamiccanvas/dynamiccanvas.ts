@@ -14,8 +14,10 @@
  *    It renders; runtime/ decides. Placement comes from the packer, mounting
  *    from lifecycle, delivery from the wiring engine, and component identity
  *    from the allowlisted registry.
- * 🔗 RELATES: [[DynamicUIRuntime]], [[Packer]], [[Lifecycle]], [[Wiring]]
+ * 🔗 RELATES: [[DynamicUIRuntime]], [[Packer]], [[Lifecycle]], [[Wiring]],
+ *    [[ClickToPlace]]
  * ⚡ FLOW: [CanvasPatch] -> [fold] -> [pack] -> [lifecycle.sync] -> [DOM]
+ * ⚡ FLOW: [startPlacement] -> [click] -> [captureSpot] -> [CanvasPatch]
  * 🔒 SECURITY: Components are resolved allowlist-only via the registry
  *    (ADR-143). No user or model content is ever assigned as HTML — every
  *    label goes through textContent.
@@ -94,6 +96,7 @@ interface CanvasNode
         readonly kind: string;
         readonly nodeId?: string;
         readonly spot?: { readonly x: number; readonly y: number };
+        readonly within?: number;
     };
 }
 
@@ -555,14 +558,7 @@ function build(
             return;
         }
 
-        // Pack against the real canvas width. With a fixed assumption a node
-        // placed in the side region landed off-screen on a narrower canvas —
-        // mounted, correct, and invisible, with nothing logged.
-        const packed = rt().packDocument(doc, {
-            width: root.clientWidth || undefined,
-            isOverlay: (component: string) =>
-                rt().getManifest(component)?.presentation === "overlay",
-        });
+        const packed = packCurrent();
 
         packedRects = packed;
         removeDepartedFrames();
@@ -586,6 +582,24 @@ function build(
         // scroll extent, and refining against zero would collapse every mark
         // onto its target's top-left corner.
         refineOverlays();
+    }
+
+    /**
+     * Packs the current document against the real canvas width.
+     *
+     * The width matters: with a fixed assumption, a node placed in the side
+     * region landed off-screen on a narrower canvas — mounted, correct, and
+     * invisible, with nothing logged.
+     *
+     * @returns Rectangles keyed by node id.
+     */
+    function packCurrent(): Map<string, PackedRect>
+    {
+        return rt().packDocument(doc, {
+            width: root.clientWidth || undefined,
+            isOverlay: (component: string) =>
+                rt().getManifest(component)?.presentation === "overlay",
+        });
     }
 
     /** Drops frames for nodes no longer in the document. */
@@ -826,6 +840,8 @@ function build(
     // Drag: intent becomes fixed
     // ------------------------------------------------------------------
 
+    // @agent:refactor attachDrag is 36 lines, over the 30-line guidance in
+    // CODING_STYLE.md. Pre-dates this file's placement work; tracked as DEBT-7.
     /**
      * Makes a frame draggable by its title bar.
      *
@@ -911,6 +927,9 @@ function build(
     // ------------------------------------------------------------------
     // Placement: a click becomes an anchor
     // ------------------------------------------------------------------
+    //
+    // ⚓ ClickToPlace
+    // @entrypoint startPlacement — the host arms; the canvas resolves the rest.
     //
     // captureSpot and spotOffset below are inverses of each other and are kept
     // ADJACENT deliberately. Capture starts from client coordinates and must
@@ -1427,7 +1446,7 @@ function build(
     /** The scrolling region index a spot was measured against. */
     function withinOf(node: CanvasNode): number
     {
-        const within = (node.anchor as { within?: number } | undefined)?.within;
+        const within = node.anchor?.within;
 
         return typeof within === "number" && within >= 0 ? within : 0;
     }
@@ -1435,8 +1454,7 @@ function build(
     /** The fractional spot recorded on a node anchor, or null. */
     function spotOf(node: CanvasNode): { x: number; y: number } | null
     {
-        const spot = (node.anchor as { spot?: { x: number; y: number } } | undefined)
-            ?.spot;
+        const spot = node.anchor?.spot;
 
         return spot && isFinite(spot.x) && isFinite(spot.y) ? spot : null;
     }

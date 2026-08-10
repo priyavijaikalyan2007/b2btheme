@@ -274,44 +274,79 @@ function placeOverlays(
             continue;
         }
 
-        if (anchored)
+        const onTarget = anchored
+            ? againstTarget(node, out, perTarget)
+            : null;
+
+        if (onTarget)
         {
-            const targetId = (node.anchor as { nodeId: string }).nodeId;
-            const target = out.get(targetId);
-
-            if (target)
-            {
-                const spot = (node.anchor as {
-                    spot?: { x: number; y: number };
-                }).spot;
-
-                if (spot)
-                {
-                    out.set(node.id, spotRect(target, spot));
-                    continue;
-                }
-
-                const index = perTarget.get(targetId) ?? 0;
-                perTarget.set(targetId, index + 1);
-                out.set(node.id, overlayRect(target, index));
-                continue;
-            }
-        }
-
-        // A mark dropped on bare canvas carries the coordinates it was dropped
-        // at. Marching it along the top of the region regardless — which this
-        // did — moved it silently, with no error and nothing logged.
-        if (node.placement.kind === "fixed")
-        {
-            out.set(node.id, fixedOverlayRect(node.placement));
+            out.set(node.id, onTarget);
             continue;
         }
 
-        // An unanchored overlay still floats rather than being packed: it
-        // marches along the top of the main region without pushing anything.
-        out.set(node.id, freeOverlayRect(geometry, free));
-        free += 1;
+        out.set(node.id, adrift(node, geometry, free));
+        free += node.placement.kind === "fixed" ? 0 : 1;
     }
+}
+
+/**
+ * Places an overlay with no target: either where it was dropped, or floating.
+ *
+ * A mark dropped on bare canvas carries the coordinates it was dropped at.
+ * Marching it along the top of the region regardless — which this did — moved
+ * it silently, with no error and nothing logged.
+ *
+ * @param node     - The untargeted overlay.
+ * @param geometry - Region geometry for the current canvas width.
+ * @param index    - Position among floating overlays.
+ * @returns The overlay's rectangle.
+ */
+function adrift(
+    node: CanvasNode,
+    geometry: RegionGeometry,
+    index: number): PackedRect
+{
+    return node.placement.kind === "fixed"
+        ? fixedOverlayRect(node.placement)
+        : freeOverlayRect(geometry, index);
+}
+
+/**
+ * Positions one overlay against the node it annotates.
+ *
+ * A spot names a place within the target; without one, several overlays on the
+ * same target fan along its top edge rather than stacking on each other.
+ *
+ * @param node      - The anchored overlay.
+ * @param out       - Packed rectangles, read for the target's box.
+ * @param perTarget - Fan-out counter per target, advanced in place.
+ * @returns The rectangle, or null when the target has not been packed.
+ */
+function againstTarget(
+    node: CanvasNode,
+    out: ReadonlyMap<string, PackedRect>,
+    perTarget: Map<string, number>): PackedRect | null
+{
+    const targetId = (node.anchor as { nodeId: string }).nodeId;
+    const target = out.get(targetId);
+
+    if (!target)
+    {
+        return null;
+    }
+
+    const spot = (node.anchor as { spot?: { x: number; y: number } }).spot;
+
+    if (spot)
+    {
+        return spotRect(target, spot);
+    }
+
+    const index = perTarget.get(targetId) ?? 0;
+
+    perTarget.set(targetId, index + 1);
+
+    return overlayRect(target, index);
 }
 
 /**

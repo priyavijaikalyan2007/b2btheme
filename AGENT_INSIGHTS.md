@@ -67,3 +67,37 @@ Adding the AuthCard stencil failed four diagramengine tests asserting exact shap
 AuthCard renders every option string via `textContent` — except provider icons, which are inherently markup (inline brand SVGs). Rather than accepting arbitrary HTML, the `iconSvg` option is (a) documented as app-authored-literals-only, (b) parsed with `DOMParser` and discarded unless the result is a single well-formed `<svg>` root, and (c) tested with an injection payload.
 
 **Principle**: When a component must accept markup, isolate it to one named option, validate its shape as defense-in-depth, and state the trust requirement in the README — "trusted" is a documented contract, not an assumption.
+
+---
+
+## 5. Library Boundaries
+
+### 5.1 "The App Shouldn't Have To Do Extra Work" Beats a Clean-Sounding Boundary (2026-08-09)
+`spot` anchoring shipped with the *field* but not the *gesture*: the model could express "mark this place", but nothing turned a click into one. The rationale — the repo ships capability, applications ship behaviour — sounded principled and was recorded as Accepted in an ADR. The owner rejected it: recording where a click landed is coordinate translation, and every consuming app would re-derive the same zoom, scroll and pan arithmetic to do it. Persisting the resulting document is the app's job; producing it is not.
+
+**Principle**: The boundary test is not "is this behaviour or capability?" — it is "would every consumer write the same code?" If they would, and it needs knowledge only the library has (its own transforms, its own DOM), it belongs in the library. State a boundary as a *proposal* until the owner rules; do not write it into a durable record first.
+
+### 5.2 Capture and Restore Must Live Adjacent, With a Round-Trip Test (2026-08-09)
+Click-to-place needs forward math (pointer → recorded fraction) and inverse math (fraction → screen position). They are asymmetric: capture starts from `getBoundingClientRect`, which is measured *after* the canvas's `scale(zoom)`, and must divide zoom out before mixing in `scrollLeft`, which is not scaled; restore works entirely in layout pixels. Housed in separate sections they drift, and a drifted pair does not throw — it puts the mark somewhere plausible.
+
+**Principle**: Write inverse functions next to each other, say in a comment that they are inverses, and assert the identity end to end (place → reload from the persisted log → same position). A test of only one direction cannot see drift.
+
+### 5.3 A Fraction Is Meaningless Without Naming Its Box (2026-08-09)
+"A fraction of the target" is ambiguous the moment a mounted component scrolls internally. A note longer than its card scrolls its own textarea; a grid scrolls its own rows; a plain document lets the frame body take the overflow. Anchoring everything to the body leaves marks behind on internal scroll — silently, since nothing errors.
+
+**Principle**: When recording a relative position, record *what it is relative to* as part of the anchor. Also: `scroll` does not bubble, but capture-phase listeners on an ancestor still receive it, so one listener on the root tracks every scrolling region — including ones a component creates long after mount.
+
+### 5.4 An Untestable Branch Is an Unshippable Branch (2026-08-09)
+The scrolling-region machinery had zero coverage: every test took the index-0 path because nothing on the demo page scrolled internally. The cause was mundane — the demo loaded `datagrid.js` but not `datagrid.css`, so the grid's scroll container had no `overflow` rule. The branch looked exercised because tests near it passed.
+
+**Principle**: When a branch exists for a case, prove the case occurs before believing the tests cover it. Print the discriminator (here, the recorded index) in a probe rather than inferring coverage from green.
+
+### 5.5 Measure the Page, Not Just the Widget, When a Position Looks Wrong (2026-08-09)
+A placement test failed by 18px and the geometry was blamed twice. The actual cause: the demo wrote its result into the five-line instruction paragraph, collapsing it to one line, which reflowed the page and moved the canvas 17px between the click and the measurement.
+
+**Principle**: When measured positions are off by a constant, probe the containers as well as the element — including whether your own status output changed the layout. Reserve height for anything that updates in place.
+
+### 5.6 Overlay Exemptions Must Cover Obstacles, Not Just Occupancy (2026-08-09)
+The packer skipped overlays when *placing* nodes but still added a fixed-placement overlay to the *obstacle* list, so a mark dropped on bare canvas pushed nearby nodes aside — the exact displacement overlays exist to prevent. A second bug in the same function ignored `placement` entirely for unanchored overlays and marched them along the top of the region, discarding the coordinates they were given.
+
+**Principle**: A layout exemption has two halves — "does not get placed by the packer" and "is not treated as an obstacle by it". Assert both: compare a node's rectangle with and without the overlay present.
