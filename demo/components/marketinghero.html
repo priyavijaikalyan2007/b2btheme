@@ -1,0 +1,212 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-FileCopyrightText: 2026 Outcrop Inc
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-MarketingHero
+  PURPOSE: Standalone demo page for the MarketingHero component. The last
+     section is hand-authored HTML with no factory call — it is what proves
+     the stylesheet is the contract.
+  RELATES: [[MarketingHero]], [[SiteFooter]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketingHero - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/marketinghero/marketinghero.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            MarketingHero
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2><i class="bi bi-megaphone"></i> MarketingHero</h2>
+            <p class="text-muted">
+                Public-page introduction area — eyebrow, heading, lede, up to two actions,
+                and an optional media slot. The stylesheet is the contract; the factory is
+                a convenience.
+            </p>
+        </div>
+
+        <!-- 1. Stacked -->
+        <div class="demo-section">
+            <h3>Stacked (default)</h3>
+            <p class="text-muted">Eyebrow, title, lede, and both actions. One left-aligned column.</p>
+            <div id="hero-stacked" style="border: 1px dashed var(--theme-border-color);"></div>
+        </div>
+
+        <!-- 2. Centered -->
+        <div class="demo-section">
+            <h3>Centered</h3>
+            <p class="text-muted">Title and lede only. No actions, no aside.</p>
+            <div id="hero-centered" style="border: 1px dashed var(--theme-border-color);"></div>
+        </div>
+
+        <!-- 3. Split at the default lg breakpoint -->
+        <div class="demo-section">
+            <h3>Split — stacks below <code>lg</code> (992px)</h3>
+            <p class="text-muted">
+                Narrow the window past 992px and the two columns become one, in source order.
+            </p>
+            <div id="hero-split-lg" style="border: 1px dashed var(--theme-border-color);"></div>
+        </div>
+
+        <!-- 4. Split at md, so both collapse points are visible together -->
+        <div class="demo-section">
+            <h3>Split — stacks below <code>md</code> (768px)</h3>
+            <p class="text-muted">
+                The same markup with <code>stackBelow: "md"</code>. Between 768px and 992px
+                this one is side by side while the section above has already stacked.
+            </p>
+            <div id="hero-split-md" style="border: 1px dashed var(--theme-border-color);"></div>
+        </div>
+
+        <!-- 5. Hand-authored — the contract under test -->
+        <div class="demo-section">
+            <h3>Hand-authored HTML — no factory call</h3>
+            <p class="text-muted">
+                Everything below is literal markup in this page. No script produced it.
+                It is the same shape a static site writes, and it should be
+                indistinguishable from the factory-rendered sections above.
+            </p>
+
+            <section class="marketinghero marketinghero-split marketinghero-stack-lg"
+                     aria-labelledby="handwritten-hero-title"
+                     style="border: 1px dashed var(--theme-border-color);">
+                <div class="marketinghero-content">
+                    <h1 class="marketinghero-title" id="handwritten-hero-title">
+                        Written by hand, styled by the contract
+                    </h1>
+                    <p class="marketinghero-eyebrow">No JavaScript</p>
+                    <p class="marketinghero-lede">
+                        This section links one stylesheet and writes semantic HTML. That is
+                        the whole integration for a static marketing page.
+                    </p>
+                    <div class="marketinghero-actions">
+                        <a class="btn btn-primary" href="#">Get started</a>
+                        <a class="btn btn-outline-secondary" href="#">Read the docs</a>
+                    </div>
+                </div>
+                <aside class="marketinghero-aside">
+                    <svg viewBox="0 0 320 200" role="img"
+                         aria-label="Placeholder illustration of a dashboard layout."
+                         style="width: 100%; height: auto;">
+                        <rect x="1" y="1" width="318" height="198" fill="none"
+                              stroke="currentColor" opacity="0.35"></rect>
+                        <rect x="17" y="17" width="286" height="26" fill="currentColor" opacity="0.12"></rect>
+                        <rect x="17" y="57" width="130" height="126" fill="currentColor" opacity="0.08"></rect>
+                        <rect x="161" y="57" width="142" height="58" fill="currentColor" opacity="0.08"></rect>
+                        <rect x="161" y="125" width="142" height="58" fill="currentColor" opacity="0.08"></rect>
+                    </svg>
+                </aside>
+            </section>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/marketinghero/marketinghero.js"></script>
+
+    <script>
+    // MarketingHero demos
+    (function() {
+
+        // 1. Stacked — the default layout
+        createMarketingHero("hero-stacked", {
+            eyebrow: "New",
+            title: "Ship enterprise UI faster",
+            lede: "A compact Bootstrap 5 theme and component library, built for " +
+                  "serious SaaS applications rather than landing pages.",
+            primaryAction: {
+                text: "Get started",
+                onClick: function() { console.log("[Demo] Get started clicked"); }
+            },
+            secondaryAction: { text: "Read the docs", href: "#" }
+        });
+
+        // 2. Centered — no actions, no aside
+        createMarketingHero("hero-centered", {
+            title: "One theme, one hundred and twenty-five components",
+            lede: "Muted colours, compact spacing, and square corners, in light and dark.",
+            layout: "centered"
+        });
+
+        // 3. Split at the default lg breakpoint
+        createMarketingHero("hero-split-lg", {
+            eyebrow: "Split layout",
+            title: "Text on one side, anything on the other",
+            lede: "The aside takes any element — a screenshot, an SVG, or another component.",
+            layout: "split",
+            primaryAction: { text: "Get started", href: "#" },
+            aside: buildPlaceholder("Default: side by side above 992px")
+        });
+
+        // 4. Split at md
+        createMarketingHero("hero-split-md", {
+            eyebrow: "Split layout",
+            title: "The same markup, a different collapse point",
+            lede: "Only the stack-* class differs between this and the section above.",
+            layout: "split",
+            stackBelow: "md",
+            primaryAction: { text: "Get started", href: "#" },
+            aside: buildPlaceholder("stackBelow: md — side by side above 768px")
+        });
+
+        /**
+         * Build a labelled placeholder box for the aside slot.
+         * Kept as an element rather than a markup string: `aside` takes a node,
+         * and the component deliberately offers no HTML-string escape hatch.
+         */
+        function buildPlaceholder(label)
+        {
+            var box = document.createElement("div");
+            box.style.cssText = "display:flex; align-items:center; justify-content:center;" +
+                "min-height:160px; padding:1rem; text-align:center;" +
+                "border:1px solid var(--theme-border-color);" +
+                "background-color:var(--theme-surface-raised-bg);" +
+                "color:var(--theme-text-secondary);";
+            box.textContent = label;
+            return box;
+        }
+    })();
+    </script>
+</body>
+</html>
