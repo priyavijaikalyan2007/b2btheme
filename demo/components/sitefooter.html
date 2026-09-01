@@ -1,0 +1,245 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-FileCopyrightText: 2026 Outcrop Inc
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-SiteFooter
+  PURPOSE: Standalone demo page for the SiteFooter component. Includes a
+     deliberately hostile section (very long email, long link labels, long
+     organization name) so overflow behaviour is visible rather than assumed,
+     and one hand-authored footer with no factory call.
+  RELATES: [[SiteFooter]], [[MarketingHero]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiteFooter - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/sitefooter/sitefooter.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            SiteFooter
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2><i class="bi bi-layout-text-window-reverse"></i> SiteFooter</h2>
+            <p class="text-muted">
+                Organization details, grouped navigation, contact details, legal links,
+                and optional build information, in one to four responsive columns.
+                Narrow the window below 768px and every example collapses to a single
+                column in source order.
+            </p>
+        </div>
+
+        <!-- 1. Three columns -->
+        <div class="demo-section">
+            <h3>Three columns</h3>
+            <p class="text-muted">Organization with contact, two navigation groups, legal row.</p>
+            <div id="footer-three"></div>
+        </div>
+
+        <!-- 2. One column -->
+        <div class="demo-section">
+            <h3>One column</h3>
+            <p class="text-muted">Organization only. No groups, no legal row.</p>
+            <div id="footer-one"></div>
+        </div>
+
+        <!-- 3. Four columns, hostile content -->
+        <div class="demo-section">
+            <h3>Four columns — long content</h3>
+            <p class="text-muted">
+                A very long email address, long link labels, and a long organization name.
+                Nothing here may overflow horizontally at any width. This is the section
+                that tests <code>minmax(0, 1fr)</code>.
+            </p>
+            <div id="footer-four"></div>
+        </div>
+
+        <!-- 4. Build information -->
+        <div class="demo-section">
+            <h3>With build information</h3>
+            <p class="text-muted">
+                <code>buildInfo</code> is a string the page passes. The component performs
+                no fetch and reads no global.
+            </p>
+            <div id="footer-build"></div>
+        </div>
+
+        <!-- 5. Visited-link states -->
+        <div class="demo-section">
+            <h3>Link states</h3>
+            <p class="text-muted">
+                Unvisited links are muted; visited links take the accent colour. That
+                inverts the usual convention deliberately (ADR-146, D5). The first link
+                below points at this page, so it is already visited — compare it with
+                its neighbours.
+            </p>
+            <div id="footer-visited"></div>
+        </div>
+
+        <!-- 6. Hand-authored — the contract under test -->
+        <div class="demo-section">
+            <h3>Hand-authored HTML — no factory call</h3>
+            <p class="text-muted">
+                Everything below is literal markup in this page. No script produced it.
+                It should be indistinguishable from the factory-rendered footers above.
+            </p>
+
+            <footer class="sitefooter">
+                <div class="sitefooter-grid sitefooter-cols-3">
+                    <div class="sitefooter-org">
+                        <p class="sitefooter-orgname">Outcrop Inc</p>
+                        <p class="sitefooter-orgdesc">Written by hand, styled by the contract.</p>
+                        <address class="sitefooter-contact">
+                            <p><a href="mailto:hello@example.test">hello@example.test</a></p>
+                        </address>
+                    </div>
+                    <nav class="sitefooter-group" aria-labelledby="hand-ft-product">
+                        <h2 class="sitefooter-grouptitle" id="hand-ft-product">Product</h2>
+                        <ul class="sitefooter-links">
+                            <li><a href="#">Overview</a></li>
+                            <li><a href="#">Pricing</a></li>
+                            <li><a href="#">Changelog</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="sitefooter-group" aria-labelledby="hand-ft-company">
+                        <h2 class="sitefooter-grouptitle" id="hand-ft-company">Company</h2>
+                        <ul class="sitefooter-links">
+                            <li><a href="#">About</a></li>
+                            <li><a href="#">Careers</a></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="sitefooter-legal">
+                    <p class="sitefooter-copyright">© 2026 Outcrop Inc</p>
+                    <ul class="sitefooter-legallinks">
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Terms</a></li>
+                    </ul>
+                    <p class="sitefooter-build">hand-authored</p>
+                </div>
+            </footer>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/sitefooter/sitefooter.js"></script>
+
+    <script>
+    // SiteFooter demos
+    (function() {
+
+        // 1. Three columns — the common shape
+        createSiteFooter("footer-three", {
+            organization: {
+                name: "Outcrop Inc",
+                description: "Enterprise software for engineering teams."
+            },
+            contact: { email: "hello@example.test", phone: "+1 555 0100" },
+            groups: [
+                { title: "Product", links: [
+                    { text: "Overview", href: "#" },
+                    { text: "Pricing", href: "#" },
+                    { text: "Changelog", href: "#" }
+                ]},
+                { title: "Company", links: [
+                    { text: "About", href: "#" },
+                    { text: "Careers", href: "#" }
+                ]}
+            ],
+            legal: {
+                copyright: "© 2026 Outcrop Inc",
+                links: [{ text: "Privacy", href: "#" }, { text: "Terms", href: "#" }]
+            }
+        });
+
+        // 2. One column — organization only
+        createSiteFooter("footer-one", {
+            organization: {
+                name: "Outcrop Inc",
+                description: "A single-column footer for a minimal page."
+            }
+        });
+
+        // 3. Four columns with deliberately hostile content
+        createSiteFooter("footer-four", {
+            organization: {
+                name: "Outcrop Incorporated International Holdings",
+                description: "Grundstücksverkehrsgenehmigungszuständigkeitsübertragungsverordnung."
+            },
+            contact: { email: "a-very-long-support-address@subdomain.example-company.test" },
+            groups: [
+                { title: "Product", links: [
+                    { text: "Enterprise deployment and configuration guide", href: "#" },
+                    { text: "Pricing", href: "#" }
+                ]},
+                { title: "Resources", links: [
+                    { text: "Documentation", href: "#" },
+                    { text: "Betriebssicherheitsverordnung", href: "#" }
+                ]},
+                { title: "Company", links: [{ text: "About", href: "#" }] }
+            ],
+            legal: { copyright: "© 2026 Outcrop Incorporated International Holdings" }
+        });
+
+        // 4. Build information
+        createSiteFooter("footer-build", {
+            organization: { name: "Outcrop Inc" },
+            groups: [{ title: "Product", links: [{ text: "Overview", href: "#" }] }],
+            legal: { copyright: "© 2026 Outcrop Inc" },
+            buildInfo: "2026.09.01 · a1b2c3d"
+        });
+
+        // 5. Visited vs unvisited. The first link points at this page, so the
+        //    browser has it in history and paints it as visited.
+        createSiteFooter("footer-visited", {
+            organization: { name: "Link states" },
+            groups: [{ title: "Compare", links: [
+                { text: "This page (visited)", href: "sitefooter.html" },
+                { text: "Unvisited example one", href: "#unvisited-1" },
+                { text: "Unvisited example two", href: "#unvisited-2" }
+            ]}]
+        });
+    })();
+    </script>
+</body>
+</html>
