@@ -3607,7 +3607,10 @@
     and crawled, not inside a script.
 
     Taken literally that meant two folders with no TypeScript in them, and the
-    library has no such thing: all 123 components ship a factory. The cost is
+    library has no such thing: every one of the 123 component folders ships a
+    `.ts`, and all but a handful expose a `create*` factory — the exceptions
+    being services and boot scripts such as ThemeInit, which are in
+    NOT_MOUNTABLE for that reason. The cost is
     not stylistic. `runtime/fleet-conformance.test.ts` enumerates every
     directory in `components/`, so a folder with no factory needs a
     NOT_MOUNTABLE entry — a category reserved for services, boot scripts and
