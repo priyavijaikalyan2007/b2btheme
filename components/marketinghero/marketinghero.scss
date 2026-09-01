@@ -1,0 +1,144 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: MarketingHeroStyles
+ * 📜 PURPOSE: Styles for the public-page hero. This file is the contract —
+ *    it works on hand-authored markup with no script on the page.
+ * 🔗 RELATES: [[MarketingHero]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.marketinghero {
+    display: flex;
+    flex-direction: column;
+    gap: $spacer * 1.5;
+    padding: $spacer * 2.5 $spacer * 1.5;
+    background-color: var(--theme-body-bg);
+    color: var(--theme-text-primary);
+}
+
+// ============================================================================
+// TEXT COLUMN
+// ============================================================================
+
+.marketinghero-content {
+    display: flex;
+    flex-direction: column;
+    // min-width: 0 lets a long unbroken word shrink instead of widening the
+    // flex item past its share.
+    min-width: 0;
+}
+
+// The eyebrow follows the title in the DOM and is lifted above it here, so the
+// heading stays first in document order. See ADR-146, D4.
+.marketinghero-eyebrow {
+    order: -1;
+    margin: 0 0 $spacer * 0.25;
+    color: var(--theme-text-secondary);
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.marketinghero-title {
+    margin: 0 0 $spacer * 0.5;
+    color: var(--theme-text-primary);
+    font-weight: $font-weight-semibold;
+}
+
+.marketinghero-lede {
+    // A measure of roughly 60 characters stays readable at the widths a hero
+    // reaches on a desktop.
+    max-width: 60ch;
+    margin: 0;
+    color: var(--theme-text-secondary);
+    line-height: $line-height-lg;
+}
+
+.marketinghero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacer * 0.5;
+    margin-top: $spacer;
+}
+
+// ============================================================================
+// MEDIA SLOT
+// ============================================================================
+
+.marketinghero-aside {
+    min-width: 0;
+
+    > img,
+    > svg {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+// ============================================================================
+// LAYOUT — CENTERED
+// ============================================================================
+
+.marketinghero-centered {
+    align-items: center;
+    text-align: center;
+
+    .marketinghero-content {
+        align-items: center;
+    }
+
+    .marketinghero-lede {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .marketinghero-actions {
+        justify-content: center;
+    }
+}
+
+// ============================================================================
+// LAYOUT — SPLIT
+// ============================================================================
+// One class per breakpoint, naming the width at and above which the two
+// columns sit side by side. Below it the hero stays stacked, which is the
+// single-column rendering with no extra rules.
+
+@each $name, $min in $grid-breakpoints {
+    @if $min != 0 {
+        .marketinghero-split.marketinghero-stack-#{$name} {
+            @media (min-width: $min) {
+                flex-direction: row;
+                align-items: center;
+                gap: $spacer * 3;
+
+                > .marketinghero-content,
+                > .marketinghero-aside {
+                    flex: 1 1 0;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================================
+// FORCED COLOURS
+// ============================================================================
+// When the system palette replaces ours, the aside loses whatever separation
+// its content provided. A system-coloured border keeps it a distinct region.
+
+@media (forced-colors: active) {
+    .marketinghero-aside {
+        border: 1px solid CanvasText;
+    }
+}
