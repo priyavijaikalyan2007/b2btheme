@@ -1130,6 +1130,17 @@
                           lede: "A compact Bootstrap 5 theme and component library.",
                           primaryAction: { text: "Get started", href: "#" },
                           secondaryAction: { text: "Read the docs", href: "#" } } },
+            { name: "sitefooter", label: "SiteFooter", icon: "bi-layout-text-window-reverse",
+              category: "Navigation", factory: "createSiteFooter", width: 600, height: 220,
+              pattern: "id-opts",
+              defaults: { organization: { name: "Outcrop Inc",
+                                          description: "Enterprise software." },
+                          groups: [{ title: "Product",
+                                     links: [{ text: "Overview", href: "#" },
+                                             { text: "Pricing", href: "#" }] },
+                                   { title: "Company",
+                                     links: [{ text: "About", href: "#" }] }],
+                          legal: { copyright: "© 2026 Outcrop Inc" } } },
             { name: "skeletonloader", label: "SkeletonLoader", icon: "bi-hourglass",
               category: "Feedback", factory: "createSkeletonLoader", width: 300, height: 200,
               pattern: "opts-id",
@@ -2268,6 +2279,24 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "eyebrow": "New",\n  "title": "Ship enterprise UI faster",\n  "layout": "split",\n  "primaryAction": { "text": "Get started", "href": "#" }\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["sitefooter"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">SiteFooter</h4>' +
+            '<p>A semantic public-site footer. Unvisited links are muted and ' +
+            'visited links take the accent colour — deliberate, see ADR-146 D5.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>organization</code> — { name, description?, logo? }</li>' +
+            '<li><code>contact</code> — { email?, phone?, address? }</li>' +
+            '<li><code>groups</code> — [{ title, headingLevel?, links }]</li>' +
+            '<li><code>legal</code> — { copyright?, links? }</li>' +
+            '<li><code>buildInfo</code> — build string you pass (string)</li>' +
+            '<li><code>columns</code> — 1–4; derived from content when omitted</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "organization": { "name": "Outcrop Inc" },\n  "groups": [{ "title": "Product", "links": [{ "text": "Overview", "href": "#" }] }],\n  "legal": { "copyright": "© 2026 Outcrop Inc" }\n}' +
             '</pre>';
 
         COMPONENT_HELP["skeletonloader"] =

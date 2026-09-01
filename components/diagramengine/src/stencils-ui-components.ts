@@ -2276,6 +2276,33 @@ function getTierBContent(name: string):
                     C_HEADER_BG, C_BORDER);
             };
 
+        case "sitefooter":
+            // Three columns of links above a divider and a copyright line.
+            return (g, x, y, w, h) =>
+            {
+                const colX = [x + 16, x + w * 0.40, x + w * 0.68];
+                const titles = ["OUTCROP INC", "PRODUCT", "COMPANY"];
+
+                for (let col = 0; col < 3; col++)
+                {
+                    uiText(g, colX[col], y + h * 0.22, titles[col], {
+                        size: 8, weight: 600, fill: C_TEXT
+                    });
+
+                    for (let row = 0; row < 3; row++)
+                    {
+                        uiText(g, colX[col], y + h * (0.36 + row * 0.13), "————", {
+                            size: 8, fill: C_TEXT_MUT
+                        });
+                    }
+                }
+
+                uiDivider(g, x + 16, y + h * 0.80, w - 32);
+                uiText(g, x + 16, y + h * 0.91, "© 2026 Outcrop Inc", {
+                    size: 8, fill: C_TEXT_SEC
+                });
+            };
+
         default:
             return null;
     }
@@ -2934,6 +2961,7 @@ const TIER_B_SHAPES: UiGenericTuple[] = [
     ["gauge",             "Gauge",                  "\u25D4", 200, 200],
     ["emptystate",        "Empty State",            "\u2300", 300, 200],
     ["marketinghero",     "Marketing Hero",         "\u25a4", 600, 260],
+    ["sitefooter",        "Site Footer",            "\u2584", 600, 220],
     ["orientationpicker", "Orientation Picker",     "\u21C5", 200, 40],
     ["sizespicker",       "Sizes Picker",           "\u2B1C", 200, 40],
     ["marginspicker",     "Margins Picker",         "\u25A3", 200, 40],
