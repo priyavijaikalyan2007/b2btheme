@@ -1,0 +1,161 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: SiteFooterStyles
+ * 📜 PURPOSE: Styles for the public-site footer. This file is the contract —
+ *    it works on hand-authored markup with no script on the page.
+ * 🔗 RELATES: [[SiteFooter]], [[MarketingHero]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+// ============================================================================
+// ROOT
+// ============================================================================
+
+.sitefooter {
+    padding: $spacer * 2 $spacer * 1.5;
+    border-top: 1px solid var(--theme-border-color);
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-secondary);
+}
+
+// ============================================================================
+// COLUMNS
+// ============================================================================
+// minmax(0, 1fr) is load-bearing: without the 0 minimum, a long email address
+// or a long translated compound forces its track wider than its share and the
+// whole row overflows. A bare 1fr means "at least the content's minimum size".
+
+.sitefooter-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: $spacer * 1.5;
+}
+
+@each $count in (1, 2, 3, 4) {
+    .sitefooter-cols-#{$count} {
+        @media (min-width: map-get($grid-breakpoints, md)) {
+            grid-template-columns: repeat($count, minmax(0, 1fr));
+        }
+    }
+}
+
+// ============================================================================
+// ORGANIZATION BLOCK
+// ============================================================================
+
+.sitefooter-orgname {
+    margin: 0 0 $spacer * 0.25;
+    color: var(--theme-text-primary);
+    font-weight: $font-weight-semibold;
+}
+
+.sitefooter-orgdesc {
+    margin: 0 0 $spacer * 0.5;
+    line-height: $line-height-lg;
+}
+
+.sitefooter-contact {
+    margin: 0;
+    // The default italic on <address> reads as emphasis the content does not
+    // intend.
+    font-style: normal;
+    // Long addresses and translated compounds break rather than overflow.
+    overflow-wrap: anywhere;
+
+    p {
+        margin: 0 0 $spacer * 0.25;
+    }
+}
+
+// ============================================================================
+// NAVIGATION GROUPS
+// ============================================================================
+
+.sitefooter-grouptitle {
+    margin: 0 0 $spacer * 0.5;
+    color: var(--theme-text-primary);
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sitefooter-links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        margin-bottom: $spacer * 0.25;
+    }
+}
+
+// ============================================================================
+// LINKS
+// ============================================================================
+// Unvisited links are muted and visited links take the accent colour. This
+// INVERTS the usual convention and is deliberate — see ADR-146 (D5) and
+// DEBT-WEB-2. Do not "correct" it without reading those first. Colour is not
+// the only signal: hover and focus add an underline.
+
+.sitefooter-links a,
+.sitefooter-legallinks a {
+    color: var(--theme-text-secondary);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    &:visited {
+        color: var(--theme-primary);
+    }
+
+    &:hover {
+        color: var(--theme-text-primary);
+        text-decoration: underline;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 2px;
+    }
+}
+
+// ============================================================================
+// LEGAL ROW
+// ============================================================================
+
+.sitefooter-legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacer * 0.5 $spacer;
+    margin-top: $spacer * 1.5;
+    padding-top: $spacer;
+    border-top: 1px solid var(--theme-border-subtle);
+    font-size: $font-size-sm;
+}
+
+.sitefooter-copyright,
+.sitefooter-build {
+    margin: 0;
+}
+
+.sitefooter-build {
+    // Pushed to the end of the row, where it reads as metadata rather than
+    // content. Falls back to normal flow once the row wraps.
+    margin-left: auto;
+    color: var(--theme-text-muted);
+}
+
+.sitefooter-legallinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacer;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
