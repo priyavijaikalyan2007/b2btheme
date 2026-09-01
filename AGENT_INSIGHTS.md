@@ -125,3 +125,18 @@ The hero request asked for an eyebrow above the heading *and* for "the heading r
 `npm test 2>&1 | tail -40` was reported as exit code 0 while the output plainly read `sh: tsc: command not found`. The zero belonged to `tail`. `node_modules` was not installed and the suite had not run at all — one step from announcing a green tree on the strength of a truncated log.
 
 **Principle**: Never take the exit status of a pipeline as the status of the command that matters. Use `set -o pipefail`, capture to a file and check separately, or read the tail before believing the code. A suite that did not run looks identical to a suite that passed if you only check the number.
+
+### 6.4 "Pre-existing" Is a Claim You Must Prove, Not Assert (2026-09-02)
+137 tests failed mid-task and were reported as pre-existing. The user pushed back — *"these tests used to work fine before you edited the code so they cant be preexisting"* — and was right to. Stashing the work and re-running was suggestive; what actually ended the argument was a clean worktree checked out at the session-start commit, with the new files provably absent, failing identically 64/64, followed by the same tree passing 64/64 with one Node flag added. The first experiment isolates the code, the second names the cause.
+
+**Principle**: When you believe a failure is not yours, do not say so — demonstrate it with a tree that cannot contain your work, then flip the suspected cause and watch the result change. And drop the phrase itself: "pre-existing" reads as *not my problem* even when accurate. The user's belief was also correct in its own terms — the tests had passed, on an older interpreter.
+
+### 6.5 Never `git add -A` in Someone Else's Working Tree (2026-09-02)
+The close-out commit used `git add -A` and swept up `LANGUAGE.md`, a file the user had left uncommitted and that had been deliberately excluded three times over the session. It cost a `reset --soft`, an unstage, and a rewritten commit — cheap only because it was caught before the push.
+
+**Principle**: In a tree carrying work that is not yours, stage by explicit path. `git add -A` is a statement that every modification in the tree belongs to your change, which is false the moment a collaborator has anything in flight. Read `git status` before committing, not after.
+
+### 6.6 When a Whole Suite Breaks, Suspect the Interpreter (2026-09-02)
+Node v26 broke this repository twice in one session, in unrelated places. It ships an experimental `localStorage` global that shadows jsdom's and is undefined without `--localstorage-file`, taking out 137 storage-using tests; and Playwright's Chromium download hangs under it, leaving the e2e suite unable to launch a browser at all. Neither is a repository defect and neither appears in any changelog the repository owns.
+
+**Principle**: A suite that passed last month and fails wholesale today, with one error shape repeated across unrelated files, is an environment change until proven otherwise. Check `node --version` early. Runtimes now ship browser globals that silently shadow the ones your test environment installs, and shadowing produces `undefined`, not a clean `ReferenceError`.
