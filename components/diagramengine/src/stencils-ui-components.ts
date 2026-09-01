@@ -2253,6 +2253,29 @@ function getTierBContent(name: string):
                 });
             };
 
+        case "marketinghero":
+            // Split layout: text column on the left, media slot on the right.
+            // The eyebrow sits above the heading, which is where it PAINTS —
+            // in the DOM it follows the heading (ADR-146, D4).
+            return (g, x, y, w, h) =>
+            {
+                uiText(g, x + 16, y + h * 0.22, "NEW", {
+                    size: 8, fill: C_TEXT_MUT
+                });
+                uiText(g, x + 16, y + h * 0.40, "Ship enterprise UI faster", {
+                    size: 15, weight: 600, fill: C_TEXT
+                });
+                uiText(g, x + 16, y + h * 0.55, "A compact Bootstrap 5 theme.", {
+                    size: 9, fill: C_TEXT_SEC
+                });
+                uiButton(g, x + 16, y + h * 0.66, 76, 22, "Get started", {
+                    fill: C_PRIMARY, textFill: C_BG
+                });
+                uiButton(g, x + 100, y + h * 0.66, 76, 22, "Read the docs");
+                uiRect(g, x + w * 0.58, y + h * 0.18, w * 0.36, h * 0.64,
+                    C_HEADER_BG, C_BORDER);
+            };
+
         default:
             return null;
     }
@@ -2910,6 +2933,7 @@ const TIER_B_SHAPES: UiGenericTuple[] = [
     ["logconsole",        "Log Console",            "\u2328", 500, 250],
     ["gauge",             "Gauge",                  "\u25D4", 200, 200],
     ["emptystate",        "Empty State",            "\u2300", 300, 200],
+    ["marketinghero",     "Marketing Hero",         "\u25a4", 600, 260],
     ["orientationpicker", "Orientation Picker",     "\u21C5", 200, 40],
     ["sizespicker",       "Sizes Picker",           "\u2B1C", 200, 40],
     ["marginspicker",     "Margins Picker",         "\u25A3", 200, 40],

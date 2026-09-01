@@ -1123,6 +1123,13 @@
               pattern: "id-opts",
               defaults: { icon: "bi-inbox", heading: "No data available",
                           description: "Add some items to get started." } },
+            { name: "marketinghero", label: "MarketingHero", icon: "bi-megaphone",
+              category: "Content", factory: "createMarketingHero", width: 600, height: 260,
+              pattern: "id-opts",
+              defaults: { eyebrow: "New", title: "Ship enterprise UI faster",
+                          lede: "A compact Bootstrap 5 theme and component library.",
+                          primaryAction: { text: "Get started", href: "#" },
+                          secondaryAction: { text: "Read the docs", href: "#" } } },
             { name: "skeletonloader", label: "SkeletonLoader", icon: "bi-hourglass",
               category: "Feedback", factory: "createSkeletonLoader", width: 300, height: 200,
               pattern: "opts-id",
@@ -2241,6 +2248,26 @@
             '<strong>Example:</strong>' +
             '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
             '{\n  "icon": "bi-inbox",\n  "title": "No items",\n  "description": "Nothing to display."\n}' +
+            '</pre>';
+
+        COMPONENT_HELP["marketinghero"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">MarketingHero</h4>' +
+            '<p>The introduction area for a public page. The stylesheet is the ' +
+            'contract — a static page can write the markup and load no script.</p>' +
+            '<strong>Options:</strong>' +
+            '<ul style="margin:4px 0;padding-left:16px;">' +
+            '<li><code>title</code> — Heading text (string, required)</li>' +
+            '<li><code>eyebrow</code> — Small label above the heading (string)</li>' +
+            '<li><code>lede</code> — Supporting paragraph (string)</li>' +
+            '<li><code>layout</code> — "stacked" | "centered" | "split"</li>' +
+            '<li><code>stackBelow</code> — "sm" | "md" | "lg" | "xl"; split only</li>' +
+            '<li><code>primaryAction</code> — { text, href?, onClick? }</li>' +
+            '<li><code>secondaryAction</code> — { text, href?, onClick? }</li>' +
+            '<li><code>aside</code> — HTMLElement for the media slot</li>' +
+            '</ul>' +
+            '<strong>Example:</strong>' +
+            '<pre style="background:var(--bs-tertiary-bg);padding:6px;font-size:11px;margin:4px 0;overflow-x:auto;">' +
+            '{\n  "eyebrow": "New",\n  "title": "Ship enterprise UI faster",\n  "layout": "split",\n  "primaryAction": { "text": "Get started", "href": "#" }\n}' +
             '</pre>';
 
         COMPONENT_HELP["skeletonloader"] =
