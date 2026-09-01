@@ -124,6 +124,11 @@ FILES=(
 
 # Re-add export on the factory function — Vitest needs it for import,
 # and the IIFE wrapper (wrap-iife.sh) strips it for browser use.
-sed -i 's/^function createDiagramEngine(/export function createDiagramEngine(/' "$OUT_FILE"
+#
+# `sed -i` without a suffix is GNU-only: BSD sed (macOS) reads the next
+# argument as the backup extension and then treats the file as the script.
+# `-i.bak` is accepted by both, so the backup is written and removed.
+sed -i.bak 's/^function createDiagramEngine(/export function createDiagramEngine(/' "$OUT_FILE"
+rm -f "$OUT_FILE.bak"
 
 echo "[bundle-diagramengine] bundled ${#FILES[@]} files -> $OUT_FILE"

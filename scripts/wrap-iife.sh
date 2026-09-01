@@ -21,8 +21,11 @@ if [[ ! -d "$DIST_DIR" ]]; then
 fi
 
 for jsfile in $(find "$DIST_DIR" -name '*.js'); do
-    # Strip all export keywords from declarations (both line-start and mid-line)
-    sed -i 's/^export //g; s/\bexport class /class /g; s/\bexport function /function /g; s/\bexport const /const /g; s/\bexport let /let /g; s/\bexport interface /interface /g; s/\bexport type /type /g; s/\bexport enum /enum /g' "$jsfile"
+    # Strip all export keywords from declarations (both line-start and mid-line).
+    # `-i.bak` rather than bare `-i`: the latter is GNU-only, and BSD sed
+    # (macOS) reads the script as the backup extension instead.
+    sed -i.bak 's/^export //g; s/\bexport class /class /g; s/\bexport function /function /g; s/\bexport const /const /g; s/\bexport let /let /g; s/\bexport interface /interface /g; s/\bexport type /type /g; s/\bexport enum /enum /g' "$jsfile"
+    rm -f "$jsfile.bak"
 
     # Wrap in an IIFE
     tmpfile=$(mktemp)
