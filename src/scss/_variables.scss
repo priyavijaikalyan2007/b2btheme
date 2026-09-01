@@ -140,6 +140,23 @@ $spacers: (
 ) !default;
 
 // =============================================================================
+// GRID BREAKPOINTS
+// =============================================================================
+// Bootstrap's own values, declared here so component SCSS — which imports this
+// file and NOT Bootstrap — can name a breakpoint instead of hardcoding pixels.
+// `!default` means Bootstrap's identical later declaration is a no-op, so the
+// compiled output is unchanged.
+
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+) !default;
+
+// =============================================================================
 // BORDERS & BORDER RADIUS - Sharp, professional edges
 // =============================================================================
 
