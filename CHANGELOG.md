@@ -12,6 +12,18 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-09-02
+
+### Added
+- **`MarketingHero`** — the introduction area for a public page: optional eyebrow, heading, supporting paragraph, up to two actions, and an optional media slot, in stacked, centered, and split layouts with a configurable collapse breakpoint. The stylesheet is the contract: a static page links `marketinghero.css`, writes the documented markup, and loads no script; `createMarketingHero(containerId, options)` is a convenience that emits exactly the same markup, and a canonical-structure test fails if the two drift. The eyebrow follows the heading in the DOM and is lifted with `order: -1`, so the heading stays first in document order (ADR-146, D4). Ships no animation at all.
+- **`SiteFooter`** — a semantic public-site footer: organization details, grouped navigation, contact details, legal links, and optional build information in one to four responsive columns, each group a `<nav>` named by its own heading. Columns use `repeat(N, minmax(0, 1fr))`, so a long email address wraps instead of forcing its track wider than its share. Unvisited links are muted and visited links take the accent colour — a deliberate inversion of the usual convention (ADR-146, D5).
+- **Named grid breakpoints** — `$grid-breakpoints` is now declared in `src/scss/_variables.scss` with Bootstrap's own values, so component SCSS can name a breakpoint instead of hardcoding pixels. Compiled `custom.css` is byte-identical.
+- Demo pages for both components, each ending with a hand-authored section that uses no factory call — the section that actually tests the CSS-is-the-contract claim. Layout Studio stencils and Component Studio entries for both.
+
+### Fixed
+- **The test suite runs on Node 22 and later.** 137 tests across 4 suites failed with `Cannot read properties of undefined (reading 'removeItem')`: Node ships its own experimental `localStorage` global that shadows jsdom's and is undefined without `--localstorage-file`. `tests/setup.ts` now supplies a minimal in-memory `Storage` when the global is missing, beside the existing `ResizeObserver` and `matchMedia` polyfills. Inert on older Node.
+- **`npm run build` runs on macOS.** Three GNU-only `sed -i` calls — in `bundle-diagramengine.sh`, `wrap-iife.sh`, and the `build:icons` script — aborted the build under BSD sed, which reads the substitution as a backup-file suffix. All three now use `sed -i.bak` and remove the backup, which behaves identically on GNU.
+
 ## 2026-09-01
 
 ### Added

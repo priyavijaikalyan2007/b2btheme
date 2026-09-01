@@ -3556,7 +3556,31 @@ runtime that drives them lives in `runtime/` and is not a component.
 
 **Use Cases**: Calling out an anomaly in a chart, drawing attention to a row during a walkthrough, marking a region for follow-up.
 
-# 28\. Summary Matrix
+# 28\. Public Surfaces
+
+Components for public, unauthenticated pages — the marketing site rather than the
+application shell. Designed CSS-first: the stylesheet is the contract and works on
+hand-authored markup with no script on the page, while a thin factory renders the
+same markup for application consumers. Specified in
+`specs/marketinghero-sitefooter.prd.md` and governed by ADR-146.
+
+## 28.1✅Marketing Hero
+
+Public-page introduction area: optional eyebrow, heading, supporting paragraph, up to
+two actions, and an optional media slot. Stacked, centered, and split layouts, with a
+configurable breakpoint at which the split collapses. The eyebrow follows the heading
+in the DOM and is lifted above it with `order: -1`, so the heading stays first in
+document order (ADR-146, D4).
+
+## 28.2✅Site Footer
+
+Semantic public-site footer: organization details, grouped navigation, contact
+details, legal links, and optional build information, in one to four responsive
+columns. Each group is a `<nav>` named by its own heading. Unvisited links are muted
+and visited links take the accent colour — a deliberate inversion of the usual
+convention (ADR-146, D5).
+
+# 29\. Summary Matrix
 
 | \# | Component | Category | Status |
 | :---- | :---- | :---- | :---- |
@@ -3755,5 +3779,7 @@ runtime that drives them lives in `runtime/` and is not a component.
 | 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
 | 41.1 | Auth Card (Login Surface Parity) | Identity & Auth | DONE |
 | 41.2 | Theme Init (Pre-Paint Theme Script) | Identity & Auth | DONE |
+| 42.1 | Marketing Hero | Public Surfaces | DONE |
+| 42.2 | Site Footer | Public Surfaces | DONE |
 
-Revised library totals: 178 component entries (95 implemented, 83 planned). Implemented count includes 92 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.
+Revised library totals: 180 component entries (97 implemented, 83 planned). Implemented count includes 94 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.

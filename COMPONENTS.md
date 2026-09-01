@@ -2148,3 +2148,67 @@ Pre-paint theme initializer (~1.2 KB, dependency-free) that sets `data-bs-theme`
 ```
 
 See `components/themeinit/README.md` for full documentation.
+
+## MarketingHero
+
+Public-page introduction area — optional eyebrow, heading, supporting paragraph, up to two actions, and an optional media slot. Stacked, centered, and split layouts, with a configurable breakpoint at which the split collapses to one column.
+
+**The CSS is the contract; the JS is a convenience.** A static page links the stylesheet, writes the documented markup, and loads no script. A canonical-structure test asserts the factory emits exactly that markup.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/marketinghero/marketinghero.css` |
+| JS | `dist/components/marketinghero/marketinghero.js` |
+| Types | `dist/components/marketinghero/marketinghero.d.ts` |
+
+**Requires:** Bootstrap CSS (for `--theme-*` tokens and `.btn-*` classes). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/marketinghero/marketinghero.js"></script>
+<script>
+    var hero = createMarketingHero("hero-host", {
+        eyebrow: "New",
+        title: "Ship enterprise UI faster",
+        lede: "A compact Bootstrap 5 theme and component library.",
+        layout: "split",
+        primaryAction: { text: "Get started", href: "/signup" }
+    });
+</script>
+```
+
+**Note:** the eyebrow follows the heading in the DOM and is lifted above it with `order: -1`, keeping the heading first in document order (ADR-146, D4). See `components/marketinghero/README.md` before reformatting the markup.
+
+## SiteFooter
+
+Semantic public-site footer — organization details, grouped navigation, contact details, legal links, and optional build information, in one to four responsive columns. Each group is a `<nav>` named by its own heading through `aria-labelledby`.
+
+**The CSS is the contract; the JS is a convenience**, as with MarketingHero.
+
+| Asset | Path |
+|-------|------|
+| CSS | `dist/components/sitefooter/sitefooter.css` |
+| JS | `dist/components/sitefooter/sitefooter.js` |
+| Types | `dist/components/sitefooter/sitefooter.d.ts` |
+
+**Requires:** Bootstrap CSS (for `--theme-*` tokens). Does **not** require Bootstrap JS or Bootstrap Icons.
+
+**Usage (script tag):**
+
+```html
+<script src="dist/components/sitefooter/sitefooter.js"></script>
+<script>
+    var footer = createSiteFooter("footer-host", {
+        organization: { name: "Outcrop Inc", description: "Enterprise software." },
+        contact: { email: "hello@example.test" },
+        groups: [
+            { title: "Product", links: [{ text: "Overview", href: "/overview" }] }
+        ],
+        legal: { copyright: "© 2026 Outcrop Inc" },
+        buildInfo: "2026.09.01 · a1b2c3d"
+    });
+</script>
+```
+
+**Note:** unvisited links are muted and visited links take the accent colour. That inverts the usual convention deliberately (ADR-146, D5; DEBT-WEB-2). See `components/sitefooter/README.md` before changing it.

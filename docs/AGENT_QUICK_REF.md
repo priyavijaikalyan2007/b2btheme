@@ -147,6 +147,8 @@ components/markdowneditor/markdowneditor.css — markdowneditor component CSS
 components/markdowneditor/markdowneditor.js  — markdowneditor component JS
 components/markdownrenderer/markdownrenderer.css — markdownrenderer component CSS
 components/markdownrenderer/markdownrenderer.js  — markdownrenderer component JS
+components/marketinghero/marketinghero.css — marketinghero component CSS
+components/marketinghero/marketinghero.js  — marketinghero component JS
 components/maskedentry/maskedentry.css — maskedentry component CSS
 components/maskedentry/maskedentry.js  — maskedentry component JS
 components/metriccard/metriccard.css — metriccard component CSS
@@ -195,6 +197,8 @@ components/sharedialog/sharedialog.css — sharedialog component CSS
 components/sharedialog/sharedialog.js  — sharedialog component JS
 components/sidebar/sidebar.css — sidebar component CSS
 components/sidebar/sidebar.js  — sidebar component JS
+components/sitefooter/sitefooter.css — sitefooter component CSS
+components/sitefooter/sitefooter.js  — sitefooter component JS
 components/sizespicker/sizespicker.css — sizespicker component CSS
 components/sizespicker/sizespicker.js  — sizespicker component JS
 components/skeletonloader/skeletonloader.css — skeletonloader component CSS
@@ -343,6 +347,7 @@ $line-height-lg=1.5
 $line-height-relaxed=1.6
 # SPACING - Adjusted for larger text
 $spacer=0.75rem
+# GRID BREAKPOINTS
 # BORDERS & BORDER RADIUS - Sharp, professional edges
 $border-width=1px
 $border-color=$gray-300 (#cbd5e1)
@@ -916,6 +921,11 @@ $control-height-xl=44px
 - JS: `components/markdownrenderer/markdownrenderer.js`
 - Exports: `function greet`
 
+### marketinghero
+
+- CSS: `components/marketinghero/marketinghero.css`
+- JS: `components/marketinghero/marketinghero.js`
+
 ### maskedentry
 
 - CSS: `components/maskedentry/maskedentry.css`
@@ -1043,6 +1053,11 @@ $control-height-xl=44px
 
 - CSS: `components/sidebar/sidebar.css`
 - JS: `components/sidebar/sidebar.js`
+
+### sitefooter
+
+- CSS: `components/sitefooter/sitefooter.css`
+- JS: `components/sitefooter/sitefooter.js`
 
 ### sizespicker
 

@@ -101,6 +101,10 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 |----------|-------|-------------|
 | `$spacer` | `0.75rem` | 12px (was 10px) - increased for larger text |
 
+## GRID BREAKPOINTS
+
+_No variables in this section._
+
 ## BORDERS & BORDER RADIUS - Sharp, professional edges
 
 | Variable | Value | Description |

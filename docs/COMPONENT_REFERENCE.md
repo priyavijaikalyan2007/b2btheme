@@ -76,6 +76,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [marginspicker](#marginspicker) | `components/marginspicker/marginspicker.css` | `components/marginspicker/marginspicker.js` |
 | [markdowneditor](#markdowneditor) | `components/markdowneditor/markdowneditor.css` | `components/markdowneditor/markdowneditor.js` |
 | [markdownrenderer](#markdownrenderer) | `components/markdownrenderer/markdownrenderer.css` | `components/markdownrenderer/markdownrenderer.js` |
+| [marketinghero](#marketinghero) | `components/marketinghero/marketinghero.css` | `components/marketinghero/marketinghero.js` |
 | [maskedentry](#maskedentry) | `components/maskedentry/maskedentry.css` | `components/maskedentry/maskedentry.js` |
 | [metriccard](#metriccard) | `components/metriccard/metriccard.css` | `components/metriccard/metriccard.js` |
 | [multiselectcombo](#multiselectcombo) | `components/multiselectcombo/multiselectcombo.css` | `components/multiselectcombo/multiselectcombo.js` |
@@ -100,6 +101,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [searchbox](#searchbox) | `components/searchbox/searchbox.css` | `components/searchbox/searchbox.js` |
 | [sharedialog](#sharedialog) | `components/sharedialog/sharedialog.css` | `components/sharedialog/sharedialog.js` |
 | [sidebar](#sidebar) | `components/sidebar/sidebar.css` | `components/sidebar/sidebar.js` |
+| [sitefooter](#sitefooter) | `components/sitefooter/sitefooter.css` | `components/sitefooter/sitefooter.js` |
 | [sizespicker](#sizespicker) | `components/sizespicker/sizespicker.css` | `components/sizespicker/sizespicker.js` |
 | [skeletonloader](#skeletonloader) | `components/skeletonloader/skeletonloader.css` | `components/skeletonloader/skeletonloader.js` |
 | [slider](#slider) | `components/slider/slider.css` | `components/slider/slider.js` |
@@ -11529,6 +11531,164 @@ Both components call `window.createMarkdownRenderer()` internally. Load `markdow
 
 ---
 
+<a id="marketinghero"></a>
+
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+-->
+
+<!-- AGENT: Documentation for the MarketingHero component — public-page introduction area, CSS-first. -->
+
+<!-- ⚓ COMPONENT: MarketingHero -->
+<!-- 📜 PURPOSE: Markup contract, options, and the document-order rule for the public-page hero. -->
+<!-- 🔗 RELATES: [[SiteFooter]], [[AuthCard]], [[EnterpriseTheme]], specs/marketinghero-sitefooter.prd.md -->
+
+# MarketingHero
+
+The introduction area for a public page: an optional eyebrow, a heading, a
+supporting paragraph, up to two actions, and an optional media slot. Three
+layouts — stacked, centered, and split.
+
+**The CSS is the contract; the JS is a convenience.** A static page links the
+stylesheet, writes the markup below, and loads no script. The factory exists
+for applications that would rather pass data than write HTML, and it renders
+exactly the markup documented here — a canonical-structure test in
+[marketinghero.test.ts](./marketinghero.test.ts) fails if the two ever drift.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/marketinghero/marketinghero.css` |
+| JS (optional) | `components/marketinghero/marketinghero.js` |
+| Types | `components/marketinghero/marketinghero.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for the `.btn-*` classes the actions use, and for the
+  `--theme-*` tokens.
+- Does **not** require Bootstrap JS.
+- Does **not** require Bootstrap Icons.
+
+## Canonical markup
+
+```html
+<section class="marketinghero marketinghero-split marketinghero-stack-lg"
+         aria-labelledby="hero-title">
+  <div class="marketinghero-content">
+    <h1 class="marketinghero-title" id="hero-title">Ship enterprise UI faster</h1>
+    <p class="marketinghero-eyebrow">New</p>
+    <p class="marketinghero-lede">A compact Bootstrap 5 theme and component library.</p>
+    <div class="marketinghero-actions">
+      <a class="btn btn-primary" href="/signup">Get started</a>
+      <a class="btn btn-outline-secondary" href="/docs">Read the docs</a>
+    </div>
+  </div>
+  <aside class="marketinghero-aside">
+    <img src="/product.png" alt="The workspace, showing a populated dashboard.">
+  </aside>
+</section>
+```
+
+## Document order — read before reformatting
+
+**The eyebrow follows the heading in the DOM and is lifted above it on screen**
+with `order: -1`. That is deliberate, not a mistake to tidy up.
+
+The requirement was an eyebrow above the heading *and* a heading that stays
+first in document order. Those cannot both hold in plain source order. Nothing
+in the content column is focusable, so displaced visual order carries no
+keyboard hazard, while assistive technology still reaches the `h1` first.
+Nesting the eyebrow inside the heading — the obvious alternative — would fold
+it into the heading's accessible name.
+
+Recorded as ADR-146, decision D4.
+
+## Classes
+
+| Class | Role |
+|---|---|
+| `.marketinghero` | Root. Flex container. |
+| `.marketinghero-centered` | Layout modifier: one centred column. |
+| `.marketinghero-split` | Layout modifier: two columns. |
+| `.marketinghero-stack-{sm,md,lg,xl,xxl}` | Width at and above which a split sits side by side. Below it the hero stacks. Only meaningful with `.marketinghero-split`. |
+| `.marketinghero-content` | Text column. Carries the eyebrow's `order`. |
+| `.marketinghero-eyebrow` | Small label above the heading. |
+| `.marketinghero-title` | Heading. |
+| `.marketinghero-lede` | Supporting paragraph. Capped at a 60-character measure. |
+| `.marketinghero-actions` | Flex row for the actions. Wraps. |
+| `.marketinghero-aside` | Media, illustration, or callout slot. |
+
+With no layout modifier the hero is a single left-aligned column. In both
+single-column modes the aside renders below the content, so one markup shape
+serves all three layouts.
+
+## Quick start (factory)
+
+```html
+<link rel="stylesheet" href="components/marketinghero/marketinghero.css">
+<script src="components/marketinghero/marketinghero.js"></script>
+<script>
+    var hero = createMarketingHero("hero-host", {
+        eyebrow: "New",
+        title: "Ship enterprise UI faster",
+        lede: "A compact Bootstrap 5 theme and component library.",
+        layout: "split",
+        primaryAction: { text: "Get started", href: "/signup" },
+        secondaryAction: { text: "Read the docs", href: "/docs" }
+    });
+</script>
+```
+
+## Options (MarketingHeroOptions)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `title` | `string` | — | **Required.** Heading text. |
+| `eyebrow` | `string?` | none | Small label above the heading. Omitted renders no element. |
+| `lede` | `string?` | none | Supporting paragraph. Omitted renders no element. |
+| `layout` | `"stacked" \| "centered" \| "split"` | `"stacked"` | Layout variant. |
+| `stackBelow` | `"sm" \| "md" \| "lg" \| "xl"` | `"lg"` | Breakpoint below which a split stacks. Ignored unless `layout` is `"split"`. |
+| `primaryAction` | `{ text, href?, onClick? }?` | none | Rendered `btn btn-primary`. |
+| `secondaryAction` | `{ text, href?, onClick? }?` | none | Rendered `btn btn-outline-secondary`. |
+| `aside` | `HTMLElement?` | none | Media slot. Appended as a node. |
+| `cssClass` | `string?` | none | Extra class(es) on the root. |
+
+An action with an `href` renders an `<a>`; one with only `onClick` renders a
+`<button type="button">`. Both may be supplied.
+
+The stylesheet also ships `.marketinghero-stack-xxl`, which hand-authored
+markup can use. `stackBelow` stops at `xl` because a hero that only goes
+side-by-side above 1400px is a single-column hero on nearly every screen.
+
+### Handle
+
+`getElement()` — the root `<section>`, or `null` after teardown.
+`destroy()` — removes listeners and DOM. Idempotent.
+`show(containerId?)` / `hide()` — attach and detach without discarding state.
+
+## Motion and forced colours
+
+The hero ships **no animation at all**, which is a stronger guarantee than
+honouring `prefers-reduced-motion`. Under `forced-colors: active` the aside
+takes a system-coloured border so it stays a distinct region when the system
+palette replaces the theme.
+
+## Scope notes
+
+- **Excluded from the DynamicFormSwitcher field convention (ADR-134):** the
+  hero is chrome, not a value-bearing field. Nothing in it round-trips as a
+  JSON value.
+- **`display` conformance** in the capability manifest — it mounts, renders,
+  and tears down, and emits nothing the canvas wires.
+- Contrast is verified by eye against the token table in `DARKMODE.md`. There
+  is no automated contrast gate in this repository; see DEBT-WEB-1.
+
+
+---
+
 <a id="maskedentry"></a>
 
 # MaskedEntry
@@ -15521,6 +15681,204 @@ In floating mode, dragging the sidebar near a viewport edge (within 40px) shows 
 - Resize handle: `role="separator"`, `aria-valuenow/min/max`, arrow keys (10px steps)
 - Collapsed strip: keyboard-accessible (Enter/Space to expand)
 - No focus trapping (persistent panel, not modal)
+
+
+---
+
+<a id="sitefooter"></a>
+
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+-->
+
+<!-- AGENT: Documentation for the SiteFooter component — semantic public-site footer, CSS-first. -->
+
+<!-- ⚓ COMPONENT: SiteFooter -->
+<!-- 📜 PURPOSE: Markup contract, options, and the deliberate visited-link inversion. -->
+<!-- 🔗 RELATES: [[MarketingHero]], [[AuthCard]], [[EnterpriseTheme]], specs/marketinghero-sitefooter.prd.md -->
+
+# SiteFooter
+
+The footer for a public page: organization details, grouped navigation,
+contact details, legal links, and optional build information, in one to four
+responsive columns.
+
+**The CSS is the contract; the JS is a convenience.** A static page links the
+stylesheet, writes the markup below, and loads no script. The factory exists
+for applications that would rather pass data than write HTML, and it renders
+exactly the markup documented here — a canonical-structure test in
+[sitefooter.test.ts](./sitefooter.test.ts) fails if the two ever drift.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| CSS | `components/sitefooter/sitefooter.css` |
+| JS (optional) | `components/sitefooter/sitefooter.js` |
+| Types | `components/sitefooter/sitefooter.d.ts` |
+
+## Requirements
+
+- **Bootstrap CSS** — for the `--theme-*` tokens.
+- Does **not** require Bootstrap JS.
+- Does **not** require Bootstrap Icons.
+
+## Canonical markup
+
+```html
+<footer class="sitefooter">
+  <div class="sitefooter-grid sitefooter-cols-3">
+    <div class="sitefooter-org">
+      <p class="sitefooter-orgname">Outcrop Inc</p>
+      <p class="sitefooter-orgdesc">Enterprise software.</p>
+      <address class="sitefooter-contact">
+        <p><a href="mailto:hello@example.test">hello@example.test</a></p>
+      </address>
+    </div>
+    <nav class="sitefooter-group" aria-labelledby="ft-product">
+      <h2 class="sitefooter-grouptitle" id="ft-product">Product</h2>
+      <ul class="sitefooter-links">
+        <li><a href="/overview">Overview</a></li>
+      </ul>
+    </nav>
+    <nav class="sitefooter-group" aria-labelledby="ft-company">
+      <h2 class="sitefooter-grouptitle" id="ft-company">Company</h2>
+      <ul class="sitefooter-links">
+        <li><a href="/about">About</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="sitefooter-legal">
+    <p class="sitefooter-copyright">© 2026 Outcrop Inc</p>
+    <ul class="sitefooter-legallinks">
+      <li><a href="/privacy">Privacy</a></li>
+    </ul>
+    <p class="sitefooter-build">2026.09.01 · a1b2c3d</p>
+  </div>
+</footer>
+```
+
+Each group must be a `<nav>` named by its own heading through
+`aria-labelledby`. That is what distinguishes several footer navigations from
+each other for assistive technology, and hand-authored markup has to supply
+the ids itself.
+
+## Link colours — read before "fixing" them
+
+**Unvisited links are muted; visited links take the accent colour.** That
+inverts what most sites do, and it is deliberate.
+
+The requirement was a clear visited state in a footer that stays quiet by
+default. Colouring every link with the accent would make the footer the
+loudest thing on the page; colouring visited links instead keeps it calm and
+makes the distinction obvious. Colour is not the only signal — hover and focus
+both add an underline.
+
+Recorded as ADR-146 decision D5 and tracked as DEBT-WEB-2, because it will
+read as a bug to anyone who meets it without this note.
+
+| State | Token |
+|---|---|
+| Link | `--theme-text-secondary` |
+| Visited | `--theme-primary` |
+| Hover | `--theme-text-primary`, underlined |
+| Focus visible | `2px solid $primary`, offset 2px |
+
+## Classes
+
+| Class | Role |
+|---|---|
+| `.sitefooter` | Root. Top border and surface background. |
+| `.sitefooter-grid` | Column container. One track by default. |
+| `.sitefooter-cols-{1,2,3,4}` | Column count at and above `md`. Below it, always one track. |
+| `.sitefooter-org` | Organization block. |
+| `.sitefooter-orgname` | Organization name. |
+| `.sitefooter-orgdesc` | Organization description. |
+| `.sitefooter-contact` | Contact block. Must be an `<address>`. |
+| `.sitefooter-group` | One navigation group. Must be a `<nav>`. |
+| `.sitefooter-grouptitle` | Group heading. Any level; supplies the group's accessible name. |
+| `.sitefooter-links` | Link list inside a group. |
+| `.sitefooter-legal` | Legal row beneath the grid. |
+| `.sitefooter-copyright` | Copyright line. |
+| `.sitefooter-legallinks` | Inline legal links. |
+| `.sitefooter-build` | Build information. Pushed to the end of the row. |
+
+## Columns and overflow
+
+`repeat(N, minmax(0, 1fr))` — the `0` minimum is load-bearing. A bare `1fr`
+means "at least the content's minimum size", so a single long email address
+would force its track wider than its share and overflow the row. With the
+zero minimum, plus `overflow-wrap: anywhere` on the contact block and the
+links, long addresses and long translated compounds wrap instead.
+
+**Nothing in this component uses `order`.** Stacking is the grid collapsing to
+one track, so the small-screen sequence is the source sequence by
+construction. That is the opposite of MarketingHero, where the eyebrow is
+displaced deliberately.
+
+## Quick start (factory)
+
+```html
+<link rel="stylesheet" href="components/sitefooter/sitefooter.css">
+<script src="components/sitefooter/sitefooter.js"></script>
+<script>
+    var footer = createSiteFooter("footer-host", {
+        organization: { name: "Outcrop Inc", description: "Enterprise software." },
+        contact: { email: "hello@example.test" },
+        groups: [
+            { title: "Product", links: [{ text: "Overview", href: "/overview" }] },
+            { title: "Company", links: [{ text: "About", href: "/about" }] }
+        ],
+        legal: { copyright: "© 2026 Outcrop Inc",
+                 links: [{ text: "Privacy", href: "/privacy" }] },
+        buildInfo: "2026.09.01 · a1b2c3d"
+    });
+</script>
+```
+
+## Options (SiteFooterOptions)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `organization` | `{ name, description?, logo? }?` | none | `logo` is an `HTMLElement`, appended as a node. |
+| `contact` | `{ email?, phone?, address? }?` | none | Email renders as `mailto:`, phone as `tel:`. |
+| `groups` | `SiteFooterGroup[]?` | none | Each `{ title, headingLevel?, links }`. |
+| `legal` | `{ copyright?, links? }?` | none | Omitted entirely renders no legal row. |
+| `buildInfo` | `string?` | none | A string you pass. No fetch, no global read. |
+| `columns` | `1 \| 2 \| 3 \| 4` | derived | Derived from rendered blocks, clamped to 4. |
+| `cssClass` | `string?` | none | Extra class(es) on the root. |
+
+`headingLevel` defaults to `2` and accepts `2` through `6`. A footer that
+hardcodes `h2` can break the heading outline of a page whose main content
+stops at `h3`, so pick the level that fits the page.
+
+Supplying `buildInfo` with no `legal` still renders the legal row — the build
+string has nowhere else to live.
+
+### Handle
+
+`getElement()` — the root `<footer>`, or `null` after teardown.
+`destroy()` — removes the DOM. Idempotent. Every action here is a link, so
+there are no listeners to detach.
+`show(containerId?)` / `hide()` — attach and detach without discarding state.
+
+## Build information
+
+`buildInfo` is a value the consumer passes. The component performs no fetch
+and reads no global. The repository already produces that value at build time
+through `npm run build:info`, so it belongs in the page template.
+
+## Scope notes
+
+- **Excluded from the DynamicFormSwitcher field convention (ADR-134):** the
+  footer is navigation chrome, not a value-bearing field.
+- **`display` conformance** in the capability manifest.
+- Two footers on one page do not collide: group heading ids carry the
+  instance counter.
+- Contrast is verified by eye against the token table in `DARKMODE.md`. There
+  is no automated contrast gate in this repository; see DEBT-WEB-1.
 
 
 ---

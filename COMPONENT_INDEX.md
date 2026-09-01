@@ -2,7 +2,7 @@
 
 # Component Index
 
-123 implemented components. Use this file for quick lookup; see each component's README for full API details.
+125 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -185,6 +185,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | logutility | A non-visual, centralised logging utility that replaces per-component `logInfo`/`logWarn`/`logError`/`logDebug` helpe... | `createLogUtility()` | [README](components/logutility/README.md) |
 | magnifier | A cursor-following magnifying glass overlay that clones and scales the content of a target element within a circular ... | `createMagnifier()` | [README](components/magnifier/README.md) |
 | markdownrenderer | Shared markdown-to-HTML rendering utility for the Enterprise Theme. | `createMarkdownRenderer()` | [README](components/markdownrenderer/README.md) |
+| marketinghero | The introduction area for a public page: an optional eyebrow, a heading, a. | `createMarketingHero()` | [README](components/marketinghero/README.md) |
 | metriccard | Single-value KPI card for dashboard "KPI strips". | `createMetricCard()` | [README](components/metriccard/README.md) |
 | navrail | App-level **primary navigation** component. | `createNavRail()` | [README](components/navrail/README.md) |
 | notificationcenter | Aggregated notification panel with bell trigger, unread badge, category filters, read/unread state, dismiss per item,... | `createNotificationCenter()` | [README](components/notificationcenter/README.md) |
@@ -198,6 +199,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | richtextinput | A lightweight `contenteditable`-based rich text input that composes STIE and Pill for per-row editing contexts — todo... | `createRichTextInput()` | [README](components/richtextinput/README.md) |
 | ruler | A canvas-based calibrated ruler with cursor tracking, multiple unit systems, and DPI-aware rendering. | `createRuler()` | [README](components/ruler/README.md) |
 | sharedialog | A modal dialog for sharing resources with configurable access levels. | `showShareDialog()`, `createShareDialog()` | [README](components/sharedialog/README.md) |
+| sitefooter | The footer for a public page: organization details, grouped navigation,. | `createSiteFooter()` | [README](components/sitefooter/README.md) |
 | slider | A range input component with single-value and dual-thumb range modes, optional tick marks, value labels, keyboard nav... | `createSlider()` | [README](components/slider/README.md) |
 | smarttextinput | A behavioral middleware engine (non-UI) that attaches to text inputs and provides trigger-based inline references suc... | `createSmartTextInput()`, `showPopover()` | [README](components/smarttextinput/README.md) |
 | spinemap | Interactive SVG capability/feature map with a central spine, branching sub-nodes, four layout algorithms, zoom/pan, s... | `createSpineMap()` | [README](components/spinemap/README.md) |

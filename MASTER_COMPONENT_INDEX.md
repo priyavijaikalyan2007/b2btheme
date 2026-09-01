@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**114 implemented** of 243 component entries.
+**116 implemented** of 245 component entries.
 
 ## By Section
 
@@ -37,6 +37,7 @@ Compact status summary of the master component list. For full specs and descript
 | 25 | Smart Text Input Engine | 1 | 14 | ⬜Background, ✅Smart Text Input Engine (STIE), ⬜Sub-Systems, ⬜Trigger Registry, ⬜Input Adapter Interface, +9 more |
 | 26 | ERP, ITSM, Process Intelligence, Orchestration & Agentic Enterprise | 0 | 20 | ⬜Background & Research Sources, ⬜Process Mining & Intelligence, ⬜Process Discovery Map, ⬜BPMN Heatmap Overlay, ⬜Variant Explorer, +15 more |
 | 27 | Dynamic UI | 5 | 5 | ✅DynamicCanvas, ✅WorkspaceShell, ✅ChatDock, ✅StickyNote, ✅Annotation |
+| 28 | Public Surfaces | 2 | 2 | ✅Marketing Hero, ✅Site Footer |
 
 ## Implemented Components
 
@@ -91,6 +92,8 @@ Compact status summary of the master component list. For full specs and descript
 **25. Smart Text Input Engine:** 25.2 Smart Text Input Engine (STIE)
 
 **27. Dynamic UI:** 27.1 DynamicCanvas | 27.2 WorkspaceShell | 27.3 ChatDock | 27.4 StickyNote | 27.5 Annotation
+
+**28. Public Surfaces:** 28.1 Marketing Hero | 28.2 Site Footer
 
 ## Not Yet Implemented
 

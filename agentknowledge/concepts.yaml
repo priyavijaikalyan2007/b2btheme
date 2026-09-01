@@ -1302,3 +1302,14 @@
   definition: "A fractional position within a target node, recorded on a node anchor as spot {x,y} plus within (ADR-145). Fractions of the target's scrollable CONTENT rather than of its visible box, so a mark placed on the fortieth line is still on the fortieth line after scrolling and after the frame is resized. `within` names WHICH scrolling region the fraction was measured against — index 0 is the frame body, and a component that scrolls internally (a note longer than its card, a grid's rows) contributes further regions in DOM order. The packer places a spot geometrically as a HEADLESS FALLBACK; the canvas refines it against the live DOM afterwards, and that refinement is what a browser measures. Known limit: geometric anchors survive scrolling and resizing but NOT reflow — re-wrap a document at a different width and the same fraction covers different text. Content anchoring is what the entity anchor is for."
   anchor_file: "runtime/src/types.ts"
   related: ["ClickToPlace", "Annotation", "DynamicCanvas"]
+
+- name: "MarketingHero"
+  definition: "Public-page introduction area — eyebrow, heading, lede, up to two actions, and an optional media slot, in stacked, centered or split layouts. CSS-first: the stylesheet is the contract and works on hand-authored markup with no script; the factory is a convenience that renders the same markup. Display conformance, excluded from the ADR-134 field convention as chrome."
+  anchor_file: "components/marketinghero/marketinghero.ts"
+  related: ["SiteFooter", "AuthCard", "EnterpriseTheme", "CapabilityManifest"]
+
+- name: "SiteFooter"
+  definition: "Semantic public-site footer — organization details, grouped navigation, contact, legal links and optional build information in one to four responsive columns, each group a nav named by its own heading. CSS-first like MarketingHero. Unvisited links are muted and visited links take the accent colour, a deliberate inversion recorded in ADR-146 D5."
+  anchor_file: "components/sitefooter/sitefooter.ts"
+  related: ["MarketingHero", "AuthCard", "EnterpriseTheme", "CapabilityManifest"]
+
