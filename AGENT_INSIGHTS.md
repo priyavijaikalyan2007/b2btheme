@@ -106,3 +106,22 @@ The packer skipped overlays when *placing* nodes but still added a fixed-placeme
 67 DiagramEngine e2e tests failed on `createDiagramEngine not found on window`. The engine was fine; the spec navigated to the component *gallery index*, which links to every component page and loads none of them. The failure looked like 67 broken features and was one broken URL. Repointing fixed all 67 with no engine change.
 
 **Principle**: When a whole suite fails identically, suspect the harness before the subject — and check what the page under test actually loads. Then prove the repaired suite is not vacuous by mutating the implementation and watching it fail. Mutate the *exact* line the assertion depends on: a first attempt here changed two unrelated `shape:"rectangle"` literals, nothing failed, and that reads precisely like a toothless suite.
+
+---
+
+## 6. Public-Surface Components
+
+### 6.1 A "No JavaScript" Request Can Still Need a Factory (2026-09-01)
+The website asked for CSS-first components requiring no JavaScript, and the honest reading was two folders containing only SCSS. That reading was wrong for a structural reason, not a stylistic one: `runtime/fleet-conformance.test.ts` enumerates every directory in `components/`, and `demo/studio/component-studio.html` registers each entry by a **factory name string**. A component with no factory cannot appear in Component Studio at all and needs a `NOT_MOUNTABLE` entry in a category reserved for services and overlays. AuthCard had already settled the same tension from the other side — "the CSS is the contract; the JS is a convenience" — because Keycloak's templates link only the stylesheet.
+
+**Principle**: Before honouring a constraint literally, find what in the repository is *keyed* to the thing you are about to omit. The factory here is not overhead paid for the consumer that never calls it; it is what buys the stencil, the studio entry, and the conformance gate.
+
+### 6.2 Two Acceptance Criteria Can Contradict Each Other (2026-09-01)
+The hero request asked for an eyebrow above the heading *and* for "the heading remains the first item in document order". Both are reasonable; together they are unsatisfiable in plain source order. Silently dropping either would have shipped something the requester believed they had. Resolved by naming the conflict, choosing `order: -1` on the eyebrow, and stating why it is safe — nothing in that block is focusable, so displaced visual order carries no keyboard hazard, whereas nesting the eyebrow inside the `h1` would pollute its accessible name.
+
+**Principle**: When two requirements collide, surface the collision and propose a mechanism, rather than picking one and hoping the omission is not noticed. The mechanism is what the requester actually needs to approve.
+
+### 6.3 A Pipe Swallows the Exit Code You Were Checking (2026-09-01)
+`npm test 2>&1 | tail -40` was reported as exit code 0 while the output plainly read `sh: tsc: command not found`. The zero belonged to `tail`. `node_modules` was not installed and the suite had not run at all — one step from announcing a green tree on the strength of a truncated log.
+
+**Principle**: Never take the exit status of a pipeline as the status of the command that matters. Use `set -o pipefail`, capture to a file and check separately, or read the tail before believing the code. A suite that did not run looks identical to a suite that passed if you only check the number.

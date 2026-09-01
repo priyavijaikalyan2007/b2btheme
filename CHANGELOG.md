@@ -12,6 +12,9 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added
+- **Design spec for `MarketingHero` and `SiteFooter`** (`specs/marketinghero-sitefooter.prd.md`) — two public-surface components requested by the Outcrop Inc website, for the hero and site-footer patterns Bootstrap does not provide. Both follow the AuthCard shape: the stylesheet is the contract and works on hand-authored markup with no script on the page, while a thin `container-first` factory renders exactly the documented markup so each component still earns its Layout Studio stencil, Component Studio entry, and a passing conformance gate. Design only — no implementation yet (ADR-146).
+
 ## 2026-08-10
 
 ### Fixed

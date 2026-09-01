@@ -257,6 +257,16 @@ listed here so future audits do not re-litigate them without the context.
 
 ---
 
+## ACCEPTED DEBT — Public-Surface Components (2026-09-01, ADR-146)
+
+Recorded at design time. Neither component is implemented yet; these are the
+limits the design knowingly accepts, not defects in shipped code.
+
+- [ ] **DEBT-WEB-1** There is **no automated contrast gate** in this repository. `MarketingHero` and `SiteFooter` both carry WCAG AA acceptance criteria, and both will be verified by eye on their demo pages in light and dark. The mitigation in the design is to use only the rated token pairs in `DARKMODE.md` and never place muted text on a raised surface. Mechanising this is worthwhile and deliberately out of scope for the two components — it is fleet-wide work, since every one of the 123 components carries the same unverified claim today.
+- [ ] **DEBT-WEB-2** `SiteFooter` links use muted text when unvisited and the accent colour when visited, which **inverts the common convention**. Chosen deliberately by the user (ADR-146, D5) to make the visited state obvious while keeping the footer quiet. Recorded because it will read as a bug to anyone who meets it without the record; the component README must state it too, or someone will "fix" it.
+
+---
+
 ## RESOLVED — DiagramEngine e2e suite did not run (2026-08-09, fixed 2026-08-10)
 
 - [x] **DEBT-DE-1** All 67 tests in `tests/diagramengine.spec.ts` failed with `createDiagramEngine not found on window`. The spec navigated to `/docs/demo.html`, the component **gallery index**, which links to every component page and loads none of them; the bundle's `window.createDiagramEngine` assignment was present and correct all along. The suite had therefore been asserting nothing. Repointed at `/demo/components/diagramengine.html`, which loads the engine and builds a canvas, and given a readiness wait on the global rather than a bare selector. All 67 pass with **no engine changes** — nothing was broken behind the broken harness.

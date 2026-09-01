@@ -3594,3 +3594,88 @@
     - "components/annotation/annotation.ts"
     - "components/annotation/annotation.scss"
     - "components/dynamiccanvas/dynamiccanvas.ts"
+
+- id: "ADR-146"
+  title: "MarketingHero and SiteFooter — CSS is the contract, the factory earns the surfaces"
+  date: "2026-09-01"
+  status: "Accepted"
+  context: |
+    The Outcrop Inc website asked for two components Bootstrap does not
+    provide: a hero for public pages and a semantic site footer. The request
+    specified CSS-first components requiring no JavaScript, which is the right
+    shape for a marketing page — copy belongs in HTML where it can be edited
+    and crawled, not inside a script.
+
+    Taken literally that meant two folders with no TypeScript in them, and the
+    library has no such thing: all 123 components ship a factory. The cost is
+    not stylistic. `runtime/fleet-conformance.test.ts` enumerates every
+    directory in `components/`, so a folder with no factory needs a
+    NOT_MOUNTABLE entry — a category reserved for services, boot scripts and
+    overlays, not for renderable surfaces. Component Studio registers each
+    entry by a `factory` name string (demo/studio/component-studio.html), so a
+    factoryless component cannot appear there at all, and the Layout Studio
+    stencil would have nothing to preview. AGENTS.md requires both surfaces of
+    every new component.
+
+    AuthCard had already met this problem from the other direction and settled
+    it: "The CSS is the contract; the JS is a convenience." Keycloak's
+    FreeMarker templates link only the stylesheet and emit the markup
+    themselves, because the login must work with JavaScript disabled.
+  decision: |
+    Both components ship the AuthCard shape: `<name>.scss` is the deliverable,
+    and a thin `create<Name>(containerId, options)` factory renders exactly the
+    markup the README documents. A canonical-structure test asserts that
+    equality, because the site loads only the CSS and would be where silent
+    drift surfaced.
+
+    Five design decisions were settled with the user and are recorded in
+    specs/marketinghero-sitefooter.prd.md as D1 through D5:
+
+    D1 — First-class library components under the normal additive contract,
+    not a frozen parity contract like AuthCard's and not in the website repo.
+    A freeze is warranted when another team mirrors the markup verbatim; the
+    website is the first consumer, not the only one.
+
+    D2 — The existing compact enterprise scale, with no new spacing or type
+    tokens. A separate public-surface scale would add tokens two components
+    use, and the site should look unmistakably like the product.
+
+    D3 — The stylesheet is the contract; the factory is a convenience. The
+    factory is not overhead paid for the website — it is what buys the
+    stencil, the studio entry, and a passing conformance gate.
+
+    D4 — MarketingHero's eyebrow follows the heading in the DOM and is lifted
+    above it with `order: -1`. The request asks both for an eyebrow and for
+    the heading to stay first in document order. Nothing in that block is
+    focusable, so displaced visual order carries no keyboard hazard; nesting
+    the eyebrow inside the heading would pollute its accessible name.
+
+    D5 — SiteFooter's unvisited links use muted text and visited links take
+    the accent colour. The user chose this to make the visited state obvious
+    while keeping the footer quiet. It inverts the common convention, so it is
+    recorded rather than left looking like an accident. Colour is not the only
+    signal: hover and focus add an underline.
+
+    Both declare `conformance: "display"` and `factoryStyle: "container-first"`
+    — the canonical ADR-134 signature, which new components must use and which
+    costs nothing here because there are no existing consumers to break.
+  consequences: |
+    + A static page links one stylesheet, writes semantic HTML, and loads no
+      script. That is what the request actually asked for.
+    + Both components stay first-class citizens of the library rather than
+      exceptions to it: stencil, studio entry, manifest, conformance gate.
+    + The canonical-structure test makes "the CSS and the factory agree" an
+      executable claim rather than a stated intention, as it did for AuthCard.
+    + Neither component carries a dark-mode rule. The `--theme-*` tokens are
+      already redefined under the dark selector, so `data-bs-theme` switching
+      works by architecture rather than duplication.
+    - Roughly 150 lines of TypeScript per component that the primary consumer
+      will never call. Accepted as the price of the discovery surfaces.
+    - The footer's visited-link colouring will read as wrong to anyone who
+      meets it without this record. Hence D5 is written down twice, here and
+      in the spec.
+    - Contrast is verified by eye. There is no automated gate in this
+      repository, and this work does not add one — see DEBT-WEB-1.
+  files:
+    - "specs/marketinghero-sitefooter.prd.md"
+    - "specs/feature_request_website.md"
