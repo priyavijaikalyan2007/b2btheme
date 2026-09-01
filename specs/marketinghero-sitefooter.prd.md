@@ -166,9 +166,16 @@ serves all three layouts.
 
 ### 5.3 Breakpoint classes
 
-A Sass loop over Bootstrap's `$grid-breakpoints` generates the
-`.marketinghero-stack-*` classes. "Configurable breakpoint" is therefore a
-class swap, not a script.
+A Sass loop over `$grid-breakpoints` generates the `.marketinghero-stack-*`
+classes. "Configurable breakpoint" is therefore a class swap, not a script.
+
+**Amended 2026-09-01, during planning.** `src/scss/_variables.scss` imports
+nothing and does not define `$grid-breakpoints`, so component SCSS cannot see
+Bootstrap's map — today `components/applauncher/applauncher.scss:451` hardcodes
+`@media (min-width: 768px)` for want of it. The map is therefore added to
+`_variables.scss` with Bootstrap's own values and `!default`, which leaves the
+compiled `custom.css` byte-identical and makes the names available fleet-wide.
+That is Task 1 of `specs/marketinghero-sitefooter.plan.md`.
 
 ### 5.4 Actions
 
