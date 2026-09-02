@@ -22,6 +22,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ### Fixed
 - **The test suite runs on Node 22 and later.** 137 tests across 4 suites failed with `Cannot read properties of undefined (reading 'removeItem')`: Node ships its own experimental `localStorage` global that shadows jsdom's and is undefined without `--localstorage-file`. `tests/setup.ts` now supplies a minimal in-memory `Storage` when the global is missing, beside the existing `ResizeObserver` and `matchMedia` polyfills. Inert on older Node.
+- **Both new demo pages are reachable from the gallery.** `MarketingHero` and `SiteFooter` shipped with working demo pages that nothing linked to; `demo/index.html` is the only page that indexes component demos. Added a **Public Surfaces** category matching section 28 of the master component list. AGENTS.md now states that registering the demo card is part of creating a demo page.
 - **`npm run build` runs on macOS.** Three GNU-only `sed -i` calls — in `bundle-diagramengine.sh`, `wrap-iife.sh`, and the `build:icons` script — aborted the build under BSD sed, which reads the substitution as a backup-file suffix. All three now use `sed -i.bak` and remove the backup, which behaves identically on GNU.
 
 ## 2026-09-01

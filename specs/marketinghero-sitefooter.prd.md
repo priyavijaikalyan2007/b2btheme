@@ -14,7 +14,7 @@ Created: 2026-09-01
 
 # MarketingHero and SiteFooter
 
-**Status:** Design approved, not implemented
+**Status:** Implemented and shipped 2026-09-02 (ADR-146). Plan: `specs/marketinghero-sitefooter.plan.md`. Progress: `specs/marketinghero.md`, `specs/sitefooter.md`.
 **Date:** 2026-09-01
 **Origin:** `specs/feature_request_website.md`
 **Folders:** `./components/marketinghero/`, `./components/sitefooter/`
@@ -371,6 +371,7 @@ The work is incomplete until every item is done, for each component:
 
 - [ ] `<name>.scss`, `<name>.ts`, `<name>.manifest.ts`, `<name>.test.ts`, `README.md`
 - [ ] Demo page at `demo/components/<name>.html`
+- [ ] Demo card registered in `demo/index.html` — the gallery's only index
 - [ ] Layout Studio stencil in `stencils-ui-components.ts`, per the Tier A/B/C pattern
 - [ ] Component Studio entry with its `factory` string
 - [ ] Progress spec at `specs/<name>.md`

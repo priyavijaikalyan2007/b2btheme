@@ -60,6 +60,7 @@ Every task's requirements implicitly include this section.
 | `components/sitefooter/sitefooter.test.ts` | Unit and canonical-structure tests. |
 | `components/sitefooter/README.md` | Markup contract, options, and the visited-link note. |
 | `demo/components/marketinghero.html` | Demo page. All three layouts, both themes. |
+| `demo/index.html` | **Modify.** Register both demo cards — the gallery's only index. |
 | `demo/components/sitefooter.html` | Demo page. One, three, and four columns, both themes. |
 | `components/diagramengine/src/stencils-ui-components.ts` | **Modify.** Two custom SVG wireframe stencils. |
 | `demo/studio/component-studio.html` | **Modify.** Two entries plus two `COMPONENT_HELP` blocks. |

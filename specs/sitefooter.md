@@ -58,6 +58,12 @@ Also touched: `stencils-ui-components.ts` (Tier B stencil),
 - **`buildInfo` alone still renders the legal row** — the build string has
   nowhere else to live. Tested explicitly so the behaviour is not accidental.
 
+## Registration
+
+The component is reachable from `demo/index.html` under **Public Surfaces**, from
+Component Studio, and from the Layout Studio stencil palette. The demo card was
+missed on first delivery and added in a follow-up — see AGENT_INSIGHTS 6.7.
+
 ## Verification status
 
 - 25 unit tests pass. Fleet conformance gate passes at 191; not in `EXEMPT`.

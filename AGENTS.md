@@ -441,7 +441,9 @@ This is going to be shorter context than CONVERSATION.md which is quite large.
 
 # Demo
 Whenever components, CSS, HTML or TypeScript, Javascript are modified, created or enabled, a demonstration 
-site must be created within the ./demo/ folder. The site can be a single or multi-page HTML site. 
+site must be created within the ./demo/ folder. Every new component demo page MUST also be registered as a 
+card in `demo/index.html`, which is the only page that indexes component demos — a demo page nothing links 
+to is unreachable from the gallery and is not delivered. The site can be a single or multi-page HTML site. 
 But it must demonstrate all styles, all components, all dialogs, all typography, all colors from the 
 base Bootstrap framework with the customizations added. This allows the user to validate that the 
 theme is working well or if not, adjust any instructions.

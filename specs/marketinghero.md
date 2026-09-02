@@ -63,6 +63,12 @@ could not name a breakpoint — `applauncher.scss` hardcodes `768px` for want of
 it. The map was added with Bootstrap's own values and `!default`, verified by a
 byte-for-byte diff of the compiled `custom.css` (272645 bytes, unchanged).
 
+## Registration
+
+The component is reachable from `demo/index.html` under **Public Surfaces**, from
+Component Studio, and from the Layout Studio stencil palette. The demo card was
+missed on first delivery and added in a follow-up — see AGENT_INSIGHTS 6.7.
+
 ## Verification status
 
 - 23 unit tests pass. Fleet conformance gate passes; not in `EXEMPT`.
