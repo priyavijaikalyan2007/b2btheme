@@ -36,7 +36,7 @@
 .confirmdialog {
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-xl);
     width: 100%;
     max-width: 440px;

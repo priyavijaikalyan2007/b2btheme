@@ -35,7 +35,7 @@
     color: var(--theme-text-primary);
     border: 1px solid var(--theme-border-subtle);
     border-radius: $border-radius;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--theme-shadow-md);
     font-size: $font-size-xs;
     line-height: $line-height-base;
     pointer-events: none;
@@ -48,10 +48,9 @@
     }
 }
 
-[data-bs-theme="dark"] .hovercard,
-.dark .hovercard {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
+// No dark-mode shadow rule is needed: --theme-shadow-md is already redefined
+// under the dark selector with its own alpha. The hardcoded override that used
+// to live here was removed in ADR-147.
 
 // Overflow fade mask — signals clipped content at maxHeight.
 .hovercard:not(.hovercard-no-fade)::after {

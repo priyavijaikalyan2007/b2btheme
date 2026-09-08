@@ -74,7 +74,7 @@
     background-color: var(--theme-input-bg, #{$gray-50});
     color: var(--theme-input-color, #{$gray-900});
     border: 1px solid var(--theme-input-border, #{$gray-300});
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     font: inherit;
 
     &:focus
@@ -255,7 +255,7 @@
     background-color: var(--theme-input-bg, #{$gray-50});
     color: var(--theme-input-color, #{$gray-900});
     border: 1px solid var(--theme-input-border, #{$gray-300});
-    border-radius: 0;
+    border-radius: $border-radius;
     font: inherit;
 
     &::placeholder

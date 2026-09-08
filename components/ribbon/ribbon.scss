@@ -38,7 +38,10 @@ $ribbon-transition-med:     200ms;
 $ribbon-separator-w:        1px;
 $ribbon-group-gap:          $sp-2;
 $ribbon-group-padding:      $sp-4 $sp-6;
-$ribbon-ctrl-border-radius: 0;
+// ADR-147: was 0. Ribbon controls are dense chrome, but they sit beside
+// buttons and inputs that now carry the base radius, and a square control
+// next to a rounded one reads as an oversight rather than a choice.
+$ribbon-ctrl-border-radius: $border-radius;
 
 // ============================================================================
 // 2. ROOT CONTAINER
@@ -994,6 +997,7 @@ $ribbon-ctrl-border-radius: 0;
     cursor: pointer;
 
     &::-webkit-color-swatch-wrapper { padding: $sp-1; }
+    // Flush inside its wrapper, which carries the radius — see ADR-147.
     &::-webkit-color-swatch { border: none; border-radius: 0; }
 
     &:disabled { opacity: 0.4; cursor: default; }

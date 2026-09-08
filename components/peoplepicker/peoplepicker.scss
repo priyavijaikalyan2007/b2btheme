@@ -39,7 +39,7 @@
     padding: $sp-4 $sp-8;
     background-color: var(--theme-input-bg);
     border: $input-border-width solid var(--theme-input-border);
-    border-radius: 0;
+    border-radius: $border-radius;
     cursor: text;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -221,7 +221,7 @@
     overflow-y: auto;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
 }
 

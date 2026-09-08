@@ -75,10 +75,16 @@
 // CARD
 // ============================================================================
 
+// This file imports no Sass on purpose — its markup is mirrored verbatim by
+// Keycloak FreeMarker templates in another repository, so everything here is
+// expressed as custom properties that resolve at runtime from the theme
+// stylesheet. Use var(--bs-*) / var(--theme-*), never a Sass variable.
 .auth-card {
-    background: var(--bs-body-bg);
+    // Was var(--bs-body-bg), which is the page GROUND — the card was the same
+    // colour as the page behind it. It is a content surface (ADR-147).
+    background: var(--theme-surface-bg);
     border: 1px solid var(--bs-border-color);
-    border-radius: 0;
+    border-radius: var(--bs-border-radius-lg);
     padding: 2rem;
     box-shadow: var(--bs-box-shadow);
     animation: slideUp 0.4s ease-out;

@@ -177,7 +177,7 @@ $sidebar-transition-duration: 300ms;
     height: $control-height-xs;
     padding: 0;
     border: none;
-    border-radius: 0;
+    border-radius: $border-radius-sm;
     background: transparent;
     color: var(--theme-text-secondary);
     cursor: pointer;

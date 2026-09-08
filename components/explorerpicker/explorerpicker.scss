@@ -24,7 +24,7 @@
     flex-direction: column;
     background-color: var(--theme-surface-bg);
     border: $input-border-width solid var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     overflow: hidden;
     position: relative;
     font-size: $font-size-base;
@@ -293,7 +293,7 @@
     width: 16px;
     height: 16px;
     border: 2px solid var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius-sm;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -398,7 +398,7 @@
     background-color: rgba(var(--theme-primary-rgb), 0.15);
     color: inherit;
     padding: 0 1px;
-    border-radius: 0;
+    border-radius: $border-radius-sm;
 }
 
 .explorerpicker-load-more
@@ -485,13 +485,13 @@
 
 .explorerpicker-btn-cancel
 {
-    border-radius: 0;
+    border-radius: $border-radius;
     @include focus-glow();
 }
 
 .explorerpicker-btn-confirm
 {
-    border-radius: 0;
+    border-radius: $border-radius;
     @include focus-glow();
 
     &:disabled
@@ -523,7 +523,7 @@
     width: 60%;
     background-color: var(--theme-surface-sunken-bg);
     animation: explorerpicker-pulse 1.5s ease-in-out infinite;
-    border-radius: 0;
+    border-radius: $border-radius-sm;
 }
 
 @keyframes explorerpicker-pulse

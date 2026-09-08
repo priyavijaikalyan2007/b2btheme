@@ -36,7 +36,7 @@
     justify-content: center;
     padding: $sp-32 $sp-24;
     border: 2px dashed var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius;
     background-color: var(--theme-surface-bg);
     cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -106,7 +106,7 @@
     padding: $sp-8 $sp-12;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-subtle);
-    border-radius: 0;
+    border-radius: $border-radius;
 }
 
 .fileupload-file-icon {
@@ -143,7 +143,7 @@
     width: 80px;
     height: 4px;
     background-color: var(--theme-border-subtle);
-    border-radius: 0;
+    border-radius: $border-radius;
     overflow: hidden;
     flex-shrink: 0;
 }
@@ -201,7 +201,7 @@
     cursor: pointer;
     padding: $sp-4;
     flex-shrink: 0;
-    border-radius: 0;
+    border-radius: $border-radius-sm;
 }
 
 .fileupload-file-action:hover {

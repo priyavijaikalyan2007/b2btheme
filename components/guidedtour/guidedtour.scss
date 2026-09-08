@@ -25,7 +25,7 @@
 // ============================================================================
 
 .driver-popover {
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     border: 1px solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-lg);
     padding: 0;
@@ -120,7 +120,8 @@
 // ============================================================================
 
 .driver-popover-arrow {
-    // Use Driver.js default arrow positioning but ensure sharp corners
+    // The arrow is a triangle formed from borders — a radius would round the
+    // point into a blob. Stays 0 regardless of the theme radius (ADR-147).
     border-radius: 0;
 }
 
@@ -130,7 +131,7 @@
 
 .driver-active-element {
     // Ensure highlighted elements stay sharp
-    border-radius: 0;
+    border-radius: $border-radius;
 }
 
 // ============================================================================

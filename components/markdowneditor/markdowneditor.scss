@@ -622,7 +622,7 @@
 .mde-fallback-textarea {
     resize: none;
     border: none;
-    border-radius: 0;
+    border-radius: $border-radius;
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
     line-height: $line-height-relaxed;

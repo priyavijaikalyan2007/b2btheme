@@ -35,7 +35,7 @@
     gap: $sp-8;
     padding: $sp-4 $sp-8;
     border: 1px solid transparent;
-    border-radius: 0;
+    border-radius: $border-radius;
     background: none;
     cursor: pointer;
     color: var(--theme-text-secondary);
@@ -183,7 +183,7 @@
     margin-top: $sp-4;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
-    border-radius: 0;
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
 }
 
@@ -249,7 +249,7 @@
     width: 100%;
     padding: $sp-8 $sp-16;
     border: none;
-    border-radius: 0;
+    border-radius: $border-radius-sm;
     background: none;
     cursor: pointer;
     font-size: $font-size-base;
