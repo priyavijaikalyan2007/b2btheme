@@ -12,6 +12,22 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-09-08
+
+### Changed
+- **Surfaces are now a tonal ladder rather than one flat field (ADR-147).** `--theme-body-bg` and `--theme-surface-bg` previously held the *same* colour (`#f8fafc`), so the page had no ground and a sidebar was separated from the content beside it by a one-pixel border and nothing else. Both themes now carry four ordered planes — sunken, ground, chrome, content. The light-mode direction is unchanged: `--theme-surface-raised-bg` remains *darker* than `--theme-surface-bg`, and still inverts in dark mode.
+- **Hover and active are translucent state layers** instead of opaque greys, so one token shades a white card, a tinted sidebar and a coloured row correctly. An opaque grey punches a visible hole in any surface that is not that exact grey — which, since the ladder, is every surface.
+- **Corner radius is a small, deliberate scale tiered by role** — 2px for badges and dense controls, 4px for buttons, inputs and cards, 6px for modals and popovers, 8px for large overlays. This amends the previous "0-2 border radius" rule in `AGENTS.md`. Setting the tokens back to 0 returns the library to hard corners in one edit. Genuine circles (`50%`) and capsules are untouched.
+- **Shadows are two layers at lower alpha** — a tight key shadow that reads as contact plus a wider ambient one that reads as distance — replacing a single wide blur that read as a smudge beneath the element.
+- **Tabs**: the active indicator is now a 3px bar inset from the tab edges with rounded top corners, so it marks the label rather than the whole cell, and it cross-fades between tabs. All four orientations carry the equivalent treatment.
+- **Slightly more reading room** in list-like surfaces: line height 1.4 → 1.45, and small increases to nav, menu, list-group and table row padding. Control heights and the `$sp-*` fixed-pixel scale are deliberately unchanged — `$spacer` does not drive them, so a global bump would move layouts unevenly.
+
+### Fixed
+- **`--theme-primary-rgb` did not match `$primary`** in either theme — both held Tailwind blues (`#2563eb` light, `#60a5fa` dark) rather than the theme's own `#1c7ed6` / `#4dabf7`. Every focus ring and hover glow in the library was tinted a hue the theme does not otherwise use. Expect a visible, and correct, shift in glow colour. `--theme-surface-bg-rgb` had drifted from `--theme-surface-bg` in the same way.
+- **The tab indicator now works in dark mode.** Its colour was a hardcoded light-mode `$blue-600` rather than a token, so it never responded to the theme.
+- **Muted text meets WCAG AA on every surface.** `--theme-text-muted` measured 4.54:1 on the old page background — already inside rounding distance of the 4.5 floor — and the new darker ground took it to 3.94:1. Darkened to `#556478`, measuring 5.00:1 on the darkest light surface.
+- **New `--theme-primary-text` token** (`$blue-700` light, `$blue-300` dark) for primary carrying *type*. `--theme-primary` is tuned as a fill and measures only 3.91:1 as a label on chrome; the active tab label uses the text token instead.
+
 ## 2026-09-02
 
 ### Added

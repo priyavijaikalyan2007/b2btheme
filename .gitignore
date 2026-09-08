@@ -6,6 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+.playwright/
+.playwright-mcp/
+
 # Pycache
 __pycache__/
 

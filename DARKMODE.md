@@ -47,20 +47,21 @@ border: 1px solid var(--theme-border-color);
 
 | Token | Light | Dark | Use for |
 |---|---|---|---|
-| `--theme-body-bg` | `$gray-50` | `$gray-900` | Page/body background |
-| `--theme-surface-bg` | `$gray-50` | `$gray-800` | Component backgrounds |
-| `--theme-surface-raised-bg` | `$gray-100` | `$gray-700` | Headers, sidebars, raised panels |
-| `--theme-surface-sunken-bg` | `$gray-200` | `$gray-900` | Inset areas, code blocks |
+| `--theme-body-bg` | `#eef1f6` | `#0d1420` | The page ground (ADR-147) |
+| `--theme-surface-bg` | `#fdfdfe` | `#151d2b` | Content surfaces |
+| `--theme-surface-raised-bg` | `#f5f7fa` | `#1f2937` | Chrome — headers, sidebars, toolbars |
+| `--theme-surface-sunken-bg` | `#e6eaf1` | `#090f19` | Inset areas, wells, code blocks |
 | `--theme-text-primary` | `$gray-900` | `$gray-100` | Primary text, headings |
 | `--theme-text-secondary` | `$gray-700` | `$gray-300` | Body text, descriptions |
-| `--theme-text-muted` | `$gray-500` | `$gray-500` | Subtle labels, hints |
+| `--theme-text-muted` | `#556478` | `$gray-400` | Subtle labels, hints (AA-safe on every surface) |
 | `--theme-text-on-primary` | `$gray-50` | `$gray-50` | Text on primary-coloured bg |
 | `--theme-border-color` | `$gray-300` | `$gray-600` | Standard borders |
 | `--theme-border-subtle` | `$gray-200` | `$gray-700` | Subtle separators |
-| `--theme-hover-bg` | `$gray-100` | `$gray-700` | Hover states |
-| `--theme-active-bg` | `$gray-200` | `$gray-600` | Active/pressed states |
+| `--theme-hover-bg` | `rgba(15,23,42,.045)` | `rgba(255,255,255,.06)` | Hover state layer — translucent |
+| `--theme-active-bg` | `rgba(15,23,42,.085)` | `rgba(255,255,255,.11)` | Active state layer — translucent |
 | `--theme-selected-bg` | blue@0.08 | blue@0.15 | Selected/highlight rows |
-| `--theme-primary` | `$blue-600` | `$blue-400` | Primary action colour |
+| `--theme-primary` | `$blue-600` | `$blue-400` | Primary as a FILL |
+| `--theme-primary-text` | `$blue-700` | `$blue-300` | Primary carrying TYPE — `--theme-primary` fails AA as a label on chrome (3.91:1) |
 | `--theme-primary-hover` | `$blue-700` | `$blue-300` | Primary hover |
 | `--theme-success` | `$green-600` | `$green-500` | Success indicators |
 | `--theme-warning` | `$yellow-500` | `$yellow-500` | Warning indicators |

@@ -254,12 +254,39 @@ visual result, and no automated contrast gate exists in this repo (DEBT-WEB-1).
 Verification of appearance is manual review against the demo pages. This is stated
 rather than glossed because it is the weakest link in the change.
 
-**Contrast.** The surface ladder moves backgrounds but not text colours. The
-lightest surface gets lighter and the darkest gets darker, so light-mode contrast
-ratios improve or hold. Dark chrome moving from `#334155` to `#1f2937` **increases**
-contrast against `--theme-text-primary`. No ratio is reduced by D2. The state
-layers in D3 are the one place worth a manual check, since a translucent hover over
-a tinted surface produces a composited colour that no token names.
+**Contrast.** An earlier draft of this spec asserted that "no ratio is reduced by
+D2". That was reasoning, not measurement, and it was **wrong**. Computing every
+text-on-surface pair in the browser against the built stylesheet found two failures
+against the 4.5:1 AA floor, both introduced by this change:
+
+| Pair | Measured | Cause |
+|---|---|---|
+| `--theme-text-muted` on `body` / `sunken`, light | 4.20 / 3.94 | The ladder's darker page ground. The old value already measured only 4.54 on the old body — it was inside rounding distance of the floor and nobody had checked. |
+| `--theme-primary` as the active tab label on chrome, light | 3.91 | D5's decision to tint the active label. `--theme-primary` is tuned to be legible as a *fill*, not as *type*. |
+
+Both are fixed rather than accepted:
+
+- `--theme-text-muted` (light) darkens from `$gray-500` `#64748b` to `#556478`,
+  measuring 5.00 on the darkest light surface and 5.94 on content, while staying
+  clearly lighter than `--theme-text-secondary`.
+- A new token **`--theme-primary-text`** (`$blue-700` light, `$blue-300` dark)
+  carries primary *as type*: 5.68 on chrome, 7.47 in dark. `--theme-primary`
+  remains the fill colour. Any future component putting primary on type should
+  use the text token.
+
+**Measured ladder**, confirming both directions are monotonic — relative luminance,
+darkest to lightest:
+
+```
+light   sunken 0.820  <  body 0.877  <  raised 0.928  <  surface 0.983
+dark    sunken 0.005  <  body 0.007  <  surface 0.012  <  raised 0.022
+```
+
+All remaining text-on-surface pairs measure between 9.15 and 17.56.
+
+The state layers in D3 remain the one place a manual eye is still worth spending,
+since a translucent hover over a tinted surface composites to a colour no token
+names and no static audit can enumerate.
 
 ## 7. Deliverables
 

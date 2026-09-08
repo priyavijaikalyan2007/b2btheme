@@ -3682,3 +3682,94 @@
   files:
     - "specs/marketinghero-sitefooter.prd.md"
     - "specs/feature_request_website.md"
+
+
+- id: "ADR-147"
+  title: "Visual refresh — tonal surface ladder, state layers, two-layer shadows, small corner radius"
+  date: "2026-09-08"
+  status: "Accepted"
+  context: |
+    Applications built on this library were compared against Material Design 3
+    applications and read as dated. Five aspects of MD3 were named as better:
+    chrome carrying a different background from content, tabs looking natural,
+    subtle shadows, a small corner radius, and slightly more spacing. Adopting
+    MD3 itself was explicitly rejected — too round, too airy for a dense
+    enterprise library.
+
+    Diagnosis found the flatness had a precise cause rather than a stylistic
+    one: --theme-body-bg and --theme-surface-bg both held $gray-50 (#f8fafc).
+    They were the SAME COLOUR. The page had no ground, so a sidebar was
+    separated from the content beside it by a 1px border and nothing else.
+
+    The library turned out to be unusually disciplined about tokens — 80 uses
+    of $border-radius against ~10 hardcoded outliers — so the whole change
+    lands in two files rather than across 125 components.
+
+    D1 Radius: 4px base / 2px sm / 6px lg / 8px xl, tiered by role. Chosen by
+    the user over a frictionless 2px, which would have stayed inside the
+    existing sanctioned exception but been close to imperceptible at 14px text.
+    This AMENDS the AGENTS.md rule "rectangular components with 0-2 border
+    radius"; the rule was rewritten rather than quietly contradicted.
+    $radius-affordance is retained as an alias of $border-radius so its six
+    call sites keep working.
+
+    D2 Surfaces: a four-step tonal ladder in both themes. The light-mode
+    direction — "raised" is DARKER than "surface" — is long-standing and
+    preserved; 140 call sites depend on it, and it inverts in dark mode.
+
+    D3 State layers: --theme-hover-bg and --theme-active-bg were opaque greys,
+    which punch a hole in any surface that is not that exact grey. Now
+    translucent overlays. This is what makes D2 hold up in practice rather than
+    optional polish.
+
+    D4 Shadows: two layers (tight key + wide ambient) at lower alpha instead of
+    one wide blur, which read as a smudge under an element rather than the
+    element lifting. Values are DUPLICATED as Sass $shadow-* and CSS
+    --theme-shadow-*; both are updated and each now carries a note that the
+    other exists.
+
+    D5 Tabs: the indicator becomes a 3px pseudo-element inset 6px from the tab
+    edges, so it marks the label rather than the whole cell. It also moves from
+    a hardcoded $blue-600 to a token — the old value was a light-mode Sass
+    colour, so the indicator never responded to dark mode at all.
+
+    D6 Spacing: deliberately the smallest of the five. $spacer drives only
+    Bootstrap-level padding; the $sp-* fixed-pixel scale and $control-height-*
+    do not follow it, so a global bump moves layouts unevenly and ends less
+    coherent than it started. Four targeted values governing reading density in
+    list-like surfaces were raised instead.
+
+    D7 Two defects found during diagnosis and fixed here: --theme-primary-rgb
+    held Tailwind blues in BOTH themes that do not match $primary, so every
+    focus ring and hover glow was tinted a hue the theme does not use; and
+    --theme-surface-bg-rgb had drifted from --theme-surface-bg.
+  consequences: |
+    + The change is auditable and reversible as a token edit. Setting the radius
+      tokens to 0 and restoring four surface values returns the old look without
+      touching a single component.
+    + Chrome, content, ground and insets are now four distinct planes, which is
+      the whole of the "flat" complaint.
+    + A translucent state layer shades whatever surface it lands on, so one
+      token is correct on a white card, a tinted sidebar and a coloured row.
+    + The tab indicator responds to dark mode for the first time.
+    - Two contrast REGRESSIONS were introduced by this work and caught only by
+      measuring every text-on-surface pair in the browser, after a draft of the
+      spec had already asserted from reasoning that no ratio was reduced. That
+      assertion was wrong. --theme-text-muted on the darker ground fell to
+      3.94:1, and D5's tinted active tab label measured 3.91:1 on chrome. Both
+      are fixed: muted darkens to #556478, and a new --theme-primary-text token
+      (blue-700 light / blue-300 dark) carries primary as TYPE while
+      --theme-primary stays the fill colour.
+    - Playwright cannot run on this machine (DEBT-WEB-3), so no automated visual
+      regression covers this. Appearance is reviewed by eye against
+      demo/visual-refresh.html.
+    - The hover-glow idiom shifts hue as a side effect of the primary-rgb fix.
+      This is a correction, but it is visible and would otherwise look like an
+      unexplained change.
+  files:
+    - "specs/visual-refresh-2026.prd.md"
+    - "src/scss/_variables.scss"
+    - "src/scss/_dark-mode.scss"
+    - "components/tabbedpanel/tabbedpanel.scss"
+    - "demo/visual-refresh.html"
+    - "AGENTS.md"

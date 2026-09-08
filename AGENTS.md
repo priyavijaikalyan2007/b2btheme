@@ -23,9 +23,28 @@ Bootstrap's initial choices of colors, fonts, sizing, border radius and more are
 Serious SaaS applications should prefer more muted, limited choices of colors and appropriately sized spacing, 
 icons, component sizing and fonts. Hence, our customizations. The key items are:
 
-- We prefer rectangular components with 0-2 border radius. This means components are rectangular instead of 
-  having rounded corners.
-- We prefer components and spacing to be compact. 
+- We prefer near-rectangular components with a small, deliberate corner radius, tiered by role
+  (ADR-147). Use the tokens, never a literal: `$border-radius-sm` (2px) for badges, chips and dense
+  controls; `$border-radius` (4px) for buttons, inputs, cards and panels; `$border-radius-lg` (6px)
+  for modals and popovers; `$border-radius-xl` (8px) for large overlays. `border-radius: 50%` for
+  genuine circles and `$border-radius-pill` for capsules remain correct — they are shapes, not
+  softening. The intent is a corner that reads as considered at 14px text, NOT the consumer-app
+  roundness of Material Design 3. Setting every radius token to 0 returns the whole theme to hard
+  corners, so this remains one decision in one place.
+  (Before ADR-147 this rule read "rectangular components with 0-2 border radius".)
+- We prefer components and spacing to be compact. Compact is not cramped: reading surfaces
+  (lists, menus, table rows, nav) carry slightly more vertical padding than controls do. Control
+  heights and the `$sp-*` fixed-pixel scale are the compactness budget and are not to be widened
+  casually — `$spacer` does not drive them, so a global bump moves layouts unevenly.
+- We prefer surfaces to be distinguished TONALLY, not by borders alone. Chrome (sidebars, toolbars,
+  headers) sits on `--theme-surface-raised-bg`, content on `--theme-surface-bg`, the page ground on
+  `--theme-body-bg`, and insets on `--theme-surface-sunken-bg`. These four are an ordered ladder;
+  never substitute a raw grey for one of them. Hover and active states are TRANSLUCENT state layers
+  (`--theme-hover-bg`, `--theme-active-bg`) so they shade whatever surface they land on rather than
+  punching an opaque hole in it.
+- We prefer shadows that are subtle and two-layered — a tight key shadow plus a wider ambient one,
+  at low alpha. Use the `--theme-shadow-*` tokens (or the `$shadow-*` Sass equivalents); never
+  author a raw `box-shadow` for elevation.
 - We prefer muted colors that fit into a good complementary palette of colors.
 - We prefer good contrast for accessibility. For example, light grey text on bright backgrounds are a terrible choice.
 - We prefer hyper legible fonts such as Google OpenSans Text and Atkinson Hyperlegible for regular text 

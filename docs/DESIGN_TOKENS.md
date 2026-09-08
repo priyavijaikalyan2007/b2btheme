@@ -90,7 +90,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$font-weight-medium` | `500` |  |
 | `$font-weight-semibold` | `600` |  |
 | `$font-weight-bold` | `700` |  |
-| `$line-height-base` | `1.4` | Compact UI elements |
+| `$line-height-base` | `1.45` | Compact UI elements (ADR-147: 1.4 -> 1.45) |
 | `$line-height-sm` | `1.3` | Tight: labels, badges, status text |
 | `$line-height-lg` | `1.5` | Comfortable: dialog body, descriptions |
 | `$line-height-relaxed` | `1.6` | Reading: articles, documentation, markdown |
@@ -105,18 +105,18 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 
 _No variables in this section._
 
-## BORDERS & BORDER RADIUS - Sharp, professional edges
+## BORDERS & BORDER RADIUS - Softened edges (Visual Refresh 2026, ADR-147)
 
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `$border-width` | `1px` |  |
 | `$border-color` | `$gray-300 (#cbd5e1)` |  |
-| `$border-radius` | `0` | No rounding |
-| `$border-radius-sm` | `0` | No rounding |
-| `$border-radius-lg` | `0` | No rounding |
-| `$border-radius-xl` | `0` | No rounding |
-| `$border-radius-pill` | `0` | No rounding (pills become rectangles) |
-| `$radius-affordance` | `2px` | general softening. Set to 0 to return the whole theme to hard corners. |
+| `$border-radius` | `4px` | buttons, inputs, cards, alerts, panels |
+| `$border-radius-sm` | `2px` | badges, chips, dense controls |
+| `$border-radius-lg` | `6px` | modals, popovers, dialogs |
+| `$border-radius-xl` | `8px` | large overlays |
+| `$border-radius-pill` | `50rem` | .rounded-pill utility — true capsule |
+| `$radius-affordance` | `$border-radius (4px)` | Prefer $border-radius in new code. |
 
 ## COMPONENTS - Compact sizing
 
@@ -131,20 +131,20 @@ _No variables in this section._
 | `$btn-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$btn-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$btn-font-size` | `$font-size-base (0.875rem)` |  |
-| `$btn-line-height` | `$line-height-base (1.4)` |  |
+| `$btn-line-height` | `$line-height-base (1.45)` |  |
 | `$btn-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$btn-padding-x-sm` | `0.5rem` | 8px (was 6px) |
 | `$btn-font-size-sm` | `$font-size-sm (0.8rem)` |  |
 | `$btn-padding-y-lg` | `0.5rem` | 8px (was 7px) |
 | `$btn-padding-x-lg` | `1rem` | 16px (was 14px) |
 | `$btn-font-size-lg` | `$font-size-lg (1rem)` |  |
-| `$btn-border-radius` | `$border-radius (0)` |  |
-| `$btn-border-radius-sm` | `$border-radius-sm (0)` |  |
-| `$btn-border-radius-lg` | `$border-radius-lg (0)` |  |
+| `$btn-border-radius` | `$border-radius (4px)` |  |
+| `$btn-border-radius-sm` | `$border-radius-sm (2px)` |  |
+| `$btn-border-radius-lg` | `$border-radius-lg (6px)` |  |
 | `$input-btn-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$input-btn-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$input-btn-font-size` | `$font-size-base (0.875rem)` |  |
-| `$input-btn-line-height` | `$line-height-base (1.4)` |  |
+| `$input-btn-line-height` | `$line-height-base (1.45)` |  |
 | `$input-btn-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$input-btn-padding-x-sm` | `0.5rem` | 8px (was 6px) |
 | `$input-btn-font-size-sm` | `$font-size-sm (0.8rem)` |  |
@@ -157,7 +157,7 @@ _No variables in this section._
 | `$input-color` | `$body-color ($gray-900)` |  |
 | `$input-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$input-border-width` | `$border-width (1px)` |  |
-| `$input-border-radius` | `$border-radius (0)` |  |
+| `$input-border-radius` | `$border-radius (4px)` |  |
 | `$input-focus-border-color` | `$primary ($blue-600)` |  |
 | `$input-focus-box-shadow` | `0 0 0 0.15rem rgba($primary, 0.25)` |  |
 | `$input-placeholder-color` | `$gray-500 (#64748b)` |  |
@@ -165,7 +165,7 @@ _No variables in this section._
 | `$form-label-font-size` | `$font-size-sm (0.8rem)` |  |
 | `$form-label-font-weight` | `$font-weight-semibold (600)` |  |
 | `$form-label-color` | `$gray-700 (#334155)` |  |
-| `$table-cell-padding-y` | `0.375rem` | 6px (was 5px) |
+| `$table-cell-padding-y` | `0.4375rem` | 7px (ADR-147: row reading density) |
 | `$table-cell-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$table-cell-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$table-cell-padding-x-sm` | `0.5rem` | 8px (was 6px) |
@@ -175,7 +175,7 @@ _No variables in this section._
 | `$card-spacer-y` | `0.75rem` | 12px (was 10px) |
 | `$card-spacer-x` | `1rem` | 16px (was 14px) |
 | `$card-border-width` | `$border-width (1px)` |  |
-| `$card-border-radius` | `$border-radius (0)` |  |
+| `$card-border-radius` | `$border-radius (4px)` |  |
 | `$card-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$card-bg` | `white` |  |
 | `$card-cap-bg` | `$gray-100 (#f1f5f9)` |  |
@@ -184,21 +184,21 @@ _No variables in this section._
 | `$dropdown-font-size` | `$font-size-base (0.875rem)` |  |
 | `$dropdown-bg` | `white` |  |
 | `$dropdown-border-color` | `$gray-300 (#cbd5e1)` |  |
-| `$dropdown-border-radius` | `$border-radius (0)` |  |
+| `$dropdown-border-radius` | `$border-radius (4px)` |  |
 | `$dropdown-divider-bg` | `$gray-200 (#e2e8f0)` |  |
 | `$dropdown-link-color` | `$gray-900 (#0f172a)` |  |
 | `$dropdown-link-hover-color` | `$gray-900 (#0f172a)` |  |
 | `$dropdown-link-hover-bg` | `$gray-100 (#f1f5f9)` |  |
 | `$dropdown-link-active-color` | `white` |  |
 | `$dropdown-link-active-bg` | `$primary ($blue-600)` |  |
-| `$dropdown-item-padding-y` | `0.375rem` | 6px (was 5px) |
+| `$dropdown-item-padding-y` | `0.4375rem` | 7px (ADR-147: menu reading density) |
 | `$dropdown-item-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$modal-inner-padding` | `1rem` | 16px (was 14px) |
 | `$modal-header-padding-y` | `0.75rem` | 12px (was 10px) |
 | `$modal-header-padding-x` | `1rem` | 16px (was 14px) |
 | `$modal-header-border-color` | `$gray-300 (#cbd5e1)` |  |
-| `$modal-content-border-radius` | `$border-radius-lg (0)` |  |
-| `$nav-link-padding-y` | `0.375rem` | 6px (was 5px) |
+| `$modal-content-border-radius` | `$border-radius-lg (6px)` |  |
+| `$nav-link-padding-y` | `0.5rem` | 8px (ADR-147: tab/nav breathing room) |
 | `$nav-link-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$nav-link-font-size` | `$font-size-base (0.875rem)` |  |
 | `$nav-link-color` | `$gray-700 (#334155)` |  |
@@ -208,12 +208,12 @@ _No variables in this section._
 | `$navbar-brand-font-size` | `$font-size-lg (1rem)` |  |
 | `$alert-padding-y` | `0.75rem` | 12px (was 10px) |
 | `$alert-padding-x` | `1rem` | 16px (was 14px) |
-| `$alert-border-radius` | `$border-radius (0)` |  |
+| `$alert-border-radius` | `$border-radius (4px)` |  |
 | `$badge-font-size` | `$font-size-sm (0.8rem)` | Badges - adjusted |
 | `$badge-font-weight` | `$font-weight-semibold (600)` |  |
 | `$badge-padding-y` | `0.25rem` | 4px (was 3px) |
 | `$badge-padding-x` | `0.5rem` | 8px (was 6px) |
-| `$badge-border-radius` | `$border-radius-sm (0)` |  |
+| `$badge-border-radius` | `$border-radius-sm (2px)` |  |
 | `$breadcrumb-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$breadcrumb-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$breadcrumb-item-padding-x` | `0.5rem` | 8px (was 7px) |
@@ -224,7 +224,7 @@ _No variables in this section._
 | `$pagination-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$pagination-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$pagination-font-size` | `$font-size-base (0.875rem)` |  |
-| `$pagination-border-radius` | `$border-radius (0)` |  |
+| `$pagination-border-radius` | `$border-radius (4px)` |  |
 | `$pagination-color` | `$gray-700 (#334155)` |  |
 | `$pagination-bg` | `white` |  |
 | `$pagination-border-color` | `$gray-300 (#cbd5e1)` |  |
@@ -237,16 +237,16 @@ _No variables in this section._
 | `$toast-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$toast-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$toast-font-size` | `$font-size-sm (0.8rem)` |  |
-| `$toast-border-radius` | `$border-radius (0)` |  |
+| `$toast-border-radius` | `$border-radius (4px)` |  |
 | `$progress-height` | `0.75rem` | 12px (was 10px) |
 | `$progress-font-size` | `$font-size-sm (0.8rem)` |  |
 | `$progress-bg` | `$gray-200 (#e2e8f0)` |  |
-| `$progress-border-radius` | `$border-radius (0)` |  |
-| `$list-group-item-padding-y` | `0.5rem` | 8px (was 7px) |
+| `$progress-border-radius` | `$border-radius (4px)` |  |
+| `$list-group-item-padding-y` | `0.5625rem` | 9px (ADR-147: list reading density) |
 | `$list-group-item-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$list-group-bg` | `white` |  |
 | `$list-group-border-color` | `$gray-300 (#cbd5e1)` |  |
-| `$list-group-border-radius` | `$border-radius (0)` |  |
+| `$list-group-border-radius` | `$border-radius (4px)` |  |
 | `$list-group-hover-bg` | `$gray-100 (#f1f5f9)` |  |
 | `$list-group-active-color` | `white` |  |
 | `$list-group-active-bg` | `$primary ($blue-600)` |  |
@@ -295,11 +295,11 @@ _No variables in this section._
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `$shadow-xs` | `0 1px 2px rgba($gray-900, 0.06)` |  |
-| `$shadow-sm` | `0 2px 8px rgba($gray-900, 0.12)` |  |
-| `$shadow-md` | `0 4px 12px rgba($gray-900, 0.15)` |  |
-| `$shadow-lg` | `0 4px 16px rgba($gray-900, 0.15)` |  |
-| `$shadow-xl` | `0 8px 24px rgba($gray-900, 0.2)` |  |
+| `$shadow-xs` | `0 1px 1px rgba($gray-900, 0.04), 0 1px 2px rgba($gray-900, 0.06)` |  |
+| `$shadow-sm` | `0 1px 2px rgba($gray-900, 0.05), 0 2px 4px rgba($gray-900, 0.07)` |  |
+| `$shadow-md` | `0 2px 4px rgba($gray-900, 0.06), 0 4px 8px rgba($gray-900, 0.08)` |  |
+| `$shadow-lg` | `0 4px 8px rgba($gray-900, 0.07), 0 8px 16px rgba($gray-900, 0.10)` |  |
+| `$shadow-xl` | `0 8px 16px rgba($gray-900, 0.08), 0 16px 32px rgba($gray-900, 0.12)` |  |
 | `$shadow-focus` | `0 0 0 0.15rem rgba($blue-600, 0.25)` |  |
 | `$chrome-edge-blur` | `6px` | -- Chrome: edge shadow + hover glow defaults -- |
 | `$chrome-glow-radius` | `8px` |  |
