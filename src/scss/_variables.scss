@@ -116,7 +116,7 @@ $font-weight-medium:    500 !default;
 $font-weight-semibold:  600 !default;
 $font-weight-bold:      700 !default;
 
-$line-height-base:      1.4 !default;  // Compact UI elements
+$line-height-base:      1.45 !default; // Compact UI elements (ADR-147: 1.4 -> 1.45)
 $line-height-sm:        1.3 !default;  // Tight: labels, badges, status text
 $line-height-lg:        1.5 !default;  // Comfortable: dialog body, descriptions
 $line-height-relaxed:   1.6 !default;  // Reading: articles, documentation, markdown
@@ -157,24 +157,30 @@ $grid-breakpoints: (
 ) !default;
 
 // =============================================================================
-// BORDERS & BORDER RADIUS - Sharp, professional edges
+// BORDERS & BORDER RADIUS - Softened edges (Visual Refresh 2026, ADR-147)
 // =============================================================================
 
 $border-width:          1px !default;
 $border-color:          $gray-300 !default;
 
-// No rounded corners - square edges for maximum professionalism
-$border-radius:         0 !default;        // No rounding
-$border-radius-sm:      0 !default;        // No rounding
-$border-radius-lg:      0 !default;        // No rounding
-$border-radius-xl:      0 !default;        // No rounding
-$border-radius-pill:    0 !default;        // No rounding (pills become rectangles)
+// A small, deliberate radius tiered by component role. The library was fully
+// square until ADR-147; the aim is a corner that reads as considered at 14px
+// text, NOT the consumer-app softness of Material Design 3. AGENTS.md carries
+// the matching rule. Set every value to 0 to return the theme to hard corners.
+$border-radius:         4px !default;      // buttons, inputs, cards, alerts, panels
+$border-radius-sm:      2px !default;      // badges, chips, dense controls
+$border-radius-lg:      6px !default;      // modals, popovers, dialogs
+$border-radius-xl:      8px !default;      // large overlays
+$border-radius-pill:    50rem !default;    // .rounded-pill utility — true capsule
 
-// The one sanctioned exception. AGENTS.md allows "0-2 border radius"; this is
-// the 2. Reserved for surfaces where a corner is a deliberate AFFORDANCE —
-// a tab lifting off its strip, a dock reading as a raised panel — not for
-// general softening. Set to 0 to return the whole theme to hard corners.
-$radius-affordance:     2px !default;
+// Retained as an ALIAS of the base radius. This token predates ADR-147, when it
+// was the single sanctioned 2px exception in an otherwise square theme, used
+// where a corner is a deliberate affordance — a tab lifting off its strip, a
+// dock reading as a raised panel. Now that a base radius exists those surfaces
+// should use the same corner as everything else, so the name survives only to
+// keep its existing call sites (annotation, chatdock, workspaceshell) valid.
+// Prefer $border-radius in new code.
+$radius-affordance:     $border-radius !default;
 
 // =============================================================================
 // COMPONENTS - Compact sizing
@@ -241,7 +247,7 @@ $form-label-font-weight:      $font-weight-semibold !default;
 $form-label-color:            $gray-700 !default;
 
 // Tables - adjusted
-$table-cell-padding-y:        0.375rem !default;   // 6px (was 5px)
+$table-cell-padding-y:        0.4375rem !default;  // 7px (ADR-147: row reading density)
 $table-cell-padding-x:        0.75rem !default;    // 12px (was 10px)
 $table-cell-padding-y-sm:     0.25rem !default;    // 4px (was 3px)
 $table-cell-padding-x-sm:     0.5rem !default;     // 8px (was 6px)
@@ -275,7 +281,7 @@ $dropdown-link-hover-bg:      $gray-100 !default;
 $dropdown-link-active-color:  white !default;
 $dropdown-link-active-bg:     $primary !default;
 
-$dropdown-item-padding-y:     0.375rem !default;   // 6px (was 5px)
+$dropdown-item-padding-y:     0.4375rem !default;  // 7px (ADR-147: menu reading density)
 $dropdown-item-padding-x:     0.75rem !default;    // 12px (was 10px)
 
 // Modals - adjusted
@@ -286,7 +292,7 @@ $modal-header-border-color:   $gray-300 !default;
 $modal-content-border-radius: $border-radius-lg !default;
 
 // Navs & Navbar - adjusted
-$nav-link-padding-y:          0.375rem !default;   // 6px (was 5px)
+$nav-link-padding-y:          0.5rem !default;     // 8px (ADR-147: tab/nav breathing room)
 $nav-link-padding-x:          0.75rem !default;    // 12px (was 10px)
 $nav-link-font-size:          $font-size-base !default;
 $nav-link-color:              $gray-700 !default;
@@ -348,7 +354,7 @@ $progress-bg:                 $gray-200 !default;
 $progress-border-radius:      $border-radius !default;
 
 // List groups - adjusted
-$list-group-item-padding-y:   0.5rem !default;     // 8px (was 7px)
+$list-group-item-padding-y:   0.5625rem !default;  // 9px (ADR-147: list reading density)
 $list-group-item-padding-x:   0.75rem !default;    // 12px (was 10px)
 $list-group-bg:               white !default;
 $list-group-border-color:     $gray-300 !default;
@@ -404,12 +410,22 @@ $font-size-3xl: 1.5rem !default;    // 24px
 // =============================================================================
 // SHADOW ELEVATION SYSTEM
 // =============================================================================
+//
+// (CRITICAL) These values are DUPLICATED as --theme-shadow-* in _dark-mode.scss.
+// The Sass names are consumed by 30 component call sites, the CSS tokens by 67.
+// They are independent declarations of one intent: change both together or the
+// library silently desynchronises, with two elevations that look different for
+// no reason a reader can see.
+//
+// Each elevation is TWO layers — a tight key shadow that reads as contact and a
+// wider ambient one that reads as distance. A single wide blur, which is what
+// this system used before ADR-147, reads as a smudge rather than a lift.
 
-$shadow-xs:    0 1px 2px rgba($gray-900, 0.06) !default;
-$shadow-sm:    0 2px 8px rgba($gray-900, 0.12) !default;
-$shadow-md:    0 4px 12px rgba($gray-900, 0.15) !default;
-$shadow-lg:    0 4px 16px rgba($gray-900, 0.15) !default;
-$shadow-xl:    0 8px 24px rgba($gray-900, 0.2) !default;
+$shadow-xs:    0 1px 1px rgba($gray-900, 0.04), 0 1px 2px rgba($gray-900, 0.06) !default;
+$shadow-sm:    0 1px 2px rgba($gray-900, 0.05), 0 2px 4px rgba($gray-900, 0.07) !default;
+$shadow-md:    0 2px 4px rgba($gray-900, 0.06), 0 4px 8px rgba($gray-900, 0.08) !default;
+$shadow-lg:    0 4px 8px rgba($gray-900, 0.07), 0 8px 16px rgba($gray-900, 0.10) !default;
+$shadow-xl:    0 8px 16px rgba($gray-900, 0.08), 0 16px 32px rgba($gray-900, 0.12) !default;
 $shadow-focus: 0 0 0 0.15rem rgba($blue-600, 0.25) !default;
 
 // -- Chrome: edge shadow + hover glow defaults --

@@ -18,11 +18,20 @@
 // ============================================================================
 
 :root {
-    // -- Surfaces --
-    --theme-body-bg:            #{$gray-50};
-    --theme-surface-bg:         #{$gray-50};
-    --theme-surface-raised-bg:  #{$gray-100};
-    --theme-surface-sunken-bg:  #{$gray-200};
+    // -- Surfaces: the tonal ladder (ADR-147) --
+    //
+    // Ordered darkest to lightest: sunken < body < raised < surface.
+    // Before ADR-147 body-bg and surface-bg were the SAME colour, so the page
+    // had no ground and a sidebar was distinguished from the content beside it
+    // by a 1px border alone. That is what made the library read as flat.
+    //
+    // Note the direction: in LIGHT mode "raised" is DARKER than "surface".
+    // That is deliberate and long-standing — chrome recedes, content advances —
+    // and it inverts in dark mode below. 140 call sites depend on it.
+    --theme-body-bg:            #eef1f6;   // the page ground
+    --theme-surface-bg:         #fdfdfe;   // content surfaces
+    --theme-surface-raised-bg:  #f5f7fa;   // chrome — sidebars, toolbars, headers
+    --theme-surface-sunken-bg:  #e6eaf1;   // wells, code blocks, inset areas
 
     // -- Text --
     --theme-text-primary:       #{$gray-900};
@@ -34,9 +43,15 @@
     --theme-border-color:       #{$gray-300};
     --theme-border-subtle:      #{$gray-200};
 
-    // -- Interactive --
-    --theme-hover-bg:           #{$gray-100};
-    --theme-active-bg:          #{$gray-200};
+    // -- Interactive: state layers (ADR-147) --
+    //
+    // TRANSLUCENT, not opaque grey. A state layer takes the colour of whatever
+    // is beneath it, so the same token shades a white card, a tinted sidebar
+    // and a coloured row correctly. The previous opaque $gray-100 punched a
+    // visible hole in any surface that was not itself $gray-100 — which, since
+    // the tonal ladder above, is every surface.
+    --theme-hover-bg:           rgba(15, 23, 42, 0.045);
+    --theme-active-bg:          rgba(15, 23, 42, 0.085);
     --theme-selected-bg:        #{rgba($blue-600, 0.08)};
 
     // -- Focus --
@@ -46,7 +61,10 @@
     // -- Primary action --
     --theme-primary:            #{$primary};
     --theme-primary-hover:      #{$blue-700};
-    --theme-primary-rgb:        37, 99, 235;
+    // Must match $primary ($blue-600, #1c7ed6). Held 37, 99, 235 (#2563eb, a
+    // Tailwind blue) until ADR-147 — every focus ring and hover glow in the
+    // library was tinted a hue the theme does not otherwise use.
+    --theme-primary-rgb:        28, 126, 214;
 
     // -- Status / Semantic --
     --theme-success:            #{$green-600};
@@ -66,16 +84,20 @@
     --theme-input-disabled-bg:  #{$gray-100};
 
     // -- Shadows (RGB channel vars for alpha control) --
+    //
+    // (CRITICAL) DUPLICATED as $shadow-* in _variables.scss. Change both or the
+    // library desynchronises. See the note there for why each elevation is two
+    // layers rather than one.
     --theme-shadow-rgb:         15, 23, 42;
-    --theme-shadow-xs:          0 1px 2px rgba(var(--theme-shadow-rgb), 0.06);
-    --theme-shadow-sm:          0 2px 8px rgba(var(--theme-shadow-rgb), 0.12);
-    --theme-shadow-md:          0 4px 12px rgba(var(--theme-shadow-rgb), 0.15);
-    --theme-shadow-lg:          0 4px 16px rgba(var(--theme-shadow-rgb), 0.15);
-    --theme-shadow-xl:          0 8px 24px rgba(var(--theme-shadow-rgb), 0.2);
+    --theme-shadow-xs:          0 1px 1px rgba(var(--theme-shadow-rgb), 0.04), 0 1px 2px rgba(var(--theme-shadow-rgb), 0.06);
+    --theme-shadow-sm:          0 1px 2px rgba(var(--theme-shadow-rgb), 0.05), 0 2px 4px rgba(var(--theme-shadow-rgb), 0.07);
+    --theme-shadow-md:          0 2px 4px rgba(var(--theme-shadow-rgb), 0.06), 0 4px 8px rgba(var(--theme-shadow-rgb), 0.08);
+    --theme-shadow-lg:          0 4px 8px rgba(var(--theme-shadow-rgb), 0.07), 0 8px 16px rgba(var(--theme-shadow-rgb), 0.10);
+    --theme-shadow-xl:          0 8px 16px rgba(var(--theme-shadow-rgb), 0.08), 0 16px 32px rgba(var(--theme-shadow-rgb), 0.12);
 
     // -- RGB channel variants (for rgba() usage in components) --
     --theme-text-primary-rgb:   15, 23, 42;
-    --theme-surface-bg-rgb:     248, 250, 252;
+    --theme-surface-bg-rgb:     253, 253, 254;   // must track --theme-surface-bg
     --theme-border-rgb:         203, 213, 225;
 
     // -- Chrome: glow + edge shadow tokens --
@@ -92,14 +114,14 @@
     --theme-group-bg-4:         #fce7f3;
     --theme-group-bg-5:         #e0e7ff;
 
-    // -- NavRail (light) --
-    --theme-navrail-bg:               #{$gray-50};
-    --theme-navrail-surface:          #{$gray-100};
+    // -- NavRail (light) — tracks the tonal ladder above (ADR-147) --
+    --theme-navrail-bg:               #f5f7fa;   // = --theme-surface-raised-bg
+    --theme-navrail-surface:          #eef1f6;   // = --theme-body-bg
     --theme-navrail-border:           #{$gray-200};
     --theme-navrail-divider:          #{$gray-200};
     --theme-navrail-item-fg:          #{$gray-700};
     --theme-navrail-item-icon:        #{$gray-500};
-    --theme-navrail-item-hover-bg:    #{$gray-100};
+    --theme-navrail-item-hover-bg:    rgba(15, 23, 42, 0.045);
     --theme-navrail-item-active-bg:   #{rgba($blue-600, 0.08)};
     --theme-navrail-item-active-fg:   #{$blue-700};
     --theme-navrail-item-active-stripe: #{$blue-600};
@@ -110,9 +132,9 @@
     --theme-navrail-header-mark-fg:   #{$gray-50};
     --theme-navrail-badge-bg:         #{$red-600};
     --theme-navrail-badge-fg:         #ffffff;
-    --theme-navrail-search-bg:        #{$gray-100};
+    --theme-navrail-search-bg:        #eef1f6;
     --theme-navrail-search-fg:        #{$gray-500};
-    --theme-navrail-search-hint-bg:   #{$gray-200};
+    --theme-navrail-search-hint-bg:   #e6eaf1;
     --theme-navrail-shadow:           0 4px 14px rgba(var(--theme-shadow-rgb), 0.18);
 }
 
@@ -121,11 +143,16 @@
 // ============================================================================
 
 [data-bs-theme="dark"] {
-    // -- Surfaces (invert gray scale) --
-    --theme-body-bg:            #{$gray-900};
-    --theme-surface-bg:         #{$gray-800};
-    --theme-surface-raised-bg:  #{$gray-700};
-    --theme-surface-sunken-bg:  #{$gray-900};
+    // -- Surfaces: the tonal ladder, inverted (ADR-147) --
+    //
+    // In dark mode elevation LIGHTENS: sunken < body < surface < raised.
+    // Chrome sat at $gray-700 (#334155) before ADR-147, which is closer to a
+    // mid-grey than to a dark surface — washed out, and too light for a subtle
+    // shadow to register against. The ladder is now tighter and darker.
+    --theme-body-bg:            #0d1420;   // the page ground
+    --theme-surface-bg:         #151d2b;   // content surfaces
+    --theme-surface-raised-bg:  #1f2937;   // chrome — sidebars, toolbars, headers
+    --theme-surface-sunken-bg:  #090f19;   // wells, code blocks, inset areas
 
     // -- Text (invert) --
     --theme-text-primary:       #{$gray-100};
@@ -137,9 +164,10 @@
     --theme-border-color:       #{$gray-600};
     --theme-border-subtle:      #{$gray-700};
 
-    // -- Interactive --
-    --theme-hover-bg:           #{$gray-700};
-    --theme-active-bg:          #{$gray-600};
+    // -- Interactive: state layers (ADR-147) --
+    // Light overlays on a dark ground, mirroring the dark overlays in :root.
+    --theme-hover-bg:           rgba(255, 255, 255, 0.06);
+    --theme-active-bg:          rgba(255, 255, 255, 0.11);
     --theme-selected-bg:        #{rgba($blue-400, 0.15)};
 
     // -- Focus --
@@ -149,7 +177,8 @@
     // -- Primary action --
     --theme-primary:            #{$blue-400};
     --theme-primary-hover:      #{$blue-300};
-    --theme-primary-rgb:        96, 165, 250;
+    // Must match $blue-400 (#4dabf7). Held 96, 165, 250 (#60a5fa) until ADR-147.
+    --theme-primary-rgb:        77, 171, 247;
 
     // -- Status / Semantic --
     --theme-success:            #{$green-400};
@@ -170,17 +199,20 @@
     --theme-edge-shadow-opacity:   0.25;
     --theme-edge-shadow-color:     rgba(0, 0, 0, 0.25);
 
-    // -- Shadows (darker, more pronounced) --
+    // -- Shadows: same two-layer geometry, higher alpha --
+    // Shadow on a dark ground needs roughly double the opacity of the light
+    // theme to register at all; the geometry stays identical so an elevation
+    // reads as the same distance in both themes.
     --theme-shadow-rgb:         0, 0, 0;
-    --theme-shadow-xs:          0 1px 2px rgba(0, 0, 0, 0.2);
-    --theme-shadow-sm:          0 2px 8px rgba(0, 0, 0, 0.3);
-    --theme-shadow-md:          0 4px 12px rgba(0, 0, 0, 0.35);
-    --theme-shadow-lg:          0 4px 16px rgba(0, 0, 0, 0.4);
-    --theme-shadow-xl:          0 8px 24px rgba(0, 0, 0, 0.5);
+    --theme-shadow-xs:          0 1px 1px rgba(0, 0, 0, 0.16), 0 1px 2px rgba(0, 0, 0, 0.22);
+    --theme-shadow-sm:          0 1px 2px rgba(0, 0, 0, 0.20), 0 2px 4px rgba(0, 0, 0, 0.26);
+    --theme-shadow-md:          0 2px 4px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.30);
+    --theme-shadow-lg:          0 4px 8px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.36);
+    --theme-shadow-xl:          0 8px 16px rgba(0, 0, 0, 0.32), 0 16px 32px rgba(0, 0, 0, 0.44);
 
     // -- RGB channels --
     --theme-text-primary-rgb:   241, 245, 249;
-    --theme-surface-bg-rgb:     30, 41, 59;
+    --theme-surface-bg-rgb:     21, 29, 43;      // must track --theme-surface-bg
     --theme-border-rgb:         71, 85, 105;
 
     // -- Metric card contrast-safe colours --
@@ -194,14 +226,14 @@
     --theme-group-bg-4:         #{rgba($red-400, 0.14)};
     --theme-group-bg-5:         #{rgba($blue-300, 0.18)};
 
-    // -- NavRail (dark) --
-    --theme-navrail-bg:               #{$gray-900};
-    --theme-navrail-surface:          #{$gray-800};
+    // -- NavRail (dark) — tracks the tonal ladder above (ADR-147) --
+    --theme-navrail-bg:               #1f2937;   // = --theme-surface-raised-bg
+    --theme-navrail-surface:          #151d2b;   // = --theme-surface-bg
     --theme-navrail-border:           #{$gray-700};
     --theme-navrail-divider:          #{$gray-700};
     --theme-navrail-item-fg:          #{$gray-300};
     --theme-navrail-item-icon:        #{$gray-400};
-    --theme-navrail-item-hover-bg:    #{$gray-800};
+    --theme-navrail-item-hover-bg:    rgba(255, 255, 255, 0.06);
     --theme-navrail-item-active-bg:   #{rgba($blue-400, 0.15)};
     --theme-navrail-item-active-fg:   #{$blue-300};
     --theme-navrail-item-active-stripe: #{$blue-400};
@@ -212,9 +244,9 @@
     --theme-navrail-header-mark-fg:   #{$gray-50};
     --theme-navrail-badge-bg:         #{$red-500};
     --theme-navrail-badge-fg:         #ffffff;
-    --theme-navrail-search-bg:        #{$gray-800};
+    --theme-navrail-search-bg:        #151d2b;
     --theme-navrail-search-fg:        #{$gray-400};
-    --theme-navrail-search-hint-bg:   #{$gray-700};
+    --theme-navrail-search-hint-bg:   #0d1420;
     --theme-navrail-shadow:           0 6px 20px rgba(0, 0, 0, 0.5);
 
     // -- Bootstrap core overrides --
