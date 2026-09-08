@@ -281,7 +281,9 @@ $tp-titlebar-height: $control-height-md;
 
 // Active tab — inset primary indicator, primary label
 .tabbedpanel-tab-active {
-    color: var(--theme-primary);
+    // --theme-primary-text, NOT --theme-primary: the fill colour measures
+    // 3.91:1 as a label on the tab bar's raised surface, below the 4.5 AA floor.
+    color: var(--theme-primary-text);
     font-weight: $font-weight-medium;
 
     &::after {

@@ -1,0 +1,591 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-FileCopyrightText: 2026 Outcrop Inc
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: VisualRefreshDemo
+  PURPOSE: Review surface for the 2026 visual refresh (ADR-147). Shows the tonal
+           surface ladder in an application context, plus the radius scale,
+           shadow elevations, tab treatment and state layers, in both themes.
+  RELATES: [[EnterpriseTheme]], [[DarkMode]], [[ThemeToggle]]
+  FLOW: [_variables.scss] -> [_dark-mode.scss] -> [dist/css/custom.css] -> [This Page]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Review surface for the 2026 visual refresh — tonal surfaces, subtle shadows, small radius and refined tabs.">
+    <title>Visual Refresh 2026 - Review Surface</title>
+
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../dist/css/custom.css">
+    <link rel="stylesheet" href="../dist/icons/bootstrap-icons.css">
+
+<style>
+/* ---------------------------------------------------------------------------
+   Page chrome. Everything below consumes the SAME tokens the library does, so
+   what is on screen is the real result rather than an approximation of it.
+   --------------------------------------------------------------------------- */
+body
+{
+    background: var(--theme-body-bg);
+    color: var(--theme-text-primary);
+    margin: 0;
+    padding: 0 0 4rem;
+}
+
+.vr-head
+{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-color);
+    box-shadow: var(--theme-shadow-sm);
+}
+.vr-head h1 { font-size: 1rem; margin: 0; font-weight: 600; }
+.vr-head .vr-sub { color: var(--theme-text-muted); font-size: 0.8rem; }
+.vr-head button
+{
+    margin-left: auto;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--bs-border-radius, 4px);
+    background: var(--theme-surface-bg);
+    color: var(--theme-text-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8rem;
+}
+.vr-head button:hover { background: var(--theme-hover-bg); }
+
+.vr-wrap { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+
+.vr-section { margin-bottom: 2.5rem; }
+.vr-section > h2
+{
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--theme-text-muted);
+    margin: 0 0 0.25rem;
+    font-weight: 600;
+}
+.vr-section > .vr-note
+{
+    color: var(--theme-text-secondary);
+    font-size: 0.8125rem;
+    margin: 0 0 1rem;
+    max-width: 62ch;
+    line-height: 1.5;
+}
+
+/* --- 1. Application shell mock: the surface ladder in context --- */
+.vr-app
+{
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 380px;
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--bs-border-radius, 4px);
+    overflow: hidden;
+    box-shadow: var(--theme-shadow-md);
+}
+.vr-app-toolbar
+{
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    height: 38px;
+    background: var(--theme-surface-raised-bg);
+    border-bottom: 1px solid var(--theme-border-color);
+}
+.vr-app-side
+{
+    background: var(--theme-surface-raised-bg);
+    border-right: 1px solid var(--theme-border-color);
+    padding: 0.5rem 0.375rem;
+    overflow-y: auto;
+}
+.vr-app-main
+{
+    background: var(--theme-body-bg);
+    padding: 1rem;
+    overflow-y: auto;
+}
+.vr-nav-item
+{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4375rem 0.625rem;
+    border-radius: var(--bs-border-radius, 4px);
+    color: var(--theme-text-secondary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+.vr-nav-item:hover { background: var(--theme-hover-bg); color: var(--theme-text-primary); }
+.vr-nav-item.is-active
+{
+    background: var(--theme-selected-bg);
+    color: var(--theme-primary-text);
+    font-weight: 500;
+}
+.vr-nav-label
+{
+    padding: 0.625rem 0.625rem 0.25rem;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--theme-text-muted);
+    font-weight: 600;
+}
+.vr-tool-btn
+{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 26px;
+    padding: 0 0.5rem;
+    border: none;
+    border-radius: var(--bs-border-radius, 4px);
+    background: transparent;
+    color: var(--theme-text-secondary);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+.vr-tool-btn:hover { background: var(--theme-hover-bg); color: var(--theme-text-primary); }
+.vr-tool-sep { width: 1px; height: 18px; background: var(--theme-border-color); margin: 0 0.25rem; }
+
+.vr-card
+{
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-subtle);
+    border-radius: var(--bs-border-radius, 4px);
+    box-shadow: var(--theme-shadow-xs);
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.75rem;
+}
+.vr-card h3 { font-size: 0.875rem; margin: 0 0 0.375rem; font-weight: 600; }
+.vr-card p { margin: 0; font-size: 0.8125rem; color: var(--theme-text-secondary); line-height: 1.5; }
+.vr-well
+{
+    background: var(--theme-surface-sunken-bg);
+    border-radius: var(--bs-border-radius, 4px);
+    padding: 0.625rem 0.75rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--theme-text-secondary);
+}
+
+/* --- 2. Ladder swatches --- */
+.vr-ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.75rem; }
+.vr-swatch
+{
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--bs-border-radius, 4px);
+    overflow: hidden;
+}
+.vr-swatch-fill { height: 66px; }
+.vr-swatch-meta { padding: 0.5rem 0.625rem; background: var(--theme-surface-bg); }
+.vr-swatch-name { font-size: 0.75rem; font-weight: 600; }
+.vr-swatch-role { font-size: 0.6875rem; color: var(--theme-text-muted); }
+.vr-swatch-val
+{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.6875rem;
+    color: var(--theme-text-secondary);
+    margin-top: 0.125rem;
+}
+
+/* --- 3. Radius + shadow specimens --- */
+.vr-row { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-end; }
+.vr-spec { text-align: center; }
+.vr-spec-box
+{
+    width: 96px;
+    height: 62px;
+    background: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
+    margin-bottom: 0.4375rem;
+}
+.vr-spec-shadow
+{
+    width: 96px;
+    height: 62px;
+    background: var(--theme-surface-bg);
+    border-radius: var(--bs-border-radius, 4px);
+    margin-bottom: 0.4375rem;
+}
+.vr-spec-cap { font-size: 0.6875rem; color: var(--theme-text-muted); font-family: "JetBrains Mono", monospace; }
+
+/* --- 4. Tab specimen --- */
+.vr-tabs
+{
+    display: flex;
+    background: var(--theme-surface-raised-bg);
+    border: 1px solid var(--theme-border-color);
+    border-bottom: none;
+    border-radius: var(--bs-border-radius, 4px) var(--bs-border-radius, 4px) 0 0;
+}
+.vr-tab
+{
+    position: relative;
+    padding: 0.375rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.vr-tab::after
+{
+    content: "";
+    position: absolute;
+    left: 6px; right: 6px; bottom: 0;
+    height: 3px;
+    border-radius: 2px 2px 0 0;
+    background: var(--theme-primary);
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+.vr-tab:hover { background: var(--theme-hover-bg); color: var(--theme-text-primary); }
+.vr-tab.is-active { color: var(--theme-primary-text); font-weight: 500; }
+.vr-tab.is-active::after { opacity: 1; }
+.vr-tab-body
+{
+    border: 1px solid var(--theme-border-color);
+    border-radius: 0 0 var(--bs-border-radius, 4px) var(--bs-border-radius, 4px);
+    background: var(--theme-surface-bg);
+    padding: 1rem;
+    font-size: 0.8125rem;
+    color: var(--theme-text-secondary);
+}
+
+/* --- 5. Before/after callout --- */
+.vr-before
+{
+    border-left: 3px solid var(--theme-warning);
+    background: var(--theme-surface-bg);
+    border-radius: 0 var(--bs-border-radius, 4px) var(--bs-border-radius, 4px) 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: var(--theme-text-secondary);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+}
+.vr-before code { font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--theme-text-primary); }
+</style>
+</head>
+<body>
+
+<header class="vr-head">
+    <div>
+        <h1>Visual Refresh 2026</h1>
+        <div class="vr-sub">ADR-147 &middot; review surface &middot; toggle the theme to check both</div>
+    </div>
+    <button type="button" id="vr-toggle"><i class="bi bi-circle-half"></i> Toggle theme</button>
+</header>
+
+<div class="vr-wrap">
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>1 &middot; The surface ladder, in context</h2>
+        <p class="vr-note">
+            This is the change that does the most work. Chrome, content and the page ground are now
+            three distinct planes rather than one flat field. Look at where the sidebar ends and the
+            content begins &mdash; before this change those were the same colour and the only thing
+            separating them was a one-pixel border.
+        </p>
+
+        <div class="vr-before">
+            <strong>Before:</strong> <code>--theme-body-bg</code> and <code>--theme-surface-bg</code>
+            both held <code>#f8fafc</code>. Identical. The page had no ground, so every panel floated
+            on the same tone and the interface read as a diagram of itself.
+        </div>
+
+        <div class="vr-app">
+            <div class="vr-app-toolbar">
+                <button class="vr-tool-btn"><i class="bi bi-plus-lg"></i> New</button>
+                <button class="vr-tool-btn"><i class="bi bi-save"></i> Save</button>
+                <span class="vr-tool-sep"></span>
+                <button class="vr-tool-btn"><i class="bi bi-arrow-counterclockwise"></i></button>
+                <button class="vr-tool-btn"><i class="bi bi-arrow-clockwise"></i></button>
+                <span class="vr-tool-sep"></span>
+                <button class="vr-tool-btn"><i class="bi bi-funnel"></i> Filter</button>
+            </div>
+
+            <nav class="vr-app-side">
+                <div class="vr-nav-label">Workspace</div>
+                <div class="vr-nav-item is-active"><i class="bi bi-grid-1x2"></i> Overview</div>
+                <div class="vr-nav-item"><i class="bi bi-table"></i> Datasets</div>
+                <div class="vr-nav-item"><i class="bi bi-diagram-3"></i> Pipelines</div>
+                <div class="vr-nav-item"><i class="bi bi-shield-check"></i> Policies</div>
+                <div class="vr-nav-label">Administration</div>
+                <div class="vr-nav-item"><i class="bi bi-people"></i> Members</div>
+                <div class="vr-nav-item"><i class="bi bi-key"></i> Credentials</div>
+                <div class="vr-nav-item"><i class="bi bi-clock-history"></i> Audit log</div>
+            </nav>
+
+            <main class="vr-app-main">
+                <div class="vr-card">
+                    <h3>Ingestion throughput</h3>
+                    <p>A content surface sits above the page ground and carries the lightest
+                       elevation. Hover an item in the sidebar &mdash; the state layer shades the
+                       chrome rather than replacing it.</p>
+                </div>
+                <div class="vr-card">
+                    <h3>Last run</h3>
+                    <div class="vr-well">2026-09-08T04:12:07Z &nbsp;ok &nbsp;1,284,552 rows &nbsp;41.2s</div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>2 &middot; The four surface tokens</h2>
+        <p class="vr-note">
+            Ordered darkest to lightest in light mode: sunken, ground, chrome, content. The order
+            inverts in dark mode &mdash; toggle the theme and the ladder still reads, because
+            elevation lightens on a dark ground and darkens on a light one.
+        </p>
+        <div class="vr-ladder">
+            <div class="vr-swatch">
+                <div class="vr-swatch-fill" style="background: var(--theme-surface-sunken-bg);"></div>
+                <div class="vr-swatch-meta">
+                    <div class="vr-swatch-name">sunken</div>
+                    <div class="vr-swatch-role">wells, code blocks, insets</div>
+                    <div class="vr-swatch-val" data-token="--theme-surface-sunken-bg">&nbsp;</div>
+                </div>
+            </div>
+            <div class="vr-swatch">
+                <div class="vr-swatch-fill" style="background: var(--theme-body-bg);"></div>
+                <div class="vr-swatch-meta">
+                    <div class="vr-swatch-name">body</div>
+                    <div class="vr-swatch-role">the page ground</div>
+                    <div class="vr-swatch-val" data-token="--theme-body-bg">&nbsp;</div>
+                </div>
+            </div>
+            <div class="vr-swatch">
+                <div class="vr-swatch-fill" style="background: var(--theme-surface-raised-bg);"></div>
+                <div class="vr-swatch-meta">
+                    <div class="vr-swatch-name">raised</div>
+                    <div class="vr-swatch-role">sidebars, toolbars, headers</div>
+                    <div class="vr-swatch-val" data-token="--theme-surface-raised-bg">&nbsp;</div>
+                </div>
+            </div>
+            <div class="vr-swatch">
+                <div class="vr-swatch-fill" style="background: var(--theme-surface-bg);"></div>
+                <div class="vr-swatch-meta">
+                    <div class="vr-swatch-name">surface</div>
+                    <div class="vr-swatch-role">content surfaces</div>
+                    <div class="vr-swatch-val" data-token="--theme-surface-bg">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>3 &middot; Corner radius</h2>
+        <p class="vr-note">
+            Four tiers by role. The intent is a corner that reads as considered at 14px text, not
+            the roundness of a consumer application. Every value comes from one token; setting them
+            all to zero returns the library to hard corners in a single edit.
+        </p>
+        <div class="vr-row">
+            <div class="vr-spec">
+                <div class="vr-spec-box" style="border-radius: 2px;"></div>
+                <div class="vr-spec-cap">sm &middot; 2px</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-box" style="border-radius: 4px;"></div>
+                <div class="vr-spec-cap">base &middot; 4px</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-box" style="border-radius: 6px;"></div>
+                <div class="vr-spec-cap">lg &middot; 6px</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-box" style="border-radius: 8px;"></div>
+                <div class="vr-spec-cap">xl &middot; 8px</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-box" style="border-radius: 0;"></div>
+                <div class="vr-spec-cap">0 &middot; before</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>4 &middot; Shadow elevation</h2>
+        <p class="vr-note">
+            Each elevation is two layers &mdash; a tight key shadow that reads as contact, a wider
+            ambient one that reads as distance &mdash; both at low alpha. The previous system used a
+            single wide blur at higher opacity, which reads as a smudge under the element rather
+            than the element lifting off the page.
+        </p>
+        <div class="vr-row">
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: var(--theme-shadow-xs);"></div>
+                <div class="vr-spec-cap">xs</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: var(--theme-shadow-sm);"></div>
+                <div class="vr-spec-cap">sm</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: var(--theme-shadow-md);"></div>
+                <div class="vr-spec-cap">md</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: var(--theme-shadow-lg);"></div>
+                <div class="vr-spec-cap">lg</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: var(--theme-shadow-xl);"></div>
+                <div class="vr-spec-cap">xl</div>
+            </div>
+            <div class="vr-spec">
+                <div class="vr-spec-shadow" style="box-shadow: 0 2px 8px rgba(15,23,42,0.12);"></div>
+                <div class="vr-spec-cap">sm &middot; before</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>5 &middot; Tabs</h2>
+        <p class="vr-note">
+            The indicator is inset from the tab edges, so it marks the label rather than the whole
+            cell. That single detail is most of what made the old strip read as a segmented control.
+            It also now takes <code>--theme-primary</code> instead of a hardcoded blue, which is why
+            it works in dark mode at all.
+        </p>
+        <div style="max-width: 520px;">
+            <div class="vr-tabs">
+                <button class="vr-tab is-active" data-vr-tab>Properties</button>
+                <button class="vr-tab" data-vr-tab>Schema</button>
+                <button class="vr-tab" data-vr-tab>Permissions</button>
+                <button class="vr-tab" data-vr-tab>History</button>
+            </div>
+            <div class="vr-tab-body">
+                Click the tabs &mdash; the indicator cross-fades rather than jumping, because it is
+                present on every tab and revealed by opacity on the active one.
+            </div>
+        </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <section class="vr-section">
+        <h2>6 &middot; State layers</h2>
+        <p class="vr-note">
+            Hover and active are now translucent overlays rather than opaque greys. The same two
+            tokens shade every row below, even though each sits on a different surface. An opaque
+            grey would have punched a hole in three of the four.
+        </p>
+        <div class="vr-row" style="align-items: stretch;">
+            <div style="background: var(--theme-surface-bg); border: 1px solid var(--theme-border-color); border-radius: 4px; padding: 0.5rem; min-width: 200px;">
+                <div class="vr-swatch-role" style="padding: 0 0.5rem 0.375rem;">on content</div>
+                <div class="vr-nav-item">Hover me</div>
+                <div class="vr-nav-item">Hover me</div>
+            </div>
+            <div style="background: var(--theme-surface-raised-bg); border: 1px solid var(--theme-border-color); border-radius: 4px; padding: 0.5rem; min-width: 200px;">
+                <div class="vr-swatch-role" style="padding: 0 0.5rem 0.375rem;">on chrome</div>
+                <div class="vr-nav-item">Hover me</div>
+                <div class="vr-nav-item">Hover me</div>
+            </div>
+            <div style="background: var(--theme-surface-sunken-bg); border: 1px solid var(--theme-border-color); border-radius: 4px; padding: 0.5rem; min-width: 200px;">
+                <div class="vr-swatch-role" style="padding: 0 0.5rem 0.375rem;">on sunken</div>
+                <div class="vr-nav-item">Hover me</div>
+                <div class="vr-nav-item">Hover me</div>
+            </div>
+            <div style="background: var(--theme-selected-bg); border: 1px solid var(--theme-border-color); border-radius: 4px; padding: 0.5rem; min-width: 200px;">
+                <div class="vr-swatch-role" style="padding: 0 0.5rem 0.375rem;">on selected</div>
+                <div class="vr-nav-item">Hover me</div>
+                <div class="vr-nav-item">Hover me</div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+(function()
+{
+    "use strict";
+
+    // -- Theme toggle -------------------------------------------------------
+    var root = document.documentElement;
+
+    document.getElementById("vr-toggle").addEventListener("click", function()
+    {
+        var nowDark = root.getAttribute("data-bs-theme") === "dark";
+
+        if (nowDark) { root.removeAttribute("data-bs-theme"); }
+        else         { root.setAttribute("data-bs-theme", "dark"); }
+
+        sessionStorage.setItem("theme-mode", nowDark ? "light" : "dark");
+        paintTokenValues();
+    });
+
+    // -- Tab strip ----------------------------------------------------------
+    var tabs = document.querySelectorAll("[data-vr-tab]");
+
+    Array.prototype.forEach.call(tabs, function(tab)
+    {
+        tab.addEventListener("click", function()
+        {
+            Array.prototype.forEach.call(tabs, function(t) { t.classList.remove("is-active"); });
+            tab.classList.add("is-active");
+        });
+    });
+
+    // -- Resolve each surface token to its computed value so the swatch
+    //    labels report what the theme ACTUALLY produced, not what this page
+    //    assumed it would.
+    function paintTokenValues()
+    {
+        var styles = getComputedStyle(root);
+        var cells  = document.querySelectorAll("[data-token]");
+
+        Array.prototype.forEach.call(cells, function(cell)
+        {
+            var name = cell.getAttribute("data-token");
+            cell.textContent = styles.getPropertyValue(name).trim() || "(unset)";
+        });
+    }
+
+    paintTokenValues();
+})();
+</script>
+
+</body>
+</html>
