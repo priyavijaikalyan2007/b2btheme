@@ -28,10 +28,10 @@
     // Note the direction: in LIGHT mode "raised" is DARKER than "surface".
     // That is deliberate and long-standing — chrome recedes, content advances —
     // and it inverts in dark mode below. 140 call sites depend on it.
-    --theme-body-bg:            #eef1f6;   // the page ground
-    --theme-surface-bg:         #fdfdfe;   // content surfaces
-    --theme-surface-raised-bg:  #f5f7fa;   // chrome — sidebars, toolbars, headers
-    --theme-surface-sunken-bg:  #e6eaf1;   // wells, code blocks, inset areas
+    --theme-body-bg:            #{$surface-ground};    // the page ground
+    --theme-surface-bg:         #{$surface-content};   // content surfaces
+    --theme-surface-raised-bg:  #{$surface-raised};    // chrome — sidebars, toolbars, headers
+    --theme-surface-sunken-bg:  #{$surface-sunken};    // wells, code blocks, inset areas
 
     // -- Text --
     --theme-text-primary:       #{$gray-900};
@@ -86,7 +86,7 @@
     --theme-metric-negative:    #{$red-700};
 
     // -- Input fields --
-    --theme-input-bg:           #{$gray-50};
+    --theme-input-bg:           #{$surface-content};
     --theme-input-border:       #{$gray-300};
     --theme-input-color:        #{$gray-900};
     --theme-input-placeholder:  #{$gray-400};
@@ -124,8 +124,8 @@
     --theme-group-bg-5:         #e0e7ff;
 
     // -- NavRail (light) — tracks the tonal ladder above (ADR-147) --
-    --theme-navrail-bg:               #f5f7fa;   // = --theme-surface-raised-bg
-    --theme-navrail-surface:          #eef1f6;   // = --theme-body-bg
+    --theme-navrail-bg:               #{$surface-raised};
+    --theme-navrail-surface:          #{$surface-ground};
     --theme-navrail-border:           #{$gray-200};
     --theme-navrail-divider:          #{$gray-200};
     --theme-navrail-item-fg:          #{$gray-700};
@@ -141,9 +141,9 @@
     --theme-navrail-header-mark-fg:   #{$gray-50};
     --theme-navrail-badge-bg:         #{$red-600};
     --theme-navrail-badge-fg:         #ffffff;
-    --theme-navrail-search-bg:        #eef1f6;
+    --theme-navrail-search-bg:        #{$surface-ground};
     --theme-navrail-search-fg:        #{$gray-500};
-    --theme-navrail-search-hint-bg:   #e6eaf1;
+    --theme-navrail-search-hint-bg:   #{$surface-sunken};
     --theme-navrail-shadow:           0 4px 14px rgba(var(--theme-shadow-rgb), 0.18);
 }
 
@@ -158,10 +158,10 @@
     // Chrome sat at $gray-700 (#334155) before ADR-147, which is closer to a
     // mid-grey than to a dark surface — washed out, and too light for a subtle
     // shadow to register against. The ladder is now tighter and darker.
-    --theme-body-bg:            #0d1420;   // the page ground
-    --theme-surface-bg:         #151d2b;   // content surfaces
-    --theme-surface-raised-bg:  #1f2937;   // chrome — sidebars, toolbars, headers
-    --theme-surface-sunken-bg:  #090f19;   // wells, code blocks, inset areas
+    --theme-body-bg:            #{$surface-ground-dark};    // the page ground
+    --theme-surface-bg:         #{$surface-content-dark};   // content surfaces
+    --theme-surface-raised-bg:  #{$surface-raised-dark};    // chrome — sidebars, toolbars, headers
+    --theme-surface-sunken-bg:  #{$surface-sunken-dark};    // wells, code blocks, inset areas
 
     // -- Text (invert) --
     --theme-text-primary:       #{$gray-100};
@@ -237,8 +237,8 @@
     --theme-group-bg-5:         #{rgba($blue-300, 0.18)};
 
     // -- NavRail (dark) — tracks the tonal ladder above (ADR-147) --
-    --theme-navrail-bg:               #1f2937;   // = --theme-surface-raised-bg
-    --theme-navrail-surface:          #151d2b;   // = --theme-surface-bg
+    --theme-navrail-bg:               #{$surface-raised-dark};
+    --theme-navrail-surface:          #{$surface-content-dark};
     --theme-navrail-border:           #{$gray-700};
     --theme-navrail-divider:          #{$gray-700};
     --theme-navrail-item-fg:          #{$gray-300};
@@ -254,17 +254,19 @@
     --theme-navrail-header-mark-fg:   #{$gray-50};
     --theme-navrail-badge-bg:         #{$red-500};
     --theme-navrail-badge-fg:         #ffffff;
-    --theme-navrail-search-bg:        #151d2b;
+    --theme-navrail-search-bg:        #{$surface-content-dark};
     --theme-navrail-search-fg:        #{$gray-400};
-    --theme-navrail-search-hint-bg:   #0d1420;
+    --theme-navrail-search-hint-bg:   #{$surface-ground-dark};
     --theme-navrail-shadow:           0 6px 20px rgba(0, 0, 0, 0.5);
 
     // -- Bootstrap core overrides --
-    --bs-body-bg:               #{$gray-900};
+    // These MUST track the ladder above. They held raw greys and so painted
+    // Bootstrap surfaces a different set of colours than every component.
+    --bs-body-bg:               #{$surface-ground-dark};
     --bs-body-color:            #{$gray-100};
     --bs-border-color:          #{$gray-600};
-    --bs-secondary-bg:          #{$gray-800};
-    --bs-tertiary-bg:           #{$gray-700};
+    --bs-secondary-bg:          #{$surface-content-dark};
+    --bs-tertiary-bg:           #{$surface-raised-dark};
     --bs-emphasis-color:        #{$gray-50};
 
     // -- Headings --
