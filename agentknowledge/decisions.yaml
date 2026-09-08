@@ -3773,3 +3773,45 @@
     - "components/tabbedpanel/tabbedpanel.scss"
     - "demo/visual-refresh.html"
     - "AGENTS.md"
+  amendment_2026_09_08: |
+    Round one was reviewed as "only a slight difference overall", with ribbon
+    controls, dropdowns and the Dynamic UI DataGrid reported as still square.
+    Both correct. The context above claims the change "lands in two files";
+    that described where the tokens LIVE, not where they are CONSUMED, and it
+    was optimistic.
+
+    Four causes, all of them consumers that never received the tokens:
+    (1) $body-bg still compiled to $gray-50, so Bootstrap painted the page the
+    OLD ground while components used the new one, and the dark --bs-* surface
+    overrides were pinned to raw greys off the ladder. (2) Bootstrap has its
+    OWN $box-shadow scale, never overridden — dropdowns and modals draw from it
+    rather than $shadow-*, so the most visible overlays kept the old smudge.
+    The "nice" dropdown shadows noted in review were in fact the old style.
+    (3) Ribbon pinned 17 call sites to a local $ribbon-ctrl-border-radius: 0,
+    and 34 further sites hardcoded border-radius: 0, several with comments
+    enforcing the now-dead rule. (4) dynamiccanvas.scss referenced
+    var(--theme-border, ...) and var(--theme-surface, ...) — NEITHER TOKEN
+    EXISTS, the names are --theme-border-color and --theme-surface-bg — so it
+    resolved to its hardcoded fallbacks and never participated in the theme in
+    either mode. A custom-property fallback fails silently by design, which is
+    why no test and no review ever caught it.
+
+    Fixed by declaring the ladder once as Sass variables and interpolating it
+    into the CSS tokens, pointing the Bootstrap variables and shadow scale at
+    the same values, and assigning the 51 hardcoded radius sites by role.
+    Three stay 0 deliberately and now document why. AuthCard's card was
+    var(--bs-body-bg) — the page ground — so it was the same colour as the page
+    behind it; it imports no Sass on purpose because Keycloak templates mirror
+    its markup, so its radius uses var(--bs-border-radius-lg).
+
+    Verified: --bs-body-bg and --theme-body-bg now agree in both themes (they
+    did not before), --bs-box-shadow is two-layer, the ladder is monotonic in
+    both directions, and the worst text-on-surface pair measures 5.00 light /
+    5.72 dark against a 4.5 floor.
+
+    Open: DEBT-VR-1 — 38 sites use --theme-hover-bg/--theme-active-bg as a
+    STATIC background rather than an interaction state. Since D3 made them
+    translucent these composite instead of filling; the light-mode result is
+    within a hair of the old $gray-200, so nothing looks broken, but it is the
+    wrong token for the job. The fix is a --theme-fill-subtle token and 38
+    reassignments, deliberately left as its own change.

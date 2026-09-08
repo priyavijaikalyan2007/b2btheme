@@ -1689,3 +1689,23 @@ Verified: 4825 unit tests across 142 files, structure checks PASSED,
 remaining pairs between 9.15 and 17.56. Playwright still cannot run on this
 machine (DEBT-WEB-3), so appearance is reviewed by eye against
 `demo/visual-refresh.html`.
+
+### Round two (same day)
+
+> I think this is good. Although I see only a slight difference overall. I also see that some of the controls especially the custom ones and regular dropdowns and such don't have a rounded edge like we designed. It looks the same sharp rectangle which doesn't gel nicely with the rest of the UI. For example, ribbon controls.
+
+> same for things like datagrid inside the dynamic UI. It's also interesting that things like dropdowns and menus and context menus have a nice drop shadow but not other controls. is that intended?
+
+Both reports were correct and the spec's "lands in two files" claim was
+optimistic — it described where the tokens live, not where they are consumed.
+Four consumers had never received them: Bootstrap itself (`$body-bg` still
+compiled to the old grey, and Bootstrap's separate `$box-shadow` scale was
+never overridden, so the admired dropdown shadows were in fact the OLD style);
+the ribbon's local `$ribbon-ctrl-border-radius: 0` across 17 sites; 34 further
+hardcoded zeros; and DynamicCanvas, which referenced two token names that do
+not exist and had therefore been silently using hardcoded fallbacks in both
+themes since it was written.
+
+The shadow question was answered directly: overlays carry elevation, inline
+controls do not — that is deliberate and unchanged. What looked inconsistent
+was three overlay components that were never on the token system at all.

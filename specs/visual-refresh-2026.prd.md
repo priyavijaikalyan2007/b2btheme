@@ -301,3 +301,73 @@ names and no static audit can enumerate.
 - [ ] `agentknowledge/decisions.yaml` — ADR-147
 - [ ] `agentknowledge/history.jsonl` — appended
 - [ ] `CHANGELOG.md`, `CONVERSATION.md`, `DARKMODE.md` token table refreshed
+
+---
+
+## 8. Amendment — round two (2026-09-08)
+
+Round one was reviewed and the verdict was *"only a slight difference overall"*,
+with specific reports that ribbon controls, dropdowns and the DataGrid inside
+Dynamic UI were still square. Both were correct, and section 3's claim that the
+change "lands in two files" turned out to be **optimistic**. It described where
+the tokens live, not where they are consumed.
+
+### Why the change was muted
+
+| Cause | Detail |
+|---|---|
+| **Bootstrap never received the refresh** | `$body-bg` still compiled to `$gray-50`, so Bootstrap painted the page the *old* ground colour while components used the new one. In dark, `--bs-body-bg`, `--bs-secondary-bg` and `--bs-tertiary-bg` were pinned to raw greys off the ladder. |
+| **Bootstrap has its own shadow scale** | `$box-shadow` / `$box-shadow-sm` / `$box-shadow-lg` were never overridden. Dropdowns and modals draw from these, not `$shadow-*` — so the most visible overlays in the library kept the single-blur smudge. The "nice" dropdown shadows noted in review were in fact the *old* style. |
+| **17 ribbon call sites** | pinned to a local `$ribbon-ctrl-border-radius: 0`. |
+| **34 further hardcoded zeros** | left over from the square era, several with comments actively enforcing the dead rule. |
+| **Dynamic UI was never themed at all** | `dynamiccanvas.scss` referenced `var(--theme-border, …)` and `var(--theme-surface, …)`. **Neither token exists** — the names are `--theme-border-color` and `--theme-surface-bg` — so it silently resolved to its hardcoded fallbacks in both themes. A CSS custom-property fallback fails silently by design, which is why nothing ever reported it. |
+
+### Changes
+
+- The ladder is declared **once** as Sass variables (`$surface-ground` and
+  friends) and interpolated into the CSS tokens, removing the hex duplication
+  round one introduced and giving Bootstrap variables something to reference.
+- `$body-bg`, `$card-cap-bg`, `$breadcrumb-bg`, `$table-striped-bg`, `$input-bg`
+  and the dark `--bs-*` overrides now track the ladder.
+- Bootstrap's `$box-shadow` scale points at the two-layer values.
+- Ribbon controls take the base radius. **If this reads too soft in the 3-high
+  stack, `$border-radius-sm` is a one-line change** — flagged for review rather
+  than decided unilaterally.
+- 34 zero-radius sites assigned by role. Three stay 0 deliberately and now
+  document why.
+- ContextMenu, HoverCard and NotificationCenter move from raw `box-shadow` to
+  the tokens. HoverCard's separate dark rule became redundant and was removed.
+- AuthCard's card background was `var(--bs-body-bg)` — the page ground — so it
+  was the same colour as the page behind it. Now the content surface.
+
+### Shadow policy, stated because it was asked
+
+Overlays carry elevation; inline controls do not. Menus, dropdowns, popovers,
+dialogs and toasts float above the page and cast a shadow; buttons and inputs
+sit *on* a surface and are described by their border and fill. This is
+deliberate and unchanged. What looked inconsistent was that three overlay
+components were never on the token system, so their shadows were arbitrary
+rather than absent.
+
+### Measured after round two
+
+```
+--bs-body-bg vs --theme-body-bg    light MATCH   dark MATCH   (both DRIFTED before)
+--bs-box-shadow                    two-layer in both themes
+ladder monotonic                   light and dark
+worst text-on-surface pair         5.00 light / 5.72 dark   (floor is 4.5)
+primary-as-type on chrome          5.67 light / 7.47 dark
+```
+
+### Known debt, deliberately not fixed here
+
+`DEBT-VR-1` — 38 sites use `--theme-hover-bg` / `--theme-active-bg` as a
+**static** background (avatar circles, chips, progress tracks, tab strips)
+rather than as an interaction state. Since D3 made those tokens translucent
+these now composite rather than fill. The result is very close to the old
+value in light mode — `rgba(15,23,42,.085)` over the content surface resolves
+to roughly `#e8e9ec` against the previous `$gray-200` `#e2e8f0` — and slightly
+darker in dark mode, so nothing looks broken. It is nonetheless the wrong token
+for the job: a filled neutral chip is not an interaction state. The correct fix
+is a `--theme-fill-subtle` token and 38 reassignments, which is its own change
+with its own review.

@@ -14,6 +14,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## 2026-09-08
 
+### Fixed (round two — the refresh reached Bootstrap and the stragglers)
+- **Bootstrap never received the refresh, which is why it read as a slight difference.** `$body-bg` still compiled to `$gray-50`, so Bootstrap painted the page the *old* ground colour while every component used the new one; the dark `--bs-*` surface overrides were pinned to raw greys off the ladder. Both layers now agree in both themes.
+- **Bootstrap's own shadow scale is now two-layer.** `$box-shadow` / `-sm` / `-lg` were never overridden — dropdowns and modals draw from those rather than `$shadow-*`, so the most visible overlays in the library kept the old single-blur smudge.
+- **Ribbon controls are no longer square.** They were pinned to a local `$ribbon-ctrl-border-radius: 0` across 17 call sites.
+- **34 further components** hardcoded `border-radius: 0` from the square era and now take a radius by role — popovers and dialogs `lg`, panels and controls base, chips and icon buttons `sm`. Three stay square deliberately and say why.
+- **Dynamic UI was never themed.** `dynamiccanvas.scss` referenced `var(--theme-border, …)` and `var(--theme-surface, …)`; neither token exists (`--theme-border-color` / `--theme-surface-bg`), so it silently used its hardcoded fallbacks in both light and dark. A CSS custom-property fallback fails quietly by design.
+- **ContextMenu, HoverCard and NotificationCenter** carried raw `box-shadow` values instead of tokens. HoverCard's separate dark-mode shadow rule is now redundant and removed.
+- **AuthCard** drew its card on `var(--bs-body-bg)` — the page ground — so the card was the same colour as the page behind it.
+
 ### Changed
 - **Surfaces are now a tonal ladder rather than one flat field (ADR-147).** `--theme-body-bg` and `--theme-surface-bg` previously held the *same* colour (`#f8fafc`), so the page had no ground and a sidebar was separated from the content beside it by a one-pixel border and nothing else. Both themes now carry four ordered planes — sunken, ground, chrome, content. The light-mode direction is unchanged: `--theme-surface-raised-bg` remains *darker* than `--theme-surface-bg`, and still inverts in dark mode.
 - **Hover and active are translucent state layers** instead of opaque greys, so one token shades a white card, a tinted sidebar and a coloured row correctly. An opaque grey punches a visible hole in any surface that is not that exact grey — which, since the ladder, is every surface.
