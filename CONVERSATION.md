@@ -1632,3 +1632,60 @@ Wrote the approved design to `specs/marketinghero-sitefooter.prd.md`: file layou
 **Standards audit of everything added this session:** Allman braces throughout, longest method 28 lines against the 30-line limit, three nesting levels, no `innerHTML`, no hardcoded hex in SCSS, no bare `console.*` outside the logging shim, SPDX headers and `⚓`/`📜`/`🔗` markers on every file, `@entrypoint` on both components. Two apparent violations turned out to be artifacts of my own checking commands — a template literal counted as a brace, and a shell variable that expanded wrongly — both confirmed clean on re-check.
 
 **Verification:** `npm run build` exits 0, `npm test` 4825/4825, structure checks PASSED, repo index rebuilt.
+
+---
+
+## 2026-09-08 — Visual Refresh 2026 (ADR-147)
+
+### Request
+
+> ok. I would like to update the look and feel of the component library slightly. Don't push anything but commit locally to a feature branch. Essentially, as I started building applications with this theme library and its components and compared them to apps built in Material UI 3, I felt material UI 3 had some aspects that were slightly better. Material UI 3 uses subtle colors to distinguish certain aspects. For example, sidebars, and menubars have slightly different backgrounds. Tabs look more natural. Shadows are subtle and nice. A small amount of rounding in the corners feels nice. A bit more spacing seems more readable. Can you research and a compose a plan to make these updates to this library to incorporate these niceties. I don't want full blown Materila UI 3; I still think that is too rounded, has too much space etc. But the subtle aspects I mentioned I think are going to bring us forward to to the 2020s versus the current feel which feels a bit 2000-ish. WDYT?
+
+Radius magnitude was put back to the user because it collides with a written
+rule; they chose **4px base / 2px small / 6px large** over the frictionless 2px.
+Asked next whether to settle the surface question visually, they answered:
+
+> Hm just do it and I can adjust as I view the demos
+
+and later, while the browser tooling was being fought:
+
+> I will just verify visually.
+
+So the remaining design decisions were made rather than asked, and the
+deliverable became working code plus a review surface.
+
+### Outcome
+
+Branch `feat/md3-inspired-refinements`, five commits, nothing pushed.
+
+The flatness turned out to have a measurable cause rather than a stylistic one:
+`--theme-body-bg` and `--theme-surface-bg` both held `#f8fafc` — the same
+colour — so the page had no ground and a sidebar was separated from the content
+beside it by a one-pixel border and nothing else. Because the library is
+unusually disciplined about tokens (80 uses of `$border-radius` against about
+ten hardcoded outliers), the whole change landed in two files plus one
+component.
+
+Delivered: a four-step tonal surface ladder in both themes; translucent state
+layers, without which the ladder does not survive contact with a hover;
+two-layer shadows at lower alpha; a 4/2/6/8 radius scale tiered by role; an
+inset cross-fading tab indicator; and four targeted spacing values rather than a
+global `$spacer` bump, which would have moved layouts unevenly.
+
+Three latent defects were fixed on the way: `--theme-primary-rgb` held Tailwind
+blues in both themes that do not match `$primary`, tinting every focus ring and
+glow off-hue; `--theme-surface-bg-rgb` had drifted; and the tab indicator's
+hardcoded `$blue-600` had made it inert in dark mode.
+
+Two contrast regressions were **introduced by this work** and caught only by
+computing every text-on-surface pair in a browser — after a draft of the spec
+had already claimed, from reasoning, that no ratio was reduced. That claim was
+wrong. Muted text fell to 3.94:1 (it had been 4.54:1, marginal and unexamined)
+and the newly tinted active tab label measured 3.91:1 on chrome. Both fixed, and
+the lesson recorded as AGENT_INSIGHTS 6.8.
+
+Verified: 4825 unit tests across 142 files, structure checks PASSED,
+`npm run build` exit 0, ladder measured monotonic in both themes with all
+remaining pairs between 9.15 and 17.56. Playwright still cannot run on this
+machine (DEBT-WEB-3), so appearance is reviewed by eye against
+`demo/visual-refresh.html`.
