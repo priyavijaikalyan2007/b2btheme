@@ -1124,7 +1124,7 @@ $ribbon-ctrl-border-radius: 0;
     appearance: none;
     -webkit-appearance: none;
     background-color: var(--theme-border-color);
-    border-radius: 8px;
+    border-radius: $border-radius-lg;
     cursor: pointer;
     transition: background-color $ribbon-transition-fast;
 

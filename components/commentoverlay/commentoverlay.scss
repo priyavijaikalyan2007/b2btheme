@@ -101,7 +101,7 @@
     right: -6px;
     min-width: $icon-size-sm;
     height: $icon-size-sm;
-    border-radius: 8px;
+    border-radius: $border-radius-lg;
     background-color: $red-600;
     color: $gray-50;
     font-size: 0.65rem;
@@ -447,7 +447,7 @@
     padding: $sp-1 $sp-4;
     background-color: $blue-100;
     color: $blue-700;
-    border-radius: 2px;
+    border-radius: $border-radius-sm;
     font-size: inherit;
 }
 

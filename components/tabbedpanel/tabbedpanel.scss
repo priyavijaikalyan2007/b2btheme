@@ -37,6 +37,12 @@ $tp-transition-duration: 300ms;
 // Tab bar height (horizontal) / width (vertical)
 $tp-tabbar-size: 32px;
 
+// Active-tab indicator (ADR-147). The bar is INSET from the tab edges so it
+// marks the label rather than the whole cell — the detail that makes a strip
+// read as a set of tabs instead of a segmented control.
+$tp-indicator-size:  3px;
+$tp-indicator-inset: 6px;
+
 // Title bar height
 $tp-titlebar-height: $control-height-md;
 
@@ -230,17 +236,33 @@ $tp-titlebar-height: $control-height-md;
 
 // Individual tab button
 .tabbedpanel-tab {
+    position: relative;   // anchors the ::after indicator
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.25rem 0.625rem;
+    padding: 0.375rem 0.75rem;
     border: none;
-    border-bottom: 2px solid transparent;
     background: transparent;
     color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     white-space: nowrap;
     cursor: pointer;
+
+    // The indicator is present on every tab and revealed by opacity on the
+    // active one, so switching tabs cross-fades instead of jumping. Drawn as a
+    // pseudo-element rather than a border because a border cannot be inset.
+    &::after {
+        content: "";
+        position: absolute;
+        left: $tp-indicator-inset;
+        right: $tp-indicator-inset;
+        bottom: 0;
+        height: $tp-indicator-size;
+        border-radius: $border-radius-sm $border-radius-sm 0 0;
+        background-color: var(--theme-primary);
+        opacity: 0;
+        transition: opacity 120ms ease;
+    }
 
     &:not(.tabbedpanel-tab-active) {
         @include hover-glow(6px);
@@ -248,20 +270,23 @@ $tp-titlebar-height: $control-height-md;
 
     &:hover {
         color: var(--theme-text-primary);
-        background-color: var(--theme-border-color);
+        background-color: var(--theme-hover-bg);
     }
 
     &:focus-visible {
-        outline: 2px solid $blue-400;
+        outline: 2px solid var(--theme-focus-border);
         outline-offset: -2px;
     }
 }
 
-// Active tab — blue bottom border and dark text
+// Active tab — inset primary indicator, primary label
 .tabbedpanel-tab-active {
-    color: var(--theme-text-primary);
-    border-bottom-color: $blue-600;
-    font-weight: $font-weight-semibold;
+    color: var(--theme-primary);
+    font-weight: $font-weight-medium;
+
+    &::after {
+        opacity: 1;
+    }
 }
 
 // Disabled tab — muted, no pointer
@@ -355,6 +380,13 @@ $tp-titlebar-height: $control-height-md;
     > .tabbedpanel-content {
         order: 5;
     }
+
+    // Indicator moves to the tab bar's inner edge, which is now the top
+    .tabbedpanel-tab::after {
+        bottom: auto;
+        top: 0;
+        border-radius: 0 0 $border-radius-sm $border-radius-sm;
+    }
 }
 
 // --- Tab bar on left (vertical) ---
@@ -379,14 +411,19 @@ $tp-titlebar-height: $control-height-md;
 }
 
 .tabbedpanel-tabbar-left .tabbedpanel-tab {
-    border-bottom: none;
-    border-right: 2px solid transparent;
     justify-content: flex-start;
-    padding: 0.375rem 0.5rem;
-}
+    padding: 0.4375rem 0.625rem;
 
-.tabbedpanel-tabbar-left .tabbedpanel-tab-active {
-    border-right-color: $blue-600;
+    // Vertical bar on the inner (right) edge, inset top and bottom
+    &::after {
+        left: auto;
+        right: 0;
+        top: $tp-indicator-inset;
+        bottom: $tp-indicator-inset;
+        width: $tp-indicator-size;
+        height: auto;
+        border-radius: $border-radius-sm 0 0 $border-radius-sm;
+    }
 }
 
 // --- Tab bar on right (vertical) ---
@@ -415,14 +452,19 @@ $tp-titlebar-height: $control-height-md;
 }
 
 .tabbedpanel-tabbar-right .tabbedpanel-tab {
-    border-bottom: none;
-    border-left: 2px solid transparent;
     justify-content: flex-start;
-    padding: 0.375rem 0.5rem;
-}
+    padding: 0.4375rem 0.625rem;
 
-.tabbedpanel-tabbar-right .tabbedpanel-tab-active {
-    border-left-color: $blue-600;
+    // Vertical bar on the inner (left) edge, inset top and bottom
+    &::after {
+        left: 0;
+        right: auto;
+        top: $tp-indicator-inset;
+        bottom: $tp-indicator-inset;
+        width: $tp-indicator-size;
+        height: auto;
+        border-radius: 0 $border-radius-sm $border-radius-sm 0;
+    }
 }
 
 // Vertical tab bar actions — stack below tabs

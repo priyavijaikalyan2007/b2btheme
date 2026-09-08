@@ -131,7 +131,7 @@
         width: 2px;
         height: 50%;
         background-color: var(--theme-border-color);
-        border-radius: 1px;
+        border-radius: $border-radius-sm;
     }
 
     &:hover::after,

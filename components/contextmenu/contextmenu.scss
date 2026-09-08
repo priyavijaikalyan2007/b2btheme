@@ -20,7 +20,7 @@
     position: fixed;
     z-index: 1080;
     padding: 4px 0;
-    border-radius: 8px;
+    border-radius: $border-radius-lg;
     background: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);

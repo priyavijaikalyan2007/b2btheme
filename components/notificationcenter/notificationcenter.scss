@@ -59,7 +59,7 @@
     text-align: center;
     color: $gray-50;
     background: $danger;
-    border-radius: 9px;
+    border-radius: $border-radius-pill;   // capsule; was 9px = half of the 18px line box
 }
 
 // ============================================================================
