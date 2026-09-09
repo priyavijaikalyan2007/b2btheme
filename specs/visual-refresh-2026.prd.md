@@ -371,3 +371,113 @@ darker in dark mode, so nothing looks broken. It is nonetheless the wrong token
 for the job: a filled neutral chip is not an interaction state. The correct fix
 is a `--theme-fill-subtle` token and 38 reassignments, which is its own change
 with its own review.
+
+---
+
+## 9. Amendment 2 — round three (2026-09-09)
+
+Three further reports, three different causes. Section 3's "lands in two files"
+is now conclusively wrong and should be read as a record of how the estimate
+failed rather than as guidance.
+
+### 9.1 Dark mode had no visible elevation
+
+Not a tuning problem. **A black shadow on a near-black ground carries almost no
+signal, and no alpha fixes it** — measured against `--theme-body-bg` `#0d1420`:
+
+| alpha | contrast vs ground | | alpha | contrast vs ground |
+|---|---|---|---|---|
+| 0.22 | 1.034 | | 0.55 | 1.081 |
+| 0.36 | 1.056 | | 0.75 | 1.106 |
+
+A *light*-mode shadow at alpha 0.08 already reaches **1.192**. Even at triple
+the opacity the dark shadow never catches up, because the ground is already
+near-black and there is nowhere darker to go.
+
+Dark elevation is therefore a different mechanism: each `--theme-shadow-*` now
+leads with a hairline light ring (`0 0 0 1px rgba(255,255,255,.04–.08)`), which
+is what actually reads as lifted, with the black layers retained for spread.
+
+Two further gaps found with it:
+
+- **`--bs-box-shadow` was never redefined in the dark block.** Round two pointed
+  `$box-shadow` at `$shadow-lg`, but that compiles the *light* values statically
+  into `:root` — so Bootstrap dropdowns and modals were casting light-tinted
+  `rgba(15,23,42,…)` shadows on a dark ground. Invisible twice over. This is the
+  third time the same Sass-vs-custom-property desync has bitten this work.
+- **`--theme-edge-shadow-color`** — the `_chrome.scss` docked-panel mixins, and
+  most likely the literal "chrome shadows" reported missing — was
+  `rgba(0,0,0,0.25)` in dark, same physics. A docked edge now reads as a faint
+  *lit seam*, which is how dark IDEs separate panels.
+
+### 9.2 Radius by omission — the real majority
+
+Round two swept the 51 sites that **set** `border-radius: 0`. It could not see
+the larger group: **71 of 125 components never declare a radius at all**, and so
+render square regardless of the token. They had not opted out; they had never
+opted in, and an absent declaration is invisible to grep.
+
+The reported symptom — a sharp LineWidthPicker beside a rounded CronPicker on
+the same ribbon — is exactly this split: **components built on Bootstrap
+primitives inherited the refresh for free; components that draw their own DOM
+never consumed any radius token.**
+
+163 rules across 46 components were assigned by role via a suffix-keyed sweep
+(`-dropdown`/`-panel`/`-menu` → `lg`; `-trigger`/`-input`/`-btn` → base;
+`-item`/`-option`/`-swatch`/`-chip` → `sm`), applied only to rules that actually
+paint a fill or an edge.
+
+**Deliberately excluded, so the sweep is auditable:**
+
+| Excluded | Why |
+|---|---|
+| 11 layout components | Containers organise children and carry no shape of their own |
+| `statusbar`, `bannerbar`, `ruler`, `graphminimap`, `logutility` | Full-bleed chrome; a corner would float it off its frame |
+| `markdownrenderer`, `marketinghero`, `sitefooter` | Text and public-page surfaces, not controls |
+| `helpdrawer`, `graphtoolbar` roots | Docked to an edge |
+| drag handles, `stickynote-bar` | Thin strips and title bars where a corner reads as an error |
+| `errordialog` | Rides Bootstrap's `.modal-content`, already covered by `$modal-content-border-radius` |
+
+### 9.3 Type and spacing
+
+`$font-size-sm` carries **481 call sites against base's 201** — it, not
+`$font-size-base`, is what decides whether the interface reads small.
+
+| Token | Before | After |
+|---|---|---|
+| `$font-size-base` | 14px | 15px |
+| `$font-size-sm` | 12.8px | 13.6px |
+| `$font-size-lg` | 16px | 17px |
+| `$font-size-xs` / `-2xs` | 12px / 10px | **unchanged** |
+| `$control-height-*` | 22/28/32/40/44 | 24/30/34/42/46 |
+| `$spacer` | 12px | 13px |
+
+`xs` and `2xs` hold because 12px at line-height 1.45 already needs 17.4px and
+the ribbon's group-label row is 16px. Control heights grew because 15px text
+needs a 21.75px line box, which left a 22px control with no slack. The `$sp-*`
+fixed-pixel internals deliberately stay put (AGENT_INSIGHTS 6.9).
+
+### 9.4 Verification
+
+Measured in a browser against the built stylesheet:
+
+```
+LineWidthPicker  trigger 4px, dropdown 6px with a shadow   (was square)
+ProgressModal    6px                                        (was square)
+Ribbon           buttons and tabs 4px
+Ribbon overflow  ZERO vertically-overflowing elements at the larger type
+Dark elevation   light ring present in all 5 --theme-shadow-* and in --bs-box-shadow
+```
+
+The ribbon overflow scan is the only machine check available for the type bump
+while Playwright cannot run (DEBT-WEB-3).
+
+### 9.5 Unrelated defect found, not fixed
+
+`agentknowledge/history.jsonl` has **three malformed lines** — 43, 58 and 104,
+dated 2026-02-20 and 2026-03-07 — that fail `json.loads`. Two contain a second
+object on the same line; one has an invalid escape. They are present on `main`
+and predate this work by months. Any agent parsing the file programmatically
+will fail on them. **Not repaired here**, because `AGENTS.md` declares the file
+append-only and repairing it is a decision for its owner rather than a
+side-effect of a styling change. Tracked as `DEBT-KB-1`.

@@ -3815,3 +3815,46 @@
     within a hair of the old $gray-200, so nothing looks broken, but it is the
     wrong token for the job. The fix is a --theme-fill-subtle token and 38
     reassignments, deliberately left as its own change.
+  amendment_2_2026_09_09: |
+    Three further reports. (1) Dark mode had no visible elevation, and raising
+    alpha could never have fixed it: measured against the #0d1420 ground a black
+    shadow reaches 1.034 contrast at alpha 0.22 and only 1.106 at 0.75, while a
+    LIGHT-mode shadow at 0.08 already reaches 1.192. The ground is near-black so
+    a darker shadow has nowhere to go. Dark elevation now leads with a hairline
+    LIGHT ring, which is what reads as lifted. Two gaps went with it:
+    --bs-box-shadow was compiled statically from the light values and never
+    redefined in the dark block (the THIRD time this Sass-vs-custom-property
+    desync has bitten this work), and --theme-edge-shadow-color, the chrome
+    mixins, was black at 0.25 and equally invisible.
+
+    (2) Radius by omission. Round two swept the 51 sites that SET
+    border-radius: 0; the larger group was 71 components that never declare a
+    radius AT ALL and so render square whatever the token says. The reported
+    symptom, a sharp LineWidthPicker beside a rounded CronPicker on one ribbon,
+    is precisely the split between hand-rolled DOM and components built on
+    Bootstrap primitives, which inherited the refresh for free. 163 rules across
+    46 components assigned by role; layouts, full-bleed bars, text renderers,
+    drag handles and edge-docked roots deliberately excluded, with the exclusion
+    list written into the spec so the sweep is auditable.
+
+    (3) Type: $font-size-sm carries 481 call sites against base's 201, so it and
+    not base decides whether the interface reads small. sm 12.8->13.6, base
+    14->15, lg 16->17; xs and 2xs held because 12px at line-height 1.45 needs
+    17.4px against a 16px ribbon label row. Control heights +2px because 15px
+    text needs a 21.75px line box. $spacer 12->13px, $sp-* internals unchanged.
+
+    Verified in a browser: LineWidthPicker trigger 4px / dropdown 6px with
+    shadow, ProgressModal 6px, ribbon buttons and tabs 4px, zero vertical
+    overflow anywhere in the ribbon at the larger type, and the light ring
+    present in all five --theme-shadow-* plus --bs-box-shadow.
+
+    Note for the record: this ADR's context claims the change "lands in two
+    files". Three rounds proved that wrong. It described where the tokens live,
+    not where they are consumed, and the gap between those two things was the
+    entire cost of this work.
+
+    Unrelated defect found: agentknowledge/history.jsonl has three malformed
+    lines (43, 58, 104; dated 2026-02-20 and 2026-03-07) that fail json.loads.
+    They are on main and predate this work. NOT repaired here — the file is
+    declared append-only, so repairing it is its owner's decision rather than a
+    side-effect of a styling change. Tracked as DEBT-KB-1.

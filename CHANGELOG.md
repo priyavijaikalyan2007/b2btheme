@@ -12,6 +12,20 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-09-09
+
+### Fixed (round three)
+- **Dark mode now has visible elevation.** It had none, and raising the shadow opacity could never have fixed it: against the `#0d1420` page ground a black shadow reaches only 1.034 contrast at alpha 0.22 and 1.106 at 0.75, while a light-mode shadow at 0.08 already reaches 1.192. The ground is near-black, so a darker shadow has nowhere to go. Every dark elevation now leads with a hairline light ring, which is what actually reads as lifted.
+- **Bootstrap's shadow scale was never redefined for dark mode**, so dropdowns and modals were casting light-tinted shadows on a dark ground — invisible twice over.
+- **Docked panel edges are visible in dark mode.** `--theme-edge-shadow-color` was black at 0.25, the same physics; a docked edge now reads as a faint lit seam.
+- **71 components never declared a corner radius at all** and so rendered square regardless of the token — the previous round only fixed components that explicitly set it to `0`. A sharp LineWidthPicker beside a rounded CronPicker was exactly this: components built on Bootstrap primitives inherited the refresh for free, hand-rolled ones never consumed the token. 163 rules across 46 components now take a radius by role. Layouts, full-bleed bars, text renderers, drag handles and edge-docked roots are deliberately excluded, and the exclusion list is written down.
+
+### Changed
+- **Type is a little larger.** `$font-size-sm` carries 481 call sites against base's 201, so it — not base — is what decides whether the interface reads small: 12.8 → 13.6px, with base 14 → 15px and lg 16 → 17px. `$font-size-xs` and `-2xs` deliberately hold, because 12px at line-height 1.45 already needs 17.4px and the ribbon's group-label row is 16px.
+- **Control heights grew 2px** (22/28/32/40/44 → 24/30/34/42/46). 15px text needs a 21.75px line box, which left a 22px control with no slack at all.
+- **`$spacer` 12 → 13px.** The `$sp-*` fixed-pixel scale used for component internals deliberately stays put; it is sized against fixed control heights and moving it wholesale produces uneven layouts.
+
+
 ## 2026-09-08
 
 ### Fixed (round two — the refresh reached Bootstrap and the stragglers)

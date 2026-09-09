@@ -89,15 +89,15 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 |----------|-------|-------------|
 | `$font-family-sans-serif` | `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | Inter — screen-optimised variable sans-serif with excellent legibility at small sizes |
 | `$font-family-monospace` | `"JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace` | JetBrains Mono - clear distinction between similar characters (0/O, 1/l/I) |
-| `$font-size-base` | `0.875rem` | 14px (was 12px) |
-| `$font-size-sm` | `0.8rem` | 12.8px (was 11px) |
-| `$font-size-lg` | `1rem` | 16px (was 14px) |
+| `$font-size-base` | `0.9375rem` | 15px (was 14px) |
+| `$font-size-sm` | `0.85rem` | 13.6px (was 12.8px) |
+| `$font-size-lg` | `1.0625rem` | 17px (was 16px) |
 | `$h1-font-size` | `1.75rem` | 28px — page titles |
 | `$h2-font-size` | `1.5rem` | 24px — section headings |
 | `$h3-font-size` | `1.25rem` | 20px — sub-section headings |
 | `$h4-font-size` | `1.125rem` | 18px — card/dialog titles |
-| `$h5-font-size` | `1rem` | 16px — group labels |
-| `$h6-font-size` | `0.875rem` | 14px — matches body size |
+| `$h5-font-size` | `1.0625rem` | 17px — group labels |
+| `$h6-font-size` | `0.9375rem` | 15px — matches body size |
 | `$font-weight-light` | `300` |  |
 | `$font-weight-normal` | `400` |  |
 | `$font-weight-medium` | `500` |  |
@@ -112,7 +112,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `$spacer` | `0.75rem` | 12px (was 10px) - increased for larger text |
+| `$spacer` | `0.8125rem` | 13px |
 
 ## GRID BREAKPOINTS
 
@@ -143,27 +143,27 @@ _No variables in this section._
 | `$padding-x-lg` | `1rem` | 16px (was 14px) |
 | `$btn-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$btn-padding-x` | `0.75rem` | 12px (was 10px) |
-| `$btn-font-size` | `$font-size-base (0.875rem)` |  |
+| `$btn-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$btn-line-height` | `$line-height-base (1.45)` |  |
 | `$btn-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$btn-padding-x-sm` | `0.5rem` | 8px (was 6px) |
-| `$btn-font-size-sm` | `$font-size-sm (0.8rem)` |  |
+| `$btn-font-size-sm` | `$font-size-sm (0.85rem)` |  |
 | `$btn-padding-y-lg` | `0.5rem` | 8px (was 7px) |
 | `$btn-padding-x-lg` | `1rem` | 16px (was 14px) |
-| `$btn-font-size-lg` | `$font-size-lg (1rem)` |  |
+| `$btn-font-size-lg` | `$font-size-lg (1.0625rem)` |  |
 | `$btn-border-radius` | `$border-radius (4px)` |  |
 | `$btn-border-radius-sm` | `$border-radius-sm (2px)` |  |
 | `$btn-border-radius-lg` | `$border-radius-lg (6px)` |  |
 | `$input-btn-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$input-btn-padding-x` | `0.75rem` | 12px (was 10px) |
-| `$input-btn-font-size` | `$font-size-base (0.875rem)` |  |
+| `$input-btn-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$input-btn-line-height` | `$line-height-base (1.45)` |  |
 | `$input-btn-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$input-btn-padding-x-sm` | `0.5rem` | 8px (was 6px) |
-| `$input-btn-font-size-sm` | `$font-size-sm (0.8rem)` |  |
+| `$input-btn-font-size-sm` | `$font-size-sm (0.85rem)` |  |
 | `$input-btn-padding-y-lg` | `0.5rem` | 8px (was 7px) |
 | `$input-btn-padding-x-lg` | `1rem` | 16px (was 14px) |
-| `$input-btn-font-size-lg` | `$font-size-lg (1rem)` |  |
+| `$input-btn-font-size-lg` | `$font-size-lg (1.0625rem)` |  |
 | `$input-bg` | `$surface-content (#fdfdfe)` |  |
 | `$input-disabled-bg` | `$gray-200 (#e2e8f0)` |  |
 | `$input-disabled-border-color` | `$gray-300 (#cbd5e1)` |  |
@@ -175,7 +175,7 @@ _No variables in this section._
 | `$input-focus-box-shadow` | `0 0 0 0.15rem rgba($primary, 0.25)` |  |
 | `$input-placeholder-color` | `$gray-500 (#64748b)` |  |
 | `$form-label-margin-bottom` | `0.375rem` | 6px (was 5px) |
-| `$form-label-font-size` | `$font-size-sm (0.8rem)` |  |
+| `$form-label-font-size` | `$font-size-sm (0.85rem)` |  |
 | `$form-label-font-weight` | `$font-weight-semibold (600)` |  |
 | `$form-label-color` | `$gray-700 (#334155)` |  |
 | `$table-cell-padding-y` | `0.4375rem` | 7px (ADR-147: row reading density) |
@@ -194,7 +194,7 @@ _No variables in this section._
 | `$card-cap-bg` | `$surface-raised (#f5f7fa)` | card headers are chrome |
 | `$dropdown-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$dropdown-spacer` | `0.125rem` |  |
-| `$dropdown-font-size` | `$font-size-base (0.875rem)` |  |
+| `$dropdown-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$dropdown-bg` | `white` |  |
 | `$dropdown-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$dropdown-border-radius` | `$border-radius (4px)` |  |
@@ -213,16 +213,16 @@ _No variables in this section._
 | `$modal-content-border-radius` | `$border-radius-lg (6px)` |  |
 | `$nav-link-padding-y` | `0.5rem` | 8px (ADR-147: tab/nav breathing room) |
 | `$nav-link-padding-x` | `0.75rem` | 12px (was 10px) |
-| `$nav-link-font-size` | `$font-size-base (0.875rem)` |  |
+| `$nav-link-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$nav-link-color` | `$gray-700 (#334155)` |  |
 | `$nav-link-hover-color` | `$primary ($blue-600)` |  |
 | `$navbar-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$navbar-padding-x` | `1rem` | 16px (was 14px) |
-| `$navbar-brand-font-size` | `$font-size-lg (1rem)` |  |
+| `$navbar-brand-font-size` | `$font-size-lg (1.0625rem)` |  |
 | `$alert-padding-y` | `0.75rem` | 12px (was 10px) |
 | `$alert-padding-x` | `1rem` | 16px (was 14px) |
 | `$alert-border-radius` | `$border-radius (4px)` |  |
-| `$badge-font-size` | `$font-size-sm (0.8rem)` | Badges - adjusted |
+| `$badge-font-size` | `$font-size-sm (0.85rem)` | Badges - adjusted |
 | `$badge-font-weight` | `$font-weight-semibold (600)` |  |
 | `$badge-padding-y` | `0.25rem` | 4px (was 3px) |
 | `$badge-padding-x` | `0.5rem` | 8px (was 6px) |
@@ -230,13 +230,13 @@ _No variables in this section._
 | `$breadcrumb-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$breadcrumb-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$breadcrumb-item-padding-x` | `0.5rem` | 8px (was 7px) |
-| `$breadcrumb-font-size` | `$font-size-sm (0.8rem)` |  |
+| `$breadcrumb-font-size` | `$font-size-sm (0.85rem)` |  |
 | `$breadcrumb-bg` | `$surface-raised (#f5f7fa)` |  |
 | `$breadcrumb-divider-color` | `$gray-500 (#64748b)` |  |
 | `$breadcrumb-active-color` | `$gray-700 (#334155)` |  |
 | `$pagination-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$pagination-padding-x` | `0.75rem` | 12px (was 10px) |
-| `$pagination-font-size` | `$font-size-base (0.875rem)` |  |
+| `$pagination-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$pagination-border-radius` | `$border-radius (4px)` |  |
 | `$pagination-color` | `$gray-700 (#334155)` |  |
 | `$pagination-bg` | `white` |  |
@@ -249,10 +249,10 @@ _No variables in this section._
 | `$pagination-active-border-color` | `$primary ($blue-600)` |  |
 | `$toast-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$toast-padding-y` | `0.5rem` | 8px (was 7px) |
-| `$toast-font-size` | `$font-size-sm (0.8rem)` |  |
+| `$toast-font-size` | `$font-size-sm (0.85rem)` |  |
 | `$toast-border-radius` | `$border-radius (4px)` |  |
 | `$progress-height` | `0.75rem` | 12px (was 10px) |
-| `$progress-font-size` | `$font-size-sm (0.8rem)` |  |
+| `$progress-font-size` | `$font-size-sm (0.85rem)` |  |
 | `$progress-bg` | `$gray-200 (#e2e8f0)` |  |
 | `$progress-border-radius` | `$border-radius (4px)` |  |
 | `$list-group-item-padding-y` | `0.5625rem` | 9px (ADR-147: list reading density) |
@@ -330,10 +330,10 @@ _No variables in this section._
 | `$icon-size-md` | `20px` |  |
 | `$icon-size-lg` | `24px` |  |
 | `$icon-size-xl` | `32px` |  |
-| `$control-height-xs` | `22px` |  |
-| `$control-height-mini` | `$control-height-xs (22px)` | 22px — Ribbon 3-high stacking |
-| `$control-height-sm` | `28px` |  |
-| `$control-height-md` | `32px` |  |
-| `$control-height-lg` | `40px` |  |
-| `$control-height-xl` | `44px` |  |
+| `$control-height-xs` | `24px` | carries its own $ribbon-btn-* constants — so that geometry is unaffected. |
+| `$control-height-mini` | `$control-height-xs (24px)` |  |
+| `$control-height-sm` | `30px` |  |
+| `$control-height-md` | `34px` |  |
+| `$control-height-lg` | `42px` |  |
+| `$control-height-xl` | `46px` |  |
 

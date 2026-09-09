@@ -1709,3 +1709,30 @@ themes since it was written.
 The shadow question was answered directly: overlays carry elevation, inline
 controls do not — that is deliberate and unchanged. What looked inconsistent
 was three overlay components that were never on the token system at all.
+
+### Round three (2026-09-09)
+
+> Now I am testing dark mode and I don't see any chrome like shadows at all. Some built in controls still are very sharp - example, the line width picker … This is jarring when you place it on a ribbon next to a cron date picker which is rounded. … I also wonder if it makes sense to increase teh typography font sizes just a bit … Modal dialgos like ProgressModal also have the sharp edges with no rounding.
+
+Three reports, three distinct causes, and the round that finally explained why
+the previous two under-delivered.
+
+Dark mode had no elevation because a black shadow on a near-black ground is not
+a weak signal but essentially no signal — 1.034 contrast at alpha 0.22, 1.106 at
+0.75, against 1.192 for a light-mode shadow at 0.08. No amount of opacity fixes
+that; dark elevation needed a hairline light ring instead.
+
+The sharp controls were **radius by omission**: round two swept the 51 sites
+that *set* `border-radius: 0`, but 71 components never declared a radius at all
+and were invisible to that search. The user's own example named the split
+exactly — the CronPicker is built on Bootstrap primitives and inherited the
+refresh for free, the LineWidthPicker draws its own DOM and never consumed the
+token.
+
+Type was raised with the observation that `$font-size-sm`, not `$font-size-base`,
+is the workhorse at 481 call sites, so that is where the change is felt.
+
+Also found and deliberately NOT fixed: three malformed lines in
+`agentknowledge/history.jsonl` dating from February and March, which fail
+`json.loads`. The file is declared append-only, so repairing it is its owner's
+call rather than a side-effect of a styling change. Tracked as DEBT-KB-1.
