@@ -41,7 +41,7 @@
     // and the tonal ladder's darker ground took it to 4.20, below it. This
     // value measures 5.00:1 on the darkest light surface (sunken) and 5.94:1 on
     // content, while staying clearly lighter than --theme-text-secondary.
-    --theme-text-muted:         #556478;
+    --theme-text-muted:         #{$gray-550};
     --theme-text-on-primary:    #{$gray-50};
 
     // -- Borders --

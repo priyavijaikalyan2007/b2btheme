@@ -438,6 +438,16 @@ Before your final commit in a session, update these files if your work changed t
 ## Rules
 - **Never delete** existing entries — only add or update.
 - **Never rewrite** `history.jsonl` — it is append-only.
+- **(CRITICAL) Append to `history.jsonl` with a JSON serializer, never with
+  `echo`, `cat` or a heredoc.** Both ways this file has been corrupted came from
+  writing JSON as shell text: an append with no trailing newline put two objects
+  on one line, and a `\!` — bash history-expansion escaping — leaked through a
+  double-quoted string as an invalid JSON escape. Three lines were broken this
+  way between 2026-02 and 2026-03 and nobody noticed for six months, because
+  nothing ever parsed the file. Use `json.dumps(entry) + "\n"` (or the
+  equivalent) so the framing and the escaping are not your problem.
+  `test-local.sh` check [8] now parses `history.jsonl` and the three YAML files
+  on every `npm test`, so a malformed append fails the build. See DEBT-KB-1.
 - Keep concept names in PascalCase and stable; other files may reference them.
 - If a decision is superseded, set its `status` to `Superseded` and add the replacement ADR id.
 

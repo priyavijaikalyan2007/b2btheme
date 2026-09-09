@@ -14,6 +14,10 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## 2026-09-09
 
+### Fixed (knowledge base)
+- **`agentknowledge/history.jsonl` was not valid JSONL and had not been since February.** Three lines failed to parse, so any agent reading the file programmatically would fail on it — undetected for six months because nothing ever parsed it. Two causes, both from writing JSON with shell text tools instead of a serializer: two entries were appended without a trailing newline, putting a second object on the same line, and one carried `\!` — bash history-expansion escaping — which is not a valid JSON escape. Repaired without touching content: 241 lines to 243, and a hash of both files with newlines and the escape normalised away is identical.
+- **`npm test` now parses the knowledge base.** `test-local.sh` check [8] validates `history.jsonl` as JSONL and the three `.yaml` files as YAML, so a malformed append fails the build instead of sitting unnoticed. `AGENTS.md` now requires appending with a JSON serializer and explains why.
+
 ### Fixed (round three)
 - **Dark mode now has visible elevation.** It had none, and raising the shadow opacity could never have fixed it: against the `#0d1420` page ground a black shadow reaches only 1.034 contrast at alpha 0.22 and 1.106 at 0.75, while a light-mode shadow at 0.08 already reaches 1.192. The ground is near-black, so a darker shadow has nowhere to go. Every dark elevation now leads with a hairline light ring, which is what actually reads as lifted.
 - **Bootstrap's shadow scale was never redefined for dark mode**, so dropdowns and modals were casting light-tinted shadows on a dark ground — invisible twice over.

@@ -131,6 +131,46 @@ for f in LICENSE README.md DISCLAIMER.md COMPONENT_INDEX.md package.json tsconfi
 done
 echo ""
 
+# ── 8. Agent knowledge base is machine-readable ──
+# history.jsonl silently accumulated three malformed lines between 2026-02 and
+# 2026-03 and nothing noticed for six months, because nothing ever parsed it.
+# Two entries had been appended WITHOUT a trailing newline, so the next append
+# landed on the same line; one carried a `\!` escape, which is not valid JSON
+# and is the signature of bash history-expansion escaping leaking through a
+# shell append. Both come from writing JSON with text tools instead of a JSON
+# serializer. This check is what makes that fail loudly next time.
+echo "[8] Agent knowledge base integrity"
+if [ -f agentknowledge/history.jsonl ]; then
+    if python3 - <<'PY'
+import json, sys
+bad = []
+for n, line in enumerate(open("agentknowledge/history.jsonl", encoding="utf-8"), 1):
+    if not line.strip():
+        continue
+    try:
+        json.loads(line)
+    except Exception as exc:
+        bad.append(f"line {n}: {exc}")
+if bad:
+    print("\n".join(f"      {b}" for b in bad), file=sys.stderr)
+    sys.exit(1)
+PY
+    then pass "history.jsonl is valid JSONL"
+    else fail "history.jsonl has malformed lines (see above) — append with a JSON serializer, never echo/cat"
+    fi
+else
+    fail "agentknowledge/history.jsonl missing"
+fi
+
+for f in agentknowledge/concepts.yaml agentknowledge/entities.yaml agentknowledge/decisions.yaml; do
+    if python3 -c "import yaml,sys; yaml.safe_load(open('$f'))" 2>/dev/null; then
+        pass "$(basename "$f") is valid YAML"
+    else
+        fail "$(basename "$f") is not valid YAML"
+    fi
+done
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

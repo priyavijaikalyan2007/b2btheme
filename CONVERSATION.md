@@ -1736,3 +1736,29 @@ Also found and deliberately NOT fixed: three malformed lines in
 `agentknowledge/history.jsonl` dating from February and March, which fail
 `json.loads`. The file is declared append-only, so repairing it is its owner's
 call rather than a side-effect of a styling change. Tracked as DEBT-KB-1.
+
+### Close-out (2026-09-09)
+
+> yes, repair history.jsonl; i wonder how it becamse malformed.
+
+Two distinct causes, both traced to specific commits. Lines 43 and 58 were
+appended **without a trailing newline**, so the following append landed on the
+same line — `…"}{"date":…` — introduced in `9c9be2e`. Line 104 carried `\!`,
+which is not a valid JSON escape; it is the signature of **bash
+history-expansion escaping** leaking through a double-quoted shell append,
+introduced in `3020cd5`. Both reduce to writing JSON as shell text rather than
+through a serializer, which is now forbidden in AGENTS.md.
+
+The repair changed framing only: 241 non-empty lines to 243, byte count +1 (two
+newlines added, one backslash removed), and a SHA-256 of both files with
+newlines and the escape normalised away is identical. `test-local.sh` check [8]
+now parses the file on every `npm test` and was mutation-tested — corrupting a
+copy makes it fail — because a guard that has only ever seen a good file proves
+nothing.
+
+The same close-out updated the semantic markers on `_variables.scss` (its
+PURPOSE still described the theme as "square"), refreshed the stale
+`EnterpriseTheme` concept, added `SurfaceLadder`, `StateLayer` and
+`ElevationScale` concepts, promoted the one raw hex introduced outside the
+palette to `$gray-550` in its correct ramp position, fixed two non-Allman
+braces in the demo page, and recorded DEBT-VR-1 … DEBT-VR-4.

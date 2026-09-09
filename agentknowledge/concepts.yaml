@@ -3,9 +3,9 @@
 # Agents should read this file at session start to orient themselves.
 
 - name: "EnterpriseTheme"
-  definition: "Bootstrap 5 variable overrides for compact, square, enterprise styling with reduced spacing and zero border radius."
+  definition: "Bootstrap 5 variable overrides for compact enterprise styling. UPDATED BY ADR-147: the theme is no longer square and no longer flat. It now carries a four-step surface ladder, a radius tiered by role (2/4/6/8px), two-layer elevation shadows, translucent state layers, and a type scale where $font-size-sm (481 call sites) rather than $font-size-base (201) is the workhorse. Setting the radius tokens to 0 and restoring four surface values returns the previous look without touching a component."
   anchor_file: "src/scss/_variables.scss"
-  related: ["CustomComponents", "OpenSansFont", "JetBrainsMonoFont", "EnterpriseThemeCommented"]
+  related: ["CustomComponents", "OpenSansFont", "JetBrainsMonoFont", "EnterpriseThemeCommented", "SurfaceLadder", "StateLayer", "ElevationScale"]
 
 - name: "EnterpriseThemeCommented"
   definition: "Beginner-friendly version of _variables.scss with extensive tutorial-style comments for new developers."
@@ -1313,3 +1313,18 @@
   anchor_file: "components/sitefooter/sitefooter.ts"
   related: ["MarketingHero", "AuthCard", "EnterpriseTheme", "CapabilityManifest"]
 
+
+- name: "SurfaceLadder"
+  definition: "The four ordered surface planes that give the interface depth (ADR-147): --theme-surface-sunken-bg (wells, code blocks, insets), --theme-body-bg (the page ground), --theme-surface-raised-bg (chrome — sidebars, toolbars, headers) and --theme-surface-bg (content). Declared ONCE as Sass variables ($surface-sunken/-ground/-raised/-content and their -dark twins) in _variables.scss and interpolated into the CSS tokens in _dark-mode.scss, so the Sass and custom-property layers cannot drift; the Bootstrap variables ($body-bg, $card-cap-bg, $breadcrumb-bg, $table-striped-bg, $input-bg) point at the same values. NOTE THE DIRECTION: in LIGHT mode raised is DARKER than surface — chrome recedes, content advances — and it inverts in dark, where elevation lightens. 140 call sites depend on that direction. Before ADR-147 body-bg and surface-bg held the SAME colour, which is why the library read as flat."
+  anchor_file: "src/scss/_variables.scss"
+  related: ["EnterpriseTheme", "DarkMode", "StateLayer", "ElevationScale"]
+
+- name: "StateLayer"
+  definition: "--theme-hover-bg and --theme-active-bg, which are TRANSLUCENT overlays rather than opaque greys (ADR-147). A state layer takes the colour of whatever is beneath it, so one token shades a white card, a tinted sidebar and a coloured row correctly; the opaque greys they replaced punched a visible hole in any surface that was not that exact grey. Known debt DEBT-VR-1: 38 sites use these tokens as a STATIC background (avatar circles, chips, progress tracks) rather than as an interaction state, which is the wrong token for the job even though the composited result is close to the old value."
+  anchor_file: "src/scss/_dark-mode.scss"
+  related: ["SurfaceLadder", "DarkMode", "EnterpriseTheme"]
+
+- name: "ElevationScale"
+  definition: "--theme-shadow-xs..xl and the $shadow-* Sass twins, plus Bootstrap's own $box-shadow scale, which all three must be kept in step (ADR-147). Light elevations are two layers — a tight key shadow reading as contact plus a wider ambient one reading as distance — at low alpha. DARK ELEVATION IS A DIFFERENT MECHANISM, not the same one turned up: a black shadow on the near-black ground reaches only 1.034 contrast at alpha 0.22 and 1.106 at 0.75, where a light-mode shadow at 0.08 already reaches 1.192, so each dark elevation leads with a hairline LIGHT ring. The same physics is why --theme-edge-shadow-color is a lit seam in dark rather than a dark one. Policy: OVERLAYS carry elevation (menus, dropdowns, dialogs, toasts); INLINE CONTROLS do not (buttons, inputs)."
+  anchor_file: "src/scss/_variables.scss"
+  related: ["SurfaceLadder", "DarkMode", "EnterpriseTheme"]

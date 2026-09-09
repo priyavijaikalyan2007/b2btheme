@@ -19,6 +19,9 @@
     <meta name="description" content="Review surface for the 2026 visual refresh — tonal surfaces, subtle shadows, small radius and refined tabs.">
     <title>Visual Refresh 2026 - Review Surface</title>
 
+    <!-- Kept byte-identical to the FOUC guard in demo/index.html so the two
+         copies can be diffed at a glance; that is why the single-line if below
+         departs from the Allman rule in CODING_STYLE.md. -->
     <script>
     (function()
     {
@@ -549,8 +552,14 @@ body
     {
         var nowDark = root.getAttribute("data-bs-theme") === "dark";
 
-        if (nowDark) { root.removeAttribute("data-bs-theme"); }
-        else         { root.setAttribute("data-bs-theme", "dark"); }
+        if (nowDark)
+        {
+            root.removeAttribute("data-bs-theme");
+        }
+        else
+        {
+            root.setAttribute("data-bs-theme", "dark");
+        }
 
         sessionStorage.setItem("theme-mode", nowDark ? "light" : "dark");
         paintTokenValues();
@@ -563,7 +572,11 @@ body
     {
         tab.addEventListener("click", function()
         {
-            Array.prototype.forEach.call(tabs, function(t) { t.classList.remove("is-active"); });
+            Array.prototype.forEach.call(tabs, function(other)
+            {
+                other.classList.remove("is-active");
+            });
+
             tab.classList.add("is-active");
         });
     });
