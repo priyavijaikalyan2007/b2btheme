@@ -66,6 +66,7 @@ $lp-dropdown-shadow:  $shadow-md;
     {
         border-color: var(--theme-border-color);
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
     }
 
     &:focus-visible
@@ -145,6 +146,7 @@ $lp-dropdown-shadow:  $shadow-md;
     padding: $sp-4 0;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius-lg;
     box-shadow: $lp-dropdown-shadow;
 }
 
@@ -203,6 +205,7 @@ $lp-dropdown-shadow:  $shadow-md;
     &.layoutpicker-item--selected
     {
         background-color: var(--theme-selected-bg);
+        border-radius: $border-radius-sm;
         border-left: 3px solid var(--theme-primary);
         padding-left: calc(#{$sp-10} - 3px);
     }

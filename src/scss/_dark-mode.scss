@@ -206,19 +206,44 @@
     // -- Chrome: glow + edge shadow tokens (dark) --
     --theme-glow-color:            rgba(var(--theme-primary-rgb), 0.08);
     --theme-glow-color-hover:      rgba(var(--theme-primary-rgb), 0.14);
-    --theme-edge-shadow-opacity:   0.25;
-    --theme-edge-shadow-color:     rgba(0, 0, 0, 0.25);
+    // Same physics as the shadow scale above: a black directional edge shadow
+    // on dark chrome cannot be seen. A docked edge reads instead as a faint LIT
+    // SEAM, which is how every dark IDE separates its panels.
+    --theme-edge-shadow-opacity:   0.08;
+    --theme-edge-shadow-color:     rgba(255, 255, 255, 0.08);
 
-    // -- Shadows: same two-layer geometry, higher alpha --
-    // Shadow on a dark ground needs roughly double the opacity of the light
-    // theme to register at all; the geometry stays identical so an elevation
-    // reads as the same distance in both themes.
+    // -- Shadows: a hairline ring plus the two-layer geometry --
+    //
+    // (CRITICAL) A BLACK SHADOW ON A DARK GROUND IS VERY NEARLY INVISIBLE, and
+    // no amount of alpha fixes it — the ground is already near-black, so there
+    // is nowhere darker to go. Measured against --theme-body-bg (#0d1420):
+    //
+    //     alpha 0.22 -> contrast 1.034      alpha 0.55 -> contrast 1.081
+    //     alpha 0.36 -> contrast 1.056      alpha 0.75 -> contrast 1.106
+    //
+    // For scale, a LIGHT-mode shadow at alpha 0.08 already reaches 1.192. Even
+    // at triple the opacity the dark shadow never catches up. This is physics,
+    // not tuning, and it is why the first pass produced a dark mode with no
+    // visible elevation at all.
+    //
+    // What actually reads as "lifted" on a dark ground is a hairline LIGHT ring
+    // at the element's edge — the same trick macOS and Material use. The ring
+    // is the first layer below; the black layers still contribute the spread
+    // that separates an overlay from what it covers.
     --theme-shadow-rgb:         0, 0, 0;
-    --theme-shadow-xs:          0 1px 1px rgba(0, 0, 0, 0.16), 0 1px 2px rgba(0, 0, 0, 0.22);
-    --theme-shadow-sm:          0 1px 2px rgba(0, 0, 0, 0.20), 0 2px 4px rgba(0, 0, 0, 0.26);
-    --theme-shadow-md:          0 2px 4px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.30);
-    --theme-shadow-lg:          0 4px 8px rgba(0, 0, 0, 0.28), 0 8px 16px rgba(0, 0, 0, 0.36);
-    --theme-shadow-xl:          0 8px 16px rgba(0, 0, 0, 0.32), 0 16px 32px rgba(0, 0, 0, 0.44);
+    --theme-shadow-xs:          0 0 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.30);
+    --theme-shadow-sm:          0 0 0 1px rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.30), 0 2px 4px rgba(0, 0, 0, 0.36);
+    --theme-shadow-md:          0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 4px rgba(0, 0, 0, 0.36), 0 4px 8px rgba(0, 0, 0, 0.44);
+    --theme-shadow-lg:          0 0 0 1px rgba(255, 255, 255, 0.07), 0 4px 8px rgba(0, 0, 0, 0.42), 0 8px 16px rgba(0, 0, 0, 0.50);
+    --theme-shadow-xl:          0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 16px rgba(0, 0, 0, 0.48), 0 16px 32px rgba(0, 0, 0, 0.58);
+
+    // Bootstrap's OWN scale, which is compiled statically from the LIGHT values
+    // and so was casting light-tinted rgba(15,23,42,...) shadows on a dark
+    // ground — invisible twice over. Dropdowns and modals read from these.
+    --bs-box-shadow:            var(--theme-shadow-lg);
+    --bs-box-shadow-sm:         var(--theme-shadow-sm);
+    --bs-box-shadow-lg:         var(--theme-shadow-xl);
+    --bs-box-shadow-inset:      inset 0 1px 2px rgba(0, 0, 0, 0.25);
 
     // -- RGB channels --
     --theme-text-primary-rgb:   241, 245, 249;
@@ -257,7 +282,7 @@
     --theme-navrail-search-bg:        #{$surface-content-dark};
     --theme-navrail-search-fg:        #{$gray-400};
     --theme-navrail-search-hint-bg:   #{$surface-ground-dark};
-    --theme-navrail-shadow:           0 6px 20px rgba(0, 0, 0, 0.5);
+    --theme-navrail-shadow:           0 0 0 1px rgba(255, 255, 255, 0.07), 0 6px 20px rgba(0, 0, 0, 0.5);
 
     // -- Bootstrap core overrides --
     // These MUST track the ladder above. They held raw greys and so painted

@@ -81,6 +81,7 @@
 .progressmodal-content {
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-xl);
     color: var(--theme-text-primary);
     display: flex;
@@ -160,6 +161,7 @@
 
 .progressmodal-bar {
     background-color: $primary;
+    border-radius: $border-radius-sm;
     transition: width 0.3s ease, background-color 0.5s ease;
 }
 
@@ -303,6 +305,7 @@
     z-index: 1;
     background: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius;
     color: var(--theme-text-secondary);
     padding: $padding-y-sm $padding-x-sm;
     cursor: pointer;

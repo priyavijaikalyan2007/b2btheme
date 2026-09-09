@@ -68,6 +68,7 @@
 
     &:active {
         background: var(--theme-active-bg);
+        border-radius: $border-radius;
     }
 
     i {
@@ -87,6 +88,7 @@
 .ribbonbuilder-preview {
     border-bottom: 1px solid var(--theme-border-color);
     background: var(--theme-surface-raised-bg);
+    border-radius: $border-radius;
     flex-shrink: 0;
 }
 
@@ -308,6 +310,7 @@
     padding: 3px 6px;
     border: 1px solid var(--theme-input-border);
     background: var(--theme-input-bg);
+    border-radius: $border-radius;
     font-size: $font-size-xs;
     color: var(--theme-input-color);
     width: 100%;
@@ -368,6 +371,7 @@
 
     &:hover {
         background: var(--theme-active-bg);
+        border-radius: $border-radius;
     }
 
     i {
@@ -450,6 +454,7 @@
     padding: 3px 6px;
     border: 1px solid var(--theme-input-border);
     background: var(--theme-input-bg);
+    border-radius: $border-radius;
     font-size: $font-size-xs;
     width: 100%;
 
@@ -531,6 +536,7 @@
 .ribbonbuilder-control-menu {
     background: var(--theme-surface-raised-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     z-index: 1060;
     min-width: 160px;
@@ -552,6 +558,7 @@
 
     &:hover {
         background: var(--theme-selected-bg);
+        border-radius: $border-radius-sm;
         color: var(--theme-primary);
     }
 }
@@ -592,6 +599,7 @@
 .ribbonbuilder-export-dialog {
     background: var(--theme-surface-raised-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     width: 90%;
     max-width: 640px;
     max-height: 80%;

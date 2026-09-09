@@ -122,17 +122,22 @@ $font-family-sans-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
 // JetBrains Mono - clear distinction between similar characters (0/O, 1/l/I)
 $font-family-monospace:  "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace !default;
 
-// Font sizes increased by ~15% for better readability
-$font-size-base:        0.875rem !default;  // 14px (was 12px)
-$font-size-sm:          0.8rem !default;    // 12.8px (was 11px)
-$font-size-lg:          1rem !default;      // 16px (was 14px)
+// ADR-147 round 3: the effective UI text size in this library is NOT
+// $font-size-base — $font-size-sm carries 481 call sites against base's 201,
+// so it is the workhorse and the one that decides whether the interface reads
+// small. Both move; sm is where the change is actually felt.
+// $font-size-xs and -2xs deliberately do NOT move: 12px text at line-height
+// 1.45 already needs 17.4px and the ribbon's group-label row is 16px.
+$font-size-base:        0.9375rem !default; // 15px (was 14px)
+$font-size-sm:          0.85rem !default;   // 13.6px (was 12.8px)
+$font-size-lg:          1.0625rem !default; // 17px (was 16px)
 
 $h1-font-size:          1.75rem !default;   // 28px — page titles
 $h2-font-size:          1.5rem !default;    // 24px — section headings
 $h3-font-size:          1.25rem !default;   // 20px — sub-section headings
 $h4-font-size:          1.125rem !default;  // 18px — card/dialog titles
-$h5-font-size:          1rem !default;      // 16px — group labels
-$h6-font-size:          0.875rem !default;  // 14px — matches body size
+$h5-font-size:          1.0625rem !default; // 17px — group labels
+$h6-font-size:          0.9375rem !default; // 15px — matches body size
 
 $font-weight-light:     300 !default;
 $font-weight-normal:    400 !default;
@@ -149,18 +154,22 @@ $line-height-relaxed:   1.6 !default;  // Reading: articles, documentation, mark
 // SPACING - Adjusted for larger text
 // =============================================================================
 
-$spacer: 0.75rem !default; // 12px (was 10px) - increased for larger text
+// ADR-147 round 3: 12px -> 13px. Drives Bootstrap-level padding only; the
+// $sp-* fixed-pixel scale below is deliberately NOT moved with it, because it
+// governs component internals sized against fixed control heights (see
+// AGENT_INSIGHTS 6.9 — a global bump moves layouts unevenly).
+$spacer: 0.8125rem !default; // 13px
 
 $spacers: (
   0: 0,
-  1: $spacer * 0.25,  // 3px
-  2: $spacer * 0.5,   // 6px
-  3: $spacer,         // 12px
-  4: $spacer * 1.5,   // 18px
-  5: $spacer * 2,     // 24px
-  6: $spacer * 2.5,   // 30px
-  7: $spacer * 3,     // 36px
-  8: $spacer * 4,     // 48px
+  1: $spacer * 0.25,  // 3.25px
+  2: $spacer * 0.5,   // 6.5px
+  3: $spacer,         // 13px
+  4: $spacer * 1.5,   // 19.5px
+  5: $spacer * 2,     // 26px
+  6: $spacer * 2.5,   // 32.5px
+  7: $spacer * 3,     // 39px
+  8: $spacer * 4,     // 52px
 ) !default;
 
 // =============================================================================
@@ -475,9 +484,13 @@ $icon-size-md: 20px !default;
 $icon-size-lg: 24px !default;
 $icon-size-xl: 32px !default;
 
-$control-height-xs: 22px !default;
-$control-height-mini: $control-height-xs !default;  // 22px — Ribbon 3-high stacking
-$control-height-sm: 28px !default;
-$control-height-md: 32px !default;
-$control-height-lg: 40px !default;
-$control-height-xl: 44px !default;
+// Each grew 2px with the type scale in ADR-147 round 3. At 15px text and
+// line-height 1.45 a line box is 21.75px, which left a 22px control with no
+// slack at all. The Ribbon does not read these for its 3-high stack — it
+// carries its own $ribbon-btn-* constants — so that geometry is unaffected.
+$control-height-xs: 24px !default;
+$control-height-mini: $control-height-xs !default;
+$control-height-sm: 30px !default;
+$control-height-md: 34px !default;
+$control-height-lg: 42px !default;
+$control-height-xl: 46px !default;

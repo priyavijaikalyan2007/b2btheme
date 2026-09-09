@@ -52,6 +52,7 @@
     z-index: 2001;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: $shadow-xl;
     width: 100%;
     max-height: calc(100vh - 48px);
@@ -304,6 +305,7 @@
     padding: $sp-6 0;
     background: none;
     border: none;
+    border-radius: $border-radius-sm;
     border-bottom: 1px solid var(--theme-border-subtle);
     color: var(--theme-text-secondary);
     font-size: $font-size-base;
@@ -409,6 +411,7 @@
     &:disabled
     {
         background-color: var(--theme-surface-raised-bg);
+        border-radius: $border-radius;
         color: var(--theme-text-muted);
         cursor: not-allowed;
     }
@@ -508,6 +511,7 @@
     overflow-y: auto;
     border-left: 1px solid var(--theme-border-subtle);
     background-color: var(--theme-surface-raised-bg);
+    border-radius: $border-radius-lg;
 }
 
 .formdialog-panel-header

@@ -222,6 +222,7 @@ $tv-z-context-menu: 1050;
     padding: 0;
     border: none;
     background: none;
+    border-radius: $border-radius-sm;
     color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
@@ -390,6 +391,7 @@ $tv-z-context-menu: 1050;
     padding: $sp-4 0;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     z-index: $tv-z-context-menu;
     font-size: $font-size-sm;
@@ -422,6 +424,7 @@ $tv-z-context-menu: 1050;
         &:hover,
         &:focus {
             background-color: transparent;
+            border-radius: $border-radius-sm;
         }
     }
 }

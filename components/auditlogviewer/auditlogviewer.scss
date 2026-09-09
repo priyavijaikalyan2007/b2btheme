@@ -22,6 +22,7 @@
     flex-direction: column;
     border: 1px solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius;
     font-family: inherit;
     overflow: hidden;
 }
@@ -70,6 +71,7 @@
     &:hover
     {
         background-color: var(--theme-active-bg);
+        border-radius: $border-radius;
         color: var(--theme-text-primary);
         box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -160,6 +162,7 @@
     gap: $sp-2;
     padding: $sp-2 $sp-8;
     background-color: var(--theme-active-bg);
+    border-radius: $border-radius-sm;
     color: var(--theme-text-secondary);
     font-size: $font-size-sm;
 }
@@ -433,6 +436,7 @@
     &:hover:not(:disabled)
     {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
         color: $blue-600;
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }

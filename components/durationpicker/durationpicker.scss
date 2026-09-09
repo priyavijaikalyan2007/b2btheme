@@ -62,6 +62,7 @@
     min-width: 200px;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y $dropdown-item-padding-x;
 }
@@ -212,6 +213,7 @@
     background-color: var(--theme-surface-raised-bg);
     color: var(--theme-text-primary);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     font-size: $font-size-sm;
     padding: $padding-y-sm $padding-x-sm;
     white-space: nowrap;

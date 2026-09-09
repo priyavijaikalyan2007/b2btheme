@@ -70,6 +70,7 @@
     width: min(360px, calc(100vw - 2rem));
     background: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius;
     border-left-width: 4px;
     box-shadow: var(--theme-shadow-lg);
     overflow: hidden;

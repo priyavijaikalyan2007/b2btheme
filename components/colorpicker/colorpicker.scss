@@ -88,6 +88,7 @@
     padding: $sp-6 $sp-10;
     border: 1px solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     cursor: pointer;
     font-family: inherit;
     font-size: inherit;
@@ -110,6 +111,7 @@
     width: $icon-size-md;
     height: 20px;
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-sm;
 }
 
 .colorpicker-trigger-label {
@@ -131,6 +133,7 @@
 .colorpicker-panel {
     background: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     padding: $sp-12;
     width: 280px;
     box-shadow: var(--theme-shadow-md);
@@ -212,6 +215,7 @@
     background-size: 8px 8px;
     background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-sm;
 }
 
 .colorpicker-opacity-track {
@@ -226,6 +230,7 @@
     height: 20px;
     background: var(--theme-surface-bg);
     border: 1px solid var(--theme-text-primary);
+    border-radius: $border-radius;
     pointer-events: none;
     transform: translateX(-50%);
 }
@@ -282,6 +287,7 @@
 
     &:hover {
         background: var(--theme-border-color);
+        border-radius: $border-radius-sm;
     }
 
     &:focus-visible {
@@ -324,6 +330,7 @@
     padding: $sp-4 $sp-6;
     border: 1px solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     color: var(--theme-text-primary);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
@@ -357,6 +364,7 @@
     padding: 0;
     border: 1px solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
@@ -386,6 +394,7 @@
     width: $control-height-xs;
     height: $control-height-xs;
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-sm;
     cursor: pointer;
     padding: 0;
     transition: transform 150ms ease, box-shadow 150ms ease;

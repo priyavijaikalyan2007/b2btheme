@@ -58,6 +58,7 @@ $op-transition:     150ms ease;
     {
         border-color: var(--theme-border-color);
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
     }
 
     &:focus-visible
@@ -100,6 +101,7 @@ $op-transition:     150ms ease;
     padding: $sp-4 0;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius-lg;
     box-shadow: $op-dropdown-shadow;
 
     .orientationpicker--open &
@@ -132,6 +134,7 @@ $op-transition:     150ms ease;
     {
         outline: none;
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
     }
 }
 

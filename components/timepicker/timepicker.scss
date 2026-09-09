@@ -53,6 +53,7 @@
     min-width: 240px;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     padding: $dropdown-padding-y 0;
 }
@@ -231,6 +232,7 @@
     background-color: var(--theme-surface-raised-bg);
     color: var(--theme-text-primary);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     font-size: $font-size-sm;
     padding: $padding-y-sm $padding-x-sm;
     white-space: nowrap;
@@ -274,6 +276,7 @@
     max-height: 20rem;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     margin-top: $dropdown-spacer;
     display: flex;
@@ -308,6 +311,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
     }
 }
 

@@ -109,6 +109,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
         color: var(--theme-text-primary);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -166,6 +167,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
         border-color: var(--theme-text-muted);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -295,6 +297,7 @@
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
         border-color: var(--theme-text-muted);
         box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -327,6 +330,7 @@
     z-index: 1050;
     background: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: $shadow-md;
     display: none;
     padding: 0.75rem;

@@ -173,6 +173,7 @@ $tg-z-context-menu: 1050;
     padding: 0;
     border: none;
     background: none;
+    border-radius: $border-radius-sm;
     color: var(--theme-text-secondary);
     cursor: pointer;
     flex-shrink: 0;
@@ -377,6 +378,7 @@ select.treegrid-editor {
     padding: $sp-4 0;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
@@ -409,6 +411,7 @@ select.treegrid-editor {
         &:hover,
         &:focus {
             background-color: transparent;
+            border-radius: $border-radius-sm;
         }
     }
 }
@@ -505,6 +508,7 @@ select.treegrid-editor {
     &:focus {
         color: var(--theme-text-primary);
         background-color: var(--theme-active-bg);
+        border-radius: $border-radius;
     }
 }
 
@@ -514,6 +518,7 @@ select.treegrid-editor {
     padding: $sp-8 0;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     z-index: $tg-z-context-menu;
     font-size: $font-size-sm;
@@ -530,6 +535,7 @@ select.treegrid-editor {
 
     &:hover {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
     }
 
     input[type="checkbox"] {

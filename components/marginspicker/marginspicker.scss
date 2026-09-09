@@ -64,6 +64,7 @@ $mp-transition:         150ms ease;
     {
         border-color: var(--theme-border-color);
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
     }
 
     &:focus-visible
@@ -98,6 +99,7 @@ $mp-transition:         150ms ease;
     width: $mp-panel-width;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius-lg;
     box-shadow: $shadow-md;
 
     .marginspicker--open &
@@ -138,6 +140,7 @@ $mp-transition:         150ms ease;
     {
         outline: none;
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
     }
 }
 

@@ -62,6 +62,7 @@ $slider-vertical-height:    200px;
     right: 0;
     height: $slider-track-height;
     background: $slider-track-color;
+    border-radius: $border-radius;
     top: 50%;
     transform: translateY(-50%);
 }
@@ -82,6 +83,7 @@ $slider-vertical-height:    200px;
     height: $slider-thumb-size;
     background: $slider-thumb-color;
     border: $slider-thumb-border;
+    border-radius: $border-radius;
     box-shadow: $slider-thumb-shadow;
     cursor: grab;
     transform: translateX(-50%);

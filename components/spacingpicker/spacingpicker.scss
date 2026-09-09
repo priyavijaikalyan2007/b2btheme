@@ -59,6 +59,7 @@ $sp-thumb-size:     40px;
     {
         border-color: var(--theme-border-color);
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
     }
 
     &:focus-visible
@@ -93,6 +94,7 @@ $sp-thumb-size:     40px;
     padding: $sp-4 0;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius-lg;
     box-shadow: $sp-dropdown-shadow;
 }
 
@@ -119,6 +121,7 @@ $sp-thumb-size:     40px;
     &.spacingpicker-item--selected
     {
         background-color: var(--theme-selected-bg);
+        border-radius: $border-radius-sm;
         font-weight: $font-weight-medium;
     }
 }

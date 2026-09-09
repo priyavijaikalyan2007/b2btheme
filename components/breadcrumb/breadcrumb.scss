@@ -156,6 +156,7 @@
 .breadcrumb-nav-dropdown {
     background: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     min-width: 160px;
     max-width: 280px;
@@ -195,6 +196,7 @@
 
         &:hover {
             background: none;
+            border-radius: $border-radius-sm;
         }
     }
 }

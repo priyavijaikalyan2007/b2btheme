@@ -82,6 +82,7 @@
 
     &.active {
         background: var(--theme-selected-bg);
+        border-radius: $border-radius-sm;
         color: var(--theme-primary);
         border-left-color: var(--theme-primary);
         font-weight: $font-weight-semibold;
@@ -154,6 +155,7 @@
 
     &:hover {
         background: var(--theme-active-bg);
+        border-radius: $border-radius-sm;
     }
 
     &:focus-visible {
@@ -274,6 +276,7 @@
 
     &:hover {
         background: var(--theme-border-color);
+        border-radius: $border-radius;
     }
 }
 

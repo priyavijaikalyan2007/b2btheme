@@ -63,6 +63,7 @@
     &:hover
     {
         background-color: var(--theme-active-bg);
+        border-radius: $border-radius;
         box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
@@ -133,6 +134,7 @@
 {
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-lg);
     display: flex;
     flex-direction: column;
@@ -207,6 +209,7 @@
     flex: 1;
     border: none;
     background: transparent;
+    border-radius: $border-radius;
     font-size: $font-size-sm;
     color: var(--theme-text-primary);
     outline: none;
@@ -244,6 +247,7 @@
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 

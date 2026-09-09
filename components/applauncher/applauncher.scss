@@ -45,6 +45,7 @@
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
         box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
@@ -101,6 +102,7 @@
     z-index: 1050;
     background-color: var(--theme-surface-bg);
     border: 1px solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: var(--theme-shadow-md);
     display: flex;
     flex-direction: column;
@@ -284,6 +286,7 @@
     &:hover
     {
         background-color: var(--theme-active-bg);
+        border-radius: $border-radius-sm;
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 
@@ -328,6 +331,7 @@
     border: none;
     outline: none;
     background: transparent;
+    border-radius: $border-radius;
     font-size: $font-size-base;
     color: var(--theme-text-primary);
     min-width: 0;
@@ -366,6 +370,7 @@
     padding: $sp-8 $sp-12;
     background: none;
     border: none;
+    border-radius: $border-radius-sm;
     border-bottom: 2px solid transparent;
     color: var(--theme-text-secondary);
     font-size: $font-size-sm;
@@ -564,6 +569,7 @@
     padding: $sp-1 $sp-4;
     color: $gray-50;
     background-color: $blue-600;
+    border-radius: $border-radius-sm;
     line-height: $line-height-base;
 }
 

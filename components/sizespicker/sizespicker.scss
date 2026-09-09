@@ -63,6 +63,7 @@ $sp-transition:        150ms ease;
     {
         border-color: var(--theme-border-color);
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius;
     }
 
     &:focus-visible
@@ -107,6 +108,7 @@ $sp-transition:        150ms ease;
     min-width: 220px;
     border: $border-width solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius-lg;
     box-shadow: $shadow-md;
 
     .sizespicker--open &
@@ -164,6 +166,7 @@ $sp-transition:        150ms ease;
     {
         outline: none;
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
         box-shadow: inset 0 0 0 2px var(--theme-focus-ring);
     }
 }

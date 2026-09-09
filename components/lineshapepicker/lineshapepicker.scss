@@ -50,6 +50,7 @@ $lsp-transition:         150ms ease;
     padding: $lsp-trigger-padding-y $lsp-trigger-padding-x;
     border: $lsp-trigger-border;
     background-color: var(--theme-input-bg);
+    border-radius: $border-radius;
     cursor: pointer;
     user-select: none;
     gap: 8px;
@@ -111,6 +112,7 @@ $lsp-transition:         150ms ease;
     z-index: $lsp-dropdown-z;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: $lsp-dropdown-shadow;
 }
 
@@ -148,6 +150,7 @@ $lsp-transition:         150ms ease;
     &:hover
     {
         background-color: var(--theme-hover-bg);
+        border-radius: $border-radius-sm;
     }
 }
 

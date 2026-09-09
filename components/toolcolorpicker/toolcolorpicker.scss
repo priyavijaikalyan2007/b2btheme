@@ -70,6 +70,7 @@ $tcp-transition:        150ms ease;
     padding: $tcp-swatch-padding;
     border: $tcp-selected-ring solid transparent;
     background: none;
+    border-radius: $border-radius-sm;
     cursor: pointer;
     outline: none;
     transition: transform $tcp-transition, border-color $tcp-transition, box-shadow $tcp-transition;

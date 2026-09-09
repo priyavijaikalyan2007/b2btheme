@@ -79,6 +79,7 @@
     justify-content: center;
     background: none;
     border: none;
+    border-radius: $border-radius;
     padding: $sp-4;
     cursor: pointer;
     color: var(--theme-text-secondary);

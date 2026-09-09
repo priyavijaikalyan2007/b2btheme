@@ -50,6 +50,7 @@ $ltp-transition:         150ms ease;
     padding: $ltp-trigger-padding-y $ltp-trigger-padding-x;
     border: $ltp-trigger-border;
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius;
     cursor: pointer;
     user-select: none;
     gap: 8px;
@@ -111,6 +112,7 @@ $ltp-transition:         150ms ease;
     z-index: $ltp-dropdown-z;
     background-color: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: $ltp-dropdown-shadow;
 }
 
@@ -148,6 +150,7 @@ $ltp-transition:         150ms ease;
     &:hover
     {
         background-color: var(--theme-active-bg);
+        border-radius: $border-radius-sm;
     }
 }
 

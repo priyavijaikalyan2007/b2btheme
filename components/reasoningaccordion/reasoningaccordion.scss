@@ -47,6 +47,7 @@
     flex-direction: column;
     border: 1px solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
+    border-radius: $border-radius;
     font-family: inherit;
 }
 
@@ -115,6 +116,7 @@
     justify-content: center;
     background: transparent;
     border: none;
+    border-radius: $border-radius;
     color: var(--theme-text-muted);
     cursor: pointer;
     padding: 0;

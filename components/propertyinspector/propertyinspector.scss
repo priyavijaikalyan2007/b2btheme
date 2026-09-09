@@ -120,6 +120,7 @@
     justify-content: center;
     background: none;
     border: none;
+    border-radius: $border-radius;
     padding: $sp-4;
     cursor: pointer;
     color: var(--theme-text-secondary);
@@ -179,6 +180,7 @@
     padding: $sp-8 $sp-12;
     background: none;
     border: none;
+    border-radius: $border-radius-sm;
     border-bottom: 2px solid transparent;
     font: inherit;
     font-size: $font-size-sm;

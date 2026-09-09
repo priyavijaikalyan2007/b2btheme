@@ -53,6 +53,7 @@ $sp-transition:         150ms ease;
     padding: $sp-6 $sp-10;
     border: $border-width solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     color: var(--theme-text-primary);
     cursor: pointer;
     font-size: inherit;
@@ -86,6 +87,7 @@ $sp-transition:         150ms ease;
 {
     background: var(--theme-surface-bg);
     border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius-lg;
     box-shadow: $sp-panel-shadow;
     width: $sp-panel-width;
     max-height: 420px;
@@ -138,6 +140,7 @@ $sp-transition:         150ms ease;
     &.active
     {
         background: $primary;
+        border-radius: $border-radius-sm;
         color: var(--theme-text-on-primary);
         border-color: $primary;
     }
@@ -158,6 +161,7 @@ $sp-transition:         150ms ease;
     padding: $sp-6 $sp-8 $sp-6 $sp-24;
     border: $border-width solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     color: var(--theme-text-primary);
     font-size: $font-size-sm;
 
@@ -207,6 +211,7 @@ $sp-transition:         150ms ease;
     padding: $sp-4 $sp-8;
     border: $border-width solid var(--theme-border-color);
     background: var(--theme-surface-bg);
+    border-radius: $border-radius;
     color: var(--theme-text-primary);
     font-size: $font-size-sm;
     cursor: pointer;
@@ -288,6 +293,7 @@ $sp-transition:         150ms ease;
     &.active
     {
         background: var(--theme-surface-bg);
+        border-radius: $border-radius-sm;
         color: $primary;
         border-color: var(--theme-border-color);
         font-weight: $font-weight-semibold;
@@ -401,6 +407,7 @@ $sp-transition:         150ms ease;
     padding: $sp-8 $sp-10;
     border-top: $border-width solid var(--theme-border-subtle);
     background: var(--theme-surface-raised-bg);
+    border-radius: $border-radius;
     min-height: 48px;
 }
 
@@ -462,6 +469,7 @@ $sp-transition:         150ms ease;
     &:hover
     {
         background: $blue-700;
+        border-radius: $border-radius;
         border-color: $blue-700;
     }
 
