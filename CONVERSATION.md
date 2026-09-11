@@ -1782,3 +1782,13 @@ jsdom@29 does not support. Every one of the 142 test files failed to start and
 vitest reported **"no tests"**: 4825 assertions silently became zero. Pinned to
 `^7.24.3`, with the reasoning written into `package.json` so the ceiling is not
 later removed as tidying.
+
+Following the security work, the six open Dependabot currency PRs were
+evaluated. Two were already superseded (`wrangler`, `vite`). Three were taken
+after verification — `marked` 17→18 (only output change across the whole docs
+set is two dropped newlines after an HTML comment; tables still render, so the
+custom `Renderer`/`Parser` API survived the major), `npm-run-all` 1→4, and
+`@playwright/test` 1.58→1.63. `sass` was **held**: 1.104 changes the shipped
+stylesheet, and a CSS delta with no security benefit is the wrong thing to
+introduce while the visual refresh is still being reviewed. Recorded as
+DEBT-SEC-3 with the detail needed to take it deliberately later.

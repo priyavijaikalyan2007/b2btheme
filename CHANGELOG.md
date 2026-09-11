@@ -14,6 +14,10 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## 2026-09-11
 
+### Changed
+- **Dependency currency:** `marked` 17 → 18, `npm-run-all` 1.1.3 → 4.1.5, `@playwright/test` 1.58 → 1.63. All three are build tooling that does not touch the published stylesheet; the compiled `custom.css` is byte-identical before and after. `marked` 18's only output difference across the whole docs set is two dropped newlines after an HTML comment.
+- **`sass` deliberately held at 1.95.x.** 1.104 changes the *shipped* stylesheet: colours inside SVG data URIs serialise as percentage `rgb()` rather than hex (valid, and it decodes to the same colour), plus off-by-one rounding in a few Bootstrap-derived values. Valid output, no security benefit, and a CSS delta is unwelcome while the visual refresh is still under review. Worth taking deliberately later with the accordion icons eyeballed — not as a side-effect of a security pass.
+
 ### Security
 - **All 18 dependency vulnerabilities resolved — `npm audit` reports 0.** 11 high (postcss, undici, sharp, svgo, ws, nanoid, vite, wrangler, browserslist, immutable, miniflare), 5 moderate, 2 low. Every fix was non-breaking: `package.json` moved only `vitest` and `@vitest/coverage-v8` from `^4.1.3` to `^4.1.11` (the patch that closes the `@vitest/mocker` path-traversal advisory), and everything else resolved in the lockfile.
 - **Scope, for the record: none of these shipped to consumers.** This package declares **no runtime dependencies** — every entry is `devDependencies` build tooling, and the two libraries that do ship (`bootstrap.bundle.min.js`, `chart.umd.js`) are the published artifacts themselves. The exposure was build-time supply chain, not the CDN.
