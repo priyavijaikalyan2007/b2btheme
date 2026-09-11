@@ -1762,3 +1762,23 @@ PURPOSE still described the theme as "square"), refreshed the stale
 `ElevationScale` concepts, promoted the one raw hex introduced outside the
 palette to `$gray-550` in its correct ramp position, fixed two non-Allman
 braces in the demo page, and recorded DEBT-VR-1 … DEBT-VR-4.
+
+### Dependency security (2026-09-11)
+
+> right, raise a PR and merge to main. Then let's work on the dependabot fixes.
+
+`gh` was authenticated as `knobbyadmin`, which has read-only access, so the PR
+could not be created; the user chose to merge locally instead. Main
+fast-forwarded `effdee0..22ef3e3`.
+
+`npm audit` went 18 → 0 with no `--force` and no semver-major upgrade. Worth
+recording for scope: the package declares **no runtime dependencies**, so none
+of the 18 advisories ever reached a CDN consumer — the exposure was build-time
+supply chain.
+
+The upgrade then surfaced a genuine defect. The `undici` override read
+`">=7.24.1"` — a floor with no ceiling — so it resolved to undici 8, which
+jsdom@29 does not support. Every one of the 142 test files failed to start and
+vitest reported **"no tests"**: 4825 assertions silently became zero. Pinned to
+`^7.24.3`, with the reasoning written into `package.json` so the ceiling is not
+later removed as tidying.
