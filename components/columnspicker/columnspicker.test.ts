@@ -93,16 +93,34 @@ describe("createColumnsPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_MissingContainer_ReturnsNullApi", () =>
+    test("Factory_MissingContainer_Throws", () =>
     {
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation();
-        const picker = createColumnsPicker(defaultOpts({
+        // ADR-148 D1. This test previously asserted
+        // `picker.getValue().name === "One"` — it required the factory to
+        // hand back a readable object fabricating a preset after a failed
+        // mount, which is the shape that let a host persist "One" over a
+        // user's real column setting. The test was holding the defect in
+        // place, so it is replaced rather than amended.
+        expect(() => createColumnsPicker(defaultOpts({
             container: "nonexistent-id",
-        }));
-        expect(picker.getValue().name).toBe("One");
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-        picker.destroy();
+        }))).toThrow(/\[ColumnsPicker\].*nonexistent-id/s);
+    });
+
+    test("Factory_MissingContainer_ProducesNoReadableObject", () =>
+    {
+        // "Logs an error" and "cannot be read from" are different
+        // properties, and only the second prevents the overwrite.
+        let escaped: unknown = null;
+
+        try
+        {
+            escaped = createColumnsPicker(defaultOpts({
+                container: "nonexistent-id",
+            }));
+        }
+        catch { /* expected */ }
+
+        expect(escaped).toBeNull();
     });
 });
 

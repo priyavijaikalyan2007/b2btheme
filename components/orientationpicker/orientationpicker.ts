@@ -187,8 +187,13 @@ export function createOrientationPicker(
     const container = resolveContainer(options.container);
     if (!container)
     {
-        logError("container not found:", options.container);
-        return createNullPicker();
+        throw new Error(
+            `[OrientationPicker] Cannot create the picker: no element matches ` +
+            `container "${String(options.container)}". Check the selector, and ` +
+            `ensure the element is in the DOM before calling ` +
+            `createOrientationPicker(). A picker that cannot mount must not be ` +
+            `returned — a caller reading its value would persist a fabricated ` +
+            `setting over the user's own (ADR-148).`);
     }
 
     const value: "portrait" | "landscape" = options.value ?? "portrait";
@@ -571,20 +576,6 @@ function removeDocumentListeners(root: HTMLElement): void
 // ============================================================================
 // S13: NULL PICKER (error fallback)
 // ============================================================================
-
-/** Return a no-op picker when container is not found. */
-function createNullPicker(): OrientationPicker
-{
-    const noop = createElement("div", []);
-    return {
-        getValue: () => "portrait",
-        setValue: () => {},
-        show: () => {},
-        hide: () => {},
-        destroy: () => {},
-        getElement: () => noop,
-    };
-}
 
 // ============================================================================
 // S14: PUBLIC API BUILDER

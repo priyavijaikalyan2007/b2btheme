@@ -1366,12 +1366,33 @@ export class PromptTemplateManager
             tpl.variables || []
         );
 
+        // ADR-148, and the most damaging site in this library before the fix.
+        // safeAsync(onSave, tpl) turned a REJECTED save into the local copy,
+        // after which clearDirty() ran unconditionally and logInfo reported
+        // "Saved". The editor therefore showed the template as saved, dropped
+        // the unsaved-changes marker, and the user navigated away and lost
+        // the work — with no error surfaced at the point of loss.
+        //
+        // A save that fails keeps the edit, keeps the dirty marker, and says
+        // so. The marker is the only thing standing between the user and
+        // silent loss, so it is cleared on the success path ONLY.
         if (this.opts.onSave)
         {
-            const saved = await safeAsync(
-                () => this.opts.onSave!(tpl), tpl
-            );
-            this.replaceTemplate(saved);
+            try
+            {
+                const saved = await this.opts.onSave(tpl);
+                this.replaceTemplate(saved);
+            }
+            catch (err)
+            {
+                logError(
+                    "Could not save template", tpl.id,
+                    "— your changes are still here and still unsaved.",
+                    "Try again, or copy the content elsewhere before closing.",
+                    err);
+                this.updateStatusBar();
+                return;
+            }
         }
 
         this.clearDirty(tpl.id);
@@ -1442,11 +1463,25 @@ export class PromptTemplateManager
                 : []
         };
 
+        // ADR-148. A rejected duplicate used to fall back to the local copy
+        // and push it, creating a template the backend has never heard of —
+        // which then looks real until the next refresh silently removes it.
         if (this.opts.onDuplicate)
         {
-            const result = await safeAsync(
-                () => this.opts.onDuplicate!(copy), copy
-            );
+            let result: PromptTemplate;
+
+            try
+            {
+                result = await this.opts.onDuplicate(copy);
+            }
+            catch (err)
+            {
+                logError(
+                    "Could not duplicate template", tpl.id,
+                    "— nothing was added. Try again.", err);
+                return;
+            }
+
             if (!result.id) { result.id = generateId(); }
             this.templates.push(result);
             this.selectedId = result.id;
@@ -1864,9 +1899,29 @@ export class PromptTemplateManager
             return;
         }
 
-        const loaded = await safeAsync(
-            () => this.opts.onLoadTemplates!(), []
-        );
+        // ADR-148. This used to be safeAsync(onLoadTemplates, []), which
+        // turned a rejected load into an empty array and then wrote it over
+        // the user's template list — a failed READ becoming an authoritative
+        // empty WRITE, which is the mechanism that destroyed sessions in the
+        // apps repo. It also logged "Refreshed: 0 templates", so the one line
+        // a human would read reported success.
+        //
+        // A load that fails leaves the existing templates exactly as they
+        // were and says so. There is nothing to replace them WITH.
+        let loaded: PromptTemplate[];
+
+        try
+        {
+            loaded = await this.opts.onLoadTemplates!();
+        }
+        catch (err)
+        {
+            logError(
+                "Could not load templates; keeping the", this.templates.length,
+                "already loaded. The list on screen may be out of date.", err);
+            return;
+        }
+
         this.setTemplates(loaded);
         logInfo("Refreshed:", loaded.length, "templates");
     }

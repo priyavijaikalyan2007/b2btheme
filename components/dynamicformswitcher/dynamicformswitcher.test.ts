@@ -1212,3 +1212,116 @@ describe("retrofitCompliance", () =>
         });
     }
 });
+
+// ===========================================================================
+// ADR-148: a form that cannot read a field refuses rather than fabricating
+// ===========================================================================
+
+describe("unreadableFields", () =>
+{
+    test("GetValues_AdapterThrows_Throws", () =>
+    {
+        // Before ADR-148 this returned `undefined` for the field. A host
+        // doing api.save(form.getValues()) then persisted undefined over
+        // the user's stored value. This is the aggregation point — the
+        // pickers were fixed to throw, and THIS is where that throw used
+        // to be swallowed back into a fabrication.
+        registerDynamicFormFieldProvider("exploding", () => ({
+            getValue: () => { throw new Error("adapter is broken"); },
+            setValue: () => {},
+            destroy: () => {},
+        }));
+
+        const handle = createDynamicFormSwitcher(container, {
+            variants: {
+                only: {
+                    label: "Only",
+                    fields: [
+                        { name: "good", label: "Good", type: "text" },
+                        { name: "bad",  label: "Bad",  type: "exploding" },
+                    ],
+                },
+            },
+            initialVariant: "only",
+        });
+
+        expect(() => handle.getValues())
+            .toThrow(/\[DynamicFormSwitcher\].*bad/s);
+
+        handle.destroy();
+        unregisterDynamicFormFieldProvider("exploding");
+    });
+
+    test("GetValues_AdapterThrows_NamesTheFieldAndRefusesPartial", () =>
+    {
+        registerDynamicFormFieldProvider("exploding2", () => ({
+            getValue: () => { throw new Error("adapter is broken"); },
+            setValue: () => {},
+            destroy: () => {},
+        }));
+
+        const handle = createDynamicFormSwitcher(container, {
+            variants: {
+                only: {
+                    label: "Only",
+                    fields: [
+                        { name: "good", label: "Good", type: "text" },
+                        { name: "bad",  label: "Bad",  type: "exploding2" },
+                    ],
+                },
+            },
+            initialVariant: "only",
+        });
+
+        let message = "";
+        try { handle.getValues(); }
+        catch (err) { message = String(err); }
+
+        // It must name the field, so a developer can fix the right one...
+        expect(message).toContain("bad");
+        // ...and say why it refuses, so the behaviour is not read as a crash.
+        expect(message.toLowerCase()).toContain("partial");
+
+        handle.destroy();
+        unregisterDynamicFormFieldProvider("exploding2");
+    });
+
+    test("GetAllValues_AdapterThrows_Throws", () =>
+    {
+        // getAllValues() commits the active variant to the store first, so
+        // it has the same exposure and must refuse the same way.
+        registerDynamicFormFieldProvider("exploding3", () => ({
+            getValue: () => { throw new Error("adapter is broken"); },
+            setValue: () => {},
+            destroy: () => {},
+        }));
+
+        const handle = createDynamicFormSwitcher(container, {
+            variants: {
+                only: {
+                    label: "Only",
+                    fields: [
+                        { name: "bad", label: "Bad", type: "exploding3" },
+                    ],
+                },
+            },
+            initialVariant: "only",
+        });
+
+        expect(() => handle.getAllValues()).toThrow(/\[DynamicFormSwitcher\]/);
+
+        handle.destroy();
+        unregisterDynamicFormFieldProvider("exploding3");
+    });
+
+    test("GetValues_AllFieldsReadable_StillReturnsValues", () =>
+    {
+        // The guard must not fire on the happy path.
+        const handle = build();
+
+        expect(() => handle.getValues()).not.toThrow();
+        expect(handle.getValues()).toHaveProperty("base_url");
+
+        handle.destroy();
+    });
+});

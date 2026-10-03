@@ -171,6 +171,23 @@ for f in agentknowledge/concepts.yaml agentknowledge/entities.yaml agentknowledg
 done
 echo ""
 
+# ── 9. No stand-in component answers a read ──
+# ADR-148. A component that failed to initialise must refuse a read, never
+# answer it with a fabricated value — a host persisting that answer overwrites
+# the user's own. Prose had already failed to prevent this twelve times, so
+# the build checks. See the script header for what the check cannot see.
+echo "[9] No fabricated reads (ADR-148)"
+if [ -f scripts/check-stand-in-reads.py ]; then
+    if python3 scripts/check-stand-in-reads.py; then
+        PASS=$((PASS + 1))
+    else
+        fail "a stand-in factory answers a read (see above)"
+    fi
+else
+    fail "scripts/check-stand-in-reads.py missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

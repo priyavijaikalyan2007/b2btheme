@@ -369,6 +369,9 @@ export class FontDropdown
     private opts: FontDropdownOptions;
     private fonts: FontItem[];
     private recentValues: string[] = [];
+
+    /** Set when a recents load failed; suppresses write-back (ADR-148). */
+    private recentLoadFailed = false;
     private filteredFonts: FontItem[] = [];
     private selectedFont: FontItem | null = null;
     private highlightedIndex = -1;
@@ -1138,13 +1141,19 @@ export class FontDropdown
         }
         catch (err)
         {
-            logWarn("failed to load recent:", err);
+            // An empty recents list is an honest degraded READ. Writing it
+            // back would overwrite stored recents we could not read, so the
+            // write withdraws for this session (ADR-148, clause 2).
+            this.recentLoadFailed = true;
+            logWarn("failed to load recent; will not overwrite stored:", err);
         }
         return [];
     }
 
     private saveRecent(): void
     {
+        if (this.recentLoadFailed) { return; }
+
         try
         {
             localStorage.setItem(

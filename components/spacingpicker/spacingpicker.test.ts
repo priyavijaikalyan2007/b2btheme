@@ -93,16 +93,30 @@ describe("createSpacingPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_MissingContainer_ReturnsNullApi", () =>
+    test("Factory_MissingContainer_Throws", () =>
     {
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation();
-        const picker = createSpacingPicker(defaultOpts({
+        // ADR-148 D1. Previously asserted `getValue().name === "1.15"`,
+        // requiring the factory to fabricate a line-height preset after a
+        // failed mount. A host persisting that overwrote the user's real
+        // spacing. The test was holding the defect in place.
+        expect(() => createSpacingPicker(defaultOpts({
             container: "nonexistent-id",
-        }));
-        expect(picker.getValue().name).toBe("1.15");
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-        picker.destroy();
+        }))).toThrow(/\[SpacingPicker\].*nonexistent-id/s);
+    });
+
+    test("Factory_MissingContainer_ProducesNoReadableObject", () =>
+    {
+        let escaped: unknown = null;
+
+        try
+        {
+            escaped = createSpacingPicker(defaultOpts({
+                container: "nonexistent-id",
+            }));
+        }
+        catch { /* expected */ }
+
+        expect(escaped).toBeNull();
     });
 });
 

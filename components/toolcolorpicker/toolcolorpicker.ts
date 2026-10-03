@@ -551,8 +551,13 @@ export function createToolColorPicker(
 
     if (!container)
     {
-        logWarn("container not found:", options.container);
-        return buildNullApi();
+        throw new Error(
+            `[ToolColorPicker] Cannot create the picker: no element matches ` +
+            `container "${String(options.container)}". Check the selector, and ` +
+            `ensure the element is in the DOM before calling ` +
+            `createToolColorPicker(). A picker that cannot mount must not be ` +
+            `returned — a caller reading its value would persist a ` +
+            `fabricated setting over the user's own (ADR-148).`);
     }
 
     const state = initState(options);
@@ -731,20 +736,6 @@ function buildApi(
 }
 
 /** Build a no-op API for when the container is missing. */
-function buildNullApi(): ToolColorPickerAPI
-{
-    const nullColor: ToolColor = { hex: "#000000", label: "None" };
-
-    return {
-        getValue: () => nullColor,
-        setValue: () => { /* no-op */ },
-        setColors: () => { /* no-op */ },
-        setTool: () => { /* no-op */ },
-        destroy: () => { /* no-op */ },
-        getElement: () => null,
-    };
-}
-
 // ============================================================================
 // S11: UTILITY HELPERS
 // ============================================================================

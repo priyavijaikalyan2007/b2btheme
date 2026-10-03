@@ -211,6 +211,14 @@ function scoreCommand(query: string, cmd: PaletteCommand): ScoredCommand
 // RECENT COMMANDS
 // ============================================================================
 
+/**
+ * True once a recents load has failed. An empty recents list is an honest
+ * degraded READ — there is simply nothing to show. Writing that empty list
+ * back is not: it would overwrite stored recents we were never able to read
+ * (ADR-148, clause 2). So the read degrades and the write withdraws.
+ */
+let recentLoadFailed = false;
+
 function loadRecent(): string[]
 {
     try
@@ -222,13 +230,16 @@ function loadRecent(): string[]
     }
     catch (e)
     {
-        logWarn("Failed to load recent:", e);
+        recentLoadFailed = true;
+        logWarn("Failed to load recent; will not overwrite stored recents:", e);
         return [];
     }
 }
 
 function saveRecent(ids: string[]): void
 {
+    if (recentLoadFailed) { return; }
+
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(ids)); }
     catch (e) { logWarn("Failed to save recent:", e); }
 }

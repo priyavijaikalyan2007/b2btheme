@@ -247,8 +247,13 @@ export function createSpacingPicker(
 
     if (!containerEl)
     {
-        logWarn("container not found:", options.container);
-        return buildNullApi();
+        throw new Error(
+            `[SpacingPicker] Cannot create the picker: no element matches ` +
+            `container "${String(options.container)}". Check the selector, and ` +
+            `ensure the element is in the DOM before calling ` +
+            `createSpacingPicker(). A picker that cannot mount must not be ` +
+            `returned — a caller reading its value would persist a ` +
+            `fabricated setting over the user's own (ADR-148).`);
     }
 
     rootEl = buildRoot();
@@ -581,25 +586,6 @@ export function createSpacingPicker(
     {
         document.removeEventListener("mousedown", boundDocClick, true);
         document.removeEventListener("keydown", boundDocKey, true);
-    }
-
-    // ── Null API for missing container ──
-
-    function buildNullApi(): SpacingPicker
-    {
-        const noop = (): void => {};
-        const nullPreset: SpacingPreset =
-            { name: "1.15", lineHeight: 1.15 };
-
-        return {
-            getValue: () => nullPreset,
-            setValue: noop,
-            setPresets: noop,
-            show: noop,
-            hide: noop,
-            destroy: noop,
-            getElement: () => document.createElement("div"),
-        };
     }
 
     // ── Public API ──

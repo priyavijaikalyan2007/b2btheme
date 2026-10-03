@@ -280,3 +280,82 @@ describe("edge cases", () =>
         mgr.destroy();
     });
 });
+
+// ============================================================================
+// ADR-148: a failed host callback must never become the success path
+// ============================================================================
+
+describe("failedCallbacks", () =>
+{
+    test("Refresh_CallbackRejects_KeepsExistingTemplates", async () =>
+    {
+        // Before ADR-148: safeAsync(onLoadTemplates, []) turned a rejected
+        // load into an empty array, which setTemplates() then wrote over the
+        // user's list. That is the incident's mechanism — a failed READ
+        // becoming an authoritative empty WRITE.
+        const mgr = createPromptTemplateManager(
+            makeOptions({
+                onLoadTemplates: () => Promise.reject(new Error("backend down")),
+            }),
+            "test-promptmgr"
+        );
+
+        expect(mgr.getTemplates()).toHaveLength(2);
+
+        await mgr.refresh();
+
+        expect(mgr.getTemplates()).toHaveLength(2);
+
+        mgr.destroy();
+    });
+
+    test("Refresh_CallbackRejects_LogsNoSuccess", async () =>
+    {
+        // Clause 1: a degraded component may never report success. This
+        // logged `Refreshed: 0 templates` — the one line a human would read
+        // said the load was fine.
+        const infoSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const mgr = createPromptTemplateManager(
+            makeOptions({
+                onLoadTemplates: () => Promise.reject(new Error("backend down")),
+            }),
+            "test-promptmgr"
+        );
+
+        await mgr.refresh();
+
+        const saidRefreshed = infoSpy.mock.calls
+            .some((call) => call.join(" ").includes("Refreshed"));
+
+        expect(saidRefreshed).toBe(false);
+        expect(errSpy).toHaveBeenCalled();
+
+        infoSpy.mockRestore();
+        errSpy.mockRestore();
+        mgr.destroy();
+    });
+
+    test("Duplicate_CallbackRejects_AddsNothing", async () =>
+    {
+        // A failed duplicate used to push the local copy, creating a
+        // template the backend has never heard of.
+        const mgr = createPromptTemplateManager(
+            makeOptions({
+                onDuplicate: () => Promise.reject(new Error("backend down")),
+            }),
+            "test-promptmgr"
+        );
+
+        const before = mgr.getTemplates().length;
+
+        mgr.duplicateTemplate("t1");
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(mgr.getTemplates()).toHaveLength(before);
+
+        mgr.destroy();
+    });
+});

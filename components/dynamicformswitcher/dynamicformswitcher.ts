@@ -192,6 +192,15 @@ const BUILTIN_FIELD_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * Sentinel for "this field could not be read", distinct from every legitimate
+ * value a field can hold — including `undefined`, `null` and `""`, each of
+ * which a form may validly contain. A unique symbol is the only thing that
+ * cannot collide with real data, which is the whole point: the caller must be
+ * able to tell "there is nothing" from "I could not find out" (ADR-148).
+ */
+const UNREADABLE: unique symbol = Symbol("dfs.unreadable");
+
+/**
  * Module-level field-provider registry. Overrides auto-discovery for a
  * given type name. Apps register here once at boot (e.g. for components
  * that don't fit the convention) and from then on `type: "<name>"` resolves
@@ -1102,11 +1111,22 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         const adapter = this.adapterMap.get(field.name);
         if (adapter)
         {
+            // ADR-148. This used to return `undefined` on a throw, which a
+            // host then persisted over the user's stored value — the same
+            // fabrication the pickers were fixed for, one level up, and
+            // harder to see because it looks like an empty field.
             try { return adapter.getValue(); }
-            catch (err) { logError("adapter.getValue threw:", field.name, err); return undefined; }
+            catch (err)
+            {
+                logError("adapter.getValue threw:", field.name, err);
+                return UNREADABLE;
+            }
         }
         const el = this.fieldMap.get(field.name);
-        if (!el) { return this.fallbackDefault(field); }
+
+        // A field that never mounted has no value to report. Seeding one
+        // from the schema is exactly the fabrication at issue.
+        if (!el) { return UNREADABLE; }
 
         switch (field.type)
         {
@@ -1119,19 +1139,6 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
             case "richtext":    return readRichText(el);
             case "custom":      return readCustom(el);
             default:            return readGenericValue(el);
-        }
-    }
-
-    private fallbackDefault(field: DynamicFormField): unknown
-    {
-        switch (field.type)
-        {
-            case "number":      return field.value ?? null;
-            case "checkbox":
-            case "toggle":      return field.value === true;
-            case "multiselect": return Array.isArray(field.value) ? field.value : [];
-            case "file":        return [];
-            default:            return field.value ?? "";
         }
     }
 
@@ -1167,15 +1174,64 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
     // Variant value commit + restore
     // ------------------------------------------------------------------
 
+    /**
+     * Collect the active variant's values, OMITTING any field that could not
+     * be read. Internal callers (variant switching) use this directly so a
+     * broken field does not break navigation; the public readers call
+     * `collectOrRefuse` and throw instead. Either way an unreadable field is
+     * never represented by a made-up value (ADR-148).
+     */
     private collectActiveValues(): Values
     {
         const variant = this.opts.variants[this.currentVariant];
         const out: Values = {};
+
         for (const field of variant.fields)
         {
-            out[field.name] = this.readFieldValue(field);
+            const value = this.readFieldValue(field);
+            if (value !== UNREADABLE) { out[field.name] = value; }
         }
+
         return out;
+    }
+
+    /** Names of the active variant's fields that cannot currently be read. */
+    private unreadableFieldNames(): string[]
+    {
+        const variant = this.opts.variants[this.currentVariant];
+        const names: string[] = [];
+
+        for (const field of variant.fields)
+        {
+            if (this.readFieldValue(field) === UNREADABLE)
+            {
+                names.push(field.name);
+            }
+        }
+
+        return names;
+    }
+
+    /**
+     * The public read path. Refuses rather than returning a partial form,
+     * because a host saving one would overwrite the user's stored values
+     * with nothing (ADR-148, D3).
+     */
+    private collectOrRefuse(): Values
+    {
+        const unreadable = this.unreadableFieldNames();
+
+        if (unreadable.length > 0)
+        {
+            throw new Error(
+                `[DynamicFormSwitcher] Cannot read ${unreadable.length} ` +
+                `field(s): ${unreadable.join(", ")}. Refusing to return a ` +
+                `partial form — saving one would overwrite the user's stored ` +
+                `values with defaults. Check that each field mounted, or ` +
+                `remove it from the variant schema (ADR-148).`);
+        }
+
+        return this.collectActiveValues();
     }
 
     private commitActiveToStore(): void
@@ -1301,11 +1357,15 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
 
     public getValues(): Values
     {
-        return this.collectActiveValues();
+        return this.collectOrRefuse();
     }
 
     public getAllValues(): Record<string, Values>
     {
+        // Refuse before committing: the same exposure as getValues(), since
+        // the active variant is folded into the returned snapshot (ADR-148).
+        this.collectOrRefuse();
+
         // Refresh active variant snapshot before returning.
         this.commitActiveToStore();
         const out: Record<string, Values> = {};

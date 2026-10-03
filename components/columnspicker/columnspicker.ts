@@ -283,8 +283,13 @@ export function createColumnsPicker(
 
     if (!containerEl)
     {
-        logWarn("container not found:", options.container);
-        return buildNullApi();
+        throw new Error(
+            `[ColumnsPicker] Cannot create the picker: no element matches ` +
+            `container "${String(options.container)}". Check the selector, and ` +
+            `ensure the element is in the DOM before calling ` +
+            `createColumnsPicker(). A picker that cannot mount must not be ` +
+            `returned — a caller reading its value would persist a ` +
+            `fabricated setting over the user's own (ADR-148).`);
     }
 
     rootEl = buildRoot();
@@ -617,25 +622,6 @@ export function createColumnsPicker(
     {
         document.removeEventListener("mousedown", boundDocClick, true);
         document.removeEventListener("keydown", boundDocKey, true);
-    }
-
-    // ── Null API for missing container ──
-
-    function buildNullApi(): ColumnsPicker
-    {
-        const noop = (): void => {};
-        const nullPreset: ColumnPreset =
-            { name: "One", columns: 1, widths: [1] };
-
-        return {
-            getValue: () => nullPreset,
-            setValue: noop,
-            setPresets: noop,
-            show: noop,
-            hide: noop,
-            destroy: noop,
-            getElement: () => document.createElement("div"),
-        };
     }
 
     // ── Public API ──

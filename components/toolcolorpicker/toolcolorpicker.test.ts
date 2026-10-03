@@ -104,12 +104,30 @@ describe("createToolColorPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_InvalidContainer_ReturnsNullApi", () =>
+    test("Factory_InvalidContainer_Throws", () =>
     {
-        const picker = createToolColorPicker(
+        // ADR-148 D1. Previously asserted the null API's getElement() was
+        // null — which looked harmless, but the same object answered
+        // getValue() with { hex: "#000000" }. A host saving a tool colour
+        // persisted black over the user's real choice.
+        expect(() => createToolColorPicker(
             defaultOpts({ container: "nonexistent-id" })
-        );
-        expect(picker.getElement()).toBeNull();
+        )).toThrow(/\[ToolColorPicker\].*nonexistent-id/s);
+    });
+
+    test("Factory_InvalidContainer_ProducesNoReadableObject", () =>
+    {
+        let escaped: unknown = null;
+
+        try
+        {
+            escaped = createToolColorPicker(
+                defaultOpts({ container: "nonexistent-id" })
+            );
+        }
+        catch { /* expected */ }
+
+        expect(escaped).toBeNull();
     });
 
     test("Factory_SetsRoleRadiogroup", () =>

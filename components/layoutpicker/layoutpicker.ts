@@ -657,8 +657,13 @@ export function createLayoutPicker(
 
     if (!containerEl)
     {
-        logWarn("container not found:", options.container);
-        return buildNullApi();
+        throw new Error(
+            `[LayoutPicker] Cannot create the picker: no element matches ` +
+            `container "${String(options.container)}". Check the selector, and ` +
+            `ensure the element is in the DOM before calling ` +
+            `createLayoutPicker(). A picker that cannot mount must not be ` +
+            `returned — a caller reading its value would persist a ` +
+            `fabricated setting over the user's own (ADR-148).`);
     }
 
     rootEl = buildRoot();
@@ -1140,24 +1145,6 @@ export function createLayoutPicker(
         document.removeEventListener("mousedown", boundDocClick, true);
         document.removeEventListener("touchstart", boundDocClick, true);
         document.removeEventListener("keydown", boundDocKey, true);
-    }
-
-    // ── Null API for missing container ──
-
-    function buildNullApi(): LayoutPickerAPI
-    {
-        const noop = (): void => {};
-
-        return {
-            getValue: () => null,
-            setValue: noop,
-            setAlgorithms: noop,
-            registerAlgorithm: noop,
-            show: noop,
-            hide: noop,
-            destroy: noop,
-            getElement: () => document.createElement("div"),
-        };
     }
 
     // ── Public API ──

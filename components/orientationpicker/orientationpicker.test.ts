@@ -83,19 +83,24 @@ describe("createOrientationPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_InvalidContainer_LogsError", () =>
+    test("Factory_InvalidContainer_Throws", () =>
     {
-        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-        const picker = createOrientationPicker({ container: "nonexistent" });
-        expect(spy).toHaveBeenCalledWith(
-            expect.any(String),
-            "[ERROR]",
-            "[OrientationPicker]",
-            "container not found:",
-            "nonexistent"
-        );
-        spy.mockRestore();
-        picker.destroy();
+        // ADR-148 D1. The previous test asserted the log and then called
+        // destroy() on the returned object. It did not assert the dangerous
+        // read, but it did require the factory to return something — and
+        // that something answered getValue() with "portrait".
+        expect(() => createOrientationPicker({ container: "nonexistent" }))
+            .toThrow(/\[OrientationPicker\].*nonexistent/s);
+    });
+
+    test("Factory_InvalidContainer_ProducesNoReadableObject", () =>
+    {
+        let escaped: unknown = null;
+
+        try { escaped = createOrientationPicker({ container: "nonexistent" }); }
+        catch { /* expected */ }
+
+        expect(escaped).toBeNull();
     });
 
     test("Factory_RendersTriggerButton", () =>
