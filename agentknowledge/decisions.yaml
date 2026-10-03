@@ -3858,3 +3858,111 @@
     They are on main and predate this work. NOT repaired here — the file is
     declared append-only, so repairing it is its owner's decision rather than a
     side-effect of a styling change. Tracked as DEBT-KB-1.
+
+- id: "ADR-148"
+  title: "No fabricated reads — a component that cannot read must refuse, not answer"
+  date: "2026-10-04"
+  status: "Accepted"
+  context: |
+    Two bug reports arrived from the consuming apps repo after a production
+    data-loss incident on 2026-10-03. A mock graph substituted for a failed CDN
+    import answered serialize() with an empty document; Thinker's autosave wrote
+    that over live sessions as a whole-document replacement, and they were not
+    recoverable. The reports named four pickers in this library with the same
+    shape and asked for a standing rule.
+
+    An audit of all 125 components found TWELVE sites across SEVEN components,
+    including three the reports did not reach and one they explicitly cleared.
+
+    The two findings that mattered most were both missed by the reports:
+
+    DynamicFormSwitcher is the AGGREGATION POINT, and fixing the pickers without
+    it would have accomplished nothing. AGENTS.md designates it the generic form
+    host every value-bearing component is driven through. readFieldValue()
+    converted an adapter throw into `undefined`, and fallbackDefault() invented
+    a typed value for a field that never mounted; both fed getValues(), which is
+    precisely what a host hands to api.save(). A picker rewritten to throw would
+    have had that throw caught there and turned back into a fabrication.
+
+    prompttemplatemanager's save path was the most damaging single site. On a
+    rejected save it called replaceTemplate() with the local copy, then ran
+    clearDirty() UNCONDITIONALLY and logged "Saved". The editor reported the
+    template as saved and dropped the unsaved-changes marker, so a user who
+    navigated away lost the work with no error at the point of loss. That is the
+    incident's mechanism — failure rendered as success, then acted upon — rather
+    than the milder stale-value-persisted shape.
+
+    The report cleared layoutpicker as "not a problem" because its null object
+    fabricates only getElement(). It also answered `getValue: () => null`, and
+    the contract is `LayoutAlgorithm | null`, so null is a LEGITIMATE value
+    meaning "no layout selected" — the stand-in was indistinguishable from a
+    real user choice, which is the report's own deciding question failing.
+
+    Two tests were asserting the defect: columnspicker and spacingpicker
+    required `getValue().name` to equal the fabricated preset after a failed
+    mount. The report warned about exactly this shape and said "yours is not
+    that". It was. layoutpicker had no test file at all.
+
+    The instruction that permitted this here was NOT the contradiction the
+    reports expected. This repo carries neither "design fallback mechanisms for
+    storage failures" nor the Fallback Code Prohibition. It carries
+    FRONTEND.md:87 — "log the error and leave the DOM unchanged" — which is
+    incomplete rather than wrong: it mandates the two things the defective code
+    already did correctly and is silent on the third, do-not-answer. An agent
+    following it exactly produces createNullPicker().
+
+    D1 A missing container throws; the five null-object factories are deleted.
+       No internal caller is affected — every in-repo reference to those
+       factories is a registry name string. breadcrumb already threw and is the
+       in-repo precedent.
+    D2 A degraded getValue() becomes impossible because the object is gone.
+    D3 DynamicFormSwitcher.getValues()/getAllValues() throw, naming every
+       unreadable field. CHOSEN BY THE USER over omitting failed fields or a
+       discriminated result, both of which leave a path where a whole-document
+       host still persists a partial form. An UNREADABLE unique symbol
+       distinguishes "could not read" from the undefined/null/"" a form may
+       legitimately contain.
+    D4 A failed host callback never becomes the success path. Throwing is wrong
+       for async UI flows: keep prior state and surface the error.
+    D5 Cache reads may degrade to empty; the WRITE-BACK withdraws, so recents
+       that failed to load are not overwritten with nothing.
+    D6 scripts/check-stand-in-reads.py enforces it as structure check [9],
+       mutation-tested.
+  consequences: |
+    + The data-loss path is closed at the aggregation point, not just at the
+      five leaves the reports named.
+    + A partial form can no longer be saved: getValues() refuses rather than
+      returning fields the host cannot distinguish from empty ones.
+    + An unsaved template stays marked unsaved, which is the only thing standing
+      between the user and silent loss.
+    + The rule is enforced by the build rather than by prose, which had already
+      failed twelve times here and three times in the apps repo.
+    - BREAKING for a consumer that today reads a partial form and tolerates it,
+      and for one that calls a picker factory with a bad container and expects
+      an object back. Both breaks are intended and were requested by the team
+      that lost the data. The additive guarantee (ADR-141) governs the
+      Surface-contract migration, not defect fixes; a read that fabricates
+      persisted state is a defect.
+    - The guard sees ONE shape — named stand-in factories exposing a read. It
+      cannot see inline failure branches, catch-swallows, or aggregation-point
+      defaults like fallbackDefault, which was the worst instance in the audit
+      and was found by hand. A catch-block regex was prototyped, produced 25
+      hits of which roughly 4 were real, and was dropped rather than shipped as
+      noise that would train everyone to ignore the gate.
+    - ConfirmDialog was checked against the reports' open question and fails
+      VISIBLE, not invisible-but-clickable: plain divs, no JS-set visibility,
+      and the only opacity:0 is a keyframe from-state. No change needed.
+    - The dependency-closure request is accepted in principle and deferred to
+      its own spec as DEBT-SEC-4, DOMPurify first.
+  files:
+    - "specs/2026-10-04-no-fabricated-reads.prd.md"
+    - "components/dynamicformswitcher/dynamicformswitcher.ts"
+    - "components/prompttemplatemanager/prompttemplatemanager.ts"
+    - "components/orientationpicker/orientationpicker.ts"
+    - "components/columnspicker/columnspicker.ts"
+    - "components/spacingpicker/spacingpicker.ts"
+    - "components/toolcolorpicker/toolcolorpicker.ts"
+    - "components/layoutpicker/layoutpicker.ts"
+    - "scripts/check-stand-in-reads.py"
+    - "AGENTS.md"
+    - "FRONTEND.md"

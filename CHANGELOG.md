@@ -12,6 +12,25 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+## 2026-10-04
+
+### Fixed — a component that cannot read now refuses rather than fabricating (ADR-148)
+
+Twelve sites across seven components answered a read after failing to initialise, returning a plausible value a host would then persist over the user's own. This is the shape that destroyed unrecoverable production data in a consuming app on 2026-10-03.
+
+- **`DynamicFormSwitcher` — the aggregation point.** `readFieldValue()` turned an adapter throw into `undefined`, and `fallbackDefault()` invented a typed value for a field that never mounted; both fed `getValues()`, which is exactly what a host hands to `api.save()`. **`getValues()` and `getAllValues()` now throw, naming every unreadable field**, rather than returning a partial form. `fallbackDefault` is deleted. **This is a breaking change**, and it is the one the reporting team asked for — a partial save is now impossible instead of silent.
+- **`PromptTemplateManager` — the most damaging single site.** A rejected save called `replaceTemplate()` with the local copy, then ran `clearDirty()` *unconditionally* and logged `"Saved"`. The editor showed the template as saved and dropped the unsaved-changes marker, so a user who navigated away lost the work with no error. A failed save now keeps the edit, keeps the marker, and says so. A failed template load no longer replaces the list with `[]` (and no longer logs `"Refreshed: 0 templates"`); a failed duplicate no longer adds a template the backend has never heard of.
+- **Five pickers throw on a missing container** instead of returning a null object that answered `getValue()` with a fabricated setting — `orientationpicker` (`"portrait"`), `columnspicker`, `spacingpicker`, `toolcolorpicker`, and `layoutpicker`. The null objects are deleted. No internal caller is affected: every in-repo reference is a registry name string. `layoutpicker` is included although the bug report cleared it — its `getValue()` returned `null` against a `LayoutAlgorithm | null` contract, so `null` is a legitimate "nothing selected" and the stand-in was indistinguishable from a real user choice.
+- **Recents caches withdraw from the write, not the read.** `commandpalette` and `fontdropdown` may still show an empty recents list when the load fails, but no longer overwrite stored recents they could not read.
+
+### Added
+- **`npm test` check `[9]`** — `scripts/check-stand-in-reads.py` fails the build when a stand-in factory answers a read instead of refusing. Mutation-tested. Its header states plainly what it cannot see: inline failure branches, `catch`-swallows, and aggregation-point defaults, all of which this audit found by hand.
+- **`layoutpicker` has a test file for the first time**, which is why its defect went unnoticed by the bug report, the suite, and three prior sessions.
+
+### Changed
+- **`FRONTEND.md` and `AGENTS.md` now carry the rule.** The line that permitted this here was not a contradiction but an omission — *"log the error and leave the DOM unchanged"* mandates the two things the defective code already did correctly and was silent on the third, *do not answer*.
+
+
 ## 2026-09-11
 
 ### Changed

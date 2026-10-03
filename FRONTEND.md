@@ -84,7 +84,35 @@ customisations and TypeScript/HTML/CSS components that consumers embed in their 
 - Use try-catch blocks in component TypeScript where DOM operations could fail.
 - Log errors using `console.error` with the `[ComponentName]` prefix (see `LOGGING.md`).
 - Never use `window.alert()` or `window.confirm()` in component code.
-- Fail gracefully: if a component cannot initialise, log the error and leave the DOM unchanged.
+- **(CRITICAL) Fail loudly, and never fabricate.** If a component cannot
+  initialise it must log the error, leave the DOM unchanged, **and refuse to
+  answer any read**. Two clauses, both testable (ADR-148):
+
+  1. **A degraded component may never report success.** No log line, return
+     value, or status that an intact component would also produce.
+  2. **A degraded component may never participate in a write.** It may render,
+     it may read, it may not persist — and *answering a read is participating*,
+     because the caller is usually about to save the answer.
+
+  The deciding question: **can a caller tell "there is nothing" from "I could
+  not find out"?** If not, the second will eventually be persisted as the first.
+
+  In practice: a missing container throws. Do **not** return a null-object that
+  satisfies the interface — that is the exact shape that destroyed production
+  data in the apps repo, and the shape an audit found in twelve places here.
+  `components/breadcrumb/breadcrumb.ts` is the reference.
+
+  A degraded mode that **announces itself and withdraws from authority** is
+  still fine and still encouraged: read-only when the write path is down, a
+  cached value labelled stale, an empty state that says it could not load, a
+  visibly degraded DOM element. What is prohibited is a stand-in that is
+  indistinguishable from the real thing.
+
+  *(Before ADR-148 this line read "Fail gracefully: if a component cannot
+  initialise, log the error and leave the DOM unchanged." That was not wrong,
+  it was incomplete — it mandated the two things the defective code already did
+  correctly and was silent on the one that mattered, so it licensed the null
+  object by omission.)*
 
 ## 1.8. Browser Compatibility
 

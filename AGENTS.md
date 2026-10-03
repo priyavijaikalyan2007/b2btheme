@@ -275,6 +275,47 @@ builder, a boot script, a modal overlay — goes in `NOT_MOUNTABLE` in the gate
 **with a written rationale**, not in `EXEMPT`. `EXEMPT` means "migration
 pending" and is expected to reach zero.
 
+## (CRITICAL) No Fabricated Reads
+
+A component that cannot initialise, or cannot reach a dependency, **must refuse
+to answer a read rather than returning a plausible value**. This is not a style
+preference. A null-object picker answering `getValue()` with `"portrait"` is
+indistinguishable from a user who chose portrait, and a host saving a page setup
+persists the fabrication over the user's real setting. The equivalent pattern
+destroyed unrecoverable production data in the consuming apps repo on
+2026-10-03.
+
+Two clauses, both testable (ADR-148):
+
+1. **A degraded component may never report success.** No log line, return
+   value, or status that an intact component would also produce.
+2. **A degraded component may never participate in a write.** Answering a read
+   *is* participating — the caller is usually about to persist the answer.
+
+**The deciding question for any such code:** can a caller tell *"there is
+nothing"* from *"I could not find out"*? If not, the second answer will
+eventually be persisted as the first.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| Container not found | `throw` a literate error | return a null object |
+| Dependency missing | `throw`, or a sentinel the caller must handle | a stand-in satisfying the interface |
+| Host callback rejected | keep prior state, surface the error | substitute a plausible value |
+| A read cannot be performed | refuse, naming what is unreadable | return `undefined`, `null`, `[]` or a schema default |
+| Cache load failed | an empty read is fine — but **do not write back** | overwrite storage you could not read |
+
+Legitimate degraded modes **announce themselves and withdraw from authority**:
+read-only when the write path is down, a value labelled stale, an empty state
+that says it could not load, a visibly degraded DOM element. Six such builders
+exist in this library and are correct. What is prohibited is a stand-in
+indistinguishable from the real thing.
+
+Enforced by `scripts/check-stand-in-reads.py` as structure check `[9]`. The
+check sees **one shape** — named stand-in factories exposing a read. It cannot
+see inline failure branches, `catch`-swallows, or aggregation-point defaults,
+all three of which the ADR-148 audit found by hand. Treat a green check as a
+ratchet, not a clearance.
+
 ## Operating Style
 
 Use the **V-V-P-T-I-R-V-C** loop (Plan → Test → Implement → Refactor → Verify) for your core workflow. 

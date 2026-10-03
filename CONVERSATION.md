@@ -1792,3 +1792,39 @@ custom `Renderer`/`Parser` API survived the major), `npm-run-all` 1→4, and
 stylesheet, and a CSS delta with no security benefit is the wrong thing to
 introduce while the visual refresh is still being reviewed. Recorded as
 DEBT-SEC-3 with the detail needed to take it deliberately later.
+
+---
+
+## 2026-10-04 — ADR-148: no fabricated reads
+
+> there is one pattern "create a false fallback behavior" that cause this
+> particular bug and resulted in unrecoverable data loss. We need to make sure
+> that this compoennt library does not have fallback behavior of the type
+> pointed out by the bug reports above.
+
+Three reports reviewed. Two concern the data-loss pattern; the third
+(dependency closure + SRI) is infrastructure and was deferred as DEBT-SEC-4
+rather than bundled into a correctness fix.
+
+The reports named four pickers. An audit of all 125 components found twelve
+sites across seven components. **The two that mattered most were not in the
+reports**, which is expected — they were written from outside, where only the
+leaves are visible:
+
+- `DynamicFormSwitcher` is the aggregation point. Fixing the five pickers
+  without it would have accomplished nothing, because a picker's throw was
+  caught there and reconverted into `undefined`.
+- `prompttemplatemanager`'s save path cleared the dirty marker and logged
+  "Saved" on a *failed* save — the user navigates away and the work is gone.
+
+Also corrected the report on `layoutpicker` (cleared as safe; its `null`
+collides with a legitimate domain value), and found that `columnspicker` and
+`spacingpicker` had **passing tests asserting the fabricated value** — the
+exact shape the report warned about while saying "yours is not that".
+
+The permitting instruction here was an omission rather than a contradiction:
+`FRONTEND.md:87` mandates log-and-leave-the-DOM and is silent on do-not-answer,
+so the most literal compliant reading produces `createNullPicker()`.
+
+Answered the reports' open question with evidence: ConfirmDialog fails
+**visible**, not invisible-but-clickable.
