@@ -136,6 +136,10 @@ scrape file contents.
 
 ## Dependency closure — `/lib/` (ADR-149, DEBT-SEC-4)
 
+> This section is the **contract**. For a worked integration — code to read
+> the manifest, build tags, and fail safely — see
+> [docs/CDN_INTEGRATION_GUIDE.md](docs/CDN_INTEGRATION_GUIDE.md).
+
 Third-party frontend libraries served from this origin instead of a public
 CDN, so the apps stop fetching executable code from infrastructure we do not
 control.

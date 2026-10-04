@@ -12,6 +12,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added
+- **[`docs/CDN_INTEGRATION_GUIDE.md`](docs/CDN_INTEGRATION_GUIDE.md)** — the entry point for consuming applications: loading the theme and components, reading `/lib-manifest.json` to emit `integrity` attributes, why `crossorigin="anonymous"` is mandatory, why the theme's own tags deliberately carry no hash, and what your code must do when a load fails. Linked from `README.md`, `AGENTS.md`, `COMPONENTS.md`, `DOCUMENTATION.md`, `CDN_CONTRACT.md` and the docs index.
+- **`npm test` check `[11]`** — fails the build when a file in `docs/` is not registered for publication.
+
+### Fixed
+- **Seven documents existed but were never published, and the docs index linked three of them** — so `static.knobby.io/docs/` carried broken links while every file was present in the repository. `APPS_TEAM_USAGE_GUIDE.md`, `BEGINNERS_GUIDE.md`, `SURFACE_CONTRACT.md`, `CAPABILITY_MANIFEST.md`, `DYNAMIC_UI_GUIDE.md`, `DYNAMIC_UI_MIGRATION.md` and `ABOUT_DEPRECATION_WARNINGS.md` are now generated and reachable.
+
+
 ### Added — dependency closure served from this origin (ADR-149)
 - **Four third-party libraries now ship from `static.knobby.io` instead of public CDNs**, at immutable versioned URLs with published SRI hashes: `dompurify`, `maxgraph`, `signalr`, `cytoscape`. Each is a single self-contained file at `/lib/<name>-<version>.js`; consumers read `/lib-manifest.json` to emit `integrity` attributes rather than transcribing hashes. See `CDN_CONTRACT.md` for the consumption pattern.
 - **`npm test` check `[10]`** re-pairs every published hash with its artifact, mutation-tested. A stale hash is a hard browser load failure — the outage SRI exists to prevent, not cause.

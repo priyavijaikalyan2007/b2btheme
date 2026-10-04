@@ -189,3 +189,34 @@ Documentation is part of the "Definition of Done". A change is not complete unti
 2. `COMPONENTS.md` is updated if a component was added or changed.
 3. `demo/index.html` includes the new or changed component.
 4. `CONVERSATION.md` records the change.
+
+---
+
+## Publishing a new document (CRITICAL)
+
+A file in `docs/` is **not published by existing**. It is published only if
+`scripts/generate-docs.js` lists it in `HAND_WRITTEN_DOCS`, which is what
+converts it to HTML into `dist/docs/`.
+
+Seven documents sat unregistered until 2026-10-04 — including
+`APPS_TEAM_USAGE_GUIDE.md`, written specifically for consuming teams — and
+`docs/INDEX.md` linked three of them, so the published site carried broken
+links that nobody noticed because every file existed in the repository.
+
+When you add a document:
+
+1. Write it in `docs/`.
+2. **Register it** in `HAND_WRITTEN_DOCS` with a human title.
+3. **Link it** from `docs/INDEX.md`, which is the only page that indexes guides.
+4. Run `npm test` — structure check `[11]` fails on an unregistered doc.
+
+Creation plus registration is the deliverable. A file that exists and a file
+that is reachable are different claims, and only the second one is "shipped".
+
+## Consumer-facing guides
+
+| Guide | For |
+|---|---|
+| [`docs/CDN_INTEGRATION_GUIDE.md`](docs/CDN_INTEGRATION_GUIDE.md) | Loading the theme and the vendored dependency closure; SRI; fail-fast behaviour on a failed load |
+| [`docs/APPS_TEAM_USAGE_GUIDE.md`](docs/APPS_TEAM_USAGE_GUIDE.md) | Factory naming, renames, CI guards against drift |
+| [`CDN_CONTRACT.md`](CDN_CONTRACT.md) | Caching policy and the `/lib/` contract |

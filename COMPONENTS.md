@@ -2,6 +2,15 @@
 
 # Components
 
+> **Consuming these components from an application?** Start with
+> [docs/CDN_INTEGRATION_GUIDE.md](docs/CDN_INTEGRATION_GUIDE.md) — how to load
+> the theme and each component from `static.knobby.io`, how to pin and verify
+> the vendored third-party libraries with Subresource Integrity, and what your
+> code must do when a load fails. A component that cannot initialise now
+> **throws** rather than returning a usable-looking stand-in (ADR-148), so
+> integrating code has to handle it.
+
+
 Custom components built on the Enterprise Bootstrap Theme.
 
 ## ErrorDialog

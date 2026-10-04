@@ -310,6 +310,12 @@ that says it could not load, a visibly degraded DOM element. Six such builders
 exist in this library and are correct. What is prohibited is a stand-in
 indistinguishable from the real thing.
 
+**Consumers need to know this too.** The behaviour is contractual, not
+internal: a picker now throws and `getValues()` refuses a partial form, so
+integrating code must handle it. That is documented for them in
+[`docs/CDN_INTEGRATION_GUIDE.md`](./docs/CDN_INTEGRATION_GUIDE.md) §5 — keep
+the two in step when you change the rule here.
+
 Enforced by `scripts/check-stand-in-reads.py` as structure check `[9]`. The
 check sees **one shape** — named stand-in factories exposing a read. It cannot
 see inline failure branches, `catch`-swallows, or aggregation-point defaults,
@@ -393,6 +399,12 @@ consistent, thoughtful and complete end to end experience.
   section for patterns already in use and anti-patterns to avoid. Consult GOF_REFACTOR.md for the active 
   refactoring backlog and to understand the target architecture.
 - Always consult DOCUMENTATION.md when generating internal operator or external user facing documentation.
+  **A doc in `docs/` is only published if it is registered in `scripts/generate-docs.js`** — see the
+  publishing rule at the end of DOCUMENTATION.md. Structure check `[11]` enforces it.
+- When changing anything a consuming app can observe — a factory signature, a thrown error, a CDN path,
+  a vendored dependency version — update [docs/CDN_INTEGRATION_GUIDE.md](./docs/CDN_INTEGRATION_GUIDE.md)
+  and [CDN_CONTRACT.md](./CDN_CONTRACT.md) in the same change. Those two are the contract consuming
+  teams read; a change that lands without them is a silent breaking change.
 - Always consult MIGRATIONS.md when migrating from one stack to another such as Javascript to TypeScript, Python to .NET Core etc.
 - Always consult LOGGING.md so that you add appropriate logging configuration and log statements to all generated code.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.

@@ -18,6 +18,12 @@ Interactive demo page showcasing every component and Bootstrap theme override. B
 ### 1. **[Getting Started](GETTING_STARTED.md)**
 Integration guide for consumers. What `dist/` contains, minimal HTML boilerplate, loading fonts and icons, adding components, and a verification checklist.
 
+### 2. **[CDN Integration Guide](CDN_INTEGRATION_GUIDE.md)**
+How to load the theme, components and vendored dependencies from
+`static.knobby.io` — including Subresource Integrity, why the theme tags
+deliberately carry no hash, and what your code must do when a load fails.
+**Read this before integrating.**
+
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
 

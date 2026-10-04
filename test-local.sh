@@ -204,6 +204,30 @@ else
 fi
 echo ""
 
+# ── 11. Every doc in docs/ is registered for publication ──
+# A file in docs/ is published only if generate-docs.js lists it in
+# HAND_WRITTEN_DOCS. Seven docs sat unregistered until 2026-10-04 — including
+# the one written for consuming teams — and INDEX.md linked three of them, so
+# the published site carried broken links nobody noticed. Creation plus
+# registration is the deliverable (AGENT_INSIGHTS 6.7).
+echo "[11] Docs are registered for publication"
+UNREGISTERED=""
+for f in docs/*.md; do
+    b=$(basename "$f")
+    case "$b" in
+        AGENT_QUICK_REF.md|COMPONENT_REFERENCE.md|DESIGN_TOKENS.md) continue ;;
+    esac
+    if ! grep -q "\"$b\"" scripts/generate-docs.js; then
+        UNREGISTERED="$UNREGISTERED $b"
+    fi
+done
+if [ -z "$UNREGISTERED" ]; then
+    pass "all hand-written docs are registered in generate-docs.js"
+else
+    fail "unregistered docs (will 404 if linked):$UNREGISTERED"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

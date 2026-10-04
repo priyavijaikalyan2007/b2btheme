@@ -745,13 +745,30 @@ function generateMasterComponentIndexMd()
 // Phase F — Convert hand-written docs to HTML
 // ---------------------------------------------------------------------------
 
-/** Hand-written docs to convert (file -> title). */
+/**
+ * Hand-written docs to convert (file -> title).
+ *
+ * (CRITICAL) This list is the ONLY thing that publishes a doc. A file in
+ * docs/ that is absent here is never converted, so a link to it from
+ * INDEX.md resolves to a 404 on the published site. Seven docs were in that
+ * state until 2026-10-04 — including APPS_TEAM_USAGE_GUIDE.md, the one
+ * written specifically for consumers. Structure check [11] now fails the
+ * build on an unregistered doc, so adding a file here is not optional.
+ */
 const HAND_WRITTEN_DOCS = {
     "INDEX.md": "Documentation Index",
     "GETTING_STARTED.md": "Getting Started",
+    "CDN_INTEGRATION_GUIDE.md": "CDN Integration Guide",
+    "APPS_TEAM_USAGE_GUIDE.md": "Apps Team Usage Guide",
+    "BEGINNERS_GUIDE.md": "Beginners Guide",
     "FONT_GUIDE.md": "Font Guide",
     "CUSTOM_CLASSES.md": "Custom CSS Classes",
     "CUSTOMIZATION_GUIDE.md": "Customization Guide",
+    "CAPABILITY_MANIFEST.md": "Capability Manifest",
+    "SURFACE_CONTRACT.md": "Surface Contract",
+    "DYNAMIC_UI_GUIDE.md": "Dynamic UI Guide",
+    "DYNAMIC_UI_MIGRATION.md": "Dynamic UI Migration",
+    "ABOUT_DEPRECATION_WARNINGS.md": "About Deprecation Warnings",
     "TROUBLESHOOTING.md": "Troubleshooting",
     "GLOSSARY_AND_FAQ.md": "Glossary and FAQ",
     "fileexplorer-flat-mode-guide.md": "FileExplorer Flat Mode Guide",

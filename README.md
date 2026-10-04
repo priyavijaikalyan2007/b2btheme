@@ -16,6 +16,11 @@ A compact, professional Bootstrap 5 theme with 106 vanilla TypeScript components
 
 **Demo:** [`https://theme.priyavijai-kalyan2007.workers.dev/docs/demo`](https://theme.priyavijai-kalyan2007.workers.dev/docs/demo)
 
+> **Integrating this into an application?**
+> [docs/CDN_INTEGRATION_GUIDE.md](docs/CDN_INTEGRATION_GUIDE.md) is the entry
+> point — loading the theme, pinning vendored dependencies with SRI, and
+> handling a failed load safely.
+
 ## Features
 
 - **Compact Design**: 14px base font with reduced padding (15-20% smaller) to maximize screen real estate
