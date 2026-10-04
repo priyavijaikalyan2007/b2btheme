@@ -12,6 +12,9 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Security
+- **The Markdown editor no longer loads its engine from `unpkg.com`.** Vditor lazily fetches its markdown engine, icon set, language pack and optional renderers (mermaid, katex, mathjax, graphviz, echarts) as script tags it injects itself — executable third-party code on pages that may be showing an admin session. The full tree is now served from this origin at `/lib/vditor-3.11.2/` and `MarkdownEditor` points vditor at it. **Consuming apps need no change**; they use `createMarkdownEditor` rather than vditor directly. Known residual: the injected chunks carry no SRI, because vditor injects them itself.
+
 ### Added
 - **`font-awesome` 6.5.1 and `chart.js` 4.5.1 join the dependency closure.** font-awesome is CSS + webfonts, so it ships as a versioned directory at `/lib/font-awesome-6.5.1/`; the stylesheet is hashed and byte-identical to the npm package. **It consolidates the two versions the apps currently load** — 6.5.1 is a verified strict superset of all 92 `fa-` classes in use.
 - **[`docs/CDN_INTEGRATION_GUIDE.md`](docs/CDN_INTEGRATION_GUIDE.md)** — the entry point for consuming applications: loading the theme and components, reading `/lib-manifest.json` to emit `integrity` attributes, why `crossorigin="anonymous"` is mandatory, why the theme's own tags deliberately carry no hash, and what your code must do when a load fails. Linked from `README.md`, `AGENTS.md`, `COMPONENTS.md`, `DOCUMENTATION.md`, `CDN_CONTRACT.md` and the docs index.

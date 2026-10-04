@@ -79,6 +79,7 @@
     "sass": "^1.93.2",
     "terser": "^5.46.1",
     "typescript": "^5.9.3",
+    "vditor": "3.11.2",
     "vitest": "^4.1.11",
     "wrangler": "^4.73.0"
   }

@@ -137,6 +137,41 @@ export interface MarkdownEditorModalOptions extends MarkdownEditorOptions
 
 const LOG_PREFIX = "[MarkdownEditor]";
 
+/**
+ * Origin-relative base for Vditor's lazily-fetched sub-resources (ADR-149).
+ *
+ * Vditor builds these as `${cdn}/dist/js/...`, so this must be the directory
+ * CONTAINING vditor's own `dist/`, not `dist/` itself. Derived from the
+ * script's own origin so the mirror works on any host serving this library —
+ * static.knobby.io, a local build, or a fork — rather than hardcoding one
+ * domain into a component other people deploy.
+ *
+ * Pinned to the version this component was built against. A Vditor upgrade
+ * must bump BOTH this constant and the vendored tree in
+ * `scripts/vendor-closure.mjs`, or the editor silently fetches a mismatched
+ * engine.
+ */
+const VDITOR_VERSION = "3.11.2";
+
+const VDITOR_CDN = ((): string =>
+{
+    try
+    {
+        const self = document.currentScript as HTMLScriptElement | null;
+        const origin = self?.src
+            ? new URL(self.src).origin
+            : window.location.origin;
+
+        return `${origin}/lib/vditor-${VDITOR_VERSION}`;
+    }
+    catch
+    {
+        // Same-origin relative path. Never fall through to a public CDN:
+        // that is the behaviour this constant exists to remove.
+        return `/lib/vditor-${VDITOR_VERSION}`;
+    }
+})();
+
 const _lu = (typeof (window as any).createLogUtility === "function") ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
 function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
 function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
@@ -1145,6 +1180,19 @@ export class MarkdownEditor
             width: "100%",
             theme: isDark ? "dark" : "classic",
             lang: "en_US",
+
+            // (CRITICAL) Without this, Vditor fetches its markdown engine
+            // (lute), icon set, language pack and every optional renderer —
+            // mermaid, katex, mathjax, graphviz — from `unpkg.com` at
+            // runtime, as script tags it injects itself. That is executable
+            // third-party code arriving on a page that may be showing an
+            // admin session, from an origin nobody here controls.
+            //
+            // VDITOR_CDN points at this library's own mirror of the full
+            // tree (ADR-149). A consumer that must override it can still
+            // pass `cdn` through `vditorOptions`, which Object.assign()s
+            // over these defaults below.
+            cdn: VDITOR_CDN,
             icon: "ant",
             toolbar: this.resolveToolbar(),
             tab: "\t",

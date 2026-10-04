@@ -151,3 +151,45 @@ describe("MarkdownEditor destroy", () =>
         expect(() => editor.destroy()).not.toThrow();
     });
 });
+
+// ===========================================================================
+// ADR-149: Vditor must not fetch its engine from a public CDN
+// ===========================================================================
+
+describe("vditorCdn", () =>
+{
+    test("InitVditor_SetsCdnToThisOrigin_NotUnpkg", () =>
+    {
+        // Vditor lazily fetches lute (its markdown engine), the icon set,
+        // the language pack and every optional renderer as script tags it
+        // injects itself. Left at its default that is executable code from
+        // unpkg.com, arriving on a page that may be showing an admin
+        // session. The `cdn` option is the only thing that redirects it.
+        let captured: Record<string, unknown> | null = null;
+
+        (window as unknown as Record<string, unknown>).Vditor =
+            function (this: unknown, _id: string, opts: Record<string, unknown>)
+            {
+                captured = opts;
+                return {
+                    getValue: () => "",
+                    getHTML: () => "",
+                    destroy: () => {},
+                    disabled: () => {},
+                };
+            };
+
+        const editor = new MarkdownEditor(container, makeOptions({ mode: "wysiwyg" }));
+
+        expect(captured).not.toBeNull();
+
+        const cdn = String((captured as unknown as Record<string, unknown>).cdn ?? "");
+
+        expect(cdn).toContain("/lib/vditor-");
+        expect(cdn).not.toContain("unpkg.com");
+        expect(cdn).not.toContain("jsdelivr");
+
+        editor.destroy();
+        delete (window as unknown as Record<string, unknown>).Vditor;
+    });
+});

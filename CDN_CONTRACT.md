@@ -240,11 +240,31 @@ render nothing today and are pre-existing defects rather than migration risk:
 | `bi-folder-open` | a Font Awesome name | `bi-folder2-open` |
 | `bi-trash-alt` | a Font Awesome name | `bi-trash` |
 
-### Not served yet
+### vditor — a whole tree, and a stated residual
 
-- **vditor** — cannot be one file. It lazily fetches from a 21 MB `dist/js`
-  tree (echarts, mermaid, katex, mathjax, …) and injects those chunks without
-  `integrity`. Needs a decision; see `specs/2026-10-04-dependency-closure.prd.md` §6.
+vditor cannot be one file. It hardcodes `https://unpkg.com/vditor@3.11.2` and
+lazily fetches its markdown engine (`lute`, 3.9 MB), icon set, language pack
+and every optional renderer — mermaid, katex, mathjax, graphviz, echarts — as
+script tags it injects itself.
+
+The **whole tree** is served at `/lib/vditor-3.11.2/`, and this library's
+`MarkdownEditor` points vditor's `cdn` option at it. **No consuming app needs
+to change anything** — the apps never instantiate vditor directly, they use
+`createMarkdownEditor`, so this was ours to fix rather than theirs.
+
+Serving only the always-needed subset would have saved ~16 MB of deploy and
+broken silently the first time a user wrote a mermaid block, because the fetch
+would 404 against this origin instead of falling through to unpkg.
+
+**Known residual, stated rather than hidden:** the lazily-injected chunks
+carry **no SRI**, because vditor injects them itself and cannot be told to add
+an `integrity` attribute. Serving them from this origin removes third-party
+trust, which is most of the value, but vditor cannot reach the same assurance
+as the single-file assets without patching it.
+
+### Everything in the original request is now served
+
+Nothing from `2026-10-03-serve-the-dependency-closure.md` remains outstanding.
 
 ### What this does not fix
 

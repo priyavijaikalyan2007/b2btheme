@@ -27,7 +27,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { build } from "esbuild";
 
@@ -98,8 +98,47 @@ const ASSETS = [
         // 6.5.1 over the 6.4.0 some pages use — verified a strict superset of
         // every fa- class the apps reference (2518 defined, 92 used, zero
         // missing), so consolidating loses nothing.
+        /*
+         * vditor is the exception the original request could not have known
+         * about. It is NOT one self-contained file: it hardcodes
+         * `CDN = "https://unpkg.com/vditor@3.11.2"` and lazily fetches its
+         * markdown engine (lute, 3.9MB), icon set, language pack and every
+         * optional renderer — mermaid, katex, mathjax, graphviz, echarts —
+         * from there at runtime, injecting them as script tags WITHOUT an
+         * integrity attribute.
+         *
+         * So we serve the whole tree and point the `cdn` option at it. The
+         * alternative — serving only the always-needed subset — saves ~16MB
+         * of deploy and breaks silently the first time a user writes a
+         * mermaid block, because the fetch 404s against our origin instead
+         * of falling through to unpkg. A feature that fails on user content
+         * is exactly the class of defect this programme exists to remove.
+         *
+         * `types/` and `ts/` are excluded: typings and sources, never
+         * fetched by a browser.
+         *
+         * KNOWN RESIDUAL: the lazily-injected chunks carry no SRI, because
+         * vditor injects them itself. Serving them removes third-party
+         * trust, which is most of the value, but vditor cannot reach the
+         * same assurance as the single-file assets without patching it.
+         * Recorded in CDN_CONTRACT.md rather than hidden.
+         */
+        name: "vditor",
+        kind: "tree",
+        assetType: "script",
+        global: "Vditor",
+        version: "3.11.2",
+        pkg: "vditor",
+        entry: "dist/index.min.js",
+        include: [
+            { from: "node_modules/vditor/dist", to: "dist", exclude: ["types", "ts"] },
+        ],
+        note: "whole dist tree; set vditor's `cdn` option to /lib/vditor-3.11.2",
+    },
+    {
         name: "font-awesome",
         kind: "tree",
+        assetType: "stylesheet",
         version: "6.5.1",
         pkg: "@fortawesome/fontawesome-free",
         entry: "css/all.min.css",
@@ -117,6 +156,22 @@ function versionOf(pkg)
     return JSON.parse(readFileSync(path, "utf8")).version;
 }
 
+function copyDirRecursive(from, to, exclude)
+{
+    mkdirSync(to, { recursive: true });
+
+    for (const name of readdirSync(from))
+    {
+        if (exclude.includes(name)) { continue; }
+
+        const src = join(from, name);
+        const dst = join(to, name);
+
+        if (statSync(src).isDirectory()) { copyDirRecursive(src, dst, exclude); }
+        else { copyFileSync(src, dst); }
+    }
+}
+
 function copyTree(asset, baseDir)
 {
     let entryPath = null;
@@ -127,12 +182,10 @@ function copyTree(asset, baseDir)
 
         if (statSync(item.from).isDirectory())
         {
-            mkdirSync(dest, { recursive: true });
+            copyDirRecursive(item.from, dest, item.exclude ?? []);
 
-            for (const file of readdirSync(item.from))
-            {
-                copyFileSync(join(item.from, file), join(dest, file));
-            }
+            const candidate = join(baseDir, asset.entry);
+            if (existsSync(candidate)) { entryPath = candidate; }
         }
         else
         {
@@ -232,15 +285,19 @@ async function main()
                 version,
                 url: `/lib/${asset.name}-${version}/${asset.entry}`,
                 integrity: sriOf(bytes),
-                type: "stylesheet",
+                type: asset.assetType ?? "stylesheet",
+                ...(asset.global ? { global: asset.global } : {}),
                 bytes: bytes.length,
                 // Honest: the stylesheet is hashed, the fonts it pulls are not.
-                closure: "stylesheet-hashed; @font-face files are not SRI-able",
+                closure: asset.assetType === "script"
+                    ? "entry hashed; lazily-injected chunks are served from this origin but carry no SRI"
+                    : "stylesheet hashed; @font-face files are not SRI-able",
                 ...(asset.note ? { note: asset.note } : {}),
             };
 
             const kb = String(Math.round(bytes.length / 1024)).padStart(4);
-            console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB (css + webfonts)`);
+            const kind = asset.assetType === "script" ? "entry + lazy chunks" : "css + webfonts";
+            console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB (${kind})`);
             continue;
         }
 

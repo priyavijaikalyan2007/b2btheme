@@ -122,6 +122,18 @@ Read `lib.assets` rather than this table — it is generated, this is not.
 | `chart.js` | `window.Chart` | Also at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | — (stylesheet) | `/lib/font-awesome-6.5.1/css/all.min.css`. See below. |
 
+### Markdown editing
+
+If you use `createMarkdownEditor`, **there is nothing to configure**. The
+component points vditor at this origin's mirror of its full dependency tree
+(`/lib/vditor-3.11.2/`), so vditor's markdown engine, icons, language pack and
+optional renderers no longer come from `unpkg.com`.
+
+The one caveat worth knowing: those chunks are injected by vditor itself and
+therefore carry no `integrity` attribute. Serving them here removes
+third-party trust, but they cannot be hash-verified the way the single-file
+assets are.
+
 ### Icon fonts
 
 `font-awesome` is CSS plus webfonts, so it is a versioned directory rather
