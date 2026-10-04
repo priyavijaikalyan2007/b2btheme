@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added — dependency closure served from this origin (ADR-149)
+- **Four third-party libraries now ship from `static.knobby.io` instead of public CDNs**, at immutable versioned URLs with published SRI hashes: `dompurify`, `maxgraph`, `signalr`, `cytoscape`. Each is a single self-contained file at `/lib/<name>-<version>.js`; consumers read `/lib-manifest.json` to emit `integrity` attributes rather than transcribing hashes. See `CDN_CONTRACT.md` for the consumption pattern.
+- **`npm test` check `[10]`** re-pairs every published hash with its artifact, mutation-tested. A stale hash is a hard browser load failure — the outage SRI exists to prevent, not cause.
+
+### Security
+- **The sanitizer the apps pin was itself vulnerable.** Vendoring `dompurify` put it under this repo's `npm audit` for the first time and surfaced **19 open advisories against 3.2.4**, including XSS bypasses. It is served at **3.4.16**. Applications should move their pin regardless of which host they fetch from — changing the host would not have changed the exposure.
+- `postcss-cli` 11 → 12, clearing three high advisories published against existing tooling since the last audit. Compiled `custom.css` is byte-identical across the upgrade.
+
+
 ## 2026-10-04
 
 ### Fixed — a component that cannot read now refuses rather than fabricating (ADR-148)

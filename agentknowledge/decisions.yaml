@@ -3966,3 +3966,91 @@
     - "scripts/check-stand-in-reads.py"
     - "AGENTS.md"
     - "FRONTEND.md"
+
+- id: "ADR-149"
+  title: "Serve the frontend dependency closure at immutable URLs with SRI"
+  date: "2026-10-04"
+  status: "Accepted"
+  context: |
+    The consuming apps fetched executable code — maxGraph, DOMPurify, vditor,
+    chart.js, bootstrap, signalr, font-awesome, cytoscape — from jsdelivr and
+    cdnjs at page load. Requested in 2026-10-03-serve-the-dependency-closure.md
+    (apps #232, same programme as #212, subresource integrity).
+
+    The reasoning in the report is accepted as written. Runtime loading is
+    correct and bundling was tried and reverted — several apps share maxGraph,
+    and a bundled copy is re-pushed on every app deploy (Thinker went 462KB to
+    2.0MB). The question is whose infrastructure. A public CDN serving
+    arbitrary package content is a trust boundary we do not control, and
+    whatever it serves runs with the session of whoever is looking at the page.
+
+    Serving the closure and applying SRI are ONE requirement, not two:
+    `integrity` attaches to a <script src> tag and cannot attach to a bare
+    import specifier, so an artifact that resolves further imports at runtime
+    defeats the point — each of those arrives unverified.
+
+    FINDINGS THAT CHANGED THE WORK:
+
+    The priority asset was itself vulnerable. The report said do DOMPurify
+    first because a substituted sanitizer becomes the attack. Pinning the
+    apps' 3.2.4 in order to vendor it surfaced NINETEEN open advisories
+    against that version, including XSS bypasses. It does not need
+    substituting. Vendored at 3.4.16; the apps should move their pin
+    regardless of where they fetch from. maxgraph, signalr and cytoscape are
+    clean at the versions the apps use.
+
+    vditor cannot satisfy the one-file constraint. It hardcodes unpkg.com as
+    its default sub-resource CDN and lazily fetches from a 21MB dist/js tree
+    (echarts, mermaid, katex, mathjax, graphviz, abcjs, markmap, highlight.js,
+    lute, i18n), injecting those chunks as script tags with NO integrity
+    attribute. It is exactly the "one level down" case the report names, and
+    SRI on those chunks is unreachable without patching vditor. Deferred with
+    three options recorded in the spec.
+
+    The real asset list was larger than the report's table: cytoscape@3.26.0
+    was absent from it entirely, and the apps already load TWO font-awesome
+    versions. That is the argument for generating the manifest rather than
+    maintaining a list by hand.
+
+    /vendor/* could not simply be made immutable — its paths are unversioned,
+    so content legitimately changes on upgrade. cdn/_headers also warns in the
+    file that Cloudflare applies every matching rule, so overlapping patterns
+    emit duplicate Cache-Control headers. Hence a disjoint /lib/ prefix, and a
+    manifest at /lib-manifest.json rather than inside it.
+
+    D1 URL scheme /lib/<name>-<version>.<ext>, immutable for a year.
+    D2 Source versions pinned as devDependencies so the lockfile pins them and
+       npm audit covers them — a vendored library with a CVE is our problem
+       once we serve it, which is precisely how the DOMPurify finding surfaced.
+    D3 Closure is ASSERTED from esbuild's metafile, never grepped. A regex over
+       the output was tried first and gave three false positives from a class
+       method named `import`.
+    D4 The manifest is the deliverable: consumers generate integrity attributes
+       from it rather than transcribing hashes, which is what unblocks #212 and
+       what stops a cytoscape-shaped omission recurring.
+    D5 Access-Control-Allow-Origin on /lib/* is required, not cosmetic — SRI
+       forces crossorigin="anonymous", making even a script-src request CORS.
+  consequences: |
+    + Four libraries, including the sanitizer, no longer come from a trust
+      boundary we do not control.
+    + One canonical URL per asset, shared across apps, cached indefinitely —
+      an app deploy no longer invalidates the library.
+    + #212 is unblocked: hashes are published and machine-readable.
+    + Vendoring put these packages under our own npm audit, which is how 19
+      DOMPurify advisories were found. That coverage is a durable benefit of
+      D2 rather than a one-off.
+    - This repo now carries five devDependencies it does not itself use, and
+      owns the duty to upgrade them when advisories land.
+    - vditor, font-awesome, bootstrap/bootstrap-icons and chart.js are NOT yet
+      served. The first needs a design decision, the next two need decisions on
+      the apps' side about version skew.
+    - Serving an asset here gives a fixable host, NOT a guarantee of presence.
+      Any runtime fetch can be absent; what makes absence safe is fail-fast
+      behaviour in the consumer (ADR-148).
+  files:
+    - "specs/2026-10-04-dependency-closure.prd.md"
+    - "scripts/vendor-closure.mjs"
+    - "scripts/check-closure.mjs"
+    - "cdn/_headers"
+    - "CDN_CONTRACT.md"
+    - "package.json"

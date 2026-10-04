@@ -1828,3 +1828,22 @@ so the most literal compliant reading produces `createNullPicker()`.
 
 Answered the reports' open question with evidence: ConfirmDialog fails
 **visible**, not invisible-but-clickable.
+
+### DEBT-SEC-4 — dependency closure (2026-10-04)
+
+> Push and merge to main (no pr) then work on the last part: debt-sec-4
+
+ADR-148 merged to main (`7e1c5c6..0f00870`). Cloudflare auto-deploys from main,
+so the breaking `getValues()` change went live at that point.
+
+The closure work produced one finding that outranks the request itself: **the
+apps' pinned DOMPurify 3.2.4 carries 19 open advisories**, found only because
+vendoring put it under our `npm audit`. The report's own argument — "a
+substituted DOMPurify becomes the attack" — applies harder than intended: it
+did not need substituting. Served at 3.4.16.
+
+Also established that **vditor cannot satisfy the one-file constraint** (21 MB
+of lazily-fetched chunks injected without `integrity`), that **cytoscape was
+missing from the request**, and that the apps run **two font-awesome
+versions**. Four assets shipped; the rest need decisions that are partly
+theirs.
