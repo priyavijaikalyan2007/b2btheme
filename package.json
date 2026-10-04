@@ -53,11 +53,12 @@
   "bugs": {
     "url": "https://github.com/priyavijaikalyan2007/b2btheme/issues"
   },
-  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start \u2014 vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
+  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start — vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
   "overrides": {
     "undici": "^7.24.3"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "6.5.1",
     "@maxgraph/core": "0.22.0",
     "@microsoft/signalr": "8.0.0",
     "@playwright/test": "^1.63.0",

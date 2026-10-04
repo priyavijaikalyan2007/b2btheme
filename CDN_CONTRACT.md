@@ -198,19 +198,53 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `maxgraph` | 0.22.0 | ESM bundled to IIFE; 240 inputs, zero externals |
 | `signalr` | 8.0.0 | |
 | `cytoscape` | 3.26.0 | Was missing from the original request |
+| `chart.js` | 4.5.1 | Also still at `/vendor/chart.js/` unversioned, for existing consumers |
+| `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
+
+`font-awesome` is CSS plus webfonts rather than a script, so it is served as a
+versioned **directory**:
+
+```html
+<link rel="stylesheet"
+      href="https://static.knobby.io/lib/font-awesome-6.5.1/css/all.min.css"
+      integrity="<from the manifest>" crossorigin="anonymous">
+```
+
+The stylesheet carries an SRI hash. The `@font-face` files it pulls **cannot**
+— CSS has no way to express integrity for them. That residual is acceptable
+here where it would not be for executable code: a substituted font renders
+wrong glyphs, it does not run. The stylesheet is copied verbatim from the npm
+package, so provenance is verifiable by diffing against it.
+
+### Bootstrap and bootstrap-icons — use what this origin already serves
+
+Do **not** vendor these under `/lib/`. They are already published, and have
+been for longer than `/lib/` has existed:
+
+```html
+<script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/icons/bootstrap-icons.css">
+```
+
+Verified safe to migrate to, rather than assumed: this origin serves
+**bootstrap-icons 1.13.1**, which defines 2078 classes and is a **strict
+superset** of every `bi-` class the apps use. Bootstrap 5.3.8 against the
+pinned 5.3.3 is a patch-level difference within the same minor.
+
+Three `bi-` classes used in the apps resolve in **neither** version, so they
+render nothing today and are pre-existing defects rather than migration risk:
+
+| Used | Problem | Intended |
+|---|---|---|
+| `bi-bi-arrow-right` | doubled prefix | `bi-arrow-right` |
+| `bi-folder-open` | a Font Awesome name | `bi-folder2-open` |
+| `bi-trash-alt` | a Font Awesome name | `bi-trash` |
 
 ### Not served yet
 
 - **vditor** — cannot be one file. It lazily fetches from a 21 MB `dist/js`
   tree (echarts, mermaid, katex, mathjax, …) and injects those chunks without
   `integrity`. Needs a decision; see `specs/2026-10-04-dependency-closure.prd.md` §6.
-- **font-awesome** — the apps load two versions (6.4.0 and 6.5.1). Which one
-  survives is their decision.
-- **bootstrap / bootstrap-icons** — this origin already serves 5.3.8 and
-  1.13.x at `/js/` and `/icons/`; the apps pin 5.3.3 and 1.11.3. Serving both
-  needs a version-skew decision, not just a build step.
-- **chart.js** — already served unversioned at `/vendor/chart.js/`. Moving it
-  to `/lib/` is mechanical once the above are settled.
 
 ### What this does not fix
 

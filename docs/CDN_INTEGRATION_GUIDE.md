@@ -119,6 +119,51 @@ Read `lib.assets` rather than this table — it is generated, this is not.
 | `maxgraph` | `window.maxgraph` | ESM bundled to IIFE; a drop-in for code already reading `window.maxgraph` |
 | `signalr` | `window.signalR` | |
 | `cytoscape` | `window.cytoscape` | |
+| `chart.js` | `window.Chart` | Also at `/vendor/chart.js/` unversioned, for existing consumers |
+| `font-awesome` | — (stylesheet) | `/lib/font-awesome-6.5.1/css/all.min.css`. See below. |
+
+### Icon fonts
+
+`font-awesome` is CSS plus webfonts, so it is a versioned directory rather
+than a single script:
+
+```html
+<link rel="stylesheet"
+      href="https://static.knobby.io/lib/font-awesome-6.5.1/css/all.min.css"
+      integrity="<from lib.assets['font-awesome'].integrity>"
+      crossorigin="anonymous">
+```
+
+**6.5.1 is the only version served.** If your pages currently load 6.4.0,
+move them — 6.5.1 defines 2518 `fa-` classes and is a verified strict
+superset of all 92 the apps use, so consolidating loses nothing.
+
+The stylesheet is hashed; the `@font-face` files it pulls cannot be, because
+CSS has no way to express integrity for them. Acceptable here where it would
+not be for executable code: a substituted font renders wrong glyphs, it does
+not run.
+
+**Bootstrap and bootstrap-icons are NOT under `/lib/`.** They are already
+served, and have been for longer:
+
+```html
+<script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/icons/bootstrap-icons.css">
+```
+
+These are latest-channel paths, so they carry no hash for the reason given in
+§2. Migrating to them from `jsdelivr` is safe: this origin serves
+bootstrap-icons 1.13.1, a strict superset of every `bi-` class the apps use.
+
+While verifying that, three `bi-` classes turned out to resolve in **neither**
+1.11.3 nor 1.13.1 — they render nothing today, and are worth fixing
+independently of this migration:
+
+| Used | Problem | Intended |
+|---|---|---|
+| `bi-bi-arrow-right` | doubled prefix | `bi-arrow-right` |
+| `bi-folder-open` | a Font Awesome name, not a Bootstrap one | `bi-folder2-open` |
+| `bi-trash-alt` | a Font Awesome name, not a Bootstrap one | `bi-trash` |
 
 Each is a **single self-contained file**. None of them fetches a further
 module at runtime, which is asserted at build time from the bundler's own

@@ -27,7 +27,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { build } from "esbuild";
 
@@ -75,6 +75,40 @@ const ASSETS = [
         global: "cytoscape",
         note: "absent from the original request; found by scanning the apps repo",
     },
+    {
+        name: "chart.js",
+        kind: "copy",
+        from: "node_modules/chart.js/dist/chart.umd.min.js",
+        global: "Chart",
+        note: "also served unversioned at /vendor/chart.js/ for existing consumers",
+    },
+    {
+        // The stylesheet is copied VERBATIM — never rewritten to drop the
+        // .ttf fallbacks it references, even though no browser that supports
+        // woff2 will ever fetch one. Byte-identical output means anyone can
+        // verify provenance by diffing against the npm package; editing it
+        // to save ~700KB would trade that for nothing a user notices.
+        //
+        // CSS + webfonts, so it cannot be one file. The STYLESHEET carries an
+        // SRI hash; the @font-face files it pulls cannot (CSS has no way to
+        // express integrity for them). That residual is acceptable where it
+        // would not be for executable code: a substituted font renders wrong
+        // glyphs, it does not run.
+        //
+        // 6.5.1 over the 6.4.0 some pages use — verified a strict superset of
+        // every fa- class the apps reference (2518 defined, 92 used, zero
+        // missing), so consolidating loses nothing.
+        name: "font-awesome",
+        kind: "tree",
+        version: "6.5.1",
+        pkg: "@fortawesome/fontawesome-free",
+        entry: "css/all.min.css",
+        include: [
+            { from: "node_modules/@fortawesome/fontawesome-free/css/all.min.css", to: "css/all.min.css" },
+            { from: "node_modules/@fortawesome/fontawesome-free/webfonts", to: "webfonts" },
+        ],
+        note: "consolidates the two versions the apps load (6.4.0 and 6.5.1)",
+    },
 ];
 
 function versionOf(pkg)
@@ -83,8 +117,38 @@ function versionOf(pkg)
     return JSON.parse(readFileSync(path, "utf8")).version;
 }
 
+function copyTree(asset, baseDir)
+{
+    let entryPath = null;
+
+    for (const item of asset.include)
+    {
+        const dest = join(baseDir, item.to);
+
+        if (statSync(item.from).isDirectory())
+        {
+            mkdirSync(dest, { recursive: true });
+
+            for (const file of readdirSync(item.from))
+            {
+                copyFileSync(join(item.from, file), join(dest, file));
+            }
+        }
+        else
+        {
+            mkdirSync(dirname(dest), { recursive: true });
+            copyFileSync(item.from, dest);
+            if (item.to === asset.entry) { entryPath = dest; }
+        }
+    }
+
+    return entryPath;
+}
+
 function packageOf(asset)
 {
+    if (asset.pkg) { return asset.pkg; }
+
     if (asset.kind === "copy")
     {
         // node_modules/<pkg...>/dist/... -> <pkg...>
@@ -157,6 +221,28 @@ async function main()
         const outFile = join(OUT_DIR, fileName);
 
         let inputs = 1;
+
+        if (asset.kind === "tree")
+        {
+            const baseDir = join(OUT_DIR, `${asset.name}-${version}`);
+            const entryFile = copyTree(asset, baseDir);
+            const bytes = readFileSync(entryFile);
+
+            manifest.assets[asset.name] = {
+                version,
+                url: `/lib/${asset.name}-${version}/${asset.entry}`,
+                integrity: sriOf(bytes),
+                type: "stylesheet",
+                bytes: bytes.length,
+                // Honest: the stylesheet is hashed, the fonts it pulls are not.
+                closure: "stylesheet-hashed; @font-face files are not SRI-able",
+                ...(asset.note ? { note: asset.note } : {}),
+            };
+
+            const kb = String(Math.round(bytes.length / 1024)).padStart(4);
+            console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB (css + webfonts)`);
+            continue;
+        }
 
         if (asset.kind === "copy")
         {

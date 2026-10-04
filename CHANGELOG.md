@@ -13,8 +13,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **`font-awesome` 6.5.1 and `chart.js` 4.5.1 join the dependency closure.** font-awesome is CSS + webfonts, so it ships as a versioned directory at `/lib/font-awesome-6.5.1/`; the stylesheet is hashed and byte-identical to the npm package. **It consolidates the two versions the apps currently load** — 6.5.1 is a verified strict superset of all 92 `fa-` classes in use.
 - **[`docs/CDN_INTEGRATION_GUIDE.md`](docs/CDN_INTEGRATION_GUIDE.md)** — the entry point for consuming applications: loading the theme and components, reading `/lib-manifest.json` to emit `integrity` attributes, why `crossorigin="anonymous"` is mandatory, why the theme's own tags deliberately carry no hash, and what your code must do when a load fails. Linked from `README.md`, `AGENTS.md`, `COMPONENTS.md`, `DOCUMENTATION.md`, `CDN_CONTRACT.md` and the docs index.
 - **`npm test` check `[11]`** — fails the build when a file in `docs/` is not registered for publication.
+
+### Changed
+- **Bootstrap and bootstrap-icons are deliberately NOT vendored under `/lib/`** — this origin already serves them at `/js/` and `/icons/`. Verified rather than assumed: our bootstrap-icons 1.13.1 is a strict superset of every `bi-` class the apps use, so migrating off jsdelivr 1.11.3 is safe. Three `bi-` classes used in consuming apps resolve in *neither* version and render nothing today; the intended names are recorded in `CDN_CONTRACT.md`.
 
 ### Fixed
 - **Seven documents existed but were never published, and the docs index linked three of them** — so `static.knobby.io/docs/` carried broken links while every file was present in the repository. `APPS_TEAM_USAGE_GUIDE.md`, `BEGINNERS_GUIDE.md`, `SURFACE_CONTRACT.md`, `CAPABILITY_MANIFEST.md`, `DYNAMIC_UI_GUIDE.md`, `DYNAMIC_UI_MIGRATION.md` and `ABOUT_DEPRECATION_WARNINGS.md` are now generated and reachable.
