@@ -188,6 +188,22 @@ else
 fi
 echo ""
 
+# ── 10. Vendored dependency closure matches its published hashes ──
+# DEBT-SEC-4 / ADR-149. Consumers pin integrity="sha384-..." from the
+# manifest; a hash that no longer matches its file is a hard load failure in
+# the browser, which is the outage SRI exists to prevent rather than cause.
+echo "[10] Dependency closure (ADR-149)"
+if [ -f scripts/check-closure.mjs ]; then
+    if node scripts/check-closure.mjs; then
+        PASS=$((PASS + 1))
+    else
+        fail "vendored artifacts do not match the published manifest (see above)"
+    fi
+else
+    fail "scripts/check-closure.mjs missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

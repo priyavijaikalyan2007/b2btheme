@@ -16,9 +16,35 @@
   Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
 
-# Vendored libraries (chart.js, ...): change only on dependency upgrades.
+# Vendored libraries (chart.js, ...) at UNVERSIONED paths: content changes on
+# a dependency upgrade, so these can never be immutable. New assets go under
+# /lib/ instead — see below.
 /vendor/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# Dependency closure at IMMUTABLE VERSIONED paths (ADR-149, DEBT-SEC-4).
+# The version is in the filename, so a given path never changes content and a
+# browser may hold it indefinitely; a version bump is a new path. Every app
+# shares one cache entry, which is the point — a library inside an app bundle
+# is re-pushed on every deploy of that app.
+#
+# Access-Control-Allow-Origin is REQUIRED here, not optional: SRI forces
+# crossorigin="anonymous", which makes even a <script src> request CORS. Omit
+# it and every integrity-protected tag fails to load.
+#
+# Deliberately a separate prefix from /vendor/* — the two patterns must not
+# overlap, or Cloudflare emits both Cache-Control headers (see the note at the
+# top of this file). For the same reason the manifest lives at
+# /lib-manifest.json rather than inside /lib/.
+/lib/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# SRI manifest: consumers generate their script tags from this, so it must
+# never be stale — a cached manifest would pair a new URL with an old hash.
+/lib-manifest.json
+  Cache-Control: no-cache
+  Access-Control-Allow-Origin: *
 
 # Parity-critical "latest" assets: short freshness so fixes propagate to
 # auth.knobby.io within minutes, stale-while-revalidate keeps loads fast.

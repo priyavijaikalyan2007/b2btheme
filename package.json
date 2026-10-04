@@ -16,7 +16,7 @@
     "build:docs": "npm run generate:docs && npm run copy:docs",
     "build:info": "bash scripts/build-info.sh",
     "build:manifest": "node scripts/build-manifest.js",
-    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run copy:cdn && npm run build:docs && npm run build:info",
+    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run build:vendor && npm run copy:cdn && npm run build:docs && npm run build:info",
     "copy:cdn": "cp cdn/_headers dist/_headers",
     "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && cp dist/components/themeinit/themeinit.js dist/js/theme-init.js && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
     "watch": "npm run watch:scss",
@@ -32,7 +32,8 @@
     "test:e2e:headed": "npx playwright test --headed",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
-    "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure"
+    "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
+    "build:vendor": "node scripts/vendor-closure.mjs"
   },
   "keywords": [
     "bootstrap",
@@ -52,11 +53,13 @@
   "bugs": {
     "url": "https://github.com/priyavijaikalyan2007/b2btheme/issues"
   },
-  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start — vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
+  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start \u2014 vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
   "overrides": {
     "undici": "^7.24.3"
   },
   "devDependencies": {
+    "@maxgraph/core": "0.22.0",
+    "@microsoft/signalr": "8.0.0",
     "@playwright/test": "^1.63.0",
     "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.4.27",
@@ -64,11 +67,14 @@
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.1",
     "cssnano": "^7.1.4",
+    "cytoscape": "3.26.0",
+    "dompurify": "3.4.16",
+    "esbuild": "0.28.2",
     "jsdom": "^29.0.0",
     "marked": "^18.0.12",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.5.12",
-    "postcss-cli": "^11.0.1",
+    "postcss-cli": "^12.0.0",
     "sass": "^1.93.2",
     "terser": "^5.46.1",
     "typescript": "^5.9.3",
