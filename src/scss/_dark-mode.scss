@@ -106,7 +106,7 @@
 
     // -- RGB channel variants (for rgba() usage in components) --
     --theme-text-primary-rgb:   15, 23, 42;
-    --theme-surface-bg-rgb:     253, 253, 254;   // must track --theme-surface-bg
+    --theme-surface-bg-rgb:     255, 255, 255;   // must track --theme-surface-bg
     --theme-border-rgb:         203, 213, 225;
 
     // -- Chrome: glow + edge shadow tokens --
@@ -247,7 +247,7 @@
 
     // -- RGB channels --
     --theme-text-primary-rgb:   241, 245, 249;
-    --theme-surface-bg-rgb:     21, 29, 43;      // must track --theme-surface-bg
+    --theme-surface-bg-rgb:     22, 31, 46;      // must track --theme-surface-bg
     --theme-border-rgb:         71, 85, 105;
 
     // -- Metric card contrast-safe colours --

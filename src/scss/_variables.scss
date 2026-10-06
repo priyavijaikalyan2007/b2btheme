@@ -33,10 +33,12 @@ $gray-800: #1e293b;
 $gray-700: #334155;
 $gray-600: #475569;
 // Between $gray-600 and $gray-500. Exists because $gray-500 fails WCAG AA as
-// muted text on the ADR-147 surface ladder (3.94:1 on the darkest light
-// surface); this measures 5.00:1 there while staying visibly lighter than
-// $gray-700, which carries --theme-text-secondary.
-$gray-550: #556478;
+// muted text on the surface ladder. Darkened again by ADR-150: the widened
+// ladder put the darkest light surface at #d8e2ee, where the previous #556478
+// measured 4.61 — passing by hundredths, which is the state that broke the
+// first time a background moved (AGENT_INSIGHTS 6.8). This measures 5.29
+// there, and stays clearly lighter than $gray-700 on --theme-text-secondary.
+$gray-550: #4d5b6d;
 $gray-500: #64748b;
 $gray-400: #94a3b8;
 $gray-300: #cbd5e1;
@@ -83,15 +85,33 @@ $orange-100: #ffedd5;
 // Ordered darkest to lightest in light mode; the order inverts in dark, where
 // elevation lightens instead of darkening.
 
-$surface-sunken:       #e6eaf1 !default;   // wells, code blocks, inset areas
-$surface-ground:       #eef1f6 !default;   // the page ground
-$surface-raised:       #f5f7fa !default;   // chrome — sidebars, toolbars, headers
-$surface-content:      #fdfdfe !default;   // content surfaces
+// ADR-150 widened these and gave chrome a deliberate TINT. The ADR-147 ladder
+// separated planes by luminance alone, and the steps were too close to read:
+// chrome against content measured 1.056 — a ratio of 1.000 is "identical" — so
+// a sidebar, toolbar or status bar was distinguished from the document beside
+// it almost entirely by its border.
+//
+// Tinting chrome alone does not work: it moves chrome DOWN into the ground
+// step below it (chrome|ground fell to 1.013 when tried). The whole ladder has
+// to widen, which is why every value here moves.
+//
+// Chrome now also carries a low-saturation cast toward the primary, so it
+// reads as a different MATERIAL rather than merely a dimmer white. That is the
+// one Material Design 3 idea in play here — a tonal surface, not a grey one.
+//
+// Measured on-screen adjacencies (light / dark):
+//     chrome | content   1.108 / 1.240    a sidebar meeting the document
+//     chrome | ground    1.085 / 1.383    a toolbar over the page
+//     sunken | content   1.310 / 1.160    a well inside a card
+$surface-sunken:       #d8e2ee !default;   // wells, code blocks, inset areas
+$surface-ground:       #e3ebf5 !default;   // the page ground
+$surface-raised:       #edf4fc !default;   // chrome — sidebars, toolbars, headers
+$surface-content:      #ffffff !default;   // content surfaces
 
 $surface-sunken-dark:  #090f19 !default;
 $surface-ground-dark:  #0d1420 !default;
-$surface-content-dark: #151d2b !default;
-$surface-raised-dark:  #1f2937 !default;
+$surface-content-dark: #161f2e !default;
+$surface-raised-dark:  #223044 !default;
 
 // =============================================================================
 // THEME COLORS
