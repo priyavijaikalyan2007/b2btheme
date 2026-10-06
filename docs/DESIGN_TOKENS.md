@@ -22,7 +22,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$gray-800` | `#1e293b` |  |
 | `$gray-700` | `#334155` |  |
 | `$gray-600` | `#475569` |  |
-| `$gray-550` | `#556478` | $gray-700, which carries --theme-text-secondary. |
+| `$gray-550` | `#4d5b6d` | there, and stays clearly lighter than $gray-700 on --theme-text-secondary. |
 | `$gray-500` | `#64748b` |  |
 | `$gray-400` | `#94a3b8` |  |
 | `$gray-300` | `#cbd5e1` |  |
@@ -56,14 +56,14 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `$surface-sunken` | `#e6eaf1` | wells, code blocks, inset areas |
-| `$surface-ground` | `#eef1f6` | the page ground |
-| `$surface-raised` | `#f5f7fa` | chrome — sidebars, toolbars, headers |
-| `$surface-content` | `#fdfdfe` | content surfaces |
+| `$surface-sunken` | `#d8e2ee` | wells, code blocks, inset areas |
+| `$surface-ground` | `#e3ebf5` | the page ground |
+| `$surface-raised` | `#edf4fc` | chrome — sidebars, toolbars, headers |
+| `$surface-content` | `#ffffff` | content surfaces |
 | `$surface-sunken-dark` | `#090f19` |  |
 | `$surface-ground-dark` | `#0d1420` |  |
-| `$surface-content-dark` | `#151d2b` |  |
-| `$surface-raised-dark` | `#1f2937` |  |
+| `$surface-content-dark` | `#161f2e` |  |
+| `$surface-raised-dark` | `#223044` |  |
 
 ## THEME COLORS
 
@@ -77,7 +77,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$danger` | `$red-600 (#dc2626)` |  |
 | `$light` | `$gray-100 (#f1f5f9)` |  |
 | `$dark` | `$gray-900 (#0f172a)` |  |
-| `$body-bg` | `$surface-ground (#eef1f6)` | invisible on any Bootstrap-driven page. |
+| `$body-bg` | `$surface-ground (#e3ebf5)` | invisible on any Bootstrap-driven page. |
 | `$body-color` | `$gray-900 (#0f172a)` |  |
 | `$link-color` | `$blue-700 (#1864ab)` | Links - Higher contrast for accessibility |
 | `$link-decoration` | `underline` |  |
@@ -165,7 +165,7 @@ _No variables in this section._
 | `$input-btn-padding-y-lg` | `0.5rem` | 8px (was 7px) |
 | `$input-btn-padding-x-lg` | `1rem` | 16px (was 14px) |
 | `$input-btn-font-size-lg` | `$font-size-lg (1.0625rem)` |  |
-| `$input-bg` | `$surface-content (#fdfdfe)` |  |
+| `$input-bg` | `$surface-content (#ffffff)` |  |
 | `$input-disabled-bg` | `$gray-200 (#e2e8f0)` |  |
 | `$input-disabled-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$input-color` | `$body-color ($gray-900)` |  |
@@ -183,7 +183,7 @@ _No variables in this section._
 | `$table-cell-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$table-cell-padding-y-sm` | `0.25rem` | 4px (was 3px) |
 | `$table-cell-padding-x-sm` | `0.5rem` | 8px (was 6px) |
-| `$table-striped-bg` | `$surface-ground (#eef1f6)` | must read against a near-white card |
+| `$table-striped-bg` | `$surface-ground (#e3ebf5)` | must read against a near-white card |
 | `$table-hover-bg` | `rgba($primary, 0.05)` |  |
 | `$table-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$card-spacer-y` | `0.75rem` | 12px (was 10px) |
@@ -192,7 +192,7 @@ _No variables in this section._
 | `$card-border-radius` | `$border-radius (4px)` |  |
 | `$card-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$card-bg` | `white` |  |
-| `$card-cap-bg` | `$surface-raised (#f5f7fa)` | card headers are chrome |
+| `$card-cap-bg` | `$surface-raised (#edf4fc)` | card headers are chrome |
 | `$dropdown-padding-y` | `0.375rem` | 6px (was 5px) |
 | `$dropdown-spacer` | `0.125rem` |  |
 | `$dropdown-font-size` | `$font-size-base (0.9375rem)` |  |
@@ -232,7 +232,7 @@ _No variables in this section._
 | `$breadcrumb-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$breadcrumb-item-padding-x` | `0.5rem` | 8px (was 7px) |
 | `$breadcrumb-font-size` | `$font-size-sm (0.85rem)` |  |
-| `$breadcrumb-bg` | `$surface-raised (#f5f7fa)` |  |
+| `$breadcrumb-bg` | `$surface-raised (#edf4fc)` |  |
 | `$breadcrumb-divider-color` | `$gray-500 (#64748b)` |  |
 | `$breadcrumb-active-color` | `$gray-700 (#334155)` |  |
 | `$pagination-padding-y` | `0.375rem` | 6px (was 5px) |

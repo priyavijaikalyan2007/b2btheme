@@ -4054,3 +4054,64 @@
     - "cdn/_headers"
     - "CDN_CONTRACT.md"
     - "package.json"
+
+- id: "ADR-150"
+  title: "Widen the surface ladder and tint chrome, so panels read as a different material"
+  date: "2026-10-06"
+  status: "Accepted"
+  context: |
+    Reported after living with ADR-147: side panels, top bars and status bars
+    were not well differentiated from content, and a moderate tint was asked
+    for.
+
+    Measurement made the complaint precise. Chrome against content was 1.056,
+    where 1.000 means the two colours are identical — a sidebar was separated
+    from the document beside it almost entirely by its 1px border. Dark was
+    1.151, better, which is why this read as mostly a light-mode problem.
+
+    Two faults in the ADR-147 ladder, and the second is the one that matters:
+
+    (1) It separated planes by LUMINANCE ALONE. Saturation never exceeded 0.33
+    across all four surfaces, so every plane was the same near-neutral material
+    at a different brightness. Nothing said "this is chrome" except "this is
+    slightly darker".
+
+    (2) It had run out of room. Four steps were packed between #e6eaf1 and
+    white, chrome sitting 0.051 of luminance below content and 0.051 above
+    ground. Tinting chrome alone was tried FIRST and does not work: chrome
+    moves down into the ground step and chrome|ground collapses from 1.055 to
+    1.013. The whole ladder has to widen.
+
+    D1 Widen every step and give chrome a low-saturation cast toward the
+       primary, so it reads as a different MATERIAL rather than a dimmer white.
+       This is the one Material Design 3 idea in play — a tonal surface.
+    D2 Darken $gray-550 again, #556478 -> #4d5b6d. The widened ladder puts the
+       darkest light surface at #d8e2ee, where the old value measured 4.61 —
+       passing AA by hundredths, the exact state that broke when a background
+       last moved (AGENT_INSIGHTS 6.8). It measures 5.29 there now.
+    D3 Judge separation on the adjacencies that OCCUR ON SCREEN, not on every
+       pair. sunken|ground measures only 1.040 in dark and that is fine: wells
+       sit inside content, never against the page ground. Optimising a pair
+       that never abuts would have cost contrast elsewhere for nothing.
+  consequences: |
+    + The edge the complaint was about roughly doubles: chrome|content 1.056 ->
+      1.108 light, 1.151 -> 1.240 dark.
+    + Chrome is a tinted material rather than a grey one, which is what makes a
+      panel read as chrome at a glance rather than on inspection.
+    + Luminance ordering stays monotonic in both themes — light ascends
+      sunken->content, dark inverts with chrome highest — so the 140 call sites
+      that depend on the direction are untouched.
+    + Every value still flows from the Sass ladder; nothing in the fleet
+      hardcoded the old hexes, verified by grep before editing.
+    - Every surface value changes, not just chrome. That is forced by the
+      geometry rather than chosen, but it means the whole interface shifts, and
+      a reviewer comparing against a screenshot from yesterday will see more
+      than the tint.
+    - Content is now pure #ffffff rather than #fdfdfe. The near-white bought
+      nothing once the ladder widened and cost separation at the top.
+    - Contrast is still verified by a hand-run browser audit. There is no
+      automated gate (DEBT-WEB-1), so a future surface change can still regress
+      a text pair silently.
+  files:
+    - "src/scss/_variables.scss"
+    - "src/scss/_dark-mode.scss"

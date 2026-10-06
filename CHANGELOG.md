@@ -12,6 +12,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Changed
+- **Chrome is now a tinted surface, and the ladder is wider (ADR-150).** Side panels, toolbars and status bars were barely distinguishable from the content beside them — measured, chrome against content was **1.056**, where 1.000 means identical. The ADR-147 ladder separated planes by luminance alone (saturation never exceeded 0.33 across all four), so every surface was the same near-neutral material at a slightly different brightness. Chrome now carries a low-saturation cast toward the primary and reads as a different material rather than a dimmer white.
+- **Every surface value moves, not only chrome.** Tinting chrome alone pushes it down into the step below — `chrome|ground` collapses to 1.013 — so the ladder had to widen. Content is now pure `#ffffff`. Measured on the adjacencies that actually occur on screen: `chrome|content` **1.108** light / **1.240** dark (from 1.056 / 1.151), `chrome|ground` 1.085 / 1.383, `sunken|content` 1.310 / 1.160.
+- **`--theme-text-muted` darkens** to `#4d5b6d`. On the widened ladder's darkest light surface the previous value measured 4.61 — passing AA by hundredths, which is the state that broke the last time a background moved. It measures 5.29 there now; the worst text pair overall is 5.29 light / 5.20 dark against a 4.5 floor.
+
+
 ### Security
 - **The Markdown editor no longer loads its engine from `unpkg.com`.** Vditor lazily fetches its markdown engine, icon set, language pack and optional renderers (mermaid, katex, mathjax, graphviz, echarts) as script tags it injects itself — executable third-party code on pages that may be showing an admin session. The full tree is now served from this origin at `/lib/vditor-3.11.2/` and `MarkdownEditor` points vditor at it. **Consuming apps need no change**; they use `createMarkdownEditor` rather than vditor directly. Known residual: the injected chunks carry no SRI, because vditor injects them itself.
 
