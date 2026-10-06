@@ -45,15 +45,33 @@ border: 1px solid var(--theme-border-color);
 
 ### 2.2 Token Reference (Quick Lookup)
 
+<!-- ladder-note -->
+> **The four surfaces are a ladder, and the gaps are load-bearing.** They are
+> declared once as Sass variables in `src/scss/_variables.scss` and
+> interpolated here, so change them there, never at a call site.
+>
+> Two properties must survive any edit. **Ordering**: light ascends
+> `sunken < ground < raised < content`; dark inverts, with `raised` highest.
+> About 140 call sites depend on that direction. **Separation**: judge it on
+> the adjacencies that occur on screen — `chrome|content` (a sidebar meeting
+> the document), `chrome|ground` (a toolbar over the page), `sunken|content`
+> (a well inside a card). `sunken|ground` measures 1.040 in dark and that is
+> fine; those two planes never abut.
+>
+> Chrome is **tinted** toward the primary, not merely darkened. That is what
+> makes a panel read as chrome at a glance. ADR-147 separated the planes by
+> luminance alone and the result measured 1.056 against content, where 1.000
+> means identical.
+
 | Token | Light | Dark | Use for |
 |---|---|---|---|
-| `--theme-body-bg` | `#eef1f6` | `#0d1420` | The page ground (ADR-147) |
-| `--theme-surface-bg` | `#fdfdfe` | `#151d2b` | Content surfaces |
-| `--theme-surface-raised-bg` | `#f5f7fa` | `#1f2937` | Chrome — headers, sidebars, toolbars |
-| `--theme-surface-sunken-bg` | `#e6eaf1` | `#090f19` | Inset areas, wells, code blocks |
+| `--theme-body-bg` | `#e3ebf5` | `#0d1420` | The page ground (ADR-150) |
+| `--theme-surface-bg` | `#ffffff` | `#161f2e` | Content surfaces |
+| `--theme-surface-raised-bg` | `#edf4fc` | `#223044` | Chrome — headers, sidebars, toolbars. **Tinted**, not merely darker (ADR-150) |
+| `--theme-surface-sunken-bg` | `#d8e2ee` | `#090f19` | Inset areas, wells, code blocks |
 | `--theme-text-primary` | `$gray-900` | `$gray-100` | Primary text, headings |
 | `--theme-text-secondary` | `$gray-700` | `$gray-300` | Body text, descriptions |
-| `--theme-text-muted` | `#556478` | `$gray-400` | Subtle labels, hints (AA-safe on every surface) |
+| `--theme-text-muted` | `#4d5b6d` | `$gray-400` | Subtle labels, hints. 5.29 on the darkest light surface (ADR-150) |
 | `--theme-text-on-primary` | `$gray-50` | `$gray-50` | Text on primary-coloured bg |
 | `--theme-border-color` | `$gray-300` | `$gray-600` | Standard borders |
 | `--theme-border-subtle` | `$gray-200` | `$gray-700` | Subtle separators |

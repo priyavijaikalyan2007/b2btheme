@@ -3687,7 +3687,7 @@
 - id: "ADR-147"
   title: "Visual refresh — tonal surface ladder, state layers, two-layer shadows, small corner radius"
   date: "2026-09-08"
-  status: "Accepted"
+  status: "Accepted; surface values superseded by ADR-150"
   context: |
     Applications built on this library were compared against Material Design 3
     applications and read as dated. Five aspects of MD3 were named as better:

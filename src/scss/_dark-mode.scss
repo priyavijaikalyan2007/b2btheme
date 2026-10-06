@@ -2,11 +2,14 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: DarkMode
  * 📜 PURPOSE: Semantic CSS custom properties for light/dark theme switching.
+ *    The surface ladder is DEFINED in _variables.scss and interpolated here —
+ *    edit it there, never at a call site (ADR-150).
  *    Defines shared theme tokens on :root (light defaults) and overrides
  *    them in [data-bs-theme="dark"]. All component SCSS files consume
  *    these tokens via var(--theme-*) so colours respond at runtime.
- * RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[ThemeToggle]]
- * FLOW: [_variables.scss] -> [Bootstrap] -> [This File] -> [Components]
+ * 🔗 RELATES: [[EnterpriseTheme]], [[SurfaceLadder]], [[StateLayer]],
+ *    [[ElevationScale]], [[ThemeToggle]]
+ * ⚡ FLOW: [_variables.scss] -> [Bootstrap] -> [This File] -> [Components]
  * ----------------------------------------------------------------------------
  */
 

@@ -11,7 +11,11 @@ Created: 2026
 
 # Visual Refresh 2026 — Selected Material Design 3 Ideas
 
-**Status:** Approved (user delegated the detail decisions; review happens against the demos)
+**Status:** Shipped. **Superseded in part by ADR-150** — every surface value in
+§4 D2 was replaced on 2026-10-06 when the ladder was widened and chrome was
+tinted. The hexes below are kept as the historical record of what ADR-147
+shipped; for current values see `src/scss/_variables.scss`, `DARKMODE.md`, or
+`specs/2026-10-06-surface-tint.prd.md`. Everything else here still holds.
 **Date:** 2026-09-08
 **ADR:** ADR-147
 **Branch:** `feat/md3-inspired-refinements`

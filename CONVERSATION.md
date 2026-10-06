@@ -1847,3 +1847,37 @@ of lazily-fetched chunks injected without `integrity`), that **cytoscape was
 missing from the request**, and that the apps run **two font-awesome
 versions**. Four assets shipped; the rest need decisions that are partly
 theirs.
+
+---
+
+## 2026-10-06 — ADR-150: surface tint
+
+> btw, going back to our previous theme work, i noticed that sidepanels, top
+> bars, status bars etc. aren't particularly well differentiated via color.
+> A moderate tint would be nice. wdyt?
+
+Agreed, and measurement made it precise: chrome against content was **1.056**,
+where 1.000 means the two colours are identical. A sidebar was separated from
+the document beside it almost entirely by its 1px border.
+
+The cause was structural rather than cosmetic. The ADR-147 ladder separated
+planes by **luminance alone** — saturation never exceeded 0.33 across all four
+— and it had run out of room, with four steps packed into a narrow band.
+Tinting chrome alone was tried first and made things worse: chrome moves down
+into the step below and `chrome|ground` collapses to 1.013. So every surface
+value moved, which is more than the request asked for and was flagged as such
+in review.
+
+`chrome|content` roughly doubled — 1.056 → 1.108 light, 1.151 → 1.240 dark.
+
+Two judgements worth keeping. Separation is measured on the adjacencies that
+**occur on screen**, not on every pair: `sunken|ground` sits at 1.040 in dark
+and is deliberately left there, because wells live inside content and never
+abut the page ground. And `--theme-text-muted` moved again, to `#4d5b6d`,
+because the widened ladder left it at 4.61 — passing AA by hundredths, the
+same state that broke last time a background moved.
+
+Reviewed and accepted. Close-out updated DARKMODE.md's token table (every
+ladder row was stale), the SurfaceLadder concept, the semantic markers on both
+SCSS files, and marked ADR-147's surface section superseded-in-part rather
+than rewriting it.
