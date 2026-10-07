@@ -228,6 +228,24 @@ else
 fi
 echo ""
 
+# ── 12. Surface ladder and text contrast ──
+# DEBT-VR-5. Three AA problems shipped across ADR-147 and ADR-150 and every
+# one was found by a hand-run browser audit AFTER the fact. All three were
+# arithmetic. This is the gate that should have caught them. It prints the
+# measured values on success too, so a pair sitting a hundredth above the
+# floor is visible before it fails rather than after.
+echo "[12] Surface contrast (ADR-150, DEBT-VR-5)"
+if [ -f scripts/check-contrast.py ]; then
+    if python3 scripts/check-contrast.py; then
+        PASS=$((PASS + 1))
+    else
+        fail "surface ladder or text contrast regressed (see above)"
+    fi
+else
+    fail "scripts/check-contrast.py missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

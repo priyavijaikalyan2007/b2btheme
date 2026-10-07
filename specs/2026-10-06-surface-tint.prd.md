@@ -120,15 +120,38 @@ a `null` is not a pass.*
 
 `npm test` 23/23 structure checks, 4842 unit tests, `npm run build` exit 0.
 
-## 7. Known gaps
+## 7. The gate (added 2026-10-07)
 
-- **DEBT-VR-5** — no automated contrast gate. Three AA problems across ADR-147
-  and ADR-150 were each found by a hand-run audit after the fact. Until a gate
-  exists, any `$surface-*` change must be followed by a manual contrast pass in
-  both themes.
+`scripts/check-contrast.py`, structure check `[12]`, closes DEBT-VR-5. It
+reads the **compiled** `dist/css/custom.css` — not the Sass, which would test
+the script's model rather than the shipped bytes — and asserts:
+
+- ladder **ordering** in both themes (the ~140-call-site property);
+- the three **on-screen adjacencies** against a 1.07 floor;
+- **every** text token against **every** surface, against the 4.5 AA floor.
+
+It prints measured values on success as well as failure, so a pair sitting a
+hundredth above the floor is visible before it fails. Mutation-tested on four
+failure modes: broken ordering, collapsed adjacency, failed text AA, absent
+stylesheet.
+
+**It found something on its first run.** `--theme-primary-text` on `sunken`
+measures **4.65** — the tightest light pair, and a combination this spec never
+measured, because §5 only checked that token against chrome and content.
+Left as-is deliberately: the token's one consumer (the TabbedPanel active
+label) sits on chrome at 5.49, and `$blue-800` would clear 8.74 but read as
+navy rather than an accent. The gate now holds the line if that changes.
+
+## 8. Known gaps
+
+- **DEBT-VR-5b** — the gate cannot see **composited** colours. The state
+  layers are translucent (ADR-147 D3), so text over a hovered row resolves
+  against a colour no token names. Modelling the compositing against a
+  declared list of "this layer is used over these surfaces" is the tractable
+  next step.
 - **DEBT-VR-6** — `sunken|ground` at 1.040 in dark, deliberate, see §4.2.
 
-## 8. If the tint is wrong
+## 9. If the tint is wrong
 
 One dial each, all in `src/scss/_variables.scss`:
 

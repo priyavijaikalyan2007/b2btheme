@@ -12,6 +12,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added
+- **`npm test` check `[12]` — an automated contrast gate** (`scripts/check-contrast.py`, DEBT-VR-5). Reads the *compiled* stylesheet and asserts surface-ladder ordering in both themes, the three on-screen adjacencies, and every text-token-on-surface pair against the 4.5 AA floor. Three accessibility problems shipped across ADR-147 and ADR-150 and every one was caught by a hand-run audit *after* the fact; all three were arithmetic. The gate prints its measurements on success as well as failure, so a pair sitting a hundredth above the floor is visible before it fails. Mutation-tested on four failure modes.
+- **It found a gap on its first run:** `--theme-primary-text` on the sunken surface measures 4.65 — the tightest light-mode pair, and one no manual audit had checked. It passes, and is left as-is because the token's only consumer sits on chrome at 5.49; the gate now holds the line if that changes.
+
+
 ### Changed
 - **Chrome is now a tinted surface, and the ladder is wider (ADR-150).** Side panels, toolbars and status bars were barely distinguishable from the content beside them — measured, chrome against content was **1.056**, where 1.000 means identical. The ADR-147 ladder separated planes by luminance alone (saturation never exceeded 0.33 across all four), so every surface was the same near-neutral material at a slightly different brightness. Chrome now carries a low-saturation cast toward the primary and reads as a different material rather than a dimmer white.
 - **Every surface value moves, not only chrome.** Tinting chrome alone pushes it down into the step below — `chrome|ground` collapses to 1.013 — so the ladder had to widen. Content is now pure `#ffffff`. Measured on the adjacencies that actually occur on screen: `chrome|content` **1.108** light / **1.240** dark (from 1.056 / 1.151), `chrome|ground` 1.085 / 1.383, `sunken|content` 1.310 / 1.160.
