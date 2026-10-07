@@ -14,6 +14,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ### Fixed (dark mode)
 - **Four `VisualTableEditor` presets rendered unreadable rows in dark mode (ADR-152).** `blue-header`, `dark-header`, `green-accent` and `warm` carried near-white alternating-row tints written as an inline `background-color`, which cannot respond to a theme — so every other row showed light text on a light background. Each now declares a dark twin at the same hue, handed to CSS as custom properties the stylesheet switches per theme. (`minimal` and `striped` were always correct; they use tokens.)
+- **The rule is now written down where it will be read**: `AGENTS.md` carries it fleet-wide (never write a colour through `element.style`; a background and its foreground are a pair), and `components/visualtableeditor/README.md` documents the preset contract with a worked example.
 - **Three demo pages hardcoded light backgrounds**, hiding their own text in dark mode — the Stepper demo's content panes and the SplitLayout demo's coloured panes. The components themselves were correct; the demos were not. Demo code now sets a foreground whenever it sets a background, since it is the first thing a consumer copies.
 
 

@@ -21164,6 +21164,43 @@ function createVisualTableEditor(options: VisualTableEditorOptions): VisualTable
 | `destroy()` | `void` | Remove DOM and release resources |
 | `refresh()` | `void` | Re-render the table |
 
+## Presets and dark mode
+
+Six built-in presets are available via the `preset` option. Four carry
+**literal** colours (`blue-header`, `dark-header`, `green-accent`, `warm`);
+two are token-based (`minimal`, `striped`).
+
+**If you add a preset with a literal `alternatingRow`, it must also declare
+`alternatingRowDark`.** This is enforced by
+`Presets_WithLiteralTint_DeclareADarkTwin`, and the reason is worth knowing
+rather than working around:
+
+The alternating-row colour is handed to CSS as the custom properties
+`--vte-alt-row` and `--vte-alt-row-dark`, and the stylesheet picks between
+them on `[data-bs-theme]`. It is **never** written as
+`tr.style.backgroundColor`. An inline background cannot respond to a theme —
+four presets shipped near-white stripes that painted straight over a dark
+table, leaving light text on a light row and the content unreadable (ADR-152).
+
+A token-based preset needs no twin, because `var(--bs-*)` already resolves per
+theme. A preset with no twin falls back to `--theme-surface-sunken-bg` rather
+than reusing its light literal, which would reproduce the defect.
+
+```ts
+"my-preset": {
+    headerBg: "#0d6efd",
+    headerFg: "#ffffff",
+    alternatingRow:     "#e7f1ff",   // light
+    alternatingRowDark: "#1d2735",   // same hue, lifted off the dark surface
+    bordered: true,
+    cellBorders: true,
+},
+```
+
+Pick the dark twin at the **same hue** and check it against
+`--theme-surface-bg` — these colours are component data, so the theme's
+contrast gate cannot see them (DEBT-VR-7).
+
 ## Data Model
 
 ### VisualTableData

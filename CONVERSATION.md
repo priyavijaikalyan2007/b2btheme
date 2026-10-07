@@ -1942,3 +1942,21 @@ so a theme toggle repaints with no re-render. Regression test added and
 mutation-tested. Recorded DEBT-VR-7: the contrast gate covers the theme
 ladder and structurally cannot see colours that live in component data, which
 is the gap these sat in.
+
+### Close-out (2026-10-07)
+
+Most of the ADR-152 record landed with the fix commits. The audit found three
+real gaps rather than busywork: the `VisualTableEditor` concept described the
+component's features but not the **preset theming rule**, which is precisely
+what a future contributor would get wrong; the component README had no mention
+of it, and that is where someone adding a preset actually looks; and
+`AGENTS.md` carried no fleet-wide rule against writing colours through
+`element.style`, despite that being the root cause of both reported bugs.
+
+All three now state it. The generated `docs/COMPONENT_REFERENCE.md` picked up
+the README on the next build — the index updating itself rather than needing a
+hand edit.
+
+Standards scan passed: Allman braces, no bare console calls, no `innerHTML`,
+SPDX intact, and `visualtableeditor.scss` correctly omits `FLOW`, which
+MARKERS.md's stylesheet format does not require.

@@ -45,6 +45,17 @@ icons, component sizing and fonts. Hence, our customizations. The key items are:
 - We prefer shadows that are subtle and two-layered — a tight key shadow plus a wider ambient one,
   at low alpha. Use the `--theme-shadow-*` tokens (or the `$shadow-*` Sass equivalents); never
   author a raw `box-shadow` for elevation.
+- **(CRITICAL) Never write a colour through `element.style`.** Doing so removes it from the theme
+  permanently and silently: an inline background cannot respond to `data-bs-theme`, so when the
+  theme flips the text to near-white the content disappears against its own background. Four
+  VisualTableEditor presets shipped that way and were unreadable in dark mode for months
+  (ADR-152). If a colour must come from DATA — a preset, a user choice, a brand value — hand it
+  to CSS as a **custom property** and let the stylesheet pick per theme; the switch stays
+  declarative and repaints with no re-render. A literal light value must be paired with a
+  literal dark one.
+- **A background and its foreground are a pair.** Setting one without the other leaves the unset
+  half following the theme, and it will invert out from under you. This applies to demo code
+  too — it is the first thing a consumer copies.
 - We prefer muted colors that fit into a good complementary palette of colors.
 - We prefer good contrast for accessibility. For example, light grey text on bright backgrounds are a terrible choice.
 - We prefer hyper legible fonts such as Google OpenSans Text and Atkinson Hyperlegible for regular text 
