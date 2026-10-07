@@ -4115,3 +4115,71 @@
   files:
     - "src/scss/_variables.scss"
     - "src/scss/_dark-mode.scss"
+
+- id: "ADR-151"
+  title: "Measure text contrast against composited backgrounds, not flat surfaces"
+  date: "2026-10-07"
+  status: "Accepted"
+  context: |
+    Structure check [12] (ADR-150, DEBT-VR-5) measured text against the four
+    FLAT surfaces and passed cleanly. Eight pairs were still below the 4.5 AA
+    floor in shipped CSS, because --theme-hover-bg and --theme-active-bg are
+    translucent (ADR-147 D3): what a user sees is the layer composited over
+    whatever surface is beneath it, and NO TOKEN NAMES that colour. A checker
+    enumerating tokens cannot examine it.
+
+    The worst was confirmed concretely rather than inferred. toolbar.scss:581
+    sets `color: var(--theme-text-muted)` and :586 sets
+    `&:hover { background-color: var(--theme-active-bg) }` on the SAME
+    element, over chrome — so hovering a toolbar button in dark mode put its
+    own label at 3.69. 21 sites across the fleet pair a state layer with
+    muted text.
+
+    D1 Check STRICTLY: every layer over every surface against every text
+       token, 96 pairs per run. A usage map of which components sit on which
+       plane would permit kinder values, but it goes stale silently the moment
+       a component moves surfaces, and a stale map makes the gate confidently
+       wrong. The user chose strict over a map when the costs were presented.
+    D2 An unparseable layer FAILS rather than being skipped. A skipped case
+       and a passing case are indistinguishable in the output, and the first
+       implementation skipped silently — a false pass in a safety check.
+    D3 Fix by moving three TEXT tokens; the state layers are untouched.
+       Reaching zero appeared to require softening the layers ~25%, and that
+       cost was presented and accepted. Measuring the specific consequence
+       first showed light hover on chrome would fall to 1.072 — against the
+       1.056 that prompted the original "not well differentiated" complaint —
+       trading an AA failure for an invisible hover. Re-solving with the
+       layers held fixed showed the text changes alone clear all 96 pairs, so
+       the accepted cost was not paid.
+    D4 Light and dark muted move in OPPOSITE directions: light $gray-550 ->
+       $gray-600 (darker), dark $gray-400 -> $gray-350 (LIGHTER). A light-mode
+       layer is dark and darkens the surface so dark text must darken; a
+       dark-mode layer is white and lightens it so light text must lighten.
+       Moving both the same way was tried first and DOUBLED the failures from
+       8 to 14.
+    D5 $gray-550 is retired. The value light muted now needs is #475569, which
+       is exactly $gray-600, so the custom half-shade ADR-150 added for this
+       purpose is redundant. $gray-350 is added for the same reason in the
+       other direction.
+  consequences: |
+    + Eight shipped AA failures are fixed, including a toolbar button whose
+      own label was unreadable on hover under two prior contrast reviews.
+    + The hover affordance is exactly as approved; the softening that looked
+      mandatory was avoided.
+    + The gate cannot be satisfied by a token that merely looks fine in
+      isolation, which is the property that let this ship.
+    - Three text tokens changed, so muted labels and the active tab label look
+      slightly different from what was reviewed on 2026-10-06.
+    - DEBT-VR-5c records what is still unmodelled: a layer over a SELECTED row
+      (two layers composited), WCAG's large-text exemption, and text over the
+      --theme-group-bg-* pastels. The two-layer case is the likeliest to become
+      real.
+    - DARKMODE.md §2.3 claimed muted text was $gray-500 "in BOTH modes" and had
+      been stale since ADR-147. Corrected, and now states the opposite-
+      directions rule explicitly, since that is the trap most likely to be hit
+      by the next person adjusting it.
+  files:
+    - "scripts/check-contrast.py"
+    - "src/scss/_variables.scss"
+    - "src/scss/_dark-mode.scss"
+    - "DARKMODE.md"

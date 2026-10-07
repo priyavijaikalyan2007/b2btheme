@@ -62,6 +62,13 @@ border: 1px solid var(--theme-border-color);
 > makes a panel read as chrome at a glance. ADR-147 separated the planes by
 > luminance alone and the result measured 1.056 against content, where 1.000
 > means identical.
+>
+> **Text contrast is measured against COMPOSITED backgrounds** (ADR-151). The
+> state layers are translucent, so text over a hovered or selected row sits
+> on a colour that no token names. Eight pairs were below AA before this was
+> checked — the worst a toolbar button's own label at 3.69 on hover.
+> Structure check `[12]` now composites every layer over every surface, 96
+> pairs per run.
 
 | Token | Light | Dark | Use for |
 |---|---|---|---|
@@ -71,7 +78,7 @@ border: 1px solid var(--theme-border-color);
 | `--theme-surface-sunken-bg` | `#d8e2ee` | `#090f19` | Inset areas, wells, code blocks |
 | `--theme-text-primary` | `$gray-900` | `$gray-100` | Primary text, headings |
 | `--theme-text-secondary` | `$gray-700` | `$gray-300` | Body text, descriptions |
-| `--theme-text-muted` | `#4d5b6d` | `$gray-400` | Subtle labels, hints. 5.29 on the darkest light surface (ADR-150) |
+| `--theme-text-muted` | `$gray-600` | `$gray-350` | Subtle labels. Light and dark move in OPPOSITE directions — see §2.3 (ADR-151) |
 | `--theme-text-on-primary` | `$gray-50` | `$gray-50` | Text on primary-coloured bg |
 | `--theme-border-color` | `$gray-300` | `$gray-600` | Standard borders |
 | `--theme-border-subtle` | `$gray-200` | `$gray-700` | Subtle separators |
@@ -92,9 +99,16 @@ border: 1px solid var(--theme-border-color);
 
 ### 2.3 Contrast Requirements
 
-- **Muted text** (`--theme-text-muted`) is `$gray-500` in BOTH modes. Use it
-  only for non-essential labels, timestamps, or hints — never for primary
-  content or interactive controls.
+- **Muted text** (`--theme-text-muted`) is **not the same value in both
+  modes**, and the two move in OPPOSITE directions. Light is `$gray-600`;
+  dark is `$gray-350`, which is *lighter* than the light-mode value. That is
+  not a mistake: a light-mode state layer is dark and darkens the surface
+  under the text, so dark text must go darker; a dark-mode layer is white and
+  lightens it, so light text must go lighter. Getting this backwards doubles
+  the failures (ADR-151). Use muted only for non-essential labels,
+  timestamps, or hints — never for primary content or interactive controls.
+  *(This bullet claimed `$gray-500` in both modes until 2026-10-07; it had
+  been stale since ADR-147.)*
 - **Section headers** (like "CONTENTS", "ON THIS PAGE") must use
   `--theme-text-secondary` at minimum, not `--theme-text-muted`.
 - **Interactive controls** (close, collapse, popout buttons) must use

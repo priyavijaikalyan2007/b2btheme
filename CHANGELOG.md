@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Fixed (accessibility)
+- **Eight text/background pairs were below WCAG AA on hovered and selected rows, and no check could see them (ADR-151).** The state layers are translucent, so text over a hovered row sits on a *composite* that no token names — invisible to a token-by-token audit. The worst was a toolbar button's own label at **3.69** on hover in dark mode, confirmed at `toolbar.scss:581`/`:586` where the muted colour and the state layer are set on the same element. 21 sites across the fleet pair a state layer with muted text.
+- **`--theme-text-muted` now differs between themes, in opposite directions**: light `$gray-600` (darker), dark `$gray-350` (**lighter**). A light-mode state layer is dark and darkens the surface under the text; a dark-mode layer is white and lightens it. `--theme-primary-text` moves to `$blue-800`. **The state layers are unchanged** — the hover feel is exactly as approved.
+- `DARKMODE.md` §2.3 claimed muted text was `$gray-500` "in BOTH modes" and had been stale since ADR-147.
+
+### Changed
+- **Check `[12]` now composites** every state layer over every surface and checks all text tokens against the result — 96 pairs per run. A layer that cannot be parsed **fails** rather than being skipped, because a skipped case is indistinguishable from a passing one.
+
+
 ### Added
 - **`npm test` check `[12]` — an automated contrast gate** (`scripts/check-contrast.py`, DEBT-VR-5). Reads the *compiled* stylesheet and asserts surface-ladder ordering in both themes, the three on-screen adjacencies, and every text-token-on-surface pair against the 4.5 AA floor. Three accessibility problems shipped across ADR-147 and ADR-150 and every one was caught by a hand-run audit *after* the fact; all three were arithmetic. The gate prints its measurements on success as well as failure, so a pair sitting a hundredth above the floor is visible before it fails. Mutation-tested on four failure modes.
 - **It found a gap on its first run:** `--theme-primary-text` on the sunken surface measures 4.65 — the tightest light-mode pair, and one no manual audit had checked. It passes, and is left as-is because the token's only consumer sits on chrome at 5.49; the gate now holds the line if that changes.

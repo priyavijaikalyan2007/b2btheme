@@ -22,7 +22,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$gray-800` | `#1e293b` |  |
 | `$gray-700` | `#334155` |  |
 | `$gray-600` | `#475569` |  |
-| `$gray-550` | `#4d5b6d` | there, and stays clearly lighter than $gray-700 on --theme-text-secondary. |
+| `$gray-350` | `#a9b6c6` | the opposite direction from light mode. |
 | `$gray-500` | `#64748b` |  |
 | `$gray-400` | `#94a3b8` |  |
 | `$gray-300` | `#cbd5e1` |  |

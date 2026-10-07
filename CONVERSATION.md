@@ -1881,3 +1881,31 @@ Reviewed and accepted. Close-out updated DARKMODE.md's token table (every
 ladder row was stale), the SurfaceLadder concept, the semantic markers on both
 SCSS files, and marked ADR-147's surface section superseded-in-part rather
 than rewriting it.
+
+---
+
+## 2026-10-07 — ADR-151: composited contrast
+
+> What do you need from you for DEBT-VR-5b?
+
+The honest answer turned out to be "one decision, and it's worse than a gate
+gap". Closing the composited-contrast hole found **eight real AA failures in
+shipped CSS** — worst 3.69, a toolbar button's own label on hover in dark
+mode, confirmed at `toolbar.scss:581`/`:586` where the muted colour and the
+state layer sit on the same element. Two prior contrast reviews had passed it,
+because the background it fails against is a composite no token names.
+
+The decision asked for was strict-vs-usage-map, and strict was chosen. Noted
+for the record: the fix package presented with that choice included softening
+the state layers ~25%, and that cost was accepted — but measuring the specific
+consequence first showed light hover on chrome would fall to **1.072**,
+against the 1.056 that prompted the original "not well differentiated"
+complaint. It would have traded an AA failure for an invisible hover.
+Re-solving with the layers held fixed showed three text-token changes alone
+clear all 96 pairs, so **the accepted cost was not paid** and the hover feel
+is exactly as approved.
+
+The subtlety worth remembering: light and dark muted move in **opposite**
+directions, because a light-mode layer darkens the surface while a dark-mode
+layer is white and lightens it. Moving both the same way was the first thing
+tried and doubled the failures from 8 to 14.
