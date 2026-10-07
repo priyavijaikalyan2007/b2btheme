@@ -44,7 +44,11 @@
     // and the tonal ladder's darker ground took it to 4.20, below it. This
     // value measures 5.00:1 on the darkest light surface (sunken) and 5.94:1 on
     // content, while staying clearly lighter than --theme-text-secondary.
-    --theme-text-muted:         #{$gray-550};
+    // ADR-151. Darkened to $gray-600 because contrast is now measured against
+    // COMPOSITED backgrounds: a dark state layer over the sunken surface put
+    // the previous value at 4.47 on a hovered row. #475569 is exactly
+    // $gray-600, so the custom half-shade this token used is retired.
+    --theme-text-muted:         #{$gray-600};
     --theme-text-on-primary:    #{$gray-50};
 
     // -- Borders --
@@ -76,7 +80,10 @@
     // Primary used as TEXT. --theme-primary is tuned to be legible as a FILL,
     // and at 3.91:1 on chrome it fails AA as a label — which the active tab
     // label needs to be. Use this token whenever primary carries type.
-    --theme-primary-text:       #{$blue-700};
+    // ADR-151. $blue-700 measured 3.93 over a composited active row on the
+    // sunken surface. $blue-800 clears every composited pair; it reads deeper
+    // than the fill colour, which is correct for type carrying an accent.
+    --theme-primary-text:       #{$blue-800};
 
     // -- Status / Semantic --
     --theme-success:            #{$green-600};
@@ -169,7 +176,10 @@
     // -- Text (invert) --
     --theme-text-primary:       #{$gray-100};
     --theme-text-secondary:     #{$gray-300};
-    --theme-text-muted:         #{$gray-400};
+    // ADR-151. LIGHTENED, the opposite direction from light mode: the dark
+    // state layer is white, so it lightens the surface beneath the text, and
+    // $gray-400 measured 3.69 on a hovered toolbar button over chrome.
+    --theme-text-muted:         #{$gray-350};
     --theme-text-on-primary:    #{$gray-50};
 
     // -- Borders --

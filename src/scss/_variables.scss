@@ -32,13 +32,12 @@ $gray-900: #0f172a;  // Almost black
 $gray-800: #1e293b;
 $gray-700: #334155;
 $gray-600: #475569;
-// Between $gray-600 and $gray-500. Exists because $gray-500 fails WCAG AA as
-// muted text on the surface ladder. Darkened again by ADR-150: the widened
-// ladder put the darkest light surface at #d8e2ee, where the previous #556478
-// measured 4.61 — passing by hundredths, which is the state that broke the
-// first time a background moved (AGENT_INSIGHTS 6.8). This measures 5.29
-// there, and stays clearly lighter than $gray-700 on --theme-text-secondary.
-$gray-550: #4d5b6d;
+// Between $gray-400 and $gray-300. Exists for DARK muted text: ADR-151 checks
+// text against COMPOSITED backgrounds, and a white state layer lightens dark
+// chrome enough that $gray-400 fell to 3.69 on a hovered toolbar button.
+// Dark muted has to get LIGHTER as the surface beneath it lightens, which is
+// the opposite direction from light mode.
+$gray-350: #a9b6c6;
 $gray-500: #64748b;
 $gray-400: #94a3b8;
 $gray-300: #cbd5e1;

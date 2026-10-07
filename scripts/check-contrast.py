@@ -29,6 +29,7 @@ either, so a heading-only token could fail this gate while being compliant —
 none currently does. Treat a pass as "the named pairs are sound", not as an
 accessibility audit.
 """
+import colorsys
 import re
 import sys
 
@@ -47,6 +48,22 @@ TEXTS = [
     ("secondary", "--theme-text-secondary"),
     ("muted", "--theme-text-muted"),
     ("primary-text", "--theme-primary-text"),
+]
+
+# Translucent state layers. These composite over whatever surface is beneath
+# them, producing a colour NO TOKEN NAMES — which is why text over a hovered
+# row was invisible to every check until ADR-151, and why eight real AA
+# failures shipped. The worst, confirmed in toolbar.scss:581/:586, put a
+# toolbar button's label at 3.69 on hover in dark mode.
+#
+# Checked STRICTLY: every layer over every surface, rather than only the
+# combinations components currently render. A usage map would permit kinder
+# values, but it goes stale silently the moment a component moves to a
+# different surface, and a stale map makes the gate confidently wrong.
+LAYERS = [
+    ("hover", "--theme-hover-bg"),
+    ("active", "--theme-active-bg"),
+    ("selected", "--theme-selected-bg"),
 ]
 
 # Pairs that actually touch on screen. NOT every combination — optimising a
@@ -98,7 +115,7 @@ def parse_block(css, selector, probe):
 
 def to_rgb(value):
     """Parse a hex colour. Returns None for anything else — a token defined
-    as var() or rgba() cannot be checked here and must not be guessed at."""
+    as var() cannot be resolved here and must not be guessed at."""
     value = value.strip()
     m = re.fullmatch(r"#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})", value)
     if not m:
@@ -109,6 +126,38 @@ def to_rgb(value):
         h = "".join(c * 2 for c in h)
 
     return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def to_rgba(value):
+    """Parse a translucent layer as (rgb, alpha).
+
+    Handles both forms the minifier emits: `rgba(15,23,42,.045)` and
+    `hsla(0,0%,100%,.06)`, which is what cssnano rewrites pure white to.
+    Missing either form would silently skip a layer — a false pass.
+    """
+    value = value.strip()
+
+    m = re.fullmatch(r"rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)"
+                     r"(?:[,/\s]+([\d.]+))?\s*\)", value)
+    if m:
+        rgb = tuple(float(m.group(i)) for i in (1, 2, 3))
+        return rgb, float(m.group(4)) if m.group(4) else 1.0
+
+    m = re.fullmatch(r"hsla?\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%"
+                     r"(?:[,/\s]+([\d.]+))?\s*\)", value)
+    if m:
+        h, sl, ll = (float(m.group(i)) for i in (1, 2, 3))
+        r, g, b = colorsys.hls_to_rgb(h / 360, ll / 100, sl / 100)
+        return (r * 255, g * 255, b * 255), \
+               float(m.group(4)) if m.group(4) else 1.0
+
+    return None
+
+
+def composite(layer_rgb, alpha, base_rgb):
+    """The colour a browser actually paints: layer over base."""
+    return tuple(alpha * f + (1 - alpha) * b
+                 for f, b in zip(layer_rgb, base_rgb))
 
 
 def luminance(rgb):
@@ -176,6 +225,36 @@ def check_theme(label, tokens, problems, notes):
                     f"{MIN_TEXT} AA floor.")
 
     notes.append(f"    {label:5} worst text pair: {worst[1]} {worst[0]:.2f}")
+
+    # --- the same text, over every state layer, over every surface --------
+    layers = {}
+    for name, token in LAYERS:
+        parsed = to_rgba(tokens.get(token, ""))
+        if parsed is None:
+            problems.append(
+                f"{label}: {token} could not be parsed as a colour, so text "
+                f"over it is unchecked — that is a false pass, not a skip.")
+        else:
+            layers[name] = parsed
+
+    cworst = (99.0, "")
+    for lname, (lrgb, alpha) in layers.items():
+        for sname, srgb in surfaces.items():
+            comp = composite(lrgb, alpha, srgb)
+            for tname, trgb in texts.items():
+                r = ratio(trgb, comp)
+                if r < cworst[0]:
+                    cworst = (r, f"{tname} on {lname} over {sname}")
+                if r < MIN_TEXT:
+                    problems.append(
+                        f"{label}: {tname} text on a {lname} state over "
+                        f"{sname} is {r:.2f}, below the {MIN_TEXT} AA floor. "
+                        f"That background is a composite no token names.")
+
+    if layers:
+        n = len(layers) * len(surfaces) * len(texts)
+        notes.append(f"    {label:5} worst composited ({n} pairs): "
+                     f"{cworst[1]} {cworst[0]:.2f}")
 
 
 def main():
