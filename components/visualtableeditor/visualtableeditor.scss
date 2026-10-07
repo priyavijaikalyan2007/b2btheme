@@ -476,3 +476,28 @@
         height: 16px;
     }
 }
+
+// ============================================================================
+// ALTERNATING ROWS — theme-aware preset tints (ADR-152)
+// ============================================================================
+//
+// Presets hand their colours over as custom properties rather than having the
+// factory write an inline background, because an inline background cannot
+// respond to a theme switch. Four presets shipped a near-white tint that
+// painted over a dark table, leaving light text on a light row.
+//
+// --vte-alt-row      the preset's light tint
+// --vte-alt-row-dark its dark twin, absent for token-based presets
+//
+// The fallback matters: a preset with no dark twin resolves to the themed
+// sunken surface, never to the light literal.
+
+.vte-row--alt
+{
+    background-color: var(--vte-alt-row, var(--theme-surface-sunken-bg));
+}
+
+[data-bs-theme="dark"] .vte-row--alt
+{
+    background-color: var(--vte-alt-row-dark, var(--theme-surface-sunken-bg));
+}

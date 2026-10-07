@@ -61,6 +61,14 @@ export interface VisualTableMeta
     /** Even-row background (alternating). */
     alternatingRowColor?: string;
 
+    /**
+     * Dark-mode alternating-row colour. Set from a preset's
+     * `alternatingRowDark`. When present the row paints via a custom property
+     * the stylesheet switches on `[data-bs-theme]`, so a theme toggle
+     * repaints without a re-render (ADR-152).
+     */
+    alternatingRowColorDark?: string;
+
     /** Enable alternating column colours. Default: false. */
     alternatingColumns?: boolean;
 
@@ -548,6 +556,19 @@ interface PresetConfig
     headerBg: string;
     headerFg: string;
     alternatingRow: string | null;
+    /**
+     * Dark-mode equivalent of `alternatingRow`.
+     *
+     * Required for any preset whose light value is a literal colour. Those
+     * are applied as a custom property the stylesheet reads, so a theme
+     * switch repaints without re-rendering; a preset that supplied only the
+     * light value used to paint a near-white stripe on a dark table, leaving
+     * light text on light background and the row unreadable.
+     *
+     * Presets whose `alternatingRow` is already a `var(--bs-*)` token do not
+     * need this — the token resolves per theme on its own.
+     */
+    alternatingRowDark?: string | null;
     bordered: boolean;
     cellBorders: boolean;
     borderColor?: string;
@@ -559,6 +580,7 @@ const PRESETS: Record<string, PresetConfig> =
         headerBg: "#0d6efd",
         headerFg: "#ffffff",
         alternatingRow: "#e7f1ff",
+        alternatingRowDark: "#1d2735",
         bordered: true,
         cellBorders: true,
     },
@@ -566,6 +588,7 @@ const PRESETS: Record<string, PresetConfig> =
         headerBg: "#212529",
         headerFg: "#ffffff",
         alternatingRow: "#f8f9fa",
+        alternatingRowDark: "#222930",
         bordered: true,
         cellBorders: true,
     },
@@ -573,6 +596,7 @@ const PRESETS: Record<string, PresetConfig> =
         headerBg: "#198754",
         headerFg: "#ffffff",
         alternatingRow: "#e8f5e9",
+        alternatingRowDark: "#1d351e",
         bordered: true,
         cellBorders: true,
     },
@@ -580,6 +604,7 @@ const PRESETS: Record<string, PresetConfig> =
         headerBg: "#fd7e14",
         headerFg: "#ffffff",
         alternatingRow: "#fff3e0",
+        alternatingRowDark: "#352c1d",
         bordered: true,
         cellBorders: true,
     },
@@ -1231,7 +1256,25 @@ function applyRowClasses(
 
         if (meta.alternatingRowColor)
         {
-            tr.style.backgroundColor = meta.alternatingRowColor;
+            // ADR-152. This used to be `tr.style.backgroundColor = colour`,
+            // which cannot respond to a theme: four presets carried a
+            // near-white tint and painted it over a dark table, leaving light
+            // text on a light row and the content unreadable. The colours are
+            // handed to CSS as custom properties instead, and the stylesheet
+            // picks per theme — so a toggle repaints with no re-render.
+            tr.style.setProperty("--vte-alt-row", meta.alternatingRowColor);
+
+            if (meta.alternatingRowColorDark)
+            {
+                tr.style.setProperty(
+                    "--vte-alt-row-dark", meta.alternatingRowColorDark);
+            }
+            else
+            {
+                // No dark variant: fall back to the themed surface rather
+                // than reusing a light literal, which is the defect itself.
+                tr.style.removeProperty("--vte-alt-row-dark");
+            }
         }
     }
 }
@@ -3457,6 +3500,7 @@ function applyPresetMeta(state: InternalState, preset: PresetConfig): void
     {
         meta.alternatingRows = true;
         meta.alternatingRowColor = preset.alternatingRow;
+        meta.alternatingRowColorDark = preset.alternatingRowDark ?? undefined;
     }
     else
     {

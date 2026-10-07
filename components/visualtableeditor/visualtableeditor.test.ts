@@ -1948,3 +1948,64 @@ describe("Accessibility", () =>
         editor.destroy();
     });
 });
+
+// ===========================================================================
+// ADR-152: a preset tint must not survive a theme switch as a literal
+// ===========================================================================
+
+describe("presetDarkMode", () =>
+{
+    test("Presets_WithLiteralTint_DeclareADarkTwin", () =>
+    {
+        // Four presets carried a near-white alternatingRow and painted it as
+        // an inline background, so a dark table showed light text on a light
+        // row and the content was unreadable. A literal tint now REQUIRES a
+        // dark twin; a token-based one does not, because the token already
+        // resolves per theme.
+        const wrapper = document.createElement("div");
+        wrapper.id = "vte-preset-test";
+        document.body.appendChild(wrapper);
+
+        const literalPresets = ["blue-header", "dark-header", "green-accent", "warm"];
+
+        for (const preset of literalPresets)
+        {
+            const host = document.createElement("div");
+            host.id = `vte-${preset}`;
+            wrapper.appendChild(host);
+
+            const editor = createVisualTableEditor({
+                container: host,
+                rows: 4,
+                columns: 2,
+                preset: preset as never,
+            });
+
+            const alt = host.querySelector(".vte-row--alt") as HTMLElement | null;
+
+            expect(alt, `${preset} should produce an alternating row`).not.toBeNull();
+
+            // Both halves must be handed to CSS. Painting only the light one
+            // is the defect: an inline background cannot follow a theme.
+            expect(
+                alt!.style.getPropertyValue("--vte-alt-row").trim(),
+                `${preset} must set the light tint as a custom property`
+            ).not.toBe("");
+
+            expect(
+                alt!.style.getPropertyValue("--vte-alt-row-dark").trim(),
+                `${preset} has a literal tint, so it must declare a dark twin`
+            ).not.toBe("");
+
+            // And never as a fixed inline background, which cannot change.
+            expect(
+                alt!.style.backgroundColor,
+                `${preset} must not pin an inline background`
+            ).toBe("");
+
+            editor.destroy();
+        }
+
+        wrapper.remove();
+    });
+});

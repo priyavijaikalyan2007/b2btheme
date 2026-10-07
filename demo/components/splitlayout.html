@@ -114,7 +114,7 @@
 
         var leftEl = horiz.getPaneElement("left");
         leftEl.style.padding = "1rem";
-        leftEl.style.background = "#f8f9fa";
+        leftEl.style.background = "var(--theme-surface-raised-bg)";
         leftEl.textContent = "Left pane (collapsible, 30%)";
 
         var rightEl = horiz.getPaneElement("right");
@@ -136,6 +136,7 @@
         var topEl = vert.getPaneElement("top");
         topEl.style.padding = "1rem";
         topEl.style.background = "#e3f2fd";
+        topEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
         topEl.textContent = "Top pane (collapsible)";
 
         var midEl = vert.getPaneElement("middle");
@@ -145,6 +146,7 @@
         var botEl = vert.getPaneElement("bottom");
         botEl.style.padding = "1rem";
         botEl.style.background = "#fff3e0";
+        botEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
         botEl.textContent = "Bottom pane (100px, collapsible)";
 
         // 3. Nested layout (IDE-style)
@@ -161,6 +163,7 @@
         var sideEl = outer.getPaneElement("sidebar");
         sideEl.style.padding = "1rem";
         sideEl.style.background = "#f1f3f5";
+        sideEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
         sideEl.textContent = "Sidebar (collapsible)";
 
         var inner = new SplitLayout({
@@ -207,6 +210,7 @@
             var extraEl = horiz.getPaneElement("extra");
             extraEl.style.padding = "1rem";
             extraEl.style.background = "#e8f5e9";
+        extraEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
             extraEl.textContent = "Extra pane (added dynamically)";
         });
 
