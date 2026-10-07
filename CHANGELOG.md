@@ -12,6 +12,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Fixed (dark mode)
+- **Four `VisualTableEditor` presets rendered unreadable rows in dark mode (ADR-152).** `blue-header`, `dark-header`, `green-accent` and `warm` carried near-white alternating-row tints written as an inline `background-color`, which cannot respond to a theme — so every other row showed light text on a light background. Each now declares a dark twin at the same hue, handed to CSS as custom properties the stylesheet switches per theme. (`minimal` and `striped` were always correct; they use tokens.)
+- **Three demo pages hardcoded light backgrounds**, hiding their own text in dark mode — the Stepper demo's content panes and the SplitLayout demo's coloured panes. The components themselves were correct; the demos were not. Demo code now sets a foreground whenever it sets a background, since it is the first thing a consumer copies.
+
+
 ### Fixed (accessibility)
 - **Eight text/background pairs were below WCAG AA on hovered and selected rows, and no check could see them (ADR-151).** The state layers are translucent, so text over a hovered row sits on a *composite* that no token names — invisible to a token-by-token audit. The worst was a toolbar button's own label at **3.69** on hover in dark mode, confirmed at `toolbar.scss:581`/`:586` where the muted colour and the state layer are set on the same element. 21 sites across the fleet pair a state layer with muted text.
 - **`--theme-text-muted` now differs between themes, in opposite directions**: light `$gray-600` (darker), dark `$gray-350` (**lighter**). A light-mode state layer is dark and darkens the surface under the text; a dark-mode layer is white and lightens it. `--theme-primary-text` moves to `$blue-800`. **The state layers are unchanged** — the hover feel is exactly as approved.

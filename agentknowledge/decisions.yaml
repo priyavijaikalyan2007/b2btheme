@@ -4183,3 +4183,65 @@
     - "src/scss/_variables.scss"
     - "src/scss/_dark-mode.scss"
     - "DARKMODE.md"
+
+- id: "ADR-152"
+  title: "Data-driven colours reach CSS as custom properties, never as inline backgrounds"
+  date: "2026-10-07"
+  status: "Accepted"
+  context: |
+    Two dark-mode defects were reported from the demo gallery, and they share
+    one shape: a light background applied as a FIXED value while the text
+    colour came from the theme. In dark mode the text inverts and the
+    background does not, so the content disappears against its own row.
+
+    VisualTableEditor: four presets (blue-header, dark-header, green-accent,
+    warm) carried a near-white `alternatingRow` and the factory wrote it as
+    `tr.style.backgroundColor`. An inline background cannot respond to a
+    theme. The two presets that looked correct, minimal and striped, use
+    var(--bs-*) tokens — and the demo page stated that only those two adapt,
+    so the defect was documented and shipped and still read as broken the
+    first time anyone opened the gallery in dark mode.
+
+    Stepper: the fault was in the DEMO, not the component. Its makeContent()
+    helper hardcoded a #f8f9fa background and a #dee2e6 border inline, while
+    the component used tokens correctly throughout. Two other demos carried
+    the same helper, and the splitlayout demos had the same shape in another
+    form — coloured panes setting a background without its paired foreground.
+
+    Both defects PRE-DATE this session, confirmed by git. ADR-150's widened
+    ladder made them starker by moving the surrounding dark surfaces further
+    from the light patches, which is why they were reported now.
+
+    D1 A colour that comes from DATA — a preset, a user choice, a brand value
+       — is handed to CSS as a custom property (--vte-alt-row,
+       --vte-alt-row-dark) and the stylesheet chooses per theme. A theme
+       toggle then repaints with no re-render.
+    D2 Any preset carrying a LITERAL tint must declare a dark twin at the same
+       hue. A preset whose tint is already a token does not, because the token
+       resolves per theme on its own.
+    D3 The fallback is the themed sunken surface, never the light literal.
+       Reusing the light value when no dark twin exists reproduces the defect.
+    D4 Demo code is held to the same rule. It is the first thing a consumer
+       copies, and a background set without its foreground teaches the
+       mistake.
+  consequences: |
+    + Every alternating row in VisualTableEditor is readable in both themes,
+      verified in a browser as carrying genuinely different backgrounds per
+      theme rather than an absence of tint.
+    + A regression test asserts a literal-tint preset declares a dark twin and
+      never pins an inline background; mutation-tested by reverting the apply
+      path.
+    - The four dark twins are hand-picked at the same hue rather than derived,
+      so a future preset needs its twin chosen by eye and measured. Deriving
+      them would need a colour model the component does not otherwise carry.
+    - The contrast gate (check [12]) cannot see any of this: these colours are
+      component data, not theme tokens, so they never appear in the compiled
+      stylesheet's :root block. The gate covers the ladder; component-level
+      literals remain the responsibility of review and tests.
+  files:
+    - "components/visualtableeditor/visualtableeditor.ts"
+    - "components/visualtableeditor/visualtableeditor.scss"
+    - "components/visualtableeditor/visualtableeditor.test.ts"
+    - "demo/components/stepper.html"
+    - "demo/components/splitlayout.html"
+    - "demo/full-demo.html"

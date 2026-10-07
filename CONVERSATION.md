@@ -1909,3 +1909,36 @@ The subtlety worth remembering: light and dark muted move in **opposite**
 directions, because a light-mode layer darkens the surface while a dark-mode
 layer is white and lightens it. Moving both the same way was the first thing
 tried and doubled the failures from 8 to 14.
+
+---
+
+## 2026-10-07 — ADR-152: light patches in dark mode
+
+> Two problems I found. Datagrid: see ~/Pictures/datagrid.png and Stepper:
+> see ~/Pictures/stepper.png.
+
+Both screenshots showed the same shape: a light background with light text on
+it, unreadable. One root cause — **a background applied as a fixed value while
+the text colour came from the theme.**
+
+The "datagrid" screenshot was actually **VisualTableEditor**'s preset gallery.
+Four presets carried near-white `alternatingRow` tints written as
+`tr.style.backgroundColor`, which cannot follow a theme. `minimal` and
+`striped` looked right because they use tokens — and the demo page *says* only
+those two adapt, so the defect was documented, shipped, and still read as
+broken on sight.
+
+The stepper fault was in the **demo**, not the component: `makeContent()`
+hardcoded `#f8f9fa`. The component uses tokens correctly throughout. Two other
+demos carried the same helper, and the splitlayout demos set pane backgrounds
+without their paired foregrounds.
+
+Both pre-date this session — confirmed by git. ADR-150's widened ladder made
+them starker by moving the surrounding surfaces further from the light
+patches, which is why they surfaced now rather than months ago.
+
+Fixed by handing preset colours to CSS as custom properties with dark twins,
+so a theme toggle repaints with no re-render. Regression test added and
+mutation-tested. Recorded DEBT-VR-7: the contrast gate covers the theme
+ladder and structurally cannot see colours that live in component data, which
+is the gap these sat in.
