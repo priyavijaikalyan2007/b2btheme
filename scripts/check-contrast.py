@@ -43,6 +43,15 @@ SURFACES = [
     ("content", "--theme-surface-bg"),
 ]
 
+# Opaque filled regions (ADR-156) — a tab strip, a kbd chip, a skipped step
+# marker. Not part of the LADDER, so they are excluded from the ordering and
+# adjacency rules, but text sits on them and must be checked. Omitting them
+# is how 34 filled regions came to be painted with an interaction-state
+# token in the first place.
+FILLS = [
+    ("fill-strong", "--theme-fill-strong"),
+]
+
 TEXTS = [
     ("primary", "--theme-text-primary"),
     ("secondary", "--theme-text-secondary"),
@@ -192,6 +201,18 @@ def check_theme(label, tokens, problems, notes):
     if len(surfaces) < len(SURFACES):
         return
 
+    # Fills join the text sweep below but NOT the ordering or adjacency
+    # checks above, because they are not rungs of the ladder.
+    fills = {}
+    for name, token in FILLS:
+        rgb = to_rgb(tokens.get(token, ""))
+        if rgb is None:
+            problems.append(
+                f"{label}: {token} is missing or not a hex colour — text on "
+                f"filled regions would go unchecked, which is a false pass")
+        else:
+            fills[name] = rgb
+
     # --- ordering: ~140 call sites depend on the direction ----------------
     order = sorted(surfaces, key=lambda k: luminance(surfaces[k]))
     expected = (["sunken", "ground", "chrome", "content"] if label == "light"
@@ -215,7 +236,7 @@ def check_theme(label, tokens, problems, notes):
     # --- every text token on every surface --------------------------------
     worst = (99.0, "")
     for tname, trgb in texts.items():
-        for sname, srgb in surfaces.items():
+        for sname, srgb in {**surfaces, **fills}.items():
             r = ratio(trgb, srgb)
             if r < worst[0]:
                 worst = (r, f"{tname} on {sname}")
@@ -239,7 +260,7 @@ def check_theme(label, tokens, problems, notes):
 
     cworst = (99.0, "")
     for lname, (lrgb, alpha) in layers.items():
-        for sname, srgb in surfaces.items():
+        for sname, srgb in {**surfaces, **fills}.items():
             comp = composite(lrgb, alpha, srgb)
             for tname, trgb in texts.items():
                 r = ratio(trgb, comp)
@@ -252,7 +273,7 @@ def check_theme(label, tokens, problems, notes):
                         f"That background is a composite no token names.")
 
     if layers:
-        n = len(layers) * len(surfaces) * len(texts)
+        n = len(layers) * (len(surfaces) + len(fills)) * len(texts)
         notes.append(f"    {label:5} worst composited ({n} pairs): "
                      f"{cworst[1]} {cworst[0]:.2f}")
 

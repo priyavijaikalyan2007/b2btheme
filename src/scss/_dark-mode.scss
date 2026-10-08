@@ -66,6 +66,20 @@
     --theme-active-bg:          rgba(15, 23, 42, 0.085);
     --theme-selected-bg:        #{rgba($blue-600, 0.08)};
 
+    // -- Filled neutral (ADR-156) --
+    //
+    // OPAQUE, unlike the state layers above. These are for a region that is
+    // simply filled — a tab strip, a kbd chip, a skipped step marker, a
+    // progress track — rather than one responding to a pointer.
+    //
+    // 34 such regions used --theme-active-bg, which made them translucent
+    // the moment ADR-147 made the state layers translucent. The result was
+    // close enough to pass review and wrong in principle: a filled strip is
+    // not an interaction state, and it inherited whatever happened to be
+    // behind it. These values sit mid-range of what those sites previously
+    // composited to, so the change is near-invisible by design.
+    --theme-fill-strong:        #e4e8ee;
+
     // -- Focus --
     --theme-focus-ring:         #{rgba($blue-600, 0.25)};
     --theme-focus-border:       #{$blue-500};
@@ -191,6 +205,12 @@
     --theme-hover-bg:           rgba(255, 255, 255, 0.06);
     --theme-active-bg:          rgba(255, 255, 255, 0.11);
     --theme-selected-bg:        #{rgba($blue-400, 0.15)};
+
+    // -- Filled neutral (ADR-156) — see the note in :root --
+    // Darker than first chosen. The gate checks text over a state layer ON
+    // a fill — a hovered row inside a filled strip — and the lighter value
+    // put muted text at 3.98 there. A fill must leave room above it.
+    --theme-fill-strong:        #222b3a;
 
     // -- Focus --
     --theme-focus-ring:         #{rgba($blue-400, 0.35)};

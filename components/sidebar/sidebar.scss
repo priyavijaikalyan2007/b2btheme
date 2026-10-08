@@ -346,7 +346,7 @@ $sidebar-transition-duration: 300ms;
 .sidebar-tab-bar {
     display: flex;
     align-items: stretch;
-    background-color: var(--theme-active-bg);
+    background-color: var(--theme-fill-strong);
     border-bottom: 1px solid var(--theme-border-color);
     flex-shrink: 0;
     min-height: $control-height-sm;

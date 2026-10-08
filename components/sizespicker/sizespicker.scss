@@ -173,7 +173,7 @@ $sp-transition:        150ms ease;
 
 .sizespicker-item--active
 {
-    background-color: var(--theme-active-bg, var(--theme-hover-bg));
+    background-color: var(--theme-fill-strong, var(--theme-hover-bg));
     font-weight: $font-weight-medium;
 }
 

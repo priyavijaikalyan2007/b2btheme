@@ -188,7 +188,7 @@
 
 // Disabled wrapper — muted background and not-allowed cursor
 .searchbox-disabled .searchbox-input-wrap {
-    background-color: var(--theme-active-bg);
+    background-color: var(--theme-fill-strong);
     cursor: not-allowed;
 }
 

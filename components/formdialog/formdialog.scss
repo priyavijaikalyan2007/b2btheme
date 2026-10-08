@@ -215,7 +215,7 @@
 {
     .formdialog-step-number
     {
-        background-color: var(--theme-active-bg);
+        background-color: var(--theme-fill-strong);
         color: var(--theme-text-secondary);
     }
 }
@@ -242,7 +242,7 @@
     flex: 1;
     height: 2px;
     min-width: $icon-size-sm;
-    background-color: var(--theme-active-bg);
+    background-color: var(--theme-fill-strong);
 }
 
 .formdialog-step-connector-done
@@ -535,7 +535,7 @@
 {
     width: 4px;
     cursor: col-resize;
-    background-color: var(--theme-active-bg);
+    background-color: var(--theme-fill-strong);
     flex-shrink: 0;
     transition: background-color 100ms;
 
