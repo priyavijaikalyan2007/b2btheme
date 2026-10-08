@@ -4245,3 +4245,84 @@
     - "demo/components/stepper.html"
     - "demo/components/splitlayout.html"
     - "demo/full-demo.html"
+
+- id: "ADR-153"
+  title: "Component colour palettes must carry their own text, and be derived rather than picked"
+  date: "2026-10-08"
+  status: "Accepted"
+  context: |
+    DEBT-VR-7 and DEBT-VR-8, taken together because the second is the tool
+    the first kept needing.
+
+    The surface-contrast gate (check [12], ADR-150/151) reads the compiled
+    stylesheet, so it covers the THEME ladder and nothing else. Colours that
+    live in component TypeScript never appear in :root. Nine palettes across
+    nine components sat in that blind spot, and measuring them found:
+
+      INITIALS_PALETTE   8/8 entries failed, worst 1.92 (white on #eab308)
+      INITIALS_COLORS    4/8 failed, worst 3.00 (white on #e67700)
+      HASH_PALETTE       5/12 failed, worst 3.00
+
+    Two distinct faults. Five components painted white on a palette that
+    could not carry it. Three more — activityfeed, applauncher,
+    workspaceswitcher — set only the background and let the FOREGROUND be
+    inherited, so it flipped to near-white in dark mode and every entry
+    failed. That is the ADR-152 pattern, found by sweeping rather than by
+    being reported.
+
+    D1 Palettes are darkened HUE-PRESERVING until white clears 4.5, and the
+       three inheriting components set the foreground explicitly.
+    D2 Caller-supplied colours cannot be vetted at build time. actionitems,
+       facetsearch, logconsole and tagger paint host-provided values, and a
+       fixed "#fff" fails on anything pale. They gained readableOn(), which
+       picks ink or paper by relative luminance, guaranteeing 4.5 against one
+       extreme for ANY input. Duplicated per component because each bundles
+       as a standalone IIFE.
+    D3 presenceindicator used #f8f9fa and measured 4.36 on the corrected
+       palette. It moves to pure white rather than re-darkening a palette
+       five other components share for one component's sake.
+    D4 Check [13] enforces it. The pairing of palette to foreground is an
+       explicit table, not a regex widening, so adding a palette is a
+       deliberate claim about what text sits on it.
+    D5 scripts/derive-colour.py replaces picking these by eye — `fit` for a
+       palette entry that must carry a fixed foreground, `twin` for a dark
+       counterpart of a light tint. A developer tool: the gates verify the
+       results, nothing imports it.
+  consequences: |
+    + Nine palettes that shipped unreadable are now readable, including white
+      initials on yellow at 1.92.
+    + Any caller-supplied colour is now safe by construction rather than by
+      hoping the host picks a dark one.
+    + The derivation is validated, not merely plausible: `fit` reproduces all
+      four hand-derived palette values EXACTLY. The four preset twins already
+      shipped meet its threshold, so nothing was churned to adopt it.
+    + Check [13] found a colour the hand pass missed on its FIRST run —
+      tagger's #d9480f at 4.30, missed because I guessed that palette's
+      contents rather than reading them.
+    - INITIALS_PALETTE changed all eight entries, so avatars in activityfeed,
+      applauncher and workspaceswitcher look meaningfully darker. That is the
+      cost of carrying white text; the alternative was dark text, which fails
+      in the other direction on the saturated end of the palette.
+    - readableOn() is duplicated in four components. The IIFE build forbids a
+      shared module, which is the same constraint that already duplicates the
+      avatar palette six times. If that constraint ever lifts, both should
+      collapse into one helper.
+    - Still unchecked: chart and diagram palettes, where the requirement is
+      series DISTINCTNESS rather than text contrast — a different
+      measurement, recorded as DEBT-VR-9.
+  files:
+    - "scripts/check-component-palettes.py"
+    - "scripts/derive-colour.py"
+    - "components/peoplepicker/peoplepicker.ts"
+    - "components/personchip/personchip.ts"
+    - "components/presenceindicator/presenceindicator.ts"
+    - "components/sharedialog/sharedialog.ts"
+    - "components/usermenu/usermenu.ts"
+    - "components/activityfeed/activityfeed.ts"
+    - "components/applauncher/applauncher.ts"
+    - "components/workspaceswitcher/workspaceswitcher.ts"
+    - "components/tagger/tagger.ts"
+    - "components/actionitems/actionitems.ts"
+    - "components/facetsearch/facetsearch.ts"
+    - "components/logconsole/logconsole.ts"
+    - "test-local.sh"

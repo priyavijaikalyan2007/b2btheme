@@ -12,6 +12,15 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Fixed (accessibility)
+- **Nine component colour palettes could not carry their own text (ADR-153).** Avatar and tag palettes rendered white initials at ratios as low as **1.92** — white on `#eab308`. Three components (`activityfeed`, `applauncher`, `workspaceswitcher`) set only the background and let the foreground be inherited, so it flipped to near-white in dark mode and every entry failed. Palettes are now darkened hue-preserving until white clears 4.5, and the foreground is always set explicitly.
+- **Caller-supplied colours are safe by construction.** `actionitems`, `facetsearch`, `logconsole` and `tagger` paint host-provided colours, where a fixed `#fff` fails on anything pale. They now pick the foreground at runtime by relative luminance.
+
+### Added
+- **`npm test` check `[13]`** — component colour palettes must carry their own text. Check `[12]` reads the compiled stylesheet and so covers only the theme ladder; colours declared in component TypeScript were invisible to it. Mutation-tested, including the vacuous case: a pattern matching no palette fails rather than reporting a clean sweep of nothing.
+- **`scripts/derive-colour.py`** — derives accessible colours instead of picking them by eye. `fit` darkens a palette entry until a fixed foreground clears the floor; `twin` produces a dark-mode counterpart of a light tint. Validated by reproducing all four previously hand-derived values exactly.
+
+
 ### Fixed (dark mode)
 - **Four `VisualTableEditor` presets rendered unreadable rows in dark mode (ADR-152).** `blue-header`, `dark-header`, `green-accent` and `warm` carried near-white alternating-row tints written as an inline `background-color`, which cannot respond to a theme — so every other row showed light text on a light background. Each now declares a dark twin at the same hue, handed to CSS as custom properties the stylesheet switches per theme. (`minimal` and `striped` were always correct; they use tokens.)
 - **The rule is now written down where it will be read**: `AGENTS.md` carries it fleet-wide (never write a colour through `element.style`; a background and its foreground are a pair), and `components/visualtableeditor/README.md` documents the preset contract with a worked example.

@@ -1960,3 +1960,37 @@ hand edit.
 Standards scan passed: Allman braces, no bare console calls, no `innerHTML`,
 SPDX intact, and `visualtableeditor.scss` correctly omits `FLOW`, which
 MARKERS.md's stylesheet format does not require.
+
+---
+
+## 2026-10-08 — ADR-153: component palettes (DEBT-VR-7 + VR-8)
+
+> Right. Go ahead with both 7 & 8.
+
+Closing VR-7 found considerably more than expected. Check `[12]` reads the
+compiled stylesheet, so it covers the theme ladder and **nothing else** —
+colours declared in component TypeScript never reach `:root`. Nine palettes
+sat in that blind spot:
+
+```
+INITIALS_PALETTE   8/8 failed, worst 1.92  (white initials on #eab308)
+INITIALS_COLORS    4/8 failed, worst 3.00
+HASH_PALETTE       5/12 failed, worst 3.00
+```
+
+Two faults, not one. Five components painted white on a palette that could not
+carry it; three more set only the background and let the foreground be
+**inherited**, so it inverted in dark mode — the ADR-152 pattern again, this
+time found by sweeping rather than being reported.
+
+Caller-supplied colours can't be fixed by darkening a palette, so four
+components now pick the foreground at runtime by luminance.
+
+VR-8's `derive-colour.py` was written after the hand answers existed, which
+turned out to be the point: `fit` reproduces all four hand-derived values
+**exactly**, which is what makes it trustworthy. And check `[13]` found an
+eleventh colour the hand pass had missed (`#d9480f` at 4.30) — missed because
+I had guessed one palette's contents instead of reading them.
+
+Left open as DEBT-VR-9: chart and diagram palettes, where the requirement is
+series distinctness under colour-vision deficiency rather than text contrast.
