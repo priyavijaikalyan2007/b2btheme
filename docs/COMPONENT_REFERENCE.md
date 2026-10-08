@@ -14542,7 +14542,7 @@ The `custom` control type embeds existing components inside ribbon groups:
     size: "large",
     element: function() {
         var div = document.createElement("div");
-        var ws = new WorkspaceSwitcher({ workspaces: [...], size: "sm" });
+        var ws = new TenantSwitcher({ workspaces: [...], size: "sm" });
         ws.show(div);
         return div;
     }
@@ -21426,7 +21426,7 @@ See `specs/visualtableeditor.prd.md` for the complete specification.
 
 Chrome for the **workspace tier** of a dynamic UI: canvas tabs with pinning, a new-canvas control, a content region for the canvas to mount into, and a history scrubber.
 
-> **Not to be confused with [WorkspaceSwitcher](../workspaceswitcher/README.md)**, which switches *tenants*. WorkspaceShell switches *canvases within one workspace*. Genuinely different concepts that collided on the same English word; the two coexist.
+> **Not to be confused with [TenantSwitcher](../tenantswitcher/README.md)**, which switches *tenants*. WorkspaceShell switches *canvases within one workspace*. Genuinely different concepts that collided on the same English word; the two coexist.
 
 ## Features
 
@@ -21518,7 +21518,7 @@ Canvas titles are user content and are only ever assigned through `textContent`.
 
 - [DynamicCanvas](../dynamiccanvas/README.md) — mounts into the content region
 - [ChatDock](../chatdock/README.md) — the conversation surface
-- [WorkspaceSwitcher](../workspaceswitcher/README.md) — tenant switching, a different concept
+- [TenantSwitcher](../tenantswitcher/README.md) — tenant switching, a different concept
 - `specs/dynamicui.prd.md` §12.1
 
 

@@ -12,6 +12,13 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Changed
+- **`WorkspaceSwitcher` is now `TenantSwitcher` (ADR-154).** The platform used "workspace" and "tenant" for one concept, and the ambiguity produced real bugs in the consuming app. The CDN path is now `/components/tenantswitcher/`.
+  - **Both names work for one release.** `/components/workspaceswitcher/` serves byte-identical artifacts, `window.createWorkspaceSwitcher` still exists and accepts the old option names (`workspaces`, `activeWorkspaceId`), and `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace` forward to their replacements. The old factory logs a deprecation warning on every call.
+  - **Migration:** `createWorkspaceSwitcher` → `createTenantSwitcher`, `workspaces` → `tenants`, `activeWorkspaceId` → `activeTenantId`, `WorkspaceItem` → `Tenant`. The item fields are unchanged.
+  - **Everything above comes out one release after 2026-10-08** (DEBT-TS-1).
+
+
 ### Fixed (accessibility)
 - **Nine component colour palettes could not carry their own text (ADR-153).** Avatar and tag palettes rendered white initials at ratios as low as **1.92** — white on `#eab308`. Three components (`activityfeed`, `applauncher`, `workspaceswitcher`) set only the background and let the foreground be inherited, so it flipped to near-white in dark mode and every entry failed. Palettes are now darkened hue-preserving until white clears 4.5, and the foreground is always set explicitly.
 - **Caller-supplied colours are safe by construction.** `actionitems`, `facetsearch`, `logconsole` and `tagger` paint host-provided colours, where a fixed `#fff` fails on anything pale. They now pick the foreground at runtime by relative luminance.

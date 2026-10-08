@@ -1414,24 +1414,24 @@ Two-pane CRUD interface for managing prompt templates with `{{variable}}` extrac
 
 See `components/prompttemplatemanager/README.md` for full documentation.
 
-## WorkspaceSwitcher
+## TenantSwitcher
 
 Multi-tenant workspace switcher with trigger button, searchable dropdown or modal mode, initials avatars with deterministic colours, member count, plan badges, and size variants (sm/default/lg).
 
 | Asset | Path |
 |-------|------|
-| CSS | `dist/components/workspaceswitcher/workspaceswitcher.css` |
-| JS | `dist/components/workspaceswitcher/workspaceswitcher.js` |
-| Types | `dist/components/workspaceswitcher/workspaceswitcher.d.ts` |
+| CSS | `dist/components/tenantswitcher/tenantswitcher.css` |
+| JS | `dist/components/tenantswitcher/tenantswitcher.js` |
+| Types | `dist/components/tenantswitcher/tenantswitcher.d.ts` |
 
 **Requires:** Bootstrap CSS, Bootstrap Icons CSS.
 
 **Usage (script tag):**
 
 ```html
-<script src="dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+<script src="dist/components/tenantswitcher/tenantswitcher.js"></script>
 <script>
-    var switcher = createWorkspaceSwitcher({
+    var switcher = createTenantSwitcher({
         workspaces: [
             { id: "1", name: "Acme Corp", role: "Owner", plan: "Enterprise" }
         ],
@@ -1442,7 +1442,7 @@ Multi-tenant workspace switcher with trigger button, searchable dropdown or moda
 </script>
 ```
 
-See `components/workspaceswitcher/README.md` for full documentation.
+See `components/tenantswitcher/README.md` for full documentation.
 
 ## ActivityFeed
 

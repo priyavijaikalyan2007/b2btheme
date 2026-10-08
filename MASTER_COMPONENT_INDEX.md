@@ -24,7 +24,7 @@ Compact status summary of the master component list. For full specs and descript
 | 12 | User Experience & Onboarding | 8 | 9 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +4 more |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
 | 14 | File & Content Management | 2 | 3 | ✅File Upload / Download Manager, ⬜Screenshot & Video Capture, ✅File Explorer / Asset Browser |
-| 15 | Workspace & Navigation | 4 | 6 | ✅Multi-Tenant Workspace Switcher, ⬜Draggable Workspace Tabs, ✅Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu, ✅App Launcher |
+| 15 | Workspace & Navigation | 4 | 6 | ✅Multi-Tenant Switcher, ⬜Draggable Workspace Tabs, ✅Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu, ✅App Launcher |
 | 16 | Governance & Security | 2 | 3 | ✅RBAC Permission Matrix, ✅Immutable Audit Log Viewer, ⬜Secret / API Key Manager |
 | 17 | Communication & Collaboration | 2 | 2 | ✅Notification Center (In-App Bell), ✅Commenting & Annotation Overlay |
 | 18 | Workflows & Automation | 1 | 3 | ⬜Visual Workflow Builder (Node Canvas), ✅Multi-Stage Stepper (Wizard), ⬜Approval Flow Indicator |
@@ -69,7 +69,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **14. File & Content Management:** 14.1 File Upload / Download Manager | 14.3 File Explorer / Asset Browser
 
-**15. Workspace & Navigation:** 15.1 Multi-Tenant Workspace Switcher | 15.3 Breadcrumb Navigation (Contextual) | 15.5 User Menu | 15.6 App Launcher
+**15. Workspace & Navigation:** 15.1 Multi-Tenant Switcher | 15.3 Breadcrumb Navigation (Contextual) | 15.5 User Menu | 15.6 App Launcher
 
 **16. Governance & Security:** 16.1 RBAC Permission Matrix | 16.2 Immutable Audit Log Viewer
 

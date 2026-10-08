@@ -288,8 +288,8 @@
 
 - name: "NavRailHeader"
   file: "components/navrail/navrail.ts"
-  description: "Optional brand / tenant block at the top of the rail. Fields: content (full custom HTMLElement — takes precedence), brandIcon (bi-* class), brandInitials (short text mark like 'K'), title, subtitle, onClick (e.g. open WorkspaceSwitcher). Collapsed state hides text and centres the mark."
-  related: ["NavRail", "NavRailOptions", "WorkspaceSwitcher"]
+  description: "Optional brand / tenant block at the top of the rail. Fields: content (full custom HTMLElement — takes precedence), brandIcon (bi-* class), brandInitials (short text mark like 'K'), title, subtitle, onClick (e.g. open TenantSwitcher). Collapsed state hides text and centres the mark."
+  related: ["NavRail", "NavRailOptions", "TenantSwitcher"]
 
 - name: "NavRailSearch"
   file: "components/navrail/navrail.ts"

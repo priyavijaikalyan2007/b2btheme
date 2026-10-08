@@ -1994,3 +1994,28 @@ I had guessed one palette's contents instead of reading them.
 
 Left open as DEBT-VR-9: chart and diagram palettes, where the requirement is
 series distinctness under colour-vision deficiency rather than text contrast.
+
+---
+
+## 2026-10-08 — ADR-154: TenantSwitcher rename
+
+> Yes take it. And it looks like the rename caused the app to break in that spot.
+
+The break was not what it looked like. Their call site was intact and
+correctly guarded; they had moved their script tag to
+`/components/tenantswitcher/` ahead of us publishing it, so the resource
+404'd and the global never existed. Their guard then did its job and said so
+by name.
+
+Renamed the **folder**, because the folder name is the CDN path and the path
+was what 404'd — renaming only the API would have left them broken. The build
+also publishes byte-identical artifacts at the old path (a copy step, not a
+shim: a shim would need the new bundle already loaded, and a copy cannot
+drift). Both globals ship, the old factory accepts the old option names and
+warns, and the legacy methods forward.
+
+Verified live after deploy: four URLs 200, both globals in the bundle.
+
+The lesson recorded as insight 6.29: the request said "whenever it suits
+you", which describes priority, not ordering. In a cross-repo rename the
+producer must publish the new path first, and saying so was our job.

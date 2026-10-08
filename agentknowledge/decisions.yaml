@@ -4326,3 +4326,77 @@
     - "components/facetsearch/facetsearch.ts"
     - "components/logconsole/logconsole.ts"
     - "test-local.sh"
+
+- id: "ADR-154"
+  title: "WorkspaceSwitcher becomes TenantSwitcher; both names ship for one release"
+  date: "2026-10-08"
+  status: "Accepted"
+  context: |
+    Requested by the consuming apps team as knobbyio/apps #255, filed in
+    specs/workspace-switcher-rename.md.
+
+    The platform used "workspace" and "tenant" for ONE concept, and the
+    ambiguity produced real bugs on their side rather than merely reading
+    badly: two tables stored the value twice under both names with nothing
+    keeping the copies equal, one entity class existed twice with the
+    correctly named one dead, a schema comment saying "workspace == tenant in
+    current model" was true but was NOT a constraint so a fixture created
+    rows where they disagreed, and a unique-index test named
+    SameResourceInDifferentTenants never used two tenants.
+
+    They renamed everything they own. This component was the last place the
+    old word survived, because it is ours, and they were translating across
+    the boundary in three lines with a comment explaining why.
+
+    THE REQUEST WAS OVERTAKEN BY AN OUTAGE. They pointed their script tag at
+    /components/tenantswitcher/ before we published it:
+
+        Failed to load resource: 404
+        [ShellTenants] loadUserTenants: CDN WorkspaceSwitcher not loaded
+
+    Their call site was never at fault — correctly guarded, still calling
+    window.createWorkspaceSwitcher. The 404 meant the global never existed.
+    Their guard behaved exactly as ADR-148 asks: it reported a missing
+    dependency instead of rendering a stand-in, which is why this surfaced as
+    a named error against a 404 rather than an empty switcher nobody noticed.
+
+    D1 Rename the FOLDER, because the folder name is the CDN path and the
+       path is what was 404ing. Renaming only the API would not have fixed
+       the outage.
+    D2 Publish byte-identical artifacts at the OLD path for one release, as a
+       build copy step rather than a shim. A shim would need the new bundle
+       already loaded; a copy cannot drift.
+    D3 Keep both globals, and have createWorkspaceSwitcher accept the OLD
+       option names (workspaces, activeWorkspaceId), forward them, and warn.
+       Keep the legacy methods forwarding too. The script tag and the option
+       names can then move in separate changes, which is the point of
+       overlapping a release.
+    D4 Dated specs written before the rename keep saying WorkspaceSwitcher.
+       They are historical record. The TenantSwitcher concept entry carries
+       the former name so a search for it still resolves.
+  consequences: |
+    + The apps shell works again, verified against the live CDN: all four
+      URLs 200 and both globals present in the shipped bundle.
+    + A consumer who has not moved is unaffected, which is what the reporting
+      team asked for and what their own outage demonstrated the need for.
+    + Four tests assert the deprecated surface WORKS rather than merely
+      exists — mounting through the old names, the warning, method
+      forwarding, and new names winning when both are supplied.
+      Mutation-tested by breaking the forwarding.
+    - Two CDN paths serve the same component until the deprecation lapses,
+      and the copy step must be removed with it. Recorded as DEBT-TS-1 so the
+      removal is scheduled rather than forgotten.
+    - The repo now has a component folder whose name differs from every spec
+      written before today. Mitigated by the concept entry resolving the old
+      name, not by rewriting the specs.
+    - A lesson rather than a consequence: the request said "whenever it suits
+      you", and we treated it as unhurried. The consumer moved first and took
+      an outage. A rename that spans two repositories needs the PRODUCER to
+      ship the new path first, and that sequencing should have been stated in
+      the reply rather than assumed.
+  files:
+    - "components/tenantswitcher/tenantswitcher.ts"
+    - "components/tenantswitcher/tenantswitcher.test.ts"
+    - "specs/tenantswitcher.prd.md"
+    - "specs/workspace-switcher-rename.md"
+    - "package.json"

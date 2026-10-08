@@ -941,7 +941,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 # 15\. Workspace & Navigation
 
-## 15.1✅Multi-Tenant Workspace Switcher
+## 15.1✅Multi-Tenant Switcher
 
 **Description**: Dropdown or modal for switching between organizational workspaces/tenants. Displays org branding, search, and "Add Workspace" action. 
 
@@ -3526,7 +3526,7 @@ runtime that drives them lives in `runtime/` and is not a component.
 
 ## 27.2✅WorkspaceShell
 
-**Description**: Chrome for the workspace tier — canvas tabs with pinning, a new-canvas control, a content region the canvas mounts into, and a conditional history scrubber. Presentation only: holds no storage, every control emits and the host decides. NOT to be confused with WorkspaceSwitcher (§4.x), which switches tenants; this switches canvases within one workspace.
+**Description**: Chrome for the workspace tier — canvas tabs with pinning, a new-canvas control, a content region the canvas mounts into, and a conditional history scrubber. Presentation only: holds no storage, every control emits and the host decides. NOT to be confused with TenantSwitcher (§4.x), which switches tenants; this switches canvases within one workspace.
 
 **References**: VS Code editor tabs, Figma pages, PostHog dashboard tabs.
 
@@ -3677,7 +3677,7 @@ convention (ADR-146, D5).
 | 14.2 | Screenshot & Video Capture | Content | NEW |
 | 14.3 | File Explorer / Asset Browser | Content | DONE |
 | 14.4 | ExplorerPicker (Resource Selection) | Content | DONE |
-| 15.1 | Multi-Tenant Workspace Switcher | Navigation | DONE |
+| 15.1 | Multi-Tenant Switcher | Navigation | DONE |
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
 | 15.3 | Breadcrumb Navigation | Navigation | DONE |
 | 15.4 | Multi-Level Collapsible Sidebar | Navigation | NEW |

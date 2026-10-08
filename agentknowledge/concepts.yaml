@@ -502,15 +502,15 @@
   anchor_file: "components/prompttemplatemanager/prompttemplatemanager.scss"
   related: ["PromptTemplateManager", "EnterpriseTheme"]
 
-- name: "WorkspaceSwitcher"
-  definition: "Multi-tenant workspace switcher with trigger button, searchable list in dropdown or modal mode. Deterministic initials avatar colours via DJB2 hash over 8-colour palette, member count, plan badges, size variants (sm/default/lg), debounced search (150ms), optional async onSearch callback, portal-appended dropdown/modal, keyboard navigation (Escape/ArrowUp/ArrowDown/Home/End/Enter). ~530 lines TypeScript."
-  anchor_file: "components/workspaceswitcher/workspaceswitcher.ts"
-  related: ["EnterpriseTheme", "WorkspaceSwitcherStyles", "BootstrapIcons"]
+- name: "TenantSwitcher"
+  definition: "FORMERLY WorkspaceSwitcher, renamed 2026-10-08 (ADR-154) when the platform settled on 'tenant' as the single word for the concept; the old CDN path and API names survive for one release. Dated specs written before the rename still say WorkspaceSwitcher — they are historical record, and this entry is where that name resolves. Multi-tenant workspace switcher with trigger button, searchable list in dropdown or modal mode. Deterministic initials avatar colours via DJB2 hash over 8-colour palette, member count, plan badges, size variants (sm/default/lg), debounced search (150ms), optional async onSearch callback, portal-appended dropdown/modal, keyboard navigation (Escape/ArrowUp/ArrowDown/Home/End/Enter). ~530 lines TypeScript."
+  anchor_file: "components/tenantswitcher/tenantswitcher.ts"
+  related: ["EnterpriseTheme", "TenantSwitcherStyles", "BootstrapIcons"]
 
-- name: "WorkspaceSwitcherStyles"
-  definition: "SCSS styles for the WorkspaceSwitcher component. Trigger button with chevron and avatar, dropdown panel with position:fixed and box-shadow, modal with fixed inset backdrop, search input, workspace items with avatar/details/check/meta, size variants (sm 28px/default 36px/lg 44px), hover and active states, empty message, reduced motion support."
-  anchor_file: "components/workspaceswitcher/workspaceswitcher.scss"
-  related: ["WorkspaceSwitcher", "EnterpriseTheme"]
+- name: "TenantSwitcherStyles"
+  definition: "SCSS styles for the TenantSwitcher component. Trigger button with chevron and avatar, dropdown panel with position:fixed and box-shadow, modal with fixed inset backdrop, search input, workspace items with avatar/details/check/meta, size variants (sm 28px/default 36px/lg 44px), hover and active states, empty message, reduced motion support."
+  anchor_file: "components/tenantswitcher/tenantswitcher.scss"
+  related: ["TenantSwitcher", "EnterpriseTheme"]
 
 - name: "ActivityFeed"
   definition: "Social-style activity feed with date grouping (Today/Yesterday/This Week/Earlier), IntersectionObserver-based infinite scroll with sentinel element, 7 event types with default icons/colours, deterministic avatar colours, relative timestamps (just now/N minutes ago/yesterday/N days ago), real-time addEvent with entrance animation (translateY + opacity), rich content truncation with Show more/Show less, compact mode with type icons replacing avatars, loading/error/end states for pagination. ~620 lines TypeScript."
@@ -670,7 +670,7 @@
 - name: "UserMenu"
   definition: "Avatar-triggered dropdown menu for user account actions. Displays image or initials avatar with status dot (online/offline/busy/away). Dropdown with menu items, dividers, group headers, danger items. ARIA menu pattern, keyboard navigation. ~963 lines TypeScript."
   anchor_file: "components/usermenu/usermenu.ts"
-  related: ["EnterpriseTheme", "UserMenuStyles", "WorkspaceSwitcher"]
+  related: ["EnterpriseTheme", "UserMenuStyles", "TenantSwitcher"]
 
 - name: "UserMenuStyles"
   definition: "SCSS styles for UserMenu. Trigger button, avatar sizing, status dots, initials colour, dropdown positioning, menu items with hover/focus/danger states, size variants, prefers-reduced-motion support."
@@ -690,7 +690,7 @@
 - name: "AppLauncher"
   definition: "Grid-based application launcher with three view modes: dropdown (waffle icon trigger, portal on body), modal (centered overlay with backdrop and category tabs), and fullpage (inline with sidebar navigation). Search with 150ms debounce and optional async fallback, localStorage-persisted favourites and recent apps, badge variants, active app indicator, 2D grid keyboard navigation with roving tabindex. ~950 lines TypeScript."
   anchor_file: "components/applauncher/applauncher.ts"
-  related: ["EnterpriseTheme", "AppLauncherStyles", "WorkspaceSwitcher", "CommandPalette", "UserMenu"]
+  related: ["EnterpriseTheme", "AppLauncherStyles", "TenantSwitcher", "CommandPalette", "UserMenu"]
 
 - name: "AppLauncherStyles"
   definition: "SCSS styles for AppLauncher. Trigger button, dropdown portal (fixed, z-1050), modal with backdrop and scale animation (z-1055), fullpage layout with sidebar, CSS Grid tiles with --al-cols custom property, badge variants, favourite star toggle, size variants (sm/default/lg), responsive columns, prefers-reduced-motion support."
