@@ -190,7 +190,7 @@
     <link rel="stylesheet" href="../../dist/components/typebadge/typebadge.css">
     <link rel="stylesheet" href="../../dist/components/usermenu/usermenu.css">
     <link rel="stylesheet" href="../../dist/components/visualtableeditor/visualtableeditor.css">
-    <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <link rel="stylesheet" href="../../dist/components/tenantswitcher/tenantswitcher.css">
 
     <link rel="stylesheet" href="./studio-shell.css">
 
@@ -691,7 +691,7 @@
     <script src="../../dist/components/typebadge/typebadge.js"></script>
     <script src="../../dist/components/usermenu/usermenu.js"></script>
     <script src="../../dist/components/visualtableeditor/visualtableeditor.js"></script>
-    <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+    <script src="../../dist/components/tenantswitcher/tenantswitcher.js"></script>
 
     <!-- Studio storage -->
     <script src="./studio-storage.js"></script>
@@ -1223,8 +1223,8 @@
               category: "Social", factory: "createPresenceIndicator", width: 120, height: 40,
               pattern: "id-opts",
               defaults: { people: [{id:"u1",name:"Alice",status:"online"},{id:"u2",name:"Bob",status:"away"}] } },
-            { name: "workspaceswitcher", label: "WorkspaceSwitcher", icon: "bi-building",
-              category: "Social", factory: "createWorkspaceSwitcher", width: 220, height: 40,
+            { name: "tenantswitcher", label: "TenantSwitcher", icon: "bi-building",
+              category: "Social", factory: "createTenantSwitcher", width: 220, height: 40,
               pattern: "opts-id",
               defaults: { workspaces: [{id:"w1",name:"Default",icon:"bi-building"},{id:"w2",name:"Project X",icon:"bi-folder"}],
                           activeWorkspaceId: "w1" } },
@@ -2557,8 +2557,8 @@
             '{\n  "status": "online"\n}' +
             '</pre>';
 
-        COMPONENT_HELP["workspaceswitcher"] =
-            '<h4 style="margin:0 0 4px;font-size:13px;">WorkspaceSwitcher</h4>' +
+        COMPONENT_HELP["tenantswitcher"] =
+            '<h4 style="margin:0 0 4px;font-size:13px;">TenantSwitcher</h4>' +
             '<p>A dropdown for switching between workspaces or organisations.</p>' +
             '<strong>Options:</strong>' +
             '<ul style="margin:4px 0;padding-left:16px;">' +

@@ -118,6 +118,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [symbolpicker](#symbolpicker) | `components/symbolpicker/symbolpicker.css` | `components/symbolpicker/symbolpicker.js` |
 | [tabbedpanel](#tabbedpanel) | `components/tabbedpanel/tabbedpanel.css` | `components/tabbedpanel/tabbedpanel.js` |
 | [tagger](#tagger) | `components/tagger/tagger.css` | `components/tagger/tagger.js` |
+| [tenantswitcher](#tenantswitcher) | `components/tenantswitcher/tenantswitcher.css` | `components/tenantswitcher/tenantswitcher.js` |
 | [themeinit](#themeinit) | `components/themeinit/themeinit.css` | `components/themeinit/themeinit.js` |
 | [themetoggle](#themetoggle) | `components/themetoggle/themetoggle.css` | `components/themetoggle/themetoggle.js` |
 | [timeline](#timeline) | `components/timeline/timeline.css` | `components/timeline/timeline.js` |
@@ -132,7 +133,6 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [usermenu](#usermenu) | `components/usermenu/usermenu.css` | `components/usermenu/usermenu.js` |
 | [visualtableeditor](#visualtableeditor) | `components/visualtableeditor/visualtableeditor.css` | `components/visualtableeditor/visualtableeditor.js` |
 | [workspaceshell](#workspaceshell) | `components/workspaceshell/workspaceshell.css` | `components/workspaceshell/workspaceshell.js` |
-| [workspaceswitcher](#workspaceswitcher) | `components/workspaceswitcher/workspaceswitcher.css` | `components/workspaceswitcher/workspaceswitcher.js` |
 
 ---
 
@@ -18579,6 +18579,78 @@ See `specs/tagger.prd.md` for the full specification.
 
 ---
 
+<a id="tenantswitcher"></a>
+
+# TenantSwitcher
+
+Dropdown or modal control for switching between organisational tenants and tenants.
+
+## Usage
+
+```html
+<link rel="stylesheet" href="components/tenantswitcher/tenantswitcher.css">
+<script src="components/tenantswitcher/tenantswitcher.js"></script>
+```
+
+```javascript
+const switcher = createTenantSwitcher({
+    tenants: [
+        { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner" },
+        { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8 },
+        { id: "3", name: "Gamma Retail", avatarUrl: "/img/gamma.png", role: "Member" },
+    ],
+    activeTenantId: "1",
+    mode: "dropdown",
+    onSwitch: (ws) => console.log("Switched to:", ws.name),
+    onCreate: () => console.log("Create tenant"),
+}, "my-container");
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `tenants` | `Tenant[]` | Required | Available tenants |
+| `activeTenantId` | `string` | Required | Currently active tenant ID |
+| `mode` | `"dropdown" \| "modal"` | `"dropdown"` | Display mode |
+| `showSearch` | `boolean` | Auto (>5) | Show search input |
+| `showCreateButton` | `boolean` | `true` | Show create tenant button |
+| `showMemberCount` | `boolean` | `false` | Show member count |
+| `showRole` | `boolean` | `true` | Show user role badge |
+| `showPlan` | `boolean` | `false` | Show plan badge |
+| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `onSwitch` | `(ws) => void` | - | Tenant switched callback |
+| `onCreate` | `() => void` | - | Create button callback |
+| `onSearch` | `(q) => Promise<Tenant[]>` | - | Server-side search |
+
+## API
+
+| Method | Description |
+|--------|-------------|
+| `show(containerId)` | Mount to container |
+| `hide()` | Remove from DOM |
+| `destroy()` | Full cleanup |
+| `open()` | Programmatic open |
+| `close()` | Programmatic close |
+| `isOpen()` | Check open state |
+| `getActiveTenant()` | Get active tenant |
+| `setActiveTenant(id)` | Set active tenant |
+| `setTenants(ws[])` | Replace tenant list |
+| `addTenant(ws)` | Add a tenant |
+| `removeTenant(id)` | Remove a tenant |
+
+## Keyboard
+
+| Key | Action |
+|-----|--------|
+| Enter / Space | Open/select |
+| Escape | Close |
+| Arrow Up/Down | Navigate items |
+| Home / End | First/last item |
+
+
+---
+
 <a id="themeinit"></a>
 
 <!--
@@ -21448,78 +21520,6 @@ Canvas titles are user content and are only ever assigned through `textContent`.
 - [ChatDock](../chatdock/README.md) — the conversation surface
 - [WorkspaceSwitcher](../workspaceswitcher/README.md) — tenant switching, a different concept
 - `specs/dynamicui.prd.md` §12.1
-
-
----
-
-<a id="workspaceswitcher"></a>
-
-# WorkspaceSwitcher
-
-Dropdown or modal control for switching between organisational workspaces and tenants.
-
-## Usage
-
-```html
-<link rel="stylesheet" href="components/workspaceswitcher/workspaceswitcher.css">
-<script src="components/workspaceswitcher/workspaceswitcher.js"></script>
-```
-
-```javascript
-const switcher = createWorkspaceSwitcher({
-    workspaces: [
-        { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner" },
-        { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8 },
-        { id: "3", name: "Gamma Retail", avatarUrl: "/img/gamma.png", role: "Member" },
-    ],
-    activeWorkspaceId: "1",
-    mode: "dropdown",
-    onSwitch: (ws) => console.log("Switched to:", ws.name),
-    onCreate: () => console.log("Create workspace"),
-}, "my-container");
-```
-
-## Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `workspaces` | `Workspace[]` | Required | Available workspaces |
-| `activeWorkspaceId` | `string` | Required | Currently active workspace ID |
-| `mode` | `"dropdown" \| "modal"` | `"dropdown"` | Display mode |
-| `showSearch` | `boolean` | Auto (>5) | Show search input |
-| `showCreateButton` | `boolean` | `true` | Show create workspace button |
-| `showMemberCount` | `boolean` | `false` | Show member count |
-| `showRole` | `boolean` | `true` | Show user role badge |
-| `showPlan` | `boolean` | `false` | Show plan badge |
-| `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
-| `onSwitch` | `(ws) => void` | - | Workspace switched callback |
-| `onCreate` | `() => void` | - | Create button callback |
-| `onSearch` | `(q) => Promise<Workspace[]>` | - | Server-side search |
-
-## API
-
-| Method | Description |
-|--------|-------------|
-| `show(containerId)` | Mount to container |
-| `hide()` | Remove from DOM |
-| `destroy()` | Full cleanup |
-| `open()` | Programmatic open |
-| `close()` | Programmatic close |
-| `isOpen()` | Check open state |
-| `getActiveWorkspace()` | Get active workspace |
-| `setActiveWorkspace(id)` | Set active workspace |
-| `setWorkspaces(ws[])` | Replace workspace list |
-| `addWorkspace(ws)` | Add a workspace |
-| `removeWorkspace(id)` | Remove a workspace |
-
-## Keyboard
-
-| Key | Action |
-|-----|--------|
-| Enter / Space | Open/select |
-| Escape | Close |
-| Arrow Up/Down | Navigate items |
-| Home / End | First/last item |
 
 
 ---

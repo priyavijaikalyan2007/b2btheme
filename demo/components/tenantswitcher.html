@@ -3,16 +3,16 @@
   SPDX-License-Identifier: MIT
 -->
 <!--
-  COMPONENT: DemoPage-WorkspaceSwitcher
-  PURPOSE: Standalone demo page for the WorkspaceSwitcher component.
-  RELATES: [[WorkspaceSwitcher]], [[DemoShell]]
+  COMPONENT: DemoPage-TenantSwitcher
+  PURPOSE: Standalone demo page for the TenantSwitcher component.
+  RELATES: [[TenantSwitcher]], [[DemoShell]]
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkspaceSwitcher - Enterprise Theme Demo</title>
+    <title>TenantSwitcher - Enterprise Theme Demo</title>
 
     <!-- FOUC prevention -->
     <script>
@@ -32,7 +32,7 @@
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
-    <link rel="stylesheet" href="../../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <link rel="stylesheet" href="../../dist/components/tenantswitcher/tenantswitcher.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -40,7 +40,7 @@
     <header class="demo-header">
         <h1 class="demo-header-title">
             <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
-            WorkspaceSwitcher
+            TenantSwitcher
         </h1>
         <div class="demo-header-actions">
             <a href="../index.html" class="demo-back-link">
@@ -52,14 +52,14 @@
 
     <main class="demo-main">
 
-        <div class="demo-section" id="workspaceswitcher-section">
-            <h2><i class="bi bi-building"></i> WorkspaceSwitcher</h2>
-            <p class="text-muted">Dropdown or modal workspace switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
+        <div class="demo-section" id="tenantswitcher-section">
+            <h2><i class="bi bi-building"></i> TenantSwitcher</h2>
+            <p class="text-muted">Dropdown or modal tenant switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
 
             <div class="row g-4">
                 <div class="col-6">
                     <h3 class="h5">Dropdown Mode (Default)</h3>
-                    <p class="text-muted small">Click the trigger to open the dropdown. Search filters workspaces.</p>
+                    <p class="text-muted small">Click the trigger to open the dropdown. Search filters tenants.</p>
                     <div id="ws-demo-dropdown" style="height: 50px;"></div>
                 </div>
                 <div class="col-6">
@@ -75,16 +75,16 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
-    <script src="../../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+    <script src="../../dist/components/tenantswitcher/tenantswitcher.js"></script>
 
     <script>
 
     // ====================================================================
-    // WorkspaceSwitcher Demos
+    // TenantSwitcher Demos
     // ====================================================================
 
     (function() {
-        var workspaces = [
+        var tenants = [
             { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner", memberCount: 24, plan: "Enterprise" },
             { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8, plan: "Pro" },
             { id: "3", name: "Gamma Retail", role: "Member", memberCount: 3, plan: "Free" },
@@ -95,25 +95,25 @@
         ];
 
         // 1. Dropdown mode
-        createWorkspaceSwitcher({
-            workspaces: workspaces,
-            activeWorkspaceId: "1",
+        createTenantSwitcher({
+            tenants: tenants,
+            activeTenantId: "1",
             mode: "dropdown",
             showMemberCount: false,
             onSwitch: function(ws) { console.log("[WS Demo] Switched to:", ws.name); },
-            onCreate: function() { console.log("[WS Demo] Create workspace"); }
+            onCreate: function() { console.log("[WS Demo] Create tenant"); }
         }, "ws-demo-dropdown");
 
         // 2. Modal mode (large size)
-        createWorkspaceSwitcher({
-            workspaces: workspaces,
-            activeWorkspaceId: "3",
+        createTenantSwitcher({
+            tenants: tenants,
+            activeTenantId: "3",
             mode: "modal",
             size: "lg",
             showMemberCount: true,
             showPlan: true,
             onSwitch: function(ws) { console.log("[WS Demo] Modal switched to:", ws.name); },
-            onCreate: function() { console.log("[WS Demo] Modal create workspace"); }
+            onCreate: function() { console.log("[WS Demo] Modal create tenant"); }
         }, "ws-demo-modal");
     })();
 

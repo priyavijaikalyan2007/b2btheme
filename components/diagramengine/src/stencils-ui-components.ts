@@ -2118,7 +2118,7 @@ function getTierBContent(name: string):
                     "Sprint review tomorrow",
                 ]);
 
-        case "workspaceswitcher":
+        case "tenantswitcher":
             return (g, x, y, w, h) =>
                 renderEnhancedPanel(g, x, y, w, h, "Workspaces", (g2, cx, cy, cw) =>
                 {
@@ -2953,7 +2953,7 @@ const TIER_B_SHAPES: UiGenericTuple[] = [
     ["permissionmatrix",  "Permission Matrix",      "\u2611", 500, 350],
     ["sharedialog",       "Share Dialog",           "\u2197", 400, 300],
     ["notificationcenter","Notification Center",    "\u2407", 350, 400],
-    ["workspaceswitcher", "Workspace Switcher",     "\u2302", 250, 300],
+    ["tenantswitcher", "Tenant Switcher",     "\u2302", 250, 300],
     ["usermenu",          "User Menu",              "\u263A", 200, 250],
     ["fileexplorer",      "File Explorer",          "\u2302", 500, 400],
     ["applauncher",       "App Launcher",           "\u2637", 300, 300],

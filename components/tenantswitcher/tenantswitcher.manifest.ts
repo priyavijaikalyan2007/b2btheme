@@ -6,15 +6,15 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Workspace Switcher / CapabilityManifest
- * PURPOSE: Declares what Workspace Switcher can render, so the Dynamic UI canvas can
+ * COMPONENT: Tenant Switcher / CapabilityManifest
+ * PURPOSE: Declares what Tenant Switcher can render, so the Dynamic UI canvas can
  *    resolve, mount, and budget it. See ADR-142.
- * RELATES: [[Workspace Switcher]], [[DynamicUIRuntime]]
+ * RELATES: [[Tenant Switcher]], [[DynamicUIRuntime]]
  * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 
-// @semantic-marker workspaceswitcher-manifest
+// @semantic-marker tenantswitcher-manifest
 
 import type { CapabilityManifest } from "../../runtime/src/types";
 
@@ -24,12 +24,12 @@ import type { CapabilityManifest } from "../../runtime/src/types";
  * happens in plan phase 9, once the component satisfies the fuller contract
  * and the conformance suite proves it.
  */
-export const WORKSPACESWITCHER_MANIFEST: CapabilityManifest =
+export const TENANTSWITCHER_MANIFEST: CapabilityManifest =
 {
-    name: "workspaceswitcher",
-    factory: "createWorkspaceSwitcher",
+    name: "tenantswitcher",
+    factory: "createTenantSwitcher",
     factoryStyle: "options-first",
-    label: "Workspace Switcher",
+    label: "Tenant Switcher",
     icon: "bi-building",
     category: "social",
 
@@ -43,7 +43,7 @@ export const WORKSPACESWITCHER_MANIFEST: CapabilityManifest =
     weight: { js: 12700, mountCost: "light", holdsResources: false },
 
     defaultSize: { w: 250, h: 300 },
-    defaultOptions: { workspaces: [], activeWorkspaceId: "" },
+    defaultOptions: { tenants: [], activeTenantId: "" },
 
     conformance: "display",
     priority: 50,

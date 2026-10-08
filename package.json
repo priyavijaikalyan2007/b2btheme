@@ -16,7 +16,7 @@
     "build:docs": "npm run generate:docs && npm run copy:docs",
     "build:info": "bash scripts/build-info.sh",
     "build:manifest": "node scripts/build-manifest.js",
-    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run build:vendor && npm run copy:cdn && npm run build:docs && npm run build:info",
+    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run copy:compat && npm run build:vendor && npm run copy:cdn && npm run build:docs && npm run build:info",
     "copy:cdn": "cp cdn/_headers dist/_headers",
     "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && cp dist/components/themeinit/themeinit.js dist/js/theme-init.js && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
     "watch": "npm run watch:scss",
@@ -33,7 +33,8 @@
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
-    "build:vendor": "node scripts/vendor-closure.mjs"
+    "build:vendor": "node scripts/vendor-closure.mjs",
+    "copy:compat": "mkdir -p dist/components/workspaceswitcher && cp dist/components/tenantswitcher/tenantswitcher.js dist/components/workspaceswitcher/workspaceswitcher.js && cp dist/components/tenantswitcher/tenantswitcher.css dist/components/workspaceswitcher/workspaceswitcher.css"
   },
   "keywords": [
     "bootstrap",
@@ -53,7 +54,7 @@
   "bugs": {
     "url": "https://github.com/priyavijaikalyan2007/b2btheme/issues"
   },
-  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start — vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
+  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start \u2014 vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
   "overrides": {
     "undici": "^7.24.3"
   },

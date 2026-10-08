@@ -221,7 +221,7 @@ const SOCIAL_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ["commentoverlay",     entry("createCommentOverlay",     "Comment Overlay",     "bi-chat-right-dots","social", 400, 300)],
     ["sharedialog",        entry("createShareDialog",        "Share Dialog",        "bi-share-fill",     "social", 400, 300)],
     ["notificationcenter", entry("createNotificationCenter", "Notification Center", "bi-bell-fill",      "social", 350, 400)],
-    ["workspaceswitcher",  entry("createWorkspaceSwitcher",  "Workspace Switcher",  "bi-building",       "social", 250, 300)],
+    ["tenantswitcher",  entry("createTenantSwitcher",  "Tenant Switcher",  "bi-building",       "social", 250, 300)],
     ["usermenu",           entry("createUserMenu",           "User Menu",           "bi-person-circle",  "social", 200, 250)],
     ["personchip",         entry("createPersonChip",         "Person Chip",         "bi-person-badge",   "social", 180, 32)],
     ["presenceindicator",  entry("createPresenceIndicator",  "Presence Indicator",  "bi-people-fill",    "social", 120, 32)],

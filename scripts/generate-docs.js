@@ -559,7 +559,7 @@ function categorizeComponent(name)
     if (["tagger", "facetsearch", "commandpalette"].includes(name)) return "Search & Filtering";
     if (["timeline", "activityfeed", "gauge"].includes(name)) return "Data Visualization";
     if (["fileupload", "commentoverlay", "codeeditor", "markdowneditor"].includes(name)) return "Content & Editing";
-    if (["usermenu", "workspaceswitcher"].includes(name)) return "Identity & Navigation";
+    if (["usermenu", "tenantswitcher"].includes(name)) return "Identity & Navigation";
     if (["permissionmatrix", "auditlogviewer"].includes(name)) return "Governance & Security";
     if (name === "logconsole") return "Developer Tools";
     return "Other";

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: MIT
  */
 /*
- * ⚓ COMPONENT: WorkspaceSwitcher
- * 📜 PURPOSE: Dropdown or modal for switching between organisational workspaces
+ * ⚓ COMPONENT: TenantSwitcher
+ * 📜 PURPOSE: Dropdown or modal for switching between organisational tenants
  *    and tenants. Trigger button with icon/avatar + name + chevron. Search,
  *    keyboard navigation, portal pattern.
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]]
@@ -14,7 +14,7 @@
 // TYPES & INTERFACES
 // ============================================================================
 
-export interface Workspace
+export interface Tenant
 {
     id: string;
     name: string;
@@ -26,10 +26,10 @@ export interface Workspace
     data?: Record<string, unknown>;
 }
 
-export interface WorkspaceSwitcherOptions
+export interface TenantSwitcherOptions
 {
-    workspaces: Workspace[];
-    activeWorkspaceId: string;
+    tenants: Tenant[];
+    activeTenantId: string;
     mode?: "dropdown" | "modal";
     showSearch?: boolean;
     showCreateButton?: boolean;
@@ -42,9 +42,9 @@ export interface WorkspaceSwitcherOptions
     cssClass?: string;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
-    onSwitch?: (workspace: Workspace) => void;
+    onSwitch?: (tenant: Tenant) => void;
     onCreate?: () => void;
-    onSearch?: (query: string) => Promise<Workspace[]>;
+    onSearch?: (query: string) => Promise<Tenant[]>;
     onOpen?: () => void;
     onClose?: () => void;
 }
@@ -53,7 +53,7 @@ export interface WorkspaceSwitcherOptions
 // CONSTANTS
 // ============================================================================
 
-const LOG_PREFIX = "[WorkspaceSwitcher]";
+const LOG_PREFIX = "[TenantSwitcher]";
 const _lu = (typeof (window as any).createLogUtility === "function") ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
 function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
 function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
@@ -61,7 +61,7 @@ function logError(...a: unknown[]): void { _lu ? _lu.error(...a) : console.error
 function logDebug(...a: unknown[]): void { _lu ? _lu.debug(...a) : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a); }
 function logTrace(...a: unknown[]): void { _lu ? _lu.trace(...a) : console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a); }
 
-const CLS = "workspaceswitcher";
+const CLS = "tenantswitcher";
 const SEARCH_DEBOUNCE_MS = 150;
 
 const SIZE_CONFIG: Record<string, { triggerH: number; avatarPx: number; dropW: number }>
@@ -126,17 +126,17 @@ function safeCallback<T extends unknown[]>(
 // CLASS
 // ============================================================================
 
-export class WorkspaceSwitcher
+export class TenantSwitcher
 {
     // -- Options -------------------------------------------------------------
     private opts: Required<
-        Pick<WorkspaceSwitcherOptions,
+        Pick<TenantSwitcherOptions,
             "mode" | "showCreateButton" | "showMemberCount" |
             "showRole" | "showPlan" | "createLabel" | "placeholder" | "size">
-    > & WorkspaceSwitcherOptions;
+    > & TenantSwitcherOptions;
 
     // -- Data ----------------------------------------------------------------
-    private workspaces: Workspace[];
+    private tenants: Tenant[];
     private activeId: string;
 
     // -- DOM -----------------------------------------------------------------
@@ -152,7 +152,7 @@ export class WorkspaceSwitcher
     private destroyed = false;
     private focusedIdx = -1;
     private showSearch: boolean;
-    private filteredWs: Workspace[] = [];
+    private filteredWs: Tenant[] = [];
     private searchTimer = 0;
 
     // -- Bound handlers ------------------------------------------------------
@@ -163,7 +163,7 @@ export class WorkspaceSwitcher
     // CONSTRUCTOR
     // ========================================================================
 
-    constructor(options: WorkspaceSwitcherOptions)
+    constructor(options: TenantSwitcherOptions)
     {
         this.opts = {
             mode: "dropdown",
@@ -171,22 +171,22 @@ export class WorkspaceSwitcher
             showMemberCount: false,
             showRole: true,
             showPlan: false,
-            createLabel: "Create workspace",
-            placeholder: "Search workspaces...",
+            createLabel: "Create tenant",
+            placeholder: "Search tenants...",
             size: "default",
             ...options,
         };
 
-        this.workspaces = [...options.workspaces];
-        this.activeId = options.activeWorkspaceId;
-        this.showSearch = options.showSearch ?? (this.workspaces.length > 5);
-        this.filteredWs = this.orderedWorkspaces();
+        this.tenants = [...options.tenants];
+        this.activeId = options.activeTenantId;
+        this.showSearch = options.showSearch ?? (this.tenants.length > 5);
+        this.filteredWs = this.orderedTenants();
 
         this.rootEl = this.buildRoot();
         this.triggerEl = this.buildTrigger();
         this.rootEl.appendChild(this.triggerEl);
 
-        logInfo(`Initialised ${this.opts.mode} mode with ${this.workspaces.length} workspaces`);
+        logInfo(`Initialised ${this.opts.mode} mode with ${this.tenants.length} tenants`);
     }
 
     // ========================================================================
@@ -236,7 +236,7 @@ export class WorkspaceSwitcher
     {
         if (this.destroyed || this.opened) { return; }
         this.opened = true;
-        this.filteredWs = this.orderedWorkspaces();
+        this.filteredWs = this.orderedTenants();
         this.portalEl = this.opts.mode === "modal"
             ? this.buildModal() : this.buildDropdown();
         document.body.appendChild(this.portalEl);
@@ -258,38 +258,73 @@ export class WorkspaceSwitcher
     // PUBLIC API
     // ========================================================================
 
-    getActiveWorkspace(): Workspace | undefined
+    getActiveTenant(): Tenant | undefined
     {
-        return this.workspaces.find(w => w.id === this.activeId);
+        return this.tenants.find(w => w.id === this.activeId);
     }
 
-    setActiveWorkspace(id: string): void
+    setActiveTenant(id: string): void
     {
         this.activeId = id;
         this.updateTriggerContent();
     }
 
-    setWorkspaces(workspaces: Workspace[]): void
+    setTenants(tenants: Tenant[]): void
     {
-        this.workspaces = [...workspaces];
-        this.showSearch = this.opts.showSearch ?? (this.workspaces.length > 5);
-        this.filteredWs = this.orderedWorkspaces();
+        this.tenants = [...tenants];
+        this.showSearch = this.opts.showSearch ?? (this.tenants.length > 5);
+        this.filteredWs = this.orderedTenants();
         this.updateTriggerContent();
         if (this.opened && this.listEl) { this.renderList(); }
     }
 
-    addWorkspace(workspace: Workspace): void
+    // ── Deprecated method aliases (ADR-154) ────────────────────────────
+    // The apps team drives this instance through setWorkspaces() today. These
+    // forward so a caller can move the method names in a separate change from
+    // the script tag, which is the whole point of overlapping one release.
+
+    /** @deprecated Use `setTenants`. Removed after one release. */
+    setWorkspaces(tenants: Tenant[]): void
     {
-        this.workspaces.push(workspace);
-        this.showSearch = this.opts.showSearch ?? (this.workspaces.length > 5);
-        this.filteredWs = this.orderedWorkspaces();
+        this.setTenants(tenants);
+    }
+
+    /** @deprecated Use `setActiveTenant`. Removed after one release. */
+    setActiveWorkspace(id: string): void
+    {
+        this.setActiveTenant(id);
+    }
+
+    /** @deprecated Use `getActiveTenant`. Removed after one release. */
+    getActiveWorkspace(): Tenant | undefined
+    {
+        return this.getActiveTenant();
+    }
+
+    /** @deprecated Use `addTenant`. Removed after one release. */
+    addWorkspace(tenant: Tenant): void
+    {
+        this.addTenant(tenant);
+    }
+
+    /** @deprecated Use `removeTenant`. Removed after one release. */
+    removeWorkspace(id: string): void
+    {
+        this.removeTenant(id);
+    }
+
+    addTenant(tenant: Tenant): void
+    {
+        this.tenants.push(tenant);
+        this.showSearch = this.opts.showSearch ?? (this.tenants.length > 5);
+        this.filteredWs = this.orderedTenants();
         if (this.opened && this.listEl) { this.renderList(); }
     }
 
-    removeWorkspace(id: string): void
+    removeTenant(id: string): void
     {
-        this.workspaces = this.workspaces.filter(w => w.id !== id);
-        this.filteredWs = this.orderedWorkspaces();
+        this.tenants = this.tenants.filter(w => w.id !== id);
+        this.filteredWs = this.orderedTenants();
         if (this.opened && this.listEl) { this.renderList(); }
     }
 
@@ -322,11 +357,11 @@ export class WorkspaceSwitcher
     private appendTriggerContent(btn: HTMLElement): void
     {
         btn.textContent = "";
-        const ws = this.getActiveWorkspace();
-        const name = ws ? ws.name : "Select workspace";
-        setAttr(btn, "aria-label", `Switch workspace, currently ${name}`);
+        const ws = this.getActiveTenant();
+        const name = ws ? ws.name : "Select tenant";
+        setAttr(btn, "aria-label", `Switch tenant, currently ${name}`);
 
-        const iconEl = this.buildWorkspaceIcon(ws, true);
+        const iconEl = this.buildTenantIcon(ws, true);
         iconEl.className = `${CLS}-trigger-icon`;
         btn.appendChild(iconEl);
 
@@ -429,10 +464,10 @@ export class WorkspaceSwitcher
         content.style.zIndex = "1056";
         setAttr(content, "role", "dialog");
         setAttr(content, "aria-modal", "true");
-        setAttr(content, "aria-label", "Switch workspace");
+        setAttr(content, "aria-label", "Switch tenant");
 
         const heading = createElement("h2", `${CLS}-modal-heading`);
-        heading.textContent = "Switch workspace";
+        heading.textContent = "Switch tenant";
         content.appendChild(heading);
 
         this.liveEl = this.buildLive();
@@ -478,8 +513,8 @@ export class WorkspaceSwitcher
         const input = document.createElement("input") as HTMLInputElement;
         input.className = `${CLS}-search-input`;
         input.type = "text";
-        input.placeholder = this.opts.placeholder ?? "Search workspaces...";
-        setAttr(input, "aria-label", "Search workspaces");
+        input.placeholder = this.opts.placeholder ?? "Search tenants...";
+        setAttr(input, "aria-label", "Search tenants");
         setAttr(input, "role", "searchbox");
         input.addEventListener("input", this.onSearchInput.bind(this));
         wrapper.appendChild(input);
@@ -492,7 +527,7 @@ export class WorkspaceSwitcher
     {
         const list = createElement("div", `${CLS}-list`);
         setAttr(list, "role", "listbox");
-        setAttr(list, "aria-label", "Workspace list");
+        setAttr(list, "aria-label", "Tenant list");
         this.renderListInto(list);
         return list;
     }
@@ -509,7 +544,7 @@ export class WorkspaceSwitcher
         if (this.filteredWs.length === 0)
         {
             const empty = createElement("div", `${CLS}-empty`);
-            empty.textContent = "No workspaces found";
+            empty.textContent = "No tenants found";
             list.appendChild(empty);
             return;
         }
@@ -520,7 +555,7 @@ export class WorkspaceSwitcher
         });
     }
 
-    private buildItem(ws: Workspace, idx: number): HTMLElement
+    private buildItem(ws: Tenant, idx: number): HTMLElement
     {
         const isActive = ws.id === this.activeId;
         const item = createElement("div", `${CLS}-item`);
@@ -540,16 +575,16 @@ export class WorkspaceSwitcher
             item.appendChild(check);
         }
 
-        item.addEventListener("click", () => this.selectWorkspace(ws));
+        item.addEventListener("click", () => this.selectTenant(ws));
         return item;
     }
 
-    private buildItemIcon(ws: Workspace): HTMLElement
+    private buildItemIcon(ws: Tenant): HTMLElement
     {
-        return this.buildWorkspaceIcon(ws, false);
+        return this.buildTenantIcon(ws, false);
     }
 
-    private buildItemInfo(ws: Workspace): HTMLElement
+    private buildItemInfo(ws: Tenant): HTMLElement
     {
         const info = createElement("div", `${CLS}-item-info`);
 
@@ -581,8 +616,8 @@ export class WorkspaceSwitcher
         return info;
     }
 
-    private buildWorkspaceIcon(
-        ws: Workspace | undefined,
+    private buildTenantIcon(
+        ws: Tenant | undefined,
         isTrigger: boolean
     ): HTMLElement
     {
@@ -657,7 +692,7 @@ export class WorkspaceSwitcher
         const icon = createElement("i", "bi bi-plus-lg");
         setAttr(icon, "aria-hidden", "true");
         btn.appendChild(icon);
-        const txt = document.createTextNode(" " + (this.opts.createLabel ?? "Create workspace"));
+        const txt = document.createTextNode(" " + (this.opts.createLabel ?? "Create tenant"));
         btn.appendChild(txt);
         btn.addEventListener("click", () => this.onCreateClick());
         return btn;
@@ -757,7 +792,7 @@ export class WorkspaceSwitcher
         if (this.focusedIdx >= 0 && this.focusedIdx < this.filteredWs.length)
         {
             e.preventDefault();
-            this.selectWorkspace(this.filteredWs[this.focusedIdx]);
+            this.selectTenant(this.filteredWs[this.focusedIdx]);
         }
     }
 
@@ -790,23 +825,23 @@ export class WorkspaceSwitcher
         else
         {
             this.filteredWs = query.length > 0
-                ? this.filterLocal(query) : this.orderedWorkspaces();
+                ? this.filterLocal(query) : this.orderedTenants();
         }
 
         this.renderList();
         this.focusedIdx = -1;
-        this.announce(`${this.filteredWs.length} workspaces found`);
+        this.announce(`${this.filteredWs.length} tenants found`);
     }
 
-    private filterLocal(query: string): Workspace[]
+    private filterLocal(query: string): Tenant[]
     {
         const lower = query.toLowerCase();
-        return this.orderedWorkspaces().filter(
+        return this.orderedTenants().filter(
             ws => ws.name.toLowerCase().includes(lower)
         );
     }
 
-    private selectWorkspace(ws: Workspace): void
+    private selectTenant(ws: Tenant): void
     {
         if (ws.id === this.activeId)
         {
@@ -818,7 +853,7 @@ export class WorkspaceSwitcher
         this.updateTriggerContent();
         this.closePortal();
         safeCallback(this.opts.onSwitch, ws);
-        logInfo(`Switched to workspace: ${ws.name}`);
+        logInfo(`Switched to tenant: ${ws.name}`);
     }
 
     private onCreateClick(): void
@@ -901,10 +936,10 @@ export class WorkspaceSwitcher
     // UTILITY
     // ========================================================================
 
-    private orderedWorkspaces(): Workspace[]
+    private orderedTenants(): Tenant[]
     {
-        const active = this.workspaces.find(w => w.id === this.activeId);
-        const rest = this.workspaces.filter(w => w.id !== this.activeId);
+        const active = this.tenants.find(w => w.id === this.activeId);
+        const rest = this.tenants.filter(w => w.id !== this.activeId);
         return active ? [active, ...rest] : rest;
     }
 
@@ -919,15 +954,68 @@ export class WorkspaceSwitcher
 // FACTORY & GLOBALS
 // ============================================================================
 
-export function createWorkspaceSwitcher(
-    options: WorkspaceSwitcherOptions,
+export function createTenantSwitcher(
+    options: TenantSwitcherOptions,
     containerId?: string
-): WorkspaceSwitcher
+): TenantSwitcher
 {
-    const instance = new WorkspaceSwitcher(options);
+    const instance = new TenantSwitcher(options);
     if (containerId) { instance.show(containerId); }
     return instance;
 }
 
-(window as unknown as Record<string, unknown>).WorkspaceSwitcher = WorkspaceSwitcher;
-(window as unknown as Record<string, unknown>).createWorkspaceSwitcher = createWorkspaceSwitcher;
+(window as unknown as Record<string, unknown>).TenantSwitcher = TenantSwitcher;
+(window as unknown as Record<string, unknown>).createTenantSwitcher = createTenantSwitcher;
+
+// ============================================================================
+// DEPRECATED ALIASES — remove no earlier than the release after 2026-10-08
+// ============================================================================
+//
+// This component was WorkspaceSwitcher until ADR-154. The platform used
+// "workspace" and "tenant" for one concept, which produced real bugs in the
+// consuming app — a schema comment saying the two were equal was true but
+// was not a constraint, so fixtures created rows where they disagreed.
+//
+// The old names stay for ONE release because the alternative is the failure
+// mode this library spent the month removing: a global that silently becomes
+// undefined renders nothing and reports nothing. The apps team asked for the
+// overlap explicitly, and when they moved first anyway their shell logged
+// "CDN WorkspaceSwitcher not loaded" against a 404.
+//
+// `createWorkspaceSwitcher` accepts the OLD option names and forwards them,
+// so a caller passing `workspaces` / `activeWorkspaceId` keeps working.
+
+/** @deprecated Use `TenantSwitcherOptions`. Removed after one release. */
+export interface WorkspaceSwitcherOptions
+    extends Omit<TenantSwitcherOptions, "tenants" | "activeTenantId">
+{
+    workspaces: Tenant[];
+    activeWorkspaceId: string;
+}
+
+/** @deprecated Use `createTenantSwitcher`. Removed after one release. */
+export function createWorkspaceSwitcher(
+    options: WorkspaceSwitcherOptions | TenantSwitcherOptions,
+    containerId?: string
+): TenantSwitcher
+{
+    const legacy = options as WorkspaceSwitcherOptions;
+    const current = options as TenantSwitcherOptions;
+
+    logWarn(
+        "createWorkspaceSwitcher is deprecated and will be removed after one "
+        + "release — use createTenantSwitcher. The component and its CDN path "
+        + "are now 'tenantswitcher' (ADR-154).");
+
+    return createTenantSwitcher(
+        {
+            ...current,
+            tenants: current.tenants ?? legacy.workspaces,
+            activeTenantId: current.activeTenantId ?? legacy.activeWorkspaceId,
+        },
+        containerId);
+}
+
+(window as unknown as Record<string, unknown>).WorkspaceSwitcher = TenantSwitcher;
+(window as unknown as Record<string, unknown>).createWorkspaceSwitcher =
+    createWorkspaceSwitcher;

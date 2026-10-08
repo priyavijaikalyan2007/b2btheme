@@ -14,10 +14,10 @@
  *    Presentation only. It holds no storage and knows nothing about how a
  *    canvas is loaded; every control emits and the host decides.
  *
- *    NOT to be confused with WorkspaceSwitcher, which switches TENANTS. This
+ *    NOT to be confused with TenantSwitcher, which switches TENANTS. This
  *    switches CANVASES within one workspace. Different concept, unfortunate
  *    collision of the word.
- * 🔗 RELATES: [[DynamicCanvas]], [[ChatDock]], [[WorkspaceSwitcher]]
+ * 🔗 RELATES: [[DynamicCanvas]], [[ChatDock]], [[TenantSwitcher]]
  * ⚡ FLOW: [tab click] -> [selectCanvas channel] -> [host loads] -> [canvas]
  * 🔒 SECURITY: Canvas titles are user content and are only ever assigned
  *    through textContent.

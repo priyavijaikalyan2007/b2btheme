@@ -231,6 +231,8 @@ components/tabbedpanel/tabbedpanel.css — tabbedpanel component CSS
 components/tabbedpanel/tabbedpanel.js  — tabbedpanel component JS
 components/tagger/tagger.css — tagger component CSS
 components/tagger/tagger.js  — tagger component JS
+components/tenantswitcher/tenantswitcher.css — tenantswitcher component CSS
+components/tenantswitcher/tenantswitcher.js  — tenantswitcher component JS
 components/themeinit/themeinit.css — themeinit component CSS
 components/themeinit/themeinit.js  — themeinit component JS
 components/themetoggle/themetoggle.css — themetoggle component CSS
@@ -259,8 +261,6 @@ components/visualtableeditor/visualtableeditor.css — visualtableeditor compone
 components/visualtableeditor/visualtableeditor.js  — visualtableeditor component JS
 components/workspaceshell/workspaceshell.css — workspaceshell component CSS
 components/workspaceshell/workspaceshell.js  — workspaceshell component JS
-components/workspaceswitcher/workspaceswitcher.css — workspaceswitcher component CSS
-components/workspaceswitcher/workspaceswitcher.js  — workspaceswitcher component JS
 docs/                        — Consumer documentation (HTML)
 ```
 
@@ -1158,6 +1158,11 @@ $control-height-xl=46px
 - JS: `components/tagger/tagger.js`
 - Exports: `class for`
 
+### tenantswitcher
+
+- CSS: `components/tenantswitcher/tenantswitcher.css`
+- JS: `components/tenantswitcher/tenantswitcher.js`
+
 ### themeinit
 
 - CSS: `components/themeinit/themeinit.css`
@@ -1232,9 +1237,4 @@ $control-height-xl=46px
 
 - CSS: `components/workspaceshell/workspaceshell.css`
 - JS: `components/workspaceshell/workspaceshell.js`
-
-### workspaceswitcher
-
-- CSS: `components/workspaceswitcher/workspaceswitcher.css`
-- JS: `components/workspaceswitcher/workspaceswitcher.js`
 
