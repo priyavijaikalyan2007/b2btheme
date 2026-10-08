@@ -26,6 +26,47 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[ActionItems]";
 
+/**
+ * Pick a foreground that stays readable on an arbitrary background.
+ *
+ * ADR-153. Caller-supplied colours cannot be vetted at build time, and a
+ * fixed `#fff` fails on anything pale — a yellow tag rendered white-on-yellow
+ * at 1.9:1. Choosing by relative luminance guarantees at least 4.5 against
+ * one of the two extremes for any input.
+ *
+ * Duplicated per component on purpose: each is bundled as a standalone IIFE
+ * and cannot import a shared module.
+ */
+function readableOn(background: string): string
+{
+    const hex = background.trim().replace("#", "");
+
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(hex))
+    {
+        return "#ffffff";   // not a hex we can read; keep the previous default
+    }
+
+    const full = hex.length === 3
+        ? hex.split("").map(function (c) { return c + c; }).join("")
+        : hex;
+
+    const channel = function (v: number): number
+    {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const r = channel(parseInt(full.slice(0, 2), 16));
+    const g = channel(parseInt(full.slice(2, 4), 16));
+    const b = channel(parseInt(full.slice(4, 6), 16));
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Contrast against white is (1.05)/(L+0.05); against near-black
+    // (L+0.05)/0.0947. They cross at L ~= 0.179.
+    return luminance > 0.179 ? "#0f172a" : "#ffffff";
+}
+
+
 const _lu = (typeof (window as any).createLogUtility === "function") ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
 function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
 function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
@@ -1541,7 +1582,7 @@ function renderTagFallback(tag: ActionItemTag): HTMLElement
     if (tag.color)
     {
         el.style.backgroundColor = tag.color;
-        el.style.color = "#fff";
+        el.style.color = readableOn(tag.color);
     }
 
     return el;

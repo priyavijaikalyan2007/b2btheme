@@ -246,6 +246,23 @@ else
 fi
 echo ""
 
+# ── 13. Component colour palettes carry their own text ──
+# DEBT-VR-7. Check [12] reads the compiled stylesheet, so it sees the THEME
+# ladder and nothing else. Colours living in component TypeScript never reach
+# :root and were invisible to it — nine avatar palettes carried white initials
+# at ratios as low as 1.92, unreadable and shipped.
+echo "[13] Component colour palettes (ADR-153)"
+if [ -f scripts/check-component-palettes.py ]; then
+    if python3 scripts/check-component-palettes.py; then
+        PASS=$((PASS + 1))
+    else
+        fail "a component palette cannot carry its own text (see above)"
+    fi
+else
+    fail "scripts/check-component-palettes.py missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

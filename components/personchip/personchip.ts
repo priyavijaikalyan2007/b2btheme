@@ -31,8 +31,8 @@ function logTrace(...a: unknown[]): void { _lu ? _lu.trace(...a) : console.debug
 
 /** Deterministic palette for initials avatars — copied from UserMenu (IIFE constraint). */
 const INITIALS_COLORS: string[] = [
-    "#1c7ed6", "#2b8a3e", "#e67700", "#862e9c",
-    "#c92a2a", "#0b7285", "#5c940d", "#d6336c",
+    "#1a77c9", "#2a853c", "#b55e00", "#862e9c",
+    "#c92a2a", "#0b7285", "#50810b", "#d6336c",
 ];
 
 /** Avatar diameter in pixels per size variant. */

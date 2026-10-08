@@ -93,8 +93,8 @@ const SIZE_CONFIG: Record<string, { triggerH: number; iconPx: number; dropW: num
 };
 
 const INITIALS_PALETTE = [
-    "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e",
-    "#f97316", "#eab308", "#22c55e", "#06b6d4",
+    "#5f62f1", "#8452f5", "#e0177a", "#e80d33",
+    "#c35305", "#916f05", "#178640", "#048095",
 ];
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> =
@@ -956,7 +956,12 @@ export class AppLauncher
         const initial = createElement("span", [`${CLS}-tile-initial`]);
         initial.textContent = name.charAt(0).toUpperCase();
         const colorIdx = hashString(name) % INITIALS_PALETTE.length;
+        // ADR-153. Set EXPLICITLY, never inherited: the background is a fixed
+        // palette colour, so a theme-supplied foreground flips to near-white in
+        // dark mode and the initials vanish. The palette is darkened to keep
+        // white above 4.5 on every entry.
         initial.style.backgroundColor = INITIALS_PALETTE[colorIdx];
+        initial.style.color = "#ffffff";
         container.appendChild(initial);
         return container;
     }
