@@ -2019,3 +2019,29 @@ Verified live after deploy: four URLs 200, both globals in the bundle.
 The lesson recorded as insight 6.29: the request said "whenever it suits
 you", which describes priority, not ordering. In a cross-repo rename the
 producer must publish the new path first, and saying so was our job.
+
+---
+
+## 2026-10-08 — ADR-155: the last two colour gates
+
+> Ok. Continue with the remaining items please.
+
+Cleaned the debt list first — six `-ORIG` entries were duplicates of items
+already resolved and still read as open. A list nobody trusts is worse than
+none. Now 21 open, 14 resolved.
+
+**DEBT-VR-2** (check `[14]`): the shadow scale is declared three times and
+drifted twice in four ADRs. The mutation tests are literally those two
+failures replayed. Worth recording that the *checker* needed three fixes
+while the theme was correct throughout — a missing `re.M`, a flat dict that
+kept the dark values, and an alpha regex stopping at the `)` inside `var(`.
+Each read as a real failure.
+
+**DEBT-VR-9** (check `[15]`): simulates the three colour-vision deficiencies
+and measures pairwise separability. **Nothing was broken** — all five
+palettes already clear the floor. Shipped the gate anyway, which is insight
+6.31: the cheapest moment to add a check is while it passes, because you pick
+the threshold on the merits rather than against a failure.
+
+Proven with `#8a843c` — ΔE 72.3 from `#dc3545` normally, **0.3** under
+deuteranopia. Invisible to the author, disabling for the reader.

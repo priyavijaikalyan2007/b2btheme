@@ -12,6 +12,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added
+- **`npm test` check `[14]` — the three elevation layers must agree** (ADR-155). The shadow scale is declared in Sass, in CSS custom properties, and in Bootstrap's own `$box-shadow`, and the copies drifted twice in four releases — once leaving every dropdown and modal on the old shadow, once leaving them casting light-tinted shadows in dark mode. The check compares geometry and alphas rather than bytes, since the layers legitimately spell the same colour differently.
+- **`npm test` check `[15]` — chart and status palettes must survive colour-vision deficiency** (ADR-155). Simulates protanopia, deuteranopia and tritanopia and measures every pair of series colours. **Nothing was broken** — all five palettes already clear the floor — so this keeps it true rather than fixing it. It does *not* discharge WCAG 1.4.1: colour must still never be the only channel.
+
+### Changed
+- Six resolved tech-debt entries were still listed as open in `CODEBASE_FIXES.md`, left behind when their replacements were written. The list now reads 21 open, 14 resolved.
+
+
 ### Changed
 - **`WorkspaceSwitcher` is now `TenantSwitcher` (ADR-154).** The platform used "workspace" and "tenant" for one concept, and the ambiguity produced real bugs in the consuming app. The CDN path is now `/components/tenantswitcher/`.
   - **Both names work for one release.** `/components/workspaceswitcher/` serves byte-identical artifacts, `window.createWorkspaceSwitcher` still exists and accepts the old option names (`workspaces`, `activeWorkspaceId`), and `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace` forward to their replacements. The old factory logs a deprecation warning on every call.

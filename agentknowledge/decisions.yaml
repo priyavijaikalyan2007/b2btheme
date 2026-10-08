@@ -4400,3 +4400,67 @@
     - "specs/tenantswitcher.prd.md"
     - "specs/workspace-switcher-rename.md"
     - "package.json"
+
+- id: "ADR-155"
+  title: "Two more colour gates — elevation agreement, and series separability under CVD"
+  date: "2026-10-08"
+  status: "Accepted"
+  context: |
+    DEBT-VR-2 and DEBT-VR-9, the last two colour gaps the earlier gates named
+    but could not cover.
+
+    DEBT-VR-2 — the shadow scale is declared THREE times: Sass $shadow-*
+    (30 call sites), CSS --theme-shadow-* (67), and Bootstrap's own
+    $box-shadow (dropdowns, modals, popovers). The copies drifted twice in
+    four ADRs. ADR-147 updated two and missed Bootstrap's, leaving the most
+    visible overlays on the old single-blur smudge. ADR-151 then found
+    Bootstrap's was never redefined in the DARK block either, so those
+    overlays cast light-tinted shadows on a near-black ground. Both were
+    caught by a human noticing.
+
+    DEBT-VR-9 — check [13] asks whether a palette can carry TEXT. Chart
+    series, status dots and connector lines carry none, so it skips them, and
+    a different question applies: can two series be told apart? For roughly
+    1 in 12 men the answer differs from the author's.
+
+    D1 Elevation agreement is GEOMETRY and ALPHAS, not bytes. The layers
+       legitimately spell the same colour differently —
+       rgba($gray-900, 0.07) against rgba(var(--theme-shadow-rgb), 0.07) —
+       and comparing text would fail on a difference that does not exist.
+    D2 Dark is NOT compared to light. ADR-151 deliberately gave dark
+       elevations a hairline light ring and doubled alphas. Dark is checked
+       for PRESENCE instead: that every --bs-box-shadow* is redefined there
+       at all, which is the exact thing that was missing.
+    D3 Series separability is measured as CIE76 ΔE in Lab after simulating
+       protanopia, deuteranopia and tritanopia (Viénot-Brettel-Mollon 1999).
+       Lab because distance there approximates perceived difference; RGB
+       distance does not.
+    D4 MEASURED, NOTHING WAS BROKEN in the series palettes — all five clear
+       ΔE 10 under every deficiency, tightest activityfeed at 11.2. The gate
+       was still written, because the cheapest moment to add one is while the
+       answer is already green.
+  consequences: |
+    + Both historical elevation drifts are now caught automatically; the
+      mutation tests are literally those two failures reproduced.
+    + The CVD gate was proven by mutation with #8a843c — ΔE 72.3 from #dc3545
+      with normal vision and 0.3 under deuteranopia. That is the bug class
+      exactly: invisible to the author, disabling for the reader.
+    - THE CHECKER NEEDED THREE FIXES WHILE THE THEME WAS CORRECT THROUGHOUT,
+      and each read as a real failure: a missing re.M made ^ match only the
+      file start; a flat dict kept the DARK --theme-shadow-* because
+      _dark-mode.scss declares them twice; and an alpha regex using [^)]*
+      stopped at the ) inside var(. Reinforces AGENT_INSIGHTS 6.22 from the
+      other direction — proving the failures were the instrument's took
+      longer than writing the gate.
+    - ΔE 10 is a rule of thumb for side-by-side swatches, not a standard. It
+      says nothing about thin lines or small dots, where the same pair reads
+      differently, and it does NOT discharge WCAG 1.4.1 — colour must still
+      not be the only channel. The gate makes colour a usable SECOND channel.
+    - Six duplicate -ORIG debt entries were removed in the same pass. They
+      were left behind when earlier items were resolved and still read as
+      open; a debt list nobody trusts is worse than no list.
+  files:
+    - "scripts/check-elevation.py"
+    - "scripts/check-series-palettes.py"
+    - "test-local.sh"
+    - "src/scss/_variables.scss"

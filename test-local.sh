@@ -279,6 +279,22 @@ else
 fi
 echo ""
 
+# ── 15. Chart and status palettes survive colour-vision deficiency ──
+# DEBT-VR-9. Check [13] asks whether a palette can carry TEXT; these carry
+# none, so a different question applies — can two series be told apart? For
+# roughly 1 in 12 men that has a different answer than it does for the author.
+echo "[15] Series palettes under CVD (ADR-155)"
+if [ -f scripts/check-series-palettes.py ]; then
+    if python3 scripts/check-series-palettes.py; then
+        PASS=$((PASS + 1))
+    else
+        fail "a series palette collapses for a colour-blind reader (see above)"
+    fi
+else
+    fail "scripts/check-series-palettes.py missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"
