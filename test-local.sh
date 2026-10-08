@@ -263,6 +263,22 @@ else
 fi
 echo ""
 
+# ── 14. The three elevation layers agree ──
+# DEBT-VR-2. The shadow scale is declared three times — Sass $shadow-*, CSS
+# --theme-shadow-*, and Bootstrap's own $box-shadow — and the copies drifted
+# TWICE during ADR-147 to ADR-151, each time caught by a human noticing.
+echo "[14] Elevation layers agree (ADR-155)"
+if [ -f scripts/check-elevation.py ]; then
+    if python3 scripts/check-elevation.py; then
+        PASS=$((PASS + 1))
+    else
+        fail "the elevation layers disagree (see above)"
+    fi
+else
+    fail "scripts/check-elevation.py missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

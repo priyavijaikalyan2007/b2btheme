@@ -469,7 +469,9 @@ $font-size-3xl: 1.5rem !default;    // 24px
 // SHADOW ELEVATION SYSTEM
 // =============================================================================
 //
-// (CRITICAL) These values are DUPLICATED as --theme-shadow-* in _dark-mode.scss.
+// (CRITICAL) These values are DUPLICATED as --theme-shadow-* in _dark-mode.scss
+// AND as Bootstrap's own $box-shadow scale below. All three must move together;
+// structure check [14] enforces it, after the copies drifted twice (ADR-155).
 // The Sass names are consumed by 30 component call sites, the CSS tokens by 67.
 // They are independent declarations of one intent: change both together or the
 // library silently desynchronises, with two elevations that look different for
