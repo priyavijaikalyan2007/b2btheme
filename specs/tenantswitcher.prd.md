@@ -1,4 +1,4 @@
-<!-- AGENT: PRD for the TenantSwitcher component — dropdown or modal for switching between organizational tenants and tenants. -->
+<!-- AGENT: PRD for the TenantSwitcher component — dropdown or modal for switching between organizational tenants. -->
 
 # TenantSwitcher Component
 

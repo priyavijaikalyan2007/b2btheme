@@ -18602,7 +18602,7 @@ See `specs/tagger.prd.md` for the full specification.
 
 # TenantSwitcher
 
-Dropdown or modal control for switching between organisational tenants and tenants.
+Dropdown or modal control for switching between organisational tenants.
 
 ## Usage
 

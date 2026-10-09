@@ -1,6 +1,6 @@
 # TenantSwitcher
 
-Dropdown or modal control for switching between organisational tenants and tenants.
+Dropdown or modal control for switching between organisational tenants.
 
 ## Usage
 

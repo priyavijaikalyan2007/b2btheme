@@ -4,8 +4,8 @@
  */
 /*
  * ⚓ COMPONENT: TenantSwitcher
- * 📜 PURPOSE: Dropdown or modal for switching between organisational tenants
- *    and tenants. Trigger button with icon/avatar + name + chevron. Search,
+ * 📜 PURPOSE: Dropdown or modal for switching between organisational tenants.
+ *    Trigger button with icon/avatar + name + chevron. Search,
  *    keyboard navigation, portal pattern.
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]]
  */
@@ -283,31 +283,31 @@ export class TenantSwitcher
     // forward so a caller can move the method names in a separate change from
     // the script tag, which is the whole point of overlapping one release.
 
-    /** @deprecated Use `setTenants`. Removed after one release. */
+    /** @deprecated Use `setTenants`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
     setWorkspaces(tenants: Tenant[]): void
     {
         this.setTenants(tenants);
     }
 
-    /** @deprecated Use `setActiveTenant`. Removed after one release. */
+    /** @deprecated Use `setActiveTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
     setActiveWorkspace(id: string): void
     {
         this.setActiveTenant(id);
     }
 
-    /** @deprecated Use `getActiveTenant`. Removed after one release. */
+    /** @deprecated Use `getActiveTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
     getActiveWorkspace(): Tenant | undefined
     {
         return this.getActiveTenant();
     }
 
-    /** @deprecated Use `addTenant`. Removed after one release. */
+    /** @deprecated Use `addTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
     addWorkspace(tenant: Tenant): void
     {
         this.addTenant(tenant);
     }
 
-    /** @deprecated Use `removeTenant`. Removed after one release. */
+    /** @deprecated Use `removeTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
     removeWorkspace(id: string): void
     {
         this.removeTenant(id);
@@ -968,7 +968,8 @@ export function createTenantSwitcher(
 (window as unknown as Record<string, unknown>).createTenantSwitcher = createTenantSwitcher;
 
 // ============================================================================
-// DEPRECATED ALIASES — remove no earlier than the release after 2026-10-08
+// DEPRECATED ALIASES — remove one release after the consumer stops calling
+// them. NOT on a date. See DEBT-TS-1.
 // ============================================================================
 //
 // This component was WorkspaceSwitcher until ADR-154. The platform used
@@ -976,16 +977,28 @@ export function createTenantSwitcher(
 // consuming app — a schema comment saying the two were equal was true but
 // was not a constraint, so fixtures created rows where they disagreed.
 //
-// The old names stay for ONE release because the alternative is the failure
-// mode this library spent the month removing: a global that silently becomes
-// undefined renders nothing and reports nothing. The apps team asked for the
-// overlap explicitly, and when they moved first anyway their shell logged
-// "CDN WorkspaceSwitcher not loaded" against a 404.
+// The old names stay because the alternative is the failure mode this library
+// spent the month removing: a global that silently becomes undefined renders
+// nothing and reports nothing. The apps team asked for the overlap
+// explicitly, and when they moved first anyway their shell logged "CDN
+// WorkspaceSwitcher not loaded" against a 404.
+//
+// THIS CARRIED A DATE — "the release after 2026-10-08" — AND THE DATE WAS THE
+// WRONG INSTRUMENT. It came due on 2026-10-09 with the consumer still calling
+// every one of these functions in live source, so the only thing it measured
+// was how long we were willing to wait. Removing on schedule would have
+// reproduced the exact 404 the aliases exist to prevent. The condition
+// replaces it, and unlike a date it is checkable:
+//
+//   grep -rn "createWorkspaceSwitcher\|setWorkspaces\|setActiveWorkspace" \
+//        ~/Work/knobby/apps/typescript/ --include="*.ts"
+//
+// Empty means safe to remove. Until then these stay, however long that is.
 //
 // `createWorkspaceSwitcher` accepts the OLD option names and forwards them,
 // so a caller passing `workspaces` / `activeWorkspaceId` keeps working.
 
-/** @deprecated Use `TenantSwitcherOptions`. Removed after one release. */
+/** @deprecated Use `TenantSwitcherOptions`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
 export interface WorkspaceSwitcherOptions
     extends Omit<TenantSwitcherOptions, "tenants" | "activeTenantId">
 {
@@ -993,7 +1006,7 @@ export interface WorkspaceSwitcherOptions
     activeWorkspaceId: string;
 }
 
-/** @deprecated Use `createTenantSwitcher`. Removed after one release. */
+/** @deprecated Use `createTenantSwitcher`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
 export function createWorkspaceSwitcher(
     options: WorkspaceSwitcherOptions | TenantSwitcherOptions,
     containerId?: string
@@ -1003,9 +1016,10 @@ export function createWorkspaceSwitcher(
     const current = options as TenantSwitcherOptions;
 
     logWarn(
-        "createWorkspaceSwitcher is deprecated and will be removed after one "
-        + "release — use createTenantSwitcher. The component and its CDN path "
-        + "are now 'tenantswitcher' (ADR-154).");
+        "createWorkspaceSwitcher is deprecated — use createTenantSwitcher. The "
+        + "component and its CDN path are now 'tenantswitcher' (ADR-154). "
+        + "It keeps working until this call site is gone, so migrate when "
+        + "you can rather than in a hurry; nothing is removed on a date.");
 
     return createTenantSwitcher(
         {

@@ -346,7 +346,16 @@ limits the design knowingly accepts, not defects in shipped code.
 
 - [ ] **DEBT-TS-1** Two CDN paths serve the same component. `/components/workspaceswitcher/` is a byte-identical copy of `/components/tenantswitcher/`, produced by the `copy:compat` build step, and the deprecated API surface (`createWorkspaceSwitcher`, `WorkspaceSwitcherOptions`, `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace`) forwards to the current one. The original note said **all of it comes out one release after 2026-10-08**, and `createWorkspaceSwitcher` warns on every call so the consuming app's console would show whether anyone was still on it.
 
-  **Checked on the due date, 2026-10-09, and the removal does not happen. The consumer is still on the deprecated API.** `~/Work/knobby/apps/typescript/apps/shell/shell-tenants.ts` calls `window.createWorkspaceSwitcher` (lines 197, 203), `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363) — live source, not a stale build — and `typescript/shared/types/component-library.d.ts` still declares the whole `WorkspaceSwitcher` surface. Deleting the aliases today reproduces the 2026-10-08 incident exactly. **The deadline needs renegotiating with the apps team, not enforcing.**
+  **The deadline is withdrawn and replaced by a condition (2026-10-09).** The user reports the apps team is heads-down on unrelated work and will not get to this soon. So: **the aliases come out one release after the consuming app stops calling them, and not before.** No date. A date here was always the wrong instrument — it measured our patience rather than their readiness, and this one expired with nobody watching. The trigger is checkable in one command, which is the point:
+
+  ```
+  grep -rn "createWorkspaceSwitcher\|setWorkspaces\|setActiveWorkspace" \
+       ~/Work/knobby/apps/typescript/ --include="*.ts"
+  ```
+
+  When that returns nothing, the removal is safe and the recipe below applies. `createWorkspaceSwitcher` warns on every call, so their console says the same thing independently.
+
+  **Checked on the original due date, 2026-10-09, and the removal did not happen. The consumer is still on the deprecated API.** `~/Work/knobby/apps/typescript/apps/shell/shell-tenants.ts` calls `window.createWorkspaceSwitcher` (lines 197, 203), `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363) — live source, not a stale build — and `typescript/shared/types/component-library.d.ts` still declares the whole `WorkspaceSwitcher` surface. Deleting the aliases today reproduces the 2026-10-08 incident exactly. **The deadline needs renegotiating with the apps team, not enforcing.**
 
   The item also **splits in two, with different answers**, which the original phrasing hid by treating it as one deadline:
 

@@ -114,7 +114,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
-| tenantswitcher | Dropdown or modal control for switching between organisational tenants and tenants. | `createTenantSwitcher()` | [README](components/tenantswitcher/README.md) |
+| tenantswitcher | Dropdown or modal control for switching between organisational tenants. | `createTenantSwitcher()` | [README](components/tenantswitcher/README.md) |
 | usermenu | Avatar-triggered dropdown menu for user account actions. | `createUserMenu()` | [README](components/usermenu/README.md) |
 
 ## AI & ML
