@@ -3,6 +3,17 @@
 # test-local.sh — Verify file structure, links, and references for local dev
 # Run after `npm run build`. Validates that run.sh serves a working site.
 # ============================================================================
+#
+# USE `grep -oE`, NEVER `grep -oP`.
+#
+# BSD grep on macOS — the primary development machine — has no -P. Four loops
+# here were written with it: checks [4], [5] (twice) and [6]. On CI's GNU grep
+# they worked; locally the grep aborted, the `for` list came out EMPTY, the
+# loop body never ran, the error counter stayed at zero, and the check
+# reported PASS. Two of them had `2>/dev/null` attached, so they did it in
+# silence. Every pattern involved was plain enough for POSIX ERE, so the -P
+# bought nothing and cost three vacuous checks on the machine where they are
+# actually run. A check that cannot fail is not a check (AGENT_INSIGHTS 6.35).
 
 set -e
 
@@ -65,14 +76,32 @@ else
     pass "demo/index.html exists"
     # Check that demo page links resolve
     DEMO_MISSING=0
-    for href in $(grep -oP 'href="components/[^"]+\.html"' demo/index.html | sed 's/href="//;s/"//'); do
+    for href in $(grep -oE 'href="components/[^"]+\.html"' demo/index.html | sed 's/href="//;s/"//'); do
         if [ ! -f "demo/$href" ]; then
             fail "demo/$href referenced but missing"
             DEMO_MISSING=$((DEMO_MISSING + 1))
         fi
     done
+
+    # SIBLING links, demo page to demo page. The loop above only walks DOWN
+    # from the index, so a cross-reference between two component pages was
+    # never checked — and one had rotted: workspaceshell.html pointed at
+    # workspaceswitcher.html, a page the TenantSwitcher rename had renamed
+    # away (DEBT-TS-1). A rename updates what the index lists; it does not
+    # update what one page says about another.
+    for demo in demo/components/*.html; do
+        case "$(basename "$demo")" in _*) continue;; esac
+        for href in $(grep -oE 'href="[A-Za-z0-9._-]+\.html"' "$demo" \
+                      | sed 's/href="//;s/"//' | sort -u); do
+            if [ ! -f "demo/components/$href" ]; then
+                fail "$demo links to missing sibling: $href"
+                DEMO_MISSING=$((DEMO_MISSING + 1))
+            fi
+        done
+    done
+
     if [ "$DEMO_MISSING" -eq 0 ]; then
-        pass "All demo page links resolve"
+        pass "All demo page links resolve, index and sibling alike"
     fi
 fi
 echo ""
@@ -84,7 +113,7 @@ for demo in demo/components/*.html; do
     # Skip template files
     case "$(basename "$demo")" in _*) continue;; esac
     # Check CSS references
-    for ref in $(grep -oP 'href="\.\./\.\./dist/[^"]+\.css"' "$demo" 2>/dev/null | sed 's/href="//;s/"//'); do
+    for ref in $(grep -oE 'href="\.\./\.\./dist/[^"]+\.css"' "$demo" | sed 's/href="//;s/"//'); do
         resolved="demo/components/$ref"
         # Normalize path
         actual=$(cd "demo/components" 2>/dev/null && realpath -m "$ref" 2>/dev/null || echo "")
@@ -94,7 +123,7 @@ for demo in demo/components/*.html; do
         fi
     done
     # Check JS references
-    for ref in $(grep -oP 'src="\.\./\.\./dist/[^"]+\.js"' "$demo" 2>/dev/null | sed 's/src="//;s/"//'); do
+    for ref in $(grep -oE 'src="\.\./\.\./dist/[^"]+\.js"' "$demo" | sed 's/src="//;s/"//'); do
         resolved="demo/components/$ref"
         actual=$(cd "demo/components" 2>/dev/null && realpath -m "$ref" 2>/dev/null || echo "")
         if [ -n "$actual" ] && [ ! -f "$actual" ]; then
@@ -112,7 +141,7 @@ echo ""
 echo "[6] COMPONENT_INDEX.md README links"
 if [ -f "COMPONENT_INDEX.md" ]; then
     INDEX_BROKEN=0
-    for link in $(grep -oP '\(components/[^)]+/README\.md\)' COMPONENT_INDEX.md | tr -d '()'); do
+    for link in $(grep -oE '\(components/[^)]+/README\.md\)' COMPONENT_INDEX.md | tr -d '()'); do
         if [ ! -f "$link" ]; then
             fail "COMPONENT_INDEX.md links to missing: $link"
             INDEX_BROKEN=$((INDEX_BROKEN + 1))
