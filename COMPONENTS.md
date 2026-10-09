@@ -2145,7 +2145,7 @@ Pre-paint theme initializer (~1.2 KB, dependency-free) that sets `data-bs-theme`
 | Asset | Path |
 |-------|------|
 | JS (canonical) | `js/theme-init.js` |
-| JS (component path) | `components/themeinit/themeinit.js` |
+| JS (component path) | `components/themeinit/themeinit.js` — **internal, do not link** (DEBT-PAR-1) |
 
 **Quick start:**
 

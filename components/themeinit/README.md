@@ -28,7 +28,7 @@ minify) and is additionally published at a stable top-level URL.
 | URL | Purpose |
 |---|---|
 | `https://static.knobby.io/js/theme-init.js` | **Canonical.** Use this in `<head>`. |
-| `https://static.knobby.io/components/themeinit/themeinit.js` | Build-pipeline twin of the same file. |
+| `https://static.knobby.io/components/themeinit/themeinit.js` | Build-pipeline twin. **Internal — do not link this one.** It exists because the source lives under `components/` to reuse the component build pipeline (ADR-137), and the deploy publishes that directory wholesale. It is byte-identical today and carries no promise to stay reachable. See DEBT-PAR-1. |
 
 ## Usage
 
