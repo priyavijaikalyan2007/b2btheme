@@ -119,18 +119,37 @@ resolve it, because only the host knows what its content *is*:
   }
 ```
 
-with a resolver on the canvas options, mirroring the existing `onFetch`
-provenance pattern:
+with a resolver on `DynamicUIHost`, mirroring `onFetch` exactly:
 
 ```ts
-onResolveAnchor?: (a: EntityAnchor) => HTMLElement | null;
+onFetch(source: DataSource, nodeId: string): Promise<unknown>;         // exists
+onResolveAnchor(anchor: EntityAnchor, nodeId: string): HTMLElement | null;  // new
 ```
 
-**Recommended because** it matches how this canvas already handles everything
-it cannot know — `DataSource.query` is "opaque to the runtime; meaningful to
-the host's onFetch". Content identity is the same kind of fact. It also
-completes a promise the README has already made, rather than inventing a
-fourth anchor concept.
+**Recommended because** it matches how this runtime already handles every
+fact it cannot know. `DataSource.query` is "opaque to the runtime; meaningful
+to the host's `onFetch`", and content identity is the same kind of fact,
+resolved by the same party, through a callback of the same shape — a domain
+object plus the `nodeId`. It also completes a promise the README has already
+made rather than inventing a fourth anchor concept.
+
+**Two things this costs that are easy to miss.**
+
+*It makes the host interface seven functions.* `DynamicUIHost` is documented
+as "The complete surface a consuming application implements. **Six
+functions.**" That count is load-bearing prose — it is the interface's own
+claim to being small. Adding to it is a deliberate act and the comment must
+change with it; the alternative is an optional seventh, which keeps the
+promise by making content anchoring opt-in and leaves hosts that do not
+implement it exactly where they are today.
+
+*It must be synchronous, unlike `onFetch`.* Overlay positions are refined on
+scroll. A `Promise`-returning resolver cannot be awaited per frame without
+either blocking the scroll path or producing marks that lag the content they
+mark. So the resolver returns an element directly, and is consulted on mount
+and on reflow rather than on every refinement — with the resolved element
+cached per node for the lifetime of a layout pass, which is how
+`regionsOf()` already memoises scrolling regions within a pass.
 
 **Degradation is explicit:** resolver returns `null` → the mark is marked
 unresolved and hidden, exactly as off-screen marks are hidden today. It is
@@ -201,10 +220,13 @@ deliberately not folded in here.
 
 ## 9. Open questions for review
 
-1. **Is `onResolveAnchor` the right seam**, or should the host hand the canvas
-   a resolver per *node* rather than one per canvas? One per canvas matches
-   `onFetch`; one per node matches the fact that different mounted components
-   identify content differently.
+1. **Should `onResolveAnchor` be required or optional on `DynamicUIHost`?**
+   Required keeps the interface honest — every host states how its content is
+   identified. Optional keeps the documented "six functions" promise closer to
+   true and means no existing host has to change. *(The per-canvas vs
+   per-node question this slot originally held is settled: `onFetch` already
+   takes `nodeId` as a parameter, so one host callback parameterised by node
+   is the established shape and the resolver should match it.)*
 2. **Should an unresolved anchor hide the mark or show it as orphaned?**
    Hiding matches the current off-screen behaviour. Showing it — greyed, with
    its last known position — tells the user something was lost rather than
