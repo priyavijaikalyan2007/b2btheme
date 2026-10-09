@@ -2099,3 +2099,67 @@ eyeball the accordion and form-select icons in both themes. Insight 6.36.
 Recorded ADR-156 as well, which shipped in `56032cc` referencing a decision
 that was never written down — the dangling cross-reference the elevation gate
 exists to catch, in prose instead of CSS.
+
+---
+
+## 2026-10-09 — "ok. fix the other items one by one."
+
+Worked the five remaining arc items in order. Every one produced something
+its own entry did not contain, and the shared cause is worth naming: the
+entries recorded **conclusions**, and a conclusion does not announce when its
+premises stop holding.
+
+**DEBT-TS-1 came due on this date, and the removal did not happen.** The
+consuming app still calls `createWorkspaceSwitcher`, `setWorkspaces` and
+`setActiveWorkspace` at six sites in `shell-tenants.ts` — live source, not a
+stale build. Deleting the aliases today reproduces the 2026-10-08 outage
+exactly, so **this one needs a conversation with the apps team rather than a
+commit, and that is yours to have.** The entry also split in two: the API
+surface is load-bearing, while the duplicate CDN path is already dead to the
+consumer; and its removal recipe listed one of the four edits the removal
+actually needs.
+
+**Then the cheap bookkeeping found the expensive bug.** Closing out that
+check turned up a dead demo link left by the rename, which prompted a new
+sibling-link check in `[4]` — and mutation-testing the new check printed
+`grep: invalid option -- P` beside the expected failure. BSD grep has no
+`-P`. Four loops in checks `[4]`, `[5]` and `[6]` drove their `for` lists
+from `grep -oP`: grep aborted, the list came out empty, the body never ran,
+the counter stayed at zero, **PASS**. Green on CI's GNU grep and green here,
+for opposite reasons, with two of the four silencing stderr so the error
+printed twice a run and was never read. All four are now `-oE` and each of
+the three checks is mutation-proven to fail. Insight 6.37.
+
+**DEBT-VR-5c asked for three things and only one was worth building.** The
+group-bg pastels are now checked — curated to the one text token actually
+drawn on them, because sweeping all four fails on a `muted` pair nothing
+renders, and with the rect's `fill-opacity: 0.3` modelled, since the token
+value is not the colour on screen. The two-layer case the entry called most
+likely turned out to be unreachable as written: `background-color` replaces,
+it does not stack, so the entry's own example paints one colour. Real
+stacking needs two nested elements on one pointer event, which exists exactly
+once in 125 components and measures 8.08. Strict modelling was tried and
+rejected at 24 failing dark pairs. The large-text exemption is declined
+permanently — it can only relax a gate and has no heading-only token to
+rescue. Insights 6.38 and 6.39.
+
+**Two entries were stale rather than open.** DEBT-WEB-1 had claimed for five
+weeks that no contrast gate existed, in six places, while three were built
+and passing; DEBT-VR-5b-ORIG asked for compositing coverage its own successor
+had delivered two days later and more strictly. DEBT-VR-3's never-quantified
+worry measured to an exposure of **zero** — eleven of the twelve undemoed
+components declare no radius at all, and the twelfth's single rule is a
+hand-written circle.
+
+**You judged the two that were yours.** Ribbon controls keep 4px: the mini
+stack the entry worried about is transparent until hovered, so there was no
+soft corner to read. And the sass bump was reverted after measuring — it
+breaks `postcss-svgo`, so three data URIs ship unminified, and they are the
+very accordion chevron DEBT-SEC-3 told us to eyeball. Larger and less
+optimised, for no security or functional gain.
+
+Opened **DEBT-VR-10**: 73 component-level `rgba()` backgrounds that no theme
+token names and no check can see. Found while closing VR-5c and deliberately
+not absorbed into it.
+
+14 open / 23 resolved. 28/28 structure checks, 4848 unit tests.

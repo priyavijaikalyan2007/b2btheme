@@ -58,6 +58,14 @@ icons, component sizing and fonts. Hence, our customizations. The key items are:
   too — it is the first thing a consumer copies.
 - We prefer muted colors that fit into a good complementary palette of colors.
 - We prefer good contrast for accessibility. For example, light grey text on bright backgrounds are a terrible choice.
+  **Three structure checks hold this line, so you do not have to eyeball it:** `[12]` reads the
+  compiled stylesheet and verifies the surface ladder, every text token on every surface, every
+  translucent state layer composited over every surface, and the namespace group fills, in both
+  themes against the 4.5 AA floor; `[13]` verifies component palettes can carry their own text;
+  `[15]` verifies series palettes stay separable under three colour-vision deficiencies. What
+  none of them does is render a component and measure pixels, and they do not see the 73
+  component-level `rgba()` backgrounds that no token names (DEBT-VR-10). A pass means "the named
+  pairs are sound", not "this is accessible".
 - We prefer hyper legible fonts such as Google OpenSans Text and Atkinson Hyperlegible for regular text 
   to aid low vision readers.
 - We prefer clean legible fonts such as JetBrains Mono for fixed width text to aid low vision readers.

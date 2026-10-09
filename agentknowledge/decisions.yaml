@@ -4605,3 +4605,115 @@
     - "components/sitefooter/sitefooter.scss"
     - "tests/website-components.spec.ts"
     - "package.json"
+
+- id: "ADR-158"
+  title: "Five debt closures by measurement: two gates that could not fail, two records that outlived their premise, and a bump taken and reverted"
+  date: "2026-10-09"
+  status: "Accepted"
+  context: |
+    A sweep of the remaining visual-refresh arc items. Four of the five were
+    expected to be bookkeeping. Each one instead produced a finding that the
+    entry describing it did not contain, and the pattern across all five is
+    the same: THE ENTRIES RECORDED CONCLUSIONS, AND THE CONCLUSIONS HAD
+    EXPIRED WHILE THE WORDS STAYED PUT.
+
+    DEBT-TS-1 came due on this date. The removal was expected to be
+    mechanical.
+
+    DEBT-VR-5c named three gate extensions, one of which it called "most
+    likely to be real".
+
+    DEBT-WEB-1 had claimed since 2026-09-01 that no automated contrast gate
+    existed. Three had been built since, by a different arc.
+
+    DEBT-SEC-3 held sass at 1.95.x and asked for a deliberate upgrade with
+    two icons eyeballed.
+
+    DEBT-VR-3 and DEBT-VR-4 were the two "verify by eye" items left from the
+    original refresh, neither ever quantified.
+  decision: |
+    D1. DEBT-TS-1 does NOT get removed, and the deadline gets renegotiated
+        rather than enforced. The consumer is still on the deprecated API in
+        live source. The item is also split in two: the API surface is
+        load-bearing, the duplicate CDN path is already dead to the consumer.
+
+    D2. Check [4] validates demo-to-demo links, not only the ones the index
+        lists. All four `grep -oP` uses in test-local.sh become `-oE`.
+
+    D3. The contrast gate learns the --theme-group-bg-* fills, CURATED to
+        the one text token that is drawn on them, with the rect's
+        fill-opacity modelled. It does NOT learn two stacked state layers,
+        and it does NOT learn the large-text exemption. Both declined with
+        the measurement attached.
+
+    D4. DEBT-WEB-1 and DEBT-VR-5b-ORIG are closed as stale, and every site
+        repeating their claims is corrected — including two ADR consequence
+        lists, which get SUPERSEDED markers rather than edits.
+
+    D5. The sass bump is taken, measured, and reverted. The deferral stands
+        on stronger ground than it did: the bump makes the shipped CSS
+        larger AND less optimised.
+
+    D6. Ribbon controls keep 4px. DEBT-VR-3 closes with an empty unverified
+        set.
+  consequences: |
+    + THREE STRUCTURE CHECKS COULD NOT FAIL ON THE DEVELOPMENT MACHINE.
+      BSD grep has no -P. Four loops in checks [4], [5] and [6] drove their
+      `for` lists from `grep -oP`: grep aborted, the list came out empty,
+      the body never ran, the counter stayed at zero, PASS. Green on CI's
+      GNU grep and green here, for opposite reasons. Two carried
+      2>/dev/null, which is why the error printed twice a run and was never
+      seen. FOUND BY MUTATION-TESTING A NEW CHECK — the error printed beside
+      the expected failure. All three are now mutation-proven to fail.
+    + The new sibling-link check immediately caught real rot: workspaceshell
+      linked to workspaceswitcher.html, a page the TenantSwitcher rename had
+      renamed away. A rename updates what the index lists; it does not
+      update what one page says about another.
+    + The contrast gate now covers the namespace group fills, and the
+      fill-opacity turned out to be load-bearing: the rect paints at 0.3, so
+      the token value is NOT the colour on screen, and in dark the token is
+      itself rgba(...,.18) so the two multiply to 0.054. Modelling the token
+      as painted reports 8.40 where the browser renders 9.74.
+    + DEBT-VR-3's exposure, never quantified in a month of sitting open,
+      turned out to be ZERO. Two commands measured it.
+    - THE TWO-LAYER CASE DEBT-VR-5c PREDICTED IS NOT REACHABLE AS WRITTEN.
+      background-color REPLACES; it does not stack. So the entry's own
+      example, a hovered row inside a selected group, paints ONE colour.
+      Real stacking needs two NESTED elements painting on one pointer event,
+      since :hover matches ancestors too. 17 candidates in the compiled CSS,
+      16 of them the same element matched twice at different specificity.
+      The one genuine instance measures 10.92 light / 8.08 dark.
+    - MODELLING IT STRICTLY WAS TRIED AND REJECTED: 24 dark pairs fail,
+      worst 3.61, on combinations nothing renders. The AGENT_INSIGHTS 6.19
+      trade, for the third time in this arc.
+    - THE LARGE-TEXT EXEMPTION IS DECLINED PERMANENTLY, not deferred. It can
+      only RELAX a gate, and no token here is heading-only, so it would open
+      a false-pass channel with no true positive behind it. The trigger to
+      revisit is stated as a condition, not a date.
+    - THE SASS BUMP BREAKS postcss-svgo. 1.105.1 emits %3csvg lowercase
+      where 1.95.1 emitted %3Csvg; svgo cannot parse it. Three
+      SvgoParserErrors, zero before, so three data URIs ship UNMINIFIED —
+      all three the dark accordion chevron, the exact icon DEBT-SEC-3 said
+      to eyeball. The entry's "resolving to the same colour" is also
+      slightly too strong: (11,50,86) against (11,50,85).
+    - DEBT-SEC-3 REMAINS OPEN. The deferral is reaffirmed, not discharged.
+    - DEBT-TS-1 REMAINS OPEN AND NOW NEEDS A CONVERSATION, not a commit. The
+      apps team has to migrate off createWorkspaceSwitcher before any of it
+      can go, and that is the user's call to make, not this repository's.
+    - NEW: DEBT-VR-10, 73 component-level translucent backgrounds that no
+      theme token names and no check can see. Found while closing VR-5c and
+      deliberately NOT absorbed into it.
+    - A DEBT ENTRY THAT STATES A CONDITION RATHER THAN A TASK GOES STALE
+      SILENTLY. DEBT-WEB-1 said "there is no automated contrast gate"; when
+      three were built, nothing contradicted it, so it read as current for
+      four more weeks — in six places, because generated docs multiply it.
+  files:
+    - "test-local.sh"
+    - "scripts/check-contrast.py"
+    - "demo/components/workspaceshell.html"
+    - "CODEBASE_FIXES.md"
+    - "components/marketinghero/README.md"
+    - "components/sitefooter/README.md"
+    - "specs/marketinghero-sitefooter.prd.md"
+    - "specs/visual-refresh-2026.prd.md"
+    - "package.json"
