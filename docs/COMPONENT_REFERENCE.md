@@ -5451,7 +5451,11 @@ What gets recorded depends on where the click landed:
 
 The application never converts a screen coordinate into an anchor. It persists the emitted patch and hands it back to `load()`; everything geometric is the canvas's problem.
 
-**What this does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text. Anchoring to content — a text quote, a row id — is what `{ kind: "entity", entityId }` is for, and it is the right anchor for anything that reflows or virtualizes.
+**What this does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text (DEBT-DUI-1). The same is true along the other axis: `within` names the **Nth** scrolling region, and the count changes whenever a region stops overflowing, so the index can move within a single session (DEBT-DUI-5).
+
+**`{ kind: "entity", entityId }` is NOT yet the answer, whatever this paragraph used to say.** It is validated and then ignored: `dynamiccanvas.ts` contains no reference to `"entity"`, `anchorTarget()` returns `null` for it, and the overlay is packed as though it were unanchored. It renders, it reports nothing, and it is attached to nothing — so a caller cannot tell it apart from no anchor at all. **Do not use it expecting content anchoring.** Making it real is designed in `specs/2026-10-10-durable-anchors.prd.md` and not yet built.
+
+Until then, spot anchors are the only working kind, and they are reliable exactly as far as §"Behaviour worth knowing" describes: through scrolling and resizing, not through reflow.
 
 ## Behaviour worth knowing
 
