@@ -54,9 +54,12 @@
   "bugs": {
     "url": "https://github.com/priyavijaikalyan2007/b2btheme/issues"
   },
-  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start \u2014 vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
+  "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start — vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
+  "_comment_overrides_transitive": "source-map-js and shell-quote are overridden to clear advisories in packages no direct dependency pins tightly. source-map-js: five consumers (postcss, sass, jsdom, svgo, magicast) all admit ^1.x, and 1.2.2 patches an event-loop DoS. This override is also why the sass bump in DEBT-SEC-3 is NOT forced by security — sass accepts source-map-js '>=0.6.2 <2.0.0', so the advisory clears while sass stays at 1.95.1 and the shipped-CSS delta stays a deliberate choice rather than a side effect of an audit. shell-quote: npm-run-all requires ^1.6.1 and 1.11.0 patches a quote() command injection; npm-run-all drives build:css, so this one runs on every build. Neither package reaches the browser — 'dependencies' is empty by design and the browser closure is vendored into /lib.",
   "overrides": {
-    "undici": "^7.24.3"
+    "undici": "^7.24.3",
+    "source-map-js": "^1.2.2",
+    "shell-quote": "^1.11.0"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "6.5.1",
@@ -82,6 +85,6 @@
     "typescript": "^5.9.3",
     "vditor": "3.11.2",
     "vitest": "^4.1.11",
-    "wrangler": "^4.73.0"
+    "wrangler": "^4.149.0"
   }
 }

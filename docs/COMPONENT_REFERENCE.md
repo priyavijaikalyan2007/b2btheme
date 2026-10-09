@@ -15810,8 +15810,19 @@ read as a bug to anyone who meets it without this note.
 `repeat(N, minmax(0, 1fr))` — the `0` minimum is load-bearing. A bare `1fr`
 means "at least the content's minimum size", so a single long email address
 would force its track wider than its share and overflow the row. With the
-zero minimum, plus `overflow-wrap: anywhere` on the contact block and the
-links, long addresses and long translated compounds wrap instead.
+zero minimum, plus `overflow-wrap: anywhere` on `.sitefooter` itself, long
+addresses and long translated compounds wrap instead.
+
+The wrap rule is declared **once at the root and inherited**, not per element.
+It was per element first — on the contact block and the links — and that
+version missed `.sitefooter-orgdesc`, the one block whose entire job is prose.
+A German compound in the description needed 539px of the 249px it had and the
+page scrolled sideways at 320px. Every string this component renders is
+author-supplied, so the rule belongs where all of them inherit it.
+
+`anywhere` rather than `break-word`: it also shrinks min-content, which is
+what lets `minmax(0, 1fr)` do its half of the work. `break-word` would wrap
+the visible text but leave the track demanding its unbroken width.
 
 **Nothing in this component uses `order`.** Stacking is the grid collapsing to
 one track, so the small-screen sequence is the source sequence by

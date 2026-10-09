@@ -295,6 +295,25 @@ else
 fi
 echo ""
 
+# ── [16] ──
+# check-stand-in-reads.py (check [9]) matches NAMES, so it sees only a stand-in
+# that announces itself. ADR-148 found the worst instance in the whole audit was
+# anonymous: DynamicFormSwitcher.fallbackDefault invented a typed value for a
+# field that never mounted and fed it to getValues(). Whether a `return` sits
+# INSIDE a catch is a structural question, and a regex answered it wrong 21
+# times out of 25 — so this one walks the AST.
+echo "[16] No fabricated reads in failure branches (ADR-157)"
+if [ -f scripts/check-fabricated-reads.mjs ]; then
+    if node scripts/check-fabricated-reads.mjs; then
+        PASS=$((PASS + 1))
+    else
+        fail "a failure branch returns something readable (see above)"
+    fi
+else
+    fail "scripts/check-fabricated-reads.mjs missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

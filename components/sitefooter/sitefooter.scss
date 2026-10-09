@@ -21,6 +21,14 @@
     border-top: 1px solid var(--theme-border-color);
     background-color: var(--theme-surface-bg);
     color: var(--theme-text-secondary);
+    // Every string here is author-supplied, and a footer is where the long
+    // ones live: a 57-character support address, a German compound, a
+    // pasted URL. Declared ONCE at the root and inherited, because the
+    // per-element version was tried first and missed `.sitefooter-orgdesc`
+    // — the one block whose whole job is prose. `anywhere` rather than
+    // `break-word` so it also shrinks min-content and lets the grid's
+    // minmax(0, 1fr) do its half of the work. See DEBT-WEB-3.
+    overflow-wrap: anywhere;
 }
 
 // ============================================================================
@@ -64,8 +72,6 @@
     // The default italic on <address> reads as emphasis the content does not
     // intend.
     font-style: normal;
-    // Long addresses and translated compounds break rather than overflow.
-    overflow-wrap: anywhere;
 
     p {
         margin: 0 0 $spacer * 0.25;
@@ -107,7 +113,6 @@
 .sitefooter-legallinks a {
     color: var(--theme-text-secondary);
     text-decoration: none;
-    overflow-wrap: anywhere;
 
     &:visited {
         color: var(--theme-primary);

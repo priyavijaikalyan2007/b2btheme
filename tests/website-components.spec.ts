@@ -29,6 +29,57 @@ async function waitForFactory(page: import("@playwright/test").Page, name: strin
         (fn) => typeof (window as any)[fn] === "function", name);
 }
 
+/**
+ * Report horizontal overflow AND name the element responsible.
+ *
+ * A bare `scrollWidth > clientWidth` says only "something is too wide", and
+ * the first real failure cost two rounds of probing to localize. Worse, the
+ * obvious probe — looking for a boundingClientRect past the viewport edge —
+ * finds NOTHING in the common case, because an unbreakable word overflows
+ * its inline box without the border box growing. So this walks for the
+ * deepest element whose own content exceeds its own width, which is the
+ * thing you have to change.
+ */
+async function overflowCulprit(page: import("@playwright/test").Page): Promise<string | null>
+{
+    return page.evaluate(() =>
+    {
+        const doc = document.documentElement;
+        if (doc.scrollWidth <= doc.clientWidth) { return null; }
+
+        let deepest: { depth: number; label: string } | null = null;
+
+        for (const el of Array.from(document.querySelectorAll("*")))
+        {
+            const e = el as HTMLElement;
+            if (e.clientWidth <= 0 || e.scrollWidth <= e.clientWidth + 1)
+            {
+                continue;
+            }
+
+            let depth = 0;
+            for (let p = e.parentElement; p; p = p.parentElement) { depth++; }
+
+            if (!deepest || depth > deepest.depth)
+            {
+                const cls = (e.className || "").toString().trim();
+                deepest = {
+                    depth,
+                    label: `${e.tagName.toLowerCase()}`
+                        + `${cls ? "." + cls.split(/\s+/).join(".") : ""}`
+                        + ` (content ${e.scrollWidth}px in ${e.clientWidth}px)`
+                        + ` — "${(e.textContent || "").trim().slice(0, 48)}"`,
+                };
+            }
+        }
+
+        return deepest
+            ? deepest.label
+            : `page is ${doc.scrollWidth}px wide but no single element `
+                + `reports overflowing content`;
+    });
+}
+
 test.describe("MarketingHero layout", () =>
 {
     test("split hero sits side by side above its breakpoint", async ({ page }) =>
@@ -97,6 +148,19 @@ test.describe("MarketingHero layout", () =>
 
         expect(eyebrowBox!.y).toBeLessThan(titleBox!.y);
     });
+
+    test("nothing overflows the viewport at 320px", async ({ page }) =>
+    {
+        await page.setViewportSize({ width: 320, height: 900 });
+        await page.goto(HERO_PAGE);
+        await waitForFactory(page, "createMarketingHero");
+
+        // The footer had this test and the hero did not, so the footer's
+        // overflow was found and the hero's would not have been. Both take
+        // author-supplied headlines and CTA labels; both can be handed a
+        // word that does not fit.
+        expect(await overflowCulprit(page)).toBeNull();
+    });
 });
 
 test.describe("SiteFooter layout", () =>
@@ -143,11 +207,10 @@ test.describe("SiteFooter layout", () =>
 
         // The four-column section carries a 57-character email address and a
         // German compound precisely so this assertion has something to catch.
-        const overflows = await page.evaluate(() =>
-            document.documentElement.scrollWidth
-                > document.documentElement.clientWidth);
-
-        expect(overflows).toBe(false);
+        // It did: `.sitefooter-orgdesc` needed 539px of the 249px it had,
+        // because `overflow-wrap` was set on the contact block and the links
+        // but not on the one element that holds prose.
+        expect(await overflowCulprit(page)).toBeNull();
     });
 
     test("each navigation group has an accessible name", async ({ page }) =>
