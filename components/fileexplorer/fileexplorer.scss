@@ -89,8 +89,15 @@
 }
 
 .fileexplorer-toolbar-btn-active {
-    background-color: $blue-100;
-    color: $blue-700;
+    // DEBT-VR-10, and the only change in this file with NO accessibility
+    // justification: this pair is opaque, so it measures 4.93 in both themes
+    // and passes. It moves because the other four "active" states in this
+    // component became theme-aware, and one frozen pastel among four token
+    // -driven siblings reads as a bug even when it is within AA — a bright
+    // light-blue button sitting in dark chrome beside rows that correctly
+    // went subtle.
+    background-color: var(--theme-selected-bg);
+    color: var(--theme-text-primary);
 }
 
 .fileexplorer-toolbar-separator {
@@ -167,8 +174,12 @@
 }
 
 .fileexplorer-tree-item-active {
-    background-color: rgba($blue-100, 0.5);
-    color: $blue-700;
+    // DEBT-VR-10: was rgba($blue-100, 0.5) — a pale tint at high alpha
+    // dominates the composite, so it stayed light over the dark surface
+    // and this row measured 1.60 against its own text. The token tracks
+    // the theme; check [12] already covers it.
+    background-color: var(--theme-selected-bg);
+    color: var(--theme-text-primary);
     font-weight: $font-weight-semibold;
 }
 
@@ -359,8 +370,9 @@
 }
 
 .fileexplorer-grid-item-selected {
-    background-color: rgba($blue-100, 0.5);
-    border-color: $blue-600;
+    // DEBT-VR-10. See .fileexplorer-tree-item-active.
+    background-color: var(--theme-selected-bg);
+    border-color: var(--theme-primary);
     border-width: 2px;
 }
 
@@ -413,7 +425,8 @@
 }
 
 .fileexplorer-list-row-selected {
-    background-color: rgba($blue-100, 0.5);
+    // DEBT-VR-10. See .fileexplorer-tree-item-active.
+    background-color: var(--theme-selected-bg);
 }
 
 // ============================================================================
@@ -479,7 +492,8 @@
 }
 
 .fileexplorer-detail-row-selected {
-    background-color: rgba($blue-100, 0.5);
+    // DEBT-VR-10. See .fileexplorer-tree-item-active.
+    background-color: var(--theme-selected-bg);
 }
 
 .fileexplorer-detail-cell {

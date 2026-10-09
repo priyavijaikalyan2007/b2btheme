@@ -209,8 +209,9 @@
 
 .promptmanager-list-item-selected
 {
-    background-color: rgba($blue-100, 0.5);
-    border-left-color: $blue-600;
+    // DEBT-VR-10: was rgba($blue-100, 0.5), 3.47 in dark.
+    background-color: var(--theme-selected-bg);
+    border-left-color: var(--theme-primary);
 }
 
 .promptmanager-list-item-dirty

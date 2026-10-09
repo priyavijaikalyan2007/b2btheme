@@ -333,7 +333,27 @@ limits the design knowingly accepts, not defects in shipped code.
 
   *Residual, as a new finding rather than this entry's:* DEBT-VR-10.
 - [x] **DEBT-VR-5b-ORIG** *(closed 2026-10-09 as superseded, not fixed)* — stale. It asked for compositing coverage — "either a headless browser computing real backgrounds, or modelling the compositing in the checker against a declared list" — and **DEBT-VR-5b built the second, two days later and more strictly than this asked**, sweeping every layer over every surface rather than a declared list, precisely because a declared list goes stale silently. The entry then sat open describing a gap that no longer existed. Same failure as DEBT-WEB-1: the work closed the gap and nobody closed the record.
-- [ ] **DEBT-VR-10** **73 component-level translucent backgrounds** that no theme token names, found while closing DEBT-VR-5c. `grep -n "background-color:\s*rgba(" components/*/*.scss` — `rgba($blue-100, 0.5)`, `rgba(var(--theme-primary-rgb), 0.12)`, `rgba($yellow-500, 0.12)` and so on. Each composites over whatever is beneath it, so each is a background colour **no check can see**: check `[12]` knows theme tokens, check `[13]` knows component palettes that carry text, and these are neither. Not all 73 are risks — many are modal backdrops and drop-zone scrims with no text on them — but some demonstrably sit under body text (`smarttextinput` highlights, `datagrid` selected rows, `actionitems`, `auditlogviewer`, `permissionmatrix`). **Not audited here, and deliberately not absorbed into DEBT-VR-5c**, whose scope was the three named sub-items. A permanent gate needs per-site knowledge of what text sits on what — the hard part is not the arithmetic, it is knowing which of the 73 have text above them, which is why this is its own item and not a one-line extension.
+- [x] **DEBT-VR-10** *(resolved 2026-10-09, ADR-159)* — all 73 audited, **nine real AA failures found and fixed**, worst 1.10.
+
+  **The failures share one shape, and it is not the one the entry guessed.** Alpha, not hue, is what decides: a *pale tint at high alpha* dominates the composite, so the painted colour stays light no matter what surface is beneath it — and in dark mode that leaves near-white sitting under near-white text. Every one of the nine was `rgba($blue-100, 0.5)` or `rgba($yellow-100, 0.7)`. **Every other theme-blind literal in the fleet passes**, nineteen of them measured individually, because they sit at alpha ≤ 0.3 and let the surface through, so they track the theme by accident. `rgba($danger, 0.06)` is fine forever; `rgba($blue-100, 0.5)` never was.
+
+  | site | light | dark |
+  |---|---|---|
+  | `applauncher-tile-name` on `.applauncher-tile-active` | **3.78** | **1.10** |
+  | `fileexplorer` ×4 selected rows (text `$blue-700`) | 5.48 | **1.60** |
+  | `applauncher-sidebar-active` (text `$blue-700`) | 5.48 | **1.60** |
+  | `permissionmatrix-cell-changed` (`$yellow-100` @ .7) | 16.55 | **1.92** |
+  | `facetsearch`, `prompttemplatemanager`, `tenantswitcher` | 16.08 | **3.47** |
+
+  **One of them failed in light as well**, which is worth noting because the audit was motivated entirely by dark mode: `applauncher`'s tile label put `$blue-600` on a `$blue-100` tint for 3.78, and nobody had looked.
+
+  Fixed by replacing the frozen literals with `--theme-selected-bg` and `--theme-text-primary` — these are all *selected / active* states that predate the token system and should have been using the selection token from the start. The warning fill moved to `rgba(var(--theme-warning-rgb), 0.18)`; **`--theme-warning-rgb` did not exist** and was added to both themes, because the alternative was freezing the hue as a literal, which is the habit this entry existed to close. All verified in the browser afterwards, not merely recomputed: the painted values match the arithmetic exactly in both themes.
+
+  `visualtableeditor` was the one component already doing this correctly — it carries a `[data-bs-theme="dark"]` override at `rgba($blue-400, 0.2)`, measuring 9.33 — and is the precedent the rest now follow.
+
+  Two deliberate non-changes: the **six scrims and backdrops** are excluded, since the dialog that sits on them is opaque and no text touches them; and `fileexplorer`'s opaque `.fileexplorer-toolbar-btn-active` moved **despite passing at 4.93 in both themes**, purely so one frozen pastel does not sit among four token-driven siblings in the same component.
+
+  *No gate.* A permanent check needs per-site knowledge of which background has text above it, and establishing that took reading every rule — the hard part is not the arithmetic. **What a gate could cheaply catch is the shape rather than the ratio: a sass-literal tint at alpha > 0.3.** Recorded here as the design for one, not built.
 - [ ] **DEBT-VR-6** `sunken|ground` measures **1.040** in dark — below the 1.08 the other adjacencies clear. Deliberate (ADR-150 D3): wells sit inside content and never abut the page ground, so the pair does not occur on screen and tightening it would cost contrast on pairs that do. Recorded so it is not "fixed" by someone reading a contrast matrix without checking what touches what. If a layout ever does place a sunken surface directly on the page ground, this becomes real.
 
 ## ACCEPTED DEBT — Component-level colour literals (2026-10-07, ADR-152)

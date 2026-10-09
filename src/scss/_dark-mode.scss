@@ -102,6 +102,11 @@
     // -- Status / Semantic --
     --theme-success:            #{$green-600};
     --theme-warning:            #{$yellow-500};
+    // DEBT-VR-10. Added because a component needed a translucent warning
+    // fill and there was no channel token to build one from, so it would
+    // have had to freeze the hue as a literal — which is the exact habit
+    // that audit was closing.
+    --theme-warning-rgb:        245, 158, 11;
     --theme-danger:             #{$red-600};
     --theme-danger-rgb:         220, 38, 38;
 
@@ -226,6 +231,11 @@
     // -- Status / Semantic --
     --theme-success:            #{$green-400};
     --theme-warning:            #{$yellow-500};
+    // Same value as light on purpose: --theme-warning is $yellow-500 in both
+    // themes, so the channels are too. Declared anyway rather than inherited,
+    // so that changing one theme's warning hue cannot silently leave the
+    // other theme's translucent fills on the old one.
+    --theme-warning-rgb:        245, 158, 11;
     --theme-danger:             #{$red-500};
     --theme-danger-rgb:         239, 68, 68;
 

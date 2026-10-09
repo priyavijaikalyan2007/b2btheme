@@ -251,7 +251,9 @@
 }
 
 .facetsearch-dropdown-item-highlighted {
-    background-color: rgba($blue-100, 0.5);
+    // DEBT-VR-10: rgba($blue-100, 0.5) measured 3.47 in dark against the
+    // inherited text. A pale tint at high alpha does not track the theme.
+    background-color: var(--theme-selected-bg);
 }
 
 .facetsearch-dropdown-item-icon {

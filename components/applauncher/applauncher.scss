@@ -299,8 +299,11 @@
 
 .applauncher-sidebar-active
 {
-    background-color: rgba($blue-100, 0.5);
-    color: $blue-700;
+    // DEBT-VR-10: was rgba($blue-100, 0.5) with $blue-700 text — 1.60 in
+    // dark. A pale tint at high alpha dominates the composite and stays
+    // light whatever surface is beneath it.
+    background-color: var(--theme-selected-bg);
+    color: var(--theme-text-primary);
     font-weight: $font-weight-semibold;
 }
 
@@ -499,11 +502,15 @@
 
 .applauncher-tile-active
 {
-    background-color: rgba($blue-100, 0.5);
+    // DEBT-VR-10. The WORST pair the audit found, and the only one that
+    // failed in LIGHT as well: $blue-600 on this tint measured 3.78 light
+    // and 1.10 dark. Every other theme-blind tint in the fleet passes,
+    // because they sit at alpha <= 0.3 and let the surface through.
+    background-color: var(--theme-selected-bg);
 
     .applauncher-tile-name
     {
-        color: $blue-600;
+        color: var(--theme-text-primary);
     }
 }
 

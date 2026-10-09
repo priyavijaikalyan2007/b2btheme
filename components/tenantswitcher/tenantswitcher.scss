@@ -260,7 +260,8 @@
 
 .tenantswitcher-item-active
 {
-    background-color: rgba($blue-100, 0.5);
+    // DEBT-VR-10: was rgba($blue-100, 0.5), 3.47 in dark.
+    background-color: var(--theme-selected-bg);
 }
 
 .tenantswitcher-item-icon

@@ -328,12 +328,19 @@
 
 .permissionmatrix-cell-inherited
 {
-    background-color: rgba($blue-100, 0.3);
+    // DEBT-VR-10. This one PASSED at 6.22 in dark; it moves anyway so the
+    // two status fills in this block stay a matched pair rather than one
+    // theme-aware and one frozen.
+    background-color: var(--theme-selected-bg);
 }
 
 .permissionmatrix-cell-changed
 {
-    background-color: rgba($yellow-100, 0.7);
+    // DEBT-VR-10: was rgba($yellow-100, 0.7) — 1.92 in dark. At alpha 0.7 a
+    // pale yellow IS the composite, so the cell stayed near-white under
+    // near-white text. The warning hue is kept; the alpha drops to 0.18 and
+    // the colour now comes from the token, so dark mode resolves it.
+    background-color: rgba(var(--theme-warning-rgb, 245, 158, 11), 0.18);
 }
 
 .permissionmatrix-cell-readonly
