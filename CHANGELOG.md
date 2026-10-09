@@ -12,15 +12,19 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Fixed
+- **SiteFooter no longer scrolls the page sideways on a narrow viewport** (ADR-157). A long unbroken string in the organisation description — a translated compound, a pasted URL, a long support address — pushed the page 254px wider than a 320px screen. `overflow-wrap` was set on the contact block and the links but not on the description, the one block whose job is prose; it is now declared once on `.sitefooter` and inherited by everything inside. Visible to anyone viewing a footer on a phone.
+
 ### Added
+- **`npm test` check `[16]` — no failure branch may return something readable** (ADR-157). Check `[9]` matches names, so it only sees a stand-in that announces itself; the worst case ADR-148 found was anonymous and caught by hand. This one walks the TypeScript AST, because whether a `return` sits *inside* a `catch` is a structural question that a regex got wrong 21 times out of 25. Mutation-tested by reinstating the original bug.
 - **`npm test` check `[14]` — the three elevation layers must agree** (ADR-155). The shadow scale is declared in Sass, in CSS custom properties, and in Bootstrap's own `$box-shadow`, and the copies drifted twice in four releases — once leaving every dropdown and modal on the old shadow, once leaving them casting light-tinted shadows in dark mode. The check compares geometry and alphas rather than bytes, since the layers legitimately spell the same colour differently.
 - **`npm test` check `[15]` — chart and status palettes must survive colour-vision deficiency** (ADR-155). Simulates protanopia, deuteranopia and tritanopia and measures every pair of series colours. **Nothing was broken** — all five palettes already clear the floor — so this keeps it true rather than fixing it. It does *not* discharge WCAG 1.4.1: colour must still never be the only channel.
+- **MarketingHero gained the 320px overflow test the footer already had.** The pair's coverage was asymmetric, so one component's overflow was findable and the other's was not. The website-components suite is now 12 tests, and **runs for the first time** — all 11 of its predecessors had never executed (DEBT-WEB-3).
 
 ### Changed
-- Six resolved tech-debt entries were still listed as open in `CODEBASE_FIXES.md`, left behind when their replacements were written. The list now reads 21 open, 14 resolved.
-
-
-### Changed
+- **Filled regions use `--theme-fill-strong` instead of an interaction-state token** (ADR-156). 26 regions across 23 components — a tab strip, a kbd chip, a skipped step marker, a progress track — were painted with `--theme-active-bg` despite not responding to a pointer, and became translucent when the state layers did. The new token is opaque and valued mid-range of what those sites previously composited to, so the appearance is near-unchanged by design.
+- **Build-toolchain advisories cleared: `npm audit` back to 0** from 5 (1 critical, 4 high). `shell-quote` → 1.12.0 (a `quote()` command injection, and `npm-run-all` drives `build:css`), `source-map-js` → 1.2.2, `wrangler` → 4.149.0 (carrying `miniflare` and `sharp` with it). Exposure was build-time only — this package declares no runtime dependencies. **The rebuilt `dist/` is byte-identical**, and `sass` deliberately stays at 1.95.1 so the shipped-CSS delta in DEBT-SEC-3 remains a considered choice rather than a side effect.
+- **Tech-debt bookkeeping.** Six resolved entries were still listed as open in `CODEBASE_FIXES.md`, left behind when their replacements were written; three more were resolved this cycle (DEBT-VR-1, DEBT-WEB-3, DEBT-FAB-2). The list now reads **18 open, 17 resolved**. DEBT-SEC-3's rationale was also re-measured rather than re-read: it had justified deferring a `sass` upgrade partly on "`npm audit` is already 0", which had stopped being true.
 - **`WorkspaceSwitcher` is now `TenantSwitcher` (ADR-154).** The platform used "workspace" and "tenant" for one concept, and the ambiguity produced real bugs in the consuming app. The CDN path is now `/components/tenantswitcher/`.
   - **Both names work for one release.** `/components/workspaceswitcher/` serves byte-identical artifacts, `window.createWorkspaceSwitcher` still exists and accepts the old option names (`workspaces`, `activeWorkspaceId`), and `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace` forward to their replacements. The old factory logs a deprecation warning on every call.
   - **Migration:** `createWorkspaceSwitcher` → `createTenantSwitcher`, `workspaces` → `tenants`, `activeWorkspaceId` → `activeTenantId`, `WorkspaceItem` → `Tenant`. The item fields are unchanged.

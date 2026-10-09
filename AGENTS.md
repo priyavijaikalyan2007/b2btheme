@@ -327,11 +327,23 @@ integrating code must handle it. That is documented for them in
 [`docs/CDN_INTEGRATION_GUIDE.md`](./docs/CDN_INTEGRATION_GUIDE.md) §5 — keep
 the two in step when you change the rule here.
 
-Enforced by `scripts/check-stand-in-reads.py` as structure check `[9]`. The
-check sees **one shape** — named stand-in factories exposing a read. It cannot
-see inline failure branches, `catch`-swallows, or aggregation-point defaults,
-all three of which the ADR-148 audit found by hand. Treat a green check as a
-ratchet, not a clearance.
+Enforced by **two** structure checks, because one shape is not the rule.
+
+`scripts/check-stand-in-reads.py` (check `[9]`) matches **names** — stand-in
+factories like `createNullPicker` that announce themselves. It cannot see a
+failure branch that does the same thing anonymously.
+
+`scripts/check-fabricated-reads.mjs` (check `[16]`, ADR-157) covers the other
+three shapes the ADR-148 audit had to find by hand: an inline failure branch
+returning an object literal, a `catch` that returns a fabricated value, and an
+aggregation-point default. It walks the **TypeScript AST**, because whether a
+`return` sits *inside* a `catch` is a structural question — a regex prototype
+answered it wrong 21 times out of 25 and was dropped rather than shipped.
+
+Two gaps remain, both recorded in ADR-157: a class-property arrow
+(`fallbackDefault = () => …`) escapes check `[16]`'s name-based branch, and a
+`return` inside a callback arrow nested in a guard is attributed to that
+guard. Treat a green check as a ratchet, not a clearance.
 
 ## Operating Style
 

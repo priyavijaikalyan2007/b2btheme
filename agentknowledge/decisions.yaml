@@ -4464,3 +4464,137 @@
     - "scripts/check-series-palettes.py"
     - "test-local.sh"
     - "src/scss/_variables.scss"
+
+- id: "ADR-156"
+  title: "A filled region is not an interaction state — --theme-fill-strong"
+  date: "2026-10-08"
+  status: "Accepted"
+  context: |
+    DEBT-VR-1. 26 regions across 23 components painted themselves with
+    --theme-active-bg: a tab strip, a kbd chip, a skipped step marker, a
+    progress track. None of them respond to a pointer. ADR-147 D3 made the
+    state layers TRANSLUCENT so they could composite over any surface, and
+    all 26 silently became translucent with them, inheriting whatever
+    happened to sit behind. The result was close enough to the old
+    appearance to pass review and wrong in principle: a filled neutral chip
+    is not a thing the user is hovering.
+
+    Recorded here late — the code shipped in 56032cc referencing ADR-156
+    while the decision itself was never written down. The dangling reference
+    is the symptom the elevation gate exists to catch, in prose instead of
+    CSS.
+  decision: |
+    D1 ADD --theme-fill-strong, opaque, valued mid-range of what those sites
+       previously composited to (light #e4e8ee, dark #222b3a). The visual
+       change is near-invisible BY DESIGN; the token change is the point.
+    D2 A FILL MUST LEAVE HEADROOM for a state layer above it. Fills were
+       added to check [12]'s sweep, which immediately found four dark-mode
+       failures — a hovered row ON a filled strip, worst 3.98. The fills are
+       darker than first chosen for this reason, not for their own contrast.
+    D3 DELETE --theme-fill-subtle rather than keep it for later. It was
+       created as the pair and ended with zero consumers; its light value
+       measured 1.022 against chrome, which is very nearly invisible. An
+       unused token that has already failed a visibility check is worse than
+       no token, because the next author will reach for it.
+  consequences: |
+    + 60 composited pairs now checked per theme, all passing.
+    - MY OWN HEURISTIC MISCLASSIFIED 8 OF 34. It looked for :hover and
+      .active, so it read -highlighted, -focused and -expanded suffixes as
+      static fills — but a keyboard-highlighted row IS an interaction state.
+      Those eight were reverted. A script-applied sweep needs a second pass
+      with a DIFFERENT pattern, because the first pattern is also what
+      decided the answer. See AGENT_INSIGHTS 6.33.
+  files:
+    - "src/scss/_dark-mode.scss"
+    - "scripts/check-contrast.py"
+
+- id: "ADR-157"
+  title: "Three closures: an AST gate for fabricated reads, a footer that wrapped nothing, and transitive advisories"
+  date: "2026-10-09"
+  status: "Accepted"
+  context: |
+    The last substantive items from the ADR-148 and ADR-146 follow-ups.
+
+    DEBT-FAB-2 — check [9] matches NAMES, so it sees only a stand-in that
+    announces itself (createNullPicker, buildFallbackApi). ADR-148 named
+    three shapes it cannot see, and the worst instance in that whole audit
+    was one of them: DynamicFormSwitcher.fallbackDefault invented a typed
+    value for a field that never mounted and fed it straight into
+    getValues(). It was found by hand. A regex pass over catch blocks was
+    prototyped and produced 25 hits of which roughly four were real, because
+    a regex cannot tell whether a `return` is INSIDE the catch or merely
+    after it.
+
+    DEBT-WEB-3 — the 11 Playwright tests for MarketingHero and SiteFooter
+    had NEVER EXECUTED. Chromium would not install on Node v26. Everything
+    they assert is layout jsdom cannot compute, so the two components were
+    verified only by eye.
+
+    DEBT-SEC-3 — sass held at 1.95.1 because 1.104 changes the SHIPPED
+    stylesheet (SVG data-URI colours serialise as percentage rgb()). The
+    entry justified the deferral partly on "npm audit is already 0". That
+    premise had quietly expired: audit showed 5 advisories, and sass is one
+    of five packages pulling source-map-js.
+  decision: |
+    D1 ANSWER THE STRUCTURAL QUESTION STRUCTURALLY. check [16] walks the
+       TypeScript AST (ts.createSourceFile, ts.forEachChild) and flags a
+       `return` lexically inside a failure context — a catch clause, or the
+       THEN branch of a guard testing absence — whose value is an object
+       literal carrying a read method, or a fabricated primitive from a
+       function whose own name admits it is a fallback.
+    D2 `default` IS EXCLUDED FROM THE NAME PATTERN. With it, the gate
+       flagged seven comparators and serializers: defaultCompare returning
+       1/-1 for a null operand is a sort function doing its job. In practice
+       `defaultX` names "the built-in implementation of X" while `fallbackX`
+       names "a value used when the real one is unavailable". Only the second
+       is this gate's concern, and fallbackDefault matches on `fallback`.
+    D3 DECLARE overflow-wrap ONCE AT .sitefooter AND INHERIT. The
+       per-element version was tried first — on the contact block and the
+       links — and missed .sitefooter-orgdesc, the one block whose entire
+       job is prose. `anywhere` rather than `break-word` because it also
+       shrinks min-content, which is what lets the grid's minmax(0, 1fr) do
+       its half of the work.
+    D4 AN OVERFLOW ASSERTION MUST NAME THE ELEMENT. scrollWidth >
+       clientWidth says only "something is too wide".
+    D5 CLEAR THE ADVISORIES WITHOUT MOVING SASS. source-map-js 1.2.2
+       patches the DoS and sass accepts ">=0.6.2 <2.0.0", so the advisory
+       clears while sass stays at 1.95.1. DEBT-SEC-3 therefore remains a
+       deliberate CSS-delta decision rather than a side effect of a security
+       pass — which is exactly what its own entry asked for.
+  consequences: |
+    + check [16] was mutation-tested by REINSTATING fallbackDefault, the
+      real historical bug, not by writing a convenient synthetic one. Also
+      proven on an inline null-object in a guard (caught) and on the same
+      shape THROWING instead (correctly passes).
+    + THE NEVER-RUN SUITE FOUND A REAL BUG ON ITS FIRST EXECUTION.
+      .sitefooter-orgdesc needed 539px of the 249px it had, from a German
+      compound in the demo fixture — which the fixture carried on purpose,
+      for an assertion that had never once run. 10 passed, 1 failed.
+    + The hero had no 320px test and the footer did, so the footer's
+      overflow was findable and the hero's was not. Both now have it: 12
+      tests, up from 11.
+    + npm audit back to 0, and the rebuilt dist is BYTE-IDENTICAL — the
+      dependency changes altered nothing shipped.
+    - THE FIRST VERSION OF THE GATE WAS 7-FOR-7 FALSE POSITIVES, all from
+      one over-broad word in a name pattern. A gate this noisy on its first
+      run would have been ignored thereafter, which is precisely why the
+      earlier regex prototype was dropped rather than shipped.
+    - THE OBVIOUS PROBE FOUND NOTHING. Looking for a boundingClientRect past
+      the viewport edge reported ZERO overflowing elements while the page was
+      574px wide, because an unbreakable word overflows its inline box
+      without the border box growing. See AGENT_INSIGHTS 6.34.
+    - TWO KNOWN BOUNDARIES of check [16], neither firing on the current 137
+      sources: enclosingName only sees function and method declarations, so
+      a class-property arrow (fallbackDefault = () => …) escapes the
+      name-based branch; and failureContext does not stop at arrow
+      boundaries, so a return inside a callback arrow nested in a guard is
+      attributed to that guard. The object-literal branch is unaffected.
+    - DEBT-SEC-3 IS STILL OPEN and still needs a human to eyeball the
+      accordion and form-select icons in both themes. Nothing in this pass
+      changed that; it only removed the security argument for rushing it.
+  files:
+    - "scripts/check-fabricated-reads.mjs"
+    - "test-local.sh"
+    - "components/sitefooter/sitefooter.scss"
+    - "tests/website-components.spec.ts"
+    - "package.json"

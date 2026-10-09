@@ -2045,3 +2045,57 @@ the threshold on the merits rather than against a failure.
 
 Proven with `#8a843c` — ΔE 72.3 from `#dc3545` normally, **0.3** under
 deuteranopia. Invisible to the author, disabling for the reader.
+
+> Yes fix
+
+Four items. Three closed; the fourth turned out not to need what it asked for.
+
+**DEBT-VR-1** (ADR-156): 26 regions painted themselves with
+`--theme-active-bg` and became translucent when the state layers did. New
+opaque `--theme-fill-strong`, valued mid-range of what they composited to, so
+the appearance barely moves — the token is the point. Two things the work
+caught were worth more than the fix: adding fills to check `[12]`'s sweep
+immediately found four dark-mode failures (a hovered row *on* a filled strip,
+worst 3.98), and my own heuristic misclassified 8 of 34 because it searched
+near `:hover`/`.active` and then used that same signal to decide. A
+keyboard-highlighted row *is* an interaction state. Insight 6.33.
+
+**DEBT-FAB-2** (check `[16]`): check `[9]` matches names, so it only sees a
+stand-in that announces itself — and the worst case ADR-148 found was
+anonymous. The new gate walks the TypeScript AST, because whether a `return`
+sits *inside* a `catch` is structural and the regex prototype got it wrong 21
+times out of 25. Mutation-tested by reinstating the real `fallbackDefault`,
+not a convenient synthetic one. Its own first run was **7-for-7 false
+positives** from one over-broad word: `default` matched `defaultCompare`, a
+sort comparator returning 1/-1 for a null operand, which is a function doing
+its job.
+
+**DEBT-WEB-3**: Chromium installed, and the 11 tests that had never executed
+ran for the first time — **10 passed, 1 found a real bug**.
+`.sitefooter-orgdesc` needed 539px of the 249px it had, from a German
+compound the demo fixture carried *on purpose*, for an assertion that had
+never once run. `overflow-wrap` was on the contact block and the links but
+not on the one element whose job is prose; it is now declared once at the
+root. Insight 6.35.
+
+Localizing it took two probes, because the obvious one — any element whose
+rect passes the viewport edge — found **zero** while the page was 574px wide.
+An unbreakable word overflows its inline box without the border box growing,
+so a rect-based probe cannot see it by construction. The assertion now names
+the culprit, its measurements and the offending text. Insight 6.34.
+
+Also: the hero had no 320px test and the footer did, so one component's
+overflow was findable and the other's was not. Both have it now — 12 tests.
+
+**DEBT-SEC-3** stays open, and deliberately. Its rationale rested partly on
+"`npm audit` is already 0", which had stopped being true — 5 advisories, and
+`sass` is one of five packages pulling the vulnerable `source-map-js`. But
+re-measuring showed the bump is *still* not required: 1.2.2 satisfies sass's
+own range, so an override clears the advisory with `sass` untouched. Audit
+back to 0, `dist/` byte-identical, and the shipped-CSS delta remains a
+considered choice rather than an audit side-effect. It still needs you to
+eyeball the accordion and form-select icons in both themes. Insight 6.36.
+
+Recorded ADR-156 as well, which shipped in `56032cc` referencing a decision
+that was never written down — the dangling cross-reference the elevation gate
+exists to catch, in prose instead of CSS.
