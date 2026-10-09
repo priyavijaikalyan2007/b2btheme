@@ -22,12 +22,34 @@ than guesses if the stylesheet is absent.
 
 WHAT IT CANNOT SEE
 ------------------
-Composited colours. A translucent state layer over a tinted surface resolves
-to a colour no token names, so `--theme-hover-bg` on chrome is not checked
-here. Large-text exemptions (WCAG allows 3.0 at >=24px) are not modelled
-either, so a heading-only token could fail this gate while being compliant —
-none currently does. Treat a pass as "the named pairs are sound", not as an
-accessibility audit.
+Three things, each deliberate, each with the measurement that decided it.
+Treat a pass as "the named pairs are sound", not as an accessibility audit.
+
+1. TWO STACKED STATE LAYERS — not modelled, because the shape does not occur.
+   DEBT-VR-5c predicted "a hovered row inside a selected group" as the likely
+   real case. It is not reachable the way it was imagined: `background-color`
+   REPLACES, it does not stack, so `.datagrid-row-selected:hover` paints one
+   colour rather than hover over selected. Stacking needs two NESTED elements
+   both painting on the same pointer event, since `:hover` matches ancestors
+   too. A scan of the compiled component CSS found 17 candidate ancestor /
+   descendant pairs and all but one were the same element matched twice at
+   different specificity. The single genuine instance is `.tabbedpanel-tab-
+   close` inside `.tabbedpanel-tab`, and it measures 10.92 light / 8.08 dark
+   against a 4.5 floor. Modelling it strictly was tried and rejected: layer
+   over layer over every base fails 24 pairs in dark, worst 3.61, for
+   combinations nothing renders — the 6.19 trade again. Worth knowing that
+   ignoring the nesting overstates by up to 1.59, so this has margin, not
+   immunity.
+
+2. THE LARGE-TEXT EXEMPTION (WCAG 3.0 at >=24px) — not modelled, ON PURPOSE,
+   and this is the one to leave alone. It can only ever RELAX the gate, and
+   no token in this repository is heading-only, so there is nothing for it to
+   rescue; adding it would open a false-pass channel with no true positive to
+   justify it. Add it when, and only when, a token becomes heading-only.
+
+3. Component-level translucent backgrounds — 73 of them, `rgba()` literals in
+   component SCSS that no theme token names. The group fills below are the
+   subset that ARE tokens. See DEBT-VR-10 for the rest.
 """
 import colorsys
 import re
@@ -74,6 +96,44 @@ LAYERS = [
     ("active", "--theme-active-bg"),
     ("selected", "--theme-selected-bg"),
 ]
+
+# Namespace group fills (DEBT-VR-5c). A pastel tint drawn behind a cluster of
+# graph nodes with the namespace name written on top of it.
+#
+# CURATED rather than strict, which is the opposite of how LAYERS is treated
+# above, so the asymmetry needs its reason. The state layers get the strict
+# sweep because any component may put any text on any surface and then hover
+# it. These five tokens have exactly ONE consumer in the repository —
+# `graphcanvas.ts` `renderOneGroupBg` — and it draws ONE string on them, in
+# `--theme-text-secondary`. Sweeping all four text tokens over them instead
+# would fail the build today on `muted` at 3.86, a pair nothing renders and
+# nothing can render, and the only way to clear it would be to lighten
+# pastels that are already correct. That is precisely the trade
+# AGENT_INSIGHTS 6.19 warns about: a pair that never abuts, costing contrast
+# on pairs that do.
+#
+# THE `fill-opacity` IS LOAD-BEARING. The rect is painted with
+# `fill-opacity: 0.3`, so the token value is NOT the colour on screen. In
+# dark mode the token is itself translucent — `rgba(28,126,214,.18)` — and
+# the two multiply to an effective 0.054. Modelling the token as painted
+# reports 8.40 where the browser renders 9.74; both pass today, so this
+# would read as harmless, and it is the kind of harmless that stops being
+# harmless the moment a pastel moves.
+#
+# WHERE THIS CHECK IS AND IS NOT SENSITIVE — established by mutation, since a
+# gate nobody has tried to break is a guess. Lightening
+# `--theme-text-secondary` to #94a3b8 fails all five fills at 2.4, and that
+# is the exact drift that shipped twice, under ADR-147 and ADR-150. Making a
+# token unparseable fails rather than skips. But raising a dark fill's alpha
+# from .18 to .95 only moves 10.06 to 7.83 — it does NOT fail, because
+# `fill-opacity: 0.3` washes every fill toward its backdrop; in light mode
+# even a pure black pastel lands at 4.59, just above the floor. So read this
+# as a guard on the LABEL COLOUR and on the fill-opacity, not on the pastel
+# values, which have margin measured in multiples rather than hundredths.
+GROUP_FILLS = [f"--theme-group-bg-{i}" for i in range(1, 6)]
+GROUP_FILL_OPACITY = 0.3        # graphcanvas.ts renderOneGroupBg
+GROUP_SURFACE = "content"       # graphcanvas.scss root is --theme-surface-bg
+GROUP_TEXT = "secondary"        # the label's fill
 
 # Pairs that actually touch on screen. NOT every combination — optimising a
 # pair that never abuts costs contrast on pairs that do (AGENT_INSIGHTS 6.19).
@@ -276,6 +336,57 @@ def check_theme(label, tokens, problems, notes):
         n = len(layers) * (len(surfaces) + len(fills)) * len(texts)
         notes.append(f"    {label:5} worst composited ({n} pairs): "
                      f"{cworst[1]} {cworst[0]:.2f}")
+
+    check_group_fills(label, tokens, surfaces, texts, problems, notes)
+
+
+def check_group_fills(label, tokens, surfaces, texts, problems, notes):
+    """The namespace group label on each pastel fill, as the browser paints it.
+
+    Two compositing steps, not one: the token's own alpha if it has one, then
+    the `fill-opacity` on the rect. See GROUP_FILLS for why this is curated to
+    a single text token rather than swept.
+    """
+    base = surfaces.get(GROUP_SURFACE)
+    text = texts.get(GROUP_TEXT)
+
+    if base is None or text is None:
+        problems.append(
+            f"{label}: cannot check group fills — "
+            f"{GROUP_SURFACE} surface or {GROUP_TEXT} text is unreadable")
+        return
+
+    gworst = (99.0, "")
+    for token in GROUP_FILLS:
+        raw = tokens.get(token, "")
+
+        # Opaque in light, rgba() in dark. A token that parses as neither must
+        # fail rather than be skipped, or the check reports a pass it never ran.
+        rgb = to_rgb(raw)
+        parsed = (rgb, 1.0) if rgb is not None else to_rgba(raw)
+        if parsed is None:
+            problems.append(
+                f"{label}: {token} could not be parsed as a colour, so the "
+                f"namespace label on it is unchecked — a false pass.")
+            continue
+
+        frgb, alpha = parsed
+        painted = composite(frgb, alpha * GROUP_FILL_OPACITY, base)
+        r = ratio(text, painted)
+
+        if r < gworst[0]:
+            gworst = (r, token)
+        if r < MIN_TEXT:
+            problems.append(
+                f"{label}: the namespace label ({GROUP_TEXT} text) on {token} "
+                f"is {r:.2f}, below the {MIN_TEXT} AA floor. That fill is "
+                f"painted at {alpha * GROUP_FILL_OPACITY:.3f} effective alpha "
+                f"over {GROUP_SURFACE}, so the token value is not the colour "
+                f"on screen.")
+
+    if gworst[1]:
+        notes.append(f"    {label:5} worst group fill ({len(GROUP_FILLS)} "
+                     f"pairs): {GROUP_TEXT} on {gworst[1]} {gworst[0]:.2f}")
 
 
 def main():
