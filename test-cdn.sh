@@ -76,6 +76,31 @@ echo "[6] Build info"
 check_url "$CDN_BASE/build.json" "build.json"
 echo ""
 
+# ── 7. Font CORS ──
+# DEBT-PAR-3. `cdn/_headers` sets Access-Control-Allow-Origin: * on
+# /icons/fonts/*, because a webfont is subject to CORS where a stylesheet is
+# not — a cross-origin @font-face without it fails silently and the page
+# falls back to a system font, which looks like a design choice rather than
+# an error.
+#
+# The entry recorded this as "shipped but untested", and the untested half is
+# what this closes. Note WHERE it is tested: a _headers file is applied by
+# the edge, so nothing in the repository can confirm it — only an actual
+# response can, which is why this lives here and not in test-local.sh.
+echo "[7] Font CORS header (DEBT-PAR-3)"
+FONT_URL="$CDN_BASE/icons/fonts/bootstrap-icons.woff2"
+ACAO=$(curl -L -s -o /dev/null -D - --max-time "$TIMEOUT" "$FONT_URL" 2>/dev/null \
+       | tr -d '\r' | awk -F': ' 'tolower($1)=="access-control-allow-origin"{print $2}' \
+       | tail -1)
+if [ "$ACAO" = "*" ]; then
+    pass "webfonts send Access-Control-Allow-Origin: * ($FONT_URL)"
+elif [ -z "$ACAO" ]; then
+    fail "no Access-Control-Allow-Origin on $FONT_URL — a cross-origin @font-face will fail silently and fall back to a system font"
+else
+    fail "Access-Control-Allow-Origin is '$ACAO', expected '*' ($FONT_URL)"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

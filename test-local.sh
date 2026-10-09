@@ -343,6 +343,52 @@ else
 fi
 echo ""
 
+# ── [17] ──
+# DEBT-PAR-2. AuthCard publishes GENERIC class names — .divider, .auth-card,
+# .brand-logo — on a shared CDN, which would collide with any consumer that
+# defines the same names. It cannot be namespaced: the Keycloak parity
+# contract (ADR-138) requires these names verbatim, because a FreeMarker
+# template mirrors them.
+#
+# So the collision risk is permanent and the MITIGATION is the whole defence:
+# authcard.css is opt-in, loaded by its own <link>, and never bundled into
+# custom.css. That mitigation was a sentence in a debt entry — nothing stopped
+# a later @import from quietly ending it, and the symptom would appear in
+# somebody else's application rather than here.
+#
+# The names are read from authcard.css rather than listed, so a tenth generic
+# name is covered the day it is added.
+echo "[17] AuthCard's generic names stay out of the shared bundle (DEBT-PAR-2)"
+AUTHCARD_CSS="dist/components/authcard/authcard.css"
+BUNDLE_CSS="dist/css/custom.css"
+if [ ! -f "$AUTHCARD_CSS" ] || [ ! -f "$BUNDLE_CSS" ]; then
+    fail "need both $AUTHCARD_CSS and $BUNDLE_CSS (run npm run build)"
+else
+    # Only names AuthCard OWNS — ones that START a selector. A class it
+    # merely composes with (`.brand-logo.lg`, `.auth-step.active`) is
+    # Bootstrap's, belongs in the bundle, and flagging it would make this
+    # check cry wolf on its first run.
+    GENERIC=$(grep -oE '(^|[}, ])\.[a-z][a-z0-9-]*' "$AUTHCARD_CSS" \
+              | grep -oE '\.[a-z][a-z0-9-]*' | sort -u)
+    if [ -z "$GENERIC" ]; then
+        fail "no class names found in $AUTHCARD_CSS — the check would pass vacuously"
+    else
+        LEAKED=0
+        for cls in $GENERIC; do
+            # Match the class as a whole token: .divider must not match
+            # .divider-text, and .dropdown-divider must not match .divider.
+            if grep -qE "(^|[^a-zA-Z0-9_-])${cls}([^a-zA-Z0-9_-]|$)" "$BUNDLE_CSS"; then
+                fail "AuthCard's '$cls' is in the shared bundle — DEBT-PAR-2's mitigation has lapsed"
+                LEAKED=$((LEAKED + 1))
+            fi
+        done
+        if [ "$LEAKED" -eq 0 ]; then
+            pass "$(echo "$GENERIC" | wc -l | tr -d ' ') AuthCard class name(s) stay opt-in"
+        fi
+    fi
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"
