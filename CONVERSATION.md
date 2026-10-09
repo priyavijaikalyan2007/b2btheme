@@ -2163,3 +2163,58 @@ token names and no check can see. Found while closing VR-5c and deliberately
 not absorbed into it.
 
 14 open / 23 resolved. 28/28 structure checks, 4848 unit tests.
+
+---
+
+## 2026-10-09 (continued) — "continue with the remaining 14 open items"
+
+Four of the fourteen were untouchable and said so up front: `DEBT-WEB-2` and
+`DEBT-VR-6` are your recorded decisions, `DEBT-SEC-3` you reaffirmed hours
+earlier, and `DEBT-PAR-4` is a bug in the apps team's own `setTheme()`. Two
+more are sized beyond a sweep. The other eight were worked one at a time.
+
+**DEBT-VR-10 overturned its own premise, and that is the finding worth
+keeping.** The entry assumed the risk in a hardcoded translucent background
+was *which colour* had been frozen. It is **alpha**. Nine real AA failures,
+worst **1.10**, and every one was a pale tint at high alpha —
+`rgba($blue-100, .5)` or `rgba($yellow-100, .7)`. At high alpha the tint *is*
+the composite, so it stays light whatever surface is beneath it, and dark
+mode leaves near-white under near-white text. All nineteen other theme-blind
+literals pass, measured individually, because they sit at alpha ≤ 0.3 and let
+the surface through — they track the theme by accident. **One of the nine
+also failed in light mode**, at 3.78, which the dark-mode-motivated audit had
+no reason to look for.
+
+All nine are selected/active states predating the token system, so they now
+use `--theme-selected-bg`. `--theme-warning-rgb` did not exist and was added
+to both themes rather than freezing a hue — the exact habit the entry
+existed to close. `visualtableeditor` was already doing it correctly and
+became the precedent.
+
+**The verification probe needed two attempts**, which is its own lesson:
+clicking a row to select it leaves the pointer on the row, `:hover` outranks
+the selected rule, and the first run reported `--theme-hover-bg`. It would
+have confirmed the work against a colour the change never touched.
+
+**The TenantSwitcher deadline is withdrawn, not extended.** You said the apps
+team is occupied, so the aliases now come out one release after the consumer
+stops calling them — a condition that can be checked with one grep, rather
+than a date that measures our patience. The console warning no longer implies
+imminent removal. The ADR-154 rename had also left "organisational tenants
+and tenants" in five places, from a substitution across a sentence containing
+both words.
+
+**Three functions came under the guidance**: `attachDrag` 36 → 27,
+`validatePatchShape` 35 → 11, `reduceOps` 51 → 16 and now a genuine fold.
+
+**Two parity mitigations stopped being sentences** — check `[17]` for
+AuthCard's class names, CDN check `[7]` for the font CORS header.
+
+**And re-measuring three conditional parkings found two already false.**
+`DEBT-DUI-5` was parked on "regions are one per component in practice" — 21
+components style more than one — and claims its index is version-stable when
+it is not: a styled region whose content currently fits is absent from the
+list entirely, so every later index shifts when *content* changes. Left open,
+but as a live defect with a mechanism rather than a hypothetical.
+
+10 open / 27 resolved. 4848 unit tests, 29/29 structure, 37/37 CDN.

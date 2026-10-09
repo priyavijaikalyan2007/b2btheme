@@ -4717,3 +4717,91 @@
     - "specs/marketinghero-sitefooter.prd.md"
     - "specs/visual-refresh-2026.prd.md"
     - "package.json"
+
+- id: "ADR-159"
+  title: "The second debt sweep: an alpha threshold nobody had named, three refactors, and two parkings resting on false premises"
+  date: "2026-10-09"
+  status: "Accepted"
+  context: |
+    Fourteen items remained open. Four were untouchable by design — two
+    recorded user decisions (ADR-146 D5, ADR-150 D3), one reaffirmed by the
+    user a day earlier, and one a bug in the apps team's own repository. Two
+    more (DEBT-DUI-1, DEBT-DUI-4) are sized beyond a sweep. The rest were
+    worked one at a time.
+
+    DEBT-VR-10 was the substantial one: 73 component-level translucent
+    backgrounds that no theme token names, opened the previous day and
+    explicitly NOT audited then.
+
+    The TenantSwitcher deadline had expired the day before with the consumer
+    still on the old API, and the user confirmed the apps team is occupied
+    elsewhere.
+  decision: |
+    D1. The TenantSwitcher removal deadline is WITHDRAWN, not extended, and
+        replaced by a checkable condition: the aliases go one release after
+        the consumer stops calling them. The console warning stops implying
+        imminent removal.
+
+    D2. The nine failing translucent backgrounds move to --theme-selected-bg
+        and --theme-text-primary. --theme-warning-rgb is added to both themes
+        rather than freezing a warning hue as a literal.
+
+    D3. No gate is built for DEBT-VR-10. The shape is recorded instead: a
+        sass-literal tint above alpha 0.3 is the catchable signal.
+
+    D4. DEBT-PAR-2's mitigation becomes structure check [17]; DEBT-PAR-3's
+        CORS header becomes CDN check [7].
+
+    D5. The three conditional parkings are re-measured, not worked.
+  consequences: |
+    + ALPHA, NOT HUE, IS WHAT DECIDES. Nine AA failures, worst 1.10, and
+      every one was a PALE TINT AT HIGH ALPHA — rgba($blue-100, .5) or
+      rgba($yellow-100, .7). Such a tint dominates the composite, so the
+      painted colour stays light whatever is beneath it, and dark mode leaves
+      near-white under near-white text. All nineteen other theme-blind
+      literals pass, measured individually, because they sit at alpha <= 0.3
+      and let the surface through — they track the theme by accident.
+      rgba($danger, .06) is safe forever; rgba($blue-100, .5) never was.
+    + ONE OF THE NINE FAILED IN LIGHT TOO, at 3.78, which matters because the
+      audit was motivated entirely by dark mode and would not have looked.
+    + visualtableeditor was already correct, with a dark override measuring
+      9.33, and became the precedent the other eight follow.
+    + attachDrag 36 -> 27, validatePatchShape 35 -> 11, reduceOps 51 -> 16.
+      reduceOps became a genuine fold: every arm returns a fresh object where
+      the original mutated the copied record in place.
+    + Check [17] derives AuthCard's ten owned class names from its own
+      stylesheet, so an eleventh is covered the day it is added.
+    - THE FIRST VISUAL PROBE MEASURED THE WRONG THING. Clicking a row to
+      select it leaves the pointer on the row, and :hover outranks the
+      selected rule — the probe reported --theme-hover-bg and would have
+      "proved" a colour the change never touched. Parking the mouse fixed it.
+    - CHECK [17]'s FIRST VERSION CRIED WOLF, flagging `.active` from
+      `.auth-step.active`. A class AuthCard composes with is Bootstrap's and
+      belongs in the bundle; only classes that START a selector are its own.
+    - DEBT-DUI-5 IS WORSE THAN RECORDED, AND BOTH HALVES OF ITS
+      JUSTIFICATION ARE FALSE. It was parked on "regions are one-per-
+      component in practice" — 21 components style more than one. And it
+      claims the index is "stable for a given component version": it is not,
+      because isScrollable requires an element to CURRENTLY overflow, so a
+      styled region whose content fits is absent from the list and every
+      later index shifts. Same version, same session.
+    - DEBT-DUI-4's exemption count was right and its conformance figures
+      stale: 84 of 91 at display, not 91 of 98. Seven components had been
+      raised and the entry was taking no credit for them.
+    - DEBT-PAR-1's trigger has not fired, but the repository was the only
+      plausible source of the confusion it waits for — two docs listed the
+      internal twin URL in a table beside the canonical one with no steer.
+    - A MITIGATION WRITTEN ONLY AS A SENTENCE IS NOT A MITIGATION. PAR-2's
+      defence had been prose in a debt entry, one @import away from ending
+      silently, with the symptom landing in a consumer's application.
+  files:
+    - "components/tenantswitcher/tenantswitcher.ts"
+    - "components/dynamiccanvas/dynamiccanvas.ts"
+    - "runtime/src/document.ts"
+    - "components/fileexplorer/fileexplorer.scss"
+    - "components/applauncher/applauncher.scss"
+    - "components/permissionmatrix/permissionmatrix.scss"
+    - "src/scss/_dark-mode.scss"
+    - "test-local.sh"
+    - "test-cdn.sh"
+    - "CODEBASE_FIXES.md"
