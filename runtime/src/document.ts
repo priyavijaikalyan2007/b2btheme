@@ -47,6 +47,7 @@ import type {
     CanvasDocument,
     CanvasNode,
     CanvasPatch,
+    PatchOp,
     Viewport,
 } from "./types";
 
@@ -794,23 +795,56 @@ function validatePatchShape(
         issues.push(typeIssue("turnId", "a non-empty string", patch.turnId));
     }
 
-    if (patch.revision !== doc.revision + 1)
+    issues.push(...revisionIssues(patch, doc));
+    issues.push(...opsIssues(patch.ops));
+
+    return issues;
+}
+
+/**
+ * The patch's revision must be exactly one past the document's.
+ *
+ * @param patch - The candidate patch.
+ * @param doc   - The document the patch applies to.
+ * @returns The revision issue, or nothing.
+ */
+function revisionIssues(
+    patch: Record<string, unknown>,
+    doc: CanvasDocument): ValidationIssue[]
+{
+    if (patch.revision === doc.revision + 1)
     {
-        issues.push(issue(
-            "revision",
-            `Patch revision ${String(patch.revision)} does not follow document `
-            + `revision ${doc.revision}.`,
-            `Set revision to ${doc.revision + 1}, or reload the canvas — another `
-            + "writer may have advanced it."));
+        return [];
     }
 
-    if (!Array.isArray(patch.ops))
+    return [issue(
+        "revision",
+        `Patch revision ${String(patch.revision)} does not follow document `
+        + `revision ${doc.revision}.`,
+        `Set revision to ${doc.revision + 1}, or reload the canvas — another `
+        + "writer may have advanced it.")];
+}
+
+/**
+ * Every entry of `ops` must name a known operation.
+ *
+ * A non-array `ops` yields ONE issue rather than that issue plus a cascade
+ * of per-entry complaints about a thing that has no entries — the caller
+ * reads the first line of the report and the rest is noise.
+ *
+ * @param ops - The candidate operations.
+ * @returns Every issue found.
+ */
+function opsIssues(ops: unknown): ValidationIssue[]
+{
+    if (!Array.isArray(ops))
     {
-        issues.push(typeIssue("ops", "an array of operations", patch.ops));
-        return issues;
+        return [typeIssue("ops", "an array of operations", ops)];
     }
 
-    patch.ops.forEach((op: unknown, i: number) =>
+    const issues: ValidationIssue[] = [];
+
+    ops.forEach((op: unknown, i: number) =>
     {
         if (!isObject(op) || typeof op.op !== "string" || !PATCH_OPS.includes(op.op))
         {
@@ -874,57 +908,95 @@ function reduceOps(
     doc: CanvasDocument,
     patch: CanvasPatch): CanvasDocument
 {
-    let nodes: Record<string, CanvasNode> = { ...doc.nodes };
-    let bindings: Binding[] = [...doc.bindings];
-    let viewport: Viewport = doc.viewport;
-    let title = doc.title;
-    let workspaceId = doc.workspaceId;
+    const start: DocState = {
+        nodes: { ...doc.nodes },
+        bindings: [...doc.bindings],
+        viewport: doc.viewport,
+        title: doc.title,
+        workspaceId: doc.workspaceId,
+    };
 
-    for (const op of patch.ops ?? [])
-    {
-        switch (op.op)
-        {
-            case "setMeta":
-                title = op.title ?? title;
-                workspaceId = op.workspaceId ?? workspaceId;
-                break;
-
-            case "addNode":
-                nodes[op.node.id] = op.node;
-                break;
-
-            case "removeNode":
-                ({ nodes, bindings } = removeNode(nodes, bindings, op.id));
-                break;
-
-            case "updateNode":
-                nodes = updateNode(nodes, op.id, op.changes);
-                break;
-
-            case "addBinding":
-                bindings = upsertBinding(bindings, op.binding);
-                break;
-
-            case "removeBinding":
-                bindings = bindings.filter((b) => b.id !== op.id);
-                break;
-
-            case "setViewport":
-                viewport = op.viewport;
-                break;
-        }
-    }
+    const state = (patch.ops ?? []).reduce(applyOp, start);
 
     return {
         ...doc,
-        title,
-        workspaceId,
-        nodes,
-        bindings,
-        viewport,
+        ...state,
         turnId: patch.turnId,
         revision: patch.revision,
     };
+}
+
+/**
+ * The slice of a document that patch operations can touch.
+ *
+ * Named so that `applyOp` has one parameter instead of five, which is what
+ * lets the switch be a pure op-to-op mapping rather than a sequence of
+ * assignments to five separate locals.
+ */
+interface DocState
+{
+    nodes: Record<string, CanvasNode>;
+    bindings: Binding[];
+    viewport: Viewport;
+    title: string;
+    workspaceId: string;
+}
+
+/**
+ * Applies ONE operation and returns the next state.
+ *
+ * Every arm returns a fresh object rather than mutating, so a reduce over
+ * this is a fold and not a loop with extra steps. An unrecognised op is
+ * returned unchanged, matching the original switch's absent default — a
+ * patch that reaches here has already passed `validatePatchShape`, so an
+ * unknown op means the validator and this switch have drifted apart, and
+ * dropping the op is the conservative half of that bargain.
+ *
+ * @param state - The state before this operation.
+ * @param op    - The operation to apply.
+ * @returns The state after it.
+ */
+function applyOp(state: DocState, op: PatchOp): DocState
+{
+    // Deliberately dense. Every arm is one mapping from an op to the state
+    // it produces, and blank lines between them would spread seven facts
+    // over twice the height without adding one.
+    switch (op.op)
+    {
+        case "setMeta":
+            return { ...state, ...metaFrom(op, state) };
+        case "addNode":
+            return { ...state, nodes: { ...state.nodes, [op.node.id]: op.node } };
+        case "removeNode":
+            return { ...state, ...removeNode(state.nodes, state.bindings, op.id) };
+        case "updateNode":
+            return { ...state, nodes: updateNode(state.nodes, op.id, op.changes) };
+        case "addBinding":
+            return { ...state, bindings: upsertBinding(state.bindings, op.binding) };
+        case "removeBinding":
+            return { ...state, bindings: dropBinding(state.bindings, op.id) };
+        case "setViewport":
+            return { ...state, viewport: op.viewport };
+        default:
+            return state;
+    }
+}
+
+/** The `setMeta` fields that are actually present, leaving the rest alone. */
+function metaFrom(
+    op: Extract<PatchOp, { op: "setMeta" }>,
+    state: DocState): Pick<DocState, "title" | "workspaceId">
+{
+    return {
+        title: op.title ?? state.title,
+        workspaceId: op.workspaceId ?? state.workspaceId,
+    };
+}
+
+/** Every binding except the one named. */
+function dropBinding(bindings: Binding[], id: string): Binding[]
+{
+    return bindings.filter((b) => b.id !== id);
 }
 
 /**

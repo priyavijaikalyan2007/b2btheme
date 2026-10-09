@@ -840,8 +840,88 @@ function build(
     // Drag: intent becomes fixed
     // ------------------------------------------------------------------
 
-    // @agent:refactor attachDrag is 36 lines, over the 30-line guidance in
-    // CODING_STYLE.md. Pre-dates this file's placement work; tracked as DEBT-7.
+    /**
+     * Claims the pointer for a drag and wires the move/up pair.
+     *
+     * The capture is what lets the gesture survive the cursor leaving the
+     * title bar — without it a fast drag drops the frame the moment the
+     * pointer outruns it.
+     */
+    function capturePointerDrag(
+        handleEl: HTMLElement,
+        pointerId: number,
+        onMove: (e: PointerEvent) => void,
+        onUp: (e: PointerEvent) => void): void
+    {
+        handleEl.setPointerCapture(pointerId);
+        handleEl.addEventListener("pointermove", onMove);
+        handleEl.addEventListener("pointerup", onUp);
+    }
+
+    /**
+     * Gives back exactly what `capturePointerDrag` took.
+     *
+     * The two are a mirror pair and are kept adjacent for that reason: a
+     * release that misses one of the three leaks a listener per drag, and
+     * the symptom (a frame that follows the cursor after the button is up)
+     * appears nowhere near the cause.
+     */
+    function releasePointerDrag(
+        handleEl: HTMLElement,
+        pointerId: number,
+        onMove: (e: PointerEvent) => void,
+        onUp: (e: PointerEvent) => void): void
+    {
+        handleEl.releasePointerCapture(pointerId);
+        handleEl.removeEventListener("pointermove", onMove);
+        handleEl.removeEventListener("pointerup", onUp);
+    }
+
+    /** Where the pointer and the frame both were when a drag began. */
+    interface DragOrigin
+    {
+        pointerX: number;
+        pointerY: number;
+        left: number;
+        top: number;
+    }
+
+    /**
+     * Snapshots the start of a drag.
+     *
+     * `parseFloat` of an empty style is NaN, so the `|| 0` is doing real
+     * work: a frame that has never been positioned reports `style.left` as
+     * "" and would otherwise jump to NaN on the first move.
+     */
+    function readDragOrigin(frame: HTMLElement, e: PointerEvent): DragOrigin
+    {
+        return {
+            pointerX: e.clientX,
+            pointerY: e.clientY,
+            left: parseFloat(frame.style.left) || 0,
+            top: parseFloat(frame.style.top) || 0,
+        };
+    }
+
+    /**
+     * Where a frame should sit for the current pointer position.
+     *
+     * The delta is divided by zoom because the pointer moves in screen
+     * pixels while the frame is positioned in canvas units; skipping this
+     * makes a zoomed-out canvas feel like the frame is sliding away from
+     * the cursor.
+     */
+    function draggedPosition(
+        origin: DragOrigin,
+        e: PointerEvent,
+        zoom: number): { left: number; top: number }
+    {
+        return {
+            left: origin.left + (e.clientX - origin.pointerX) / zoom,
+            top: origin.top + (e.clientY - origin.pointerY) / zoom,
+        };
+    }
+
     /**
      * Makes a frame draggable by its title bar.
      *
@@ -854,23 +934,20 @@ function build(
         handleEl: HTMLElement,
         nodeId: string): void
     {
-        let startX = 0;
-        let startY = 0;
-        let originX = 0;
-        let originY = 0;
+        let origin: DragOrigin | null = null;
 
         const onMove = (e: PointerEvent): void =>
         {
-            const zoom = doc.viewport.zoom || 1;
-            frame.style.left = `${originX + (e.clientX - startX) / zoom}px`;
-            frame.style.top = `${originY + (e.clientY - startY) / zoom}px`;
+            if (!origin) { return; }
+            const at = draggedPosition(origin, e, doc.viewport.zoom || 1);
+            frame.style.left = `${at.left}px`;
+            frame.style.top = `${at.top}px`;
         };
 
         const onUp = (e: PointerEvent): void =>
         {
-            handleEl.releasePointerCapture(e.pointerId);
-            handleEl.removeEventListener("pointermove", onMove);
-            handleEl.removeEventListener("pointerup", onUp);
+            releasePointerDrag(handleEl, e.pointerId, onMove, onUp);
+            origin = null;
             promoteToFixed(nodeId, frame);
         };
 
@@ -881,14 +958,8 @@ function build(
                 return;
             }
 
-            startX = e.clientX;
-            startY = e.clientY;
-            originX = parseFloat(frame.style.left) || 0;
-            originY = parseFloat(frame.style.top) || 0;
-
-            handleEl.setPointerCapture(e.pointerId);
-            handleEl.addEventListener("pointermove", onMove);
-            handleEl.addEventListener("pointerup", onUp);
+            origin = readDragOrigin(frame, e);
+            capturePointerDrag(handleEl, e.pointerId, onMove, onUp);
         });
     }
 
