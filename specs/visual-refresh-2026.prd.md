@@ -258,6 +258,15 @@ visual result, and no automated contrast gate exists in this repo (DEBT-WEB-1).
 Verification of appearance is manual review against the demo pages. This is stated
 rather than glossed because it is the weakest link in the change.
 
+**Amended 2026-10-09 — both halves of that limitation are gone.** Playwright
+runs: `npx playwright install chromium` succeeds and the website-components
+suite executes 12 tests, which is how the SiteFooter overflow bug was finally
+caught (DEBT-WEB-3, ADR-157). And a contrast gate exists: structure check
+`[12]`, plus `[13]` and `[15]` (DEBT-WEB-1, closed under ADR-158). The
+weakest link is no longer verification; it is the part verification still
+cannot reach — rendered pixels, and the 73 component-level translucent
+backgrounds of DEBT-VR-10.
+
 **Contrast.** An earlier draft of this spec asserted that "no ratio is reduced by
 D2". That was reasoning, not measurement, and it was **wrong**. Computing every
 text-on-surface pair in the browser against the built stylesheet found two failures

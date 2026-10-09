@@ -331,6 +331,17 @@ and is deliberately not part of this work: it is fleet-wide, since all 123
 components carry the same unverified claim. Tracked as **DEBT-WEB-1** in
 `CODEBASE_FIXES.md` rather than claimed here.
 
+**Amended 2026-10-09 — the paragraph above is no longer true.** Three gates
+were built by the ADR-150/-153/-155 arc: structure check `[12]` verifies the
+surface ladder, every text-token-on-surface pair, every state layer
+composited over every surface, and the namespace group fills, in both themes
+from the compiled stylesheet; check `[13]` covers component palettes; check
+`[15]` covers series separability under three colour-vision deficiencies.
+Both components here use only `--theme-*` tokens, so check `[12]` covers the
+pairs this section was worried about, and neither declares a palette. What
+still has no gate is rendering a component and measuring pixels. DEBT-WEB-1
+is closed; the surviving residual is DEBT-VR-10.
+
 ## 9. Testing
 
 ### 9.1 Unit, per component
@@ -389,6 +400,6 @@ The work is incomplete until every item is done, for each component:
 
 | Id | Limit |
 |---|---|
-| L1 | Contrast is verified manually. No automated gate exists. See section 8. |
+| L1 | ~~Contrast is verified manually. No automated gate exists.~~ **Lifted 2026-10-09:** check `[12]` verifies the token pairs both components use, in both themes. See section 8. |
 | L2 | The footer's visited-link colouring inverts the common convention, by choice. See D5. |
 | L3 | Neither component is internally scrollable, so the annotation-durability caveat in AGENTS.md (DEBT-DUI-5) does not apply to either. |

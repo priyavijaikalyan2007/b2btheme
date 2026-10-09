@@ -2578,6 +2578,6 @@ git commit -m "docs: index MarketingHero and SiteFooter across the knowledge bas
 
 | Item | Why |
 |---|---|
-| Automated contrast checking | Fleet-wide work. All 123 components carry the same unverified AA claim. Tracked as DEBT-WEB-1. |
+| Automated contrast checking | Fleet-wide work. All 123 components carry the same unverified AA claim. Tracked as DEBT-WEB-1. **Built since, by another arc** — checks `[12]`, `[13]`, `[15]`; DEBT-WEB-1 closed 2026-10-09. |
 | Replacing `applauncher.scss`'s hardcoded `@media (min-width: 768px)` | Task 1 makes the named breakpoints available, which is the prerequisite. Changing AppLauncher is unrelated to this feature and belongs in its own commit. |
 | Promoting either component above `display` conformance | Neither emits anything the canvas would wire. Raising the level would mean inventing channels nothing consumes. |

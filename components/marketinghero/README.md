@@ -148,5 +148,9 @@ palette replaces the theme.
   JSON value.
 - **`display` conformance** in the capability manifest — it mounts, renders,
   and tears down, and emits nothing the canvas wires.
-- Contrast is verified by eye against the token table in `DARKMODE.md`. There
-  is no automated contrast gate in this repository; see DEBT-WEB-1.
+- **Contrast is checked automatically.** This component uses only `--theme-*`
+  tokens, and structure check `[12]` verifies those pairs arithmetically in
+  both themes against the 4.5 AA floor — reading the compiled stylesheet, not
+  the Sass. It declares no component palette, so check `[13]` does not apply.
+  What no gate does is render the component and measure pixels, so a token
+  used somewhere the gate does not model is still on you; see DEBT-VR-10.

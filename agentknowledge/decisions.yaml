@@ -3679,6 +3679,9 @@
       in the spec.
     - Contrast is verified by eye. There is no automated gate in this
       repository, and this work does not add one — see DEBT-WEB-1.
+      SUPERSEDED 2026-10-09 (ADR-158) — checks [12], [13] and [15] were built
+      by the ADR-150/-153/-155 arc. Both components use only --theme-* tokens,
+      so check [12] now covers the pairs this consequence was about.
   files:
     - "specs/marketinghero-sitefooter.prd.md"
     - "specs/feature_request_website.md"
@@ -4112,6 +4115,10 @@
     - Contrast is still verified by a hand-run browser audit. There is no
       automated gate (DEBT-WEB-1), so a future surface change can still regress
       a text pair silently.
+      SUPERSEDED 2026-10-09 (ADR-158) — this consequence was the direct cause
+      of DEBT-VR-5, and check [12] now holds that line: a surface change that
+      regresses a text pair fails the build. The silent-regression risk this
+      names is closed.
   files:
     - "src/scss/_variables.scss"
     - "src/scss/_dark-mode.scss"
