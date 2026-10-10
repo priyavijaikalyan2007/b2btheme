@@ -8,5 +8,14 @@
     "claude-md-management@claude-plugins-official": true,
     "feature-dev@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(bash test-local.sh)",
+      "Bash(npm run test:unit)",
+      "Bash(npm run typecheck:runtime)",
+      "Bash(curl -sL https://theme.priyavijai-kalyan2007.workers.dev/*)"
+    ]
   }
 }
