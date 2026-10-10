@@ -2218,3 +2218,70 @@ list entirely, so every later index shifts when *content* changes. Left open,
 but as a live defect with a mechanism rather than a hypothetical.
 
 10 open / 27 resolved. 4848 unit tests, 29/29 structure, 37/37 CDN.
+
+## 2026-10-10 — "continue fixing the remaining items please"
+
+Of the ten open items, nine were parked for reasons that still hold: two
+recorded user decisions (DEBT-WEB-2, DEBT-VR-6), one you reaffirmed two days
+ago (DEBT-SEC-3), one that lives in the apps team's repository (DEBT-PAR-4),
+two accepted by the parity contract (DEBT-PAR-1, DEBT-PAR-2), DEBT-TS-1
+waiting on a consumer migration, and DEBT-DUI-1 + DEBT-DUI-5 waiting on the
+three open questions in the durable-anchors design. **One had work in it**, so
+it got all of the session: DEBT-DUI-4, the sixteen components exempt from the
+fleet conformance gate.
+
+Yesterday's sweep verified that the count was sixteen. It did not re-read the
+blockers, and **eleven of them did not survive being re-read.** Six said
+"Required option shape not yet determined" and four named a "non-standard
+factory signature" — predictions about difficulty, written when the list was
+seeded on 2026-08-03. In the nine weeks since, the runtime grew
+`factoryStyle`, `containerOption`, `containerAs`, `mountMethod` and the
+`invoke` glue hook, precisely because only 35 of 118 factories follow the
+canonical argument order. **The blockers named mechanisms that had since been
+built.** The four "non-standard" signatures are
+`(containerOrId: string | HTMLElement, options)`, which *is* container-first:
+the union accepts the host id the gate passes. One of the six "undetermined"
+components was already canonical.
+
+**Six migrated at `display` without one line changing in any component's own
+source** — `usermenu`, `timeline`, `stacklayout`, `multiselectcombo`,
+`permissionmatrix`, `fileexplorer`. Six manifests, six glue files, six names
+removed from a `Set`.
+
+**Five were in the wrong list entirely**, which the count could never have
+shown. `createStatusBar()` calls `show()` with no argument and appends to
+`document.body` — mechanically the same exclusion already written for
+`toolbar`. `createGraphToolbar()` builds a preconfigured `Toolbar` through
+`window.createToolbar` and throws without it, so it wraps a component the
+exclusion list already names. `CommandPalette` is a `getInstance()` singleton
+opened by a keystroke. `createHelpTooltip(target, …)` takes the element it
+decorates. `GuidedTour` steps a popover across other components' elements —
+and its "returns null under jsdom" was it refusing to run without third-party
+Driver.js. All five now carry written rationales in `NOT_MOUNTABLE`.
+
+**`AuthCard` stays exempt, but for a different reason than recorded.** Its
+signature was never the obstacle. What is open is whether a pre-session
+Keycloak login surface should be published to consumers as canvas-mountable at
+all — your call, not a migration task.
+
+**Mutating the fixtures, not just the manifests, found the more interesting
+thing.** Every new manifest was mutation-proved: flipping `timeline`'s
+`containerAs` to `"element"` fails `renders-content` with a diagnostic naming
+all three attachment fields; flipping `stacklayout`'s to `"id"` fails `mounts`
+with "options.container.appendChild is not a function". Then the same was done
+to the conformance fixtures by emptying their options — and **three of six
+stayed green.** Their shells are chrome, and `renders-content` only asserts
+the host is not empty, so it is satisfied before any data arrives;
+`permissionmatrix` passes on its empty-state message. Only `timeline` and
+`multiselectcombo` have load-bearing fixtures. A fixture can therefore rot
+silently. Recorded as **DEBT-DUI-6** rather than fixed, because the check runs
+for all 97 migrated components, and each affected glue header now says that
+deleting its fixture would not turn the gate red.
+
+One drive-by, found by reading a real validation failure: `typeIssue()` built
+"Supply a valid **a** non-empty string" at every one of its ~20 call sites,
+because each caller's expected-type string carries its own article so it reads
+correctly after "Expected". Fixed in the one place that builds the sentence.
+
+EXEMPT 16 → 5. Migrated 91 → 97 of 102 in scope. NOT_MOUNTABLE 18 → 23.
+11 open / 27 resolved (DEBT-DUI-6 is new). 4860 unit tests, 29/29 structure.

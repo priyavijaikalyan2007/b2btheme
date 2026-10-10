@@ -4805,3 +4805,115 @@
     - "test-local.sh"
     - "test-cdn.sh"
     - "CODEBASE_FIXES.md"
+
+- id: "ADR-160"
+  title: "Eleven of sixteen exemption blockers did not survive re-measurement, because the runtime grew the mechanisms they named"
+  date: "2026-10-10"
+  status: "Accepted"
+  context: |
+    DEBT-DUI-4 recorded sixteen components as EXEMPT from the fleet
+    conformance gate, "with recorded blockers". The count had been verified a
+    day earlier (ADR-159) and was right. The blockers themselves had never
+    been re-read since the list was seeded on 2026-08-03.
+
+    Six of them said "Required option shape not yet determined". Four named a
+    "non-standard factory signature". One said "Factory returns null under
+    jsdom; needs investigation". Each is a sentence about what somebody
+    expected to be hard, not a record of an attempt.
+
+    Between the seed and today the runtime grew `factoryStyle`
+    (container-first / options-first / options-only), `containerOption`,
+    `containerAs`, `mountMethod`, and the `invoke` hook in
+    `<name>.conformance.ts` — precisely to honour a fleet where only 35 of 118
+    factories follow the canonical argument order. The seed's blockers predate
+    all of it.
+  decision: |
+    D1. Six components are MIGRATED at `display`: usermenu, timeline,
+        stacklayout, multiselectcombo, permissionmatrix, fileexplorer. None
+        needed a change to its own source. Each needed a manifest declaring
+        the argument order the runtime already supports, and five needed
+        fixture options in conformance glue.
+
+    D2. Five components move from EXEMPT to NOT_MOUNTABLE, which is where they
+        always belonged: statusbar (createStatusBar calls show() with no
+        argument, appending to document.body — mechanically identical to the
+        toolbar exclusion), graphtoolbar (builds a preconfigured Toolbar via
+        window.createToolbar and throws without it, so it wraps an already
+        excluded component), commandpalette (a getInstance() singleton that
+        appends its backdrop to document.body and is opened by a shortcut),
+        guidedtour (a full-viewport walkthrough that steps a popover across
+        other components' elements), helptooltip (takes the element it
+        decorates as its first argument and throws without one).
+
+    D3. `display` is the target, not `surface`. EXEMPT means "no manifest";
+        clearing it needs mount, render and destroy. Promotion to `field` or
+        `surface` is a change to a component's own public API and belongs with
+        that component's arc. DEBT-DUI-4's prose conflated the two.
+
+    D4. AuthCard stays EXEMPT, but its blocker is replaced rather than kept.
+        `(containerOrId: string | HTMLElement, options)` IS container-first —
+        the union accepts the host id the gate passes — so the frozen ADR-138
+        contract was never the obstacle. What is open is a category decision:
+        AuthCard renders Keycloak's pre-session login step, and a manifest
+        would publish it to consumers as canvas-mountable. That is the user's
+        call, not a migration task.
+
+    D5. The surviving four blockers are rewritten to say what was TRIED.
+        graphminimap requires a live GraphCanvas and a 2D context jsdom does
+        not implement. diagramengine waits on phase 10, unchanged.
+        dynamicformswitcher's signature resolves; what is open is what its
+        manifest should declare, which is consumer-visible design.
+        markdowneditor exports a class and no factory, so migrating it means
+        ADDING one to the public surface.
+
+    D6. The renders-content blind spot found while proving the new entries is
+        recorded as DEBT-DUI-6 rather than fixed. Changing the check affects
+        all 97 migrated components.
+  consequences: |
+    + EXEMPT: 16 -> 5. Migrated: 91 -> 97 of 102 in scope. Permanently
+      excluded: 18 -> 23. The gate logs all three on every run.
+    + Not one of the six migrations touched component source. Six manifests,
+      six glue files, and the removal of six names from a Set.
+    + Every new entry was mutation-proved, not just observed passing.
+      Flipping timeline's containerAs to "element" fails renders-content with
+      the diagnostic naming all three attachment fields; flipping
+      stacklayout's to "id" fails `mounts` with
+      "options.container.appendChild is not a function".
+    - THREE OF THE SIX FIXTURES ARE NOT WHAT MAKES THE GATE PASS. Emptying
+      the glue options for usermenu, stacklayout and fileexplorer leaves all
+      three GREEN, because renders-content is satisfied by chrome — a toolbar,
+      a trigger button, a root div — and by an empty-state message in
+      permissionmatrix's case. Only timeline and multiselectcombo have
+      load-bearing fixtures. Measured, and written into each glue header, so
+      the next reader does not assume a deleted fixture would turn the gate
+      red.
+    - emits[].legacyOption is ALSO hand-declared and unchecked at display:
+      the channel checks are surface-level, so a misspelled callback name
+      would ship to consumers in capability-manifest.json and pass green. All
+      nine were grepped against their option interfaces. FileExplorer turned
+      up TWO callbacks for one event -- onSelect and onSelectionChange, fired
+      from adjacent lines of the same method -- which is recorded in its
+      manifest, because legacy-callback-fires checks one name and the
+      duplicate would go unobserved on promotion to surface.
+    - mountCost and holdsResources are HAND-DECLARED and nothing checks them.
+      weight.js is overwritten by the build from the real bundle, so it is
+      the one field that cannot drift; the two beside it can. All six were
+      corrected against the measured bundle size and the fleet's own size
+      bands after the first build, and timeline's holdsResources is true
+      because it retains an IntersectionObserver and a ResizeObserver.
+    - typeIssue() in runtime/src/errors.ts produced "Supply a valid a
+      non-empty string" at every one of its ~20 call sites, because each
+      caller's `expected` string carries its own article so it reads correctly
+      after "Expected". Found by reading a real validation failure. Fixed in
+      the one place.
+  files:
+    - "runtime/fleet-conformance.test.ts"
+    - "runtime/src/errors.ts"
+    - "components/usermenu/usermenu.manifest.ts"
+    - "components/timeline/timeline.manifest.ts"
+    - "components/stacklayout/stacklayout.manifest.ts"
+    - "components/multiselectcombo/multiselectcombo.manifest.ts"
+    - "components/permissionmatrix/permissionmatrix.manifest.ts"
+    - "components/fileexplorer/fileexplorer.manifest.ts"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"

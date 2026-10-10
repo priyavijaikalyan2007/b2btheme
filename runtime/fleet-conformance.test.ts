@@ -48,39 +48,41 @@ import type { CapabilityManifest } from "./src/types";
  * Seeded with the full fleet as of 2026-08-03. DO NOT add new entries for
  * newly written components: a component authored after this gate landed is
  * expected to be canvas-capable from its first commit.
+ *
+ * (CRITICAL) Every blocker here was re-measured on 2026-10-10 (ADR-160) and
+ * eleven of the sixteen did not survive. The seed was written before the
+ * runtime grew `factoryStyle`, `containerOption`, `containerAs`, `mountMethod`
+ * and the `invoke` glue hook, so six entries recorded as blocked by their
+ * argument order were blocked by nothing, and five more were in the wrong list
+ * entirely — they belong in NOT_MOUNTABLE. A blocker that names a mechanism
+ * the runtime has since grown reads as work pending when the work is done.
+ * State what was TRIED, not what looks hard.
  */
 const EXEMPT: ReadonlySet<string> = new Set([
-    // Requires a live GraphCanvas handle; needs .conformance.ts glue that builds one.
+    // Requires a live GraphCanvas handle, and the blocker holds. Measured
+    // 2026-10-10: `options.graphCanvas` is required and the minimap paints
+    // through a 2D context, which jsdom does not implement — glue that stands
+    // up a real GraphCanvas is the prerequisite, not the manifest.
     "graphminimap",
-    // Requires the Toolbar component to be loaded first; needs a peer-loading glue.
-    "graphtoolbar",
-    // Factory returns null under jsdom; needs investigation.
-    "guidedtour",
-    // Required option shape not yet determined.
-    "multiselectcombo",
-    // Required option shape not yet determined.
-    "permissionmatrix",
-    // Required option shape not yet determined.
-    "stacklayout",
-    // Required option shape not yet determined.
-    "statusbar",
-    // Required option shape not yet determined (needs date-bearing items).
-    "timeline",
-    // Required option shape not yet determined.
-    "usermenu",
-    // Non-standard factory signature (containerOrId: string | HTMLElement); frozen Keycloak-parity contract (ADR-138) needs care before any change.
+    // Its signature is NOT the blocker. `(containerOrId: string | HTMLElement,
+    // options)` IS the canonical container-first form: the union accepts the
+    // host id the gate passes, so the frozen ADR-138 contract never needed
+    // touching. What is actually open is a disposition decision — AuthCard
+    // renders Keycloak's pre-session login step, and a manifest would publish
+    // it to consumers as canvas-mountable. Decide the category first.
     "authcard",
-    // No exported create* factory found; entry point needs identifying.
-    "commandpalette",
-    // 25k-line engine with its own embed registry; migrate after phase 10 extracts that registry.
+    // 25k-line engine with its own embed registry; migrate after phase 10
+    // extracts that registry. Unchanged by the 2026-10-10 re-measurement.
     "diagramengine",
-    // Non-standard signature; it is the ADR-134 form host, so its manifest needs design rather than generation.
+    // Its signature is NOT the blocker either — `(target, options)` is
+    // container-first and resolves. It is the ADR-134 form host, so what its
+    // manifest declares (one `affords` entry per field type it switches over?
+    // one for the form?) is a design question with consumer-visible answers.
     "dynamicformswitcher",
-    // Non-standard factory signature (containerOrId union).
-    "fileexplorer",
-    // Non-standard signature (target: HTMLElement first).
-    "helptooltip",
-    // No exported create* factory found; entry point needs identifying.
+    // Class-only entry point, and the blocker holds: `MarkdownEditor` is
+    // exported but no `create*` factory is. Migration means ADDING one to the
+    // public surface — additive, so permitted, but it is an API change rather
+    // than a manifest, and it should land with the editor's own arc.
     "markdowneditor",
 ]);
 
@@ -164,6 +166,41 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
 
     toolbar:
         "Viewport-docked app chrome. createToolbar() calls show() with no argument, attaching to document.body — it docks to the window edge, not into a container. A toolbar inside a canvas node is meaningless. ADR-134 already excludes it as chrome rather than a field.",
+
+    commandpalette:
+        "Global singleton overlay. CommandPalette.getInstance() appends its "
+        + "backdrop and dialog straight to document.body and is opened by a "
+        + "keyboard shortcut, so there is one per document and no container "
+        + "to mount it into. Excluded for the same reason as contextmenu. "
+        + "The seed recorded this as 'no create* factory found' — the entry "
+        + "point is openCommandPalette(), and the singleton it reaches for is "
+        + "the actual reason it cannot be a canvas citizen.",
+
+    statusbar:
+        "Viewport-docked app chrome. createStatusBar(options) calls show() "
+        + "with no argument, which appends to document.body, and the options "
+        + "carry a z-index rather than a container. See toolbar — this is "
+        + "mechanically the same exclusion.",
+
+    graphtoolbar:
+        "Viewport-docked app chrome. It builds a preconfigured Toolbar "
+        + "through window.createToolbar and throws without it, so it is a "
+        + "wrapper around a component this list already excludes. See "
+        + "toolbar.",
+
+    guidedtour:
+        "Transient full-viewport walkthrough. It paints a backdrop over the "
+        + "whole page and steps a popover across elements that belong to "
+        + "other components, so it decorates an application rather than "
+        + "occupying a canvas node. It also returns null without third-party "
+        + "Driver.js on window — which is what the seed's 'returns null under "
+        + "jsdom' was seeing.",
+
+    helptooltip:
+        "Transient hover overlay anchored to another element. "
+        + "createHelpTooltip(target, options) takes the element it decorates "
+        + "as its first argument and throws without one. See hovercard — it "
+        + "decorates a component rather than being one.",
 
     dynamiccanvas:
         "The canvas HOST, not a canvas citizen — it is the surface other "

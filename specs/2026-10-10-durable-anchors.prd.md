@@ -100,8 +100,10 @@ own object model, by its own code.
    re-anchor to whatever now occupies the coordinate — that is the current
    behaviour and it is the one genuinely unsafe outcome.
 4. **Not require every component to participate before any of it works.**
-   16 components are still `EXEMPT` from the conformance gate; a design that
-   needs fleet-wide adoption to deliver anything ships to nobody.
+   5 components are still `EXEMPT` from the conformance gate (16 when this was
+   written; ADR-160 cleared eleven the same day); a design that needs
+   fleet-wide adoption to deliver anything ships to nobody. The requirement
+   stands on the 97 that *are* migrated, not on the handful that are not.
 
 ## 5. Three approaches
 

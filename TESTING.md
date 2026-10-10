@@ -343,6 +343,16 @@ never fail.
 Apply the same standard to any gate you add. A gate that has never been
 observed failing is not known to be a gate.
 
+**Then mutate the fixtures too.** Mutating the thing under test proves the
+gate; mutating the gate's own inputs proves the inputs, and the second
+experiment is the one nobody runs. Emptying the conformance options for six
+newly migrated components left three of them GREEN (ADR-160) — their shells
+are chrome, and `renders-content` only asserts the host is not empty, so it is
+satisfied before any data arrives. Those fixtures are still worth keeping,
+because they make the check walk the real path instead of the empty state, but
+each now says in its own header that deleting it would not turn the gate red.
+Tracked as DEBT-DUI-6.
+
 ### Test the artefact, not just the modules
 
 `runtime/bundle.test.ts` tests the concatenated bundle rather than its sources,

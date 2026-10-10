@@ -294,6 +294,22 @@ builder, a boot script, a modal overlay — goes in `NOT_MOUNTABLE` in the gate
 **with a written rationale**, not in `EXEMPT`. `EXEMPT` means "migration
 pending" and is expected to reach zero.
 
+Check the exclusion criteria **before** writing a blocker. `EXEMPT` is the
+default, and `NOT_MOUNTABLE` costs you a rationale, so miscategorisations
+collect in `EXEMPT` and read as a backlog. Five of the original sixteen
+exemptions were in the wrong list (ADR-160): a factory that calls `show()`
+with no argument is viewport-docked chrome, and a factory that takes the
+element it decorates as its first argument is a decoration.
+
+When an exemption is real, **write the blocker as what you TRIED and what
+HAPPENED**, never as what looks hard. Ten of the original sixteen were worded
+as predictions — "Required option shape not yet determined", "non-standard
+factory signature" — and eleven of the sixteen fell on a re-read, because the
+runtime had since grown `factoryStyle`, `containerOption`, `containerAs`, `mountMethod` and the
+`invoke` glue hook — the blockers named mechanisms that now exist. "Throws
+without `options.graphCanvas`, and jsdom has no 2D context" stays true or
+becomes visibly false; a prediction just ages.
+
 ## (CRITICAL) No Fabricated Reads
 
 A component that cannot initialise, or cannot reach a dependency, **must refuse

@@ -886,10 +886,14 @@ function typeIssue(
     expected: string,
     found: unknown): ValidationIssue
 {
+    // `expected` carries its own article — "a non-empty string", "an array of
+    // intent verbs" — because it reads correctly after "Expected". Putting
+    // "a valid" in front of it here produced "Supply a valid a non-empty
+    // string", in every one of the 20-odd call sites, in text consumers see.
     return issue(
         path,
         `Expected ${expected} but found ${describe(found)}.`,
-        `Supply a valid ${expected} at "${path}".`);
+        `Supply ${expected} at "${path}".`);
 }
 
 /**
