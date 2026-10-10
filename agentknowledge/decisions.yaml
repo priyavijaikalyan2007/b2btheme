@@ -4785,6 +4785,15 @@
       because isScrollable requires an element to CURRENTLY overflow, so a
       styled region whose content fits is absent from the list and every
       later index shifts. Same version, same session.
+    - AMENDED 2026-10-10. The count of 21 is low, and it was wrong about its
+      unit as well as its axes. It counted `overflow` and `overflow-y`
+      DECLARATIONS, while isScrollable returns true when EITHER `overflowX` or
+      `overflowY` is auto or scroll, and tests one ELEMENT. Re-measured per
+      selector across both axes: 25 components declare more than one scrolling
+      region and 68 declare at least one. ribbonbuilder still leads at five,
+      then applauncher, conversation, docviewer, formdialog, markdowneditor,
+      ribbon and tabbedpanel at four. The measurement's predicate and its unit
+      both have to come from the code being measured.
     - DEBT-DUI-4's exemption count was right and its conformance figures
       stale: 84 of 91 at display, not 91 of 98. Seven components had been
       raised and the entry was taking no credit for them.

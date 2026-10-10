@@ -7,110 +7,200 @@ File GUID: 7d41c8b2-05ea-4f36-9b17-2c6de8a41f09
 Created: 2026
 -->
 
-<!-- AGENT: Design for durable canvas anchors. Addresses DEBT-DUI-1 and DEBT-DUI-5 together. AWAITING APPROVAL — nothing here is built. -->
+<!-- AGENT: Design for durable canvas anchors. Addresses DEBT-DUI-1 and DEBT-DUI-5 together. AWAITING APPROVAL. No code is written. -->
 
-# Durable anchors — identify the content, not the coordinate
+# Durable anchors: identify the content, not the coordinate
 
-**Status:** DESIGN, awaiting approval. No code written.
+**Status:** design, awaiting approval. No code is written.
 **Addresses:** DEBT-DUI-1, DEBT-DUI-5
 **Touches:** `runtime/src/types.ts`, `components/dynamiccanvas/dynamiccanvas.ts`,
 `components/annotation/`, the capability manifest, the fleet conformance gate
 
----
+## Summary
 
-## 1. The two entries are one defect
+A user can attach one canvas node to another. A comment attached to a paragraph
+is the common case. The runtime records that attachment as an anchor. Every
+anchor that the canvas can resolve today names a position inside the target,
+not the content the user pointed at. When the content moves, the attached node
+stays at the old position and then points at whatever now occupies it.
 
-They were filed separately and read as unrelated. They are the same bug seen
-from two sides. `Anchor` has a `node` variant with two locator fields, and
-**neither identifies content**:
+This defect matters now for three reasons. First, two debt items describe it
+from two sides, so each one looks partial and neither looks urgent. Second, the
+cure that both items prescribe does not work: the runtime accepts an `entity`
+anchor, validates it, and then ignores it. Third, measurement on 9 October 2026
+showed that both items understate the problem. The index that one of them calls
+stable can move inside a single session.
 
-| Field | What it names | Dies when |
+This design recommends approach A, which adds a content resolver to the host
+application. The host owns its content, so only the host can say what a stable
+content identity is. Approach A needs no change to any of the 97 components
+that the conformance gate covers. It costs the host application one new
+function, and it makes the `entity` anchor mean what its name says.
+
+The main tradeoff is the size of the host interface. `DynamicUIHost` documents
+itself as six functions, and approach A proposes a seventh. The main risk is
+backward compatibility, because the `within` field is a persisted integer that
+host documents already contain. Section "`within` is a persisted integer"
+states the rule that keeps existing documents working.
+
+The next action belongs to you. Nothing starts until you answer the three
+questions in the next section.
+
+## Decisions needed from you
+
+1. **Is `onResolveAnchor` required or optional on `DynamicUIHost`?** A required
+   function keeps the interface honest, because every host then states how its
+   content is identified. An optional function keeps the documented count of
+   six closer to true, and no existing host has to change.
+2. **When an anchor cannot be resolved, does the canvas hide the attached node
+   or show it as orphaned?** Hiding matches how the canvas treats nodes that
+   scroll off screen. Showing the node in a grey state at its last known
+   position tells the user that an anchored node was lost. The section "What a
+   durable anchor must do" argues for telling the user.
+3. **Does the apps team need this, and by when?** The apps team is the only
+   consumer. That team currently works on the TenantSwitcher migration.
+
+One question that this list held in an earlier draft is settled. That question
+was whether the resolver should be registered for each canvas or for each node.
+`onFetch` already takes `nodeId` as a parameter, so one host callback
+parameterized by node is the established shape. The resolver matches it.
+
+## Terms used in this document
+
+- **Anchor.** The record that says what a canvas node is attached to. The
+  variants are `canvas`, `node`, and `entity`.
+- **Anchored node.** A canvas node whose anchor points at another node, or at
+  content inside one. A comment, a callout, or a review mark is an anchored
+  node.
+- **`spot`.** An optional field on a `node` anchor. It holds x and y as
+  fractions of the target's scrollable content, from 0 to 1.
+- **`within`.** An optional field on a `node` anchor. It holds the index of the
+  scrolling region that `spot` is measured against. Index 0 is the target's own
+  body.
+- **Scrolling region.** An element that scrolls its own content. A grid's rows
+  and a document's text are scrolling regions.
+- **Reflow.** The change in where text sits when the width changes and the text
+  re-wraps. The same fraction of the content then covers different text.
+- **Packer.** The part of the canvas that turns layout intent into coordinates.
+- **Host application.** The application that embeds the canvas and implements
+  the `DynamicUIHost` interface.
+- **Resolver.** The function proposed in approach A. The host implements it, and
+  it returns the element that holds the anchored content.
+- **Fleet conformance gate.** The test suite in `runtime/fleet-conformance.test.ts`.
+  It requires every component to declare a capability manifest and to pass the
+  contract tests.
+- **`EXEMPT`.** The gate's list of components that have no manifest yet. ADR-160
+  reduced this list from 16 components to 5 on 10 October 2026.
+
+## The two debt items describe one defect
+
+DEBT-DUI-1 and DEBT-DUI-5 were filed separately and read as unrelated. They are
+the same defect seen from two sides. The `node` anchor carries two locator
+fields, and neither field identifies content.
+
+| Field | What it names | When it stops being correct |
 |---|---|---|
-| `spot` | a fraction of the content box | the content **reflows** — same fraction, different text (DEBT-DUI-1) |
-| `within` | the **Nth** scrolling region, DOM order | the set of scrolling regions changes (DEBT-DUI-5) |
+| `spot` | a fraction of the content box | the content reflows, so the same fraction covers different text (DEBT-DUI-1) |
+| `within` | the Nth scrolling region, in DOM order | the set of scrolling regions changes (DEBT-DUI-5) |
 
-A mark says *where it was*, and then the thing it was marking moves. Any fix
-that addresses one and not the other leaves the anchor durable along one axis
-and fragile along the other, which is worse than the present state because it
-reads as solved.
+A fix that addresses one field and not the other leaves the anchor durable
+along one axis and fragile along the other. That outcome is worse than the
+present state, because it reads as solved.
 
-## 2. What the measurements say
+## What the measurements show
 
-Taken 2026-10-09 while re-measuring the parked entries, and they are the
-reason this is a defect rather than a theoretical weakness.
+The measurements below were taken on 9 October 2026, while the parked debt
+entries were re-checked. They are the reason this is a defect rather than a
+theoretical weakness.
 
-**`within` is not "stable for a given component version", as DEBT-DUI-5
-claimed.** `isScrollable()` in `dynamiccanvas.ts` requires an element to be
-**currently overflowing** as well as to carry a scrolling overflow style:
+DEBT-DUI-5 claims that `within` is stable for a given component version. That
+claim is false. `isScrollable()` in `dynamiccanvas.ts` requires an element to
+overflow at the time of the test, and also to carry a scrolling overflow style:
 
 ```ts
 if (el.scrollHeight <= el.clientHeight
     && el.scrollWidth <= el.clientWidth) { return false; }
 ```
 
-So a styled region whose content happens to fit is **absent from the list**,
-and every later index shifts up. The index therefore moves when *content*
-changes — same component, same version, same session. A mark recorded against
-region 2 silently re-anchors to a different region the moment an earlier
-sibling's content shrinks below its box.
+A styled region whose content happens to fit is therefore absent from the list,
+and every later index shifts up by one. The index moves when the content
+changes, inside the same component, the same version, and the same session. An
+anchor that records region 2 re-anchors to a different region as soon as an
+earlier sibling's content shrinks below its box.
 
-**The "one region per component in practice" premise is false.** 21 components
-style more than one scrolling region: `ribbonbuilder` (5), then `tabbedpanel`,
-`ribbon`, `prompttemplatemanager`, `markdowneditor`, `docviewer` and
-`applauncher` at 3 each.
+DEBT-DUI-5 also assumes one scrolling region for each component in practice.
+That assumption is false. 25 components declare more than one scrolling
+region. `ribbonbuilder` declares 5. Then `applauncher`, `conversation`,
+`docviewer`, `formdialog`, `markdowneditor`, `ribbon` and `tabbedpanel`
+declare 4 each. 68 components declare at least one.
 
-## 3. The prescribed remedy does not exist
+The figures above count distinct selectors in each component's SCSS that set
+`overflow`, `overflow-x` or `overflow-y` to `auto` or `scroll`. The unit is the
+selector rather than the declaration, because `isScrollable()` tests one
+element. The predicate covers both axes for the same reason. `isScrollable()`
+returns true when either `overflowX` or `overflowY` permits scrolling. A
+horizontally scrolling region therefore takes an index exactly like a
+vertical one.
 
-This is the finding that reshapes the design, and it should be read before
-anything below.
+The 9 October 2026 measurement reported 21 components and counted vertical
+overflow only. That figure is low by four components, and it reached the debt
+entry, ADR-159 and the first draft of this design before anybody re-ran it.
 
-DEBT-DUI-1 says the fix is content anchoring "surfaced through the existing
-`{ kind: "entity" }` anchor". `components/dynamiccanvas/README.md` goes
-further and tells consumers so:
+## The entity anchor does nothing today
 
-> Anchoring to content — a text quote, a row id — is what
-> `{ kind: "entity", entityId }` is for, and it is the right anchor for
-> anything that reflows or virtualizes.
+Both debt items prescribe content anchoring through the existing
+`{ kind: "entity" }` anchor. That anchor is accepted and then ignored. The
+string `"entity"` does not appear in `dynamiccanvas.ts`.
 
-**`dynamiccanvas.ts` contains no reference to `"entity"`.** The string does not
-appear in the file. What actually happens to an entity-anchored node:
+```mermaid
+flowchart TD
+    V["A node carries an entity anchor"] --> T{"anchorTarget() tests<br/>anchor.kind === 'node'"}
+    T -->|"today: 'entity' fails the test"| N["anchorTarget() returns null"]
+    N --> P["The packer places the node<br/>as if it had no anchor"]
+    P --> S["The node renders, reports no error,<br/>and is attached to nothing"]
+    T -->|"approach A: 'entity' reaches the resolver"| R["The host runs<br/>onResolveAnchor(anchor, nodeId)"]
+    R -->|"an element is returned"| M["The canvas measures the spot<br/>inside that element"]
+    R -->|"null is returned"| H["The canvas marks the anchor<br/>unresolved and hides the node"]
+```
 
-1. `runtime/src/document.ts` validates `entityId` is an identifier. It passes.
-2. `anchorTarget()` returns `null`, because it tests `kind === "node"`.
-3. No spot refinement runs. The overlay is packed as if unanchored.
+The consequence is that a caller cannot tell an entity anchor apart from no
+anchor at all. ADR-148 exists to prevent exactly that shape. This instance of
+the shape was reached through documentation rather than through a fabricated
+return value.
 
-It renders, it reports no error, and it is attached to nothing. A caller
-cannot distinguish "anchored to entity X" from "not anchored" — which is the
-shape ADR-148 exists to prevent, reached through documentation rather than
-through a fabricated return value. **The README is the most dangerous part:
-it recommends the broken path as the cure for the known one.**
+`components/dynamiccanvas/README.md` recommended the broken path until
+10 October 2026. The old text read: "Anchoring to content — a text quote, a row
+id — is what `{ kind: "entity", entityId }` is for". Commit `2d04799` replaced
+that text with a warning that the anchor does nothing yet. The README now
+states that spot anchors are the only working kind. No further README work is
+needed before this design is approved.
 
-Three separate anchor unions also exist — the runtime's, `annotation.ts`'s,
-and `diagramengine.ts`'s — and `annotation.setAnchor()` accepts an entity
-anchor and stores it. Only `diagramengine` resolves `entityId`, against its
-own object model, by its own code.
+Three separate anchor unions also exist, in the runtime, in `annotation.ts`,
+and in `diagramengine.ts`. `annotation.setAnchor()` accepts an entity anchor and
+stores it. Only `diagramengine` resolves an `entityId`, against its own object
+model, through its own code.
 
-## 4. What a durable anchor has to do
+## What a durable anchor must do
 
-1. **Survive reflow.** Re-wrap at a different width; the mark stays on the
-   same content.
-2. **Survive a region count change.** A sibling region stops overflowing; the
-   mark stays in its own region.
-3. **Degrade honestly.** When the content is gone, say so. Never silently
-   re-anchor to whatever now occupies the coordinate — that is the current
-   behaviour and it is the one genuinely unsafe outcome.
-4. **Not require every component to participate before any of it works.**
-   5 components are still `EXEMPT` from the conformance gate (16 when this was
-   written; ADR-160 cleared eleven the same day); a design that needs
-   fleet-wide adoption to deliver anything ships to nobody. The requirement
-   stands on the 97 that *are* migrated, not on the handful that are not.
+1. **Survive reflow.** When the content re-wraps at a different width, the
+   attached node stays on the same content.
+2. **Survive a change in the number of regions.** When a sibling region stops
+   overflowing, the attached node stays in its own region.
+3. **Degrade honestly.** When the content is gone, say so. Never re-anchor in
+   silence to whatever now occupies the position. Silent re-anchoring is the
+   current behavior, and it is the one genuinely unsafe outcome.
+4. **Work before the whole fleet participates.** 5 components are still
+   `EXEMPT` from the conformance gate. A design that needs fleet-wide adoption
+   before it delivers anything delivers nothing. This requirement stands on the
+   97 components that the gate already covers.
 
-## 5. Three approaches
+## Three approaches
 
-### A — Content selectors, host-resolved *(recommended)*
+### Approach A: content selectors that the host resolves
 
-Replace the opaque `entityId` with a resolvable descriptor, and make the host
-resolve it, because only the host knows what its content *is*:
+Approach A replaces the opaque `entityId` with a descriptor that the host can
+resolve, and it makes the host do the resolving. Only the host knows what its
+content is.
 
 ```ts
 | {
@@ -121,125 +211,115 @@ resolve it, because only the host knows what its content *is*:
   }
 ```
 
-with a resolver on `DynamicUIHost`, mirroring `onFetch` exactly:
+The resolver sits on `DynamicUIHost` and mirrors `onFetch`:
 
 ```ts
 onFetch(source: DataSource, nodeId: string): Promise<unknown>;         // exists
 onResolveAnchor(anchor: EntityAnchor, nodeId: string): HTMLElement | null;  // new
 ```
 
-**Recommended because** it matches how this runtime already handles every
-fact it cannot know. `DataSource.query` is "opaque to the runtime; meaningful
-to the host's `onFetch`", and content identity is the same kind of fact,
-resolved by the same party, through a callback of the same shape — a domain
-object plus the `nodeId`. It also completes a promise the README has already
-made rather than inventing a fourth anchor concept.
+This design recommends approach A, because it matches how the runtime already
+handles every fact that it cannot know for itself. `DataSource.query` is
+documented as opaque to the runtime and meaningful to the host's `onFetch`.
+Content identity is the same kind of fact. The same party resolves it, through a
+callback of the same shape, which takes a domain object and the `nodeId`.
+Approach A also completes a promise that the documentation already made,
+instead of adding a fourth anchor concept.
 
-**Two things this costs that are easy to miss.**
+Two costs are easy to miss.
 
-*It makes the host interface seven functions.* `DynamicUIHost` is documented
-as "The complete surface a consuming application implements. **Six
-functions.**" That count is load-bearing prose — it is the interface's own
-claim to being small. Adding to it is a deliberate act and the comment must
-change with it; the alternative is an optional seventh, which keeps the
-promise by making content anchoring opt-in and leaves hosts that do not
-implement it exactly where they are today.
+The first cost is the size of the host interface. `runtime/src/types.ts` line 605
+describes `DynamicUIHost` as "The complete surface a consuming application
+implements. Six functions." That count is load-bearing prose, because it is the
+interface's own claim to being small. Adding a function is therefore a
+deliberate act, and the comment must change with it. The alternative is an
+optional seventh function. An optional function keeps the promise, makes content
+anchoring opt-in, and leaves a host that does not implement it exactly where it
+is today.
 
-*It must be synchronous, unlike `onFetch`.* Overlay positions are refined on
-scroll. A `Promise`-returning resolver cannot be awaited per frame without
-either blocking the scroll path or producing marks that lag the content they
-mark. So the resolver returns an element directly, and is consulted on mount
-and on reflow rather than on every refinement — with the resolved element
-cached per node for the lifetime of a layout pass, which is how
-`regionsOf()` already memoises scrolling regions within a pass.
+The second cost is that the resolver must be synchronous, unlike `onFetch`. The
+canvas refines the position of an attached node on scroll. A resolver that
+returns a `Promise` cannot be awaited for each frame. Awaiting it would either
+block the scroll path or produce attached nodes that lag their content. The
+resolver therefore returns an element directly. The canvas consults it on mount
+and on reflow, and not on every refinement pass. The canvas caches the resolved
+element for each node for the lifetime of one layout pass. `regionsOf()` already
+memoizes scrolling regions in the same way.
 
-**Degradation is explicit:** resolver returns `null` → the mark is marked
-unresolved and hidden, exactly as off-screen marks are hidden today. It is
-never re-placed by coordinate.
+Degradation is explicit. When the resolver returns `null`, the canvas marks the
+anchor as unresolved and hides the node. That matches how the canvas hides
+nodes that scroll off screen. The canvas never places the node by position
+instead.
 
-**Cost:** hosts that want content anchoring must write a resolver. Hosts that
-do not are unaffected.
+The cost to a consumer is one function. A host that wants content anchoring
+writes a resolver. A host that does not want content anchoring is unaffected.
 
-### B — Component-owned region descriptors
+### Approach B: region descriptors that components own
 
-DEBT-DUI-5's own prescription. Each scrolling region declares a stable name it
-owns, and `within` becomes that name:
+Approach B is the fix that DEBT-DUI-5 prescribes. Each scrolling region
+declares a stable name that it owns, and `within` becomes that name:
 
 ```html
 <div class="docviewer-body" data-dui-region="body">
 ```
 
-`within?: number` becomes `within?: string`, resolved by query rather than by
-index. The manifest declares each component's region names, and the
-conformance gate asserts that every scrollable region has one.
+The field `within?: number` becomes `within?: string`, and the canvas resolves
+it by query rather than by index. Each component declares its region names in
+its capability manifest. The conformance gate then asserts that every
+scrollable region has a name.
 
-**Fixes DUI-5 completely and DUI-1 not at all** — a named region still holds
-a geometric fraction inside it.
+Approach B fixes DEBT-DUI-5 completely and DEBT-DUI-1 not at all. A named
+region still holds a geometric fraction inside it.
 
-**Cost:** touches all 21 multi-region components and the gate.
+The cost is fleet work, and it is larger than the count of multi-region
+components suggests. A gate that asserts a name on every scrollable region
+reaches all 68 components that declare one. The 25 components with more than
+one region are where the names change behavior. The remaining 43 still have to
+declare a name to keep the gate green.
 
-### C — Both, B underneath A
+### Approach C: both, with B underneath A
 
-A names the content; B names the region the content lives in. A full anchor
-becomes "region `body`, entity `row-4823`", and the geometric `spot` degrades
-from the locator to a *hint* used only to break ties and to place a mark
-before the resolver has answered.
+Approach A names the content. Approach B names the region that the content
+lives in. A full anchor then reads as "region `body`, entity `row-4823`". The
+geometric `spot` stops being the locator and becomes a hint. The canvas uses
+the hint to break ties, and to place a node before the resolver has answered.
 
-**This is the end state.** It is also two pieces of work, and A alone is
-useful without B while B alone is not useful without A.
+Approach C is the end state. It is also two pieces of work. Approach A is
+useful without approach B, and approach B is not useful without approach A.
 
-## 6. Recommendation
+## Recommendation
 
-**Build A first, design B alongside it, ship B per-component afterwards.**
+Build approach A first. Design approach B alongside it. Ship approach B one
+component at a time afterwards.
 
-A is self-contained, needs no component changes, and makes the README true.
-B is fleet work gated on the conformance suite and can land component by
-component without blocking anything.
+Approach A is self-contained, needs no component changes, and makes the
+documentation true. Approach B is fleet work that depends on the conformance
+gate. Approach B can land component by component without blocking anything
+else.
 
-## 7. The constraint most likely to be forgotten
+## `within` is a persisted integer
 
-**`within` is a persisted integer.** Any host that has saved a canvas has
-integers in its documents. Changing the field's type is a breaking change to
-the document format, so:
+Any host that has saved a canvas holds integers in its documents. Changing the
+type of the `within` field is therefore a breaking change to the document
+format. The following rules keep existing documents working:
 
-- `within?: number` **stays**, deprecated, and keeps resolving by index.
-- `region?: string` is added alongside it.
-- When both are present, `region` wins.
-- An integer-only anchor keeps today's behaviour exactly, including its
-  fragility. It does not silently become something else.
+- The field `within?: number` stays. It is deprecated, and it keeps resolving
+  by index.
+- The field `region?: string` is added alongside it.
+- When a document carries both fields, `region` wins.
+- An anchor that carries only an integer keeps today's behavior exactly,
+  including today's fragility. It does not become something else in silence.
 
-The repository carries no persisted fixtures with `within` — it appears only
-in `document.test.ts` and in the live code path — so the migration surface is
-entirely host-side and we cannot see it. **That is the argument for additive
-change rather than a version bump:** we do not know who would break.
+The repository carries no persisted fixtures that contain `within`. The field
+appears only in `document.test.ts` and in the live code path. The migration
+surface is therefore entirely host-side, and this repository cannot see it.
+That is the argument for additive change rather than a version bump, because we
+do not know which host would break.
 
-## 8. Fleet implication, stated and not solved
+## Effect on the component fleet
 
 Approach B needs the conformance gate to assert that every scrollable region
-declares a descriptor, or adoption is zero. That assertion will not pass for
-the 16 `EXEMPT` components, and raising those is DEBT-DUI-4 — separate work,
-deliberately not folded in here.
-
-## 9. Open questions for review
-
-1. **Should `onResolveAnchor` be required or optional on `DynamicUIHost`?**
-   Required keeps the interface honest — every host states how its content is
-   identified. Optional keeps the documented "six functions" promise closer to
-   true and means no existing host has to change. *(The per-canvas vs
-   per-node question this slot originally held is settled: `onFetch` already
-   takes `nodeId` as a parameter, so one host callback parameterised by node
-   is the established shape and the resolver should match it.)*
-2. **Should an unresolved anchor hide the mark or show it as orphaned?**
-   Hiding matches the current off-screen behaviour. Showing it — greyed, with
-   its last known position — tells the user something was lost rather than
-   quietly dropping their annotation. §4.3 argues for honesty; this is the
-   point where honesty and tidiness disagree.
-3. **Does the apps team need this**, and on what timescale? It is the only
-   consumer, it is currently occupied with the TenantSwitcher migration, and
-   nothing here should start before that is known.
-
-## 10. Before any of this is built
-
-**Correct `components/dynamiccanvas/README.md` now, independently of this
-design.** It currently recommends an anchor kind that silently does nothing.
-That is a one-paragraph fix and should not wait for approval of the rest.
+declares a name. Without that assertion, adoption is zero. The assertion cannot
+pass for the 5 components that remain `EXEMPT` after ADR-160. Clearing those 5
+is DEBT-DUI-4. That work is separate, and this design deliberately leaves it
+separate.

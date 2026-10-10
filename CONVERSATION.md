@@ -2285,3 +2285,54 @@ correctly after "Expected". Fixed in the one place that builds the sentence.
 
 EXEMPT 16 → 5. Migrated 91 → 97 of 102 in scope. NOT_MOUNTABLE 18 → 23.
 11 open / 27 resolved (DEBT-DUI-6 is new). 4860 unit tests, 29/29 structure.
+
+---
+
+## 2026-10-10 — "rewrite that design doc using the instructions in language.md"
+
+The durable-anchors design was written in a voice the user could not read:
+dense, heavy with emphasis, and full of stage directions telling the reader
+which paragraph mattered most. The repository already carries the standard it
+should have followed. `LANGUAGE.md` is byte-identical to `~/Work/language.md`,
+and AGENTS.md line 438 requires it. So this was not a new style request. It
+was a document that never applied the rule it was already under.
+
+The rewrite leads with the three decisions that wait on the user, because the
+document's purpose is to get them answered. It defines every term on first use
+(anchor, `spot`, `within`, reflow, scrolling region, packer, host application,
+resolver, conformance gate, `EXEMPT`), uses one name for each thing, and keeps
+descriptive sentences under 25 words. One Mermaid flowchart replaced the prose
+that traced the entity anchor through `anchorTarget()`, since the two paths
+(today's null return and approach A's resolver) are a relationship rather than
+a narrative. The structure, the three approaches, the recommendation, the
+backward-compatibility rule and the open questions all survive unchanged.
+
+Re-reading a document against a standard means re-checking its facts, and
+**two had gone stale inside a day.** The design quoted a README paragraph
+recommending the entity anchor, and asked for that paragraph to be corrected
+as future work. Commit `2d04799` had already corrected it, in the same commit
+that created the design. The design also still said 16 components were exempt
+where ADR-160 had left 5 the same morning.
+
+**A third fact was wrong from the start, and it is the one worth keeping.**
+The design said 21 components style more than one scrolling region. The
+original grep matched `overflow` and `overflow-y` declarations, while
+`isScrollable()` returns true when **either** `overflowX` or `overflowY` is
+`auto` or `scroll`. A horizontally scrolling region takes a `within` index
+exactly like a vertical one, so the first correction read 25.
+
+Review then found the same class of mistake inside the correction.
+`isScrollable()` tests one **element**, so `overflow-x` and `overflow-y` in a
+single rule are one region and two matches. The unit has to be the selector.
+Counting distinct selectors across both axes holds the 25, and it also shows
+what the line count hid: **68 components declare at least one scrolling
+region.** That figure is the real cost of approach B, because a gate asserting
+a region name reaches every one of them, not only the 25. "Scrolling region"
+sounds vertical, which narrowed the first grep, and it sounds countable one
+declaration at a time, which survived the first fix.
+Recorded as insight 6.46 and as an `AMENDED` note inside ADR-159. ADR-145
+set that precedent: a correction that changes a fact rather than a decision is
+noted in place and dated, and does not need an ADR of its own.
+
+No ADR was added, because no decision changed. The three questions in the
+design are still open, and nothing starts before they are answered.
