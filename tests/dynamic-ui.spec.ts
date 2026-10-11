@@ -237,3 +237,211 @@ test.describe("Dynamic UI demo", () =>
         await expect(frame).not.toHaveClass(/dyncanvas-frame-pinned/);
     });
 });
+
+/**
+ * Content anchors (ADR-161), measured where they can be measured.
+ *
+ * The state machine around the resolver is covered in
+ * `components/dynamiccanvas/dynamiccanvas-anchors.test.ts`. Position is not,
+ * because jsdom reports every bounding rectangle as zero and an assertion
+ * there would pass against any arithmetic at all. These tests build their own
+ * canvas from the globals the demo page already loaded, so the geometry is
+ * real layout.
+ */
+test.describe("Dynamic UI — content anchors", () =>
+{
+    /**
+     * Builds a canvas carrying one content node and one note anchored to a
+     * row inside it, with a host resolver that finds the row by its id.
+     */
+    async function buildAnchoredCanvas(page: Page): Promise<void>
+    {
+        await page.evaluate(() =>
+        {
+            const w = window as unknown as Record<string, any>;
+            const holder = document.createElement("div");
+
+            holder.id = "anchor-probe";
+            holder.style.cssText =
+                "position:fixed;left:0;top:0;width:900px;height:600px;"
+                + "background:#fff;z-index:9999;";
+            document.body.appendChild(holder);
+
+            const canvas = w.createDynamicCanvas("anchor-probe", {
+                onResolveAnchor: (anchor: { entityId?: string }) =>
+                    document.querySelector(
+                        `#anchor-probe [data-row-id="${anchor.entityId}"]`),
+            });
+
+            w.__probe = canvas;
+
+            const node = (id: string, component: string, anchor: unknown) => ({
+                id, component,
+                placement: { kind: "intent", region: "main", size: "wide" },
+                options: component === "stickynote"
+                    ? { text: "content host" }
+                    : { label: "Check this row" },
+                source: null, state: {}, anchor,
+                provenance: { turnId: "t1", lastTouched: 1 },
+                pinned: false, grants: [],
+            });
+
+            canvas.apply({
+                turnId: "t1", revision: 1,
+                ops: [
+                    { op: "addNode", node: node("host", "stickynote",
+                        { kind: "canvas" }) },
+                    { op: "addNode", node: node("note", "annotation",
+                        { kind: "entity", entityId: "r-2" }) },
+                ],
+            });
+
+            // Rows the host application would have rendered itself. The tall
+            // list is what makes the region scroll, so a mark can leave it.
+            const body = holder.querySelector(
+                "[data-node-id='host'] .dyncanvas-body") as HTMLElement;
+            const list = document.createElement("div");
+
+            list.className = "probe-list";
+            list.style.cssText = "height:120px;overflow-y:auto;";
+
+            for (let i = 0; i < 40; i++)
+            {
+                const row = document.createElement("div");
+
+                row.setAttribute("data-row-id", `r-${i}`);
+                row.style.cssText = "height:24px;";
+                row.textContent = `row ${i}`;
+                list.appendChild(row);
+            }
+
+            body.appendChild(list);
+
+            // Re-render so the resolver runs now that the rows exist.
+            canvas.apply({ turnId: "t2", revision: 2, ops: [] });
+        });
+    }
+
+    test("a note lands on the row the host resolved, not on the frame corner",
+        async ({ page }) =>
+    {
+        await open(page);
+        await buildAnchoredCanvas(page);
+
+        const note = page.locator("#anchor-probe .dyncanvas-overlay");
+        const row = page.locator('#anchor-probe [data-row-id="r-2"]');
+
+        await expect(note).toHaveCount(1);
+        await expect(note).not.toHaveClass(/dyncanvas-overlay-orphaned/);
+
+        const noteBox = (await note.boundingBox())!;
+        const rowBox = (await row.boundingBox())!;
+
+        // The mark is centred on the row it marks. Half a marker of slack in
+        // each direction, which is the same correction the spot path applies.
+        const noteCx = noteBox.x + noteBox.width / 2;
+        const noteCy = noteBox.y + noteBox.height / 2;
+
+        expect(Math.abs(noteCy - (rowBox.y + rowBox.height / 2)),
+            "the note is not on the row vertically").toBeLessThan(20);
+        expect(Math.abs(noteCx - (rowBox.x + rowBox.width / 2)),
+            "the note is not on the row horizontally").toBeLessThan(20);
+
+        // And it is NOT merely sitting at the content frame's origin, which is
+        // what a broken resolve path would look like.
+        const frameBox = (await page
+            .locator("#anchor-probe [data-node-id='host']").boundingBox())!;
+
+        expect(Math.abs(noteCy - frameBox.y),
+            "the note sits at the frame corner, so nothing was resolved")
+            .toBeGreaterThan(20);
+    });
+
+    test("the note follows its row when the list scrolls, and hides when the "
+        + "row leaves the list", async ({ page }) =>
+    {
+        await open(page);
+        await buildAnchoredCanvas(page);
+
+        const note = page.locator("#anchor-probe .dyncanvas-overlay");
+        const before = (await note.boundingBox())!;
+
+        await page.evaluate(() =>
+        {
+            const list = document.querySelector(
+                "#anchor-probe .probe-list") as HTMLElement;
+
+            list.scrollTop = 40;
+            list.dispatchEvent(new Event("scroll", { bubbles: true }));
+        });
+
+        const after = (await note.boundingBox())!;
+
+        expect(after.y, "the note did not follow the scrolled row")
+            .toBeLessThan(before.y - 10);
+
+        // Scrolled far enough and the row leaves the visible list. The note
+        // is hidden, which is not the same state as orphaned: the content is
+        // there, it is off screen.
+        await page.evaluate(() =>
+        {
+            const list = document.querySelector(
+                "#anchor-probe .probe-list") as HTMLElement;
+
+            list.scrollTop = list.scrollHeight;
+            list.dispatchEvent(new Event("scroll", { bubbles: true }));
+        });
+
+        await expect(note).toHaveClass(/dyncanvas-overlay-hidden/);
+        await expect(note).not.toHaveClass(/dyncanvas-overlay-orphaned/);
+    });
+
+    test("deleting the content orphans the note and keeps it on the canvas",
+        async ({ page }) =>
+    {
+        await open(page);
+        await buildAnchoredCanvas(page);
+
+        const note = page.locator("#anchor-probe .dyncanvas-overlay");
+
+        await expect(note).not.toHaveClass(/dyncanvas-overlay-orphaned/);
+
+        const kept = await page.evaluate(() =>
+        {
+            const w = window as unknown as Record<string, any>;
+
+            document.querySelector(
+                '#anchor-probe [data-row-id="r-2"]')!.remove();
+            w.__probe.apply({ turnId: "t3", revision: 3, ops: [] });
+
+            return Boolean(w.__probe.getDocument().nodes.note);
+        });
+
+        // The decision this implements: a comment is not lost because the
+        // data it discussed was deleted.
+        expect(kept, "the note was removed from the document").toBe(true);
+        await expect(note).toHaveClass(/dyncanvas-overlay-orphaned/);
+        await expect(note).toBeVisible();
+        await expect(note).not.toHaveClass(/dyncanvas-overlay-hidden/);
+
+        // The glyph must actually draw. A class-only assertion cannot tell a
+        // mapped icon from a misspelt class or a missing icon stylesheet,
+        // which would leave the state carried by colour alone.
+        const glyph = await page.evaluate(() =>
+        {
+            const i = document.querySelector(
+                "#anchor-probe .dyncanvas-orphan-glyph") as HTMLElement;
+
+            return {
+                present: Boolean(i),
+                content: i
+                    ? getComputedStyle(i, "::before").content
+                    : "none",
+            };
+        });
+
+        expect(glyph.present, "no orphan glyph was rendered").toBe(true);
+        expect(glyph.content, "the glyph class maps to no icon")
+            .not.toBe("none");
+    });
+});

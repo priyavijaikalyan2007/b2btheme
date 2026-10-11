@@ -11,7 +11,9 @@ Created: 2026
 
 # Durable anchors: identify the content, not the coordinate
 
-**Status:** design, awaiting approval. No code is written.
+**Status:** approach A is BUILT and shipped (ADR-161, 11 October 2026).
+Approach B is designed and not built. The section "As built" records what the
+implementation changed about this design.
 **Addresses:** DEBT-DUI-1, DEBT-DUI-5
 **Touches:** `runtime/src/types.ts`, `components/dynamiccanvas/dynamiccanvas.ts`,
 `components/annotation/`, the capability manifest, the fleet conformance gate
@@ -31,39 +33,68 @@ anchor, validates it, and then ignores it. Third, measurement on 9 October 2026
 showed that both items understate the problem. The index that one of them calls
 stable can move inside a single session.
 
-This design recommends approach A, which adds a content resolver to the host
-application. The host owns its content, so only the host can say what a stable
+This design recommends approach A, and approach A is approved. It adds a
+content resolver to the host application. The host owns its content, so only the host can say what a stable
 content identity is. Approach A needs no change to any of the 97 components
 that the conformance gate covers. It costs the host application one new
 function, and it makes the `entity` anchor mean what its name says.
 
-The main tradeoff is the size of the host interface. `DynamicUIHost` documents
-itself as six functions, and approach A proposes a seventh. The main risk is
+The main tradeoff is the size of the host interface. `DynamicUIHost` documented
+itself as six functions, and the resolver makes it seven. The main risk is
 backward compatibility, because the `within` field is a persisted integer that
 host documents already contain. Section "`within` is a persisted integer"
 states the rule that keeps existing documents working.
 
-The next action belongs to you. Nothing starts until you answer the three
-questions in the next section.
+All three open questions were answered on 10 October 2026. The next section
+records the answers. Approach A was built on 11 October 2026 as ADR-161, and
+the section "As built" records what the implementation changed about this
+design.
 
-## Decisions needed from you
+## Decisions taken on 10 October 2026
 
-1. **Is `onResolveAnchor` required or optional on `DynamicUIHost`?** A required
-   function keeps the interface honest, because every host then states how its
-   content is identified. An optional function keeps the documented count of
-   six closer to true, and no existing host has to change.
-2. **When an anchor cannot be resolved, does the canvas hide the attached node
-   or show it as orphaned?** Hiding matches how the canvas treats nodes that
-   scroll off screen. Showing the node in a grey state at its last known
-   position tells the user that an anchored node was lost. The section "What a
-   durable anchor must do" argues for telling the user.
-3. **Does the apps team need this, and by when?** The apps team is the only
-   consumer. That team currently works on the TenantSwitcher migration.
+1. **`onResolveAnchor` is required on `DynamicUIHost`.** Every host must state
+   how its content is identified. The interface comment changes from six
+   functions to seven, and the published type stops compiling for a host that
+   does not implement the function. The next section states what this means for
+   the one existing consumer.
+2. **An anchor that cannot be resolved shows its node as orphaned. The canvas
+   never hides it and never removes it.** The reason is the user's: a comment
+   must not disappear because the data it discussed was deleted. The comment
+   stays on the canvas, marked as orphaned, and the person who wrote it decides
+   what happens to it.
+3. **Build it now.** The apps team does not need content anchoring yet. Doing
+   the work before that team takes a dependency on the current interface is
+   cheaper than changing the interface afterwards. This is also the reason
+   decision 1 could be taken at all.
 
 One question that this list held in an earlier draft is settled. That question
 was whether the resolver should be registered for each canvas or for each node.
 `onFetch` already takes `nodeId` as a parameter, so one host callback
 parameterized by node is the established shape. The resolver matches it.
+
+## What decision 1 costs, and who pays it
+
+`DynamicUIHost` is a published TypeScript interface. Adding a required member
+is a breaking change for anyone who implements it. Two facts make the change
+affordable today, and both stop being true later.
+
+The first fact is that no code in this repository calls a host function. The
+interface is a contract that a consuming application implements, and the
+runtime never holds an instance of it. The canvas receives its wiring through
+`DynamicCanvasOptions`, where every member is optional. A search for
+`DynamicUIHost` finds the type declaration, this design, two specifications and
+one guide. Nothing breaks inside the repository.
+
+The second fact is that the apps team has not implemented the interface yet.
+That team is the only consumer, and decision 3 records that it does not need
+content anchoring now. A required member added before the first implementation
+costs that team one function in its first version of the host. The same member
+added afterwards costs a migration.
+
+The canvas option stays optional, which is a deliberate asymmetry. The canvas
+is also mounted by demo pages, by the Layout Studio and by tests, none of which
+is a host application. A canvas with no resolver treats every entity anchor as
+unresolved, which decision 2 defines as orphaned rather than lost.
 
 ## Terms used in this document
 
@@ -186,9 +217,12 @@ model, through its own code.
    attached node stays on the same content.
 2. **Survive a change in the number of regions.** When a sibling region stops
    overflowing, the attached node stays in its own region.
-3. **Degrade honestly.** When the content is gone, say so. Never re-anchor in
-   silence to whatever now occupies the position. Silent re-anchoring is the
-   current behavior, and it is the one genuinely unsafe outcome.
+3. **Degrade honestly, and keep the node.** When the content is gone, say so,
+   and leave the anchored node on the canvas marked as orphaned. Never
+   re-anchor in silence to whatever now occupies the position, which is the
+   current behavior and the one genuinely unsafe outcome. Never remove the
+   node either. A comment is the user's work, and deleted data is not a
+   reason to discard it.
 4. **Work before the whole fleet participates.** 5 components are still
    `EXEMPT` from the conformance gate. A design that needs fleet-wide adoption
    before it delivers anything delivers nothing. This requirement stands on the
@@ -246,10 +280,17 @@ and on reflow, and not on every refinement pass. The canvas caches the resolved
 element for each node for the lifetime of one layout pass. `regionsOf()` already
 memoizes scrolling regions in the same way.
 
-Degradation is explicit. When the resolver returns `null`, the canvas marks the
-anchor as unresolved and hides the node. That matches how the canvas hides
-nodes that scroll off screen. The canvas never places the node by position
-instead.
+Degradation is explicit, and it keeps the node. Three cases count as unresolved: the resolver returns
+`null`, no resolver is configured, or the returned element is not inside a
+mounted frame. In each case the canvas marks the anchor unresolved and shows
+the node in an orphaned state. The node stays visible and stays in the document.
+The canvas never places it by position instead, and never removes it.
+
+An orphaned node sits at its last resolved position for as long as the canvas
+is open. After a reload, nothing records where the content used to be, so the
+packer places the node by its stored placement. This is a known limit of
+approach A on its own. Approach B's region name, and a `spot` kept as a hint,
+are what would narrow it.
 
 The cost to a consumer is one function. A host that wants content anchoring
 writes a resolver. A host that does not want content anchoring is unaffected.
@@ -323,3 +364,37 @@ declares a name. Without that assertion, adoption is zero. The assertion cannot
 pass for the 5 components that remain `EXEMPT` after ADR-160. Clearing those 5
 is DEBT-DUI-4. That work is separate, and this design deliberately leaves it
 separate.
+
+## As built
+
+Approach A shipped on 11 October 2026 as ADR-161. The design held, and three
+things in it needed correcting once the code existed.
+
+**The host interface was not the only place the resolver had to go.** This
+design proposed `onResolveAnchor` on `DynamicUIHost` and stopped there, because
+that is the published contract. Nothing in this repository calls a host
+function, so a member added there alone would have changed no behavior. The canvas takes its wiring through
+`DynamicCanvasOptions`, so the resolver reaches the canvas through an option.
+That option stays optional, for the reasons the section "What decision 1 costs"
+gives.
+
+**A null return had to be read more carefully than this design said.** The
+design treated "the resolver returned null" as "the content is gone". A
+resolver also returns null when the component holding the content is demoted by
+virtualization, which happens whenever the user pans away. Marking the note
+orphaned then would be the opposite of decision 2. So the canvas remembers which frame a note last resolved
+into. The note then follows that frame's mounted state, exactly as a spot
+anchor follows its target. The resolver is asked again only while that frame is
+mounted.
+
+**The scroll path needed the same change as the mount path, and only a browser
+test found it.** `refineOverlaysOf` selected overlays by their node anchor only. A
+content-anchored note therefore did not follow its row when the row
+scrolled. Every
+rectangle is zero in jsdom, so no unit test could see it. The three position
+tests live in `tests/dynamic-ui.spec.ts` for that reason, and the eleven unit
+tests cover the resolver state machine only.
+
+The limit this design predicted is real and unchanged: an orphaned note keeps
+its last resolved position only while the canvas is open. Approach B is what
+would narrow it.

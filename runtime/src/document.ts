@@ -307,10 +307,7 @@ function validateAnchor(
 
     if (value.kind === "entity")
     {
-        if (!isIdentifier(value.entityId))
-        {
-            issues.push(typeIssue(`${path}.entityId`, "an entity id", value.entityId));
-        }
+        validateEntityAnchor(value, path, issues);
         return;
     }
 
@@ -340,6 +337,37 @@ function validateNodeAnchor(
     }
 
     validateSpot(anchor, path, issues);
+}
+
+/**
+ * Validates a content anchor.
+ *
+ * The `selector` is the host's own business, so the runtime checks its SHAPE
+ * and never its contents. A record is required rather than any value, because
+ * the host receives it verbatim and an array or a primitive is a sign the
+ * caller meant something else.
+ *
+ * @param anchor - The candidate entity anchor.
+ * @param path   - JSON path for error reporting.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateEntityAnchor(
+    anchor: Record<string, unknown>,
+    path: string,
+    issues: ValidationIssue[]): void
+{
+    if (!isIdentifier(anchor.entityId))
+    {
+        issues.push(typeIssue(`${path}.entityId`, "an entity id", anchor.entityId));
+    }
+
+    if (anchor.selector !== undefined && !isObject(anchor.selector))
+    {
+        issues.push(typeIssue(
+            `${path}.selector`,
+            "an object of host-defined selector fields",
+            anchor.selector));
+    }
 }
 
 /**

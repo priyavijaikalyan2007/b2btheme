@@ -2336,3 +2336,51 @@ noted in place and dated, and does not need an ADR of its own.
 
 No ADR was added, because no decision changed. The three questions in the
 design are still open, and nothing starts before they are answered.
+
+---
+
+## 2026-10-11 — the three answers, and approach A built
+
+The user answered the design's open questions: make the resolver required,
+show an unresolved note as orphaned rather than hiding it, and build it now
+because the apps team has not taken a dependency yet. The reason given for the
+second answer is the one that shaped the code: "we should not lose a comment
+because the data was deleted; its just shown as orphaned."
+
+Orientation turned up a fact the design did not have. **`DynamicUIHost` is
+declared in `runtime/src/types.ts` and consumed nowhere in this repository.**
+No runtime code holds a host instance. The canvas takes its wiring through
+`DynamicCanvasOptions`, where every member is optional. So the required member
+is a contract change for the one external consumer, and the functional wiring
+had to go through the canvas option too — which stays optional, because demo
+pages and the Layout Studio mount the canvas and are not host applications.
+That asymmetry is now written into the option's own comment.
+
+**The advisor caught the design's blind spot before any code was written.** A
+resolver returns `null` when the content was deleted, and equally when the
+component holding it was demoted by virtualization. Treating both the same way
+would mark every comment on a grid orphaned the moment the user panned away —
+the user's decision lost through the back door. The canvas now remembers which
+frame a note resolved into, follows that frame's mounted state, and asks the
+resolver again only while it is mounted.
+
+**The browser found the bug the unit suite could not.** `refineOverlaysOf`, the
+scroll handler, selected overlays with `anchorTarget(node) === targetId`, which
+is node-anchors-only, so a content-anchored note sat still while its row
+scrolled away. jsdom reports every rectangle as zero, so a position assertion
+there would have passed against no arithmetic at all. Three e2e tests measure
+the geometry now, and the scroll fix is mutation-proven in a real browser. The
+repair was to name the lookup once, `trackedTarget`, and use it in both places.
+
+Mutation testing earned its keep twice. Five of the first mutations survived,
+and in three cases the test was at fault rather than the code: the "own frame
+refused" test passed because an overlay's container carries
+`dyncanvas-overlay` and never `dyncanvas-frame`, so the rule was unreachable
+for overlays and had to be tested against a normal node; the cross-canvas test
+needed a second canvas rather than a stray element; and the cache test was
+asserting on scroll, where the resolver is never called at all. One mutation
+had never applied, because two call sites shared the line I was rewriting.
+
+DEBT-DUI-1 is resolved. DEBT-DUI-5 is not: `within` is untouched, and what
+closes it is approach B, which is designed and waiting. 4876 unit tests across
+144 files, 29/29 structure checks, 3 new e2e tests.

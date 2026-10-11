@@ -808,6 +808,9 @@ export interface DynamicUIHost
     /** Load a canvas at a revision. */
     onLoad(canvasId: string, revision?: number): Promise<CanvasPatch[]>;
 
+    /** Resolve a content anchor. Where content identity lives (ADR-161). */
+    onResolveAnchor(anchor: EntityAnchor, nodeId: string): HTMLElement | null;
+
     /** Execute a declared action. Where authorisation lives. */
     actionDispatcher: ActionDispatcher;
 
@@ -816,7 +819,13 @@ export interface DynamicUIHost
 }
 ```
 
-Six functions. An application that implements these six gets a dynamic UI.
+Seven functions. An application that implements these seven gets a dynamic UI.
+
+**Amended 11 October 2026 (ADR-161).** This section specified six. The seventh,
+`onResolveAnchor`, was added when content anchoring was built, because an
+annotation cannot survive a reflow unless the application says where its
+content went. It is required rather than optional, and the cost of that choice
+was paid before the first host existed.
 
 ---
 

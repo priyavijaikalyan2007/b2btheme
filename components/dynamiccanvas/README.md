@@ -93,9 +93,28 @@ The application never converts a screen coordinate into an anchor. It persists t
 
 **What this does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text (DEBT-DUI-1). The same is true along the other axis: `within` names the **Nth** scrolling region, and the count changes whenever a region stops overflowing, so the index can move within a single session (DEBT-DUI-5).
 
-**`{ kind: "entity", entityId }` is NOT yet the answer, whatever this paragraph used to say.** It is validated and then ignored: `dynamiccanvas.ts` contains no reference to `"entity"`, `anchorTarget()` returns `null` for it, and the overlay is packed as though it were unanchored. It renders, it reports nothing, and it is attached to nothing — so a caller cannot tell it apart from no anchor at all. **Do not use it expecting content anchoring.** Making it real is designed in `specs/2026-10-10-durable-anchors.prd.md` and not yet built.
+**`{ kind: "entity", entityId, selector? }` survives reflow, and it needs a resolver from you** (ADR-161). The canvas cannot find your content by itself, so a host application implements `onResolveAnchor(anchor, nodeId)` and returns the element that holds the content now. `DynamicUIHost` requires that function. On this component the matching option is optional, because demo pages and the Layout Studio mount the canvas and are not host applications.
 
-Until then, spot anchors are the only working kind, and they are reliable exactly as far as §"Behaviour worth knowing" describes: through scrolling and resizing, not through reflow.
+```js
+const canvas = createDynamicCanvas("canvas-host", {
+    onResolveAnchor: (anchor) =>
+        document.querySelector(`[data-row-id="${anchor.entityId}"]`),
+});
+```
+
+Three rules are worth knowing before you write one.
+
+The resolver is **synchronous**. Overlay positions are refined on every scroll frame, and a promise cannot be awaited that often without either blocking the scroll or lagging the content. The canvas calls your resolver once per render, reuses the element it got for as long as that element stays in the DOM, and asks again when the element disconnects.
+
+The canvas verifies what you return. The element must be inside a mounted frame **of this canvas**, and not inside the anchored node's own frame. Anything else is refused, because positioning a note against a rectangle it has no relationship to is worse than not placing it.
+
+**Unresolved content orphans the note. It is never hidden and never removed.** When your resolver returns `null`, when no resolver is configured, or when the element has gone, the note gets `dyncanvas-overlay-orphaned`, a warning glyph and a visually hidden sentence saying the content cannot be found. A comment must not disappear because the data it discussed was deleted — the person who wrote it decides what happens to it. An orphan is a statement about now, not a verdict: if your resolver finds the content on a later pass, the state clears.
+
+Two states that look similar are not the same. `dyncanvas-overlay-hidden` means the content exists and is scrolled out of view. `dyncanvas-overlay-orphaned` means the content could not be found at all. A note whose content is in a component that is merely demoted by virtualization is in neither state: it follows that component, and it is remounted with it.
+
+One limit to plan around: an orphaned note keeps its last resolved position only while the canvas is open. After a reload nothing records where the content used to be, so the packer places it by its stored placement. Narrowing that gap is approach B in `specs/2026-10-10-durable-anchors.prd.md` (DEBT-DUI-5), which is designed and not built.
+
+Spot anchors are unchanged and still do not survive reflow. Use a content anchor for anything that reflows or virtualizes.
 
 ## Behaviour worth knowing
 

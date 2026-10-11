@@ -163,6 +163,33 @@
     display: none;
 }
 
+// The host could not find the content this note was attached to. Shown, never
+// hidden and never removed: a comment is the user's work, and deleted data is
+// not a reason to discard it. The state has three channels — a dashed outline,
+// a warning glyph and a visually hidden sentence — because colour alone fails
+// WCAG 1.4.1, and the marker inside the overlay keeps its own appearance.
+.dyncanvas-overlay-orphaned
+{
+    outline: 1px dashed var(--theme-warning, #{$yellow-500});
+    outline-offset: 2px;
+    opacity: 0.75;
+}
+
+// The glyph is an element carrying a `bi-` class, not a codepoint written into
+// this file. Bootstrap Icons owns the mapping from name to codepoint, and a
+// hand-copied hex silently ships whatever icon happens to live at that number.
+.dyncanvas-orphan-glyph
+{
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--theme-warning, #{$yellow-500});
+    // The glyph marks the state; it never takes the click away from the note.
+    pointer-events: none;
+}
+
 // ============================================================================
 // PLACEMENT MODE
 // ============================================================================

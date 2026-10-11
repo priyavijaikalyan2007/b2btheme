@@ -705,4 +705,53 @@ describe("validate — anchor spot", () =>
             kind: "node", nodeId: "a", within: -1,
         })).ok).toBe(false);
     });
+
+    test("accepts a content anchor with a host selector", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "entity",
+            entityId: "row-4823",
+            selector: { quote: "the sentence", offset: 12 },
+        }));
+
+        expect(res.issues).toEqual([]);
+        expect(res.ok).toBe(true);
+    });
+
+    test("accepts a content anchor with no selector", () =>
+    {
+        expect(validateDocument(docWithAnchor({
+            kind: "entity", entityId: "row-4823",
+        })).ok).toBe(true);
+    });
+
+    test("rejects a selector that is not an object", () =>
+    {
+        // The host receives this value verbatim. A string or an array is a
+        // sign the caller meant a different field, and the runtime cannot
+        // check the contents, so the shape is all it can check.
+        const res = validateDocument(docWithAnchor({
+            kind: "entity", entityId: "row-4823", selector: "the sentence",
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues[0].path).toContain("selector");
+    });
+
+    test("rejects an array selector", () =>
+    {
+        expect(validateDocument(docWithAnchor({
+            kind: "entity", entityId: "row-4823", selector: ["a", "b"],
+        })).ok).toBe(false);
+    });
+
+    test("still rejects a content anchor with no entity id", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "entity", selector: { quote: "x" },
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.some((i) => i.path.includes("entityId"))).toBe(true);
+    });
 });

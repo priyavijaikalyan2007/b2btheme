@@ -97,6 +97,8 @@ interface CanvasNode
         readonly nodeId?: string;
         readonly spot?: { readonly x: number; readonly y: number };
         readonly within?: number;
+        readonly entityId?: string;
+        readonly selector?: Readonly<Record<string, unknown>>;
     };
 }
 
@@ -290,6 +292,22 @@ export interface DynamicCanvasOptions
 
     /** Called when a node's "why?" affordance is activated. */
     onExplain?: (nodeId: string) => void;
+
+    /**
+     * Resolves a content anchor to the element holding the content.
+     *
+     * OPTIONAL here although `DynamicUIHost.onResolveAnchor` is required
+     * (ADR-161). A host application must state how its content is identified.
+     * This canvas is also mounted by demo pages, by the Layout Studio and by
+     * tests, none of which is a host application. A canvas with no resolver
+     * cannot resolve a content anchor, so it shows the anchored node as
+     * orphaned instead of discarding it.
+     */
+    onResolveAnchor?: (
+        anchor: { kind: string; entityId?: string;
+            selector?: Readonly<Record<string, unknown>> },
+        nodeId: string
+    ) => HTMLElement | null;
 }
 
 /**
@@ -410,6 +428,26 @@ function build(
 
     const frames = new Map<string, HTMLElement>();
     const bodies = new Map<string, HTMLElement>();
+
+    /**
+     * What each content anchor last resolved to, keyed by the ANCHORED node.
+     *
+     * Kept across refinement passes on purpose. Refinement runs on every
+     * scroll frame, and calling the host's resolver that often is the jank
+     * `refineOverlaysOf` exists to avoid. A live element is re-measured; the
+     * resolver is consulted only when there is no element or it has left the
+     * DOM.
+     *
+     * `frameId` is the node whose component held the content when it last
+     * resolved, and it is REMEMBERED after `el` goes away. That memory is
+     * what separates "the content was deleted" from "the component holding it
+     * is not mounted right now", which look identical from the resolver's
+     * return value (ADR-161).
+     */
+    const resolvedAnchors = new Map<string, {
+        el: HTMLElement | null;
+        frameId: string;
+    }>();
 
     /** Armed placement, or null. Set by startPlacement, cleared on the click. */
     let placing: PlacementSpec | null = null;
@@ -580,7 +618,11 @@ function build(
 
         // After sync, not before: an unmounted body has no content and so no
         // scroll extent, and refining against zero would collapse every mark
-        // onto its target's top-left corner.
+        // onto its target's top-left corner. Content anchors resolve here for
+        // the same reason — the element cannot exist before its component is
+        // mounted, and a resolver asked too early reports content missing
+        // when it is merely not built yet.
+        resolveContentAnchors();
         refineOverlays();
     }
 
@@ -1108,9 +1150,13 @@ function build(
     function frameUnder(target: EventTarget | null): string | null
     {
         const frame = (target as HTMLElement | null)
-            ?.closest?.(`.${CLS}-frame`);
+            ?.closest?.(`.${CLS}-frame`) as HTMLElement | null;
+        const id = frame?.getAttribute("data-node-id") ?? null;
 
-        return frame?.getAttribute("data-node-id") ?? null;
+        // Ownership, not just shape: a second canvas on the same page has
+        // frames carrying the same class and its own node ids, and treating
+        // one of those as ours positions against the wrong rectangle.
+        return id && frames.get(id) === frame ? id : null;
     }
 
     /**
@@ -1435,7 +1481,7 @@ function build(
 
         for (const node of Object.values(doc.nodes))
         {
-            if (anchorTarget(node) === targetId)
+            if (trackedTarget(node) === targetId)
             {
                 refineOverlay(node, regions);
             }
@@ -1453,6 +1499,12 @@ function build(
         node: CanvasNode,
         regions: Map<string, HTMLElement[]>): void
     {
+        if (node.anchor?.kind === "entity")
+        {
+            refineContentOverlay(node);
+            return;
+        }
+
         const spot = spotOf(node);
         const targetId = anchorTarget(node);
         const frame = frames.get(node.id);
@@ -1478,6 +1530,321 @@ function build(
         frame.style.left = `${targetRect.x + offset.dx - half}px`;
         frame.style.top = `${targetRect.y + offset.dy - half}px`;
         frame.classList.toggle(`${CLS}-overlay-hidden`, !offset.visible);
+    }
+
+    // ------------------------------------------------------------------
+    // Content anchors (ADR-161)
+    // ------------------------------------------------------------------
+
+    /**
+     * Asks the host where each content-anchored node's content is now.
+     *
+     * Called once per render, after mounting. Three cases are deliberately
+     * distinguished, because the resolver's `null` cannot tell them apart:
+     *
+     * 1. A live element is still connected, so nothing is asked.
+     * 2. The component that held the content is not mounted, so nothing is
+     *    asked. The content is not missing; it is not built. Asking here
+     *    would mark the user's comment orphaned every time they pan away.
+     * 3. Otherwise the resolver is asked exactly once.
+     */
+    function resolveContentAnchors(): void
+    {
+        for (const id of [...resolvedAnchors.keys()])
+        {
+            if (!doc.nodes[id])
+            {
+                resolvedAnchors.delete(id);
+            }
+        }
+
+        for (const node of Object.values(doc.nodes))
+        {
+            if (node.anchor?.kind !== "entity")
+            {
+                continue;
+            }
+
+            const prior = resolvedAnchors.get(node.id);
+
+            if (prior?.frameId && !lifecycle.isMounted(prior.frameId))
+            {
+                resolvedAnchors.set(node.id, { el: null, frameId: prior.frameId });
+                continue;
+            }
+
+            if (prior?.el?.isConnected)
+            {
+                continue;
+            }
+
+            const found = askResolver(node);
+
+            resolvedAnchors.set(node.id, found ?? {
+                el: null,
+                frameId: prior?.frameId ?? "",
+            });
+        }
+    }
+
+    /**
+     * Calls the host's resolver once and validates what comes back.
+     *
+     * A host returns an element from its own DOM, so the canvas verifies that
+     * the element is actually inside one of ITS OWN mounted frames before
+     * trusting it. An element from another canvas, from outside the canvas, or
+     * from the anchored node's own frame would otherwise be positioned against
+     * a rectangle it has no relationship to.
+     *
+     * @param node - The anchored node.
+     * @returns The element and the frame holding it, or null.
+     */
+    function askResolver(
+        node: CanvasNode): { el: HTMLElement; frameId: string } | null
+    {
+        if (!options.onResolveAnchor)
+        {
+            return null;
+        }
+
+        let found: HTMLElement | null = null;
+
+        try
+        {
+            found = options.onResolveAnchor(
+                {
+                    kind: "entity",
+                    entityId: node.anchor?.entityId,
+                    selector: node.anchor?.selector,
+                },
+                node.id);
+        }
+        catch (err)
+        {
+            logError(`Anchor resolver threw for "${node.id}":`, err);
+            return null;
+        }
+
+        if (!found || !found.isConnected)
+        {
+            return null;
+        }
+
+        const frameId = owningFrame(found);
+
+        if (!frameId || frameId === node.id || !lifecycle.isMounted(frameId))
+        {
+            if (frameId === node.id)
+            {
+                logWarn(`Anchor resolver for "${node.id}" returned an element `
+                    + "inside that node's own frame; ignored.");
+            }
+
+            return null;
+        }
+
+        return { el: found, frameId };
+    }
+
+    /**
+     * Positions a content-anchored overlay on the element the host resolved,
+     * or marks it orphaned when there is no element to stand on.
+     *
+     * An orphaned overlay keeps its last position, stays visible and stays in
+     * the document. A comment must not disappear because the data it discussed
+     * was deleted — the person who wrote it decides what happens to it.
+     *
+     * @param node - The anchored node.
+     */
+    function refineContentOverlay(node: CanvasNode): void
+    {
+        const frame = frames.get(node.id);
+
+        if (!frame)
+        {
+            return;
+        }
+
+        const hit = resolvedAnchors.get(node.id);
+        const targetFrame = hit?.frameId ? frames.get(hit.frameId) : undefined;
+        const targetRect = hit?.frameId
+            ? packedRects.get(hit.frameId)
+            : undefined;
+
+        if (!hit?.el || !hit.el.isConnected || !targetFrame || !targetRect)
+        {
+            // Not orphaned when the content's own component is simply away:
+            // it comes back with the component, and saying "lost" here would
+            // be a false alarm the user cannot act on.
+            const away = Boolean(hit?.frameId)
+                && !lifecycle.isMounted(hit?.frameId ?? "");
+
+            setOrphaned(node, frame, !away);
+            return;
+        }
+
+        setOrphaned(node, frame, false);
+
+        const zoom = doc.viewport.zoom || 1;
+        const origin = originWithin(targetFrame, hit.el);
+        const box = hit.el.getBoundingClientRect();
+
+        // Half the marker's own box, so the mark is centred on the content
+        // rather than hanging below and right of it. Same correction the spot
+        // path applies, applied to the element's centre instead of a point.
+        const half = (packedRects.get(node.id)?.w ?? MARKER_BOX) / 2;
+        const cx = origin.x + box.width / zoom / 2;
+        const cy = origin.y + box.height / zoom / 2;
+
+        frame.style.left = `${targetRect.x + cx - half}px`;
+        frame.style.top = `${targetRect.y + cy - half}px`;
+        frame.classList.toggle(
+            `${CLS}-overlay-hidden`, !contentVisible(hit.el, hit.frameId));
+    }
+
+    /**
+     * Marks or unmarks an overlay as orphaned.
+     *
+     * Orphaned and hidden are exclusive. Hiding an orphan would discard the
+     * one thing the state exists to communicate, so the hidden class is
+     * cleared whenever the orphaned class goes on.
+     *
+     * @param node     - The anchored node, used for the accessible message.
+     * @param frame    - That node's frame.
+     * @param orphaned - Whether the content could not be found.
+     */
+    function setOrphaned(
+        node: CanvasNode,
+        frame: HTMLElement,
+        orphaned: boolean): void
+    {
+        const was = frame.classList.contains(`${CLS}-overlay-orphaned`);
+
+        frame.classList.toggle(`${CLS}-overlay-orphaned`, orphaned);
+
+        const noteId = `${node.id}-orphaned`;
+
+        if (orphaned)
+        {
+            frame.classList.remove(`${CLS}-overlay-hidden`);
+            frame.setAttribute("data-anchor-state", "orphaned");
+            frame.setAttribute("aria-describedby", noteId);
+
+            // A real element, not a bare aria-describedby: an id pointing at
+            // nothing is announced as nothing, and the state would then exist
+            // only as a colour, which WCAG 1.4.1 does not accept.
+            //
+            // Found by class rather than by id, because a node id is a
+            // document value and `CSS.escape` is not available everywhere
+            // this component runs, jsdom included.
+            if (!frame.querySelector(`.${CLS}-orphan-note`))
+            {
+                const note = el("span", `visually-hidden ${CLS}-orphan-note`,
+                    "The content this note was attached to cannot be found.");
+
+                note.id = noteId;
+                frame.appendChild(note);
+
+                // Three channels, because colour alone fails WCAG 1.4.1: the
+                // outline, this glyph and the sentence above. The glyph is an
+                // `i` carrying a Bootstrap Icons class, the same way the frame
+                // chrome draws its own icons.
+                frame.appendChild(
+                    el("i", `bi-exclamation-triangle ${CLS}-orphan-glyph`));
+            }
+        }
+        else
+        {
+            frame.removeAttribute("data-anchor-state");
+            frame.removeAttribute("aria-describedby");
+            frame.querySelector(`.${CLS}-orphan-note`)?.remove();
+            frame.querySelector(`.${CLS}-orphan-glyph`)?.remove();
+        }
+
+        if (orphaned !== was)
+        {
+            logInfo(`Node "${node.id}" anchor `
+                + (orphaned
+                    ? `cannot find content "${String(node.anchor?.entityId)}"`
+                    : "resolved"));
+        }
+    }
+
+    /**
+     * Whether a resolved element is inside the visible part of its scrolling
+     * region.
+     *
+     * Walks up to the nearest scrolling ancestor instead of trusting the
+     * body: a row in a grid's scrolled list is inside the body's box and
+     * outside the list's, and the list is what the reader sees.
+     *
+     * @param content - The resolved element.
+     * @param frameId - The node holding it.
+     * @returns True when any part of the element is on screen.
+     */
+    function contentVisible(content: HTMLElement, frameId: string): boolean
+    {
+        const body = bodies.get(frameId);
+
+        if (!body)
+        {
+            return true;
+        }
+
+        let scroller = body;
+
+        for (let p = content.parentElement; p && p !== body; p = p.parentElement)
+        {
+            if (isScrollable(p))
+            {
+                scroller = p;
+                break;
+            }
+        }
+
+        const a = content.getBoundingClientRect();
+        const b = scroller.getBoundingClientRect();
+
+        return a.bottom > b.top && a.top < b.bottom
+            && a.right > b.left && a.left < b.right;
+    }
+
+    /**
+     * The id of THIS canvas's frame containing an element, or null.
+     *
+     * The class alone is not proof of ownership. Two canvases on one page
+     * both have `.${CLS}-frame` elements, and a resolver that reaches into the
+     * wrong one would be positioned against a rectangle from this one.
+     *
+     * @param content - Any element.
+     * @returns The owning node id, or null.
+     */
+    function owningFrame(content: HTMLElement): string | null
+    {
+        const frame = content.closest?.(`.${CLS}-frame`) as HTMLElement | null;
+        const id = frame?.getAttribute("data-node-id") ?? null;
+
+        return id && frames.get(id) === frame ? id : null;
+    }
+
+    /**
+     * The node whose content an overlay is placed against, by either kind of
+     * anchor: the target a node anchor names, or the frame a content anchor
+     * last resolved into.
+     *
+     * Both the scroll handler and the virtualization pass need this. Using
+     * `anchorTarget` alone in either place silently excludes content anchors —
+     * a note that does not follow its row on scroll, or one demoted away from
+     * the component holding its content.
+     *
+     * @param node - Any node.
+     * @returns The node id it tracks, or null.
+     */
+    function trackedTarget(node: CanvasNode): string | null
+    {
+        return anchorTarget(node)
+            ?? resolvedAnchors.get(node.id)?.frameId
+            ?? null;
     }
 
     /** The node id an overlay is anchored to, or null. */
@@ -1577,7 +1944,11 @@ function build(
     {
         for (const node of Object.values(doc.nodes))
         {
-            const targetId = anchorTarget(node);
+            // A content-anchored node follows the frame it RESOLVED into, so
+            // a comment is demoted and remounted with the component holding
+            // its content, exactly like a spot mark. Before it has ever
+            // resolved there is no such frame, and its own rectangle decides.
+            const targetId = trackedTarget(node);
 
             if (!targetId || !doc.nodes[targetId])
             {
@@ -1703,6 +2074,7 @@ function build(
             lifecycle.destroy();
             frames.clear();
             bodies.clear();
+            resolvedAnchors.clear();
             root.remove();
             logInfo("Destroyed");
         },

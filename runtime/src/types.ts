@@ -362,7 +362,33 @@ export type Anchor =
          */
         readonly within?: number;
     }
-    | { readonly kind: "entity"; readonly entityId: string };
+    | EntityAnchor;
+
+/**
+ * An attachment to CONTENT rather than to a position.
+ *
+ * The canvas cannot resolve this by itself. Only the application knows what
+ * its own content is, so the host's `onResolveAnchor` turns the anchor into
+ * the element that holds the content. See ADR-161.
+ */
+export interface EntityAnchor
+{
+    readonly kind: "entity";
+
+    /** The host's own identifier for the content. */
+    readonly entityId: string;
+
+    /**
+     * Extra information the host needs to find the content, for example a
+     * text quote, a row key or a document offset.
+     *
+     * Opaque to the runtime; passed to the host's `onResolveAnchor` verbatim.
+     * An `entityId` alone is ambiguous when two mounted components both hold
+     * the same record, so a host that can mount the same data twice needs
+     * this field to tell them apart.
+     */
+    readonly selector?: Readonly<Record<string, unknown>>;
+}
 
 /**
  * How a node obtains its data. Records provenance, never rows.
@@ -602,9 +628,31 @@ export type ActionDispatcher = (
 ) => Promise<ActionResult>;
 
 /**
- * The complete surface a consuming application implements. Six functions.
- * Everything intelligent — model, storage, queries, authorisation — lives
- * behind this interface and never inside the runtime.
+ * Resolves a content anchor to the element that currently holds the content.
+ *
+ * SYNCHRONOUS on purpose, unlike `onFetch`. Overlay positions are refined on
+ * scroll, and a promise cannot be awaited per frame without either blocking
+ * the scroll path or producing marks that lag the content they mark. The
+ * canvas calls this on mount and when a resolved element disconnects, never
+ * once per frame, so a DOM query here is affordable.
+ *
+ * @param anchor - The content anchor, including the host's own `selector`.
+ * @param nodeId - The ANCHORED node, the comment or mark being placed. It is
+ *                 not the node holding the content, because a content anchor
+ *                 does not name one. The host searches its own DOM.
+ * @returns The element holding the content, or null when the host cannot find
+ *          it. Null never deletes the anchored node: the canvas shows it as
+ *          orphaned and asks again on the next pass (ADR-161).
+ */
+export type AnchorResolver = (
+    anchor: EntityAnchor,
+    nodeId: string
+) => HTMLElement | null;
+
+/**
+ * The complete surface a consuming application implements. Seven functions.
+ * Everything intelligent — model, storage, queries, authorisation, content
+ * identity — lives behind this interface and never inside the runtime.
  */
 export interface DynamicUIHost
 {
@@ -619,6 +667,13 @@ export interface DynamicUIHost
 
     /** Load a canvas patch log, optionally truncated at a revision. */
     onLoad(canvasId: string, revision?: number): Promise<readonly CanvasPatch[]>;
+
+    /**
+     * Resolve a content anchor to a live element. Where content identity
+     * lives. Required: a host that cannot say what its content is cannot
+     * carry an annotation across a reflow (ADR-161).
+     */
+    onResolveAnchor: AnchorResolver;
 
     /** Execute a declared action. Where authorisation lives. */
     actionDispatcher: ActionDispatcher;

@@ -4926,3 +4926,118 @@
     - "components/fileexplorer/fileexplorer.manifest.ts"
     - "CODEBASE_FIXES.md"
     - "AGENT_INSIGHTS.md"
+
+- id: "ADR-161"
+  title: "Content anchors are resolved by the host, and unresolved content orphans the note rather than losing it"
+  date: 2026-10-11
+  status: "Accepted"
+  context: |
+    DEBT-DUI-1 and DEBT-DUI-5 were one defect: every anchor the canvas could
+    resolve named a POSITION, so a mark survived scrolling and resizing and
+    not reflow. Both entries prescribed the same cure, the existing
+    `{ kind: "entity" }` anchor, and that cure did not exist. document.ts
+    validated an entity anchor, anchorTarget() returned null for it because it
+    tested kind === "node", and the overlay was packed as though unanchored.
+    It rendered, reported nothing and was attached to nothing.
+
+    specs/2026-10-10-durable-anchors.prd.md put three questions to the user.
+    All three were answered on 10 October 2026: make the resolver REQUIRED on
+    DynamicUIHost, show an unresolved note as ORPHANED rather than hiding it,
+    and build it now because the apps team has not taken a dependency yet.
+
+    One fact shaped the implementation and is not in the design. DynamicUIHost
+    is declared in runtime/src/types.ts and consumed NOWHERE in this
+    repository. No runtime code holds a host instance; the canvas takes its
+    wiring through DynamicCanvasOptions, where every member is optional. So a
+    required member is a contract change for the one external consumer, and
+    the functional wiring had to go through the canvas option as well.
+  decision: |
+    D1. `EntityAnchor` gains an optional `selector`, opaque to the runtime and
+    passed to the host verbatim. `entityId` alone cannot disambiguate the same
+    record mounted twice.
+
+    D2. `DynamicUIHost.onResolveAnchor` is REQUIRED, taking (anchor, nodeId)
+    and returning `HTMLElement | null`. The interface comment moves from six
+    functions to seven. Paid now, before the first host exists.
+
+    D3. The canvas option `onResolveAnchor` stays OPTIONAL. Demo pages, the
+    Layout Studio and the test suites mount the canvas and are not host
+    applications. A canvas with no resolver treats every content anchor as
+    unresolved, which D4 defines.
+
+    D4. Unresolved content ORPHANS the note: `dyncanvas-overlay-orphaned`, a
+    warning glyph, and a visually hidden sentence. Never hidden, never
+    removed, never re-placed by coordinate. Orphaned and hidden are exclusive.
+    A comment must not disappear because the data it discussed was deleted.
+
+    D5. The resolver is SYNCHRONOUS and called once per render, never from the
+    scroll path. A resolved element is re-measured while it stays connected;
+    the resolver is asked again only when it disconnects.
+
+    D6. A remembered `frameId` separates "deleted" from "not mounted". Once a
+    note resolves, it follows that frame's mounted-ness like a spot mark, and
+    the resolver is not asked while that frame is unmounted.
+
+    D7. The canvas verifies what the host returns: the element must be inside
+    a mounted frame of THIS canvas and not inside the anchored node's own
+    frame.
+  consequences: |
+    + A content anchor survives reflow, which is what DEBT-DUI-1 asked for.
+      DEBT-DUI-5 stays open: that is approach B, region names, 68 components.
+    + The published type stops compiling for a host that does not implement
+      the member, which is the intended effect and the reason for the timing.
+      specs/2026-10-11-content-anchors-migration-guide.md is the one-function
+      migration.
+    - D6 EXISTS BECAUSE THE OBVIOUS IMPLEMENTATION IS WRONG. A resolver's null
+      means "not found now", which is equally true when the component holding
+      the content was demoted by virtualization. Asking and believing the
+      answer turns every comment on a grid orphaned the moment the user pans
+      away. That is decision D4 lost through the back door, and the advisor
+      caught it in the plan rather than in the code.
+    - THE BROWSER FOUND A BUG THE UNIT SUITE COULD NOT. `refineOverlaysOf`,
+      the scroll handler, selected overlays with `anchorTarget(node) ===
+      targetId`, which is node-anchors-only, so a content-anchored note did
+      not follow its row on scroll. jsdom reports every rectangle as zero, so
+      no unit assertion could see it. Fixed by `trackedTarget`, used by the
+      scroll handler and the virtualization pass alike.
+    - The own-frame refusal (D7) is UNREACHABLE for overlays and reachable
+      only for a normal node. An overlay's container carries
+      `dyncanvas-overlay` and never `dyncanvas-frame`, so `closest` cannot
+      find one. The first version of that test passed for the wrong reason
+      and was rewritten against a stickynote carrying a content anchor.
+    - A FIRST-LOAD FALSE ORPHAN IS POSSIBLE AND IS NOT TESTED. visibleNodes
+      runs before mounting, and on the first pass a content-anchored note has
+      no learned frame, so its own rectangle decides whether it mounts. If the
+      note's nominal placement is in view and the component holding its
+      content is not, the note mounts, resolves to nothing and shows orphaned
+      for one render. It clears on the next pass once that component mounts.
+      Acceptable because an orphan is a statement about now, and because the
+      wording never claims deletion. The e2e probe builds both nodes in view,
+      so nothing exercises it.
+    - An orphaned note keeps its last resolved position only while the canvas
+      is open. After a reload nothing records where the content was, so the
+      packer places it by its stored placement. Recorded in the README and the
+      migration guide rather than hidden.
+    - `CSS.escape` is not available in jsdom, so the orphan description
+      element is found by class rather than by id.
+    - Position is asserted in tests/dynamic-ui.spec.ts, not in vitest. Three
+      e2e tests measure real layout, and both the geometry and the scroll fix
+      are mutation-proven there. The eleven vitest tests cover the state
+      machine only, and say so in their header.
+  files:
+    - "runtime/src/types.ts"
+    - "runtime/src/document.ts"
+    - "runtime/src/document.test.ts"
+    - "runtime/runtime.ts"
+    - "components/dynamiccanvas/dynamiccanvas.ts"
+    - "components/dynamiccanvas/dynamiccanvas.scss"
+    - "components/dynamiccanvas/dynamiccanvas-anchors.test.ts"
+    - "components/dynamiccanvas/README.md"
+    - "tests/dynamic-ui.spec.ts"
+    - "docs/DYNAMIC_UI_GUIDE.md"
+    - "specs/dynamicui.prd.md"
+    - "specs/2026-10-10-durable-anchors.prd.md"
+    - "specs/2026-10-11-content-anchors-migration-guide.md"
+    - "CODEBASE_FIXES.md"
+    - "CHANGELOG.md"
+    - "AGENT_INSIGHTS.md"

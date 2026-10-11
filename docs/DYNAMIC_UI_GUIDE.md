@@ -224,7 +224,7 @@ On permissions, do all three:
 
 ## 9. The host contract
 
-Six functions. An application that implements these gets a dynamic UI.
+Seven functions. An application that implements these gets a dynamic UI.
 
 ```typescript
 interface DynamicUIHost
@@ -233,10 +233,28 @@ interface DynamicUIHost
     onFetch(source, nodeId): Promise<unknown>;    // where queries live
     onPersist(canvasId, patch): Promise<void>;    // where storage lives
     onLoad(canvasId, revision?): Promise<CanvasPatch[]>;
+    onResolveAnchor(anchor, nodeId): HTMLElement | null;  // content identity
     actionDispatcher: ActionDispatcher;           // where authorisation lives
     capabilitiesProvider?: () => CapabilityManifest[];
 }
 ```
+
+`onResolveAnchor` is required, and it was added on 11 October 2026, before the
+first host existed (ADR-161). It turns `{ kind: "entity", entityId,
+selector? }` into the element that holds that content right now, which is the
+only way an annotation survives a reflow. Only the application knows what its
+content is, so only the application can answer.
+
+Return `null` when you cannot find the content. The canvas then shows the
+anchored note as orphaned, keeps it visible and keeps it in the document, and
+asks again on the next render. It never discards a note, because a comment must
+not disappear when the data it discussed does.
+
+The function is synchronous, unlike `onFetch`, because overlay positions are
+refined on every scroll frame. The canvas calls it once per render, reuses the
+element while that element stays in the DOM, and never calls it from the scroll
+path. A `querySelector` is therefore affordable; a network call is not, so
+resolve from state you already hold.
 
 ---
 
