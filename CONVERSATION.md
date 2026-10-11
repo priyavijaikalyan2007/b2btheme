@@ -2454,3 +2454,41 @@ says the element belongs to CodeMirror.
 
 DEBT-DUI-5 resolved. 9 open / 29 resolved. 4887 unit tests, 30/30 structure
 checks, 119 e2e tests.
+
+## 2026-10-11 — "AuthCard not being there is correct"
+
+I had asked a question and recommended the wrong reason for the right answer.
+The question was whether AuthCard should carry a canvas manifest. My
+recommendation was no, on the grounds that a login form should not be
+something a model can place on a canvas. The user agreed with the answer and
+replaced the reason: Dynamic UI exists to compose a surface **in reaction to a
+model response**, and AuthCard renders Keycloak's login step, which runs before
+any session exists. There is no response for it to be part of. Not "the canvas
+must refuse this", but "the canvas is not there yet".
+
+That reason is stronger in a way worth keeping. Mine describes a policy
+somebody has to enforce and that a future host could decide differently. The
+user's describes a sequence, and it holds whatever the policy is.
+
+**The interesting part is why it sat in the wrong list for two months.**
+`EXEMPT` means migration pending, and ADR-160 had already shown nothing was
+pending — the factory signature was container-first all along and the frozen
+ADR-138 parity contract never needed touching. It stayed because
+`NOT_MOUNTABLE` described four **shapes**: a service, an element builder, a
+boot script, a modal or docked overlay. AuthCard is none of them. It is an
+ordinary component with an ordinary factory, excluded by **when** it renders,
+and shape-based criteria cannot say that. A list named for a process state is
+the default destination, so every category the criteria lack becomes a false
+backlog entry. The criteria in AGENTS.md, TESTING.md and SURFACE_CONTRACT.md
+now carry a fifth category, and it is about place in time rather than shape.
+Insight 6.51.
+
+Nothing in AuthCard changed, and nothing should have: no manifest, no
+conformance glue, no source edit, no change to `capability-manifest.json`,
+which never listed it. The deliverable is a written reason where the next
+reader will look for one. The gate's disjointness assertion is what proved
+both halves of the move landed — a component may be excluded or exempt and
+never both, so doing only one half fails rather than passing quietly.
+
+ADR-163. EXEMPT 5 → 4, NOT_MOUNTABLE 23 → 24, in-scope 102 → 101. The four
+remaining exemptions are all real work with a recorded attempt.

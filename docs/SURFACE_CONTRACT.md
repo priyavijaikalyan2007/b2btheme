@@ -166,7 +166,7 @@ Returning `false` is the honest answer for a channel with no programmatic entry 
 
 ## 7. Components that are not canvas-capable
 
-A service, an element builder, a boot script, or a modal overlay belongs in `NOT_MOUNTABLE` in the gate **with a written rationale** — not in `EXEMPT`, which means "migration pending" and is expected to reach zero.
+A service, an element builder, a boot script, a modal overlay, or a surface that renders before a model response can exist belongs in `NOT_MOUNTABLE` in the gate **with a written rationale** — not in `EXEMPT`, which means "migration pending" and is expected to reach zero. The last of those is about sequence rather than shape: a canvas is composed in reaction to a model response, so AuthCard's pre-session login step has no moment at which a canvas could mount it (ADR-163).
 
 MarkdownRenderer is the canonical example: `createMarkdownRenderer(opts)` returns `{render, toHtml}`. It has no host, owns no DOM, and has no lifecycle. It is a service that consumers call, not a component a canvas can mount.
 

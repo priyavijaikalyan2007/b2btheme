@@ -57,6 +57,9 @@ import type { CapabilityManifest } from "./src/types";
  * entirely — they belong in NOT_MOUNTABLE. A blocker that names a mechanism
  * the runtime has since grown reads as work pending when the work is done.
  * State what was TRIED, not what looks hard.
+ *
+ * A twelfth closed on 2026-10-11 (ADR-163). AuthCard was never a migration at
+ * all, so it moved to NOT_MOUNTABLE and four entries remain here.
  */
 const EXEMPT: ReadonlySet<string> = new Set([
     // Requires a live GraphCanvas handle, and the blocker holds. Measured
@@ -64,13 +67,6 @@ const EXEMPT: ReadonlySet<string> = new Set([
     // through a 2D context, which jsdom does not implement — glue that stands
     // up a real GraphCanvas is the prerequisite, not the manifest.
     "graphminimap",
-    // Its signature is NOT the blocker. `(containerOrId: string | HTMLElement,
-    // options)` IS the canonical container-first form: the union accepts the
-    // host id the gate passes, so the frozen ADR-138 contract never needed
-    // touching. What is actually open is a disposition decision — AuthCard
-    // renders Keycloak's pre-session login step, and a manifest would publish
-    // it to consumers as canvas-mountable. Decide the category first.
-    "authcard",
     // 25k-line engine with its own embed registry; migrate after phase 10
     // extracts that registry. Unchanged by the 2026-10-10 re-measurement.
     "diagramengine",
@@ -201,6 +197,19 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
         + "createHelpTooltip(target, options) takes the element it decorates "
         + "as its first argument and throws without one. See hovercard — it "
         + "decorates a component rather than being one.",
+
+    authcard:
+        "Pre-session surface, and the exclusion is about SEQUENCE rather than "
+        + "shape. Dynamic UI composes a canvas in reaction to a model "
+        + "response, so a citizen of that canvas is something a model can ask "
+        + "for. AuthCard renders Keycloak's login step, which runs BEFORE any "
+        + "session exists — there is no model and no response to react to yet, "
+        + "so there is never a moment at which a canvas could mount it. Its "
+        + "absence from the fleet is the correct outcome and not a backlog "
+        + "item (ADR-163, closing ADR-160 D4). Its signature was never the "
+        + "obstacle: (containerOrId: string | HTMLElement, options) is "
+        + "container-first and the frozen ADR-138 parity contract never "
+        + "needed touching.",
 
     dynamiccanvas:
         "The canvas HOST, not a canvas citizen — it is the surface other "

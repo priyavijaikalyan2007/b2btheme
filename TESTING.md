@@ -325,8 +325,9 @@ A component is one of three things, and nothing else:
 2. **`EXEMPT`** — migration pending. Each entry carries its specific blocker
    inline. This list is expected to reach zero.
 3. **`NOT_MOUNTABLE`** — permanently outside the contract (a service, an element
-   builder, a boot script, a modal overlay). Every entry MUST carry a written
-   rationale; a test enforces that, so it cannot become a dumping ground.
+   builder, a boot script, a modal overlay, or a surface that renders before a
+   model response can exist). Every entry MUST carry a written rationale; a test
+   enforces that, so it cannot become a dumping ground.
 
 **A new component that is not canvas-capable cannot land** without also editing
 the exemption list, which is deliberately conspicuous in review.

@@ -4866,6 +4866,10 @@
         AuthCard renders Keycloak's pre-session login step, and a manifest
         would publish it to consumers as canvas-mountable. That is the user's
         call, not a migration task.
+        CLOSED 2026-10-11 (ADR-163): the answer is NOT_MOUNTABLE, and the
+        reason is sequence rather than shape. A canvas is composed in reaction
+        to a model response; AuthCard's login step runs before a session
+        exists, so there is never a response for it to be part of.
 
     D5. The surviving four blockers are rewritten to say what was TRIED.
         graphminimap requires a live GraphCanvas and a 2D context jsdom does
@@ -5167,3 +5171,82 @@
     - "CODEBASE_FIXES.md"
     - "CHANGELOG.md"
     - "AGENT_INSIGHTS.md"
+
+- id: "ADR-163"
+  title: "AuthCard is permanently excluded from the canvas, because a pre-session surface has no model response to react to"
+  date: 2026-10-11
+  status: "Accepted"
+  context: |
+    ADR-160 D4 left AuthCard in EXEMPT and said the decision was the user's.
+    The re-measurement had established what the blocker is NOT: the factory
+    signature `(containerOrId: string | HTMLElement, options)` is container-
+    first, the union accepts the host id the gate passes, and the frozen
+    ADR-138 Keycloak parity contract never needed touching. So AuthCard sat in
+    a list whose entries all mean "migration pending" while nothing was
+    pending. It had been there since the list was seeded on 2026-08-03.
+
+    The question was put to the user on 2026-10-11 with a recommendation of
+    "no" on the grounds that a login surface should not be publishable as
+    something a model can place on a canvas. The user agreed with the outcome
+    and gave a different and better reason, recorded in D1.
+  decision: |
+    D1. AuthCard moves from EXEMPT to NOT_MOUNTABLE. The reason is SEQUENCE,
+        not shape. Dynamic UI composes a canvas in reaction to a model
+        response, so a citizen of that canvas is something a model can ask
+        for. AuthCard renders Keycloak's login step, which runs BEFORE any
+        session exists. There is no model and no response to react to at that
+        point, so there is no moment at which a canvas could mount it. Its
+        absence from the fleet is the correct outcome rather than a backlog
+        item. This closes ADR-160 D4.
+
+    D2. The safety argument is NOT the recorded rationale, although it points
+        the same way. "A model should not be able to place a login form" is a
+        claim about what the canvas must refuse. D1 is a claim about when the
+        canvas exists at all, which is stronger: it holds even for a host that
+        would happily mount a login form, and it does not need a policy to
+        enforce it.
+
+    D3. The exclusion criteria gain a fifth category, written into AGENTS.md,
+        TESTING.md and docs/SURFACE_CONTRACT.md. The first four describe a
+        component's SHAPE: a service, an element builder, a boot script, a
+        modal or viewport-docked overlay. The fifth describes its PLACE IN
+        TIME: a surface that renders before a model response can exist. Every
+        existing entry in NOT_MOUNTABLE is one of the four shapes, which is
+        why AuthCard did not look like it belonged there.
+
+    D4. `authcard:auth-main` stays excluded in scripts/check-region-names.mjs
+        on its own separate grounds (page-level scaffolding the consuming
+        application provides, mirrored verbatim by a FreeMarker template under
+        ADR-138). The two exclusions are unrelated and neither implies the
+        other.
+  consequences: |
+    + THE EXEMPT LIST NOW MEANS WHAT IT SAYS. Four entries remain and each is
+      real work with a recorded attempt: graphminimap (needs a live
+      GraphCanvas and a 2D context jsdom does not implement), diagramengine
+      (phase 10), dynamicformswitcher (what its manifest should declare is
+      consumer-visible design), markdowneditor (exports a class and no
+      factory, so migrating it means adding one to the public surface).
+    + Gate counts: 97 of 101 in-scope migrated, 4 EXEMPT, 24 NOT_MOUNTABLE.
+      The in-scope figure drops by one because an excluded directory is not
+      in scope. 203 fleet-gate assertions pass.
+    + The disjointness assertion is what proved both halves of the move
+      landed. A component may be excluded or exempt and never both, so
+      deleting the EXEMPT entry without adding the exclusion, or the reverse,
+      fails the gate rather than passing quietly.
+    - NOTHING IN AUTHCARD CHANGED, AND NOTHING SHOULD. No manifest, no
+      conformance glue, no source edit. The deliverable is a written reason in
+      the place where the next reader will look for one.
+    - AN EXCLUSION WITH NO VOCABULARY READS AS A BACKLOG ITEM. AuthCard spent
+      two months in a pending-migration list because the criteria had no words
+      for "correctly absent". The categories are a reading aid, and a missing
+      category is a silent misfiling. Recorded as insight 6.51.
+  files:
+    - "runtime/fleet-conformance.test.ts"
+    - "AGENTS.md"
+    - "TESTING.md"
+    - "docs/SURFACE_CONTRACT.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/concepts.yaml"
+    - "agentknowledge/history.jsonl"

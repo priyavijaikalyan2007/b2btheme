@@ -300,9 +300,20 @@ shape, or say in the README that annotations on it are not durable across
 versions. Tracked as DEBT-DUI-5.
 
 A component that is genuinely not canvas-mountable — a service, an element
-builder, a boot script, a modal overlay — goes in `NOT_MOUNTABLE` in the gate
-**with a written rationale**, not in `EXEMPT`. `EXEMPT` means "migration
-pending" and is expected to reach zero.
+builder, a boot script, a modal overlay, or a surface that renders before a
+model response can exist — goes in `NOT_MOUNTABLE` in the gate **with a
+written rationale**, not in `EXEMPT`. `EXEMPT` means "migration pending" and is
+expected to reach zero.
+
+That last category is about **sequence** rather than shape, and it is easy to
+miss. A canvas is composed in reaction to a model response, so a canvas citizen
+is something a model can ask for. AuthCard renders Keycloak's login step, which
+runs before any session exists, so there is no response to react to and no
+moment at which a canvas could mount it (ADR-163). Its factory signature was
+fine and it sat in `EXEMPT` for two months reading as pending work, because the
+exclusion criteria had no words for "correctly absent". **Ask what has to be
+true for a mount to happen at all, not only whether the factory would
+cooperate.**
 
 Check the exclusion criteria **before** writing a blocker. `EXEMPT` is the
 default, and `NOT_MOUNTABLE` costs you a rationale, so miscategorisations
