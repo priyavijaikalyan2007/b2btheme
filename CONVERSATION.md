@@ -2492,3 +2492,13 @@ never both, so doing only one half fails rather than passing quietly.
 
 ADR-163. EXEMPT 5 → 4, NOT_MOUNTABLE 23 → 24, in-scope 102 → 101. The four
 remaining exemptions are all real work with a recorded attempt.
+
+**A count went stale in the same document for the second day running, and the
+advisor caught it because my grep was case-sensitive.** The durable-anchors
+design said "the 5 components that remain `EXEMPT`", which I had corrected from
+16 only yesterday. I searched for `exempt` and `authcard` and found nothing in
+that file, then searched for the printed figure `97 of 102` and found the
+concept entry instead. This repository writes the word as `EXEMPT` in prose.
+A case-sensitive grep for a word a codebase shouts is a grep for the wrong
+word, and the second miss in one arc on the same shape of mistake as insight
+6.46: the predicate was mine, not the file's.

@@ -308,8 +308,8 @@ expected to reach zero.
 That last category is about **sequence** rather than shape, and it is easy to
 miss. A canvas is composed in reaction to a model response, so a canvas citizen
 is something a model can ask for. AuthCard renders Keycloak's login step, which
-runs before any session exists, so there is no response to react to and no
-moment at which a canvas could mount it (ADR-163). Its factory signature was
+runs before any session exists. There is therefore no response to react to,
+and no moment at which a canvas could mount it (ADR-163). Its factory signature was
 fine and it sat in `EXEMPT` for two months reading as pending work, because the
 exclusion criteria had no words for "correctly absent". **Ask what has to be
 true for a mount to happen at all, not only whether the factory would

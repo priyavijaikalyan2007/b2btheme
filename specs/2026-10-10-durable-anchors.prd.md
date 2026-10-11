@@ -361,9 +361,14 @@ do not know which host would break.
 
 Approach B needs the conformance gate to assert that every scrollable region
 declares a name. Without that assertion, adoption is zero. The assertion cannot
-pass for the 5 components that remain `EXEMPT` after ADR-160. Clearing those 5
+pass for the 4 components that remain `EXEMPT` after ADR-163. Clearing those 4
 is DEBT-DUI-4. That work is separate, and this design deliberately leaves it
 separate.
+
+ADR-160 left 5 of them. AuthCard left the list on 11 October 2026, and it left
+by being answered rather than migrated. A canvas is composed in reaction to a
+model response. AuthCard renders the login step that runs before a session
+exists, so no canvas can ever mount it (ADR-163).
 
 ## As built
 
