@@ -2540,10 +2540,13 @@ sanitizeHtml` returns one commit, the one that added the component. Reading
 `sanitizeNodes` declaration when the audit ran. Closed as a measurement error
 rather than as fixed, because no fix was made.
 
-Four mutations prove the new tests can fail. Parsing the reply as markup again
-fails the hostile-reply test and only that test. Calling `btoa` without the
-UTF-8 step fails the Unicode test. Renaming the hidden class fails the
-description test. Percent-encoding instead of base64 fails three.
+Six mutations prove the new tests can fail, five in the source and one in the
+built bundle. Parsing the reply as markup again fails the hostile-reply test
+and only that test. Calling `btoa` without the UTF-8 step fails the Unicode
+test. Renaming the hidden class fails the description test. Emptying the alt
+text fails the first test, which I checked last, because an assertion sharing
+a test with a stronger one can ride on it unnoticed. Percent-encoding instead
+of base64 fails three.
 
 The cost is in the README and the changelog, because it is visible to
 consumers: diagram text is no longer selectable, links inside a diagram no

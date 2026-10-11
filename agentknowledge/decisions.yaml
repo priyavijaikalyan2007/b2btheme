@@ -5355,11 +5355,15 @@
       reply assigned to innerHTML sets the global to 1, which is the onerror
       attribute firing, not the 2 from the script element. That is the
       evidence for the mechanism claim in the context above.
-    + FOUR MUTATIONS CONFIRM THE TESTS CAN FAIL: parsing the reply as markup
-      again fails the hostile-reply test and only that test, calling `btoa`
-      without the UTF-8 step fails the Unicode test, renaming the hidden
-      class fails the description test, and switching to percent-encoding
-      fails three.
+    + SIX MUTATIONS CONFIRM THE TESTS CAN FAIL, five in the source and one in
+      the built bundle: parsing the reply as markup again fails the
+      hostile-reply test and only that test, calling `btoa` without the UTF-8
+      step fails the Unicode test, renaming the hidden class fails the
+      description test, emptying the alt text fails the first test, switching
+      to percent-encoding fails three, and the bundle mutation fails the
+      browser test. The alt-text mutation was run last and separately,
+      because an assertion that shares a test with a stronger one can ride on
+      it and look load-bearing when it is not.
   files:
     - "components/markdownrenderer/markdownrenderer.ts"
     - "components/markdownrenderer/markdownrenderer.test.ts"
