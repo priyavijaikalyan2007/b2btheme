@@ -2502,3 +2502,78 @@ concept entry instead. This repository writes the word as `EXEMPT` in prose.
 A case-sensitive grep for a word a codebase shouts is a grep for the wrong
 word, and the second miss in one arc on the same shape of mistake as insight
 6.46: the predicate was mine, not the file's.
+
+## 2026-10-11 — "Go with option 3" (SEC-3)
+
+SEC-3 had been open since 19 March 2026. MarkdownRenderer asks a PlantUML
+server to draw a diagram and receives SVG, which is markup rather than pixels.
+`applyPlantUmlSvg` put that markup into the page through `innerHTML`. The
+default server is the public `plantuml.com`, so the trust boundary was a third
+party and nothing at the call site tested it.
+
+The user chose the strongest of three options: load the reply as an image. A
+browser runs no script in an SVG it loads as an image, so the class of defect
+is gone rather than a list of vectors. Sanitizing was the cheap option and the
+wrong shape — `sanitize()` works from a list of forbidden things, which cannot
+cover `<use>`, `<animate>`, `<set>`, `<foreignObject>` and `<style>`.
+
+**The entry's description of the mechanism was half wrong, and the correct half
+was the one that mattered.** `innerHTML` does not execute a `<script>`
+element. It does attach event-handler attributes, so
+`<image href="/missing" onerror="…">` ran at once.
+
+**The test block named after the defect had never tested the defect.** A
+section header read `SEC-3: PLANTUML SVG SANITIZATION`, and its three tests
+checked `sanitize()` against SVG-shaped *markdown* — a different input on a
+different path. A comment gave the reason: `CompressionStream + fetch
+(unavailable in jsdom)`. I probed, and both exist. The missing API is
+`Blob.prototype.stream`, which the encoder calls and Node's own `Blob` has.
+One `vi.stubGlobal("Blob", NodeBlob)` put five new tests on the real
+asynchronous path, including a hostile reply. A plausible wrong reason held
+that gap open for almost seven months. Insight 6.52.
+
+**SEC-1 was never a defect.** Line 1407 of `richtextinput.ts` sat inside the
+component's own sanitizer, and the statement was `return temp.innerHTML` on a
+detached element, which is a getter and executes nothing. `git log -S
+sanitizeHtml` returns one commit, the one that added the component. Reading
+`f3c1666`, the last commit before 20 March 2026, confirms line 1407 was the
+`sanitizeNodes` declaration when the audit ran. Closed as a measurement error
+rather than as fixed, because no fix was made.
+
+Four mutations prove the new tests can fail. Parsing the reply as markup again
+fails the hostile-reply test and only that test. Calling `btoa` without the
+UTF-8 step fails the Unicode test. Renaming the hidden class fails the
+description test. Percent-encoding instead of base64 fails three.
+
+The cost is in the README and the changelog, because it is visible to
+consumers: diagram text is no longer selectable, links inside a diagram no
+longer work, and CSS targeting the inner `svg` no longer reaches a PlantUML
+diagram. The source stays in `data-source` and in a visually hidden `pre` that
+`aria-describedby` points at.
+
+**Two assertions needed a browser, and one of them proved the mechanism I had
+described to the user.** jsdom loads no image, so `naturalWidth` is always 0
+and a data URL Chromium refused would still look correct in the unit suite.
+jsdom also runs no handler from an image load, so "no handler fired" passes
+there whether or not the markup was parsed. The new browser spec stubs the
+PlantUML route with an SVG carrying both an `onerror` attribute and a
+`<script>` element. The diagram decodes, has a visible box, and sets no
+global. The second test assigns the identical reply to `innerHTML` in the same
+engine, and the global comes back as **1** — the `onerror` attribute firing,
+not the 2 from the script element. That is the measurement behind the claim
+that `innerHTML` runs no script element and does fire a handler.
+
+Mutating the built bundle back to `innerHTML = svg` fails the first browser
+test and leaves the characterisation passing.
+
+**One thing found on the way, now DEBT-DOC-1.** `scripts/generate-docs.js`
+builds each component's published "Exports" line by regexing its README prose
+for `class` or `function` followed by a word. My sentence "removes the whole
+class of script injection" published an export called `class of`. The quick
+reference already lists `class on` 17 times and `function greet` for this
+component, which does not exist. I reworded the sentence, which is a
+workaround, and recorded the defect.
+
+SEC-3 resolved, SEC-1 closed, SEC-2 left open with its line corrected from
+1841 to 1825. Tracker 31 resolved / 29 open, counting DEBT-DOC-1. ADR-164.
+4892 unit tests across 144 files, 121 browser tests, 30/30 structure checks.

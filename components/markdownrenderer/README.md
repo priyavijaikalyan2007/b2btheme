@@ -174,7 +174,28 @@ digraph G { rankdir=LR; A -> B; }
 
 ### PlantUML diagrams
 
-Rendered via server. Source is deflate-compressed, base64-encoded, and fetched as SVG.
+Rendered by a server. The source is deflate-compressed, base64-encoded, and fetched as SVG.
+
+**The reply is shown as an image, not as markup.** The component puts the SVG
+into a data URL and sets it as the source of an `img` element. A browser runs
+no script in an SVG that it loads as an image. The reply comes from a third
+party under the default option. This removes every variant of script
+injection through that path, where a filter would remove only the vectors
+somebody listed (SEC-3, ADR-164).
+
+Three effects follow from that decision:
+
+- Text inside a PlantUML diagram is not selectable, and the browser cannot find it with a page search.
+- A link inside a PlantUML diagram does not work.
+- CSS that targets the `svg` element inside `.md-diagram` does not reach a PlantUML diagram. Target `.md-diagram-image` instead.
+
+The diagram source stays available in two places. The placeholder keeps its
+`data-source` attribute. The component also adds a visually hidden `pre`
+element holding the source and points the image at it with
+`aria-describedby`, which is the long-description pattern for a complex image.
+
+Mermaid and Graphviz are not affected. Both render on the local machine from
+source the document author wrote, and neither inserts a markup string.
 
 ````markdown
 ```plantuml
@@ -187,10 +208,12 @@ Bob --> Alice: Hi back
 
 ## Security
 
-- All HTML output is sanitised: `<script>`, `<iframe>`, `<object>`, `<embed>`, and `<form>` elements are stripped
-- Event handler attributes (`onclick`, `onload`, etc.) and `javascript:` URLs are removed
-- PlantUML server calls send only diagram source text (no cookies, no credentials)
-- Consumer-provided markdown is never trusted
+The component has two inputs, and it treats them differently on purpose.
+
+- **Markdown from the consumer is sanitised.** `<script>`, `<iframe>`, `<object>`, `<embed>` and `<form>` elements are stripped. Event-handler attributes such as `onclick` and `onload` are removed, and so are `javascript:` URLs.
+- **A PlantUML reply is never parsed as markup.** It is loaded as an image through a data URL, so a hostile or compromised server cannot run script in the page (SEC-3, ADR-164). The sanitiser is a list of forbidden things, which is weaker than this for SVG, because SVG can carry `<use>`, `<animate>`, `<set>`, `<foreignObject>` and `<style>`.
+- PlantUML server calls send only diagram source text. They send no cookies and no credentials.
+- Consumer-provided markdown is never trusted.
 
 ## Architecture
 

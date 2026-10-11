@@ -5,12 +5,20 @@
 /**
  * ⚓ TESTS: MarkdownRenderer
  * Security-focused tests for the MarkdownRenderer component.
- * Covers: SEC-3 PlantUML SVG sanitization, sanitize() XSS prevention,
- * factory function, code rendering, KaTeX math, diagram placeholders,
- * and fallback behaviour.
+ * Covers: SEC-3 (a PlantUML reply is loaded as an image and never parsed as
+ * markup), sanitize() XSS prevention, the factory function, code rendering,
+ * KaTeX math, diagram placeholders, and fallback behaviour.
+ *
+ * Until 11 October 2026 this header claimed SEC-3 coverage that no test
+ * provided. The three tests below it checked sanitize() against SVG-shaped
+ * MARKDOWN, which is a different input from a server reply, and one comment
+ * said CompressionStream and fetch were unavailable in jsdom. Both exist
+ * here. The one missing piece is `Blob.prototype.stream`, which the SEC-3
+ * block supplies from Node, so the real path was always testable (ADR-164).
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { Blob as NodeBlob } from "node:buffer";
 import { createMarkdownRenderer } from "./markdownrenderer";
 
 // ============================================================================
@@ -279,10 +287,10 @@ describe("sanitize — XSS prevention", () =>
 });
 
 // ============================================================================
-// SEC-3: PLANTUML SVG SANITIZATION
+// sanitize() ON SVG-SHAPED MARKDOWN
 // ============================================================================
 
-describe("PlantUML SVG sanitization", () =>
+describe("sanitize() on SVG-shaped markdown", () =>
 {
     test("plantumlPlaceholder_CreatedByRender", () =>
     {
@@ -297,10 +305,11 @@ describe("PlantUML SVG sanitization", () =>
 
         const block = target.querySelector(".md-diagram-plantuml");
         expect(block).not.toBeNull();
-        // The placeholder is created and the async fetch pipeline starts.
-        // Since PlantUML uses CompressionStream + fetch (unavailable in
-        // jsdom), we verify the placeholder exists and loading indicator
-        // is shown.
+        // This test covers the SYNCHRONOUS half: the placeholder exists and
+        // shows its loading indicator before any reply arrives. The async
+        // half has its own block below, which stubs fetch. The earlier
+        // comment here blamed CompressionStream and fetch, and both exist in
+        // this environment. Only `Blob.prototype.stream` is missing.
         expect(block?.querySelector(".md-diagram-loading")).not.toBeNull();
     });
 
@@ -658,5 +667,155 @@ describe("edge cases", () =>
         expect(html).not.toContain("onmouseover");
         expect(html).not.toContain("onfocus");
         expect(html).toContain("Text");
+    });
+});
+
+// ============================================================================
+// SEC-3: A PLANTUML REPLY IS LOADED AS AN IMAGE
+// ============================================================================
+
+/**
+ * The reply from a PlantUML server is markup, and the server is a third party
+ * under the default option. These tests drive the real asynchronous path:
+ * marked produces the placeholder, the component compresses the source,
+ * fetch is stubbed, and the reply reaches the insertion function.
+ *
+ * Real timers are needed. The shared beforeEach installs fake timers, and the
+ * encoder reads a CompressionStream whose reads are not microtasks.
+ */
+describe("SEC-3 — a PlantUML reply is loaded as an image", () =>
+{
+    const PLACEHOLDER = `<div class="md-diagram md-diagram-plantuml" `
+        + `data-lang="plantuml" data-source="@startuml&#10;A-&gt;B&#10;@enduml">`
+        + `</div>`;
+
+    beforeEach(() =>
+    {
+        // The encoder calls `new Blob([bytes]).stream()`, and jsdom's Blob
+        // has no stream(). Node's Blob does, and it returns a web
+        // ReadableStream that CompressionStream accepts. Shimming the one
+        // missing method keeps the test on the real code path instead of
+        // asserting against a mock of it.
+        vi.stubGlobal("Blob", NodeBlob);
+    });
+
+    /** Decode a base64 data URL payload back to its original text. */
+    function decodeDataUrl(src: string): string
+    {
+        const b64 = src.slice("data:image/svg+xml;base64,".length);
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+        return new TextDecoder().decode(bytes);
+    }
+
+    /** Render one PlantUML block with a stubbed server reply. */
+    async function renderWithReply(svg: string): Promise<HTMLElement>
+    {
+        vi.useRealTimers();
+        vi.stubGlobal("marked", buildMarkedMock(() => PLACEHOLDER));
+        vi.stubGlobal("fetch", vi.fn(async () => new Response(svg,
+            { status: 200, headers: { "Content-Type": "image/svg+xml" } })));
+
+        const handle = createMarkdownRenderer({ plantuml: true });
+        const target = document.createElement("div");
+
+        container.appendChild(target);
+        handle.render("plantuml content", target);
+
+        const block = target.querySelector<HTMLElement>(".md-diagram-plantuml");
+
+        expect(block).not.toBeNull();
+
+        await vi.waitFor(() =>
+        {
+            expect(block?.querySelector("img")).not.toBeNull();
+        });
+
+        return block as HTMLElement;
+    }
+
+    test("serverReply_BecomesImageWithBase64DataUrl", async () =>
+    {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>`;
+        const block = await renderWithReply(svg);
+        const img = block.querySelector("img") as HTMLImageElement;
+
+        expect(img.src.startsWith("data:image/svg+xml;base64,")).toBe(true);
+        expect(decodeDataUrl(img.src)).toBe(svg);
+        expect(img.alt).toBe("PlantUML diagram");
+    });
+
+    test("hostileReply_ProducesNoElementsAndRunsNoHandler", async () =>
+    {
+        const g = globalThis as unknown as Record<string, unknown>;
+
+        delete g["__sec3"];
+
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg">`
+            + `<image href="/missing" onerror="globalThis.__sec3 = 1"/>`
+            + `</svg>`;
+        const block = await renderWithReply(svg);
+        const img = block.querySelector("img") as HTMLImageElement;
+
+        // No element from the reply exists, because nothing parsed it.
+        expect(block.querySelector("svg")).toBeNull();
+        expect(block.querySelector("[onerror]")).toBeNull();
+        expect(g["__sec3"]).toBeUndefined();
+
+        // The payload is still intact INSIDE the data URL. The defect is
+        // closed because the markup is never parsed, not because a filter
+        // removed something.
+        expect(decodeDataUrl(img.src)).toContain("onerror");
+    });
+
+    test("unicodeReply_SurvivesTheDataUrlRoundTrip", async () =>
+    {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg">`
+            + `<text>Ünicode 日本語 café</text></svg>`;
+        const block = await renderWithReply(svg);
+        const img = block.querySelector("img") as HTMLImageElement;
+
+        // btoa throws above code point 255, so the source is encoded to UTF-8
+        // bytes first. A throw here would leave the block empty.
+        expect(decodeDataUrl(img.src)).toBe(svg);
+    });
+
+    test("image_CarriesTheSourceAsALongDescription", async () =>
+    {
+        const block = await renderWithReply("<svg/>");
+        const img = block.querySelector("img") as HTMLImageElement;
+        const id = img.getAttribute("aria-describedby");
+
+        expect(id).toBeTruthy();
+
+        const desc = block.querySelector(`#${id}`);
+
+        expect(desc).not.toBeNull();
+        expect(desc?.className).toContain("visually-hidden");
+        expect(desc?.textContent).toContain("@startuml");
+    });
+
+    test("failedRequest_ShowsEscapedErrorAndNoImage", async () =>
+    {
+        vi.useRealTimers();
+        vi.stubGlobal("marked", buildMarkedMock(() => PLACEHOLDER));
+        vi.stubGlobal("fetch", vi.fn(async () => new Response("nope",
+            { status: 503 })));
+
+        const handle = createMarkdownRenderer({ plantuml: true });
+        const target = document.createElement("div");
+
+        container.appendChild(target);
+        handle.render("plantuml content", target);
+
+        const block = target.querySelector<HTMLElement>(".md-diagram-plantuml");
+
+        await vi.waitFor(() =>
+        {
+            expect(block?.querySelector(".md-diagram-error")).not.toBeNull();
+        });
+
+        expect(block?.querySelector("img")).toBeNull();
+        expect(block?.textContent).toContain("503");
     });
 });

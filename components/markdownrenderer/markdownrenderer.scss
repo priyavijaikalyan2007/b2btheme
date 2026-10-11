@@ -18,7 +18,11 @@
     background: var(--theme-surface-bg);
     overflow-x: auto;
 
-    svg {
+    // Mermaid and Graphviz insert an svg element. A PlantUML diagram is an
+    // img holding a data URL, because a reply from a server must never be
+    // parsed as markup (SEC-3, ADR-164). Both need the same fit.
+    svg,
+    img {
         max-width: 100%;
         height: auto;
     }

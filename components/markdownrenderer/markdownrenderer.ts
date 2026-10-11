@@ -11,9 +11,13 @@
  *    No CSS injection — uses theme fonts natively.
  * 🔗 RELATES: [[HelpDrawer]], [[DocViewer]], [[EnterpriseTheme]]
  * ⚡ FLOW: [Consumer] -> createMarkdownRenderer(opts?) -> { render(md, el) }
- * 🔒 SECURITY: Output sanitised by stripping scripts, iframes, and event
- *    handler attributes. Consumer-provided markdown is never trusted.
- *    PlantUML server calls send only diagram source text, no credentials.
+ * 🔒 SECURITY: Two inputs, handled differently on purpose. Markdown output
+ *    is sanitised by stripping scripts, iframes and event-handler attributes,
+ *    because consumer-provided markdown is never trusted. A PlantUML reply is
+ *    loaded as an image through a data URL and is never parsed as markup, so
+ *    a hostile or compromised server cannot run script in the page (SEC-3,
+ *    ADR-164). PlantUML server calls send only diagram source text, no
+ *    credentials.
  * ----------------------------------------------------------------------------
  */
 
@@ -444,7 +448,7 @@ function renderPlantUmlBlock(
     encodePlantUml(src)
         .then((encoded) => fetch(serverUrl + encoded))
         .then((resp) => handlePlantUmlResponse(resp))
-        .then((svg) => applyPlantUmlSvg(block, svg))
+        .then((svg) => applyPlantUmlDiagram(block, svg))
         .catch((err) => showPlantUmlError(block, err));
 }
 
@@ -455,16 +459,102 @@ function handlePlantUmlResponse(resp: Response): Promise<string>
     return resp.text();
 }
 
-/** Insert rendered SVG into a PlantUML block. */
-function applyPlantUmlSvg(block: HTMLElement, svg: string): void
+/**
+ * Show a rendered diagram as an image, so its markup can never run (SEC-3).
+ *
+ * The reply comes from a PlantUML server, which is a third party under the
+ * default option, and SVG is markup rather than pixels. Assigning that markup
+ * to `innerHTML` parsed it into live elements, and an event-handler attribute
+ * such as `onerror` runs as soon as the parser attaches it. A browser runs no
+ * script in an SVG that it loads as an image. A data URL therefore removes
+ * every variant of this defect, where a filter would remove only the vectors
+ * somebody listed (ADR-164).
+ *
+ * The other two diagram paths need no equivalent change. Mermaid receives its
+ * source through `textContent`, and Graphviz returns a DOM element that this
+ * file appends. Neither inserts a markup string, and neither takes markup
+ * from a remote server.
+ *
+ * @param block - Placeholder element for this diagram.
+ * @param svg - SVG markup the server returned.
+ */
+function applyPlantUmlDiagram(block: HTMLElement, svg: string): void
 {
-    block.innerHTML = svg;
-    const svgEl = block.querySelector("svg");
-    if (svgEl)
+    const img = document.createElement("img");
+    const source = block.getAttribute("data-source") ?? "";
+
+    img.src = svgDataUrl(svg);
+    img.alt = "PlantUML diagram";
+    img.className = "md-diagram-image";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+
+    block.innerHTML = "";
+    block.appendChild(img);
+
+    if (source)
     {
-        svgEl.style.maxWidth = "100%";
-        svgEl.style.height = "auto";
+        describePlantUmlDiagram(block, img, source);
     }
+}
+
+/**
+ * A diagram as a data URL that an `img` element can load.
+ *
+ * Base64 rather than percent-encoding, for two reasons. An SVG carries many
+ * characters that percent-encoding expands to three bytes each, such as the
+ * `<`, `"` and `#` in `fill="#000"`, so the URL grows by about a third. And
+ * base64 is the form browsers have always accepted for an SVG image, where
+ * percent-encoded SVG has needed engine-specific escaping.
+ *
+ * `btoa` throws on a code point above 255 and a diagram can contain any
+ * Unicode text, so the string becomes UTF-8 bytes first.
+ *
+ * @param svg - SVG markup.
+ * @returns A data URL holding the same markup.
+ */
+function svgDataUrl(svg: string): string
+{
+    const bytes = new TextEncoder().encode(svg);
+    let binary = "";
+
+    for (const byte of bytes)
+    {
+        binary += String.fromCharCode(byte);
+    }
+
+    return `data:image/svg+xml;base64,${btoa(binary)}`;
+}
+
+/**
+ * Give the image a long description holding the diagram source.
+ *
+ * An image exposes only its `alt` text to assistive technology, so rendering
+ * the diagram as an image takes the diagram text out of the accessibility
+ * tree. The source goes into a visually hidden element, and
+ * `aria-describedby` points the image at it. This is the long-description
+ * pattern for a complex image. The `data-source` attribute on the placeholder
+ * is not enough on its own, because the accessibility tree does not read it.
+ *
+ * @param block - Placeholder element for this diagram.
+ * @param img - Image this function describes.
+ * @param source - Diagram source text.
+ */
+function describePlantUmlDiagram(
+    block: HTMLElement,
+    img: HTMLImageElement,
+    source: string
+): void
+{
+    const id = `md-diagram-source-${++diagramSeq}`;
+    const desc = document.createElement("pre");
+
+    desc.id = id;
+    desc.className = "visually-hidden";
+    desc.textContent = source;
+
+    block.appendChild(desc);
+    img.setAttribute("aria-describedby", id);
 }
 
 /** Show a PlantUML rendering error. */
@@ -564,6 +654,9 @@ function encode6bit(b: number): string
 // ============================================================================
 // FACTORY
 // ============================================================================
+
+/** Counter for unique long-description ids, one per rendered diagram. */
+let diagramSeq = 0;
 
 let configured = false;
 

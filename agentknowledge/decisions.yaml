@@ -5250,3 +5250,124 @@
     - "CHANGELOG.md"
     - "agentknowledge/concepts.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-164"
+  title: "A PlantUML reply is loaded as an image, so a server's markup can never run in the page"
+  date: 2026-10-11
+  status: "Accepted"
+  context: |
+    SEC-3 in CODEBASE_FIXES.md had been open since the audit on 19 March 2026.
+    MarkdownRenderer renders a PlantUML diagram by sending the diagram source
+    to a server and receiving SVG. SVG is markup rather than pixels.
+    `applyPlantUmlSvg` assigned that markup to `block.innerHTML`.
+
+    The default server is https://www.plantuml.com/plantuml/svg/, a public
+    third-party service, and PlantUML rendering is on unless a consumer passes
+    `plantuml: false`. A consumer can also point `plantumlServer` anywhere. So
+    the trust boundary is the server, and nothing at the call site tested it.
+
+    The same file sanitises its other input. The markdown path wraps
+    marked's output in `sanitize()`. The PlantUML reply never reached it.
+
+    The entry's description of the mechanism was half wrong. `innerHTML` does
+    not execute a `<script>` element. It does attach event-handler attributes,
+    so `<image href="/missing" onerror="...">` ran immediately, with the host
+    application's origin and therefore its cookies, storage and APIs. This
+    package sets no Content-Security-Policy, so nothing outside the component
+    blocked an inline handler.
+
+    The user chose the image approach from three options after reading the
+    tradeoffs. The options were sanitising the reply, rebuilding it against an
+    allowlist, and loading it as an image.
+  decision: |
+    D1. `applyPlantUmlDiagram` replaces `applyPlantUmlSvg`. It puts the reply
+        into a data URL and sets that as the `src` of an `img` element. A
+        browser runs no script in an SVG that it loads as an image, so the
+        whole class of defect is gone rather than a list of named vectors.
+        The function was renamed because it no longer applies SVG.
+
+    D2. Sanitising was rejected as the primary fix. `sanitize()` works from a
+        list of forbidden things. It removes `on*` attributes and
+        `javascript:` values, which covers the vector above, but it does not
+        cover `<use>`, `<animate>`, `<set>`, `<foreignObject>` or `<style>`.
+        A list of forbidden things is the wrong shape for SVG.
+
+    D3. Base64, not percent-encoding. An SVG carries many characters that
+        percent-encoding expands to three bytes each, including the `<`, `"`
+        and `#` in `fill="#000"`, so the URL grows by about a third. Base64 is
+        also the form browsers have always accepted for an SVG image.
+        `btoa` throws above code point 255, so the string becomes UTF-8 bytes
+        first. A test renders a reply holding Japanese text and accented
+        Latin text, and the mutation that removes the encoder fails it.
+
+    D4. The fetch stays. Pointing the `img` straight at the server URL would
+        avoid the request entirely, but it would lose the `resp.ok` check that
+        produces the error block, and it would put the compressed diagram
+        source into the DOM. Fetching and inlining keeps both.
+
+    D5. Accessibility is handled rather than accepted as lost. An image
+        exposes only its `alt` text, so rendering a diagram as an image takes
+        the diagram text out of the accessibility tree. `alt` is "PlantUML
+        diagram", and `aria-describedby` points at a visually hidden `pre`
+        holding the source. The `data-source` attribute on the placeholder is
+        not sufficient, because the accessibility tree does not read it.
+
+    D6. SEC-1 is closed as NEVER A DEFECT, not as fixed. The flagged line,
+        richtextinput.ts:1407, was inside the component's own sanitiser, and
+        the statement was `return temp.innerHTML` on a detached element.
+        Reading `innerHTML` is a getter and executes nothing. `git log -S
+        sanitizeHtml` returns one commit, `0f2d32a`, which is the commit that
+        added the component. Reading `f3c1666`, the last commit before 20
+        March 2026, shows line 1407 was the `sanitizeNodes` declaration at the
+        time of the audit.
+
+    D7. SEC-2 stays open with its location corrected from 1841 to 1825. One
+        close-out covers one defect. The defect reproduces in `stripHtmlTags`,
+        and the severity is lower than the entry implies, because a detached
+        node runs no script although a browser can still fire `onerror` on a
+        failed image load.
+  consequences: |
+    - THREE BEHAVIOURS CHANGE FOR CONSUMERS, and the README states all three.
+      Text inside a PlantUML diagram is no longer selectable and a page search
+      cannot find it. A link inside a PlantUML diagram no longer works. CSS
+      that targets the `svg` element inside `.md-diagram` no longer reaches a
+      PlantUML diagram, and `.md-diagram-image` is the replacement hook. The
+      stylesheet now fits `svg, img` rather than `svg` alone.
+    + MERMAID AND GRAPHVIZ NEEDED NO CHANGE, and the reason is worth keeping.
+      Mermaid receives its source through `textContent`. Graphviz calls
+      `viz.renderSVGElement`, which returns a DOM element that the file
+      appends. Neither inserts a markup string and neither takes markup from a
+      remote server. PlantUML was the only path with a remote producer.
+    - THE TEST BLOCK NAMED AFTER THIS DEFECT NEVER TESTED IT. A section header
+      read "SEC-3: PLANTUML SVG SANITIZATION" and the three tests under it
+      checked `sanitize()` against SVG-shaped MARKDOWN. The recorded reason
+      for the gap named CompressionStream and fetch, and both exist in the
+      test environment. The actual gap is `Blob.prototype.stream`, which jsdom
+      does not implement and Node does. The new tests stub the global `Blob`
+      with Node's, so they drive the real asynchronous path. Insight 6.52.
+    + TWO ASSERTIONS NEEDED A REAL ENGINE and live in
+      tests/markdown-diagrams.spec.ts. jsdom loads no image, so
+      `naturalWidth` is always 0 and a data URL the browser refused would
+      still look correct. jsdom also runs no handler from an image load, so
+      "the handler did not fire" passes whether or not the markup was parsed.
+      The browser spec asserts the diagram decodes and has a visible box, and
+      a second test characterises the defect in the same engine: the same
+      reply assigned to innerHTML sets the global to 1, which is the onerror
+      attribute firing, not the 2 from the script element. That is the
+      evidence for the mechanism claim in the context above.
+    + FOUR MUTATIONS CONFIRM THE TESTS CAN FAIL: parsing the reply as markup
+      again fails the hostile-reply test and only that test, calling `btoa`
+      without the UTF-8 step fails the Unicode test, renaming the hidden
+      class fails the description test, and switching to percent-encoding
+      fails three.
+  files:
+    - "components/markdownrenderer/markdownrenderer.ts"
+    - "components/markdownrenderer/markdownrenderer.test.ts"
+    - "tests/markdown-diagrams.spec.ts"
+    - "components/markdownrenderer/markdownrenderer.scss"
+    - "components/markdownrenderer/README.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/concepts.yaml"
+    - "agentknowledge/history.jsonl"

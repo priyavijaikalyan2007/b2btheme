@@ -1111,7 +1111,7 @@
   related: ["ActionItems", "DarkModeTokens", "EnterpriseTheme"]
 
 - name: "MarkdownRenderer"
-  definition: "Shared markdown-to-HTML rendering utility using marked with optional extensions for code highlighting (highlight.js), math (KaTeX), diagrams (Mermaid), Graphviz/dot (@viz-js/viz WASM), and PlantUML (configurable server). Zero CSS injection — uses theme fonts natively. Registered on window.createMarkdownRenderer."
+  definition: "Shared markdown-to-HTML rendering utility using marked with optional extensions for code highlighting (highlight.js), math (KaTeX), diagrams (Mermaid), Graphviz/dot (@viz-js/viz WASM), and PlantUML (configurable server). Zero CSS injection — uses theme fonts natively. Registered on window.createMarkdownRenderer. Two inputs, treated differently on purpose (ADR-164): markdown from the consumer is sanitised by stripping scripts, iframes, embeds, forms, on* attributes and javascript: URLs, while a PlantUML reply is loaded as an image through a base64 data URL and never parsed as markup, because the server is a third party under the default option and a list of forbidden things is the wrong shape for SVG. Mermaid takes its source through textContent and Graphviz returns a DOM element, so neither inserts a markup string. Cost of the PlantUML decision: diagram text is not selectable, links inside a diagram do not work, and CSS targeting the inner svg does not reach it (.md-diagram-image is the hook)."
   anchor_file: "components/markdownrenderer/markdownrenderer.ts"
   related: ["CustomComponents", "MarkdownRendererStyles", "HelpDrawer", "DocViewer", "MarkdownEditor"]
 
