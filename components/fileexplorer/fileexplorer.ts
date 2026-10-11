@@ -876,6 +876,7 @@ export class FileExplorer
         {
             this.treeContainer = createElement("div",
                 ["fileexplorer-tree-pane"]);
+            this.treeContainer.setAttribute("data-dui-region", "fileexplorer:tree-pane");
             this.treeContainer.style.width =
                 (this.opts.treePaneWidth || 250) + "px";
             this.treeContainer.style.minWidth =
@@ -900,12 +901,15 @@ export class FileExplorer
         {
             this.breadcrumbsEl = createElement("nav",
                 ["fileexplorer-breadcrumbs"]);
+            this.breadcrumbsEl.setAttribute("data-dui-region", "fileexplorer:breadcrumbs");
             setAttr(this.breadcrumbsEl, "role", "navigation");
             setAttr(this.breadcrumbsEl, "aria-label", "Breadcrumb");
             this.contentPane.appendChild(this.breadcrumbsEl);
         }
 
         this.listingEl = createElement("div", ["fileexplorer-listing"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listingEl.setAttribute("data-dui-region", "fileexplorer:listing");
         setAttr(this.listingEl, "tabindex", "0");
         this.contentPane.appendChild(this.listingEl);
 

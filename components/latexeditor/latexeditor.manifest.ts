@@ -40,6 +40,12 @@ export const LATEXEDITOR_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "latexeditor:preview",
+        "latexeditor:palette-tabs",
+        "latexeditor:palette-grid",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 20737, mountCost: "moderate", holdsResources: false },
 

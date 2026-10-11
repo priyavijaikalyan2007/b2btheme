@@ -40,6 +40,11 @@ export const RELATIONSHIPMANAGER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "relationshipmanager:list",
+        "relationshipmanager:search-results",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 14990, mountCost: "light", holdsResources: false },
 

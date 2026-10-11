@@ -38,6 +38,8 @@ export const ACTIONITEMS_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["actionitems:body", "actionitems:filter-panel"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 45986, mountCost: "moderate", holdsResources: false },
 

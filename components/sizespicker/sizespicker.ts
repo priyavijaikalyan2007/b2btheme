@@ -448,6 +448,8 @@ export class SizesPicker implements SizesPickerAPI
         setAttr(panel, { "role": "listbox", "aria-label": "Page sizes" });
 
         this.listEl = createElement("div", [`${CLS}-list`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "sizespicker:list");
         this.appendGroupedItems(this.listEl);
         panel.appendChild(this.listEl);
 

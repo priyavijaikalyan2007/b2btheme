@@ -39,6 +39,14 @@ export const RIBBONBUILDER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "ribbonbuilder:tree-body",
+        "ribbonbuilder:props",
+        "ribbonbuilder:iconpicker",
+        "ribbonbuilder:symbolpicker-host",
+        "ribbonbuilder:control-menu",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 44126, mountCost: "moderate", holdsResources: false },
 

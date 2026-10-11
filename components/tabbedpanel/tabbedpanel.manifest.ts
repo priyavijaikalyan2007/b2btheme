@@ -39,6 +39,8 @@ export const TABBEDPANEL_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["tabbedpanel:tabbar", "tabbedpanel:panel"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 29054, mountCost: "moderate", holdsResources: false },
 

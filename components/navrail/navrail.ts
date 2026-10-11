@@ -802,6 +802,8 @@ export class NavRail
         }
 
         this.bodyEl = createElement("div", ["navrail-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "navrail:body");
         setAttr(this.bodyEl, "role", "tree");
         this.rootEl.appendChild(this.bodyEl);
         this.renderCategories();

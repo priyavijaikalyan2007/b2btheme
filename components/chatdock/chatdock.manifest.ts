@@ -48,6 +48,8 @@ export const CHATDOCK_MANIFEST: CapabilityManifest =
 
     stateKeys: ["draft", "historyOpen"],
 
+    regions: ["chatdock:turns"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 9_000, mountCost: "light", holdsResources: false },
 

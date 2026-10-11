@@ -404,6 +404,8 @@ class NotificationCenter
         }
 
         this.listEl = createElement("div", "notificationcenter-list");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "notificationcenter:list");
         setAttr(this.listEl, { role: "list" });
         this.panelEl.appendChild(this.listEl);
         this.renderList();
@@ -444,6 +446,7 @@ class NotificationCenter
     private buildCategoryTabs(): HTMLElement
     {
         const tabs = createElement("div", "notificationcenter-tabs");
+        tabs.setAttribute("data-dui-region", "notificationcenter:tabs");
         setAttr(tabs, { role: "tablist" });
 
         for (const cat of this.categories)

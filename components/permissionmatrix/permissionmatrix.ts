@@ -533,6 +533,8 @@ export class PermissionMatrix
     private buildGrid(): HTMLElement
     {
         const grid = createElement("div", `${CLS}-grid`);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        grid.setAttribute("data-dui-region", "permissionmatrix:grid");
         setAttr(grid, "role", "grid");
         setAttr(grid, "aria-label", "Permission matrix");
         if (this.readOnly)

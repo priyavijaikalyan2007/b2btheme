@@ -40,6 +40,8 @@ export const MARGINSPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["marginspicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 8704, mountCost: "light", holdsResources: false },
 

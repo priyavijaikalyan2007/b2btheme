@@ -369,6 +369,8 @@ class PropertyInspector
         }
 
         this.bodyEl = createElement("div", "propertyinspector-body");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "propertyinspector:body");
         this.drawerEl.appendChild(this.bodyEl);
         this.renderBodyContent(opts);
 
@@ -498,6 +500,7 @@ class PropertyInspector
     private buildTabBar(): HTMLElement
     {
         const bar = createElement("div", "propertyinspector-tabs");
+        bar.setAttribute("data-dui-region", "propertyinspector:tabs");
         setAttr(bar, { role: "tablist" });
 
         for (const tab of this.tabs)

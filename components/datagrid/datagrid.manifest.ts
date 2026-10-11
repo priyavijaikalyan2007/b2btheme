@@ -64,6 +64,8 @@ export const DATAGRID_MANIFEST: CapabilityManifest =
 
     stateKeys: ["sort", "page", "pageSize", "selection"],
 
+    regions: ["datagrid:scroll-container"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 33_889, mountCost: "moderate", holdsResources: false },
 

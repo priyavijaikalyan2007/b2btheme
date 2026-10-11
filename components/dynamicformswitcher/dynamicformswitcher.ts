@@ -1023,6 +1023,8 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         // upgrade via `customElement` on a `custom` field.
         const ta = document.createElement("textarea");
         ta.classList.add(`${CLS}-code`);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        ta.setAttribute("data-dui-region", "dynamicformswitcher:code");
         ta.name = field.name;
         ta.rows = field.rows ?? 6;
         ta.spellcheck = false;

@@ -1542,6 +1542,8 @@ export class Timeline
     private renderBody(): void
     {
         const body = createElement("div", ["timeline-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        body.setAttribute("data-dui-region", "timeline:body");
         const rowHeight = this.opts.spanHeight + this.opts.rowGap;
         const maxHeight = this.opts.maxVisibleRows * rowHeight;
         body.style.maxHeight = `${maxHeight}px`;
@@ -2289,6 +2291,7 @@ export class Timeline
         dropdown.appendChild(search);
 
         const list = createElement("div", ["timeline-tz-list"]);
+        list.setAttribute("data-dui-region", "timeline:tz-list");
         dropdown.appendChild(list);
 
         const allTimezones = getIANATimezones();

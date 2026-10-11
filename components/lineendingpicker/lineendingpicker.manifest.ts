@@ -38,6 +38,8 @@ export const LINEENDINGPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["lineendingpicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 14339, mountCost: "light", holdsResources: false },
 

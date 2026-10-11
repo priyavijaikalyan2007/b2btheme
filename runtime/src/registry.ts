@@ -35,7 +35,9 @@ import {
     type ValidationResult,
 } from "./errors";
 
-import { isFiniteNumber, isNonEmptyString, isObject } from "./predicates";
+import {
+    isFiniteNumber, isNonEmptyString, isObject, isRegionName,
+} from "./predicates";
 
 import type { CapabilityManifest } from "./types";
 
@@ -391,6 +393,35 @@ function validateConformance(
     {
         issues.push(typeIssue("stateKeys", "an array of state key names", m.stateKeys));
         return;
+    }
+
+    if (m.regions !== undefined)
+    {
+        if (!Array.isArray(m.regions))
+        {
+            issues.push(typeIssue(
+                "regions", "an array of region names", m.regions));
+            return;
+        }
+
+        for (const [i, name] of m.regions.entries())
+        {
+            if (!isRegionName(name))
+            {
+                issues.push(typeIssue(
+                    `regions[${i}]`,
+                    "a region name of the form \"component:region\"",
+                    name));
+            }
+            else if (!name.startsWith(`${m.name}:`))
+            {
+                issues.push(issue(
+                    `regions[${i}]`,
+                    `Region "${name}" is not namespaced to this component.`,
+                    `Name it "${m.name}:<region>", so an anchor cannot `
+                    + "address another component's region by accident."));
+            }
+        }
     }
 
     if (m.conformance === "surface" && m.stateKeys.length === 0)

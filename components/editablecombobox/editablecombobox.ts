@@ -631,6 +631,8 @@ export class EditableComboBox
     private buildListbox(): HTMLElement
     {
         const listbox = createElement("ul", ["combobox-listbox"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        listbox.setAttribute("data-dui-region", "editablecombobox:combobox-listbox");
         setAttr(listbox, "id", `${this.instanceId}-listbox`);
         setAttr(listbox, "role", "listbox");
         setAttr(listbox, "aria-label", "Options");

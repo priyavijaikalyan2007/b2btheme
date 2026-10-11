@@ -11,9 +11,9 @@ Created: 2026
 
 # Durable anchors: identify the content, not the coordinate
 
-**Status:** approach A is BUILT and shipped (ADR-161, 11 October 2026).
-Approach B is designed and not built. The section "As built" records what the
-implementation changed about this design.
+**Status:** BUILT. Approach A shipped as ADR-161 and approach B as ADR-162,
+both on 11 October 2026. The section "As built" records what the
+implementations changed about this design.
 **Addresses:** DEBT-DUI-1, DEBT-DUI-5
 **Touches:** `runtime/src/types.ts`, `components/dynamiccanvas/dynamiccanvas.ts`,
 `components/annotation/`, the capability manifest, the fleet conformance gate
@@ -398,3 +398,35 @@ tests cover the resolver state machine only.
 The limit this design predicted is real and unchanged: an orphaned note keeps
 its last resolved position only while the canvas is open. Approach B is what
 would narrow it.
+
+## As built: approach B
+
+Approach B shipped on 11 October 2026 as ADR-162. Three things in this design
+did not survive contact with the fleet.
+
+**The fleet numbers in this document were wrong in both directions.** Section
+"What the measurements show" said 21 components, then 25 after a correction.
+Counting the region ELEMENTS rather than the declarations gives 111 across 68
+components, and 104 of them can be named. The remaining seven cannot, and each
+one earned its exclusion by inspection. Five are a `pre` inside rendered
+content, which the content creates. One is page-level scaffolding that a
+consuming application provides. One was dead stylesheet rules for a tab strip
+that a `<select>` replaced.
+
+**"Every scrollable region declares a descriptor" is not achievable, and the
+gate had to say so.** A `pre` inside a rendered document cannot be named
+without numbering it, and a number is the thing this work replaces. So the
+check carries an exclusion list, and each entry states why that region cannot
+be named. It fails when a new unnameable region appears without an entry, and
+when an entry stops matching any region. Seven regions stay
+index-addressed, which is the residue of DEBT-DUI-5 rather than a finished job.
+
+**The gate cannot be a mounted-DOM check, which costs it precision.** jsdom
+has no layout and never loads a component stylesheet, so a region's overflow is
+invisible there and `isScrollable` is false for everything. The check is
+therefore static: it reads regions from the SCSS and names from the
+TypeScript. It matches a region to an attribute in the same file, not to the
+same element, so a component that labels the wrong element passes. Two regions are checked properly, in a real browser.
+The test collapses an earlier region's content and asserts the mark stays put.
+A second test asserts that the same mark in an UNNAMED region moves, which is
+what makes the first assertion mean anything.

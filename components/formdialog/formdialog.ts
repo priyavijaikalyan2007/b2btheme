@@ -559,6 +559,8 @@ class FormDialogImpl implements FormDialog
     private buildStepIndicator(): HTMLElement
     {
         const bar = createElement("div", [`${CLS}-steps`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        bar.setAttribute("data-dui-region", "formdialog:steps");
         setAttr(bar, "role", "navigation");
         setAttr(bar, "aria-label", "Form steps");
         this.renderStepIndicator(bar);
@@ -637,6 +639,7 @@ class FormDialogImpl implements FormDialog
         }
 
         this.formEl = createElement("div", [`${CLS}-form`]);
+        this.formEl.setAttribute("data-dui-region", "formdialog:form");
         this.renderFormContent();
         body.appendChild(this.formEl);
 
@@ -942,6 +945,8 @@ class FormDialogImpl implements FormDialog
     {
         const ta = document.createElement("textarea");
         ta.classList.add(`${CLS}-textarea`, `${CLS}-code`);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        ta.setAttribute("data-dui-region", "formdialog:code");
         ta.name = field.name;
         ta.rows = field.rows ?? 6;
         ta.spellcheck = false;
@@ -1133,6 +1138,7 @@ class FormDialogImpl implements FormDialog
     private buildPanel(): HTMLElement
     {
         const panel = createElement("div", [`${CLS}-panel`]);
+        panel.setAttribute("data-dui-region", "formdialog:panel");
         panel.style.width = `${this.panelWidth}px`;
 
         if (this.opts.panel!.title)

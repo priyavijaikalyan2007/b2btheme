@@ -40,6 +40,8 @@ export const SIZESPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["sizespicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 8994, mountCost: "light", holdsResources: false },
 

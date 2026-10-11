@@ -40,7 +40,9 @@ import {
     type ValidationResult,
 } from "./errors";
 
-import { isFiniteNumber, isIdentifier, isObject } from "./predicates";
+import {
+    isFiniteNumber, isIdentifier, isObject, isRegionName,
+} from "./predicates";
 
 import type {
     Binding,
@@ -397,6 +399,14 @@ function validateSpot(
                 "a spot { x, y } with both between 0 and 1",
                 spot));
         }
+    }
+
+    if (anchor.region !== undefined && !isRegionName(anchor.region))
+    {
+        issues.push(typeIssue(
+            `${path}.region`,
+            "a region name of the form \"component:region\"",
+            anchor.region));
     }
 
     if (anchor.within !== undefined

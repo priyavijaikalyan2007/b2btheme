@@ -373,6 +373,9 @@ class RelationshipManagerImpl implements RelationshipManager
         this.root = htmlEl("div", { class: "rm-root" });
         this.root.appendChild(this.buildHeader());
         this.listEl = htmlEl("div", { class: "rm-list" });
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute(
+            "data-dui-region", "relationshipmanager:list");
         this.root.appendChild(this.listEl);
         this.addPanelEl = htmlEl("div", { class: "rm-add-panel" });
         this.addPanelEl.style.display = "none";
@@ -952,6 +955,8 @@ class RelationshipManagerImpl implements RelationshipManager
         wrap.appendChild(input);
 
         const resultsEl = htmlEl("div", { class: "rm-search-results" });
+        resultsEl.setAttribute(
+            "data-dui-region", "relationshipmanager:search-results");
         resultsEl.setAttribute("data-role", "results");
         wrap.appendChild(resultsEl);
 

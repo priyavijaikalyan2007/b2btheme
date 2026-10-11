@@ -719,6 +719,8 @@ export class ProgressModal
         }
 
         this.logEl = createElement("div", ["progressmodal-log"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.logEl.setAttribute("data-dui-region", "progressmodal:log");
         setAttr(this.logEl, "role", "log");
         setAttr(this.logEl, "aria-label", "Operation details");
         setAttr(this.logEl, "aria-live", "polite");

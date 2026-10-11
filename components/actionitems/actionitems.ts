@@ -2130,6 +2130,8 @@ export class ActionItems
         }
 
         const body = createElement("div", [`${CLS}-body`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        body.setAttribute("data-dui-region", "actionitems:body");
 
         if (this.items.length === 0)
         {
@@ -4786,6 +4788,7 @@ export class ActionItems
     private renderFilterPanel(): HTMLElement
     {
         const panel = createElement("div", [`${CLS}-filter-panel`]);
+        panel.setAttribute("data-dui-region", "actionitems:filter-panel");
 
         this.addStatusFilterGroup(panel);
         this.addPriorityFilterGroup(panel);

@@ -461,6 +461,8 @@ export class ShareDialog
     private buildBody(): HTMLElement
     {
         const body = createElement("div", [`${CLS}-body`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        body.setAttribute("data-dui-region", "sharedialog:body");
         body.appendChild(this.buildAddSection());
         body.appendChild(createElement("div", [`${CLS}-divider`]));
         body.appendChild(this.buildExistingSection());
@@ -524,6 +526,7 @@ export class ShareDialog
         section.appendChild(label);
 
         this.accessListEl = createElement("div", [`${CLS}-access-list`]);
+        this.accessListEl.setAttribute("data-dui-region", "sharedialog:access-list");
         section.appendChild(this.accessListEl);
 
         return section;

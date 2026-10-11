@@ -60,6 +60,8 @@ export const TIMELINE_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["timeline:body", "timeline:tz-list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     // holdsResources: it retains both an IntersectionObserver (lazy row
     // rendering) and a ResizeObserver, so the canvas must count it against

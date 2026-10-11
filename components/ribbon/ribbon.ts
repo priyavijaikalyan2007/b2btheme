@@ -1367,6 +1367,8 @@ export class RibbonImpl implements Ribbon
     private buildTabBar(): HTMLElement
     {
         const bar = createElement("div", [`${CLS}-tabbar`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        bar.setAttribute("data-dui-region", "ribbon:tabbar");
         setAttr(bar, { "role": "tablist" });
         this.populateTabBar(bar);
         return bar;
@@ -2044,6 +2046,7 @@ export class RibbonImpl implements Ribbon
     private buildGalleryPopup(gallery: RibbonGallery): HTMLElement
     {
         const popup = createElement("div", [`${CLS}-gallery-popup`]);
+        popup.setAttribute("data-dui-region", "ribbon:gallery-popup");
         const layout = gallery.layout || "grid";
         const cols = gallery.columns || 4;
 
@@ -2816,7 +2819,9 @@ export class RibbonImpl implements Ribbon
     {
         const layout = createElement("div", [`${CLS}-backstage-layout`]);
         const sidebar = createElement("div", [`${CLS}-backstage-sidebar`]);
+        sidebar.setAttribute("data-dui-region", "ribbon:backstage-sidebar");
         const contentArea = createElement("div", [`${CLS}-backstage-content`]);
+        contentArea.setAttribute("data-dui-region", "ribbon:backstage-content");
 
         if (tab.backstageSidebar)
         {

@@ -46,6 +46,11 @@ export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "auditlogviewer:table",
+        "auditlogviewer:detail-json",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 18321, mountCost: "light", holdsResources: false },
 

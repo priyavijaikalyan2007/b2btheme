@@ -47,6 +47,12 @@ export const DOCVIEWER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "docviewer:toc-list",
+        "docviewer:content",
+        "docviewer:outline",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 12200, mountCost: "light", holdsResources: false },
 

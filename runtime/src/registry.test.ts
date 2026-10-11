@@ -208,6 +208,50 @@ describe("validateManifest", () =>
         expect(res.issues.some((i) => i.path === "name")).toBe(true);
     });
 
+    test("accepts declared scrolling regions", () =>
+    {
+        expect(validateManifest(manifest("datagrid", {
+            regions: ["datagrid:scroll-container", "datagrid:body"],
+        })).ok).toBe(true);
+    });
+
+    test("accepts a manifest that declares no regions", () =>
+    {
+        // A component with nothing of its own that scrolls omits the field.
+        expect(validateManifest(manifest("metriccard")).ok).toBe(true);
+    });
+
+    test("rejects regions that are not an array", () =>
+    {
+        const res = validateManifest(manifest("datagrid", {
+            regions: "datagrid:body" as unknown as readonly string[],
+        }));
+
+        expect(res.issues.some((i) => i.path === "regions")).toBe(true);
+    });
+
+    test("rejects a malformed region name", () =>
+    {
+        const res = validateManifest(manifest("datagrid", {
+            regions: ["body"],
+        }));
+
+        expect(res.issues.some((i) => i.path === "regions[0]")).toBe(true);
+    });
+
+    test("rejects a region namespaced to another component", () =>
+    {
+        // A component may only name its own regions. Declaring somebody
+        // else's would let an anchor address a region this manifest does not
+        // own, and nothing downstream would catch it.
+        const res = validateManifest(manifest("datagrid", {
+            regions: ["treeview:list-container"],
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.some((i) => i.path === "regions[0]")).toBe(true);
+    });
+
     test("rejects a missing factory", () =>
     {
         const res = validateManifest({ ...manifest("x"), factory: 42 });

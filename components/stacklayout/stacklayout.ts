@@ -296,6 +296,8 @@ function buildPanelHeader(cfg: StackedPanelConfig): HTMLElement
 function buildPanelContent(cfg: StackedPanelConfig): HTMLElement
 {
     const content = createElement("div", ["stacklayout-content"]);
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    content.setAttribute("data-dui-region", "stacklayout:content");
 
     if (cfg.content)
     {

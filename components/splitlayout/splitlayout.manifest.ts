@@ -38,6 +38,8 @@ export const SPLITLAYOUT_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["splitlayout:pane"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 13299, mountCost: "light", holdsResources: false },
 

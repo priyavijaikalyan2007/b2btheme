@@ -38,6 +38,8 @@ export const SYMBOLPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["symbolpicker:panel", "symbolpicker:grid-wrap"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 46327, mountCost: "moderate", holdsResources: false },
 

@@ -365,6 +365,9 @@ export class AuditLogViewer
         {
             root.appendChild(this.buildFilterBar());
             this.chipsEl = createElement("div", `${CLS}-chips`);
+            // Canvas anchors name this region rather than counting it (ADR-162).
+            this.chipsEl.setAttribute("data-dui-region", "auditlogviewer:detail-json");
+            this.chipsEl.setAttribute("data-dui-region", "auditlogviewer:table");
             setAttr(this.chipsEl, "role", "list");
             root.appendChild(this.chipsEl);
         }

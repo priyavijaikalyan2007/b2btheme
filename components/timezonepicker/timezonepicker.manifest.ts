@@ -38,6 +38,8 @@ export const TIMEZONEPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["timezonepicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 14353, mountCost: "light", holdsResources: false },
 

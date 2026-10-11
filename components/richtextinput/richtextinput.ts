@@ -450,6 +450,8 @@ export class RichTextInput
     private buildEditableArea(): void
     {
         this.editableEl = createElement("div", "richtextinput-editable");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.editableEl.setAttribute("data-dui-region", "richtextinput:editable");
         const editable = !(this.options.disabled || this.options.readonly);
         this.editableEl.contentEditable = editable ? "true" : "false";
 

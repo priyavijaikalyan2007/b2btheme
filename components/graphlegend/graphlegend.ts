@@ -450,6 +450,7 @@ function buildBody(
     const body = createElement("div", {
         class: "graphlegend-body"
     });
+    body.setAttribute("data-dui-region", "graphlegend:body");
 
     body.style.maxHeight = `${maxHeight}px`;
 

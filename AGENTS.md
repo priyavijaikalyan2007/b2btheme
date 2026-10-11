@@ -101,6 +101,16 @@ we will build custom components where necessary. For that:
   always dogfood the library — never use raw HTML for UI that a library component can provide.
 - Every new component MUST have a corresponding entry in the `Component Studio` app so users can model their
   applications visually (to some extend) and understand the look and feel of each component.
+- Every element a component gives a scrolling overflow (`overflow: auto` or
+  `scroll`, on either axis) MUST carry `data-dui-region="<component>:<region>"`,
+  and a component with a manifest MUST list those names in `regions` (ADR-162).
+  A canvas anchor used to name a region by its INDEX in DOM order, and the index
+  moves: `isScrollable()` requires an element to be overflowing when it is
+  tested, so a region whose content happens to fit drops out of the list and
+  every later index shifts — inside one session. Structure check `[18]` enforces
+  this. If a region genuinely cannot be named, because the CONTENT creates it or
+  a consuming application provides it, add it to `UNNAMEABLE` in
+  `scripts/check-region-names.mjs` with the reason. Silence fails the check.
 
 ## (CRITICAL) Form-field-capable Components — DynamicFormSwitcher Convention
 

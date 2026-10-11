@@ -518,6 +518,8 @@ export class LogConsole
     private buildBody(): void
     {
         this.bodyEl = createElement("div", ["logconsole-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "logconsole:body");
         setAttr(this.bodyEl, {
             "role": "log",
             "aria-live": "polite",

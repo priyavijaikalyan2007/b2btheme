@@ -939,6 +939,8 @@ export class TreeGrid
     private buildBody(): HTMLElement
     {
         this.bodyEl = createElement("div", ["treegrid-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "treegrid:body");
         setAttr(this.bodyEl, "role", "rowgroup");
         this.bodyEl.addEventListener("scroll", this.boundOnBodyScroll);
         this.renderTree();

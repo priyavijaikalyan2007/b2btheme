@@ -288,6 +288,21 @@ export interface CapabilityManifest
     /** Keys returned by getState(), used for restore. */
     readonly stateKeys: readonly string[];
 
+    /**
+     * Scrolling regions this component owns, as `<component>:<region>` names
+     * matching the `data-dui-region` attributes it sets (ADR-162).
+     *
+     * Consumer-visible, and the reason it belongs in the manifest: a host
+     * writing an `Anchor` needs to know which region names exist, and reading
+     * them out of a stylesheet is not an interface. A component with no
+     * scrolling region of its own omits the field.
+     *
+     * Regions a component does NOT create are absent by definition. A `pre`
+     * inside rendered content is created by the content, and nothing stable
+     * can name it, so an anchor into one still uses `within`.
+     */
+    readonly regions?: readonly string[];
+
     /** Cost model for the mount budget. */
     readonly weight: WeightSpec;
 
@@ -359,8 +374,30 @@ export type Anchor =
          * A component may scroll internally — a grid's rows, a document's
          * text — and a fraction of the wrong box lands nowhere near what was
          * pointed at. Absent means the body.
+         *
+         * @deprecated Prefer `region`. An INDEX moves: a styled region whose
+         * content happens to fit is not scrollable, so it is absent from the
+         * list and every later index shifts, inside one session (DEBT-DUI-5).
+         * This field stays and keeps resolving by index, because it is a
+         * PERSISTED integer in documents this package cannot see. An anchor
+         * carrying only `within` behaves exactly as it always has.
          */
         readonly within?: number;
+
+        /**
+         * Which scrolling region the spot is measured against, by NAME:
+         * `<component>:<region>`, matching a `data-dui-region` attribute the
+         * component sets on the element itself (ADR-162).
+         *
+         * A name survives what an index cannot. The component owns it, the
+         * manifest's `regions` lists it, and nothing about a sibling region's
+         * content can change it.
+         *
+         * When both this and `within` are present, this wins. When the named
+         * region is absent — a component dropped or renamed it — the canvas
+         * falls back to `within`, then to the body, and logs the fall-back.
+         */
+        readonly region?: string;
     }
     | EntityAnchor;
 

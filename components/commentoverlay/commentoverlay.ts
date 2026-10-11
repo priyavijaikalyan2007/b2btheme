@@ -995,6 +995,8 @@ export class CommentOverlay
     private buildThreadBody(thread: CommentThread): HTMLElement
     {
         const body = createElement("div", CLS + "-thread-body");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        body.setAttribute("data-dui-region", "commentoverlay:thread-body");
         setAttr(body, "role", "list");
         if (thread.resolved && thread.resolvedBy)
         {
@@ -1661,6 +1663,8 @@ export class CommentOverlay
     {
         if (this.mDropdown) { return; }
         this.mDropdown = createElement("div", CLS + "-mention-dropdown");
+        this.mDropdown.setAttribute(
+            "data-dui-region", "commentoverlay:mention-dropdown");
         setAttr(this.mDropdown, "role", "listbox");
         setAttr(this.mDropdown, "aria-label", "Mention suggestions");
         const z = (this.opts.zIndex ?? DEFAULT_Z_INDEX) + 2;

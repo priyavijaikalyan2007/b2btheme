@@ -91,7 +91,13 @@ What gets recorded depends on where the click landed:
 
 The application never converts a screen coordinate into an anchor. It persists the emitted patch and hands it back to `load()`; everything geometric is the canvas's problem.
 
-**What this does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text (DEBT-DUI-1). The same is true along the other axis: `within` names the **Nth** scrolling region, and the count changes whenever a region stops overflowing, so the index can move within a single session (DEBT-DUI-5).
+**What a geometric anchor does not survive: reflow.** A geometric anchor points at a *position*, not at *content*. Re-wrap a document at a different width and the same fraction covers different text. Use a content anchor for that, described below.
+
+**`region` names the scrolling region; `within` is the deprecated index** (ADR-162). A component marks each region it creates with `data-dui-region="<component>:<region>"` and lists the names in its manifest's `regions`, so an anchor can say `region: "docviewer:content"` instead of counting. The index moved: `isScrollable()` requires an element to be overflowing when it is tested, so a styled region whose content happens to fit drops out of the list and every later index shifts, inside one session (DEBT-DUI-5).
+
+`within` stays and still resolves by index, because host documents already contain those integers. When an anchor carries both, `region` wins; when the named region is gone, the canvas falls back to the index, then to the body, and logs once. A fresh capture records both, so a renamed region leaves the index behind as a fallback.
+
+Seven regions in the fleet are still index-addressed, and the reason is written in `scripts/check-region-names.mjs`. Five are a `pre` inside rendered content, which the content creates — numbering those would reproduce the problem the names exist to solve.
 
 **`{ kind: "entity", entityId, selector? }` survives reflow, and it needs a resolver from you** (ADR-161). The canvas cannot find your content by itself, so a host application implements `onResolveAnchor(anchor, nodeId)` and returns the element that holds the content now. `DynamicUIHost` requires that function. On this component the matching option is optional, because demo pages and the Layout Studio mount the canvas and are not host applications.
 
@@ -112,7 +118,7 @@ The canvas verifies what you return. The element must be inside a mounted frame 
 
 Two states that look similar are not the same. `dyncanvas-overlay-hidden` means the content exists and is scrolled out of view. `dyncanvas-overlay-orphaned` means the content could not be found at all. A note whose content is in a component that is merely demoted by virtualization is in neither state: it follows that component, and it is remounted with it.
 
-One limit to plan around: an orphaned note keeps its last resolved position only while the canvas is open. After a reload nothing records where the content used to be, so the packer places it by its stored placement. Narrowing that gap is approach B in `specs/2026-10-10-durable-anchors.prd.md` (DEBT-DUI-5), which is designed and not built.
+One limit to plan around: an orphaned note keeps its last resolved position only while the canvas is open. After a reload nothing records where the content used to be, so the packer places it by its stored placement. Narrowing that gap means recording a region name and a `spot` as a *hint* on a content anchor, so the packer has somewhere better than the stored placement to put an orphan. That is approach C in `specs/2026-10-10-durable-anchors.prd.md`, and it is not built. Approach B, the region names themselves, shipped on 11 October 2026 (ADR-162).
 
 Spot anchors are unchanged and still do not survive reflow. Use a content anchor for anything that reflows or virtualizes.
 

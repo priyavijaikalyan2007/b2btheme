@@ -389,6 +389,29 @@ else
 fi
 echo ""
 
+# ── [18] ──
+# DEBT-DUI-5, approach B (ADR-162). A canvas anchor used to name a scrolling
+# region by its INDEX in DOM order, and an index moves: isScrollable requires
+# an element to be overflowing at the time of the test, so a styled region
+# whose content fits drops out of the list and every later index shifts —
+# same component, same version, same session.
+#
+# A region that names itself cannot move. The check reads each component's
+# stylesheet for regions and its TypeScript for names, because the gate suite
+# runs in jsdom, which has no layout and never loads these stylesheets, so a
+# mounted-DOM check would find no scrolling region at all.
+echo "[18] Every scrolling region a component creates declares a name (ADR-162)"
+if [ -f scripts/check-region-names.mjs ]; then
+    if node scripts/check-region-names.mjs; then
+        PASS=$((PASS + 1))
+    else
+        fail "a scrolling region has no stable name (see above)"
+    fi
+else
+    fail "scripts/check-region-names.mjs missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

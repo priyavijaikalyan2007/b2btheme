@@ -41,6 +41,8 @@ export const LOGCONSOLE_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["logconsole:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 10565, mountCost: "light", holdsResources: false },
 

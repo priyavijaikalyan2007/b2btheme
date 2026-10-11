@@ -38,6 +38,8 @@ export const SEARCHBOX_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["searchbox:suggestions"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 10291, mountCost: "light", holdsResources: false },
 

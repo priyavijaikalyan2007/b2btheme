@@ -4317,6 +4317,8 @@ function buildDom(state: InternalState): void
     }
 
     const tableContainer = createElement("div", "vte-table-container");
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    tableContainer.setAttribute("data-dui-region", "visualtableeditor:table-container");
     tableContainer.style.position = "relative";
     tableContainer.style.overflow = "auto";
     root.appendChild(tableContainer);

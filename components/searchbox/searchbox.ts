@@ -572,6 +572,8 @@ export class SearchBox
     private buildSuggestionsPanel(): HTMLElement
     {
         const panel = createElement("div", ["searchbox-suggestions"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        panel.setAttribute("data-dui-region", "searchbox:suggestions");
         setAttr(panel, "role", "listbox");
         setAttr(panel, "id", `${this.instanceId}-listbox`);
         panel.style.display = "none";

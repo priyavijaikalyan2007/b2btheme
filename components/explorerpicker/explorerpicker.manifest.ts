@@ -40,6 +40,8 @@ export const EXPLORERPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["explorerpicker:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 36839, mountCost: "moderate", holdsResources: false },
 

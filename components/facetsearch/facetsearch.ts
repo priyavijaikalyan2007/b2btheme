@@ -640,6 +640,8 @@ export class FacetSearch
     private buildDropdown(): void
     {
         this.dropdown = createElement("div", ["facetsearch-dropdown"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.dropdown.setAttribute("data-dui-region", "facetsearch:dropdown");
         setAttr(this.dropdown, "id", this.id + "-listbox");
         setAttr(this.dropdown, "role", "listbox");
         setAttr(this.dropdown, "aria-label", "Search suggestions");

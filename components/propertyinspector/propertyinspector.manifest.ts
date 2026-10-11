@@ -47,6 +47,8 @@ export const PROPERTYINSPECTOR_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["propertyinspector:tabs", "propertyinspector:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 7665, mountCost: "trivial", holdsResources: false },
 

@@ -39,6 +39,12 @@ export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "prompttemplatemanager:list",
+        "prompttemplatemanager:detail",
+        "prompttemplatemanager:preview-panel",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 26795, mountCost: "moderate", holdsResources: false },
 

@@ -1617,6 +1617,8 @@ export class Conversation
     private buildMessageList(): void
     {
         this.messageListEl = createElement("div", ["conversation-messages"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.messageListEl.setAttribute("data-dui-region", "conversation:messages");
         setAttr(this.messageListEl, "role", "log");
         setAttr(this.messageListEl, "aria-live", "polite");
         setAttr(this.messageListEl, "aria-relevant", "additions");
@@ -1676,6 +1678,7 @@ export class Conversation
     private buildTextarea(): void
     {
         this.textareaEl = document.createElement("textarea");
+        this.textareaEl.setAttribute("data-dui-region", "conversation:textarea");
         this.textareaEl.classList.add("conversation-textarea");
         this.textareaEl.rows = 1;
         this.textareaEl.placeholder =
@@ -2174,6 +2177,7 @@ export class Conversation
         }
         const pre = createElement("pre",
             ["conversation-error-technical"]);
+        pre.setAttribute("data-dui-region", "conversation:error-technical");
         pre.textContent = techText.trim();
         details.appendChild(pre);
         el.appendChild(details);

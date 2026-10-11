@@ -38,6 +38,11 @@ export const COMMENTOVERLAY_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "commentoverlay:thread-body",
+        "commentoverlay:mention-dropdown",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 29698, mountCost: "moderate", holdsResources: false },
 

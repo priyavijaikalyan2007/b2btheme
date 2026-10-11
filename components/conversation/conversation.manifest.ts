@@ -39,6 +39,12 @@ export const CONVERSATION_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "conversation:messages",
+        "conversation:textarea",
+        "conversation:error-technical",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 38792, mountCost: "moderate", holdsResources: false },
 

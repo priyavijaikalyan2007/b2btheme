@@ -38,6 +38,8 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["facetsearch:dropdown"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 21028, mountCost: "moderate", holdsResources: false },
 

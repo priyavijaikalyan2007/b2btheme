@@ -47,6 +47,8 @@ export const SPINEMAP_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["spinemap:popover", "spinemap:sidebar-tree"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 56035, mountCost: "moderate", holdsResources: false },
 

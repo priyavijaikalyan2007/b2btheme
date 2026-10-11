@@ -425,6 +425,8 @@ export class AppLauncher
         this.appendSearchToPortal();
         this.appendTabsIfNeeded();
         this.sectionsEl = createElement("div", [`${CLS}-sections`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.sectionsEl.setAttribute("data-dui-region", "applauncher:sections");
         this.portalEl.appendChild(this.sectionsEl);
         this.appendFooter();
 
@@ -544,6 +546,7 @@ export class AppLauncher
             body.appendChild(this.buildSidebar());
         }
         const content = createElement("div", [`${CLS}-fullpage-content`]);
+        content.setAttribute("data-dui-region", "applauncher:fullpage-content");
         this.sectionsEl = content;
         body.appendChild(content);
         this.rootEl.appendChild(body);
@@ -638,6 +641,7 @@ export class AppLauncher
     private buildTabs(): HTMLElement
     {
         const nav = createElement("div", [`${CLS}-tabs`]);
+        nav.setAttribute("data-dui-region", "applauncher:tabs");
         setAttr(nav, "role", "tablist");
         nav.appendChild(this.buildTabItem("all", "All"));
         this.getSortedCategories().forEach(cat =>
@@ -687,6 +691,7 @@ export class AppLauncher
     private buildSidebar(): HTMLElement
     {
         const sidebar = createElement("div", [`${CLS}-sidebar`]);
+        sidebar.setAttribute("data-dui-region", "applauncher:sidebar");
         setAttr(sidebar, "role", "navigation");
         setAttr(sidebar, "aria-label", "App categories");
         sidebar.appendChild(

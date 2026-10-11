@@ -2958,6 +2958,8 @@ export class SpineMap
             class: "spinemap-popover",
             style: "display:none", role: "dialog"
         });
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.popoverEl.setAttribute("data-dui-region", "spinemap:popover");
         this.canvasWrapEl.appendChild(this.svgEl);
         document.body.appendChild(this.popoverEl);
     }
@@ -3031,6 +3033,7 @@ export class SpineMap
             class: "spinemap-sidebar-tree",
             id: `spinemap-tree-${Date.now()}`
         });
+        treeWrap.setAttribute("data-dui-region", "spinemap:sidebar-tree");
         this.sidebarEl.append(
             this.buildSidebarResizeHandle(),
             hdr,

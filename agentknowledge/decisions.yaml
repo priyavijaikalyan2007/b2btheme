@@ -5017,13 +5017,17 @@
     - An orphaned note keeps its last resolved position only while the canvas
       is open. After a reload nothing records where the content was, so the
       packer places it by its stored placement. Recorded in the README and the
-      migration guide rather than hidden.
+      migration guide rather than hidden. NARROWED for geometric anchors by
+      ADR-162 the same day; for a content anchor it needs a region and a spot
+      kept as a hint, which is approach C and is not built.
     - `CSS.escape` is not available in jsdom, so the orphan description
       element is found by class rather than by id.
     - Position is asserted in tests/dynamic-ui.spec.ts, not in vitest. Three
       e2e tests measure real layout, and both the geometry and the scroll fix
-      are mutation-proven there. The eleven vitest tests cover the state
-      machine only, and say so in their header.
+      are mutation-proven there. The vitest file covers the resolver's state
+      machine, and says so in its header. ADR-162 later added two tests to the
+      same file for region-name handling, which is why the header names both
+      subjects rather than one.
   files:
     - "runtime/src/types.ts"
     - "runtime/src/document.ts"
@@ -5038,6 +5042,128 @@
     - "specs/dynamicui.prd.md"
     - "specs/2026-10-10-durable-anchors.prd.md"
     - "specs/2026-10-11-content-anchors-migration-guide.md"
+    - "CODEBASE_FIXES.md"
+    - "CHANGELOG.md"
+    - "AGENT_INSIGHTS.md"
+
+- id: "ADR-162"
+  title: "A scrolling region declares its own name; an anchor records the name and keeps the index as a fallback"
+  date: 2026-10-11
+  status: "Accepted"
+  context: |
+    DEBT-DUI-5. A canvas anchor named the scrolling region a mark was measured
+    against by its INDEX in DOM order, and the index moves. isScrollable()
+    requires an element to be overflowing at the time of the test, so a styled
+    region whose content happens to fit is absent from the list and every later
+    index shifts up — same component, same version, same session. A mark
+    recorded against region 2 silently re-anchors to a different region the
+    moment an earlier sibling's content shrinks below its box.
+
+    Approach B of specs/2026-10-10-durable-anchors.prd.md. The user asked for
+    it after approach A shipped (ADR-161), which fixed DEBT-DUI-1 and left this
+    entry untouched.
+
+    Measured first, because the design's "touches all 21 components" was wrong
+    in both directions. 68 components declare at least one scrolling region.
+    114 selector blocks collapse to 111 distinct region elements. 104 of those
+    are created by the component itself and can be named. Seven cannot, and
+    each earned its exclusion by inspection rather than by a regex miss: five
+    are a bare `pre` inside rendered CONTENT, which the content creates and
+    nothing stable can name; authcard:auth-main is page-level scaffolding the
+    consuming application provides, named in the frozen Keycloak parity
+    contract; symbolpicker-categories is DEAD CSS, styling a tab strip that a
+    `<select>` replaced.
+  decision: |
+    D1. A component marks each scrolling region it creates with
+    `data-dui-region="<component>:<region>"`. The name is the region's class
+    with the component's own prefix removed, so it is derived rather than
+    invented and two people naming the same region agree.
+
+    D2. The node anchor gains `region?: string`. `within?: number` STAYS,
+    deprecated, and keeps resolving by index, because it is a persisted integer
+    in documents this package cannot see. When both are present the name wins;
+    the resolution order is name, then index, then the body, in one place.
+
+    D3. Capture records BOTH when the clicked region has a name. The name is
+    what resolves; the index is the fallback for the day a component renames or
+    drops a region, which would otherwise leave the anchor with nothing.
+
+    D4. `CapabilityManifest` gains `regions?: readonly string[]`, validated to
+    be namespaced to the declaring component. A host writing an anchor needs to
+    know which names exist, and a stylesheet is not an interface.
+
+    D5. `isRegionName` is narrower than `isIdentifier`: `^[a-z0-9-]+:[a-z0-9-]+$`.
+    The value is interpolated into `[data-dui-region="..."]`, so a quote or a
+    bracket in it would change which element that selector matches. The canvas
+    re-checks it before use, independently of the runtime's validator.
+
+    D6. Structure check [18] asserts that every region a component creates
+    declares a name, that a migrated component's manifest lists exactly those
+    names, and that each exclusion carries a reason of at least 40 characters.
+    An exclusion that matches no region any more also fails, so the list cannot
+    rot into fiction.
+  consequences: |
+    + An anchor into a named region survives what the index cannot. The e2e
+      suite collapses an earlier region's content and asserts the mark stays
+      put; the same scenario with UNNAMED regions is also a test, and it
+      asserts the mark MOVES. Without that second test the first one proves
+      nothing, and it would have passed against an unused code path.
+    + Additive: a component that has not declared its regions behaves exactly
+      as before, fragility included. An integer-only anchor is unchanged.
+    - SEVEN REGIONS REMAIN INDEX-ADDRESSED and that is the residue of
+      DEBT-DUI-5 rather than a finished job. A `pre` inside rendered content
+      cannot be named without numbering it, and a number is the thing being
+      replaced. Recorded in the check itself, where the next reader will be.
+    - THE CHECK IS STATIC AND CANNOT BIND AN ATTRIBUTE TO AN ELEMENT. It reads
+      regions from the SCSS and names from the TypeScript in the same file; a
+      component that sets the attribute on the WRONG element passes. jsdom has
+      no layout and does not load component stylesheets, so no mounted-DOM
+      check can see a scrolling region at all. The browser suite is where that
+      binding is tested, for two regions.
+    - THE CANVAS GUARD IS REACHABLE ONLY UNDER VERSION SKEW, and the test says
+      so rather than implying more. lifecycle.sync() validates every document
+      before mounting, so apply() and load() both refuse a malformed name when
+      runtime and component ship together. They are separate CDN artifacts, so
+      a consumer can pin an older runtime whose validator predates `region`;
+      the test injects a non-validating lifecycle to stand in for that.
+    - SIXTEEN NAMES STUTTERED AND WERE RENAMED BEFORE SHIPPING. Deriving a
+      name by stripping the DIRECTORY prefix produced
+      `prompttemplatemanager:promptmanager-list` and
+      `markdowneditor:mde-display`, because a component's class prefix is not
+      always its directory name. These names ship in
+      capability-manifest.json and are PERSISTED in a host document the
+      moment an anchor records one, so the only cheap moment to fix them was
+      before the first one existed. CLASS_PREFIX_ALIASES in the check maps
+      the eight components that abbreviate themselves, and the names became
+      `prompttemplatemanager:list` and `markdowneditor:display`.
+      The table is curated, not inferred: `filter-panel` and `tree-pane` also
+      differ from the directory name and are proper region words. CodeEditor's
+      `cm-` is deliberately left in place, because `codeeditor:cm-scroller`
+      says the element belongs to CodeMirror, which is worth saying.
+    - markdowneditor:mde-display names the WRAPPER, because `mde-display` is a
+      mode class toggled on the wrapper rather than a separate element. The
+      wrapper is what scrolls when the mode is set, so the attribute is on the
+      element that actually scrolls.
+    - codeeditor:cm-scroller is set after the CodeMirror view exists, because
+      CodeMirror creates that element. The element is third-party; the
+      integration is ours, which is what makes it nameable at all.
+  files:
+    - "runtime/src/types.ts"
+    - "runtime/src/predicates.ts"
+    - "runtime/src/document.ts"
+    - "runtime/src/registry.ts"
+    - "runtime/src/document.test.ts"
+    - "runtime/src/registry.test.ts"
+    - "runtime/runtime.ts"
+    - "components/dynamiccanvas/dynamiccanvas.ts"
+    - "components/dynamiccanvas/dynamiccanvas-anchors.test.ts"
+    - "components/dynamiccanvas/README.md"
+    - "scripts/check-region-names.mjs"
+    - "test-local.sh"
+    - "tests/dynamic-ui.spec.ts"
+    - "docs/DYNAMIC_UI_GUIDE.md"
+    - "specs/2026-10-10-durable-anchors.prd.md"
+    - "AGENTS.md"
     - "CODEBASE_FIXES.md"
     - "CHANGELOG.md"
     - "AGENT_INSIGHTS.md"

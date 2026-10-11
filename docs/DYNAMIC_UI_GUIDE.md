@@ -240,7 +240,16 @@ interface DynamicUIHost
 ```
 
 `onResolveAnchor` is required, and it was added on 11 October 2026, before the
-first host existed (ADR-161). It turns `{ kind: "entity", entityId,
+first host existed (ADR-161).
+
+A geometric anchor has a second field worth knowing. `region` names the
+scrolling region a `spot` was measured against, as `<component>:<region>`,
+matching a `data-dui-region` attribute the component sets and declares in its
+manifest's `regions` (ADR-162). It replaces `within`, which named the same
+region by its index in DOM order and moved whenever an earlier region stopped
+overflowing. `within` still works and is still read, so documents you have
+already saved behave exactly as before. When an anchor carries both, the name
+wins. It turns `{ kind: "entity", entityId,
 selector? }` into the element that holds that content right now, which is the
 only way an annotation survives a reflow. Only the application knows what its
 content is, so only the application can answer.

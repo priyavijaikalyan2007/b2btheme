@@ -297,6 +297,8 @@ function buildAccordionBody(
     bodyDiv.appendChild(buildCopyButton(id, error));
 
     const pre = createElement("pre", ["errordialog-technical", "small", "mb-0"]);
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    pre.setAttribute("data-dui-region", "errordialog:technical");
     pre.textContent = formatTechnicalText(error);
     bodyDiv.appendChild(pre);
 

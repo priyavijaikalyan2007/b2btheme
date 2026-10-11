@@ -56,6 +56,8 @@ export const TREEVIEW_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: ["expanded", "selection"],
 
+    regions: ["treeview:list-container"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 46857, mountCost: "moderate", holdsResources: false },
 

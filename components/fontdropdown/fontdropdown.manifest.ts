@@ -38,6 +38,8 @@ export const FONTDROPDOWN_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["fontdropdown:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 15765, mountCost: "light", holdsResources: false },
 

@@ -38,6 +38,8 @@ export const TAGGER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["tagger:dropdown"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 16407, mountCost: "light", holdsResources: false },
 

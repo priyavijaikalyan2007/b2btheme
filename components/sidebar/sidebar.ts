@@ -856,6 +856,8 @@ export class Sidebar
 
         // Content area
         this.contentEl = createElement("div", ["sidebar-content"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.contentEl.setAttribute("data-dui-region", "sidebar:content");
         this.rootEl.appendChild(this.contentEl);
 
         // Collapsed strip (hidden until collapsed)
@@ -2040,6 +2042,7 @@ export class SidebarManager
     ): HTMLElement
     {
         const bar = createElement("div", ["sidebar-tab-bar"]);
+        bar.setAttribute("data-dui-region", "sidebar:tab-bar");
         setAttr(bar, "role", "tablist");
 
         for (const s of sidebars)

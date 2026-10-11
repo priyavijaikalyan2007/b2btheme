@@ -573,6 +573,9 @@ export class CommandPalette
         if (this.opts.cssClass) { el.classList.add(this.opts.cssClass); }
         el.appendChild(this.buildSearchRow());
         this.resultsEl = createElement("div", CLS + "-results");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.resultsEl.setAttribute(
+            "data-dui-region", "commandpalette:results");
         this.resultsEl.id = CLS + "-results";
         setAttr(this.resultsEl, "role", "listbox");
         setAttr(this.resultsEl, "aria-label", "Command results");

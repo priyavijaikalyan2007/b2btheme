@@ -1114,6 +1114,8 @@ function renderPreview(state: InternalState, root: HTMLElement): void
     }
 
     const preview = createElement("div", "le-preview");
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    preview.setAttribute("data-dui-region", "latexeditor:preview");
     setAttr(preview, {
         role: "status",
         "aria-live": "polite",
@@ -1178,6 +1180,7 @@ function renderPaletteTabBar(
     palette: HTMLElement): void
 {
     const tabBar = createElement("div", "le-palette-tabs");
+    tabBar.setAttribute("data-dui-region", "latexeditor:palette-tabs");
     setAttr(tabBar, { role: "tablist" });
 
     const categories = getAllCategories();
@@ -1216,6 +1219,7 @@ function renderPaletteGrid(
     palette: HTMLElement): void
 {
     const grid = createElement("div", "le-palette-grid");
+    grid.setAttribute("data-dui-region", "latexeditor:palette-grid");
     palette.appendChild(grid);
     state.paletteGridEl = grid;
 

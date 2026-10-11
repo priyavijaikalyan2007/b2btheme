@@ -38,6 +38,8 @@ export const PEOPLEPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["peoplepicker:dropdown"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 18910, mountCost: "light", holdsResources: false },
 

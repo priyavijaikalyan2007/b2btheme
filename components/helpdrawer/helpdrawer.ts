@@ -288,6 +288,8 @@ class HelpDrawer
         drawer.appendChild(this.resizeHandleEl);
 
         this.bodyEl = createElement("div", "helpdrawer-body");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "helpdrawer:body");
         drawer.appendChild(this.bodyEl);
 
         this.spinnerEl = this.buildSpinner();

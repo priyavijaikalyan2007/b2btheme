@@ -98,9 +98,11 @@ resolver finds the content again.
 
 An orphaned note keeps its last resolved position only while the canvas is
 open. After a reload, nothing records where the content used to be, so the
-packer places the note by its stored placement. Narrowing that gap needs
-component-owned region names, which are designed as approach B in
-`specs/2026-10-10-durable-anchors.prd.md` and not built.
+packer places the note by its stored placement. Component-owned region names
+shipped the same day (ADR-162), so a geometric anchor no longer has this
+problem. Narrowing it for a CONTENT anchor needs a region and a spot recorded
+as a hint, which is approach C in
+`specs/2026-10-10-durable-anchors.prd.md` and is not built.
 
 ## Checklist
 

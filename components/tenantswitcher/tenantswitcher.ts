@@ -526,6 +526,8 @@ export class TenantSwitcher
     private buildList(): HTMLElement
     {
         const list = createElement("div", `${CLS}-list`);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        list.setAttribute("data-dui-region", "tenantswitcher:list");
         setAttr(list, "role", "listbox");
         setAttr(list, "aria-label", "Tenant list");
         this.renderListInto(list);

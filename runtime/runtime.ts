@@ -310,6 +310,21 @@ interface CapabilityManifest
     /** Keys returned by getState(), used for restore. */
     readonly stateKeys: readonly string[];
 
+    /**
+     * Scrolling regions this component owns, as `<component>:<region>` names
+     * matching the `data-dui-region` attributes it sets (ADR-162).
+     *
+     * Consumer-visible, and the reason it belongs in the manifest: a host
+     * writing an `Anchor` needs to know which region names exist, and reading
+     * them out of a stylesheet is not an interface. A component with no
+     * scrolling region of its own omits the field.
+     *
+     * Regions a component does NOT create are absent by definition. A `pre`
+     * inside rendered content is created by the content, and nothing stable
+     * can name it, so an anchor into one still uses `within`.
+     */
+    readonly regions?: readonly string[];
+
     /** Cost model for the mount budget. */
     readonly weight: WeightSpec;
 
@@ -381,8 +396,30 @@ type Anchor =
          * A component may scroll internally — a grid's rows, a document's
          * text — and a fraction of the wrong box lands nowhere near what was
          * pointed at. Absent means the body.
+         *
+         * @deprecated Prefer `region`. An INDEX moves: a styled region whose
+         * content happens to fit is not scrollable, so it is absent from the
+         * list and every later index shifts, inside one session (DEBT-DUI-5).
+         * This field stays and keeps resolving by index, because it is a
+         * PERSISTED integer in documents this package cannot see. An anchor
+         * carrying only `within` behaves exactly as it always has.
          */
         readonly within?: number;
+
+        /**
+         * Which scrolling region the spot is measured against, by NAME:
+         * `<component>:<region>`, matching a `data-dui-region` attribute the
+         * component sets on the element itself (ADR-162).
+         *
+         * A name survives what an index cannot. The component owns it, the
+         * manifest's `regions` lists it, and nothing about a sibling region's
+         * content can change it.
+         *
+         * When both this and `within` are present, this wins. When the named
+         * region is absent — a component dropped or renamed it — the canvas
+         * falls back to `within`, then to the body, and logs the fall-back.
+         */
+        readonly region?: string;
     }
     | EntityAnchor;
 
@@ -1116,6 +1153,24 @@ function isIdentifier(v: unknown): v is string
     return isNonEmptyString(v) && !/[\u0000-\u001F]/.test(v);
 }
 
+/**
+ * Whether a value is a canvas scrolling-region name, `<component>:<region>`.
+ *
+ * Deliberately narrower than `isIdentifier`, for two reasons. The value is
+ * interpolated into an attribute selector, `[data-dui-region="..."]`, so a
+ * quote or a bracket inside it would change which element that selector
+ * matches. And a region name is derived from a class name, so lowercase
+ * letters, digits and hyphens either side of one colon is the whole
+ * vocabulary it needs (ADR-162).
+ *
+ * @param v - Candidate value.
+ * @returns Whether it is a well-formed region name.
+ */
+function isRegionName(v: unknown): v is string
+{
+    return typeof v === "string" && /^[a-z0-9-]+:[a-z0-9-]+$/.test(v);
+}
+
 // ========================================================================
 // SOURCE: document.ts
 // ========================================================================
@@ -1494,6 +1549,14 @@ function validateSpot(
                 "a spot { x, y } with both between 0 and 1",
                 spot));
         }
+    }
+
+    if (anchor.region !== undefined && !isRegionName(anchor.region))
+    {
+        issues.push(typeIssue(
+            `${path}.region`,
+            "a region name of the form \"component:region\"",
+            anchor.region));
     }
 
     if (anchor.within !== undefined
@@ -2640,6 +2703,35 @@ function validateConformance(
     {
         issues.push(typeIssue("stateKeys", "an array of state key names", m.stateKeys));
         return;
+    }
+
+    if (m.regions !== undefined)
+    {
+        if (!Array.isArray(m.regions))
+        {
+            issues.push(typeIssue(
+                "regions", "an array of region names", m.regions));
+            return;
+        }
+
+        for (const [i, name] of m.regions.entries())
+        {
+            if (!isRegionName(name))
+            {
+                issues.push(typeIssue(
+                    `regions[${i}]`,
+                    "a region name of the form \"component:region\"",
+                    name));
+            }
+            else if (!name.startsWith(`${m.name}:`))
+            {
+                issues.push(issue(
+                    `regions[${i}]`,
+                    `Region "${name}" is not namespaced to this component.`,
+                    `Name it "${m.name}:<region>", so an anchor cannot `
+                    + "address another component's region by accident."));
+            }
+        }
     }
 
     if (m.conformance === "surface" && m.stateKeys.length === 0)

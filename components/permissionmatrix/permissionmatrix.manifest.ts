@@ -59,6 +59,8 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["permissionmatrix:grid"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 17605, mountCost: "light", holdsResources: false },
 

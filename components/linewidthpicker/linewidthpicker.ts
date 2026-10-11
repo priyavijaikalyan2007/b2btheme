@@ -330,6 +330,8 @@ export class LineWidthPicker
         const dd = createElement("div", [`${CLS}-dropdown`]);
         dd.style.display = "none";
         this.listEl = createElement("ul", [`${CLS}-list`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "linewidthpicker:list");
         setAttr(this.listEl, {
             "role": "listbox",
             "aria-label": "Line widths",

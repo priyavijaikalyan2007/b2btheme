@@ -39,6 +39,8 @@ export const TENANTSWITCHER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["tenantswitcher:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 12700, mountCost: "light", holdsResources: false },
 

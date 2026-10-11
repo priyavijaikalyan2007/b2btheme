@@ -526,6 +526,8 @@ class Breadcrumb
     private buildActionsMenu(segment: VisibleSegment): HTMLElement
     {
         const menu = createElement("div", "breadcrumb-nav-dropdown");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        menu.setAttribute("data-dui-region", "breadcrumb:nav-dropdown");
         setAttr(menu, { role: "menu" });
 
         for (const action of this.actions)

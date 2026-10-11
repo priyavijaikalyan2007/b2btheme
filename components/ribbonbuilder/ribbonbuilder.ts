@@ -548,6 +548,9 @@ class RibbonBuilderImpl
         this.symbolPickerHostEl = createElement(
             "div", [`${CLS}-symbolpicker-host`]
         );
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.symbolPickerHostEl.setAttribute(
+            "data-dui-region", "ribbonbuilder:symbolpicker-host");
         this.symbolPickerHostEl.style.display = "none";
 
         // SymbolPicker renders in a modal overlay, not inline
@@ -880,6 +883,8 @@ class RibbonBuilderImpl
         panel.appendChild(header);
 
         const treeBody = createElement("div", [`${CLS}-tree-body`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        treeBody.setAttribute("data-dui-region", "ribbonbuilder:tree-body");
         panel.appendChild(treeBody);
 
         this.renderTree(treeBody);
@@ -906,7 +911,9 @@ class RibbonBuilderImpl
         const panel = createElement("div", [`${CLS}-right`]);
 
         this.propsEl = createElement("div", [`${CLS}-props`]);
+        this.propsEl.setAttribute("data-dui-region", "ribbonbuilder:props");
         this.iconPickerEl = createElement("div", [`${CLS}-iconpicker`]);
+        this.iconPickerEl.setAttribute("data-dui-region", "ribbonbuilder:iconpicker");
         this.iconPickerEl.style.display = "none";
 
         panel.appendChild(this.propsEl);
@@ -2845,6 +2852,7 @@ class RibbonBuilderImpl
         this.dismissControlTypeMenu();
 
         const menu = createElement("div", [`${CLS}-control-menu`]);
+        menu.setAttribute("data-dui-region", "ribbonbuilder:control-menu");
 
         for (const ct of CONTROL_TYPES)
         {

@@ -370,6 +370,8 @@ export class ActivityFeed
     private buildFeed(): HTMLElement
     {
         const feed = createElement("div", `${CLS}-feed`);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        feed.setAttribute("data-dui-region", "activityfeed:feed");
         setAttr(feed, "role", "feed");
         setAttr(feed, "aria-label", "Activity feed");
         return feed;

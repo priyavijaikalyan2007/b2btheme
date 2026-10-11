@@ -760,6 +760,8 @@ export function createLayoutPicker(
     function buildPanel(): HTMLElement
     {
         const panel = createElement("div", [`${CLS}-panel`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        panel.setAttribute("data-dui-region", "layoutpicker:panel");
 
         setAttr(panel, {
             "role": "listbox",

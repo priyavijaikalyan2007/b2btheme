@@ -228,7 +228,9 @@ function buildDiagramPlaceholder(lang: string, src: string): string
 {
     const cls = `md-diagram md-diagram-${lang}`;
     const encoded = escapeHtml(src);
+    // Canvas anchors name this region rather than counting it (ADR-162).
     return `<div class="${cls}" data-lang="${lang}" `
+        + "data-dui-region=\"markdownrenderer:diagram\" "
         + `data-source="${encoded}"></div>`;
 }
 

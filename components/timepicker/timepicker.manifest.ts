@@ -38,6 +38,8 @@ export const TIMEPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["timepicker:tz-list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 30548, mountCost: "moderate", holdsResources: false },
 

@@ -46,6 +46,8 @@ export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["activityfeed:feed"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 12159, mountCost: "light", holdsResources: false },
 

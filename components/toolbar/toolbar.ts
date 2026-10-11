@@ -2651,6 +2651,8 @@ export class Toolbar
     private buildGalleryPopup(gallery: GalleryItem): HTMLElement
     {
         const popup = createElement("div", ["toolbar-gallery-popup"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        popup.setAttribute("data-dui-region", "toolbar:gallery-popup");
         setAttr(popup, {
             "role": "listbox",
             "aria-label": gallery.tooltip + " options",

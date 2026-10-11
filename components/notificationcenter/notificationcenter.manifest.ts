@@ -40,6 +40,8 @@ export const NOTIFICATIONCENTER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["notificationcenter:tabs", "notificationcenter:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 10704, mountCost: "light", holdsResources: false },
 

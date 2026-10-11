@@ -801,6 +801,8 @@ export class DataGrid
     private buildScrollContainer(): HTMLElement
     {
         const sc = createElement("div", ["datagrid-scroll-container"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        sc.setAttribute("data-dui-region", "datagrid:scroll-container");
         sc.style.height = this.options.height || "400px";
 
         this.headerRowEl = this.buildHeaderRow();

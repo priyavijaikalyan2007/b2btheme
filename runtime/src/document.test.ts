@@ -706,6 +706,57 @@ describe("validate — anchor spot", () =>
         })).ok).toBe(false);
     });
 
+    test("accepts a named scrolling region", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: 0.5, y: 0.5 },
+            region: "docviewer:content",
+        }));
+
+        expect(res.issues).toEqual([]);
+        expect(res.ok).toBe(true);
+    });
+
+    test("accepts a region name beside a deprecated index", () =>
+    {
+        // Both fields together is the normal shape of a freshly captured
+        // anchor: the name resolves, the index is the fallback for the day a
+        // component renames the region.
+        expect(validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", spot: { x: 0.5, y: 0.5 },
+            region: "docviewer:content", within: 2,
+        })).ok).toBe(true);
+    });
+
+    test("rejects a region name that is not namespaced", () =>
+    {
+        const res = validateDocument(docWithAnchor({
+            kind: "node", nodeId: "a", region: "content",
+        }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues[0].path).toContain("region");
+    });
+
+    test("rejects a region name that could break out of a selector", () =>
+    {
+        // The name is interpolated into [data-dui-region="..."], so a quote
+        // in it would change which element that selector matches. This is the
+        // reason isRegionName is narrower than isIdentifier.
+        for (const bad of [
+            'docviewer:content"] , [data-dui-region="other',
+            "docviewer:con tent",
+            "DocViewer:Content",
+            "docviewer:content:extra",
+            "",
+        ])
+        {
+            expect(validateDocument(docWithAnchor({
+                kind: "node", nodeId: "a", region: bad,
+            })).ok, `accepted ${JSON.stringify(bad)}`).toBe(false);
+        }
+    });
+
     test("accepts a content anchor with a host selector", () =>
     {
         const res = validateDocument(docWithAnchor({

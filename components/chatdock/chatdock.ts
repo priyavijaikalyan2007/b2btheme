@@ -253,6 +253,8 @@ function build(
 
     const root = createElement("div", CLS);
     const turnList = createElement("div", `${CLS}-turns`);
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    turnList.setAttribute("data-dui-region", "chatdock:turns");
     const bar = createElement("div", `${CLS}-bar`);
     const field = document.createElement("input");
     const send = createElement("button", `${CLS}-send`, "Send");

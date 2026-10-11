@@ -41,6 +41,8 @@ export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["richtextinput:editable"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 18900, mountCost: "light", holdsResources: false },
 

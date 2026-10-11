@@ -420,6 +420,8 @@ export class PromptTemplateManager
         }
 
         this.listEl = createElement("div", CLS + "-list");
+        this.listEl.setAttribute(
+            "data-dui-region", "prompttemplatemanager:list");
         setAttr(this.listEl, "role", "listbox");
         setAttr(this.listEl, "aria-label", "Template list");
         pane.appendChild(this.listEl);
@@ -459,6 +461,8 @@ export class PromptTemplateManager
     {
         const pane = createElement("div", CLS + "-detail-pane-inner");
         this.detailEl = createElement("div", CLS + "-detail");
+        this.detailEl.setAttribute(
+            "data-dui-region", "prompttemplatemanager:detail");
         this.detailEl.style.display = "none";
 
         this.detailEl.appendChild(this.buildDetailHeader());
@@ -682,6 +686,8 @@ export class PromptTemplateManager
         section.appendChild(this.previewBtn);
 
         this.previewPanel = createElement("div", CLS + "-preview-panel");
+        this.previewPanel.setAttribute(
+            "data-dui-region", "prompttemplatemanager:preview-panel");
         this.previewPanel.id = this.instanceId + "-preview";
         setAttr(this.previewPanel, "role", "region");
         setAttr(this.previewPanel, "aria-label", "Template preview");

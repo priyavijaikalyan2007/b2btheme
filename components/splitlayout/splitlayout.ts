@@ -317,6 +317,8 @@ export class SplitLayout
     private buildPane(config: SplitPaneConfig): HTMLElement
     {
         const pane = createElement("div", ["splitlayout-pane"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        pane.setAttribute("data-dui-region", "splitlayout:pane");
         setAttr(pane, "data-pane-id", config.id);
         setAttr(pane, "role", "region");
         setAttr(pane, "aria-label", config.id);

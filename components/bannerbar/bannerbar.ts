@@ -641,6 +641,8 @@ export class BannerBar
     private buildBody(): HTMLElement
     {
         const body = createElement("div", ["bannerbar-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        body.setAttribute("data-dui-region", "bannerbar:body");
 
         // Icon
         const variant = this.options.variant || "info";

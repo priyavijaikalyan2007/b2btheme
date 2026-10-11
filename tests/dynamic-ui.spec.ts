@@ -445,3 +445,241 @@ test.describe("Dynamic UI — content anchors", () =>
             .not.toBe("none");
     });
 });
+
+/**
+ * Named scrolling regions (ADR-162, DEBT-DUI-5), in a real browser.
+ *
+ * This is the suite that can run the defect at all. The index DEBT-DUI-5
+ * describes moves because `isScrollable()` requires an element to be
+ * overflowing at the time of the test, and whether an element overflows is a
+ * question about layout. jsdom reports every dimension as zero, so there the
+ * region list is always empty and the bug is unreachable.
+ */
+test.describe("Dynamic UI — named scrolling regions", () =>
+{
+    /**
+     * Builds a canvas whose content node has TWO scrolling regions, the first
+     * of which can be made to stop overflowing on demand. A note is placed in
+     * the second region.
+     *
+     * @param page   - The page.
+     * @param named  - Whether the regions declare `data-dui-region`.
+     */
+    async function buildTwoRegions(page: Page, named: boolean): Promise<void>
+    {
+        await page.evaluate((useNames) =>
+        {
+            const w = window as unknown as Record<string, any>;
+            const holder = document.createElement("div");
+
+            holder.id = "region-probe";
+            holder.style.cssText =
+                "position:fixed;left:0;top:0;width:900px;height:700px;"
+                + "background:#fff;z-index:9999;";
+            document.body.appendChild(holder);
+
+            const canvas = w.createDynamicCanvas("region-probe", {});
+
+            w.__regionProbe = canvas;
+
+            canvas.apply({
+                turnId: "t1", revision: 1,
+                ops: [{
+                    op: "addNode",
+                    node: {
+                        id: "host", component: "stickynote",
+                        placement: { kind: "intent", region: "main", size: "wide" },
+                        options: { text: "two regions" },
+                        source: null, state: {},
+                        anchor: { kind: "canvas" },
+                        provenance: { turnId: "t1", lastTouched: 1 },
+                        pinned: false, grants: [],
+                    },
+                }],
+            });
+
+            const body = holder.querySelector(
+                "[data-node-id='host'] .dyncanvas-body") as HTMLElement;
+
+            // The probe's regions stand in for content the HOST renders, so
+            // the component's own markup goes. Without this the regions are
+            // pushed past the body's visible height, where they are not
+            // hit-testable and a click lands on bare canvas instead.
+            body.innerHTML = "";
+
+            // Region A comes first in DOM order, so it owns index 1 while it
+            // overflows. Region B is the one the note is placed in.
+            for (const [key, rows] of [["a", 30], ["b", 30]] as const)
+            {
+                const region = document.createElement("div");
+
+                region.id = `region-${key}`;
+                region.style.cssText = "height:60px;overflow-y:auto;";
+
+                if (useNames)
+                {
+                    region.setAttribute("data-dui-region", `probe:${key}`);
+                }
+
+                for (let i = 0; i < rows; i++)
+                {
+                    const row = document.createElement("div");
+
+                    row.style.cssText = "height:24px;";
+                    row.textContent = `${key} row ${i}`;
+                    region.appendChild(row);
+                }
+
+                body.appendChild(region);
+            }
+        }, named);
+    }
+
+    /** Places a note by clicking inside region B. */
+    async function placeInRegionB(page: Page): Promise<void>
+    {
+        await page.evaluate(() =>
+        {
+            const w = window as unknown as Record<string, any>;
+
+            w.__regionProbe.startPlacement({ options: { label: "in B" } });
+        });
+
+        const b = page.locator("#region-b");
+        const box = (await b.boundingBox())!;
+
+        await page.mouse.click(box.x + box.width / 2, box.y + 20);
+    }
+
+    test("a click in a named region records the name, not just the index",
+        async ({ page }) =>
+    {
+        await open(page);
+        await buildTwoRegions(page, true);
+        await placeInRegionB(page);
+
+        const anchor = await page.evaluate(() =>
+        {
+            const w = window as unknown as Record<string, any>;
+            const nodes = w.__regionProbe.getDocument().nodes;
+            const note = Object.values(nodes).find((n: any) => n.id !== "host");
+
+            return (note as any).anchor;
+        });
+
+        expect(anchor.region, "the region name was not captured")
+            .toBe("probe:b");
+
+        // The index is kept beside it as the fallback for a renamed region.
+        expect(anchor.within, "the index fallback was dropped")
+            .toBeGreaterThan(0);
+        expect(anchor.spot).toBeTruthy();
+    });
+
+    test("the note stays in its own region when an earlier region stops "
+        + "overflowing", async ({ page }) =>
+    {
+        await open(page);
+        await buildTwoRegions(page, true);
+        await placeInRegionB(page);
+
+        const note = page.locator("#region-probe .dyncanvas-overlay");
+        const before = (await note.boundingBox())!;
+        const bBox = (await page.locator("#region-b").boundingBox())!;
+
+        // The note starts inside region B.
+        expect(before.y + before.height / 2).toBeGreaterThan(bBox.y - 1);
+        expect(before.y + before.height / 2).toBeLessThan(bBox.y + bBox.height + 1);
+
+        // THE DEFECT: region A stops overflowing, so it leaves the scrollable
+        // list and every later index shifts down by one. An index-anchored
+        // note silently re-anchors to a different region. Nothing about the
+        // note changed, and nothing about region B changed.
+        await page.evaluate(() =>
+        {
+            const a = document.querySelector("#region-a") as HTMLElement;
+
+            while (a.children.length > 1)
+            {
+                a.lastElementChild!.remove();
+            }
+
+            const w = window as unknown as Record<string, any>;
+
+            w.__regionProbe.apply({ turnId: "t2", revision: 2, ops: [] });
+        });
+
+        const after = (await note.boundingBox())!;
+        const bAfter = (await page.locator("#region-b").boundingBox())!;
+        const centre = after.y + after.height / 2;
+
+        expect(centre, "the note left its region when a sibling stopped "
+            + "overflowing — this is DEBT-DUI-5")
+            .toBeGreaterThan(bAfter.y - 1);
+        expect(centre).toBeLessThan(bAfter.y + bAfter.height + 1);
+    });
+
+    test("WITHOUT a name the same note leaves its region — the defect, "
+        + "characterised", async ({ page }) =>
+    {
+        // The counterpart to the test above, and what makes it mean
+        // something. Identical scenario, regions NOT named: the index the
+        // anchor recorded now points at a different region, so the note moves
+        // without anybody touching it. If this test ever passes by the note
+        // staying put, the test above has stopped proving anything.
+        await open(page);
+        await buildTwoRegions(page, false);
+        await placeInRegionB(page);
+
+        const note = page.locator("#region-probe .dyncanvas-overlay");
+        const before = (await note.boundingBox())!;
+
+        await page.evaluate(() =>
+        {
+            const a = document.querySelector("#region-a") as HTMLElement;
+
+            while (a.children.length > 1)
+            {
+                a.lastElementChild!.remove();
+            }
+
+            const w = window as unknown as Record<string, any>;
+
+            w.__regionProbe.apply({ turnId: "t2", revision: 2, ops: [] });
+        });
+
+        const after = (await note.boundingBox())!;
+        const bAfter = (await page.locator("#region-b").boundingBox())!;
+        const centre = after.y + after.height / 2;
+        const inB = centre > bAfter.y - 1
+            && centre < bAfter.y + bAfter.height + 1;
+
+        expect(inB || Math.abs(after.y - before.y) > 1,
+            "an index-anchored note neither moved nor stayed — the probe is "
+            + "not exercising the index path at all").toBe(true);
+        expect(inB, "an INDEX-anchored note stayed in its region, so the "
+            + "named-region test above proves nothing").toBe(false);
+    });
+
+    test("an unnamed region still resolves by index, unchanged",
+        async ({ page }) =>
+    {
+        // Approach B is additive: a component that has not declared its
+        // regions behaves exactly as it did before, including the fragility.
+        await open(page);
+        await buildTwoRegions(page, false);
+        await placeInRegionB(page);
+
+        const anchor = await page.evaluate(() =>
+        {
+            const w = window as unknown as Record<string, any>;
+            const nodes = w.__regionProbe.getDocument().nodes;
+            const note = Object.values(nodes).find((n: any) => n.id !== "host");
+
+            return (note as any).anchor;
+        });
+
+        expect(anchor.region).toBeUndefined();
+        expect(anchor.within).toBeGreaterThan(0);
+    });
+});

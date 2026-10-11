@@ -40,6 +40,8 @@ export const NAVRAIL_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["navrail:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 17726, mountCost: "light", holdsResources: false },
 

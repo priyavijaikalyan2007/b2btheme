@@ -307,6 +307,8 @@ class DocViewer
         }
 
         this.contentEl = createElement("div", "docviewer-content");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.contentEl.setAttribute("data-dui-region", "docviewer:content");
         this.rootEl.appendChild(this.contentEl);
 
         if (showOutline)
@@ -362,6 +364,7 @@ class DocViewer
         toc.appendChild(this.tocSearchInput);
 
         this.tocListEl = createElement("div", "docviewer-toc-list");
+        this.tocListEl.setAttribute("data-dui-region", "docviewer:toc-list");
         setAttr(this.tocListEl, { role: "tree" });
         toc.appendChild(this.tocListEl);
 
@@ -755,6 +758,7 @@ class DocViewer
     private buildOutlinePanel(): HTMLElement
     {
         const outline = createElement("aside", "docviewer-outline");
+        outline.setAttribute("data-dui-region", "docviewer:outline");
         setAttr(outline, { "aria-label": "On this page" });
 
         const title = createElement("div", "docviewer-outline-title");

@@ -97,6 +97,7 @@ interface CanvasNode
         readonly nodeId?: string;
         readonly spot?: { readonly x: number; readonly y: number };
         readonly within?: number;
+        readonly region?: string;
         readonly entityId?: string;
         readonly selector?: Readonly<Record<string, unknown>>;
     };
@@ -209,6 +210,16 @@ const MOUNT_MARGIN = 400;
  * quietly offsetting every mark by half a marker.
  */
 const MARKER_BOX = 30;
+
+/**
+ * Shape of a scrolling-region name, `<component>:<region>` (ADR-162).
+ *
+ * Checked before the name reaches an attribute selector. The runtime
+ * validates a document on the way in, and this canvas also renders documents
+ * handed straight to `load()`, so the guard belongs on both sides: a quote or
+ * a bracket inside the value would change which element the selector matches.
+ */
+const REGION_NAME = /^[a-z0-9-]+:[a-z0-9-]+$/;
 
 // ============================================================================
 // LOGGING
@@ -455,8 +466,17 @@ function build(
     /** Last packed layout, kept so a scroll can reposition without re-packing. */
     let packedRects: ReadonlyMap<string, PackedRect> = new Map();
 
+    /**
+     * Region names already reported missing, so the warning is one per name
+     * rather than one per refinement pass. Refinement runs on every scroll
+     * frame, and a log line per frame is a log nobody reads.
+     */
+    const reportedMissingRegion = new Set<string>();
+
     const root = el("div", CLS);
     const world = el("div", `${CLS}-world`);
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    world.setAttribute("data-dui-region", "dynamiccanvas:body");
     const chipRail = el("div", `${CLS}-chiprail`);
 
     root.appendChild(world);
@@ -1179,13 +1199,31 @@ function build(
             return { kind: "node", nodeId: targetId };
         }
 
-        // `within` names WHICH scroller the fraction is measured against. A
-        // component may own its own scrolling region — a grid's rows, a
-        // document's text — and a fraction of the wrong box lands nowhere near
-        // what the user pointed at.
-        return scroller!.index === 0
-            ? { kind: "node", nodeId: targetId, spot }
-            : { kind: "node", nodeId: targetId, spot, within: scroller!.index };
+        // The anchor must say WHICH scroller the fraction is measured
+        // against. A component may own its own scrolling region — a grid's
+        // rows, a document's text — and a fraction of the wrong box lands
+        // nowhere near what the user pointed at.
+        //
+        // Both forms are recorded when the region names itself (ADR-162). The
+        // name is what resolves, and it is stable; the index is kept as the
+        // fallback for the day a component renames or drops the region, which
+        // would otherwise leave the anchor with nothing to resolve against.
+        const region = scroller!.el.getAttribute("data-dui-region");
+        const anchor: Record<string, unknown> = {
+            kind: "node", nodeId: targetId, spot,
+        };
+
+        if (scroller!.index !== 0)
+        {
+            anchor.within = scroller!.index;
+        }
+
+        if (region)
+        {
+            anchor.region = region;
+        }
+
+        return anchor;
     }
 
     /**
@@ -1312,7 +1350,8 @@ function build(
         targetId: string,
         spot: { x: number; y: number },
         within: number,
-        regions: readonly HTMLElement[]):
+        regions: readonly HTMLElement[],
+        named: HTMLElement | null):
         { dx: number; dy: number; visible: boolean } | null
     {
         const frame = frames.get(targetId);
@@ -1323,7 +1362,9 @@ function build(
             return null;
         }
 
-        const scroller = regions[within] ?? body;
+        // Name first, then the recorded index, then the body. The order is the
+        // document format's precedence rule (ADR-162), in one place.
+        const scroller = named ?? regions[within] ?? body;
         const metrics = scrollMetrics(scroller);
 
         if (!metrics)
@@ -1516,7 +1557,8 @@ function build(
         }
 
         const offset = spotOffset(
-            targetId, spot, withinOf(node), regionsOf(targetId, regions));
+            targetId, spot, withinOf(node), regionsOf(targetId, regions),
+            namedRegion(node, targetId));
 
         if (!offset)
         {
@@ -1887,6 +1929,60 @@ function build(
         const within = node.anchor?.within;
 
         return typeof within === "number" && within >= 0 ? within : 0;
+    }
+
+    /**
+     * The scrolling region a spot was measured against, by NAME when the
+     * anchor carries one (ADR-162).
+     *
+     * A name beats an index because an index moves: `isScrollable` requires an
+     * element to be overflowing right now, so a styled region whose content
+     * happens to fit drops out of the list and every later index shifts within
+     * one session. That is DEBT-DUI-5, and it is why `region` wins whenever
+     * both fields are present.
+     *
+     * Scoped to the target's own body, and the first match in DOM order wins.
+     * A name is namespaced to its component, so the only way to see two
+     * matches is a component mounting two copies of another component inside
+     * itself — in which case the index fallback is the honest answer, and it
+     * is still on the anchor.
+     *
+     * @param node    - The anchored node.
+     * @param targetId - The node whose body holds the region.
+     * @returns The named element, or null when the anchor names none or the
+     *          named region is not there any more.
+     */
+    function namedRegion(
+        node: CanvasNode,
+        targetId: string): HTMLElement | null
+    {
+        const name = node.anchor?.region;
+
+        if (!name || !REGION_NAME.test(name))
+        {
+            return null;
+        }
+
+        const body = bodies.get(targetId);
+
+        if (!body)
+        {
+            return null;
+        }
+
+        const found = body.matches(`[data-dui-region="${name}"]`)
+            ? body
+            : body.querySelector<HTMLElement>(`[data-dui-region="${name}"]`);
+
+        if (!found && !reportedMissingRegion.has(name))
+        {
+            reportedMissingRegion.add(name);
+            logWarn(`Region "${name}" is not in node "${targetId}" any more; `
+                + "falling back to the recorded index. The component may have "
+                + "renamed or dropped it.");
+        }
+
+        return found;
     }
 
     /** The fractional spot recorded on a node anchor, or null. */

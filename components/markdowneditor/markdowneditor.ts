@@ -460,6 +460,11 @@ export class MarkdownEditor
         logInfo("Initialising");
 
         this.wrapper = createElement("div", "mde-wrapper");
+        // Canvas anchors name this region rather than counting it (ADR-162). `mde-display`
+        // is a MODE class toggled on this same wrapper, not a separate
+        // element, so the wrapper is what scrolls when it is set.
+        this.wrapper.setAttribute(
+            "data-dui-region", "markdowneditor:display");
 
         if (this.options.mode === "display")
         {
@@ -517,6 +522,8 @@ export class MarkdownEditor
         this.applySizeClass();
         this.displayValue = this.options.value ?? "";
         this.previewArea = createElement("div", "mde-preview-area");
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.previewArea.setAttribute("data-dui-region", "markdowneditor:preview-area");
         this.wrapper.appendChild(this.previewArea);
         this.container.appendChild(this.wrapper);
         this.renderDisplayPreview();
@@ -1885,6 +1892,7 @@ function showMarkdownEditorModalFn(
     setAttr(backdrop, { tabindex: "-1", "aria-hidden": "true" });
 
     const dialog = createElement("div", "modal-dialog", "modal-xl", "modal-dialog-scrollable", "mde-modal-dialog");
+    dialog.setAttribute("data-dui-region", "markdowneditor:modal-dialog");
     const content = createElement("div", "modal-content");
 
     // Header

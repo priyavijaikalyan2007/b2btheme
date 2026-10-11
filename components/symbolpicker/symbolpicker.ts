@@ -1494,6 +1494,8 @@ export class SymbolPicker
     private buildPanel(): HTMLElement
     {
         const panel = createElement("div", [`${CLS}-panel`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        panel.setAttribute("data-dui-region", "symbolpicker:panel");
         if (!this.opts.inline) { panel.style.display = "none"; }
         panel.appendChild(this.buildHeader());
         panel.appendChild(this.buildBody());
@@ -1654,6 +1656,7 @@ export class SymbolPicker
     private buildGridArea(): HTMLElement
     {
         const wrap = createElement("div", [`${CLS}-grid-wrap`]);
+        wrap.setAttribute("data-dui-region", "symbolpicker:grid-wrap");
         this.gridEl = createElement("div", [`${CLS}-grid`]);
         this.applyGridStyle();
         setAttr(this.gridEl, {

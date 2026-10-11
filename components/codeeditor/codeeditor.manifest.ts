@@ -45,6 +45,8 @@ export const CODEEDITOR_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["codeeditor:editor", "codeeditor:cm-scroller"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 14790, mountCost: "light", holdsResources: false },
 

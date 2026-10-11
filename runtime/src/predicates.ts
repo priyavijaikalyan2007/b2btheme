@@ -68,3 +68,21 @@ export function isIdentifier(v: unknown): v is string
     // eslint-disable-next-line no-control-regex
     return isNonEmptyString(v) && !/[\u0000-\u001F]/.test(v);
 }
+
+/**
+ * Whether a value is a canvas scrolling-region name, `<component>:<region>`.
+ *
+ * Deliberately narrower than `isIdentifier`, for two reasons. The value is
+ * interpolated into an attribute selector, `[data-dui-region="..."]`, so a
+ * quote or a bracket inside it would change which element that selector
+ * matches. And a region name is derived from a class name, so lowercase
+ * letters, digits and hyphens either side of one colon is the whole
+ * vocabulary it needs (ADR-162).
+ *
+ * @param v - Candidate value.
+ * @returns Whether it is a well-formed region name.
+ */
+export function isRegionName(v: unknown): v is string
+{
+    return typeof v === "string" && /^[a-z0-9-]+:[a-z0-9-]+$/.test(v);
+}

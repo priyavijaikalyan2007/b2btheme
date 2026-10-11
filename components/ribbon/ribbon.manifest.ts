@@ -39,6 +39,13 @@ export const RIBBON_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "ribbon:tabbar",
+        "ribbon:gallery-popup",
+        "ribbon:backstage-sidebar",
+        "ribbon:backstage-content",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 41931, mountCost: "moderate", holdsResources: false },
 

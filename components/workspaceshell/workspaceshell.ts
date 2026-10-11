@@ -253,6 +253,8 @@ function build(
 
     const root = createElement("div", CLS);
     const tabBar = createElement("div", `${CLS}-tabs`);
+    // Canvas anchors name this region rather than counting it (ADR-162).
+    tabBar.setAttribute("data-dui-region", "workspaceshell:tabs");
     const content = createElement("div", `${CLS}-content`);
     const scrubberSlot = createElement("div", `${CLS}-scrubber-slot`);
 

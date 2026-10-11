@@ -52,6 +52,8 @@ export const STACKLAYOUT_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["stacklayout:content"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6158, mountCost: "trivial", holdsResources: false },
 

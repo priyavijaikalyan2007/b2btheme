@@ -738,6 +738,8 @@ export class SprintPicker
             return;
         }
         const list = createElement("div", ["sprintpicker-list"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        list.setAttribute("data-dui-region", "sprintpicker:list");
         setAttr(list, "role", "listbox");
 
         for (const sprint of this.sprints)

@@ -1269,6 +1269,8 @@ export class TabbedPanel
     private buildTabBar(): HTMLElement
     {
         const bar = createElement("div", ["tabbedpanel-tabbar"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        bar.setAttribute("data-dui-region", "tabbedpanel:tabbar");
         setAttr(bar, "role", "tablist");
 
         const isVertical = this.tabBarPosition === "left" ||
@@ -1487,6 +1489,7 @@ export class TabbedPanel
     private buildTabPanel(tab: TabDefinition): HTMLElement
     {
         const panel = createElement("div", ["tabbedpanel-panel"]);
+        panel.setAttribute("data-dui-region", "tabbedpanel:panel");
         const panelId = `${this.instanceId}-panel-${tab.id}`;
         const tabElId = `${this.instanceId}-tab-${tab.id}`;
 

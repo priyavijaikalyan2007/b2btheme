@@ -619,6 +619,8 @@ export class PeoplePicker
     private buildDropdown(): HTMLElement
     {
         const dd = createElement("div", ["peoplepicker-dropdown"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        dd.setAttribute("data-dui-region", "peoplepicker:dropdown");
         dd.style.display = "none";
         dd.style.position = "fixed";
 

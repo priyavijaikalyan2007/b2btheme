@@ -38,6 +38,8 @@ export const SPRINTPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["sprintpicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 17662, mountCost: "light", holdsResources: false },
 

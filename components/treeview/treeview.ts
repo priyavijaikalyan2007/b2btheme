@@ -1450,6 +1450,7 @@ export class TreeView
         this.listContainerEl = createElement("div", [
             "treeview-list-container"
         ]);
+        this.listContainerEl.setAttribute("data-dui-region", "treeview:list-container");
         root.appendChild(this.listContainerEl);
 
         // Build tree content

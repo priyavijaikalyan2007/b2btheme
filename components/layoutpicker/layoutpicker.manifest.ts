@@ -40,6 +40,8 @@ export const LAYOUTPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["layoutpicker:panel"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 15166, mountCost: "light", holdsResources: false },
 

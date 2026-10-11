@@ -992,6 +992,8 @@ export class MultiselectCombo
     private buildListbox(): HTMLElement
     {
         const lb = createElement("div", ["multiselectcombo-listbox"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        lb.setAttribute("data-dui-region", "multiselectcombo:listbox");
         setAttr(lb, "id", `${this.instanceId}-listbox`);
         setAttr(lb, "role", "listbox");
         setAttr(lb, "aria-multiselectable", "true");

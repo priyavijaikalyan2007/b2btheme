@@ -40,6 +40,8 @@ export const BREADCRUMB_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["breadcrumb:nav-dropdown"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 8431, mountCost: "light", holdsResources: false },
 

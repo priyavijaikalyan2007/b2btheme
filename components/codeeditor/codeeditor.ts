@@ -424,6 +424,8 @@ export class CodeEditor
         }
 
         this.editorContainerEl = createElement("div", ["codeeditor-editor"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.editorContainerEl.setAttribute("data-dui-region", "codeeditor:editor");
         this.applyEditorHeight();
         root.appendChild(this.editorContainerEl);
 
@@ -641,6 +643,14 @@ export class CodeEditor
         });
 
         this.cmView = new EV({ state, parent: this.editorContainerEl });
+
+        // Canvas anchors name this region rather than counting it (ADR-162). CodeMirror
+        // creates `.cm-scroller`, so the attribute goes on after the view
+        // exists rather than at build time. The element is third-party; the
+        // integration is ours, which is what makes it nameable.
+        this.editorContainerEl
+            ?.querySelector(".cm-scroller")
+            ?.setAttribute("data-dui-region", "codeeditor:cm-scroller");
         this.updateToolbarDisabledStates();
 
         if (this.options.diagnostics?.length)

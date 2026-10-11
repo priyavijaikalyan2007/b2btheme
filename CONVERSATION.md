@@ -2384,3 +2384,73 @@ had never applied, because two call sites shared the line I was rewriting.
 DEBT-DUI-1 is resolved. DEBT-DUI-5 is not: `within` is untouched, and what
 closes it is approach B, which is designed and waiting. 4876 unit tests across
 144 files, 29/29 structure checks, 3 new e2e tests.
+
+---
+
+## 2026-10-11 — approach B, and the four answers to "how many regions"
+
+The user asked to finish approach B. The design said it touched 21 components.
+It touches 68, and the number was wrong in a way worth recording, because the
+same mistake happened twice in two days.
+
+**Four predicates gave four answers.** Declarations of `overflow` set to auto
+or scroll: 114. Distinct elements those declarations style: 111, because a
+component styles one element under several parent variants. Elements the
+component's own code creates: 104, because some selectors are dead CSS and
+some regions are built by rendered content. Elements that can carry a stable
+name: 104, but only after checking each apparent exception by hand. Of the
+three I had written off as unnameable, **two were nameable** — CodeMirror's
+scroller can be labelled after the view exists, because the element is
+third-party but the integration is ours — and the third was not a region at
+all: `symbolpicker-categories` styles a tab strip that a `<select>` replaced.
+The advisor insisted on earning each exclusion rather than inferring it from a
+regex miss, and it was right twice.
+
+**The gate was written first, deliberately.** It reported 104 unnamed regions
+on the unmodified tree, then 0 after the edits, and the delta is the proof
+rather than the script's own "edited N files". The script placed 81, a second
+pass with a multi-line matcher placed 7, and the last 16 were done by hand
+because each used a different construction: `CLS + "-suffix"` concatenation,
+`htmlEl("div", { class })`, a class toggled on a wrapper, a markup template,
+and CodeMirror's own element.
+
+**"Every scrollable region declares a descriptor" turned out to be
+unachievable**, which the design had asserted as a requirement. A `pre` inside
+a rendered document is created by the content; naming it would mean numbering
+it, and a number is the thing this work replaces. So seven regions stay
+index-addressed, each with a written reason the check enforces — and the check
+fails both when a new unnameable region appears without a reason and when a
+reason stops matching any region.
+
+**The hero test passed on the first run, which is when to be suspicious.**
+Collapse an earlier region's content, assert the mark stays in its own region:
+green. That assertion also passes if the mark never moves for any reason,
+including the scenario never reproducing the defect. So the same scenario runs
+again with the regions **unnamed**, asserting the mark **moves**. It does.
+Mutating the resolution path confirms it from a third direction. Recorded as
+insight 6.49.
+
+Two honest limits are in the ADR rather than hidden. The gate is static — SCSS
+for regions, TypeScript for names — because jsdom has no layout and never
+loads a component stylesheet, so it matches a region to an attribute in the
+same file and not on the same element. And the canvas's own guard against a
+malformed name reaching `querySelector` is reachable only under version skew,
+since `lifecycle.sync` validates every document before mounting; the test
+injects a non-validating lifecycle to stand in for an older runtime, because
+runtime.js and dynamiccanvas.js are separate CDN artifacts.
+
+**Sixteen names stuttered, and the advisor caught it in the last review before
+push.** Deriving a region name by stripping the directory prefix produced
+`prompttemplatemanager:promptmanager-list` and `markdowneditor:mde-display`,
+because a component's class prefix is not always its directory name. These
+names ship in `capability-manifest.json` and get persisted in a host document
+the moment an anchor records one, so the cheap moment to fix them was before
+the first one existed. Eight components abbreviate themselves; the alias table
+in the check maps them, and the names are now `prompttemplatemanager:list` and
+`markdowneditor:display`. The table is curated rather than inferred, because
+`filter-panel` and `tree-pane` also differ from the directory name and are
+proper region words. `codeeditor:cm-scroller` keeps its prefix on purpose: it
+says the element belongs to CodeMirror.
+
+DEBT-DUI-5 resolved. 9 open / 29 resolved. 4887 unit tests, 30/30 structure
+checks, 119 e2e tests.

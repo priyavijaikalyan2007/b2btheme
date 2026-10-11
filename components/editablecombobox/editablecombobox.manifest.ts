@@ -38,6 +38,8 @@ export const EDITABLECOMBOBOX_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["editablecombobox:combobox-listbox"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 14221, mountCost: "light", holdsResources: false },
 

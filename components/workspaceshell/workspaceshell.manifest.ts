@@ -50,6 +50,8 @@ export const WORKSPACESHELL_MANIFEST: CapabilityManifest =
 
     stateKeys: ["activeCanvasId", "revision"],
 
+    regions: ["workspaceshell:tabs"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 9_000, mountCost: "light", holdsResources: false },
 

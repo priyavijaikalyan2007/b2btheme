@@ -41,6 +41,8 @@ export const HELPDRAWER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["helpdrawer:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6694, mountCost: "trivial", holdsResources: false },
 

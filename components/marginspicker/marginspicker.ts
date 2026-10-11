@@ -538,6 +538,8 @@ export class MarginsPicker implements MarginsPickerAPI
         setAttr(panel, { "role": "listbox", "aria-label": "Margin presets" });
 
         this.listEl = createElement("div", [`${CLS}-list`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "marginspicker:list");
         this.appendPresetItems(this.listEl);
         panel.appendChild(this.listEl);
 

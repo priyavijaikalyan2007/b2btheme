@@ -38,6 +38,8 @@ export const LINESHAPEPICKER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["lineshapepicker:list"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 10135, mountCost: "light", holdsResources: false },
 

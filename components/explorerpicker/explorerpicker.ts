@@ -432,6 +432,8 @@ export class ExplorerPickerImpl
     private buildBody(): void
     {
         this.bodyEl = createElement("div", ["explorerpicker-body"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.bodyEl.setAttribute("data-dui-region", "explorerpicker:body");
 
         this.recentSection = this.buildSection(
             "Recent", "explorerpicker-section-recent");

@@ -40,6 +40,8 @@ export const GRAPHLEGEND_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["graphlegend:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6905, mountCost: "trivial", holdsResources: false },
 

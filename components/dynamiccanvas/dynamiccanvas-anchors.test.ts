@@ -5,13 +5,23 @@
  * File GUID: 6ae3c287-ba02-49d1-857f-b36977b1ad85
  */
 /**
- * ⚓ TESTS: DynamicCanvas content anchors (ADR-161)
+ * ⚓ TESTS: DynamicCanvas anchors — content anchors (ADR-161) and region
+ * names (ADR-162)
  *
- * These tests cover the STATE MACHINE around the host's anchor resolver: how
- * often it is called, what is remembered between calls, and when an anchored
- * node is marked orphaned. They do not assert pixel positions. jsdom reports
- * every bounding rectangle as zero, so a position assertion here would pass
- * against any arithmetic at all, including none. The geometry is measured in
+ * Two subjects, both chosen because jsdom can actually answer them.
+ *
+ * The first is the STATE MACHINE around the host's anchor resolver: how often
+ * it is called, what is remembered between calls, and when an anchored node is
+ * marked orphaned.
+ *
+ * The second is how a region NAME is handled when it is malformed, including
+ * the version-skew path where the runtime underneath does not validate.
+ *
+ * Neither subject is geometry, and nothing here asserts a pixel. jsdom reports
+ * every bounding rectangle as zero, so a position assertion would pass against
+ * any arithmetic at all, including none — and for the same reason
+ * `isScrollable` is false for every element here, so region RESOLUTION and
+ * region CAPTURE cannot be reached in this file either. Both live in
  * `tests/dynamic-ui.spec.ts`, in a real browser (insight 6.45).
  */
 
@@ -439,6 +449,102 @@ describe("DynamicCanvas — the host resolves content anchors", () =>
 
         expect(resolver.mock.calls.length).toBeGreaterThan(settled);
         expect(frameOf("c1").classList.contains(ORPHANED)).toBe(true);
+
+        canvas.destroy();
+    });
+});
+
+/**
+ * Named scrolling regions (ADR-162, DEBT-DUI-5).
+ *
+ * Only what jsdom can answer. Capture is NOT here: `captureSpot` divides by
+ * the scroller's content size, which is zero in jsdom, so a click produces an
+ * anchor with no spot and therefore no region either. `isScrollable` is false
+ * for every element here for the same reason. Both the capture of a region
+ * name and the resolution of one are measured in tests/dynamic-ui.spec.ts.
+ */
+describe("DynamicCanvas — scrolling regions name themselves", () =>
+{
+    test("a malformed region name cannot reach an attribute selector, even "
+        + "with a runtime that does not validate", () =>
+    {
+        // Every path in a MATCHED pair validates: lifecycle.sync() calls
+        // validateDocument before mounting, so apply() and load() both refuse
+        // a bad name. The canvas still guards, because runtime.js and
+        // dynamiccanvas.js are separate CDN artifacts and a consumer can pin
+        // an older runtime whose validator predates `region` (ADR-162).
+        //
+        // That skew is what this lifecycle stub stands in for. Frames are
+        // built by render() before sync() is ever called, so refinement runs
+        // against the hostile document exactly as it would with an older
+        // runtime underneath.
+        const api = (window as unknown as Record<string, Record<string, unknown>>)
+            .EnterpriseRuntime;
+        const realLifecycle = api.createLifecycleManager;
+
+        api.createLifecycleManager = () => ({
+            sync: () => undefined,
+            isMounted: () => false,
+            getSurface: () => null,
+            getChips: () => [],
+            getMountedWeight: () => 0,
+            destroy: () => undefined,
+        });
+
+        try
+        {
+            const canvas = createDynamicCanvas("canvas-host", {});
+
+            expect(() => canvas.load([{
+                turnId: "t1", revision: 1,
+                ops: [
+                    { op: "addNode", node: contentNode("grid") },
+                    {
+                        op: "addNode",
+                        node: {
+                            ...commentNode("c1", "x"),
+                            anchor: {
+                                kind: "node" as const,
+                                nodeId: "grid",
+                                spot: { x: 0.5, y: 0.5 },
+                                region: 'grid:x"]):has(',
+                            },
+                        },
+                    },
+                ],
+            }])).not.toThrow();
+
+            expect(canvas.getDocument().nodes.c1).toBeTruthy();
+            expect(frameOf("grid")).toBeTruthy();
+
+            canvas.destroy();
+        }
+        finally
+        {
+            api.createLifecycleManager = realLifecycle;
+        }
+    });
+
+    test("the runtime rejects such a name on the validated path", () =>
+    {
+        // Belt and braces: `apply()` goes through validation, so the same
+        // document is refused outright there. Both paths are covered because
+        // a consumer can reach either.
+        const canvas = createDynamicCanvas("canvas-host", {});
+
+        expect(() => canvas.apply({
+            turnId: "t1", revision: 1,
+            ops: [{
+                op: "addNode",
+                node: {
+                    ...commentNode("c1", "x"),
+                    anchor: {
+                        kind: "node" as const, nodeId: "c1",
+                        region: "NotNamespaced",
+                    },
+                },
+            }],
+        })).toThrow(/Invalid canvas document/);
 
         canvas.destroy();
     });

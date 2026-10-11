@@ -39,6 +39,13 @@ export const APPLAUNCHER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "applauncher:fullpage-content",
+        "applauncher:sidebar",
+        "applauncher:tabs",
+        "applauncher:sections",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 22217, mountCost: "moderate", holdsResources: false },
 

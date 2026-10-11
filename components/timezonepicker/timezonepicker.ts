@@ -708,6 +708,8 @@ export class TimezonePicker
 
         // Timezone list
         this.listEl = createElement("div", ["timezonepicker-list"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "timezonepicker:list");
         this.renderTimezoneList();
         dropdown.appendChild(this.listEl);
 

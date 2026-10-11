@@ -64,6 +64,12 @@ export const FILEEXPLORER_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: [
+        "fileexplorer:tree-pane",
+        "fileexplorer:breadcrumbs",
+        "fileexplorer:listing",
+    ],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 37407, mountCost: "moderate", holdsResources: false },
 

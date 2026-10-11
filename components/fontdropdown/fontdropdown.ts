@@ -594,6 +594,8 @@ export class FontDropdown
         );
         searchWrap.appendChild(this.searchEl);
         this.listEl = createElement("ul", [`${CLS}-list`]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        this.listEl.setAttribute("data-dui-region", "fontdropdown:list");
         setAttr(this.listEl, {
             "role": "listbox", "aria-label": "Fonts",
         });

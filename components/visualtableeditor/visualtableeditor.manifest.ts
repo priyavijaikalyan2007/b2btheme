@@ -40,6 +40,8 @@ export const VISUALTABLEEDITOR_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["visualtableeditor:table-container"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 40341, mountCost: "moderate", holdsResources: false },
 

@@ -48,6 +48,8 @@ export const TREEGRID_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["treegrid:body"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 48200, mountCost: "moderate", holdsResources: false },
 

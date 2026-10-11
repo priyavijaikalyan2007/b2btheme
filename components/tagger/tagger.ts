@@ -588,6 +588,8 @@ export class Tagger
     private buildDropdown(): HTMLElement
     {
         const dd = createElement("div", ["tagger-dropdown"]);
+        // Canvas anchors name this region rather than counting it (ADR-162).
+        dd.setAttribute("data-dui-region", "tagger:dropdown");
         setAttr(dd, "id", `${this.instanceId}-dropdown`);
         setAttr(dd, "role", "listbox");
         setAttr(dd, "aria-label", "Tag suggestions");

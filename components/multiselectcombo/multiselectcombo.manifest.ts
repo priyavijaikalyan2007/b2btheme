@@ -56,6 +56,8 @@ export const MULTISELECTCOMBO_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    regions: ["multiselectcombo:listbox"],
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 22123, mountCost: "light", holdsResources: false },
 
