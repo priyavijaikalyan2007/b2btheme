@@ -380,10 +380,26 @@ gate; mutating the gate's own inputs proves the inputs, and the second
 experiment is the one nobody runs. Emptying the conformance options for six
 newly migrated components left three of them GREEN (ADR-160) — their shells
 are chrome, and `renders-content` only asserts the host is not empty, so it is
-satisfied before any data arrives. Those fixtures are still worth keeping,
-because they make the check walk the real path instead of the empty state, but
-each now says in its own header that deleting it would not turn the gate red.
-Tracked as DEBT-DUI-6.
+satisfied before any data arrives.
+
+**Swept across all seventeen glue files on 12 October 2026, seven of the
+thirteen that carry mount data could be replaced with an inert key and no test
+turned red.** `data-changes-render` closes that (ADR-167): it mounts a second
+instance with the fixture's options stripped and compares the element sequence
+and the text. A baseline that cannot mount at all is a pass, because a factory
+that refuses to construct without data is the strongest proof there is that
+the data reaches the DOM. All thirteen fixtures are now load-bearing.
+**Eighty-eight components still have nothing to compare** — 84 have no glue
+file and four carry channel triggers without mount data — so for those
+`renders-content` still proves only that the host is not empty.
+
+**Run the measurement on the real harness.** A first attempt at this sweep
+reimplemented the gate's mount path in a probe file, and every component it
+reported as insensitive to its fixture was the probe's own bug: three threw
+because the options never reached the factory, two rendered nothing because
+the probe's `mountMethod` handling was wrong, and a signature comparison reads
+two identical failures as "no difference". The sweep that produced the real
+answer changed one glue file at a time and ran the gate. Insight 6.54.
 
 ### Test the artefact, not just the modules
 

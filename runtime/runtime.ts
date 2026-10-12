@@ -5282,6 +5282,7 @@ const CONFORMANCE_CHECKS: readonly CheckDeclaration[] =
     { id: "channel-observable", minLevel: "surface", description: "Every declared channel reaches an on() subscriber." },
     { id: "legacy-callback-fires", minLevel: "surface", description: "The pre-existing constructor callback still fires, and fires first." },
     { id: "renders-content", minLevel: "display", description: "Mounting puts something in the host." },
+    { id: "data-changes-render", minLevel: "display", description: "Fixture data changes what the host contains." },
     { id: "destroy-clears-dom", minLevel: "display", description: "destroy() removes everything the component added." },
     { id: "destroy-idempotent", minLevel: "display", description: "A second destroy() is a no-op." },
 ];
@@ -5459,6 +5460,7 @@ function runMounted(
 
         checkMethods(target, handle, out);
         checkRendered(target, host, out);
+        checkDataChangesRender(target, host, out);
         checkSurface(target, handle, spies, out);
         checkTeardown(handle, host, out);
     }
@@ -5595,6 +5597,142 @@ function defaultInvoke(
 
     return (f, id, o) =>
         (f as (a: string, b: unknown) => unknown)(id, o);
+}
+
+/**
+ * A signature of what a host contains: its element sequence and its text.
+ *
+ * Node count alone is too coarse. A component that writes a fixture's label
+ * into chrome it would have rendered anyway changes the text and not the
+ * shape, and that still counts as the data arriving.
+ *
+ * @param host - The mounted host.
+ * @returns A string that differs whenever the rendered content differs.
+ */
+function hostSignature(host: HTMLElement): string
+{
+    const tags: string[] = [];
+
+    host.querySelectorAll("*").forEach((el) => tags.push(el.tagName));
+
+    const text = (host.textContent ?? "").replace(/\s+/g, " ").trim();
+
+    return `${tags.join(",")}|${text}`;
+}
+
+/**
+ * Asserts that a component's fixture data reaches the DOM (DEBT-DUI-6).
+ *
+ * `renders-content` asserts the host is not empty, which is the right
+ * assertion and caught a wrong `containerOption` on TreeView. It is also
+ * satisfied by chrome: a component whose shell is a toolbar and two panes
+ * passes it with no data at all. Measured against this gate on 12 October
+ * 2026, eleven of the seventeen mount fixtures could be deleted without
+ * turning a single test red.
+ *
+ * So this mounts a SECOND instance with the fixture's options stripped and
+ * compares the two hosts. Three outcomes, and only one is a failure:
+ *
+ *   - the baseline cannot mount at all, because the factory needs the data
+ *     to construct. That is the strongest proof there is that the data
+ *     reaches the DOM, so it passes.
+ *   - the signatures differ, so the data changed what is rendered. Passes.
+ *   - the signatures are identical, so the fixture changed nothing the gate
+ *     can see, and every other check on this component is being satisfied by
+ *     chrome. That is the failure.
+ *
+ * It runs only when the target carries fixture options. A component with no
+ * fixture has nothing to compare: 84 migrated components have no glue file at
+ * all, and four more carry channel triggers without mount data. That is a
+ * separate finding, recorded in DEBT-DUI-6, not a failure here.
+ *
+ * As measured on 12 October 2026, all thirteen mount fixtures pass: nine by
+ * comparison, and four — docviewer, multiselectcombo, stepper and timeline —
+ * because their factory will not construct without the data. Every one of
+ * the thirteen is load-bearing, which was not true before: seven of them
+ * could be replaced with an inert key and no test turned red.
+ *
+ * There is deliberately no exclusion list. No component needs one, and an
+ * empty allowlist invites an entry where a better fixture is the answer.
+ *
+ * @param target - The component under test.
+ * @param host   - Host of the already-mounted fixture instance.
+ * @param out    - Findings accumulator.
+ */
+function checkDataChangesRender(
+    target: ConformanceTarget,
+    host: HTMLElement,
+    out: ConformanceFailure[]): void
+{
+    const name = target.manifest.name;
+    const fixture = target.options ?? {};
+
+    if (Object.keys(fixture).length === 0)
+    {
+        return;
+    }
+
+    const withFixture = hostSignature(host);
+    const baseline = mountBaseline(target);
+
+    if (baseline === null || baseline !== withFixture)
+    {
+        return;
+    }
+
+    fail(out, "data-changes-render",
+        "Mounting with the fixture and mounting without it produced the "
+        + "same content, so nothing the fixture supplies reaches the DOM. "
+        + "Every other check on this component is passing on chrome. Give "
+        + `components/${name}/${name}.conformance.ts data the component has `
+        + "to render in a freshly mounted state. If its data genuinely "
+        + "cannot show until the component is opened or interacted with, "
+        + "say so here in a comment and move the assertion to a Playwright "
+        + "spec, where the interaction is possible.");
+}
+
+/**
+ * Mounts the component with its fixture options stripped.
+ *
+ * @param target - The component under test.
+ * @returns The baseline signature, or null when it could not mount.
+ */
+function mountBaseline(
+    target: ConformanceTarget): string | null
+{
+    const host = document.createElement("div");
+
+    host.id = `conformance-baseline-${++hostSeq}`;
+    document.body.appendChild(host);
+
+    try
+    {
+        const bare: ConformanceTarget = { ...target, options: undefined };
+        const handle = mount(bare, host.id, new Map());
+
+        if (!handle)
+        {
+            return null;
+        }
+
+        const signature = hostSignature(host);
+
+        if (typeof handle.destroy === "function")
+        {
+            try { (handle.destroy as () => void).call(handle); }
+            catch { /* a teardown failure is checkTeardown's finding */ }
+        }
+
+        return signature;
+    }
+    catch
+    {
+        return null;
+    }
+    finally
+    {
+        host.remove();
+    }
 }
 
 /**

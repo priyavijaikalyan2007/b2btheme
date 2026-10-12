@@ -469,6 +469,15 @@ consistent, thoughtful and complete end to end experience.
 - Always consult DOCUMENTATION.md when generating internal operator or external user facing documentation.
   **A doc in `docs/` is only published if it is registered in `scripts/generate-docs.js`** — see the
   publishing rule at the end of DOCUMENTATION.md. Structure check `[11]` enforces it.
+- **A conformance fixture must change what is rendered.** The gate's
+  `renders-content` check asserts the host is not empty, which a component
+  whose shell is chrome satisfies with no data at all: seven of the thirteen
+  mount fixtures could be replaced with an inert key and no test turned red
+  (DEBT-DUI-6, ADR-167). `data-changes-render` now mounts a second instance
+  with the fixture's options stripped and compares the two hosts. When you add
+  a `<name>.conformance.ts`, give it data the component has to render in a
+  freshly mounted state — not data it only shows once opened, which belongs in
+  a Playwright spec instead.
 - **A generated document must read code, never prose.** `scripts/generate-docs.js` derived each
   component's published API list by regexing its own README for the words `class` and `function`,
   so a sentence became an API name: of 54 names published across 32 components, one was real, and

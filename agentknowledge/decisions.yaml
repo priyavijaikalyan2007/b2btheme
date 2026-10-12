@@ -5629,3 +5629,103 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-167"
+  title: "A fixture must change what is rendered, or the gate is measuring chrome"
+  date: 2026-10-12
+  status: "Accepted"
+  context: |
+    DEBT-DUI-6 was recorded on 2026-10-10 (ADR-160). The fleet gate's
+    `renders-content` check asserts that mounting put something in the host.
+    That assertion is true and useful: it caught a wrong `containerOption` on
+    TreeView, where the component constructed cleanly and rendered nothing.
+
+    It is also satisfied by chrome. A component whose shell is a trigger
+    button, or a root div, or a toolbar and two panes, passes it with no data
+    at all, and so does every other check that follows — `destroy-clears-dom`
+    is trivially satisfied when nothing was added.
+
+    Re-measured on the real gate before anything was written. Emptying the
+    fixture for `usermenu`, `stacklayout` or `fileexplorer` in turn left all
+    203 tests passing, confirming ADR-160. Swept across all seventeen glue
+    files: of the thirteen that carry mount data, SEVEN could be replaced
+    with an inert key and no test turned red — chartpanel, fileexplorer,
+    permissionmatrix, personchip, stacklayout, treeview, usermenu.
+
+    Two numbers in the original entry were wrong, both too kind to the gate.
+    It said only timeline and multiselectcombo had fixtures the gate needed;
+    the figure is six, because emptying datagrid, docviewer, multiselectcombo,
+    splitlayout, stepper or timeline breaks a mount outright. And
+    permissionmatrix was recorded as passing on its `emptyMessage`, which is
+    true but is not why it was invisible: its data does reach the DOM.
+
+    A FIRST ATTEMPT AT MEASURING THIS WAS THROWN AWAY. It reimplemented the
+    gate's mount path in a probe file, and every component it reported as
+    insensitive to its fixture was its own defect: three threw because the
+    options never reached the factory, two rendered nothing because the
+    probe's `mountMethod` handling was wrong. A probe that reimplements the
+    harness measures the probe. The second attempt used the real gate and
+    changed one glue file at a time.
+  decision: |
+    D1. Add a check rather than change one. `renders-content` keeps its
+        assertion and its diagnostic, because it was never wrong, only
+        incomplete, and it is the check that catches a wrong container
+        option. `data-changes-render` is the missing half.
+
+    D2. Compare two mounts rather than declare a selector per component. The
+        check mounts a second instance with the fixture's options stripped
+        and compares the hosts. Declaring an expected selector and count for
+        each of a hundred components would be a hundred things to maintain
+        and a hundred chances to declare something the component renders
+        anyway. The differential needs no per-component declaration and is
+        exactly the probe ADR-160 ran by hand.
+
+    D3. Signature is the element sequence plus the normalised text, not the
+        node count. A component that writes a fixture's label into chrome it
+        would have rendered anyway changes the text and not the shape, and
+        the data still arrived.
+
+    D4. A baseline that cannot mount is a PASS, not a failure. Four
+        components — docviewer, multiselectcombo, stepper, timeline — throw
+        without their data. A factory that refuses to construct without data
+        is the strongest proof available that the data reaches the DOM.
+
+    D5. No exclusion list. No component needs one, and an empty allowlist
+        invites an entry where a better fixture is the right answer. The
+        failure diagnostic instead tells the author to say so in a comment
+        and move the assertion to a Playwright spec, where the interaction a
+        closed component needs is possible.
+
+    D6. Assert the scope, because the check is conditional. It runs only for
+        a target carrying fixture options, so it would go silent if the glue
+        ever stopped reaching the target, and a check that quietly stops
+        running looks exactly like a check that passes. A gate test asserts
+        every `.conformance.ts` declaring mount options yields a target that
+        still has them, with a floor of thirteen.
+  consequences: |
+    + ALL THIRTEEN MOUNT FIXTURES ARE NOW LOAD-BEARING, and the thirteen
+      partition exactly: the seven the inert-key mutation catches and the six
+      the empty-fixture mutation catches are disjoint and sum to thirteen.
+      Nine pass by comparison, four because their factory will not construct
+      without data.
+    + BOTH NEW ASSERTIONS ARE MUTATION-PROVEN. Making treeview's fixture an
+      inert key fails `data-changes-render` by name with the full
+      diagnostic. Making `buildTarget` drop the glue options fails the scope
+      test by name, along with six others.
+    - EIGHTY-EIGHT COMPONENTS STILL HAVE NOTHING TO COMPARE. 84 migrated
+      components have no glue file, and four more carry channel triggers
+      without mount data. For those, `renders-content` still proves only
+      that the host is not empty. That is a fixture-writing programme rather
+      than a gate defect, and it stays open in DEBT-DUI-6's successor text.
+    + THE GATE IS 204 TESTS, up from 203, and the new check costs one extra
+      mount for each of thirteen components.
+  files:
+    - "runtime/src/conformance.ts"
+    - "runtime/runtime.ts"
+    - "runtime/fleet-conformance.test.ts"
+    - "CODEBASE_FIXES.md"
+    - "AGENTS.md"
+    - "TESTING.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

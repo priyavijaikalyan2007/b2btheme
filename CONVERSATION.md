@@ -2740,3 +2740,81 @@ the revert would have no reader-visible benefit.
 DEBT-DOC-1 resolved. Tracker 33 resolved / 27 open. ADR-166, no new insight —
 the shape is already 6.46, 6.50 and 6.53. 4933 unit tests across 145 files,
 123 browser tests, 31/31 structure checks.
+
+## 2026-10-12 — "ok continue" (DEBT-DUI-6)
+
+**I threw away my first measurement, and that was the most useful thing that
+happened.** To find out whether the gate's fixtures were load-bearing I wrote a
+probe that mounted each component twice, with and without its fixture, and
+compared the output. The gate's mount path is internal, so the probe
+reimplemented it — the invoke convention, the `mountMethod` handling, the
+option merge. It reported five components whose fixture made no difference, and
+every one was the probe's own defect: three threw because my option merge never
+reached the factory, and two left the host empty because my `mountMethod`
+branch did not attach them. A signature comparison reads two identical failures
+as "no difference". The only reason I looked twice is that the result
+contradicted ADR-160's recorded measurement. Insight 6.54, and the principle is
+narrow enough to be useful: change the input and run the real system, never
+build a second copy to ask.
+
+**The second measurement touched nothing but the real thing.** Empty one glue
+file's `options`, run the real gate, record green or red, restore, repeat.
+Seventeen runs, no new code. Emptying `usermenu`, `stacklayout` or
+`fileexplorer` left all 203 tests passing, which confirms ADR-160. Across the
+whole sweep, **seven of the thirteen fixtures that carry mount data could be
+replaced with an inert key and no test turned red**.
+
+**Two numbers in the entry were wrong, and both flattered the gate.** It said
+only `timeline` and `multiselectcombo` had fixtures the gate needed; the real
+figure is six, because emptying `datagrid`, `docviewer`, `multiselectcombo`,
+`splitlayout`, `stepper` or `timeline` breaks a mount outright. And
+`permissionmatrix` was recorded as passing on its `emptyMessage` — true, but
+not why it was invisible: its data does reach the DOM, which the inert-key
+mutation proves.
+
+**The fix adds a check rather than changing one.** `renders-content` keeps its
+assertion, because it was never wrong, only incomplete, and it is the check
+that caught a wrong `containerOption` on TreeView. `data-changes-render` mounts
+a second instance with the fixture's options stripped and compares the element
+sequence plus the normalised text — not the node count, because a component
+that writes a label into chrome it would have rendered anyway changes the text
+and not the shape, and the data still arrived.
+
+A baseline that cannot mount is a **pass**. Four components throw without their
+data, and a factory that refuses to construct without data is the strongest
+proof available that the data reaches the DOM.
+
+I chose the differential over declaring an expected selector and count per
+component. A hundred declarations would be a hundred things to maintain and a
+hundred chances to declare something the component renders anyway. The
+differential needs no declaration and is exactly the probe ADR-160 ran by hand,
+which is the argument for putting the measurement inside the harness as a check
+rather than cloning the harness to run it from outside.
+
+**No exclusion list, deliberately.** No component needs one, and an empty
+allowlist invites an entry where a better fixture is the right answer. The
+diagnostic instead says to record the reason in a comment and move the
+assertion to a Playwright spec, where the interaction a closed component needs
+is possible.
+
+**The check is conditional, so its scope is asserted.** It runs only for a
+target carrying fixture options, which means it would go silent if the glue
+ever stopped reaching the target — and a check that quietly stops running looks
+exactly like a check that passes. A gate test asserts that every
+`.conformance.ts` declaring mount options yields a target that still has them,
+with a floor of thirteen. Mutating `buildTarget` to drop the glue options fails
+that test by name along with six others, and making TreeView's fixture an inert
+key fails `data-changes-render` by name with the full diagnostic.
+
+All thirteen fixtures are load-bearing now, and the thirteen partition exactly:
+the seven the inert-key mutation catches and the six the empty-fixture mutation
+catches are disjoint and sum to thirteen.
+
+**Left open and said so.** Eighty-eight components still have nothing to
+compare — 84 have no glue file at all and four carry channel triggers without
+mount data. For those, `renders-content` still proves only that the host is not
+empty. That is a fixture-writing programme rather than a gate defect.
+
+DEBT-DUI-6 resolved. Tracker 34 resolved / 26 open. ADR-167, insight 6.54.
+Gate 204 tests, 4934 unit tests across 145 files, 123 browser tests, 31/31
+structure checks.

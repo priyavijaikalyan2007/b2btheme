@@ -479,6 +479,54 @@ describe("fleet gate — conformance", () =>
             .toEqual([]);
     });
 
+    /**
+     * The `data-changes-render` check (ADR-167) only runs when a target
+     * carries fixture options, so it goes silent if the glue stops reaching
+     * the target. This asserts the wiring it depends on, because a check
+     * that quietly stops running looks exactly like a check that passes.
+     */
+    test("every mount fixture reaches the target it was written for", async () =>
+    {
+        const withFixtures: string[] = [];
+
+        for (const name of migrated)
+        {
+            const glueLoad =
+                GLUE_LOADERS[`../components/${name}/${name}.conformance.ts`];
+
+            if (!glueLoad) { continue; }
+
+            const glue = (await glueLoad()).CONFORMANCE_GLUE as
+                { options?: Record<string, unknown> } | undefined;
+
+            if (!glue?.options || Object.keys(glue.options).length === 0)
+            {
+                continue;
+            }
+
+            const manifest = await loadManifest(name);
+            const target = await buildTarget(name, manifest!);
+
+            expect(
+                Object.keys(target?.options ?? {}).length,
+                `${name}.conformance.ts declares mount fixture options but `
+                + "buildTarget produced a target without them, so "
+                + "data-changes-render skipped this component silently")
+                .toBeGreaterThan(0);
+
+            withFixtures.push(name);
+        }
+
+        console.log(
+            `[fleet gate] ${withFixtures.length} mount fixture(s) reach their `
+            + `target: ${withFixtures.join(", ")}`);
+
+        // Thirteen as of 12 October 2026. The floor guards against the glue
+        // loader silently matching nothing, which would leave
+        // data-changes-render running on no component at all.
+        expect(withFixtures.length).toBeGreaterThanOrEqual(13);
+    });
+
     test.runIf(migrated.length > 0).each(migrated)(
         "%s conforms to its declared level",
         async (name: string) =>
