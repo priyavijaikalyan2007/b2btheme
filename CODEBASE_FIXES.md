@@ -224,7 +224,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| CRITICAL — Security | 3 | Open |
+| CRITICAL — Security | 3 | 1 open, 2 closed |
 | CRITICAL — Standards | 2 | Open |
 | HIGH — Window Cast | 1 (20 files, 62 occurrences) | Open |
 | HIGH — Function Length | 3 (14 functions total) | Open |
@@ -235,7 +235,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 | MINOR — Markers | 3 (44 files) | Open |
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (119 errors) | Open |
-| **Total** | **21 items** | **0 resolved** |
+| **Total** | **21 items** | **2 resolved** |
 
 ---
 
