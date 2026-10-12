@@ -5,7 +5,7 @@
 /**
  * ⚓ TESTS: SpineMap
  * Security-focused tests for the SpineMap component.
- * Covers: SEC-2 stripHtmlTags XSS prevention, factory function,
+ * Covers: SEC-2 inert text extraction, label rendering, factory function,
  * options, handle methods, node rendering, selection, layout,
  * data management, ARIA accessibility, and edge cases.
  */
@@ -72,12 +72,6 @@ function buildMinimalData(): SpineMapData
     };
 }
 
-/** Find SVG group elements with node role. */
-function getNodeGroups(root: HTMLElement): NodeListOf<Element>
-{
-    return root.querySelectorAll("[role='button'][data-node-id]");
-}
-
 /** Find the SVG element inside the SpineMap root. */
 function getSvg(root: HTMLElement): SVGSVGElement | null
 {
@@ -114,10 +108,17 @@ afterEach(() =>
 });
 
 // ============================================================================
-// SEC-2: stripHtmlTags — XSS PREVENTION
+// NODE LABELS — MARKUP IN A LABEL IS SHOWN AS TEXT
 // ============================================================================
-
-describe("stripHtmlTags — XSS prevention", () =>
+//
+// These tests check the label path, which reaches the SVG through
+// `textContent` and parses nothing. They were named after SEC-2 and after
+// `stripHtmlTags` until 12 October 2026, and they never reached either:
+// reducing `stripHtmlTags` to `return html` left all fifty tests in this
+// file passing. The property they do check is real, so they are kept under
+// an accurate name. The function itself is covered further down.
+//
+describe("node labels — markup is shown as text", () =>
 {
     test("imgOnerror_NotInjectedAsDomElement", () =>
     {
@@ -153,18 +154,21 @@ describe("stripHtmlTags — XSS prevention", () =>
         map.destroy();
     });
 
-    test("nestedXssPayload_StrippedFromDescription", () =>
+    test("nestedXssPayload_StoredVerbatimAndNeverParsed", () =>
     {
-        const data = buildMinimalData();
-        data.hubs[0].description =
+        const payload =
             '<div onmouseover="alert(1)"><img src=x onerror=alert(1)>Desc</div>';
+        const data = buildMinimalData();
+        data.hubs[0].description = payload;
         const map = createSpineMap({ container, data, editable: true });
+        const root = map.getElement();
 
-        // Verify the node was created and the map is functional
-        const node = map.getNode("solo");
-        expect(node).not.toBeNull();
-        // Description should be stored as-is in data, but rendering
-        // uses stripHtmlTags which extracts textContent only
+        // The description is kept verbatim in the data, because a consumer
+        // reading it back must get what it put in. Nothing on the canvas
+        // parses it, so no element from the payload exists.
+        expect(map.getNode("solo")?.description).toBe(payload);
+        expect(root.querySelectorAll("img").length).toBe(0);
+        expect(root.querySelectorAll("[onmouseover]").length).toBe(0);
         map.destroy();
     });
 
@@ -236,6 +240,196 @@ describe("stripHtmlTags — XSS prevention", () =>
         const map = createSpineMap({ container, data });
         const node = map.getNode("solo");
         expect(node?.label).toBe("A &amp; B &lt;safe&gt;");
+        map.destroy();
+    });
+});
+
+// ============================================================================
+// SEC-2: A RICH-TEXT FIELD VALUE IS PARSED IN AN INERT DOCUMENT
+// ============================================================================
+//
+// `stripHtmlTags` reduces a stored rich-text or markdown value to plain text
+// for the read-only popover. It is reached from exactly two places, the
+// `renderView` of the richtextinput and markdowneditor field adapters, so
+// these tests drive it the way a consumer does: a field of that type, a
+// hostile stored value, and a click on the node to open the popover.
+//
+// What jsdom cannot show lives in `tests/spinemap-inert-parse.spec.ts`.
+// jsdom starts no image load and runs no event handler, so "the handler did
+// not fire" passes here whether or not the markup was parsed.
+//
+
+/**
+ * Inputs compared against the old detached-div implementation on
+ * 12 October 2026. All twenty-one produced identical text, which is why
+ * the fix could change where parsing happens without changing what
+ * consumers see. The twenty-first is the empty string, covered in its own
+ * test below, because an empty field is skipped before the adapter runs.
+ */
+const EXTRACTION_CASES: { html: string; text: string }[] = [
+    { html: '<img src=x onerror="alert(1)">', text: "" },
+    { html: '<script>alert("xss")</script>Safe', text: 'alert("xss")Safe' },
+    {
+        html: '<div onmouseover="alert(1)">'
+            + "<img src=x onerror=alert(1)>Desc</div>",
+        text: "Desc"
+    },
+    { html: "A &amp; B &lt;safe&gt;", text: "A & B <safe>" },
+    { html: "<p>a</p><p>b</p>", text: "ab" },
+    { html: "<td>x</td>", text: "x" },
+    { html: "<br>", text: "" },
+    { html: "<title>x</title>y", text: "xy" },
+    { html: "plain text", text: "plain text" },
+    { html: "<b>bold</b> and <i>it</i>", text: "bold and it" },
+    { html: "<!-- comment -->visible", text: "visible" },
+    {
+        html: "<svg onload=\"alert(1)\"><circle r='5'/></svg>Label",
+        text: "Label"
+    },
+    { html: "<style>p{color:red}</style>After", text: "p{color:red}After" },
+    { html: "<textarea><b>x</b></textarea>", text: "<b>x</b>" },
+    {
+        html: "<table><tr><td>cell</td></tr></table>",
+        text: "cell"
+    },
+    { html: "a<br>b", text: "ab" },
+    { html: "&#60;script&#62;", text: "<script>" },
+    { html: "<iframe src=evil></iframe>Branch", text: "Branch" },
+    {
+        html: '<a href="javascript:alert(1)">Click</a>',
+        text: "Click"
+    },
+    { html: "<form><input name=x></form>Tail", text: "Tail" }
+];
+
+/** Build data whose node carries `stored` in a metadata field. */
+function buildFieldData(stored: string): SpineMapData
+{
+    const data = buildMinimalData();
+    data.hubs[0].metadata = { notes: stored };
+    return data;
+}
+
+/** Open the read-only popover for the one node and return it. */
+function openPopover(map: ReturnType<typeof createSpineMap>): HTMLElement
+{
+    const g = map.getElement()
+        .querySelector("[data-id='solo']") as SVGGElement | null;
+    expect(g).not.toBeNull();
+    g!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    // The popover is appended to `document.body`, not to the map root, so
+    // that it is never clipped by the canvas overflow.
+    const all = document.body.querySelectorAll(".spinemap-popover");
+    const popover = all[all.length - 1] as HTMLElement | undefined;
+    expect(popover).toBeTruthy();
+    return popover!;
+}
+
+/** Read the rendered value of the field labelled `label`. */
+function readFieldText(popover: HTMLElement, label: string): string | null
+{
+    const rows = popover.querySelectorAll(".spinemap-popover-field");
+    for (const row of rows)
+    {
+        const lbl = row.querySelector(".spinemap-popover-label");
+        if ((lbl?.textContent || "") === `${label}:`)
+        {
+            return row.querySelector(".spinemap-popover-value")
+                ?.textContent ?? "";
+        }
+    }
+    return null;
+}
+
+/** Mount a map with one rich-text or markdown field and open its popover. */
+function renderFieldView(
+    stored: string,
+    type: "richtextinput" | "markdowneditor" = "richtextinput"
+): { map: ReturnType<typeof createSpineMap>; popover: HTMLElement }
+{
+    const map = createSpineMap({
+        container,
+        data: buildFieldData(stored),
+        popoverFields: [
+            {
+                key: "notes",
+                label: "Notes",
+                type,
+                source: "metadata"
+            }
+        ]
+    });
+    return { map, popover: openPopover(map) };
+}
+
+describe("stripHtmlTags — text extraction", () =>
+{
+    for (const sample of EXTRACTION_CASES)
+    {
+        test(`extracts ${JSON.stringify(sample.html)}`, () =>
+        {
+            const { map, popover } = renderFieldView(sample.html);
+            expect(readFieldText(popover, "Notes")).toBe(sample.text);
+            map.destroy();
+        });
+    }
+
+    test("emptyValue_SkipsTheFieldEntirely", () =>
+    {
+        const { map, popover } = renderFieldView("");
+        expect(readFieldText(popover, "Notes")).toBeNull();
+        map.destroy();
+    });
+
+    test("markdownField_UsesTheSameExtraction", () =>
+    {
+        const { map, popover } = renderFieldView(
+            '<img src=x onerror="alert(1)">Note', "markdowneditor"
+        );
+        expect(readFieldText(popover, "Notes")).toBe("Note");
+        map.destroy();
+    });
+
+    test("scriptText_StillAppearsInTheValue_unchangedOnPurpose", () =>
+    {
+        // `textContent` includes the text of a script or style element, so
+        // the body of one shows up in the extracted value. That was true
+        // of the old code too. Output parity was the point of the fix, so
+        // this is recorded rather than changed.
+        const { map, popover } = renderFieldView(
+            "<script>alert(1)</script>Tail"
+        );
+        expect(readFieldText(popover, "Notes")).toBe("alert(1)Tail");
+        map.destroy();
+    });
+});
+
+describe("SEC-2 — a hostile field value creates no elements", () =>
+{
+    test("hostileValue_ProducesNoImageAndNoHandlerAttribute", () =>
+    {
+        const { map, popover } = renderFieldView(
+            '<img src="/does-not-exist.png" onerror="alert(1)">Desc'
+        );
+        const root = map.getElement();
+
+        expect(readFieldText(popover, "Notes")).toBe("Desc");
+        expect(popover.querySelectorAll("img").length).toBe(0);
+        expect(popover.querySelectorAll("[onerror]").length).toBe(0);
+        expect(root.querySelectorAll("img").length).toBe(0);
+        expect(document.querySelectorAll("[onerror]").length).toBe(0);
+        map.destroy();
+    });
+
+    test("value_IsInsertedAsTextSoTheMarkupIsVisible", () =>
+    {
+        // The extracted text is put in through `textContent`, so a payload
+        // that survives extraction as text stays text and is never markup.
+        const { map, popover } = renderFieldView("&lt;b&gt;not bold&lt;/b&gt;");
+
+        expect(readFieldText(popover, "Notes")).toBe("<b>not bold</b>");
+        expect(popover.querySelectorAll("b").length).toBe(0);
         map.destroy();
     });
 });

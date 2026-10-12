@@ -161,6 +161,37 @@ components/
 - Pure SCSS styling (verified visually and by build integrity).
 - Bootstrap's own behaviour (it is already tested upstream).
 - Trivial DOM queries with no logic.
+- Anything jsdom cannot carry out. jsdom runs no layout, loads no image, and
+  fires no event handler from a resource load. A unit test that asserts "the
+  handler did not fire" or "the element has a visible box" passes in jsdom
+  whether or not the code is correct. Put that assertion in a Playwright spec
+  under `tests/` and say in both files which half lives where. SEC-2 and SEC-3
+  are both split this way (ADR-164, ADR-165).
+
+### 2.6 Check That a Test Reaches the Code
+
+A test block named after a defect, a ticket, or a function is a claim of
+coverage, and the claim outlives anyone's memory of whether it was ever true.
+Before trusting inherited coverage, break the function on purpose and run the
+suite:
+
+```ts
+// Replace the body with something obviously wrong, then run the file.
+function stripHtmlTags(html: string): string
+{
+    return html;          // no extraction at all
+}
+```
+
+If nothing fails, no test reaches that function, whatever the heading says.
+This takes seconds and it has been wrong twice: six tests named after SEC-2
+checked a neighbouring code path, and three named after SEC-3 checked a
+different input. Run the probe on the **unfixed** code, before you change
+anything, or you measure your new tests instead of the old ones.
+
+Apply the same probe to a new test you have just written, one assertion at a
+time. An assertion that shares a test with a stronger one can ride on it and
+look load-bearing when it is not.
 
 ---
 

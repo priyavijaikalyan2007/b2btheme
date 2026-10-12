@@ -2580,3 +2580,88 @@ workaround, and recorded the defect.
 SEC-3 resolved, SEC-1 closed, SEC-2 left open with its line corrected from
 1841 to 1825. Tracker 31 resolved / 29 open, counting DEBT-DOC-1. ADR-164.
 4892 unit tests across 144 files, 121 browser tests, 30/30 structure checks.
+
+## 2026-10-12 — "Plan makes sense. Continue." (SEC-2)
+
+The user asked what was next. I traced the data before recommending anything,
+because SEC-1 had turned out to be a measurement rather than a defect two days
+earlier. `stripHtmlTags` has two call sites, both the `renderView` of a field
+adapter — richtextinput and markdowneditor — so the input is a stored field
+value shown as a plain-text line in the read-only popover. For a rich-text
+field that value is markup by definition. Every other `innerHTML` in the file
+is `= ""`, which clears, and node labels reach the SVG through `textContent`.
+So the defect was real and the branch was clear: a consumer-supplied string
+reaching `innerHTML` in the live document.
+
+**The entry's prescription could not be followed.** It said "replace with
+`textContent` for safe text extraction", and the function already returned
+`textContent`. The defect was the assignment on the line above. A tracker
+entry can name a real defect and prescribe a fix that makes no sense, and the
+two have to be judged separately.
+
+**A detached element is less protection than it looks.** It stops a `<script>`
+element running, which is probably why the pattern read as safe for seven
+months. It stops nothing else. `innerHTML` attaches event-handler attributes,
+so a browser starts the image load and fires `onerror` for an element that was
+never in the document. I measured it in Chromium rather than reasoning about
+it: the old implementation, run byte for byte on
+`<img src="/does-not-exist-sec2.png" onerror="…">Desc`, extracts "Desc", makes
+one request, and sets the global.
+
+**The fix is a `<template>`, and the output is unchanged.** A template parses
+into its content fragment, whose owner document has no browsing context. I
+chose it over `DOMParser` for output parity: `DOMParser` builds a whole
+document, so `<title>x</title>y` gives "y" through `body.textContent` where the
+old code gave "xy". Before writing anything I ran twenty-one inputs through
+both implementations side by side — hostile payloads, entities, numeric
+character references, comments, `<br>`, textarea, table and head-context
+markup, plain text. All twenty-one matched. That list is now the test table, so
+the evidence is runnable instead of a sentence in a record.
+
+The dead `innerText` fallback went too. `tmp.textContent || tmp.innerText || ""`
+could never use the middle term: the specification defines `innerText` to
+return `textContent` when the element is not being rendered, and a detached
+element is not being rendered.
+
+**The test block named after SEC-2 never reached the function.** Six tests sat
+under a header reading `SEC-2: stripHtmlTags — XSS PREVENTION`. Every one set a
+node label or description and searched the SVG canvas for injected elements.
+That is a true property of a different code path. I measured it before
+touching the fix, which is the only time the measurement is clean: reducing
+`stripHtmlTags` to `return html` left **all 50** tests in the file passing. One
+of the six asserted only that the node was not null, under a comment claiming
+descriptions pass through `stripHtmlTags`. They are kept under an accurate
+name, because what they check is worth checking — only the heading was a lie.
+A dead helper went with them: `getNodeGroups` queried `[data-node-id]` while
+the component writes `data-id`, so it could only ever return an empty list.
+
+This is the second security entry in two days whose test block tested a
+neighbour. Insight 6.53 is about the mechanism rather than the naming, which
+6.52 already covers: a component can apply the same-sounding guarantee on
+several paths, and a test proving the easy one reads as proving all of them.
+The probe is cheap — break the function to the identity and run the suite.
+
+**The split between engines was measured, not assumed.** Restoring the
+detached `<div>` in the source leaves all 75 unit tests passing, because jsdom
+starts no image load and runs no handler. That is what makes
+`tests/spinemap-inert-parse.spec.ts` load-bearing rather than duplicative. The
+browser spec counts requests for the payload's image, which needs no timing
+assumption — one from the old path, none from the new — and carries a positive
+control in the same page: a second payload parsed through `div.innerHTML` with
+the same wait, so a wait that is too short fails the control instead of
+passing the assertion silently. Mutating the built bundle back to the detached
+`<div>` fails the fix test on the handler assertion, with the control having
+already passed, and leaves the characterisation test green.
+
+One behaviour is unchanged on purpose. `textContent` includes the text of a
+`<script>` or `<style>` element, so the body of one still appears in the
+extracted value. Output parity was the point, so it is written in the README
+and pinned by a test rather than quietly fixed in the same commit.
+
+Also added the component's first `🔒 SECURITY` header marker. It had none,
+although it takes consumer markup on three paths.
+
+SEC-2 resolved. **CRITICAL — Security is now empty**: one defect with a fix,
+one defect with a wrong prescription, one that was never a defect. Tracker 32
+resolved / 28 open. ADR-165, insight 6.53. 4917 unit tests across 144 files,
+123 browser tests, 30/30 structure checks.

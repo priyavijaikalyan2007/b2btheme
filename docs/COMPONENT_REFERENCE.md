@@ -16979,6 +16979,18 @@ Drag nodes to reposition. Shift+drag from one node to another to create a connec
 | PNG | `exportPNG()` | 2x resolution raster via canvas |
 | JSON | `exportJSON()` | Full `SpineMapData` for backup/import |
 
+## Security
+
+Everything a consumer puts into a SpineMap is treated as untrusted: node labels, descriptions, and the stored values of popover fields.
+
+**Labels and descriptions reach the SVG through `textContent`.** Markup inside a label is shown as characters, so `<img src=x onerror=...>` appears as that text and creates no element.
+
+**A rich-text or markdown field value is reduced to plain text in an inert document.** The read-only popover shows a short plain-text view of a `richtextinput` or `markdowneditor` field. Getting that text needs the markup parsed, and until 12 October 2026 the parse happened in a detached `<div>` belonging to the live document. A detached element is enough to stop a `<script>` element running, but it is not enough to stop anything else: setting `innerHTML` attaches event-handler attributes, and a browser starts the image load and fires `onerror` even though the element is not in the page. The parse now happens in a `<template>`, whose content belongs to a document with no browsing context, so no request is made and no handler runs (SEC-2, ADR-165).
+
+**The extracted text is identical to before.** Twenty-one inputs were compared against the old code, including hostile payloads, HTML entities, comments, and table and head-context markup. All twenty-one produced the same text, so the change moves where parsing happens and leaves what consumers see alone. One consequence is unchanged on purpose: the text of a `<script>` or `<style>` element is part of `textContent`, so the body of one still appears in the extracted value.
+
+**What a consumer reads back is untouched.** Stored values and descriptions are kept verbatim in the data, because a consumer reading them must get what it put in. Only the rendered view is reduced to text.
+
 
 ---
 

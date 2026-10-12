@@ -5375,3 +5375,133 @@
     - "CHANGELOG.md"
     - "agentknowledge/concepts.yaml"
     - "agentknowledge/history.jsonl"
+
+
+- id: "ADR-165"
+  title: "Plain text is extracted in an inert template, not in a detached div"
+  date: 2026-10-12
+  status: "Accepted"
+  context: |
+    SEC-2 in CODEBASE_FIXES.md had been open since the audit on 19 March 2026
+    and was the last open CRITICAL — Security entry. SpineMap's
+    `stripHtmlTags` created a detached `<div>`, assigned the argument to its
+    `innerHTML`, and returned its `textContent`.
+
+    The entry's prescription could not be followed as written. It said
+    "replace with `textContent` for safe text extraction", and the function
+    already returned `textContent`. The defect was the assignment on the line
+    above, which is where parsing happens.
+
+    A detached element is enough to stop a `<script>` element running, and
+    that is probably why the pattern looked safe. It stops nothing else.
+    Setting `innerHTML` attaches event-handler attributes, and a browser
+    starts the image load and fires `onerror` for an element that is not in
+    the document. Measured in Chromium: the old implementation run on
+    `<img src="/does-not-exist-sec2.png" onerror="…">Desc` extracts "Desc",
+    makes one request, and sets the global.
+
+    The input is consumer data. `stripHtmlTags` is reached from exactly two
+    places, the `renderView` of the richtextinput and markdowneditor field
+    adapters, so the argument is a stored field value shown as a short
+    plain-text line in the read-only popover. For a rich-text field that
+    value is markup by definition. Node labels never reach the function, as
+    they go to the SVG through `textContent`, and every other `innerHTML` in
+    the file is `= ""`, which clears.
+  decision: |
+    D1. Parse in an inert document rather than filter the input. A
+        `<template>` parses into its content fragment, whose owner document
+        has no browsing context, so no request is made and no handler runs.
+        This is ADR-164 D1 one layer down: remove the whole category by
+        never parsing in the live document, rather than enumerate the markup
+        that must be removed. A denylist has to grow with the platform.
+        Inertness does not.
+
+    D2. A template rather than DOMParser, for output parity. `DOMParser`
+        builds a whole document, so head-context markup is sorted into
+        `<head>` and `body.textContent` drops it: `<title>x</title>y` yields
+        "y" there and "xy" through a template, which is what the old code
+        gave. A template also allocates no document per call, and this runs
+        once per field per popover.
+
+    D3. The dead `innerText` fallback is removed. The old return was
+        `tmp.textContent || tmp.innerText || ""`, and the middle term could
+        never contribute. The HTML specification defines `innerText` to
+        return the same value as `textContent` when the element is not being
+        rendered, and a detached element is not being rendered. A
+        `DocumentFragment` has no `innerText` at all, so the new code returns
+        `textContent` alone.
+
+    D4. The six misnamed tests are kept under an accurate name rather than
+        deleted. What they check is real and worth checking: a node label
+        reaches the SVG through `textContent`. Only the name was wrong.
+
+    D5. One behaviour is left alone on purpose. `textContent` includes the
+        text of a `<script>` or `<style>` element, so the body of one appears
+        in the extracted value. The old code did this too. Output parity was
+        the point of the change, so this is written down in the README and
+        pinned by a test rather than quietly fixed in the same commit.
+
+    D6. The component header now carries a 🔒 SECURITY marker. It had none,
+        although the component takes consumer markup on three paths. The
+        marker states what is trusted and what is not, so the next reader
+        does not have to re-derive it from the call sites.
+  consequences: |
+    + THE OUTPUT IS UNCHANGED, AND THAT WAS MEASURED rather than assumed.
+      Twenty-one inputs were run through both implementations side by side:
+      hostile payloads, HTML entities, numeric character references,
+      comments, `<br>`, textarea, table and head-context markup, and plain
+      text. All twenty-one matched. The list is the test table in
+      spinemap.test.ts, so the evidence stays runnable rather than sitting
+      in this record.
+    - THE TEST BLOCK NAMED AFTER THIS DEFECT NEVER REACHED THE FUNCTION. A
+      section header read "SEC-2: stripHtmlTags — XSS PREVENTION" and all six
+      tests under it set a node label or description and then searched the
+      SVG canvas for injected elements. That is a true property of a
+      different code path. Measured before the fix: reducing `stripHtmlTags`
+      to `return html` left all 50 tests in the file passing. This is the
+      second security entry in two days whose test block tested a
+      neighbouring property under a matching name. Insight 6.53.
+    - ONE OF THE SIX ASSERTED NOTHING. `nestedXssPayload_StrippedFromDescription`
+      checked only that the node was not null, under a comment claiming
+      descriptions pass through `stripHtmlTags`, which they do not. It now
+      asserts the description is stored verbatim and that no element from the
+      payload exists.
+    - A DEAD HELPER WENT WITH IT. `getNodeGroups` queried
+      `[role='button'][data-node-id]` while the component writes `data-id`,
+      so it could only return an empty list. It had no callers.
+    + THE INERTNESS ASSERTION NEEDS A REAL ENGINE and lives in
+      tests/spinemap-inert-parse.spec.ts. jsdom starts no image load and runs
+      no event handler, so restoring the detached `<div>` in the source
+      leaves all 75 unit tests passing. That measurement is what makes the
+      browser spec load-bearing rather than duplicative.
+    + THE BROWSER SPEC COUNTS REQUESTS AND CARRIES A POSITIVE CONTROL,
+      because a test for something that does not happen can pass for the
+      wrong reason. Request counting needs no timing assumption: the old path
+      makes one request for the payload's image, the new path makes none. The
+      control is a second payload parsed through `div.innerHTML` in the same
+      page with the same wait, so a wait that is too short fails the control
+      instead of passing the assertion silently.
+    + SEVEN MUTATIONS CONFIRM THE TESTS CAN FAIL, six in the source and one
+      in the built bundle. `return html` kills 23 of the 25 new unit tests.
+      The two survivors are honest: one feeds `plain text`, which is its own
+      output, and one feeds the empty string, where the field is skipped
+      before the adapter runs. Restoring the detached `<div>` in the source
+      kills nothing, which is the measurement above. Mutating the built
+      bundle the same way fails the browser fix test on the handler
+      assertion and leaves the characterisation test passing.
+    + CRITICAL — SECURITY IS NOW EMPTY. All three entries from the March 2026
+      audit are closed: SEC-3 was a defect with a fix, SEC-2 was a defect
+      whose prescription was wrong but whose mechanism was real, and SEC-1
+      was never a defect. Two of the three had a test block named after them
+      that tested something else.
+  files:
+    - "components/spinemap/spinemap.ts"
+    - "components/spinemap/spinemap.test.ts"
+    - "tests/spinemap-inert-parse.spec.ts"
+    - "components/spinemap/README.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "TESTING.md"
+    - "agentknowledge/concepts.yaml"
+    - "agentknowledge/history.jsonl"

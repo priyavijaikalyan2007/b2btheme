@@ -10,6 +10,12 @@
  *    color coding, cross-branch connections, and integrated editing.
  * 🔗 RELATES: [[EnterpriseTheme]], [[TreeGrid]], [[CustomComponents]]
  * ⚡ FLOW: [Consumer] -> [createSpineMap()] -> [SVG canvas + sidebar + popover]
+ * 🔒 SECURITY: Node labels, descriptions and field values are consumer data
+ *    and are never trusted. Every label reaches the SVG through `textContent`,
+ *    so markup in a label is shown as text. A rich-text or markdown field
+ *    value is reduced to plain text by `stripHtmlTags`, which parses in an
+ *    inert `<template>` rather than in the live document, so a hostile value
+ *    cannot start a request or run a handler (SEC-2, ADR-165).
  * ----------------------------------------------------------------------------
  */
 
@@ -1823,11 +1829,21 @@ function stringifyForView(value: unknown): string
     catch { return String(value); }
 }
 
+/**
+ * 🔒 SECURITY: Extract the plain text of a markup string without ever
+ * parsing it in the live document (SEC-2, ADR-165). A `<template>` parses
+ * into its content fragment, which belongs to an inert document with no
+ * browsing context, so a browser starts no image load and fires no event
+ * handler. A detached `<div>` does not give that guarantee: `innerHTML`
+ * attaches event-handler attributes, and `<img src=x onerror=...>` runs.
+ * Output is unchanged — see `stripHtmlTags — text extraction` in the test
+ * file for the twenty-one inputs that were compared against the old code.
+ */
 function stripHtmlTags(html: string): string
 {
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
+    const inert = document.createElement("template");
+    inert.innerHTML = html;
+    return inert.content.textContent ?? "";
 }
 
 // ============================================================================

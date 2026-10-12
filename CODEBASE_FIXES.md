@@ -10,11 +10,25 @@
 
 These issues involve potential XSS or script injection vectors and must be addressed before any public-facing deployment.
 
+**All three are closed as of 12 October 2026.** One was a defect with a fix (SEC-3), one was a defect whose prescription was wrong but whose mechanism was real (SEC-2), and one was never a defect (SEC-1). Two of the three had a test block named after them that tested something else.
+
 - [x] **SEC-1** *(closed 2026-10-11, ADR-164 — never a defect)* — `components/richtextinput/richtextinput.ts:1407` was **inside the component's own sanitizer**, and the flagged statement was a `return temp.innerHTML` on a detached element. Reading `innerHTML` is a getter and executes nothing. The sanitizer has been there since the component's first commit, `0f2d32a`: `git log -S sanitizeHtml` returns that commit and no other. The write path at `:321` is `this.editableEl.innerHTML = this.sanitizeHtml(html)`, and `sanitizeHtml` works from an allowlist (`PASTE_ALLOWED_TAGS`), copies nodes recursively, and restricts link protocols to `http:`, `https:` and `mailto:`. I verified the audit's own view of the file by reading `f3c1666`, the last commit before 20 March 2026: line 1407 was the `sanitizeNodes` declaration. **No fix was needed and none was made.** The entry described a measurement, not the code.
 
-- [ ] **SEC-2** `components/spinemap/spinemap.ts:1825` — DOM-based text extraction via `innerHTML` could trigger script execution if the source element contains injected markup. Replace with `textContent` for safe text extraction.
+- [x] **SEC-2** *(resolved 2026-10-12, ADR-165)* — `stripHtmlTags` now parses in an **inert `<template>`** instead of a detached `<div>`. A template's content belongs to a document with no browsing context, so a browser starts no request and runs no event handler. The entry's prescription, "replace with `textContent`", could not be followed as written: the function already read `textContent`, and the defect was in the assignment on the line above it.
 
-  **Location re-measured 2026-10-11:** the line moved from 1841 to 1825, and the function is `stripHtmlTags`. It assigns `tmp.innerHTML = html` on a detached `div` and then reads `textContent`. The defect reproduces. Severity is lower than the entry implies, because a detached node runs no `<script>`, but a browser can still start an image load and fire `onerror`. Left open deliberately: SEC-3 was fixed on its own so that one close-out covers one defect.
+  **Location re-measured 2026-10-11:** the line moved from 1841 to 1825, and the function is `stripHtmlTags`. The defect reproduced. Severity is lower than the original entry implies, because a detached node runs no `<script>`, but a browser still starts an image load and fires `onerror`. A Chromium characterisation test proves exactly that: the old implementation, run byte for byte on `<img src="/does-not-exist-sec2.png" onerror="…">Desc`, extracts the right text **and** makes one request **and** sets the global, with the element detached the whole time.
+
+  **Reached from two places, neither of them the label path.** `stripHtmlTags` is called only from the `renderView` of the `richtextinput` and `markdowneditor` field adapters, so the input is a stored field value shown in the read-only popover. Every other `innerHTML` in the file is `= ""`, which clears. Node labels never touch it — they reach the SVG through `textContent`.
+
+  **The test block named after this defect never reached the function.** `spinemap.test.ts` carried a section header reading `SEC-2: stripHtmlTags — XSS PREVENTION` and a describe block of the same name, with six tests. All six set a node **label** or **description** and then searched the SVG canvas for injected elements. That is a real property of a different code path. **Measured before the fix:** reducing `stripHtmlTags` to `return html` — no extraction at all — left all **50** tests in the file passing. The six are kept, because what they check is true and worth checking, under a name that says what it is. One of them, `nestedXssPayload_StrippedFromDescription`, asserted only that the node was not null and carried a comment claiming descriptions go through `stripHtmlTags`, which they do not. It now asserts the description is stored verbatim and that no element from the payload exists.
+
+  **A dead helper went with it.** `getNodeGroups` queried `[role='button'][data-node-id]` while the component writes `data-id`, so it could only ever return an empty list. It had no callers.
+
+  **Twenty-five new tests drive the real path** — a `richtextinput` field whose metadata value is hostile, a click on the node, and the rendered popover value. Twenty-one inputs are compared against the old implementation's output and all twenty-one match, which is the evidence that the fix moved where parsing happens without changing what consumers see. `return html` kills 23 of the 25. The two survivors are honest: one feeds `plain text`, which is its own output, and one feeds the empty string, where the field is skipped before the adapter runs.
+
+  **The inertness assertion needed a real engine, so it lives in `tests/spinemap-inert-parse.spec.ts`.** jsdom starts no image load and runs no handler, so restoring the detached `<div>` in the source leaves **all 75** unit tests passing. The browser spec counts requests for the payload's image, which needs no timing assumption — the old path makes one, the new path makes none — and carries a positive control in the same page, a second payload parsed through `div.innerHTML`, so a wait that was too short fails the control instead of passing the assertion. Mutating the **built bundle** back to the detached `<div>` fails the fix test on the handler assertion and leaves the characterisation test passing.
+
+  **One behaviour is unchanged on purpose.** `textContent` includes the text of a `<script>` or `<style>` element, so the body of one appears in the extracted value. That was true of the old code. Output parity was the point of the fix, so it is recorded rather than changed.
 
 - [x] **SEC-3** *(resolved 2026-10-11, ADR-164)* — the PlantUML reply is now **loaded as an image and never parsed as markup**. `applyPlantUmlDiagram` puts the SVG into a base64 data URL and sets it as the source of an `img` element, because a browser runs no script in an SVG that it loads as an image. That removes the class of defect rather than a list of vectors, which sanitizing would not: the file's `sanitize()` works from a list of forbidden things and does not cover `<use>`, `<animate>`, `<set>`, `<foreignObject>` or `<style>`.
 
@@ -224,7 +238,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| CRITICAL — Security | 3 | 1 open, 2 closed |
+| CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
 | HIGH — Window Cast | 1 (20 files, 62 occurrences) | Open |
 | HIGH — Function Length | 3 (14 functions total) | Open |
@@ -235,7 +249,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 | MINOR — Markers | 3 (44 files) | Open |
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (119 errors) | Open |
-| **Total** | **21 items** | **2 resolved** |
+| **Total** | **21 items** | **3 resolved** |
 
 ---
 
