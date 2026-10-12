@@ -2673,14 +2673,20 @@ resolved / 28 open. ADR-165, insight 6.53. 4917 unit tests across 144 files,
 **The number I gave the user was wrong, and the fix is what produced the right
 one.** I said 70 percent of the published API names were fiction, measured by
 asking whether the component's source declared the name anywhere. That oracle
-was the best available before the replacement existed. Once the new extractors
-were written there was a real ground truth, and the answer is worse: of the 54
-names the generator published across 32 components, **one** was real —
-`function createVisualTableEditor`. Thirty-six named nothing declared anywhere.
-The other seventeen were prose words that collide with a real declaration, such
-as "names", "mode" and "category". Every one of the 32 components published at
-least one fabrication. The weaker count is recorded as superseded in ADR-166
-rather than quietly replaced, because it was quoted in conversation.
+was the best available before the replacement existed. Then I graded the old
+output with the **new extractors**, got 53 of 54, and that was the right answer
+reached the wrong way: an extractor cannot grade itself. The oracle that owes
+nothing to either version is the built `d.ts`, which tsc writes and which
+check `[19]` uses. Against it: of the 54 names published across 32 components,
+**one** was correct — `function createVisualTableEditor`. Thirty-seven name
+nothing the component's published types declare at all. The other seventeen
+match a declared name, and fourteen of those are prose words colliding with a
+real declaration — `class on` seven times, `class names` and `class for` twice
+each. That is the same 37-and-17 split the check's mutation produces, because
+it is the same oracle. Every one of the 32 components published at least one
+wrong name and 31 published nothing but wrong names. Both superseded counts
+are recorded in ADR-166 rather than quietly replaced, because one was quoted in
+conversation and the other was quoted in a commit message.
 
 **The line is now two lines, because this is an IIFE library.** An `export`
 keyword is invisible at run time in a bundle, so what a CDN consumer can call
@@ -2703,7 +2709,10 @@ syntax you did not know about, and the two look identical in the output.
 **The twin had the same defect, so it went in the same change.**
 `extractFactory` read the README for `create*` or `show*` followed by a
 bracket, and 26 of the 179 names it published across 21 components were not
-functions. Most were boolean **options** whose name begins with "show" —
+functions — measured against the source, because a boolean option named
+`showError` appears in the shipped bundle as a property name, so the bundle
+oracle sees only the 14 that do not exist in any form. Most were boolean
+**options** whose name begins with "show" —
 `showError`, `showColumn`, `showLoading`. Some were another component's factory
 mentioned in passing, like `createGraphCanvas` in HoverCard's README. One was
 the English word "created" in a sentence followed by a bracket. Filing it

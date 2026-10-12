@@ -5531,23 +5531,33 @@
     newline, so a line ending in "class" also joined the first word of the
     next line, which is where `class category` came from.
 
-    Measured against the replacement, which is the first ground truth this
-    line ever had: of the 54 names published across 32 components, ONE was
-    real — `function createVisualTableEditor`. Thirty-six named nothing
-    declared anywhere in the source. The other 17 were prose words that
-    collide with a real declaration somewhere, such as "names", "mode" and
-    "category". Every one of the 32 components published at least one
-    fabrication. `docs/AGENT_QUICK_REF.md` listed `class on` 17 times and
-    `function greet` twice, and greet is not a function this repository has.
+    Measured against the built `d.ts`, which is the oracle check [19] uses
+    and the only one independent of both the old code and the new: of the 54
+    names published across 32 components, ONE was correct — `function
+    createVisualTableEditor`. Thirty-seven name nothing the component's
+    published types declare at all. The other 17 match a declared name, 15
+    with the same keyword and 2 with a different one, and 14 of those are
+    prose words colliding with a real declaration: `class on` seven times,
+    `class names` and `class for` twice each, plus `class override`, `class
+    or` and `function returning`. Every one of the 32 components published at
+    least one wrong name, and 31 published nothing but wrong names.
+    `docs/AGENT_QUICK_REF.md` listed `class on` 17 times and `function greet`
+    twice, and greet is not a function this repository has.
 
-    An earlier count of 38 of 54 was taken before the extractors existed,
-    with a weaker oracle that asked whether the source declared the name at
-    all rather than whether the name was public. It is recorded here because
-    it was quoted to the user before the better measurement was available.
+    TWO EARLIER COUNTS ARE SUPERSEDED, and both are recorded because both
+    were stated before the better oracle existed. The first, 38 of 54, was
+    quoted to the user; it asked only whether the source declared the name at
+    all rather than whether the name was public. The second, 53 of 54, was
+    the right answer reached the wrong way, because it used the new
+    extractors, and an extractor cannot grade itself.
 
     `extractFactory` had the same defect in the same file. It read the README
     for `create*` or `show*` followed by a bracket, and 26 of the 179 names
-    it published across 21 components were not functions.
+    it published across 21 components were not functions. That is measured
+    against the component's SOURCE and not the bundle, because a boolean
+    option named `showError` appears in the bundle as a property name: the
+    bundle oracle reports only the 14 names, across 11 components, that do
+    not exist in the component in any form.
   decision: |
     D1. Read the component's TypeScript, not its README. Prose is written for
         a human and will always contain the words a code regex looks for. The
