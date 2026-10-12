@@ -2773,8 +2773,13 @@ not why it was invisible: its data does reach the DOM, which the inert-key
 mutation proves.
 
 **The fix adds a check rather than changing one.** `renders-content` keeps its
-assertion, because it was never wrong, only incomplete, and it is the check
-that caught a wrong `containerOption` on TreeView. `data-changes-render` mounts
+assertion, because it was never wrong, only incomplete. I checked its
+provenance rather than repeating it: the gate did **not** catch the failure it
+was written for. On 4 August 2026 a TreeView with a wrong auto-detected
+`containerOption` constructed cleanly, rendered nothing, and satisfied every
+check. A human noticed; the check was written in response and then found 17
+components in the same state. DEBT-DUI-6 is that story one level down.
+`data-changes-render` mounts
 a second instance with the fixture's options stripped and compares the element
 sequence plus the normalised text — not the node count, because a component
 that writes a label into chrome it would have rendered anyway changes the text
@@ -2810,9 +2815,13 @@ All thirteen fixtures are load-bearing now, and the thirteen partition exactly:
 the seven the inert-key mutation catches and the six the empty-fixture mutation
 catches are disjoint and sum to thirteen.
 
-**Left open and said so.** Eighty-eight components still have nothing to
-compare — 84 have no glue file at all and four carry channel triggers without
-mount data. For those, `renders-content` still proves only that the host is not
+**Left open and said so.** Of the 97 migrated components, 80 have no glue file
+at all and four carry channel triggers without mount data, so **84 have nothing
+to compare**. My first write-up said 88, because the 84 came from the discarded
+probe — which counted every component with a valid manifest rather than the
+migrated set — and I then added the four again. A number carried out of an
+instrument I had already thrown away, which is the same shape as the "seven
+mutations" error two days ago. For those, `renders-content` still proves only that the host is not
 empty. That is a fixture-writing programme rather than a gate defect.
 
 DEBT-DUI-6 resolved. Tracker 34 resolved / 26 open. ADR-167, insight 6.54.

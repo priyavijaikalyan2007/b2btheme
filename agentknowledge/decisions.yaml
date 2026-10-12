@@ -5637,8 +5637,13 @@
   context: |
     DEBT-DUI-6 was recorded on 2026-10-10 (ADR-160). The fleet gate's
     `renders-content` check asserts that mounting put something in the host.
-    That assertion is true and useful: it caught a wrong `containerOption` on
-    TreeView, where the component constructed cleanly and rendered nothing.
+    That assertion is true and useful, and the gate did NOT catch the failure
+    it was written for. On 4 August 2026 a TreeView whose auto-detected
+    `containerOption` was wrong constructed cleanly, rendered nothing, and
+    satisfied every check including `destroy-clears-dom`. A human noticed it.
+    `renders-content` was written in response and then found 17 components in
+    the same state. DEBT-DUI-6 is that story one level down, and the lesson
+    repeats: a check written after a miss closes the miss, not the class.
 
     It is also satisfied by chrome. A component whose shell is a trigger
     button, or a root div, or a toolbar and two panes, passes it with no data
@@ -5669,8 +5674,8 @@
   decision: |
     D1. Add a check rather than change one. `renders-content` keeps its
         assertion and its diagnostic, because it was never wrong, only
-        incomplete, and it is the check that catches a wrong container
-        option. `data-changes-render` is the missing half.
+        incomplete, and its failure text is the one that names a wrong
+        container option. `data-changes-render` is the missing half.
 
     D2. Compare two mounts rather than declare a selector per component. The
         check mounts a second instance with the fixture's options stripped
@@ -5712,9 +5717,12 @@
       inert key fails `data-changes-render` by name with the full
       diagnostic. Making `buildTarget` drop the glue options fails the scope
       test by name, along with six others.
-    - EIGHTY-EIGHT COMPONENTS STILL HAVE NOTHING TO COMPARE. 84 migrated
-      components have no glue file, and four more carry channel triggers
-      without mount data. For those, `renders-content` still proves only
+    - EIGHTY-FOUR COMPONENTS STILL HAVE NOTHING TO COMPARE. Of the 97
+      migrated components, 80 have no glue file and four more carry channel
+      triggers without mount data. An earlier draft said 88 and attributed 84
+      to the no-glue group alone, which double-counted the four; the 84 came
+      from the discarded probe, which counted every component with a valid
+      manifest rather than the migrated set. For those, `renders-content` still proves only
       that the host is not empty. That is a fixture-writing programme rather
       than a gate defect, and it stays open in DEBT-DUI-6's successor text.
     + THE GATE IS 204 TESTS, up from 203, and the new check costs one extra

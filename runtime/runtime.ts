@@ -5624,8 +5624,11 @@ function hostSignature(host: HTMLElement): string
  * Asserts that a component's fixture data reaches the DOM (DEBT-DUI-6).
  *
  * `renders-content` asserts the host is not empty, which is the right
- * assertion and caught a wrong `containerOption` on TreeView. It is also
- * satisfied by chrome: a component whose shell is a toolbar and two panes
+ * assertion. It exists because the gate once passed a TreeView whose
+ * auto-detected `containerOption` was wrong: it constructed cleanly, rendered
+ * nothing, and satisfied every check. A human noticed, not the gate — and the
+ * new check then found 17 components in that state (plan, 4 August 2026). It
+ * is also satisfied by chrome: a component whose shell is a toolbar and two panes
  * passes it with no data at all. Measured against this gate on 12 October
  * 2026, eleven of the seventeen mount fixtures could be deleted without
  * turning a single test red.
@@ -5642,9 +5645,10 @@ function hostSignature(host: HTMLElement): string
  *     chrome. That is the failure.
  *
  * It runs only when the target carries fixture options. A component with no
- * fixture has nothing to compare: 84 migrated components have no glue file at
- * all, and four more carry channel triggers without mount data. That is a
- * separate finding, recorded in DEBT-DUI-6, not a failure here.
+ * fixture has nothing to compare: of the 97 migrated components, 80 have no
+ * glue file at all and four more carry channel triggers without mount data,
+ * so 84 have nothing to compare. That is a separate finding, recorded in
+ * DEBT-DUI-6, not a failure here.
  *
  * As measured on 12 October 2026, all thirteen mount fixtures pass: nine by
  * comparison, and four — docviewer, multiselectcombo, stepper and timeline —

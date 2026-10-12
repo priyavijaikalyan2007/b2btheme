@@ -389,9 +389,10 @@ instance with the fixture's options stripped and compares the element sequence
 and the text. A baseline that cannot mount at all is a pass, because a factory
 that refuses to construct without data is the strongest proof there is that
 the data reaches the DOM. All thirteen fixtures are now load-bearing.
-**Eighty-eight components still have nothing to compare** — 84 have no glue
-file and four carry channel triggers without mount data — so for those
-`renders-content` still proves only that the host is not empty.
+**Eighty-four components still have nothing to compare** — of the 97
+migrated, 80 have no glue file and four carry channel triggers without mount
+data — so for those `renders-content` still proves only that the host is not
+empty.
 
 **Run the measurement on the real harness.** A first attempt at this sweep
 reimplemented the gate's mount path in a probe file, and every component it
