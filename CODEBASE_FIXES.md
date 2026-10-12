@@ -66,7 +66,13 @@ These violate mandatory project conventions (`export` keyword requirement per ME
 
 Per ADR and MEMORY.md, the required pattern is `(window as unknown as Record<string, unknown>)`. Using `(window as any)` bypasses type safety.
 
-- [ ] **WIN-1** 20 files use `(window as any)` instead of the required double-cast pattern (62 total occurrences). Files requiring update:
+- [ ] **WIN-1** `(window as any)` is used instead of the required double-cast pattern. **Re-measured 2026-10-12: 311 occurrences on 203 lines in 113 non-test files**, not the 20 files and 62 occurrences recorded in March 2026. The file list below is the March list and is no longer the whole set.
+
+  **The growth has one dominant cause, and it is not drift in the components.** 112 of the 203 lines are the same logging preamble, `const _lu = (typeof (window as any).createLogUtility === "function") ? …`, which was added to every component after the audit ran. **86 files contain no other violation at all** — the preamble is their only one. The remaining 91 lines are genuine and need individual attention: reads of another component's global such as `(window as any).createHoverCard` (15 times), third-party globals such as `MathfieldElement` and `DOMPurify`, and bracket-form registrations.
+
+  **Scope this as two items, not one.** The preamble is a single mechanical change and the correct fix is probably a shared typed accessor rather than 112 copies of a longer cast, because the double-cast form also forces a second cast on the value. The 91 remaining uses are the actual audit finding.
+
+  March 2026 file list, retained as the starting point:
   - `components/timeline/timeline.ts`
   - `components/tabbedpanel/tabbedpanel.ts`
   - `components/datepicker/datepicker.ts`
@@ -240,7 +246,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 |----------|-------|--------|
 | CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 1 (20 files, 62 occurrences) | Open |
+| HIGH — Window Cast | 1 (113 files, 311 occurrences) | Open |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
 | MEDIUM — !important | 3 | Open |
