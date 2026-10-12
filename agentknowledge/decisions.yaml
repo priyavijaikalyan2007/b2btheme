@@ -5392,11 +5392,15 @@
     already returned `textContent`. The defect was the assignment on the line
     above, which is where parsing happens.
 
-    A detached element is enough to stop a `<script>` element running, and
-    that is probably why the pattern looked safe. It stops nothing else.
-    Setting `innerHTML` attaches event-handler attributes, and a browser
-    starts the image load and fires `onerror` for an element that is not in
-    the document. Measured in Chromium: the old implementation run on
+    The pattern looked safe because `innerHTML` runs no `<script>` element.
+    That is true, and it is true whether or not the host is in the document:
+    ADR-164 measured it on an attached host, where the global came back as 1
+    from an `onerror` attribute rather than 2 from a script element. So
+    detachment was never the thing protecting this call. It added nothing,
+    and it stops nothing else either. Setting `innerHTML` attaches
+    event-handler attributes, and a browser starts the image load and fires
+    `onerror` for an element that is not in the document. Measured in
+    Chromium: the old implementation run on
     `<img src="/does-not-exist-sec2.png" onerror="…">Desc` extracts "Desc",
     makes one request, and sets the global.
 
@@ -5481,14 +5485,20 @@
       control is a second payload parsed through `div.innerHTML` in the same
       page with the same wait, so a wait that is too short fails the control
       instead of passing the assertion silently.
-    + SEVEN MUTATIONS CONFIRM THE TESTS CAN FAIL, six in the source and one
-      in the built bundle. `return html` kills 23 of the 25 new unit tests.
-      The two survivors are honest: one feeds `plain text`, which is its own
-      output, and one feeds the empty string, where the field is skipped
-      before the adapter runs. Restoring the detached `<div>` in the source
-      kills nothing, which is the measurement above. Mutating the built
-      bundle the same way fails the browser fix test on the handler
-      assertion and leaves the characterisation test passing.
+    + TWO MUTATIONS, RUN FOUR TIMES, AND THE COUNT IS THE RUNS NOT THE EDITS.
+      The identity, `return html`, against the old code: all 50 tests pass,
+      which is the probe above. The identity against the new code: 23 of the
+      25 new unit tests fail, and the two survivors are honest — one feeds
+      `plain text`, which is its own output, and one feeds the empty string,
+      where the field is skipped before the adapter runs. The detached
+      `<div>` restored in the source: nothing fails, which is why the browser
+      spec exists. The same edit in the built bundle: the browser fix test
+      fails on the handler assertion, after the positive control has already
+      passed, and the characterisation test keeps passing. An earlier draft
+      of this record, and the commit message of 05a0afc, said "seven
+      mutations, six in the source and one in the built bundle". That was
+      ADR-164's five-plus-one shape carried over to a change that does not
+      have it. The sentence listed three runs and then claimed seven.
     + CRITICAL — SECURITY IS NOW EMPTY. All three entries from the March 2026
       audit are closed: SEC-3 was a defect with a fix, SEC-2 was a defect
       whose prescription was wrong but whose mechanism was real, and SEC-1

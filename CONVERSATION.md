@@ -2599,9 +2599,11 @@ reaching `innerHTML` in the live document.
 entry can name a real defect and prescribe a fix that makes no sense, and the
 two have to be judged separately.
 
-**A detached element is less protection than it looks.** It stops a `<script>`
-element running, which is probably why the pattern read as safe for seven
-months. It stops nothing else. `innerHTML` attaches event-handler attributes,
+**Detachment was never the protection it looked like.** The pattern read as
+safe for seven months because `innerHTML` runs no `<script>` element. That is
+true, and ADR-164 measured it on an *attached* host the day before, where the
+global came back as 1 from an `onerror` attribute and not 2 from a script
+element. So detachment contributed nothing here, and it stops nothing else. `innerHTML` attaches event-handler attributes,
 so a browser starts the image load and fires `onerror` for an element that was
 never in the document. I measured it in Chromium rather than reasoning about
 it: the old implementation, run byte for byte on
