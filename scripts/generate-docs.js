@@ -334,7 +334,7 @@ function generateDesignTokensMd(sections)
 // Phase B — Collate component READMEs → COMPONENT_REFERENCE.md
 // ---------------------------------------------------------------------------
 
-function gatherComponentReadmes()
+function gatherComponents()
 {
     const components = [];
     if (!fs.existsSync(COMPONENTS_DIR))
@@ -352,15 +352,91 @@ function gatherComponentReadmes()
             let content = fs.readFileSync(readmePath, "utf8");
             // Strip AGENT header line
             content = content.replace(/^<!--\s*AGENT:.*?-->\s*\n*/, "");
+            const srcPath = path.join(
+                COMPONENTS_DIR, entry.name, `${entry.name}.ts`
+            );
+            const source = fs.existsSync(srcPath)
+                ? fs.readFileSync(srcPath, "utf8")
+                : "";
             components.push({
                 name: entry.name,
                 content,
+                source,
                 cssPath: `components/${entry.name}/${entry.name}.css`,
                 jsPath: `components/${entry.name}/${entry.name}.js`,
             });
         }
     }
     return components;
+}
+
+/**
+ * 📜 The names a consumer can CALL, read from the component's source.
+ *
+ * Every component ships as an IIFE bundle, so an `export` keyword is
+ * invisible at run time and the callable surface is whatever the file
+ * registers on `window`. Four syntaxes are in use and all four count: a cast
+ * with dot access, a cast with bracket access, a bare `window.name =`, and a
+ * cast held in a local first — `const w = window as …` followed by
+ * `w["name"] =`, which is how the eight layout components register and the
+ * reason a first pass of this function reported them as having no public
+ * surface at all. The negative lookahead on `=` keeps a comparison out, such
+ * as the `(window as any).createLogUtility === "function"` in every
+ * component's logging preamble (DEBT-DOC-1, ADR-166).
+ */
+function extractGlobals(source)
+{
+    const names = [];
+    const add = (n) =>
+    {
+        if (n && !names.includes(n)) { names.push(n); }
+    };
+    const prop = "(?:\\.([A-Za-z_$][\\w$]*)|\\[\\s*[\"']([^\"']+)[\"']\\s*\\])";
+    const cast = new RegExp(
+        `\\(\\s*window\\b[^)]*\\)\\s*${prop}\\s*=(?!=)`, "g"
+    );
+    const bare = /^[ \t]*(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=(?!=)/gm;
+    let m;
+    while ((m = cast.exec(source)) !== null) { add(m[1] || m[2]); }
+    while ((m = bare.exec(source)) !== null) { add(m[1]); }
+
+    // A cast kept in a local, then written through: `const w = window as …`.
+    const alias = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*window\b[^;]*;/g;
+    const aliases = [];
+    while ((m = alias.exec(source)) !== null) { aliases.push(m[1]); }
+    for (const a of aliases)
+    {
+        const viaAlias = new RegExp(`\\b${a}\\s*${prop}\\s*=(?!=)`, "g");
+        while ((m = viaAlias.exec(source)) !== null) { add(m[1] || m[2]); }
+    }
+    return names.sort();
+}
+
+/**
+ * 📜 The names a TypeScript consumer can IMPORT from the `.d.ts`, read from
+ * the component's source. Anchored to the start of a line, so a word in a
+ * comment or a string cannot become a published name. A component with none
+ * is reported as `none` rather than omitted, because an empty list is itself
+ * worth seeing: it means the file declares no `export` keyword at all
+ * (STD-1, STD-2).
+ */
+function extractExports(source)
+{
+    const names = [];
+    const re =
+        new RegExp(
+            "^export\\s+(?:(?:declare|abstract|async)\\s+)*"
+            + "(class|function|interface|type|const|enum|let|var)"
+            + "\\s+([A-Za-z_$][\\w$]*)",
+            "gm"
+        );
+    let m;
+    while ((m = re.exec(source)) !== null)
+    {
+        const entry = `${m[1]} ${m[2]}`;
+        if (!names.includes(entry)) { names.push(entry); }
+    }
+    return names;
 }
 
 function generateComponentReferenceMd(components)
@@ -467,12 +543,23 @@ function generateAgentQuickRefMd(sections, components, customClasses)
         md += `### ${c.name}\n\n`;
         md += `- CSS: \`${c.cssPath}\`\n`;
         md += `- JS: \`${c.jsPath}\`\n`;
-        // Extract function/class signatures from README content
-        const sigMatches = c.content.match(/(?:class|function)\s+\w+/g);
-        if (sigMatches)
-        {
-            md += "- Exports: " + sigMatches.map(s => `\`${s}\``).join(", ") + "\n";
-        }
+        // Read the public surface from the SOURCE. Until 11 October 2026 this
+        // ran /(?:class|function)\s+\w+/ over the README PROSE, so a sentence
+        // containing either word published an API name: 38 of the 54 names it
+        // emitted were fiction, including `class on` and `function greet`
+        // (DEBT-DOC-1, ADR-166).
+        const globals = extractGlobals(c.source);
+        const exports = extractExports(c.source);
+        md += "- Globals: "
+            + (globals.length
+                ? globals.map(g => `\`${g}()\``).join(", ")
+                : "none")
+            + "\n";
+        md += "- Exports: "
+            + (exports.length
+                ? exports.map(e => `\`${e}\``).join(", ")
+                : "none")
+            + "\n";
         md += "\n";
     }
 
@@ -522,21 +609,22 @@ function extractDescription(content)
 }
 
 /**
- * Extract factory/convenience function names from README content.
- * Looks for create* and show* patterns in code blocks.
+ * 📜 The component's factory and convenience functions, read from the names
+ * it registers on `window`.
+ *
+ * This read the README PROSE for `create*` and `show*` followed by an opening
+ * parenthesis until 11 October 2026, and 26 of the 179 names it published
+ * across 21 components were not functions. Most were boolean OPTIONS whose
+ * name begins with "show" — `showError`, `showColumn`, `showLoading` — and
+ * some were another component's factory mentioned in passing, such as
+ * `createGraphCanvas` in HoverCard's README. One was the English word
+ * "created" in a sentence that happened to be followed by a bracket
+ * (DEBT-DOC-1, ADR-166).
  */
-function extractFactory(content)
+function extractFactory(source)
 {
-    const factories = [];
-    const re = /\b(create\w+|show\w+)\s*\(/g;
-    let m;
-    while ((m = re.exec(content)) !== null)
-    {
-        if (!factories.includes(m[1]))
-        {
-            factories.push(m[1]);
-        }
-    }
+    const factories = extractGlobals(source)
+        .filter(n => /^(create|show)/.test(n));
     return factories.length > 0
         ? factories.map(f => `\`${f}()\``).join(", ")
         : "—";
@@ -603,7 +691,7 @@ function generateComponentIndexMd(components)
         for (const c of groups[cat])
         {
             const desc = extractDescription(c.content);
-            const factory = extractFactory(c.content);
+            const factory = extractFactory(c.source);
             md += `| ${c.name} | ${desc} | ${factory} | [README](components/${c.name}/README.md) |\n`;
         }
         md += "\n";
@@ -796,7 +884,7 @@ function main()
     writeMdAndHtml(path.join(DOCS_DIR, "DESIGN_TOKENS.md"), "Design Tokens", tokensMd);
 
     // Phase B: Component reference
-    const components = gatherComponentReadmes();
+    const components = gatherComponents();
     const compRefMd = generateComponentReferenceMd(components);
     writeMdAndHtml(path.join(DOCS_DIR, "COMPONENT_REFERENCE.md"), "Component Reference", compRefMd);
 
@@ -842,4 +930,12 @@ function main()
     console.log("[DocGenerator] documentation generation complete.");
 }
 
-main();
+// Run only when invoked directly, so the extractors above can be unit tested.
+// There were no tests for this file when DEBT-DOC-1 was found, and a defect
+// that publishes a wrong API name to the CDN is exactly what a test catches.
+if (require.main === module)
+{
+    main();
+}
+
+module.exports = { extractGlobals, extractExports, extractFactory };

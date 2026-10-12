@@ -2667,3 +2667,67 @@ SEC-2 resolved. **CRITICAL — Security is now empty**: one defect with a fix,
 one defect with a wrong prescription, one that was never a defect. Tracker 32
 resolved / 28 open. ADR-165, insight 6.53. 4917 unit tests across 144 files,
 123 browser tests, 30/30 structure checks.
+
+## 2026-10-12 — "Go ahead" (DEBT-DOC-1)
+
+**The number I gave the user was wrong, and the fix is what produced the right
+one.** I said 70 percent of the published API names were fiction, measured by
+asking whether the component's source declared the name anywhere. That oracle
+was the best available before the replacement existed. Once the new extractors
+were written there was a real ground truth, and the answer is worse: of the 54
+names the generator published across 32 components, **one** was real —
+`function createVisualTableEditor`. Thirty-six named nothing declared anywhere.
+The other seventeen were prose words that collide with a real declaration, such
+as "names", "mode" and "category". Every one of the 32 components published at
+least one fabrication. The weaker count is recorded as superseded in ADR-166
+rather than quietly replaced, because it was quoted in conversation.
+
+**The line is now two lines, because this is an IIFE library.** An `export`
+keyword is invisible at run time in a bundle, so what a CDN consumer can call
+is whatever the file registers on `window`. `Globals:` lists those.
+`Exports:` lists the declarations a TypeScript consumer imports from the
+`.d.ts`. Where either is empty the generator prints `none` rather than omitting
+the line, because omission is what hid this: a component publishing nothing
+looked the same as a component nobody had checked. An empty `Exports:` is also
+a finding, since it means the file carries no `export` keyword at all.
+
+**A fourth registration syntax came out of measuring, not reading.** The first
+version of `extractGlobals` reported eleven components as having no public
+surface. Eight were the layout components, which hold the cast in a local
+first — `const w = window as …` then `w["createAnchorLayout"] = …`. Two more
+were the same shape. The eleventh, `themeinit`, really does register nothing,
+because it is a boot script, so `Globals: none` is correct there. Zero is worth
+treating as suspicious in any extraction: it is either a real absence or a
+syntax you did not know about, and the two look identical in the output.
+
+**The twin had the same defect, so it went in the same change.**
+`extractFactory` read the README for `create*` or `show*` followed by a
+bracket, and 26 of the 179 names it published across 21 components were not
+functions. Most were boolean **options** whose name begins with "show" —
+`showError`, `showColumn`, `showLoading`. Some were another component's factory
+mentioned in passing, like `createGraphCanvas` in HoverCard's README. One was
+the English word "created" in a sentence followed by a bracket. Filing it
+instead of fixing it would have been the exact failure insight 6.53 is about.
+
+**There were no tests for this file at all**, which is how a defect that
+published a wrong API name to the CDN survived for months. It now has sixteen,
+and `scripts/**/*.test.ts` joins the vitest include. The script runs `main()`
+only under `require.main === module`, so the extractors can be required.
+
+**Check `[19]` does not reuse the extractors.** A check that shares an oracle
+with the thing it checks passes by construction. It reads the built `d.ts`,
+which tsc writes from the real export keywords, and the shipped bundle, which
+is what a consumer loads: 1076 names across 125 components. Reverting the
+generator to the prose regex and regenerating fails 37 of the 54 names. The
+other seventeen are the prose-collision cases, and the check's own header says
+it cannot see them — its job is to stop the generator drifting back, and 37
+failures fail the suite.
+
+One loose end left deliberately. The sentence in MarkdownRenderer's README that
+was reworded yesterday to dodge the words "class of" is no longer
+load-bearing. It is not reverted, because the current wording is no worse and
+the revert would have no reader-visible benefit.
+
+DEBT-DOC-1 resolved. Tracker 33 resolved / 27 open. ADR-166, no new insight —
+the shape is already 6.46, 6.50 and 6.53. 4933 unit tests across 145 files,
+123 browser tests, 31/31 structure checks.

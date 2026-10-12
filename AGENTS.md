@@ -469,6 +469,14 @@ consistent, thoughtful and complete end to end experience.
 - Always consult DOCUMENTATION.md when generating internal operator or external user facing documentation.
   **A doc in `docs/` is only published if it is registered in `scripts/generate-docs.js`** — see the
   publishing rule at the end of DOCUMENTATION.md. Structure check `[11]` enforces it.
+- **A generated document must read code, never prose.** `scripts/generate-docs.js` derived each
+  component's published API list by regexing its own README for the words `class` and `function`,
+  so a sentence became an API name: of 54 names published across 32 components, one was real, and
+  the quick reference listed `class on` 17 times (DEBT-DOC-1, ADR-166). The extractors now read the
+  component's TypeScript — `extractGlobals` for the `window` registrations a CDN consumer calls, and
+  `extractExports` for the declarations a TypeScript consumer imports. Structure check `[19]` holds
+  the line, and it reads the built `d.ts` and bundle rather than reusing those extractors, because a
+  check that shares an oracle with the thing it checks passes by construction.
 - When changing anything a consuming app can observe — a factory signature, a thrown error, a CDN path,
   a vendored dependency version — update [docs/CDN_INTEGRATION_GUIDE.md](./docs/CDN_INTEGRATION_GUIDE.md)
   and [CDN_CONTRACT.md](./CDN_CONTRACT.md) in the same change. Those two are the contract consuming

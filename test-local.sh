@@ -412,6 +412,30 @@ else
 fi
 echo ""
 
+# ── [19] ──
+# DEBT-DOC-1 (ADR-166). The documentation generator built each component's
+# published "Exports" line by regexing its README PROSE for `class` or
+# `function` followed by a word, so a sentence became an API name. Of the 54
+# names it published across 32 components, exactly one was real: the quick
+# reference listed `class on` 17 times and `function greet` twice, and greet
+# is not a function this repository has.
+#
+# The check reads the BUILT ARTEFACTS rather than the generator's own
+# extractors, because a check that shares an oracle with the thing it checks
+# passes by construction. A d.ts comes from tsc and a bundle is what a
+# consumer loads.
+echo "[19] Every API name the documentation publishes exists (DEBT-DOC-1)"
+if [ -f scripts/check-published-api.mjs ]; then
+    if node scripts/check-published-api.mjs; then
+        PASS=$((PASS + 1))
+    else
+        fail "the documentation publishes an API name that does not exist (see above)"
+    fi
+else
+    fail "scripts/check-published-api.mjs missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

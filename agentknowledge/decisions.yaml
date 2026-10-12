@@ -5515,3 +5515,107 @@
     - "TESTING.md"
     - "agentknowledge/concepts.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-166"
+  title: "A generated document reads code, never prose"
+  date: 2026-10-12
+  status: "Accepted"
+  context: |
+    DEBT-DOC-1 was recorded on 11 October 2026, during the SEC-3 close-out,
+    when a sentence written that day — "removes the whole class of script
+    injection" — was published as an export named `class of`.
+
+    `scripts/generate-docs.js` built each component's "Exports" line by
+    running `/(?:class|function)\s+\w+/g` over the component's README PROSE.
+    Any sentence containing either word became an API name. `\s` matches a
+    newline, so a line ending in "class" also joined the first word of the
+    next line, which is where `class category` came from.
+
+    Measured against the replacement, which is the first ground truth this
+    line ever had: of the 54 names published across 32 components, ONE was
+    real — `function createVisualTableEditor`. Thirty-six named nothing
+    declared anywhere in the source. The other 17 were prose words that
+    collide with a real declaration somewhere, such as "names", "mode" and
+    "category". Every one of the 32 components published at least one
+    fabrication. `docs/AGENT_QUICK_REF.md` listed `class on` 17 times and
+    `function greet` twice, and greet is not a function this repository has.
+
+    An earlier count of 38 of 54 was taken before the extractors existed,
+    with a weaker oracle that asked whether the source declared the name at
+    all rather than whether the name was public. It is recorded here because
+    it was quoted to the user before the better measurement was available.
+
+    `extractFactory` had the same defect in the same file. It read the README
+    for `create*` or `show*` followed by a bracket, and 26 of the 179 names
+    it published across 21 components were not functions.
+  decision: |
+    D1. Read the component's TypeScript, not its README. Prose is written for
+        a human and will always contain the words a code regex looks for. The
+        source is the only artefact that cannot disagree with itself.
+
+    D2. Publish two lines, because this is an IIFE library and the two
+        audiences differ. `Globals:` lists the `window` registrations, which
+        is what a CDN consumer can actually call — an `export` keyword is
+        invisible at run time in a bundle. `Exports:` lists the declarations
+        a TypeScript consumer can import from the `.d.ts`.
+
+    D3. Print `none` rather than omitting the line. Omission is what hid this
+        defect for months: a component that published nothing looked the same
+        as a component nobody had looked at. An empty `Exports:` is also a
+        finding in its own right, because it means the file carries no
+        `export` keyword at all (STD-1, STD-2).
+
+    D4. Fix `extractFactory` in the same change rather than filing it. It is
+        the same defect, in the same file, found by the same measurement.
+        Leaving the twin would be the failure that insight 6.53 is about. It
+        now filters the globals list for `create*` and `show*`, so a boolean
+        option named `showError` can no longer be published as a function.
+
+    D5. Anchor the export regex to the start of a line, with the `m` flag. The
+        old pattern's `\s+` could span a newline, and an unanchored pattern
+        reads a word inside a comment or a string literal as a declaration.
+
+    D6. Structure check `[19]` must not reuse the generator's extractors. A
+        check that shares an oracle with the thing it checks passes by
+        construction. It reads the built `d.ts`, which tsc writes from the
+        real export keywords, and the shipped bundle, which is what a
+        consumer loads.
+  consequences: |
+    + THE PUBLISHED SURFACE IS NOW REAL: 1076 names across 125 components,
+      each one verified against a built artefact. SpineMap's entry went from
+      two listings of `class on` to one global and thirteen exported names.
+    + A FOURTH REGISTRATION SYNTAX WAS FOUND BY MEASURING, not by reading.
+      The first version of `extractGlobals` reported eleven components as
+      having no public surface at all. Eight were the layout components,
+      which hold the cast in a local first — `const w = window as …` then
+      `w["createAnchorLayout"] = …`. Two more were the same shape. The
+      eleventh, `themeinit`, really does register nothing, because it is a
+      boot script, so `Globals: none` is the correct output there. "Zero is
+      suspicious" is worth asserting on any extraction: a component with no
+      public surface is either a boot script or a missed syntax.
+    - THERE WERE NO TESTS FOR THIS FILE AT ALL, which is why a defect that
+      published a wrong API name to the CDN survived for months.
+      `scripts/generate-docs.test.ts` adds 16, and `scripts/**/*.test.ts`
+      joins the vitest include. The extractors are reachable because the
+      script now runs `main()` only under `require.main === module`.
+    + CHECK [19] IS MUTATION-PROVEN THE HONEST WAY. Reverting the Exports
+      line to the prose regex and regenerating fails 37 of the 54 names it
+      emits. The other 17 are the prose-collision cases, and the check's
+      header records that it cannot see them: its job is to stop the
+      generator drifting back, and 37 failures fail the suite.
+    + THE SEC-3 WORKAROUND CAN BE UNDONE, though it is left alone. The
+      sentence in markdownrenderer's README was reworded on 11 October to
+      avoid the words "class of". That rewording is no longer load-bearing.
+      It is not reverted, because the current wording is no worse and a
+      revert would be a change with no reader-visible benefit.
+  files:
+    - "scripts/generate-docs.js"
+    - "scripts/generate-docs.test.ts"
+    - "scripts/check-published-api.mjs"
+    - "test-local.sh"
+    - "vitest.config.ts"
+    - "AGENTS.md"
+    - "CODEBASE_FIXES.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
