@@ -6072,8 +6072,9 @@
 
     D3. ONE FACTORY FOR THE ENGINE BUNDLE, SANCTIONED EXPLICITLY.
         `components/diagramengine/src/logging.ts` holds `makeLogger(prefix)` and
-        each module destructures the levels it uses. This removed 282 lines,
-        left all 192 call sites unchanged and lowered STD-1 from 30,693 to
+        each module destructures the levels it uses. This removed 80 helper
+        declarations and 294 lines from the modules, cost 78 for the factory,
+        left all 118 call sites standing and lowered STD-1 from 30,693 to
         30,479. FRONTEND_LOGGING.md section 1.1 permits the variant ONLY inside
         a bundle concatenated from many modules carrying more than one prefix,
         and states the boundary: `makeLogger` is local to one generated file,
@@ -6107,7 +6108,7 @@
       as conforming. Converting them is the mechanical path to closing WIN-1,
       roughly 220 of its 294 occurrences, and is deliberately not done here.
     - REFACTORING THE CODE A CHECK READS CAN BLIND THE CHECK. After the factory
-      landed, 17 modules holding 192 log calls classified as "no-logging" and
+      landed, 17 modules holding 57 log calls classified as "no-logging" and
       the ratchet passed in silence. A count can be right by accident. When a
       change alters the shape of what a check measures, re-derive the
       classification by hand before trusting the number.

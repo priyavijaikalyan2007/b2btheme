@@ -228,8 +228,9 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
     mandated preamble 20 times would have added 291 lines to the largest file
     in the repository, and check `[20]` failed on `diagramengineLines` for
     exactly that reason. The namespaces now take their helpers from one
-    factory in `src/logging.ts`, which removed 282 lines of near-duplicate
-    code, left all 192 call sites unchanged, and brought STD-1 down from
+    factory in `src/logging.ts`, which removed 80 helper declarations and 294
+    lines of near-duplicate code, left all 118 call sites standing, and brought
+    STD-1 down from
     30,693 to 30,479 lines. FRONTEND_LOGGING.md section 1.1 sanctions that
     variant and states its boundary.
 
@@ -245,7 +246,7 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
   **The classifier had to learn the factory form.** After the refactor the 18
   engine modules hold neither `createLogUtility` nor the shim, so
-  `classifyLoggingPattern` called 17 files holding 192 log calls "no-logging"
+  `classifyLoggingPattern` called 17 files holding 57 log calls "no-logging"
   and the ratchet passed. A count that is right by accident is the failure
   mode those classifier tests exist to catch, so `makeLogger(` now counts as
   conforming and carries two cases. The same pass fixed a real false positive:

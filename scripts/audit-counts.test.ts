@@ -176,7 +176,7 @@ describe("classifyLoggingPattern", () =>
     // Regression. The DiagramEngine modules take their helpers from
     // src/logging.ts, so they hold no `createLogUtility` of their own. A
     // classifier that only knows the direct form calls seventeen files
-    // holding 192 log calls "no-logging" and passes, which is a count that
+    // holding 57 log calls "no-logging" and passes, which is a count that
     // is right by accident. See FRONTEND_LOGGING.md section 1.1.
     test("helpers taken from the engine factory conform", () =>
     {

@@ -49,7 +49,11 @@ import { readFileSync } from "node:fs";
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
  * spec files, because a violation in a test is not a violation in the
- * library, and nothing under `dist/`, which is generated.
+ * library, nothing under `dist/`, which is generated, and no `.d.ts`
+ * declaration file, which holds types rather than executable code. That
+ * last exclusion means `components/globals.d.ts` is outside every count
+ * here, including the marker count, so its `COMPONENT:` marker is a
+ * convention this script does not enforce.
  */
 export function sourceFiles()
 {

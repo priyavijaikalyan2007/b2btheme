@@ -495,12 +495,13 @@ pattern. Nineteen of them belonged to DiagramEngine, where 20 log prefixes
 each carried four near-identical helper functions. Repeating the mandated
 preamble 20 more times would have added 291 lines to the largest file in the
 repository, so I replaced the duplication with one factory and had each module
-destructure the levels it uses. 282 lines removed, 192 call sites untouched,
+destructure the levels it uses. 80 helper declarations and 294 lines removed
+from the modules, all 118 call sites left standing,
 every test passing, and the size ratchet moved in the right direction.
 
 The check that measures logging conformance then reported zero violations and
 passed. It was wrong. Those 17 modules no longer contained the token the
-classifier looks for, so files holding 192 log calls between them classified
+classifier looks for, so 17 files holding 57 log calls between them classified
 as "no-logging" — not conforming, not violating, invisible. The count was
 correct by accident and the gate had quietly stopped watching the largest
 component in the repository.
@@ -554,3 +555,17 @@ in 117 files. A mandated snippet is code, and nobody had reviewed it as code.
 standards it has to satisfy.** The migration is the cheap part. Declaring the
 window globals in one `.d.ts` cost four lines and turned a 52-occurrence
 regression into none. Related: [[6.55]] on counts as claims, and ADR-171.
+
+One last instance of the same error, in the commit that closed this item. I
+reported "192 call sites unchanged" in six places. The real figure is **118**,
+and 192 was neither a call-site count nor correct: the regex I counted with
+matched the helper *declarations* as well as the calls, and its character class
+excluded underscores, so it missed six real names in `tool-text.ts` — the same
+blind spot that made my migration script skip that file. The true before-and-
+after is 198 matches falling to 118, which decomposes as 80 declarations
+removed and 118 calls standing. The reviewer caught it by asking the obvious
+question: the count was taken before the change and never retaken. **Restating
+a measurement after the thing it measures has changed is not restating, it is
+asserting.** See [[6.55]]: the pattern is half the claim, and a regex that
+matches more than you think is how a count becomes a different count with the
+same name.

@@ -1104,7 +1104,7 @@ interface DiagramEngineOptions
  *    preamble would add roughly six hundred lines of near-identical code to
  *    the largest file in the repository. The factory resolves LogUtility once
  *    per namespace and callers destructure the levels they use, which leaves
- *    all 192 call sites unchanged. See FRONTEND_LOGGING.md section 1.1.
+ *    all 118 call sites standing. See FRONTEND_LOGGING.md section 1.1.
  * 🔗 RELATES: [[LogUtility]], [[DiagramEngine]]
  * ⚡ FLOW: [makeLogger(prefix)] -> [window.createLogUtility] -> [console.*]
  * ----------------------------------------------------------------------------

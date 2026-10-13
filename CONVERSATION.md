@@ -3048,8 +3048,11 @@ the repository, and check `[20]` failed on `diagramengineLines`. The ratchet I
 built two commits earlier caught a change I made, on a count that change was
 not about, and it was right to. Raising that baseline is the one move the
 ratchet exists to forbid. One factory in `src/logging.ts` instead removed
-**282** lines, left all **192** call sites unchanged because the helper names
-survive destructuring, and brought STD-1 from 30,693 down to **30,479**.
+**80** helper declarations and **294** lines from the modules, cost 78 for the
+factory, and left all **118** call sites standing because the helper names
+survive destructuring. STD-1 fell from 30,693 to **30,479**. Two call sites
+were renamed, `logText_tool*` to `logText*`, which is a naming defect the
+migration surfaced rather than a cost of the refactor.
 
 The prescribed snippet carried two `(window as any)` casts. Using it 26 more
 times would have added 52 occurrences to WIN-1 and failed the same check — a
@@ -3061,7 +3064,7 @@ mandated snippet is code, and nobody had reviewed it as code.
 
 **Then the failure worth keeping.** After the factory landed, the check
 reported zero violations and passed. It was wrong. The 17 engine modules no
-longer contained the token the classifier looks for, so files holding 192 log
+longer contained the token the classifier looks for, so 17 files holding 57 log
 calls between them classified as `no-logging` — not conforming, not violating,
 invisible. The count was right by accident and the gate had quietly stopped
 watching the largest component in the repository. Nothing failed, which is the

@@ -227,7 +227,7 @@ as a standards violation for a line of pixels.
 
 **The fifth is the one worth studying, because the check went green.** When the
 DiagramEngine modules moved to a shared factory they stopped containing the
-token the classifier looked for, so 17 files holding 192 log calls classified
+token the classifier looked for, so 17 files holding 57 log calls classified
 as "no-logging" and the count fell to zero. The ratchet passed. Nothing failed.
 A count can be right by accident, and refactoring the code a classifier reads
 is how that happens. **When you change the shape of what a check measures,
