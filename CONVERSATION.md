@@ -2981,3 +2981,34 @@ previous commit deployed without incident.
 
 ADR-169. CI-1 opened. Tracker 36 resolved / 27 open. 32/32 structure checks,
 now enforced on every push.
+
+**The first CI run failed, on the step I had just rehearsed.** Check `[16]`
+threw before running an assertion:
+`SyntaxError: The requested module 'node:fs' does not provide an export named
+'globSync'`. `scripts/check-fabricated-reads.mjs` imports `globSync` from
+`node:fs`, added in Node v22.0.0 and stable in v22.17.0. CI pinned Node 20, so
+**that check could never have passed there.** It has been green since the day
+it was written, on this machine's Node 26, and it had never executed anywhere
+else.
+
+My verification could not have caught it. I ran the exact CI command sequence
+locally and it passed, which established that the commands were right and
+nothing at all about the runtime they would run in. A local rehearsal of a
+pipeline shares the local runtime, so it tests the commands and silently
+inherits my version of the environment. Worse, I had already written CI-1
+saying the pin change "needs a run to find out, not a guess" — and then treated
+my local run as that run. Insight 6.56.
+
+**Fixed by aligning on production rather than on the script's floor.** CI now
+pins Node 24, which is what Cloudflare compiles the deployed bundle with, so a
+green run exercises the major that ships. Pinning 22 would have cleared the
+error while leaving CI validating a version nobody runs. `package.json` now
+declares `engines.node >= 22`, the measured floor, so the requirement is
+readable instead of discovered through a crash. `globSync` is the only such API
+in the repository, in two calls in one file, which I checked rather than
+assumed. GitHub's own annotation on the failing run agreed: Node 20 is
+deprecated and three of the actions were already being forced onto 24.
+
+Run 38345921165 on `af35267` is green, all twelve steps including
+`Run structure checks`. CI-1 closed on the evidence it asked for. ADR-170,
+insight 6.56. Tracker 37 resolved / 26 open.

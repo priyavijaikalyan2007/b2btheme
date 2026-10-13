@@ -5939,3 +5939,77 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-170"
+  title: "CI pins the Node major that ships, because 20 could not run the suite at all"
+  date: "2026-10-13"
+  status: "accepted"
+  context: |
+    ADR-169 wired the 32 structure checks into CI. CI-1 was opened at the same
+    time to record that `.github/workflows/ci.yml` pinned Node 20 while
+    Cloudflare Workers Builds compiles the deployed bundle on v24.18.0 and the
+    development machine runs v26.11.1. The entry said aligning the pin was a
+    one-line change whose consequences could not be measured from here, and
+    that it needed a run rather than a guess.
+
+    The run found it immediately. The first CI execution of the suite failed at
+    check `[16]`, because `scripts/check-fabricated-reads.mjs` imports
+    `globSync` from `node:fs`, added in Node v22.0.0 and marked stable in
+    v22.17.0:
+
+      SyntaxError: The requested module 'node:fs' does not provide an export
+      named 'globSync'
+
+    That check could never have passed in CI. It has been green locally since
+    it was written only because this machine runs Node 26, and it had never
+    run anywhere else. This is exactly the failure mode CI-1 described: a
+    thing that works on the version nobody validates and breaks on the version
+    CI pins stays invisible until something runs it.
+
+    The verification in ADR-169 did not catch it either, and the reason is
+    worth recording. The exact CI sequence was run locally and passed, which
+    established that the commands were right and nothing about which runtime
+    they needed. A local rehearsal of a pipeline shares the local runtime, so
+    it cannot test the pipeline's environment.
+  decision: |
+    D1. PIN THE MAJOR THAT SHIPS, NOT THE SCRIPT'S FLOOR. Node 24 matches
+        Cloudflare's v24.18.0, so a green CI run exercises the same major as
+        the deployed bundle. Pinning 22, the floor `globSync` requires, would
+        have fixed the error while leaving CI validating a version nobody
+        runs.
+    D2. DECLARE THE FLOOR IN `package.json`. `engines.node >= 22` makes the
+        requirement explicit rather than discoverable through a SyntaxError.
+        `globSync` is the only API in the repository newer than that, in two
+        calls in one file, so the floor is measured rather than assumed.
+    D3. DO NOT REWRITE THE SCRIPT TO SUIT AN OLD RUNTIME. Replacing `globSync`
+        would have kept CI on a deprecated major and hidden the real problem,
+        which was the pin.
+    D4. CLOSE CI-1 ON THE EVIDENCE. The entry asked for a run. The run
+        happened, it was conclusive, and the fix is pushed and green.
+  consequences: |
+    + CI IS GREEN WITH THE SUITE ENFORCED. All twelve steps of run 38345921165
+      pass on `af35267`, including `Run structure checks`. The count ratchet
+      from ADR-168 is now enforced on every push and pull request to `main`.
+    + CHECK `[16]` RUNS OUTSIDE THIS MACHINE FOR THE FIRST TIME. Before this
+      it had only ever executed on a developer's Node 26.
+    + CI AND PRODUCTION NOW SHARE A MAJOR, so a build failure caused by the
+      runtime shows up in Actions rather than only in a Cloudflare build log
+      the read-only Workers tools cannot reach.
+    + GITHUB'S OWN DEPRECATION AGREES. The failing run annotated that Node 20
+      is deprecated and that `actions/checkout@v4`, `setup-node@v4` and
+      `upload-artifact@v4` are already being forced onto Node 24.
+    - ONE MAJOR STILL SEPARATES CI FROM DEVELOPMENT, 24 against 26. That is
+      the safe direction, because CI exists to predict production, not the
+      developer's laptop. It does mean a Node 26 feature can still pass
+      locally and fail in CI, which is now the correct order of discovery.
+    - A LOCAL REHEARSAL OF A PIPELINE CANNOT TEST THE PIPELINE'S ENVIRONMENT.
+      Running the exact CI command sequence locally verified the commands and
+      proved nothing about the runtime. The only test of a CI environment is
+      a CI run.
+  files:
+    - ".github/workflows/ci.yml"
+    - "package.json"
+    - "CODEBASE_FIXES.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

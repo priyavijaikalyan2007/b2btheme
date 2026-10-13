@@ -437,3 +437,42 @@ wrong. Then ratchet the number so it can only fall, and date it so a reader
 knows whether they are looking at a measurement or an old assertion. Related:
 [[6.54]] on probes that measure themselves, and [[6.53]] on mutating the real
 thing to find out whether anything notices.
+
+### 6.56 Rehearsing a Pipeline Locally Tests the Commands, Never the Environment (2026-10-13)
+
+Before wiring the structure suite into CI, I did what looked like careful work.
+I read the suite's dependencies, confirmed the vendor step makes no network
+call, confirmed every git command survives a depth-one checkout, and then ran
+the exact CI sequence locally: full build, runtime typecheck, unit tests,
+structure checks. Build 115 seconds, 4,955 tests, 32 of 32 checks, exit zero. I
+also mutated a baseline to prove the new step could fail, which it did.
+
+The first CI run failed anyway, on the step I had just rehearsed.
+
+`scripts/check-fabricated-reads.mjs` imports `globSync` from `node:fs`, added
+in Node v22.0.0. The workflow pinned Node 20, so check `[16]` threw a
+`SyntaxError` before running a single assertion. That check could never have
+passed in CI. It had been green since the day it was written, on a machine
+running Node 26, and it had never executed anywhere else.
+
+My rehearsal could not have found this. It ran on my runtime, which is the one
+thing a local run cannot vary. Every command was right, every dependency was
+present, the mutation proved the gate had teeth — and all of that was evidence
+about the commands, not about the environment they would run in. I had
+verified the half of the problem I could see from here and read the result as
+verification of the whole.
+
+The second-order lesson is about the item I had already written. I opened a
+tracker entry for the version gap saying it "needs a run to find out, not a
+guess", and then treated my local run as that run. A local rehearsal is the
+guess. Knowing the right epistemics and then substituting the convenient test
+is the easier mistake to make than not knowing them.
+
+**Principle**: A pipeline has two halves — the commands and the environment.
+Running the commands locally tests the first and silently inherits your own
+version of the second. Pin the environment to what ships, declare the floor
+where tools can read it (`engines` in `package.json`, not a comment), and
+accept that the only test of a CI environment is a CI run. When a check has
+only ever passed on one machine, you do not know that it passes. Related:
+[[6.35]] on a check that cannot fail, and [[6.55]] on stating a measurement's
+preconditions instead of trusting the number.

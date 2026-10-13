@@ -269,15 +269,17 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ---
 
-## CI — The pipeline validates a version nobody ships
+## CI — Node version alignment
 
-- [ ] **CI-1** `.github/workflows/ci.yml` pins Node 20. Cloudflare Workers Builds compiles the deployed bundle on **Node v24.18.0 with npm 11.16.0**, read from the live `/build.json`, and the development machine runs **Node v26.11.1**. **Three different majors, measured 2026-10-13.**
+- [x] **CI-1** `.github/workflows/ci.yml` pinned Node 20 while Cloudflare Workers Builds compiles the deployed bundle on **Node v24.18.0 with npm 11.16.0**, read from the live `/build.json`, and the development machine runs **Node v26.11.1**. Three different majors. **Closed 2026-10-13 (ADR-170): CI now pins 24, matching production.**
 
-  **Why it matters now rather than in principle.** A green CI run is the signal used to decide a commit is safe, and it exercises a runtime that neither development nor production uses. The failure mode is silent in both directions: something that works on 20 and breaks on 24 ships, and something that breaks only on 20 blocks a commit that would have deployed fine.
+  **The gap was not theoretical, and the first CI run of the structure suite proved it.** `scripts/check-fabricated-reads.mjs` imports `globSync` from `node:fs`, [added in Node v22.0.0](https://nodejs.org/docs/latest-v22.x/api/fs.html) and stable in v22.17.0. On Node 20 check `[16]` threw `SyntaxError: The requested module 'node:fs' does not provide an export named 'globSync'`. **That check could never have passed in CI.** It has been green locally since it was written only because this machine runs Node 26.
 
-  **It also means CI cannot predict the deploy.** When three commits sat undeployed behind a Cloudflare build that ran for over thirty minutes, green CI was never evidence about that build, both because Workers Builds runs independently of Actions and because it runs a different Node.
+  This is the precise failure mode the entry predicted: something that works on 24 and breaks on 20 had been invisible, because nothing ever ran it on 20. The entry said the fix "needs a run to find out, not a guess", and the run is what found it.
 
-  **The fix is a one-line pin change, and it is not obviously safe**, which is why this is an item rather than a change already made. Moving CI to 24 aligns it with production but may surface failures that have been invisible. That needs a run to find out, not a guess. Pinning to 24 and reading the result is the next step.
+  **Resolved by aligning on production rather than on the script's floor.** Node 24 is what ships, so a green CI run now exercises the same major as the deployed bundle. GitHub is also deprecating Node 20 on its runners, which the failing run's own annotation reported. `package.json` now declares `engines.node >= 22`, the measured floor, so the requirement is explicit rather than discovered through a SyntaxError. `globSync` is the only such API in the repository, in two calls in one file.
+
+  **One major still separates CI from development** — 24 against 26 — which is the safe direction, since CI matching production is what the signal is for.
 
 ---
 
@@ -333,8 +335,8 @@ the step exits 1 and the workflow fails.
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
-| CI — Node version gap | 1 (3 majors, 2026-10-13) | Open |
-| **Total** | **24 items** | **5 resolved** |
+| CI — Node version gap | 1 | **Closed** |
+| **Total** | **24 items** | **6 resolved** |
 
 ### The March 2026 counts re-measured so far
 
