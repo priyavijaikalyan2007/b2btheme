@@ -468,6 +468,15 @@ guess", and then treated my local run as that run. A local rehearsal is the
 guess. Knowing the right epistemics and then substituting the convenient test
 is the easier mistake to make than not knowing them.
 
+There was a third instance in the fix itself, caught in review. I declared
+`engines.node >= 22` in `package.json`, because 22 is where the Node
+documentation says `globSync` was added. Nothing in this repository has ever
+run on 22 or 23, and the API was experimental until 22.17.0, so the declaration
+promised support for a range nobody had exercised. In a change whose whole
+argument is "state the preconditions you measured", I wrote down a
+documented number and presented it as a measured one. The floor there is
+evidence for is 24, which CI and production both run.
+
 **Principle**: A pipeline has two halves — the commands and the environment.
 Running the commands locally tests the first and silently inherits your own
 version of the second. Pin the environment to what ships, declare the floor

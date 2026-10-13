@@ -277,7 +277,7 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
   This is the precise failure mode the entry predicted: something that works on 24 and breaks on 20 had been invisible, because nothing ever ran it on 20. The entry said the fix "needs a run to find out, not a guess", and the run is what found it.
 
-  **Resolved by aligning on production rather than on the script's floor.** Node 24 is what ships, so a green CI run now exercises the same major as the deployed bundle. GitHub is also deprecating Node 20 on its runners, which the failing run's own annotation reported. `package.json` now declares `engines.node >= 22`, the measured floor, so the requirement is explicit rather than discovered through a SyntaxError. `globSync` is the only such API in the repository, in two calls in one file.
+  **Resolved by aligning on production rather than on the script's floor.** Node 24 is what ships, so a green CI run now exercises the same major as the deployed bundle. GitHub is also deprecating Node 20 on its runners, which the failing run's own annotation reported. `package.json` now declares `engines.node >= 24`, **the lowest version this repository is actually tested on**, so the requirement is explicit rather than discovered through a SyntaxError. A first draft said `>= 22`, which repeated the error this item is about: 22 is where the Node documentation says `globSync` was added, the API was experimental until 22.17.0, and nothing here has ever run on 22 or 23. `globSync` is the only such API in the repository, in two calls in one file.
 
   **One major still separates CI from development** — 24 against 26 — which is the safe direction, since CI matching production is what the signal is for.
 

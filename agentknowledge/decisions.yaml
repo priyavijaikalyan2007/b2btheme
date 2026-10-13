@@ -5977,10 +5977,15 @@
         the deployed bundle. Pinning 22, the floor `globSync` requires, would
         have fixed the error while leaving CI validating a version nobody
         runs.
-    D2. DECLARE THE FLOOR IN `package.json`. `engines.node >= 22` makes the
-        requirement explicit rather than discoverable through a SyntaxError.
-        `globSync` is the only API in the repository newer than that, in two
-        calls in one file, so the floor is measured rather than assumed.
+    D2. DECLARE THE FLOOR IN `package.json` AS THE LOWEST VERSION ACTUALLY
+        TESTED, which is 24. `globSync` is the only API in the repository
+        newer than that, in two calls in one file. A first draft declared
+        `>= 22` and that was the same error this ADR is about: 22 is where
+        the Node documentation says `globSync` was added, nothing in this
+        repository has ever run on 22 or 23, and the API was experimental
+        until 22.17.0, so `>= 22` promised support for a range that had never
+        been exercised and would emit a runtime warning on part of it. CI and
+        Cloudflare both run 24, so 24 is the floor there is evidence for.
     D3. DO NOT REWRITE THE SCRIPT TO SUIT AN OLD RUNTIME. Replacing `globSync`
         would have kept CI on a deprecated major and hidden the real problem,
         which was the pin.
@@ -5998,6 +6003,11 @@
     + GITHUB'S OWN DEPRECATION AGREES. The failing run annotated that Node 20
       is deprecated and that `actions/checkout@v4`, `setup-node@v4` and
       `upload-artifact@v4` are already being forced onto Node 24.
+    = THAT ANNOTATION IS NOT A DEFECT AND WILL NOT GO AWAY. It is about the
+      runtime the ACTIONS themselves execute on, which the runner forces to
+      24 whatever `node-version` says, and `node-version` governs only the
+      `run:` steps. It appeared on the passing run too. Do not read it as
+      something this pin failed to fix.
     - ONE MAJOR STILL SEPARATES CI FROM DEVELOPMENT, 24 against 26. That is
       the safe direction, because CI exists to predict production, not the
       developer's laptop. It does mean a Node 26 feature can still pass

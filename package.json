@@ -2,7 +2,7 @@
   "name": "enterprise-bootstrap-theme",
   "version": "1.0.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "description": "Compact, professional Bootstrap theme for enterprise SaaS applications",
   "main": "dist/css/custom.css",

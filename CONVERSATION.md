@@ -3003,8 +3003,11 @@ my local run as that run. Insight 6.56.
 pins Node 24, which is what Cloudflare compiles the deployed bundle with, so a
 green run exercises the major that ships. Pinning 22 would have cleared the
 error while leaving CI validating a version nobody runs. `package.json` now
-declares `engines.node >= 22`, the measured floor, so the requirement is
-readable instead of discovered through a crash. `globSync` is the only such API
+declares `engines.node >= 24`, the lowest version this project is actually
+tested on, so the requirement is readable instead of discovered through a
+crash. My first draft said `>= 22` and the advisor caught it as the same error
+this commit argues against: 22 is the documented addition version, the API was
+experimental until 22.17.0, and nothing here has ever run on 22 or 23. `globSync` is the only such API
 in the repository, in two calls in one file, which I checked rather than
 assumed. GitHub's own annotation on the failing run agreed: Node 20 is
 deprecated and three of the actions were already being forced onto 24.
