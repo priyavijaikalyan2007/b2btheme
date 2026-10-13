@@ -17,10 +17,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Node 24 matches what Cloudflare Workers Builds compiles the deployed
+      # bundle with (v24.18.0, read from the live /build.json). Node 20 could
+      # not run the suite at all: check [16] imports `globSync` from `node:fs`,
+      # added in Node 22, so it threw a SyntaxError on every run (CI-1,
+      # ADR-170). GitHub is also deprecating Node 20 on its runners.
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
 
       - name: Install dependencies
