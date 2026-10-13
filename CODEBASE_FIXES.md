@@ -269,6 +269,18 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ---
 
+## CI — The pipeline validates a version nobody ships
+
+- [ ] **CI-1** `.github/workflows/ci.yml` pins Node 20. Cloudflare Workers Builds compiles the deployed bundle on **Node v24.18.0 with npm 11.16.0**, read from the live `/build.json`, and the development machine runs **Node v26.11.1**. **Three different majors, measured 2026-10-13.**
+
+  **Why it matters now rather than in principle.** A green CI run is the signal used to decide a commit is safe, and it exercises a runtime that neither development nor production uses. The failure mode is silent in both directions: something that works on 20 and breaks on 24 ships, and something that breaks only on 20 blocks a commit that would have deployed fine.
+
+  **It also means CI cannot predict the deploy.** When three commits sat undeployed behind a Cloudflare build that ran for over thirty minutes, green CI was never evidence about that build, both because Workers Builds runs independently of Actions and because it runs a different Node.
+
+  **The fix is a one-line pin change, and it is not obviously safe**, which is why this is an item rather than a change already made. Moving CI to 24 aligns it with production but may surface failures that have been invisible. That needs a run to find out, not a guess. Pinning to 24 and reading the result is the next step.
+
+---
+
 ## MEASUREMENT — Counts must be re-derivable
 
 - [x] **AUDIT-1** Every count in this file must be reproducible from a stated file set and a stated pattern. **Closed 2026-10-13 (ADR-168).**
@@ -280,6 +292,8 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   **The classifier is tested, because it was wrong three times.** `scripts/audit-counts.test.ts` holds 21 tests. Three identity mutations were run against them: making every line a shim body fails 7, counting lines instead of occurrences fails 2, and ignoring string literals fails 4. A count is only as good as the classifier behind it.
 
   **What it cannot do.** It counts tokens, not intent. Whether a call site picked `logDebug` where `logInfo` was right is not a question grep can answer, and that was the real question LOG-1 asked.
+
+  **The ratchet is enforced in CI (ADR-169).** When this item was first closed it was not, which made "can only fall" true on one machine. `.github/workflows/ci.yml` now runs the full build, the runtime typecheck, the unit tests and `npm run test:structure`. Verified by mutation rather than by reading: lowering the `windowAnyCasts` baseline to 200 makes the step exit 1.
 
 ---
 
@@ -297,10 +311,13 @@ been re-measured. **Of the ten March counts re-measured so far, nine were
 wrong and the tenth was never a count at all**, so treat an undated number as an
 unverified claim rather than a figure.
 
-**Check `[20]` runs locally, not in CI.** `.github/workflows/ci.yml` runs
-`npm ci`, the two builds and the unit tests only, so the whole structure suite
-including this ratchet holds only where `./test-local.sh` is run. Wiring it into
-CI is the obvious next step and is not done.
+**Check `[20]` runs in CI as of 2026-10-13 (ADR-169).** It did not when this
+section was first written. `.github/workflows/ci.yml` ran `npm ci`, two partial
+build steps and the unit tests, so all 32 structure checks held only where
+`./test-local.sh` was run and a count could rise in a branch CI called green.
+CI now runs the full `npm run build`, the runtime typecheck, the unit tests and
+`npm run test:structure`. Proven by lowering a baseline below its real value:
+the step exits 1 and the workflow fails.
 
 | Severity | Count | Status |
 |----------|-------|--------|
@@ -316,7 +333,8 @@ CI is the obvious next step and is not done.
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
-| **Total** | **23 items** | **5 resolved** |
+| CI — Node version gap | 1 (3 majors, 2026-10-13) | Open |
+| **Total** | **24 items** | **5 resolved** |
 
 ### The March 2026 counts re-measured so far
 

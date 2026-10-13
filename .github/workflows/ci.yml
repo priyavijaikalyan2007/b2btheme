@@ -26,14 +26,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build CSS (SCSS compilation + autoprefixer)
-        run: npm run build:css
+      # The full build, not build:css + build:ts alone. test-local.sh checks
+      # dist/components/*.css, the manifest, the docs and build.json, none of
+      # which the two partial steps produce, and its header says to run it
+      # after `npm run build`.
+      - name: Build
+        run: npm run build
 
-      - name: Build TypeScript
-        run: npm run build:ts
+      - name: Typecheck the runtime
+        run: npm run typecheck:runtime
 
       - name: Run unit tests with coverage
         run: npm run test:unit:coverage
+
+      # The 32 structure checks ran locally only until 2026-10-13, so a
+      # tracked count could rise in a branch this workflow called green
+      # (AUDIT-1, ADR-168). Check [20] ratchets those counts and is the
+      # reason this step exists.
+      - name: Run structure checks
+        run: npm run test:structure
 
       - name: Upload coverage report
         if: always()

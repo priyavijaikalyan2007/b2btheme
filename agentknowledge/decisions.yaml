@@ -5861,3 +5861,81 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-169"
+  title: "The structure suite runs in CI, so the count ratchet holds off one machine"
+  date: "2026-10-13"
+  status: "accepted"
+  context: |
+    ADR-168 added check `[20]`, which holds eleven tracked counts at measured
+    baselines and fails when one rises. It also recorded that the whole
+    structure suite ran locally only, and named wiring it into CI as the
+    obvious next step.
+
+    That gap made the central claim of ADR-168 weaker than it read. "The
+    figures ratchet down and never drift up in silence" was true where
+    `./test-local.sh` was run and nowhere else. A count could rise in a branch
+    that `.github/workflows/ci.yml` called green, which is the same shape as
+    the defect ADR-158 found: a check that cannot fail is not a check, and a
+    check nothing runs is a special case of that.
+
+    The workflow ran `npm ci`, `build:css`, `build:ts` and
+    `test:unit:coverage`. Two partial build steps are not enough for the
+    suite: it reads `dist/components/*.css` from `build:components:css`,
+    `dist/js/bootstrap.bundle.min.js` from `copy:js`, the manifest, the
+    generated docs and `build.json`. The suite's own header has said "run
+    after `npm run build`" since it was written.
+
+    Three CI hazards were checked rather than assumed. `vendor-closure.mjs`
+    makes no network call, so the vendor step works offline. Every git command
+    in `build-info.sh` is `rev-parse HEAD`, `log -1` or a `describe` that
+    falls back to an empty string, and all are wrapped to return empty on
+    failure, so `actions/checkout` at its default depth of one is sufficient.
+    The full build takes 115 seconds locally.
+  decision: |
+    D1. RUN THE FULL BUILD IN CI, replacing the two partial steps. The suite
+        depends on artefacts they do not produce, and the full build is also
+        what Cloudflare runs, so CI exercises the same command as production.
+    D2. ADD THE RUNTIME TYPECHECK. `npm run typecheck:runtime` was already in
+        the project's own `test` script and was the only part of it CI never
+        ran.
+    D3. ADD `npm run test:structure` AS ITS OWN STEP, after the unit tests, so
+        a structure failure is distinguishable from a unit failure in the log.
+    D4. KEEP `test:unit:coverage` RATHER THAN COLLAPSING INTO `npm run test`.
+        The project's `test` script runs `test:unit` without coverage, and the
+        coverage artefact upload depends on it.
+    D5. PROVE THE STEP CAN FAIL BEFORE TRUSTING IT. Lowering the
+        `windowAnyCasts` baseline from 294 to 200 was run through
+        `npm run test:structure`: the check reports the count against the
+        baseline and the command exits 1.
+    D6. DO NOT CHANGE THE NODE PIN IN THIS CHANGE. CI pins 20, Cloudflare
+        builds on v24.18.0 and the development machine runs v26.11.1. Aligning
+        them is a one-line edit whose consequences cannot be measured from
+        here, so it is tracked as CI-1 rather than bundled in.
+  consequences: |
+    + THE RATCHET IS NOW ENFORCED RATHER THAN AVAILABLE. All 32 structure
+      checks run on every push and pull request to `main`, so a tracked count
+      cannot rise without failing the workflow. Verified by mutation, not by
+      reading the YAML.
+    + CI NOW RUNS THE SAME BUILD COMMAND AS PRODUCTION, so a build failure
+      shows up in Actions instead of only in a Cloudflare build log that the
+      read-only Workers tools cannot reach.
+    + THE ENTIRE `npm run test` SCRIPT IS NOW COVERED. Before this, CI ran one
+      of its three parts.
+    - CI IS ABOUT TWO MINUTES SLOWER. The full build is 115 seconds locally
+      against roughly 40 for the two partial steps. That is the price of the
+      suite having artefacts to check.
+    - THE NODE VERSION GAP IS UNRESOLVED AND NOW RECORDED. CI validates on a
+      major that neither development nor production uses, so green CI still
+      does not predict a Cloudflare build. Tracked as CI-1.
+    - A FIRST FAILING RUN IS POSSIBLE AND WAS NOT REPRODUCIBLE HERE. The exact
+      sequence passes locally on Node 26, and CI runs Node 20. If it fails,
+      the failure is information about CI-1 rather than about the suite.
+  files:
+    - ".github/workflows/ci.yml"
+    - "CODEBASE_FIXES.md"
+    - "AGENTS.md"
+    - "TESTING.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

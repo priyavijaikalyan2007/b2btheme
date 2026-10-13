@@ -497,8 +497,9 @@ consistent, thoughtful and complete end to end experience.
   one keeping the `()` that documentation writes around a name and one using `grep -oc`, where `-c`
   silently overrides `-o` and counts lines. **Date every count you write into a tracker.** An
   undated number is an unverified claim, and nine of the ten re-measured so far were wrong in
-  both directions. Note that check `[20]`, and the whole structure suite, runs via
-  `./test-local.sh` and **not** in CI, so a count can rise in a branch CI calls green.
+  both directions. Check `[20]`, and the whole structure suite, runs in CI as
+  well as via `./test-local.sh` (ADR-169), so a rising count fails the workflow. CI pins Node 20
+  while Cloudflare builds on Node 24, so green CI still does not predict the deploy — see CI-1.
 - When changing anything a consuming app can observe — a factory signature, a thrown error, a CDN path,
   a vendored dependency version — update [docs/CDN_INTEGRATION_GUIDE.md](./docs/CDN_INTEGRATION_GUIDE.md)
   and [CDN_CONTRACT.md](./CDN_CONTRACT.md) in the same change. Those two are the contract consuming

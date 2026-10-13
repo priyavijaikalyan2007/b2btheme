@@ -2929,3 +2929,55 @@ unasked.
 AUDIT-1 resolved, LOG-1 closed as obsolete, LOG-2 opened. Tracker 36 resolved /
 26 open. ADR-168, insight 6.55, TESTING.md §2.7. 4,955 unit tests across 146
 files, 21 of them new, 32/32 structure checks.
+
+---
+
+## 2026-10-13 — "if nothing, continue fixing" (ADR-169, CI-1)
+
+Nothing needed, so I wired the structure suite into CI. That was my own
+recommendation from the previous turn, and it closes the one claim in ADR-168
+that read stronger than it was: "the figures ratchet down and never drift up in
+silence" was true where `./test-local.sh` was run and nowhere else.
+
+**The gap was bigger than the new check.** `.github/workflows/ci.yml` ran
+`npm ci`, `build:css`, `build:ts` and `test:unit:coverage`. All 32 structure
+checks ran locally only, so a tracked count could rise in a branch CI called
+green. That is the same shape as the defect in ADR-158 — a check that cannot
+fail is not a check, and a check nothing runs is a special case of it.
+
+Two partial build steps were never enough for the suite anyway. It reads
+`dist/components/*.css` from `build:components:css`,
+`dist/js/bootstrap.bundle.min.js` from `copy:js`, plus the manifest, the
+generated docs and `build.json`. The suite's own header has said "run after
+`npm run build`" since it was written. CI now runs the full build, the runtime
+typecheck — which was already in the project's `test` script and the only part
+of it CI never ran — the unit tests with coverage, and
+`npm run test:structure`.
+
+**I checked three CI hazards rather than assuming them.**
+`vendor-closure.mjs` makes no network call. Every git command in
+`build-info.sh` is `rev-parse HEAD`, `log -1`, or a `describe` that falls back
+to an empty string, all wrapped to return empty on failure, so
+`actions/checkout` at its default depth of one is enough. Then I ran the exact
+CI sequence locally: build 115 seconds, typecheck clean, 4,955 tests, 32/32
+structure checks, exit 0.
+
+**Then I proved the step can fail**, because reading the YAML is not evidence.
+Lowering the `windowAnyCasts` baseline from 294 to 200 makes
+`npm run test:structure` report the count against the baseline and exit 1, so
+the workflow would go red. Restored byte-identical afterwards.
+
+**One thing I found and did not fix.** CI pins Node 20. Cloudflare builds the
+deployed bundle on **Node v24.18.0**, read from the live `/build.json`, and
+this machine runs **v26.11.1**. Three different majors. A green CI run is the
+signal used to decide a commit is safe and it exercises a runtime neither
+development nor production uses, which is also part of why green CI said
+nothing about the build that recently hung for over thirty minutes. Aligning
+the pin is one line, and its consequences cannot be measured from here, so it
+is tracked as CI-1 rather than bundled into this change.
+
+Also confirmed while reading `/build.json`: **`f9e1917` is live**, so the
+previous commit deployed without incident.
+
+ADR-169. CI-1 opened. Tracker 36 resolved / 27 open. 32/32 structure checks,
+now enforced on every push.

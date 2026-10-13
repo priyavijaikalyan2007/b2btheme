@@ -224,7 +224,10 @@ double-quoted string filed a real call site as string data.
 
 **Gate a count with a baseline, not a target.** Each count in that script
 carries the value measured on a stated date, and check `[20]` fails when one
-rises. The number can only fall, and lowering a baseline is how progress gets
+rises. The suite runs both locally through `./test-local.sh` and in CI through
+`npm run test:structure` (ADR-169). It ran locally only until 2026-10-13, which
+made the ratchet true on one machine — a gate nothing runs is a gate that
+cannot fail. The number can only fall, and lowering a baseline is how progress gets
 recorded. A baseline stops silent growth. It does not claim the count is
 acceptable.
 
