@@ -21,25 +21,9 @@
 // ============================================================================
 
 const UI_LOG_PREFIX = "[UiComponentStencils]";
-function logUiInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", UI_LOG_PREFIX, ...args);
-}
 
-function logUiWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", UI_LOG_PREFIX, ...args);
-}
-
-function logUiError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", UI_LOG_PREFIX, ...args);
-}
-
-function logUiDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", UI_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logUiDebug, info: logUiInfo, warn: logUiWarn, error: logUiError } = makeLogger(UI_LOG_PREFIX);
 
 const UI_CATEGORY = "ui-components";
 
@@ -1366,7 +1350,6 @@ function renderTimeline(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
-
 // ============================================================================
 // DYNAMIC UI STENCILS
 // ============================================================================
@@ -1520,7 +1503,6 @@ function renderAnnotationStencil(ctx: ShapeRenderContext): SVGElement
 
     return g;
 }
-
 
 /**
  * ⚓ FUNCTION: renderChatDockStencil

@@ -14,6 +14,51 @@
 // @entrypoint
 
 // ============================================================================
+// LOGGING
+// ============================================================================
+
+/** Log prefix for all console output from this component. */
+const LOG_PREFIX = "[ErrorDialog]";
+
+/** Routes through LogUtility when the host page loads it. See FRONTEND_LOGGING.md. */
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+    : null;
+
+/** Emits a structured info log. */
+function logInfo(...args: unknown[]): void
+{
+    _lu
+        ? _lu.info(...args)
+        : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
+
+/** Emits a structured warning. */
+function logWarn(...args: unknown[]): void
+{
+    _lu
+        ? _lu.warn(...args)
+        : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+}
+
+/** Emits a structured error. */
+function logError(...args: unknown[]): void
+{
+    _lu
+        ? _lu.error(...args)
+        : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+}
+
+/** Emits a structured debug log. */
+function logDebug(...args: unknown[]): void
+{
+    _lu
+        ? _lu.debug(...args)
+        : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
+
+// ============================================================================
 // INTERFACES
 // ============================================================================
 
@@ -358,10 +403,10 @@ function copyToClipboard(text: string, btn: HTMLElement): void
         navigator.clipboard.writeText(text).then(() =>
         {
             showCopyFeedback(btn);
-            console.debug("[ErrorDialog] Technical details copied to clipboard");
+            logDebug("Technical details copied to clipboard");
         }).catch((err) =>
         {
-            console.warn("[ErrorDialog] Clipboard API failed, trying fallback:", err);
+            logWarn("Clipboard API failed, trying fallback:", err);
             fallbackCopy(text, btn);
         });
     }
@@ -387,11 +432,11 @@ function fallbackCopy(text: string, btn: HTMLElement): void
     {
         document.execCommand("copy");
         showCopyFeedback(btn);
-        console.debug("[ErrorDialog] Technical details copied (fallback)");
+        logDebug("Technical details copied (fallback)");
     }
     catch (err)
     {
-        console.error("[ErrorDialog] Failed to copy to clipboard:", err);
+        logError("Failed to copy to clipboard:", err);
     }
     finally
     {
@@ -443,7 +488,7 @@ function buildFooter(id: string, error: LiterateError): HTMLElement
         const retryCallback = error.onRetry;
         retryBtn.addEventListener("click", () =>
         {
-            console.log("[ErrorDialog] Retry button clicked");
+            logInfo("Retry button clicked");
             retryCallback();
         });
 
@@ -481,7 +526,7 @@ export class ErrorDialog
         instanceCounter++;
         this.instanceId = `errordialog-${instanceCounter}`;
 
-        console.debug("[ErrorDialog] Instance created:", this.instanceId);
+        logDebug("Instance created:", this.instanceId);
     }
 
     /**
@@ -491,14 +536,14 @@ export class ErrorDialog
     {
         if (!error.title && !error.message)
         {
-            console.warn("[ErrorDialog] No title or message provided; dialog not shown");
+            logWarn("No title or message provided; dialog not shown");
             return;
         }
 
         const container = document.getElementById(this.containerId);
         if (!container)
         {
-            console.error("[ErrorDialog] Container element not found:", this.containerId);
+            logError("Container element not found:", this.containerId);
             return;
         }
 
@@ -510,8 +555,8 @@ export class ErrorDialog
         this.modalElement = buildModalElement(this.instanceId, error);
         container.appendChild(this.modalElement);
 
-        console.log("[ErrorDialog] Showing error dialog:", error.title);
-        console.debug("[ErrorDialog] Error details:", error);
+        logInfo("Showing error dialog:", error.title);
+        logDebug("Error details:", error);
 
         // Initialise Bootstrap Modal and show
         // @ts-expect-error — bootstrap is loaded globally, not as an ES module
@@ -565,7 +610,7 @@ export class ErrorDialog
         const parts = this.collectCopyParts();
         navigator.clipboard.writeText(parts.join("\n")).catch(() => {});
         e.preventDefault();
-        console.debug("[ErrorDialog] Dialog content copied via Ctrl+C");
+        logDebug("Dialog content copied via Ctrl+C");
     }
 
     /**
@@ -595,7 +640,7 @@ export class ErrorDialog
         if (this.bootstrapModal)
         {
             (this.bootstrapModal as { hide(): void }).hide();
-            console.debug("[ErrorDialog] Modal hidden");
+            logDebug("Modal hidden");
         }
     }
 
@@ -620,7 +665,7 @@ export class ErrorDialog
             this.modalElement = null;
             this.currentError = null;
 
-            console.debug("[ErrorDialog] Modal destroyed:", this.instanceId);
+            logDebug("Modal destroyed:", this.instanceId);
         }
     }
 }

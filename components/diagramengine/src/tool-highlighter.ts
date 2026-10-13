@@ -58,25 +58,13 @@ export interface EngineForHighlighterTool extends EngineForTools
 /** Log prefix for HighlighterTool console messages. */
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
-function logHighlighterInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logHighlighterDebug,
+    info: logHighlighterInfo,
+    warn: logHighlighterWarn,
+    error: logHighlighterError,
+} = makeLogger(HIGHLIGHTER_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";

@@ -18,6 +18,7 @@ OUT_FILE="components/diagramengine/diagramengine.ts"
 # and finally the phase extension modules.
 FILES=(
     "types.ts"
+    "logging.ts"
     "event-bus.ts"
     "undo-stack.ts"
     "shape-registry.ts"
@@ -83,13 +84,9 @@ FILES=(
     echo "const NUDGE_PX = 1;"
     echo "const NUDGE_SHIFT_PX = 10;"
     echo ""
-    echo "// Shared structured logging helpers"
-    echo "function logInfo(...args: unknown[]): void { console.log(new Date().toISOString(), \"[INFO]\", LOG_PREFIX, ...args); }"
-    echo "function logWarn(...args: unknown[]): void { console.warn(new Date().toISOString(), \"[WARN]\", LOG_PREFIX, ...args); }"
-    echo "function logError(...args: unknown[]): void { console.error(new Date().toISOString(), \"[ERROR]\", LOG_PREFIX, ...args); }"
-    echo "function logDebug(...args: unknown[]): void { console.debug(new Date().toISOString(), \"[DEBUG]\", LOG_PREFIX, ...args); }"
+    echo "// Structured logging lives in src/logging.ts, concatenated below, so the"
+    echo "// factory and the twenty namespace prefixes have a single definition."
     echo ""
-
     for file in "${FILES[@]}"; do
         filepath="$SRC_DIR/$file"
         if [[ ! -f "$filepath" ]]; then

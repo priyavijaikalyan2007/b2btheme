@@ -485,3 +485,72 @@ accept that the only test of a CI environment is a CI run. When a check has
 only ever passed on one machine, you do not know that it passes. Related:
 [[6.35]] on a check that cannot fail, and [[6.55]] on stating a measurement's
 preconditions instead of trusting the number.
+
+---
+
+### 6.57 Refactoring the Code a Check Reads Can Turn the Check Green by Blinding It (2026-10-13)
+
+LOG-2 asked me to migrate 26 component files onto the mandated logging
+pattern. Nineteen of them belonged to DiagramEngine, where 20 log prefixes
+each carried four near-identical helper functions. Repeating the mandated
+preamble 20 more times would have added 291 lines to the largest file in the
+repository, so I replaced the duplication with one factory and had each module
+destructure the levels it uses. 282 lines removed, 192 call sites untouched,
+every test passing, and the size ratchet moved in the right direction.
+
+The check that measures logging conformance then reported zero violations and
+passed. It was wrong. Those 17 modules no longer contained the token the
+classifier looks for, so files holding 192 log calls between them classified
+as "no-logging" — not conforming, not violating, invisible. The count was
+correct by accident and the gate had quietly stopped watching the largest
+component in the repository.
+
+Nothing failed. That is the whole problem. A broken check announces itself. A
+blinded one reports success. The classifier had tests, and they all passed,
+because every test exercised a form of code the classifier still recognized.
+The refactor did not break a rule the tests encoded, it moved the code outside
+the universe the tests described.
+
+**When a change alters the shape of what a check reads, the check's silence is
+not evidence.** Re-derive the classification by hand for at least one affected
+file and confirm the classifier agrees. Here that meant printing the per-file
+verdicts rather than the totals, where 17 lines of `no-logging` against files
+I had just edited were impossible to miss.
+
+The reviewer predicted this before I ran it, from the refactor's shape alone:
+remove the token a classifier keys on and the classifier goes quiet. That is a
+general shape, not a detail of this codebase. Related: [[6.35]] on a check that
+cannot fail, [[6.55]] on a count being a claim about a file set and a pattern,
+and [[6.56]] on verifying the half of a problem you can see.
+
+---
+
+### 6.58 A Standard That Contradicts Itself Produces Code That Follows Neither Half (2026-10-13)
+
+Two documents governed logging here. LOGGING.md said to use `console` directly
+and not to create a shared logger. FRONTEND_LOGGING.md shipped a shared logger
+as a component and required every component to route through it. AGENTS.md
+pointed at the first one. 117 files followed the second, 24 followed half of
+it, and 2 followed neither.
+
+I expected to resolve that by naming an authority, which took one paragraph in
+each document. The work was elsewhere: the winning document contradicted
+*itself* in four places, every one of them text copied from the document it
+superseded. It told the reader to prefer `console.log`, to strip
+`console.debug` before committing, that "we use `console.*` directly", and to
+include correlation IDs that its own section 8 assigns to the host
+application. A document assembled by copying its predecessor inherits the
+predecessor's rules along with its prose.
+
+The second finding was worse, because it was in the prescribed code. The
+snippet every component is told to copy carried two `(window as any)` casts.
+Using it 26 more times would have added 52 occurrences to the very count
+another open item tracks, and the structure suite would have rejected the
+change for violating one standard while complying with another. The snippet
+also ran 133 to 150 characters wide against a documented 120-character limit,
+in 117 files. A mandated snippet is code, and nobody had reviewed it as code.
+
+**Before migrating N files onto a pattern, check the pattern against the other
+standards it has to satisfy.** The migration is the cheap part. Declaring the
+window globals in one `.d.ts` cost four lines and turned a 52-occurrence
+regression into none. Related: [[6.55]] on counts as claims, and ADR-171.

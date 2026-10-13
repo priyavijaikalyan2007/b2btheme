@@ -99,25 +99,13 @@ export interface EngineForConnectTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
-function logConnectInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", CONNECT_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logConnectDebug,
+    info: logConnectInfo,
+    warn: logConnectWarn,
+    error: logConnectError,
+} = makeLogger(CONNECT_LOG_PREFIX);
 
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";

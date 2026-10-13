@@ -58,25 +58,8 @@ export interface EngineForPenTool extends EngineForTools
 /** Log prefix for PenTool console messages. */
 const PEN_LOG_PREFIX = "[PenTool]";
 
-function logPenInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PEN_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logPenDebug, info: logPenInfo, warn: logPenWarn, error: logPenError } = makeLogger(PEN_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";

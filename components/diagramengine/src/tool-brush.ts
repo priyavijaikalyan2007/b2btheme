@@ -57,25 +57,13 @@ export interface EngineForBrushTool extends EngineForTools
 /** Log prefix for BrushTool console messages. */
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
-function logBrushInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", BRUSH_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logBrushDebug,
+    info: logBrushInfo,
+    warn: logBrushWarn,
+    error: logBrushError,
+} = makeLogger(BRUSH_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";

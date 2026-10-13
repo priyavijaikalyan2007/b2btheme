@@ -22,25 +22,8 @@
 /** Log prefix for template engine console messages. */
 const TPL_LOG = "[DiagramEngine:Templates]";
 
-function logTplInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", TPL_LOG, ...args);
-}
-
-function logTplWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", TPL_LOG, ...args);
-}
-
-function logTplError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", TPL_LOG, ...args);
-}
-
-function logTplDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", TPL_LOG, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logTplDebug, info: logTplInfo, warn: logTplWarn, error: logTplError } = makeLogger(TPL_LOG);
 
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;

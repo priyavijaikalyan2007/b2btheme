@@ -3015,3 +3015,74 @@ deprecated and three of the actions were already being forced onto 24.
 Run 38345921165 on `af35267` is green, all twelve steps including
 `Run structure checks`. CI-1 closed on the evidence it asked for. ADR-170,
 insight 6.56. Tracker 37 resolved / 26 open.
+
+---
+
+## LOG-2 — reconciling two logging standards, then the 26 files that followed neither
+
+**The documents were the easy half.** `LOGGING.md:13` forbids a shared logger
+module. `FRONTEND_LOGGING.md` ships one as a component and requires every
+other component to resolve it. Naming the authority took a paragraph in each
+file, plus the rescoping of `LOGGING.md`'s section 1 prohibition to what it
+was actually protecting: third-party frameworks, and importing a logger across
+component boundaries.
+
+Then the winning document turned out to contradict itself in four places, and
+every one was text copied from the document it superseded. It told the reader
+to prefer `console.log`, to strip `console.debug` before committing, that "we
+use `console.*` directly", and to include correlation IDs its own section 8
+assigns to the host application. A document assembled by copying its
+predecessor inherits the predecessor's rules along with its prose. Insight
+6.58.
+
+**Three findings reshaped the migration itself.**
+
+`components/diagramengine/diagramengine.ts` is **generated**. One of the 24
+files I was about to edit is concatenated from `src/` by
+`scripts/bundle-diagramengine.sh`, and the generator was itself emitting a
+shim with no utility check. The fix belonged there, not in the artifact.
+
+The engine carries **21 log prefixes**, 20 in its modules plus its own.
+Applying the mandated preamble to each added 291 lines to the largest file in
+the repository, and check `[20]` failed on `diagramengineLines`. The ratchet I
+built two commits earlier caught a change I made, on a count that change was
+not about, and it was right to. Raising that baseline is the one move the
+ratchet exists to forbid. One factory in `src/logging.ts` instead removed
+**282** lines, left all **192** call sites unchanged because the helper names
+survive destructuring, and brought STD-1 from 30,693 down to **30,479**.
+
+The prescribed snippet carried two `(window as any)` casts. Using it 26 more
+times would have added 52 occurrences to WIN-1 and failed the same check — a
+change complying with one standard by violating another. `components/globals.d.ts`
+now types `window.createLogUtility`, so the lookup keeps its type and adds
+nothing to the count. The snippet also ran 133 to 150 characters wide against
+a documented 120-character limit, in all 117 files that already used it. A
+mandated snippet is code, and nobody had reviewed it as code.
+
+**Then the failure worth keeping.** After the factory landed, the check
+reported zero violations and passed. It was wrong. The 17 engine modules no
+longer contained the token the classifier looks for, so files holding 192 log
+calls between them classified as `no-logging` — not conforming, not violating,
+invisible. The count was right by accident and the gate had quietly stopped
+watching the largest component in the repository. Nothing failed, which is the
+whole problem: a broken check announces itself and a blinded one reports
+success. The classifier's tests all passed, because every test exercised a
+form of code the classifier still recognized. The advisor predicted this from
+the refactor's shape before I ran it. `classifyLoggingPattern` now accepts
+`makeLogger(` and skips console tokens inside string literals, which also
+fixed a real false positive: `stencils-ui-components.ts` was reported as a
+violation for one line of sample source it draws onto a canvas. Insight 6.57.
+
+**Verified.** `tsc` clean, 4,958 unit tests pass — the real test of the
+factory, since hoisted `function` declarations became `const` destructuring
+and a call during module evaluation would have thrown a TDZ error. 32 of 32
+structure checks pass. Three baselines lowered to 0 and `diagramengineLines`
+to 30,479. An identity mutation reverting one engine module makes check `[20]`
+exit 1 on two counts. Mutation sensitivity on the classifier is now 7/2/5/1
+across 24 tests.
+
+**Left open deliberately.** 117 files still use the old one-line cast form.
+They compile and they classify as conforming. Converting them is roughly 220
+of WIN-1's 294 occurrences and is now a mechanical sed, which is the next
+obvious piece of work. ADR-171, insights 6.57 and 6.58. Tracker 38 resolved /
+25 open.

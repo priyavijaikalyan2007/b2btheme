@@ -199,11 +199,11 @@ A check that counts something is only as good as the rule it uses to decide
 what counts. That rule is code, so it gets tests like any other code.
 
 `scripts/audit-counts.mjs` reports how many `console.log` violations the tree
-holds. The honest answer is two, out of 176 lines containing the token: 161 are
-the body of a logging shim where `console.log` is the correct mapping for INFO,
-10 sit in doc comments, 2 are sample code drawn on a canvas as string data, and
-one is the log utility's own fallthrough. A count that skipped the
-classification would report 176 and be wrong by two orders of magnitude.
+holds. After LOG-2 the honest answer is zero, out of 135 lines containing the
+token: 122 are the body of a logging shim where `console.log` is the correct
+mapping for INFO, 10 sit in doc comments, 2 are sample code drawn on a canvas
+as string data, and one is the log utility's own fallthrough. A count that
+skipped the classification would report 135 and be wrong in every digit.
 
 So `scripts/audit-counts.test.ts` gives every outcome a case, and the probe in
 2.6 applies here too — mutate the classifier and confirm the tests notice:
@@ -212,15 +212,27 @@ So `scripts/audit-counts.test.ts` gives every outcome a case, and the probe in
 |---|---|
 | Treat every line as a shim body | 7 |
 | Count lines instead of occurrences | 2 |
-| Stop detecting string literals | 4 |
+| Stop detecting string literals | 5 |
+| Forget the engine logging factory | 1 |
 
-Three of the cases in that file are regressions for real bugs, all three from
-probes written in a single session. One searched shipped bundles for API names and
-kept the trailing `()` the documentation writes, reporting 17 real names as
-missing. The second used `grep -oc`, where `-c` silently overrides `-o` and
-counts matching lines, which turns two casts on one line into one. The third
-tracked each quote type's parity separately, so an apostrophe inside a
-double-quoted string filed a real call site as string data.
+Five of the cases in that file are regressions for real bugs. One probe
+searched shipped bundles for API names and kept the trailing `()` the
+documentation writes, reporting 17 real names as missing. One used `grep -oc`,
+where `-c` silently overrides `-o` and counts matching lines, which turns two
+casts on one line into one. One tracked each quote type's parity separately, so
+an apostrophe inside a double-quoted string filed a real call site as string
+data. One had no string-literal awareness at all in the logging-pattern
+classifier, so a component that draws sample source onto a canvas was reported
+as a standards violation for a line of pixels.
+
+**The fifth is the one worth studying, because the check went green.** When the
+DiagramEngine modules moved to a shared factory they stopped containing the
+token the classifier looked for, so 17 files holding 192 log calls classified
+as "no-logging" and the count fell to zero. The ratchet passed. Nothing failed.
+A count can be right by accident, and refactoring the code a classifier reads
+is how that happens. **When you change the shape of what a check measures,
+re-derive the classification by hand on at least one file before trusting the
+number.**
 
 **Gate a count with a baseline, not a target.** Each count in that script
 carries the value measured on a stated date, and check `[20]` fails when one

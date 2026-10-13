@@ -17,68 +17,19 @@
 // @entrypoint
 
 const NET_LOG_PREFIX = "[NetworkStencils]";
-function logNetInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", NET_LOG_PREFIX, ...args);
-}
 
-function logNetWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", NET_LOG_PREFIX, ...args);
-}
-
-function logNetError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", NET_LOG_PREFIX, ...args);
-}
-
-function logNetDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", NET_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logNetDebug, info: logNetInfo, warn: logNetWarn, error: logNetError } = makeLogger(NET_LOG_PREFIX);
 
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
-function logBpmnInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", BPMN_LOG_PREFIX, ...args);
-}
 
-function logBpmnWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", BPMN_LOG_PREFIX, ...args);
-}
-
-function logBpmnError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", BPMN_LOG_PREFIX, ...args);
-}
-
-function logBpmnDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", BPMN_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logBpmnDebug, info: logBpmnInfo, warn: logBpmnWarn, error: logBpmnError } = makeLogger(BPMN_LOG_PREFIX);
 
 const ER_LOG_PREFIX = "[ErStencils]";
 
-function logErInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", ER_LOG_PREFIX, ...args);
-}
-
-function logErWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", ER_LOG_PREFIX, ...args);
-}
-
-function logErError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", ER_LOG_PREFIX, ...args);
-}
-
-function logErDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", ER_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logErDebug, info: logErInfo, warn: logErWarn, error: logErError } = makeLogger(ER_LOG_PREFIX);
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";

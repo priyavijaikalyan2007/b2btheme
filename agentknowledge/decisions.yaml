@@ -6023,3 +6023,106 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-171
+  title: FRONTEND_LOGGING.md governs the mechanism, and the engine bundle gets one logging factory
+  date: 2026-10-13
+  status: accepted
+  context: |
+    Two documents governed logging and they contradicted each other head on.
+    LOGGING.md:13 said "Do not create a shared logger module". FRONTEND_LOGGING.md
+    shipped `LogUtility` as a component and required every other component to
+    resolve it through `window.createLogUtility`. AGENTS.md pointed agents at
+    LOGGING.md, which is how LOG-1 survived six months citing a superseded
+    standard (ADR-168). 117 component files followed FRONTEND_LOGGING.md, 24
+    carried the shim without the utility check, and 2 called `console` directly.
+
+    Three findings reshaped the work once measurement started.
+
+    `components/diagramengine/diagramengine.ts` is GENERATED, concatenated from
+    `src/` by scripts/bundle-diagramengine.sh. The generator was itself emitting
+    a shim with no utility check, so 1 of the 24 files was an artifact and the
+    fix belonged in the generator.
+
+    The engine carries 21 log prefixes, 20 in its modules plus its own. Applying
+    the mandated preamble to each added 291 lines to the largest file in the
+    repository, and check `[20]` failed on `diagramengineLines` for exactly that
+    reason. The ratchet from ADR-168 caught a change made by the author of the
+    ratchet, on the count that change was not about.
+
+    The prescribed snippet carried two `(window as any)` casts. Using it 26 more
+    times would have added 52 occurrences to WIN-1 and failed the same check. The
+    snippet also ran 133 to 150 characters wide against a documented
+    120-character limit, in all 117 files that already used it.
+  decision: |
+    D1. FRONTEND_LOGGING.md IS THE AUTHORITY FOR `components/`. Both documents
+        now say so in their own first section. LOGGING.md keeps the principles,
+        what to log, what not to log, and the severity semantics. Its section 1
+        prohibition is rescoped to third-party frameworks and to importing a
+        logger across component boundaries, which is what it was protecting.
+        Its section 7 checklist defers to FRONTEND_LOGGING.md section 9.
+        AGENTS.md points at FRONTEND_LOGGING.md, including in the TDD loop.
+
+    D2. THE WINDOW GLOBALS COMPONENTS PUBLISH ARE DECLARED, NOT CAST.
+        `components/globals.d.ts` types `window.createLogUtility`, so the
+        canonical snippet reads `window.createLogUtility` with no cast. The
+        snippet is restated in Allman form inside 120 characters. Declaration
+        files are excluded from the audit's source set, since they hold no
+        executable code.
+
+    D3. ONE FACTORY FOR THE ENGINE BUNDLE, SANCTIONED EXPLICITLY.
+        `components/diagramengine/src/logging.ts` holds `makeLogger(prefix)` and
+        each module destructures the levels it uses. This removed 282 lines,
+        left all 192 call sites unchanged and lowered STD-1 from 30,693 to
+        30,479. FRONTEND_LOGGING.md section 1.1 permits the variant ONLY inside
+        a bundle concatenated from many modules carrying more than one prefix,
+        and states the boundary: `makeLogger` is local to one generated file,
+        not a module imported across component boundaries.
+
+    D4. THE CLASSIFIER LEARNS THE FACTORY FORM AND STRING LITERALS.
+        `classifyLoggingPattern` accepts `makeLogger(` as conforming and skips
+        console tokens inside string literals, with three new test cases. Four
+        baselines are lowered: consoleLogCalls, shimWithoutUtility and
+        directConsole to 0, diagramengineLines to 30,479.
+  consequences: |
+    + ALL 143 LOGGING COMPONENTS CONFORM. Verified by check `[20]` with three
+      counts held at zero, and by an identity mutation: reverting one engine
+      module makes the check exit 1 on two counts.
+    + THE ENGINE IS SMALLER THAN BEFORE THE MIGRATION, not larger. STD-1 fell
+      214 lines below the baseline it was measured at.
+    + 4,958 UNIT TESTS PASS, which is the real test of the factory. The helpers
+      changed from hoisted `function` declarations to `const` destructuring, so
+      a call during module evaluation would have thrown a TDZ error. The
+      concatenated bundle has no module-scope invocations and the engine's six
+      test files evaluate it.
+    = THE `_lu` LOOKUP RESOLVES ONCE, AT LOAD. A page must load `logutility.js`
+      before any component bundle for routing to happen. This was already true
+      of all 117 files and is now written down. 6 of the 138 demo pages load
+      it, and 5 enable the debug flags, so the console fallback is the common
+      path rather than the exception.
+    = THEMEINIT WILL ALMOST NEVER ROUTE. It runs in `<head>` before every other
+      script by design. The guarded `typeof` check costs nothing and keeps the
+      pattern uniform, so it conforms rather than becoming a tracked exception.
+    - 117 FILES STILL USE THE OLD ONE-LINE CAST FORM. They compile and classify
+      as conforming. Converting them is the mechanical path to closing WIN-1,
+      roughly 220 of its 294 occurrences, and is deliberately not done here.
+    - REFACTORING THE CODE A CHECK READS CAN BLIND THE CHECK. After the factory
+      landed, 17 modules holding 192 log calls classified as "no-logging" and
+      the ratchet passed in silence. A count can be right by accident. When a
+      change alters the shape of what a check measures, re-derive the
+      classification by hand before trusting the number.
+  files:
+    - "FRONTEND_LOGGING.md"
+    - "LOGGING.md"
+    - "AGENTS.md"
+    - "components/globals.d.ts"
+    - "components/diagramengine/src/logging.ts"
+    - "scripts/bundle-diagramengine.sh"
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "TESTING.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

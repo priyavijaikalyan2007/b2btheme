@@ -18,25 +18,8 @@
 
 const FC_LOG_PREFIX = "[FlowchartStencils]";
 
-function logFcInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", FC_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logFcDebug, info: logFcInfo, warn: logFcWarn, error: logFcError } = makeLogger(FC_LOG_PREFIX);
 
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";

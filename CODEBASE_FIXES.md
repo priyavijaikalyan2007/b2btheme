@@ -173,7 +173,7 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
 ---
 
-## MEDIUM — Logging (LOG-1 closed as obsolete, LOG-2 opened)
+## MEDIUM — Logging (LOG-1 closed as obsolete, LOG-2 fixed)
 
 - [x] **LOG-1** Convert `console.log` to `console.debug` where appropriate. **Closed as obsolete on 2026-10-13, not fixed.** The item was written against LOGGING.md, which FRONTEND_LOGGING.md superseded, and its count described a tree that no longer exists.
 
@@ -187,11 +187,13 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   | The log utility's own fallthrough | 1 | No. It is the terminus |
   | **Genuine bare call site** | **2** | **Yes**, both in `errordialog.ts` (lines 446 and 513) |
 
-  The named "worst offenders" hold 1 or 2 lines each, not 9 to 27, and every one of them is a shim body. `diagramengine` holds 22, and all 22 are shim bodies for its six log prefixes. **The audit counted call sites that were later replaced by a shim, and nobody re-ran the count.**
+  The named "worst offenders" hold 1 or 2 lines each, not 9 to 27, and every one of them is a shim body. `diagramengine` holds 22, and all 22 are shim bodies covering its 21 log prefixes. **The audit counted call sites that were later replaced by a shim, and nobody re-ran the count.**
+
+  **After LOG-2 landed the same day, the total is 135 lines, not 176.** Shim bodies fell from 161 to 122 because the engine's 21 prefixes now share one factory, and the 2 genuine call sites are gone. The table above is the measurement that closed this item and is left as it was taken.
 
   **Why it closes rather than narrowing to the two call sites.** The item asks for a level decision — is this message INFO or DEBUG? — which no count can answer. `errordialog.ts` is the example component in LOGGING.md and has no shim at all, so it belongs to LOG-2 below, where the fix is to adopt the mandated pattern rather than to swap one console method for another.
 
-- [ ] **LOG-2** Two logging standards contradict each other, and 26 component files follow neither. **Measured 2026-10-13.**
+- [x] **LOG-2** Two logging standards contradict each other, and 26 component files follow neither. **Measured and fixed 2026-10-13** (ADR-171).
 
   **The contradiction is head on.** LOGGING.md:13 says "**Do not create a shared logger module.** A centralised logger in a component library will conflict with or duplicate the host application's logging." FRONTEND_LOGGING.md:20 says this library "ships with its own logging utility `LogUtility`", and FRONTEND_LOGGING.md:27 says "*every component MUST follow the same pattern*". The repository followed the second: `components/logutility/` exists and 117 files carry the mandated preamble.
 
@@ -203,6 +205,53 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   - `components/annotation/annotation.ts`, `components/chatdock/chatdock.ts`, `components/dynamiccanvas/dynamiccanvas.ts`, `components/stickynote/stickynote.ts`, `components/workspaceshell/workspaceshell.ts`
 
   2 files have no shim at all and call `console` directly with a hand written prefix: `components/errordialog/errordialog.ts` and `components/themeinit/themeinit.ts`.
+
+  **How it was resolved.** Both documents now name the authority in their own
+  first section: LOGGING.md holds the principles, FRONTEND_LOGGING.md holds the
+  mechanism for `components/`, and AGENTS.md points at the second. LOGGING.md
+  section 1 was rewritten so its prohibition covers third-party frameworks and
+  cross-component imports rather than `LogUtility`, and its section 7
+  checklist defers to FRONTEND_LOGGING.md section 9. FRONTEND_LOGGING.md also
+  contradicted itself in four places, all copy-paste from the document it
+  superseded, and those are fixed: a rule to prefer `console.log`, advice to
+  strip `console.debug` before committing, a section 7 opening that said "we
+  use `console.*` directly", and a section 9 checklist demanding correlation
+  IDs and context propagation that section 8 assigns to the host application.
+
+  All 143 logging components now conform and check `[20]` holds the three
+  counts at zero. Two findings changed the shape of the work:
+
+  - **`components/diagramengine/diagramengine.ts` is generated**, concatenated
+    from `src/` by `scripts/bundle-diagramengine.sh`. The fix belonged in the
+    generator, which was itself emitting a shim with no `LogUtility` check.
+  - **The engine holds 20 log prefixes across 18 modules.** Repeating the
+    mandated preamble 20 times would have added 291 lines to the largest file
+    in the repository, and check `[20]` failed on `diagramengineLines` for
+    exactly that reason. The namespaces now take their helpers from one
+    factory in `src/logging.ts`, which removed 282 lines of near-duplicate
+    code, left all 192 call sites unchanged, and brought STD-1 down from
+    30,693 to 30,479 lines. FRONTEND_LOGGING.md section 1.1 sanctions that
+    variant and states its boundary.
+
+  **The prescribed snippet needed two corrections before it could be used 26
+  more times.** It carried two `(window as any)` casts, so migrating would
+  have added 52 occurrences to WIN-1 and failed the same check. The window
+  globals that components publish to each other are now declared in
+  `components/globals.d.ts`, the snippet reads `window.createLogUtility` with
+  no cast, and the snippet appears in Allman form inside the 120-character
+  limit. The one-line form in the 117 older files runs 133 to 150 characters
+  wide. Converting those 117 files to the typed form is the mechanical path to
+  closing WIN-1 and is not done here.
+
+  **The classifier had to learn the factory form.** After the refactor the 18
+  engine modules hold neither `createLogUtility` nor the shim, so
+  `classifyLoggingPattern` called 17 files holding 192 log calls "no-logging"
+  and the ratchet passed. A count that is right by accident is the failure
+  mode those classifier tests exist to catch, so `makeLogger(` now counts as
+  conforming and carries two cases. The same pass fixed a real false positive:
+  the classifier had no string-literal awareness, so
+  `stencils-ui-components.ts` was reported as a violation for one line of
+  sample source it draws onto the canvas.
 
   Check `[20]` holds all three counts at their current values, so this cannot grow while it waits.
 
@@ -325,18 +374,18 @@ the step exits 1 and the workflow fails.
 |----------|-------|--------|
 | CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 1 (113 files, 294 occurrences, 2026-10-13) | Open |
+| HIGH — Window Cast | 1 (113 files, 294 occurrences, 2026-10-13) | Open — `components/globals.d.ts` now gives the typed path |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
-| MEDIUM — Logging | 2 (2 bare calls, 26 files off-pattern, 2026-10-13) | **1 open, 1 closed** |
+| MEDIUM — Logging | 2 | **0 open, 2 closed** |
 | MEDIUM — : any | 2 (88 occurrences, 2026-10-13) | Open |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **24 items** | **6 resolved** |
+| **Total** | **24 items** | **7 resolved** |
 
 ### The March 2026 counts re-measured so far
 
@@ -350,7 +399,7 @@ the step exits 1 and the workflow fails.
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294 | far larger |
 | UNUSED-1 | 119 | 421 | far larger |
-| STD-1 | 19,198 lines | 30,693 lines | larger |
+| STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |
 
 The errors run in both directions, which is why re-measuring beats guessing

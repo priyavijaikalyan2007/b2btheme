@@ -428,7 +428,7 @@ this sequence. **Never write implementation code before writing a failing test.*
   1. Focus on correctness, not elegance. Get the tests to pass with the simplest implementation.
   2. Apply the GoF patterns identified in the Plan step.
   3. Follow `CODING_STYLE.md` (Allman braces, max 30-line methods, max 3 nesting levels, guard clauses).
-  4. Add logging per `LOGGING.md`, comments per `COMMENTING.md`, and markers per `MARKERS.md`.
+  4. Add logging per `FRONTEND_LOGGING.md` (`LOGGING.md` for the principles behind it), comments per `COMMENTING.md`, and markers per `MARKERS.md`.
   5. Run the tests - they MUST pass (Green). If they fail, fix the implementation, NOT the tests.
 
 + **Refactor (Clean):** Now that tests pass, improve the code structure without changing behaviour. 
@@ -506,12 +506,14 @@ consistent, thoughtful and complete end to end experience.
   teams read; a change that lands without them is a silent breaking change.
 - Always consult MIGRATIONS.md when migrating from one stack to another such as Javascript to TypeScript, Python to .NET Core etc.
 - Always consult **FRONTEND_LOGGING.md** for component logging, and LOGGING.md for the general
-  principles behind it. **The two contradict each other and FRONTEND_LOGGING.md wins for anything
-  in `components/`:** LOGGING.md:13 forbids a shared logger module, while FRONTEND_LOGGING.md ships
-  `LogUtility` as a component and requires every other component to carry the shim preamble plus a
-  `createLogUtility` check. 117 files follow it, 26 do not, and the reconciliation is tracked as
-  LOG-2. Do not open an item against LOGGING.md's level mapping without checking which document
-  governs — LOG-1 survived six months because it cited the superseded one (ADR-168).
+  principles behind it. **FRONTEND_LOGGING.md is the authority for anything in `components/`.**
+  Both documents now say so in their own first section, and all 143 logging components follow it
+  (LOG-2, ADR-171). Do not open an item against LOGGING.md's level mapping without checking which
+  document governs — LOG-1 survived six months because it cited the superseded one (ADR-168).
+- **Reach a window global through `components/globals.d.ts`, not a `window as any` cast.** The
+  declaration file types the globals components publish to each other, so the lookup keeps its
+  type and the line does not add to WIN-1. Add the global there when you publish a new one. Check
+  `[20]` ratchets the cast count, so a new cast in `components/` fails the structure suite.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.

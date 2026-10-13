@@ -22,25 +22,8 @@
 /** Log prefix for page frame messages. */
 const PF_LOG = "[DiagramEngine:PageFrames]";
 
-function logPfInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PF_LOG, ...args);
-}
-
-function logPfWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PF_LOG, ...args);
-}
-
-function logPfError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PF_LOG, ...args);
-}
-
-function logPfDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PF_LOG, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logPfDebug, info: logPfInfo, warn: logPfWarn, error: logPfError } = makeLogger(PF_LOG);
 
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";

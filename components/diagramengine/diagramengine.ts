@@ -32,11 +32,8 @@ const ROTATION_HANDLE_OFFSET = 25;
 const NUDGE_PX = 1;
 const NUDGE_SHIFT_PX = 10;
 
-// Shared structured logging helpers
-function logInfo(...args: unknown[]): void { console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args); }
-function logWarn(...args: unknown[]): void { console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args); }
-function logError(...args: unknown[]): void { console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args); }
-function logDebug(...args: unknown[]): void { console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args); }
+// Structured logging lives in src/logging.ts, concatenated below, so the
+// factory and the twenty namespace prefixes have a single definition.
 
 
 // ========================================================================
@@ -1086,6 +1083,89 @@ interface DiagramEngineOptions
     onChange?: (ops: Operation[]) => void;
     onViewportChange?: (viewport: ViewportState) => void;
 }
+
+// ========================================================================
+// SOURCE: logging.ts
+// ========================================================================
+
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ * File GUID: 4b8e21c7-5a60-4f93-8d12-6e7a9c0b3d84
+ * Created: 2026-10-13
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: DiagramEngine
+ * 📜 PURPOSE: One logging factory for every namespace in the engine bundle.
+ *    FRONTEND_LOGGING.md prescribes a per-component `_lu` resolution plus a
+ *    set of helper functions. The engine concatenates twenty namespaces of
+ *    its own, plus the engine prefix, into one file, so repeating that
+ *    preamble would add roughly six hundred lines of near-identical code to
+ *    the largest file in the repository. The factory resolves LogUtility once
+ *    per namespace and callers destructure the levels they use, which leaves
+ *    all 192 call sites unchanged. See FRONTEND_LOGGING.md section 1.1.
+ * 🔗 RELATES: [[LogUtility]], [[DiagramEngine]]
+ * ⚡ FLOW: [makeLogger(prefix)] -> [window.createLogUtility] -> [console.*]
+ * ----------------------------------------------------------------------------
+ */
+
+/** The five severity levels every namespace exposes. */
+interface EngineLogger
+{
+    trace(...args: unknown[]): void;
+    debug(...args: unknown[]): void;
+    info(...args: unknown[]): void;
+    warn(...args: unknown[]): void;
+    error(...args: unknown[]): void;
+}
+
+/**
+ * Builds the logging helpers for one namespace.
+ *
+ * Resolution happens once, when the bundle is evaluated. A host page that
+ * loads `logutility.js` before the engine gets routed output. A host page
+ * that does not gets the same text on the console instead, so logging never
+ * depends on LogUtility being present.
+ *
+ * @param prefix - Bracketed namespace, for example `"[PenTool]"`.
+ * @returns Helpers for all five levels.
+ */
+function makeLogger(prefix: string): EngineLogger
+{
+    const lu = (typeof window.createLogUtility === "function")
+        ? window.createLogUtility().getLogger(prefix.slice(1, -1))
+        : null;
+
+    return {
+        trace: (...args: unknown[]): void =>
+        {
+            lu ? lu.trace(...args) : console.debug(new Date().toISOString(), "[TRACE]", prefix, ...args);
+        },
+        debug: (...args: unknown[]): void =>
+        {
+            lu ? lu.debug(...args) : console.debug(new Date().toISOString(), "[DEBUG]", prefix, ...args);
+        },
+        info: (...args: unknown[]): void =>
+        {
+            lu ? lu.info(...args) : console.log(new Date().toISOString(), "[INFO]", prefix, ...args);
+        },
+        warn: (...args: unknown[]): void =>
+        {
+            lu ? lu.warn(...args) : console.warn(new Date().toISOString(), "[WARN]", prefix, ...args);
+        },
+        error: (...args: unknown[]): void =>
+        {
+            lu ? lu.error(...args) : console.error(new Date().toISOString(), "[ERROR]", prefix, ...args);
+        },
+    };
+}
+
+/**
+ * Engine-level helpers. `LOG_PREFIX` is declared in the bundle preamble that
+ * scripts/bundle-diagramengine.sh writes ahead of every concatenated section.
+ */
+const { info: logInfo, warn: logWarn, error: logError, debug: logDebug } = makeLogger(LOG_PREFIX);
 
 // ========================================================================
 // SOURCE: event-bus.ts
@@ -2227,25 +2307,13 @@ class ShapeRegistry
 
 const BASIC_LOG_PREFIX = "[BasicShapes]";
 
-function logBasicInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", BASIC_LOG_PREFIX, ...args);
-}
-
-function logBasicWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", BASIC_LOG_PREFIX, ...args);
-}
-
-function logBasicError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", BASIC_LOG_PREFIX, ...args);
-}
-
-function logBasicDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", BASIC_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logBasicDebug,
+    info: logBasicInfo,
+    warn: logBasicWarn,
+    error: logBasicError,
+} = makeLogger(BASIC_LOG_PREFIX);
 
 /** Category identifier for all basic shapes in the stencil palette. */
 const BASIC_CATEGORY = "basic";
@@ -2870,25 +2938,13 @@ function registerBasicShapes(registry: ShapeRegistry): void
 
 const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
 
-function logExtendedInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", EXTENDED_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logExtendedDebug,
+    info: logExtendedInfo,
+    warn: logExtendedWarn,
+    error: logExtendedError,
+} = makeLogger(EXTENDED_LOG_PREFIX);
 
 /** Category identifier for extended shapes in the stencil palette. */
 const EXTENDED_CATEGORY = "extended";
@@ -4490,25 +4546,8 @@ function registerExtendedShapes(registry: ShapeRegistry): void
 
 const FC_LOG_PREFIX = "[FlowchartStencils]";
 
-function logFcInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", FC_LOG_PREFIX, ...args);
-}
-
-function logFcDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", FC_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logFcDebug, info: logFcInfo, warn: logFcWarn, error: logFcError } = makeLogger(FC_LOG_PREFIX);
 
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";
@@ -5439,25 +5478,8 @@ function registerFlowchartPack(registry: ShapeRegistry): void
 
 const UML_LOG_PREFIX = "[UmlStencils]";
 
-function logUmlInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", UML_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logUmlDebug, info: logUmlInfo, warn: logUmlWarn, error: logUmlError } = makeLogger(UML_LOG_PREFIX);
 
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";
@@ -6205,68 +6227,19 @@ function registerUmlPack(registry: ShapeRegistry): void
 // @entrypoint
 
 const NET_LOG_PREFIX = "[NetworkStencils]";
-function logNetInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", NET_LOG_PREFIX, ...args);
-}
 
-function logNetWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", NET_LOG_PREFIX, ...args);
-}
-
-function logNetError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", NET_LOG_PREFIX, ...args);
-}
-
-function logNetDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", NET_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logNetDebug, info: logNetInfo, warn: logNetWarn, error: logNetError } = makeLogger(NET_LOG_PREFIX);
 
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
-function logBpmnInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", BPMN_LOG_PREFIX, ...args);
-}
 
-function logBpmnWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", BPMN_LOG_PREFIX, ...args);
-}
-
-function logBpmnError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", BPMN_LOG_PREFIX, ...args);
-}
-
-function logBpmnDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", BPMN_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logBpmnDebug, info: logBpmnInfo, warn: logBpmnWarn, error: logBpmnError } = makeLogger(BPMN_LOG_PREFIX);
 
 const ER_LOG_PREFIX = "[ErStencils]";
 
-function logErInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", ER_LOG_PREFIX, ...args);
-}
-
-function logErWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", ER_LOG_PREFIX, ...args);
-}
-
-function logErError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", ER_LOG_PREFIX, ...args);
-}
-
-function logErDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", ER_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logErDebug, info: logErInfo, warn: logErWarn, error: logErError } = makeLogger(ER_LOG_PREFIX);
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";
@@ -7301,25 +7274,8 @@ function registerErPack(registry: ShapeRegistry): void
 
 const DEV_LOG_PREFIX = "[DeviceStencils]";
 
-function logDevInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", DEV_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logDevDebug, info: logDevInfo, warn: logDevWarn, error: logDevError } = makeLogger(DEV_LOG_PREFIX);
 
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";
@@ -9836,25 +9792,9 @@ function registerDeviceStencils(registry: ShapeRegistry): void
 // ============================================================================
 
 const UI_LOG_PREFIX = "[UiComponentStencils]";
-function logUiInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", UI_LOG_PREFIX, ...args);
-}
 
-function logUiWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", UI_LOG_PREFIX, ...args);
-}
-
-function logUiError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", UI_LOG_PREFIX, ...args);
-}
-
-function logUiDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", UI_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logUiDebug, info: logUiInfo, warn: logUiWarn, error: logUiError } = makeLogger(UI_LOG_PREFIX);
 
 const UI_CATEGORY = "ui-components";
 
@@ -11181,7 +11121,6 @@ function renderTimeline(ctx: ShapeRenderContext): SVGElement
     return g;
 }
 
-
 // ============================================================================
 // DYNAMIC UI STENCILS
 // ============================================================================
@@ -11335,7 +11274,6 @@ function renderAnnotationStencil(ctx: ShapeRenderContext): SVGElement
 
     return g;
 }
-
 
 /**
  * ⚓ FUNCTION: renderChatDockStencil
@@ -13451,25 +13389,13 @@ function registerUiComponentStencils(registry: ShapeRegistry): void
 /** Log prefix for all console messages from this module. */
 const CONNECTOR_LOG_PREFIX = "[Connectors]";
 
-function logConnectorInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", CONNECTOR_LOG_PREFIX, ...args);
-}
-
-function logConnectorWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", CONNECTOR_LOG_PREFIX, ...args);
-}
-
-function logConnectorError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", CONNECTOR_LOG_PREFIX, ...args);
-}
-
-function logConnectorDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", CONNECTOR_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logConnectorDebug,
+    info: logConnectorInfo,
+    warn: logConnectorWarn,
+    error: logConnectorError,
+} = makeLogger(CONNECTOR_LOG_PREFIX);
 
 /** SVG namespace URI for element creation. */
 const CONNECTOR_SVG_NS = "http://www.w3.org/2000/svg";
@@ -20149,25 +20075,8 @@ interface EngineForDrawTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
-function logDrawInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", DRAW_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logDrawDebug, info: logDrawInfo, warn: logDrawWarn, error: logDrawError } = makeLogger(DRAW_LOG_PREFIX);
 
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;
@@ -20550,25 +20459,13 @@ class DrawTool implements Tool
 /** Log prefix for all console messages from this module. */
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
 
-function logText_toolInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logTextDebug,
+    info: logTextInfo,
+    warn: logTextWarn,
+    error: logTextError,
+} = makeLogger(TEXT_TOOL_LOG_PREFIX);
 
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
@@ -20672,7 +20569,7 @@ class TextTool implements Tool
         e.preventDefault();
         this.engine.setActiveTool("select");
 
-        logText_toolDebug("Text tool cancelled");
+        logTextDebug("Text tool cancelled");
     }
 
     // ========================================================================
@@ -20777,7 +20674,7 @@ class TextTool implements Tool
         this.engine.setActiveTool("select");
         this.engine.startInlineTextEdit(obj.id);
 
-        logText_toolDebug("Placed text object:", obj.id);
+        logTextDebug("Placed text object:", obj.id);
     }
 }
 
@@ -20886,25 +20783,13 @@ interface EngineForConnectTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
-function logConnectInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", CONNECT_LOG_PREFIX, ...args);
-}
-
-function logConnectDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", CONNECT_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logConnectDebug,
+    info: logConnectInfo,
+    warn: logConnectWarn,
+    error: logConnectError,
+} = makeLogger(CONNECT_LOG_PREFIX);
 
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";
@@ -21528,25 +21413,8 @@ interface EngineForPenTool extends EngineForTools
 /** Log prefix for PenTool console messages. */
 const PEN_LOG_PREFIX = "[PenTool]";
 
-function logPenInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PEN_LOG_PREFIX, ...args);
-}
-
-function logPenDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PEN_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logPenDebug, info: logPenInfo, warn: logPenWarn, error: logPenError } = makeLogger(PEN_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";
@@ -22136,25 +22004,13 @@ interface EngineForBrushTool extends EngineForTools
 /** Log prefix for BrushTool console messages. */
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
-function logBrushInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", BRUSH_LOG_PREFIX, ...args);
-}
-
-function logBrushDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", BRUSH_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logBrushDebug,
+    info: logBrushInfo,
+    warn: logBrushWarn,
+    error: logBrushError,
+} = makeLogger(BRUSH_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";
@@ -22653,25 +22509,13 @@ interface EngineForPaintbrushTool extends EngineForTools
 /** Log prefix for PaintbrushTool console messages. */
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
-function logPaintbrushInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logPaintbrushDebug,
+    info: logPaintbrushInfo,
+    warn: logPaintbrushWarn,
+    error: logPaintbrushError,
+} = makeLogger(PAINTBRUSH_LOG_PREFIX);
 
 /** Minimum distance in pixels between interpolated stroke points. */
 const PAINTBRUSH_MIN_STEP = 1;
@@ -23254,25 +23098,13 @@ interface EngineForHighlighterTool extends EngineForTools
 /** Log prefix for HighlighterTool console messages. */
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
-function logHighlighterInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
-
-function logHighlighterDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", HIGHLIGHTER_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logHighlighterDebug,
+    info: logHighlighterInfo,
+    warn: logHighlighterWarn,
+    error: logHighlighterError,
+} = makeLogger(HIGHLIGHTER_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";
@@ -23761,25 +23593,13 @@ function toHighlighterLocalPathData(pts: Point[], bbox: Rect): string
 /** Log prefix for MeasureTool console messages. */
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
-function logMeasureInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", MEASURE_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logMeasureDebug,
+    info: logMeasureInfo,
+    warn: logMeasureWarn,
+    error: logMeasureError,
+} = makeLogger(MEASURE_LOG_PREFIX);
 
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
@@ -24375,25 +24195,8 @@ class ToolManager
 /** Log prefix for template engine console messages. */
 const TPL_LOG = "[DiagramEngine:Templates]";
 
-function logTplInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", TPL_LOG, ...args);
-}
-
-function logTplWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", TPL_LOG, ...args);
-}
-
-function logTplError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", TPL_LOG, ...args);
-}
-
-function logTplDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", TPL_LOG, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logTplDebug, info: logTplInfo, warn: logTplWarn, error: logTplError } = makeLogger(TPL_LOG);
 
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;
@@ -24703,25 +24506,8 @@ function resolveBlockTemplates(
 /** Log prefix for page frame messages. */
 const PF_LOG = "[DiagramEngine:PageFrames]";
 
-function logPfInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PF_LOG, ...args);
-}
-
-function logPfWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PF_LOG, ...args);
-}
-
-function logPfError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PF_LOG, ...args);
-}
-
-function logPfDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PF_LOG, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logPfDebug, info: logPfInfo, warn: logPfWarn, error: logPfError } = makeLogger(PF_LOG);
 
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";

@@ -11,40 +11,107 @@ Created: 2026
 
 # Logging
 
-First, consult ./LOGGING.md for general logging guidelines and principles.
+## 0. Which document governs
+
+LOGGING.md states the general principles: what to log, what not to log, which
+severity each situation deserves, and the fact that the host application owns
+the pipeline. Those principles still hold.
+
+**This document is the authority for the mechanism in `components/`.** Where
+LOGGING.md describes writing to `console` directly, this document supersedes
+it. LOGGING.md was written before the LogUtility component existed and still
+says not to create a shared logger. Read LOGGING.md for the principles and
+this document for the code.
 
 ## 1. Scope and Rationale
 
-This is a **reusable theme and component library**. Components from this library are embedded into larger SaaS applications 
-that may have their own logging infrastructure (Serilog, Winston, Pino, etc.). To keep things simple but flexible, this
-component library ships with its own logging utility `LogUtility`. This is also a resuable component. Every other component:
+This is a **reusable theme and component library**. Components from this
+library are embedded into larger SaaS applications that may have their own
+logging infrastructure (Serilog, Winston, Pino, and so on). To keep things
+simple but flexible, this library ships its own logging utility, `LogUtility`.
+That is a reusable component like any other. Every other component:
 
-1.  Has their own logging functions for `trace`, `debug`, `info`, `warn`, and `error` logging.
-2.  Each component independently checks if the `LogUtility` is loaded into the `window` globals.
-3.  If the `LogUtility` is loaded, the component will log via the `LogUtility`.
-4.  If the `LogUtility` is NOT loaded, the component will log directly to console.
+1.  Has its own logging functions for `trace`, `debug`, `info`, `warn`, and `error`.
+2.  Independently checks whether `LogUtility` is loaded into the `window` globals.
+3.  Logs through `LogUtility` when it is loaded.
+4.  Logs straight to the console when it is not.
 
-**Therefore:**, *every component MUST follow the same pattern.*
-
-* Include the following code that sets up the logging functions appropriately
+**Therefore, every component MUST follow the same pattern.** Declare a prefix,
+resolve the utility once, and route every level through the result:
 
 ```typescript
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[COMPONENT_NAME]";
 
-const _lu = (typeof (window as any).createLogUtility === "function") ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
-function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
-function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
-function logError(...a: unknown[]): void { _lu ? _lu.error(...a) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a); }
-function logDebug(...a: unknown[]): void { _lu ? _lu.debug(...a) : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a); }
-function logTrace(...a: unknown[]): void { _lu ? _lu.trace(...a) : console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a); }
+/** Routes through LogUtility when the host page loads it. */
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+    : null;
+
+/** Emits a structured info log. */
+function logInfo(...args: unknown[]): void
+{
+    _lu
+        ? _lu.info(...args)
+        : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+}
 ```
 
-* **Use only `_lu` logger** abstraction for logging.
-* **Do not install logging dependencies.** Do not introduce ANY other logging frameworks, wrappers, or abstractions. No Winston, Pino, log4js, or similar libraries.
+Repeat that helper for `logWarn`, `logError`, `logDebug` and `logTrace`,
+mapping each to `_lu.warn`, `_lu.error`, `_lu.debug` and `_lu.trace` and to
+`console.warn`, `console.error`, `console.debug` and `console.debug`. Declare
+the levels the component actually uses. A component with no trace-level
+instrumentation does not need a dead `logTrace`.
 
-The host application owns the logging pipeline. Our components simply write to the console, and the host can 
-intercept or suppress console output as it sees fit.
+* **Use only the `_lu` helpers** for logging.
+* **Do not install logging dependencies.** Do not introduce ANY other logging framework, wrapper, or abstraction. No Winston, Pino, log4js, or similar.
+* **No `window as any` cast.** `components/globals.d.ts` declares
+  `window.createLogUtility`, so the lookup is typed. A cast here would both
+  lose the type and add to the WIN-1 count in CODEBASE_FIXES.md.
+
+The host application owns the logging pipeline. Our components write to the
+console, and the host can intercept or suppress that output as it sees fit.
+
+### 1.1 One variant: a bundle with many namespaces
+
+`DiagramEngine` is a special case. Thirty source modules under
+`components/diagramengine/src/` are concatenated into one file by
+`scripts/bundle-diagramengine.sh`, and they carry twenty distinct log
+prefixes between them. Repeating the preamble above twenty times would add
+roughly six hundred lines of near-identical code to the largest file in the
+repository, which works against STD-1.
+
+So that bundle resolves LogUtility once per namespace through a factory in
+`components/diagramengine/src/logging.ts`, and each module destructures the
+levels it uses:
+
+```typescript
+const { debug: logPenDebug, info: logPenInfo } = makeLogger(PEN_LOG_PREFIX);
+```
+
+**The boundary matters.** `makeLogger` is a local helper inside a single
+concatenated file, not a module other components import. A shared logger
+module imported across component boundaries is the thing LOGGING.md section 1
+forbids, and this is not that. Use the factory form only inside a bundle that
+is concatenated from many modules and carries more than one prefix. Everywhere
+else, use the pattern in section 1.
+
+### 1.2 Resolution happens once, at load
+
+`_lu` is assigned when the component bundle is evaluated, so the host page
+must load `logutility.js` **before** any component bundle for routing to
+happen. A page that loads it afterwards gets the console fallback for the
+whole session, with no error.
+
+Two consequences:
+
+* A page that does not load `logutility.js` is fully supported. The fallback
+  prints the same text to the console. Of the 138 demo pages in this
+  repository, 6 load it.
+* `ThemeInit` runs in `<head>` before every other script by design, so its
+  `_lu` is effectively always null. The guarded `typeof` check costs nothing
+  and keeps the pattern uniform, and the console fallback is the expected
+  path there rather than a degraded one.
 
 ---
 
@@ -54,7 +121,7 @@ Use the `_lu` methods. Each maps to a severity level:
 
 | Method | Use For | Browser DevTools |
 | --------------- | ------------------------------------------- | ---------------- |
-| `logTrace` | High voluem operations such as handler tracking | Verbose (hidden by default) |
+| `logTrace` | High volume operations such as handler tracking | Verbose (hidden by default) |
 | `logDebug` | Entry/exit, internal state, parameter values | Verbose (hidden by default) |
 | `logInfo` | Lifecycle events, initialisation, disposal | Info |
 | `logWarn` | Recoverable anomalies, fallback behaviour | Warning |
@@ -70,7 +137,9 @@ Use the `_lu` methods. Each maps to a severity level:
 * Use `logWarn` when the component recovers but the situation is unusual (missing optional parameter, deprecated usage).
 * Use `logError` for genuine failures (DOM element not found, required parameter missing, API call failed).
 
-* **Never use `console.info`.** It is functionally identical to `console.log` and adds no value. Prefer `console.log` for consistency.
+* **Never call `console.*` directly.** The helpers are the only entry point. The
+  fallback inside a helper is the single exception, and `console.info` is not
+  used even there: it is identical to `console.log` and adds nothing.
 
 ---
 
@@ -176,7 +245,7 @@ logTrace("DOM mutation:", { target: el.tagName, type: "childList" });
 ## 5. What NOT to Log
 
 * **Sensitive data.** Never log tokens, passwords, API keys, or personally identifiable information (PII).
-* **High-frequency events.** Do not log on every keystroke, mouse move, or scroll event. If such logging is needed during development, use `console.debug` and remove it before committing.
+* **High-frequency events.** Do not log on every keystroke, mouse move, or scroll event with `logInfo` or above. Use `logTrace`, which browsers hide by default, and leave it in place.
 * **Redundant state.** Do not log values that are obvious from context (e.g., logging `true` inside an `if (isValid)` block).
 
 ---
@@ -208,13 +277,16 @@ window.__ebt_trace_logging = true;   // ultra-verbose trace output
 window.__ebt_debug_logging = false;
 ```
 
-**Studio apps and demo pages** automatically enable all flags for development convenience.
+**The full demo and the four studio pages** enable all three flags for
+development convenience. That is 5 of the 138 demo pages, not all of them, so
+do not assume verbose output is on when reading a demo page.
 
 ---
 
 ## 7. Production Considerations
 
-Because we use `console.*` directly:
+Because the fallback path writes to `console.*` and LogUtility writes to
+`console.*` too:
 
 * **No build-time stripping is required.** `console.debug` is hidden by default in browser DevTools. `console.log` and `console.warn` provide useful runtime diagnostics for operators.
 * **Host applications can suppress output** by overriding `console` methods or using DevTools filters. This is their responsibility, not ours.
@@ -232,16 +304,17 @@ The guidelines above apply to **this component library only**. When building ful
 
 Before delivering code, the agent **must verify**:
 
-  * [ ] Structured logs are used
-  * [ ] Context propagation exists
-  * [ ] All log calls use the `_lu` workaround that checks for the availability of the `logutility` component
-        and redirects to `console.debug`, `console.log`, `console.warn`, or `console.error` if it is not available.
-  * [ ] Correlation/request IDs are included if necessary and available.
-  * [ ] No logging libraries or abstractions are imported or created except the `logutility` component.
-  * [ ] All messages are prefixed with `[Timestamp] [LogLevel] [ComponentName]`
-  * [ ] Errors include the original error object for stack trace preservation.
+  * [ ] Every log call goes through a `log*` helper. No raw `console.*` outside a helper fallback.
+  * [ ] The helpers resolve LogUtility through `window.createLogUtility`, with no `window as any` cast.
+  * [ ] `_lu` is resolved once, at module scope, not per call.
+  * [ ] The prefix is declared as `LOG_PREFIX` (or a namespaced equivalent inside the DiagramEngine bundle).
+  * [ ] Errors include the original error object, so the browser keeps the stack trace.
   * [ ] No sensitive data (tokens, passwords, PII) is logged.
-  * [ ] High-frequency events are not logged (or use `logTrace`).
-  * [ ] Entry, exit, branches logged
-  * [ ] Errors always logged
-  * [ ] Dynamic verbosity supported
+  * [ ] High-frequency events use `logTrace`, never `logInfo` or above.
+  * [ ] Entry, exit and branch decisions are logged at `logDebug` or `logTrace`.
+  * [ ] Every caught exception is logged.
+  * [ ] No logging library or abstraction is imported or created, except the `logutility` component.
+
+Correlation IDs, request context propagation and log aggregation are the host
+application's concern, as section 8 says. A component includes a correlation
+ID only when the caller hands it one.

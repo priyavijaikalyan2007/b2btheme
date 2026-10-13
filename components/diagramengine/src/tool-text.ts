@@ -23,25 +23,13 @@
 /** Log prefix for all console messages from this module. */
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
 
-function logText_toolInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
-
-function logText_toolDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", TEXT_TOOL_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logTextDebug,
+    info: logTextInfo,
+    warn: logTextWarn,
+    error: logTextError,
+} = makeLogger(TEXT_TOOL_LOG_PREFIX);
 
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
@@ -145,7 +133,7 @@ export class TextTool implements Tool
         e.preventDefault();
         this.engine.setActiveTool("select");
 
-        logText_toolDebug("Text tool cancelled");
+        logTextDebug("Text tool cancelled");
     }
 
     // ========================================================================
@@ -250,6 +238,6 @@ export class TextTool implements Tool
         this.engine.setActiveTool("select");
         this.engine.startInlineTextEdit(obj.id);
 
-        logText_toolDebug("Placed text object:", obj.id);
+        logTextDebug("Placed text object:", obj.id);
     }
 }

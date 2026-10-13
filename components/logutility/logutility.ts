@@ -38,7 +38,7 @@ const LEVELS: Record<string, number> = {
  * Usage (browser console):
  *   window.__ebt_debug_logging = true;   // enable debug output
  *   window.__ebt_info_logging = true;    // enable info output
- *   window.__ebt_trace_logging = true;   // alias for debug
+ *   window.__ebt_trace_logging = true;   // enable trace output
  *
  * Warnings and errors are ALWAYS emitted regardless of these flags.
  * When a flag is true, that level is enabled even if the LogUtility's

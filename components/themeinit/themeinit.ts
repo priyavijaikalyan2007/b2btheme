@@ -31,6 +31,26 @@
 
 const LOG_PREFIX = "[ThemeInit]";
 
+/*
+ * FRONTEND_LOGGING.md requires every component to route through LogUtility
+ * when the host page loads it. ThemeInit normally runs before any other
+ * script, so `_lu` is usually null here and the console fallback is the
+ * expected path rather than a degraded one. The probe is a guarded `typeof`
+ * check, so this keeps the pre-paint contract: no app global is required.
+ */
+/** Routes through LogUtility when the host page loads it. See FRONTEND_LOGGING.md. */
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+    : null;
+
+/** Emits a structured debug log. */
+function logDebug(...args: unknown[]): void
+{
+    _lu
+        ? _lu.debug(...args)
+        : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+}
+
 /** Cookie AND localStorage key — the R3 contract shared with ThemeManager. */
 const THEME_PREFERENCE_KEY = "knobby-theme";
 
@@ -214,7 +234,7 @@ export function runThemeInit(env: ThemeInitEnvironment): () => void
     const resolved = resolveThemeMode(mode, query !== null && query.matches);
 
     env.root.setAttribute("data-bs-theme", resolved);
-    console.debug(LOG_PREFIX, `mode=${mode ?? "none"} resolved=${resolved}`);
+    logDebug(`mode=${mode ?? "none"} resolved=${resolved}`);
 
     if (mode === "light" || mode === "dark" || query === null)
     {

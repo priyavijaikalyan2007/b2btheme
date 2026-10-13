@@ -19,25 +19,8 @@
 
 const DEV_LOG_PREFIX = "[DeviceStencils]";
 
-function logDevInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", DEV_LOG_PREFIX, ...args);
-}
-
-function logDevDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", DEV_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logDevDebug, info: logDevInfo, warn: logDevWarn, error: logDevError } = makeLogger(DEV_LOG_PREFIX);
 
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";

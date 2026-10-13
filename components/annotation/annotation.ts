@@ -30,6 +30,11 @@
 /** Log prefix for all console output from this component. */
 const LOG_PREFIX = "[Annotation]";
 
+/** Routes through LogUtility when the host page loads it. See FRONTEND_LOGGING.md. */
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+    : null;
+
 /** Root CSS class. */
 const CLS = "annotation";
 
@@ -183,19 +188,25 @@ export interface AnnotationHandle
 /** Emits a structured info log. */
 function logInfo(...args: unknown[]): void
 {
-    console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+    _lu
+        ? _lu.info(...args)
+        : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
 }
 
 /** Emits a structured warning. */
 function logWarn(...args: unknown[]): void
 {
-    console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
+    _lu
+        ? _lu.warn(...args)
+        : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...args);
 }
 
 /** Emits a structured error. */
 function logError(...args: unknown[]): void
 {
-    console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+    _lu
+        ? _lu.error(...args)
+        : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
 }
 
 // ============================================================================

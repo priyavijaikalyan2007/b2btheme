@@ -22,25 +22,13 @@
 /** Log prefix for MeasureTool console messages. */
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
-function logMeasureInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", MEASURE_LOG_PREFIX, ...args);
-}
-
-function logMeasureDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", MEASURE_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logMeasureDebug,
+    info: logMeasureInfo,
+    warn: logMeasureWarn,
+    error: logMeasureError,
+} = makeLogger(MEASURE_LOG_PREFIX);
 
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";

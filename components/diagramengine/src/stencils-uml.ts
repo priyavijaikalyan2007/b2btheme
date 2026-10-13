@@ -17,25 +17,8 @@
 
 const UML_LOG_PREFIX = "[UmlStencils]";
 
-function logUmlInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", UML_LOG_PREFIX, ...args);
-}
-
-function logUmlDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", UML_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logUmlDebug, info: logUmlInfo, warn: logUmlWarn, error: logUmlError } = makeLogger(UML_LOG_PREFIX);
 
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";

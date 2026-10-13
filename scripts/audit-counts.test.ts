@@ -172,4 +172,30 @@ describe("classifyLoggingPattern", () =>
     {
         expect(classifyLoggingPattern("export function createThing(): void { return; }")).toBe("no-logging");
     });
+
+    // Regression. The DiagramEngine modules take their helpers from
+    // src/logging.ts, so they hold no `createLogUtility` of their own. A
+    // classifier that only knows the direct form calls seventeen files
+    // holding 192 log calls "no-logging" and passes, which is a count that
+    // is right by accident. See FRONTEND_LOGGING.md section 1.1.
+    test("helpers taken from the engine factory conform", () =>
+    {
+        const text = "const { info: logPenInfo } = makeLogger(PEN_LOG_PREFIX);\nlogPenInfo(\"Started\");";
+        expect(classifyLoggingPattern(text)).toBe("conforms");
+    });
+
+    test("the factory name must be a call, not a mention in prose", () =>
+    {
+        expect(classifyLoggingPattern("// makeLogger is described in FRONTEND_LOGGING.md")).toBe("no-logging");
+    });
+
+    // Regression. stencils-ui-components.ts draws sample source onto the
+    // canvas, so one of its data strings contains a console call. This
+    // classifier reported the file as a standards violation until it asked
+    // the same string-literal scanner that classifyConsoleLog uses.
+    test("a console call drawn as canvas data is not logging", () =>
+    {
+        const text = '{ num: "3", text: "  console.log(msg);", color: C_CODE_TEXT },';
+        expect(classifyLoggingPattern(text)).toBe("no-logging");
+    });
 });

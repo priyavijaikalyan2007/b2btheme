@@ -57,25 +57,13 @@ export interface EngineForPaintbrushTool extends EngineForTools
 /** Log prefix for PaintbrushTool console messages. */
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
-function logPaintbrushInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
-
-function logPaintbrushDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", PAINTBRUSH_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logPaintbrushDebug,
+    info: logPaintbrushInfo,
+    warn: logPaintbrushWarn,
+    error: logPaintbrushError,
+} = makeLogger(PAINTBRUSH_LOG_PREFIX);
 
 /** Minimum distance in pixels between interpolated stroke points. */
 const PAINTBRUSH_MIN_STEP = 1;

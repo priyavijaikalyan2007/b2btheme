@@ -57,6 +57,7 @@ export function sourceFiles()
     return out.split("\n")
         .filter(Boolean)
         .filter((f) => !/\.(test|spec)\.ts$/.test(f))
+        .filter((f) => !/\.d\.ts$/.test(f))
         .filter((f) => !f.startsWith("dist/"));
 }
 
@@ -122,8 +123,26 @@ export function classifyConsoleLog(line, file = "")
  */
 export function classifyLoggingPattern(text)
 {
-    const hasConsole = /console\.(log|debug|warn|error|trace|info)\b/.test(text);
-    const hasUtility = text.includes("createLogUtility");
+    // A console call inside a string literal is data, not logging. The
+    // ui-component stencils draw sample source onto the canvas, so
+    // `{ text: "  console.log(msg);" }` is a pixel. classifyConsoleLog has
+    // always known this. This classifier did not, and it reported
+    // stencils-ui-components.ts as a standards violation for one drawn
+    // string. Both now ask the same scanner.
+    let hasConsole = false;
+    for (const line of text.split("\n"))
+    {
+        const at = line.search(/console\.(log|debug|warn|error|trace|info)\b/);
+        if (at !== -1 && !insideStringLiteral(line, at)) { hasConsole = true; break; }
+    }
+
+    // `createLogUtility` is the component resolving LogUtility for itself.
+    // `makeLogger(` is a module inside the DiagramEngine bundle taking its
+    // helpers from src/logging.ts, which resolves LogUtility once for all
+    // twenty namespaces. Without this second form the seventeen engine
+    // modules read as "no-logging" while holding 192 log calls, and the
+    // count would be right by accident. See FRONTEND_LOGGING.md section 1.1.
+    const hasUtility = text.includes("createLogUtility") || /\bmakeLogger\(/.test(text);
     const hasShim = /console\.(log|debug|warn|error)\(new Date\(\)\.toISOString\(\)/.test(text);
 
     if (hasUtility) { return "conforms"; }
@@ -148,19 +167,24 @@ export function countOccurrences(text, needle)
     return n;
 }
 
-/** Baselines measured 2026-10-13 at commit 38c6f1b. Ratchet down only. */
+/**
+ * Baselines measured 2026-10-13. windowAnyCasts, windowAnyFiles,
+ * anyAnnotations, scssImportant and the three marker counts were measured at
+ * 38c6f1b. The three logging counts and diagramengineLines were re-measured
+ * after LOG-2 landed. Ratchet down only.
+ */
 const BASELINES = {
     windowAnyCasts: 294,
     windowAnyFiles: 113,
-    consoleLogCalls: 2,
-    shimWithoutUtility: 24,
-    directConsole: 2,
+    consoleLogCalls: 0,
+    shimWithoutUtility: 0,
+    directConsole: 0,
     anyAnnotations: 88,
     scssImportant: 113,
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
-    diagramengineLines: 30693,
+    diagramengineLines: 30479,
 };
 
 function measure()
@@ -252,7 +276,7 @@ function main()
 {
     const { counts, consoleLogKinds, callSites, nonConforming, unmarked, fileCount } = measure();
 
-    console.log(`  file set: ${fileCount} tracked .ts sources, excluding tests and dist`);
+    console.log(`  file set: ${fileCount} tracked .ts sources, excluding tests, declarations and dist`);
     console.log("  console.log lines by kind: "
         + Object.entries(consoleLogKinds).sort().map(([k, v]) => `${k}=${v}`).join(", "));
 

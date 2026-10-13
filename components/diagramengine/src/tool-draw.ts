@@ -67,25 +67,8 @@ export interface EngineForDrawTool extends EngineForTools
 /** Log prefix for all console messages from this module. */
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
-function logDrawInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", DRAW_LOG_PREFIX, ...args);
-}
-
-function logDrawDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", DRAW_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const { debug: logDrawDebug, info: logDrawInfo, warn: logDrawWarn, error: logDrawError } = makeLogger(DRAW_LOG_PREFIX);
 
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;

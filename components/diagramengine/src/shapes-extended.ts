@@ -18,25 +18,13 @@
 
 const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
 
-function logExtendedInfo(...args: unknown[]): void
-{
-    console.log(new Date().toISOString(), "[INFO]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedWarn(...args: unknown[]): void
-{
-    console.warn(new Date().toISOString(), "[WARN]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedError(...args: unknown[]): void
-{
-    console.error(new Date().toISOString(), "[ERROR]", EXTENDED_LOG_PREFIX, ...args);
-}
-
-function logExtendedDebug(...args: unknown[]): void
-{
-    console.debug(new Date().toISOString(), "[DEBUG]", EXTENDED_LOG_PREFIX, ...args);
-}
+/** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
+const {
+    debug: logExtendedDebug,
+    info: logExtendedInfo,
+    warn: logExtendedWarn,
+    error: logExtendedError,
+} = makeLogger(EXTENDED_LOG_PREFIX);
 
 /** Category identifier for extended shapes in the stencil palette. */
 const EXTENDED_CATEGORY = "extended";
