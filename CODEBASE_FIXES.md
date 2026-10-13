@@ -46,7 +46,7 @@ These issues involve potential XSS or script injection vectors and must be addre
 
 These violate mandatory project conventions (`export` keyword requirement per MEMORY.md, TypeScript module pattern) and cause build fragility.
 
-- [ ] **STD-1** `components/diagramengine/diagramengine.ts` (19,198 lines) — Zero `export` keywords on 60+ interfaces, 15+ classes, and the factory function. Per project convention, ALL public types, interfaces, classes, and factory functions MUST have the `export` keyword. Without `export`, tsc treats files as scripts (global scope), leading to duplicate declaration errors across the codebase. This is the single largest standards violation in the repository.
+- [ ] **STD-1** `components/diagramengine/diagramengine.ts` (**30,693 lines, measured 2026-10-13**, not the 19,198 recorded in March 2026) — Zero `export` keywords on 60+ interfaces, 15+ classes, and the factory function. Per project convention, ALL public types, interfaces, classes, and factory functions MUST have the `export` keyword. Without `export`, tsc treats files as scripts (global scope), leading to duplicate declaration errors across the codebase. This is the single largest standards violation in the repository.
 
 - [ ] **STD-2** Twelve implementation files are missing the `export` keyword on their primary classes/types:
   - `components/notificationcenter/notificationcenter.ts` — `NotificationCenter` class
@@ -66,11 +66,13 @@ These violate mandatory project conventions (`export` keyword requirement per ME
 
 Per ADR and MEMORY.md, the required pattern is `(window as unknown as Record<string, unknown>)`. Using `(window as any)` bypasses type safety.
 
-- [ ] **WIN-1** `(window as any)` is used instead of the required double-cast pattern. **Re-measured 2026-10-12: 311 occurrences on 203 lines in 113 non-test files**, not the 20 files and 62 occurrences recorded in March 2026. The file list below is the March list and is no longer the whole set.
+- [ ] **WIN-1** `(window as any)` is used instead of the required double-cast pattern. **Measured 2026-10-13 by `scripts/audit-counts.mjs`: 294 occurrences on 186 lines in 113 non-test files**, not the 20 files and 62 occurrences recorded in March 2026. The file list below is the March list and is no longer the whole set.
 
-  **The growth has one dominant cause, and it is not drift in the components.** 112 of the 203 lines are the same logging preamble, `const _lu = (typeof (window as any).createLogUtility === "function") ? …`, which was added to every component after the audit ran. **86 files contain no other violation at all** — the preamble is their only one. The remaining 91 lines are genuine and need individual attention: reads of another component's global such as `(window as any).createHoverCard` (15 times), third-party globals such as `MathfieldElement` and `DOMPurify`, and bracket-form registrations.
+  **A correction to this entry's own previous figure.** It read "311 occurrences on 203 lines" on 2026-10-12. The file count of 113 was right and both other numbers were not. No file set in this repository yields 311 or 203, the code containing these casts is byte-identical at every commit from `4daccb4` to now, and the counting command was never written down, so the error cannot be traced further. That is the whole argument for check `[20]`: a count whose file set and pattern are not stated in code is not a measurement.
 
-  **Scope this as two items, not one.** The preamble is a single mechanical change and the correct fix is probably a shared typed accessor rather than 112 copies of a longer cast, because the double-cast form also forces a second cast on the value. The 91 remaining uses are the actual audit finding.
+  **The growth has one dominant cause, and it is not drift in the components.** 112 of the 186 lines are the same logging preamble, `const _lu = (typeof (window as any).createLogUtility === "function") ? …`, which was added to every component after the audit ran. **86 files contain no other violation at all** — the preamble is their only one. The remaining 74 lines are genuine and need individual attention: reads of another component's global such as `(window as any).createHoverCard` (6 times, not the 15 recorded on 2026-10-12), third-party globals such as `MathfieldElement` and `DOMPurify`, and bracket-form registrations.
+
+  **Scope this as two items, not one.** The preamble is a single mechanical change and the correct fix is probably a shared typed accessor rather than 112 copies of a longer cast, because the double-cast form also forces a second cast on the value. The 74 remaining uses are the actual audit finding. Those 112 preamble lines carry 220 of the 294 occurrences, two per line, and the other 74 occurrences sit one per line.
 
   March 2026 file list, retained as the starting point:
   - `components/timeline/timeline.ts`
@@ -142,11 +144,13 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
 
 ---
 
-## MEDIUM — `!important` in Component SCSS (47 occurrences, 15 files)
+## MEDIUM — `!important` in Component SCSS (113 occurrences, 20 files, measured 2026-10-13)
 
 Per CODING_STYLE.md, `!important` should only be used when overriding third-party styles or for accessibility-critical rules (e.g., `prefers-reduced-motion`). All other uses indicate specificity problems that should be fixed structurally.
 
-- [ ] **IMP-1** Violations (no third-party justification) — should be refactored:
+- [ ] **IMP-1** **113 occurrences across 20 SCSS files, not the 47 across 15 recorded in March 2026.** Held at that value by check `[20]`. The per-file list below is the March list and is not the whole set.
+
+  Violations (no third-party justification) — should be refactored:
   - `components/conversation/conversation.scss` (5 occurrences)
   - `components/treeview/treeview.scss` (4 occurrences)
   - `components/treegrid/treegrid.scss` (2 occurrences)
@@ -169,27 +173,48 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
 ---
 
-## MEDIUM — Excessive `console.log` (406 occurrences)
+## MEDIUM — Logging (LOG-1 closed as obsolete, LOG-2 opened)
 
-Per LOGGING.md, most log statements should use `console.debug` (development-only, stripped or silent in production) rather than `console.log` (always visible). Only user-facing status messages and critical operational logs should use `console.log`.
+- [x] **LOG-1** Convert `console.log` to `console.debug` where appropriate. **Closed as obsolete on 2026-10-13, not fixed.** The item was written against LOGGING.md, which FRONTEND_LOGGING.md superseded, and its count described a tree that no longer exists.
 
-- [ ] **LOG-1** Audit and convert `console.log` to `console.debug` where appropriate. Worst offenders:
-  - `components/diagramengine/diagramengine.ts` — 72 occurrences
-  - `components/treegrid/treegrid.ts` — 27 occurrences
-  - `components/timeline/timeline.ts` — 20 occurrences
-  - `components/treeview/treeview.ts` — 17 occurrences
-  - `components/actionitems/actionitems.ts` — 16 occurrences
-  - `components/markdowneditor/markdowneditor.ts` — 13 occurrences
-  - `components/prompttemplatemanager/prompttemplatemanager.ts` — 10 occurrences
-  - `components/ribbonbuilder/ribbonbuilder.ts` — 9 occurrences
+  **The 406 figure is not reproducible, and the per-file figures are wrong by an order of magnitude.** The tree holds **176 lines** containing `console.log` across 284 source files. Run `node scripts/audit-counts.mjs` for the current classification. On 2026-10-13 it was:
+
+  | Kind | Lines | Is it a violation? |
+  |---|---|---|
+  | Logging shim body | 161 | No. `logInfo` maps to `console.log` by FRONTEND_LOGGING.md:36 |
+  | Doc comment example | 10 | No. Sample code in a JSDoc block |
+  | String data drawn on a canvas | 2 | No. `diagramengine` renders sample code as pixels |
+  | The log utility's own fallthrough | 1 | No. It is the terminus |
+  | **Genuine bare call site** | **2** | **Yes**, both in `errordialog.ts` (lines 446 and 513) |
+
+  The named "worst offenders" hold 1 or 2 lines each, not 9 to 27, and every one of them is a shim body. `diagramengine` holds 22, and all 22 are shim bodies for its six log prefixes. **The audit counted call sites that were later replaced by a shim, and nobody re-ran the count.**
+
+  **Why it closes rather than narrowing to the two call sites.** The item asks for a level decision — is this message INFO or DEBUG? — which no count can answer. `errordialog.ts` is the example component in LOGGING.md and has no shim at all, so it belongs to LOG-2 below, where the fix is to adopt the mandated pattern rather than to swap one console method for another.
+
+- [ ] **LOG-2** Two logging standards contradict each other, and 26 component files follow neither. **Measured 2026-10-13.**
+
+  **The contradiction is head on.** LOGGING.md:13 says "**Do not create a shared logger module.** A centralised logger in a component library will conflict with or duplicate the host application's logging." FRONTEND_LOGGING.md:20 says this library "ships with its own logging utility `LogUtility`", and FRONTEND_LOGGING.md:27 says "*every component MUST follow the same pattern*". The repository followed the second: `components/logutility/` exists and 117 files carry the mandated preamble.
+
+  **Resolve the documents first.** Either amend LOGGING.md so its prohibition applies to third-party frameworks and not to `LogUtility`, or mark it superseded for this repository. An open item that cites a dead standard is how LOG-1 survived six months.
+
+  **Then migrate the files that follow neither standard.** 24 files carry the shim but never check for `LogUtility`, so they always log to the console even when the host has a logger loaded:
+
+  - `components/diagramengine/` — **19 files** (`diagramengine.ts` plus 18 under `src/`). One component, most of the work.
+  - `components/annotation/annotation.ts`, `components/chatdock/chatdock.ts`, `components/dynamiccanvas/dynamiccanvas.ts`, `components/stickynote/stickynote.ts`, `components/workspaceshell/workspaceshell.ts`
+
+  2 files have no shim at all and call `console` directly with a hand written prefix: `components/errordialog/errordialog.ts` and `components/themeinit/themeinit.ts`.
+
+  Check `[20]` holds all three counts at their current values, so this cannot grow while it waits.
 
 ---
 
-## MEDIUM — `: any` Type Usage (60 occurrences, 12 files)
+## MEDIUM — `: any` Type Usage (88 occurrences, measured 2026-10-13)
 
 Using `: any` defeats TypeScript's type safety. Each occurrence should be replaced with a proper type, interface, or `unknown` with narrowing.
 
-- [ ] **ANY-1** Files with highest `: any` usage:
+- [ ] **ANY-1** **88 occurrences, not the 60 recorded in March 2026.** Held at that value by check `[20]`. Run `node scripts/audit-counts.mjs` to re-derive it. The per-file list below is the March list and is not the whole set.
+
+  Files with highest `: any` usage:
   - `components/graphcanvasmx/graphcanvasmx.ts` — 23 occurrences
   - `components/docklayout/docklayout.ts` — 17 occurrences
   - `components/toolbar/toolbar.ts` — 4 occurrences
@@ -204,7 +229,9 @@ Using `: any` defeats TypeScript's type safety. Each occurrence should be replac
 
 Per MARKERS.md, all source files must contain semantic navigation markers (e.g., `// COMPONENT:`, `// SECTION:`, etc.) to support agent navigation and codebase understanding.
 
-- [ ] **MRK-1** 12 TypeScript files missing the `COMPONENT` marker:
+- [ ] **MRK-1** **3 TypeScript files missing the `COMPONENT` marker, not the 12 recorded in March 2026.** Measured 2026-10-13: `components/diagramengine/src/engine.ts`, `components/diagramengine/src/types.ts` and `components/treegrid/treegrid.ts`. Nine of the twelve were fixed and the entry was never updated.
+
+  March 2026 list, retained as the starting point:
   - `components/markdowneditor/markdowneditor.ts`
   - `components/treegrid/treegrid.ts`
   - `components/searchbox/searchbox.ts`
@@ -218,9 +245,11 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   - `components/timezonepicker/timezonepicker.ts`
   - `components/timepicker/timepicker.ts`
 
-- [ ] **MRK-2** 22 of 24 files in `components/diagramengine/src/` are missing the `COMPONENT` marker.
+- [ ] **MRK-2** **2 of 29 files in `components/diagramengine/src/` are missing the `COMPONENT` marker, not the 22 of 24 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`: `engine.ts` and `types.ts`. Both are already named in MRK-1, so MRK-2 adds no file that MRK-1 does not cover. The entry was wrong by a factor of eleven and the directory has grown by five files since.
 
-- [ ] **MRK-3** 10 SCSS files missing the marker:
+- [ ] **MRK-3** **4 SCSS files are missing the marker, not the 10 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`.
+
+  March 2026 list, retained as the starting point:
   - `components/smarttextinput/smarttextinput.scss`
   - `components/markdowneditor/markdowneditor.scss`
   - `components/durationpicker/durationpicker.scss`
@@ -240,28 +269,78 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ---
 
+## MEASUREMENT — Counts must be re-derivable
+
+- [x] **AUDIT-1** Every count in this file must be reproducible from a stated file set and a stated pattern. **Closed 2026-10-13 (ADR-168).**
+
+  **The problem was not stale numbers, it was unrepeatable ones.** `console.log` was measured three times as 406, then 200, then 176, with no change to the code in between, because neither the file set nor the pattern was ever written down. WIN-1's own re-measurement of "311 occurrences on 203 lines" matches no file set in the repository. A number nobody can re-derive cannot be checked, corrected, or trusted.
+
+  `scripts/audit-counts.mjs` now states the file set in code (tracked `*.ts`, no tests, nothing under `dist/`) and classifies each hit rather than counting raw tokens. Each count carries a baseline and check `[20]` fails when one rises, so the figures ratchet down and never drift up in silence.
+
+  **The classifier is tested, because it was wrong three times.** `scripts/audit-counts.test.ts` holds 21 tests. Three identity mutations were run against them: making every line a shim body fails 7, counting lines instead of occurrences fails 2, and ignoring string literals fails 4. A count is only as good as the classifier behind it.
+
+  **What it cannot do.** It counts tokens, not intent. Whether a call site picked `logDebug` where `logInfo` was right is not a question grep can answer, and that was the real question LOG-1 asked.
+
+---
+
 ## Summary
+
+| Severity | Count | Status |
+|----------|-------|--------|
+Every count below that carries a date was measured on that date. All but one
+are measured by `node scripts/audit-counts.mjs` and held by check `[20]`, which
+fails when any of them rises. The exception is **UNUSED-1**, which needs a type
+check rather than a scan: re-derive it with
+`npx tsc --noEmit --noUnusedLocals --noUnusedParameters`, and note that it is
+**not** ratcheted. A count with no date is from the March 2026 audit and has not
+been re-measured. **Of the ten March counts re-measured so far, nine were
+wrong and the tenth was never a count at all**, so treat an undated number as an
+unverified claim rather than a figure.
+
+**Check `[20]` runs locally, not in CI.** `.github/workflows/ci.yml` runs
+`npm ci`, the two builds and the unit tests only, so the whole structure suite
+including this ratchet holds only where `./test-local.sh` is run. Wiring it into
+CI is the obvious next step and is not done.
 
 | Severity | Count | Status |
 |----------|-------|--------|
 | CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 1 (113 files, 311 occurrences) | Open |
+| HIGH — Window Cast | 1 (113 files, 294 occurrences, 2026-10-13) | Open |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
-| MEDIUM — !important | 3 | Open |
-| MEDIUM — console.log | 1 (406 occurrences) | Open |
-| MEDIUM — : any | 2 (60 occurrences) | Open |
-| MINOR — Markers | 3 (44 files) | Open |
+| MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
+| MEDIUM — Logging | 2 (2 bare calls, 26 files off-pattern, 2026-10-13) | **1 open, 1 closed** |
+| MEDIUM — : any | 2 (88 occurrences, 2026-10-13) | Open |
+| MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 | Open |
-| MEDIUM — Unused Variables | 1 (119 errors) | Open |
-| **Total** | **21 items** | **3 resolved** |
+| MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
+| MEASUREMENT — Re-derivable counts | 1 | **Closed** |
+| **Total** | **23 items** | **5 resolved** |
+
+### The March 2026 counts re-measured so far
+
+| Item | March figure | Measured | Direction |
+|---|---|---|---|
+| MRK-1 | 12 | 3 | far smaller |
+| MRK-2 | 22 of 24 | 2 of 29 | far smaller |
+| MRK-3 | 10 | 4 | far smaller |
+| LOG-1 | 406 | 2 real call sites | far smaller |
+| IMP-1 | 47 | 113 | far larger |
+| ANY-1 | 60 | 88 | larger |
+| WIN-1 | 62 | 294 | far larger |
+| UNUSED-1 | 119 | 421 | far larger |
+| STD-1 | 19,198 lines | 30,693 lines | larger |
+| ERR-1 | never a count | "10 of 15 sampled" | not comparable |
+
+The errors run in both directions, which is why re-measuring beats guessing
+which way a stale number leans.
 
 ---
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
+- [ ] **UNUSED-1**: **421 unused local/parameter errors, measured 2026-10-13**, not the 119 recorded in March 2026. The original text follows: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
 
 ---
 

@@ -386,3 +386,54 @@ Every one of the five was the probe's own defect. Three threw `options.items is 
 The second attempt touched nothing but the real thing: empty one glue file's `options`, run the real gate, record whether it stays green, restore, repeat. Seventeen runs, no new code, and the answer was both different and trustworthy — seven of the thirteen mount fixtures were not load-bearing. The same technique then proved the fix, by swapping each fixture for an inert key.
 
 **Principle**: When you need to know how a system behaves under a changed input, change the input and run the system. Do not build a second copy of the system to ask it. A reimplementation gives you two things that look the same in the output — the behaviour you wanted to measure, and your copy's divergence from the original — and nothing in the result distinguishes them. If the harness is too internal to drive from outside, that is an argument for putting the measurement *inside* it as a check, which is where this one ended up, not for cloning it. The corollary is a debugging rule: when a measurement contradicts one already in the record, suspect the new instrument before the old number. Related: [[6.53]] on mutating the real code to see whether a test reaches it.
+
+### 6.55 A Count Is a Claim About a File Set and a Pattern — Write Both Down or You Have Neither (2026-10-13)
+
+`console.log` in this repository was measured three times in the space of one
+workstream: 406, then 200, then 176. The code did not change between them. The
+number moved because nobody had written down which files were counted or what
+was matched, so each measurement answered a different question and all three
+were filed under one name.
+
+WIN-1 shows the failure's end state. Its entry was re-measured as "311
+occurrences on 203 lines in 113 non-test files". The file count was right. The
+other two match no file set in the repository, and the casts they count are
+byte-identical at every commit since, so the code cannot explain the gap. The
+command was never recorded, so the error is now untraceable. The number cannot
+be reproduced, corrected, or defended — it can only be replaced.
+
+The instruments were part of the problem. One probe searched shipped bundles
+for published API names and kept the trailing parentheses the documentation
+writes, reporting seventeen real names as missing. A per-file count used
+`grep -oc`, where `-c` silently overrides `-o` and counts matching *lines*.
+That is almost certainly how a line count became an occurrence count in the
+first place. Both bugs produced confident, specific, wrong findings.
+
+Re-measuring also moved a verdict rather than a magnitude, which is the part
+worth noticing. LOG-1 asked for `console.log` to become `console.debug`. Of
+the 176 lines, 161 are the body of a logging shim where `console.log` is the
+*correct* mapping for INFO, 10 are doc comment examples, 2 are sample code
+drawn on a canvas as string data, and 1 is the log utility's own fallthrough.
+Two are real call sites. The item was not 99 percent overstated. It was asking
+for the wrong change, against a standard that another document had already
+superseded. A stale count can hide a dead premise.
+
+Two more came out of review, and both sharpen the lesson. The classifier had a
+third bug: it tracked each quote type's parity separately, so an apostrophe
+inside a double-quoted string left an odd single-quote count and filed a real
+call site as string data. It was latent rather than active, which is only
+knowable because the classification partition did not move when it was fixed.
+And MRK-2 claimed 22 of 24 files in one directory lacked a marker when it is 2
+of 29 — wrong by a factor of eleven, with the listing that proves it already
+sitting in my own output from the MRK-1 measurement, unread for several steps.
+Gathering evidence is not reading it.
+
+**Principle**: A count is a claim about a file set and a pattern. State both in
+code, where they can be read and re-run, not in prose where they decay into a
+bare number. Classify what you count — a token in a comment, a string literal,
+or a shim body is not a violation, and the difference is the whole finding.
+Give the classifier a test, because a classifier is code and yours will be
+wrong. Then ratchet the number so it can only fall, and date it so a reader
+knows whether they are looking at a measurement or an old assertion. Related:
+[[6.54]] on probes that measure themselves, and [[6.53]] on mutating the real
+thing to find out whether anything notices.

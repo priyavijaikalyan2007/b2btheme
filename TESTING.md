@@ -193,6 +193,41 @@ Apply the same probe to a new test you have just written, one assertion at a
 time. An assertion that shares a test with a stronger one can ride on it and
 look load-bearing when it is not.
 
+### 2.7 Test the Classifier Behind a Count
+
+A check that counts something is only as good as the rule it uses to decide
+what counts. That rule is code, so it gets tests like any other code.
+
+`scripts/audit-counts.mjs` reports how many `console.log` violations the tree
+holds. The honest answer is two, out of 176 lines containing the token: 161 are
+the body of a logging shim where `console.log` is the correct mapping for INFO,
+10 sit in doc comments, 2 are sample code drawn on a canvas as string data, and
+one is the log utility's own fallthrough. A count that skipped the
+classification would report 176 and be wrong by two orders of magnitude.
+
+So `scripts/audit-counts.test.ts` gives every outcome a case, and the probe in
+2.6 applies here too — mutate the classifier and confirm the tests notice:
+
+| Mutation | Tests that fail |
+|---|---|
+| Treat every line as a shim body | 7 |
+| Count lines instead of occurrences | 2 |
+| Stop detecting string literals | 4 |
+
+Three of the cases in that file are regressions for real bugs, all three from
+probes written in a single session. One searched shipped bundles for API names and
+kept the trailing `()` the documentation writes, reporting 17 real names as
+missing. The second used `grep -oc`, where `-c` silently overrides `-o` and
+counts matching lines, which turns two casts on one line into one. The third
+tracked each quote type's parity separately, so an apostrophe inside a
+double-quoted string filed a real call site as string data.
+
+**Gate a count with a baseline, not a target.** Each count in that script
+carries the value measured on a stated date, and check `[20]` fails when one
+rises. The number can only fall, and lowering a baseline is how progress gets
+recorded. A baseline stops silent growth. It does not claim the count is
+acceptable.
+
 ---
 
 ## 3. Visual Verification

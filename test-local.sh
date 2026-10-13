@@ -436,6 +436,24 @@ else
 fi
 echo ""
 
+# ── [20] Every tracker count is re-derivable ──
+# The March 2026 audit recorded counts nobody can reproduce: LOG-1 said 406
+# console.log occurrences where 161 of the 176 lines are a logging shim body,
+# and WIN-1's re-measured 311-on-203-lines matches no file set in the tree.
+# This states the file set and the pattern in code, and ratchets each count
+# so it can only fall.
+echo "[20] Every count in the tracker is re-derivable (AUDIT-1)"
+if [ -f scripts/audit-counts.mjs ]; then
+    if node scripts/audit-counts.mjs; then
+        PASS=$((PASS + 1))
+    else
+        fail "a tracked count rose above its recorded baseline (see above)"
+    fi
+else
+    fail "scripts/audit-counts.mjs missing"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

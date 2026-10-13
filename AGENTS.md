@@ -486,12 +486,31 @@ consistent, thoughtful and complete end to end experience.
   `extractExports` for the declarations a TypeScript consumer imports. Structure check `[19]` holds
   the line, and it reads the built `d.ts` and bundle rather than reusing those extractors, because a
   check that shares an oracle with the thing it checks passes by construction.
+- **A count is a claim about a file set and a pattern — state both in code.** `console.log` was
+  measured three times in one workstream as 406, 200 and 176 with no change to the code, because
+  neither the file set nor the pattern was ever written down. WIN-1's "311 occurrences on 203 lines"
+  matches no file set in this repository and the command was not recorded, so the figure cannot be
+  reproduced or corrected (AUDIT-1, ADR-168). Counts belong in `scripts/audit-counts.mjs`, which
+  declares the file set once and classifies each hit: a token in a doc comment, inside a string
+  literal, or in a logging shim body is not a violation. Check `[20]` ratchets each count so it can
+  only fall. Give any new classifier a test — the two probes written for this work were both wrong,
+  one keeping the `()` that documentation writes around a name and one using `grep -oc`, where `-c`
+  silently overrides `-o` and counts lines. **Date every count you write into a tracker.** An
+  undated number is an unverified claim, and nine of the ten re-measured so far were wrong in
+  both directions. Note that check `[20]`, and the whole structure suite, runs via
+  `./test-local.sh` and **not** in CI, so a count can rise in a branch CI calls green.
 - When changing anything a consuming app can observe — a factory signature, a thrown error, a CDN path,
   a vendored dependency version — update [docs/CDN_INTEGRATION_GUIDE.md](./docs/CDN_INTEGRATION_GUIDE.md)
   and [CDN_CONTRACT.md](./CDN_CONTRACT.md) in the same change. Those two are the contract consuming
   teams read; a change that lands without them is a silent breaking change.
 - Always consult MIGRATIONS.md when migrating from one stack to another such as Javascript to TypeScript, Python to .NET Core etc.
-- Always consult LOGGING.md so that you add appropriate logging configuration and log statements to all generated code.
+- Always consult **FRONTEND_LOGGING.md** for component logging, and LOGGING.md for the general
+  principles behind it. **The two contradict each other and FRONTEND_LOGGING.md wins for anything
+  in `components/`:** LOGGING.md:13 forbids a shared logger module, while FRONTEND_LOGGING.md ships
+  `LogUtility` as a component and requires every other component to carry the shim preamble plus a
+  `createLogUtility` check. 117 files follow it, 26 do not, and the reconciliation is tracked as
+  LOG-2. Do not open an item against LOGGING.md's level mapping without checking which document
+  governs — LOG-1 survived six months because it cited the superseded one (ADR-168).
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.

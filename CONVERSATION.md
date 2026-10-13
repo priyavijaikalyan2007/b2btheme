@@ -2827,3 +2827,105 @@ empty. That is a fixture-writing programme rather than a gate defect.
 DEBT-DUI-6 resolved. Tracker 34 resolved / 26 open. ADR-167, insight 6.54.
 Gate 204 tests, 4934 unit tests across 145 files, 123 browser tests, 31/31
 structure checks.
+
+---
+
+## 2026-10-13 — "the change has been published. continue." (AUDIT-1, LOG-1, LOG-2)
+
+**Verified the deploy before anything else.** The three commits stuck behind a
+Cloudflare build that ran over thirty minutes are live. `/build.json` reports
+`38c6f1b`, `test-cdn.sh` passes 37 of 37, and `docs/AGENT_QUICK_REF.md` is
+byte-identical to the repository by sha256. One live number had moved since the
+last check, from 94,591 bytes to 72,564, so I traced it: the quick reference has
+been 72,566 bytes at every commit since `884786d`, the earlier figure measured
+something else, and the two-byte gap was my own `printf '%s'` dropping the
+trailing newline.
+
+Then a non-circular check on what DEBT-DOC-1 shipped, resolving published names
+against the **live** bundles rather than local `dist/`: 50 globals and 153
+exports across a 25-component sample, all present. The first run reported 17
+missing, which was my probe keeping the `()` that the documentation writes
+around a name — insight 6.54 again, in the same session that cites it. A
+fabricated-name positive control fires, so the clean run means something.
+
+**The tracker's counts are not stale. They are irreproducible.** That was the
+finding, and it changed what the work was. `console.log` has now been measured
+three times in this workstream — 406, then 200, then 176 — with no change to the
+code between them, because neither the file set nor the pattern was ever
+written down. `WIN-1` is the end state of that habit: yesterday I recorded "311
+occurrences on 203 lines in 113 non-test files" in commit `4daccb4`. The file
+count is right. No file set in this repository yields 311 or 203, the casts are
+byte-identical at every commit from `4daccb4` to `38c6f1b`, and I did not record
+the command, so the error cannot be traced. The real figure is **294 on 186
+lines**. Within it, the 112 preamble lines carry 220 of the occurrences and the
+other 74 sit one per line. The sub-figure of 86 files whose only violation is
+the preamble was verified and stands, and the claim of 15 `createHoverCard`
+reads is 6.
+
+**LOG-1 closes as obsolete, not fixed, and the reason is not the count.** Of the
+176 lines holding `console.log`, 161 are the body of a logging shim where
+`console.log` is the *correct* mapping for INFO, 10 are doc-comment examples, 2
+are sample code `diagramengine` draws on a canvas as string data, one is the log
+utility's own fallthrough, and **2** are genuine bare calls, both in
+`errordialog.ts`. Its named worst offenders hold one or two lines each, not nine
+to twenty-seven, and all twenty-two of `diagramengine`'s are shim bodies.
+
+Underneath sat the real finding. LOG-1 cites `LOGGING.md`, whose §1 says "**do
+not create a shared logger module**". `FRONTEND_LOGGING.md` ships `LogUtility`
+as a component and says "*every component MUST follow the same pattern*". The
+two contradict each other head on, the repository followed the second — 117
+files conform — and `AGENTS.md` still pointed agents at the first. That is how
+an item cited a dead standard for six months. `AGENTS.md` now names
+`FRONTEND_LOGGING.md` as the authority for components and says which one wins.
+LOG-2 opens for the reconciliation plus the 24 files carrying the shim without
+the utility check — 19 of them `diagramengine` — and the 2 with no shim at all.
+
+**The deliverable is the measurement, not another round of numbers.**
+`scripts/audit-counts.mjs` declares the file set once in code and classifies
+each hit instead of counting tokens. Check `[20]` holds seven counts at the
+value measured today and fails when one rises, so they ratchet down. Nineteen
+tests pin the classifier, and three identity mutations fail 6, 2 and 3 of
+them — because the classifier was wrong twice while I wrote it, and both bugs
+are now regressions in that file: the `()` above, and `grep -oc`, where `-c`
+silently overrides `-o` and counts lines, which is very likely how a line count
+became an occurrence count in the WIN-1 entry.
+
+A third bug was in the script itself and the advisor's steer found it: `IMP-1`
+is about SCSS **sources**, and my first draft counted tracked `*.css`, which
+holds one occurrence against the sources' 113. Generated files measure the
+build, not the code. Twice in this session I also wrote a derived number
+instead of a measured one — 111 preamble lines and 75 remaining, where the
+measured values are 112 and 74 — and caught both only by going back to measure.
+Arithmetic on a figure you have just corrected is not a measurement either.
+
+Nine of the ten March counts re-measured so far were wrong, and the errors run
+both ways: `MRK-1` 12 → 3, `MRK-2` 22-of-24 → 2-of-29, `MRK-3` 10 → 4 and
+`LOG-1` 406 → 2, against `IMP-1` 47 → 113, `ANY-1` 60 → 88, `WIN-1` 62 → 294,
+`UNUSED-1` 119 → 421, and `STD-1` 19,198 → 30,693 lines. `ERR-1` was never a
+count. Guessing which way a stale number
+leans is not available, which is the argument for the script.
+
+**Review caught four more, and three were the same error class as the commit's
+own thesis.** The summary table had kept the March figures for UNUSED-1 and the
+markers while the entries above said otherwise — the identical staleness caught
+in `78ef97e` two days ago. The preamble claimed every dated figure came from the
+script when three had been measured by hand, so MRK-1, MRK-2, MRK-3 and STD-1
+are now in the script and UNUSED-1 is stated as not ratcheted, since it needs a
+type check rather than a scan. MRK-2 was wrong by a factor of eleven, 2 of 29
+rather than 22 of 24, and the listing proving it had been sitting in my own
+output since the MRK-1 measurement — gathering evidence is not reading it. And
+`insideStringLiteral` had a third bug, tracking each quote type's parity
+separately so an apostrophe inside a double-quoted string filed a real call site
+as string data. Latent, not active: the 161/10/2/1/2 partition did not move when
+I fixed it, which is the only reason that is knowable.
+
+**One claim had to be weakened rather than fixed.** `.github/workflows/ci.yml`
+runs `npm ci`, the two builds and the unit tests only. The structure suite —
+all 32 checks, not just the new one — runs where `./test-local.sh` is run, so a
+count can rise in a branch CI calls green. Wiring the suite into CI is the
+obvious next step and I left it out of this change rather than widen the scope
+unasked.
+
+AUDIT-1 resolved, LOG-1 closed as obsolete, LOG-2 opened. Tracker 36 resolved /
+26 open. ADR-168, insight 6.55, TESTING.md §2.7. 4,955 unit tests across 146
+files, 21 of them new, 32/32 structure checks.

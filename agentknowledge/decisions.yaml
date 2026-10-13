@@ -5737,3 +5737,127 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: "ADR-168"
+  title: "A count whose file set and pattern are not written down is not a measurement"
+  date: "2026-10-13"
+  status: "accepted"
+  context: |
+    CODEBASE_FIXES.md carried counts from a March 2026 audit. Spot checks had
+    already shown several were wrong, and the assumption was that they were
+    merely stale. They are worse than stale: they are not reproducible.
+
+    `console.log` was measured three times across this work as 406, then 200,
+    then 176, with no change to the code in between. The reason is that
+    neither the file set nor the pattern was ever recorded, so each
+    measurement answered a slightly different question. WIN-1 was worse still.
+    Its entry was re-measured on 2026-10-12 as "311 occurrences on 203 lines
+    in 113 non-test files". The file count is right and the other two numbers
+    match no file set in the repository, while the code containing those casts
+    is byte-identical at every commit from `4daccb4` to `38c6f1b`. The
+    counting command was never written down, so the error cannot be traced.
+
+    Two further errors surfaced while measuring, both in probes written for
+    this work. A probe searching shipped bundles for published API names kept
+    the trailing parentheses the quick reference writes, so it reported
+    seventeen real names as missing. A per-file count used `grep -oc`, where
+    `-c` silently overrides `-o` and counts matching lines rather than
+    occurrences, which is very likely how a line count became an occurrence
+    count in the WIN-1 entry.
+
+    Re-measuring also changed a verdict rather than a magnitude. LOG-1 asks
+    for `console.log` to become `console.debug` and cites LOGGING.md. The tree
+    holds 176 lines containing the token, and 161 are the body of a logging
+    shim where `console.log` is the correct mapping for INFO. The authority for
+    that shim is FRONTEND_LOGGING.md, which supersedes LOGGING.md and
+    contradicts it: LOGGING.md forbids a shared logger module and
+    FRONTEND_LOGGING.md ships one as a component and requires every component
+    to use it.
+  decision: |
+    D1. CLOSE LOG-1 AS OBSOLETE RATHER THAN FIXING IT. Its count described a
+        tree that no longer exists and its authority was superseded. Two
+        genuine bare call sites remain, both in `errordialog.ts`, and they
+        belong to the successor item because that component has no shim at
+        all.
+    D2. OPEN LOG-2 FOR THE CONTRADICTION FIRST AND THE FILES SECOND. The two
+        logging documents must be reconciled before any migration, because an
+        item citing a dead standard is how LOG-1 survived six months. 24
+        files carry the shim without the `LogUtility` check and two call the
+        console directly with a hand written prefix.
+    D3. STATE THE FILE SET AND THE PATTERN IN CODE. `scripts/audit-counts.mjs`
+        declares the file set once as tracked `*.ts`, excluding tests and
+        anything under `dist/`, and every count derives from it.
+    D4. CLASSIFY, DO NOT COUNT TOKENS. A `console.log` line is a shim body, a
+        doc comment example, string data drawn on a canvas, the log utility's
+        own fallthrough, or a real call site. Only the last is a violation,
+        and the five outcomes are disjoint.
+    D5. RATCHET EACH COUNT. Every count carries a baseline measured on a
+        stated date, and check `[20]` fails when one rises. Lowering a
+        baseline is how progress is recorded.
+    D6. TEST THE CLASSIFIER, BECAUSE IT WAS WRONG THREE TIMES. Twenty-one
+        tests pin every outcome, and all three bugs are regressions in that
+        file rather than lessons in a document.
+    D7. DATE EVERY FIGURE IN THE TRACKER. An undated count is an unverified
+        claim from March 2026, and the summary now says so in those words.
+  consequences: |
+    + EVERY COUNT IN THE TRACKER IS NOW RE-DERIVABLE with one command, and
+      check `[20]` holds ten of the eleven. The suite is 32 checks, up from 31.
+      The exception is UNUSED-1, which needs a type check rather than a scan,
+      so the tracker states the `tsc` command and says it is not ratcheted.
+    + NINE OF THE TEN MARCH COUNTS RE-MEASURED SO FAR WERE WRONG, and the
+      errors run in both directions: MRK-1 12 to 3, MRK-2 22-of-24 to 2-of-29,
+      MRK-3 10 to 4 and LOG-1 406 to 2, against IMP-1 47 to 113, ANY-1 60 to
+      88, WIN-1 62 to 294, UNUSED-1 119 to 421 and STD-1 19,198 to 30,693
+      lines. The tenth, ERR-1, was never a count. Guessing which way a stale
+      number leans is not available.
+    + MRK-2 WAS WRONG BY A FACTOR OF ELEVEN and the evidence was already on
+      screen. It claimed 22 of 24 files in `components/diagramengine/src/`
+      lacked the marker. It is 2 of 29, and both files were already named by
+      MRK-1, so MRK-2 adds nothing MRK-1 does not cover. The listing that
+      proves it came out of the MRK-1 measurement and went unread for several
+      steps, which is its own lesson: gathering evidence is not reading it.
+    + THREE IDENTITY MUTATIONS PROVE THE TESTS. Treating every line as a shim
+      body fails seven of the twenty-one, counting lines instead of
+      occurrences fails two, and ignoring string literals fails four.
+    + A THIRD CLASSIFIER BUG, FOUND IN REVIEW AND LATENT RATHER THAN ACTIVE.
+      `insideStringLiteral` tracked each quote type's parity independently, so
+      an apostrophe inside a double-quoted string left an odd single-quote
+      count and filed a real call site as string data. It is now a single pass
+      that tracks which quote is open, with that line as a test case. The
+      161/10/2/1/2 partition is unchanged, which is how the bug is known to
+      have been latent.
+    + A CORRECTION TO THE WIN-1 RE-MEASUREMENT OF 2026-10-12, which was
+      written straight into the tracker by commit `4daccb4` and never
+      recorded in an ADR. Its 311 occurrences on 203 lines is replaced by
+      294 on 186, with 112
+      preamble lines carrying 220 of the occurrences and 74 sitting one per
+      line. The sub-figure of 86 files whose only violation is the preamble
+      was verified and stands. The claim of 15 `createHoverCard` reads was
+      wrong and is 6.
+    + IMP-1 WAS COUNTING THE WRONG FILES. The entry is about SCSS sources and
+      the first draft of this script counted tracked `*.css`, which holds one
+      occurrence against the sources' 113. Generated files measure the build,
+      not the code.
+    - IT COUNTS TOKENS, NOT INTENT. Whether a call site chose `logDebug` where
+      `logInfo` was right is not answerable by grep, and that was the real
+      question LOG-1 asked. Closing LOG-1 does not answer it.
+    - THE BASELINES ARE A SNAPSHOT, NOT A TARGET. They record 2026-10-13 at
+      `38c6f1b` and only stop silent growth. Nothing in the gate drives any
+      count down.
+    - THE RATCHET HOLDS LOCALLY AND NOT IN CI. `.github/workflows/ci.yml` runs
+      `npm ci`, `build:css`, `build:ts` and `test:unit:coverage` only, so the
+      whole structure suite, all 32 checks and not merely this one, runs where
+      `./test-local.sh` is run. A count can therefore rise in a branch that CI
+      calls green. Wiring the suite into CI is the obvious next step and is
+      deliberately not bundled into this change.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "test-local.sh"
+    - "CODEBASE_FIXES.md"
+    - "AGENTS.md"
+    - "TESTING.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
