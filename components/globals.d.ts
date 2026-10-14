@@ -41,7 +41,7 @@
  * THIS FILE IS BUILD-TIME ONLY. It is not emitted to `dist/`, `package.json`
  * declares no `types` entry, and no generated component `.d.ts` refers to
  * it. A consumer still loads one `<script>` per component and gets
- * `dist/components/<name>/<name>.d.ts` for types. Declaring 253 globals here
+ * `dist/components/<name>/<name>.d.ts` for types. Declaring 268 globals here
  * costs a consumer nothing and pulls in no component they did not ask for.
  */
 

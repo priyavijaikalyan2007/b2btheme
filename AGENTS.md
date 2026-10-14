@@ -510,19 +510,30 @@ consistent, thoughtful and complete end to end experience.
   Both documents now say so in their own first section, and all 143 logging components follow it
   (LOG-2, ADR-171). Do not open an item against LOGGING.md's level mapping without checking which
   document governs — LOG-1 survived six months because it cited the superseded one (ADR-168).
-- **Reach a window global through `components/globals.d.ts`, not a `window as any` cast.** The
-  declaration file types the globals components publish to each other, so the lookup keeps its
-  type and the line does not add to WIN-1. Add the global there when you publish a new one. Check
-  `[20]` ratchets the cast count, so a new cast in `components/` fails the structure suite.
-  The older `(window as unknown as Record<string, unknown>)` form is superseded by ADR-171 D2.
-  It returns `unknown`, so it forces a second cast on the value and buys nothing over `any`.
-  237 uses of it remain and WIN-2 tracks them. Do not add one, and do not copy it from a spec
-  or a component README that still shows it.
-- **`windowCasts` gates EVERY assertion on `window`, not one spelling of it.** WIN-1 counted the
-  literal `(window as any)` and reached 0 while 237 assertions in three other spellings went
-  unwatched (ADR-173). Any `window as` in `components/` now fails check `[20]`, whatever it
-  asserts to. If a global cannot be declared, say so in the ADR rather than reaching for a cast:
-  a lookup by a computed key is the one case a declaration cannot express.
+- **(CRITICAL) Publishing a global means adding a declaration to `components/globals.d.ts`.**
+  That file holds 268 declarations and is the single place a component's window API is typed
+  (ADR-174 D1). Add yours there in the same change that publishes it, and write
+  `window.createThing = createThing;` with no assertion. A `declare global` beside your own
+  component is NOT the house style: the third-party globals have no publisher here, so the
+  central file exists either way. The file is build-time only, so declaring a global costs a
+  consumer nothing. `(window as unknown as Record<string, unknown>)` and `(window as any)` are
+  both superseded. Do not add either, and do not copy one from a spec or a README that still
+  shows it.
+- **`windowCasts` gates EVERY assertion on the global object, and `windowAliasUses` gates the
+  way round it.** WIN-1 counted the literal `(window as any)` and reached 0 while 237
+  assertions in three other spellings went unwatched (ADR-173). WIN-2 then found that
+  `const win = window as unknown as Record<string, unknown>;` spends one occurrence and buys
+  73 untyped accesses (ADR-174, insight 6.65). `window as`, `globalThis as`, an alias
+  declaration and every use of an aliased name all fail check `[20]` now. If you need an alias,
+  write `const win = window;`, which types every use and emits the same JavaScript.
+- **Six assertions are allowed and they are listed, not budgeted.** Each reaches `window` by a
+  name known only at run time, which no declaration can express: `window[someString]` is TS7015
+  and `Window` is not assignable to `Record<string, unknown>` without an assertion, which is
+  TS2322. ADR-174 D3 names all six by file and line, and the baseline of 6 is the count of that
+  list. If you believe you need a seventh, the key is probably from a closed set the module
+  owns — mark the source `as const` and type the parameter as a union or `keyof Window`, which
+  is how five other sites were typed. If it genuinely is host data, amend ADR-174 D3 and say
+  why, rather than removing a listed one to stay under the number.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.

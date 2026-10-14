@@ -692,3 +692,79 @@ refactoring the code a check reads turned the check green by blinding it. This
 is its sibling — refactoring the code a *generator* reads empties the generated
 file, and the check downstream of it still passes because its question was
 never "is this complete".
+
+### 6.64 A Filter That Excludes `*.test.ts` Does Not Exclude `tests/` (2026-10-14)
+
+`scripts/audit-counts.mjs` stated its file set in a comment: tracked
+TypeScript sources, "no test or spec files, because a violation in a test is
+not a violation in the library". The printed header said the same. The filter
+was `!/\.(test|spec)\.ts$/`, which matches a file CALLED a test and says
+nothing about a file that LIVES in the test directory. `tests/setup.ts` and
+`tests/helpers/dom-helpers.ts` were inside every count for as long as the
+comment claimed they were not.
+
+Nothing downstream noticed, because the two files contribute exactly one
+occurrence to any counted pattern. The cost was not a wrong number. It was a
+wrong inference: `CODEBASE_FIXES.md` reasoned from the stated set and
+concluded that the single `(globalThis as any)` in `tests/setup.ts` was
+"outside the count twice over", which was false twice.
+
+**A file-set comment is a claim, and a claim about code is testable.** The
+set is stated in one place and implemented three lines below it, and the two
+still disagreed for a month. Read the filter, not the paragraph above it,
+and prefer a directory exclusion to a name pattern when the intent is "test
+infrastructure" rather than "files named like tests". Related: [[6.59]].
+
+### 6.65 An Alias Spends One Occurrence and Buys Unlimited Access (2026-10-14)
+
+WIN-2 was scoped at 237 occurrences of `window as `. The real conversion
+surface was 310, and the gap was one line:
+
+```typescript
+const win = window as unknown as Record<string, unknown>;
+win["createFormDialog"] = createFormDialog;
+const f = win["createPeoplePicker"];
+```
+
+The counted pattern appears once. Every access after it is free. Measured
+across the tracked sources: **42 alias declarations carrying 73 accesses, so
+the gate saw 42 of 115.**
+
+This is [[6.61]] one level further out, and the second time in two days.
+There, `windowAnyCasts` watched one SPELLING of four. Here `windowCasts`
+watches every spelling and still only the assertion, so moving the access
+away from the assertion moves it out from under the count. A pattern written
+against syntax will keep finding a syntax that is not it.
+
+**Name the behavior, not the syntax that expresses it.** The behavior here
+is reaching the global object untyped. `windowCasts` plus `windowAliasUses`
+together name it; neither does alone. And note what the fix looks like:
+`const win = window;` keeps the alias, types all 73 uses through
+`components/globals.d.ts`, and emits the same JavaScript. The count going to
+zero does not mean the aliases are gone. It means none of them is untyped.
+
+### 6.66 A Check Script Is Code, and an Inline One Is Code You Did Not Read (2026-10-14)
+
+While closing WIN-2 I ran an inline `node -e` check for whether 25
+alias-published names reached `docs/AGENT_QUICK_REF.md`. It reported 25 of 25
+missing. That matched a prediction made minutes earlier, so I converted 11
+files to inline `window` at those publication sites, changing the emit of 11
+bundles.
+
+All 25 names were present. `extractGlobals` had handled aliases since WIN-1,
+at `scripts/generate-docs.js:421`. The check was wrong: `\\\\b` written inside
+a single-quoted bash string reaches the RegExp constructor as a literal `\b`,
+which matches a backspace character, so no name could ever match. A `grep`
+for one name would have shown it in two seconds.
+
+Two things made it land. The result **confirmed a prediction**, and it was
+**too clean** — exactly 25 of 25, with nothing partial. A real gap in a
+generated document is almost never total.
+
+**A measurement that agrees with your hypothesis deserves a second method
+before it earns an edit.** Write check scripts to a file where the escaping
+is visible and can be read back, and confirm a surprising negative with a
+different tool than the one that produced it. This is the second
+inline-escaping failure in this arc; the first mangled a regex in a
+counterfactual probe. Related: [[6.63]], where the counterfactual was run
+correctly and was worth everything.

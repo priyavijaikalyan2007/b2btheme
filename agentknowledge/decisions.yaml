@@ -6302,3 +6302,157 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-174
+  title: Every component global is declared in one file, and six assertions stay because no declaration can replace them
+  date: 2026-10-14
+  status: accepted
+  context: |
+    ADR-173 closed WIN-1 and left two questions open. Where the remaining
+    globals should be declared, and how to type a lookup by a computed key.
+    The user chose the central file. Scoping the work answered the second
+    question differently from the way ADR-173 had framed it, and turned up a
+    third thing nobody had counted.
+
+    THE COUNT WAS 237 AND THE SURFACE WAS 310. A file that writes
+    `const win = window as unknown as Record<string, unknown>;` spends one
+    occurrence of the counted pattern and then reaches window untyped as
+    often as it likes. Measured on 2026-10-14: 42 alias declarations carrying
+    73 accesses. `windowCasts` saw 42 of those 115. This is insight 6.61 one
+    level further out and the second instance in two days: the earlier gate
+    watched one spelling of four, and this one watches every spelling of the
+    assertion and still only the assertion.
+
+    A COMPUTED KEY IS NOT ONE PROBLEM. ADR-173 and CODEBASE_FIXES.md both say
+    a lookup by a computed key "cannot be expressed by a declaration at all".
+    That was overstated. Of the eleven such sites, five take their key from a
+    closed set that the module itself owns, and those are typeable. Six take
+    it from data the host application supplies, and those are not. The
+    compiler states the boundary directly: indexing `window` by a `string` is
+    TS7015, and `Window` is not assignable to `Record<string, unknown>`
+    without an assertion, which is TS2322.
+
+    THE FILE SET WAS NOT WHAT IT SAID IT WAS. `sourceFiles()` excluded files
+    named `*.test.ts` and claimed in its comment, and in the printed header,
+    to exclude tests. `tests/setup.ts` and `tests/helpers/dom-helpers.ts` were
+    inside every count. CODEBASE_FIXES.md reasoned from the claim and called
+    the one `(globalThis as any)` there "outside the count twice over".
+  decision: |
+    D1. ONE CENTRAL components/globals.d.ts, NOT A BLOCK PER COMPONENT. The
+        file grows from 70 declarations to 268, covering 187 publication
+        sites across 102 files. The third-party globals decide it: nothing in
+        this repository publishes `Chart`, `katex` or `dagre`, so a
+        `declare global` beside the publisher has nowhere to put them.
+        Per-component would not have removed this file. It would have shrunk
+        it to the third-party names and left two readers of one library to
+        agree with each other by hand. The file is build-time only: it is not
+        emitted to dist/, package.json declares no `types` entry, and no
+        generated component .d.ts refers to it, so a consumer still loads one
+        script per component and imports nothing extra.
+
+    D2. THE ALIASES KEEP THEIR NAME AND LOSE THEIR CAST, and the closed-key
+        lookups are typed rather than routed around. `const win = window as
+        unknown as Record<string, unknown>;` becomes `const win = window;`,
+        so all 73 uses typecheck with no textual change and the emit is
+        unaffected. `GLOBAL_FLAGS` is marked `as const` so the three debug
+        flag names are a union of literals rather than `string`.
+        `STANDARD_FACTORY_MAP` carries `keyof Window` values.
+        markdownrenderer's `probe` takes the five library names as a union
+        and exports the interfaces that describe them, so globals.d.ts states
+        each shape once rather than twice.
+
+    D3. SIX ASSERTIONS REMAIN AND WIN-2 CLOSES ABOVE ZERO. Each reaches
+        window by a name known only at run time. THIS LIST IS THE ALLOWLIST
+        and the baseline is only its count:
+
+          components/codeeditor/codeeditor.ts:158
+          components/diagramengine/diagramengine.ts:16425  (generated)
+          components/diagramengine/src/render-engine.ts:1027
+          components/dynamiccanvas/dynamiccanvas.ts:447
+          components/dynamicformswitcher/dynamicformswitcher.ts:834
+          components/ribbonbuilder/ribbonbuilder.ts:408
+
+        codeeditor probes about thirty CodeMirror 6 globals from a build the
+        host page supplies, asking for alternatives when the first spelling
+        is absent. diagramengine takes the name from `embed.component`, a
+        field of the diagram document. dynamicformswitcher builds
+        `create${PascalCase(field.type)}` and falls back to scanning
+        `Object.keys`. ribbonbuilder takes it from `componentFactory` in the
+        consumer's control definition. dynamiccanvas hands the global object
+        to the runtime as a lookup scope. A declaration broad enough to admit
+        any name would buy a round number by making the declarations a worse
+        description of run time than the assertions are.
+
+    D4. THE GATE NAMES THE BEHAVIOR, NOT THE SYNTAX. `windowAliasDecls` and
+        `windowAliasUses` count an alias declaration and every property
+        access on the aliased name. `windowCasts` now counts `globalThis as`
+        as well. Both landed BEFORE any source file moved. Baselines went
+        237/42/73, then 6/1/1 after the work. `windowAliasUses` over-counts
+        by design, because it cannot tell an alias from a parameter of the
+        same name, so the one remaining untyped alias is named
+        `globalNamespace` rather than `win`.
+
+    D5. THE FILE SET EXCLUDES `tests/`, WHICH IT ALREADY CLAIMED TO DO. Those
+        two files contribute exactly one occurrence to any count, so stating
+        the set correctly moved no baseline.
+
+    D6. THE RUNTIME DECLARES ITS OWN GLOBAL, the one exception to D1.
+        `runtime/runtime.ts` is built by a program whose rootDir is
+        `runtime/` and cannot see components/globals.d.ts, and adding it
+        would pull every component source in. The declaration lives in
+        `scripts/bundle-runtime.sh`, because the file is generated.
+  consequences: |
+    + 124 OF 127 BUNDLES ARE BYTE-FOR-BYTE IDENTICAL. The three that differ
+      were each read. codeeditor is identical once the two accessors are
+      normalized: they swapped order so terser swapped their mangled names,
+      and `hasCMGlobal` now delegates instead of repeating the lookup.
+      diagramengine extracts the factory name to a local. spinemap emits
+      `this.factoryName ? window[this.factoryName] : void 0`, which is the
+      old `|| ""` fallback made explicit, and `window[""]` was already
+      undefined.
+    + THREE CHECKS HAD TO BE FIXED FIRST AND TWO FAILED LOUDLY.
+      runtime/bundle.test.ts searched for the literal `["EnterpriseRuntime"]`
+      and 32 tests failed at once when the registration became
+      `window.EnterpriseRuntime`. runtime/runtime.ts is generated, so editing
+      it was undone by the next build. `diagramengineLines` is a ratchet, and
+      a named accessor in render-engine cost 13 lines of the largest file in
+      the repository, so the engine documents the same decision in one line.
+    + THREE HAND-WRITTEN CASTS ON NOW-TYPED VALUES WERE WRONG, in formdialog,
+      graphlegend and spinemap. Two disagreed with the real signature.
+      graphlegend's return type is now read from the declaration rather than
+      restated.
+    = FORMDIALOG KEEPS A LOCAL FOR THE CALL. Removing it changed
+      `(0, t.showConfirmDialog)(...)` into `t.showConfirmDialog(...)`, which
+      binds `this` to window. The local is kept so the call stays unbound and
+      the bundle stays byte-identical.
+    - WIN-2 CLOSES AT 6, NOT 0, AND THE USER WAS TOLD 0. The claim was made
+      after reading the four direct computed-key sites, which are all closed
+      sets, and before reading the seven reached through an alias, which are
+      not. Four sites read is not eleven sites read.
+    - A MEASUREMENT THAT CONFIRMED A PREDICTION WAS WRONG AND DROVE AN EDIT.
+      An inline check reported 25 alias-published names missing from the
+      quick reference. All 25 were present. The regex was broken by bash
+      quoting, and the result was too clean to be real. 11 files were
+      converted and reverted. Insight 6.66.
+    - THE SIX REMAINING ASSERTIONS ARE A LIST, NOT A BUDGET. A seventh fails
+      the gate, and a sixth written somewhere new while a listed one is
+      removed does not. The list is in D3 and has to be read.
+  files:
+    - "components/globals.d.ts"
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "scripts/bundle-runtime.sh"
+    - "runtime/bundle.test.ts"
+    - "components/codeeditor/codeeditor.ts"
+    - "components/dynamicformswitcher/dynamicformswitcher.ts"
+    - "components/hovercard/hovercard.ts"
+    - "components/logutility/logutility.ts"
+    - "components/markdownrenderer/markdownrenderer.ts"
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+    - "components/spinemap/spinemap.ts"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "AGENTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

@@ -124,54 +124,95 @@ declaration buys real type safety, and it buys it once for the whole library.
   `[20]`: a count whose file set and pattern are not stated in code is not a
   measurement.
 
-- [ ] **WIN-2** The library asserts on `window` in four spellings, and WIN-1
-  counted one of them. **Measured 2026-10-14 by `scripts/audit-counts.mjs`:
-  237 occurrences**, gated by the new `windowCasts` baseline. The breakdown
-  prints on every run. 235 are
-  `(window as unknown as Record<string, unknown>)`, the form the March 2026
-  audit prescribed and ADR-171 D2 superseded. 2 are assertions in
-  `components/spinemap/spinemap.ts` wrapped so the asserted type is not on the
-  line.
+- [x] **WIN-2** The library asserted on `window` in four spellings, and WIN-1
+  counted one of them. **Opened at 237 occurrences on 2026-10-14 and closed
+  the same day at 6**, gated by `windowCasts`. ADR-174.
 
-  **This is not a new finding about the code, it is a finding about the
-  count.** WIN-1's pattern was the literal string `window as any`, and the
-  population it did not count was 3.3 times the one it did. The count was
-  never wrong. It answered a narrower question than its name suggests, which
-  meant a cast written in any other spelling could be added for free. The item
-  is opened under a new number rather than folded into WIN-1, because
-  redefining a count under its old name produces a different count with the
-  same name. See insight 6.58.
+  **The count was 237 and the surface was 310.** Scoping the conversion found
+  a second blind spot in the gate that had just been built. A file that writes
 
-  **161 of the 237 are publication sites** and the rest are reads,
-  including genuine third-party globals that no declaration of ours can own:
-  `Chart`, `Vditor`, `katex`, `dagre`, `driver`, `bootstrap`. Two forms need
-  deciding before the work starts, and both are recorded in ADR-173 as open:
-  whether ~200 further globals belong in one central `globals.d.ts` or in a
-  `declare global` block beside each component's own assignment, and how to
-  type a lookup by a computed key, as in `codeeditor.ts:140` and the debug
-  flag read in `logutility.ts:63`, which no declaration can express.
+  ```typescript
+  const win = window as unknown as Record<string, unknown>;
+  win["createFormDialog"] = createFormDialog;
+  const f = win["createPeoplePicker"];
+  ```
 
-  **The gate has one known gap and it is written down rather than closed.**
-  `windowCasts` keys on the literal `window`, so `(globalThis as any)` is
-  invisible to it. One exists, at `tests/setup.ts:81`, and the counted file set
-  excludes tests, so it is outside the count twice over. A component using
-  `globalThis` would not be. Widening the pattern is held until WIN-2 chooses
-  the declaration shape, because the two decisions interact.
+  spends ONE occurrence of the counted pattern and then reaches `window`
+  untyped as often as it likes. Measured: **42 alias declarations carrying 73
+  accesses, so the gate saw 42 of 115.** This is insight 6.61 one level
+  further out and the second instance in two days. `windowAliasDecls` and
+  `windowAliasUses` were added and baselined before any source file moved,
+  and `windowCasts` was widened to `globalThis as` in the same commit.
 
-  **Two leftovers of the same defect, neither counted by anything.**
-  `components/hovercard/hovercard.ts` casts `_lu` a second time in `logDebug`,
-  and `_lu` is now typed, so the cast says nothing. And
-  `components/dynamicformswitcher/dynamicformswitcher.ts` keeps a local
-  `interface LogUtility` that shadows the real one by name. Both are the
-  second-cast habit the declaration was meant to retire.
+  **253 declarations became 268 in one central `components/globals.d.ts`**,
+  covering 187 publication sites across 102 files. The third-party globals
+  decided the shape: nothing here publishes `Chart`, `katex` or `dagre`, so a
+  `declare global` beside each publisher has nowhere to put them. The file is
+  build-time only. It is not emitted to `dist/`, `package.json` declares no
+  `types` entry, and no generated component `.d.ts` refers to it, so a
+  consumer still loads one `<script>` per component and imports nothing extra.
 
-  Specs and component READMEs still showing the double-cast form are corrected
-  as this item reaches them, and deliberately not before:
-  `specs/explorerpicker.prd.md`, `components/inlinetoolbar/README.md` and the
-  generated `docs/COMPONENT_REFERENCE.md` copy of it. Both components publish
-  through the double cast, so `createInlineToolbar` and `createExplorerPicker`
-  have no declaration yet, and correcting the prose now would document a form
-  that does not typecheck.
+  **Six assertions remain, and the list is the allowlist.** Each reaches
+  `window` by a name known only at run time, so no declaration can replace it.
+  ADR-174 D3 names all six by file and line. The compiler states the boundary:
+  indexing `window` by a `string` is TS7015, and `Window` is not assignable to
+  `Record<string, unknown>` without an assertion, which is TS2322. A baseline
+  of 6 gates the total and says nothing about the composition, so a seventh
+  assertion fails and a replacement for a listed one does not. Read the list.
+
+  **A correction to the claim this item was opened with.** This entry and
+  ADR-173 both said a lookup by a computed key "cannot be expressed by a
+  declaration at all". Of the eleven such sites, **five take their key from a
+  closed set the module owns and are now typed** — `GLOBAL_FLAGS` marked
+  `as const`, `STANDARD_FACTORY_MAP` carrying `keyof Window`, and
+  markdownrenderer's five library names as a union. Six take it from host
+  data and are not typeable. The original claim was made after reading four
+  sites and before reading the seven reached through an alias.
+
+  **A correction to this entry's statement about the gate's file set.** It
+  said the one `(globalThis as any)` in `tests/setup.ts` was "outside the
+  count twice over". It was inside it. `sourceFiles()` excluded files NAMED
+  `*.test.ts` and said nothing about the `tests/` directory, while its own
+  comment and the printed header both claimed otherwise. The exclusion is now
+  real, and because those two files contribute exactly that one occurrence to
+  any count, stating the set correctly moved no baseline. Insight 6.64.
+
+  **Both leftovers this entry listed are fixed, not carried.**
+  `components/hovercard/hovercard.ts` cast `_lu` a second time in `logDebug`
+  and `logWarn`; `_lu` is typed, so both casts are gone.
+  `components/dynamicformswitcher/dynamicformswitcher.ts` kept a local
+  `interface LogUtility` shadowing the real one, now `ComponentLogger` with
+  the reason written down.
+
+  **The deferred prose is corrected.** `specs/explorerpicker.prd.md`,
+  `components/inlinetoolbar/README.md`, its generated copy in
+  `docs/COMPONENT_REFERENCE.md`, and `specs/hovercard.md`, which described
+  today's lookup using a form that no longer typechecks. Historical planning
+  records keep their original text: `specs/marketinghero-sitefooter.plan.md`
+  and `specs/hovercard-adoption.prd.md` describe what was built at the time.
+
+  **Verified by emit.** 124 of 127 bundles byte-for-byte identical, and the
+  three that differ were each read: codeeditor's two accessors swapped order
+  so terser swapped their mangled names, diagramengine extracts the factory
+  name to a local, and spinemap emits the old `|| ""` fallback explicitly.
+
+- [ ] **DEBT-SEC-5** Five third-party browser libraries are read from
+  `window` but are not vendored into `dist/lib`, so the host page chooses the
+  build and this repository applies no SRI to it: **highlight.js, KaTeX,
+  Mermaid, @viz-js/viz and CodeMirror 6**. `scripts/vendor-closure.mjs`
+  vendors seven assets with a published hash, and these five sit outside that
+  guarantee. `components/markdownrenderer/README.md` names a jsdelivr build
+  for each of the first four.
+
+  This surfaced during WIN-2, because these are exactly the globals no
+  declaration of ours can own, and CodeMirror 6 is the reason
+  `components/codeeditor/codeeditor.ts` keeps one of the six remaining
+  assertions. **Vendoring them would not remove that assertion** — codeeditor
+  probes about thirty names and asks for alternatives when the first spelling
+  is absent — so this is a supply-chain question in the shape of DEBT-SEC-4,
+  not a continuation of WIN-2. Decide whether the SRI guarantee should cover
+  them, and if so whether the optional renderers stay optional.
+
 ---
 
 ## HIGH — Function Length (>30 lines)
@@ -451,9 +492,9 @@ the step exits 1 and the workflow fails.
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| CRITICAL — Security | 3 | **0 open, 3 closed** |
+| CRITICAL — Security | 4 (DEBT-SEC-5 opened 2026-10-14) | **1 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 237 occurrences, 2026-10-14) | **WIN-1 closed.** WIN-2 opened: WIN-1 counted one of four spellings |
+| HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
@@ -464,7 +505,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **25 items** | **8 resolved** |
+| **Total** | **26 items** | **9 resolved** |
 
 ### The March 2026 counts re-measured so far
 

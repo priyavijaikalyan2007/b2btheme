@@ -207,19 +207,35 @@ export function countOccurrences(text, needle)
  *
  * windowAliasDecls and windowAliasUses were added on 2026-10-14 while WIN-2
  * was being scoped, and they are the conversion surface windowCasts could
- * not see: 42 declarations carrying 73 accesses. windowCasts is unchanged at
+ * not see: 42 declarations carrying 73 accesses. windowCasts was unchanged at
  * 237 even though it now counts `globalThis as` too, because the only such
  * occurrence is in `tests/setup.ts` and the file set stopped including the
  * `tests/` directory in the same commit. Both edits landed BEFORE any source
  * file moved, which is the only order in which a gate is not fitted to the
  * result it is supposed to judge.
+ *
+ * WIN-2 then took the three to 6, 1 and 1, re-measured here on 2026-10-14.
+ *
+ * A BASELINE OF 6 GATES THE TOTAL AND SAYS NOTHING ABOUT THE COMPOSITION.
+ * Six assertions remain because each reaches window by a name known only at
+ * run time, and ADR-174 D3 lists them by file and line. That list is the
+ * allowlist. This number is only the count of it, so a seventh assertion
+ * fails here, and a sixth one written somewhere new while one of the listed
+ * six is removed does not. Read the list, not the number.
+ *
+ * windowAliasUses counts every property access on an aliased name ANYWHERE
+ * in the file that declares the alias. It cannot tell an alias apart from a
+ * parameter or a different local of the same name, so it over-counts by
+ * design, which is the safe direction for a ratchet. The one remaining
+ * untyped alias is named `globalNamespace` rather than `win` for exactly
+ * this reason.
  */
 const BASELINES = {
-    windowCasts: 237,
+    windowCasts: 6,
     windowAnyCasts: 0,
     windowAnyFiles: 0,
-    windowAliasDecls: 42,
-    windowAliasUses: 73,
+    windowAliasDecls: 1,
+    windowAliasUses: 1,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,

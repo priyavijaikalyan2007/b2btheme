@@ -272,7 +272,17 @@ function resolveFactoryName(
 // 3. LOGGING
 // ============================================================================
 
-interface LogUtility
+/**
+ * The four levels this component uses.
+ *
+ * Named `ComponentLogger` rather than `LogUtility`, which is what it was
+ * called until WIN-2. The LogUtility component exports a real `LogUtility`
+ * and components/globals.d.ts declares the factory that returns it, so a
+ * local interface of the same name shadowed a type that now exists. The
+ * shape is deliberately narrower than the real one: this component needs
+ * four methods and should not be typed against members it never calls.
+ */
+interface ComponentLogger
 {
     info(...a: unknown[]): void;
     warn(...a: unknown[]): void;
@@ -280,7 +290,7 @@ interface LogUtility
     debug(...a: unknown[]): void;
 }
 
-function getLogger(): LogUtility | null
+function getLogger(): ComponentLogger | null
 {
     if (typeof window.createLogUtility !== "function")
     {
@@ -827,10 +837,14 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         // closes above zero rather than at it, because a declaration broad
         // enough to admit any name would describe run time less accurately
         // than this assertion does.
-        const win = window as unknown as Record<string, unknown>;
-        const factoryName = resolveFactoryName(win, field.type);
+        // Named `globalNamespace` rather than `win` so `windowAliasUses`
+        // counts what it measures. That count matches an aliased name across
+        // the whole file, so sharing the name `win` with the typed
+        // publications below made one untyped alias read as seven.
+        const globalNamespace = window as unknown as Record<string, unknown>;
+        const factoryName = resolveFactoryName(globalNamespace, field.type);
         if (!factoryName) { return null; }
-        const factory = win[factoryName];
+        const factory = globalNamespace[factoryName];
         if (typeof factory !== "function") { return null; }
 
         this.ensureHostInDom(host, field.name);

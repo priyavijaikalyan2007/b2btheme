@@ -58,7 +58,7 @@ renderEdgeTooltip?(edge: GraphEdge): HoverCardContent | HTMLElement | string | n
 
 Default extractor maps: `label → title`, `sublabel ?? type → subtitle`, `icon → icon`, `color → iconColor`, `status → badge` (via `nodeStatusVariant`), `properties + namespace → properties`, `description → description`. For edges: `label ?? type → title`, `type → subtitle`, `sourceId/targetId/provenance/confidence + properties → properties`, `description → description`.
 
-GraphCanvas resolves the factory via `(window as any).createHoverCard` so it stays decoupled at runtime. If the HoverCard bundle isn't loaded, GraphCanvas silently skips the card.
+GraphCanvas resolves the factory via `window.createHoverCard` so it stays decoupled at runtime. If the HoverCard bundle is not loaded, GraphCanvas silently skips the card.
 
 ## Tech-debt / follow-ups
 

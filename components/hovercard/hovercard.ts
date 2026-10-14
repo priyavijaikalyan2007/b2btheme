@@ -31,10 +31,9 @@ const _lu = (typeof window.createLogUtility === "function")
 
 function logDebug(...a: unknown[]): void
 {
-    const l = _lu as { debug?: (...args: unknown[]) => void } | null;
-    if (l && typeof l.debug === "function")
+    if (_lu && typeof _lu.debug === "function")
     {
-        l.debug(...a);
+        _lu.debug(...a);
     }
     else
     {
@@ -44,10 +43,9 @@ function logDebug(...a: unknown[]): void
 
 function logWarn(...a: unknown[]): void
 {
-    const l = _lu as { warn?: (...args: unknown[]) => void } | null;
-    if (l && typeof l.warn === "function")
+    if (_lu && typeof _lu.warn === "function")
     {
-        l.warn(...a);
+        _lu.warn(...a);
     }
     else
     {

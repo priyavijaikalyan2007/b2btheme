@@ -3234,3 +3234,80 @@ in a `declare global` block beside each component's own assignment, and how to
 type a lookup by a computed key, as in `codeeditor.ts:140` and the debug flag
 read in `logutility.ts:63`, which no declaration can express. Both are recorded
 as open in ADR-173. Tracker 39 resolved / 25 open.
+
+---
+
+## WIN-2: 237 assertions become 268 declarations, and six stay (2026-10-14)
+
+**Asked.** Explain the two open decisions again, then two questions about the
+central-file option: are the dependencies not vendored, and would one file
+force every consuming site to import every component. Then: go with the
+central file, and go ahead.
+
+**Answered first.** No, a consumer imports nothing extra. `globals.d.ts` is
+not emitted to `dist/`, `package.json` declares no `types` entry, and no
+generated component `.d.ts` refers to it, so a consumer still loads one
+`<script>` per component. Internally the same holds, because `tsconfig.json`
+already includes `components/**/*.ts` and every component is in one program
+today. On vendoring: seven assets go through `scripts/vendor-closure.mjs`
+into `dist/lib` with an SRI hash, but the five that drive the probes —
+highlight.js, KaTeX, Mermaid, @viz-js/viz and CodeMirror 6 — are not among
+them, which corrected my earlier claim that nothing here publishes the
+third-party globals. It was true of the probe targets and false of `Chart`
+and `Vditor`.
+
+**The count was 237 and the surface was 310.** Scoping the conversion found a
+blind spot in the gate built the day before. `const win = window as unknown as
+Record<string, unknown>;` spends one occurrence of the counted pattern and
+then reaches `window` untyped as often as the file likes: **42 alias
+declarations carrying 73 accesses, so the gate saw 42 of 115.** That is
+insight 6.61 one level further out and the second instance in two days.
+`windowAliasDecls` and `windowAliasUses` were added and baselined, and
+`windowCasts` widened to `globalThis as`, **before any source file moved**.
+
+**WIN-2 closes at 6, and the user was told 0.** That claim was made after
+reading the four direct computed-key sites, which are all closed sets, and
+before reading the seven reached through an alias, which are not. Six sites
+take their key from host data: `codeeditor` probes about thirty CodeMirror 6
+names from a build the page supplies, `dynamicformswitcher` builds
+`create${PascalCase(field.type)}` and scans `Object.keys`, `ribbonbuilder`
+reads the name from the consumer's control definition, `diagramengine` from
+the diagram document, and `dynamiccanvas` hands the global object to the
+runtime as a scope. The compiler says it plainly: `window[someString]` is
+TS7015 and `Window` is not assignable to `Record<string, unknown>` without an
+assertion, which is TS2322. The six are listed by file and line in ADR-174 D3,
+and the baseline of 6 is the count of that list, not a budget.
+
+**Verified by emit.** 124 of 127 bundles byte-for-byte identical. The three
+that differ were each read rather than assumed: `codeeditor` is identical once
+the two accessors are normalized, `diagramengine` extracts the factory name to
+a local, and `spinemap` emits the old `|| ""` fallback explicitly.
+
+**Three checks had to be fixed first and two failed loudly.**
+`runtime/bundle.test.ts` searched for the literal `["EnterpriseRuntime"]` and
+32 tests failed at once. `runtime/runtime.ts` is generated, so editing it was
+undone by the next build and the declaration moved into
+`scripts/bundle-runtime.sh`. And `diagramengineLines` is a ratchet, so a named
+accessor costing 13 lines of the largest file became a one-line comment.
+
+**A measurement that confirmed a prediction was wrong and drove an edit.** An
+inline check reported 25 alias-published names missing from the quick
+reference. All 25 were present; `extractGlobals` has handled aliases since
+WIN-1. The regex was broken by bash quoting, and the result was too clean —
+25 of 25, nothing partial. Eleven files were converted on the strength of it,
+the emit change caught it, and all eleven were reverted. Insight 6.66.
+
+**Corrections recorded.** A computed key is not always undeclarable: five of
+eleven sites were closed sets and are now typed. The gate's file set did not
+exclude `tests/` though its comment and header both said so, which made the
+tracker call one occurrence "outside the count twice over" when it was inside
+it. `__navRailManager` was not declared, though ADR-173 D4 said all three
+internal slots were. Published names 1073 to 1079.
+
+**Closed out.** The two leftovers this item listed are fixed rather than
+carried: `hovercard.ts`'s second cast on a now-typed `_lu`, and
+`dynamicformswitcher.ts`'s `interface LogUtility` shadowing the real one. The
+deferred prose in `specs/explorerpicker.prd.md`,
+`components/inlinetoolbar/README.md` and `specs/hovercard.md` is corrected.
+DEBT-SEC-5 opened for the five browser libraries read from `window` but not
+vendored. Tracker 40 resolved / 25 open.

@@ -647,8 +647,8 @@ export function createExplorerPicker(
 ): ExplorerPicker;
 
 // Window globals (IIFE wrapper exposes these):
-(window as unknown as Record<string, unknown>)["ExplorerPicker"] = ExplorerPicker;
-(window as unknown as Record<string, unknown>)["createExplorerPicker"] = createExplorerPicker;
+window["ExplorerPicker"] = ExplorerPicker;
+window["createExplorerPicker"] = createExplorerPicker;
 ```
 
 The factory resolves `options.container`:

@@ -293,6 +293,40 @@ purpose because a debugging slot is not public API.
 
 ---
 
+### 2.9 Confirm a Surprising Measurement With a Second Method
+
+A check script is code, and an inline one is code nobody read.
+
+While closing WIN-2 an inline `node -e` check reported that 25
+alias-published names were missing from `docs/AGENT_QUICK_REF.md`. That
+matched a prediction made minutes earlier, so 11 files were edited to fix it
+and 11 bundles changed. All 25 names were present. `extractGlobals` had
+handled aliases since WIN-1, at `scripts/generate-docs.js:421`. The check was
+broken: `\\b` written inside a single-quoted bash string arrives at the
+`RegExp` constructor as a literal `\b`, which matches a backspace character,
+so nothing could ever match. A `grep` for one name would have shown it.
+
+Two properties should have stopped it. The result **confirmed a prediction**,
+and it was **too clean**: exactly 25 of 25, with nothing partial. A real gap
+in a generated document is almost never total.
+
+The rule:
+
+1. **Write a check to a file.** Escaping that passes through a shell twice is
+   invisible at the point where it matters. A file can be read back.
+2. **Confirm a surprising negative with a different tool.** If a script says
+   something is missing, `grep` for it before acting.
+3. **Treat agreement with your hypothesis as a reason to look harder**, not
+   as a reason to stop. The counterfactual probe in section 2.8 is the same
+   method pointed the other way: break the thing and require the check to
+   notice. Here the check was already broken and nothing required it to
+   prove otherwise.
+
+This is the second escaping failure of its kind in one work stream. The first
+mangled a regex inside a counterfactual probe and failed loudly with
+`AssertionError`. This one failed silently and produced a plausible number,
+which is the more expensive of the two.
+
 ## 3. Visual Verification
 
 ### 3.1 Manual Visual Checks

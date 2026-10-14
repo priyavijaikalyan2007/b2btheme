@@ -113,6 +113,6 @@ The toolbar is **opt-in** (`showInlineToolbar: false` by default) — consuming 
 
 Components that follow this pattern: `RelationshipManager`, `ActionItems`, `Timeline`, `TreeView` (extends its existing toolbar — does not mount a second).
 
-Resolve the factory defensively: `(window as unknown as Record<string, unknown>).createInlineToolbar` may be `undefined` if the InlineToolbar bundle is not loaded; treat opt-in as a silent no-op (with a `console.warn`) in that case.
+Resolve the factory defensively: `window.createInlineToolbar` may be `undefined` if the InlineToolbar bundle is not loaded; treat opt-in as a silent no-op (with a `console.warn`) in that case.
 
 See `agentknowledge/decisions.yaml` ADR-128 and `agentknowledge/concepts.yaml` `CategorizedDataInlineToolbar` for the full spec.
