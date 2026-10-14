@@ -63,6 +63,17 @@ import { readFileSync } from "node:fs";
  * last exclusion means `components/globals.d.ts` is outside every count
  * here, including the marker count, so its `COMPONENT:` marker is a
  * convention this script does not enforce.
+ *
+ * THE `tests/` EXCLUSION IS SEPARATE FROM THE `*.test.ts` ONE, and it was
+ * missing until WIN-2. The name filter catches a file CALLED a test and
+ * says nothing about a file that LIVES in the test directory, so
+ * `tests/setup.ts` and `tests/helpers/dom-helpers.ts` were inside every
+ * count while this comment and the printed header both said they were not.
+ * CODEBASE_FIXES.md reasoned from the claim and concluded that the one
+ * `(globalThis as any)` in `tests/setup.ts` was "outside the count twice
+ * over", which was false twice. Those two files contribute exactly that one
+ * occurrence and nothing else to any count here, so stating the set
+ * correctly moves no baseline. See insight 6.64.
  */
 export function sourceFiles()
 {
@@ -71,6 +82,7 @@ export function sourceFiles()
         .filter(Boolean)
         .filter((f) => !/\.(test|spec)\.ts$/.test(f))
         .filter((f) => !/\.d\.ts$/.test(f))
+        .filter((f) => !f.startsWith("tests/"))
         .filter((f) => !f.startsWith("dist/"));
 }
 
@@ -192,11 +204,22 @@ export function countOccurrences(text, needle)
  * the table because a baseline of 0 is the only one that cannot be met by
  * accident, and because deleting the count that defined the item would erase
  * the evidence that it reached 0. windowCasts is where the work continues.
+ *
+ * windowAliasDecls and windowAliasUses were added on 2026-10-14 while WIN-2
+ * was being scoped, and they are the conversion surface windowCasts could
+ * not see: 42 declarations carrying 73 accesses. windowCasts is unchanged at
+ * 237 even though it now counts `globalThis as` too, because the only such
+ * occurrence is in `tests/setup.ts` and the file set stopped including the
+ * `tests/` directory in the same commit. Both edits landed BEFORE any source
+ * file moved, which is the only order in which a gate is not fitted to the
+ * result it is supposed to judge.
  */
 const BASELINES = {
     windowCasts: 237,
     windowAnyCasts: 0,
     windowAnyFiles: 0,
+    windowAliasDecls: 42,
+    windowAliasUses: 73,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -209,7 +232,7 @@ const BASELINES = {
 };
 
 /**
- * Classify one `window as ...` type assertion by what it asserts to.
+ * Classify one global-object type assertion by what it asserts to.
  *
  * WIN-1 counts the literal string `window as any`, and that is one of four
  * spellings this library uses to reach the same place. The others assert to
@@ -218,7 +241,12 @@ const BASELINES = {
  * watches is how a ratchet grows a blind spot larger than the count it holds,
  * so `windowCasts` gates every spelling and this function reports the mix.
  *
- * @param tail - The text following `window as ` at one match position.
+ * `globalThis as` is counted with `window as` from WIN-2 on. The two reach the
+ * same object and only the spelling differs, so watching one of them is the
+ * same defect one level up.
+ *
+ * @param tail - The text following `window as ` or `globalThis as ` at one
+ *               match position.
  * @returns "any", "record", or "other".
  */
 export function classifyWindowCast(tail)
@@ -228,6 +256,67 @@ export function classifyWindowCast(tail)
     return "other";
 }
 
+/**
+ * Count the untyped window accesses that hide behind a LOCAL ALIAS.
+ *
+ * WHY THIS IS A SEPARATE COUNT AND NOT A WIDER REGEX
+ * --------------------------------------------------
+ * `windowCasts` counts the characters `window as `. A file that writes
+ *
+ *     const win = window as unknown as Record<string, unknown>;
+ *     win["createFormDialog"] = createFormDialog;
+ *     const f = win["createPeoplePicker"];
+ *
+ * spends ONE occurrence of that pattern and then reaches `window` untyped as
+ * many times as it likes, for free. Measured across the tracked sources on
+ * 2026-10-14: 42 alias declarations carrying 73 uses. The gate saw 42 of
+ * those 115 accesses.
+ *
+ * This is the WIN-1 finding a second time, one level further out. WIN-1's
+ * pattern was one spelling of four. `windowCasts` is every spelling of the
+ * assertion and still only the assertion, so an alias moves the access out
+ * from under it. A ratchet is only as wide as its pattern, and the pattern
+ * has to name the BEHAVIOR (reaching window untyped) rather than the syntax
+ * that happened to be used for it. See insight 6.61 and 6.65.
+ *
+ * THE FIX THE COUNT EXPECTS is to drop the assertion and keep the alias:
+ * `const win = window;` types every use through `components/globals.d.ts`
+ * and emits the same JavaScript. So this count going to zero does not mean
+ * the aliases are gone, it means none of them is untyped.
+ *
+ * @param text - One file's full source.
+ * @returns `{ declarations, uses }`, where `uses` counts every property
+ *          access on an aliased name outside its own declaration line.
+ */
+export function countWindowAliases(text)
+{
+    const lines = text.split("\n");
+    const declRe = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:window|globalThis) as /;
+    const names = new Set();
+    let declarations = 0;
+
+    for (const line of lines)
+    {
+        const m = line.match(declRe);
+        if (m) { names.add(m[1]); declarations += 1; }
+    }
+    if (names.size === 0) { return { declarations: 0, uses: 0 }; }
+
+    let uses = 0;
+    for (const name of names)
+    {
+        const useRe = new RegExp(`\\b${name}(?:\\[|\\.[A-Za-z_$])`, "g");
+        for (const line of lines)
+        {
+            // The declaration itself is counted as a declaration, never as
+            // a use, or `const win = window as X` would count its own name.
+            if (declRe.test(line)) { continue; }
+            uses += (line.match(useRe) ?? []).length;
+        }
+    }
+    return { declarations, uses };
+}
+
 function measure()
 {
     const files = sourceFiles();
@@ -235,6 +324,8 @@ function measure()
         windowCasts: 0,
         windowAnyCasts: 0,
         windowAnyFiles: 0,
+        windowAliasDecls: 0,
+        windowAliasUses: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -258,12 +349,16 @@ function measure()
         counts.windowAnyCasts += casts;
         if (casts > 0) { counts.windowAnyFiles += 1; }
 
-        for (const m of text.matchAll(/window as (.*)/g))
+        for (const m of text.matchAll(/(?:window|globalThis) as (.*)/g))
         {
             counts.windowCasts += 1;
             const kind = classifyWindowCast(m[1]);
             windowCastKinds[kind] = (windowCastKinds[kind] ?? 0) + 1;
         }
+
+        const aliases = countWindowAliases(text);
+        counts.windowAliasDecls += aliases.declarations;
+        counts.windowAliasUses += aliases.uses;
 
         counts.anyAnnotations += (text.match(/:\s*any\b/g) ?? []).length;
 

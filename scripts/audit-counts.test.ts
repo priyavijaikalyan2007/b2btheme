@@ -28,6 +28,7 @@ import
     classifyLoggingPattern,
     classifyWindowCast,
     countOccurrences,
+    countWindowAliases,
     insideStringLiteral,
 } from "./audit-counts.mjs";
 
@@ -247,5 +248,88 @@ describe("classifyWindowCast", () =>
     test("a longer identifier beginning with any is not 'any'", () =>
     {
         expect(classifyWindowCast("anyOtherThing)")).toBe("other");
+    });
+});
+
+/**
+ * `countWindowAliases` watches the conversion surface `windowCasts` cannot
+ * see. One `const win = window as unknown as Record<string, unknown>;` spends
+ * a single occurrence of the counted pattern and then reaches `window`
+ * untyped as often as the file likes. These cases pin the alias, not the
+ * assertion that created it.
+ */
+describe("countWindowAliases", () =>
+{
+    test("an alias declaration counts once and each use counts once", () =>
+    {
+        const text = [
+            "const win = window as unknown as Record<string, unknown>;",
+            "win[\"createFormDialog\"] = createFormDialog;",
+            "const f = win[\"createPeoplePicker\"];",
+        ].join("\n");
+        expect(countWindowAliases(text)).toEqual({ declarations: 1, uses: 2 });
+    });
+
+    test("the declaration line is never also a use", () =>
+    {
+        // `const win = window as X` contains the token `win` followed by
+        // nothing that looks like access, but a rule that scanned the whole
+        // file for the name would still have to skip this line on principle.
+        const text = "const win = window as unknown as Record<string, unknown>;";
+        expect(countWindowAliases(text)).toEqual({ declarations: 1, uses: 0 });
+    });
+
+    test("dot access through the alias counts too", () =>
+    {
+        const text = "const w = window as any;\nw.createToolbar();";
+        expect(countWindowAliases(text).uses).toBe(1);
+    });
+
+    test("a globalThis alias is the same defect", () =>
+    {
+        const text = "const g = globalThis as unknown as Record<string, unknown>;\ng[\"Chart\"];";
+        expect(countWindowAliases(text)).toEqual({ declarations: 1, uses: 1 });
+    });
+
+    // The fix this count expects. Dropping the assertion and keeping the
+    // alias types every use through globals.d.ts and emits the same
+    // JavaScript, so the count reaching 0 does not mean the aliases are gone.
+    test("an alias with no assertion is not counted at all", () =>
+    {
+        const text = "const win = window;\nwin.createFormDialog = createFormDialog;";
+        expect(countWindowAliases(text)).toEqual({ declarations: 0, uses: 0 });
+    });
+
+    test("a longer identifier sharing the alias prefix is not a use", () =>
+    {
+        const text = "const w = window as any;\nconst width = w2.x;\nwindowish.y;";
+        expect(countWindowAliases(text).uses).toBe(0);
+    });
+
+    test("a file with no alias costs nothing", () =>
+    {
+        expect(countWindowAliases("export function f(): void { return; }"))
+            .toEqual({ declarations: 0, uses: 0 });
+    });
+});
+
+/**
+ * `globalThis as` is counted with `window as` from WIN-2 on. The two reach
+ * the same object and only the spelling differs, so a gate that watched one
+ * of them would be the WIN-1 blind spot one level up.
+ */
+describe("the globalThis spelling", () =>
+{
+    test("classification does not depend on which global was asserted", () =>
+    {
+        expect(classifyWindowCast("any)[name]")).toBe("any");
+        expect(classifyWindowCast("unknown as Record<string, unknown>)[name]")).toBe("record");
+    });
+
+    test("the counting pattern matches both spellings", () =>
+    {
+        const re = /(?:window|globalThis) as (.*)/g;
+        const text = "(window as any).a;\n(globalThis as any).b;";
+        expect([...text.matchAll(re)]).toHaveLength(2);
     });
 });
