@@ -1984,8 +1984,7 @@ function showMarkdownEditorModalFn(
         }
     };
 
-    const BootstrapLib = window["bootstrap"] as
-        { Modal: new (el: HTMLElement) => { show(): void; hide(): void } } | undefined;
+    const BootstrapLib = window.bootstrap;
     if (BootstrapLib && BootstrapLib.Modal)
     {
         bsModal = new BootstrapLib.Modal(backdrop);

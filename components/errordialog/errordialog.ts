@@ -558,8 +558,25 @@ export class ErrorDialog
         logInfo("Showing error dialog:", error.title);
         logDebug("Error details:", error);
 
-        // Initialise Bootstrap Modal and show
-        // @ts-expect-error — bootstrap is loaded globally, not as an ES module
+        // Initialise Bootstrap Modal and show.
+        //
+        // THIS COMPONENT HAS NO FALLBACK WITHOUT BOOTSTRAP JS, and until
+        // ANY-2 that fact was hidden by a `@ts-expect-error` on the line
+        // below. Every other consumer of the global guards first and
+        // degrades: Toolbar drops back to the title attribute, MarkdownEditor
+        // skips its backdrop. This one threw a bare ReferenceError from
+        // inside the dialog whose job is to report that something already
+        // went wrong. The throw is kept, because an error dialog that
+        // silently shows nothing is worse than one that fails loudly, but it
+        // now says what is missing. See CODEBASE_FIXES.md DEBT-ERR-2.
+        if (typeof bootstrap === "undefined" || !bootstrap.Modal)
+        {
+            logError("Bootstrap JS is not loaded, so the error dialog cannot open.");
+            throw new Error(
+                "ErrorDialog requires the Bootstrap JavaScript bundle. "
+                + "Load dist/js/bootstrap.bundle.min.js before showing a dialog.");
+        }
+
         this.bootstrapModal = new bootstrap.Modal(this.modalElement);
 
         // Attach Ctrl+C copy handler (mirrors Windows native dialog behaviour)

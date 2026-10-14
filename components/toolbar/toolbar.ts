@@ -552,6 +552,104 @@ export interface ToolbarLayoutState
 }
 
 /** A region (group) of related tools. */
+/**
+ * Anything a toolbar region can hold.
+ *
+ * THE FILE DECLARES TEN ITEM INTERFACES AND MOST OF IT NAMED THREE. The map
+ * of live configs, `addTool`, `getTool` and six helpers were typed
+ * `ToolbarItem`, while `ToolbarRegion.items`
+ * spelled out all eleven members. Nothing caught the difference, because
+ * `addTool` stores `JSON.parse(JSON.stringify(tool))` and `JSON.parse`
+ * returns `any`, so the one line that fills the map launders the type.
+ *
+ * The 41 `(config)` casts downstream were the consequence, not the
+ * cause. `setToolState` publicly accepts `checked` and `value` and wrote
+ * them through a cast; those fields exist only on the checkbox, switch,
+ * number, color and dropdown items, which are five of the seven the short
+ * union omitted. ANY-1, ADR-175.
+ */
+/**
+ * Any toolbar item except a separator.
+ *
+ * A `ToolSeparator` declares only `type: "separator"`. It has no id, so it
+ * is never stored in the live-config map and never reaches a helper that
+ * reads a label, an icon or a state. Naming that distinction is what lets
+ * those helpers drop their casts: the union they were missing is
+ * `ToolbarTool`, not `ToolbarItem`.
+ */
+export type ToolbarTool = Exclude<ToolbarItem, ToolSeparator>;
+
+/**
+ * The presentation and state fields a live toolbar item may carry.
+ *
+ * NOT EVERY MEMBER OF `ToolbarTool` DECLARES EVERY ONE OF THESE. A label
+ * item has no `active`, a gallery has no `toggle`, and `checked` and `value`
+ * belong to the input items alone. At run time the objects carry whatever
+ * the consumer passed and whatever `setToolState` has written since, and
+ * `setToolState` accepts all eight of its fields for any tool id.
+ *
+ * So the generic paths through this file assert to
+ * `ToolbarTool & Partial<ToolbarItemFields>` ONCE and then read and write
+ * normally. That is weaker than the per-member types and stronger than the
+ * 57 `as any` casts it replaces, which constrained neither the names nor
+ * their types. Narrowing on `type` instead would mean adding run-time
+ * checks where none exist today, which is a behavior change wearing a
+ * type-safety costume. ANY-1, ADR-175.
+ */
+export interface ToolbarItemFields
+{
+    id: string;
+    type: string;
+    icon: string;
+    label: string;
+    tooltip: string;
+    keyTip: string;
+    active: boolean;
+    toggle: boolean;
+    disabled: boolean;
+    hidden: boolean;
+    checked: boolean;
+    value: string | number;
+    suffix: string;
+    overflowPriority: ToolOverflowPriority;
+    menuItems: SplitMenuItem[];
+
+    /**
+     * The handlers, typed only as present.
+     *
+     * Each item interface declares its own precise signature, and those
+     * signatures differ in their parameters, so no single callable type
+     * accepts all of them: a parameter is contravariant, and
+     * `(...args: unknown[]) => void` rejects `(tool: ToolItem) => void`.
+     * `unknown` is what the two generic uses actually need, which are
+     * testing whether a handler is present and copying it back after
+     * `addTool`'s JSON round trip drops it. The one generic path that CALLS
+     * a handler names the signature it expects at that line.
+     */
+    onClick: unknown;
+    onChange: unknown;
+    onSelect: unknown;
+    onInput: unknown;
+    onSubmit: unknown;
+}
+
+/** A live toolbar item read or written through the generic paths. */
+type MutableTool = ToolbarTool & Partial<ToolbarItemFields>;
+
+
+export type ToolbarItem =
+    | ToolItem
+    | SplitButtonItem
+    | GalleryItem
+    | ToolInputItem
+    | ToolDropdownItem
+    | ToolLabelItem
+    | ToolCheckboxItem
+    | ToolToggleSwitchItem
+    | ToolNumberItem
+    | ToolColorItem
+    | ToolSeparator;
+
 export interface ToolbarRegion
 {
     /** Unique identifier for this region. */
@@ -564,7 +662,7 @@ export interface ToolbarRegion
     showTitle?: boolean;
 
     /** Tool items, split buttons, galleries, inputs, and separators. */
-    items: Array<ToolItem | SplitButtonItem | GalleryItem | ToolInputItem | ToolDropdownItem | ToolLabelItem | ToolCheckboxItem | ToolToggleSwitchItem | ToolNumberItem | ToolColorItem | ToolSeparator>;
+    items: ToolbarItem[];
 
     /** Default tool style for items in this region. */
     style?: ToolStyle;
@@ -701,7 +799,6 @@ export interface ToolbarOptions
 }
 
 // Bootstrap tooltip API (optional dependency)
-declare var bootstrap: any;
 
 const LOG_PREFIX = "[Toolbar]";
 
@@ -921,7 +1018,7 @@ export class Toolbar
     // O(1) lookup maps
     private toolElements: Map<string, HTMLElement> = new Map();
     private regionElements: Map<string, HTMLElement> = new Map();
-    private toolConfigs: Map<string, ToolItem | SplitButtonItem | GalleryItem> = new Map();
+    private toolConfigs: Map<string, ToolbarTool> = new Map();
     private regionConfigs: Map<string, ToolbarRegion> = new Map();
     private splitMenuEls: Map<string, HTMLElement> = new Map();
     private galleryPopupEls: Map<string, HTMLElement> = new Map();
@@ -962,7 +1059,7 @@ export class Toolbar
     private debouncedPersist: () => void;
 
     // Tooltip instances for cleanup
-    private tooltipInstances: any[] = [];
+    private tooltipInstances: BootstrapInstance[] = [];
 
     constructor(options: ToolbarOptions)
     {
@@ -1229,7 +1326,7 @@ export class Toolbar
      */
     public addTool(
         regionId: string,
-        tool: ToolItem | SplitButtonItem | GalleryItem,
+        tool: ToolbarTool,
         index?: number
     ): void
     {
@@ -1317,7 +1414,7 @@ export class Toolbar
      */
     public getTool(
         toolId: string
-    ): ToolItem | SplitButtonItem | GalleryItem | undefined
+    ): ToolbarTool | undefined
     {
         return this.toolConfigs.get(toolId);
     }
@@ -1343,7 +1440,7 @@ export class Toolbar
         }>
     ): void
     {
-        const config = this.toolConfigs.get(toolId);
+        const config = this.toolConfigs.get(toolId) as MutableTool | undefined;
 
         if (!config)
         {
@@ -1356,42 +1453,42 @@ export class Toolbar
         // Update config
         if (state.active !== undefined)
         {
-            (config as any).active = state.active;
+            config.active = state.active;
         }
 
         if (state.disabled !== undefined)
         {
-            (config as any).disabled = state.disabled;
+            config.disabled = state.disabled;
         }
 
         if (state.hidden !== undefined)
         {
-            (config as any).hidden = state.hidden;
+            config.hidden = state.hidden;
         }
 
         if (state.icon !== undefined)
         {
-            (config as any).icon = state.icon;
+            config.icon = state.icon;
         }
 
         if (state.label !== undefined)
         {
-            (config as any).label = state.label;
+            config.label = state.label;
         }
 
         if (state.tooltip !== undefined)
         {
-            (config as any).tooltip = state.tooltip;
+            config.tooltip = state.tooltip;
         }
 
         if (state.checked !== undefined)
         {
-            (config as any).checked = state.checked;
+            config.checked = state.checked;
         }
 
         if (state.value !== undefined)
         {
-            (config as any).value = state.value;
+            config.value = state.value;
         }
 
         // Update DOM
@@ -1428,9 +1525,9 @@ export class Toolbar
         }
 
         return {
-            active: !!(config as any).active,
-            disabled: !!(config as any).disabled,
-            hidden: !!(config as any).hidden,
+            active: !!(config as MutableTool).active,
+            disabled: !!(config as MutableTool).disabled,
+            hidden: !!(config as MutableTool).hidden,
         };
     }
 
@@ -1479,7 +1576,7 @@ export class Toolbar
     {
         const config = this.toolConfigs.get(galleryId) as GalleryItem | undefined;
 
-        if (!config || (config as any).type !== "gallery")
+        if (!config || config.type !== "gallery")
         {
             logWarn("Gallery not found:", galleryId);
             return;
@@ -1512,7 +1609,7 @@ export class Toolbar
     {
         const config = this.toolConfigs.get(galleryId) as GalleryItem | undefined;
 
-        if (!config || (config as any).type !== "gallery")
+        if (!config || config.type !== "gallery")
         {
             return undefined;
         }
@@ -1556,9 +1653,9 @@ export class Toolbar
         const rootRect = this.rootEl.getBoundingClientRect();
 
         // Create badges for each visible tool with a keyTip
-        this.toolConfigs.forEach((config, id) =>
+        (this.toolConfigs as Map<string, MutableTool>).forEach((config, id) =>
         {
-            if (!(config as any).keyTip || (config as any).hidden || (config as any).disabled)
+            if (!config.keyTip || config.hidden || config.disabled)
             {
                 return;
             }
@@ -1576,7 +1673,7 @@ export class Toolbar
             }
 
             const badge = this.buildKeyTipBadge(
-                ((config as any).keyTip as string).toUpperCase(),
+                (config.keyTip as string).toUpperCase(),
                 el.getBoundingClientRect(),
                 rootRect
             );
@@ -2321,7 +2418,7 @@ export class Toolbar
      * Builds a single item element (tool, split, gallery, or separator).
      */
     private buildItemElement(
-        item: ToolItem | SplitButtonItem | GalleryItem
+        item: ToolbarTool
             | ToolInputItem | ToolDropdownItem | ToolLabelItem
             | ToolCheckboxItem | ToolToggleSwitchItem
             | ToolNumberItem | ToolColorItem | ToolSeparator,
@@ -2763,7 +2860,7 @@ export class Toolbar
 
     /** Registers a tool element in tracking maps and applies common props. */
     private registerToolItem(
-        el: HTMLElement, id: string, config: any,
+        el: HTMLElement, id: string, config: MutableTool,
         cssClass?: string, hidden?: boolean
     ): void
     {
@@ -2913,7 +3010,7 @@ export class Toolbar
         const handler = item.onChange;
         input.addEventListener("change", () =>
         {
-            (item as any).checked = input.checked;
+            item.checked = input.checked;
             if (handler) { handler(input.checked); }
         });
     }
@@ -3015,7 +3112,7 @@ export class Toolbar
         input.addEventListener("change", () =>
         {
             const val = parseFloat(input.value) || 0;
-            (item as any).value = val;
+            item.value = val;
             if (handler) { handler(val); }
         });
     }
@@ -3058,14 +3155,14 @@ export class Toolbar
         const onChange = item.onChange;
         input.addEventListener("change", () =>
         {
-            (item as any).value = input.value;
+            item.value = input.value;
             if (onChange) { onChange(input.value); }
         });
 
         const onInput = item.onInput;
         input.addEventListener("input", () =>
         {
-            (item as any).value = input.value;
+            item.value = input.value;
             if (onInput) { onInput(input.value); }
             const lbl = wrap.querySelector(".toolbar-color-label");
             if (lbl) { lbl.textContent = input.value; }
@@ -4000,14 +4097,12 @@ export class Toolbar
      */
     private applyToolStateToDOM(
         el: HTMLElement,
-        config: ToolItem | SplitButtonItem | GalleryItem
-            | ToolCheckboxItem | ToolToggleSwitchItem
-            | ToolNumberItem | ToolColorItem
+        config: MutableTool
     ): void
     {
-        const isActive = !!(config as any).active;
-        const isDisabled = !!(config as any).disabled;
-        const isHidden = !!(config as any).hidden;
+        const isActive = !!config.active;
+        const isDisabled = !!config.disabled;
+        const isHidden = !!config.hidden;
 
         // Active state
         if (isActive)
@@ -4042,7 +4137,7 @@ export class Toolbar
         }
 
         // Toggle aria-pressed
-        if ((config as any).toggle)
+        if (config.toggle)
         {
             const btn = el.tagName === "BUTTON" ? el :
                 el.querySelector(".toolbar-tool") as HTMLElement;
@@ -4054,7 +4149,7 @@ export class Toolbar
         }
 
         // Update icon
-        if ((config as any).icon)
+        if (config.icon)
         {
             const iconEl = el.querySelector(".toolbar-tool-icon");
 
@@ -4072,44 +4167,44 @@ export class Toolbar
                 });
 
                 toRemove.forEach((cls) => iconEl.classList.remove(cls));
-                iconEl.classList.add((config as any).icon);
+                iconEl.classList.add(config.icon);
             }
         }
 
         // Update label
-        if ((config as any).label)
+        if (config.label)
         {
             const labelEl = el.querySelector(".toolbar-tool-label");
 
             if (labelEl)
             {
-                labelEl.textContent = (config as any).label;
+                labelEl.textContent = config.label;
             }
         }
 
         // Update tooltip
-        if ((config as any).tooltip)
+        if (config.tooltip)
         {
             const btn = el.tagName === "BUTTON" ? el :
                 el.querySelector(".toolbar-tool") as HTMLElement;
 
             if (btn)
             {
-                btn.setAttribute("title", (config as any).tooltip);
-                btn.setAttribute("aria-label", (config as any).tooltip);
+                btn.setAttribute("title", config.tooltip);
+                btn.setAttribute("aria-label", config.tooltip);
             }
         }
 
         // Checked state for checkbox / switch
-        this.applyCheckedState(el, config as any);
+        this.applyCheckedState(el, config);
 
         // Value state for number / color
-        this.applyValueState(el, config as any);
+        this.applyValueState(el, config);
     }
 
     /** Applies checked state to checkbox/switch DOM inputs. */
     private applyCheckedState(
-        el: HTMLElement, config: any
+        el: HTMLElement, config: MutableTool
     ): void
     {
         if (config.type !== "checkbox" && config.type !== "switch")
@@ -4130,7 +4225,7 @@ export class Toolbar
 
     /** Applies value state to number/color DOM inputs. */
     private applyValueState(
-        el: HTMLElement, config: any
+        el: HTMLElement, config: MutableTool
     ): void
     {
         if (config.type !== "number" && config.type !== "color")
@@ -4361,13 +4456,13 @@ export class Toolbar
 
         this.toolConfigs.forEach((config, id) =>
         {
-            if ((config as any).hidden) { return; }
+            if (config.hidden) { return; }
             const el = this.toolElements.get(id);
             if (!el) { return; }
             const size = isH ? el.offsetWidth : el.offsetHeight;
             tools.push({
                 id, size,
-                priority: (config as any).overflowPriority || "low",
+                priority: config.overflowPriority || "low",
             });
         });
 
@@ -4428,9 +4523,9 @@ export class Toolbar
             {
                 for (const item of r.items)
                 {
-                    if ("id" in item && (item as any).id)
+                    if ("id" in item && item.id)
                     {
-                        ids.add((item as any).id);
+                        ids.add(item.id);
                     }
                 }
             }
@@ -4476,8 +4571,8 @@ export class Toolbar
             if (region.hidden) { continue; }
 
             const allOverflowed = region.items
-                .filter((item) => "id" in item && (item as any).id)
-                .every((item) => this.overflowedIds.has((item as any).id));
+                .filter((item): item is ToolbarTool => "id" in item && !!item.id)
+                .every((item) => this.overflowedIds.has(item.id));
 
             const regionEl = this.regionElements.get(region.id);
 
@@ -4515,7 +4610,7 @@ export class Toolbar
     ): boolean
     {
         const items = region.items.filter(
-            (item) => "id" in item && this.overflowedIds.has((item as any).id)
+            (item) => "id" in item && this.overflowedIds.has(item.id)
         );
         if (items.length === 0) { return isFirst; }
 
@@ -4537,7 +4632,7 @@ export class Toolbar
 
     /** Appends individual overflowed items to a menu element. */
     private appendOverflowItems(
-        items: Array<ToolItem | SplitButtonItem | GalleryItem
+        items: Array<ToolbarItem
             | ToolInputItem | ToolDropdownItem | ToolLabelItem
             | ToolCheckboxItem | ToolToggleSwitchItem
             | ToolNumberItem | ToolColorItem | ToolSeparator>,
@@ -4554,13 +4649,13 @@ export class Toolbar
             ))
             {
                 menuEl.appendChild(
-                    this.buildInputOverflowItem(item as any)
+                    this.buildInputOverflowItem(item)
                 );
                 continue;
             }
 
             const menuItem = this.buildOverflowItem(
-                item as ToolItem | SplitButtonItem | GalleryItem
+                item as ToolbarTool
             );
             menuEl.appendChild(menuItem);
         }
@@ -4570,30 +4665,30 @@ export class Toolbar
      * Builds a single overflow menu item for a tool.
      */
     private buildOverflowItem(
-        config: ToolItem | SplitButtonItem | GalleryItem
+        config: MutableTool
     ): HTMLElement
     {
         const btn = createElement("button", ["toolbar-overflow-item"]);
 
         setAttr(btn, {
             "role": "menuitem",
-            "data-tool-id": (config as any).id,
+            "data-tool-id": config.id,
             "type": "button",
         });
 
-        if ((config as any).disabled)
+        if (config.disabled)
         {
             btn.classList.add("toolbar-tool-disabled");
             setAttr(btn, { "aria-disabled": "true" });
         }
 
-        if ((config as any).icon)
+        if (config.icon)
         {
-            const icon = createElement("i", ["bi", (config as any).icon]);
+            const icon = createElement("i", ["bi", config.icon]);
             btn.appendChild(icon);
         }
 
-        const label = (config as any).label || (config as any).tooltip || "";
+        const label = config.label || config.tooltip || "";
         const span = createElement("span", [], label);
         btn.appendChild(span);
 
@@ -4603,7 +4698,7 @@ export class Toolbar
 
             if ("type" in config && config.type === "split-button")
             {
-                this.handleSplitPrimaryClick(config);
+                this.handleSplitPrimaryClick(config as SplitButtonItem);
             }
             else if ("type" in config && config.type === "gallery")
             {
@@ -4620,7 +4715,7 @@ export class Toolbar
     }
 
     /** Builds an overflow menu item for input-type tools. */
-    private buildInputOverflowItem(config: any): HTMLElement
+    private buildInputOverflowItem(config: MutableTool): HTMLElement
     {
         const btn = createElement("button", ["toolbar-overflow-item"]);
 
@@ -4642,7 +4737,7 @@ export class Toolbar
 
     /** Adds icon, label, and click handler to an input overflow button. */
     private decorateInputOverflowBtn(
-        btn: HTMLElement, config: any
+        btn: HTMLElement, config: MutableTool
     ): void
     {
         const iconClass = this.getInputOverflowIcon(config);
@@ -4663,7 +4758,7 @@ export class Toolbar
     }
 
     /** Returns the Bootstrap icon class for an input overflow item. */
-    private getInputOverflowIcon(config: any): string
+    private getInputOverflowIcon(config: MutableTool): string
     {
         if (config.type === "checkbox")
         {
@@ -4679,7 +4774,7 @@ export class Toolbar
     }
 
     /** Returns the label text for an input overflow item. */
-    private getInputOverflowLabel(config: any): string
+    private getInputOverflowLabel(config: MutableTool): string
     {
         if (config.type === "checkbox" || config.type === "switch")
         {
@@ -4691,22 +4786,22 @@ export class Toolbar
         }
         if (config.type === "color")
         {
-            return config.value || "#000000";
+            return String(config.value || "#000000");
         }
         return config.tooltip || config.id;
     }
 
     /** Handles click on an input-type overflow item. */
-    private handleInputOverflowClick(config: any): void
+    private handleInputOverflowClick(config: MutableTool): void
     {
         if (config.type === "checkbox" || config.type === "switch")
         {
             const newChecked = !config.checked;
             this.setToolState(config.id, { checked: newChecked });
 
-            if (config.onChange)
+            if (typeof config.onChange === "function")
             {
-                config.onChange(newChecked);
+                (config.onChange as (checked: boolean) => void)(newChecked);
             }
         }
     }
@@ -4846,13 +4941,17 @@ export class Toolbar
                 return;
             }
 
-            const triggers = container.querySelectorAll(
+            // Held in a local because the guard above does not narrow inside
+            // the callback below, and `querySelectorAll` is given its element
+            // type because the Tooltip constructor wants an HTMLElement.
+            const Tooltip = bootstrap.Tooltip;
+            const triggers = container.querySelectorAll<HTMLElement>(
                 '[data-bs-toggle="tooltip"]'
             );
 
             triggers.forEach((el) =>
             {
-                const instance = new bootstrap.Tooltip(el);
+                const instance = new Tooltip(el);
                 this.tooltipInstances.push(instance);
             });
         }
@@ -5002,10 +5101,10 @@ export class Toolbar
         {
             if ("id" in item && item.id)
             {
-                this.toolConfigs.set(item.id, item as any);
+                this.toolConfigs.set(item.id, item);
 
                 // Restore callbacks from original options
-                this.restoreCallbacksFromOptions(item as any);
+                this.restoreCallbacksFromOptions(item);
             }
         }
     }
@@ -5014,7 +5113,7 @@ export class Toolbar
      * Restores callback functions from the original options (lost in JSON copy).
      */
     private restoreCallbacksFromOptions(
-        config: ToolItem | SplitButtonItem | GalleryItem
+        config: ToolbarTool
     ): void
     {
         if (!this.opts.regions)
@@ -5026,9 +5125,9 @@ export class Toolbar
         {
             for (const item of region.items)
             {
-                if ("id" in item && item.id === (config as any).id)
+                if ("id" in item && item.id === config.id)
                 {
-                    this.restoreCallbacks(config, item as any);
+                    this.restoreCallbacks(config, item);
                     return;
                 }
             }
@@ -5039,7 +5138,7 @@ export class Toolbar
      * Copies callback references from source to target config.
      */
     private restoreCallbacks(
-        target: any, source: any
+        target: MutableTool, source: MutableTool
     ): void
     {
         if (source.onClick)
@@ -5075,9 +5174,9 @@ export class Toolbar
      */
     private hasKeyTips(): boolean
     {
-        for (const [, config] of this.toolConfigs)
+        for (const [, config] of this.toolConfigs as Map<string, MutableTool>)
         {
-            if ((config as any).keyTip)
+            if (config.keyTip)
             {
                 return true;
             }
@@ -5094,9 +5193,9 @@ export class Toolbar
         const upperKey = key.toUpperCase();
         const seen = new Set<string>();
 
-        for (const [id, config] of this.toolConfigs)
+        for (const [id, config] of this.toolConfigs as Map<string, MutableTool>)
         {
-            const tip = ((config as any).keyTip || "").toUpperCase();
+            const tip = (config.keyTip || "").toUpperCase();
 
             if (!tip || tip !== upperKey)
             {
@@ -5111,7 +5210,7 @@ export class Toolbar
 
             seen.add(tip);
 
-            if ((config as any).hidden || (config as any).disabled)
+            if (config.hidden || config.disabled)
             {
                 continue;
             }

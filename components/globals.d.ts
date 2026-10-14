@@ -867,4 +867,52 @@ declare global
         /** Published by the WorkspaceShell component. */
         createWorkspaceShell?: typeof createWorkspaceShell;
     }
+
+    /**
+     * BOOTSTRAP'S OWN JAVASCRIPT BUNDLE, supplied by the host page.
+     *
+     * Declared as a `var` rather than as a member of `Window`, because three
+     * components reach it as a BARE identifier — `new bootstrap.Modal(el)` —
+     * and only a global `var` types that. A `var` also types
+     * `window.bootstrap`, so this one declaration covers both spellings and
+     * leaves no second place for them to disagree.
+     *
+     * ANY-2 found four declarations of this one global: `declare var
+     * bootstrap: any` in toolbar.ts, a `window["bootstrap"] as { Modal: … }`
+     * cast in markdowneditor.ts, a `@ts-expect-error` in errordialog.ts
+     * suppressing the missing declaration outright, and a
+     * `bootstrap?: Record<string, unknown>` added here by WIN-2. That
+     * suppression was the only one in the tracked sources.
+     *
+     * `undefined` is part of the type because every caller guards with
+     * `typeof bootstrap === "undefined"` first. Only the members this
+     * library calls are declared, which is the rule `DOMPurify` and the
+     * renderer libraries above already follow.
+     */
+    var bootstrap: BootstrapStatic | undefined;
+
+    /**
+     * A Bootstrap component instance, as this library uses one.
+     *
+     * Declared inside `declare global` rather than at this file's top
+     * level, because the file is a module and a top-level interface in a
+     * module is module-scoped. Components name this type directly, as
+     * Toolbar does for its tooltip handles.
+     */
+    interface BootstrapInstance
+    {
+        show(): void;
+        hide(): void;
+        dispose(): void;
+    }
+
+    /** The parts of Bootstrap's JavaScript bundle this library calls. */
+    interface BootstrapStatic
+    {
+        Modal: new (element: HTMLElement) => BootstrapInstance;
+        Tooltip: (new (element: HTMLElement) => BootstrapInstance) &
+        {
+            getInstance(element: HTMLElement): BootstrapInstance | null;
+        };
+    }
 }
