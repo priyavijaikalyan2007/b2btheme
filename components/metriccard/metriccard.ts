@@ -146,15 +146,9 @@ let instanceCounter = 0;
 // LOGGING
 // ============================================================================
 
-const _lu =
-    (typeof (window as unknown as Record<string, unknown>)
-        ["createLogUtility"] === "function")
-        ? ((window as unknown as Record<string, unknown>)
-            ["createLogUtility"] as () => {
-                getLogger: (n: string) => Record<string,
-                    (...a: unknown[]) => void>;
-            })().getLogger("MetricCard")
-        : null;
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger("MetricCard")
+    : null;
 
 function logInfo(...a: unknown[]): void
 {

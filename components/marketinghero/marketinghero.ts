@@ -345,5 +345,5 @@ export function createMarketingHero(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).MarketingHero = MarketingHero;
-(window as any).createMarketingHero = createMarketingHero;
+window.MarketingHero = MarketingHero;
+window.createMarketingHero = createMarketingHero;

@@ -375,30 +375,48 @@ function gatherComponents()
  *
  * Every component ships as an IIFE bundle, so an `export` keyword is
  * invisible at run time and the callable surface is whatever the file
- * registers on `window`. Four syntaxes are in use and all four count: a cast
- * with dot access, a cast with bracket access, a bare `window.name =`, and a
- * cast held in a local first — `const w = window as …` followed by
- * `w["name"] =`, which is how the eight layout components register and the
- * reason a first pass of this function reported them as having no public
- * surface at all. The negative lookahead on `=` keeps a comparison out, such
- * as the `(window as any).createLogUtility === "function"` in every
- * component's logging preamble (DEBT-DOC-1, ADR-166).
+ * registers on `window`. Five syntaxes are in use and all five count: a cast
+ * with dot access, a cast with bracket access, a bare `window.name =`, a bare
+ * `window["name"] =`, and a cast held in a local first — `const w = window as
+ * …` followed by `w["name"] =`, which is how the eight layout components
+ * register and the reason a first pass of this function reported them as
+ * having no public surface at all. The negative lookahead on `=` keeps a
+ * comparison out, such as the `window.createLogUtility === "function"` in
+ * every component's logging preamble (DEBT-DOC-1, ADR-166).
+ *
+ * The bare bracket form was added for WIN-1 phase B (ADR-173). Removing the
+ * cast from `(window as any)["Toolbar"] = Toolbar` leaves a line the cast
+ * regex cannot match, because it requires the parentheses, and the bare rule
+ * read dot access only. Measured before the conversion ran: the extractor
+ * returned `Toolbar` from the cast form and nothing from the cast-free one,
+ * so 38 published names across 14 components would have disappeared from the
+ * reference in silence. Check `[19]` verifies that every published name
+ * EXISTS and cannot see a name that stopped being published, which is the
+ * same shape as the classifier LOG-2 blinded.
  */
 function extractGlobals(source)
 {
     const names = [];
+    // A leading double underscore marks an internal slot. SidebarManager and
+    // TabbedPanelManager each write their singleton to one for debugging and
+    // for tests, and the quick reference advertised `__sidebarManager()` and
+    // `__tabbedPanelManager()` as callable public API because an assignment
+    // to `window` is all this function used to look at. They are still public
+    // at run time and components/globals.d.ts still declares them, which is
+    // what honesty about the runtime requires. Publishing them as API is a
+    // different claim, and it was the wrong one.
     const add = (n) =>
     {
-        if (n && !names.includes(n)) { names.push(n); }
+        if (n && !n.startsWith("__") && !names.includes(n)) { names.push(n); }
     };
     const prop = "(?:\\.([A-Za-z_$][\\w$]*)|\\[\\s*[\"']([^\"']+)[\"']\\s*\\])";
     const cast = new RegExp(
         `\\(\\s*window\\b[^)]*\\)\\s*${prop}\\s*=(?!=)`, "g"
     );
-    const bare = /^[ \t]*(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=(?!=)/gm;
+    const bare = new RegExp(`^[ \t]*(?:window|globalThis)${prop}\\s*=(?!=)`, "gm");
     let m;
     while ((m = cast.exec(source)) !== null) { add(m[1] || m[2]); }
-    while ((m = bare.exec(source)) !== null) { add(m[1]); }
+    while ((m = bare.exec(source)) !== null) { add(m[1] || m[2]); }
 
     // A cast kept in a local, then written through: `const w = window as …`.
     const alias = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*window\b[^;]*;/g;

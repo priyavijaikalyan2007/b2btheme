@@ -2092,6 +2092,6 @@ export function createDatePicker(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["DatePicker"] = DatePicker;
-    (window as any)["createDatePicker"] = createDatePicker;
+    window["DatePicker"] = DatePicker;
+    window["createDatePicker"] = createDatePicker;
 }

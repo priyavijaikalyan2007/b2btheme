@@ -5972,8 +5972,7 @@ export class ActionItems
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const attach = (window as any).attachHoverCard;
+        const attach = window.attachHoverCard;
 
         if (typeof attach !== "function")
         {
@@ -5999,8 +5998,7 @@ export class ActionItems
     {
         if (this.hoverCard) { return this.hoverCard; }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const factory = (window as any).createHoverCard;
+        const factory = window.createHoverCard;
 
         if (typeof factory !== "function") { return null; }
 

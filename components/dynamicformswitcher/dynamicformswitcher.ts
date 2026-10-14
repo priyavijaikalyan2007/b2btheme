@@ -282,14 +282,13 @@ interface LogUtility
 
 function getLogger(): LogUtility | null
 {
-    const w = window as unknown as { createLogUtility?: () => { getLogger: (n: string) => LogUtility } };
-    if (typeof w.createLogUtility !== "function")
+    if (typeof window.createLogUtility !== "function")
     {
         return null;
     }
     try
     {
-        return w.createLogUtility().getLogger("DynamicFormSwitcher");
+        return window.createLogUtility().getLogger("DynamicFormSwitcher");
     }
     catch (_e)
     {

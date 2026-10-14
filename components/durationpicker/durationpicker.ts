@@ -1920,6 +1920,6 @@ export function createDurationPicker(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["DurationPicker"] = DurationPicker;
-    (window as any)["createDurationPicker"] = createDurationPicker;
+    window["DurationPicker"] = DurationPicker;
+    window["createDurationPicker"] = createDurationPicker;
 }

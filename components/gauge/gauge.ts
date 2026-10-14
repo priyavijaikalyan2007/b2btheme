@@ -1402,9 +1402,9 @@ export function createBarGauge(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["Gauge"] = Gauge;
-    (window as any)["createGauge"] = createGauge;
-    (window as any)["createTileGauge"] = createTileGauge;
-    (window as any)["createRingGauge"] = createRingGauge;
-    (window as any)["createBarGauge"] = createBarGauge;
+    window["Gauge"] = Gauge;
+    window["createGauge"] = createGauge;
+    window["createTileGauge"] = createTileGauge;
+    window["createRingGauge"] = createRingGauge;
+    window["createBarGauge"] = createBarGauge;
 }

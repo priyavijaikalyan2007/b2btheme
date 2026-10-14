@@ -2593,6 +2593,6 @@ export function createTimePicker(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["TimePicker"] = TimePicker;
-    (window as any)["createTimePicker"] = createTimePicker;
+    window["TimePicker"] = TimePicker;
+    window["createTimePicker"] = createTimePicker;
 }

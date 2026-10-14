@@ -233,17 +233,8 @@ export interface NavRailHandle
 
 const LOG_PREFIX = "[NavRail]";
 
-const _lu = (typeof (window as unknown as Record<string, unknown>)
-    .createLogUtility === "function")
-    ? ((window as unknown as Record<string, unknown>)
-        .createLogUtility as () => { getLogger: (n: string) => unknown })()
-        .getLogger(LOG_PREFIX.slice(1, -1)) as {
-            info: (...a: unknown[]) => void;
-            warn: (...a: unknown[]) => void;
-            error: (...a: unknown[]) => void;
-            debug: (...a: unknown[]) => void;
-            trace: (...a: unknown[]) => void;
-        }
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 
 function logInfo(...a: unknown[]): void

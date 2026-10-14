@@ -374,5 +374,5 @@ export function createSkeletonLoader(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).SkeletonLoader = SkeletonLoader;
-(window as any).createSkeletonLoader = createSkeletonLoader;
+window.SkeletonLoader = SkeletonLoader;
+window.createSkeletonLoader = createSkeletonLoader;

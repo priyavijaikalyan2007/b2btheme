@@ -1088,7 +1088,7 @@ $control-height-xl=46px
 
 - CSS: `components/navrail/navrail.css`
 - JS: `components/navrail/navrail.js`
-- Globals: `NavRail()`, `NavRailManager()`, `__navRailManager()`, `createNavRail()`
+- Globals: `NavRail()`, `NavRailManager()`, `createNavRail()`
 - Exports: `type NavRailPosition`, `type NavRailSize`, `type NavRailBadgeVariant`, `interface NavRailItem`, `interface NavRailCategory`, `interface NavRailHeader`, `interface NavRailSearch`, `interface NavRailFooter`, `interface NavRailOptions`, `interface NavRailHandle`, `class NavRailManager`, `class NavRail`, `function createNavRail`
 
 ### notificationcenter
@@ -1228,7 +1228,7 @@ $control-height-xl=46px
 
 - CSS: `components/sidebar/sidebar.css`
 - JS: `components/sidebar/sidebar.js`
-- Globals: `Sidebar()`, `SidebarManager()`, `__sidebarManager()`, `createDockedSidebar()`, `createFloatingSidebar()`, `createSidebar()`
+- Globals: `Sidebar()`, `SidebarManager()`, `createDockedSidebar()`, `createFloatingSidebar()`, `createSidebar()`
 - Exports: `type SidebarDockPosition`, `type SidebarMode`, `interface SidebarOptions`, `class Sidebar`, `class SidebarManager`, `function createSidebar`, `function createDockedSidebar`, `function createFloatingSidebar`
 
 ### sitefooter
@@ -1340,7 +1340,7 @@ $control-height-xl=46px
 
 - CSS: `components/tabbedpanel/tabbedpanel.css`
 - JS: `components/tabbedpanel/tabbedpanel.js`
-- Globals: `TabbedPanel()`, `TabbedPanelManager()`, `__tabbedPanelManager()`, `createDockedTabbedPanel()`, `createFloatingTabbedPanel()`, `createTabbedPanel()`
+- Globals: `TabbedPanel()`, `TabbedPanelManager()`, `createDockedTabbedPanel()`, `createFloatingTabbedPanel()`, `createTabbedPanel()`
 - Exports: `type TabbedPanelMode`, `type TabbedPanelDockPosition`, `type TabBarPosition`, `type TabTitleMode`, `interface TabDefinition`, `interface TabbedPanelOptions`, `class TabbedPanel`, `class TabbedPanelManager`, `function createTabbedPanel`, `function createDockedTabbedPanel`, `function createFloatingTabbedPanel`
 
 ### tagger

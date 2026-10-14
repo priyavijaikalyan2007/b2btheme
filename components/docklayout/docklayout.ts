@@ -944,6 +944,6 @@ export function createDockLayout(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["DockLayout"] = DockLayout;
-    (window as any)["createDockLayout"] = createDockLayout;
+    window["DockLayout"] = DockLayout;
+    window["createDockLayout"] = createDockLayout;
 }

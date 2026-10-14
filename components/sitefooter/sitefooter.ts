@@ -434,5 +434,5 @@ export function createSiteFooter(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).SiteFooter = SiteFooter;
-(window as any).createSiteFooter = createSiteFooter;
+window.SiteFooter = SiteFooter;
+window.createSiteFooter = createSiteFooter;

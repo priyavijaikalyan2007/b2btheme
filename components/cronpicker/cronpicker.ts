@@ -1886,6 +1886,6 @@ export function createCronPicker(
 
 if (typeof window !== "undefined")
 {
-    (window as any)["CronPicker"] = CronPicker;
-    (window as any)["createCronPicker"] = createCronPicker;
+    window["CronPicker"] = CronPicker;
+    window["createCronPicker"] = createCronPicker;
 }

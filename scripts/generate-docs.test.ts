@@ -47,6 +47,39 @@ describe("extractGlobals — the names a CDN consumer can call", () =>
             .toEqual(["createThing"]);
     });
 
+    // Regression, WIN-1 phase B (ADR-173). Dropping the cast from
+    // `(window as any)["Toolbar"] = Toolbar` leaves a line the cast rule
+    // cannot match, because that rule requires the parentheses, and the bare
+    // rule read dot access only. Measured before the conversion ran: this
+    // form returned nothing, so 38 published names across 14 components
+    // would have vanished from the reference without a check failing.
+    test("bareBracketAssignment_IsFound", () =>
+    {
+        expect(extractGlobals('window["Toolbar"] = Toolbar;')).toEqual(["Toolbar"]);
+        expect(extractGlobals('    window["createDockedToolbar"] = createDockedToolbar;'))
+            .toEqual(["createDockedToolbar"]);
+        expect(extractGlobals("globalThis['createThing'] = fn;")).toEqual(["createThing"]);
+    });
+
+    test("bareBracketComparison_IsNotARegistration", () =>
+    {
+        const src = 'if (typeof window["createHoverCard"] === "function") { return; }';
+
+        expect(extractGlobals(src)).toEqual([]);
+    });
+
+    test("internalDoubleUnderscoreSlot_IsNotPublished", () =>
+    {
+        // SidebarManager writes its singleton to window for debugging. The
+        // quick reference listed `__sidebarManager()` as callable API until
+        // WIN-1 phase B. It is still declared in globals.d.ts, because it is
+        // genuinely there at run time. It is not part of the public surface.
+        const src = "window.__sidebarManager = SidebarManager.instance;\n"
+            + "window.createSidebar = createSidebar;";
+
+        expect(extractGlobals(src)).toEqual(["createSidebar"]);
+    });
+
     test("castHeldInALocal_IsFound", () =>
     {
         // How the eight layout components register. A first version of the

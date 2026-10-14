@@ -113,8 +113,8 @@ export interface ExplorerPickerOptions
 // ============================================================================
 
 const LOG_PREFIX = "[ExplorerPicker]";
-const _lu = (typeof (window as unknown as Record<string, unknown>)["createLogUtility"] === "function")
-    ? ((window as unknown as Record<string, unknown>)["createLogUtility"] as Function)().getLogger("ExplorerPicker")
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger("ExplorerPicker")
     : null;
 function logInfo(...a: unknown[]): void
 {

@@ -2686,7 +2686,7 @@ export class TabbedPanelManager
 
             if (typeof window !== "undefined")
             {
-                (window as any).__tabbedPanelManager =
+                window.__tabbedPanelManager =
                     TabbedPanelManager.instance;
             }
         }
@@ -2948,9 +2948,9 @@ export function createFloatingTabbedPanel(
 // Global exports for script tag usage
 if (typeof window !== "undefined")
 {
-    (window as any).TabbedPanel = TabbedPanel;
-    (window as any).TabbedPanelManager = TabbedPanelManager;
-    (window as any).createTabbedPanel = createTabbedPanel;
-    (window as any).createDockedTabbedPanel = createDockedTabbedPanel;
-    (window as any).createFloatingTabbedPanel = createFloatingTabbedPanel;
+    window.TabbedPanel = TabbedPanel;
+    window.TabbedPanelManager = TabbedPanelManager;
+    window.createTabbedPanel = createTabbedPanel;
+    window.createDockedTabbedPanel = createDockedTabbedPanel;
+    window.createFloatingTabbedPanel = createFloatingTabbedPanel;
 }

@@ -184,14 +184,19 @@ export function countOccurrences(text, needle)
  * Baselines measured 2026-10-13, except where noted. anyAnnotations,
  * scssImportant and the three marker counts were measured at 38c6f1b. The
  * three logging counts and diagramengineLines were re-measured after LOG-2
- * landed. windowAnyCasts and windowAnyFiles were re-measured on 2026-10-14
- * after WIN-1 phase A, and windowCasts was added the same day. Ratchet down
- * only.
+ * landed. windowAnyCasts, windowAnyFiles and diagramengineLines were
+ * re-measured on 2026-10-14 after WIN-1 phase B, and windowCasts was added
+ * the same day and measured at 325 before phase B ran. Ratchet down only.
+ *
+ * windowAnyCasts and windowAnyFiles are 0 and WIN-1 is closed. They stay in
+ * the table because a baseline of 0 is the only one that cannot be met by
+ * accident, and because deleting the count that defined the item would erase
+ * the evidence that it reached 0. windowCasts is where the work continues.
  */
 const BASELINES = {
-    windowCasts: 325,
-    windowAnyCasts: 74,
-    windowAnyFiles: 27,
+    windowCasts: 237,
+    windowAnyCasts: 0,
+    windowAnyFiles: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -200,7 +205,7 @@ const BASELINES = {
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
-    diagramengineLines: 30479,
+    diagramengineLines: 30478,
 };
 
 /**

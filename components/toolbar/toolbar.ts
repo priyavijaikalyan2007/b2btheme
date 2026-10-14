@@ -843,9 +843,9 @@ function debounce(fn: () => void, ms: number): () => void
 function sanitiseHTML(html: string): string
 {
     // SECURITY: Use DOMPurify when available for safe HTML rendering
-    if (typeof (window as any).DOMPurify !== "undefined")
+    if (typeof window.DOMPurify !== "undefined")
     {
-        return (window as any).DOMPurify.sanitize(html);
+        return window.DOMPurify.sanitize(html);
     }
 
     // Fallback: strip all HTML tags via temporary element
@@ -5325,8 +5325,8 @@ export function createFloatingToolbar(options: ToolbarOptions): Toolbar
 
 if (typeof window !== "undefined")
 {
-    (window as any)["Toolbar"] = Toolbar;
-    (window as any)["createToolbar"] = createToolbar;
-    (window as any)["createDockedToolbar"] = createDockedToolbar;
-    (window as any)["createFloatingToolbar"] = createFloatingToolbar;
+    window["Toolbar"] = Toolbar;
+    window["createToolbar"] = createToolbar;
+    window["createDockedToolbar"] = createDockedToolbar;
+    window["createFloatingToolbar"] = createFloatingToolbar;
 }

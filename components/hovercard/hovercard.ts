@@ -25,8 +25,8 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[HoverCard]";
 
-const _lu = (typeof (window as unknown as Record<string, unknown>)["createLogUtility"] === "function")
-    ? ((window as unknown as Record<string, () => { getLogger: (p: string) => unknown }>)["createLogUtility"]()).getLogger(LOG_PREFIX.slice(1, -1))
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 
 function logDebug(...a: unknown[]): void
@@ -1225,11 +1225,12 @@ function detachAnchorListeners(
 // ============================================================================
 // WINDOW GLOBALS (IIFE runtime access)
 // ============================================================================
-// IIFE-wrapped component files share state only through window. Other
-// components (GraphCanvas, Timeline, etc.) call createHoverCard via
-// (window as any).createHoverCard. See scripts/wrap-iife.sh.
+// IIFE-wrapped component files share state only through window. ActionItems,
+// DiagramEngine and GraphCanvas call createHoverCard through
+// window.createHoverCard, which components/globals.d.ts declares, so the
+// lookup is typed and needs no cast. Each of the three guards with a typeof
+// check, because a page that does not load hovercard.js leaves it undefined.
+// See scripts/wrap-iife.sh for the bundling.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).createHoverCard = createHoverCard;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(window as any).attachHoverCard = attachHoverCard;
+window.createHoverCard = createHoverCard;
+window.attachHoverCard = attachHoverCard;

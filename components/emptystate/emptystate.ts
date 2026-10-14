@@ -426,5 +426,5 @@ export function createEmptyState(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).EmptyState = EmptyState;
-(window as any).createEmptyState = createEmptyState;
+window.EmptyState = EmptyState;
+window.createEmptyState = createEmptyState;

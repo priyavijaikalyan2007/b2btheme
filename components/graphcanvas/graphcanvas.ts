@@ -1044,8 +1044,7 @@ class GraphCanvasImpl implements GraphCanvas
     {
         if (this.hoverCard) { return this.hoverCard; }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const factory = (window as any).createHoverCard;
+        const factory = window.createHoverCard;
         if (typeof factory !== "function") { return null; }
 
         // Portal to document.body (HoverCard's default) so position: fixed

@@ -1768,5 +1768,5 @@ export function createColorPicker(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).ColorPicker = ColorPicker;
-(window as any).createColorPicker = createColorPicker;
+window.ColorPicker = ColorPicker;
+window.createColorPicker = createColorPicker;

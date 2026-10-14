@@ -1818,7 +1818,7 @@ export class SidebarManager
             // Store on window for cross-component access
             if (typeof window !== "undefined")
             {
-                (window as any).__sidebarManager = SidebarManager.instance;
+                window.__sidebarManager = SidebarManager.instance;
             }
         }
 
@@ -2345,9 +2345,9 @@ export function createFloatingSidebar(options: SidebarOptions): Sidebar
 
 if (typeof window !== "undefined")
 {
-    (window as any)["Sidebar"] = Sidebar;
-    (window as any)["SidebarManager"] = SidebarManager;
-    (window as any)["createSidebar"] = createSidebar;
-    (window as any)["createDockedSidebar"] = createDockedSidebar;
-    (window as any)["createFloatingSidebar"] = createFloatingSidebar;
+    window["Sidebar"] = Sidebar;
+    window["SidebarManager"] = SidebarManager;
+    window["createSidebar"] = createSidebar;
+    window["createDockedSidebar"] = createDockedSidebar;
+    window["createFloatingSidebar"] = createFloatingSidebar;
 }

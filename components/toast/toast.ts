@@ -689,10 +689,10 @@ export function configureToasts(options: ToastContainerOptions): void
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).showToast = showToast;
-(window as any).showInfoToast = showInfoToast;
-(window as any).showSuccessToast = showSuccessToast;
-(window as any).showWarningToast = showWarningToast;
-(window as any).showErrorToast = showErrorToast;
-(window as any).clearAllToasts = clearAllToasts;
-(window as any).configureToasts = configureToasts;
+window.showToast = showToast;
+window.showInfoToast = showInfoToast;
+window.showSuccessToast = showSuccessToast;
+window.showWarningToast = showWarningToast;
+window.showErrorToast = showErrorToast;
+window.clearAllToasts = clearAllToasts;
+window.configureToasts = configureToasts;

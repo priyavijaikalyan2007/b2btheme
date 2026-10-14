@@ -998,5 +998,5 @@ export function createLogConsole(options?: LogConsoleOptions): LogConsole
 // S18: GLOBAL EXPORTS
 // ============================================================================
 
-(window as any).LogConsole = LogConsole;
-(window as any).createLogConsole = createLogConsole;
+window.LogConsole = LogConsole;
+window.createLogConsole = createLogConsole;

@@ -362,6 +362,6 @@ export function resetLogUtility(): void
 // WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createLogUtility = createLogUtility;
-(window as unknown as Record<string, unknown>).resetLogUtility = resetLogUtility;
-(window as unknown as Record<string, unknown>).LogUtility = LogUtilityImpl;
+window.createLogUtility = createLogUtility;
+window.resetLogUtility = resetLogUtility;
+window.LogUtility = LogUtilityImpl;
