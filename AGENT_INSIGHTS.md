@@ -836,3 +836,67 @@ of them is visible to a text-pattern count. This repository had exactly one
 `new bootstrap.Modal(...)` with no guard, so a page without Bootstrap's
 JavaScript got a `ReferenceError` out of the dialog whose job is to report
 that something already went wrong.
+
+### 6.69 "Safe to Leave In" Is a Claim About Emission, Not About the Viewer's Filter (2026-10-14)
+
+`FRONTEND_LOGGING.md` justified shipping debug calls to production with:
+
+> Browser DevTools hides debug output by default, so this is safe to leave
+> in production builds.
+
+That sentence is true and the conclusion does not follow. DevTools hides
+`console.debug` from the **default display filter**. The call still runs,
+still builds an ISO timestamp, still formats its arguments, still enters the
+console buffer. Anyone who ticks "Verbose", attaches a remote debugger, or
+reads a captured console sees all of it, and in this library that was 385
+`logDebug` call sites across 131 components.
+
+The repository then had a real filter, and the sentence was what kept
+anybody from noticing that **the filter was not reached on the path most
+pages take**. The utility gated debug by level; the fallback that runs when
+the utility is absent gated nothing at all, and 132 of 138 demo pages take
+the fallback.
+
+**A control you cannot see the code for is not a control you have.** When a
+document says output is suppressed, find the line that suppresses it. If
+the line lives in someone else's tool, the suppression is a convention of
+that tool and not a property of your program. The fix is one your own code
+can state: the emitter decides, and the viewer's filter is a convenience on
+top.
+
+The same reasoning applies to the default. `level: "debug"` was the
+documented default, so debug emitting was deliberate in the sense that
+somebody typed it — and nobody had asked whether the default should be the
+verbose one, because no page ever configured a level and so nothing ever
+surfaced the choice.
+
+### 6.70 Migrating One Pattern Across a Codebase Means Finding Out It Is Four Patterns (2026-10-14)
+
+LOG-3 had to gate a one-line logging shim in 117 files. The first script
+matched the shape that appears in 109 of them and reported success. Eight
+files were untouched, and a second script found three more shapes: a ternary
+split across lines, an if/else block, and NavRail's early return. The last
+one was edited by hand.
+
+A script that assumes uniformity does not fail on the files it does not
+recognize. It skips them and reports the number it did change, which reads
+exactly like completion.
+
+**The check caught it, and only because the check was written first.** This
+is the same ordering the last three items used, and here it paid in a new
+way: `ungatedVerboseShims` was baselined at 225 before any file moved, so
+after the first pass it read 9 rather than 0 and said which files. Without
+it the migration would have reported "115 files migrated" and been believed.
+
+**Then the checker turned out to have the same bug.** It read a shim body
+with a lazy `[^}]*`, which stops at the first `}` — for the if/else shape
+that is the brace closing the `if`, so a gate written in the `else` went
+unseen and four files that HAD been migrated counted as unmigrated.
+Anchoring to `\n}` fixed those four and broke the one-liners, where the
+closing brace is on the same line. Counting braces reads all four shapes.
+
+The pattern that matches your code and the pattern that verifies your code
+are the same pattern, so they are wrong in the same way at the same time.
+Write the verifier to parse rather than to match whenever the thing it reads
+has more than one shape — and expect to learn how many shapes there are from
+the verifier disagreeing with you.

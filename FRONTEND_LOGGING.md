@@ -106,12 +106,61 @@ whole session, with no error.
 Two consequences:
 
 * A page that does not load `logutility.js` is fully supported. The fallback
-  prints the same text to the console. Of the 138 demo pages in this
-  repository, 6 load it.
+  prints the same text to the console, and from LOG-3 it applies the same
+  verbose filter: `logDebug` and `logTrace` write nothing unless the page
+  asks for them. Of the 138 demo pages in this repository, 6 load it, which
+  is why that branch is the usual path and not the exception.
+
+  Until LOG-3 the fallback filtered NOTHING. Debug and trace printed
+  unconditionally on those 132 pages and no flag could stop them, because
+  nothing on that branch read a flag.
 * `ThemeInit` runs in `<head>` before every other script by design, so its
   `_lu` is effectively always null. The guarded `typeof` check costs nothing
   and keeps the pattern uniform, and the console fallback is the expected
   path there rather than a degraded one.
+
+
+### 1.3 When verbose output is on
+
+Three switches decide whether `logDebug` and `logTrace` reach the console,
+and they behave identically whether or not `logutility.js` is loaded.
+
+| Switch | Effect |
+|---|---|
+| `createLogUtility({ level })` | The configured minimum. Defaults to `"info"`, so debug and trace are filtered out. The FIRST caller wins, because the utility is a singleton. |
+| `window.__ebt_debug_logging` | Tri-state. `true` turns debug on anywhere, `false` turns it off even on localhost, unset means "decide from the host". |
+| `window.__ebt_trace_logging` | `true` turns trace on anywhere. Trace does NOT follow the host. |
+
+**A local development host turns debug on by itself.** The rule is
+
+```
+/^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/
+```
+
+tested against `location.hostname`. `[::1]` keeps its brackets because that
+is what the browser reports for an IPv6 literal, and `*.localhost` is
+included because RFC 6761 reserves it for loopback. Deliberately NOT local:
+`file:` URLs, whose hostname is empty; LAN addresses such as `192.168.x` and
+`10.x`, which are other people's devices on a real network; and `.test`,
+which is reserved but not resolved to loopback. `localhost.example.com` is a
+public domain anybody can register and reads as remote.
+
+The flags FORCE ON rather than override. An explicit
+`createLogUtility({ level: "debug" })` still emits debug whatever the flag
+says, because the level comparison short-circuits before the flag is read.
+
+**The same rule is written in three places** and cannot be shared, because
+the component fallback exists precisely when `logutility.js` is absent:
+`components/logutility/logutility.ts`, every component preamble, and
+`components/diagramengine/src/logging.ts`. `scripts/audit-counts.mjs`
+compares the texts and fails if any copy drifts, and
+`logutility.test.ts` pins the semantics against a table of hostnames.
+
+**Setting it by hand**, before the component bundles load:
+
+```html
+<script>window.__ebt_debug_logging = true; window.__ebt_trace_logging = true;</script>
+```
 
 ---
 
@@ -129,10 +178,16 @@ Use the `_lu` methods. Each maps to a severity level:
 
 **Rules:**
 
-* Use `logTrace` for anything that would be high frequency or super noisy in normal use such as event handler tracing. 
-  Browser DevTools hides debug output by default, so this is safe to leave in production builds.
-* Use `logDebug` for anything that would be noisy in normal use. Browser DevTools hides debug output by default, 
-  so this is safe to leave in production builds.
+* Use `logTrace` for anything that would be high frequency or super noisy in normal use such as event handler
+  tracing. Trace is OFF everywhere until `window.__ebt_trace_logging = true` is set, including on localhost.
+* Use `logDebug` for anything that would be noisy in normal use. Debug is OFF in production and ON automatically
+  on a local development host. See section 1.3.
+
+  Both are safe to leave in production, and the reason is the filter rather than DevTools. Earlier revisions of
+  this document said "Browser DevTools hides debug output by default, so this is safe to leave in production".
+  That is true of the DevTools DISPLAY filter and not of emission: the call still ran, still built a timestamp,
+  still formatted its arguments, and still landed in the console buffer where anyone ticking Verbose, or reading
+  a captured console, could see it. The filter below is what makes the claim true.
 * Use `logInfo` sparingly for meaningful lifecycle events (component mounted, configuration applied).
 * Use `logWarn` when the component recovers but the situation is unusual (missing optional parameter, deprecated usage).
 * Use `logError` for genuine failures (DOM element not found, required parameter missing, API call failed).

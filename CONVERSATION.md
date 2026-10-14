@@ -3354,3 +3354,56 @@ arithmetic not adding up.
 **Closed.** ANY-1 and ANY-2. **Opened.** ANY-3 for the last 15, which need a
 policy decision about naming another component's option types, and
 DEBT-ERR-2. Tracker 42 resolved / 25 open.
+
+---
+
+## LOG-3: verbose logging becomes opt-in (2026-10-14)
+
+**Asked.** Is trace on in production or only on local builds? I would not
+want trace or even debug enabled by default in any situation, it has to be
+explicitly enabled. We designed some mechanism for it; how does it work?
+Then: make debug turn-on-demand like trace, and turn it on automatically on
+localhost.
+
+**Answered.** The mechanism exists and did not do what was wanted, in two
+separate ways. The default level was `"debug"`, so the gate `0 > 0` was
+false and debug emitted; all 125 components call `createLogUtility()` bare,
+the singleton keeps the first caller's options, and nothing calls
+`setLevel`, so the default governed every page. And the fallback branch,
+which runs when `logutility.js` is absent on 132 of 138 demo pages, read no
+flag and no level at all, so nothing could switch it off there.
+
+The documentation defended this with "Browser DevTools hides debug output by
+default, so this is safe to leave in production". True of the display
+filter, not of emission. Insight 6.69.
+
+**Built.** Default `"info"`. `__ebt_debug_logging` tri-state. A local host
+turns debug on by itself, matching localhost, 127.0.0.1, the bracketed IPv6
+loopback and `*.localhost`, with `file:`, LAN addresses and `.test`
+excluded on purpose and `localhost.example.com` reading as remote. Trace
+stays flag-only, as asked. 225 ungated shims across 117 files plus the
+engine factory now gated and held at 0.
+
+**The suite proved the rule before any test did.** jsdom serves from
+`http://localhost:3000/`, so six level-filtering assertions failed the
+moment the rule landed. That is what the tri-state is for.
+
+**One pattern turned out to be four.** 109 files use the one-line shim, five
+split the ternary, four use if/else, NavRail uses an early return. Three
+passes and one hand edit. The counter had the same bug and it mattered more:
+a lazy body match stopped at the brace closing an `if`, so four MIGRATED
+files read as unmigrated. Counting braces reads all four. Insight 6.70.
+
+**A ratchet went up for the first time.** `diagramengineLines` 30478 to
+30482, four lines in the engine factory, measured at the minimum and
+recorded with its reason rather than worked around.
+
+**Costs stated rather than hidden.** Every bundle grew, +15,485 bytes
+(0.71%), and in 50 components the gate can never fire because both verbose
+shims are dead there. That is the same question as LOG-4, and either answer
+removes it.
+
+**Opened.** LOG-4, trace instrumentation asked for and never written:
+declared in 108 components, called in 2, and 80 of the other 106 have
+high-frequency handlers. LOG-5, 543 over-length shim lines, 216 of them
+lengthened here. Tracker 43 resolved / 27 open.

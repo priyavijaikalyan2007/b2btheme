@@ -6558,3 +6558,103 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-176
+  title: Verbose logging is opt-in, a local host opts in for you, and the rule is written three times on purpose
+  date: 2026-10-14
+  status: accepted
+  context: |
+    The user asked whether trace and debug could reach production, said
+    neither should be on by default anywhere, and asked for debug to turn on
+    automatically on localhost. Reading the code found two independent
+    reasons the answer was no.
+
+    THE DEFAULT LEVEL WAS "debug". The level lands at 0 and the debug gate
+    is `level > LEVELS.debug`, which is `0 > 0` and false. Documented as the
+    default in logutility/README.md, so it was deliberate, but all 125
+    components call `createLogUtility()` with no options, the singleton
+    keeps whatever the first caller passed, and nothing in the repository
+    calls `setLevel`. The four demo pages that create it call it bare.
+
+    THE FALLBACK HAD NO FILTER. The branch after the colon in
+    `_lu ? _lu.debug(...) : console.debug(...)` runs when `logutility.js` is
+    absent, and it read no flag and no level. FRONTEND_LOGGING.md recorded
+    that 6 of 138 demo pages load the utility and called a page without it
+    "fully supported". It also justified leaving debug in production with
+    "Browser DevTools hides debug output by default", which is true of the
+    DISPLAY filter and not of emission.
+  decision: |
+    D1. THE DEFAULT LEVEL IS "info". Info, warn and error emit. Debug and
+        trace are opt-in. A host that already passes a level is unaffected,
+        because the first caller still wins.
+
+    D2. THE DEBUG FLAG IS TRI-STATE. Unset means "decide from the host",
+        true is on anywhere, false is off even on localhost. The third state
+        is not decoration: jsdom serves every test from localhost, so
+        without it the suite goes verbose, and six level-filtering
+        assertions failed the moment the rule landed.
+
+    D3. A LOCAL HOST TURNS DEBUG ON, AND ONLY DEBUG. Trace is event-handler
+        volume and nobody wants it for opening a page. The rule matches
+        localhost, 127.0.0.1, the bracketed IPv6 loopback, and any
+        .localhost subdomain, against location.hostname. Brackets kept,
+        because that is what a browser reports for an IPv6 literal.
+        Subdomains in, per RFC 6761. Out on purpose: file URLs, LAN
+        addresses, and .test. A hostname like localhost.example.com is a
+        registrable public domain and reads as remote, which a
+        "hostname contains localhost" rule would have got wrong.
+
+    D4. THE FLAGS FORCE ON, THEY DO NOT OVERRIDE. An explicit level of
+        "debug" still emits whatever the flag says, because the level
+        comparison short-circuits before the flag is read.
+
+    D5. THE RULE IS WRITTEN THREE TIMES AND GUARDED MECHANICALLY. The
+        component fallback exists precisely when logutility.js is absent, so
+        the three copies cannot share code. driftedHostRule fails if any
+        file computing the gate stops carrying the literal, a test asserts
+        the literal the script compares against is the one logutility.ts
+        declares, and ungatedVerboseShims pins the shim text at 0.
+
+    D6. diagramengineLines RISES, 30478 to 30482. First baseline in the
+        table to go up. The engine factory needs three lines for the two
+        constants and one comment. Recorded in the BASELINES comment rather
+        than absorbed, because a ratchet that cannot record a justified
+        exception gets worked around instead, and a worked-around ratchet
+        measures nothing.
+  consequences: |
+    + DEBUG AND TRACE NO LONGER REACH A PRODUCTION CONSOLE unless the page
+      asks. 225 ungated shims across 117 files go to 0, plus the engine
+      factory serving nineteen namespaces.
+    + THE SUITE FOUND THE LOCALHOST RULE ITSELF, by going verbose and
+      failing six assertions, which is better evidence that it works than
+      any test written afterwards.
+    = FOUR SHIM SHAPES, NOT ONE. 109 files use the one-liner, five split the
+      ternary, four use if/else, NavRail uses an early return. The migration
+      took three passes and one hand edit. A script that assumes uniformity
+      in a codebase that is not uniform skips what it does not recognize.
+    = THE COUNTER HAD THE SAME BUG AND IT MATTERED MORE. A lazy body match
+      stopped at the brace closing an `if`, so four MIGRATED files read as
+      unmigrated. Anchoring to a newline-brace fixed those and broke the
+      one-liners. Counting braces reads all four shapes.
+    - 50 COMPONENTS CARRY A GATE THAT CANNOT FIRE, because both verbose
+      shims are dead there, and terser keeps the window read while dropping
+      the constant. 15485 bytes, 0.71 percent. That is the LOG-4 decision:
+      trace is declared in 108 components and called in 2, while 80 of the
+      other 106 have high-frequency handlers. Instrumenting them makes the
+      gates work; deciding against trace removes shims and gates together.
+    - 216 SHIM LINES GOT LONGER, against a 120-character limit that nothing
+      enforces and that 543 of them already broke. LOG-5.
+  files:
+    - "components/logutility/logutility.ts"
+    - "components/logutility/logutility.test.ts"
+    - "components/logutility/README.md"
+    - "components/diagramengine/src/logging.ts"
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "tests/setup.ts"
+    - "FRONTEND_LOGGING.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

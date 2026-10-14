@@ -393,6 +393,57 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
 ---
 
+- [x] **LOG-3** Verbose logging was not opt-in, in two independent ways.
+  **Closed 2026-10-14.** ADR-176.
+
+  **The default level was `"debug"`.** The gate reads
+  `level > LEVELS.debug`, and with the default at 0 that is `0 > 0`, which
+  is false, so debug emitted. It was documented as the default, so it was
+  deliberate, but all 125 components call `createLogUtility()` with no
+  options, the singleton keeps whatever the FIRST caller passed, and nothing
+  in this repository ever calls `setLevel`. In practice the default governed
+  every page. Now `"info"`.
+
+  **The fallback had no filter at all.** `_lu ? _lu.debug(…) : console.debug(…)`
+  writes straight to the console when `logutility.js` is absent, and nothing
+  on that branch read a flag. 6 of 138 demo pages load the utility, so that
+  was the usual path. 225 ungated shims across 117 files, plus the
+  DiagramEngine factory serving nineteen namespaces, now gated and held at 0
+  by `ungatedVerboseShims`.
+
+  **A local development host turns debug on by itself**, and trace stays
+  flag-only. The rule is one regex with its exclusions written down, and it
+  exists in three places that cannot share code. `driftedHostRule` compares
+  the texts and a unit test pins the semantics against a hostname table.
+
+  **`diagramengineLines` rose 30478 to 30482**, the first baseline in the
+  table to go up. Four lines in the engine factory, measured at the minimum,
+  recorded in the BASELINES comment rather than absorbed.
+
+- [ ] **LOG-4** Trace instrumentation was asked for and never written.
+  `logTrace` is declared in **108 components and called in 2** — latexeditor
+  and visualtableeditor, 10 call sites in all. **80 of the other 106 have
+  high-frequency handlers** (`mousemove`, `pointermove`, `scroll`, `input`,
+  `keydown`, `drag`, `wheel`, `resize`, `touchmove`), which is exactly what
+  FRONTEND_LOGGING.md reserves trace for.
+
+  These are not dead helpers to delete. They are a coverage gap: the shim
+  was declared following the pattern and never filled in. Today a dragging
+  or scrolling bug in those components produces no trace output at all,
+  which is the one level that would show it.
+
+  The decision is binary and it removes a cost either way. 50 components
+  currently carry a LOG-3 gate that can never fire, because both verbose
+  shims are dead there, and that is +15,485 bytes (0.71%) across the
+  bundles. Instrument the 80 and the gates start doing work; decide against
+  trace and the shims and gates come out together.
+
+- [ ] **LOG-5** 543 logging shim lines exceed the 120-character limit in
+  AGENTS.md, which nothing enforces, and LOG-3 lengthened 216 of them.
+  Reflowing all five shims to a guarded block shape is roughly 1000 lines
+  across 122 files. Worth doing with LOG-4, since both rewrite the same
+  lines.
+
 ## MEDIUM — `: any` Type Usage (15 remaining, from 157 measured 2026-10-14)
 
 Using `: any` defeats TypeScript's type safety. Each occurrence should be replaced with a proper type, interface, or `unknown` with narrowing.
@@ -570,14 +621,14 @@ the step exits 1 and the workflow fails.
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
-| MEDIUM — Logging | 2 | **0 open, 2 closed** |
+| MEDIUM — Logging | 5 (LOG-3 closed, LOG-4/-5 opened 2026-10-14) | **2 open, 3 closed** |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **28 items** | **11 resolved** |
+| **Total** | **31 items** | **12 resolved** |
 
 ### The March 2026 counts re-measured so far
 
