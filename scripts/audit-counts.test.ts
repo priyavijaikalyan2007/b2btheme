@@ -26,6 +26,7 @@ import
 {
     classifyConsoleLog,
     classifyLoggingPattern,
+    classifyWindowCast,
     countOccurrences,
     insideStringLiteral,
 } from "./audit-counts.mjs";
@@ -197,5 +198,54 @@ describe("classifyLoggingPattern", () =>
     {
         const text = '{ num: "3", text: "  console.log(msg);", color: C_CODE_TEXT },';
         expect(classifyLoggingPattern(text)).toBe("no-logging");
+    });
+});
+
+/**
+ * `windowCasts` counts every type assertion on `window`, whatever it asserts
+ * to. WIN-1 counted one spelling of four, and the spelling it counted was the
+ * smaller population, so these cases pin the mix rather than the total.
+ */
+describe("classifyWindowCast", () =>
+{
+    test("the bare any assertion is 'any'", () =>
+    {
+        expect(classifyWindowCast("any).createLogUtility")).toBe("any");
+    });
+
+    test("the double cast to a record is 'record'", () =>
+    {
+        expect(classifyWindowCast("unknown as Record<string, unknown>)[\"Toolbar\"]")).toBe("record");
+    });
+
+    // hovercard.ts:29 asserts to a record whose value type is a function, so
+    // a classifier keyed on the full `Record<string, unknown>` string misses
+    // it. The rule keys on the opening of the generic instead.
+    test("a record of any value type is still 'record'", () =>
+    {
+        const tail = "unknown as Record<string, () => { getLogger: (p: string) => unknown }>)";
+        expect(classifyWindowCast(tail)).toBe("record");
+    });
+
+    // dynamicformswitcher.ts:285 asserts to an inline object type. This is
+    // the form that made the total 325 rather than the 321 derived from the
+    // two spellings that were known.
+    test("an inline object type is 'other'", () =>
+    {
+        expect(classifyWindowCast("unknown as { createLogUtility?: () => void };")).toBe("other");
+    });
+
+    // spinemap.ts:858 wraps the line after `as`, so the asserted type is not
+    // on the matched line at all. It must still count.
+    test("a wrapped assertion with no type on the line is 'other'", () =>
+    {
+        expect(classifyWindowCast("unknown as")).toBe("other");
+    });
+
+    // `anyOther` would classify as "any" under a prefix test without a word
+    // boundary, and no such identifier should be read as the any assertion.
+    test("a longer identifier beginning with any is not 'any'", () =>
+    {
+        expect(classifyWindowCast("anyOtherThing)")).toBe("other");
     });
 });

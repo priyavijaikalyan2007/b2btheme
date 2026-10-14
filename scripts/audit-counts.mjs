@@ -24,6 +24,13 @@
  *   - LOG-1 was measured three times (406, 200, 176) with no change to
  *     the code in between, because the file set and the pattern were
  *     never written down.
+ *   - WIN-1's pattern is the literal `window as any`, and the library
+ *     reaches `window` through an assertion in FOUR spellings. The one
+ *     WIN-1 counts is the smaller population: 74 against 248 asserting to
+ *     `Record<string, unknown>` and 3 to an inline object type. The count
+ *     was never wrong. It answered a narrower question than its name
+ *     suggests, and a cast written in any other spelling could be added
+ *     for free. `windowCasts` gates the total, so no spelling is exempt.
  *
  * A count whose file set and pattern are not stated is not a measurement.
  * This script states both, in code, so every number in the tracker can be
@@ -178,9 +185,11 @@ export function countOccurrences(text, needle)
  * scssImportant and the three marker counts were measured at 38c6f1b. The
  * three logging counts and diagramengineLines were re-measured after LOG-2
  * landed. windowAnyCasts and windowAnyFiles were re-measured on 2026-10-14
- * after WIN-1 phase A. Ratchet down only.
+ * after WIN-1 phase A, and windowCasts was added the same day. Ratchet down
+ * only.
  */
 const BASELINES = {
+    windowCasts: 325,
     windowAnyCasts: 74,
     windowAnyFiles: 27,
     consoleLogCalls: 0,
@@ -194,10 +203,31 @@ const BASELINES = {
     diagramengineLines: 30479,
 };
 
+/**
+ * Classify one `window as ...` type assertion by what it asserts to.
+ *
+ * WIN-1 counts the literal string `window as any`, and that is one of four
+ * spellings this library uses to reach the same place. The others assert to
+ * `Record<string, unknown>`, to an inline object type, or wrap the line so the
+ * asserted type is not on it at all. A pattern narrower than the behavior it
+ * watches is how a ratchet grows a blind spot larger than the count it holds,
+ * so `windowCasts` gates every spelling and this function reports the mix.
+ *
+ * @param tail - The text following `window as ` at one match position.
+ * @returns "any", "record", or "other".
+ */
+export function classifyWindowCast(tail)
+{
+    if (/^any\b/.test(tail)) { return "any"; }
+    if (/^unknown as Record</.test(tail)) { return "record"; }
+    return "other";
+}
+
 function measure()
 {
     const files = sourceFiles();
     const counts = {
+        windowCasts: 0,
         windowAnyCasts: 0,
         windowAnyFiles: 0,
         consoleLogCalls: 0,
@@ -211,6 +241,7 @@ function measure()
         diagramengineLines: 0,
     };
     const consoleLogKinds = {};
+    const windowCastKinds = {};
     const callSites = [];
     const nonConforming = [];
 
@@ -221,6 +252,13 @@ function measure()
         const casts = countOccurrences(text, "window as any");
         counts.windowAnyCasts += casts;
         if (casts > 0) { counts.windowAnyFiles += 1; }
+
+        for (const m of text.matchAll(/window as (.*)/g))
+        {
+            counts.windowCasts += 1;
+            const kind = classifyWindowCast(m[1]);
+            windowCastKinds[kind] = (windowCastKinds[kind] ?? 0) + 1;
+        }
 
         counts.anyAnnotations += (text.match(/:\s*any\b/g) ?? []).length;
 
@@ -276,16 +314,18 @@ function measure()
     counts.diagramengineLines = readFileSync("components/diagramengine/diagramengine.ts", "utf8")
         .split("\n").length - 1;
 
-    return { counts, consoleLogKinds, callSites, nonConforming, unmarked, fileCount: files.length };
+    return { counts, consoleLogKinds, windowCastKinds, callSites, nonConforming, unmarked, fileCount: files.length };
 }
 
 function main()
 {
-    const { counts, consoleLogKinds, callSites, nonConforming, unmarked, fileCount } = measure();
+    const { counts, consoleLogKinds, windowCastKinds, callSites, nonConforming, unmarked, fileCount } = measure();
 
     console.log(`  file set: ${fileCount} tracked .ts sources, excluding tests, declarations and dist`);
     console.log("  console.log lines by kind: "
         + Object.entries(consoleLogKinds).sort().map(([k, v]) => `${k}=${v}`).join(", "));
+    console.log("  window casts by asserted type: "
+        + Object.entries(windowCastKinds).sort().map(([k, v]) => `${k}=${v}`).join(", "));
 
     const failures = [];
     for (const [key, baseline] of Object.entries(BASELINES))
