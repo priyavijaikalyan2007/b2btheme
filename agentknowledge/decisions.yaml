@@ -5561,7 +5561,7 @@
   decision: |
     D1. Read the component's TypeScript, not its README. Prose is written for
         a human and will always contain the words a code regex looks for. The
-        source is the only artefact that cannot disagree with itself.
+        source is the only artifact that cannot disagree with itself.
 
     D2. Publish two lines, because this is an IIFE library and the two
         audiences differ. `Globals:` lists the `window` registrations, which
@@ -5592,7 +5592,7 @@
         consumer loads.
   consequences: |
     + THE PUBLISHED SURFACE IS NOW REAL: 1076 names across 125 components,
-      each one verified against a built artefact. SpineMap's entry went from
+      each one verified against a built artifact. SpineMap's entry went from
       two listings of `class on` to one global and thirteen exported names.
     + A FOURTH REGISTRATION SYNTAX WAS FOUND BY MEASURING, not by reading.
       The first version of `extractGlobals` reported eleven components as
@@ -5894,7 +5894,7 @@
     The full build takes 115 seconds locally.
   decision: |
     D1. RUN THE FULL BUILD IN CI, replacing the two partial steps. The suite
-        depends on artefacts they do not produce, and the full build is also
+        depends on artifacts they do not produce, and the full build is also
         what Cloudflare runs, so CI exercises the same command as production.
     D2. ADD THE RUNTIME TYPECHECK. `npm run typecheck:runtime` was already in
         the project's own `test` script and was the only part of it CI never
@@ -5903,7 +5903,7 @@
         a structure failure is distinguishable from a unit failure in the log.
     D4. KEEP `test:unit:coverage` RATHER THAN COLLAPSING INTO `npm run test`.
         The project's `test` script runs `test:unit` without coverage, and the
-        coverage artefact upload depends on it.
+        coverage artifact upload depends on it.
     D5. PROVE THE STEP CAN FAIL BEFORE TRUSTING IT. Lowering the
         `windowAnyCasts` baseline from 294 to 200 was run through
         `npm run test:structure`: the check reports the count against the
@@ -5924,7 +5924,7 @@
       of its three parts.
     - CI IS ABOUT TWO MINUTES SLOWER. The full build is 115 seconds locally
       against roughly 40 for the two partial steps. That is the price of the
-      suite having artefacts to check.
+      suite having artifacts to check.
     - THE NODE VERSION GAP IS UNRESOLVED AND NOW RECORDED. CI validates on a
       major that neither development nor production uses, so green CI still
       does not predict a Cloudflare build. Tracked as CI-1.

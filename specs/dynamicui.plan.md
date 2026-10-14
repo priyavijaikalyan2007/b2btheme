@@ -185,7 +185,7 @@ Decisions worth carrying forward:
 
 - **Tests import `runtime/src/*` directly** rather than a concatenated bundle, unlike the DiagramEngine
   precedent. Vitest resolves ES modules natively, so this gives a fast red/green loop. The bundle
-  becomes a build artefact with its own freshness check in Phase 9, rather than the thing under test.
+  becomes a build artifact with its own freshness check in Phase 9, rather than the thing under test.
 - **Validation collects every issue** instead of stopping at the first, and each names a JSON path.
   Cycle detection only runs once structural validation is clean, so a malformed document does not
   produce a confusing cycle report on top of its real errors.
@@ -431,7 +431,7 @@ Concatenation surfaced three problems, each fixed at the source rather than work
   `predicates.ts`, which also made the two different `isName` semantics explicit
   (identifier-strength vs merely non-empty).
 
-`runtime/bundle.test.ts` (38 tests) now tests the *artefact* rather than the modules: no
+`runtime/bundle.test.ts` (38 tests) now tests the *artifact* rather than the modules: no
 leftover module syntax, no duplicate top-level function, no top-level binding shadowing a DOM
 global, every advertised name actually declared, and the bundle not stale relative to the
 bundler's file list. Those are failure modes the module suites structurally cannot see.
@@ -490,7 +490,7 @@ decoration: a live **document and patch-log inspector**, so the model is legible
 builds up; and a **resolver explainer** wired to each node's "why?" affordance, showing the
 ranked candidates with per-factor scores.
 
-`runtime/integration.test.ts` (10 tests) is the stronger artefact. It drives the whole layer
+`runtime/integration.test.ts` (10 tests) is the stronger artifact. It drives the whole layer
 the way the demo does — register manifests, apply a patch, mount **real** TreeView and
 DataGrid instances, select a real tree node, and assert the payload arrives in the grid
 through a real binding. Every unit suite stubs the pieces either side of the one under test,
@@ -527,7 +527,7 @@ Governance now matches the live gate rather than contradicting it:
   and the no-heavyweight-dependency-for-a-lightweight-affordance rule that StickyNote and
   Annotation exist to honour.
 - `TESTING.md` — the conformance gate's three states, and three lessons worth keeping:
-  write checks that can actually fail, test the artefact as well as the modules, and never
+  write checks that can actually fail, test the artifact as well as the modules, and never
   put fixtures in shipped data.
 - `agentknowledge/` — 8 new concepts, history entry appended. (Three pre-existing malformed
   lines in `history.jsonl` from February and March were left alone: the file is append-only.)

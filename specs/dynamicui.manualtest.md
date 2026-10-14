@@ -67,7 +67,7 @@ Click **"show me the tables in the sales database"**.
 
 > **2.2 is the single most important check on this page.** A TreeView that renders an empty box is exactly the bug the `renders-content` check was added for — it constructs cleanly and shows nothing. If the panel is empty but present, the container option is wrong again.
 
-**If 2.2 fails:** check `components/treeview/treeview.manifest.ts` declares `containerOption: "containerId"` and `containerAs: "id"`, and that `dist/capability-manifest.json` carries the same (re-run `npm run build` if not). The demo fetches that artefact rather than keeping its own copy, so there is only one place this can be wrong.
+**If 2.2 fails:** check `components/treeview/treeview.manifest.ts` declares `containerOption: "containerId"` and `containerAs: "id"`, and that `dist/capability-manifest.json` carries the same (re-run `npm run build` if not). The demo fetches that artifact rather than keeping its own copy, so there is only one place this can be wrong.
 
 **If nothing appears at all:** read the console. A literate error naming a missing component means the manifest was not registered; a mount error renders *inside* the frame rather than throwing.
 

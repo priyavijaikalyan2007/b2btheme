@@ -4,7 +4,7 @@
 
 set -e
 
-# Clean previous build artefacts
+# Clean previous build artifacts
 rm -f -R ./dist/
 rm -f -R ./node_modules/
 

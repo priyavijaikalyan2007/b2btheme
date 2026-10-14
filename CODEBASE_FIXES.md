@@ -142,7 +142,7 @@ declaration buys real type safety, and it buys it once for the whole library.
   redefining a count under its old name produces a different count with the
   same name. See insight 6.58.
 
-  **Roughly 164 of the 237 are publication sites** and the rest are reads,
+  **161 of the 237 are publication sites** and the rest are reads,
   including genuine third-party globals that no declaration of ours can own:
   `Chart`, `Vditor`, `katex`, `dagre`, `driver`, `bootstrap`. Two forms need
   deciding before the work starts, and both are recorded in ADR-173 as open:
@@ -151,10 +151,27 @@ declaration buys real type safety, and it buys it once for the whole library.
   type a lookup by a computed key, as in `codeeditor.ts:140` and the debug
   flag read in `logutility.ts:63`, which no declaration can express.
 
+  **The gate has one known gap and it is written down rather than closed.**
+  `windowCasts` keys on the literal `window`, so `(globalThis as any)` is
+  invisible to it. One exists, at `tests/setup.ts:81`, and the counted file set
+  excludes tests, so it is outside the count twice over. A component using
+  `globalThis` would not be. Widening the pattern is held until WIN-2 chooses
+  the declaration shape, because the two decisions interact.
+
+  **Two leftovers of the same defect, neither counted by anything.**
+  `components/hovercard/hovercard.ts` casts `_lu` a second time in `logDebug`,
+  and `_lu` is now typed, so the cast says nothing. And
+  `components/dynamicformswitcher/dynamicformswitcher.ts` keeps a local
+  `interface LogUtility` that shadows the real one by name. Both are the
+  second-cast habit the declaration was meant to retire.
+
   Specs and component READMEs still showing the double-cast form are corrected
-  as this item reaches them: `specs/explorerpicker.prd.md`,
-  `components/inlinetoolbar/README.md` and the generated
-  `docs/COMPONENT_REFERENCE.md` copy of it.
+  as this item reaches them, and deliberately not before:
+  `specs/explorerpicker.prd.md`, `components/inlinetoolbar/README.md` and the
+  generated `docs/COMPONENT_REFERENCE.md` copy of it. Both components publish
+  through the double cast, so `createInlineToolbar` and `createExplorerPicker`
+  have no declaration yet, and correcting the prose now would document a form
+  that does not typecheck.
 ---
 
 ## HIGH — Function Length (>30 lines)
@@ -694,7 +711,7 @@ limits the design knowingly accepts, not defects in shipped code.
 
 ## RESOLVED — The documentation generator read prose as an API (2026-10-11, fixed 2026-10-12, ADR-166)
 
-- [x] **DEBT-DOC-1** *(resolved 2026-10-12, ADR-166)* — the generator now reads each component's **TypeScript**, and the published line is two: `Globals:` for the `window` registrations a CDN consumer can call, and `Exports:` for the declarations a TypeScript consumer can import. **1076 names across 125 components**, every one of them checked against the built artefacts.
+- [x] **DEBT-DOC-1** *(resolved 2026-10-12, ADR-166)* — the generator now reads each component's **TypeScript**, and the published line is two: `Globals:` for the `window` registrations a CDN consumer can call, and `Exports:` for the declarations a TypeScript consumer can import. **1076 names across 125 components**, every one of them checked against the built artifacts.
 
   **The original description, kept because it was accurate:** `scripts/generate-docs.js:470` built each component's "Exports" line by running `/(?:class|function)\s+\w+/g` over its **README prose**, so any sentence containing the words "class" or "function" became a published API name. `docs/AGENT_QUICK_REF.md` listed `class on` 17 times, `class for` 6 times, `class names` 4 times, `class override` 3 times, and `function that` twice, among others. MarkdownRenderer's entry read `function greet`, which is not a function this repository has.
 

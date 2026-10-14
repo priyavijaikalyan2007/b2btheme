@@ -11,7 +11,7 @@
  *    size so the canvas mount budget uses real numbers rather than the
  *    placeholders authors write.
  *
- *    This is the artefact ADR-142 promises and that DYNAMIC_UI_GUIDE.md,
+ *    This is the artifact ADR-142 promises and that DYNAMIC_UI_GUIDE.md,
  *    CAPABILITY_MANIFEST.md and DYNAMIC_UI_MIGRATION.md all reference.
  * RELATES: [[CapabilityManifest]], [[DynamicUIRuntime]], [[BuildPipeline]]
  * FLOW: [components/*.manifest.ts] -> [build-manifest] -> [capability-manifest.json]
@@ -91,7 +91,7 @@ function builtSize(name)
  * Validates the fields the runtime depends on.
  *
  * Full validation lives in runtime/src/registry.ts; this catches the
- * aggregation-time mistakes that would otherwise ship a malformed artefact.
+ * aggregation-time mistakes that would otherwise ship a malformed artifact.
  *
  * @param {object} manifest - Candidate manifest.
  * @param {string} dir      - Component directory name.
@@ -127,7 +127,7 @@ function check(manifest, dir)
     return problems;
 }
 
-/** Aggregates every manifest and writes the artefact. */
+/** Aggregates every manifest and writes the artifact. */
 async function main()
 {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "manifest-"));

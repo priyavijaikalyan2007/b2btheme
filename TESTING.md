@@ -500,7 +500,7 @@ the probe's `mountMethod` handling was wrong, and a signature comparison reads
 two identical failures as "no difference". The sweep that produced the real
 answer changed one glue file at a time and ran the gate. Insight 6.54.
 
-### Test the artefact, not just the modules
+### Test the artifact, not just the modules
 
 `runtime/bundle.test.ts` tests the concatenated bundle rather than its sources,
 because concatenation has failure modes the module suites structurally cannot

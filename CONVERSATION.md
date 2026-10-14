@@ -1421,7 +1421,7 @@ Over the course of the session the scope grew to encompass:
 - `tsc --noEmit` clean.
 - Full vitest: 4087 / 4087 tests across 123 files.
 - SCSS compiles clean.
-- Bundle diagramengine + `wrap-iife.sh` produced all expected dist artefacts.
+- Bundle diagramengine + `wrap-iife.sh` produced all expected dist artifacts.
 - Demo page loaded against real CDN components (CronPicker / TimezonePicker
   / DurationPicker / ColorPicker / AnglePicker / DatePicker / TimePicker /
   CodeEditor) — initial "Container not found" errors flagged the

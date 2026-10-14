@@ -157,7 +157,7 @@ function main()
     }
 
     console.log(`  PASS: ${names} published API name(s) across `
-        + `${blocks.length} components all exist in the built artefacts`);
+        + `${blocks.length} components all exist in the built artifacts`);
 }
 
 main();

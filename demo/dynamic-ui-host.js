@@ -78,7 +78,7 @@
      * carried hand-written copies of each manifest, and they immediately drifted
      * — the inline TreeView copy repeated a containerOption bug that had already
      * been fixed in the real manifest. Two sources of truth for the same fact is
-     * one too many, and the aggregated artefact exists precisely so consumers do
+     * one too many, and the aggregated artifact exists precisely so consumers do
      * not have to restate it.
      *
      * Allowlist-only (ADR-143): a component absent from this list can never be
