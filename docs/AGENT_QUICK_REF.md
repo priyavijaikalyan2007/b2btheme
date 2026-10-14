@@ -774,7 +774,7 @@ $control-height-xl=46px
 - CSS: `components/docklayout/docklayout.css`
 - JS: `components/docklayout/docklayout.js`
 - Globals: `DockLayout()`, `createDockLayout()`
-- Exports: `interface LayoutState`, `interface DockLayoutOptions`, `class DockLayout`, `function createDockLayout`
+- Exports: `interface LayoutState`, `interface DockSlotComponent`, `type DockResizeListener`, `type DockCollapseListener`, `interface DockLayoutOptions`, `class DockLayout`, `function createDockLayout`
 
 ### docviewer
 

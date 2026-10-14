@@ -503,7 +503,7 @@ export class FlexGridLayout
     }
 
     /** Mounts a component or HTMLElement into a cell wrapper. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -515,7 +515,7 @@ export class FlexGridLayout
     }
 
     /** Hides a child that is currently visible before re-mounting. */
-    private hideIfVisible(child: any): void
+    private hideIfVisible(child: MountableComponent): void
     {
         if (typeof child.isVisible === "function"
             && child.isVisible()
@@ -526,7 +526,7 @@ export class FlexGridLayout
     }
 
     /** Shows a duck-typed component or appends an HTMLElement. */
-    private showOrAppend(child: any, cell: HTMLElement): void
+    private showOrAppend(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.show === "function")
         {
@@ -544,7 +544,7 @@ export class FlexGridLayout
     }
 
     /** Calls destroy or removes a child element. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

@@ -1034,8 +1034,9 @@ export class DatePicker
                     )
                 );
 
-                // Store date on the element
-                (btn as any)._date = cellDate;
+                // Store date on the element. The expando is named in
+                // the cast rather than erased by `any`.
+                (btn as HTMLElement & { _date?: Date })._date = cellDate;
 
                 btn.addEventListener("click", () =>
                 {

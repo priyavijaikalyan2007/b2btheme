@@ -542,7 +542,7 @@ export class CardLayout
     // ========================================================================
 
     /** Mounts a component or HTMLElement into a wrapper. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -554,7 +554,7 @@ export class CardLayout
     }
 
     /** Hides a child if it is currently visible. */
-    private hideIfVisible(child: any): void
+    private hideIfVisible(child: MountableComponent): void
     {
         if (typeof child.isVisible === "function"
             && child.isVisible()
@@ -565,7 +565,7 @@ export class CardLayout
     }
 
     /** Shows a child in a cell, or appends its root element. */
-    private showOrAppend(child: any, cell: HTMLElement): void
+    private showOrAppend(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.show === "function")
         {
@@ -583,7 +583,7 @@ export class CardLayout
     }
 
     /** Calls destroy or removes the element from a child. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

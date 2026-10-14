@@ -613,7 +613,7 @@ export class AnchorLayout
         {
             if (source[key] !== undefined)
             {
-                (target as any)[key] = source[key];
+                (target as unknown as Record<string, unknown>)[key] = source[key];
             }
         }
     }
@@ -631,7 +631,7 @@ export class AnchorLayout
         {
             if (source[key] !== undefined)
             {
-                (target as any)[key] = source[key];
+                (target as unknown as Record<string, unknown>)[key] = source[key];
             }
         }
     }
@@ -649,7 +649,7 @@ export class AnchorLayout
         {
             if (source[key] !== undefined)
             {
-                (target as any)[key] = source[key];
+                (target as unknown as Record<string, unknown>)[key] = source[key];
             }
         }
     }
@@ -659,7 +659,7 @@ export class AnchorLayout
     // ========================================================================
 
     /** Mounts a component or HTMLElement into a wrapper cell. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -671,7 +671,7 @@ export class AnchorLayout
     }
 
     /** Hides a child if it is currently visible. */
-    private hideIfVisible(child: any): void
+    private hideIfVisible(child: MountableComponent): void
     {
         if (typeof child.isVisible === "function"
             && child.isVisible()
@@ -682,7 +682,7 @@ export class AnchorLayout
     }
 
     /** Shows a child in a cell, or appends its root element. */
-    private showOrAppend(child: any, cell: HTMLElement): void
+    private showOrAppend(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.show === "function")
         {
@@ -700,7 +700,7 @@ export class AnchorLayout
     }
 
     /** Calls destroy or removes the element from a child. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

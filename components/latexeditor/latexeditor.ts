@@ -650,9 +650,9 @@ function resolveContainer(input: HTMLElement | string): HTMLElement | null
 // ============================================================================
 
 /** Reference to KaTeX global, if available. */
-function getKaTeX(): any
+function getKaTeX(): NonNullable<Window["katex"]> | null
 {
-    return window["katex"] || null;
+    return window.katex || null;
 }
 
 /** Render LaTeX to HTML string using KaTeX. */

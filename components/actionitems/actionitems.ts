@@ -1671,7 +1671,10 @@ export class ActionItems
 
     /** Shared HoverCard handle for all item rows (ADR-126). Lazily created. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private hoverCard: any = null;
+    /** Created on first hover. The factory's own return type, read from
+     *  components/globals.d.ts rather than imported, because components
+     *  in this library do not import one another. */
+    private hoverCard: ReturnType<NonNullable<Window["createHoverCard"]>> | null = null;
 
     /** Disposers returned by attachHoverCard, cleared on re-render / destroy. */
     private hoverDisposers: Array<() => void> = [];
@@ -5994,7 +5997,7 @@ export class ActionItems
      * component is not loaded.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private ensureHoverCard(): any
+    private ensureHoverCard(): ReturnType<NonNullable<Window["createHoverCard"]>> | null
     {
         if (this.hoverCard) { return this.hoverCard; }
 

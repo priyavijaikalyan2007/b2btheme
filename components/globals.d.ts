@@ -281,8 +281,16 @@ declare global
          */
         Chart?: new (ctx: unknown, config: unknown) => { destroy(): void; update(): void };
 
-        /** Vendored into `dist/lib`. The Markdown editor the RichTextInput wraps. */
-        Vditor?: new (element: HTMLElement, options: Record<string, unknown>) => Record<string, unknown>;
+        /**
+         * Vendored into `dist/lib`. The Markdown editor that RichTextInput and
+         * MarkdownEditor wrap. Only the members those two call are declared,
+         * which is the rule the other third-party globals here follow.
+         */
+        Vditor?: (new (element: HTMLElement | string, options: Record<string, unknown>) => VditorInstance) &
+        {
+            /** Static renderer, used for the read-only preview pane. */
+            preview(el: HTMLElement, markdown: string, options: Record<string, unknown>): void;
+        };
 
         /** Supplied by the host page. Bootstrap's own JavaScript bundle. */
         bootstrap?: Record<string, unknown>;
@@ -904,6 +912,64 @@ declare global
         show(): void;
         hide(): void;
         dispose(): void;
+    }
+
+    /**
+     * `Intl.supportedValuesOf` is ES2022 and this project compiles against
+     * the ES2020 lib, so TypeScript does not know the method exists. Three
+     * components list the IANA time zones with it and each reached for a
+     * cast. The method is present in every browser this theme targets, so
+     * the honest description is a declaration rather than an assertion.
+     *
+     * Only the one key this library passes is declared. Widening it to the
+     * full ES2022 union would describe a surface nothing here uses.
+     */
+    namespace Intl
+    {
+        function supportedValuesOf(key: "timeZone"): string[];
+    }
+
+    /**
+     * A COMPONENT A LAYOUT CAN MOUNT INTO ONE OF ITS CELLS.
+     *
+     * Eight layout components — AnchorLayout, BorderLayout, BoxLayout,
+     * CardLayout, FlexGridLayout, FlowLayout, GridLayout and LayerLayout —
+     * each mount, show, hide and destroy whatever child they are handed,
+     * and each described that child as `any`. The surface is identical in
+     * all eight, measured: seven members and nothing else.
+     *
+     * It lives here rather than in one of them because components in this
+     * library do not import one another, so eight private copies of one
+     * interface was the alternative. A consumer may also mount a component
+     * this repository has never heard of, which is why the contract is
+     * STRUCTURAL and why every member is optional: each caller already
+     * tests with `typeof child.method === "function"` before using it.
+     * ANY-1, ADR-175.
+     */
+    interface MountableComponent
+    {
+        getRootElement?(): HTMLElement;
+        show?(container?: HTMLElement): void;
+        hide?(): void;
+        isVisible?(): boolean;
+        setContained?(contained: boolean): void;
+        destroy?(): void;
+        remove?(): void;
+    }
+
+    /** The parts of a Vditor instance this library calls. */
+    interface VditorInstance
+    {
+        getValue(): string;
+        setValue(value: string, clearStack?: boolean): void;
+        updateValue(value: string): void;
+        getHTML(): string;
+        getCursorPosition(): { left: number; top: number };
+        getSelection(): string;
+        enable(): void;
+        disabled(): void;
+        focus(): void;
+        destroy(): void;
     }
 
     /** The parts of Bootstrap's JavaScript bundle this library calls. */

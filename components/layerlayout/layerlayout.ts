@@ -497,7 +497,7 @@ export class LayerLayout
 
         for (const [prop, value] of Object.entries(styles))
         {
-            (wrap.style as any)[prop] = value;
+            (wrap.style as unknown as Record<string, string>)[prop] = value;
         }
     }
 
@@ -510,7 +510,7 @@ export class LayerLayout
      * Uses duck-typing: calls setContained, hide/show, getRootElement,
      * or falls back to direct appendChild.
      */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -543,7 +543,7 @@ export class LayerLayout
      * Calls destroy or removes the element from a child.
      * Mirrors mountComponent in duck-typing approach.
      */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

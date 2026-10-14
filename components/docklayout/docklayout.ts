@@ -36,6 +36,55 @@ export interface LayoutState
 /**
  * Configuration options for the DockLayout component.
  */
+/**
+ * What DockLayout needs from a component placed in one of its five slots.
+ *
+ * EVERY MEMBER IS OPTIONAL, AND THAT IS THE CONTRACT. The slots hold
+ * different component types — a Toolbar in one, a Sidebar in two, a
+ * StatusBar in another — and each implements a different part of this
+ * surface. DockLayout already tests with `typeof x.method === "function"`
+ * before every call, so the `?` is what forces the guard that the code
+ * writes anyway.
+ *
+ * It is STRUCTURAL rather than a union of the library's own component
+ * types, for two reasons. Components in this library do not import one
+ * another, and a consumer may dock a component this repository has never
+ * heard of. The contract is the twelve members below, not an identity.
+ * ANY-1, ADR-175.
+ */
+export interface DockSlotComponent extends MountableComponent
+{
+    isCollapsed?(): boolean;
+    getWidth?(): number;
+    getHeight?(): number;
+    setContained?(contained: boolean): void;
+    addResizeListener?(fn: DockResizeListener): void;
+    removeResizeListener?(fn: DockResizeListener): void;
+    addCollapseListener?(fn: DockCollapseListener): void;
+    removeCollapseListener?(fn: DockCollapseListener): void;
+
+    /**
+     * The component's own options, read for its collapsed dimensions.
+     *
+     * DockLayout reads two fields and needs no opinion on the rest, so the
+     * rest stay open. A docked component is free to carry whatever options
+     * its own type declares.
+     */
+    options?: {
+        collapsedWidth?: number;
+        collapsedHeight?: number;
+        [key: string]: unknown;
+    };
+}
+
+/** Notified when a docked component changes size. */
+export type DockResizeListener =
+    (width: number, height: number, source: DockSlotComponent) => void;
+
+/** Notified when a docked component collapses or expands. */
+export type DockCollapseListener =
+    (collapsed: boolean, source: DockSlotComponent) => void;
+
 export interface DockLayoutOptions
 {
     /** Custom element ID. Auto-generated if omitted. */
@@ -45,19 +94,19 @@ export interface DockLayoutOptions
     container?: HTMLElement | string;
 
     /** Top row — spans full width. */
-    toolbar?: any;
+    toolbar?: DockSlotComponent;
 
     /** Left column — between toolbar and bottom panel. */
-    leftSidebar?: any;
+    leftSidebar?: DockSlotComponent;
 
     /** Right column — between toolbar and bottom panel. */
-    rightSidebar?: any;
+    rightSidebar?: DockSlotComponent;
 
     /** Bottom row — spans full width, above status bar. */
-    bottomPanel?: any;
+    bottomPanel?: DockSlotComponent;
 
     /** Very bottom row — spans full width. */
-    statusBar?: any;
+    statusBar?: DockSlotComponent;
 
     /** Center cell element or CSS selector. */
     content?: HTMLElement | string;
@@ -140,12 +189,13 @@ export class DockLayout
     // State
     private visible = false;
 
-    // Slot references (typed as any for cross-component compatibility)
-    private toolbar: any | null = null;
-    private leftSidebar: any | null = null;
-    private rightSidebar: any | null = null;
-    private bottomPanel: any | null = null;
-    private statusBarComp: any | null = null;
+    // Slot references. Typed by the structural `DockSlotComponent`
+    // contract above rather than by a cross-component import.
+    private toolbar: DockSlotComponent | null = null;
+    private leftSidebar: DockSlotComponent | null = null;
+    private rightSidebar: DockSlotComponent | null = null;
+    private bottomPanel: DockSlotComponent | null = null;
+    private statusBarComp: DockSlotComponent | null = null;
     private contentElement: HTMLElement | null = null;
 
     // DOM references
@@ -161,12 +211,12 @@ export class DockLayout
     private toolbarObserver: ResizeObserver | null = null;
 
     // Bound listener references for cleanup
-    private leftResizeFn: ((w: number, h: number, s: any) => void) | null = null;
-    private leftCollapseFn: ((c: boolean, s: any) => void) | null = null;
-    private rightResizeFn: ((w: number, h: number, s: any) => void) | null = null;
-    private rightCollapseFn: ((c: boolean, s: any) => void) | null = null;
-    private bottomResizeFn: ((w: number, h: number, p: any) => void) | null = null;
-    private bottomCollapseFn: ((c: boolean, p: any) => void) | null = null;
+    private leftResizeFn: DockResizeListener | null = null;
+    private leftCollapseFn: DockCollapseListener | null = null;
+    private rightResizeFn: DockResizeListener | null = null;
+    private rightCollapseFn: DockCollapseListener | null = null;
+    private bottomResizeFn: DockResizeListener | null = null;
+    private bottomCollapseFn: DockCollapseListener | null = null;
 
     constructor(options: DockLayoutOptions)
     {
@@ -257,7 +307,7 @@ export class DockLayout
     // ========================================================================
 
     /** Sets or removes the toolbar in the top row. */
-    public setToolbar(toolbar: any | null): void
+    public setToolbar(toolbar: DockSlotComponent | null): void
     {
         this.clearCell(this.toolbarCell);
         this.toolbar = null;
@@ -273,7 +323,7 @@ export class DockLayout
     }
 
     /** Sets or removes the left sidebar. */
-    public setLeftSidebar(sidebar: any | null): void
+    public setLeftSidebar(sidebar: DockSlotComponent | null): void
     {
         this.unhookSidebar("left");
         this.clearCell(this.leftCell);
@@ -291,7 +341,7 @@ export class DockLayout
     }
 
     /** Sets or removes the right sidebar. */
-    public setRightSidebar(sidebar: any | null): void
+    public setRightSidebar(sidebar: DockSlotComponent | null): void
     {
         this.unhookSidebar("right");
         this.clearCell(this.rightCell);
@@ -309,7 +359,7 @@ export class DockLayout
     }
 
     /** Sets or removes the bottom panel. */
-    public setBottomPanel(panel: any | null): void
+    public setBottomPanel(panel: DockSlotComponent | null): void
     {
         this.unhookBottomPanel();
         this.clearCell(this.bottomCell);
@@ -327,7 +377,7 @@ export class DockLayout
     }
 
     /** Sets or removes the status bar. */
-    public setStatusBar(statusBar: any | null): void
+    public setStatusBar(statusBar: DockSlotComponent | null): void
     {
         this.clearCell(this.statusCell);
         this.statusBarComp = null;
@@ -505,7 +555,7 @@ export class DockLayout
      * Sets contained mode on a component and shows it inside a grid cell.
      */
     private mountComponent(
-        component: any, cell: HTMLElement
+        component: DockSlotComponent, cell: HTMLElement
     ): void
     {
         // Set contained mode if the component supports it
@@ -555,7 +605,7 @@ export class DockLayout
     }
 
     /** Calls destroy on a component if it has a destroy method. */
-    private destroySlotComponent(comp: any): void
+    private destroySlotComponent(comp: DockSlotComponent | null): void
     {
         if (comp && typeof comp.destroy === "function")
         {
@@ -679,7 +729,7 @@ export class DockLayout
      * Hooks sidebar resize and collapse listeners for grid updates.
      */
     private hookSidebarCallbacks(
-        sidebar: any, side: "left" | "right"
+        sidebar: DockSlotComponent, side: "left" | "right"
     ): void
     {
         const resizeFn = () =>
@@ -719,7 +769,7 @@ export class DockLayout
     /**
      * Hooks bottom panel resize and collapse listeners for grid updates.
      */
-    private hookBottomPanelCallbacks(panel: any): void
+    private hookBottomPanelCallbacks(panel: DockSlotComponent): void
     {
         const resizeFn = () =>
         {
@@ -819,7 +869,7 @@ export class DockLayout
 
     /** Returns sidebar slot state or null. */
     private getSidebarState(
-        sidebar: any
+        sidebar: DockSlotComponent | null
     ): { width: number; collapsed: boolean } | null
     {
         if (!sidebar) { return null; }

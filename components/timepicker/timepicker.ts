@@ -460,7 +460,7 @@ function getIANATimezones(): string[]
 {
     try
     {
-        return (Intl as any).supportedValuesOf("timeZone") as string[];
+        return Intl.supportedValuesOf("timeZone");
     }
     catch
     {

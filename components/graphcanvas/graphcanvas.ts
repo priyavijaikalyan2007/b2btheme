@@ -918,7 +918,10 @@ class GraphCanvasImpl implements GraphCanvas
     private overlayG: SVGElement | null = null;
     // HoverCard handle (lazily created; shared across all nodes/edges).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private hoverCard: any = null;
+    /** Created on first hover. The factory's own return type, read from
+     *  components/globals.d.ts rather than imported, because components
+     *  in this library do not import one another. */
+    private hoverCard: ReturnType<NonNullable<Window["createHoverCard"]>> | null = null;
     private contextMenuEl: HTMLElement | null = null;
     private liveRegion: HTMLElement | null = null;
     private nodeElements: Map<string, SVGElement> = new Map();
@@ -1040,7 +1043,7 @@ class GraphCanvasImpl implements GraphCanvas
      * that case and silently skip the card.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private ensureHoverCard(): any
+    private ensureHoverCard(): ReturnType<NonNullable<Window["createHoverCard"]>> | null
     {
         if (this.hoverCard) { return this.hoverCard; }
 

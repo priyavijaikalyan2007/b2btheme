@@ -307,7 +307,7 @@ export class GridLayout
     /** Updates the column configuration dynamically. */
     public setColumns(n: number | "auto"): void
     {
-        (this.options as any).columns = n;
+        (this.options as unknown as Record<string, unknown>)["columns"] = n;
 
         if (n === "auto")
         {
@@ -491,7 +491,7 @@ export class GridLayout
     }
 
     /** Mounts a component or HTMLElement into a wrapper cell. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -521,7 +521,7 @@ export class GridLayout
     }
 
     /** Calls destroy or removes the element from a child. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

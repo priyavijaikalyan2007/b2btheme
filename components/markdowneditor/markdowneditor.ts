@@ -402,7 +402,8 @@ export class MarkdownEditor
             "showCounter" | "vditorMode" | "disabled"
         >
     > & MarkdownEditorOptions;
-    private vditor: any = null;
+    /** The Vditor instance, typed from the global this library declares. */
+    private vditor: InstanceType<NonNullable<Window["Vditor"]>> | null = null;
     private wrapper: HTMLElement | null = null;
     private headerEl: HTMLElement | null = null;
     private bodyEl: HTMLElement | null = null;
@@ -560,8 +561,7 @@ export class MarkdownEditor
         if (!this.previewArea) { return; }
         const isDark = this.options.theme === "dark"
             || document.documentElement.getAttribute("data-bs-theme") === "dark";
-        const VditorClass = window["Vditor"] as
-            { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
+        const VditorClass = window.Vditor;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, this.displayValue, {
@@ -904,8 +904,7 @@ export class MarkdownEditor
     {
         if (!this.previewArea || !this.vditor) { return; }
 
-        const VditorClass = window["Vditor"] as
-            { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
+        const VditorClass = window.Vditor;
         const markdown = this.vditor.getValue();
 
         const previewRef = this.previewArea;
@@ -1129,18 +1128,27 @@ export class MarkdownEditor
     /**
      * Initialises the Vditor editor instance.
      */
-    private initVditor(): void
+    /**
+     * Creates the Vditor instance, and RETURNS it as well as storing it.
+     *
+     * The return value exists for `observeThemeChanges`, which nulls the
+     * field before re-initializing. TypeScript follows that assignment and
+     * narrows the field to `null` for the rest of the block, so reading it
+     * back after this call needs either an assertion or this return. The
+     * return is the honest one: the caller wants the instance this call
+     * made, not whatever the field happens to hold.
+     */
+    private initVditor(): VditorInstance | null
     {
-        const VditorClass = window["Vditor"] as
-            (new (id: string, opts: Record<string, unknown>) => unknown) | undefined;
+        const VditorClass = window.Vditor;
         if (!VditorClass)
         {
             logError("Vditor library not found. Load vditor JS/CSS before this component.");
             this.buildFallbackTextarea();
-            return;
+            return null;
         }
 
-        if (!this.editorArea) { return; }
+        if (!this.editorArea) { return null; }
 
         // Ensure editor area has an ID for Vditor
         if (!this.editorArea.id)
@@ -1152,6 +1160,7 @@ export class MarkdownEditor
         const vditorOptions = this.buildVditorOptions(vditorMode);
 
         this.vditor = new VditorClass(this.editorArea.id, vditorOptions);
+        return this.vditor;
     }
 
     /**
@@ -1822,10 +1831,10 @@ ${bodyHTML}
                 const currentValue = this.vditor.getValue();
                 this.vditor.destroy();
                 this.vditor = null;
-                this.initVditor();
-                if (currentValue && this.vditor)
+                const reinitialised = this.initVditor();
+                if (currentValue && reinitialised)
                 {
-                    this.vditor.setValue(currentValue);
+                    reinitialised.setValue(currentValue);
                 }
             }
             if (this.previewArea && this.displayValue)
@@ -1974,7 +1983,7 @@ function showMarkdownEditorModalFn(
     const editor = new MarkdownEditor(editorContainer, editorOptions);
 
     // Show modal using Bootstrap API
-    let bsModal: any = null;
+    let bsModal: BootstrapInstance | null = null;
 
     const hideModal = (): void =>
     {

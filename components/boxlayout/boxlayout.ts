@@ -395,12 +395,12 @@ export class BoxLayout
 
         if (config.minSize !== undefined)
         {
-            (s as any)[`min${axis}`] = `${config.minSize}px`;
+            (s as unknown as Record<string, string>)[`min${axis}`] = `${config.minSize}px`;
         }
 
         if (config.maxSize !== undefined)
         {
-            (s as any)[`max${axis}`] = `${config.maxSize}px`;
+            (s as unknown as Record<string, string>)[`max${axis}`] = `${config.maxSize}px`;
         }
 
         if (config.alignSelf)
@@ -410,7 +410,7 @@ export class BoxLayout
     }
 
     /** Mounts a component or HTMLElement into a wrapper cell. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -440,7 +440,7 @@ export class BoxLayout
     }
 
     /** Calls destroy or removes the element from a child. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {

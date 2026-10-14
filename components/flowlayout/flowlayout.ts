@@ -430,7 +430,7 @@ export class FlowLayout
     }
 
     /** Mounts a component or HTMLElement into a wrapper cell. */
-    private mountComponent(child: any, cell: HTMLElement): void
+    private mountComponent(child: MountableComponent, cell: HTMLElement): void
     {
         if (typeof child.setContained === "function")
         {
@@ -460,7 +460,7 @@ export class FlowLayout
     }
 
     /** Calls destroy or removes the element from a child. */
-    private unmountComponent(child: any): void
+    private unmountComponent(child: MountableComponent): void
     {
         if (typeof child.destroy === "function")
         {
@@ -474,7 +474,7 @@ export class FlowLayout
 
     /** Inserts a wrapper at the given index. */
     private insertChildAt(
-        child: any,
+        child: MountableComponent,
         wrapper: HTMLElement,
         index: number
     ): void
@@ -487,7 +487,7 @@ export class FlowLayout
 
     /** Appends a wrapper at the end. */
     private appendChildAtEnd(
-        child: any, wrapper: HTMLElement
+        child: MountableComponent, wrapper: HTMLElement
     ): void
     {
         this.rootEl!.appendChild(wrapper);

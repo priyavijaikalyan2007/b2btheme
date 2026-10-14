@@ -107,7 +107,7 @@ class DiagramEngineImpl implements EngineForTools
 
     /** Shared HoverCard handle (ADR-126). Lazily created when first needed. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private hoverCard: any = null;
+    private hoverCard: ReturnType<NonNullable<Window["createHoverCard"]>> | null = null;
 
     /** id of the object/connector the hover card is currently anchored to. */
     private hoverAnchorId: string | null = null;
@@ -3101,7 +3101,7 @@ class DiagramEngineImpl implements EngineForTools
      * HoverCard component is not loaded.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private ensureHoverCard(): any
+    private ensureHoverCard(): ReturnType<NonNullable<Window["createHoverCard"]>> | null
     {
         if (this.hoverCard) { return this.hoverCard; }
 
