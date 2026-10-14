@@ -27,6 +27,7 @@ import
     classifyConsoleLog,
     classifyLoggingPattern,
     classifyWindowCast,
+    countAnyCasts,
     countOccurrences,
     countWindowAliases,
     insideStringLiteral,
@@ -331,5 +332,56 @@ describe("the globalThis spelling", () =>
         const re = /(?:window|globalThis) as (.*)/g;
         const text = "(window as any).a;\n(globalThis as any).b;";
         expect([...text.matchAll(re)]).toHaveLength(2);
+    });
+});
+
+/**
+ * `countAnyCasts` watches the half of ANY-1 that `anyAnnotations` cannot
+ * see. `: any` is a declaration saying the type is unknown; `as any` says
+ * the same about an expression and carries no colon. 88 were gated and 69
+ * were not. Third time in this repository that a ratchet was narrower than
+ * the behavior it was named for, so these cases pin the behavior.
+ */
+describe("countAnyCasts", () =>
+{
+    test("a value cast counts", () =>
+    {
+        expect(countAnyCasts("const x = thing as any;")).toBe(1);
+    });
+
+    test("two casts on one line count twice", () =>
+    {
+        // The `grep -c` bug again. Measuring this file with `grep -c` reported
+        // 52 casts in toolbar.ts where countAnyCasts finds 56.
+        expect(countAnyCasts("f(a as any, b as any);")).toBe(2);
+    });
+
+    test("an annotation is not a cast", () =>
+    {
+        // anyAnnotations owns this one. Counting it here would double-count.
+        expect(countAnyCasts("let x: any = 1;")).toBe(0);
+    });
+
+    test("a doc comment example is not a cast", () =>
+    {
+        expect(countAnyCasts(" *     const x = el as any;")).toBe(0);
+        expect(countAnyCasts("// const x = el as any;")).toBe(0);
+    });
+
+    test("sample code drawn as string data is not a cast", () =>
+    {
+        const line = '        { num: "3", text: "  const x = y as any;", color: C },';
+        expect(countAnyCasts(line)).toBe(0);
+    });
+
+    test("a longer identifier is not the keyword", () =>
+    {
+        expect(countAnyCasts("const n = parseAsAnyone(x);")).toBe(0);
+        expect(countAnyCasts("const n = x as anyThing;")).toBe(0);
+    });
+
+    test("a file with no cast costs nothing", () =>
+    {
+        expect(countAnyCasts("export function f(): void { return; }")).toBe(0);
     });
 });

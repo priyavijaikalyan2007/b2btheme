@@ -216,6 +216,12 @@ export function countOccurrences(text, needle)
  *
  * WIN-2 then took the three to 6, 1 and 1, re-measured here on 2026-10-14.
  *
+ * anyCasts was added on 2026-10-14 while ANY-1 was being scoped, and it is
+ * the same discovery a third time. anyAnnotations counts `: any` and so
+ * watches declarations, while a value cast carries no colon. 88 annotations
+ * were gated and 69 casts were not, so the baseline covered 88 of 157. It is
+ * baselined here BEFORE any source file moves.
+ *
  * A BASELINE OF 6 GATES THE TOTAL AND SAYS NOTHING ABOUT THE COMPOSITION.
  * Six assertions remain because each reaches window by a name known only at
  * run time, and ADR-174 D3 lists them by file and line. That list is the
@@ -240,6 +246,7 @@ const BASELINES = {
     shimWithoutUtility: 0,
     directConsole: 0,
     anyAnnotations: 88,
+    anyCasts: 69,
     scssImportant: 113,
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
@@ -333,6 +340,49 @@ export function countWindowAliases(text)
     return { declarations, uses };
 }
 
+/**
+ * Count the `as any` VALUE CASTS, which `anyAnnotations` cannot see.
+ *
+ * `anyAnnotations` counts `: any`, so it watches the places a declaration
+ * says "I do not know this type". A value cast carries no colon and says
+ * the same thing about an expression, and it was counted by nothing.
+ * Measured across the tracked sources on 2026-10-14: 88 annotations and 70
+ * casts, so ANY-1 held a baseline over 88 of 158.
+ *
+ * That is the third time in this repository that a ratchet turned out to be
+ * narrower than the behavior it was named after. WIN-1 counted one spelling
+ * of four. `windowCasts` counted the assertion and not the alias that moved
+ * accesses out from under it. The lesson each time is the same: write the
+ * pattern against the BEHAVIOR, which here is reaching for `any` to silence
+ * the checker, rather than against one syntax for it. See insights 6.61 and
+ * 6.65.
+ *
+ * COMMENTS AND STRING DATA ARE NOT CASTS. `windowCasts` has no such
+ * filtering and a prose line reading "the global object as a namespace"
+ * counted against it until the sentence was reworded, which is a false
+ * POSITIVE and therefore safe, but it is still a number that does not mean
+ * what it says. This count asks the same string scanner `classifyConsoleLog`
+ * uses, because `diagramengine` draws sample source onto a canvas as string
+ * data and this repository has been bitten by that twice.
+ *
+ * @param text - One file's full source.
+ * @returns The number of real `as any` casts.
+ */
+export function countAnyCasts(text)
+{
+    let n = 0;
+    for (const line of text.split("\n"))
+    {
+        const trimmed = line.trimStart();
+        if (trimmed.startsWith("*") || trimmed.startsWith("//")) { continue; }
+        for (const m of line.matchAll(/\bas any\b/g))
+        {
+            if (!insideStringLiteral(line, m.index)) { n += 1; }
+        }
+    }
+    return n;
+}
+
 function measure()
 {
     const files = sourceFiles();
@@ -346,6 +396,7 @@ function measure()
         shimWithoutUtility: 0,
         directConsole: 0,
         anyAnnotations: 0,
+        anyCasts: 0,
         scssImportant: 0,
         componentsMissingMarker: 0,
         diagramengineSrcMissingMarker: 0,
@@ -377,6 +428,7 @@ function measure()
         counts.windowAliasUses += aliases.uses;
 
         counts.anyAnnotations += (text.match(/:\s*any\b/g) ?? []).length;
+        counts.anyCasts += countAnyCasts(text);
 
         for (const [n, line] of text.split("\n").entries())
         {

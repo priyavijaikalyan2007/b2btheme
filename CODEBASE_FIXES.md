@@ -40,6 +40,23 @@ These issues involve potential XSS or script injection vectors and must be addre
 
   **Cost to consumers, stated in the README:** text inside a PlantUML diagram is no longer selectable, a link inside one no longer works, and CSS targeting the inner `svg` no longer reaches it. The diagram source stays in `data-source` and in a visually hidden `pre` that `aria-describedby` points at. Mermaid and Graphviz are unaffected, because both render locally from author-written source and neither inserts a markup string.
 
+- [ ] **DEBT-SEC-5** Five third-party browser libraries are read from
+  `window` but are not vendored into `dist/lib`, so the host page chooses the
+  build and this repository applies no SRI to it: **highlight.js, KaTeX,
+  Mermaid, @viz-js/viz and CodeMirror 6**. `scripts/vendor-closure.mjs`
+  vendors seven assets with a published hash, and these five sit outside that
+  guarantee. `components/markdownrenderer/README.md` names a jsdelivr build
+  for each of the first four.
+
+  This surfaced during WIN-2, because these are exactly the globals no
+  declaration of ours can own, and CodeMirror 6 is the reason
+  `components/codeeditor/codeeditor.ts` keeps one of the six remaining
+  assertions. **Vendoring them would not remove that assertion** — codeeditor
+  probes about thirty names and asks for alternatives when the first spelling
+  is absent — so this is a supply-chain question in the shape of DEBT-SEC-4,
+  not a continuation of WIN-2. Decide whether the SRI guarantee should cover
+  them, and if so whether the optional renderers stay optional.
+
 ---
 
 ## CRITICAL — Standards
@@ -195,23 +212,6 @@ declaration buys real type safety, and it buys it once for the whole library.
   three that differ were each read: codeeditor's two accessors swapped order
   so terser swapped their mangled names, diagramengine extracts the factory
   name to a local, and spinemap emits the old `|| ""` fallback explicitly.
-
-- [ ] **DEBT-SEC-5** Five third-party browser libraries are read from
-  `window` but are not vendored into `dist/lib`, so the host page chooses the
-  build and this repository applies no SRI to it: **highlight.js, KaTeX,
-  Mermaid, @viz-js/viz and CodeMirror 6**. `scripts/vendor-closure.mjs`
-  vendors seven assets with a published hash, and these five sit outside that
-  guarantee. `components/markdownrenderer/README.md` names a jsdelivr build
-  for each of the first four.
-
-  This surfaced during WIN-2, because these are exactly the globals no
-  declaration of ours can own, and CodeMirror 6 is the reason
-  `components/codeeditor/codeeditor.ts` keeps one of the six remaining
-  assertions. **Vendoring them would not remove that assertion** — codeeditor
-  probes about thirty names and asks for alternatives when the first spelling
-  is absent — so this is a supply-chain question in the shape of DEBT-SEC-4,
-  not a continuation of WIN-2. Decide whether the SRI guarantee should cover
-  them, and if so whether the optional renderers stay optional.
 
 ---
 
