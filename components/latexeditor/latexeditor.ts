@@ -24,8 +24,8 @@
 /** Log prefix for all console messages from this component. */
 const LOG_PREFIX = "[LatexEditor]";
 
-const _lu = (typeof (window as any).createLogUtility === "function")
-    ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 function logInfo(...a: unknown[]): void
 {

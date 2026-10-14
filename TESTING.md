@@ -199,11 +199,13 @@ A check that counts something is only as good as the rule it uses to decide
 what counts. That rule is code, so it gets tests like any other code.
 
 `scripts/audit-counts.mjs` reports how many `console.log` violations the tree
-holds. After LOG-2 the honest answer is zero, out of 135 lines containing the
-token: 122 are the body of a logging shim where `console.log` is the correct
+holds. After LOG-2 the honest answer is zero, out of 136 lines containing the
+token: 123 are the body of a logging shim where `console.log` is the correct
 mapping for INFO, 10 sit in doc comments, 2 are sample code drawn on a canvas
 as string data, and one is the log utility's own fallthrough. A count that
-skipped the classification would report 135 and be wrong in every digit.
+skipped the classification would report 136 and be wrong in every digit.
+(Written as 122 of 135 on 2026-10-13, which the script never reported at any
+commit. Re-derived with `node scripts/audit-counts.mjs` on 2026-10-14.)
 
 So `scripts/audit-counts.test.ts` gives every outcome a case, and the probe in
 2.6 applies here too — mutate the classifier and confirm the tests notice:
@@ -242,6 +244,35 @@ made the ratchet true on one machine — a gate nothing runs is a gate that
 cannot fail. The number can only fall, and lowering a baseline is how progress gets
 recorded. A baseline stops silent growth. It does not claim the count is
 acceptable.
+### 2.8 Verify a Type-Only Change by Its Compiled Output
+
+Some changes are supposed to leave the program alone. A cast removed, a symbol
+renamed, an `import type` added, a line reflowed. The usual evidence is a green
+test suite, and for this class of change it is weaker than it looks. A passing
+suite says the paths the tests cover still behave the same way. It says nothing
+about the paths they do not cover, and a refactor that touches 110 files
+touches plenty of those.
+
+**Build before, build after, and diff the emitted output.**
+
+```bash
+npm run build:ts
+cp -R dist/components /tmp/before-components
+# ... make the change ...
+npm run build:ts
+diff -rq /tmp/before-components dist/components
+```
+
+WIN-1 phase A ran this across 110 files and all 126 bundles came back
+byte-for-byte identical. That is a different kind of claim from "the tests
+pass". It says no path changed, because the program the browser downloads is
+the same program. When the diff is not empty, the change was not type-only and
+the suite would not have told you.
+
+Two limits. The output has to be deterministic, so a build that stamps a
+timestamp or a hash into the bundle needs that file excluded or the stamp
+pinned. And an empty diff proves only that behavior did not change. It does not
+prove the change was correct, so the compiler and the suite still have to run.
 
 ---
 

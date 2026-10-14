@@ -6104,9 +6104,11 @@
     = THEMEINIT WILL ALMOST NEVER ROUTE. It runs in `<head>` before every other
       script by design. The guarded `typeof` check costs nothing and keeps the
       pattern uniform, so it conforms rather than becoming a tracked exception.
-    - 117 FILES STILL USE THE OLD ONE-LINE CAST FORM. They compile and classify
+    - 110 FILES STILL USE THE OLD ONE-LINE CAST FORM. They compile and classify
       as conforming. Converting them is the mechanical path to closing WIN-1,
-      roughly 220 of its 294 occurrences, and is deliberately not done here.
+      220 of its 294 occurrences, and is deliberately not done here. (Written
+      as 117 files on 2026-10-13. Measured the next day: 110 files on 112
+      lines. ADR-172 carries the correction and the conversion.)
     - REFACTORING THE CODE A CHECK READS CAN BLIND THE CHECK. After the factory
       landed, 17 modules holding 57 log calls classified as "no-logging" and
       the ratchet passed in silence. A count can be right by accident. When a
@@ -6125,5 +6127,77 @@
     - "CODEBASE_FIXES.md"
     - "AGENT_INSIGHTS.md"
     - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
+
+- id: ADR-172
+  title: The LogUtility lookup moves to the declared global, and a type-only change proves itself by its output
+  date: 2026-10-14
+  status: accepted
+  context: |
+    ADR-171 D2 established that a window global is declared in
+    `components/globals.d.ts` and reached without a cast, and it applied that to
+    the 7 files it migrated. It left 110 files on the older one-line form:
+    `const _lu = (typeof (window as any).createLogUtility === "function") ? ...`.
+    Those 110 files carried 220 of WIN-1's 294 cast occurrences, two per line,
+    on 112 lines.
+
+    The line was also 148 characters wide against the 120-character limit in
+    AGENTS.md. Removing the two casts saves 18 characters and leaves it at 130,
+    so a cast-only substitution would have closed one standards gap and left
+    the other open. FRONTEND_LOGGING.md section 1 already prescribes a
+    three-line shape for exactly this reason.
+
+    Re-deriving the remainder changed what WIN-1 is. The entry described it as
+    unsafe reads of other components' globals and named `MathfieldElement`
+    among them. `MathfieldElement` appears only in a test file, which the
+    counted file set excludes. Of the 74 occurrences that survive phase A, 66
+    are a component publishing its own API to `window`, 7 are cross-component
+    reads and every one of those 7 already guards with `typeof`, and 1 is a
+    comment.
+  decision: |
+    D1. ALL 110 FILES MOVE TO THE DECLARED GLOBAL, REFLOWED TO THREE LINES. The
+        substitution and the reflow happen together, because the cast and the
+        line width are two standards violations on one line and fixing one
+        without the other leaves the line non-conforming.
+
+    D2. THE SHIM BODIES ARE LEFT ALONE. They are about 100 characters, inside
+        the limit, and the classifier in scripts/audit-counts.mjs accepts both
+        the one-line and the three-line body. Reflowing them would triple the
+        diff and change the shape of what check `[20]` reads, which is the
+        exact move that blinded the check in ADR-171.
+
+    D3. A TYPE-ONLY CHANGE IS VERIFIED BY DIFFING THE COMPILED OUTPUT, not only
+        by the test suite. Build before, build after, diff. The claim is that
+        the runtime does not move, and the emitted bundles are that claim
+        stated in bytes.
+
+    D4. WIN-1 STAYS OPEN. Phase B is the 74 remaining occurrences, and they are
+        a different kind of work: roughly 20 declarations added to
+        `components/globals.d.ts`, one per published global.
+  consequences: |
+    + WIN-1 FALLS FROM 294 OCCURRENCES ON 186 LINES IN 113 FILES TO 74 ON 74
+      LINES IN 27 FILES. Baselines lowered to 74 and 27, and an identity
+      mutation confirms check `[20]` fails at the new level on both counts.
+    + ALL 126 COMPILED BUNDLES ARE BYTE-FOR-BYTE IDENTICAL before and after.
+      Nothing but types and whitespace changed, and that is proved rather than
+      inferred from 4,958 passing tests.
+    + 108 LINES COME INSIDE THE 120-CHARACTER LIMIT. They were 148.
+    = THE DOUBLE-CAST FORM IS FORMALLY SUPERSEDED. CODEBASE_FIXES.md still
+      named it as the required pattern. AGENTS.md now records that it forces a
+      second cast on the value and buys nothing over `any`.
+    - SPECS AND TWO COMPONENT READMES STILL SHOW THE DOUBLE CAST. They document
+      publication and read sites that phase B will change, so they are
+      corrected when phase B reaches them rather than now.
+    - A RATCHET GATES THE TOTAL AND NOT ITS COMPOSITION. WIN-1's count was
+      correct and re-derivable while the paragraph explaining what made it up
+      was wrong in two places. Insight 6.60.
+  files:
+    - "AGENTS.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "TESTING.md"
+    - "CHANGELOG.md"
+    - "scripts/audit-counts.mjs"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"

@@ -548,8 +548,10 @@ snippet every component is told to copy carried two `(window as any)` casts.
 Using it 26 more times would have added 52 occurrences to the very count
 another open item tracks, and the structure suite would have rejected the
 change for violating one standard while complying with another. The snippet
-also ran 133 to 150 characters wide against a documented 120-character limit,
-in 117 files. A mandated snippet is code, and nobody had reviewed it as code.
+also ran 148 characters wide against a documented 120-character limit, in 108
+files. (Both of those figures were wrong when first written, as 133 to 150 and
+117. Measured on 2026-10-14: the one-line form was uniformly 148 characters in
+108 files, and 2 further files already carried it across three lines.) A mandated snippet is code, and nobody had reviewed it as code.
 
 **Before migrating N files onto a pattern, check the pattern against the other
 standards it has to satisfy.** The migration is the cheap part. Declaring the
@@ -569,3 +571,44 @@ a measurement after the thing it measures has changed is not restating, it is
 asserting.** See [[6.55]]: the pattern is half the claim, and a regex that
 matches more than you think is how a count becomes a different count with the
 same name.
+
+### 6.59 Byte-Identical Compiled Output Is the Proof That a Type-Only Change Is Type-Only (2026-10-14)
+
+WIN-1 phase A changed 110 files. It replaced `(window as any).createLogUtility`
+with `window.createLogUtility` and reflowed one line into three. Every edit was
+supposed to touch types and whitespace only. The 4958 unit tests passed, which
+is the usual evidence, and it is weaker than it looks: a passing suite says the
+paths the tests cover still behave the same. It says nothing about the paths
+they do not cover.
+
+**For a change that claims to be type-only, build before and build after, then
+diff the emitted output.** All 126 compiled bundles came back byte-for-byte
+identical. That is not evidence about covered paths. It is evidence that no
+path changed, because the program the browser runs is the same program. The
+check cost one `cp -R` and one `diff -rq`, and it is available for any refactor
+whose whole claim is that the runtime does not move: a rename, a cast removal,
+a reflow, an `import type`. When the diff is not empty, the claim was wrong and
+the suite would not have told you. Related: [[6.54]] on probes that measure
+themselves.
+
+### 6.60 A Ratchet Gates the Total and Says Nothing About What the Total Is Made Of (2026-10-14)
+
+WIN-1's measured count of 294 was correct, re-derivable, and gated by check
+`[20]`. The paragraph underneath it, explaining what those 294 casts *were*,
+was wrong twice. It listed `MathfieldElement` among the remaining third-party
+globals, and all 3 of its casts live in a test file the counted file set
+excludes, so it was never in the 294 at all. It also framed the item as unsafe
+reads of other components' globals. When the mechanical half was removed and
+the remainder could be read directly, 66 of the 74 survivors turned out to be
+each component publishing its own API to `window`, and only 7 were
+cross-component reads. Every one of those 7 already guarded with `typeof`.
+
+**The breakdown of a count is a separate claim from the count, and only one of
+them is under the ratchet.** The number was protected by a check that reruns on
+every commit. The sentence describing its composition was protected by nothing,
+so it aged the way the March 2026 figures aged. Before scoping work from a
+tracker entry, re-derive the composition, not only the total — the total tells
+you how much there is and the composition tells you what kind of work it is.
+Here it was the difference between "20 declarations and no behavior change" and
+"audit every cross-component lookup in the library". See [[6.55]]: a count is a
+claim about a file set and a pattern, and so is every sentence that explains it.

@@ -64,15 +64,50 @@ These violate mandatory project conventions (`export` keyword requirement per ME
 
 ## HIGH — Window Cast Pattern
 
-Per ADR and MEMORY.md, the required pattern is `(window as unknown as Record<string, unknown>)`. Using `(window as any)` bypasses type safety.
+Per the March 2026 audit, the required pattern was
+`(window as unknown as Record<string, unknown>)`. **ADR-171 D2 superseded that
+on 2026-10-13.** A window global is now declared in `components/globals.d.ts`
+and reached without any cast. The double-cast form forces a second cast on the
+value that comes back, so it buys no type safety over `any`. A declaration buys
+real type safety, and it buys it once for the whole library.
 
-- [ ] **WIN-1** `(window as any)` is used instead of the required double-cast pattern. **Measured 2026-10-13 by `scripts/audit-counts.mjs`: 294 occurrences on 186 lines in 113 non-test files**, not the 20 files and 62 occurrences recorded in March 2026. The file list below is the March list and is no longer the whole set.
+- [ ] **WIN-1** `(window as any)` is used instead of a declared global. **Phase A
+  is done. Measured 2026-10-14 by `scripts/audit-counts.mjs`: 74 occurrences on
+  74 lines in 27 non-test files**, down from 294 on 186 lines in 113 files. The
+  file list below is the March list and is no longer the whole set.
 
-  **A correction to this entry's own previous figure.** It read "311 occurrences on 203 lines" on 2026-10-12. The file count of 113 was right and both other numbers were not. No file set in this repository yields 311 or 203, the code containing these casts is byte-identical at every commit from `4daccb4` to now, and the counting command was never written down, so the error cannot be traced further. That is the whole argument for check `[20]`: a count whose file set and pattern are not stated in code is not a measurement.
+  **Phase A, closed 2026-10-14.** The LogUtility preamble carried 220 of the 294
+  occurrences, two per line, on 112 lines in 110 files. Every one of those lines
+  was textually identical, so all 110 files moved to the declared form in one
+  pass. The preamble was also 148 characters wide, against the 120-character
+  limit in AGENTS.md, and dropping the casts alone would have left it at 130. It
+  is now reflowed to the three-line shape that FRONTEND_LOGGING.md section 1
+  prescribes, so 108 lines came inside the limit as well. The compiled output is
+  byte-identical across all 126 emitted bundles, which is the proof that nothing
+  but types changed. Baselines lowered: `windowAnyCasts` 294 to 74,
+  `windowAnyFiles` 113 to 27.
 
-  **The growth has one dominant cause, and it is not drift in the components.** 112 of the 186 lines are the same logging preamble, `const _lu = (typeof (window as any).createLogUtility === "function") ? …`, which was added to every component after the audit ran. **86 files contain no other violation at all** — the preamble is their only one. The remaining 74 lines are genuine and need individual attention: reads of another component's global such as `(window as any).createHoverCard` (6 times, not the 15 recorded on 2026-10-12), third-party globals such as `MathfieldElement` and `DOMPurify`, and bracket-form registrations.
+  **Phase B is the 74 that remain, and they are not one problem.** 66 of them are
+  a component publishing its own API to `window`, not a component reading
+  anybody else's. 7 are genuine cross-component reads, and all 7 already guard
+  with `typeof`. 1 is a comment. The publication sites need a declaration each
+  and then a plain assignment. The read sites need an optional declaration, and
+  because they already guard, they will not raise a strict-null error. Phase B
+  is therefore low risk and roughly 20 declarations of work, which is why it is
+  scoped separately rather than bundled into the mechanical pass.
 
-  **Scope this as two items, not one.** The preamble is a single mechanical change and the correct fix is probably a shared typed accessor rather than 112 copies of a longer cast, because the double-cast form also forces a second cast on the value. The 74 remaining uses are the actual audit finding. Those 112 preamble lines carry 220 of the 294 occurrences, two per line, and the other 74 occurrences sit one per line.
+  **A correction to this entry's own inventory.** It named `MathfieldElement`
+  among the remaining third-party globals. All 3 of its casts are in
+  `components/latexeditor/latexeditor.test.ts`, and the counted file set excludes
+  tests, so it was never part of the 294 and is not part of the 74.
+
+  **A correction to this entry's own previous figure.** It read "311 occurrences
+  on 203 lines" on 2026-10-12. The file count of 113 was right and both other
+  numbers were not. No file set in this repository yields 311 or 203, the code
+  containing these casts is byte-identical at every commit from `4daccb4` to
+  2026-10-13, and the counting command was never written down, so the error
+  cannot be traced further. That is the whole argument for check `[20]`: a count
+  whose file set and pattern are not stated in code is not a measurement.
 
   March 2026 file list, retained as the starting point:
   - `components/timeline/timeline.ts`
@@ -375,7 +410,7 @@ the step exits 1 and the workflow fails.
 |----------|-------|--------|
 | CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 1 (113 files, 294 occurrences, 2026-10-13) | Open — `components/globals.d.ts` now gives the typed path |
+| HIGH — Window Cast | 1 (27 files, 74 occurrences, 2026-10-14) | Open — phase A removed 220 of 294, phase B is 66 publication sites and 7 guarded reads |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
@@ -398,7 +433,7 @@ the step exits 1 and the workflow fails.
 | LOG-1 | 406 | 2 real call sites | far smaller |
 | IMP-1 | 47 | 113 | far larger |
 | ANY-1 | 60 | 88 | larger |
-| WIN-1 | 62 | 294 | far larger |
+| WIN-1 | 62 | 294, now 74 after phase A | far larger |
 | UNUSED-1 | 119 | 421 | far larger |
 | STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |

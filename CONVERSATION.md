@@ -3059,7 +3059,7 @@ times would have added 52 occurrences to WIN-1 and failed the same check — a
 change complying with one standard by violating another. `components/globals.d.ts`
 now types `window.createLogUtility`, so the lookup keeps its type and adds
 nothing to the count. The snippet also ran 133 to 150 characters wide against
-a documented 120-character limit, in all 117 files that already used it. A
+a documented 120-character limit, in all 110 files that already used it. A
 mandated snippet is code, and nobody had reviewed it as code.
 
 **Then the failure worth keeping.** After the factory landed, the check
@@ -3084,8 +3084,77 @@ to 30,479. An identity mutation reverting one engine module makes check `[20]`
 exit 1 on two counts. Mutation sensitivity on the classifier is now 7/2/5/1
 across 24 tests.
 
-**Left open deliberately.** 117 files still use the old one-line cast form.
+**Left open deliberately.** 110 files still use the old one-line cast form.
+(Written as 117 on 2026-10-13 and measured as 110 the next day.)
 They compile and they classify as conforming. Converting them is roughly 220
 of WIN-1's 294 occurrences and is now a mechanical sed, which is the next
 obvious piece of work. ADR-171, insights 6.57 and 6.58. Tracker 38 resolved /
 25 open.
+
+---
+
+## WIN-1 Phase A — the preamble moves to the declared global (2026-10-14)
+
+**The mechanical half of WIN-1, and only the mechanical half.** 220 of its 294
+`(window as any)` occurrences were one textually identical line repeated in
+110 component files, two casts per line on 112 lines. ADR-171 had already
+built the typed path in `components/globals.d.ts` and used it in 7 files. This
+pass moves the other 110 onto it. Measured after: **74 occurrences on 74 lines
+in 27 files**, against a derived prediction of 74 and 27 made before the
+measurement was taken.
+
+**A cast-only substitution would have been the wrong fix.** The line was 148
+characters against the 120-character limit in AGENTS.md, and dropping two
+casts saves 18 characters, which leaves it at 130. Still over. It is reflowed
+to the three-line shape FRONTEND_LOGGING.md section 1 prescribes, so 108 lines
+came inside the limit as well. Two files already carried the three-line shape
+with casts and took the substitution alone.
+
+**The shim bodies were left alone on purpose.** They sit at about 100
+characters, inside the limit, and `classifyLoggingPattern` accepts both the
+one-line and the three-line body. Reflowing them would have tripled the diff
+and changed the shape of what check `[20]` reads, which is precisely the move
+that blinded the check during LOG-2. The 123 shim-body lines the classifier
+partitions are unchanged.
+
+**The verification that matters here is not the test suite.** 4,958 tests
+passing says the paths the tests cover still behave the same. For a change
+that claims to be type-only, that is the weaker statement. `dist/components`
+was built before, copied, rebuilt after and diffed: all **126** emitted
+bundles are byte-for-byte identical. No path changed, because the program the
+browser downloads is the same program. The diff across the 110 source files
+holds exactly 5 distinct changed-line forms, 328 insertions and 112 deletions.
+Insight 6.59, TESTING.md section 2.8.
+
+**The finding worth keeping: a ratchet gates a total and says nothing about
+its composition.** WIN-1's count of 294 was correct, re-derivable and gated by
+check `[20]` on every commit. The paragraph underneath it, explaining what
+those casts were, was protected by nothing and was wrong twice. It listed
+`MathfieldElement` among the remaining third-party globals, and all 3 of its
+casts live in a test file the counted file set excludes, so it was never among
+the 294. It framed the item as unsafe reads of other components' globals, and
+when the mechanical half came off, **66 of the 74 survivors turned out to be a
+component publishing its own API to `window`**, 7 were cross-component reads
+with a `typeof` guard already on every one, and 1 was a comment. That is the
+difference between "about 20 declarations, no behavior change" and "audit
+every cross-component lookup in the library". Insight 6.60.
+
+**Three published figures were wrong and are corrected here.** TESTING.md
+section 2.7 said 122 shim bodies out of 135, and the script has reported 123
+of 136 at every commit since `5e651f7`. The CHANGELOG's LOG-2 bullet still
+read "282 lines" and "192 call sites" after `54927f0` corrected those numbers
+in the tracker, the ADR and the insights. ADR-171 and insight 6.58 said 117
+files at 133 to 150 characters, measured now as 110 files uniformly at 148.
+None of the three changes a conclusion. All three are the same error as the
+one LOG-2 closed on, which is why they are recorded rather than quietly
+overwritten.
+
+**Verified.** `tsc --noEmit` clean on the full project and on
+`tsconfig.runtime.json`. 4,958 unit tests pass. 24 classifier tests pass. 32
+of 32 structure checks pass. Baselines lowered to 74 and 27, and an identity
+mutation reintroducing one cast makes check `[20]` report both counts over.
+
+**Left open.** WIN-1 phase B, the 74 remaining: roughly 20 declarations added
+to `components/globals.d.ts`, one per published global, plus the two component
+READMEs and the specs that still document the superseded double-cast form.
+ADR-172, insights 6.59 and 6.60. Tracker 38 resolved / 25 open.

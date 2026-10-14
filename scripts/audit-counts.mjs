@@ -18,7 +18,9 @@
  *   - WIN-1 was re-measured on 2026-10-12 as 311 occurrences on 203
  *     lines in 113 files. The file count is right. No file set in this
  *     repository yields 311 or 203, the code is byte-identical at every
- *     commit since, and the true figure is 294 occurrences on 186 lines.
+ *     commit since, and the true figure was 294 occurrences on 186 lines.
+ *     WIN-1 phase A has since removed the 220 of those that were the
+ *     LogUtility lookup, leaving 74 occurrences on 74 lines in 27 files.
  *   - LOG-1 was measured three times (406, 200, 176) with no change to
  *     the code in between, because the file set and the pattern were
  *     never written down.
@@ -172,14 +174,15 @@ export function countOccurrences(text, needle)
 }
 
 /**
- * Baselines measured 2026-10-13. windowAnyCasts, windowAnyFiles,
- * anyAnnotations, scssImportant and the three marker counts were measured at
- * 38c6f1b. The three logging counts and diagramengineLines were re-measured
- * after LOG-2 landed. Ratchet down only.
+ * Baselines measured 2026-10-13, except where noted. anyAnnotations,
+ * scssImportant and the three marker counts were measured at 38c6f1b. The
+ * three logging counts and diagramengineLines were re-measured after LOG-2
+ * landed. windowAnyCasts and windowAnyFiles were re-measured on 2026-10-14
+ * after WIN-1 phase A. Ratchet down only.
  */
 const BASELINES = {
-    windowAnyCasts: 294,
-    windowAnyFiles: 113,
+    windowAnyCasts: 74,
+    windowAnyFiles: 27,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,

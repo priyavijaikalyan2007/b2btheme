@@ -95,8 +95,8 @@ export interface LayoutPickerAPI
 // ============================================================================
 
 const LOG_PREFIX = "[LayoutPicker]";
-const _lu = (typeof (window as any).createLogUtility === "function")
-    ? (window as any).createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
+const _lu = (typeof window.createLogUtility === "function")
+    ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
 function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }

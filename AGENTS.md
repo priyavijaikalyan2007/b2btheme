@@ -514,6 +514,9 @@ consistent, thoughtful and complete end to end experience.
   declaration file types the globals components publish to each other, so the lookup keeps its
   type and the line does not add to WIN-1. Add the global there when you publish a new one. Check
   `[20]` ratchets the cast count, so a new cast in `components/` fails the structure suite.
+  The older `(window as unknown as Record<string, unknown>)` form is superseded by ADR-171 D2.
+  It forces a second cast on the value that comes back, so it buys nothing over `any`. Some
+  specs and component READMEs still show it, and they are corrected as WIN-1 phase B reaches them.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.
