@@ -61,16 +61,65 @@ const GLOBAL_FLAGS = {
 type GlobalFlagName = (typeof GLOBAL_FLAGS)[keyof typeof GLOBAL_FLAGS];
 
 /**
- * Checks whether a global debug flag is set on window.
+ * THE LOCAL DEVELOPMENT RULE, STATED ONCE.
+ *
+ * This literal is repeated character-for-character in the fallback preamble
+ * every component carries, because that path runs when `logutility.js` is
+ * not loaded and so cannot call into this file. `scripts/audit-counts.mjs`
+ * compares the two texts and fails if they drift apart.
+ *
+ * `[::1]` keeps its brackets: `location.hostname` returns an IPv6 literal
+ * bracketed in every major browser. `*.localhost` is included because
+ * RFC 6761 reserves it for loopback. DELIBERATELY EXCLUDED: `file:` URLs,
+ * whose hostname is empty; LAN addresses such as 192.168.x and 10.x, which
+ * are real devices on a real network; and `.test`, which is reserved but
+ * not resolved to loopback by browsers. Widen this only on purpose.
+ */
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
+
+/** Whether the page is being served from a local development host. */
+function isLocalHost(): boolean
+{
+    try
+    {
+        return LOCAL_HOSTS.test(window.location.hostname);
+    }
+    catch
+    {
+        return false;
+    }
+}
+
+/**
+ * Whether a verbose level has been switched on for this page.
+ *
+ * THE FLAG IS TRI-STATE AND THAT IS THE POINT. Unset means "decide for me",
+ * which for `debug` means local development is enough and for every other
+ * level means no. `true` switches the level on anywhere. `false` switches it
+ * off even on localhost, which is how a test run keeps its output quiet
+ * while jsdom serves it from `http://localhost:3000/`.
+ *
+ * Only `debug` follows the host. Trace stays flag-only, because trace is
+ * event-handler volume and nobody wants it merely for opening a page.
+ *
+ * This FORCES ON. A level the configured `level` already admits is emitted
+ * whatever the flag says, so an explicit `createLogUtility({ level: "debug" })`
+ * still wins. The flag is for turning something on that the level would
+ * otherwise filter.
  *
  * @param flagName - The window property name to check.
- * @returns True if the flag is truthy.
+ * @returns True if the level should be emitted regardless of `level`.
  */
 function isGlobalFlagSet(flagName: GlobalFlagName): boolean
 {
     try
     {
-        return !!window[flagName];
+        const flag = window[flagName];
+
+        if (typeof flag === "boolean") { return flag; }
+        if (flag !== undefined) { return !!flag; }
+
+        return flagName === GLOBAL_FLAGS.debug && isLocalHost();
     }
     catch
     {
@@ -183,7 +232,13 @@ class LogUtilityImpl implements LogUtility
 
     constructor(options?: LogUtilityOptions)
     {
-        this.level = LEVELS[options?.level ?? "debug"];
+        // "info" rather than "debug". The debug gate is `level > LEVELS.debug`,
+        // so a default of "debug" made `0 > 0` false and DEBUG EMITTED
+        // EVERYWHERE. All 125 components call `createLogUtility()` with no
+        // options and the singleton keeps whatever the first caller passed,
+        // so in practice the default governed every page that did not
+        // configure one. Verbose levels are opt-in now. LOG-3, ADR-176.
+        this.level = LEVELS[options?.level ?? "info"];
         this.timestamps = options?.timestamps !== false;
         this.consoleOutput = options?.consoleOutput !== false;
         this.logConsole = options?.logConsole ?? null;

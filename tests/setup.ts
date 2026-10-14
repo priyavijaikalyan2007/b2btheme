@@ -108,3 +108,19 @@ if (typeof window.matchMedia !== "function")
         }),
     });
 }
+
+/*
+ * KEEP THE SUITE QUIET ON A LOCALHOST URL.
+ *
+ * LOG-3 turns debug logging on automatically when `location.hostname` is a
+ * local development host, and jsdom serves every test from
+ * `http://localhost:3000/`. Without this the 4983 tests go verbose and six
+ * level-filtering assertions fail, which is how the rule was first shown to
+ * work rather than a problem with it.
+ *
+ * `false` rather than `delete`, because the flag is tri-state: unset means
+ * "let the host decide", and here the host is always localhost. A test that
+ * wants to exercise the automatic behavior sets the flag back to
+ * `undefined` for its own duration.
+ */
+window.__ebt_debug_logging = false;

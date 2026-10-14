@@ -192,9 +192,31 @@ describe("console method dispatch", () =>
         );
     });
 
-    test("debug should call console.debug", () =>
+    // LOG-3. Nothing pinned the default level before, so flipping it from
+    // "debug" to "info" broke exactly one test, and that test was about
+    // console dispatch rather than about the default. These two are about
+    // the default.
+    test("debug is silent by default", () =>
     {
         const lu = createLogUtility({ timestamps: false });
+        lu.getLogger("X").debug("msg");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("info is emitted by default", () =>
+    {
+        const lu = createLogUtility({ timestamps: false });
+        lu.getLogger("X").info("msg");
+
+        expect(console.log).toHaveBeenCalledWith("[INFO]", "[X]", "msg");
+    });
+
+    test("debug should call console.debug", () =>
+    {
+        // `level` is explicit because the default is "info" from LOG-3 on,
+        // and this case is about the console method, not about filtering.
+        const lu = createLogUtility({ timestamps: false, level: "debug" });
         const log = lu.getLogger("X");
 
         log.debug("msg");
@@ -631,7 +653,11 @@ describe("global debug flags", () =>
 
     afterEach(() =>
     {
-        delete win.__ebt_debug_logging;
+        // `false`, not `delete`, for debug alone. Deleting it means "let the
+        // host decide" and jsdom's host is localhost, so a deleted flag
+        // turns debug back on and leaks into the next test. Info and trace
+        // do not follow the host, so unset and false mean the same for them.
+        win.__ebt_debug_logging = false;
         delete win.__ebt_info_logging;
         delete win.__ebt_trace_logging;
         resetLogUtility();
@@ -725,5 +751,113 @@ describe("global debug flags", () =>
         log.debug("suppressed again");
 
         expect(console.debug).toHaveBeenCalledTimes(1);
+    });
+});
+
+/**
+ * THE LOCAL DEVELOPMENT RULE.
+ *
+ * Debug logging is on without a flag when the page is served from a local
+ * host, and trace is NOT: trace is event-handler volume and nobody wants it
+ * merely for opening a page. The same regex literal appears in every
+ * component's fallback preamble, and `scripts/audit-counts.mjs` compares the
+ * two texts, so these cases pin the semantics for both.
+ */
+describe("the local development rule", () =>
+{
+    const win = window as unknown as Record<string, unknown>;
+    const setHost = (hostname: string): void =>
+    {
+        Object.defineProperty(window, "location", {
+            configurable: true,
+            value: { ...window.location, hostname },
+        });
+    };
+    const realLocation = window.location;
+
+    afterEach(() =>
+    {
+        Object.defineProperty(window, "location",
+            { configurable: true, value: realLocation });
+        win.__ebt_debug_logging = false;
+        resetLogUtility();
+    });
+
+    const LOCAL = ["localhost", "127.0.0.1", "[::1]", "app.localhost"];
+    const REMOTE = ["theme.priyavijai-kalyan2007.workers.dev", "example.com",
+                    "192.168.1.40", "10.0.0.5", "localhost.example.com", ""];
+
+    test.each(LOCAL)("debug is on at %s with no flag set", (hostname) =>
+    {
+        delete win.__ebt_debug_logging;
+        setHost(hostname);
+
+        createLogUtility({ timestamps: false }).getLogger("X").debug("msg");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(REMOTE)("debug is off at %s with no flag set", (hostname) =>
+    {
+        delete win.__ebt_debug_logging;
+        setHost(hostname);
+
+        createLogUtility({ timestamps: false }).getLogger("X").debug("msg");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    // `localhost.example.com` is in the remote list above on purpose. A rule
+    // written as `hostname.includes("localhost")` would call it local, and
+    // it is a public domain anybody can register.
+    test("a hostname merely containing localhost is remote", () =>
+    {
+        delete win.__ebt_debug_logging;
+        setHost("localhost.example.com");
+
+        createLogUtility({ timestamps: false }).getLogger("X").debug("msg");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("an explicit false beats the local host", () =>
+    {
+        win.__ebt_debug_logging = false;
+        setHost("localhost");
+
+        createLogUtility({ timestamps: false }).getLogger("X").debug("msg");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("an explicit true beats a remote host", () =>
+    {
+        win.__ebt_debug_logging = true;
+        setHost("example.com");
+
+        createLogUtility({ timestamps: false }).getLogger("X").debug("msg");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
+    });
+
+    test("trace does NOT follow the host", () =>
+    {
+        delete win.__ebt_trace_logging;
+        setHost("localhost");
+
+        createLogUtility({ timestamps: false }).getLogger("X").trace("msg");
+
+        expect(console.debug).not.toHaveBeenCalled();
+    });
+
+    test("trace still responds to its own flag", () =>
+    {
+        win.__ebt_trace_logging = true;
+        setHost("example.com");
+
+        createLogUtility({ timestamps: false }).getLogger("X").trace("msg");
+
+        expect(console.debug).toHaveBeenCalledTimes(1);
+        delete win.__ebt_trace_logging;
     });
 });
