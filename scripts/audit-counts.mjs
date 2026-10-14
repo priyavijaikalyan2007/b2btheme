@@ -222,7 +222,14 @@ export function countOccurrences(text, needle)
  * were gated and 69 casts were not, so the baseline covered 88 of 157. It is
  * baselined here BEFORE any source file moves.
  *
- * ANY-1 then took the pair to 13 and 2, re-measured on 2026-10-14. All 15
+ * ANY-1 then took the pair to 13 and 2, re-measured on 2026-10-14.
+ *
+ * ungatedVerboseShims and driftedHostRule were added on 2026-10-14 for
+ * LOG-3, baselined at 225 across 117 files BEFORE any preamble moved. The
+ * second one is 0 from the start and must stay there: it fails the moment a
+ * file computes `_dbg` without carrying the host rule verbatim, which is
+ * the only mechanical guard against the two implementations of that rule
+ * drifting apart. All 15
  * are in components/visualtableeditor/visualtableeditor.ts and are carried
  * as ANY-3, because they name another component's option types and neither
  * the no-cross-import rule nor components/globals.d.ts reaches those.
@@ -247,6 +254,8 @@ const BASELINES = {
     windowAnyFiles: 0,
     windowAliasDecls: 1,
     windowAliasUses: 1,
+    ungatedVerboseShims: 225,
+    driftedHostRule: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -388,6 +397,53 @@ export function countAnyCasts(text)
     return n;
 }
 
+/**
+ * THE LOCAL DEVELOPMENT RULE, as `components/logutility/logutility.ts`
+ * states it. Repeated here so the check below can compare the two texts.
+ */
+export const LOCAL_HOST_RULE = String.raw`/^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/`;
+
+/**
+ * Count the verbose logging shims whose console fallback has no gate.
+ *
+ * WHY THE FALLBACK NEEDS ITS OWN GATE
+ * -----------------------------------
+ * Every component carries five one-line shims of the form
+ *
+ *     function logDebug(...a) { _lu ? _lu.debug(...a) : console.debug(...); }
+ *
+ * `_lu` is the LogUtility, which filters by level and by the `__ebt_*`
+ * flags. The branch after the colon runs when `logutility.js` was NOT
+ * loaded, and it filtered nothing at all: debug and trace printed
+ * unconditionally and no flag could stop them. FRONTEND_LOGGING.md records
+ * that 6 of 138 demo pages load the utility, so that branch is the usual
+ * one rather than the exception.
+ *
+ * The two paths cannot share code, because the whole point of the fallback
+ * is that the utility is absent. Two implementations of one rule is exactly
+ * the drift this repository keeps finding, so this check pins the text:
+ * a gated shim reads `: _dbg && console.debug(` or `: _trc && console.debug(`,
+ * and any file that computes `_dbg` must contain LOCAL_HOST_RULE verbatim.
+ * The unit tests in logutility.test.ts pin the semantics on the other side.
+ *
+ * @param text - One file's full source.
+ * @returns `{ ungated, missingRule }` for that file.
+ */
+export function countUngatedVerboseShims(text)
+{
+    let ungated = 0;
+    for (const [name, gate] of [["logDebug", "_dbg"], ["logTrace", "_trc"]])
+    {
+        const shim = new RegExp(`function ${name}\\([^)]*\\)[^{]*\\{([^}]*)\\}`);
+        const m = text.match(shim);
+        if (!m) { continue; }
+        if (!m[1].includes(`${gate} && console.`)) { ungated += 1; }
+    }
+    const usesRule = text.includes("_dbg = window.__ebt_debug_logging");
+    const missingRule = usesRule && !text.includes(LOCAL_HOST_RULE) ? 1 : 0;
+    return { ungated, missingRule };
+}
+
 function measure()
 {
     const files = sourceFiles();
@@ -397,6 +453,8 @@ function measure()
         windowAnyFiles: 0,
         windowAliasDecls: 0,
         windowAliasUses: 0,
+        ungatedVerboseShims: 0,
+        driftedHostRule: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -427,6 +485,10 @@ function measure()
             const kind = classifyWindowCast(m[1]);
             windowCastKinds[kind] = (windowCastKinds[kind] ?? 0) + 1;
         }
+
+        const shims = countUngatedVerboseShims(text);
+        counts.ungatedVerboseShims += shims.ungated;
+        counts.driftedHostRule += shims.missingRule;
 
         const aliases = countWindowAliases(text);
         counts.windowAliasDecls += aliases.declarations;

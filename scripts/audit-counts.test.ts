@@ -21,14 +21,17 @@
  * outcome gets a case and each bug gets a regression.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import
 {
     classifyConsoleLog,
     classifyLoggingPattern,
     classifyWindowCast,
+    LOCAL_HOST_RULE,
     countAnyCasts,
     countOccurrences,
+    countUngatedVerboseShims,
     countWindowAliases,
     insideStringLiteral,
 } from "./audit-counts.mjs";
@@ -383,5 +386,85 @@ describe("countAnyCasts", () =>
     test("a file with no cast costs nothing", () =>
     {
         expect(countAnyCasts("export function f(): void { return; }")).toBe(0);
+    });
+});
+
+/**
+ * `countUngatedVerboseShims` watches the branch that runs when
+ * `logutility.js` is NOT loaded. That branch filtered nothing, so debug and
+ * trace printed unconditionally and no flag could stop them, on the 132 of
+ * 138 demo pages that do not load the utility.
+ *
+ * The two paths cannot share code, because the fallback exists precisely
+ * when the utility is absent. These cases pin the TEXT of the gate, and
+ * logutility.test.ts pins the semantics on the other side.
+ */
+describe("countUngatedVerboseShims", () =>
+{
+    const shim = (name: string, body: string): string =>
+        `function ${name}(...a: unknown[]): void { ${body} }`;
+
+    test("an unguarded console fallback is ungated", () =>
+    {
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(1);
+    });
+
+    test("a guarded fallback is gated", () =>
+    {
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg && console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(0);
+    });
+
+    test("debug and trace are counted separately", () =>
+    {
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg && console.debug(P, ...a);")
+            + "\n" + shim("logTrace", "_lu ? _lu.trace(...a) : console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(1);
+    });
+
+    test("trace must use its own gate, not debug's", () =>
+    {
+        // `_dbg && console.debug` inside logTrace would make trace follow the
+        // host, and trace deliberately does not.
+        const t = shim("logTrace", "_lu ? _lu.trace(...a) : _dbg && console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(1);
+    });
+
+    test("info, warn and error are not verbose and are not counted", () =>
+    {
+        const t = shim("logInfo", "_lu ? _lu.info(...a) : console.log(P, ...a);")
+            + "\n" + shim("logWarn", "_lu ? _lu.warn(...a) : console.warn(P, ...a);")
+            + "\n" + shim("logError", "_lu ? _lu.error(...a) : console.error(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(0);
+    });
+
+    test("a file with no shims costs nothing", () =>
+    {
+        expect(countUngatedVerboseShims("export function f(): void { return; }"))
+            .toEqual({ ungated: 0, missingRule: 0 });
+    });
+
+    // The drift guard. Two implementations of one rule is what this
+    // repository keeps finding, so a file that computes `_dbg` has to carry
+    // the rule character-for-character.
+    test("computing _dbg without the host rule is drift", () =>
+    {
+        const t = "const _dbg = window.__ebt_debug_logging ?? /^(localhost)$/.test(h);";
+        expect(countUngatedVerboseShims(t).missingRule).toBe(1);
+    });
+
+    test("computing _dbg with the rule verbatim is not drift", () =>
+    {
+        const t = `const _dbg = window.__ebt_debug_logging\n    ?? ${LOCAL_HOST_RULE}.test(location.hostname);`;
+        expect(countUngatedVerboseShims(t).missingRule).toBe(0);
+    });
+
+    test("the rule this check compares against is the one logutility declares", () =>
+    {
+        // If logutility.ts changes its regex, this fails and the 117 files
+        // carrying a copy have to be updated with it.
+        const source = readFileSync("components/logutility/logutility.ts", "utf8");
+        expect(source).toContain(`const LOCAL_HOSTS = ${LOCAL_HOST_RULE};`);
     });
 });
