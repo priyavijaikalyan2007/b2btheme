@@ -3311,3 +3311,46 @@ deferred prose in `specs/explorerpicker.prd.md`,
 `components/inlinetoolbar/README.md` and `specs/hovercard.md` is corrected.
 DEBT-SEC-5 opened for the five browser libraries read from `window` but not
 vendored. Tracker 40 resolved / 25 open.
+
+---
+
+## ANY-1 and ANY-2: 157 uses of `any` become 15 (2026-10-14)
+
+**Asked.** Go ahead with the recommendation, and: what is our current status,
+have we addressed everything in the tech debt list?
+
+**Answered.** No. 42 of 67 checkboxes resolved and 25 open, or 11 of 28 items
+by the summary table's own reckoning. Of the 25 open, 8 are accepted debt
+recorded against an ADR and 17 are actionable. The two framings disagree
+inside one document, which is itself worth knowing when reading it.
+
+**The gate watched 88 of 157.** `anyAnnotations` counts `: any`, which is a
+declaration saying the type is unknown. A value cast says the same about an
+expression and carries no colon, so 69 `as any` were outside the ratchet.
+Third instance in three days. `anyCasts` is a second count rather than a
+wider pattern, so that rewriting a cast as an annotation fails one while the
+other holds. Baselined before any source file moved.
+
+**The casts were downstream of types nobody wrote.** 41 of them in
+`toolbar.ts` were `(config as any).<field>`, and the cause was a map naming
+three of the ten item interfaces the file declares, kept from ever failing by
+`JSON.parse` returning `any` on the one line that fills it. DockLayout's 26
+annotations were one unwritten slot contract. Eight layout components' 16
+were one missing shared interface. Fixing each declaration removed the casts
+as a side effect, and the DockLayout change left all 126 bundles identical.
+
+**ANY-2 was four declarations of one global**, one of them the repository's
+only `@ts-expect-error`. Removing it found that `ErrorDialog.show()` throws a
+bare ReferenceError when Bootstrap's JavaScript is absent, in the dialog
+whose job is to report that something already went wrong. DEBT-ERR-2.
+
+**Two errors of my own, both caught.** The DockLayout interface was written
+from a grep that matched a bare receiver and not `this.bottomPanel.`, so it
+missed two members; the compiler caught it and the second attempt enumerated
+the surface instead of sampling it. And a slice that rewrote the ANY-1
+tracker entry swallowed ANY-2's entry with it, caught by the checkbox
+arithmetic not adding up.
+
+**Closed.** ANY-1 and ANY-2. **Opened.** ANY-3 for the last 15, which need a
+policy decision about naming another component's option types, and
+DEBT-ERR-2. Tracker 42 resolved / 25 open.

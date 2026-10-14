@@ -534,6 +534,23 @@ consistent, thoughtful and complete end to end experience.
   owns — mark the source `as const` and type the parameter as a union or `keyof Window`, which
   is how five other sites were typed. If it genuinely is host data, amend ADR-174 D3 and say
   why, rather than removing a listed one to stay under the number.
+- **`any` is gated in two places, because `: any` and `as any` are the same claim.**
+  `anyAnnotations` watches the annotation and `anyCasts` watches the value cast. They are
+  deliberately separate: rewriting a cast as an annotation fails the first while the second
+  holds, and the reverse also fails. Both are at their floor (13 and 2), so any new `any` in
+  the tracked sources fails check `[20]`. The 15 that remain are all in
+  `visualtableeditor.ts` and carried as ANY-3.
+- **A cast is usually downstream of a type nobody wrote. Count them, then look upstream.**
+  41 casts in Toolbar came from a union naming three of ten interfaces. 26 annotations in
+  DockLayout came from one unwritten slot contract. 16 across eight layouts came from one
+  missing shared interface. Fixing the declaration removes the casts as a side effect, and
+  the compiled bundle usually stays byte-identical, which is the proof that only types
+  moved. ADR-175, insight 6.68.
+- **A contract several components share goes in `components/globals.d.ts`, not in each of
+  them.** `MountableComponent` and `BootstrapStatic` live there because components in this
+  library do not import one another, so a `.d.ts` in the global scope is the only place a
+  shared structural type can sit. Make every member optional when each caller already guards
+  with `typeof x.method === "function"`.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.

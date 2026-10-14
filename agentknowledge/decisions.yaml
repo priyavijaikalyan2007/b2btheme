@@ -6456,3 +6456,105 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-175
+  title: The `any` count watched the annotation and not the assertion, and the casts were downstream of unwritten types
+  date: 2026-10-14
+  status: accepted
+  context: |
+    ANY-1 was baselined at 88 occurrences of `: any`. That pattern watches a
+    DECLARATION saying the type is unknown. A value cast says the same about
+    an expression and carries no colon, so 69 `as any` were counted by
+    nothing. 88 of 157.
+
+    This is the third instance in three days. windowAnyCasts watched one
+    spelling of four. windowCasts watched every spelling of the assertion
+    and missed the alias that carried 73 accesses. Each gate was correct,
+    re-derivable and mutation-proven, and each was named after a behavior it
+    only partly watched. Insight 6.67.
+
+    Reading the 69 casts changed what the item is. 56 were in
+    components/toolbar/toolbar.ts and 41 of those were
+    `(config as any).<field>`. The cause was one line: the live-config map
+    named three of the ten item interfaces the file declares, and the seven
+    it omitted carry `checked`, `value` and `suffix`, which are the fields
+    the casts reach for. Nothing failed, because `addTool` stores
+    `JSON.parse(JSON.stringify(tool))` and `JSON.parse` returns `any`.
+
+    The same shape appeared twice more. DockLayout described five slots as
+    `any` when the twelve members it calls are identical every time, and
+    eight layout components each described the mounted child as `any` when
+    the surface is the same seven members in all eight.
+  decision: |
+    D1. `anyCasts` IS A SECOND COUNT, NOT A WIDER REGEX. A wider pattern
+        would have merged two numbers that should disagree. Kept apart, a
+        cast rewritten as an annotation fails anyAnnotations while anyCasts
+        holds, and the reverse also fails. Baselined at 69 before any source
+        file moved, then at 2. anyAnnotations went 88 to 13. The counter
+        skips comment lines and string data, which windowCasts does not.
+
+    D2. A MISSING UNION IS FIXED, NOT THE 41 CASTS DOWNSTREAM OF IT.
+        `ToolbarItem` names all eleven members, `ToolbarTool` excludes the
+        separator because a separator has no id and never reaches a live
+        config, and `ToolbarItemFields` names what a live item may carry.
+
+    D3. THE GENERIC PATHS ASSERT ONCE TO A NAMED INTERSECTION. They read
+        `ToolbarTool & Partial<ToolbarItemFields>` rather than `any`, which
+        is weaker than the per-member types and far stronger than what it
+        replaces. Narrowing on `type` instead would mean adding run-time
+        checks where none exist, which is a behavior change wearing a
+        type-safety costume. `setToolState` writes eight fields to any tool
+        id today and that is the behavior being described.
+
+    D4. ONE SHARED `MountableComponent` IN components/globals.d.ts rather
+        than eight private copies. Components here do not import one
+        another, so a `.d.ts` in the global scope is the only place a shared
+        structural contract can live. `DockSlotComponent` extends it and
+        adds the five members DockLayout alone needs.
+
+    D5. THE BOOTSTRAP GLOBAL IS DECLARED ONCE, as `var` rather than as a
+        member of `Window`, because three components reach it as a bare
+        identifier. ANY-2 found four declarations of it, one of them a
+        `@ts-expect-error` that was the only type suppression in the tracked
+        sources.
+
+    D6. ANY-3 CARRIES THE LAST 15. They are in visualtableeditor and name
+        Toolbar and ContextMenu option types, which are exported from their
+        own components but not published as globals, so neither the
+        no-cross-import rule nor globals.d.ts reaches them. That is a policy
+        question, not a typing one, and it is not decided here.
+  consequences: |
+    + 157 USES OF `any` BECOME 15, and all 15 are in one file.
+    + 123 OF 126 BUNDLES BYTE-FOR-BYTE IDENTICAL across three commits, and
+      every difference was read. The DockLayout change alone left all 126
+      identical, which is what a purely type-level change looks like.
+    + THREE FIXES CAME OUT OF THE TYPES. A color value could escape a
+      function declared to return a string, a non-function `onChange` would
+      have been called, and `ErrorDialog` threw a bare ReferenceError when
+      Bootstrap's JavaScript was absent.
+    = THE DOCKLAYOUT INTERFACE WAS WRONG ON THE FIRST ATTEMPT, written from
+      a grep that matched a bare receiver and not `this.bottomPanel.`, so it
+      missed `getHeight` and `options`. The compiler caught it. The second
+      attempt enumerated the surface rather than sampling it.
+    - A COUNT NAMED AFTER A CONCEPT IS READ AS COVERING THE CONCEPT. Three
+      times now the pattern was written by looking at the code in front of
+      it. Before baselining, state the behavior in a sentence with no syntax
+      in it and ask how many ways the language has to express it.
+    - AN IMPLICIT `any` IS INVISIBLE TO BOTH COUNTS. `JSON.parse` returning
+      `any` is what let the toolbar union be wrong for as long as it was,
+      and no text pattern can see it. That is noImplicitAny territory and it
+      is not opened here.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "components/globals.d.ts"
+    - "components/toolbar/toolbar.ts"
+    - "components/docklayout/docklayout.ts"
+    - "components/errordialog/errordialog.ts"
+    - "components/markdowneditor/markdowneditor.ts"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "AGENTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

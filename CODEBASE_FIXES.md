@@ -261,6 +261,22 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
 
 ---
 
+- [ ] **DEBT-ERR-2** `components/errordialog/errordialog.ts` has no fallback
+  when Bootstrap's JavaScript is absent. `show()` called
+  `new bootstrap.Modal(...)` with no guard and no `try`, so a page without
+  the bundle got a bare `ReferenceError` out of the dialog whose job is to
+  report that something already went wrong. Found by ANY-2, because a
+  `@ts-expect-error` on that line had been suppressing the missing
+  declaration, and it was the only type suppression in the tracked sources.
+
+  The throw is kept and now names what is missing, because an error dialog
+  that silently shows nothing is worse than one that fails loudly. What is
+  open is whether it should degrade instead. Every other consumer of the
+  global does: Toolbar falls back to the title attribute, MarkdownEditor
+  skips its backdrop. A Bootstrap modal is markup plus CSS classes, so
+  showing the dialog without the JavaScript is feasible and is a behavior
+  decision rather than a typing one.
+
 ## MEDIUM — `!important` in Component SCSS (113 occurrences, 20 files, measured 2026-10-13)
 
 Per CODING_STYLE.md, `!important` should only be used when overriding third-party styles or for accessibility-critical rules (e.g., `prefers-reduced-motion`). All other uses indicate specificity problems that should be fixed structurally.
@@ -377,20 +393,76 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
 ---
 
-## MEDIUM — `: any` Type Usage (88 occurrences, measured 2026-10-13)
+## MEDIUM — `: any` Type Usage (15 remaining, from 157 measured 2026-10-14)
 
 Using `: any` defeats TypeScript's type safety. Each occurrence should be replaced with a proper type, interface, or `unknown` with narrowing.
 
-- [ ] **ANY-1** **88 occurrences, not the 60 recorded in March 2026.** Held at that value by check `[20]`. Run `node scripts/audit-counts.mjs` to re-derive it. The per-file list below is the March list and is not the whole set.
+- [x] **ANY-1** 88 `: any` annotations, **and 69 `as any` casts that nothing
+  counted**. Opened at 88 and closed 2026-10-14 at **13 annotations and 2
+  casts, 15 in all**, gated by `anyAnnotations` and the new `anyCasts`.
+  ADR-175.
 
-  Files with highest `: any` usage:
-  - `components/graphcanvasmx/graphcanvasmx.ts` — 23 occurrences
-  - `components/docklayout/docklayout.ts` — 17 occurrences
-  - `components/toolbar/toolbar.ts` — 4 occurrences
-  - `components/markdowneditor/markdowneditor.ts` — 2 occurrences
-  - Layout components — 1-3 each
+  **The count watched the annotation and not the assertion.** `: any` is a
+  declaration saying the type is unknown. `as any` says the same about an
+  expression and carries no colon, so 69 of the 157 were outside the ratchet.
+  That is the third time in this repository that a ratchet proved narrower
+  than the behavior it was named for, after WIN-1 and WIN-2. `anyCasts` was
+  added and baselined before any source file moved. Insight 6.67.
 
-- [ ] **ANY-2** `components/toolbar/toolbar.ts` — `declare var bootstrap: any` should use a proper type declaration file (`bootstrap.d.ts`) or a minimal interface declaration.
+  **56 of the 69 casts were in `toolbar.ts`, and they were a symptom.** The
+  file declares ten item interfaces and most of it named three: the live
+  config map, `addTool`, `getTool` and six helpers were typed
+  `ToolItem | SplitButtonItem | GalleryItem`, while `ToolbarRegion.items`
+  already spelled out all eleven members. Nothing caught it, because
+  `addTool` stores `JSON.parse(JSON.stringify(tool))` and `JSON.parse`
+  returns `any`, so the one line that fills the map launders the type. The
+  proof the gap was real: `setToolState` publicly accepts `checked` and
+  `value`, and `getInputOverflowIcon` reads `config.suffix`. Those exist only
+  on five of the seven interfaces the short union omitted.
+
+  **`docklayout.ts` and eight layout components described one contract as
+  nothing.** DockLayout's five slots and the eight layouts' mounted child
+  each call an identical, measured surface. `DockSlotComponent` and the
+  shared `MountableComponent` in `components/globals.d.ts` name them, every
+  member optional because each caller already guards with
+  `typeof x.method === "function"`. All 126 bundles stayed byte-identical
+  through the DockLayout change.
+
+  **Verified by emit.** 123 of 126 bundles byte-for-byte identical across the
+  three commits, and every difference was read: one hoisted local, a `!!` in
+  a filter that already coerced, a `String()` on a value a function declared
+  it returned as a string, a `typeof === "function"` replacing a truthy test,
+  one new guard, and one method that now returns the instance it made.
+
+- [x] **ANY-2** `components/toolbar/toolbar.ts` — `declare var bootstrap: any`
+  should use a proper type declaration or a minimal interface. **Closed
+  2026-10-14, and it was not one declaration but four.** `bootstrap` was
+  declared as `any` here, cast from `window["bootstrap"]` in
+  `markdowneditor.ts`, suppressed with a `@ts-expect-error` in
+  `errordialog.ts`, and added as `bootstrap?: Record<string, unknown>` to
+  `components/globals.d.ts` by WIN-2 the day before. It is now one
+  `declare global { var bootstrap: BootstrapStatic | undefined }`, declared
+  as a `var` because three components reach it as a bare identifier and only
+  a `var` types both that and `window.bootstrap`.
+
+  That `@ts-expect-error` was the only type suppression in the tracked
+  sources, and removing it surfaced a latent crash. See DEBT-ERR-2.
+
+- [ ] **ANY-3** The last 15 uses of `any` are in
+  `components/visualtableeditor/visualtableeditor.ts`, and they are a
+  different problem from the 142 that closed with ANY-1. Thirteen build
+  arrays of **Toolbar items and ContextMenu items**: `buildToolbarItems`,
+  `buildContextMenuItems` and their six helpers. Two assign to
+  `footerAggregate` and `col.aggregate`.
+
+  The item types are exported from `toolbar.ts` and `contextmenu.ts`, but
+  they are **not published as window globals**, so neither route this
+  repository allows reaches them. A component cannot import another
+  component (AGENTS.md), and `components/globals.d.ts` can only name what is
+  on `window`. ANY-1 cannot finish without deciding which: publish the option
+  types as globals, relax the import rule for types alone, or let a consumer
+  of another component restate the shape it builds. The third is what the
+  `any` is standing in for today.
 
 ---
 
@@ -496,16 +568,16 @@ the step exits 1 and the workflow fails.
 | CRITICAL — Standards | 2 | Open |
 | HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
-| HIGH — Error Handling | 1 (10 factories) | Open |
+| HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
 | MEDIUM — Logging | 2 | **0 open, 2 closed** |
-| MEDIUM — : any | 2 (88 occurrences, 2026-10-13) | Open |
+| MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 | Open |
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **26 items** | **9 resolved** |
+| **Total** | **28 items** | **11 resolved** |
 
 ### The March 2026 counts re-measured so far
 

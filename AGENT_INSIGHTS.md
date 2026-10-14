@@ -768,3 +768,71 @@ different tool than the one that produced it. This is the second
 inline-escaping failure in this arc; the first mangled a regex in a
 counterfactual probe. Related: [[6.63]], where the counterfactual was run
 correctly and was worth everything.
+
+### 6.67 Three Ratchets, Three Blind Spots, One Shape (2026-10-14)
+
+In three days this repository found the same defect three times, each one
+level further out than the last:
+
+| Count | Watched | Missed | Ratio |
+|---|---|---|---|
+| `windowAnyCasts` | `window as any`, 74 | three other spellings, 251 | 1 : 3.4 |
+| `windowCasts` | every assertion, 237 | the alias carrying 73 uses, 73 | 1 : 0.3 |
+| `anyAnnotations` | `: any`, 88 | `as any`, 69 | 1 : 0.8 |
+
+Each gate was correct, re-derivable, mutation-proven, and named after a
+behavior it only partly watched. The third one is the clearest: `: any` is a
+DECLARATION saying the type is unknown, `as any` says the same about an
+EXPRESSION, and the only difference between them is a colon. Nobody set out
+to exempt casts. The pattern was written by looking at the code in front of
+it, and the code in front of it used annotations.
+
+**A count named after a concept will be read as covering the concept.** The
+name is the claim the next reader believes, so the pattern has to earn it.
+Before baselining anything, write down the behavior in a sentence with no
+syntax in it, then ask how many ways the language has to express that
+sentence. For "reaching the global object untyped" the answer was four
+spellings, plus an alias, plus `globalThis`. For "telling the checker you do
+not know" it was two, plus `@ts-expect-error`, plus an implicit `any` from a
+library signature that no text pattern can see at all.
+
+Related: [[6.60]], [[6.61]], [[6.65]]. The fix each time was not a wider
+regex. It was a SECOND count beside the first, because the two then disagree
+when a cast is rewritten as an annotation, and one of them fails.
+
+### 6.68 A Cast Is Usually Downstream of a Type That Was Never Written (2026-10-14)
+
+`components/toolbar/toolbar.ts` held 56 `as any` casts, 41 of them
+`(config as any).<field>`. The obvious reading is that someone was lazy 41
+times. The real cause was one line:
+
+```typescript
+private toolConfigs: Map<string, ToolItem | SplitButtonItem | GalleryItem>
+```
+
+The file declares TEN item interfaces. The map named three, and the seven it
+omitted are exactly the ones carrying `checked`, `value` and `suffix` — the
+fields the casts were reaching for. Nothing failed, because `addTool` stores
+`JSON.parse(JSON.stringify(tool))` and `JSON.parse` returns `any`, so the one
+line that fills the map launders the type and the declared union is never
+checked against what is actually stored.
+
+The same shape appeared twice more the same day. DockLayout described five
+slots as `any` when the twelve members it calls on them are identical every
+time. Eight layout components each described the mounted child as `any` when
+the surface is the same seven members in all eight.
+
+**Count the casts, then look for the one declaration upstream of all of
+them.** 41 casts, 1 missing union. 26 annotations, 1 missing interface. 16
+annotations across 8 files, 1 missing shared contract. Fixing the
+declaration removed the casts as a side effect, and in the DockLayout case
+all 126 compiled bundles stayed byte-for-byte identical, which is the proof
+that nothing but the types moved.
+
+The corollary is a warning. A JSON round trip, a library function returning
+`any`, or a `@ts-expect-error` will hide a wrong type indefinitely and none
+of them is visible to a text-pattern count. This repository had exactly one
+`@ts-expect-error`, and it was hiding a crash: `ErrorDialog.show()` called
+`new bootstrap.Modal(...)` with no guard, so a page without Bootstrap's
+JavaScript got a `ReferenceError` out of the dialog whose job is to report
+that something already went wrong.

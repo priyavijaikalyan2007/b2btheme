@@ -222,6 +222,11 @@ export function countOccurrences(text, needle)
  * were gated and 69 casts were not, so the baseline covered 88 of 157. It is
  * baselined here BEFORE any source file moves.
  *
+ * ANY-1 then took the pair to 13 and 2, re-measured on 2026-10-14. All 15
+ * are in components/visualtableeditor/visualtableeditor.ts and are carried
+ * as ANY-3, because they name another component's option types and neither
+ * the no-cross-import rule nor components/globals.d.ts reaches those.
+ *
  * A BASELINE OF 6 GATES THE TOTAL AND SAYS NOTHING ABOUT THE COMPOSITION.
  * Six assertions remain because each reaches window by a name known only at
  * run time, and ADR-174 D3 lists them by file and line. That list is the
@@ -245,8 +250,8 @@ const BASELINES = {
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
-    anyAnnotations: 88,
-    anyCasts: 69,
+    anyAnnotations: 13,
+    anyCasts: 2,
     scssImportant: 113,
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
