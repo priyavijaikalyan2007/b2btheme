@@ -116,6 +116,8 @@ const LOG_PREFIX = "[ExplorerPicker]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger("ExplorerPicker")
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 function logInfo(...a: unknown[]): void
 {
     _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
@@ -130,7 +132,7 @@ function logError(...a: unknown[]): void
 }
 function logDebug(...a: unknown[]): void
 {
-    _lu ? _lu.debug(...a) : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+    _lu ? _lu.debug(...a) : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
 // ============================================================================

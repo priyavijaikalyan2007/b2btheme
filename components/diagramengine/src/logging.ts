@@ -46,15 +46,19 @@ function makeLogger(prefix: string): EngineLogger
     const lu = (typeof window.createLogUtility === "function")
         ? window.createLogUtility().getLogger(prefix.slice(1, -1))
         : null;
+    // LOG-3. Same gate as every component preamble, kept verbatim.
+    const _dbg = window.__ebt_debug_logging
+        ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
+    const _trc = window.__ebt_trace_logging === true;
 
     return {
         trace: (...args: unknown[]): void =>
         {
-            lu ? lu.trace(...args) : console.debug(new Date().toISOString(), "[TRACE]", prefix, ...args);
+            lu ? lu.trace(...args) : _trc && console.debug(new Date().toISOString(), "[TRACE]", prefix, ...args);
         },
         debug: (...args: unknown[]): void =>
         {
-            lu ? lu.debug(...args) : console.debug(new Date().toISOString(), "[DEBUG]", prefix, ...args);
+            lu ? lu.debug(...args) : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", prefix, ...args);
         },
         info: (...args: unknown[]): void =>
         {

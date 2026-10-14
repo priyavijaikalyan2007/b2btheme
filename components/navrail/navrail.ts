@@ -236,6 +236,8 @@ const LOG_PREFIX = "[NavRail]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 
 function logInfo(...a: unknown[]): void
 {
@@ -252,7 +254,7 @@ function logWarn(...a: unknown[]): void
 function logDebug(...a: unknown[]): void
 {
     if (_lu) { _lu.debug(...a); return; }
-    console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+    _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
 /** Default expanded width in px. */

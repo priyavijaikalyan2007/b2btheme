@@ -154,6 +154,8 @@ let instanceCounter = 0;
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger("ChartPanel")
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 
 function logInfo(...a: unknown[]): void
 {
@@ -164,7 +166,7 @@ function logInfo(...a: unknown[]): void
 function logDebug(...a: unknown[]): void
 {
     _lu ? _lu.debug(...a)
-        : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+        : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
 function logError(...a: unknown[]): void

@@ -28,6 +28,8 @@ const LOG_PREFIX = "[HoverCard]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 
 function logDebug(...a: unknown[]): void
 {
@@ -37,7 +39,7 @@ function logDebug(...a: unknown[]): void
     }
     else
     {
-        console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+        _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
     }
 }
 

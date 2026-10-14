@@ -24,6 +24,8 @@ const LOG_PREFIX = "[ErrorDialog]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 
 /** Emits a structured info log. */
 function logInfo(...args: unknown[]): void
@@ -54,7 +56,7 @@ function logDebug(...args: unknown[]): void
 {
     _lu
         ? _lu.debug(...args)
-        : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+        : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
 }
 
 

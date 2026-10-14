@@ -229,7 +229,22 @@ export function countOccurrences(text, needle)
  * second one is 0 from the start and must stay there: it fails the moment a
  * file computes `_dbg` without carrying the host rule verbatim, which is
  * the only mechanical guard against the two implementations of that rule
- * drifting apart. All 15
+ * drifting apart.
+ *
+ * diagramengineLines ROSE, from 30478 to 30482, and that is the first time
+ * a baseline in this table has gone UP. STD-1 exists to stop the largest
+ * file in the repository growing, and LOG-3 needs four lines inside
+ * `components/diagramengine/src/logging.ts`: three to compute the two gate
+ * constants, which cannot be one line without passing 120 characters, and
+ * one comment saying why. Those four lines stop nineteen engine namespaces
+ * writing debug and trace to the console unconditionally on any page that
+ * does not load `logutility.js`.
+ *
+ * The rule is still ratchet down only. This is an exception, taken
+ * deliberately, measured at its minimum, and written here rather than
+ * quietly absorbed. A ratchet that cannot record a justified exception
+ * gets worked around instead, and a worked-around ratchet measures
+ * nothing. All 15
  * are in components/visualtableeditor/visualtableeditor.ts and are carried
  * as ANY-3, because they name another component's option types and neither
  * the no-cross-import rule nor components/globals.d.ts reaches those.
@@ -254,7 +269,7 @@ const BASELINES = {
     windowAnyFiles: 0,
     windowAliasDecls: 1,
     windowAliasUses: 1,
-    ungatedVerboseShims: 225,
+    ungatedVerboseShims: 0,
     driftedHostRule: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
@@ -265,7 +280,7 @@ const BASELINES = {
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
-    diagramengineLines: 30478,
+    diagramengineLines: 30482,
 };
 
 /**
@@ -398,6 +413,41 @@ export function countAnyCasts(text)
 }
 
 /**
+ * The full body of a named function, found by MATCHING BRACES rather than
+ * by a regex.
+ *
+ * The shims come in three shapes in this repository: one line, a ternary
+ * split across lines, and an if/else block. A lazy `[^}]*` stops at the
+ * first `}`, which for the if/else shape is the brace closing the `if`, so
+ * a gate written in the `else` went unseen and four migrated files counted
+ * as unmigrated. An anchored `\n}` fixed those and broke the one-liners.
+ * Counting braces is the only version that reads all three.
+ *
+ * @param text - One file's full source.
+ * @param name - The function name to find.
+ * @returns The body between its braces, or null when absent.
+ */
+export function functionBody(text, name)
+{
+    const at = text.indexOf(`function ${name}(`);
+    if (at === -1) { return null; }
+    const open = text.indexOf("{", at);
+    if (open === -1) { return null; }
+
+    let depth = 0;
+    for (let i = open; i < text.length; i += 1)
+    {
+        if (text[i] === "{") { depth += 1; }
+        else if (text[i] === "}")
+        {
+            depth -= 1;
+            if (depth === 0) { return text.slice(open + 1, i); }
+        }
+    }
+    return null;
+}
+
+/**
  * THE LOCAL DEVELOPMENT RULE, as `components/logutility/logutility.ts`
  * states it. Repeated here so the check below can compare the two texts.
  */
@@ -434,10 +484,9 @@ export function countUngatedVerboseShims(text)
     let ungated = 0;
     for (const [name, gate] of [["logDebug", "_dbg"], ["logTrace", "_trc"]])
     {
-        const shim = new RegExp(`function ${name}\\([^)]*\\)[^{]*\\{([^}]*)\\}`);
-        const m = text.match(shim);
-        if (!m) { continue; }
-        if (!m[1].includes(`${gate} && console.`)) { ungated += 1; }
+        const body = functionBody(text, name);
+        if (body === null) { continue; }
+        if (!body.includes(`${gate} && console.`)) { ungated += 1; }
     }
     const usesRule = text.includes("_dbg = window.__ebt_debug_logging");
     const missingRule = usesRule && !text.includes(LOCAL_HOST_RULE) ? 1 : 0;

@@ -10671,7 +10671,7 @@ A non-visual, centralised logging utility that replaces per-component `logInfo`/
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `level` | `"debug" \| "info" \| "warn" \| "error"` | `"debug"` | Minimum log level |
+| `level` | `"trace" \| "debug" \| "info" \| "warn" \| "error"` | `"info"` | Minimum log level. `debug` and `trace` are opt-in, see Level Filtering. |
 | `timestamps` | `boolean` | `true` | Include ISO timestamps in output |
 | `logConsole` | `LogConsoleHandle` | `null` | Route user-visible events to a LogConsole |
 | `consoleOutput` | `boolean` | `true` | Enable or disable browser console output |

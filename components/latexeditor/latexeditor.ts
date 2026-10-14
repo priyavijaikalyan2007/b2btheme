@@ -27,6 +27,9 @@ const LOG_PREFIX = "[LatexEditor]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
+const _trc = window.__ebt_trace_logging === true;
 function logInfo(...a: unknown[]): void
 {
     _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
@@ -41,11 +44,11 @@ function logError(...a: unknown[]): void
 }
 function logDebug(...a: unknown[]): void
 {
-    _lu ? _lu.debug(...a) : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+    _lu ? _lu.debug(...a) : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 function logTrace(...a: unknown[]): void
 {
-    _lu ? _lu.trace(...a) : console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+    _lu ? _lu.trace(...a) : _trc && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
 }
 
 /** Default minimum width in px. */

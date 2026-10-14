@@ -42,13 +42,15 @@ const LOG_PREFIX = "[ThemeInit]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
+const _dbg = window.__ebt_debug_logging
+    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
 
 /** Emits a structured debug log. */
 function logDebug(...args: unknown[]): void
 {
     _lu
         ? _lu.debug(...args)
-        : console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+        : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
 }
 
 /** Cookie AND localStorage key — the R3 contract shared with ThemeManager. */
