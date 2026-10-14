@@ -66,71 +66,95 @@ These violate mandatory project conventions (`export` keyword requirement per ME
 
 Per the March 2026 audit, the required pattern was
 `(window as unknown as Record<string, unknown>)`. **ADR-171 D2 superseded that
-on 2026-10-13.** A window global is now declared in `components/globals.d.ts`
-and reached without any cast. The double-cast form forces a second cast on the
-value that comes back, so it buys no type safety over `any`. A declaration buys
-real type safety, and it buys it once for the whole library.
+on 2026-10-13.** A window global is declared in `components/globals.d.ts` and
+reached without any cast. The double-cast form returns `unknown` and so forces
+a second cast on the value, which buys no type safety over `any`. A
+declaration buys real type safety, and it buys it once for the whole library.
 
-- [ ] **WIN-1** `(window as any)` is used instead of a declared global. **Phase A
-  is done. Measured 2026-10-14 by `scripts/audit-counts.mjs`: 74 occurrences on
-  74 lines in 27 non-test files**, down from 294 on 186 lines in 113 files. The
-  file list below is the March list and is no longer the whole set.
+- [x] **WIN-1** `(window as any)` used instead of a declared global. **Closed
+  2026-10-14 at 0 occurrences in 0 files**, from 294 on 186 lines in 113 files.
+  Verified by `scripts/audit-counts.mjs` and by an identity mutation that
+  reintroduces one cast and fails three counts.
 
-  **Phase A, closed 2026-10-14.** The LogUtility preamble carried 220 of the 294
-  occurrences, two per line, on 112 lines in 110 files. Every one of those lines
-  was textually identical, so all 110 files moved to the declared form in one
-  pass. The preamble was also 148 characters wide, against the 120-character
-  limit in AGENTS.md, and dropping the casts alone would have left it at 130. It
-  is now reflowed to the three-line shape that FRONTEND_LOGGING.md section 1
-  prescribes, so 108 lines came inside the limit as well. The compiled output is
-  byte-identical across all 126 emitted bundles, which is the proof that nothing
-  but types changed. Baselines lowered: `windowAnyCasts` 294 to 74,
-  `windowAnyFiles` 113 to 27.
+  **Phase A, 2026-10-14.** The LogUtility preamble carried 220 of the 294
+  occurrences, two per line, on 112 lines in 110 files. Every one of those
+  lines was textually identical. The preamble was also 148 characters wide
+  against the 120-character limit in AGENTS.md, and dropping the casts alone
+  would have left it at 130, so it was reflowed to the three-line shape
+  FRONTEND_LOGGING.md section 1 prescribes and 108 lines came inside the limit.
+  All 126 compiled bundles were byte-identical before and after.
 
-  **Phase B is the 74 that remain, and they are not one problem.** 66 of them are
-  a component publishing its own API to `window`, not a component reading
-  anybody else's. 7 are genuine cross-component reads, and all 7 already guard
-  with `typeof`. 1 is a comment. The publication sites need a declaration each
-  and then a plain assignment. The read sites need an optional declaration, and
-  because they already guard, they will not raise a strict-null error. Phase B
-  is therefore low risk and roughly 20 declarations of work, which is why it is
-  scoped separately rather than bundled into the mechanical pass.
+  **Phase B, 2026-10-14.** The remaining 74: 66 publication sites where a
+  component writes its own API to `window`, 7 reads, and 1 comment.
+  `components/globals.d.ts` grew from 2 declarations to 70. 125 of 126 bundles
+  byte-identical, and the one that differs held `const w = window` as a local
+  alias, now gone.
+
+  **Two things phase B found before it broke them.** `extractGlobals` in
+  `scripts/generate-docs.js` matched a cast by its parentheses and a bare
+  `window` by dot access only, so removing the cast from
+  `(window as any)["Toolbar"] = Toolbar` left a line neither rule could see.
+  Measured by reverting the fix and regenerating: **14 components report
+  `Globals: none` and 38 published names vanish** from
+  `docs/AGENT_QUICK_REF.md`, and check `[19]` passes throughout, because it
+  verifies that published names exist and cannot see a name that stopped being
+  published. Separately, the quick reference advertised `__sidebarManager()`,
+  `__tabbedPanelManager()` and `__navRailManager()` as callable API. They are
+  singletons written to `window` for debugging. They stay declared, because
+  they are there at run time, and they are no longer published as API.
+
+  **Phase A was incomplete and said otherwise.** It migrated every file
+  matching `(window as any).createLogUtility`, which is one spelling. Six
+  components reached the same global through four other spellings, and
+  `components/logutility/logutility.ts` published `createLogUtility` through a
+  double cast, so the producer of the typed contract was not using it. All
+  seven are converted in phase B and the lookup now has one form library-wide.
 
   **A correction to this entry's own inventory.** It named `MathfieldElement`
   among the remaining third-party globals. All 3 of its casts are in
-  `components/latexeditor/latexeditor.test.ts`, and the counted file set excludes
-  tests, so it was never part of the 294 and is not part of the 74.
+  `components/latexeditor/latexeditor.test.ts`, and the counted file set
+  excludes tests, so it was never part of the 294.
 
-  **A correction to this entry's own previous figure.** It read "311 occurrences
-  on 203 lines" on 2026-10-12. The file count of 113 was right and both other
-  numbers were not. No file set in this repository yields 311 or 203, the code
-  containing these casts is byte-identical at every commit from `4daccb4` to
-  2026-10-13, and the counting command was never written down, so the error
-  cannot be traced further. That is the whole argument for check `[20]`: a count
-  whose file set and pattern are not stated in code is not a measurement.
+  **A correction to this entry's own previous figure.** It read "311
+  occurrences on 203 lines" on 2026-10-12. The file count of 113 was right and
+  both other numbers were not. No file set in this repository yields 311 or
+  203, the code containing these casts is byte-identical at every commit from
+  `4daccb4` to 2026-10-13, and the counting command was never written down, so
+  the error cannot be traced further. That is the whole argument for check
+  `[20]`: a count whose file set and pattern are not stated in code is not a
+  measurement.
 
-  March 2026 file list, retained as the starting point:
-  - `components/timeline/timeline.ts`
-  - `components/tabbedpanel/tabbedpanel.ts`
-  - `components/datepicker/datepicker.ts`
-  - `components/progressmodal/progressmodal.ts`
-  - `components/logconsole/logconsole.ts`
-  - `components/docklayout/docklayout.ts`
-  - `components/timepicker/timepicker.ts`
-  - `components/cronpicker/cronpicker.ts`
-  - `components/statusbar/statusbar.ts`
-  - `components/bannerbar/bannerbar.ts`
-  - `components/treeview/treeview.ts`
-  - `components/gauge/gauge.ts`
-  - `components/timezonepicker/timezonepicker.ts`
-  - `components/toolbar/toolbar.ts`
-  - `components/colorpicker/colorpicker.ts`
-  - `components/sidebar/sidebar.ts`
-  - `components/durationpicker/durationpicker.ts`
-  - `components/toast/toast.ts`
-  - `components/skeletonloader/skeletonloader.ts`
-  - `components/emptystate/emptystate.ts`
+- [ ] **WIN-2** The library asserts on `window` in four spellings, and WIN-1
+  counted one of them. **Measured 2026-10-14 by `scripts/audit-counts.mjs`:
+  237 occurrences**, gated by the new `windowCasts` baseline. The breakdown
+  prints on every run. 235 are
+  `(window as unknown as Record<string, unknown>)`, the form the March 2026
+  audit prescribed and ADR-171 D2 superseded. 2 are assertions in
+  `components/spinemap/spinemap.ts` wrapped so the asserted type is not on the
+  line.
 
+  **This is not a new finding about the code, it is a finding about the
+  count.** WIN-1's pattern was the literal string `window as any`, and the
+  population it did not count was 3.3 times the one it did. The count was
+  never wrong. It answered a narrower question than its name suggests, which
+  meant a cast written in any other spelling could be added for free. The item
+  is opened under a new number rather than folded into WIN-1, because
+  redefining a count under its old name produces a different count with the
+  same name. See insight 6.58.
+
+  **Roughly 164 of the 237 are publication sites** and the rest are reads,
+  including genuine third-party globals that no declaration of ours can own:
+  `Chart`, `Vditor`, `katex`, `dagre`, `driver`, `bootstrap`. Two forms need
+  deciding before the work starts, and both are recorded in ADR-173 as open:
+  whether ~200 further globals belong in one central `globals.d.ts` or in a
+  `declare global` block beside each component's own assignment, and how to
+  type a lookup by a computed key, as in `codeeditor.ts:140` and the debug
+  flag read in `logutility.ts:63`, which no declaration can express.
+
+  Specs and component READMEs still showing the double-cast form are corrected
+  as this item reaches them: `specs/explorerpicker.prd.md`,
+  `components/inlinetoolbar/README.md` and the generated
+  `docs/COMPONENT_REFERENCE.md` copy of it.
 ---
 
 ## HIGH — Function Length (>30 lines)
@@ -275,9 +299,11 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   globals that components publish to each other are now declared in
   `components/globals.d.ts`, the snippet reads `window.createLogUtility` with
   no cast, and the snippet appears in Allman form inside the 120-character
-  limit. The one-line form in the 117 older files runs 133 to 150 characters
-  wide. Converting those 117 files to the typed form is the mechanical path to
-  closing WIN-1 and is not done here.
+  limit. The one-line form in the 110 older files runs 148 characters wide.
+  Converting those 110 files to the typed form is the mechanical path to
+  closing WIN-1 and is not done here. (Written as 117 files at 133 to 150
+  characters. Measured the next day: 110 files, uniformly 148. WIN-1 phase A
+  and phase B then closed the item on 2026-10-14.)
 
   **The classifier had to learn the factory form.** After the refactor the 18
   engine modules hold neither `createLogUtility` nor the shim, so
@@ -410,7 +436,7 @@ the step exits 1 and the workflow fails.
 |----------|-------|--------|
 | CRITICAL — Security | 3 | **0 open, 3 closed** |
 | CRITICAL — Standards | 2 | Open |
-| HIGH — Window Cast | 1 (27 files, 74 occurrences, 2026-10-14) | Open — phase A removed 220 of 294, phase B is 66 publication sites and 7 guarded reads |
+| HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 237 occurrences, 2026-10-14) | **WIN-1 closed.** WIN-2 opened: WIN-1 counted one of four spellings |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 1 (10 factories) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
@@ -421,7 +447,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **24 items** | **7 resolved** |
+| **Total** | **25 items** | **8 resolved** |
 
 ### The March 2026 counts re-measured so far
 
@@ -433,7 +459,7 @@ the step exits 1 and the workflow fails.
 | LOG-1 | 406 | 2 real call sites | far smaller |
 | IMP-1 | 47 | 113 | far larger |
 | ANY-1 | 60 | 88 | larger |
-| WIN-1 | 62 | 294, now 74 after phase A | far larger |
+| WIN-1 | 62 | 294, now 0 | far larger, then closed |
 | UNUSED-1 | 119 | 421 | far larger |
 | STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |

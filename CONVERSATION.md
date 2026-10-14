@@ -3158,3 +3158,79 @@ mutation reintroducing one cast makes check `[20]` report both counts over.
 to `components/globals.d.ts`, one per published global, plus the two component
 READMEs and the specs that still document the superseded double-cast form.
 ADR-172, insights 6.59 and 6.60. Tracker 38 resolved / 25 open.
+
+---
+
+## WIN-1 Phase B — the item closes, and the count turns out to be one of four (2026-10-14)
+
+**WIN-1 is at 0 occurrences in 0 files**, from 294 on 186 lines in 113 files
+three days ago. The last 74 were 66 publication sites where a component writes
+its own API to `window`, 7 reads and 1 comment. `components/globals.d.ts` grew
+from 2 declarations to 70. The access syntax was left alone, bracket stays
+bracket and dot stays dot, so 125 of the 126 compiled bundles came back
+byte-for-byte identical. The one that differs is `dynamicformswitcher`, which
+held `const w = window` as a local alias. The hunk is that alias removed and
+two `e.createLogUtility` becoming `window.createLogUtility`. Read, not assumed.
+
+**The finding is larger than the work.** WIN-1's pattern is the literal string
+`window as any`. Reading the survivors to plan phase B showed the library
+asserts on `window` in **four** spellings, and the one WIN-1 counted is the
+smaller population: 74 `any` against 248
+`(window as unknown as Record<string, unknown>)` and 3 either an inline object
+type or an assertion wrapped so the type is not on the line. **325 in all.**
+
+Nothing about the count was wrong. Its file set was declared, its pattern was
+declared, its number was reproducible, it was gated and mutation-proven, and
+it went to zero honestly. It answered a narrower question than its name
+implied, so a cast in any spelling but `any` could be added for free while the
+gate reported progress, and the unwatched population was 3.3 times the watched
+one. `windowCasts` now gates the total and the breakdown by asserted type
+prints ungated. The gate went in **before** any file moved, which is the only
+order that proves it was not fitted to the result. Insight 6.61, ADR-173 D1.
+
+**WIN-2 is opened at 237 rather than WIN-1 being redefined.** Renaming the
+thing a count measures while keeping its number is how a different count ends
+up with the same name, which is insight 6.58, written three days ago about my
+own error.
+
+**The docs generator would have gone blind, and this was measured first.**
+`extractGlobals` recognizes a registration by its parentheses when it is a
+cast, and by dot access when it is bare. Removing the cast from
+`(window as any)["Toolbar"] = Toolbar` leaves a line neither rule matches. I
+reverted the fix and regenerated to see what the conversion would have cost:
+**14 components report `Globals: none` and 38 published names disappear** from
+`docs/AGENT_QUICK_REF.md`. `scripts/check-published-api.mjs`, check `[19]`,
+passes through all of it, because it verifies that every published name exists
+and a name that stops being published is not a name it checks. **A check that
+validates the entries on a list cannot tell you the list got shorter.** Insight
+6.63, TESTING.md section 2.8.
+
+**Phase A was incomplete and its prose said otherwise.** It migrated every file
+matching `(window as any).createLogUtility` and reported the preamble as moved
+to the declared global. Six components reached the same global through the
+other spellings, and `components/logutility/logutility.ts` — the component that
+*publishes* `createLogUtility` — registered it through a double cast, so the
+producer of the typed contract was not using it. All seven are converted and
+the lookup now has one form library-wide. One `grep -l createLogUtility` would
+have ended the question in a second. **Search for the subject, not the syntax:
+the shape is a hypothesis, the name is the fact.** Insight 6.62.
+
+**A smaller find.** The quick reference advertised `__sidebarManager()`,
+`__tabbedPanelManager()` and `__navRailManager()` as callable globals. They are
+singletons their own `getInstance()` writes to window for debugging. They stay
+declared, because a declaration describes what is there at run time, and they
+are no longer published as API, because that was a different claim.
+
+**Verified.** `tsc --noEmit` clean on the full project and on
+`tsconfig.runtime.json`. 4,967 unit tests. 32 of 32 structure checks. Baselines
+`windowCasts` 325 to 237, `windowAnyCasts` 74 to 0, `windowAnyFiles` 27 to 0,
+`diagramengineLines` 30,479 to 30,478. An identity mutation reintroducing one
+cast fails all three window counts. Generated docs diff only by the three
+internal slots.
+
+**Left open.** WIN-2 at 237, with two questions this work does not answer:
+whether roughly 200 further globals belong in one central declaration file or
+in a `declare global` block beside each component's own assignment, and how to
+type a lookup by a computed key, as in `codeeditor.ts:140` and the debug flag
+read in `logutility.ts:63`, which no declaration can express. Both are recorded
+as open in ADR-173. Tracker 39 resolved / 25 open.

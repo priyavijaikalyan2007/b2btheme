@@ -6201,3 +6201,104 @@
     - "scripts/audit-counts.mjs"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-173
+  title: Every component global is declared, and the count that watches them gates all four spellings
+  date: 2026-10-14
+  status: accepted
+  context: |
+    ADR-172 closed WIN-1 phase A and scoped phase B as 74 occurrences in 27
+    files, 66 of them a component publishing its own API to `window`. Reading
+    the survivors to plan that work turned up something larger than the work.
+
+    WIN-1's pattern is the literal string `window as any`. The library reaches
+    `window` through a type assertion in FOUR spellings, and the one WIN-1
+    counts is the smaller population. Measured on 2026-10-14 across the 285
+    tracked sources: 74 `any`, 248 `unknown as Record<string, ...>`, 3 an
+    inline object type or an assertion wrapped so the type is not on the line.
+    325 in all. The count was never wrong. It answered a narrower question than
+    its name suggests, so an untyped window access in any other spelling could
+    be added for free, and the unwatched population was 3.3 times the watched
+    one.
+
+    The same narrowness had already cost something. Phase A migrated every file
+    matching `(window as any).createLogUtility` and reported the LogUtility
+    lookup as moved to the declared global. Six components reached that global
+    through the other spellings and were invisible to the grep, and
+    `components/logutility/logutility.ts` published `createLogUtility` itself
+    through a double cast, so the producer of the typed contract was not using
+    it.
+
+    One more thing had to be settled before any publication site could move.
+    `extractGlobals` in `scripts/generate-docs.js` recognizes a registration by
+    its parentheses when it is a cast, and by dot access when it is bare.
+    Removing the cast from `(window as any)["Toolbar"] = Toolbar` leaves a line
+    neither rule matches. Measured by reverting the fix and regenerating: 14
+    components report `Globals: none` and 38 published names disappear from
+    `docs/AGENT_QUICK_REF.md`. Check `[19]` passes throughout, because it
+    verifies that published names EXIST and cannot see a name that stopped
+    being published.
+  decision: |
+    D1. `windowCasts` GATES EVERY SPELLING. A new count in
+        scripts/audit-counts.mjs counts every `window as ` assertion whatever
+        it asserts to, baselined at 325 before the work and 237 after. The
+        breakdown by asserted type prints on every run and is not gated, so a
+        spelling that moves is visible without being a failure.
+
+    D2. `windowAnyCasts` KEEPS ITS DEFINITION AND WIN-1 CLOSES AT 0. The item
+        is closed as its own pattern defines it and WIN-2 opens at the measured
+        237. Redefining a count under its old name produces a different count
+        with the same name, which is insight 6.58.
+
+    D3. ALL 66 PUBLICATION SITES ARE DECLARED CENTRALLY in
+        components/globals.d.ts, which grows from 2 declarations to 70. The
+        access syntax is preserved, bracket stays bracket and dot stays dot,
+        so TypeScript emits the same call and the emit stays comparable.
+
+    D4. THE INTERNAL SLOTS ARE DECLARED BUT NOT PUBLISHED. `__sidebarManager`,
+        `__tabbedPanelManager` and `__navRailManager` are singletons their own
+        `getInstance()` writes to window. A declaration describes what is there
+        at run time, so they are declared. The quick reference listing them as
+        callable API is a different claim, and extractGlobals now skips a
+        leading double underscore.
+
+    D5. THE DOCS EXTRACTOR LEARNS THE CAST-FREE BRACKET FORM before the files
+        it reads change, with two tests, rather than after the names go
+        missing.
+  consequences: |
+    + WIN-1 IS CLOSED AT 0 OCCURRENCES IN 0 FILES, from 294 on 186 lines in
+      113 files. An identity mutation reintroducing one cast fails three
+      counts.
+    + THE LOGUTILITY LOOKUP HAS ONE FORM LIBRARY-WIDE for the first time. 110
+      files from phase A, 7 from ADR-171, 6 consumers and the producer here.
+    + 125 OF 126 BUNDLES ARE BYTE-FOR-BYTE IDENTICAL. The one that differs is
+      dynamicformswitcher, which held `const w = window` as a local alias, and
+      the hunk is that alias removed. Read rather than assumed.
+    + THREE INTERNAL SLOTS STOP BEING ADVERTISED AS PUBLIC API.
+    = THE TYPE IMPORTS IN globals.d.ts ARE ERASED. A `.d.ts` emits nothing, so
+      naming 23 components there creates no runtime edge and does not weaken
+      the rule that components never import one another.
+    - WIN-2 STANDS AT 237 AND TWO QUESTIONS ARE OPEN. Whether roughly 200
+      further globals belong in one central file or in a `declare global`
+      block beside each component's own assignment is a choice this ADR does
+      not make, because it amends D3 and the AGENTS.md instruction. And a
+      lookup by a computed key, as in `codeeditor.ts:140` and the debug flag
+      read in `logutility.ts:63`, cannot be expressed by a declaration at all,
+      so some of the 237 will need a different answer rather than a
+      declaration.
+    - A RATCHET IS ONLY AS WIDE AS ITS PATTERN. WIN-1 was gated, re-derivable
+      and correct for three days while the larger population went unwatched.
+      Insight 6.61.
+  files:
+    - "components/globals.d.ts"
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "scripts/generate-docs.js"
+    - "scripts/generate-docs.test.ts"
+    - "AGENTS.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "TESTING.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

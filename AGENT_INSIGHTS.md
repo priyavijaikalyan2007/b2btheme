@@ -612,3 +612,83 @@ you how much there is and the composition tells you what kind of work it is.
 Here it was the difference between "20 declarations and no behavior change" and
 "audit every cross-component lookup in the library". See [[6.55]]: a count is a
 claim about a file set and a pattern, and so is every sentence that explains it.
+
+### 6.61 A Ratchet Is Only as Wide as Its Pattern, and a Narrow One Builds a Blind Spot Bigger Than Itself (2026-10-14)
+
+WIN-1 counted `(window as any)`. The count was gated by check `[20]`,
+re-derivable from code, mutation-proven, and correct. It went from 294 to 0 in
+two days. Reading the last 74 to plan the work turned up the thing the count
+could not say: the library asserts on `window` in **four** spellings, and the
+one WIN-1 watched was the smaller population. 74 `any` against 248
+`unknown as Record<string, ...>` and 3 inline or line-wrapped. **The unwatched
+population was 3.3 times the watched one, and a cast in any spelling but `any`
+could be added for free while the gate reported progress.**
+
+Nothing here was a measurement error. The file set was declared, the pattern
+was declared, the number was reproducible. The pattern simply answered a
+narrower question than the item's name — "window cast pattern" — implied, and
+nobody had asked what else satisfies the name.
+
+**When a count gates a behavior, write the pattern against the behavior, not
+against the spelling you first saw.** The concrete test: before trusting a
+count to zero, ask what *else* would satisfy its English description, then grep
+for the general form. Here that was `window as ` — four characters shorter than
+`window as any` and 4.4 times the hits. The total is now gated and the
+breakdown by asserted type prints ungated, so a spelling that moves is visible
+without being a failure.
+
+Two mutations show the difference, and the second is the whole insight:
+rewriting one `record` cast as an inline object type holds the total and shifts
+the breakdown, while adding a cast in a new spelling raises the total and
+fails — and leaves `windowAnyCasts` at 0, passing. Related: [[6.55]] on counts
+as claims about a file set and a pattern, and [[6.58]], because renaming the
+count rather than opening a new one would have produced a different count with
+the same name.
+
+### 6.62 Migrating by Grep Migrates What You Grepped For (2026-10-14)
+
+WIN-1 phase A moved the LogUtility lookup to the declared global in 110 files
+and reported the preamble as migrated. It searched for
+`(window as any).createLogUtility`. Six components reached the same global
+through four other spellings and were invisible to that search, and
+`components/logutility/logutility.ts` — the component that **publishes**
+`createLogUtility` — registered it through a double cast, so the producer of
+the typed contract was not using the contract.
+
+The counts stayed honest, because they count casts rather than claims. The
+prose did not: "all 110 now reach the global through the declaration" is true
+and reads as "the lookup is now uniform", which was false for seven files.
+
+**Search for the subject, not for the syntax.** One `grep -l createLogUtility`
+over the tracked sources returns 126 files and ends the question in a second,
+where the cast-shaped search returned 110 and felt complete. The general rule:
+when migrating every use of X, enumerate by X and then classify, instead of
+enumerating by the shape you expect X's uses to have. The shape is a hypothesis.
+The name is the fact. This is the same failure as the character class that
+excluded underscores in [[6.58]], one level up: there the pattern was too narrow
+for the names, here it was too narrow for the syntax.
+
+### 6.63 Removing a Cast Can Unpublish an API, and the Check That Watches the API Will Not Notice (2026-10-14)
+
+`extractGlobals` in `scripts/generate-docs.js` finds the names a component
+registers on `window`. It recognized a cast by its parentheses and a bare
+`window` by dot access. WIN-1 phase B removes the parentheses from 38 bracket
+registrations, which leaves `window["Toolbar"] = Toolbar` — a line neither rule
+matches.
+
+Measured before the conversion ran, by reverting the extractor fix and
+regenerating: **14 components report `Globals: none` and 38 published names
+disappear** from the quick reference. `scripts/check-published-api.mjs`, check
+`[19]`, **passes through all of it**, because it verifies that every published
+name exists in the built artifact. A name that stops being published is not a
+name it checks. The guard against fiction had no guard against silence.
+
+**A check that validates the entries on a list cannot tell you the list got
+shorter.** Pair any "everything published is real" check with a count, or
+with the diff of the generated output against a snapshot. Here the snapshot
+diff was the whole method: generate before, convert, generate after, require
+the only differences to be ones you can name. Related: [[6.57]], where
+refactoring the code a check reads turned the check green by blinding it. This
+is its sibling — refactoring the code a *generator* reads empties the generated
+file, and the check downstream of it still passes because its question was
+never "is this complete".

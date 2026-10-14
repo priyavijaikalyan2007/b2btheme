@@ -274,6 +274,23 @@ timestamp or a hash into the bundle needs that file excluded or the stamp
 pinned. And an empty diff proves only that behavior did not change. It does not
 prove the change was correct, so the compiler and the suite still have to run.
 
+**The same method covers generated documentation, and there it caught a real
+one.** WIN-1 phase B removed the cast from 38 `(window as any)["Name"] = Name`
+registrations. `extractGlobals` in `scripts/generate-docs.js` recognized a cast
+by its parentheses and a bare `window` by dot access, so the converted line
+matched neither rule. Snapshot, convert, regenerate, diff: 14 components would
+have reported `Globals: none` and 38 published names would have vanished from
+`docs/AGENT_QUICK_REF.md`.
+
+Check `[19]` passed through all of it. It verifies that every published name
+exists in the built artifact, which is a guard against fiction and not against
+silence — a name that stops being published is not a name it checks. **A check
+that validates the entries on a list cannot tell you the list got shorter.**
+Pair it with a snapshot diff of the generated file, and require every
+difference to be one you can name out loud. The three that survived here were
+`__sidebarManager`, `__tabbedPanelManager` and `__navRailManager`, removed on
+purpose because a debugging slot is not public API.
+
 ---
 
 ## 3. Visual Verification

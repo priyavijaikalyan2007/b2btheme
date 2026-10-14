@@ -515,8 +515,14 @@ consistent, thoughtful and complete end to end experience.
   type and the line does not add to WIN-1. Add the global there when you publish a new one. Check
   `[20]` ratchets the cast count, so a new cast in `components/` fails the structure suite.
   The older `(window as unknown as Record<string, unknown>)` form is superseded by ADR-171 D2.
-  It forces a second cast on the value that comes back, so it buys nothing over `any`. Some
-  specs and component READMEs still show it, and they are corrected as WIN-1 phase B reaches them.
+  It returns `unknown`, so it forces a second cast on the value and buys nothing over `any`.
+  237 uses of it remain and WIN-2 tracks them. Do not add one, and do not copy it from a spec
+  or a component README that still shows it.
+- **`windowCasts` gates EVERY assertion on `window`, not one spelling of it.** WIN-1 counted the
+  literal `(window as any)` and reached 0 while 237 assertions in three other spellings went
+  unwatched (ADR-173). Any `window as` in `components/` now fails check `[20]`, whatever it
+  asserts to. If a global cannot be declared, say so in the ADR rather than reaching for a cast:
+  a lookup by a computed key is the one case a declaration cannot express.
 - Always consult COMMENTING.md so that you add appropriate comments to all generated code.
 - Always consult PRAGMATIC_PROGRAMMER.md for pragmatic engineering principles and PRAGMATIC_PROGRAMMER.checklist.md for a quick review.
 - Always consult CODE_COMPLETE.md for software construction best practices and CODE_COMPLETE.checklist.md for a quick review.
