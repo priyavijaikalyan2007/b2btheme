@@ -1479,6 +1479,6 @@ export function createSprintPicker(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["SprintPicker"] = SprintPicker;
-    (window as unknown as Record<string, unknown>)["createSprintPicker"] = createSprintPicker;
+    window["SprintPicker"] = SprintPicker;
+    window["createSprintPicker"] = createSprintPicker;
 }

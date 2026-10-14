@@ -1492,7 +1492,7 @@ class FormDialogImpl implements FormDialog
     private handleSubmitError(err: unknown): void
     {
         const msg = err instanceof Error ? err.message : String(err);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win.showErrorToast === "function")
         {
             (win.showErrorToast as (m: string) => void)(msg);
@@ -1692,11 +1692,14 @@ class FormDialogImpl implements FormDialog
 
     private promptDirtyClose(): void
     {
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win.showConfirmDialog === "function")
         {
-            const showConfirm = win.showConfirmDialog as (
-                opts: Record<string, unknown>) => Promise<boolean>;
+            // Kept as a local rather than called as `win.showConfirmDialog(...)`
+            // so the call stays unbound, which is how it has always been
+            // emitted. Removing the local would silently change `this` from
+            // undefined to window.
+            const showConfirm = win.showConfirmDialog;
             showConfirm({
                 title: "Unsaved Changes",
                 message: "You have unsaved changes. Discard them?",
@@ -2144,7 +2147,7 @@ export function createFormDialog(options: FormDialogOptions): FormDialog
 
 (function register(): void
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     win.FormDialog = FormDialogImpl;
     win.createFormDialog = createFormDialog;
 })();

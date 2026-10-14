@@ -1159,7 +1159,7 @@ export function registerCommands(cmds: PaletteCommand[]): void
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).CommandPalette = CommandPalette;
-(window as unknown as Record<string, unknown>).openCommandPalette = openCommandPalette;
-(window as unknown as Record<string, unknown>).registerCommand = registerCommand;
-(window as unknown as Record<string, unknown>).registerCommands = registerCommands;
+window.CommandPalette = CommandPalette;
+window.openCommandPalette = openCommandPalette;
+window.registerCommand = registerCommand;
+window.registerCommands = registerCommands;

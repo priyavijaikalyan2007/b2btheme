@@ -6285,7 +6285,26 @@ function blockingFailures(
 // GLOBAL REGISTRATION
 // ========================================================================
 
-(window as unknown as Record<string, unknown>)["EnterpriseRuntime"] = {
+/*
+ * THE RUNTIME DECLARES ITS OWN GLOBAL, the one exception to ADR-174 D1.
+ * components/globals.d.ts is reached by the component program, whose
+ * rootDir is components/. This bundle is built by
+ * tsconfig.runtime.build.json with rootDir set to runtime/, so it cannot
+ * see that file, and adding it would pull every component source into
+ * this program. The components that READ this global are declared
+ * against it in globals.d.ts, so both sides are typed and neither
+ * imports the other.
+ *
+ * The augmentation is a bare interface rather than a declare global
+ * block, because this bundle has no top-level export and so is a
+ * script. TypeScript rejects a global augmentation in a script.
+ */
+interface Window
+{
+    EnterpriseRuntime?: Record<string, unknown>;
+}
+
+window.EnterpriseRuntime = {
     createEmptyDocument, validateDocument, validatePatch, applyPatch,
     fold, foldTo, branch,
     registerComponent, registerComponents, getManifest, getAllManifests,

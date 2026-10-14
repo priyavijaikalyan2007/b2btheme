@@ -900,5 +900,5 @@ export function attachLongPress(
 // WINDOW GLOBAL
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createContextMenu = createContextMenu;
-(window as unknown as Record<string, unknown>).attachLongPress = attachLongPress;
+window.createContextMenu = createContextMenu;
+window.attachLongPress = attachLongPress;

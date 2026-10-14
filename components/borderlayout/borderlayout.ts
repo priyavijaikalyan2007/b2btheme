@@ -710,7 +710,7 @@ export function createBorderLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["BorderLayout"] = BorderLayout;
     w["createBorderLayout"] = createBorderLayout;
 }

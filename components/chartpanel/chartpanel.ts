@@ -204,7 +204,7 @@ function setAttr(el: Element, name: string, value: string): void
 
 function getChartCtor(): ChartCtor | null
 {
-    const v = (window as unknown as Record<string, unknown>)["Chart"];
+    const v = window["Chart"];
     if (typeof v === "function")
     {
         return v as ChartCtor;
@@ -861,6 +861,6 @@ export function createChartPanel(
 // GLOBAL EXPORTS (for IIFE consumers)
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["ChartPanel"] = ChartPanel;
-(window as unknown as Record<string, unknown>)["createChartPanel"] =
+window["ChartPanel"] = ChartPanel;
+window["createChartPanel"] =
     createChartPanel;

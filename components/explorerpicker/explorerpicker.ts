@@ -2960,7 +2960,7 @@ export function createExplorerPicker(
 // WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["ExplorerPickerImpl"] =
+window["ExplorerPickerImpl"] =
     ExplorerPickerImpl;
-(window as unknown as Record<string, unknown>)["createExplorerPicker"] =
+window["createExplorerPicker"] =
     createExplorerPicker;

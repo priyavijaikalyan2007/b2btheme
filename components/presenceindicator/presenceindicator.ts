@@ -157,7 +157,7 @@ type ChipFactory = (opts: Record<string, unknown>) => { getElement: () => HTMLEl
  */
 function resolveChipFactory(): ChipFactory | null
 {
-    const factory = (window as unknown as Record<string, unknown>)[
+    const factory = window[
         "createPersonChip"
     ] as ChipFactory | undefined;
 
@@ -789,5 +789,5 @@ export function createPresenceIndicator(
 // WINDOW EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["PresenceIndicator"] = PresenceIndicator;
-(window as unknown as Record<string, unknown>)["createPresenceIndicator"] = createPresenceIndicator;
+window["PresenceIndicator"] = PresenceIndicator;
+window["createPresenceIndicator"] = createPresenceIndicator;

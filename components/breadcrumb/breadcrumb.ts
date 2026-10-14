@@ -853,4 +853,4 @@ export function createBreadcrumb(options: BreadcrumbOptions): BreadcrumbHandle
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createBreadcrumb = createBreadcrumb;
+window.createBreadcrumb = createBreadcrumb;

@@ -1253,6 +1253,6 @@ export function createTagger(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["Tagger"] = Tagger;
-    (window as unknown as Record<string, unknown>)["createTagger"] = createTagger;
+    window["Tagger"] = Tagger;
+    window["createTagger"] = createTagger;
 }

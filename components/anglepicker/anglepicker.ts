@@ -1011,5 +1011,5 @@ export function createAnglePicker(
     return new AnglePicker(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["AnglePicker"] = AnglePicker;
-(window as unknown as Record<string, unknown>)["createAnglePicker"] = createAnglePicker;
+window["AnglePicker"] = AnglePicker;
+window["createAnglePicker"] = createAnglePicker;

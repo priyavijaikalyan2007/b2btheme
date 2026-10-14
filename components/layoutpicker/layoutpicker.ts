@@ -1255,5 +1255,5 @@ export function createLayoutPicker(
 // ============================================================================
 
 const LayoutPicker = { LAYOUT_ALGORITHMS, createLayoutPicker };
-(window as unknown as Record<string, unknown>)["LayoutPicker"] = LayoutPicker;
-(window as unknown as Record<string, unknown>)["createLayoutPicker"] = createLayoutPicker;
+window["LayoutPicker"] = LayoutPicker;
+window["createLayoutPicker"] = createLayoutPicker;

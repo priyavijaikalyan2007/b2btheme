@@ -308,4 +308,4 @@ export function createThemeToggle(options: ThemeToggleOptions): ThemeToggleHandl
 // GLOBAL EXPORT
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createThemeToggle = createThemeToggle;
+window.createThemeToggle = createThemeToggle;

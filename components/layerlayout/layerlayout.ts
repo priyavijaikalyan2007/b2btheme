@@ -665,7 +665,7 @@ export function createLayerLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["LayerLayout"] = LayerLayout;
     w["createLayerLayout"] = createLayerLayout;
 }

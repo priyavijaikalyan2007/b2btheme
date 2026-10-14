@@ -616,7 +616,7 @@ export function createFlowLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["FlowLayout"] = FlowLayout;
     w["createFlowLayout"] = createFlowLayout;
 }

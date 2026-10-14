@@ -968,5 +968,5 @@ export function createUserMenu(
 // WINDOW EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["UserMenu"] = UserMenu;
-(window as unknown as Record<string, unknown>)["createUserMenu"] = createUserMenu;
+window["UserMenu"] = UserMenu;
+window["createUserMenu"] = createUserMenu;

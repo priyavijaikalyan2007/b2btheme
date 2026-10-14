@@ -962,6 +962,6 @@ export function createMaskedEntry(
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["MaskedEntry"] = MaskedEntry;
-    (window as unknown as Record<string, unknown>)["createMaskedEntry"] = createMaskedEntry;
+    window["MaskedEntry"] = MaskedEntry;
+    window["createMaskedEntry"] = createMaskedEntry;
 }

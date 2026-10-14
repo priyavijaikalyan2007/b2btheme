@@ -805,7 +805,7 @@ class CustomFieldAdapter implements SpineFieldAdapter
  * Handles library components with consistent
  * create*(containerId, options?) + getValue()/destroy() API.
  */
-const STANDARD_FACTORY_MAP: Record<string, string> =
+const STANDARD_FACTORY_MAP: Record<string, keyof Window> =
 {
     "datepicker": "createDatePicker",
     "timepicker": "createTimePicker",
@@ -820,7 +820,12 @@ const STANDARD_FACTORY_MAP: Record<string, string> =
 
 class StandardComponentAdapter implements SpineFieldAdapter
 {
-    private factoryName: string;
+    /**
+     * The window global this adapter mounts, or "" when the field type has
+     * no standard factory. Typed `keyof Window` rather than `string`, which
+     * is what lets `resolveFactory` read the global without an assertion.
+     */
+    private factoryName: keyof Window | "";
     private instance: Record<string, Function> | null = null;
     private wrapperId: string = "";
     private compOpts: Record<string, unknown>;
@@ -855,9 +860,7 @@ class StandardComponentAdapter implements SpineFieldAdapter
 
     private resolveFactory(): Function | null
     {
-        const win = window as unknown as
-            Record<string, unknown>;
-        const fn = win[this.factoryName];
+        const fn = this.factoryName ? window[this.factoryName] : undefined;
         if (typeof fn !== "function")
         {
             logWarn(`${this.factoryName}` +
@@ -975,7 +978,7 @@ class SprintPickerAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createSprintPicker"] !== "function")
         {
             this.fallback(wrap, value);
@@ -1047,7 +1050,7 @@ class FontDropdownAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createFontDropdown"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -1118,7 +1121,7 @@ class EditableComboBoxAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createEditableComboBox"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -1190,7 +1193,7 @@ class MultiselectComboAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createMultiselectCombo"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -1264,7 +1267,7 @@ class TaggerAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createTagger"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -1336,7 +1339,7 @@ class PeoplePickerAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createPeoplePicker"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -1408,8 +1411,7 @@ class RichTextInputAdapter implements SpineFieldAdapter
             class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as
-            Record<string, unknown>;
+        const win = window;
         const Ctor = win["RichTextInput"];
         if (typeof Ctor !== "function")
         {
@@ -1507,8 +1509,12 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
             class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
-        if (typeof win["MarkdownEditor"] !== "function")
+        // Read once and guard the value, not the property. Guarding
+        // `win["MarkdownEditor"]` and then reading `win.MarkdownEditor`
+        // leaves the second read optional, which costs a second guard that
+        // can never fire.
+        const Ctor = window.MarkdownEditor;
+        if (typeof Ctor !== "function")
         {
             this.fallback(wrap, value); return;
         }
@@ -1517,12 +1523,7 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
         try
         {
             // new MarkdownEditor(element, opts)
-            const Ctor = win["MarkdownEditor"] as
-                new (
-                    el: HTMLElement,
-                    o: Record<string, unknown>
-                ) => Record<string, Function>;
-            this.instance = new Ctor(wrap, opts);
+            this.instance = new Ctor(wrap, opts) as unknown as Record<string, Function>;
         }
         catch { this.fallback(wrap, value); }
     }
@@ -1588,7 +1589,7 @@ class SymbolPickerAdapter implements SpineFieldAdapter
             id, class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["createSymbolPicker"] !== "function")
         {
             this.fallback(wrap, value); return;
@@ -4351,7 +4352,7 @@ export class SpineMap
         }
 
         const createFn = (
-            window as unknown as Record<string, unknown>
+            window
         ).createTreeGrid;
         if (createFn)
         {
@@ -4366,7 +4367,7 @@ export class SpineMap
     private initTreeGrid(container: HTMLElement): void
     {
         const createFn = (
-            window as unknown as Record<string, unknown>
+            window
         ).createTreeGrid as
             ((o: Record<string, unknown>) => Record<string, Function>)
             | undefined;
@@ -4823,7 +4824,7 @@ export class SpineMap
             return this.opts.onConfirmRemove(message);
         }
 
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         if (typeof win["showDangerConfirmDialog"] === "function")
         {
             return (win["showDangerConfirmDialog"] as
@@ -4849,4 +4850,4 @@ export function createSpineMap(options: SpineMapOptions): SpineMap
     return new SpineMap(options);
 }
 
-(window as unknown as Record<string, unknown>).createSpineMap = createSpineMap;
+window.createSpineMap = createSpineMap;

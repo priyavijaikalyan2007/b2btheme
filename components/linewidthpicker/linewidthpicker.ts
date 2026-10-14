@@ -622,5 +622,5 @@ export function createLineWidthPicker(
     return new LineWidthPicker(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["LineWidthPicker"] = LineWidthPicker;
-(window as unknown as Record<string, unknown>)["createLineWidthPicker"] = createLineWidthPicker;
+window["LineWidthPicker"] = LineWidthPicker;
+window["createLineWidthPicker"] = createLineWidthPicker;

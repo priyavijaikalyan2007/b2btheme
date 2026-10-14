@@ -715,4 +715,4 @@ export function createColumnsPicker(
 // S6: WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createColumnsPicker"] = createColumnsPicker;
+window["createColumnsPicker"] = createColumnsPicker;

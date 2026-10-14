@@ -139,7 +139,7 @@ type MdRendererFactory = () => MdRendererHandle;
 /** Get or create the shared markdown renderer. */
 function getMdRenderer(): MdRendererHandle | null
 {
-    const factory = (window as unknown as Record<string, unknown>)
+    const factory = window
         ["createMarkdownRenderer"] as MdRendererFactory | undefined;
     if (typeof factory === "function")
     {
@@ -1034,5 +1034,5 @@ export function createDocViewer(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createDocViewer =
+window.createDocViewer =
     createDocViewer;

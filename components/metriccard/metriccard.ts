@@ -706,6 +706,6 @@ export function createMetricCard(
 // GLOBAL EXPORTS (for IIFE consumers)
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["MetricCard"] = MetricCard;
-(window as unknown as Record<string, unknown>)["createMetricCard"] =
+window["MetricCard"] = MetricCard;
+window["createMetricCard"] =
     createMetricCard;

@@ -837,5 +837,5 @@ export function createRuler(
     return new Ruler(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["Ruler"] = Ruler;
-(window as unknown as Record<string, unknown>)["createRuler"] = createRuler;
+window["Ruler"] = Ruler;
+window["createRuler"] = createRuler;

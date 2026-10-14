@@ -352,7 +352,7 @@ class HelpTooltip
         }
 
         const factory = (
-            window as unknown as Record<string, unknown>
+            window
         )["createHelpDrawer"] as
             ((opts?: Record<string, unknown>) => {
                 open: (t: HelpTooltipTopic) => void;
@@ -407,5 +407,5 @@ export function createHelpTooltip(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createHelpTooltip =
+window.createHelpTooltip =
     createHelpTooltip;

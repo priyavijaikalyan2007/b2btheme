@@ -1254,6 +1254,6 @@ export function createSearchBox(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["SearchBox"] = SearchBox;
-    (window as unknown as Record<string, unknown>)["createSearchBox"] = createSearchBox;
+    window["SearchBox"] = SearchBox;
+    window["createSearchBox"] = createSearchBox;
 }

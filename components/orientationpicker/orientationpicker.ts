@@ -650,4 +650,4 @@ function buildApi(
 // S15: GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createOrientationPicker"] = createOrientationPicker;
+window["createOrientationPicker"] = createOrientationPicker;

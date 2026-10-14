@@ -984,5 +984,5 @@ export function createActivityFeed(
     return instance;
 }
 
-(window as unknown as Record<string, unknown>).ActivityFeed = ActivityFeed;
-(window as unknown as Record<string, unknown>).createActivityFeed = createActivityFeed;
+window.ActivityFeed = ActivityFeed;
+window.createActivityFeed = createActivityFeed;

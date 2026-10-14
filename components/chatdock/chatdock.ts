@@ -544,5 +544,5 @@ function build(
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createChatDock"] =
+window["createChatDock"] =
     createChatDock;

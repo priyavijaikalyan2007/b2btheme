@@ -590,7 +590,7 @@ export function createBoxLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["BoxLayout"] = BoxLayout;
     w["createBoxLayout"] = createBoxLayout;
 }

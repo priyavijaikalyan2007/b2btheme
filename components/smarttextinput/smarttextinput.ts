@@ -2262,6 +2262,6 @@ export function createSmartTextInput(
 // >> Delegates to: window globals
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["SmartTextInputEngine"] = SmartTextInputEngine;
-    (window as unknown as Record<string, unknown>)["createSmartTextInput"] = createSmartTextInput;
+    window["SmartTextInputEngine"] = SmartTextInputEngine;
+    window["createSmartTextInput"] = createSmartTextInput;
 }

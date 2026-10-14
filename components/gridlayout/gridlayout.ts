@@ -747,7 +747,7 @@ export function createGridLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["GridLayout"] = GridLayout;
     w["createGridLayout"] = createGridLayout;
 }

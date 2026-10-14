@@ -1469,6 +1469,6 @@ export function createSplitLayout(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["SplitLayout"] = SplitLayout;
-    (window as unknown as Record<string, unknown>)["createSplitLayout"] = createSplitLayout;
+    window["SplitLayout"] = SplitLayout;
+    window["createSplitLayout"] = createSplitLayout;
 }

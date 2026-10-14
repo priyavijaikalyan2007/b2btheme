@@ -312,4 +312,4 @@ function buildHandle(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createInlineToolbar = createInlineToolbar;
+window.createInlineToolbar = createInlineToolbar;

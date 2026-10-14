@@ -712,5 +712,5 @@ export function createSizesPicker(
     return new SizesPicker(options);
 }
 
-(window as unknown as Record<string, unknown>)["SizesPicker"] = SizesPicker;
-(window as unknown as Record<string, unknown>)["createSizesPicker"] = createSizesPicker;
+window["SizesPicker"] = SizesPicker;
+window["createSizesPicker"] = createSizesPicker;

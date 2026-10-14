@@ -388,6 +388,25 @@ function getAllIcons(): string[]
 // S4: CLASS SHELL & CONSTRUCTOR
 // ============================================================================
 
+/**
+ * THE ONE UNTYPED WINDOW LOOKUP IN THIS COMPONENT, and it is here on purpose.
+ *
+ * The factory name comes from `componentFactory` on a control in the
+ * ribbon definition, which the host application writes. The set of
+ * names a consumer may register is open by design.
+ * A name that is only known at run time cannot be a `keyof Window`, so no
+ * declaration in components/globals.d.ts can type this read. WIN-2 closes
+ * above zero rather than at it, because writing a declaration broad enough
+ * to admit any name would describe run time less accurately than the
+ * assertion does.
+ *
+ * @param name - The factory global to read, supplied by the caller.
+ * @returns The global, or `undefined` when nothing published that name.
+ */
+function lookupFactoryGlobal(name: string): unknown
+{
+    return (window as unknown as Record<string, unknown>)[name];
+}
 class RibbonBuilderImpl
 {
     private readonly instanceId: number;
@@ -721,7 +740,7 @@ class RibbonBuilderImpl
         const previewConfig = this.buildPreviewConfig();
         const containerId = host.id;
 
-        const createRibbonFn = (window as unknown as Record<string, unknown>)[
+        const createRibbonFn = window[
             "createRibbon"
         ] as ((opts: unknown, id: string) => { destroy(): void }) | undefined;
 
@@ -782,8 +801,7 @@ class RibbonBuilderImpl
 
         const factoryName = anyCtrl["componentFactory"] as string;
         const opts = (anyCtrl["componentOptions"] as Record<string, unknown>) || {};
-        const win = window as unknown as Record<string, unknown>;
-        const factory = win[factoryName] as
+        const factory = lookupFactoryGlobal(factoryName) as
             ((id: string, o: unknown) => unknown) | undefined;
 
         if (!factory)
@@ -2076,7 +2094,7 @@ class RibbonBuilderImpl
     {
         if (this.symbolPickerInstance) { return; }
 
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
 
         if (typeof win["createSymbolPicker"] !== "function")
         {
@@ -3465,5 +3483,5 @@ export function createRibbonBuilder(
     return handle;
 }
 
-(window as unknown as Record<string, unknown>)["RibbonBuilderImpl"] = RibbonBuilderImpl;
-(window as unknown as Record<string, unknown>)["createRibbonBuilder"] = createRibbonBuilder;
+window["RibbonBuilderImpl"] = RibbonBuilderImpl;
+window["createRibbonBuilder"] = createRibbonBuilder;

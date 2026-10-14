@@ -2687,7 +2687,7 @@ export function createFileExplorer(
     return fe;
 }
 
-(window as unknown as Record<string, unknown>)["FileExplorer"] =
+window["FileExplorer"] =
     FileExplorer;
-(window as unknown as Record<string, unknown>)["createFileExplorer"] =
+window["createFileExplorer"] =
     createFileExplorer;

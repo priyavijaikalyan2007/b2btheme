@@ -499,5 +499,5 @@ function build(
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createWorkspaceShell"] =
+window["createWorkspaceShell"] =
     createWorkspaceShell;

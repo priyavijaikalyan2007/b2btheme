@@ -675,5 +675,5 @@ export function createPropertyInspector(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createPropertyInspector =
+window.createPropertyInspector =
     createPropertyInspector;

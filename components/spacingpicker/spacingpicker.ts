@@ -679,4 +679,4 @@ export function createSpacingPicker(
 // S6: WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createSpacingPicker"] = createSpacingPicker;
+window["createSpacingPicker"] = createSpacingPicker;

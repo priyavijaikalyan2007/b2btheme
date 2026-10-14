@@ -5082,7 +5082,7 @@ export function createDiagramEngine(
 // WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["DiagramEngine"] =
+window["DiagramEngine"] =
     DiagramEngineImpl;
-(window as unknown as Record<string, unknown>)["createDiagramEngine"] =
+window["createDiagramEngine"] =
     createDiagramEngine;

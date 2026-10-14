@@ -239,4 +239,4 @@ export function createTypeBadge(options: TypeBadgeOptions): HTMLElement
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createTypeBadge = createTypeBadge;
+window.createTypeBadge = createTypeBadge;

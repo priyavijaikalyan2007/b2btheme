@@ -238,7 +238,7 @@ function getInitialsColor(name: string): string
  */
 function resolvePeoplePicker(): ((containerId: string, opts?: unknown) => unknown) | null
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const fn = win["createPeoplePicker"];
     return typeof fn === "function" ? fn as (id: string, opts?: unknown) => unknown : null;
 }
@@ -249,7 +249,7 @@ function resolvePeoplePicker(): ((containerId: string, opts?: unknown) => unknow
  */
 function resolvePersonChip(): ((opts: unknown) => { getElement(): HTMLElement; destroy(): void }) | null
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const fn = win["createPersonChip"];
     if (typeof fn !== "function") { return null; }
     return fn as (opts: unknown) => { getElement(): HTMLElement; destroy(): void };
@@ -1312,7 +1312,7 @@ export function createShareDialog(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["ShareDialog"] = ShareDialog;
-    (window as unknown as Record<string, unknown>)["showShareDialog"] = showShareDialog;
-    (window as unknown as Record<string, unknown>)["createShareDialog"] = createShareDialog;
+    window["ShareDialog"] = ShareDialog;
+    window["showShareDialog"] = showShareDialog;
+    window["createShareDialog"] = createShareDialog;
 }

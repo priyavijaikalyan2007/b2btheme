@@ -75,43 +75,51 @@ export interface MarkdownRendererHandle
 // THIRD-PARTY PROBES
 // ============================================================================
 
-interface MarkedStatic
+export interface MarkedStatic
 {
     parse: (md: string, opts?: Record<string, unknown>) => string;
     use: (ext: Record<string, unknown>) => void;
 }
 
-interface HljsStatic
+export interface HljsStatic
 {
     highlight: (code: string, opts: { language: string }) =>
         { value: string };
     getLanguage: (lang: string) => unknown;
 }
 
-interface KatexStatic
+export interface KatexStatic
 {
     renderToString: (tex: string, opts?: Record<string, unknown>) => string;
 }
 
-interface MermaidStatic
+export interface MermaidStatic
 {
     run: (opts: { nodes: NodeListOf<Element> }) => Promise<void>;
 }
 
-interface VizInstance
+export interface VizInstance
 {
     renderSVGElement: (src: string) => SVGSVGElement;
 }
 
-interface VizStatic
+export interface VizStatic
 {
     instance: () => Promise<VizInstance>;
 }
 
-/** Probe window for a global. */
-function probe<T>(name: string): T | null
+/**
+ * Probe window for one of the optional rendering libraries.
+ *
+ * The parameter is a union of the five names rather than `string`, which is
+ * what lets the lookup read `window[name]` with no assertion. Each library
+ * is declared in components/globals.d.ts using the interfaces above, and
+ * each is OPTIONAL there because the host page supplies it. None of the
+ * five is vendored into `dist/lib`.
+ */
+function probe<T>(name: "marked" | "hljs" | "katex" | "mermaid" | "Viz"): T | null
 {
-    const val = (window as unknown as Record<string, unknown>)[name];
+    const val = window[name];
     return val ? val as T : null;
 }
 
@@ -754,5 +762,5 @@ function buildFallbackHandle(): MarkdownRendererHandle
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createMarkdownRenderer"] =
+window["createMarkdownRenderer"] =
     createMarkdownRenderer;

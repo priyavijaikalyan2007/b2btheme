@@ -2678,7 +2678,7 @@ export class Timeline
         if (!this.showInlineToolbar) { return; }
         if (!this.rootEl) { return; }
 
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win.createInlineToolbar as
             ((opts: Record<string, unknown>) => InlineToolbarHandleShape) | undefined;
         if (typeof factory !== "function")

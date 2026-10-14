@@ -1054,7 +1054,7 @@ $control-height-xl=46px
 - CSS: `components/markdownrenderer/markdownrenderer.css`
 - JS: `components/markdownrenderer/markdownrenderer.js`
 - Globals: `createMarkdownRenderer()`
-- Exports: `interface MarkdownRendererOptions`, `interface MarkdownRendererHandle`, `function createMarkdownRenderer`
+- Exports: `interface MarkdownRendererOptions`, `interface MarkdownRendererHandle`, `interface MarkedStatic`, `interface HljsStatic`, `interface KatexStatic`, `interface MermaidStatic`, `interface VizInstance`, `interface VizStatic`, `function createMarkdownRenderer`
 
 ### marketinghero
 

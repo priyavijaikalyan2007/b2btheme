@@ -2996,7 +2996,7 @@ function renderToolbar(state: InternalState): void
 /** Populate the toolbar container with buttons. */
 function populateToolbar(state: InternalState, container: HTMLElement): void
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const factory = win["createInlineToolbar"] as Function | undefined;
 
     if (typeof factory === "function")
@@ -3251,7 +3251,7 @@ function showContextMenu(state: InternalState, event: MouseEvent): void
 {
     event.preventDefault();
 
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const createContextMenu = win["createContextMenu"] as Function | undefined;
 
     if (typeof createContextMenu !== "function")
@@ -4807,4 +4807,4 @@ function destroyPublic(state: InternalState): void
 // WINDOW GLOBAL EXPORT
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createVisualTableEditor"] = createVisualTableEditor;
+window["createVisualTableEditor"] = createVisualTableEditor;

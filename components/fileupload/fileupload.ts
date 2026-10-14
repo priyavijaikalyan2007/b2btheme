@@ -1564,5 +1564,5 @@ export function createFileUpload(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["FileUpload"] = FileUpload;
-(window as unknown as Record<string, unknown>)["createFileUpload"] = createFileUpload;
+window["FileUpload"] = FileUpload;
+window["createFileUpload"] = createFileUpload;

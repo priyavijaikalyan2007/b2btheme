@@ -1198,7 +1198,7 @@ export function createFontDropdown(
     return new FontDropdown(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["FontDropdown"] =
+window["FontDropdown"] =
     FontDropdown;
-(window as unknown as Record<string, unknown>)["createFontDropdown"] =
+window["createFontDropdown"] =
     createFontDropdown;

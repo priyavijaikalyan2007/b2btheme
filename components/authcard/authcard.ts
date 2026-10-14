@@ -375,4 +375,4 @@ export function createAuthCard(
 // GLOBAL EXPORT
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createAuthCard = createAuthCard;
+window.createAuthCard = createAuthCard;

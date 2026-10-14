@@ -440,7 +440,7 @@ const SANITISE_SVG_ATTRS: string[] = [
  */
 function sanitiseHTML(html: string): string
 {
-    const dp = (window as unknown as Record<string, unknown>)["DOMPurify"] as
+    const dp = window["DOMPurify"] as
         { sanitize: (h: string, o: Record<string, unknown>) => string } | undefined;
     if (dp && typeof dp.sanitize === "function")
     {
@@ -1954,7 +1954,7 @@ export class Conversation
             container.textContent = "";
             return;
         }
-        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+        const VditorClass = window["Vditor"] as
             { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
@@ -3388,6 +3388,6 @@ export function createConversation(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["Conversation"] = Conversation;
-    (window as unknown as Record<string, unknown>)["createConversation"] = createConversation;
+    window["Conversation"] = Conversation;
+    window["createConversation"] = createConversation;
 }

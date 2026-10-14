@@ -1473,6 +1473,6 @@ export function createEditableComboBox(
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["EditableComboBox"] = EditableComboBox;
-    (window as unknown as Record<string, unknown>)["createEditableComboBox"] = createEditableComboBox;
+    window["EditableComboBox"] = EditableComboBox;
+    window["createEditableComboBox"] = createEditableComboBox;
 }

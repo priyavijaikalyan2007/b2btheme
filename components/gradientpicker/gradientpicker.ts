@@ -1429,7 +1429,7 @@ export class GradientPicker
         options?: Record<string, unknown>
     ) => unknown) | null
     {
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win["createColorPicker"];
         if (typeof factory === "function")
         {
@@ -1656,7 +1656,7 @@ export class GradientPicker
         options?: Record<string, unknown>
     ) => unknown) | null
     {
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win["createAnglePicker"];
         if (typeof factory === "function")
         {
@@ -2373,5 +2373,5 @@ export function createGradientPicker(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["GradientPicker"] = GradientPicker;
-(window as unknown as Record<string, unknown>)["createGradientPicker"] = createGradientPicker;
+window["GradientPicker"] = GradientPicker;
+window["createGradientPicker"] = createGradientPicker;

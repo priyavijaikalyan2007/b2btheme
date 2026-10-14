@@ -681,5 +681,5 @@ export function createLineTypePicker(
     return new LineTypePicker(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["LineTypePicker"] = LineTypePicker;
-(window as unknown as Record<string, unknown>)["createLineTypePicker"] = createLineTypePicker;
+window["LineTypePicker"] = LineTypePicker;
+window["createLineTypePicker"] = createLineTypePicker;

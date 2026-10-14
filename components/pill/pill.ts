@@ -434,5 +434,5 @@ export function createPill(options: PillOptions): Pill
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).Pill = Pill;
-(window as unknown as Record<string, unknown>).createPill = createPill;
+window.Pill = Pill;
+window.createPill = createPill;

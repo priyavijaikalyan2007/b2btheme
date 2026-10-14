@@ -968,8 +968,8 @@ export function createTenantSwitcher(
     return instance;
 }
 
-(window as unknown as Record<string, unknown>).TenantSwitcher = TenantSwitcher;
-(window as unknown as Record<string, unknown>).createTenantSwitcher = createTenantSwitcher;
+window.TenantSwitcher = TenantSwitcher;
+window.createTenantSwitcher = createTenantSwitcher;
 
 // ============================================================================
 // DEPRECATED ALIASES — remove one release after the consumer stops calling
@@ -1034,6 +1034,6 @@ export function createWorkspaceSwitcher(
         containerId);
 }
 
-(window as unknown as Record<string, unknown>).WorkspaceSwitcher = TenantSwitcher;
-(window as unknown as Record<string, unknown>).createWorkspaceSwitcher =
+window.WorkspaceSwitcher = TenantSwitcher;
+window.createWorkspaceSwitcher =
     createWorkspaceSwitcher;

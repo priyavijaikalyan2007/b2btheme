@@ -1612,5 +1612,5 @@ export function createAppLauncher(
     return launcher;
 }
 
-(window as unknown as Record<string, unknown>).AppLauncher = AppLauncher;
-(window as unknown as Record<string, unknown>).createAppLauncher = createAppLauncher;
+window.AppLauncher = AppLauncher;
+window.createAppLauncher = createAppLauncher;

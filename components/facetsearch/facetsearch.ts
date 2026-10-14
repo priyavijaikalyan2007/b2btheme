@@ -1607,8 +1607,8 @@ export function createFacetSearch(
     return fs;
 }
 
-(window as unknown as Record<string, unknown>)["FacetSearch"] = FacetSearch;
-(window as unknown as Record<string, unknown>)["createFacetSearch"] =
+window["FacetSearch"] = FacetSearch;
+window["createFacetSearch"] =
     createFacetSearch;
-(window as unknown as Record<string, unknown>)["parseFacetQuery"] =
+window["parseFacetQuery"] =
     parseFacetQuery;

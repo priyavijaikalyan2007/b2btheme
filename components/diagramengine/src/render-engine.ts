@@ -1022,9 +1022,9 @@ export class RenderEngine
         objId: string,
         embed: EmbedDefinition): void
     {
-        const win = window as unknown as Record<string, unknown>;
+        // Host data names the factory, so no declaration types it. ADR-174 D3.
         const factoryName = this.resolveFactoryName(embed.component);
-        const factory = win[factoryName];
+        const factory = (window as unknown as Record<string, unknown>)[factoryName];
 
         if (typeof factory !== "function")
         {

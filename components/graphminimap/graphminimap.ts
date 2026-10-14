@@ -722,4 +722,4 @@ function buildPublicApi(state: MinimapState): GraphMinimap
 // WINDOW GLOBAL
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createGraphMinimap = createGraphMinimap;
+window.createGraphMinimap = createGraphMinimap;

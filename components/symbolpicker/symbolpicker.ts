@@ -2353,5 +2353,5 @@ export function createSymbolPicker(
     return picker;
 }
 
-(window as unknown as Record<string, unknown>)["SymbolPicker"] = SymbolPicker;
-(window as unknown as Record<string, unknown>)["createSymbolPicker"] = createSymbolPicker;
+window["SymbolPicker"] = SymbolPicker;
+window["createSymbolPicker"] = createSymbolPicker;

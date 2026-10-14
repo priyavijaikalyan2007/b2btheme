@@ -818,6 +818,15 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
     private tryAutoDiscover(
         field: DynamicFormField, host: HTMLElement): DynamicFormFieldAdapter | null
     {
+        // THE ONE UNTYPED WINDOW ACCESS IN THIS COMPONENT, and it is here on
+        // purpose. Auto-discovery builds the name from `field.type`, which
+        // the host application supplies, and `resolveFactoryName` falls back
+        // to scanning `Object.keys` for a `create*` whose tail matches. Both
+        // need window AS A NAMESPACE rather than as a known set of members,
+        // so no declaration in components/globals.d.ts can type this. WIN-2
+        // closes above zero rather than at it, because a declaration broad
+        // enough to admit any name would describe run time less accurately
+        // than this assertion does.
         const win = window as unknown as Record<string, unknown>;
         const factoryName = resolveFactoryName(win, field.type);
         if (!factoryName) { return null; }
@@ -1712,7 +1721,7 @@ export function createDynamicFormSwitcher(
 
 if (typeof window !== "undefined")
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     win.DynamicFormSwitcher = DynamicFormSwitcherImpl;
     win.createDynamicFormSwitcher = createDynamicFormSwitcher;
     // Expose the registry as a property on the factory (the idiomatic

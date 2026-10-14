@@ -846,5 +846,5 @@ function destroyLayout(root: HTMLElement): void
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["createStackLayout"] = createStackLayout;
+    window["createStackLayout"] = createStackLayout;
 }

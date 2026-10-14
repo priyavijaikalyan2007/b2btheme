@@ -136,7 +136,7 @@ interface DriverModule
  */
 function getDriverJs(): DriverFactory | null
 {
-    const mod = (window as unknown as Record<string, unknown>)["driver"];
+    const mod = window["driver"];
     if (!mod) { return null; }
 
     if (typeof mod === "function")
@@ -693,5 +693,5 @@ export function createGuidedTour(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createGuidedTour =
+window.createGuidedTour =
     createGuidedTour;

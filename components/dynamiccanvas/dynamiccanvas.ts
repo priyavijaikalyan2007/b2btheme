@@ -170,7 +170,7 @@ interface RuntimeApi
  */
 function rt(): RuntimeApi
 {
-    const api = (window as unknown as Record<string, unknown>)
+    const api = window
         ["EnterpriseRuntime"];
 
     if (!api)
@@ -440,6 +440,9 @@ function build(
     host: HTMLElement,
     options: DynamicCanvasOptions): DynamicCanvasHandle
 {
+    // The runtime resolves a factory BY NAME inside this scope, so it needs
+    // the global object as a NAMESPACE rather than as a known set of
+    // members. No declaration can type that. ADR-174 D3.
     const scope = options.scope
         ?? (window as unknown as Record<string, unknown>);
 
@@ -2313,9 +2316,9 @@ function hashCode(value: string): number
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createDynamicCanvas"] =
+window["createDynamicCanvas"] =
     createDynamicCanvas;
 
 /** Exposed so hosts can tune virtualization without importing constants. */
-(window as unknown as Record<string, unknown>)["DYNAMIC_CANVAS_ZOOM_STEP"] =
+window["DYNAMIC_CANVAS_ZOOM_STEP"] =
     ZOOM_STEP;

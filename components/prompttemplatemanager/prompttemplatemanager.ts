@@ -1965,5 +1965,5 @@ export function createPromptTemplateManager(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).PromptTemplateManager = PromptTemplateManager;
-(window as unknown as Record<string, unknown>).createPromptTemplateManager = createPromptTemplateManager;
+window.PromptTemplateManager = PromptTemplateManager;
+window.createPromptTemplateManager = createPromptTemplateManager;

@@ -1221,7 +1221,7 @@ export class RichTextInput
     {
         if (!this.options.triggers || this.options.triggers.length === 0) { return; }
 
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win["createSmartTextInput"] as
             ((opts?: Record<string, unknown>) => unknown) | undefined;
 
@@ -1573,5 +1573,5 @@ export function createRichTextInput(options: RichTextInputOptions): RichTextInpu
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).RichTextInput = RichTextInput;
-(window as unknown as Record<string, unknown>).createRichTextInput = createRichTextInput;
+window.RichTextInput = RichTextInput;
+window.createRichTextInput = createRichTextInput;

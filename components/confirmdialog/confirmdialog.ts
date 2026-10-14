@@ -759,7 +759,7 @@ export function showDangerConfirmDialog(
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["ConfirmDialog"] = ConfirmDialog;
-    (window as unknown as Record<string, unknown>)["showConfirmDialog"] = showConfirmDialog;
-    (window as unknown as Record<string, unknown>)["showDangerConfirmDialog"] = showDangerConfirmDialog;
+    window["ConfirmDialog"] = ConfirmDialog;
+    window["showConfirmDialog"] = showConfirmDialog;
+    window["showDangerConfirmDialog"] = showDangerConfirmDialog;
 }

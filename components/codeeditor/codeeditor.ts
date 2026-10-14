@@ -134,17 +134,35 @@ function setAttr(el: HTMLElement, name: string, value: string): void
     el.setAttribute(name, value);
 }
 
-/** Check if a CM6 global exists on window (function, object, or array). */
-function hasCMGlobal(name: string): boolean
-{
-    const val = (window as unknown as Record<string, unknown>)[name];
-    return typeof val === "function" || (typeof val === "object" && val !== null);
-}
-
-/** Get a CM6 global from window. */
+/**
+ * THE ONE UNTYPED WINDOW LOOKUP IN THIS COMPONENT, and it is here on purpose.
+ *
+ * CodeMirror 6 is not vendored into `dist/lib`. The host page supplies the
+ * build, and which globals that build publishes is the page's choice, not
+ * this library's. This component probes about thirty names and asks for
+ * alternatives when the first is absent, as in `tryPush("cmHistory",
+ * "history")`. A name the page may or may not have published under a
+ * spelling we do not control is not something `components/globals.d.ts` can
+ * declare, so the assertion stays and every other lookup in the file goes
+ * through this one function.
+ *
+ * WIN-2 therefore closes above zero rather than at it. Declaring a global
+ * that may not exist, so that the count can reach a round number, would
+ * make the declaration a worse description of run time than the cast is.
+ *
+ * @param name - The CodeMirror global to read.
+ * @returns The global, or `undefined` when the page did not publish it.
+ */
 function getCMGlobal(name: string): unknown
 {
     return (window as unknown as Record<string, unknown>)[name];
+}
+
+/** Check if a CM6 global exists on window (function, object, or array). */
+function hasCMGlobal(name: string): boolean
+{
+    const val = getCMGlobal(name);
+    return typeof val === "function" || (typeof val === "object" && val !== null);
 }
 
 // ============================================================================
@@ -1213,6 +1231,6 @@ export function createCodeEditor(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["CodeEditor"] = CodeEditor;
-    (window as unknown as Record<string, unknown>)["createCodeEditor"] = createCodeEditor;
+    window["CodeEditor"] = CodeEditor;
+    window["createCodeEditor"] = createCodeEditor;
 }

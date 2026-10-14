@@ -160,7 +160,7 @@ function getInitialsColor(name: string): string
 function tryCreatePersonChip(
     person: PersonData, size: "sm" | "md" | "lg"): HTMLElement | null
 {
-    const factory = (window as unknown as Record<string, unknown>)[
+    const factory = window[
         "createPersonChip"
     ] as ((opts: Record<string, unknown>) => { getElement: () => HTMLElement }) | undefined;
 
@@ -1432,6 +1432,6 @@ export function createPeoplePicker(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["PeoplePicker"] = PeoplePicker;
-    (window as unknown as Record<string, unknown>)["createPeoplePicker"] = createPeoplePicker;
+    window["PeoplePicker"] = PeoplePicker;
+    window["createPeoplePicker"] = createPeoplePicker;
 }

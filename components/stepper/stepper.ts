@@ -605,4 +605,4 @@ export function createStepper(options: StepperOptions): StepperHandle
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createStepper = createStepper;
+window.createStepper = createStepper;

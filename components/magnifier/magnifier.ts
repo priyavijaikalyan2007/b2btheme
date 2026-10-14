@@ -529,5 +529,5 @@ export function createMagnifier(
     return new Magnifier(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["Magnifier"] = Magnifier;
-(window as unknown as Record<string, unknown>)["createMagnifier"] = createMagnifier;
+window["Magnifier"] = Magnifier;
+window["createMagnifier"] = createMagnifier;

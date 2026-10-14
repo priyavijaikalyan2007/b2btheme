@@ -789,5 +789,5 @@ export function createLineShapePicker(
     return new LineShapePicker(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["LineShapePicker"] = LineShapePicker;
-(window as unknown as Record<string, unknown>)["createLineShapePicker"] = createLineShapePicker;
+window["LineShapePicker"] = LineShapePicker;
+window["createLineShapePicker"] = createLineShapePicker;

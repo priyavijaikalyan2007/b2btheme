@@ -1985,6 +1985,6 @@ export function createMultiselectCombo(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["MultiselectCombo"] = MultiselectCombo;
-    (window as unknown as Record<string, unknown>)["createMultiselectCombo"] = createMultiselectCombo;
+    window["MultiselectCombo"] = MultiselectCombo;
+    window["createMultiselectCombo"] = createMultiselectCombo;
 }

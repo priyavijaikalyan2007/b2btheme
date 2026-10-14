@@ -1139,5 +1139,5 @@ export function createLineEndingPicker(
     return new LineEndingPicker(containerId, options);
 }
 
-(window as unknown as Record<string, unknown>)["LineEndingPicker"] = LineEndingPicker;
-(window as unknown as Record<string, unknown>)["createLineEndingPicker"] = createLineEndingPicker;
+window["LineEndingPicker"] = LineEndingPicker;
+window["createLineEndingPicker"] = createLineEndingPicker;

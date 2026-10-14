@@ -1302,5 +1302,5 @@ export function createAuditLogViewer(
     return instance;
 }
 
-(window as unknown as Record<string, unknown>).AuditLogViewer = AuditLogViewer;
-(window as unknown as Record<string, unknown>).createAuditLogViewer = createAuditLogViewer;
+window.AuditLogViewer = AuditLogViewer;
+window.createAuditLogViewer = createAuditLogViewer;

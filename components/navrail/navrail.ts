@@ -301,7 +301,7 @@ export class NavRailManager
             NavRailManager.instance = new NavRailManager();
             if (typeof window !== "undefined")
             {
-                (window as unknown as Record<string, unknown>)
+                window
                     .__navRailManager = NavRailManager.instance;
             }
         }
@@ -1681,7 +1681,7 @@ export function createNavRail(options: NavRailOptions): NavRailHandle
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["NavRail"] = NavRail;
     w["NavRailManager"] = NavRailManager;
     w["createNavRail"] = createNavRail;

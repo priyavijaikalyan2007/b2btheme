@@ -444,5 +444,5 @@ function build(
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createStickyNote"] =
+window["createStickyNote"] =
     createStickyNote;

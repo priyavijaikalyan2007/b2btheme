@@ -771,4 +771,4 @@ createToolColorPicker.BRUSH_COLORS = BRUSH_COLORS;
 // S13: WINDOW GLOBAL
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createToolColorPicker"] = createToolColorPicker;
+window["createToolColorPicker"] = createToolColorPicker;

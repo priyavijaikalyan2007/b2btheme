@@ -115,14 +115,36 @@ describe("bundle — public surface", () =>
         "runConformance", "blockingFailures", "formatConformance", "sampleFor",
     ];
 
+    /**
+     * Where the registration starts, in either spelling.
+     *
+     * This used to search for the literal `["EnterpriseRuntime"]`. WIN-2
+     * dropped the `(window as unknown as Record<string, unknown>)` cast that
+     * forced bracket access, and the registration became
+     * `window.EnterpriseRuntime = {`. Thirty-two tests failed at once, which
+     * is the good outcome: a check keyed on syntax should break loudly when
+     * the syntax changes, not keep passing against a string that no longer
+     * means what it meant. The subject here is the registration, so the
+     * search now accepts either way of writing it.
+     */
+    const registrationStart = (): number =>
+    {
+        for (const form of ['["EnterpriseRuntime"]', "window.EnterpriseRuntime"])
+        {
+            const at = source.indexOf(form);
+            if (at !== -1) { return at; }
+        }
+        return -1;
+    };
+
     test("registers window.EnterpriseRuntime", () =>
     {
-        expect(source).toContain('["EnterpriseRuntime"]');
+        expect(registrationStart()).toBeGreaterThan(-1);
     });
 
     test.each(EXPECTED)("exposes %s", (name: string) =>
     {
-        const block = source.slice(source.indexOf('["EnterpriseRuntime"]'));
+        const block = source.slice(registrationStart());
 
         expect(
             block.includes(name),

@@ -559,7 +559,7 @@ export function createGraphToolbar(
     };
 
     // Access the global createToolbar
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const createToolbarFn = win["createToolbar"] as
         ((opts: Record<string, unknown>) => unknown) | undefined;
 
@@ -716,4 +716,4 @@ function buildHandle(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createGraphToolbar"] = createGraphToolbar;
+window["createGraphToolbar"] = createGraphToolbar;

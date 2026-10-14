@@ -772,5 +772,5 @@ function build(
 // WINDOW REGISTRATION
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["createAnnotation"] =
+window["createAnnotation"] =
     createAnnotation;

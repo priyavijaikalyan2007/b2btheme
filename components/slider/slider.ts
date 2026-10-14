@@ -915,4 +915,4 @@ export function createSlider(
 }
 
 // ── Window Global ──
-(window as unknown as Record<string, unknown>)["createSlider"] = createSlider;
+window["createSlider"] = createSlider;

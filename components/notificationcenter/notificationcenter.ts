@@ -836,5 +836,5 @@ export function createNotificationCenter(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createNotificationCenter =
+window.createNotificationCenter =
     createNotificationCenter;

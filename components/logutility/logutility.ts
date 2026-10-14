@@ -48,7 +48,17 @@ const GLOBAL_FLAGS = {
     debug: "__ebt_debug_logging",
     trace: "__ebt_trace_logging",
     info: "__ebt_info_logging",
-};
+} as const;
+
+/**
+ * The three flag names, as a union of literals rather than `string`.
+ *
+ * `as const` above is what makes this a union. Without it the values widen
+ * to `string`, the parameter below widens with them, and indexing `window`
+ * by a `string` is the one thing no declaration can type. The flags are
+ * declared in components/globals.d.ts, so the lookup needs no assertion.
+ */
+type GlobalFlagName = (typeof GLOBAL_FLAGS)[keyof typeof GLOBAL_FLAGS];
 
 /**
  * Checks whether a global debug flag is set on window.
@@ -56,11 +66,11 @@ const GLOBAL_FLAGS = {
  * @param flagName - The window property name to check.
  * @returns True if the flag is truthy.
  */
-function isGlobalFlagSet(flagName: string): boolean
+function isGlobalFlagSet(flagName: GlobalFlagName): boolean
 {
     try
     {
-        return !!(window as unknown as Record<string, unknown>)[flagName];
+        return !!window[flagName];
     }
     catch
     {

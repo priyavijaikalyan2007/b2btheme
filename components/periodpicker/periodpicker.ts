@@ -1175,6 +1175,6 @@ export function createPeriodPicker(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["PeriodPicker"] = PeriodPicker;
-    (window as unknown as Record<string, unknown>)["createPeriodPicker"] = createPeriodPicker;
+    window["PeriodPicker"] = PeriodPicker;
+    window["createPeriodPicker"] = createPeriodPicker;
 }

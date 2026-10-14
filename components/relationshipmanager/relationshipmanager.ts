@@ -413,7 +413,7 @@ class RelationshipManagerImpl implements RelationshipManager
     private mountInlineToolbar(header: HTMLElement): void
     {
         if (this.opts.showInlineToolbar !== true) { return; }
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win.createInlineToolbar as
             ((opts: Record<string, unknown>) => InlineToolbarHandleShape) | undefined;
         if (typeof factory !== "function")
@@ -650,7 +650,7 @@ class RelationshipManagerImpl implements RelationshipManager
 
     private buildTypeBadgeForRel(rel: RelationshipInstance): HTMLElement
     {
-        const factory = (window as unknown as Record<string, unknown>)["createTypeBadge"] as
+        const factory = window["createTypeBadge"] as
             ((opts: Record<string, unknown>) => HTMLElement) | undefined;
         if (factory)
         {
@@ -799,7 +799,7 @@ class RelationshipManagerImpl implements RelationshipManager
 
     private handleDelete(id: string): void
     {
-        const confirmDialog = (window as unknown as Record<string, unknown>)["showConfirmDialog"] as
+        const confirmDialog = window["showConfirmDialog"] as
             ((opts: Record<string, unknown>) => Promise<boolean>) | undefined;
         if (confirmDialog)
         {
@@ -1016,7 +1016,7 @@ class RelationshipManagerImpl implements RelationshipManager
 
     private buildTypeBadgeForSearch(result: ResourceSearchResult): HTMLElement
     {
-        const factory = (window as unknown as Record<string, unknown>)["createTypeBadge"] as
+        const factory = window["createTypeBadge"] as
             ((opts: Record<string, unknown>) => HTMLElement) | undefined;
         if (factory)
         {
@@ -1182,5 +1182,5 @@ export function createRelationshipManager(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).RelationshipManagerImpl = RelationshipManagerImpl;
-(window as unknown as Record<string, unknown>).createRelationshipManager = createRelationshipManager;
+window.RelationshipManagerImpl = RelationshipManagerImpl;
+window.createRelationshipManager = createRelationshipManager;

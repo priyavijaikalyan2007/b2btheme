@@ -573,7 +573,7 @@ export class ReasoningAccordion
 
     private renderMarkdown(el: HTMLElement, md: string): void
     {
-        const Vditor = (window as unknown as Record<string, unknown>).Vditor as
+        const Vditor = window.Vditor as
             { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (Vditor && typeof Vditor.preview === "function")
         {
@@ -590,7 +590,7 @@ export class ReasoningAccordion
 
     private applySanitizer(el: HTMLElement): void
     {
-        const DOMPurify = (window as unknown as Record<string, unknown>).DOMPurify as
+        const DOMPurify = window.DOMPurify as
             { sanitize: (html: string) => string } | undefined;
         if (DOMPurify && typeof DOMPurify.sanitize === "function")
         {
@@ -944,5 +944,5 @@ export function createReasoningAccordion(
     return acc;
 }
 
-(window as unknown as Record<string, unknown>).ReasoningAccordion = ReasoningAccordion;
-(window as unknown as Record<string, unknown>).createReasoningAccordion = createReasoningAccordion;
+window.ReasoningAccordion = ReasoningAccordion;
+window.createReasoningAccordion = createReasoningAccordion;

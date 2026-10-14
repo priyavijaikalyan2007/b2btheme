@@ -2699,6 +2699,6 @@ export function createDataGrid(
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["DataGrid"] = DataGrid;
-    (window as unknown as Record<string, unknown>)["createDataGrid"] = createDataGrid;
+    window["DataGrid"] = DataGrid;
+    window["createDataGrid"] = createDataGrid;
 }

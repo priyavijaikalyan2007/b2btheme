@@ -652,7 +652,7 @@ function resolveContainer(input: HTMLElement | string): HTMLElement | null
 /** Reference to KaTeX global, if available. */
 function getKaTeX(): any
 {
-    return (window as unknown as Record<string, unknown>)["katex"] || null;
+    return window["katex"] || null;
 }
 
 /** Render LaTeX to HTML string using KaTeX. */
@@ -1637,4 +1637,4 @@ function buildPublicHandle(state: InternalState): LatexEditor
 }
 
 // ⚓ LatexEditor — register on window for IIFE consumers
-(window as unknown as Record<string, unknown>)["createLatexEditor"] = createLatexEditor;
+window["createLatexEditor"] = createLatexEditor;

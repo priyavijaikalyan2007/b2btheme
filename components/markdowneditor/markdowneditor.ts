@@ -308,7 +308,7 @@ function setAttr(
  */
 function sanitiseHTML(html: string): string
 {
-    const dp = (window as unknown as Record<string, unknown>)["DOMPurify"] as
+    const dp = window["DOMPurify"] as
         { sanitize: (h: string, o: Record<string, unknown>) => string } | undefined;
     if (dp && typeof dp.sanitize === "function")
     {
@@ -441,7 +441,7 @@ export class MarkdownEditor
             disabled: options.disabled ?? false,
         };
 
-        this.hasDOMPurify = !!(window as unknown as Record<string, unknown>)["DOMPurify"];
+        this.hasDOMPurify = !!window["DOMPurify"];
         if (!this.hasDOMPurify)
         {
             logWarn("DOMPurify not loaded — HTML output will use Vditor built-in sanitisation only");
@@ -560,7 +560,7 @@ export class MarkdownEditor
         if (!this.previewArea) { return; }
         const isDark = this.options.theme === "dark"
             || document.documentElement.getAttribute("data-bs-theme") === "dark";
-        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+        const VditorClass = window["Vditor"] as
             { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         if (VditorClass && typeof VditorClass.preview === "function")
         {
@@ -904,7 +904,7 @@ export class MarkdownEditor
     {
         if (!this.previewArea || !this.vditor) { return; }
 
-        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+        const VditorClass = window["Vditor"] as
             { preview: (el: HTMLElement, md: string, opts: Record<string, unknown>) => void } | undefined;
         const markdown = this.vditor.getValue();
 
@@ -1131,7 +1131,7 @@ export class MarkdownEditor
      */
     private initVditor(): void
     {
-        const VditorClass = (window as unknown as Record<string, unknown>)["Vditor"] as
+        const VditorClass = window["Vditor"] as
             (new (id: string, opts: Record<string, unknown>) => unknown) | undefined;
         if (!VditorClass)
         {
@@ -1984,7 +1984,7 @@ function showMarkdownEditorModalFn(
         }
     };
 
-    const BootstrapLib = (window as unknown as Record<string, unknown>)["bootstrap"] as
+    const BootstrapLib = window["bootstrap"] as
         { Modal: new (el: HTMLElement) => { show(): void; hide(): void } } | undefined;
     if (BootstrapLib && BootstrapLib.Modal)
     {
@@ -2063,6 +2063,6 @@ function createMarkdownEditorFn(
 // WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["MarkdownEditor"] = MarkdownEditor;
-(window as unknown as Record<string, unknown>)["createMarkdownEditor"] = createMarkdownEditorFn;
-(window as unknown as Record<string, unknown>)["showMarkdownEditorModal"] = showMarkdownEditorModalFn;
+window["MarkdownEditor"] = MarkdownEditor;
+window["createMarkdownEditor"] = createMarkdownEditorFn;
+window["showMarkdownEditorModal"] = showMarkdownEditorModalFn;

@@ -671,5 +671,5 @@ export function createStatusBadge(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["StatusBadge"] = StatusBadge;
-(window as unknown as Record<string, unknown>)["createStatusBadge"] = createStatusBadge;
+window["StatusBadge"] = StatusBadge;
+window["createStatusBadge"] = createStatusBadge;

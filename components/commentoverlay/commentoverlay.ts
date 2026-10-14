@@ -1998,5 +1998,5 @@ export function createCommentOverlay(
     return new CommentOverlay(options);
 }
 
-(window as unknown as Record<string, unknown>).CommentOverlay = CommentOverlay;
-(window as unknown as Record<string, unknown>).createCommentOverlay = createCommentOverlay;
+window.CommentOverlay = CommentOverlay;
+window.createCommentOverlay = createCommentOverlay;

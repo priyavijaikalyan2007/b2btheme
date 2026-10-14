@@ -490,7 +490,7 @@ function clearChildren(el: HTMLElement): void
 
 function sanitiseHTML(html: string): string
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     if (typeof w["DOMPurify"] === "object" && w["DOMPurify"] !== null)
     {
         const dp = w["DOMPurify"] as { sanitize: (h: string) => string };
@@ -3316,5 +3316,5 @@ export function createRibbon(
     return ribbon;
 }
 
-(window as unknown as Record<string, unknown>)["Ribbon"] = RibbonImpl;
-(window as unknown as Record<string, unknown>)["createRibbon"] = createRibbon;
+window["Ribbon"] = RibbonImpl;
+window["createRibbon"] = createRibbon;

@@ -223,15 +223,20 @@ function buildEdgeLineSvg(
 // NODE TYPE RENDERING
 // ============================================================================
 
-/** Reference to the global createTypeBadge factory. */
-function getTypeBadgeFactory(): ((opts: Record<string, unknown>) => HTMLElement) | null
+/**
+ * Reference to the global createTypeBadge factory.
+ *
+ * The return type is read from the declaration rather than restated, so it
+ * cannot drift from what the TypeBadge component actually publishes.
+ */
+function getTypeBadgeFactory(): NonNullable<Window["createTypeBadge"]> | null
 {
-    const win = window as unknown as Record<string, unknown>;
+    const win = window;
     const fn = win.createTypeBadge;
 
     if (typeof fn === "function")
     {
-        return fn as (opts: Record<string, unknown>) => HTMLElement;
+        return fn;
     }
 
     return null;
@@ -939,4 +944,4 @@ function createHandle(
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).createGraphLegend = createGraphLegend;
+window.createGraphLegend = createGraphLegend;

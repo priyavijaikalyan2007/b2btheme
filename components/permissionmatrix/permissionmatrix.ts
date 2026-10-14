@@ -1422,5 +1422,5 @@ export function createPermissionMatrix(
     return instance;
 }
 
-(window as unknown as Record<string, unknown>).PermissionMatrix = PermissionMatrix;
-(window as unknown as Record<string, unknown>).createPermissionMatrix = createPermissionMatrix;
+window.PermissionMatrix = PermissionMatrix;
+window.createPermissionMatrix = createPermissionMatrix;

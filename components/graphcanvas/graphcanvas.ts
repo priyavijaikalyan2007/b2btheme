@@ -1444,7 +1444,7 @@ class GraphCanvasImpl implements GraphCanvas
         // Optional dagre probe
         if (this.layout === "dagre")
         {
-            const dagre = (window as unknown as Record<string, unknown>)["dagre"];
+            const dagre = window["dagre"];
             if (!dagre)
             {
                 logInfo("dagre not found, falling back to hierarchical.");
@@ -2868,5 +2868,5 @@ export function createGraphCanvas(options: GraphCanvasOptions): GraphCanvas
 // GLOBAL EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>).GraphCanvasImpl = GraphCanvasImpl;
-(window as unknown as Record<string, unknown>).createGraphCanvas = createGraphCanvas;
+window.GraphCanvasImpl = GraphCanvasImpl;
+window.createGraphCanvas = createGraphCanvas;

@@ -830,7 +830,7 @@ export function createCardLayout(
 
 if (typeof window !== "undefined")
 {
-    const w = window as unknown as Record<string, unknown>;
+    const w = window;
     w["CardLayout"] = CardLayout;
     w["createCardLayout"] = createCardLayout;
 }

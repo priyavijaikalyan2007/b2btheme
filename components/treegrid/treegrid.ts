@@ -4733,6 +4733,6 @@ export function createTreeGrid(options: TreeGridOptions): TreeGrid
 
 if (typeof window !== "undefined")
 {
-    (window as unknown as Record<string, unknown>)["TreeGrid"] = TreeGrid;
-    (window as unknown as Record<string, unknown>)["createTreeGrid"] = createTreeGrid;
+    window["TreeGrid"] = TreeGrid;
+    window["createTreeGrid"] = createTreeGrid;
 }

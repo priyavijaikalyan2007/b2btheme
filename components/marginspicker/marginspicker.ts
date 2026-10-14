@@ -767,5 +767,5 @@ export function createMarginsPicker(
     return new MarginsPicker(options);
 }
 
-(window as unknown as Record<string, unknown>)["MarginsPicker"] = MarginsPicker;
-(window as unknown as Record<string, unknown>)["createMarginsPicker"] = createMarginsPicker;
+window["MarginsPicker"] = MarginsPicker;
+window["createMarginsPicker"] = createMarginsPicker;

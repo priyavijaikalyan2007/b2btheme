@@ -1443,7 +1443,7 @@ function renderAssigneeChip(
     onClick?: () => void
 ): HTMLElement
 {
-    const factory = (window as unknown as Record<string, unknown>)
+    const factory = window
         .createPersonChip as PersonChipFactory | undefined;
 
     if (factory && assignee)
@@ -1536,7 +1536,7 @@ function renderAssigneeFallback(
  */
 function renderTagElement(tag: ActionItemTag): HTMLElement
 {
-    const factory = (window as unknown as Record<string, unknown>)
+    const factory = window
         .createPill as PillFactory | undefined;
 
     if (factory)
@@ -1917,7 +1917,7 @@ export class ActionItems
     private mountInlineToolbar(header: HTMLElement): void
     {
         if (this.options.showInlineToolbar !== true) { return; }
-        const win = window as unknown as Record<string, unknown>;
+        const win = window;
         const factory = win.createInlineToolbar as
             ((opts: Record<string, unknown>) => InlineToolbarHandleShape)
             | undefined;
@@ -6197,5 +6197,5 @@ function buildHandle(instance: ActionItems): ActionItemsHandle
 // S9: WINDOW GLOBALS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["ActionItems"] = ActionItems;
-(window as unknown as Record<string, unknown>)["createActionItems"] = createActionItems;
+window["ActionItems"] = ActionItems;
+window["createActionItems"] = createActionItems;

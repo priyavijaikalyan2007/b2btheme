@@ -764,5 +764,5 @@ export function createPersonChip(options: PersonChipOptions): PersonChip
 // WINDOW EXPORTS
 // ============================================================================
 
-(window as unknown as Record<string, unknown>)["PersonChip"] = PersonChip;
-(window as unknown as Record<string, unknown>)["createPersonChip"] = createPersonChip;
+window["PersonChip"] = PersonChip;
+window["createPersonChip"] = createPersonChip;
