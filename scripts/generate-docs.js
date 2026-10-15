@@ -419,7 +419,14 @@ function extractGlobals(source)
     while ((m = bare.exec(source)) !== null) { add(m[1] || m[2]); }
 
     // A cast kept in a local, then written through: `const w = window as …`.
-    const alias = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*window\b[^;]*;/g;
+    //
+    // THE NEGATIVE LOOKAHEAD IS WHAT MAKES THIS AN ALIAS AND NOT A READ.
+    // `const f = window.__ebt_debug_logging;` reads one property; it does
+    // not alias the global object, and a later `f.action = x` writes to an
+    // ordinary local. Without the lookahead the LOG-6 gate introduced one
+    // such local into 117 components, and this extractor published six of
+    // auditlogviewer's internal filter fields as callable CDN API.
+    const alias = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:window|globalThis)\b(?!\s*[.[])[^;]*;/g;
     const aliases = [];
     while ((m = alias.exec(source)) !== null) { aliases.push(m[1]); }
     for (const a of aliases)

@@ -1263,7 +1263,7 @@ $control-height-xl=46px
 
 - CSS: `components/smarttextinput/smarttextinput.css`
 - JS: `components/smarttextinput/smarttextinput.js`
-- Globals: `SmartTextInputEngine()`, `border()`, `clip()`, `createSmartTextInput()`, `font()`, `height()`, `letterSpacing()`, `lineHeight()`, `margin()`, `overflow()`, `padding()`, `position()`, `visibility()`, `whiteSpace()`, `width()`, `wordWrap()`
+- Globals: `SmartTextInputEngine()`, `createSmartTextInput()`
 - Exports: `type InputAdapterType`, `type TriggerState`, `type TokenRenderType`, `type SuppressContext`, `type PopoverCloseReason`, `type StieEventName`, `type Unsubscribe`, `interface TriggerActivation`, `interface DataSourceResult`, `interface TriggerDataSource`, `interface TokenRenderer`, `interface TokenSerializer`, `interface TriggerDefinition`, `interface ResolvedToken`, `interface DeserializedToken`, `interface RenderContext`, `interface CursorPosition`, `interface CursorCoordinates`, `interface CursorContext`, `interface InputAdapter`, `interface TriggerOpenEvent`, `interface TriggerQueryEvent`, `interface TriggerCloseEvent`, `interface TriggerSession`, `interface SmartTextInputOptions`, `class SmartTextInputEngine`, `function createSmartTextInput`
 
 ### spacingpicker

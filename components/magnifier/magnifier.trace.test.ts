@@ -15,11 +15,13 @@
  * genuinely high-frequency handler and no LogUtility on the page, which
  * is the fallback branch 132 of 138 demo pages take.
  *
- * The flag is read once when the module is evaluated, so each case has to
- * reset the module registry and import again. That is not a quirk of the
- * test: it is the component's actual contract, and LOG-6 records that
- * FRONTEND_LOGGING.md section 6 promises a runtime toggle the fallback
- * branch does not deliver.
+ * Each case resets the module registry and imports again, which WAS a
+ * requirement and is now only isolation. The gate used to be captured in a
+ * const at script evaluation, so setting the flag after the import changed
+ * nothing and a fresh module was the only way to vary it. LOG-6 made the
+ * gate a call, and magnifier.flag.test.ts is the file that proves it by
+ * importing once and flipping the flag afterwards. Keeping the reset here
+ * costs nothing and keeps each payload case independent.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";

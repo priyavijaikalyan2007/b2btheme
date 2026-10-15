@@ -6886,3 +6886,111 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-179
+  title: The verbose gates became calls rather than constants, and the reflow that LOG-5 wanted came free with it
+  date: 2026-10-15
+  status: accepted
+  context: |
+    FRONTEND_LOGGING.md section 6 told customer support that a flag set in
+    a browser console takes effect immediately. That was true on the
+    LogUtility branch, where isGlobalFlagSet reads window on every call. It
+    was false on the console fallback, where `const _dbg` and `const _trc`
+    were evaluated once when the script loaded. The fallback is the branch
+    on 132 of the 138 demo pages, so the promise was false where it
+    mattered most. LOG-3 had added those gates and read them at load, and
+    nothing decided that they should be read there.
+
+    LOG-5 was a separate entry: 531 shim lines over the 120-character limit
+    in AGENTS.md, which nothing enforced. Both entries rewrite the same
+    five lines in the same 117 files.
+  decision: |
+    D1. THE GATE IS A CALL, NOT A CAPTURE. `_dbg()` and `_trc()` read
+        window on every invocation, in 117 component preambles and in
+        components/diagramengine/src/logging.ts, where one copy serves all
+        twenty namespaces. The regex is hoisted to a module-level
+        LOCAL_HOSTS so the per-call cost is a property read rather than a
+        regex construction.
+
+    D2. LOG-5 LANDED IN THE SAME PASS. Reflowing separately would have
+        rewritten 610 lines twice. The codemod reflowed exactly 531
+        one-liners and the repository count of over-length lines went
+        819 to 288, which is the same number from the other direction.
+
+    D3. THE LIMIT IS COUNTED IN COLUMNS, NOT BYTES. `awk 'length > 120'`
+        reported 928 against the new check's 819 at one commit. awk counts
+        bytes in the C locale and every marker header in this repository
+        carries the four-emoji set at three bytes each. The overLengthLines
+        ceiling counts characters, and it is the first count in the table
+        that measures a style rule rather than a defect.
+
+    D4. THE SEMANTIC DRIFT WAS CLOSED AT THE SAME TIME. driftedHostRule
+        compares the host REGEX between the two implementations and cannot
+        see how the flag VALUE is read. The two had diverged there: the
+        shim tested `=== true` and so ignored a truthy non-boolean that
+        isGlobalFlagSet honours, and it sent an explicit null to the host
+        rule where isGlobalFlagSet reads it as off. Both now match, and the
+        same tri-state table runs against both sides.
+
+    D5. _lu IS STILL RESOLVED ONCE, DELIBERATELY. The user asked for a
+        completely dynamic FLAG and that is what this is. Which logging
+        back end a component uses is a load-order contract that section 1.2
+        documents, not an oversight, and making it dynamic would mean a
+        component changing back ends mid-session.
+
+    D6. A TEXT COUNT CANNOT PROVE A TIMING FIX. magnifier.flag.test.ts
+        imports the component ONCE and flips the flag afterwards, which is
+        the experiment a captured const fails. 9 of its 17 cases fail
+        against the old code, which was measured rather than assumed. It
+        also asserts window.createLogUtility is absent, because with the
+        utility present the component takes the branch that was always
+        dynamic and every case would pass while proving nothing.
+
+    D7. THE FLOOR IS FOR THE MUTATION THE CEILING CANNOT SEE.
+        ungatedVerboseShims now requires the call form, so reverting a gate
+        fails it. It skips a function it cannot find, so a shim DELETED
+        with its calls leaves it at zero and reads as success.
+        dynamicVerboseShims holds 213 of them, 117 logDebug and 96
+        logTrace. The 96 were already covered by tracedComponents. The
+        117 were covered by nothing.
+  consequences: |
+    + THE DOCUMENTED PROMISE IS NOW TRUE ON BOTH BRANCHES. A flag set in a
+      live console takes effect from the next log call on any of the 138
+      demo pages.
+    + THE BUILD GOT SMALLER, by 2,868 bytes. The minifier inlines `_trc()`
+      to `window.__ebt_trace_logging && console.debug(...)` and drops the
+      declaration, so the dynamic read costs less than the const it
+      replaced.
+    + 531 OVER-LENGTH LINES ARE GONE and a ceiling holds the remaining 288.
+    - 288 OVER-LENGTH LINES REMAIN, 203 of them in two diagramengine files.
+      They are ordinary long lines rather than one repeated template, so
+      each needs its own judgment.
+    - THE DEBUG GATE RE-TESTS THE HOST REGEX when the flag is unset, which
+      is the usual production state. It is not memoised, on purpose:
+      isGlobalFlagSet re-tests it too and driftedHostRule exists to keep
+      the two identical. Debug is lifecycle-frequency, and trace pays
+      only a property read.
+    ? DOC-1 WAS FOUND BY THE BUILD DIFF ON A GENERATED FILE. The new gate
+      declares `const f = window.__ebt_debug_logging;`, and extractGlobals
+      in scripts/generate-docs.js treated any `= window...;` as an alias of
+      the global object. It had been publishing fourteen CSS property names
+      from smarttextinput as callable CDN API, because
+      `const style = window.getComputedStyle(el)` reads the same way. Fixed
+      with a negative lookahead and a regression case. Keeping generated
+      output in the tree is what surfaced it.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "scripts/generate-docs.js"
+    - "scripts/generate-docs.test.ts"
+    - "scripts/trace-scan.test.ts"
+    - "components/diagramengine/src/logging.ts"
+    - "components/logconsole/logconsole.ts"
+    - "components/magnifier/magnifier.flag.test.ts"
+    - "components/magnifier/magnifier.trace.test.ts"
+    - "FRONTEND_LOGGING.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

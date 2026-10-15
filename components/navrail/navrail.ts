@@ -236,8 +236,16 @@ const LOG_PREFIX = "[NavRail]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
-const _dbg = window.__ebt_debug_logging
-    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
+// LOG-6. Read per call, never captured. A const freezes the flag at script
+// evaluation, so a console toggle on a live page did nothing. The semantics
+// match isGlobalFlagSet in logutility.ts: unset means "decide from the host"
+// for debug and "off" for trace. See FRONTEND_LOGGING.md section 1.3.
+function _dbg(): boolean
+{
+    const f = window.__ebt_debug_logging;
+    return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
+}
 
 function logInfo(...a: unknown[]): void
 {
@@ -254,7 +262,7 @@ function logWarn(...a: unknown[]): void
 function logDebug(...a: unknown[]): void
 {
     if (_lu) { _lu.debug(...a); return; }
-    _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+    _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
 /** Default expanded width in px. */

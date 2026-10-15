@@ -292,6 +292,42 @@ and no content" then asserted nothing about either and passed for the same
 reason as the case above it. A privacy assertion that cannot fail is worse
 than no assertion, because it reads like the rule is enforced.
 
+### 2.7b A Test That Cannot Fail the Old Way Proves Nothing About the New
+
+LOG-6 changed WHEN a flag is read, not what it means. `_dbg` and `_trc`
+were constants evaluated at script load and are now `_dbg()` and `_trc()`,
+read on every call. Nothing about the output changes. Only the timing does.
+
+A test for that has to be built so the old code fails it, and two separate
+things can quietly make it pass either way.
+
+**The first is re-importing.** `magnifier.trace.test.ts` calls
+`vi.resetModules()` between cases, because when the gate was a const a fresh
+module was the only way to vary it. A timing test written in that shape
+passes against the captured const, since every case gets a module evaluated
+after the flag was set. `magnifier.flag.test.ts` therefore imports the
+component ONCE, in `beforeAll`, and every case flips the flag afterwards.
+That single difference is the whole experiment.
+
+**The second is taking the wrong branch.** Each component logs through
+LogUtility when `window.createLogUtility` exists and through a console shim
+when it does not. The shim is what LOG-6 changed. `isGlobalFlagSet` on the
+LogUtility side was always read per call. So if anything in the environment
+defines `createLogUtility`, every case passes while testing the branch that
+never had the bug. The file asserts its absence in its first test, for the
+same reason the payload case captures raw arguments: an assertion that
+cannot fail reads like a rule being enforced.
+
+**Then measure it.** The file was run against the pre-LOG-6 gate before
+being trusted: **9 of 17 cases fail**, and the 8 that pass are the ones that
+assert silence, which a frozen `false` also delivers. That number is the
+evidence the test works, not the green run afterwards.
+
+| Check | What it can prove | What it cannot |
+|---|---|---|
+| `dynamicVerboseShims` floor, `ungatedVerboseShims` ceiling | The call form is present in 213 shims and a shim was not deleted | That calling it reads the flag now rather than at load |
+| `magnifier.flag.test.ts` | A flag set after import changes the next call's output, both ways, on both levels | Anything about the other 116 components |
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

@@ -1021,3 +1021,56 @@ is that a documented promise found to be false is not a neutral thing to
 leave alone while the entry waits: section 6 now carries a caveat pointing
 at LOG-6, because the cost of the sentence is someone trusting it at the
 moment they need it.
+
+### 6.76 A Column Limit Measured in Bytes Is Not a Column Limit (2026-10-15)
+
+LOG-5 said 531 shim lines exceed the 120-character limit and nothing
+enforces it. Adding the ceiling meant counting what was there, and the
+first count disagreed with the second by a third: `awk 'length > 120'`
+reported 928 where the new check reported 819, at the same commit.
+
+awk counts bytes in the C locale. Every marker header in this repository
+carries ⚓, 📜, 🔗 and ⚡, and each of those is three bytes and one column.
+So the tool that was easiest to reach reported a file as over the limit for
+characters nobody can see in a column, and would have failed a ratchet for
+them.
+
+**A limit stated in one unit has to be measured in that unit, and the
+easiest tool does not always use it.** The version that matters is the one
+the rule is about: 120 is what a reader counts across a screen, so the
+check counts characters, and the baseline is 288 rather than 397. The two
+numbers differ by 109, which is the emoji in the headers and nothing else.
+
+The related trap is quieter. Had the ceiling been baselined from awk at
+397, it would have passed on the day it was written and then failed later
+for an unrelated file that happened to carry a marker, with a diff that
+showed no long line at all.
+
+### 6.77 The Fix Put a New Name in Every File and the Generator Published It (2026-10-15)
+
+LOG-6 added `const f = window.__ebt_debug_logging;` to 117 component
+preambles. The unit tests passed, the structure checks passed, and
+`docs/AGENT_QUICK_REF.md` came out of the build with six new entries under
+auditlogviewer: `action()`, `actor()`, `dateFrom()`, `dateTo()`, `search()`
+and `severity()`, advertised as callable CDN API.
+
+`extractGlobals` follows a local that aliases the global object, so that
+`const w = window as Record<string, unknown>` and a later `w.createThing =`
+are reported. Its pattern for that was `= window\b[^;]*;`, which also
+matches a property READ. The new `f` became an alias, and auditlogviewer's
+own assignments to its own `f` were published.
+
+It was already wrong before LOG-6 touched anything.
+`const style = window.getComputedStyle(el)` reads identically, so fourteen
+CSS property names from smarttextinput, `border`, `font`, `padding`,
+`whiteSpace` and the rest, had been sitting in the published reference as
+callable globals. Twenty names in all that were never API.
+
+**Two things did the work here, and neither was a test.** The first is that
+generated output is committed, so a build produces a diff and the diff gets
+read. The second is that the change was uniform: putting one new identifier
+into 117 files is a wide, shallow perturbation, and a latent pattern bug
+that needs a coincidence to fire gets 117 chances at once. `test-local.sh`
+check [19] verifies every published name EXISTS. Existence was never the
+problem, and a check written against absence cannot see a surplus — the
+same shape as the floors, from the other side.

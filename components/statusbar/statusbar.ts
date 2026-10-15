@@ -89,12 +89,32 @@ const LOG_PREFIX = "[StatusBar]";
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
-const _dbg = window.__ebt_debug_logging
-    ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
-function logInfo(...a: unknown[]): void { _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a); }
-function logWarn(...a: unknown[]): void { _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a); }
-function logError(...a: unknown[]): void { _lu ? _lu.error(...a) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a); }
-function logDebug(...a: unknown[]): void { _lu ? _lu.debug(...a) : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a); }
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
+// LOG-6. Read per call, never captured. A const freezes the flag at script
+// evaluation, so a console toggle on a live page did nothing. The semantics
+// match isGlobalFlagSet in logutility.ts: unset means "decide from the host"
+// for debug and "off" for trace. See FRONTEND_LOGGING.md section 1.3.
+function _dbg(): boolean
+{
+    const f = window.__ebt_debug_logging;
+    return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
+}
+function logInfo(...a: unknown[]): void
+{
+    _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
+}
+function logWarn(...a: unknown[]): void
+{
+    _lu ? _lu.warn(...a) : console.warn(new Date().toISOString(), "[WARN]", LOG_PREFIX, ...a);
+}
+function logError(...a: unknown[]): void
+{
+    _lu ? _lu.error(...a) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a);
+}
+function logDebug(...a: unknown[]): void
+{
+    _lu ? _lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+}
 
 /** Height in pixels for each size variant */
 const SIZE_HEIGHT_MAP: Record<string, number> =

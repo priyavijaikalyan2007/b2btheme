@@ -20,6 +20,25 @@
  * ----------------------------------------------------------------------------
  */
 
+// LOG-3 put a gate on the console fallback. LOG-6 made it a call rather
+// than a capture, because a `const` freezes the flag at bundle evaluation
+// and a console toggle on a live page then does nothing. One copy serves
+// all twenty namespaces. The rule is kept verbatim from
+// components/logutility/logutility.ts and the semantics match
+// isGlobalFlagSet there: unset means "decide from the host" for debug and
+// "off" for trace.
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
+
+/** True when the page asks for debug output. Read on every call. */
+function _dbg(): boolean
+{
+    const f = window.__ebt_debug_logging;
+    return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
+}
+
+/** True when the page asks for trace output. Read on every call. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
 /** The five severity levels every namespace exposes. */
 interface EngineLogger
 {
@@ -46,19 +65,15 @@ function makeLogger(prefix: string): EngineLogger
     const lu = (typeof window.createLogUtility === "function")
         ? window.createLogUtility().getLogger(prefix.slice(1, -1))
         : null;
-    // LOG-3. Same gate as every component preamble, kept verbatim.
-    const _dbg = window.__ebt_debug_logging
-        ?? /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/.test(location.hostname);
-    const _trc = window.__ebt_trace_logging === true;
 
     return {
         trace: (...args: unknown[]): void =>
         {
-            lu ? lu.trace(...args) : _trc && console.debug(new Date().toISOString(), "[TRACE]", prefix, ...args);
+            lu ? lu.trace(...args) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", prefix, ...args);
         },
         debug: (...args: unknown[]): void =>
         {
-            lu ? lu.debug(...args) : _dbg && console.debug(new Date().toISOString(), "[DEBUG]", prefix, ...args);
+            lu ? lu.debug(...args) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", prefix, ...args);
         },
         info: (...args: unknown[]): void =>
         {

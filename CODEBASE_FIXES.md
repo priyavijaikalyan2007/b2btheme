@@ -610,17 +610,34 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   while it waits. diagramengine is the awkward one: it is the multi-namespace
   bundle of FRONTEND_LOGGING.md section 1.1 and it carries a line ratchet.
 
-- [ ] **LOG-5** **531** logging shim lines exceed the 120-character limit in
-  AGENTS.md, which nothing enforces. Was 543, and LOG-4 removed 12 by dropping
-  dead shims. LOG-3 lengthened 216 of them. Reflowing all five shims to a
-  guarded block shape is roughly 1000 lines across 122 files.
+- [x] **LOG-5** **531** logging shim lines exceeded the 120-character limit
+  in AGENTS.md, which nothing enforced. Closed 2026-10-15 together with
+  LOG-6, because the two rewrite the same lines. Gated by the new
+  `overLengthLines` ceiling. ADR-179.
 
   The entry used to say this was worth doing with LOG-4 because both rewrite
   the same lines. That was only true of the branch that removed the shims.
   Instrumenting added call sites and touched no shim line, so the two are
-  independent and LOG-5 is unchanged by LOG-4 apart from the 12.
+  independent and LOG-5 was unchanged by LOG-4 apart from the 12. LOG-6 is a
+  different matter: it rewrites every shim body, so reflowing in the same
+  pass cost nothing and reflowing separately would have rewritten 610 lines
+  twice.
 
-- [ ] **LOG-6** FRONTEND_LOGGING.md section 6 promises a runtime toggle the
+  **531 WAS EXACTLY RIGHT AND THE TOTAL AROUND IT WAS NOT.** The codemod
+  reflowed 531 one-line shims, and the repository-wide count of over-length
+  lines went 819 -> 288, which is the same number. The figure that was wrong
+  is the one never written down: `awk 'length > 120'` reports 928 where the
+  new check reports 819 at the same commit. awk counts bytes in the C locale
+  and every marker header carries ⚓, 📜, 🔗 and ⚡ at three bytes each. A
+  column limit is counted in columns, so 288 is the baseline.
+
+  **288 over-length lines remain and none of them are shims.** 104 are in the
+  generated `diagramengine.ts`, 99 in `embed-registry.ts`, and the rest are
+  spread thin. They are ordinary long lines rather than one repeated
+  template, so each needs a judgment the shims did not, and the ceiling
+  stops the number growing while they are dealt with.
+
+- [x] **LOG-6** FRONTEND_LOGGING.md section 6 promises a runtime toggle the
   fallback branch does not deliver. It states that flags are checked on every
   log call, so toggling one in the browser console takes effect immediately,
   and it names customer support as the reason. That is true on the LogUtility
@@ -636,10 +653,65 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   do. Section 6 now carries a caveat pointing here rather than a sentence
   that is known to be false.
 
-  The fix is to read the flag inside the shim instead of beside it. The cost
-  is one property lookup per call on a branch that is about to write to the
-  console anyway. The care needed is in `ungatedVerboseShims` and
-  `driftedHostRule`, which both match the shim text.
+  **Closed 2026-10-15.** The gates are now `_dbg()` and `_trc()`, functions
+  that read `window` on every call, in 117 component preambles and in
+  `components/diagramengine/src/logging.ts`, where one copy serves all
+  twenty namespaces. ADR-179.
+
+  **The minifier made it cheaper than the entry predicted.** It inlines
+  `_trc()` to `window.__ebt_trace_logging && console.debug(...)` and drops
+  the declaration, so `dist/components` came out **2,868 bytes smaller**
+  than the captured-const build. The promised property lookup is real on the
+  debug path, where an unset flag also re-tests the host regex, and that is
+  deliberate: `isGlobalFlagSet` re-tests it too, and `driftedHostRule`
+  exists so the two copies stay identical. Debug is lifecycle-frequency.
+  Trace, which runs in event handlers, pays one property read.
+
+  **It also closed a drift that `driftedHostRule` could not see.** That
+  check compares the host REGEX. It cannot see how the flag VALUE is read,
+  and the two copies had diverged there: the shim tested
+  `__ebt_trace_logging === true` and ignored a truthy non-boolean that
+  `isGlobalFlagSet` honours, and it sent an explicit `null` to the host rule
+  where `isGlobalFlagSet` reads it as off. Both now match, and
+  `magnifier.flag.test.ts` runs the same tri-state table against the
+  fallback that `logutility.test.ts` runs against the utility.
+
+  **A count of `_dbg()` call sites cannot prove any of this**, which is the
+  LOG-4 lesson in a new costume. `magnifier.flag.test.ts` imports the
+  component ONCE and flips the flag afterwards, which is the experiment the
+  captured const fails: 9 of its 17 cases fail against the old code. It also
+  asserts `window.createLogUtility` is absent, because if it were present
+  the component would take the LogUtility branch, which was always dynamic,
+  and every case would pass while saying nothing.
+
+  Gated by `dynamicVerboseShims`, a floor at 213, and by `ungatedVerboseShims`,
+  which now requires the call form so a reverted shim reads as ungated. The
+  floor exists for the one mutation the ceiling cannot see: a shim DELETED
+  with its calls leaves the ceiling at zero and looks like success.
+
+- [x] **DOC-1** `extractGlobals` in `scripts/generate-docs.js` published
+  **20 names that were never API**, across two components, into
+  `docs/AGENT_QUICK_REF.md`. Found and closed 2026-10-15 while LOG-6 was
+  landing. ADR-179.
+
+  The extractor follows a local that aliases the global object, so that
+  `const w = window as Record<string, unknown>; w.createThing = …` is
+  reported. The pattern it used for that, `= window\b[^;]*;`, also matches
+  a PROPERTY READ. `const style = window.getComputedStyle(el);` made
+  `style` an alias, and the fourteen CSS properties smarttextinput then
+  assigns to it, `border`, `font`, `padding`, `whiteSpace` and the rest,
+  were published as callable CDN globals.
+
+  **LOG-6 is what exposed it.** The new gate puts
+  `const f = window.__ebt_debug_logging;` in every component preamble, and
+  auditlogviewer assigns to its own `f`, so six filter fields appeared in
+  the reference. The build diff on a generated file is what showed it, which
+  is the argument for keeping generated output in the tree.
+
+  Fixed with a negative lookahead: an alias is `window` itself, not
+  `window.something`. Check `[19]` in `test-local.sh` verifies that every
+  published name EXISTS, so it could not see twenty names that should never
+  have been there.
 
 ## MEDIUM — `: any` Type Usage (15 remaining, from 157 measured 2026-10-14)
 
@@ -866,14 +938,15 @@ the step exits 1 and the workflow fails.
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
-| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **3 open, 4 closed.** LOG-4 closed at 96 components, 268 calls |
+| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **1 open, 6 closed.** LOG-5 and LOG-6 closed together: same lines |
+| DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
 | MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **33 items** | **15 resolved** |
+| **Total** | **34 items** | **18 resolved** |
 
 ### The March 2026 counts re-measured so far
 

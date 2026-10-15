@@ -43,6 +43,17 @@ describe("extractGlobals — the names a CDN consumer can call", () =>
     test("bareWindowAssignment_IsFound", () =>
     {
         expect(extractGlobals("window.mcpBridge = {};")).toEqual(["mcpBridge"]);
+    });
+
+    test("reading one property off window is not an alias of window", () =>
+    {
+        // The LOG-6 gate puts `const f = window.__ebt_debug_logging;` in
+        // every component. `f` is a boolean, so a later `f.action = x` on an
+        // unrelated local must not publish `action` as CDN API.
+        const src = "const f = window.__ebt_debug_logging;\n"
+            + "const filters = {};\nfilters.action = 1;\nf.action = 2;\n"
+            + "window.createThing = createThing;";
+        expect(extractGlobals(src)).toEqual(["createThing"]);
         expect(extractGlobals("globalThis.createThing = fn;"))
             .toEqual(["createThing"]);
     });

@@ -400,6 +400,13 @@ describe("countAnyCasts", () =>
  * The two paths cannot share code, because the fallback exists precisely
  * when the utility is absent. These cases pin the TEXT of the gate, and
  * logutility.test.ts pins the semantics on the other side.
+ *
+ * LOG-6 CHANGED THE TEXT THESE CASES PIN, from `_dbg` to `_dbg()`. The
+ * captured const was read once at script evaluation, so a flag set in a
+ * live console did nothing on this branch. The call form is the fix and
+ * the old form now reads as ungated, which is case one below.
+ * magnifier.flag.test.ts drives the behaviour, because text is not
+ * behaviour and only one of the two can fail for the right reason.
  */
 describe("countUngatedVerboseShims", () =>
 {
@@ -414,13 +421,38 @@ describe("countUngatedVerboseShims", () =>
 
     test("a guarded fallback is gated", () =>
     {
-        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg && console.debug(P, ...a);");
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg() && console.debug(P, ...a);");
         expect(countUngatedVerboseShims(t).ungated).toBe(0);
+    });
+
+    test("a gate captured in a const is ungated, because LOG-6 made it a call", () =>
+    {
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg && console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).ungated).toBe(1);
+        expect(countUngatedVerboseShims(t).dynamic).toBe(0);
+    });
+
+    test("a dynamic shim is counted for the floor", () =>
+    {
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg() && console.debug(P, ...a);")
+            + "\n" + shim("logTrace", "_lu ? _lu.trace(...a) : _trc() && console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(t).dynamic).toBe(2);
+    });
+
+    // The floor's own mutation. A shim DELETED with its calls leaves the
+    // ceiling at zero, which reads as success. Only `dynamic` falls.
+    test("a deleted shim is invisible to the ceiling and visible to the floor", () =>
+    {
+        const both = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg() && console.debug(P, ...a);")
+            + "\n" + shim("logTrace", "_lu ? _lu.trace(...a) : _trc() && console.debug(P, ...a);");
+        const gone = shim("logTrace", "_lu ? _lu.trace(...a) : _trc() && console.debug(P, ...a);");
+        expect(countUngatedVerboseShims(both)).toEqual({ ungated: 0, missingRule: 0, dynamic: 2 });
+        expect(countUngatedVerboseShims(gone)).toEqual({ ungated: 0, missingRule: 0, dynamic: 1 });
     });
 
     test("debug and trace are counted separately", () =>
     {
-        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg && console.debug(P, ...a);")
+        const t = shim("logDebug", "_lu ? _lu.debug(...a) : _dbg() && console.debug(P, ...a);")
             + "\n" + shim("logTrace", "_lu ? _lu.trace(...a) : console.debug(P, ...a);");
         expect(countUngatedVerboseShims(t).ungated).toBe(1);
     });
@@ -429,7 +461,7 @@ describe("countUngatedVerboseShims", () =>
     {
         // `_dbg && console.debug` inside logTrace would make trace follow the
         // host, and trace deliberately does not.
-        const t = shim("logTrace", "_lu ? _lu.trace(...a) : _dbg && console.debug(P, ...a);");
+        const t = shim("logTrace", "_lu ? _lu.trace(...a) : _dbg() && console.debug(P, ...a);");
         expect(countUngatedVerboseShims(t).ungated).toBe(1);
     });
 
@@ -444,7 +476,7 @@ describe("countUngatedVerboseShims", () =>
     test("a file with no shims costs nothing", () =>
     {
         expect(countUngatedVerboseShims("export function f(): void { return; }"))
-            .toEqual({ ungated: 0, missingRule: 0 });
+            .toEqual({ ungated: 0, missingRule: 0, dynamic: 0 });
     });
 
     // The drift guard. Two implementations of one rule is what this
@@ -452,13 +484,14 @@ describe("countUngatedVerboseShims", () =>
     // the rule character-for-character.
     test("computing _dbg without the host rule is drift", () =>
     {
-        const t = "const _dbg = window.__ebt_debug_logging ?? /^(localhost)$/.test(h);";
+        const t = "const f = window.__ebt_debug_logging ?? /^(localhost)$/.test(h);";
         expect(countUngatedVerboseShims(t).missingRule).toBe(1);
     });
 
     test("computing _dbg with the rule verbatim is not drift", () =>
     {
-        const t = `const _dbg = window.__ebt_debug_logging\n    ?? ${LOCAL_HOST_RULE}.test(location.hostname);`;
+        const t = `const LOCAL_HOSTS = ${LOCAL_HOST_RULE};\n`
+            + "function _dbg(): boolean { return !!window.__ebt_debug_logging; }";
         expect(countUngatedVerboseShims(t).missingRule).toBe(0);
     });
 

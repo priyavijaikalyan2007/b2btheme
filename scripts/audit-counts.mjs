@@ -250,11 +250,31 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
- * The rule is still ratchet down only. Both raises are exceptions, taken
- * deliberately, measured at their minimum, and written here rather than
- * quietly absorbed. A ratchet that cannot record a justified exception
+ * The third raise was LOG-6, 30488 -> 30503: fifteen lines in
+ * `components/diagramengine/src/logging.ts`, turning the two captured gate
+ * constants into functions read on every call, plus the comment saying
+ * why. One copy serves all twenty namespaces, so fifteen lines is the
+ * whole cost of making the engine's console fallback respond to a flag set
+ * after the bundle loaded.
+ *
+ * The rule is still ratchet down only. All three raises are exceptions,
+ * taken deliberately, measured at their minimum, and written here rather
+ * than quietly absorbed. A ratchet that cannot record a justified exception
  * gets worked around instead, and a worked-around ratchet measures
  * nothing.
+ *
+ * overLengthLines was added on 2026-10-15 for LOG-5 and is the first count
+ * here that measures a style rule rather than a defect. AGENTS.md sets 120
+ * characters and nothing enforced it, which is the UNUSED-1 shape: a stated
+ * rule with no counter drifts without anybody deciding that it should.
+ *
+ * IT IS MEASURED IN CHARACTERS, NOT BYTES, AND THE TWO DISAGREE BY A THIRD.
+ * `awk 'length > 120'` reported 928 against this check's 819 at the same
+ * commit. awk counts bytes in the C locale and every marker header in this
+ * repository carries ⚓, 📜, 🔗 and ⚡, which are three bytes each. The
+ * shorter number is the real one, because 120 is a column limit and a
+ * reader counts columns. LOG-5 reflowed 531 shim lines and the count went
+ * 819 -> 288, which is exact.
  *
  * ADDING EXPORT KEYWORDS DID NOT MOVE THIS COUNT. The bundle script used
  * to delete them with a substitution, `s/^export //g`, which rewrites a
@@ -288,6 +308,7 @@ const BASELINES = {
     windowAliasUses: 1,
     ungatedVerboseShims: 0,
     driftedHostRule: 0,
+    overLengthLines: 288,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -297,7 +318,7 @@ const BASELINES = {
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
-    diagramengineLines: 30488,
+    diagramengineLines: 30503,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 13,
@@ -329,10 +350,24 @@ const BASELINES = {
  * deadTraceShims fails if a component that does no high-frequency work
  * carries one, and hotWithoutTraceShim holds the 13 components that never
  * declared a shim and were therefore never part of LOG-4.
+ *
+ * dynamicVerboseShims is the third, added for LOG-6, and its job is narrow
+ * enough to be worth stating. It counts 213 shims, 117 logDebug and 96
+ * logTrace, whose console fallback reads the flag through `_dbg()` or
+ * `_trc()` rather than a captured const.
+ *
+ * REVERTING `_dbg()` TO `_dbg` IS NOT WHAT THIS CATCHES. The
+ * ungatedVerboseShims ceiling does that, because it now requires the call
+ * form and a reverted shim reads as ungated. What this floor alone catches
+ * is a logDebug shim DELETED together with its calls. countUngatedVerboseShims
+ * skips a function it cannot find, so a removed shim leaves the ceiling at
+ * zero and looks like success. tracedComponents already covers the 96
+ * logTrace shims that way. The 117 logDebug shims sat under nothing.
  */
 const FLOORS = {
     diagramengineBundleExports: 138,
     tracedComponents: 96,
+    dynamicVerboseShims: 213,
 };
 
 /**
@@ -546,9 +581,23 @@ export const LOCAL_HOST_RULE = String.raw`/^(localhost|127\.0\.0\.1|\[::1\]|.+\.
  * The two paths cannot share code, because the whole point of the fallback
  * is that the utility is absent. Two implementations of one rule is exactly
  * the drift this repository keeps finding, so this check pins the text:
- * a gated shim reads `: _dbg && console.debug(` or `: _trc && console.debug(`,
- * and any file that computes `_dbg` must contain LOCAL_HOST_RULE verbatim.
+ * a gated shim reads `: _dbg() && console.debug(` or
+ * `: _trc() && console.debug(`, and any file that reads
+ * `window.__ebt_debug_logging` must contain LOCAL_HOST_RULE verbatim.
  * The unit tests in logutility.test.ts pin the semantics on the other side.
+ *
+ * LOG-6 PUT THE PARENTHESES THERE AND THEY CARRY THE MEANING. The gate used
+ * to be a const, evaluated once when the script loaded, so a flag set in a
+ * live console changed nothing on the fallback path. Requiring the call
+ * form is what stops that regression returning, and `dynamicVerboseShims`
+ * is the floor underneath it.
+ *
+ * NOT EVERY FALLBACK IS COVERED HERE. This reads `function logDebug`, and
+ * `components/diagramengine/src/logging.ts` builds its five helpers as
+ * arrow properties on an object, so the engine's gates are outside the
+ * ungated count and always were. driftedHostRule does see that file,
+ * because it searches the whole text. The engine's behaviour is pinned by
+ * the fallback semantics test instead.
  *
  * @param text - One file's full source.
  * @returns `{ ungated, missingRule }` for that file.
@@ -556,15 +605,17 @@ export const LOCAL_HOST_RULE = String.raw`/^(localhost|127\.0\.0\.1|\[::1\]|.+\.
 export function countUngatedVerboseShims(text)
 {
     let ungated = 0;
-    for (const [name, gate] of [["logDebug", "_dbg"], ["logTrace", "_trc"]])
+    let dynamic = 0;
+    for (const [name, gate] of [["logDebug", "_dbg()"], ["logTrace", "_trc()"]])
     {
         const body = functionBody(text, name);
         if (body === null) { continue; }
-        if (!body.includes(`${gate} && console.`)) { ungated += 1; }
+        if (body.includes(`${gate} && console.`)) { dynamic += 1; }
+        else { ungated += 1; }
     }
-    const usesRule = text.includes("_dbg = window.__ebt_debug_logging");
+    const usesRule = text.includes("window.__ebt_debug_logging");
     const missingRule = usesRule && !text.includes(LOCAL_HOST_RULE) ? 1 : 0;
-    return { ungated, missingRule };
+    return { ungated, missingRule, dynamic };
 }
 
 function measure()
@@ -578,6 +629,8 @@ function measure()
         windowAliasUses: 0,
         ungatedVerboseShims: 0,
         driftedHostRule: 0,
+        dynamicVerboseShims: 0,
+        overLengthLines: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -612,6 +665,13 @@ function measure()
         const shims = countUngatedVerboseShims(text);
         counts.ungatedVerboseShims += shims.ungated;
         counts.driftedHostRule += shims.missingRule;
+        counts.dynamicVerboseShims += shims.dynamic;
+
+        // LOG-5. AGENTS.md sets 120 characters and nothing enforced it.
+        for (const line of text.split("\n"))
+        {
+            if (line.length > 120) { counts.overLengthLines += 1; }
+        }
 
         const aliases = countWindowAliases(text);
         counts.windowAliasDecls += aliases.declarations;

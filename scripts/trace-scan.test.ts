@@ -33,7 +33,16 @@ import
     isHighFrequency,
 } from "./trace-scan.mjs";
 
-const SHIM = 'function logTrace(...a: unknown[]): void { _lu ? _lu.trace(...a) : _trc && console.debug(...a); }';
+// The house form since LOG-5 reflowed it and LOG-6 made the gate a call.
+// declaresTraceShim only looks for `function logTrace(`, so the shape does
+// not change what this file measures, but a fixture that shows a form no
+// component still carries would be read as the pattern to copy.
+const SHIM = [
+    "function logTrace(...a: unknown[]): void",
+    "{",
+    "    _lu ? _lu.trace(...a) : _trc() && console.debug(...a);",
+    "}",
+].join("\n");
 
 describe("hasHighFrequencyListener", () =>
 {

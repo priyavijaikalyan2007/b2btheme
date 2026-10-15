@@ -96,12 +96,17 @@ forbids, and this is not that. Use the factory form only inside a bundle that
 is concatenated from many modules and carries more than one prefix. Everywhere
 else, use the pattern in section 1.
 
-### 1.2 Resolution happens once, at load
+### 1.2 The utility resolves once, the flags do not
 
 `_lu` is assigned when the component bundle is evaluated, so the host page
 must load `logutility.js` **before** any component bundle for routing to
 happen. A page that loads it afterwards gets the console fallback for the
 whole session, with no error.
+
+**This is true of the utility and NOT of the flags.** `_dbg()` and `_trc()`
+are functions that read `window` on every call, so a flag set at any point
+takes effect from the next log call on either branch. They were `const`
+until LOG-6, which is what made section 6's promise false.
 
 Two consequences:
 
@@ -113,7 +118,8 @@ Two consequences:
 
   Until LOG-3 the fallback filtered NOTHING. Debug and trace printed
   unconditionally on those 132 pages and no flag could stop them, because
-  nothing on that branch read a flag.
+  nothing on that branch read a flag. LOG-3 added the gate and read it
+  once, at load. LOG-6 made it read per call.
 * `ThemeInit` runs in `<head>` before every other script by design, so its
   `_lu` is effectively always null. The guarded `typeof` check costs nothing
   and keeps the pattern uniform, and the console fallback is the expected
@@ -130,6 +136,11 @@ and they behave identically whether or not `logutility.js` is loaded.
 | `createLogUtility({ level })` | The configured minimum. Defaults to `"info"`, so debug and trace are filtered out. The FIRST caller wins, because the utility is a singleton. |
 | `window.__ebt_debug_logging` | Tri-state. `true` turns debug on anywhere, `false` turns it off even on localhost, unset means "decide from the host". |
 | `window.__ebt_trace_logging` | `true` turns trace on anywhere. Trace does NOT follow the host. |
+
+Both flags are read on **every call**, on both branches. A value that is
+neither a boolean nor unset is taken for its truthiness, so `1` turns a
+level on and `0`, `""` and `null` leave it off. Only `undefined` means
+"decide from the host", and only debug has a host to decide from.
 
 **A local development host turns debug on by itself.** The rule is
 
@@ -156,7 +167,17 @@ the component fallback exists precisely when `logutility.js` is absent:
 compares the texts and fails if any copy drifts, and
 `logutility.test.ts` pins the semantics against a table of hostnames.
 
-**Setting it by hand**, before the component bundles load:
+`driftedHostRule` compares the host REGEX and cannot see a difference in
+how the flag VALUE is read, and the two copies had in fact drifted there.
+The fallback tested `__ebt_trace_logging === true`, so it ignored a truthy
+non-boolean that `isGlobalFlagSet` honours, and it sent an explicit `null`
+to the host rule where `isGlobalFlagSet` reads it as off. LOG-6 aligned
+both, and `magnifier.flag.test.ts` now runs the same tri-state table
+against the fallback that `logutility.test.ts` runs against the utility.
+
+**Setting it by hand.** Any time will do, including from the console on a
+loaded page. Setting it in `<head>` catches the log calls components make
+while they initialise:
 
 ```html
 <script>window.__ebt_debug_logging = true; window.__ebt_trace_logging = true;</script>
@@ -344,12 +365,13 @@ Flags are checked on every log call, so toggling them in the browser console tak
 immediately. This is useful for customer support scenarios where a customer reports a problem
 and the support engineer needs to see verbose component output.
 
-> **This holds only when the page loads `logutility.js`.** The fallback branch
-> inside each component reads the flag once, when the script is evaluated, so
-> setting it later in the console changes nothing there. 132 of the 138 demo
-> pages take that branch. Until LOG-6 is fixed, set the flag in an inline
-> `<script>` in `<head>`, ahead of the component, as the example in section 1.3
-> does.
+**This holds on both branches**, whether or not the page loads
+`logutility.js`. It did not until LOG-6: the fallback captured the flag in a
+`const` when the script was evaluated, so a support engineer typing one of
+these into the console of a live page saw nothing on the 132 of 138 demo
+pages that take that branch. The gates are now functions, read per call. Log
+calls that already ran are gone, so a flag set after a component initialises
+shows the next event and not the startup lines.
 
 ```javascript
 // In the browser console:
@@ -374,7 +396,8 @@ Because the fallback path writes to `console.*` and LogUtility writes to
 
 * **No build-time stripping is required.** `console.debug` is hidden by default in browser DevTools. `console.log` and `console.warn` provide useful runtime diagnostics for operators.
 * **Host applications can suppress output** by overriding `console` methods or using DevTools filters. This is their responsibility, not ours.
-* **LogUtility** is optional. If not loaded, components fall back to direct `console.*` calls with the same format. There is zero runtime overhead when LogUtility is absent.
+* **LogUtility** is optional. If not loaded, components fall back to direct `console.*` calls with the same format.
+* **A suppressed `logDebug` or `logTrace` is not free, and the two differ.** Since LOG-6 the gate is a call rather than a captured const. `_trc()` is one property read. `_dbg()` is a property read, plus a regex test against `location.hostname` when the flag is unset, which is the usual production state. The regex itself is built once at module scope, not per call. `_dbg()` is deliberately NOT memoised: `isGlobalFlagSet` in LogUtility re-tests the host every call too, and the whole point of `driftedHostRule` is that these two implementations stay identical. Debug is lifecycle-frequency, so this is paid on component init and not in an event handler. Trace, which IS in event handlers, pays only the property read.
 * **Global flags** (`__ebt_*_logging`) provide runtime control without rebuilds or configuration changes — ideal for production troubleshooting.
 * If a future need arises for build-time removal of debug statements, a simple Terser or ESBuild configuration in the consuming application can drop `console.debug` calls. The component library itself should not perform this stripping.
 

@@ -3508,3 +3508,63 @@ script load. It affects debug equally, so it is filed apart.
 **Tracker 46 resolved / 26 open.**
 
 **Still waiting on the user.** LOG-5, LOG-6, ANY-3, DEBT-SEC-5, DEBT-ERR-2.
+
+---
+
+## LOG-6 and LOG-5: the gates became calls, and 531 lines reflowed with them
+
+**The user approved LOG-6 and asked for a completely dynamic flag**, then
+asked whether logconsole's own trace call makes it recursive, then said to
+continue with the rest of the items.
+
+**It is not recursive, and the reason is worth keeping.** `LogUtility.trace`
+reaches `console.debug` and stops. Only `event()` routes into a LogConsole,
+and LogConsole never patches `console`. The one way a loop could form is a
+host overriding `console.debug` to feed a LogConsole, which section 7
+explicitly invites. Even then the `rafId !== null` guard bounds it to one
+extra entry per flush, **because the trace call sits before
+`this.rafId = null`**. That ordering is load-bearing and was accidental, so
+it now carries a comment. The label was also wrong: it said "frame flush
+scheduled" and fires when the frame runs.
+
+**LOG-5 was folded into the same pass**, because both rewrite the same five
+lines in the same 117 files. Separately they would have rewritten 610 lines
+twice. The codemod reflowed exactly 531 one-liners and the over-length count
+went 819 to 288, which is the same number from the other direction.
+
+**The limit is counted in columns, not bytes.** `awk 'length > 120'` reports
+928 where the new check reports 819 at one commit. awk counts bytes and the
+four marker emoji are three bytes each. Had the ceiling been baselined from
+awk it would have passed on day one and failed later on an unrelated file
+whose diff showed no long line.
+
+**A drift `driftedHostRule` could not see was closed too.** It compares the
+host regex. It cannot see how the flag VALUE is read, and there the two
+implementations had diverged: the shim tested `=== true` and ignored a
+truthy non-boolean that `isGlobalFlagSet` honours, and it sent an explicit
+`null` to the host rule where `isGlobalFlagSet` reads it as off.
+
+**The build got smaller, by 2,868 bytes.** The minifier inlines `_trc()` to
+`window.__ebt_trace_logging && console.debug(...)` and drops the
+declaration, so the dynamic read costs less than the const it replaced.
+
+**A text count cannot prove a timing fix.** `magnifier.flag.test.ts` imports
+once and flips the flag afterwards, and asserts `createLogUtility` is absent
+so the fallback is genuinely the branch under test. **9 of its 17 cases fail
+against the old code**, measured rather than assumed.
+
+**`_lu` is still resolved once, on purpose.** The ask was a dynamic flag and
+that is what this is. Which back end a component logs through is a
+load-order contract documented in section 1.2.
+
+**DOC-1 was found by a build diff on a generated file.** `extractGlobals`
+treated any `= window...;` as an alias of the global object, so the new
+`const f = window.__ebt_debug_logging;` published six auditlogviewer filter
+fields as CDN API — and it had already been publishing fourteen CSS property
+names from smarttextinput, via `const style = window.getComputedStyle(el)`.
+Twenty names that were never API. Keeping generated output in the tree is
+what surfaced it.
+
+**Tracker 49 resolved / 24 open.**
+
+**Next, without needing an answer:** LOG-4a, then the decision items.
