@@ -2,7 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
-/* ⚓ FontDropdown — dropdown with font names rendered in their own typeface */
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: FontDropdownStyles
+ * 📜 PURPOSE: Styles for the dropdown that renders each font name in its own
+ *    typeface, so the list previews what it offers.
+ * 🔗 RELATES: [[FontDropdown]], [[EnterpriseTheme]]
+ * ----------------------------------------------------------------------------
+ */
 
 @import '../../src/scss/variables';
 // @dependency: ../../src/scss/chrome

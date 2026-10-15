@@ -1154,3 +1154,55 @@ precondition for whichever way the decision goes. A sweep that fetches
 what it is about to publish also found that one of the URLs,
 `bootstrap@5/css/bootstrap.min.css`, has been returning 404 to anyone who
 followed the setup block.
+
+### 6.81 The Marker Was There in Prose and Missing in Shape (2026-10-15)
+
+Seven files were recorded as missing the `COMPONENT` marker. Not one of
+them was undocumented. `treegrid.ts` opened with a banner reading "TreeGrid
+Component - Phase 1". The two engine files had a `/** DiagramEngine — … */`
+paragraph describing exactly what the block form describes. All four SCSS
+files had `/* ⚓ SymbolPicker — grid-based symbol / icon picker … */`, which
+carries the anchor emoji and not the keyword.
+
+A reader opening any of the seven would say it was marked. The check said
+otherwise and the check was right.
+
+**A convention has two jobs and these files were doing only one.** The
+information was present for a human reading top to bottom. The SHAPE was
+absent, and the shape is what makes the information findable by something
+that greps rather than reads. MARKERS.md exists for the second job. Four of
+the seven had the emoji and not the keyword, which is the signature of a
+convention adopted by eye: the part that looks like the convention got
+copied and the part that does the work did not.
+
+**Fixing it is also when you find out the count was honest.** It would have
+been easy to read these as false positives and relax the check to accept
+`⚓` anywhere. That would have taken the number to zero and removed the only
+thing that can tell a marked file from a decorated one.
+
+### 6.82 An Unratcheted Count Is a Memory of a Measurement (2026-10-15)
+
+UNUSED-1 was the last tracked count in this repository with no ratchet,
+because it needs the compiler rather than a scan. The entry said to
+re-derive it by hand and recorded **414**, measured on 2026-10-15.
+
+The real number that same day was **308**.
+
+106 of the difference were LOG-4's dead `logTrace` declarations. TS6133
+counts an uncalled function like any other unused binding, so instrumenting
+94 components and deleting 12 shims cleared 106 errors nobody was counting.
+Measured rather than assumed: a worktree at `e361179` reports 414 of which
+106 name `logTrace`, and the tree after LOG-4 reports 308 of which none do.
+414 − 106 = 308, exactly.
+
+**A quarter of a tracked count vanished as a side effect of unrelated work,
+on the day it was re-measured, and nothing noticed.** Not because anybody
+was careless — the number was measured carefully and written down carefully.
+It went stale four commits later because nothing was watching it.
+
+**That is the whole argument, and it is the opposite of the intuitive one.**
+The reason given for not ratcheting this count was that it is expensive to
+derive: it needs `tsc` rather than a grep. Expensive to derive is precisely
+why it must be automated, because expensive is exactly what nobody repeats.
+The cheap counts can survive being checked by hand. This one could not, and
+it is 1.6 seconds.

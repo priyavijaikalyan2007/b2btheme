@@ -3645,3 +3645,32 @@ four packages. `chart.js` is sharpest — the repository serves a hashed
 4.5.1 at `dist/lib` while the docs send consumers to an unhashed 4.4.7.
 
 **Tracker 51 resolved / 24 open.**
+
+---
+
+## Markers and the last unratcheted count
+
+**All three marker entries closed at 0, and none of the seven files was
+undocumented.** Each carried a comment saying what a marker block says:
+`treegrid.ts` had "TreeGrid Component - Phase 1", the engine files had a
+prose paragraph, and all four SCSS files had the anchor emoji without the
+`COMPONENT:` keyword. The information was there and the shape was not,
+which is the only thing a marker is for. Relaxing the check to accept `⚓`
+anywhere would have zeroed the count and removed the only thing that can
+tell a marked file from a decorated one.
+
+**UNUSED-1 is ratcheted at 308, and its 414 was stale the day it was
+written.** 106 of the difference were LOG-4's dead `logTrace` declarations,
+which TS6133 counts like any other unused binding. Measured with a worktree
+at `e361179`: 414 errors of which 106 name `logTrace`, against 308 of which
+none do. 414 − 106 = 308 exactly.
+
+A quarter of a tracked count vanished as a side effect of unrelated work,
+on the day it was measured by hand, and nothing noticed. The reason it had
+never been ratcheted was that deriving it needs `tsc` rather than a grep.
+That is the argument FOR automating it: expensive to derive is exactly what
+nobody repeats. It costs 1.6 seconds.
+
+**Every tracked count in this repository is now ratcheted.**
+
+**Tracker 54 resolved / 21 open.**

@@ -250,6 +250,12 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
+ * The fifth raise was MRK-1 and MRK-2, 30524 -> 30529: five lines across
+ * `src/engine.ts` and `src/types.ts`, which carried a plain description
+ * comment and not the marker block MARKERS.md requires. The three marker
+ * counts all reach 0 with it, so the ratchet that records this raise is
+ * also the one that can now never be satisfied by deleting a marker.
+ *
  * The fourth raise was LOG-4a, 30503 -> 30524: twenty-one lines in
  * `src/engine.ts`, `src/render-engine.ts` and `src/logging.ts`. Three
  * inline listener thunks became blocks so a trace call could sit in them,
@@ -264,7 +270,7 @@ export function countOccurrences(text, needle)
  * whole cost of making the engine's console fallback respond to a flag set
  * after the bundle loaded.
  *
- * The rule is still ratchet down only. All four raises are exceptions,
+ * The rule is still ratchet down only. All five raises are exceptions,
  * taken deliberately, measured at their minimum, and written here rather
  * than quietly absorbed. A ratchet that cannot record a justified exception
  * gets worked around instead, and a worked-around ratchet measures
@@ -317,16 +323,17 @@ const BASELINES = {
     driftedHostRule: 0,
     overLengthLines: 288,
     unpinnedCdnRefs: 0,
+    unusedLocals: 308,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
     anyAnnotations: 13,
     anyCasts: 2,
     scssImportant: 113,
-    componentsMissingMarker: 3,
-    diagramengineSrcMissingMarker: 2,
-    scssMissingMarker: 4,
-    diagramengineLines: 30524,
+    componentsMissingMarker: 0,
+    diagramengineSrcMissingMarker: 0,
+    scssMissingMarker: 0,
+    diagramengineLines: 30529,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -436,6 +443,42 @@ export function countUnpinnedCdnRefs(text)
         if (!/^\d+\.\d/.test(version)) { unpinned += 1; }
     }
     return unpinned;
+}
+
+/**
+ * UNUSED-1, and the only count here that needs the COMPILER rather than a
+ * scan. `noUnusedLocals` and `noUnusedParameters` are off in tsconfig.json,
+ * so this asks for them explicitly and counts TS6133.
+ *
+ * WHY IT WAS NOT RATCHETED BEFORE, AND WHY THAT COST SOMETHING. The entry
+ * said to re-derive it by hand and recorded 414 on 2026-10-15. The real
+ * number that day was already 308, because LOG-4 had just instrumented 94
+ * components and deleted 12 dead shims. 106 of the 414 were the
+ * `function logTrace` declarations that nothing called, measured at
+ * e361179 and gone at 945db05.
+ *
+ * A QUARTER OF THE COUNT WENT AWAY AS A SIDE EFFECT AND NOTHING NOTICED,
+ * which is the argument for the ratchet rather than against it. An
+ * unratcheted number is not a measurement, it is a memory of one, and this
+ * one was four commits stale within a day.
+ *
+ * It runs tsc, so it is the slowest check in this file at about 1.6
+ * seconds. The whole point is that a scan cannot see an unused binding.
+ */
+export function countUnusedLocals()
+{
+    try
+    {
+        execFileSync("npx", ["tsc", "--noEmit", "--noUnusedLocals", "--noUnusedParameters"],
+            { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        return 0;
+    }
+    catch (err)
+    {
+        // tsc exits non-zero when it reports anything, so the output is here.
+        const out = `${err.stdout ?? ""}${err.stderr ?? ""}`;
+        return (out.match(/error TS6133:/g) ?? []).length;
+    }
 }
 
 /**
@@ -700,6 +743,7 @@ function measure()
         dynamicVerboseShims: 0,
         overLengthLines: 0,
         unpinnedCdnRefs: 0,
+        unusedLocals: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -796,6 +840,9 @@ function measure()
     {
         if (!readFileSync(file, "utf8").includes("COMPONENT:")) { counts.scssMissingMarker += 1; }
     }
+
+    // UNUSED-1. The compiler, not a scan: an unused binding is an absence.
+    counts.unusedLocals = countUnusedLocals();
 
     // DEBT-SEC-5. Documentation and demo pages hand consumers third-party
     // URLs. One without an exact version is a floating dependency.

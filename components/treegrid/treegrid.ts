@@ -2,10 +2,15 @@
  * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
-// ============================================================================
-// TreeGrid Component - Phase 1
-// Enterprise tree grid with expandable rows, multi-column data, and ARIA support
-// ============================================================================
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: TreeGrid
+ * 📜 PURPOSE: Enterprise tree grid with expandable rows, multi-column data and
+ *    full ARIA support for the treegrid role.
+ * 🔗 RELATES: [[DataGrid]], [[TreeView]], [[EnterpriseTheme]]
+ * ⚡ FLOW: [createTreeGrid] -> [flatten rows] -> [render] -> [ARIA wiring]
+ * ----------------------------------------------------------------------------
+ */
 
 // ============================================================================
 // S1: Types, Interfaces, Constants

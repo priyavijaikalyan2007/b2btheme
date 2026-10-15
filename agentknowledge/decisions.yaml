@@ -7165,3 +7165,69 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-182
+  title: The markers were present in prose and absent in shape, and the unratcheted count was stale within a day
+  date: 2026-10-15
+  status: accepted
+  context: |
+    MRK-1, MRK-2 and MRK-3 recorded 3 TypeScript files and 4 SCSS files
+    missing the COMPONENT marker MARKERS.md requires. UNUSED-1 recorded 414
+    unused-local errors and was the one tracked count in this repository
+    with no ratchet, because it needs the compiler rather than a scan.
+  decision: |
+    D1. NONE OF THE SEVEN FILES WAS UNMARKED. Every one carried a comment
+        saying what a marker block says. treegrid.ts had a banner reading
+        "TreeGrid Component - Phase 1". The two engine files had a
+        `/** DiagramEngine — … */` paragraph. All four SCSS files had an
+        abbreviated one-liner, `/* ⚓ SymbolPicker — … */`, carrying the
+        anchor emoji and not the COMPONENT keyword. The information was
+        there and the shape an agent greps for was not, which is the whole
+        point of a marker and the reason a count of them is worth keeping.
+
+    D2. THE ENGINE PAIR COST THE LINE RATCHET ITS FIFTH RAISE, five lines,
+        30524 to 30529. The three marker counts reach 0 with it, so the
+        same change that raises one ceiling closes three others.
+
+    D3. UNUSED-1 IS RATCHETED, AND SHELLING OUT TO tsc IS THE POINT. An
+        unused binding is an absence and no text scan can see one, so
+        `unusedLocals` runs the compiler and counts TS6133. It costs about
+        1.6 seconds, which makes it the slowest check in audit-counts.mjs
+        and still the cheapest way to measure the thing.
+
+    D4. THE 414 WAS STALE ON THE DAY IT WAS WRITTEN, AND BY A QUARTER.
+        The real figure is 308. 106 of the difference were LOG-4's dead
+        `logTrace` declarations, which TS6133 counts like any other unused
+        binding. This was measured rather than inferred: a worktree at
+        e361179 reports 414 of which 106 name logTrace, and the tree after
+        LOG-4 reports 308 of which none do. 414 - 106 = 308 exactly.
+  consequences: |
+    + ALL THREE MARKER COUNTS ARE 0 and every tracked source and stylesheet
+      now carries the block form.
+    + EVERY TRACKED COUNT IN THIS REPOSITORY IS NOW RATCHETED. UNUSED-1 was
+      the last exception.
+    + THE STALENESS IS ON RECORD. A quarter of a tracked count vanished as
+      a side effect of unrelated work, on the same day the count was
+      re-measured by hand, and nothing noticed. A number that has to be
+      re-derived by hand is a memory of a measurement and not a
+      measurement.
+    - 308 UNUSED BINDINGS REMAIN, 103 of them in the generated
+      diagramengine.ts and none elsewhere above 10. The ceiling stops them
+      growing and does not remove them.
+    - diagramengineLines HAS NOW BEEN RAISED FIVE TIMES. Every raise is
+      recorded with its reason and its line count, but five is enough that
+      the next one should be argued against rather than recorded.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/types.ts"
+    - "components/treegrid/treegrid.ts"
+    - "components/diagramengine/diagramengine.scss"
+    - "components/fontdropdown/fontdropdown.scss"
+    - "components/markdownrenderer/markdownrenderer.scss"
+    - "components/symbolpicker/symbolpicker.scss"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

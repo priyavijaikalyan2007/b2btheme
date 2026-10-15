@@ -2,12 +2,15 @@
  * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
-/**
- * DiagramEngine — Main engine implementation and factory function.
- *
- * This is the public-facing class that consumers interact with.
- * It owns the document model, render engine, tool manager, and
- * shape registry, and exposes the full public API defined in the spec.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: DiagramEngine
+ * 📜 PURPOSE: Main engine implementation and factory. The public-facing class
+ *    consumers interact with. It owns the document model, render engine, tool
+ *    manager and shape registry, and exposes the full public API in the spec.
+ * 🔗 RELATES: [[DiagramEngine]], [[RenderEngine]], [[ShapeRegistry]]
+ * ⚡ FLOW: [createDiagramEngine] -> [DiagramEngineImpl] -> [RenderEngine]
+ * ----------------------------------------------------------------------------
  */
 
 // ============================================================================

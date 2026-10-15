@@ -2,7 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
-/* ⚓ DiagramEngine — universal vector canvas engine */
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: DiagramEngineStyles
+ * 📜 PURPOSE: Styles for the universal vector canvas engine: the SVG surface,
+ *    its tool chrome, selection handles and inline text editor.
+ * 🔗 RELATES: [[DiagramEngine]], [[EnterpriseTheme]]
+ * ----------------------------------------------------------------------------
+ */
 
 @import '../../src/scss/variables';
 

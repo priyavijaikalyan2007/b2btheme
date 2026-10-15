@@ -2,12 +2,14 @@
  * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
-/**
- * DiagramEngine — Type definitions.
- *
- * All interfaces and type aliases used across the engine. Organised
- * into logical groups: geometry, styles, text, semantic data, objects,
- * connectors, document structure, shapes, and configuration.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: DiagramEngineTypes
+ * 📜 PURPOSE: Every interface and type alias used across the engine, grouped
+ *    as geometry, styles, text, semantic data, objects, connectors, document
+ *    structure, shapes and configuration.
+ * 🔗 RELATES: [[DiagramEngine]], [[CdnContract]]
+ * ----------------------------------------------------------------------------
  */
 
 // ============================================================================

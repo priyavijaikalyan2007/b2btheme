@@ -910,7 +910,15 @@ Using `: any` defeats TypeScript's type safety. Each occurrence should be replac
 
 Per MARKERS.md, all source files must contain semantic navigation markers (e.g., `// COMPONENT:`, `// SECTION:`, etc.) to support agent navigation and codebase understanding.
 
-- [ ] **MRK-1** **3 TypeScript files missing the `COMPONENT` marker, not the 12 recorded in March 2026.** Measured 2026-10-13: `components/diagramengine/src/engine.ts`, `components/diagramengine/src/types.ts` and `components/treegrid/treegrid.ts`. Nine of the twelve were fixed and the entry was never updated.
+- [x] **MRK-1** **3 TypeScript files missing the `COMPONENT` marker, not the 12 recorded in March 2026.** Measured 2026-10-13: `components/diagramengine/src/engine.ts`, `components/diagramengine/src/types.ts` and `components/treegrid/treegrid.ts`. Nine of the twelve were fixed and the entry was never updated. **Closed 2026-10-15 at 0.** ADR-182.
+
+  None of the three was unmarked. Each carried a plain description comment
+  saying the same things a marker block says, in prose: `treegrid.ts` had a
+  banner reading "TreeGrid Component - Phase 1", and the two engine files
+  had a `/** DiagramEngine — … */` paragraph. The information was present
+  and the shape an agent greps for was not, which is the whole point of
+  MARKERS.md and the reason a count of missing markers is worth keeping.
+  The engine pair cost five lines and the line ratchet's fifth raise.
 
   March 2026 list, retained as the starting point:
   - `components/markdowneditor/markdowneditor.ts`
@@ -926,9 +934,16 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   - `components/timezonepicker/timezonepicker.ts`
   - `components/timepicker/timepicker.ts`
 
-- [ ] **MRK-2** **2 of 29 files in `components/diagramengine/src/` are missing the `COMPONENT` marker, not the 22 of 24 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`: `engine.ts` and `types.ts`. Both are already named in MRK-1, so MRK-2 adds no file that MRK-1 does not cover. The entry was wrong by a factor of eleven and the directory has grown by five files since.
+- [x] **MRK-2** **2 of 29 files in `components/diagramengine/src/` are missing the `COMPONENT` marker, not the 22 of 24 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`: `engine.ts` and `types.ts`. Both are already named in MRK-1, so MRK-2 adds no file that MRK-1 does not cover. The entry was wrong by a factor of eleven and the directory has grown by five files since. **Closed 2026-10-15 at 0 with MRK-1**, since it never held a file of its own. ADR-182.
 
-- [ ] **MRK-3** **4 SCSS files are missing the marker, not the 10 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`.
+- [x] **MRK-3** **4 SCSS files are missing the marker, not the 10 recorded in March 2026.** Measured 2026-10-13 and held by check `[20]`. **Closed 2026-10-15 at 0.** ADR-182.
+
+  Same finding as MRK-1 in a second language. All four carried an
+  abbreviated one-line form, `/* ⚓ SymbolPicker — grid-based symbol / icon
+  picker … */`, which has the anchor emoji and no `COMPONENT:` keyword.
+  They read as marked to a person and not to the check, which is the drift
+  a half-adopted convention produces: `diagramengine`, `fontdropdown`,
+  `markdownrenderer` and `symbolpicker`.
 
   March 2026 list, retained as the starting point:
   - `components/smarttextinput/smarttextinput.scss`
@@ -1034,10 +1049,13 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 |----------|-------|--------|
 Every count below that carries a date was measured on that date. All but one
 are measured by `node scripts/audit-counts.mjs` and held by check `[20]`, which
-fails when any of them rises. The exception is **UNUSED-1**, which needs a type
-check rather than a scan: re-derive it with
-`npx tsc --noEmit --noUnusedLocals --noUnusedParameters`, and note that it is
-**not** ratcheted. A count with no date is from the March 2026 audit and has not
+fails when any of them rises. **UNUSED-1 used to be the exception and is not
+one as of 2026-10-15**: it needs a type check rather than a scan, so
+`unusedLocals` shells out to
+`npx tsc --noEmit --noUnusedLocals --noUnusedParameters` and counts TS6133.
+It is the slowest check in the file and the only one that invokes the
+compiler. The hand-derived figure it replaced was stale by 106 within a day
+of being written down. A count with no date is from the March 2026 audit and has not
 been re-measured. **Of the ten March counts re-measured so far, nine were
 wrong and the tenth was never a count at all**, so treat an undated number as an
 unverified claim rather than a figure.
@@ -1061,12 +1079,12 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **0 open, 7 closed.** Trace reaches 109 components and 301 calls |
 | DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
-| MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
+| MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | **0 open, 3 closed 2026-10-15.** All three counts at 0 |
 | MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
-| MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
+| MEDIUM — Unused Variables | 1 (**308** errors, ratcheted 2026-10-15; the 414 was stale) | Open, and now held |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **36 items** | **20 resolved** |
+| **Total** | **36 items** | **23 resolved** |
 
 ### The March 2026 counts re-measured so far
 
@@ -1079,7 +1097,7 @@ the step exits 1 and the workflow fails.
 | IMP-1 | 47 | 113 | far larger |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
-| UNUSED-1 | 119 | 421 | far larger |
+| UNUSED-1 | 119 | 308 | far larger |
 | STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |
 
@@ -1102,6 +1120,27 @@ which way a stale number leans.
   tested and it is mostly false.** Only 7 of the 79 distinct names were
   exported in `src/`, and fixing STD-1 cleared exactly those 7. The rest
   are real dead locals such as `bounds`, `defsEl`, `dragStart` and `cw`.
+
+  **RATCHETED 2026-10-15 at 308, and the 414 above was already stale when
+  it was written.** ADR-182. `unusedLocals` in `scripts/audit-counts.mjs`
+  runs the compiler rather than a scan, because an unused binding is an
+  absence and no text search can see one. It costs about 1.6 seconds.
+
+  **106 of the 414 were LOG-4's dead `logTrace` shims.** Measured, not
+  inferred: a worktree at `e361179` reports 414 errors of which 106 name
+  `logTrace`, and the tree after LOG-4 reports 308 of which none do.
+  414 − 106 = 308 exactly.
+
+  **A quarter of this count disappeared as a side effect of unrelated work,
+  on the same day it was re-measured, and nothing noticed.** That is the
+  argument for the ratchet rather than against it. The entry told a reader
+  to re-derive the number by hand, and a number that has to be re-derived
+  by hand is a memory of a measurement rather than a measurement. This one
+  was four commits stale within a day of being recorded.
+
+  The 308 are still real work: **103 in the generated `diagramengine.ts`**
+  and no other file above 10. The ceiling stops them growing while they are
+  dealt with, which is all a ceiling has ever been for here.
   The two items are separate work.
 
 ---
