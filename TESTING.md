@@ -244,6 +244,24 @@ made the ratchet true on one machine — a gate nothing runs is a gate that
 cannot fail. The number can only fall, and lowering a baseline is how progress gets
 recorded. A baseline stops silent growth. It does not claim the count is
 acceptable.
+
+**A ceiling cannot see an absence. Ask which direction the failure moves
+in before you write the check.** Every count in that script was a ceiling
+until 2026-10-15, which is the right shape for a defect you can count, such
+as a cast or a bare `console.log`. It is the wrong shape for a defect that
+is something missing. DiagramEngine published one type name out of 138
+because the build script deleted the export keywords, and no ceiling could
+ever have gone up in response. `FLOORS` in the same script holds counts
+that fail when they FALL, and `diagramengineBundleExports` is the first.
+
+Two details from that case are worth carrying. **A substitution costs no
+lines**, so `s/^export //g` left `diagramengineLines` unchanged at 30,482
+through the entire regression, and a line-count ratchet is blind to any
+edit that trades one token for another. And **mutation-prove a floor the
+same way you mutation-prove a ceiling**: restoring the strip drops the
+count to 0 and fails the check, which is the evidence that the floor is
+wired to the thing it names.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

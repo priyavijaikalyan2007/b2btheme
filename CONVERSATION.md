@@ -3407,3 +3407,49 @@ removes it.
 declared in 108 components, called in 2, and 80 of the other 106 have
 high-frequency handlers. LOG-5, 543 over-length shim lines, 216 of them
 lengthened here. Tracker 43 resolved / 27 open.
+
+---
+
+## 2026-10-15 — STD-1 and STD-2: the last CRITICAL section closes by being disproved
+
+**Asked.** "What's next?", then "go ahead" on the recommendation. The user
+also asked, mid-turn, whether types need exporting to be usable, what LOG-4
+needs from them, what UNUSED-1 is, and for STD-1 and STD-2 explained under
+LANGUAGE.md.
+
+**The export question was the right one.** Two kinds of usable. At run time
+`wrap-iife.sh` removes every export keyword, so nothing is importable and a
+component is reached through `window.createBreadcrumb`. At build time a
+consumer reads the published `.d.ts`, and only an export keyword puts a name
+there. The test is whether the consumer has to WRITE the name. Options and
+handle types, yes. The implementation class, no.
+
+**STD-1 was wrong and was sitting on a real defect.**
+`scripts/bundle-diagramengine.sh` stripped every export while concatenating
+thirty src modules, and tsc builds the published `.d.ts` from that file.
+DiagramEngine shipped 2,169 lines of types holding one usable name, whose
+signature named two types that were present and unexported.
+`docs/APPS_TEAM_USAGE_GUIDE.md` step 3 tells the apps team to type-check
+against that file. Removing the strip takes it to 138 names and the
+repository total from 1,336 to 1,473, with **all 126 bundles
+byte-identical**.
+
+**STD-2 asked for the opposite of PAT-1.** Its ten implementation classes
+correctly sit behind exported handles. Exporting them would publish
+implementation details. Closed into PAT-1 with the measurement.
+
+**The gate had to be a new kind.** Every count was a ceiling, and a missing
+export is an absence. `FLOORS` is new, mutation-proven, and holds
+`diagramengineBundleExports` at 138. `diagramengineLines` rose a second time,
+30,482 to 30,488, and the first raise's note was corrected where it conflated
+STD-1 with file growth.
+
+**One theory tested and dropped.** The 110 unused locals in the generated
+bundle looked like an artifact of the strip. Only 7 of 79 distinct names
+were. UNUSED-1 goes 421 to 414 and the two items are separate work.
+
+**Opened wider.** PAT-1 measured for the first time: 83 of 130 factories
+return a class rather than a handle, against an entry reading "some" and
+filed MINOR. Tracker 45 resolved / 25 open.
+
+**Still waiting on the user.** LOG-4, LOG-5, ANY-3, DEBT-SEC-5, DEBT-ERR-2.

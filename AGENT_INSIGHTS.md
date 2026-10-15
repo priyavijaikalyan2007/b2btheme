@@ -900,3 +900,77 @@ are the same pattern, so they are wrong in the same way at the same time.
 Write the verifier to parse rather than to match whenever the thing it reads
 has more than one shape — and expect to learn how many shapes there are from
 the verifier disagreeing with you.
+
+### 6.71 Every Ratchet Was a Ceiling, and the Defect Was an Absence (2026-10-15)
+
+`scripts/audit-counts.mjs` tracks eighteen counts. Each one caps something
+unwanted and fails when the number goes up. That shape found four real
+defects in this arc, so it felt general. It is not.
+
+DiagramEngine's published type file held one usable name out of 138,
+because the build script deleted every `export` keyword before the compiler
+read the file. Nothing could see it. There is no count of a thing that is
+missing, and every existing count would have read as healthy forever.
+
+The fix was a `FLOORS` table: counts that fail when they FALL. One entry so
+far, `diagramengineBundleExports`, pinned at 138 and mutation-proven by
+restoring the strip and watching it read 0.
+
+**Before adding a check, ask which direction the failure moves in.** The
+four earlier misses in this arc were patterns that matched too little, and
+widening the pattern fixed each one. This one was a ceiling where a floor
+was needed, and no amount of widening would ever have reached it.
+
+A second lesson sits underneath. The strip was `s/^export //g`, a
+substitution. It rewrites a line and never removes one, so
+`diagramengineLines` sat unchanged at 30482 through the entire regression.
+**A line-count ratchet is blind to any edit that trades one token for
+another**, which is most of what a damaging edit actually does.
+
+### 6.72 A Tracker Entry Can Be Wrong in the Direction That Makes It Worse (2026-10-15)
+
+STD-1 and STD-2 were the last two entries under CRITICAL — Standards, open
+since March 2026. Both were wrong, and they were wrong in opposite ways
+that are both worth recognizing.
+
+STD-2 asked for a change that would have **damaged** the codebase. It named
+ten implementation classes and asked for an `export` keyword on each. All
+ten sit behind an exported options type, an exported handle, and an
+exported factory. They are the encapsulation that PAT-1, in the same
+document, asks every component to adopt. Doing STD-2 would have published
+implementation details in order to satisfy a rule invented for the entry.
+
+STD-1 was wrong about the diagnosis while **standing on a real defect**. It
+saw no export keywords and called it a standards violation. The keywords
+were stripped on purpose by a generator, which makes the complaint
+baseless, and the strip also destroyed the published type surface, which
+makes it the most serious defect in the section. An entry can be
+simultaneously incorrect and pointing at something.
+
+The common cause is that both entries reasoned from a text pattern to a
+conclusion without reading the build. `diagramengine.ts` is generated. Its
+header says so on line 11.
+
+**When an entry has been open a long time, re-derive its premise before
+its fix.** The premise is what rotted. In this arc that has now happened to
+`UNUSED-1` (119 to 421), `MRK-1` (12 to 3), `MRK-2` (22 of 24 to 2 of 29),
+`IMP-1` (47 to 113), `DEBT-SEC-3`, and now both STD entries. The pattern is
+strong enough to be the default assumption.
+
+### 6.73 Measuring an Entry to Close It Can Reopen It Much Larger (2026-10-15)
+
+Closing STD-2 required knowing how many factories leak an implementation
+class, so the scan became `scripts/pat-scan.mjs`. It answered the STD-2
+question in one line: one factory returned a class nobody could name, and
+STD-1 had already fixed it.
+
+Then the same scan was pointed at the next question over, which is whether
+a factory returns a class at all. **83 of 130.** PAT-1 describes this as
+"some components" and is filed under MINOR. It is the majority of the
+public API, and it had never been counted in the seven months the entry was
+open.
+
+The number was two lines of extra code in a script written for another
+purpose. **The reason a vague entry stays vague is that nobody measures it,
+and the reason nobody measures it is that it is filed as MINOR.** Severity
+recorded before measurement is a guess wearing a label.

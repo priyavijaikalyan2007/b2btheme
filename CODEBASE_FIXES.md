@@ -63,9 +63,112 @@ These issues involve potential XSS or script injection vectors and must be addre
 
 These violate mandatory project conventions (`export` keyword requirement per MEMORY.md, TypeScript module pattern) and cause build fragility.
 
-- [ ] **STD-1** `components/diagramengine/diagramengine.ts` (**30,693 lines, measured 2026-10-13**, not the 19,198 recorded in March 2026) — Zero `export` keywords on 60+ interfaces, 15+ classes, and the factory function. Per project convention, ALL public types, interfaces, classes, and factory functions MUST have the `export` keyword. Without `export`, tsc treats files as scripts (global scope), leading to duplicate declaration errors across the codebase. This is the single largest standards violation in the repository.
+- [x] **STD-1** Opened as a standards violation. **It was not one, and the
+  defect underneath it was worse.** Closed 2026-10-15. ADR-177.
 
-- [ ] **STD-2** Twelve implementation files are missing the `export` keyword on their primary classes/types:
+  The original entry said that `components/diagramengine/diagramengine.ts`
+  has no `export` keywords, and called this "the single largest standards
+  violation in the repository". The observation was correct. The diagnosis
+  was wrong twice over. The file is **generated**, and
+  `scripts/bundle-diagramengine.sh` deleted the keywords on purpose with
+  `s/^export //g`. The stated mechanism, that "tsc treats files as
+  scripts", was false for this file, because the script re-added one export
+  and that alone makes it a module.
+
+  **The real defect was in the published type surface.** The strip ran
+  before tsc, so the compiler wrote `.d.ts` from a source with one export.
+  `dist/components/diagramengine/diagramengine.d.ts` was 2,169 lines long
+  and published one usable name:
+
+  ```ts
+  export declare function createDiagramEngine(
+      container: string | HTMLElement,
+      options?: DiagramEngineOptions): DiagramEngineImpl;
+  export {};
+  ```
+
+  `DiagramEngineOptions` and `DiagramEngineImpl` were both in that file and
+  neither was exported. A consumer could call the factory and could not
+  name its argument or its result. This is not academic.
+  `docs/APPS_TEAM_USAGE_GUIDE.md` step 3 instructs the apps team to
+  type-check against the published `.d.ts`. For scale, breadcrumb published
+  5 names, treeview 13, and toolbar 31.
+
+  **This is DEBT-DOC-1 again** (ADR-166, "the published API list for every
+  component was fiction"), in the one component large enough to need its
+  types most. That pass fixed the generator that invented names. It did not
+  ask whether a component could publish too few.
+
+  The fix is six characters of build script. `wrap-iife.sh` already strips
+  every export keyword from the emitted JS, and `build:ts` runs it before
+  `minify-js.sh`, so the browser never saw them. Dropping the strip costs
+  the bundle nothing:
+
+  | | before | after |
+  |---|---|---|
+  | `diagramengine.ts` exports | 1 | 138 |
+  | published `.d.ts` exports | 1 | 138 |
+  | names in `AGENT_QUICK_REF.md` | 1,336 | 1,473 |
+  | unused locals (TS6133) | 421 | 414 |
+  | `.js` bundles changed | — | **0 of 126** |
+
+  **Verified by emit.** All 126 bundles are byte-identical to the versions
+  built before the change, which is the proof that a type-only change was
+  type-only.
+
+  `DiagramEngineImpl` is exported as well, because the factory returns it.
+  The class is already public at run time as `window.DiagramEngine`, so
+  this publishes nothing that was private. It stays the implementation type
+  rather than a handle interface, and that single case is now recorded
+  under PAT-1.
+
+  **Nothing in this repository could see this defect.** Every tracked count
+  is a ceiling on something unwanted, and a missing export is an absence.
+  `scripts/audit-counts.mjs` gains a **`FLOORS`** table for counts that
+  must not fall, holding `diagramengineBundleExports` at 138. It is
+  mutation-proven: with the strip restored the count reads 0 and the check
+  fails.
+
+- [x] **STD-2** Opened as twelve files missing `export` on their primary
+  classes. **Every one of them is correct as written.** Closed 2026-10-15.
+  ADR-177.
+
+  Each named class sits behind a factory function. Measured 2026-10-15,
+  all ten files that exist export their options type, their handle type and
+  their factory. Only the implementation class is private, and a consumer
+  never names it. FormDialog looks like an exception in a grep because its
+  handle is called `FormDialog` rather than `FormDialogHandle`, and it is
+  exported.
+
+  | file | class exported | Options | Handle | factory | published names |
+  |---|---|---|---|---|---|
+  | notificationcenter | no | yes | yes | yes | 5 |
+  | breadcrumb | no | yes | yes | yes | 5 |
+  | stepper | no | yes | yes | yes | 5 |
+  | propertyinspector | no | yes | yes | yes | 6 |
+  | guidedtour | no | yes | yes | yes | 4 |
+  | helptooltip | no | yes | yes | yes | 5 |
+  | slider | no | yes | yes | yes | 3 |
+  | formdialog | no | yes | yes (`FormDialog`) | yes | 8 |
+  | helpdrawer | no | yes | yes | yes | 5 |
+  | docviewer | no | yes | yes | yes | 4 |
+
+  Exporting these classes would publish an implementation detail, which is
+  the opposite of what **PAT-1 asks for in this same document**. The entry
+  asked us to undo the pattern another entry asks us to adopt.
+
+  The count was wrong too. The repository has **53** unexported classes,
+  not twelve. Exactly one causes a real problem, and it is
+  `createDiagramEngine`, which returns the private class
+  `DiagramEngineImpl`. That case moved to PAT-1 and is fixed for now by
+  exporting the class.
+
+  The convention the entry cites does not say what the entry says. As
+  written in `CONVERSATION.md:1251` and `specs/navrail.prd.md:395` the rule
+  covers ***public*** types. AGENTS.md states no export rule at all, and
+  STD-1 cited `MEMORY.md`, which this repository does not contain.
+
+  The original list follows, for the record:
   - `components/notificationcenter/notificationcenter.ts` — `NotificationCenter` class
   - `components/breadcrumb/breadcrumb.ts` — `Breadcrumb` class
   - `components/stepper/stepper.ts` — `Stepper` class
@@ -559,6 +662,35 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 - [ ] **PAT-1** Some components return Handle interfaces (preferred pattern — encapsulates implementation, exposes only public API), while others return class instances directly (leaks implementation details). Standardize all components on the Handle pattern for consistency and encapsulation. Audit each component's factory function return type and refactor as needed.
 
+  **Measured for the first time on 2026-10-15 by `scripts/pat-scan.mjs`.
+  The entry says "some" components. It is 83 of 130 factories, across 125
+  components.** This is the majority, not a tail, and the entry has
+  understated itself since March 2026. Re-run the scan rather than
+  re-deriving the number.
+
+  The scan separates two failures, because they cost different things:
+
+  - **Returns a class the file does not export: 0, was 1.** The severe
+    case. The consumer receives a value and cannot name its type at all.
+    `createDiagramEngine` was the only one, and STD-1 fixed it on
+    2026-10-15 by exporting `DiagramEngineImpl`.
+  - **Returns an exported class rather than a handle: 83.** The ordinary
+    case. The consumer can name the type, the name is an implementation
+    class, and so every method on that class reads as public API.
+
+  **STD-2 was closed into this entry, and its ten files are the pattern
+  working.** Each keeps its class private and returns an exported handle
+  interface. They are the model the other 83 should follow, which is why
+  exporting their classes, as STD-2 asked, would have moved the repository
+  in the wrong direction.
+
+  DiagramEngine is the hardest of the 83 and shows what the work costs.
+  `DiagramEngineImpl` has **135 public methods**. Writing
+  `DiagramEngineHandle` means deciding which of the 135 are API, and
+  inventing the interface without that decision only gives the class a
+  second name. That is a design question for each component, not a
+  mechanical refactor, which is the real reason this entry has sat open.
+
 ---
 
 ## CI — Node version alignment
@@ -616,7 +748,7 @@ the step exits 1 and the workflow fails.
 | Severity | Count | Status |
 |----------|-------|--------|
 | CRITICAL — Security | 4 (DEBT-SEC-5 opened 2026-10-14) | **1 open, 3 closed** |
-| CRITICAL — Standards | 2 | Open |
+| CRITICAL — Standards | 2 | **0 open, 2 closed 2026-10-15.** Both entries were wrong. STD-1 hid a real defect, STD-2 contradicted PAT-1 |
 | HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
@@ -624,11 +756,11 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Logging | 5 (LOG-3 closed, LOG-4/-5 opened 2026-10-14) | **2 open, 3 closed** |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
-| MINOR — Factory Pattern | 1 | Open |
-| MEDIUM — Unused Variables | 1 (421 errors, 2026-10-13, not ratcheted) | Open |
+| MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
+| MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **31 items** | **12 resolved** |
+| **Total** | **31 items** | **14 resolved** |
 
 ### The March 2026 counts re-measured so far
 
@@ -652,7 +784,19 @@ which way a stale number leans.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **421 unused local/parameter errors, measured 2026-10-13**, not the 119 recorded in March 2026. The original text follows: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
+- [ ] **UNUSED-1**: **414 unused local/parameter errors, re-measured 2026-10-15** (421 on 2026-10-13, reduced by STD-1, see below), not the 119 recorded in March 2026. The original text follows: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
+
+  **Measured 2026-10-15.** All 414 are `TS6133`, "declared but its value is
+  never read". The distribution is lopsided: **110 are in the generated
+  `components/diagramengine/diagramengine.ts`** and no other file has more
+  than 11.
+
+  A tempting theory is that those 110 were an artifact of STD-1, because a
+  symbol looks unused once its `export` is stripped. **That theory was
+  tested and it is mostly false.** Only 7 of the 79 distinct names were
+  exported in `src/`, and fixing STD-1 cleared exactly those 7. The rest
+  are real dead locals such as `bounds`, `defsEl`, `dragStart` and `cw`.
+  The two items are separate work.
 
 ---
 

@@ -6658,3 +6658,115 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-177
+  title: A generated file stripped the exports that the published types are built from, and the only check that could see it had to be a floor
+  date: 2026-10-15
+  status: accepted
+  context: |
+    STD-1 and STD-2 were the last two entries in the CRITICAL - Standards
+    section of CODEBASE_FIXES.md, open since March 2026. Both were wrong.
+    Reading them to plan the work found the defect that STD-1 was sitting
+    on top of without naming it.
+
+    STD-1 SAID components/diagramengine/diagramengine.ts has no export
+    keywords and called this the single largest standards violation in the
+    repository. The observation was right. The file is GENERATED, and
+    scripts/bundle-diagramengine.sh deleted the keywords on purpose with
+    `s/^export //g` while concatenating thirty src modules. The stated
+    mechanism, that "tsc treats files as scripts", was false here, because
+    the script re-added one export and that alone makes the file a module.
+    STD-1 also cited MEMORY.md as the source of the convention, and this
+    repository has no MEMORY.md.
+
+    THE REAL DEFECT WAS THE PUBLISHED TYPE SURFACE. The strip ran before
+    tsc, so the compiler wrote the .d.ts from a source holding one export.
+    dist/components/diagramengine/diagramengine.d.ts was 2,169 lines and
+    published one usable name. Its signature referenced DiagramEngineOptions
+    and DiagramEngineImpl, both present in the same file and neither
+    exported, and the trailing `export {}` made the file a module so the
+    2,168 other declarations were unreachable. A consumer could call the
+    factory and could not name its argument or its result. This is not
+    hypothetical: docs/APPS_TEAM_USAGE_GUIDE.md step 3 tells the apps team
+    to type-check against the published .d.ts. Breadcrumb publishes 5 names,
+    treeview 13, toolbar 31, and the largest component published 1.
+
+    STD-2 SAID twelve files were missing export on their primary classes.
+    All ten that exist export their options type, their handle type and
+    their factory, and keep only the implementation class private. That is
+    the handle pattern working. Doing what STD-2 asked would have published
+    an implementation detail, which is what PAT-1 asks us to stop doing, in
+    the same document. The count was wrong too: 53 classes are unexported,
+    not twelve.
+  decision: |
+    D1. KEEP THE EXPORT KEYWORDS IN THE GENERATED BUNDLE. The strip bought
+    nothing. wrap-iife.sh already removes every export keyword from the
+    emitted JS, and build:ts runs it before minify-js.sh, so the browser
+    never saw them. bundle-diagramengine.sh now removes import lines only,
+    and the single-symbol rescue patch for createDiagramEngine is deleted
+    because every export survives concatenation.
+
+    D2. VERIFY BY EMIT, NOT BY SUITE. All 126 .js bundles are byte-identical
+    to the versions built before the change. That is the proof a type-only
+    change was type-only. A passing suite speaks only for covered paths.
+
+    D3. EXPORT DiagramEngineImpl AS A STOPGAP AND SAY SO. The factory
+    returns it, so without the export the return type is unnameable. The
+    class is already public at run time as window.DiagramEngine, so this
+    publishes nothing that was private. It is still the implementation type
+    and not a handle interface. Recorded under PAT-1 rather than called
+    finished.
+
+    D4. ADD A FLOORS TABLE TO scripts/audit-counts.mjs. Every count in that
+    file is a CEILING on something unwanted. A missing export is an ABSENCE,
+    so nothing in the repository could see this defect, and restoring the
+    strip is a one-character edit whose only visible effect is a .d.ts
+    quietly returning to one export. diagramengineBundleExports fails below
+    138. Mutation-proven: with the strip restored it reads 0 and the check
+    fails.
+
+    D5. CLOSE STD-2 INTO PAT-1 RATHER THAN DELETING IT. The ten files it
+    named are the model, not the problem, and the record of why matters more
+    than the entry. Its one real case, a factory returning a private class,
+    moves to PAT-1.
+
+    D6. RAISE diagramengineLines A SECOND TIME, 30482 to 30488. Six comment
+    lines explaining the exported class. The note left with the first raise
+    claimed STD-1 existed to stop this file growing, which was a conflation
+    of two unrelated things, and it is corrected in place.
+  consequences: |
+    + DIAGRAMENGINE PUBLISHES 138 NAMES INSTEAD OF 1, and the repository
+      total in docs/AGENT_QUICK_REF.md goes from 1,336 to 1,473. The bundles
+      did not move by a byte.
+    + THE LAST CRITICAL SECTION IS EMPTY, and both entries closed by being
+      disproved rather than by being done.
+    + PAT-1 IS MEASURED FOR THE FIRST TIME. scripts/pat-scan.mjs reports 83
+      of 130 factories returning an exported class rather than a handle. The
+      entry said "some" and is marked MINOR. It is the majority.
+    = A RATCHET CANNOT SEE AN ABSENCE. This is the fifth time in this arc
+      that a check proved narrower than the behavior it was named for, after
+      WIN-1, WIN-2, the any-cast count and the logging fallback. The first
+      four were patterns that matched too little. This one was the wrong
+      DIRECTION, and no amount of widening a ceiling would have found it.
+    = THE DEFECT WAS A TEXT SUBSTITUTION, SO IT COST NO LINES. `s/^export //g`
+      rewrites a line and never removes one, which is why diagramengineLines
+      sat at 30482 through the whole regression and reported nothing.
+    - UNUSED-1 DROPPED 421 TO 414 AND NO FURTHER. The tempting theory, that
+      the 110 unused locals in the generated bundle were an artifact of the
+      strip, was tested and is mostly false. Only 7 of 79 distinct names were
+      exported in src. The rest are real dead locals.
+    - THE 83 PAT-1 CASES ARE NOT MECHANICAL. DiagramEngineImpl has 135 public
+      methods. Writing a handle interface means deciding which are API, per
+      component, which is why the entry has sat open.
+  files:
+    - "scripts/bundle-diagramengine.sh"
+    - "scripts/audit-counts.mjs"
+    - "scripts/pat-scan.mjs"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/diagramengine.ts"
+    - "docs/AGENT_QUICK_REF.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
