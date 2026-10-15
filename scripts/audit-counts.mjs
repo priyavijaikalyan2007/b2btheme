@@ -276,6 +276,28 @@ export function countOccurrences(text, needle)
  * gets worked around instead, and a worked-around ratchet measures
  * nothing.
  *
+ * scssImportantComponents was added on 2026-10-15, and it is the same
+ * discovery the `: any` counts made twice: a ratchet named for one
+ * population and measuring another. The tracker section reads "!important
+ * in Component SCSS (113 occurrences, 20 files)" and lists component
+ * stylesheets. scssImportant spans EVERY tracked .scss, so 58 of its 113
+ * are in `src/scss/`, and 56 of those 58 are in one file,
+ * `src/scss/_dark-mode.scss`, where beating Bootstrap's specificity is the
+ * justification CODING_STYLE.md allows. The population the entry actually
+ * describes is 55 across 18 files, not 113 across 20.
+ *
+ * Both counts are kept. The wide one stops the total growing anywhere.
+ * The narrow one is the one IMP-1 can be measured against, and it is the
+ * one that should fall.
+ *
+ * ONE OF THE 113 IS THE WORD INSIDE A COMMENT, in
+ * components/guidedtour/guidedtour.scss, where a note explains why the
+ * declaration below it needs the keyword. 112 are real. It is left in
+ * rather than parsed out: SCSS block comments would need a real scanner
+ * for one occurrence, and a count that is high by one in a known place is
+ * safer than a parser that is wrong in an unknown one. Written here so
+ * the next reader does not rediscover it as a defect.
+ *
  * overLengthLines was added on 2026-10-15 for LOG-5 and is the first count
  * here that measures a style rule rather than a defect. AGENTS.md sets 120
  * characters and nothing enforced it, which is the UNUSED-1 shape: a stated
@@ -330,6 +352,7 @@ const BASELINES = {
     anyAnnotations: 13,
     anyCasts: 2,
     scssImportant: 113,
+    scssImportantComponents: 55,
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
@@ -750,6 +773,7 @@ function measure()
         anyAnnotations: 0,
         anyCasts: 0,
         scssImportant: 0,
+        scssImportantComponents: 0,
         componentsMissingMarker: 0,
         diagramengineSrcMissingMarker: 0,
         scssMissingMarker: 0,
@@ -816,11 +840,18 @@ function measure()
 
     // IMP-1 is about the SCSS SOURCES. The tracked .css files are generated,
     // so counting them measures the build rather than the code.
+    // IMP-1. TWO COUNTS, BECAUSE THE ENTRY AND THE RATCHET WERE NOT
+    // LOOKING AT THE SAME FILES. scssImportant spans every tracked
+    // stylesheet. The tracker section is titled "!important in Component
+    // SCSS" and lists component files only, so scssImportantComponents is
+    // the one that matches the words around it.
     const scss = execFileSync("git", ["ls-files", "*.scss"], { encoding: "utf8" })
         .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
     for (const file of scss)
     {
-        counts.scssImportant += countOccurrences(readFileSync(file, "utf8"), "!important");
+        const n = countOccurrences(readFileSync(file, "utf8"), "!important");
+        counts.scssImportant += n;
+        if (file.startsWith("components/")) { counts.scssImportantComponents += n; }
     }
 
     // MRK-1/-2/-3 (MARKERS.md). All three entries were recorded in March 2026

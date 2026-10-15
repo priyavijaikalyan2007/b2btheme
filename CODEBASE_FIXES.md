@@ -468,11 +468,64 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
   showing the dialog without the JavaScript is feasible and is a behavior
   decision rather than a typing one.
 
-## MEDIUM — `!important` in Component SCSS (113 occurrences, 20 files, measured 2026-10-13)
+## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 
 Per CODING_STYLE.md, `!important` should only be used when overriding third-party styles or for accessibility-critical rules (e.g., `prefers-reduced-motion`). All other uses indicate specificity problems that should be fixed structurally.
 
-- [ ] **IMP-1** **113 occurrences across 20 SCSS files, not the 47 across 15 recorded in March 2026.** Held at that value by check `[20]`. The per-file list below is the March list and is not the whole set.
+- [ ] **IMP-1** **55 occurrences across 18 COMPONENT stylesheets.** Held by
+  the new `scssImportantComponents` ceiling. The March entry said 47 across
+  15 and the October re-measurement said 113 across 20. Both were wrong,
+  in opposite directions, and the second was wrong because it counted a
+  different population. ADR-183.
+
+  **113 IS THE ALL-STYLESHEET TOTAL AND THIS SECTION IS ABOUT COMPONENTS.**
+  `scssImportant` spans every tracked `.scss`, so **58 of its 113 are in
+  `src/scss/`** — and **56 of those 58 are in one file**,
+  `src/scss/_dark-mode.scss`, where beating Bootstrap's own specificity is
+  exactly the third-party override CODING_STYLE.md permits. Carrying them
+  in a count headed "Component SCSS" doubled the apparent size of this item
+  and hid where the work actually is. This is the `: any` discovery a third
+  time: a ratchet named for one population and measuring another.
+
+  Both counts are kept. `scssImportant` stops the total growing anywhere.
+  `scssImportantComponents` is the one this entry is measured against.
+
+  **One of the 113 is the word inside a comment**, in
+  `guidedtour.scss`, where a note explains why the line below it needs the
+  keyword. 112 are real declarations. Left in deliberately: parsing SCSS
+  block comments for one occurrence buys less than it risks.
+
+  **Classified by justification, the 54 real declarations split three ways:**
+
+  | Kind | Count | Entry |
+  |---|---|---|
+  | Inside a `prefers-reduced-motion` block | 11 | IMP-3, justified |
+  | Carries a nearby explaining comment | 14 | IMP-2, justified |
+  | Neither | **29** | **IMP-1, the real target** |
+
+  The 29 are in **8** files: `markdowneditor` (11), `conversation` (4),
+  `graphcanvas` (4), `treeview` (4), `chartpanel` (2), `treegrid` (2),
+  `ribbon` (1) and `stacklayout` (1).
+
+  **THE FIRST RUN OF THIS CLASSIFICATION WAS WRONG, AND ALLMAN BRACES ARE
+  WHY.** It reported 8 reduced-motion and 32 bare. The scanner recorded the
+  nesting depth on the line matching `prefers-reduced-motion`, but this
+  repository writes `@media (prefers-reduced-motion: reduce)` with the
+  brace on the NEXT line, so depth had not yet increased and the block
+  closed itself immediately. Three whole files of accessibility overrides
+  read as unjustified. The fix is to wait for the opening brace rather than
+  assume it is on the same line, and it is worth writing down because every
+  brace-counting scan over this codebase has the same trap in it.
+
+  **These are not refactored here, on purpose.** Removing an `!important`
+  changes specificity, and specificity changes are visual. This repository
+  has a visual-regression suite and a set of measured contrast adjacencies
+  for exactly that reason, so the work belongs with a visual check rather
+  than beside a logging change. The target is now exact: 29 declarations in
+  8 files.
+
+  Original March list, retained because it is the only record of what was
+  looked at then and it is wrong in both directions:
 
   Violations (no third-party justification) — should be refactored:
   - `components/conversation/conversation.scss` (5 occurrences)
@@ -484,16 +537,36 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   - `components/toast/toast.scss` (2 occurrences)
   - `components/ribbon/ribbon.scss` (1 occurrence)
 
-- [ ] **IMP-2** Justified (third-party overrides) — acceptable, document reason in comments:
-  - `components/markdowneditor/markdowneditor.scss` (18 occurrences — Vditor overrides)
-  - `components/guidedtour/guidedtour.scss` (1 occurrence — driver.js override)
+- [ ] **IMP-2** Justified (third-party overrides) — acceptable, document reason in comments.
+  **Re-measured 2026-10-15: markdowneditor has 17, not 18, and 11 of those
+  17 carry no comment**, so they are in IMP-1's 29 rather than here.
+  `guidedtour` has 1 real declaration and it is already documented, which
+  is what the other 11 need. The entry's own instruction, "document reason
+  in comments", was followed in exactly one of the two files it names.
+  - `components/markdowneditor/markdowneditor.scss` (17 occurrences — Vditor overrides, 6 documented)
+  - `components/guidedtour/guidedtour.scss` (1 occurrence — driver.js override, documented)
 
-- [ ] **IMP-3** Justified (accessibility) — acceptable:
-  - `components/cardlayout/cardlayout.scss` — `prefers-reduced-motion`
-  - `components/skeletonloader/skeletonloader.scss` — `prefers-reduced-motion`
-  - `components/gauge/gauge.scss` — `prefers-reduced-motion`
-  - `components/graphcanvasmx/graphcanvasmx.scss` — `prefers-reduced-motion`
-  - `components/diagramengine/diagramengine.scss` — `prefers-reduced-motion`
+- [x] **IMP-3** Justified (accessibility) — acceptable. **Verified
+  2026-10-15 and closed:** 11 declarations sit inside a
+  `prefers-reduced-motion` block and need no further documentation, because
+  the media query IS the justification. ADR-183.
+
+  **`components/graphcanvasmx/graphcanvasmx.scss` DOES NOT EXIST.** Not a
+  file with zero occurrences — no such file in the tree. That is another
+  March figure naming something that is not there, and it is the one kind
+  of error a count can never surface, because a count of occurrences in a
+  file that is absent is zero and zero reads as clean.
+
+  **The list was also short by three.** `contextmenu`, `dynamicformswitcher`
+  and `toast` all carry reduced-motion overrides and none was listed:
+  - `components/cardlayout/cardlayout.scss` ✓
+  - `components/contextmenu/contextmenu.scss` ✓ (not listed in March)
+  - `components/diagramengine/diagramengine.scss` ✓
+  - `components/dynamicformswitcher/dynamicformswitcher.scss` ✓ (not listed in March)
+  - `components/gauge/gauge.scss` ✓
+  - `components/skeletonloader/skeletonloader.scss` ✓
+  - `components/toast/toast.scss` ✓ (not listed in March)
+  - `components/graphcanvasmx/graphcanvasmx.scss` — **no such file**
 
 ---
 
@@ -1075,7 +1148,7 @@ the step exits 1 and the workflow fails.
 | HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
-| MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
+| MEDIUM — !important | 3 (**54** real in 18 component files, re-measured 2026-10-15; 113 was all stylesheets) | **1 closed, 2 open.** Real target is 29 |
 | MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **0 open, 7 closed.** Trace reaches 109 components and 301 calls |
 | DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
@@ -1084,7 +1157,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Unused Variables | 1 (**308** errors, ratcheted 2026-10-15; the 414 was stale) | Open, and now held |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **36 items** | **23 resolved** |
+| **Total** | **36 items** | **24 resolved** |
 
 ### The March 2026 counts re-measured so far
 

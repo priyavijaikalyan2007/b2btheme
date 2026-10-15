@@ -1206,3 +1206,52 @@ derive: it needs `tsc` rather than a grep. Expensive to derive is precisely
 why it must be automated, because expensive is exactly what nobody repeats.
 The cheap counts can survive being checked by hand. This one could not, and
 it is 1.6 seconds.
+
+### 6.83 A Heading Is a Claim About Population, and Nothing Checks It (2026-10-15)
+
+The tracker section reads "`!important` in Component SCSS (113
+occurrences, 20 files)". The count behind it spans every tracked `.scss`
+in the repository, so **58 of the 113 are not component stylesheets at
+all, and 56 of those 58 are in one file**, `src/scss/_dark-mode.scss`,
+where beating Bootstrap's specificity is the exact third-party override
+the style guide permits.
+
+The real target is 29 declarations in 8 files. The headline said 113, so
+the item read as four times its size and as spread across the fleet rather
+than concentrated.
+
+This is the third time: `anyAnnotations` watched declarations and missed 69
+casts, `WIN-1` watched one spelling of a cast, and now a count headed
+"Component SCSS" measures every stylesheet. **Each time the count was
+correct and its NAME was the thing that was wrong**, and a name is not
+executable, so nothing can fail when it drifts from what is measured. The
+only defence found so far is to re-derive the population whenever the
+number is used for a decision, which is what a heading quietly discourages,
+because a heading looks like it was checked.
+
+### 6.84 Allman Braces Break Every Brace-Counting Scan (2026-10-15)
+
+Classifying the 54 `!important` declarations by justification needed to
+know which sit inside `@media (prefers-reduced-motion: reduce)`. The first
+scan tracked nesting depth per line and recorded the depth on the line that
+matched `prefers-reduced-motion`.
+
+This repository writes Allman braces, so that line has no `{` on it. Depth
+had not risen when it was recorded, the very next check saw `depth <=
+rmDepth`, and the block closed itself on the line it opened. **Three whole
+files of accessibility overrides were classified as unjustified**, and the
+split came out 8 and 32 instead of 11 and 29.
+
+It was caught by spot-checking one file by eye before writing the numbers
+down, not by the scan failing. The scan was confident.
+
+**The assumption was invisible because it is true in most codebases.**
+`if (x) {` puts the brace on the introducing line, and a scanner written
+anywhere else works. Here it never does. Every brace-counting pass over
+this codebase has to wait for the opening brace rather than assume it
+arrives with the construct, and it is worth checking any existing scan that
+tracks nesting for the same mistake.
+
+**The general shape: a scanner written against a language is wrong when the
+codebase has a dialect.** The style guide is a fact about the input, and a
+scan that has not read it is guessing.

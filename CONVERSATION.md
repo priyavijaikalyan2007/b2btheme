@@ -3674,3 +3674,34 @@ nobody repeats. It costs 1.6 seconds.
 **Every tracked count in this repository is now ratcheted.**
 
 **Tracker 54 resolved / 21 open.**
+
+---
+
+## The !important count measured the wrong files
+
+**113 was never the component figure.** 58 of it is `src/scss/`, and 56 of
+those 58 are one file, `_dark-mode.scss`, where beating Bootstrap's
+specificity is the override the style guide allows. Components hold 54 real
+declarations, and the actual target — no reduced-motion block, no
+explaining comment — is **29 in 8 files**.
+
+Third time a ratchet has been named for one population and measured
+another, after `anyAnnotations` and `WIN-1`. A name is not executable, so
+nothing fails when it drifts.
+
+**My first classification was wrong and Allman braces are why.** It read
+nesting depth from the line matching `prefers-reduced-motion`, but the
+opening brace is on the next line here, so the block closed itself
+immediately and three files of accessibility overrides came out
+unjustified: 8 and 32 instead of 11 and 29. Caught by spot-checking one
+file by eye, not by the scan failing.
+
+**IMP-3 named a file that does not exist.** `graphcanvasmx.scss` is not in
+the tree. A count cannot surface that — occurrences in an absent file are
+zero, and zero reads as clean. It also missed three real ones.
+
+**The 29 are not refactored.** Removing an `!important` changes
+specificity, specificity is visual, and that belongs with a visual check
+rather than beside a logging change.
+
+**Tracker 55 resolved / 20 open.**

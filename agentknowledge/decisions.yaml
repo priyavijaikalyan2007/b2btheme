@@ -7231,3 +7231,73 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-183
+  title: The !important count was headed Component SCSS and measured every stylesheet, and the first reclassification broke on Allman braces
+  date: 2026-10-15
+  status: accepted
+  context: |
+    The tracker section reads "!important in Component SCSS (113
+    occurrences, 20 files)". The ratchet behind it, scssImportant, spans
+    every tracked .scss in the repository. IMP-2 and IMP-3 list the
+    occurrences they consider justified and ask for the rest to be
+    refactored.
+  decision: |
+    D1. 58 OF THE 113 ARE NOT COMPONENT STYLESHEETS, and 56 of those 58
+        are in one file, src/scss/_dark-mode.scss, where beating
+        Bootstrap's own specificity is the third-party override
+        CODING_STYLE.md permits. The population the section describes is
+        55 across 18 files. This is the third time a ratchet in this
+        repository has been named for one population and measured another,
+        after anyAnnotations and WIN-1.
+
+    D2. BOTH COUNTS ARE KEPT. scssImportant stops the total growing
+        anywhere, including in the core stylesheets. scssImportantComponents
+        is the one IMP-1 is measured against and the one that should fall.
+
+    D3. ONE OF THE 113 IS THE WORD INSIDE A COMMENT and 112 are real. It is
+        left in rather than parsed out, because SCSS block comments need a
+        real scanner and the error is one occurrence in a known place.
+        Written down so it is not rediscovered as a defect.
+
+    D4. THE FIRST RECLASSIFICATION WAS WRONG AND ALLMAN BRACES ARE WHY.
+        It reported 8 declarations inside a prefers-reduced-motion block
+        and 32 unjustified. The scanner took the nesting depth from the
+        line matching prefers-reduced-motion, but this repository puts the
+        opening brace on the NEXT line, so depth had not risen yet and the
+        block closed itself immediately. Three whole files of accessibility
+        overrides read as unjustified. The real split is 11 reduced-motion,
+        14 commented, 29 neither. Every brace-counting scan over this
+        codebase has the same trap in it.
+
+    D5. IMP-3 NAMED A FILE THAT DOES NOT EXIST.
+        components/graphcanvasmx/graphcanvasmx.scss is not in the tree. A
+        count cannot surface that, because occurrences in an absent file
+        are zero and zero reads as clean. The list was also short by three
+        real files: contextmenu, dynamicformswitcher and toast all carry
+        reduced-motion overrides and none was listed.
+
+    D6. THE 29 ARE NOT REFACTORED HERE. Removing an !important changes
+        specificity and specificity changes are visual. This repository
+        keeps a visual-regression suite and measured contrast adjacencies
+        for that reason, so the work belongs with a visual check rather
+        than beside a logging change.
+  consequences: |
+    + THE TARGET IS EXACT AND SMALLER. 29 declarations in 8 files, named by
+      line, against a headline that said 113.
+    + THE COUNT NOW MATCHES ITS OWN HEADING, and the wide count still
+      guards the core stylesheets it was accidentally covering.
+    + IMP-3 CLOSES at 11 verified accessibility overrides.
+    - 29 DECLARATIONS REMAIN and they need a visual check to remove, which
+      is why this entry stays open with a precise target rather than being
+      swept.
+    ? THE ALLMAN-BRACE TRAP IS GENERAL. Any future scan here that tracks
+      nesting by counting braces per line must wait for the opening brace
+      rather than assume it sits on the line that introduced the block.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
