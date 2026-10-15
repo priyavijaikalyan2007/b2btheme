@@ -316,6 +316,7 @@ const BASELINES = {
     ungatedVerboseShims: 0,
     driftedHostRule: 0,
     overLengthLines: 288,
+    unpinnedCdnRefs: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -389,6 +390,53 @@ const FLOORS = {
     traceCalls: 301,
     dynamicVerboseShims: 225,
 };
+
+/**
+ * THE VERSION IN A THIRD-PARTY CDN URL IS THE ONLY THING PINNING IT.
+ *
+ * jsdelivr resolves `npm/mermaid@11` to the newest 11.x AT REQUEST TIME and
+ * `npm/dompurify` to the newest anything. A documented URL without an exact
+ * version is a standing instruction to consumers to load whatever that
+ * project publishes next, with no review here and no SRI either. DEBT-SEC-5
+ * is about adding SRI to five optional libraries. This is the hole
+ * underneath it, and when it was first measured one of the eight unpinned
+ * references was DOMPurify, which vendor-closure.mjs itself calls the
+ * highest-value asset to remove third-party trust from.
+ *
+ * An exact version is `@` followed by a digit AND a dot. `@11` is a major
+ * and still floats, so `@11.17.2` and `@5.3.8` pass while `@11` and `@5` do
+ * not.
+ *
+ * HOW MANY SEGMENTS THE PACKAGE NAME TAKES DEPENDS ON THE REGISTRY, and
+ * getting that wrong is how the first version of this check reported four
+ * correctly pinned URLs as floating. Under `npm/` a name is one segment,
+ * or two when it is scoped: `@viz-js/viz@3.11.0`. Under `gh/` it is ALWAYS
+ * two, user and repository, and it carries no leading at-sign:
+ * `gh/highlightjs/cdn-release@11.11.1`. Reading the leading character
+ * instead of the registry takes `highlightjs` for the whole name, finds no
+ * version on it, and fails a URL that was never wrong.
+ *
+ * This reads documentation and demo pages, not source. A reference that is
+ * wrong here is served to a consumer rather than executed by us, which is
+ * why nothing else in this file was looking at it.
+ */
+export function countUnpinnedCdnRefs(text)
+{
+    const urls = text.match(/cdn\.jsdelivr\.net\/(?:npm|gh)\/[^\s"'`)|<>]+/g) ?? [];
+    let unpinned = 0;
+    for (const url of urls)
+    {
+        const parts = url.split("/");
+        const registry = parts[1];
+        const rest = parts.slice(2);
+        const segments = (registry === "gh" || rest[0].startsWith("@")) ? 2 : 1;
+        const pkg = rest.slice(0, segments).join("/");
+        const at = pkg.lastIndexOf("@");
+        const version = at > 0 ? pkg.slice(at + 1) : "";
+        if (!/^\d+\.\d/.test(version)) { unpinned += 1; }
+    }
+    return unpinned;
+}
 
 /**
  * Counts the export keywords that survive into a generated bundle.
@@ -651,6 +699,7 @@ function measure()
         driftedHostRule: 0,
         dynamicVerboseShims: 0,
         overLengthLines: 0,
+        unpinnedCdnRefs: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -746,6 +795,15 @@ function measure()
     for (const file of scssSources)
     {
         if (!readFileSync(file, "utf8").includes("COMPONENT:")) { counts.scssMissingMarker += 1; }
+    }
+
+    // DEBT-SEC-5. Documentation and demo pages hand consumers third-party
+    // URLs. One without an exact version is a floating dependency.
+    const published = execFileSync("git", ["ls-files", "*.md", "*.html"], { encoding: "utf8" })
+        .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
+    for (const file of published)
+    {
+        counts.unpinnedCdnRefs += countUnpinnedCdnRefs(readFileSync(file, "utf8"));
     }
 
     // STD-1. The file is the single largest in the repository and the entry

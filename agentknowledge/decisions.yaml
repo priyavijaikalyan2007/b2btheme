@@ -7084,3 +7084,84 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-181
+  title: The SRI question was left open and the unpinned URLs underneath it were not
+  date: 2026-10-15
+  status: accepted
+  context: |
+    DEBT-SEC-5 asks whether five optional third-party renderers should join
+    the vendored SRI closure in dist/lib. Scoping that meant reading every
+    place this repository hands a consumer a third-party URL, and the
+    reading found a different problem. Eleven jsdelivr URLs in
+    documentation and demo pages carried no exact version, so jsdelivr
+    resolved them at request time to whatever the project had published
+    most recently. One of them was DOMPurify.
+  decision: |
+    D1. THE VENDORING QUESTION STAYS OPEN AND CARRIES A RECOMMENDATION.
+        None of the six is installed, so vendoring means six new
+        devDependencies and roughly 6 MB more on the CDN for renderers that
+        are optional by design. The recommendation is to publish an SRI
+        hash for each recommended build instead, which gives a consumer the
+        same protection without this repository owning the upgrade
+        treadmill for six projects. That is a decision about what the
+        library guarantees, so it is recommended and not taken.
+
+    D2. IT IS SIX AND NOT FIVE. `marked` is probed on window, named in the
+        same README table, and not vendored, and it is the only one of the
+        six marked Required. It was missed because WIN-2 surfaced this
+        entry while looking at globals no declaration of ours can own, and
+        marked has one.
+
+    D3. PINNING IS NOT A DECISION AND WAS DONE. Eight URLs had no version
+        and two were floating majors. DOMPurify with no version is the
+        worst of them, because vendor-closure.mjs says in its own comments
+        that a substituted sanitizer becomes the attack. Every replacement
+        URL was fetched and checked for a 200 before it was written down.
+
+    D4. ONE OF THEM WAS ALREADY BROKEN.
+        `bootstrap@5/css/bootstrap.min.css` returns 404. The setup block in
+        components/conversation/README.md has been handing consumers a dead
+        stylesheet link. The correct path has `dist/` in it. A pinning
+        sweep that fetches what it writes finds this and a search-and-
+        replace does not.
+
+    D5. THE CHECK'S OWN FIRST RUN WAS WRONG, IN THE SAFE DIRECTION. It
+        reported four correctly pinned `gh/` URLs as floating, because a
+        jsdelivr package name is one segment under npm, two when scoped,
+        and ALWAYS two under gh, where it carries no leading at-sign.
+        Deciding that from the leading character rather than the registry
+        reads `gh/highlightjs/cdn-release@11.11.1` as the package
+        `highlightjs`. Both forms are now unit cases.
+
+    D6. THE VERSION DRIFT IS A THIRD THING AND IS FILED, NOT SWEPT.
+        Documented versions disagree with installed ones for four packages,
+        and chart.js is the sharp case: the repository serves a hashed
+        4.5.1 at dist/lib while the documentation sends consumers to an
+        unhashed 4.4.7. Changing a recommended version is a compatibility
+        decision for consumers rather than a lint fix, so each row needs
+        its own answer. DEBT-SEC-7.
+  consequences: |
+    + NO DOCUMENTED THIRD-PARTY URL FLOATS. unpinnedCdnRefs is a ceiling of
+      0 over every tracked .md and .html, mutation-proved by putting
+      `mermaid@11` back.
+    + A BROKEN SETUP BLOCK IS FIXED, found only because the sweep fetched
+      what it was about to publish.
+    - THE SRI GAP IS UNCHANGED. Six libraries are still loaded by the host
+      with no integrity attribute recommended. Pinning makes the target
+      stable, which is a precondition for publishing a hash and not a
+      substitute for one.
+    - DEBT-SEC-7 IS OPEN AND NOT RATCHETED, because the right version for
+      each row is a judgment and a count would force all four at once.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "scripts/audit-counts.test.ts"
+    - "components/conversation/README.md"
+    - "components/markdownrenderer/README.md"
+    - "demo/studio/component-studio.html"
+    - "demo/studio/layout-studio.html"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

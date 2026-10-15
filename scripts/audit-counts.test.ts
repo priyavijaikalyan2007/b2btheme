@@ -32,6 +32,7 @@ import
     countAnyCasts,
     countOccurrences,
     countUngatedVerboseShims,
+    countUnpinnedCdnRefs,
     countBundleExports,
     countWindowAliases,
     floorStatus,
@@ -585,5 +586,61 @@ describe("countBundleExports", () =>
     {
         const source = readFileSync("components/diagramengine/diagramengine.ts", "utf8");
         expect(countBundleExports(source)).toBeGreaterThanOrEqual(138);
+    });
+});
+
+/**
+ * `countUnpinnedCdnRefs` reads the URLs this repository hands to consumers
+ * in documentation and demo pages. A jsdelivr URL without an exact version
+ * resolves to whatever that project publishes next, which is a dependency
+ * nobody here reviews.
+ */
+describe("countUnpinnedCdnRefs", () =>
+{
+    test("an exact version is pinned", () =>
+    {
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js")).toBe(0);
+    });
+
+    test("a bare package name is not pinned", () =>
+    {
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js")).toBe(1);
+    });
+
+    test("a major on its own still floats", () =>
+    {
+        // jsdelivr resolves `@11` to the newest 11.x at request time.
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js")).toBe(1);
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/bootstrap@5/css/bootstrap.min.css")).toBe(1);
+    });
+
+    test("a scoped package keeps its own at-sign", () =>
+    {
+        const u = "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js";
+        expect(countUnpinnedCdnRefs(u)).toBe(0);
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/@viz-js/viz/lib/viz-standalone.js")).toBe(1);
+    });
+
+    // The bug the first version of this check shipped with. A gh name is
+    // user AND repository, and it carries no leading at-sign, so reading
+    // the first character instead of the registry took `highlightjs` for
+    // the whole name and failed four URLs that were correctly pinned.
+    test("a gh package name is two segments and carries no at-sign", () =>
+    {
+        const u = "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js";
+        expect(countUnpinnedCdnRefs(u)).toBe(0);
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/x.js")).toBe(1);
+    });
+
+    test("every URL in one file is counted, not just the first", () =>
+    {
+        const t = "a https://cdn.jsdelivr.net/npm/marked/marked.min.js b\n"
+            + "c https://cdn.jsdelivr.net/npm/vditor/dist/index.min.js d";
+        expect(countUnpinnedCdnRefs(t)).toBe(2);
+    });
+
+    test("a file with no CDN URLs costs nothing", () =>
+    {
+        expect(countUnpinnedCdnRefs("# Heading\n\nSome prose.")).toBe(0);
     });
 });

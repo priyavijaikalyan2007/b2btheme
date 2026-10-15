@@ -1123,3 +1123,34 @@ The engine is large and uniform, and uniformity is what makes a change
 cheap. The others are small and each one different, and difference is what
 costs. The entry's own words, "diagramengine is the awkward one", came from
 reading a line count.
+
+### 6.80 Scoping the Decision Found the Thing That Needed No Decision (2026-10-15)
+
+DEBT-SEC-5 asks a real question: should five optional renderers join the
+vendored SRI closure? It has a cost on both sides, roughly 6 MB of CDN and
+six upgrade treadmills against a supply-chain guarantee, and it is the
+user's call rather than mine.
+
+Reading every place the repository hands a consumer a third-party URL, in
+order to answer it, turned up eleven jsdelivr URLs with no exact version.
+One was DOMPurify, loaded from `npm/dompurify/dist/purify.min.js`. The
+vendoring script says in its own comments that a substituted sanitizer
+becomes the attack, which is why DOMPurify is the first asset it vendors.
+The documentation was telling consumers to take whatever jsdelivr served
+that day.
+
+Nothing about that needed deciding. A floating version is not a trade-off
+with an upside, and fixing it took one pass.
+
+**The open question was shading the thing underneath it.** DEBT-SEC-5 was
+filed as "SRI or not", and SRI is the stronger guarantee, so the weaker
+one it depends on read as already handled. You cannot publish a hash for a
+moving target: pinning is a PRECONDITION for the thing being debated, and
+it had never been done.
+
+**When an entry is blocked on a decision, look for the part that is not.**
+It is usually there, it is usually smaller, and it is usually a
+precondition for whichever way the decision goes. A sweep that fetches
+what it is about to publish also found that one of the URLs,
+`bootstrap@5/css/bootstrap.min.css`, has been returning 404 to anyone who
+followed the setup block.

@@ -57,6 +57,94 @@ These issues involve potential XSS or script injection vectors and must be addre
   not a continuation of WIN-2. Decide whether the SRI guarantee should cover
   them, and if so whether the optional renderers stay optional.
 
+  **It is six, not five. `marked` is in exactly the same position** — probed
+  on `window`, named with a jsdelivr URL in the same README table, not
+  vendored — and it is the only one marked **Required** rather than
+  Optional. It was missed because WIN-2, which surfaced this entry, was
+  looking at globals no declaration of ours can own, and `marked` has one.
+
+  **None of the six is installed**, so vendoring means six new
+  devDependencies and roughly 6 MB more on the CDN, for renderers that are
+  optional by design and that most consumers will never load. The
+  recommendation here is NOT to vendor them. The guarantee `dist/lib` makes
+  is "we serve this and we hash it", and it is worth making for a sanitizer
+  and worth questioning for a 3 MB diagram renderer that a page loads only
+  if it has diagrams. Publishing an SRI hash for each recommended build
+  gives a consumer the same protection without this repository taking
+  ownership of the upgrade treadmill for six projects. **That is a decision
+  about what the library guarantees, so it is left open rather than taken.**
+
+  **What was NOT a decision has been fixed separately as DEBT-SEC-6.**
+  Reading this entry turned up eight CDN URLs in the documentation with no
+  version at all, one of them DOMPurify.
+
+- [x] **DEBT-SEC-6** **11 third-party CDN URLs in documentation and demo
+  pages carried no exact version**, so jsdelivr resolved them to whatever
+  the project had published most recently, at request time, with no review
+  here. Found and closed 2026-10-15 while scoping DEBT-SEC-5. Held at 0 by
+  the new `unpinnedCdnRefs` ceiling. ADR-181.
+
+  **One of them was DOMPurify**, which `scripts/vendor-closure.mjs` names in
+  its own comments as the highest-value asset to remove third-party trust
+  from, "because every other asset degrades when substituted and a
+  substituted sanitizer becomes the attack". `components/conversation/README.md`
+  told consumers to load it from `npm/dompurify/dist/purify.min.js`, with no
+  version and no integrity attribute.
+
+  The others were `vditor` and `bootstrap-icons` with no version,
+  `marked` with no version on two live studio demo pages, and two floating
+  majors: `mermaid@11`, which jsdelivr currently resolves to 11.17.2 while
+  mermaid 12 is already out, and `bootstrap@5`.
+
+  **`bootstrap@5/css/bootstrap.min.css` returns 404.** The setup block in
+  `components/conversation/README.md` has been handing consumers a dead
+  stylesheet link, which is a plain documentation defect that the pinning
+  sweep happened to walk into. The correct path is
+  `bootstrap@5.3.8/dist/css/bootstrap.min.css`, verified 200 before it was
+  written down. Every replacement URL in this change was fetched first.
+
+  **The check reported four correct URLs as floating on its first run, and
+  that was the check's bug.** Under `npm/` a package name is one path
+  segment, or two when scoped. Under `gh/` it is always two, user and
+  repository, and carries no leading at-sign:
+  `gh/highlightjs/cdn-release@11.11.1`. Deciding segment count from the
+  leading character rather than the registry reads the name as
+  `highlightjs`, finds no version, and fails a URL that was never wrong.
+  Both forms are now unit cases.
+
+  **The check then failed this repository's own CHANGELOG**, because the
+  entry describing the fix quoted the broken `bootstrap@5` URL in full. That
+  is the right answer and there is deliberately no exemption for it: a
+  complete jsdelivr URL in published documentation is copy-pasteable
+  whatever the surrounding prose says about it. The entry was reworded to
+  name the path without spelling it. An allowlist here would be a hole
+  shaped exactly like the thing being guarded against.
+
+- [ ] **DEBT-SEC-7** **Documented CDN versions drift from the versions this
+  repository actually builds and serves.** Measured 2026-10-15 while closing
+  DEBT-SEC-6, and not ratcheted.
+
+  | Package | Installed | Documented |
+  |---|---|---|
+  | bootstrap | 5.3.8 | 5.3.3 **and** 5.3.8, in different files |
+  | bootstrap-icons | 1.13.1 | 1.11.3 **and** 1.13.1 |
+  | chart.js | 4.5.1 | 4.4.7 |
+  | marked | 18.0.12 | 15.0.7 |
+
+  `chart.js` is the one that matters most, because it is **vendored**: the
+  repository serves a hashed 4.5.1 at `dist/lib` and the documentation sends
+  consumers to an unhashed 4.4.7 elsewhere. `bootstrap` matters next,
+  because the theme's CSS is compiled against the installed version and a
+  consumer following the older number gets a stylesheet built against a
+  different Bootstrap.
+
+  `marked` is probably fine as it stands: it is host-supplied, and
+  `markdownrenderer` is written against the v15 API rather than against
+  whatever is in `node_modules` for the build. That is the point: each row
+  needs its own answer, which is why this is open rather than swept.
+  Changing a recommended version is a compatibility decision for consumers
+  and not a lint fix.
+
 ---
 
 ## CRITICAL — Standards
@@ -964,7 +1052,7 @@ the step exits 1 and the workflow fails.
 
 | Severity | Count | Status |
 |----------|-------|--------|
-| CRITICAL — Security | 4 (DEBT-SEC-5 opened 2026-10-14) | **1 open, 3 closed** |
+| CRITICAL — Security | 6 (DEBT-SEC-6 and -7 opened 2026-10-15) | **3 open, 3 closed.** DEBT-SEC-6 closed at 0 unpinned CDN URLs |
 | CRITICAL — Standards | 2 | **0 open, 2 closed 2026-10-15.** Both entries were wrong. STD-1 hid a real defect, STD-2 contradicted PAT-1 |
 | HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
@@ -978,7 +1066,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **34 items** | **19 resolved** |
+| **Total** | **36 items** | **20 resolved** |
 
 ### The March 2026 counts re-measured so far
 

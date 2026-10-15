@@ -18,7 +18,7 @@ These libraries are probed on `window` at render time. If present, they are used
 |---------|--------|-----|---------|
 | [highlight.js](https://highlightjs.org/) | `window.hljs` | `https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js` | Code syntax highlighting |
 | [KaTeX](https://katex.org/) | `window.katex` | `https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js` | LaTeX/MathML math rendering |
-| [Mermaid](https://mermaid.js.org/) | `window.mermaid` | `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js` | Mermaid diagrams |
+| [Mermaid](https://mermaid.js.org/) | `window.mermaid` | `https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js` | Mermaid diagrams |
 | [@viz-js/viz](https://viz-js.com/) | `window.Viz` | `https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js` | Graphviz/dot diagrams (client-side WASM, no server) |
 
 ### PlantUML (server-based)

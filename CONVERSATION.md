@@ -3609,3 +3609,39 @@ purpose: 5 of 5 fail during a re-bundle loop, 6 of 6 pass on a quiet tree.
 **Tracker 50 resolved / 23 open. Every logging entry is closed.**
 
 **Next:** the decision items, led by a recommendation rather than a list.
+
+---
+
+## DEBT-SEC-5 scoped, DEBT-SEC-6 found and closed
+
+**The vendoring question is left open with a recommendation.** None of the
+six libraries is installed, so vendoring means six devDependencies and
+roughly 6 MB more CDN for renderers that are optional by design. Publishing
+an SRI hash per recommended build gives a consumer the same protection
+without this repository owning six upgrade treadmills. That is a decision
+about what the library guarantees, so it is recommended and not taken. The
+entry also undercounted: `marked` is a sixth library in the same position
+and the only one marked **Required**.
+
+**Scoping it found the part that needed no decision.** Eleven jsdelivr URLs
+in documentation and demo pages had no exact version. One was **DOMPurify**,
+which the vendoring script itself calls the highest-value asset to remove
+third-party trust from, because a substituted sanitizer becomes the attack.
+Also `vditor`, `bootstrap-icons`, `marked` on two live demo pages, and two
+floating majors, `mermaid@11` and `bootstrap@5`. All pinned, held at 0 by a
+new ratchet, mutation-proved.
+
+**`bootstrap@5/css/bootstrap.min.css` returns 404.** That setup block has
+been handing consumers a dead stylesheet link. Found only because every
+replacement URL was fetched before being written down.
+
+**The check's own first run was wrong, in the safe direction.** It called
+four correctly pinned `gh/` URLs floating, because a jsdelivr package name
+is two segments under `gh/` and carries no leading at-sign. Both forms are
+now unit cases.
+
+**DEBT-SEC-7 opened:** documented versions drift from installed ones for
+four packages. `chart.js` is sharpest — the repository serves a hashed
+4.5.1 at `dist/lib` while the docs send consumers to an unhashed 4.4.7.
+
+**Tracker 51 resolved / 24 open.**
