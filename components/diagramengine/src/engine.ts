@@ -79,8 +79,14 @@ function safeCallback<T extends unknown[]>(
  * This class implements the EngineForTools interface so that tools
  * can call back into the engine for operations like hit testing,
  * selection management, and rendering.
+ *
+ * Exported because createDiagramEngine() returns it, so a TypeScript
+ * consumer cannot name the result without it. The class is already public
+ * at run time as window.DiagramEngine, so this adds no new surface. It is
+ * still the implementation type rather than a handle interface, which is
+ * the one case PAT-1 has to resolve for this component.
  */
-class DiagramEngineImpl implements EngineForTools
+export class DiagramEngineImpl implements EngineForTools
 {
     private readonly instanceId: string;
     private readonly opts: DiagramEngineOptions;

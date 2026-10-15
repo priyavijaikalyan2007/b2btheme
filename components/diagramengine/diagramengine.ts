@@ -57,7 +57,7 @@ const NUDGE_SHIFT_PX = 10;
 // ============================================================================
 
 /** Axis-aligned bounding rectangle. */
-interface Rect
+export interface Rect
 {
     x: number;
     y: number;
@@ -66,7 +66,7 @@ interface Rect
 }
 
 /** 2D point in canvas coordinate space. */
-interface Point
+export interface Point
 {
     x: number;
     y: number;
@@ -77,7 +77,7 @@ interface Point
 // ============================================================================
 
 /** Linear or radial gradient definition for fills and strokes. */
-interface GradientDefinition
+export interface GradientDefinition
 {
     /** Gradient interpolation type. */
     type: "linear" | "radial";
@@ -96,7 +96,7 @@ interface GradientDefinition
 }
 
 /** Repeating pattern fill. */
-interface PatternDefinition
+export interface PatternDefinition
 {
     type: "hatch" | "cross-hatch" | "dots" | "checkerboard" | "custom";
     color: string;
@@ -109,7 +109,7 @@ interface PatternDefinition
 }
 
 /** Fill specification for shapes and connectors. */
-interface FillStyle
+export interface FillStyle
 {
     type: "solid" | "gradient" | "pattern" | "none";
     color?: string;
@@ -122,7 +122,7 @@ interface FillStyle
 // ============================================================================
 
 /** Stroke (outline) specification. Colour may be a solid value or gradient. */
-interface StrokeStyle
+export interface StrokeStyle
 {
     color: string | GradientDefinition;
     width: number;
@@ -132,7 +132,7 @@ interface StrokeStyle
 }
 
 /** Individual edge stroke for per-edge control on rectangular shapes. */
-interface EdgeStroke
+export interface EdgeStroke
 {
     visible: boolean;
     color?: string | GradientDefinition;
@@ -144,7 +144,7 @@ interface EdgeStroke
  * Independent stroke control for each edge of a rectangular shape.
  * Enables three-sided boxes, accent borders, and gradient fade effects.
  */
-interface PerEdgeStroke
+export interface PerEdgeStroke
 {
     top?: EdgeStroke;
     right?: EdgeStroke;
@@ -157,7 +157,7 @@ interface PerEdgeStroke
 // ============================================================================
 
 /** Drop shadow specification rendered via SVG feDropShadow filter. */
-interface ShadowStyle
+export interface ShadowStyle
 {
     enabled: boolean;
     color: string;
@@ -173,7 +173,7 @@ interface ShadowStyle
 // ============================================================================
 
 /** Complete visual style for a diagram object. */
-interface ObjectStyle
+export interface ObjectStyle
 {
     fill?: FillStyle;
     stroke?: StrokeStyle;
@@ -195,7 +195,7 @@ interface ObjectStyle
 // ============================================================================
 
 /** A run of styled text within a TextContent block. */
-interface TextRun
+export interface TextRun
 {
     /** Text content. May contain {{variable}} template expressions. */
     text: string;
@@ -216,7 +216,7 @@ interface TextRun
 }
 
 /** An inline icon glyph within a text flow. */
-interface IconRun
+export interface IconRun
 {
     /** Icon identifier (e.g. "bi-star-fill", "fa-rocket"). */
     icon: string;
@@ -232,13 +232,13 @@ interface IconRun
 }
 
 /** A content run is either styled text or an inline icon. */
-type ContentRun = TextRun | IconRun;
+export type ContentRun = TextRun | IconRun;
 
 /**
  * Block-level text element for structured content such as
  * paragraphs, headings, and lists.
  */
-interface TextBlock
+export interface TextBlock
 {
     type: "paragraph" | "heading" | "ordered-list" | "unordered-list";
     level?: number;
@@ -250,7 +250,7 @@ interface TextBlock
  * Rich text content for any text surface in the engine.
  * Supports both flat runs and block-structured content.
  */
-interface TextContent
+export interface TextContent
 {
     /** Flat sequence of styled runs (for simple text). */
     runs?: ContentRun[];
@@ -277,7 +277,7 @@ interface TextContent
 /**
  * Configuration for rendering text along an SVG path (WordArt / textPath).
  */
-interface TextPathDefinition
+export interface TextPathDefinition
 {
     /** SVG path data string (d attribute) in local coordinates. */
     path: string;
@@ -297,7 +297,7 @@ interface TextPathDefinition
 // ============================================================================
 
 /** Reference to an external resource linked from a diagram entity. */
-interface ResourceReference
+export interface ResourceReference
 {
     /** Resource type (e.g. "api-endpoint", "ticket", "repo"). */
     type: string;
@@ -314,7 +314,7 @@ interface ResourceReference
  * Separated from presentation so the same semantic data can be
  * rendered in multiple visual styles.
  */
-interface SemanticData
+export interface SemanticData
 {
     /** Domain type (e.g. "uml.class", "bpmn.task", "sequence.actor"). */
     type: string;
@@ -337,7 +337,7 @@ interface SemanticData
 // ============================================================================
 
 /** Image-specific presentation properties. */
-interface ImageStyle
+export interface ImageStyle
 {
     /** Image source (URL or data URI). */
     src: string;
@@ -378,7 +378,7 @@ interface ImageStyle
 // ============================================================================
 
 /** Configuration for paintable canvas shapes. */
-interface PaintableStyle
+export interface PaintableStyle
 {
     /** Clip shape for the painting area. */
     clipShape: "rectangle" | "circle" | "ellipse" | "triangle";
@@ -395,7 +395,7 @@ interface PaintableStyle
 // ============================================================================
 
 /** Definition of an embedded component within a diagram object. */
-interface EmbedDefinition
+export interface EmbedDefinition
 {
     /** Registered component name (e.g. "datagrid", "datepicker"). */
     component: string;
@@ -414,7 +414,7 @@ interface EmbedDefinition
 }
 
 /** Registry entry for an embeddable component type. */
-interface EmbeddableComponentEntry
+export interface EmbeddableComponentEntry
 {
     /** Factory function name on window. */
     factory: string;
@@ -440,14 +440,14 @@ interface EmbeddableComponentEntry
 // ============================================================================
 
 /** Binding from an object property to a template expression. */
-interface DataBinding
+export interface DataBinding
 {
     property: string;
     expression: string;
 }
 
 /** Constraint that pins an object to a canvas edge (for title blocks). */
-interface AnchorConstraint
+export interface AnchorConstraint
 {
     edge: "top" | "bottom" | "left" | "right";
     offset: number;
@@ -461,7 +461,7 @@ interface AnchorConstraint
  * A diagram object with dual-layer architecture: semantic data
  * (domain meaning) and presentation data (visual appearance).
  */
-interface DiagramObject
+export interface DiagramObject
 {
     /** Unique identifier. */
     id: string;
@@ -536,19 +536,19 @@ interface DiagramObject
 // ============================================================================
 
 /** Arrow marker type for connector endpoints. */
-type ArrowType =
+export type ArrowType =
     | "none" | "block" | "classic" | "open"
     | "diamond" | "oval" | "dash" | "cross"
     | "er-one" | "er-many" | "er-one-or-many"
     | "er-zero-or-one" | "er-zero-or-many" | "er-mandatory-one";
 
 /** Connector routing algorithm. */
-type RoutingStyle =
+export type RoutingStyle =
     | "straight" | "orthogonal" | "curved"
     | "segment" | "manhattan" | "elbow" | "entity";
 
 /** Connector-specific stroke style with arrow markers. */
-interface ConnectorStyle extends StrokeStyle
+export interface ConnectorStyle extends StrokeStyle
 {
     startArrow?: ArrowType;
     endArrow?: ArrowType;
@@ -556,7 +556,7 @@ interface ConnectorStyle extends StrokeStyle
 }
 
 /** A positioned label on a connector. */
-interface ConnectorLabel
+export interface ConnectorLabel
 {
     /** Position along the path (named or 0–1 numeric). */
     position: "start" | "middle" | "end" | number;
@@ -571,7 +571,7 @@ interface ConnectorLabel
  * A connector between two objects (or freestanding endpoints).
  * Has the same semantic/presentation split as DiagramObject.
  */
-interface DiagramConnector
+export interface DiagramConnector
 {
     id: string;
     semantic: SemanticData;
@@ -601,7 +601,7 @@ interface DiagramConnector
 // ============================================================================
 
 /** Predefined page frame size with name and dimensions in pixels. */
-interface PageFrameSize
+export interface PageFrameSize
 {
     /** Display name (e.g. "A4 Portrait", "Business Card"). */
     name: string;
@@ -614,7 +614,7 @@ interface PageFrameSize
 }
 
 /** Margin specification for a page frame. */
-interface PageFrameMargins
+export interface PageFrameMargins
 {
     top: number;
     right: number;
@@ -623,7 +623,7 @@ interface PageFrameMargins
 }
 
 /** A page frame — a non-exportable guide overlay on the canvas. */
-interface PageFrame
+export interface PageFrame
 {
     id: string;
     /** Auto-assigned sequential number (1-based). */
@@ -657,7 +657,7 @@ interface PageFrame
 // ============================================================================
 
 /** A named visibility and ordering group for objects. */
-interface Layer
+export interface Layer
 {
     id: string;
     name: string;
@@ -669,7 +669,7 @@ interface Layer
 }
 
 /** A persistent guide line on the canvas, dragged from a ruler. */
-interface RulerGuide
+export interface RulerGuide
 {
     id: string;
     orientation: "horizontal" | "vertical";
@@ -677,7 +677,7 @@ interface RulerGuide
 }
 
 /** A comment anchored to an entity or canvas position. */
-interface DiagramComment
+export interface DiagramComment
 {
     id: string;
     anchor:
@@ -693,7 +693,7 @@ interface DiagramComment
 }
 
 /** A single entry in a comment thread. */
-interface CommentEntry
+export interface CommentEntry
 {
     id: string;
     userId: string;
@@ -707,7 +707,7 @@ interface CommentEntry
  * The complete serialisable document. This is the persistence
  * format — JSON.stringify(doc) produces the canonical payload.
  */
-interface DiagramDocument
+export interface DiagramDocument
 {
     /** Format version for migration support. */
     version: string;
@@ -760,7 +760,7 @@ interface DiagramDocument
 // ============================================================================
 
 /** A connection port on a shape where connectors can attach. */
-interface ConnectionPort
+export interface ConnectionPort
 {
     /** Unique port ID within the shape. */
     id: string;
@@ -776,14 +776,14 @@ interface ConnectionPort
 }
 
 /** A region within a shape where text can be placed. */
-interface TextRegion
+export interface TextRegion
 {
     id: string;
     bounds: Rect;
 }
 
 /** Context passed to a shape's render function. */
-interface ShapeRenderContext
+export interface ShapeRenderContext
 {
     /** Bounds in local coordinates (x=0, y=0). */
     bounds: Rect;
@@ -802,7 +802,7 @@ interface ShapeRenderContext
 }
 
 /** A resize handle on a selected object. */
-interface ResizeHandle
+export interface ResizeHandle
 {
     id: string;
     position: Point;
@@ -815,7 +815,7 @@ interface ResizeHandle
  * Shapes are registered in stencil packs and referenced
  * by their type string.
  */
-interface ShapeDefinition
+export interface ShapeDefinition
 {
     /** Unique type identifier (e.g. "rectangle", "uml-class"). */
     type: string;
@@ -900,7 +900,7 @@ interface ShapeDefinition
 // ============================================================================
 
 /** Current viewport state (pan offset and zoom level). */
-interface ViewportState
+export interface ViewportState
 {
     x: number;
     y: number;
@@ -908,7 +908,7 @@ interface ViewportState
 }
 
 /** Snapping and guide configuration. */
-interface SnappingConfig
+export interface SnappingConfig
 {
     grid: boolean;
     gridSize: number;
@@ -922,7 +922,7 @@ interface SnappingConfig
 }
 
 /** Alignment operations for multi-select alignment. */
-type AlignmentType =
+export type AlignmentType =
     | "left" | "center" | "right"
     | "top" | "middle" | "bottom";
 
@@ -931,7 +931,7 @@ type AlignmentType =
  * Allows callers to provide only the fields they care about;
  * the engine fills in sensible defaults for everything else.
  */
-interface DiagramObjectInput
+export interface DiagramObjectInput
 {
     id?: string;
     semantic?: Partial<SemanticData>;
@@ -939,7 +939,7 @@ interface DiagramObjectInput
 }
 
 /** A structured mutation for collaboration broadcasting. */
-interface Operation
+export interface Operation
 {
     id: string;
     userId: string;
@@ -953,7 +953,7 @@ interface Operation
  * Layout function signature for custom layout algorithms.
  * May return positions synchronously or asynchronously (for AI layouts).
  */
-type LayoutFunction = (
+export type LayoutFunction = (
     objects: DiagramObject[],
     connectors: DiagramConnector[],
     options: Record<string, unknown>
@@ -964,7 +964,7 @@ type LayoutFunction = (
  * Mirrors the HoverCard component's `HoverCardContent` so DiagramEngine
  * can reference it without importing another IIFE module.
  */
-interface DiagramHoverCardContent
+export interface DiagramHoverCardContent
 {
     title?: string;
     subtitle?: string;
@@ -977,20 +977,20 @@ interface DiagramHoverCardContent
 }
 
 /** Return type of a custom hover card renderer. */
-type DiagramHoverRenderResult =
+export type DiagramHoverRenderResult =
     | DiagramHoverCardContent
     | HTMLElement
     | string
     | null;
 
 /** Mode selector for the DiagramEngine hover card. */
-type DiagramHoverCardMode = "builtin" | "custom" | "off";
+export type DiagramHoverCardMode = "builtin" | "custom" | "off";
 
 /**
  * Configuration options for createDiagramEngine().
  * All options are optional — sensible defaults are applied.
  */
-interface DiagramEngineOptions
+export interface DiagramEngineOptions
 {
     /** Pre-existing document to load. */
     document?: DiagramDocument;
@@ -1197,7 +1197,7 @@ const { info: logInfo, warn: logWarn, error: logError, debug: logDebug } = makeL
 // ============================================================================
 
 /** Callback signature for event handlers. */
-type EventHandler = (...args: unknown[]) => void;
+export type EventHandler = (...args: unknown[]) => void;
 
 /** Log prefix for all console messages from this module. */
 
@@ -1217,7 +1217,7 @@ type EventHandler = (...args: unknown[]) => void;
  * failing subscriber does not prevent other subscribers from
  * receiving the event.
  */
-class EventBus
+export class EventBus
 {
     /** Registry of event names to their handler sets. */
     private readonly handlers: Map<string, Set<EventHandler>> = new Map();
@@ -1342,7 +1342,7 @@ class EventBus
 // ============================================================================
 
 /** A reversible command stored in the undo stack. */
-interface UndoCommand
+export interface UndoCommand
 {
     /** Command category (e.g. "move", "resize", "text-edit"). */
     type: string;
@@ -1387,7 +1387,7 @@ const MERGE_WINDOW_MS = 500;
  * command is pushed after an undo, the forward (redo) history is
  * truncated.
  */
-class UndoStack
+export class UndoStack
 {
     /** Ordered list of commands. */
     private stack: UndoCommand[] = [];
@@ -1682,7 +1682,7 @@ const DEFAULT_STROKE_WIDTH = 1.5;
  * @param attrs - Optional attribute key/value pairs to set.
  * @returns The created SVG element.
  */
-function svgCreate(tag: string, attrs?: Record<string, string>): SVGElement
+export function svgCreate(tag: string, attrs?: Record<string, string>): SVGElement
 {
     const el = document.createElementNS(SVG_NS, tag);
 
@@ -1701,7 +1701,7 @@ function svgCreate(tag: string, attrs?: Record<string, string>): SVGElement
  * @param attrs - Attribute key/value pairs to apply.
  * @returns void
  */
-function svgSetAttr(el: SVGElement, attrs: Record<string, string>): void
+export function svgSetAttr(el: SVGElement, attrs: Record<string, string>): void
 {
     const keys = Object.keys(attrs);
 
@@ -1724,7 +1724,7 @@ function svgSetAttr(el: SVGElement, attrs: Record<string, string>): void
  * @param fill - Fill style specification, or undefined for default.
  * @returns void
  */
-function applyFillToSvg(el: SVGElement, fill?: FillStyle): void
+export function applyFillToSvg(el: SVGElement, fill?: FillStyle): void
 {
     if (!fill)
     {
@@ -1898,7 +1898,7 @@ function parseStopColor(color: string): { color: string; opacity: number }
  * @param stroke - Stroke style specification, or undefined for default.
  * @returns void
  */
-function applyStrokeToSvg(el: SVGElement, stroke?: StrokeStyle): void
+export function applyStrokeToSvg(el: SVGElement, stroke?: StrokeStyle): void
 {
     if (!stroke)
     {
@@ -1994,7 +1994,7 @@ const EDGE_SIDES: ReadonlyArray<{
  * @param fallback - Fallback stroke style for sides without overrides.
  * @returns SVG group containing the per-edge lines.
  */
-function renderPerEdgeStroke(
+export function renderPerEdgeStroke(
     bounds: Rect,
     perEdge: PerEdgeStroke,
     fallback?: StrokeStyle
@@ -2116,7 +2116,7 @@ function buildEdgeGradientElement(
  * @param bounds - Bounding rectangle of the shape.
  * @returns Array of four ConnectionPort definitions.
  */
-function createDefaultPorts(bounds: Rect): ConnectionPort[]
+export function createDefaultPorts(bounds: Rect): ConnectionPort[]
 {
     return [
         { id: "port-n",  position: { x: 0.5, y: 0 },   direction: "north", maxConnections: 0 },
@@ -2138,7 +2138,7 @@ function createDefaultPorts(bounds: Rect): ConnectionPort[]
  * @param bounds - Bounding rectangle of the shape.
  * @returns Array of eight ResizeHandle definitions.
  */
-function createBoundingBoxHandles(bounds: Rect): ResizeHandle[]
+export function createBoundingBoxHandles(bounds: Rect): ResizeHandle[]
 {
     const x = bounds.x;
     const y = bounds.y;
@@ -2201,7 +2201,7 @@ function buildEdgeHandles(x: number, y: number, w: number, h: number): ResizeHan
  * @param bounds - The bounding rectangle to test against.
  * @returns true if the point is inside the rectangle.
  */
-function rectHitTest(point: Point, bounds: Rect): boolean
+export function rectHitTest(point: Point, bounds: Rect): boolean
 {
     return (
         (point.x >= bounds.x) &&
@@ -2221,7 +2221,7 @@ function rectHitTest(point: Point, bounds: Rect): boolean
  * by category. The engine and stencil palette use this registry to
  * resolve shape types and populate the shape chooser.
  */
-class ShapeRegistry
+export class ShapeRegistry
 {
     /** Map of shape type to definition. */
     private readonly _shapes: Map<string, ShapeDefinition> = new Map();
@@ -2389,7 +2389,7 @@ function rectOutlinePath(bounds: Rect): string
  *
  * @returns A complete ShapeDefinition for rectangles.
  */
-function buildRectangleShape(): ShapeDefinition
+export function buildRectangleShape(): ShapeDefinition
 {
     return {
         type: "rectangle",
@@ -2515,7 +2515,7 @@ function ellipseOutlinePath(bounds: Rect): string
  *
  * @returns A complete ShapeDefinition for ellipses.
  */
-function buildEllipseShape(): ShapeDefinition
+export function buildEllipseShape(): ShapeDefinition
 {
     return {
         type: "ellipse",
@@ -2631,7 +2631,7 @@ function diamondTextRegions(bounds: Rect): TextRegion[]
  *
  * @returns A complete ShapeDefinition for diamonds.
  */
-function buildDiamondShape(): ShapeDefinition
+export function buildDiamondShape(): ShapeDefinition
 {
     return {
         type: "diamond",
@@ -2781,7 +2781,7 @@ function triangleTextRegions(bounds: Rect): TextRegion[]
  *
  * @returns A complete ShapeDefinition for triangles.
  */
-function buildTriangleShape(): ShapeDefinition
+export function buildTriangleShape(): ShapeDefinition
 {
     return {
         type: "triangle",
@@ -2853,7 +2853,7 @@ function textTextRegions(bounds: Rect): TextRegion[]
  *
  * @returns A complete ShapeDefinition for text containers.
  */
-function buildTextShape(): ShapeDefinition
+export function buildTextShape(): ShapeDefinition
 {
     return {
         type: "text",
@@ -2907,7 +2907,7 @@ function insetRect(bounds: Rect, inset: number): Rect
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerBasicShapes(registry: ShapeRegistry): void
+export function registerBasicShapes(registry: ShapeRegistry): void
 {
     registry.register(buildRectangleShape());
     registry.register(buildEllipseShape());
@@ -4508,7 +4508,7 @@ function paintableOutlinePath(bounds: Rect): string
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerExtendedShapes(registry: ShapeRegistry): void
+export function registerExtendedShapes(registry: ShapeRegistry): void
 {
     registry.register(buildHexagonShape());
     registry.register(buildStarShape());
@@ -5446,7 +5446,7 @@ function buildDatabaseShape(): ShapeDefinition
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerFlowchartPack(registry: ShapeRegistry): void
+export function registerFlowchartPack(registry: ShapeRegistry): void
 {
     registry.register(buildProcessShape());
     registry.register(buildDecisionShape());
@@ -6197,7 +6197,7 @@ function buildUmlComponentShape(): ShapeDefinition
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerUmlPack(registry: ShapeRegistry): void
+export function registerUmlPack(registry: ShapeRegistry): void
 {
     registry.register(buildUmlClassShape());
     registry.register(buildUmlActorShape());
@@ -7204,7 +7204,7 @@ function buildErRelationshipShape(): ShapeDefinition
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerNetworkPack(registry: ShapeRegistry): void
+export function registerNetworkPack(registry: ShapeRegistry): void
 {
     registry.register(buildServerShape());
     registry.register(buildCloudShape());
@@ -7224,7 +7224,7 @@ function registerNetworkPack(registry: ShapeRegistry): void
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerBpmnPack(registry: ShapeRegistry): void
+export function registerBpmnPack(registry: ShapeRegistry): void
 {
     registry.register(buildBpmnTaskShape());
     registry.register(buildBpmnStartEventShape());
@@ -7245,7 +7245,7 @@ function registerBpmnPack(registry: ShapeRegistry): void
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerErPack(registry: ShapeRegistry): void
+export function registerErPack(registry: ShapeRegistry): void
 {
     registry.register(buildErEntityShape());
     registry.register(buildErRelationshipShape());
@@ -9751,7 +9751,7 @@ function buildFooterShape(): ShapeDefinition
  * @param registry - The ShapeRegistry instance to populate.
  * @returns void
  */
-function registerDeviceStencils(registry: ShapeRegistry): void
+export function registerDeviceStencils(registry: ShapeRegistry): void
 {
     registry.register(buildBrowserChromeShape());
     registry.register(buildBrowserMinimalShape());
@@ -13317,7 +13317,7 @@ const HTML_CATEGORY = "html";
  *
  * @param registry - The ShapeRegistry instance to populate.
  */
-function registerUiComponentStencils(registry: ShapeRegistry): void
+export function registerUiComponentStencils(registry: ShapeRegistry): void
 {
     // --- Tier A: custom render functions ---
     for (const [name, label, icon, w, h, renderFn] of TIER_A_SHAPES)
@@ -13450,7 +13450,7 @@ const LABEL_DEFAULT_PADDING = 4;
  * @param arrowType - The arrow type to create a marker for.
  * @returns The marker element ID string.
  */
-function ensureArrowMarker(
+export function ensureArrowMarker(
     defsEl: SVGElement,
     arrowType: ArrowType): string
 {
@@ -13577,7 +13577,7 @@ function buildArrowGeometryTable(): Record<string, { d: string; fill: string; st
  * @param otherPoint - The other endpoint's position for nearest-edge calculation.
  * @returns The resolved point, or null if the object cannot be found.
  */
-function resolveEndpoint(
+export function resolveEndpoint(
     objId: string,
     portId: string | undefined,
     fallbackPoint: Point | undefined,
@@ -13724,7 +13724,7 @@ function findPortNormPosition(portId: string): { x: number; y: number }
  * @param objects - All objects in the document for endpoint resolution.
  * @returns The SVG path d attribute string, or empty string on failure.
  */
-function computeConnectorPath(
+export function computeConnectorPath(
     conn: DiagramConnector,
     objects: DiagramObject[]): string
 {
@@ -13826,7 +13826,7 @@ function routePath(
  * @param tgt - Target point.
  * @returns SVG path d attribute for a straight line.
  */
-function straightPath(src: Point, tgt: Point): string
+export function straightPath(src: Point, tgt: Point): string
 {
     return `M ${src.x} ${src.y} L ${tgt.x} ${tgt.y}`;
 }
@@ -13839,7 +13839,7 @@ function straightPath(src: Point, tgt: Point): string
  * @param tgt - Target point.
  * @returns SVG path d attribute with right-angle segments.
  */
-function orthogonalPath(src: Point, tgt: Point): string
+export function orthogonalPath(src: Point, tgt: Point): string
 {
     const midX = (src.x + tgt.x) / 2;
 
@@ -13897,7 +13897,7 @@ function computeManhattanPath(
  * @param tgtBounds - Bounding rectangle of the target object.
  * @returns SVG path d attribute with manhattan routing.
  */
-function manhattanPath(
+export function manhattanPath(
     src: Point,
     tgt: Point,
     srcBounds: Rect,
@@ -14009,7 +14009,7 @@ function buildManhattanSegments(
  * @param t - Parameter from 0 (source) to 1 (target).
  * @returns The interpolated point on the line.
  */
-function getPointOnPath(src: Point, tgt: Point, t: number): Point
+export function getPointOnPath(src: Point, tgt: Point, t: number): Point
 {
     return {
         x: src.x + ((tgt.x - src.x) * t),
@@ -14051,7 +14051,7 @@ function resolveLabelPosition(position: "start" | "middle" | "end" | number): nu
  * @param d - The SVG path d attribute string.
  * @returns Array of points along the path.
  */
-function parsePathToPoints(d: string): Point[]
+export function parsePathToPoints(d: string): Point[]
 {
     const points: Point[] = [];
     const tokens = d.match(/[ML]\s*[\d.eE+-]+\s+[\d.eE+-]+/g);
@@ -14087,7 +14087,7 @@ function parsePathToPoints(d: string): Point[]
  * @param b - Segment end point.
  * @returns The distance from p to the closest point on segment (a, b).
  */
-function pointToSegmentDistance(p: Point, a: Point, b: Point): number
+export function pointToSegmentDistance(p: Point, a: Point, b: Point): number
 {
     const abx = b.x - a.x;
     const aby = b.y - a.y;
@@ -14124,7 +14124,7 @@ function pointToSegmentDistance(p: Point, a: Point, b: Point): number
  * @param tolerance - Maximum distance in pixels for a hit (default 8).
  * @returns true if the connector path is within tolerance of the point.
  */
-function hitTestConnectorPath(
+export function hitTestConnectorPath(
     conn: DiagramConnector,
     canvasPos: Point,
     objects: DiagramObject[],
@@ -14182,7 +14182,7 @@ function testSegmentsDistance(
  * @param defsEl - The SVG defs element for marker definitions.
  * @returns An SVG group element representing the connector.
  */
-function renderConnectorToSvg(
+export function renderConnectorToSvg(
     conn: DiagramConnector,
     objects: DiagramObject[],
     defsEl: SVGElement): SVGElement
@@ -14550,7 +14550,7 @@ const SPACING_LABEL_FONT_SIZE = 11;
 // ============================================================================
 
 /** A line segment between two points. */
-interface LineSegment
+export interface LineSegment
 {
     x1: number;
     y1: number;
@@ -14559,7 +14559,7 @@ interface LineSegment
 }
 
 /** A visual guide line with optional label. */
-interface AlignmentGuide
+export interface AlignmentGuide
 {
     type: "alignment" | "spacing";
     lines: LineSegment[];
@@ -14567,7 +14567,7 @@ interface AlignmentGuide
 }
 
 /** Result of snap computation: delta to apply and guides to render. */
-interface SnapResult
+export interface SnapResult
 {
     dx: number;
     dy: number;
@@ -14781,7 +14781,7 @@ function buildHorizontalGuideLine(y: number, a: Rect, b: Rect): LineSegment
  * @param threshold - Snap distance in canvas pixels.
  * @returns SnapResult with dx/dy snap deltas and guide lines.
  */
-function computeAlignmentGuides(
+export function computeAlignmentGuides(
     movingBounds: Rect,
     allObjects: DiagramObject[],
     excludeIds: Set<string>,
@@ -14966,7 +14966,7 @@ function selectClosestV(
  * @param threshold - Tolerance for considering gaps equal.
  * @returns Array of spacing guides with dimension lines and labels.
  */
-function computeSpacingGuides(
+export function computeSpacingGuides(
     movingBounds: Rect,
     allObjects: DiagramObject[],
     excludeIds: Set<string>,
@@ -15310,7 +15310,7 @@ function buildVSpacingGuide(
  * @param toolOverlay - The SVG tool overlay group element.
  * @param guides - Array of guide definitions to render.
  */
-function renderGuides(
+export function renderGuides(
     toolOverlay: SVGElement,
     guides: AlignmentGuide[]): void
 {
@@ -15514,7 +15514,7 @@ interface InlineEditState
  * viewport group, layer groups, and provides methods for rendering
  * objects, selection handles, rubber bands, grids, and inline editing.
  */
-class RenderEngine
+export class RenderEngine
 {
     /** Root SVG element appended to the container. */
     private readonly svg: SVGSVGElement;
@@ -18770,7 +18770,7 @@ class RenderEngine
  * Using an explicit contract avoids circular dependencies since files
  * are concatenated without ES module imports.
  */
-interface EngineForTools
+export interface EngineForTools
 {
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
@@ -18897,7 +18897,7 @@ type HandleId = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
  * - Drag on empty canvas to rubber-band select
  * - Arrow keys nudge, Delete removes, Ctrl+A selects all
  */
-class SelectTool implements Tool
+export class SelectTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "select";
@@ -19806,7 +19806,7 @@ class SelectTool implements Tool
  * Uses screen-space deltas so that panning speed is independent
  * of zoom level — the engine converts to canvas space internally.
  */
-interface EngineForPanTool
+export interface EngineForPanTool
 {
     /**
      * Translate the canvas viewport by a screen-space pixel delta.
@@ -19844,7 +19844,7 @@ const LOG_PREFIX_PAN = "[DiagramEngine]";
  * middle-click, the previous tool name is stored and restored on
  * release.
  */
-class PanTool implements Tool
+export class PanTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "pan";
@@ -20039,7 +20039,7 @@ class PanTool implements Tool
  * EngineForTools contract. The concrete DiagramEngineImpl class
  * implements this interface.
  */
-interface EngineForDrawTool extends EngineForTools
+export interface EngineForDrawTool extends EngineForTools
 {
     /**
      * Add a new object to the document from a partial definition.
@@ -20103,7 +20103,7 @@ const DRAG_THRESHOLD = 4;
  * After placement the tool switches to "select" and selects the
  * newly created object. An undo command is pushed for the placement.
  */
-class DrawTool implements Tool
+export class DrawTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "draw";
@@ -20492,7 +20492,7 @@ const TEXT_DEFAULT_HEIGHT = 40;
  *
  * Escape cancels text placement and returns to the select tool.
  */
-class TextTool implements Tool
+export class TextTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "text";
@@ -20713,7 +20713,7 @@ class TextTool implements Tool
  * with connector creation and object lookup methods needed for drawing
  * connectors interactively.
  */
-interface EngineForConnectTool extends EngineForTools
+export interface EngineForConnectTool extends EngineForTools
 {
     /**
      * Adds a connector to the document and renders it.
@@ -20837,7 +20837,7 @@ const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
  * 5. Escape cancels the operation.
  * 6. After creation, the tool switches to "select".
  */
-class ConnectorTool implements Tool
+export class ConnectorTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "connect";
@@ -21385,7 +21385,7 @@ class ConnectorTool implements Tool
  * with object creation and removal methods needed for finalising
  * the drawn path into a diagram object.
  */
-interface EngineForPenTool extends EngineForTools
+export interface EngineForPenTool extends EngineForTools
 {
     /**
      * Adds a new object to the document.
@@ -21458,7 +21458,7 @@ const PEN_CLOSED_FILL_COLOR = "rgba(200, 220, 255, 0.2)";
  * 4. Press Escape to finalise (or cancel if only 1 point).
  * 5. Double-click to finalise (or cancel if only 1 point).
  */
-class PenTool implements Tool
+export class PenTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "pen";
@@ -21976,7 +21976,7 @@ function toLocalPathData(pts: Point[], bbox: Rect): string
  * with object creation and removal methods needed for finalising
  * the freehand stroke into a diagram object.
  */
-interface EngineForBrushTool extends EngineForTools
+export interface EngineForBrushTool extends EngineForTools
 {
     /**
      * Adds a new object to the document.
@@ -22041,7 +22041,7 @@ const SIMPLIFY_TOLERANCE = 3;
  * 3. Mouse-up applies point simplification and creates a "path" object.
  * 4. Escape switches back to the select tool.
  */
-class BrushTool implements Tool
+export class BrushTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "brush";
@@ -22480,7 +22480,7 @@ function toBrushLocalPathData(pts: Point[], bbox: Rect): string
  * Engine interface consumed by the PaintbrushTool. Extends EngineForTools
  * with methods to look up paintable canvases and update objects.
  */
-interface EngineForPaintbrushTool extends EngineForTools
+export interface EngineForPaintbrushTool extends EngineForTools
 {
     /**
      * Retrieves the HTML canvas element for a paintable shape.
@@ -22537,7 +22537,7 @@ const PAINTBRUSH_MIN_STEP = 1;
  * 3. Mouse-up serialises the canvas to dataURI and updates the object.
  * 4. Escape switches back to the select tool.
  */
-class PaintbrushTool implements Tool
+export class PaintbrushTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "paintbrush";
@@ -23070,7 +23070,7 @@ class PaintbrushTool implements Tool
  * with object creation and removal methods needed for finalising
  * the freehand highlight stroke into a diagram object.
  */
-interface EngineForHighlighterTool extends EngineForTools
+export interface EngineForHighlighterTool extends EngineForTools
 {
     /**
      * Adds a new object to the document.
@@ -23122,22 +23122,22 @@ const HIGHLIGHTER_SIMPLIFY_TOLERANCE = 3;
 // -- Highlight colour presets ------------------------------------------------
 
 /** Semi-transparent yellow highlight. */
-const HIGHLIGHT_YELLOW = "rgba(255, 255, 0, 0.4)";
+export const HIGHLIGHT_YELLOW = "rgba(255, 255, 0, 0.4)";
 
 /** Semi-transparent pink highlight. */
-const HIGHLIGHT_PINK = "rgba(255, 182, 193, 0.4)";
+export const HIGHLIGHT_PINK = "rgba(255, 182, 193, 0.4)";
 
 /** Semi-transparent blue highlight. */
-const HIGHLIGHT_BLUE = "rgba(173, 216, 230, 0.4)";
+export const HIGHLIGHT_BLUE = "rgba(173, 216, 230, 0.4)";
 
 /** Semi-transparent green highlight. */
-const HIGHLIGHT_GREEN = "rgba(144, 238, 144, 0.4)";
+export const HIGHLIGHT_GREEN = "rgba(144, 238, 144, 0.4)";
 
 /** Semi-transparent orange highlight. */
-const HIGHLIGHT_ORANGE = "rgba(255, 200, 100, 0.4)";
+export const HIGHLIGHT_ORANGE = "rgba(255, 200, 100, 0.4)";
 
 /** Semi-transparent red highlight. */
-const HIGHLIGHT_RED = "rgba(255, 128, 128, 0.4)";
+export const HIGHLIGHT_RED = "rgba(255, 128, 128, 0.4)";
 
 // ============================================================================
 // PUBLIC API
@@ -23153,7 +23153,7 @@ const HIGHLIGHT_RED = "rgba(255, 128, 128, 0.4)";
  * 4. Escape cancels and switches back to select tool.
  * 5. After finalisation, auto-switches to select tool.
  */
-class HighlighterTool implements Tool
+export class HighlighterTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "highlighter";
@@ -23637,7 +23637,7 @@ const MEASURE_LABEL_OFFSET = -10;
  * 3. The line stays visible until the next interaction.
  * 4. Press Escape to switch back to the select tool.
  */
-class MeasureTool implements Tool
+export class MeasureTool implements Tool
 {
     /** @inheritdoc */
     public readonly name = "measure";
@@ -23904,7 +23904,7 @@ function computeDistance(a: Point, b: Point): number
  * Interface that all canvas tools must implement.
  * Tools are state machines — only one is active at a time.
  */
-interface Tool
+export interface Tool
 {
     /** Unique tool name. */
     name: string;
@@ -23975,7 +23975,7 @@ interface Tool
  * All canvas input events are routed through the manager to the
  * currently active tool.
  */
-class ToolManager
+export class ToolManager
 {
     /** Registry of all registered tools, keyed by name. */
     private readonly tools: Map<string, Tool> = new Map();
@@ -24220,7 +24220,7 @@ const FILTER_SEPARATOR = "|";
  * @param path - Dot-separated property path (e.g. "project.name").
  * @returns The resolved value, or undefined if the path is invalid.
  */
-function resolveDotPath(
+export function resolveDotPath(
     obj: Record<string, unknown>,
     path: string
 ): unknown
@@ -24264,7 +24264,7 @@ function resolveDotPath(
  * @param filter - The filter name (trimmed, case-insensitive).
  * @returns The filtered string.
  */
-function applyFilter(value: string, filter: string): string
+export function applyFilter(value: string, filter: string): string
 {
     const normalised = filter.trim().toLowerCase();
 
@@ -24319,7 +24319,7 @@ function capitalizeWords(text: string): string
  * @param data - Data context for variable resolution.
  * @returns The text with all expressions replaced.
  */
-function resolveTemplateVars(
+export function resolveTemplateVars(
     text: string,
     data: Record<string, unknown>
 ): string
@@ -24392,7 +24392,7 @@ function convertToString(value: unknown): string
  *
  * @param doc - The DiagramDocument to process in place.
  */
-function resolveDocumentTemplates(doc: DiagramDocument): void
+export function resolveDocumentTemplates(doc: DiagramDocument): void
 {
     const data = doc.data;
 
@@ -24545,7 +24545,7 @@ const PF_LOCK_ICON_SIZE = 14;
 // ============================================================================
 
 /** Predefined page frame sizes at 96 DPI. */
-const PAGE_FRAME_SIZES: PageFrameSize[] = [
+export const PAGE_FRAME_SIZES: PageFrameSize[] = [
     // Paper
     { name: "A4 Portrait",       category: "Paper",        width: 794,  height: 1123 },
     { name: "A4 Landscape",      category: "Paper",        width: 1123, height: 794  },
@@ -24616,7 +24616,7 @@ const PAGE_FRAME_SIZES: PageFrameSize[] = [
 // ============================================================================
 
 /** Named margin presets for page frames. */
-const PAGE_FRAME_MARGIN_PRESETS: Record<string, PageFrameMargins> = {
+export const PAGE_FRAME_MARGIN_PRESETS: Record<string, PageFrameMargins> = {
     /** Normal: 72px all sides (1 inch at 96 DPI). */
     normal: { top: 72, right: 72, bottom: 72, left: 72 },
     /** Narrow: 36px all sides (0.5 inch at 96 DPI). */
@@ -24637,7 +24637,7 @@ const PAGE_FRAME_MARGIN_PRESETS: Record<string, PageFrameMargins> = {
  * @param name - The size preset name (e.g. "A4 Portrait").
  * @returns The matching PageFrameSize, or null if not found.
  */
-function findPageFrameSize(name: string): PageFrameSize | null
+export function findPageFrameSize(name: string): PageFrameSize | null
 {
     return PAGE_FRAME_SIZES.find((s) => s.name === name) ?? null;
 }
@@ -24655,7 +24655,7 @@ function findPageFrameSize(name: string): PageFrameSize | null
  * @param defsEl - SVG defs element (reserved for future use).
  * @returns An SVG group element representing the frame.
  */
-function renderPageFrame(
+export function renderPageFrame(
     frame: PageFrame,
     defsEl: SVGElement
 ): SVGElement
@@ -24960,7 +24960,7 @@ function createFrameLabel(frame: PageFrame): SVGElement
  * @param scale - Scale factor (e.g. 0.1 for 10% size).
  * @returns An SVG element sized to the scaled frame dimensions.
  */
-function generateFrameThumbnail(
+export function generateFrameThumbnail(
     frame: PageFrame,
     objects: DiagramObject[],
     scale: number
@@ -25109,7 +25109,7 @@ function createThumbnailPlaceholder(b: Rect): SVGElement
  * Minimal interface required to register embeddable components.
  * Allows the embed pack to remain decoupled from the full engine.
  */
-interface EngineForEmbeds
+export interface EngineForEmbeds
 {
     registerEmbeddableComponent(
         name: string,
@@ -25350,7 +25350,7 @@ const OTHER_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
  * Each tuple is `[registryName, EmbeddableComponentEntry]`.
  * Excludes DiagramEngine (recursive) and SmartTextInput (engine, not UI).
  */
-const ENTERPRISE_EMBED_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
+export const ENTERPRISE_EMBED_ENTRIES: readonly [string, EmbeddableComponentEntry][] = [
     ...DATA_ENTRIES,
     ...INPUT_ENTRIES,
     ...CONTENT_ENTRIES,
@@ -25374,7 +25374,7 @@ const ENTERPRISE_EMBED_ENTRIES: readonly [string, EmbeddableComponentEntry][] = 
  *
  * @param engine - Any object implementing the EngineForEmbeds interface.
  */
-function registerEnterpriseThemeEmbeds(engine: EngineForEmbeds): void
+export function registerEnterpriseThemeEmbeds(engine: EngineForEmbeds): void
 {
     const count = ENTERPRISE_EMBED_ENTRIES.length;
 
@@ -25473,8 +25473,14 @@ function safeCallback<T extends unknown[]>(
  * This class implements the EngineForTools interface so that tools
  * can call back into the engine for operations like hit testing,
  * selection management, and rendering.
+ *
+ * Exported because createDiagramEngine() returns it, so a TypeScript
+ * consumer cannot name the result without it. The class is already public
+ * at run time as window.DiagramEngine, so this adds no new surface. It is
+ * still the implementation type rather than a handle interface, which is
+ * the one case PAT-1 has to resolve for this component.
  */
-class DiagramEngineImpl implements EngineForTools
+export class DiagramEngineImpl implements EngineForTools
 {
     private readonly instanceId: string;
     private readonly opts: DiagramEngineOptions;

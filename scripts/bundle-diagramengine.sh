@@ -98,8 +98,15 @@ FILES=(
         echo "// SOURCE: $file"
         echo "// ========================================================================"
         echo ""
-        # Strip import/export statements and duplicate constant declarations
-        sed 's/^import .*//; s/^export //g' "$filepath" \
+        # Strip import statements and duplicate constant declarations.
+        #
+        # The `export` keywords are deliberately KEPT. tsc writes the published
+        # .d.ts from this file, and a name without `export` does not reach it.
+        # Stripping them here cost DiagramEngine its whole type surface: the
+        # d.ts published one usable name out of 126 (STD-1). The browser bundle
+        # is unaffected, because wrap-iife.sh removes every export keyword from
+        # the emitted JS before minify-js.sh runs.
+        sed 's/^import .*//' "$filepath" \
             | grep -v '^const LOG_PREFIX\b' \
             | grep -v '^const SVG_NS\b' \
             | grep -v '^const CLS\b' \
@@ -119,13 +126,8 @@ FILES=(
     done
 } > "$OUT_FILE"
 
-# Re-add export on the factory function — Vitest needs it for import,
-# and the IIFE wrapper (wrap-iife.sh) strips it for browser use.
-#
-# `sed -i` without a suffix is GNU-only: BSD sed (macOS) reads the next
-# argument as the backup extension and then treats the file as the script.
-# `-i.bak` is accepted by both, so the backup is written and removed.
-sed -i.bak 's/^function createDiagramEngine(/export function createDiagramEngine(/' "$OUT_FILE"
-rm -f "$OUT_FILE.bak"
+# The factory keeps the export it already carries in src/engine.ts. The
+# single-symbol patch that used to live here is gone: every export now
+# survives concatenation, so there is no one name left to rescue.
 
 echo "[bundle-diagramengine] bundled ${#FILES[@]} files -> $OUT_FILE"
