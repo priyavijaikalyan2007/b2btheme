@@ -101,6 +101,41 @@ else
 fi
 echo ""
 
+# ── Published type surface ──
+#
+# STD-1: scripts/bundle-diagramengine.sh used to delete every export
+# keyword before tsc wrote the .d.ts, so this file reached the CDN holding
+# one usable name out of 138. docs/APPS_TEAM_USAGE_GUIDE.md step 3 tells
+# the apps team to type-check against it.
+#
+# `diagramengineBundleExports` in scripts/audit-counts.mjs guards the
+# source. Nothing guarded the artifact, and the artifact is what a
+# consumer downloads. A 200 is not enough here, because the broken file
+# also returned 200.
+DTS_URL="$CDN_BASE/components/diagramengine/diagramengine.d.ts"
+DTS_FLOOR=138
+DTS_COUNT=$(curl -L -s --max-time "$TIMEOUT" "$DTS_URL" 2>/dev/null | grep -c "^export" || true)
+DTS_COUNT=${DTS_COUNT:-0}
+if [ "$DTS_COUNT" -ge "$DTS_FLOOR" ]; then
+    pass "DiagramEngine publishes $DTS_COUNT type names (floor $DTS_FLOOR)"
+else
+    fail "DiagramEngine publishes only $DTS_COUNT type names, floor is $DTS_FLOOR — the export strip is back in scripts/bundle-diagramengine.sh ($DTS_URL)"
+fi
+
+# The factory's own argument and return type have to be nameable. Those
+# two were present in the broken file and unexported, which is the exact
+# shape the count alone would not catch if the plumbing exports returned
+# without them.
+DTS_BODY=$(curl -L -s --max-time "$TIMEOUT" "$DTS_URL" 2>/dev/null)
+for TYPE_NAME in DiagramEngineOptions DiagramEngineImpl; do
+    if printf '%s' "$DTS_BODY" | grep -qE "^export (declare )?(interface|class) $TYPE_NAME\b"; then
+        pass "$TYPE_NAME is exported, so a consumer can name it"
+    else
+        fail "$TYPE_NAME is not exported — createDiagramEngine's signature refers to it and a consumer cannot name it ($DTS_URL)"
+    fi
+done
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"
