@@ -63,6 +63,22 @@ function logWarn(...a: unknown[]): void
     }
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    if (_lu && typeof _lu.trace === "function")
+    {
+        _lu.trace(...a);
+    }
+    else
+    {
+        _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+    }
+}
+
 /** Default delay before opening (ms). */
 const DEFAULT_OPEN_DELAY = 250;
 
@@ -1050,13 +1066,24 @@ function attachOpenListeners(state: CardState): void
     const onKey = (ev: Event): void =>
     {
         const ke = ev as KeyboardEvent;
+        logTrace("keydown handler:", { key: ke.key.length > 1 ? ke.key : "(char)", ctrl: ke.ctrlKey });
         if (ke.key === "Escape")
         {
             hideCard(state, "escape", true);
         }
     };
-    const onScroll = (): void => hideCard(state, "scroll", true);
-    const onResize = (): void => hideCard(state, "resize", true);
+    const onScroll = (): void =>
+    {
+        // No payload. Reading scrollTop here forces the layout that a
+        // scroll handler exists to avoid.
+        logTrace("scroll handler");
+        hideCard(state, "scroll", true);
+    };
+    const onResize = (): void =>
+    {
+        logTrace("resize handler");
+        hideCard(state, "resize", true);
+    };
 
     addTracked(state.listeners, document, "keydown", onKey, {});
     addTracked(state.listeners, window, "resize", onResize, { passive: true });

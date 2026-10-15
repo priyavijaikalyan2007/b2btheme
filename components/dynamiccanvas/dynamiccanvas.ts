@@ -254,6 +254,17 @@ function logError(...args: unknown[]): void
         : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...args: unknown[]): void
+{
+    _lu
+        ? _lu.trace(...args)
+        : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...args);
+}
+
 // ============================================================================
 // DOM HELPERS
 // ============================================================================
@@ -1014,6 +1025,7 @@ function build(
 
         const onMove = (e: PointerEvent): void =>
         {
+            logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
             if (!origin) { return; }
             const at = draggedPosition(origin, e, doc.viewport.zoom || 1);
             frame.style.left = `${at.left}px`;
@@ -1104,6 +1116,7 @@ function build(
     /** Escape disarms, matching every other modal gesture in the library. */
     function onPlacementKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape")
         {
             cancelPlacement();
@@ -1513,6 +1526,7 @@ function build(
      */
     function onRegionScroll(e: Event): void
     {
+        logTrace("scroll handler");
         const targetId = frameUnder(e.target);
 
         if (targetId)

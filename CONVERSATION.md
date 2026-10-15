@@ -3568,3 +3568,44 @@ what surfaced it.
 **Tracker 49 resolved / 24 open.**
 
 **Next, without needing an answer:** LOG-4a, then the decision items.
+
+---
+
+## LOG-4a: the last 13, and a mutation that moved nothing
+
+**Trace now reaches 109 of 138 components across 301 calls**, from 96 and
+268. `hotWithoutTraceShim` is a ceiling of 0, so the population LOG-4 could
+not see is closed rather than held.
+
+**The codemod placed 17 of 23 sites and refused 6**, all the same shape: a
+listener delegating to something that takes no event.
+
+**`dynamicformswitcher` needed the toolbar judgment again.** Its four input
+listeners delegate to `onFieldInput`, which has twelve callers and eight of
+them are `change`. Tracing inside it would have labelled a change as an
+input.
+
+**A fourth payload rule came out of that.** Those listeners forward no
+event, so there is no `inputType`. A field NAME is schema and a field VALUE
+is content, so the payload is `{ field: name }`. Where no name is in scope,
+the payload is empty rather than whatever is nearby, because in `annotation`
+and `stickynote` the only other thing in scope is the typed text.
+
+**The awkward one was the smallest.** diagramengine has 5 registrations in 2
+files, and `makeLogger` already returned a `trace` nobody destructured. One
+line in `src/logging.ts` reached all twenty namespaces. Twenty-one lines
+total, and the line ratchet's fourth deliberate raise.
+
+**A mutation failed to be caught, and that was the useful result.** Deleting
+four of diagramengine's five trace calls moved no count, because
+`tracedComponents` counts COMPONENTS and the fifth kept the file in the
+traced bucket. `traceCalls`, a floor at 301, closes it.
+
+**An intermittent test failure was my own concurrency.** Two runs reported
+`1 failed` and named nothing. `audit-counts.test.ts` reads the generated
+`diagramengine.ts` and a background build was rewriting it. Reproduced on
+purpose: 5 of 5 fail during a re-bundle loop, 6 of 6 pass on a quiet tree.
+
+**Tracker 50 resolved / 23 open. Every logging entry is closed.**
+
+**Next:** the decision items, led by a recommendation rather than a list.

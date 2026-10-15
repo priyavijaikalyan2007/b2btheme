@@ -165,6 +165,17 @@ function logError(...args: unknown[]): void
         : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...args: unknown[]): void
+{
+    _lu
+        ? _lu.trace(...args)
+        : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...args);
+}
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -350,7 +361,12 @@ function build(
         }
     }
 
-    const onInput = (): void => setText(area.value);
+    const onInput = (): void =>
+    {
+        // No payload: area.value is the note's text.
+        logTrace("input handler");
+        setText(area.value);
+    };
     area.addEventListener("input", onInput);
 
     logInfo("Created in container:", host.id);

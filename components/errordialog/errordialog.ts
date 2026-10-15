@@ -67,6 +67,17 @@ function logDebug(...args: unknown[]): void
         : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...args: unknown[]): void
+{
+    _lu
+        ? _lu.trace(...args)
+        : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...args);
+}
+
 
 // ============================================================================
 // INTERFACES
@@ -631,6 +642,7 @@ export class ErrorDialog
      */
     private handleDialogCopy(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!e.ctrlKey || e.key !== "c") { return; }
         if (window.getSelection()?.toString()) { return; }
 

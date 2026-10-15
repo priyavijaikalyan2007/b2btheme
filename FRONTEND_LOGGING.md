@@ -49,19 +49,52 @@ const _lu = (typeof window.createLogUtility === "function")
     : null;
 
 /** Emits a structured info log. */
-function logInfo(...args: unknown[]): void
+function logInfo(...a: unknown[]): void
 {
-    _lu
-        ? _lu.info(...args)
-        : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+    _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
 }
 ```
 
-Repeat that helper for `logWarn`, `logError`, `logDebug` and `logTrace`,
-mapping each to `_lu.warn`, `_lu.error`, `_lu.debug` and `_lu.trace` and to
-`console.warn`, `console.error`, `console.debug` and `console.debug`. Declare
-the levels the component actually uses. A component with no trace-level
-instrumentation does not need a dead `logTrace`.
+Repeat that helper for `logWarn` and `logError`, mapping each to `_lu.warn`
+and `_lu.error` and to `console.warn` and `console.error`.
+
+**`logDebug` and `logTrace` are different, because the fallback has to filter
+and the utility branch already does.** Copy these verbatim:
+
+```typescript
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
+// LOG-6. Read per call, never captured. A const freezes the flag at script
+// evaluation, so a console toggle on a live page did nothing. The semantics
+// match isGlobalFlagSet in logutility.ts: unset means "decide from the host"
+// for debug and "off" for trace. See FRONTEND_LOGGING.md section 1.3.
+function _dbg(): boolean
+{
+    const f = window.__ebt_debug_logging;
+    return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
+}
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+function logDebug(...a: unknown[]): void
+{
+    _lu ? _lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
+}
+function logTrace(...a: unknown[]): void
+{
+    _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
+```
+
+Three things about that block are enforced rather than advisory.
+`scripts/audit-counts.mjs` reads the text of each shim body, so
+`_dbg() && console.` and `_trc() && console.` have to appear literally. A gate
+written as `if (_dbg()) { … }` is counted as UNGATED even though it behaves
+the same. `LOCAL_HOSTS` has to carry the regex character-for-character,
+because `driftedHostRule` compares it against the copy in
+`components/logutility/logutility.ts`. Omit `LOCAL_HOSTS` and `_dbg` when the
+component declares no `logDebug`, since only debug follows the host.
+
+Declare the levels the component actually uses. A component with no
+trace-level instrumentation does not need a dead `logTrace`, and
+`deadTraceShims` fails if it carries one anyway.
 
 * **Use only the `_lu` helpers** for logging.
 * **Do not install logging dependencies.** Do not introduce ANY other logging framework, wrapper, or abstraction. No Winston, Pino, log4js, or similar.
@@ -313,6 +346,18 @@ if (!container)
   `scripts/trace-scan.mjs` holds that rule and `audit-counts.mjs` fails when a
   component stops. A component with no high-frequency work does not declare the
   shim at all.
+* **109 of the 138 components are instrumented, across 301 calls.** Four
+  counts hold that: `tracedComponents` at a floor of 109, `traceCalls` at a
+  floor of 301, and `untracedHotShims`, `deadTraceShims` and
+  `hotWithoutTraceShim` all at a ceiling of 0. The second floor exists
+  because the first counts COMPONENTS: deleting four of `diagramengine`'s
+  five calls moved nothing, since the fifth kept the file in the traced
+  bucket.
+* **Where the trace call goes is the hard part, not whether to add one.**
+  A listener that delegates to a shared method must be traced in the
+  listener and not in the method, whenever that method has other callers.
+  `dynamicformswitcher.onFieldInput` has twelve, eight of them `change`
+  events, so tracing inside it would have labelled a change as an input.
 
 ```typescript
 logTrace("mousedown handler fired:", { x: e.clientX, y: e.clientY });
@@ -329,6 +374,17 @@ on. Three rules follow from section 5, and they are not advisory:
 | `keydown`, `keyup` | A key NAME, and only when `key.length > 1`. A single character is reported as `"(char)"`. | `e.key` unguarded. One character is what a password is made of. |
 | `input`, `beforeinput` | `inputType`. | `value`, `data`, or the length of either. Length leaks a password. |
 | `scroll`, `resize` | The fact that the handler ran. | Anything read from layout. |
+| `input` on a named form field | The field's NAME, as `{ field: name }`. | The value, always. A name is schema and a value is content. |
+
+The fourth row was added by LOG-4a for `dynamicformswitcher`, whose four
+`input` listeners are thunks that forward no event, so there is no
+`inputType` to read. Four identical lines reading `input handler` would say
+nothing about which field fired, and a field name is already in the DOM and
+in the component's own options. Where the handler takes no event and has no
+field name in scope either, log `logTrace("input handler")` with no payload
+at all rather than reaching for whatever is nearby. `annotation` and
+`stickynote` are both that case, and in both the only other thing in scope
+is the text the user typed.
 
 The last row is about cost rather than privacy. `getBoundingClientRect` and
 `offsetHeight` force a reflow, and a reflow inside a scroll handler is the bug

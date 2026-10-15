@@ -183,6 +183,16 @@ function logError(...a: unknown[]): void
         : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    _lu ? _lu.trace(...a)
+        : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
+
 // ============================================================================
 // DOM HELPERS
 // ============================================================================
@@ -640,6 +650,12 @@ export class ChartPanel implements ChartPanelHandle
         {
             this.themeObserver = new MutationObserver(() =>
             {
+                // A theme flip is rare, so this is not high-frequency work
+                // by the rule in scripts/trace-scan.mjs. It is traced for
+                // consistency with the ResizeObserver below, because a
+                // reader comparing the two would otherwise read the gap as
+                // an oversight.
+                logTrace("theme observer fired");
                 this.handleThemeChange();
             });
             this.themeObserver.observe(document.documentElement, {
@@ -651,6 +667,9 @@ export class ChartPanel implements ChartPanelHandle
         {
             this.resizeObserver = new ResizeObserver(() =>
             {
+                // No payload. Reading the entry's rect here would be a
+                // forced reflow inside the callback that reports one.
+                logTrace("resize observer fired");
                 this.scheduleResize();
             });
             this.resizeObserver.observe(this.opts.container);

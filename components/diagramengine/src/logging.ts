@@ -94,4 +94,5 @@ function makeLogger(prefix: string): EngineLogger
  * Engine-level helpers. `LOG_PREFIX` is declared in the bundle preamble that
  * scripts/bundle-diagramengine.sh writes ahead of every concatenated section.
  */
-const { info: logInfo, warn: logWarn, error: logError, debug: logDebug } = makeLogger(LOG_PREFIX);
+const { trace: logTrace, info: logInfo, warn: logWarn, error: logError, debug: logDebug }
+    = makeLogger(LOG_PREFIX);

@@ -288,6 +288,7 @@ interface ComponentLogger
     warn(...a: unknown[]): void;
     error(...a: unknown[]): void;
     debug(...a: unknown[]): void;
+    trace(...a: unknown[]): void;
 }
 
 function getLogger(): ComponentLogger | null
@@ -324,6 +325,16 @@ function logError(...a: unknown[]): void
 {
     if (_logger) { _logger.error(...a); return; }
     console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a);
+}
+
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    if (_logger) { _logger.trace(...a); return; }
+    _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
 }
 
 // ============================================================================
@@ -617,6 +628,7 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
 
     private handleSelectorKeydown(e: KeyboardEvent, ids: string[]): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const current = ids.indexOf(this.currentVariant);
         let next = -1;
         if (e.key === "ArrowRight" || e.key === "ArrowDown")
@@ -932,7 +944,14 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
             if (typeof field.max === "number") { el.max = String(field.max); }
             if (typeof field.step === "number") { el.step = String(field.step); }
         }
-        el.addEventListener("input", () => this.onFieldInput(field.name));
+        el.addEventListener("input", () =>
+        {
+            // The field NAME is schema and the field VALUE is content.
+            // onFieldInput has twelve callers and eight of them are change
+            // events, so tracing inside it would mislabel them.
+            logTrace("input handler:", { field: field.name });
+            this.onFieldInput(field.name);
+        });
         el.addEventListener("change", () => this.onFieldInput(field.name));
         return el;
     }
@@ -947,7 +966,14 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         if (field.placeholder) { ta.placeholder = field.placeholder; }
         if (field.disabled) { ta.disabled = true; }
         if (field.required) { setAttr(ta, "aria-required", "true"); }
-        ta.addEventListener("input", () => this.onFieldInput(field.name));
+        ta.addEventListener("input", () =>
+        {
+            // The field NAME is schema and the field VALUE is content.
+            // onFieldInput has twelve callers and eight of them are change
+            // events, so tracing inside it would mislabel them.
+            logTrace("input handler:", { field: field.name });
+            this.onFieldInput(field.name);
+        });
         return ta;
     }
 
@@ -1033,7 +1059,14 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         c.name = field.name;
         if (typeof field.value === "string") { c.value = field.value; }
         if (field.disabled) { c.disabled = true; }
-        c.addEventListener("input", () => this.onFieldInput(field.name));
+        c.addEventListener("input", () =>
+        {
+            // The field NAME is schema and the field VALUE is content.
+            // onFieldInput has twelve callers and eight of them are change
+            // events, so tracing inside it would mislabel them.
+            logTrace("input handler:", { field: field.name });
+            this.onFieldInput(field.name);
+        });
         c.addEventListener("change", () => this.onFieldInput(field.name));
         return c;
     }
@@ -1053,7 +1086,14 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         if (typeof field.value === "string") { ta.value = field.value; }
         if (field.placeholder) { ta.placeholder = field.placeholder; }
         if (field.disabled) { ta.disabled = true; }
-        ta.addEventListener("input", () => this.onFieldInput(field.name));
+        ta.addEventListener("input", () =>
+        {
+            // The field NAME is schema and the field VALUE is content.
+            // onFieldInput has twelve callers and eight of them are change
+            // events, so tracing inside it would mislabel them.
+            logTrace("input handler:", { field: field.name });
+            this.onFieldInput(field.name);
+        });
         return ta;
     }
 
@@ -1076,6 +1116,7 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         wrap.appendChild(mirror);
         div.addEventListener("input", () =>
         {
+            logTrace("input handler");
             mirror.value = div.innerHTML;
             this.onFieldInput(field.name);
         });

@@ -1074,3 +1074,52 @@ that needs a coincidence to fire gets 117 chances at once. `test-local.sh`
 check [19] verifies every published name EXISTS. Existence was never the
 problem, and a check written against absence cannot see a surplus — the
 same shape as the floors, from the other side.
+
+### 6.78 The Mutation That Moved Nothing Was the Useful One (2026-10-15)
+
+LOG-4a finished with four counts green: 109 traced components, three
+ceilings at zero. Proving them meant breaking them, and the first attempt
+broke nothing. Deleting four of diagramengine's five trace calls left every
+count sitting exactly on its line.
+
+The fifth call is in `src/render-engine.ts`. `tracedComponents` counts
+COMPONENTS, and one surviving call keeps a file in the traced bucket. So a
+30,524-line file could lose 80 percent of its instrumentation and the
+ratchet would report success.
+
+**The floor was correct and its unit was wrong.** It was built during LOG-4,
+when the question was whether a component had any trace at all, and that is
+a per-component question. Instrumenting a bundle changed the question
+without changing the count, and nothing announced that, because a count
+keeps reporting confidently in the units it was born with.
+
+`traceCalls`, a floor at 301, is the fix and it took four lines. The
+expensive part was running a mutation expecting a failure and getting a
+pass, then believing the pass rather than moving on.
+
+**A mutation test has two outcomes worth having.** The count fails, which
+confirms it watches what it claims. Or the count does not fail, which is the
+more valuable result, because it is the only cheap way to find out that a
+guard has quietly stopped matching the thing it guards. The ones that pass
+are the ones to write down.
+
+### 6.79 The Awkward One Was the Smallest One (2026-10-15)
+
+LOG-4a listed thirteen components and flagged diagramengine as the hard
+case: the multi-namespace bundle, 30,524 lines, a line ratchet that had
+already been raised three times. It was left for last and budgeted for.
+
+It has five high-frequency registrations in two files, and `makeLogger`
+already returned a `trace` that no namespace destructured. One line in
+`src/logging.ts` made trace reachable from all twenty namespaces at once.
+Total cost: twenty-one lines.
+
+The twelve "easy" components took five distinct preamble forms, a judgment
+about a method with twelve callers, a new payload rule, and a dedicated
+emission test.
+
+**Size was standing in for difficulty and they are not the same variable.**
+The engine is large and uniform, and uniformity is what makes a change
+cheap. The others are small and each one different, and difference is what
+costs. The entry's own words, "diagramengine is the awkward one", came from
+reading a line count.

@@ -250,6 +250,13 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
+ * The fourth raise was LOG-4a, 30503 -> 30524: twenty-one lines in
+ * `src/engine.ts`, `src/render-engine.ts` and `src/logging.ts`. Three
+ * inline listener thunks became blocks so a trace call could sit in them,
+ * a MutationObserver and an inline-editor keydown gained one each, and the
+ * engine's single destructure gained `trace: logTrace`. That one line is
+ * what makes trace reachable from all twenty namespaces at once.
+ *
  * The third raise was LOG-6, 30488 -> 30503: fifteen lines in
  * `components/diagramengine/src/logging.ts`, turning the two captured gate
  * constants into functions read on every call, plus the comment saying
@@ -257,7 +264,7 @@ export function countOccurrences(text, needle)
  * whole cost of making the engine's console fallback respond to a flag set
  * after the bundle loaded.
  *
- * The rule is still ratchet down only. All three raises are exceptions,
+ * The rule is still ratchet down only. All four raises are exceptions,
  * taken deliberately, measured at their minimum, and written here rather
  * than quietly absorbed. A ratchet that cannot record a justified exception
  * gets worked around instead, and a worked-around ratchet measures
@@ -318,10 +325,10 @@ const BASELINES = {
     componentsMissingMarker: 3,
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
-    diagramengineLines: 30503,
+    diagramengineLines: 30524,
     untracedHotShims: 0,
     deadTraceShims: 0,
-    hotWithoutTraceShim: 13,
+    hotWithoutTraceShim: 0,
 };
 
 /*
@@ -352,9 +359,21 @@ const BASELINES = {
  * declared a shim and were therefore never part of LOG-4.
  *
  * dynamicVerboseShims is the third, added for LOG-6, and its job is narrow
- * enough to be worth stating. It counts 213 shims, 117 logDebug and 96
+ * enough to be worth stating. It counts 225 shims, 117 logDebug and 108
  * logTrace, whose console fallback reads the flag through `_dbg()` or
- * `_trc()` rather than a captured const.
+ * `_trc()` rather than a captured const. It was 213 when LOG-6 landed and
+ * LOG-4a added the twelve logTrace shims that took it to 225. The engine
+ * is not among them: it destructures `trace` from makeLogger rather than
+ * declaring `function logTrace`, so no shim text exists there to count.
+ *
+ * traceCalls is the fourth, and a failed mutation is why it exists.
+ * tracedComponents counts COMPONENTS, so it moves only when a component
+ * loses its LAST trace call. Deleting four of diagramengine's five left
+ * every count sitting at its line, because the fifth is in
+ * src/render-engine.ts and one call is enough to keep the file in the
+ * traced bucket. The larger the file the worse that gets, and the engine
+ * is 30,524 lines. This floor holds the 301 calls themselves, so losing
+ * any one of them fails.
  *
  * REVERTING `_dbg()` TO `_dbg` IS NOT WHAT THIS CATCHES. The
  * ungatedVerboseShims ceiling does that, because it now requires the call
@@ -366,8 +385,9 @@ const BASELINES = {
  */
 const FLOORS = {
     diagramengineBundleExports: 138,
-    tracedComponents: 96,
-    dynamicVerboseShims: 213,
+    tracedComponents: 109,
+    traceCalls: 301,
+    dynamicVerboseShims: 225,
 };
 
 /**
@@ -641,6 +661,7 @@ function measure()
         diagramengineSrcMissingMarker: 0,
         scssMissingMarker: 0,
         diagramengineLines: 0,
+        traceCalls: 0,
     };
     const consoleLogKinds = {};
     const windowCastKinds = {};
@@ -738,6 +759,7 @@ function measure()
     // the definition of what counts as high-frequency work.
     const trace = scanComponents();
     counts.tracedComponents = trace.traced.length;
+    counts.traceCalls = trace.calls;
     counts.untracedHotShims = trace.untracedHotShim.length;
     counts.deadTraceShims = trace.deadTraceShim.length;
     counts.hotWithoutTraceShim = trace.hotWithoutShim.length;

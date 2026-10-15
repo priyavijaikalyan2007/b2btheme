@@ -601,14 +601,46 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   branch that was chosen, so the 15,485 bytes of LOG-3 gates stay and now do
   work.
 
-- [ ] **LOG-4a** 13 components do high-frequency work and never declared a
+- [x] **LOG-4a** 13 components did high-frequency work and never declared a
   `logTrace` shim, so they were never part of LOG-4, which was defined over
-  the components that had one. They are annotation, chartpanel, chatdock,
-  diagramengine, dynamiccanvas, dynamicformswitcher, errordialog,
-  explorerpicker, hovercard, layoutpicker, navrail, stickynote and
-  workspaceshell. Held at 13 by `hotWithoutTraceShim`, so the set cannot grow
-  while it waits. diagramengine is the awkward one: it is the multi-namespace
-  bundle of FRONTEND_LOGGING.md section 1.1 and it carries a line ratchet.
+  the components that had one. **Closed 2026-10-15 at 109 components and 301
+  calls**, up from 96 and 268. `hotWithoutTraceShim` is now a ceiling of 0.
+  ADR-180.
+
+  **The codemod placed 17 of the 23 sites and refused 6.** The refusals were
+  the shape LOG-4 already knew: a listener that delegates to something taking
+  no event. Each was placed by hand.
+
+  **`dynamicformswitcher` is the one that needed a judgment.** Its four
+  `input` listeners all delegate to `onFieldInput(name)`, which has twelve
+  callers and eight of them are `change` events. Tracing inside it would have
+  labelled a change as an input, so each listener traces for itself. It is
+  also the only component with its own shim form: a `ComponentLogger` built
+  by a `getLogger()` with a try/catch, kept in `_logger` rather than `_lu`,
+  and with no `trace` on its interface until this entry added one. That is
+  why it gets its own emission test: a fleet count reads shim TEXT and would
+  be satisfied by a body that never runs.
+
+  **A fourth payload rule came out of it.** Those four listeners forward no
+  event, so there is no `inputType` to log, and four lines reading
+  `input handler` would not say which field fired. The rule added to section
+  4.5 is that a field NAME is schema and a field VALUE is content. Where no
+  name is in scope either, the payload is empty rather than whatever is
+  nearby: in `annotation` and `stickynote` the only other thing in scope is
+  the text the user typed.
+
+  **diagramengine was the awkward one and turned out to be the smallest.**
+  It has 5 hot registrations in 2 files. `makeLogger` already returned a
+  `trace` nobody used, so one destructure in `src/logging.ts` made it
+  reachable from all twenty namespaces. The line ratchet took its fourth
+  deliberate raise, 30503 to 30524.
+
+  **It also produced the `traceCalls` floor, through a mutation that
+  failed.** Deleting four of diagramengine's five trace calls moved no count
+  at all, because `tracedComponents` counts COMPONENTS and the fifth call
+  kept the file in the traced bucket. A 30,524-line file can lose almost all
+  of its instrumentation without a per-component floor noticing. The new
+  floor holds the 301 calls themselves.
 
 - [x] **LOG-5** **531** logging shim lines exceeded the 120-character limit
   in AGENTS.md, which nothing enforced. Closed 2026-10-15 together with
@@ -938,7 +970,7 @@ the step exits 1 and the workflow fails.
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
-| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **1 open, 6 closed.** LOG-5 and LOG-6 closed together: same lines |
+| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **0 open, 7 closed.** Trace reaches 109 components and 301 calls |
 | DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
@@ -946,7 +978,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **34 items** | **18 resolved** |
+| **Total** | **34 items** | **19 resolved** |
 
 ### The March 2026 counts re-measured so far
 

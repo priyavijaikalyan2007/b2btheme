@@ -6994,3 +6994,93 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-180
+  title: LOG-4a closed the third trace population, and a mutation that failed produced a fourth count
+  date: 2026-10-15
+  status: accepted
+  context: |
+    LOG-4 instrumented the components that declared a logTrace shim. 13
+    others did high-frequency work and declared none, so they were never in
+    scope, and hotWithoutTraceShim held them at 13 so the set could not
+    grow. LOG-4a is that set. The entry called diagramengine the awkward
+    one, because it is the multi-namespace bundle of FRONTEND_LOGGING.md
+    section 1.1 and it carries a line ratchet.
+  decision: |
+    D1. THE SHIM COPIES THE FILE, NOT THE TEMPLATE. Five distinct preamble
+        forms exist across the twelve, from a compact ternary to a
+        typeof-guarded if/else, and each new logTrace matches the form
+        beside it. What is NOT negotiable is the literal text
+        `_trc() && console.`, because countUngatedVerboseShims reads it. A
+        gate written as `if (_trc()) { … }` behaves the same and counts as
+        ungated.
+
+    D2. THE ENGINE WAS THE SMALLEST OF THE THIRTEEN, NOT THE LARGEST.
+        30,524 lines and 5 hot registrations in 2 files. makeLogger already
+        returned a trace that nothing destructured, so adding
+        `trace: logTrace` to the single destructure in src/logging.ts made
+        it reachable from all twenty namespaces. The ratchet took its
+        fourth deliberate raise, 30503 to 30524.
+
+    D3. TRACE GOES IN THE LISTENER WHEN THE METHOD HAS OTHER CALLERS.
+        dynamicformswitcher's four input listeners delegate to
+        onFieldInput, which has twelve callers and eight of them are change
+        events. Instrumenting the method would have labelled a change as an
+        input. This is the toolbar judgment from ADR-178 a second time, and
+        it is the reason the codemod refuses rather than guesses.
+
+    D4. A FIELD NAME IS SCHEMA AND A FIELD VALUE IS CONTENT. Those four
+        listeners forward no event, so there is no inputType to read, and
+        four lines reading `input handler` would not say which field fired.
+        The payload is `{ field: name }`. Where no name is in scope either,
+        the payload is empty rather than whatever is nearby: in annotation
+        and stickynote the only other thing in scope is the text the user
+        typed. Section 4.5 gained a fourth row.
+
+    D5. THE SHIM FORM NOBODY ELSE USES EARNS ITS OWN TEST.
+        dynamicformswitcher keeps its logger in `_logger`, builds it in a
+        try/catch, and had no trace on its ComponentLogger interface until
+        now. dynamicVerboseShims reads shim TEXT and would be satisfied by
+        a body that never runs, so the branch is driven through a real
+        input event on a real password field. Both mutations fail it: 3 of
+        4 cases with the trace calls removed, and 3 of 4 with the gate
+        frozen in a const.
+
+    D6. traceCalls EXISTS BECAUSE A MUTATION FAILED TO BE CAUGHT. Deleting
+        four of diagramengine's five trace calls moved no count at all.
+        tracedComponents counts COMPONENTS, and the fifth call, in
+        src/render-engine.ts, kept the file in the traced bucket. A
+        30,524-line file can lose almost all of its instrumentation that
+        way. The new floor holds the 301 calls themselves, and the mutation
+        now fails it.
+  consequences: |
+    + TRACE REACHES 109 OF 138 COMPONENTS across 301 calls, from 96 and 268.
+      Every component that does high-frequency work now has it.
+    + hotWithoutTraceShim IS A CEILING OF 0. A new component that does
+      high-frequency work and declares no shim fails, rather than being
+      absorbed into a baseline.
+    + THE PER-CALL GAP IS CLOSED. traceCalls catches the partial deletion
+      that a per-component floor cannot see, in any file.
+    - THE ENGINE IS NOT IN dynamicVerboseShims. It destructures trace from
+      makeLogger rather than declaring `function logTrace`, so there is no
+      shim text to count there and its gate is covered only by the copy in
+      src/logging.ts that driftedHostRule reads.
+    - IF THE ENGINE'S TRACE CALLS ARE EVER REMOVED it is reported as
+      hotWithoutShim, which is literally true and still the wrong
+      instruction. The fix is to put the calls back, not to add a shim the
+      engine does not use. Written into the scanner header beside the same
+      note about logconsole.
+  files:
+    - "scripts/audit-counts.mjs"
+    - "scripts/trace-scan.mjs"
+    - "components/diagramengine/src/engine.ts"
+    - "components/diagramengine/src/logging.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/dynamicformswitcher/dynamicformswitcher.ts"
+    - "components/dynamicformswitcher/dynamicformswitcher.flag.test.ts"
+    - "FRONTEND_LOGGING.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

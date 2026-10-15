@@ -3153,10 +3153,22 @@ export class DiagramEngineImpl implements EngineForTools
         const svg = this.renderer.getSvgElement();
 
         svg.addEventListener("mousedown", (e) => this.onMouseDown(e));
-        svg.addEventListener("mousemove", (e) => this.onMouseMove(e));
+        svg.addEventListener("mousemove", (e) =>
+        {
+            logTrace("mousemove handler:", { x: e.clientX, y: e.clientY });
+            this.onMouseMove(e);
+        });
         svg.addEventListener("mouseup", (e) => this.onMouseUp(e));
-        svg.addEventListener("wheel", (e) => this.onWheel(e), { passive: false });
-        svg.addEventListener("keydown", (e) => this.onKeyDown(e));
+        svg.addEventListener("wheel", (e) =>
+        {
+            logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
+            this.onWheel(e);
+        }, { passive: false });
+        svg.addEventListener("keydown", (e) =>
+        {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
+            this.onKeyDown(e);
+        });
         svg.addEventListener("dblclick", (e) => this.onDoubleClick(e));
     }
 
@@ -3191,6 +3203,10 @@ export class DiagramEngineImpl implements EngineForTools
     {
         this.themeObserver = new MutationObserver(() =>
         {
+            // A theme flip is rare. Traced because reRenderAll() is the
+            // most expensive thing the engine does, so knowing it ran
+            // unexpectedly is worth a line.
+            logTrace("theme observer fired");
             this.reRenderAll();
         });
 

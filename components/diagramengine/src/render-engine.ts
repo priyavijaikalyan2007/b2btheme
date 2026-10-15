@@ -2886,6 +2886,10 @@ export class RenderEngine
 
         const keydown = (e: KeyboardEvent): void =>
         {
+            // This runs inside an inline text editor, so the key name is
+            // withheld for any single character. See FRONTEND_LOGGING.md
+            // section 4.5.
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             this.handleEditKeydown(e);
         };
 

@@ -328,6 +328,29 @@ evidence the test works, not the green run afterwards.
 | `dynamicVerboseShims` floor, `ungatedVerboseShims` ceiling | The call form is present in 213 shims and a shim was not deleted | That calling it reads the flag now rather than at load |
 | `magnifier.flag.test.ts` | A flag set after import changes the next call's output, both ways, on both levels | Anything about the other 116 components |
 
+### 2.7c Do Not Run the Suite While a Build Is in Flight
+
+Two consecutive full runs during LOG-4a reported `1 failed | 5064 passed`
+and named nothing. Six sequential runs afterwards were clean. An
+intermittent failure in a suite with no async tests is worth stopping for,
+because the usual causes are shared state and ordering.
+
+It was neither. `scripts/audit-counts.test.ts` reads
+`components/diagramengine/diagramengine.ts` to check the export floor
+against the real bundle, and `scripts/bundle-diagramengine.sh` REWRITES
+that file during `npm run build`. A build was running in the background.
+The test read the file mid-write.
+
+Reproduced deliberately: re-bundling in a loop while running that one file
+fails 5 times out of 5, and the same file passes 6 times out of 6 on a
+quiet tree.
+
+**A test that reads a generated artifact is correct and not self-contained.**
+Reading the artifact is the point, and section 2.8 argues for more of it,
+not less. In CI the build completes before the tests start, so the order is
+safe there. Locally it is only safe if nothing else is writing. Before
+treating an intermittent failure as flakiness, check what else was running.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

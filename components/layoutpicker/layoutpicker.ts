@@ -125,6 +125,15 @@ function logDebug(...a: unknown[]): void
     _lu ? _lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
+
 const CLS = "layoutpicker";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
@@ -1078,6 +1087,7 @@ export function createLayoutPicker(
 
     function onTriggerKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();
@@ -1098,6 +1108,7 @@ export function createLayoutPicker(
 
     function onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!isOpen) { return; }
 
         const handler = KEY_HANDLERS[e.key];

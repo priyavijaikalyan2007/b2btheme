@@ -37,12 +37,26 @@
  * deleted the scanner will report logconsole as a dead shim, which is the
  * wrong instruction: the right one is to put the trace back.
  *
+ * diagramengine has no `function logTrace` and never will. It is the
+ * multi-namespace bundle of FRONTEND_LOGGING.md section 1.1, and it takes
+ * all five levels from `makeLogger` in src/logging.ts, which destructures
+ * `trace: logTrace` once for the whole engine. countTraceCalls therefore
+ * sees its calls and declaresTraceShim does not see a declaration, which
+ * is the right answer by accident rather than by design: there is no
+ * declaration to subtract, so the count is not off by one. If the engine's
+ * trace calls are ever removed it is reported as hotWithoutShim rather
+ * than as an untraced shim. That wording is literally true and still the
+ * wrong instruction, because the fix is to put the calls back and not to
+ * add a shim the engine does not use.
+ *
  * WHAT IT REPORTS. Three populations, because they need different work.
  * A hot component whose shim is never called is the LOG-4 gap itself. A
  * cold component carrying a shim has a dead helper, which
  * FRONTEND_LOGGING.md says to drop. A hot component with no shim at all
  * was never in LOG-4, because LOG-4 was defined over the components that
- * declared one; it is held at its measured value so it cannot grow.
+ * declared one. LOG-4a closed that third population on 2026-10-15, so it
+ * now sits at 0 and a new component that does high-frequency work without
+ * a shim fails rather than being absorbed.
  */
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";

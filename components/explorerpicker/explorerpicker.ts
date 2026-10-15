@@ -143,6 +143,15 @@ function logDebug(...a: unknown[]): void
     _lu ? _lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
+
 // ============================================================================
 // DOM HELPERS
 // ============================================================================
@@ -685,6 +694,7 @@ export class ExplorerPickerImpl
 
     private onSearchInput = (): void =>
     {
+        logTrace("input handler");
         const query = this.searchInput?.value.trim() ?? "";
         this.searchQuery = query;
         this.updateSearchClearVisibility();
@@ -784,6 +794,7 @@ export class ExplorerPickerImpl
 
     private onBodyScroll = (): void =>
     {
+        logTrace("scroll handler");
         if (!this.virtualScrollActive || !this.bodyEl)
         {
             return;
@@ -2427,6 +2438,7 @@ export class ExplorerPickerImpl
 
     private onKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleGlobalKeys(e))
         {
             return;

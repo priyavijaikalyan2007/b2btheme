@@ -265,6 +265,16 @@ function logDebug(...a: unknown[]): void
     _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
+/** True when the page asks for trace output. Read on every call. LOG-6. */
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
+
+/** Emits a trace log. High-frequency handlers only. */
+function logTrace(...a: unknown[]): void
+{
+    if (_lu) { _lu.trace(...a); return; }
+    _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
+
 /** Default expanded width in px. */
 const DEFAULT_WIDTH = 240;
 
@@ -1281,6 +1291,7 @@ export class NavRail
         item: NavRailItem, btn: HTMLElement, e: KeyboardEvent
     ): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const key = e.key;
 
         if (key === "Enter" || key === " ")
@@ -1495,6 +1506,7 @@ export class NavRail
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape" && this.flyoutEl)
         {
             e.preventDefault();
