@@ -691,6 +691,25 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   second name. That is a design question for each component, not a
   mechanical refactor, which is the real reason this entry has sat open.
 
+  **The 138 names STD-1 restored are a union, not an API, and the same
+  decision governs them.** The `src/` modules export `svgCreate`,
+  `svgSetAttr`, `rectHitTest`, the `HIGHLIGHT_*` constants and the
+  `EngineFor*Tool` interfaces so that **sibling modules can import them**.
+  Concatenation erases that boundary, because one keyword has to mean both
+  "exported for a neighbor" and "exported for a consumer". So
+  `docs/AGENT_QUICK_REF.md` now lists `function svgCreate` as DiagramEngine
+  API, and check `[19]` cannot tell intended from incidental, because it
+  verifies that a published name exists and not that it was meant.
+
+  This is not a reason to undo STD-1. Publishing 1 name was strictly worse
+  than publishing 138, and no consumer could type anything at all. It does
+  mean two things. **Deciding which of the 138 are consumer API is the same
+  decision as which of the 135 methods belong on the handle**, so both
+  belong to this entry rather than to a new one. And **the floor at 138
+  pins the plumbing along with the API**, so when the surface is trimmed
+  the floor in `scripts/audit-counts.mjs` comes down with a recorded
+  reason, exactly as raising a ceiling does.
+
 ---
 
 ## CI — Node version alignment

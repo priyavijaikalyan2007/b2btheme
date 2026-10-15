@@ -32,7 +32,9 @@ import
     countAnyCasts,
     countOccurrences,
     countUngatedVerboseShims,
+    countBundleExports,
     countWindowAliases,
+    floorStatus,
     insideStringLiteral,
 } from "./audit-counts.mjs";
 
@@ -466,5 +468,89 @@ describe("countUngatedVerboseShims", () =>
         // carrying a copy have to be updated with it.
         const source = readFileSync("components/logutility/logutility.ts", "utf8");
         expect(source).toContain(`const LOCAL_HOSTS = ${LOCAL_HOST_RULE};`);
+    });
+});
+
+describe("floorStatus", () =>
+{
+    /*
+     * A floor is the mirror of a baseline and the two are easy to write
+     * the wrong way round. These cases pin the direction. STD-1 is the
+     * reason floors exist: every other count in the script is a ceiling
+     * on something unwanted, and a missing export keyword is an absence,
+     * so no ceiling could ever rise in response to it.
+     */
+    test("fails when the count falls below the floor", () =>
+    {
+        expect(floorStatus(0, 138)).toBe("UNDER");
+        expect(floorStatus(137, 138)).toBe("UNDER");
+    });
+
+    test("passes when the count sits exactly on the floor", () =>
+    {
+        expect(floorStatus(138, 138)).toBe("at");
+    });
+
+    test("passes when the count rises above the floor", () =>
+    {
+        expect(floorStatus(139, 138)).toBe("over");
+        expect(floorStatus(1000, 138)).toBe("over");
+    });
+
+    test("a floor of zero still reports a status", () =>
+    {
+        expect(floorStatus(0, 0)).toBe("at");
+        expect(floorStatus(1, 0)).toBe("over");
+    });
+});
+
+describe("countBundleExports", () =>
+{
+    test("counts one declaration per line-start export", () =>
+    {
+        const text = [
+            "export interface Rect",
+            "{",
+            "    x: number;",
+            "}",
+            "export function svgCreate(): void {}",
+            "export const HIGHLIGHT_BLUE = \"rgba(173, 216, 230, 0.4)\";",
+        ].join("\n");
+        expect(countBundleExports(text)).toBe(3);
+    });
+
+    test("reads zero from a bundle built with the export strip restored", () =>
+    {
+        /*
+         * This is the regression itself. scripts/bundle-diagramengine.sh
+         * used to run `s/^export //g` over every source file, and the
+         * published .d.ts was built from the result.
+         */
+        const stripped = [
+            "interface Rect",
+            "{",
+            "    x: number;",
+            "}",
+            "function svgCreate(): void {}",
+        ].join("\n");
+        expect(countBundleExports(stripped)).toBe(0);
+        expect(floorStatus(countBundleExports(stripped), 138)).toBe("UNDER");
+    });
+
+    test("does not count an export that is indented, quoted or commented", () =>
+    {
+        const text = [
+            "    export interface Indented {}",
+            "const note = \"export interface InAString {}\";",
+            "// export interface Commented {}",
+            " * export interface InABlockComment {}",
+        ].join("\n");
+        expect(countBundleExports(text)).toBe(0);
+    });
+
+    test("the real bundle is at or above its floor", () =>
+    {
+        const source = readFileSync("components/diagramengine/diagramengine.ts", "utf8");
+        expect(countBundleExports(source)).toBeGreaterThanOrEqual(138);
     });
 });

@@ -321,6 +321,28 @@ const FLOORS = {
 };
 
 /**
+ * Counts the export keywords that survive into a generated bundle.
+ *
+ * Only a line-start `export ` counts, which is what the concatenation
+ * produces and what tsc reads when it writes the .d.ts. An export inside
+ * a string or a comment is not a declaration and must not be counted.
+ */
+export function countBundleExports(text)
+{
+    return (text.match(/^export /gm) ?? []).length;
+}
+
+/**
+ * Compares a count against a floor. The mirror of the baseline check: a
+ * baseline fails when a count RISES, a floor fails when a count FALLS.
+ */
+export function floorStatus(actual, floor)
+{
+    if (actual < floor) { return "UNDER"; }
+    return actual > floor ? "over" : "at";
+}
+
+/**
  * Classify one global-object type assertion by what it asserts to.
  *
  * WIN-1 counts the literal string `window as any`, and that is one of four
@@ -632,9 +654,8 @@ function measure()
 
     // STD-1. The file is the single largest in the repository and the entry
     // recorded its length, so the length is a tracked count.
-    counts.diagramengineBundleExports =
-        (readFileSync("components/diagramengine/diagramengine.ts", "utf8")
-            .match(/^export /gm) ?? []).length;
+    counts.diagramengineBundleExports = countBundleExports(
+        readFileSync("components/diagramengine/diagramengine.ts", "utf8"));
     counts.diagramengineLines = readFileSync("components/diagramengine/diagramengine.ts", "utf8")
         .split("\n").length - 1;
 
@@ -666,7 +687,7 @@ function main()
     for (const [key, floor] of Object.entries(FLOORS))
     {
         const actual = counts[key];
-        const mark = actual < floor ? "UNDER" : (actual > floor ? "over" : "at");
+        const mark = floorStatus(actual, floor);
         console.log(`  ${key.padEnd(30)} ${String(actual).padStart(5)}  (floor ${floor}, ${mark})`);
         if (actual < floor)
         {
