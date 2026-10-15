@@ -526,6 +526,7 @@ export function createColumnsPicker(
 
     function onTriggerKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();
@@ -546,6 +547,7 @@ export function createColumnsPicker(
 
     function onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!isOpen) { return; }
 
         if (e.key === "Escape")

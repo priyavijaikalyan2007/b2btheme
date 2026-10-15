@@ -616,6 +616,7 @@ export class BorderLayout
 
         this.resizeObserver = new ResizeObserver(() =>
         {
+            logTrace("resize observer fired");
             this.fireOnLayoutChange();
         });
 

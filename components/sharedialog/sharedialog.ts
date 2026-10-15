@@ -888,6 +888,7 @@ export class ShareDialog
     /** Route keydown events to handlers. */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const closeOnEscape = this.opts.closeOnEscape ?? true;
 
         if (closeOnEscape

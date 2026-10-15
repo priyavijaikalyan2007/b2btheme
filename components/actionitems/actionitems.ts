@@ -3035,6 +3035,7 @@ export class ActionItems
         e: KeyboardEvent, itemId: string, input: HTMLInputElement
     ): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter")
         {
             e.preventDefault();
@@ -3781,6 +3782,7 @@ export class ActionItems
      */
     private handleDragMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.dragState)
         {
             return;
@@ -4290,6 +4292,7 @@ export class ActionItems
      */
     private handleGlobalKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.isEditingActive())
         {
             return;

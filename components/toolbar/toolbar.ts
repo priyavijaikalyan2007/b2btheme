@@ -2884,13 +2884,18 @@ export class Toolbar
         if (item.onInput)
         {
             const handler = item.onInput;
-            input.addEventListener("input", () => handler(input.value));
+            input.addEventListener("input", () =>
+            {
+                logTrace("input handler");
+                handler(input.value);
+            });
         }
         if (item.onSubmit)
         {
             const handler = item.onSubmit;
             input.addEventListener("keydown", (e: KeyboardEvent) =>
             {
+                logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
                 if (this.matchesKeyCombo(e, "inputSubmit"))
                 {
                     handler(input.value);
@@ -3165,6 +3170,7 @@ export class Toolbar
         const onInput = item.onInput;
         input.addEventListener("input", () =>
         {
+            logTrace("input handler");
             item.value = input.value;
             if (onInput) { onInput(input.value); }
             const lbl = wrap.querySelector(".toolbar-color-label");
@@ -3558,6 +3564,7 @@ export class Toolbar
      */
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         // KeyTip activation on Alt press
         if (this.matchesKeyCombo(e, "toggleKeyTips")
             && (this.opts.keyTips !== false))
@@ -3670,6 +3677,7 @@ export class Toolbar
      */
     private handleDragMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.isDragging)
         {
             return;
@@ -3757,6 +3765,7 @@ export class Toolbar
 
             const onMove = (ev: PointerEvent) =>
             {
+                logTrace("pointermove handler:", { x: ev.clientX, y: ev.clientY });
                 const currentPos = this.currentOrientation === "horizontal"
                     ? ev.clientX : ev.clientY;
                 const delta = currentPos - startPos;
@@ -3801,6 +3810,7 @@ export class Toolbar
      */
     private handleResizeKeyboard(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const isH = (this.currentOrientation === "horizontal");
         const delta = this.resolveResizeDelta(e, isH);
 
@@ -3866,7 +3876,13 @@ export class Toolbar
             this.handleKeyDown(e);
         };
 
-        this.boundWindowResize = this.debouncedOverflow;
+        // Traced before the debounce, because the raw resize burst is what a
+        // reflow bug shows up in; recalculateOverflow() has five other callers.
+        this.boundWindowResize = (): void =>
+        {
+            logTrace("resize handler");
+            this.debouncedOverflow();
+        };
 
         document.addEventListener("pointerdown", this.boundClickOutside);
         document.addEventListener("keydown", this.boundKeyDown);

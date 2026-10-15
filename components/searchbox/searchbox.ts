@@ -681,6 +681,7 @@ export class SearchBox
      */
     private onInput(): void
     {
+        logTrace("input handler");
         const query = this.inputEl?.value ?? "";
 
         this.updateClearButton();
@@ -704,6 +705,7 @@ export class SearchBox
      */
     private onKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "clear"))
         {
             e.preventDefault();

@@ -1328,6 +1328,7 @@ export class CronPicker
         });
         this.rawInputEl.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (this.matchesKeyCombo(e, "rawEnter"))
             {
                 e.preventDefault();
@@ -1825,6 +1826,7 @@ export class CronPicker
         };
         this.boundOnDocKeydown = (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (e.key === "Escape")
             {
                 this.closePopup();

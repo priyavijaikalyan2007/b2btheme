@@ -2726,7 +2726,12 @@ function handleResizePointerDown(
 
     logTrace("Column resize start:", { colIdx });
 
-    const onMove = (e: Event) => handleResizePointerMove(state, e as PointerEvent);
+    const onMove = (e: Event): void =>
+    {
+        const pe = e as PointerEvent;
+        logTrace("pointermove handler:", { x: pe.clientX, y: pe.clientY });
+        handleResizePointerMove(state, pe);
+    };
     const onUp = (e: Event) =>
     {
         const pe = e as PointerEvent;
@@ -2798,7 +2803,12 @@ function handleRowResizePointerDown(
     const row = state.data.rows[rowIdx];
     state.resizeStartHeight = row.height || MIN_ROW_HEIGHT;
 
-    const onMove = (e: Event) => handleRowResizePointerMove(state, e as PointerEvent);
+    const onMove = (e: Event): void =>
+    {
+        const pe = e as PointerEvent;
+        logTrace("pointermove handler:", { x: pe.clientX, y: pe.clientY });
+        handleRowResizePointerMove(state, pe);
+    };
     const onUp = (e: Event) =>
     {
         const pe = e as PointerEvent;
@@ -4038,7 +4048,12 @@ function bindEvents(state: InternalState): void
     const tableClick = (e: Event) => onTableClick(state, e as MouseEvent);
     const tableDblClick = (e: Event) => onTableDoubleClick(state, e as MouseEvent);
     const tableContext = (e: Event) => onTableContextMenu(state, e as MouseEvent);
-    const keyDown = (e: Event) => handleKeyDown(state, e as KeyboardEvent);
+    const keyDown = (e: Event): void =>
+    {
+        const ke = e as KeyboardEvent;
+        logTrace("keydown handler:", { key: ke.key.length > 1 ? ke.key : "(char)", ctrl: ke.ctrlKey });
+        handleKeyDown(state, ke);
+    };
     const resizeDown = (e: Event) => onResizeHandlePointerDown(state, e as PointerEvent);
 
     state.tableContainerEl.addEventListener("click", tableClick);

@@ -482,11 +482,13 @@ export class PermissionMatrix
         setAttr(input, "aria-label", "Filter permissions");
         input.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.filterText = input.value;
             this.debouncedFilter();
         });
         input.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (this.matchesKeyCombo(e, "escape"))
             {
                 input.value = "";
@@ -933,6 +935,7 @@ export class PermissionMatrix
 
     private onGridKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const target = e.target as HTMLElement;
 
         if (target.classList.contains(`${CLS}-group-toggle`))

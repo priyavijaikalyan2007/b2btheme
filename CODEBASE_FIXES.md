@@ -409,7 +409,7 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
 
 ---
 
-## MEDIUM — Logging (LOG-1 closed as obsolete, LOG-2 fixed)
+## MEDIUM — Logging (LOG-1 closed as obsolete, LOG-2 and LOG-3 fixed, LOG-4 closed at 96 components and 268 trace calls, 2026-10-15)
 
 - [x] **LOG-1** Convert `console.log` to `console.debug` where appropriate. **Closed as obsolete on 2026-10-13, not fixed.** The item was written against LOGGING.md, which FRONTEND_LOGGING.md superseded, and its count described a tree that no longer exists.
 
@@ -523,29 +523,123 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   table to go up. Four lines in the engine factory, measured at the minimum,
   recorded in the BASELINES comment rather than absorbed.
 
-- [ ] **LOG-4** Trace instrumentation was asked for and never written.
-  `logTrace` is declared in **108 components and called in 2** — latexeditor
-  and visualtableeditor, 10 call sites in all. **80 of the other 106 have
-  high-frequency handlers** (`mousemove`, `pointermove`, `scroll`, `input`,
-  `keydown`, `drag`, `wheel`, `resize`, `touchmove`), which is exactly what
-  FRONTEND_LOGGING.md reserves trace for.
+- [x] **LOG-4** Trace instrumentation was asked for and never written.
+  **Closed 2026-10-15.** ADR-178.
 
-  These are not dead helpers to delete. They are a coverage gap: the shim
-  was declared following the pattern and never filled in. Today a dragging
-  or scrolling bug in those components produces no trace output at all,
-  which is the one level that would show it.
+  `logTrace` was declared in **108 components and called in 2**, latexeditor
+  and visualtableeditor, 10 call sites in all. A dragging or scrolling bug in
+  the other 106 produced no trace output, which is the one level that would
+  have shown it. The shims were not dead helpers to delete. They were a
+  coverage gap: the pattern was followed as far as declaring the helper and
+  then never filled in.
 
-  The decision is binary and it removes a cost either way. 50 components
-  currently carry a LOG-3 gate that can never fire, because both verbose
-  shims are dead there, and that is +15,485 bytes (0.71%) across the
-  bundles. Instrument the 80 and the gates start doing work; decide against
-  trace and the shims and gates come out together.
+  **The entry said 80 and the number is 83.** The figure is not reproducible:
+  no single change to the event list yields 80. The likely cause is that the
+  earlier scan looked for an inline handler body, and `magnifier`,
+  `graphminimap` and `ruler` each attach a bound method reference instead.
+  83 minus those three is 80. That is an explanation and not a derivation,
+  and the definition now lives in `scripts/trace-scan.mjs` so the next count
+  is reproducible.
 
-- [ ] **LOG-5** 543 logging shim lines exceed the 120-character limit in
-  AGENTS.md, which nothing enforces, and LOG-3 lengthened 216 of them.
-  Reflowing all five shims to a guarded block shape is roughly 1000 lines
-  across 122 files. Worth doing with LOG-4, since both rewrite the same
-  lines.
+  **The scope was wider than the entry.** Measured against the rule in the
+  scanner, 94 components were newly instrumented:
+
+  | Population | Count | What it is |
+  |---|---|---|
+  | High-frequency DOM listener | 83 | The entry's population, re-measured |
+  | `selectionchange` | 1 | richtextinput, an event the entry's list omitted |
+  | `ResizeObserver` | 8 | The layout components, which register no listener at all |
+  | `IntersectionObserver` | 1 | activityfeed |
+  | Coalescing frame loop | 1 | logconsole, a judgment call recorded in the scanner |
+
+  Two more were deepened. **96 components now carry 268 `logTrace` calls**,
+  up from 2 components and 10 calls.
+
+  **12 components lost the shim instead of gaining a call.** bannerbar,
+  codeeditor, emptystate, gauge, inlinetoolbar, markdownrenderer,
+  marketinghero, sitefooter, skeletonloader, statusbar, themetoggle and
+  toolcolorpicker do no high-frequency work. FRONTEND_LOGGING.md already said
+  a component with no trace-level instrumentation does not need a dead
+  `logTrace`, so the helper and its gate came out.
+
+  **A one-shot `requestAnimationFrame` is not a frame loop.** bannerbar and
+  codeeditor schedule a single frame to start a CSS transition, and gauge runs
+  a countdown `setInterval`. Treating either as high frequency would have
+  demanded trace from three components that never repeat anything.
+
+  **Half the work was choosing where the call goes, not whether.** 99 of 229
+  listener sites attach a handler by reference, and the most common remaining
+  shape is a thunk, `(e) => this.onInputKeydown(e)`. Inserting at the
+  registration site would have missed the first group and instrumented a
+  wrapper rather than a handler in the second. The transform resolved each
+  listener to the function that actually runs, following `.bind(this)`, name
+  aliases and delegating thunks, and it followed a delegation only when the
+  event was forwarded or the callee was referenced exactly once. Without that
+  second condition it resolved four handlers to a helper whose first parameter
+  was a `string` or a `number`, which would have attributed unrelated calls to
+  an input event. 222 of 246 sites resolved; the remaining 24 were done by
+  hand, and each is a shape the transform refused on purpose.
+
+  **The payload is metadata, never content.** Trace runs inside text fields
+  and password fields. `keydown` logs a key name only when `key.length > 1`,
+  so a single character reports as `"(char)"`. `input` logs `inputType` and
+  never the value or its length. `scroll` and `resize` read nothing from
+  layout, because a forced reflow inside a scroll handler is the bug trace
+  exists to find. The rule is written into FRONTEND_LOGGING.md section 4.5
+  and one test pins the exact key set of a real payload.
+
+  **The ratchet is a floor and three ceilings.** This is the second floor in
+  the table and the reason is the same as the first: a missing `logTrace` is
+  an absence, and a ceiling cannot see an absence. `tracedComponents` holds at
+  96, `untracedHotShims` and `deadTraceShims` at 0, and `hotWithoutTraceShim`
+  at 13. All four were mutation-proved. Deleting one trace call from magnifier
+  fails two counts and two tests.
+
+  **Cost, stated plainly.** `dist/components` grew **22,651 bytes, 0.60%**,
+  measured against the on-disk `e361179` build. Nothing was saved. The entry
+  offered removing the shims as the cheaper branch, and instrumenting is the
+  branch that was chosen, so the 15,485 bytes of LOG-3 gates stay and now do
+  work.
+
+- [ ] **LOG-4a** 13 components do high-frequency work and never declared a
+  `logTrace` shim, so they were never part of LOG-4, which was defined over
+  the components that had one. They are annotation, chartpanel, chatdock,
+  diagramengine, dynamiccanvas, dynamicformswitcher, errordialog,
+  explorerpicker, hovercard, layoutpicker, navrail, stickynote and
+  workspaceshell. Held at 13 by `hotWithoutTraceShim`, so the set cannot grow
+  while it waits. diagramengine is the awkward one: it is the multi-namespace
+  bundle of FRONTEND_LOGGING.md section 1.1 and it carries a line ratchet.
+
+- [ ] **LOG-5** **531** logging shim lines exceed the 120-character limit in
+  AGENTS.md, which nothing enforces. Was 543, and LOG-4 removed 12 by dropping
+  dead shims. LOG-3 lengthened 216 of them. Reflowing all five shims to a
+  guarded block shape is roughly 1000 lines across 122 files.
+
+  The entry used to say this was worth doing with LOG-4 because both rewrite
+  the same lines. That was only true of the branch that removed the shims.
+  Instrumenting added call sites and touched no shim line, so the two are
+  independent and LOG-5 is unchanged by LOG-4 apart from the 12.
+
+- [ ] **LOG-6** FRONTEND_LOGGING.md section 6 promises a runtime toggle the
+  fallback branch does not deliver. It states that flags are checked on every
+  log call, so toggling one in the browser console takes effect immediately,
+  and it names customer support as the reason. That is true on the LogUtility
+  branch, which re-reads the flag per call. It is false on the fallback
+  branch, where `const _trc` and `const _dbg` are evaluated once when the
+  script loads. **109 components capture `_trc` that way and 118 capture
+  `_dbg`**, and the fallback is the path on 132 of the 138 demo pages.
+
+  ADR-176 decided what the flags mean and never decided when they are read,
+  so this is drift rather than a choice. It is filed apart from LOG-4 because
+  it affects debug equally and because trace is still reachable: set the flag
+  in an inline script ahead of the component, which is what the demo pages
+  do. Section 6 now carries a caveat pointing here rather than a sentence
+  that is known to be false.
+
+  The fix is to read the flag inside the shim instead of beside it. The cost
+  is one property lookup per call on a branch that is about to write to the
+  console anyway. The care needed is in `ungatedVerboseShims` and
+  `driftedHostRule`, which both match the shim text.
 
 ## MEDIUM — `: any` Type Usage (15 remaining, from 157 measured 2026-10-14)
 
@@ -772,14 +866,14 @@ the step exits 1 and the workflow fails.
 | HIGH — Function Length | 3 (14 functions total) | Open |
 | HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
 | MEDIUM — !important | 3 (113 occurrences in 20 SCSS files, 2026-10-13) | Open |
-| MEDIUM — Logging | 5 (LOG-3 closed, LOG-4/-5 opened 2026-10-14) | **2 open, 3 closed** |
+| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **3 open, 4 closed.** LOG-4 closed at 96 components, 268 calls |
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | Open |
 | MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
 | MEDIUM — Unused Variables | 1 (**414** errors, re-measured 2026-10-15, not ratcheted) | Open |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
-| **Total** | **31 items** | **14 resolved** |
+| **Total** | **33 items** | **15 resolved** |
 
 ### The March 2026 counts re-measured so far
 

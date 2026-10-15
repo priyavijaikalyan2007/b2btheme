@@ -974,3 +974,50 @@ The number was two lines of extra code in a script written for another
 purpose. **The reason a vague entry stays vague is that nobody measures it,
 and the reason nobody measures it is that it is filed as MINOR.** Severity
 recorded before measurement is a guess wearing a label.
+
+### 6.74 Where the Call Goes Was the Whole Problem (2026-10-15)
+
+Instrumenting 106 components with trace sounds like a loop over files. The
+transform's first honest run refused 112 of 250 listener sites and reported
+"handler body is an expression, not a block", which read like a limitation
+of the tool.
+
+It was a description of the codebase. **99 of 229 sites attach a handler by
+reference**, `addEventListener("pointermove", this.boundMove)`, and the
+commonest remaining shape is a thunk, `(e) => this.onKeydown(e)`. Inserting
+at the registration site would have missed the first group completely and
+written the trace into a one-line wrapper for the second, leaving the
+function that actually runs untouched and the count looking finished.
+
+The fix was to resolve each listener to the function that runs, through
+`.bind(this)`, name aliases and thunks. **The guard mattered more than the
+resolution.** Following any one-line delegation reached helpers whose first
+parameter was a `string` or a `number`: four handlers would have been
+labelled as input events inside shared methods with other callers. Requiring
+that the wrapper forward its own event argument, or that the callee be
+referenced exactly once, caught all four.
+
+A transform over 250 sites is worth building only if it refuses. The 24
+refusals were the deliverable as much as the 222 insertions, because each
+one was a case a regex would have silently got wrong.
+
+### 6.75 Instrumentation Nobody Can Switch On Is Not Instrumentation (2026-10-15)
+
+Reading the gates before adding trace to them turned up a sentence in
+FRONTEND_LOGGING.md section 6: flags are checked on every log call, so
+toggling one in the browser console takes effect immediately, which it
+offers as the customer-support story.
+
+It is true on the LogUtility branch. On the fallback branch `const _trc` is
+evaluated once when the script loads, and **109 components capture it that
+way.** The fallback is the path on 132 of the 138 demo pages. A support
+engineer typing the flag into a console on a live page gets nothing.
+
+ADR-176 decided what the flags mean and never decided when they are read,
+so this is drift and not a choice. Two things follow. The first is that it
+belongs in its own entry, because it affects debug identically and fixing it
+inside a trace change would be scope creep dressed as diligence. The second
+is that a documented promise found to be false is not a neutral thing to
+leave alone while the entry waits: section 6 now carries a caveat pointing
+at LOG-6, because the cost of the sentence is someone trusting it at the
+moment they need it.

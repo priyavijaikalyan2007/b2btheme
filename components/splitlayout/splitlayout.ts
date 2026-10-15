@@ -619,6 +619,7 @@ export class SplitLayout
      */
     private onDividerPointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (this.activeDividerIndex < 0)
         {
             return;
@@ -726,6 +727,7 @@ export class SplitLayout
      */
     private onDividerKeyDown(e: KeyboardEvent, index: number): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const delta = this.resizeDeltaFromKey(e);
 
         if (delta !== 0)

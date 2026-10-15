@@ -693,6 +693,7 @@ export class CardLayout
     /** Dispatches keyboard events to card navigation actions. */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "nextCard"))
         {
             e.preventDefault();

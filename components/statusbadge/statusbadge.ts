@@ -579,6 +579,7 @@ export class StatusBadge
      */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();

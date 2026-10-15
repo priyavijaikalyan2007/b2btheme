@@ -504,6 +504,7 @@ export class MaskedEntry
      */
     private handleInputChange(): void
     {
+        logTrace("input handler");
         if (!this.inputEl)
         {
             return;
@@ -531,6 +532,7 @@ export class MaskedEntry
      */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "toggleReveal"))
         {
             e.preventDefault();

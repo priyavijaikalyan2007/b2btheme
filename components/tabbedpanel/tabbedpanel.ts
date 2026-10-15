@@ -1592,6 +1592,7 @@ export class TabbedPanel
 
         strip.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();
@@ -1807,6 +1808,7 @@ export class TabbedPanel
         e: KeyboardEvent, tabId: string
     ): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleTabSwitchKeys(e)) { return; }
 
         this.handleTabArrowKeys(e, tabId);
@@ -1817,6 +1819,7 @@ export class TabbedPanel
      */
     private handleTabSwitchKeys(e: KeyboardEvent): boolean
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         for (let i = 1; i <= 9; i++)
         {
             if (this.matchesKeyCombo(e, `switchTab${i}`))
@@ -2335,6 +2338,7 @@ export class TabbedPanel
     /** Handles pointer movement during a drag operation. */
     private handleDragMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.isDragging)
         {
             return;
@@ -2447,6 +2451,7 @@ export class TabbedPanel
         startHeight: number
     ): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
 
@@ -2542,6 +2547,7 @@ export class TabbedPanel
         e: KeyboardEvent, direction: string
     ): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         let handled = false;
 
         if (direction === "vertical" || direction === "corner")

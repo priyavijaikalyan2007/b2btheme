@@ -1203,6 +1203,7 @@ class RibbonBuilderImpl
 
         row.addEventListener("dragover", (e) =>
         {
+            logTrace("dragover handler");
             e.preventDefault();
             this.updateDropIndicator(row, e);
         });
@@ -2270,6 +2271,7 @@ class RibbonBuilderImpl
 
         searchInput.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.buildIconPickerGrid(searchInput.value, activeCategory, input, onChange);
         });
 
@@ -3119,6 +3121,7 @@ class RibbonBuilderImpl
     /** Handle keydown events on the root element. */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Delete" || e.key === "Backspace")
         {
             if (this.isInputFocused())
@@ -3256,6 +3259,7 @@ class RibbonBuilderImpl
 
         const onMove = (ev: PointerEvent) =>
         {
+            logTrace("pointermove handler:", { x: ev.clientX, y: ev.clientY });
             if (!this.treeResizing)
             {
                 return;

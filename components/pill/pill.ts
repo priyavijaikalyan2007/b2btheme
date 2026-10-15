@@ -381,6 +381,7 @@ export class Pill
 
         const keyHandler = (e: Event): void =>
         {
+            logTrace("keydown handler");
             const key = (e as KeyboardEvent).key;
             if (key === "Enter" || key === " ")
             {

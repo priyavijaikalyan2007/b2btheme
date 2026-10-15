@@ -2305,6 +2305,7 @@ export class Timeline
 
         search.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.populateTimezoneList(
                 list, allTimezones, search.value
             );
@@ -2494,6 +2495,7 @@ export class Timeline
      */
     private handlePanMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.isPanning)
         {
             return;
@@ -2552,6 +2554,7 @@ export class Timeline
      */
     private handleWheelPan(e: WheelEvent): void
     {
+        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
         if (this.opts.disabled)
         {
             return;
@@ -3011,6 +3014,7 @@ export class Timeline
     /** Dispatches keyboard events to timeline actions. */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.opts.disabled) { return; }
         if (e.target !== this.rootEl) { return; }
 

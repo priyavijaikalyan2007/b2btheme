@@ -971,6 +971,7 @@ class FormDialogImpl implements FormDialog
         const mirror = buildRichTextMirror(field);
         editor.addEventListener("input", () =>
         {
+            logTrace("input handler");
             mirror.value = editor.innerHTML;
             this.onFieldInput(field.name);
         });
@@ -1204,6 +1205,7 @@ class FormDialogImpl implements FormDialog
 
     private onDividerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.dividerEl!.hasPointerCapture(e.pointerId)) { return; }
 
         const panel = this.opts.panel!;
@@ -1935,6 +1937,7 @@ class FormDialogImpl implements FormDialog
 
     private onKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         // Ctrl+C — copy dialog title (Windows native dialog behaviour)
         if (e.ctrlKey && e.key === "c" && !window.getSelection()?.toString())
         {
@@ -2044,6 +2047,7 @@ class FormDialogImpl implements FormDialog
 
     private onFieldInput(name: string): void
     {
+        logTrace("field input:", { field: name });
         // Clear error on edit
         this.setFieldError(name, "");
 

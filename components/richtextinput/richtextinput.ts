@@ -218,6 +218,7 @@ function ensureSelectionListener(): void
 /** Dispatch selectionchange to all active instances. */
 function handleGlobalSelectionChange(): void
 {
+    logTrace("selectionchange handler");
     for (const instance of activeInstances)
     {
         instance.handleSelectionChange();

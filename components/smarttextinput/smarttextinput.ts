@@ -434,7 +434,12 @@ class PlainTextAdapter implements InputAdapter
 
     public onKeyDown(handler: (event: KeyboardEvent) => void): Unsubscribe
     {
-        const wrapped = (e: Event): void => { handler(e as KeyboardEvent); };
+        const wrapped = (e: Event): void =>
+        {
+            const ke = e as KeyboardEvent;
+            logTrace("keydown handler:", { key: ke.key.length > 1 ? ke.key : "(char)", ctrl: ke.ctrlKey });
+            handler(ke);
+        };
         this.element.addEventListener("keydown", wrapped);
         const unsub = (): void => { this.element.removeEventListener("keydown", wrapped); };
         this.unsubs.push(unsub);
@@ -443,8 +448,13 @@ class PlainTextAdapter implements InputAdapter
 
     public onInput(handler: () => void): Unsubscribe
     {
-        this.element.addEventListener("input", handler);
-        const unsub = (): void => { this.element.removeEventListener("input", handler); };
+        const wrapped = (): void =>
+        {
+            logTrace("input handler");
+            handler();
+        };
+        this.element.addEventListener("input", wrapped);
+        const unsub = (): void => { this.element.removeEventListener("input", wrapped); };
         this.unsubs.push(unsub);
         return unsub;
     }
@@ -656,7 +666,12 @@ class ContentEditableAdapter implements InputAdapter
 
     public onKeyDown(handler: (event: KeyboardEvent) => void): Unsubscribe
     {
-        const wrapped = (e: Event): void => { handler(e as KeyboardEvent); };
+        const wrapped = (e: Event): void =>
+        {
+            const ke = e as KeyboardEvent;
+            logTrace("keydown handler:", { key: ke.key.length > 1 ? ke.key : "(char)", ctrl: ke.ctrlKey });
+            handler(ke);
+        };
         this.element.addEventListener("keydown", wrapped);
         const unsub = (): void => { this.element.removeEventListener("keydown", wrapped); };
         this.unsubs.push(unsub);
@@ -665,8 +680,13 @@ class ContentEditableAdapter implements InputAdapter
 
     public onInput(handler: () => void): Unsubscribe
     {
-        this.element.addEventListener("input", handler);
-        const unsub = (): void => { this.element.removeEventListener("input", handler); };
+        const wrapped = (): void =>
+        {
+            logTrace("input handler");
+            handler();
+        };
+        this.element.addEventListener("input", wrapped);
+        const unsub = (): void => { this.element.removeEventListener("input", wrapped); };
         this.unsubs.push(unsub);
         return unsub;
     }

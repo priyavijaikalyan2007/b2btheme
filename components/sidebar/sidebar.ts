@@ -1085,6 +1085,7 @@ export class Sidebar
 
         strip.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (this.matchesKeyCombo(e, "expand")
                 || this.matchesKeyCombo(e, "expandSpace"))
             {
@@ -1444,6 +1445,7 @@ export class Sidebar
      */
     private handleDragMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.isDragging)
         {
             return;
@@ -1570,6 +1572,7 @@ export class Sidebar
         startHeight: number
     ): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
 
@@ -1640,6 +1643,7 @@ export class Sidebar
      */
     private handleResizeKeyboard(e: KeyboardEvent, direction: string): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         let handled = false;
 
         if ((direction === "horizontal") || (direction === "corner"))

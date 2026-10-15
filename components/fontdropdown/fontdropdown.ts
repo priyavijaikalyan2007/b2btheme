@@ -1028,6 +1028,7 @@ export class FontDropdown
 
     private onTriggerKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.opts.disabled) { return; }
         if (this.matchesKey(e, "openOrMoveDown")
             || this.matchesKey(e, "openOrMoveUp"))
@@ -1044,6 +1045,7 @@ export class FontDropdown
 
     private onSearchKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const actions: Record<string, () => void> =
         {
             openOrMoveDown:    () => this.moveHighlight(1),
@@ -1092,6 +1094,7 @@ export class FontDropdown
 
     private onSearchInput(): void
     {
+        logTrace("input handler");
         const text = this.searchEl?.value ?? "";
         this.renderListItems(text);
     }
@@ -1129,6 +1132,7 @@ export class FontDropdown
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.isOpen) { return; }
         if (e.key === "Escape")
         {

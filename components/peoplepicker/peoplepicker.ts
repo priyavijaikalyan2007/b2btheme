@@ -1138,6 +1138,7 @@ export class PeoplePicker
 
     private onInputChange(): void
     {
+        logTrace("input handler");
         const query = this.inputEl.value.trim();
         const minChars = this.options.minSearchChars ?? DEFAULT_MIN_CHARS;
 
@@ -1169,6 +1170,7 @@ export class PeoplePicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "moveDown"))
         {
             e.preventDefault();

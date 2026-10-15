@@ -304,6 +304,7 @@ function onTriggerKeydown(
     state: { value: "portrait" | "landscape"; isOpen: boolean; panelEl: HTMLElement | null }
 ): void
 {
+    logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
     if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
     {
         e.preventDefault();
@@ -390,6 +391,7 @@ function attachItemListeners(
 
     item.addEventListener("keydown", (e) =>
     {
+        logTrace("keydown handler");
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();
@@ -554,6 +556,7 @@ function addDocumentCloseListener(
 
     const keyHandler = (e: KeyboardEvent) =>
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (state.destroyed) { return; }
         if (!state.isOpen) { return; }
         if (e.key === "Escape")

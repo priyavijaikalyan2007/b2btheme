@@ -539,6 +539,7 @@ export class SizesPicker implements SizesPickerAPI
         link.addEventListener("click", () => this.onCustomClick());
         link.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();
@@ -648,6 +649,7 @@ export class SizesPicker implements SizesPickerAPI
 
     private onItemKeydown(e: KeyboardEvent, preset: SizePreset): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();
@@ -680,6 +682,7 @@ export class SizesPicker implements SizesPickerAPI
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.isOpen) { return; }
         if (e.key === "Escape")
         {

@@ -1332,6 +1332,7 @@ function handleSymbolClick(
 /** Handle search input in the palette. */
 function handleSearchInput(state: InternalState): void
 {
+    logTrace("input handler");
     if (state.searchTimer)
     {
         clearTimeout(state.searchTimer);
@@ -1408,6 +1409,7 @@ function clearSearch(state: InternalState): void
 /** Handle input in the source textarea. */
 function handleSourceInput(state: InternalState): void
 {
+    logTrace("input handler");
     if (!state.sourceEl || state.destroyed)
     {
         return;
@@ -1421,6 +1423,7 @@ function handleSourceInput(state: InternalState): void
 /** Handle keydown events in the source textarea. */
 function handleKeyDown(state: InternalState, e: KeyboardEvent): void
 {
+    logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
     if (state.destroyed) { return; }
 
     if (e.ctrlKey && e.key === "Enter")

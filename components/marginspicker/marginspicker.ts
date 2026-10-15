@@ -597,6 +597,7 @@ export class MarginsPicker implements MarginsPickerAPI
         link.addEventListener("click", () => this.onCustomClick());
         link.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();
@@ -705,6 +706,7 @@ export class MarginsPicker implements MarginsPickerAPI
 
     private onItemKeydown(e: KeyboardEvent, preset: MarginPreset): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();
@@ -735,6 +737,7 @@ export class MarginsPicker implements MarginsPickerAPI
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.isOpen) { return; }
         if (e.key === "Escape")
         {

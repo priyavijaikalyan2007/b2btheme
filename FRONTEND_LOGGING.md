@@ -288,12 +288,34 @@ if (!container)
 
 * Use `logTrace` for very high-frequency or low-level operations.
 * Safe to leave in production — trace output is hidden by default.
+* Every component with a high-frequency handler MUST call `logTrace` in it.
+  `scripts/trace-scan.mjs` holds that rule and `audit-counts.mjs` fails when a
+  component stops. A component with no high-frequency work does not declare the
+  shim at all.
 
 ```typescript
 logTrace("mousedown handler fired:", { x: e.clientX, y: e.clientY });
 logTrace("render cycle:", { objectCount: objects.length, frameId });
 logTrace("DOM mutation:", { target: el.tagName, type: "childList" });
 ```
+
+**The payload is event metadata and never event content.** Trace runs inside
+text fields and password fields, so a payload is read by whoever turns the flag
+on. Three rules follow from section 5, and they are not advisory:
+
+| Event | Log | Never log |
+| --- | --- | --- |
+| `keydown`, `keyup` | A key NAME, and only when `key.length > 1`. A single character is reported as `"(char)"`. | `e.key` unguarded. One character is what a password is made of. |
+| `input`, `beforeinput` | `inputType`. | `value`, `data`, or the length of either. Length leaks a password. |
+| `scroll`, `resize` | The fact that the handler ran. | Anything read from layout. |
+
+The last row is about cost rather than privacy. `getBoundingClientRect` and
+`offsetHeight` force a reflow, and a reflow inside a scroll handler is the bug
+trace exists to find.
+
+One limit is known and accepted. A key that is a surrogate pair, such as an
+emoji, has a length of 2 and is logged in full. No component in this library
+takes an emoji as secret input.
 
 ---
 
@@ -321,6 +343,13 @@ at runtime without reloading the page:
 Flags are checked on every log call, so toggling them in the browser console takes effect
 immediately. This is useful for customer support scenarios where a customer reports a problem
 and the support engineer needs to see verbose component output.
+
+> **This holds only when the page loads `logutility.js`.** The fallback branch
+> inside each component reads the flag once, when the script is evaluated, so
+> setting it later in the console changes nothing there. 132 of the 138 demo
+> pages take that branch. Until LOG-6 is fixed, set the flag in an inline
+> `<script>` in `<head>`, ahead of the component, as the example in section 1.3
+> does.
 
 ```javascript
 // In the browser console:

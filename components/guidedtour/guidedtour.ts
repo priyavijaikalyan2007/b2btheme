@@ -622,6 +622,7 @@ class GuidedTour
 
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.active) { return; }
 
         if (e.key === "ArrowRight" || e.key === "ArrowDown")

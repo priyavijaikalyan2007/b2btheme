@@ -621,6 +621,7 @@ function handleDividerMove(
     options: StackLayoutOptions,
     isHorizontal: boolean): void
 {
+    logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
     const delta = (isHorizontal ? e.clientX : e.clientY) - startPos;
     const above = findExpandedAbove(panels, divIdx);
     const below = findExpandedBelow(panels, divIdx);
@@ -721,6 +722,7 @@ function bindHeaderEvents(
 
         panel.headerEl.addEventListener("keydown", (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();

@@ -1665,6 +1665,7 @@ export class TreeView
 
         this.searchInputEl.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Escape")
             {
                 this.clearSearch();
@@ -2298,6 +2299,7 @@ export class TreeView
      */
     private onVirtualScroll(): void
     {
+        logTrace("scroll handler");
         if (!this.virtualState || this.virtualState.scrollPending)
         {
             return;
@@ -3354,6 +3356,7 @@ export class TreeView
      */
     private onDocumentKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.rootEl?.contains(document.activeElement) ||
             this.isRenaming)
         {
@@ -3772,6 +3775,7 @@ export class TreeView
 
         input.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter")
             {
                 e.preventDefault();
@@ -4252,6 +4256,7 @@ export class TreeView
         e: DragEvent, row: HTMLElement, node: TreeNode
     ): void
     {
+        logTrace("dragover handler:", { x: e.clientX, y: e.clientY });
         if (!e.dataTransfer)
         {
             return;
@@ -4477,6 +4482,7 @@ export class TreeView
      */
     private onSearchInput(): void
     {
+        logTrace("input handler");
         if (this.searchDebounceTimer)
         {
             clearTimeout(this.searchDebounceTimer);

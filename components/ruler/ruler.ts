@@ -808,6 +808,7 @@ export class Ruler
     /** Handle pointermove: update cursor position and re-render. */
     private handlePointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.canvasEl || this.options.disabled)
         {
             return;

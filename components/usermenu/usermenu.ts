@@ -703,6 +703,7 @@ export class UserMenu
 
     private onTriggerKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "toggle") || this.matchesKeyCombo(e, "toggleAlt"))
         {
             e.preventDefault();
@@ -719,6 +720,7 @@ export class UserMenu
 
     private onDropdownKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "close"))
         {
             e.preventDefault();

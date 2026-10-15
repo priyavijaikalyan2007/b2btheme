@@ -987,6 +987,7 @@ export class Tagger
 
     private onInputChange(): void
     {
+        logTrace("input handler");
         const debounce = this.options.filterDebounceMs ?? 150;
 
         if (this.filterTimer) { clearTimeout(this.filterTimer); }
@@ -1000,6 +1001,7 @@ export class Tagger
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "moveDown"))
         {
             e.preventDefault();

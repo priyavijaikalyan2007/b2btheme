@@ -1563,7 +1563,11 @@ export class SymbolPicker
             "aria-label": "Search symbols",
             autocomplete: "off",
         });
-        input.addEventListener("input", () => this.applyFilter(input.value));
+        input.addEventListener("input", () =>
+        {
+            logTrace("input handler");
+            this.applyFilter(input.value);
+        });
         this.searchInput = input;
         const icon = createElement("i", ["bi", "bi-search", `${CLS}-search-icon`]);
         wrap.appendChild(icon);
@@ -2054,6 +2058,7 @@ export class SymbolPicker
     /** Dispatch keyboard events on the grid. */
     private onGridKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "moveLeft"))
         {
             e.preventDefault();
@@ -2266,6 +2271,7 @@ export class SymbolPicker
         };
         this.boundEscapeKey = (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (this.matchesKeyCombo(e, "closePopup"))
             {
                 this.closePopup();

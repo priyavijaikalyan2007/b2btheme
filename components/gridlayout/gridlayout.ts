@@ -655,6 +655,7 @@ export class GridLayout
 
         this.resizeObserver = new ResizeObserver(() =>
         {
+            logTrace("resize observer fired");
             this.recalculateColumns();
         });
 

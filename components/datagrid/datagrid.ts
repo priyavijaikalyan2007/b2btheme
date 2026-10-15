@@ -995,7 +995,10 @@ export class DataGrid
         setAttr(input, "aria-label", `Filter ${col.label}`);
 
         input.addEventListener("input", () =>
-            this.debouncedFilter(col.id, input.value));
+        {
+            logTrace("input handler:", { column: col.id });
+            this.debouncedFilter(col.id, input.value);
+        });
 
         return input;
     }
@@ -1047,6 +1050,7 @@ export class DataGrid
 
         const update = () =>
         {
+            logTrace("input handler");
             const val: Record<string, string> = {};
             if (min.value) { val[inputType === "number" ? "min" : "from"] = min.value; }
             if (max.value) { val[inputType === "number" ? "max" : "to"] = max.value; }
@@ -1265,6 +1269,7 @@ export class DataGrid
 
         cell.addEventListener("dragover", (e) =>
         {
+            logTrace("dragover handler");
             e.preventDefault();
             this.showDropIndicator(cell);
         });
@@ -2189,6 +2194,7 @@ export class DataGrid
 
     private handleEditorKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter")
         {
             e.preventDefault();
@@ -2231,6 +2237,7 @@ export class DataGrid
 
         const onMove = (me: PointerEvent) =>
         {
+            logTrace("pointermove handler:", { x: me.clientX, y: me.clientY });
             const newW = this.clampWidth(col, startWidth + (me.clientX - startX));
             col.width = newW;
             this.updateAllColumnWidths();
@@ -2351,6 +2358,7 @@ export class DataGrid
 
     private onViewportScroll(): void
     {
+        logTrace("scroll handler");
         if (!this.virtualActive || this.rafId !== null) { return; }
 
         this.rafId = requestAnimationFrame(() =>
@@ -2389,6 +2397,7 @@ export class DataGrid
 
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.editState) { return; }
 
         const target = e.target as HTMLElement;

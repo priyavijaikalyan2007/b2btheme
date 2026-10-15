@@ -1519,6 +1519,7 @@ export class MultiselectCombo
 
     private onFilterInput(): void
     {
+        logTrace("input handler");
         const query = this.filterInputEl?.value || "";
         this.filterQuery = query;
         this.options.onFilterChange?.(query);
@@ -1584,6 +1585,7 @@ export class MultiselectCombo
 
     private handleInputAreaKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -1683,6 +1685,7 @@ export class MultiselectCombo
 
     private handleFilterKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleFilterNavKeys(e)) { return; }
         this.handleFilterKeydownExtra(e);
     }

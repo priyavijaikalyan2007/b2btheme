@@ -1059,6 +1059,7 @@ export class PeriodPicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -1077,6 +1078,7 @@ export class PeriodPicker
 
     private onDropdownKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleDropdownNavKey(e))
         {
             return;

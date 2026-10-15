@@ -691,6 +691,7 @@ class SliderImpl
     /** Handle pointermove during drag. */
     private onPointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         const pct = this.getPointerPct(e);
         const rawVal = pctToValue(pct, this.opts.min, this.opts.max);
         const snapped = snapToStep(rawVal, this.opts.min, this.opts.step);
@@ -748,6 +749,7 @@ class SliderImpl
     /** Handle keydown on a thumb element. */
     private onThumbKeydown(e: KeyboardEvent, role: "single" | "low" | "high"): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.isDisabled) { return; }
 
         const delta = this.getKeyDelta(e);

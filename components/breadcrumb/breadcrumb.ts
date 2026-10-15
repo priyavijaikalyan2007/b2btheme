@@ -756,6 +756,7 @@ class Breadcrumb
     /** Handle keyboard events for dropdown navigation. */
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape" && this.activeDropdown)
         {
             e.preventDefault();

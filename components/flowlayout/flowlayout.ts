@@ -521,6 +521,7 @@ export class FlowLayout
 
         this.resizeObserver = new ResizeObserver(() =>
         {
+            logTrace("resize observer fired");
             this.fireOnLayoutChange();
         });
 

@@ -955,6 +955,7 @@ class RelationshipManagerImpl implements RelationshipManager
         }) as HTMLInputElement;
         input.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.runSearch(input.value);
         });
         wrap.appendChild(input);

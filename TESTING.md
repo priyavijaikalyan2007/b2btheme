@@ -262,6 +262,36 @@ same way you mutation-prove a ceiling**: restoring the strip drops the
 count to 0 and fails the check, which is the evidence that the floor is
 wired to the thing it names.
 
+### 2.7a A Count of Call Sites Cannot Tell You Output Reached a Console
+
+LOG-4 added 268 `logTrace` calls across 96 components, and
+`scripts/trace-scan.mjs` counts them. That count is worth exactly what it
+measures, which is the presence of a call. It cannot see a gate that never
+opens, a flag read at the wrong moment, or a payload that is empty.
+
+That is the STD-1 mistake in a different costume. The published `.d.ts` was
+200 OK for months and served one usable name, and the test that would have
+caught it had to read the artifact rather than count the source.
+
+So trace coverage is held by two different kinds of check:
+
+| Check | What it can prove | What it cannot |
+|---|---|---|
+| `tracedComponents` floor, 3 ceilings | A component stopped calling its shim | That calling it produces output |
+| `magnifier.trace.test.ts` | A real mousemove on a real component writes a real `[TRACE]` line, and the payload is exactly `{ x, y }` | Anything about the other 95 |
+
+Neither is enough. The floor covers the fleet and proves nothing about
+behaviour; the emission test proves behaviour on one component. Both were
+mutation-probed: deleting magnifier's single trace call fails two counts and
+two tests.
+
+**Capture the arguments, not a string of them.** The first version of the
+emission test did `args.map(String).join(" ")`, which renders the payload as
+`[object Object]`. The case named "the payload carries the pointer position
+and no content" then asserted nothing about either and passed for the same
+reason as the case above it. A privacy assertion that cannot fail is worse
+than no assertion, because it reads like the rule is enforced.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

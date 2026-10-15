@@ -755,6 +755,7 @@ export class TenantSwitcher
 
     private onDocKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.opened) { return; }
 
         if (this.matchesKeyCombo(e, "close"))
@@ -805,6 +806,7 @@ export class TenantSwitcher
 
     private onSearchInput(): void
     {
+        logTrace("input handler");
         clearTimeout(this.searchTimer);
         this.searchTimer = window.setTimeout(
             () => this.applySearch(),

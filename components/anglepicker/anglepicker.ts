@@ -628,6 +628,7 @@ export class AnglePicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === DEFAULT_KEY_BINDINGS.confirmInput)
         {
             e.preventDefault();
@@ -821,6 +822,7 @@ export class AnglePicker
 
     private onPointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.isDragging) { return; }
         e.preventDefault();
         this.updateAngleFromPointer(e);
@@ -857,6 +859,7 @@ export class AnglePicker
 
     private onDialKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.opts.disabled) { return; }
         const step = e.shiftKey ? this.opts.snapStep : this.opts.step;
         const handled = this.handleDialKey(e.key, step);
@@ -905,6 +908,7 @@ export class AnglePicker
 
     private onTriggerKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.opts.disabled) { return; }
         if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")
         {
@@ -926,6 +930,7 @@ export class AnglePicker
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.isOpen) { return; }
         if (e.key === "Tab")
         {

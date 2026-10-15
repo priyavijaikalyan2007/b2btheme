@@ -917,6 +917,7 @@ export class FileUpload
     // <- Handles: dragover
     private onDragOver(e: DragEvent): void
     {
+        logTrace("dragover handler:", { x: e.clientX, y: e.clientY });
         if (this.options.disabled)
         {
             return;
@@ -974,6 +975,7 @@ export class FileUpload
     // <- Handles: keydown
     private onDropzoneKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;

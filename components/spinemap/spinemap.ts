@@ -1621,6 +1621,7 @@ class SymbolPickerAdapter implements SpineFieldAdapter
         }) as HTMLInputElement;
         inp.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.selected = inp.value;
         });
         wrap.appendChild(inp);
@@ -3152,6 +3153,7 @@ export class SpineMap
         e: PointerEvent, pos: string, handle: HTMLElement
     ): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.sidebarResizing || !this.sidebarEl)
         {
             return;
@@ -3169,6 +3171,7 @@ export class SpineMap
     {
         handle.addEventListener("keydown", (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (!this.sidebarEl) { return; }
             const step = 10;
             const cur = this.sidebarEl.offsetWidth;
@@ -3653,6 +3656,7 @@ export class SpineMap
 
     private onWheel(e: WheelEvent): void
     {
+        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
         e.preventDefault();
         const dir = e.deltaY < 0 ? 1 : -1;
         const factor = 1 + dir * ZOOM_STEP;
@@ -3691,6 +3695,7 @@ export class SpineMap
 
     private onPointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (this.isPanning) { this.doPan(e); }
         else if (this.isDragging) { this.doDrag(e); }
         else if (this.isConnecting) { this.doConnection(e); }
@@ -4674,6 +4679,7 @@ export class SpineMap
 
     private onKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape") { this.hidePopover(); return; }
         if (e.key === "+" || e.key === "=") { this.zoomIn(); return; }
         if (e.key === "-") { this.zoomOut(); return; }

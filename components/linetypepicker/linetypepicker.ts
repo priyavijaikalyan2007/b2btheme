@@ -589,6 +589,7 @@ export class LineTypePicker
 
     private onTriggerKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.opts.disabled) { return; }
         if (e.key === DEFAULT_KEY_BINDINGS.openOrMoveDown ||
             e.key === DEFAULT_KEY_BINDINGS.openOrMoveUp ||
@@ -610,6 +611,7 @@ export class LineTypePicker
 
     private onDocumentKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.isOpen) { return; }
         if (e.key === "Escape")
         {

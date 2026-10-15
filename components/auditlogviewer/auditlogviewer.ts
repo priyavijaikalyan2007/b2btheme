@@ -485,6 +485,7 @@ export class AuditLogViewer
         setAttr(input, "aria-label", `Filter by ${key}`);
         input.addEventListener("input", () =>
         {
+            logTrace("input handler");
             (this.filters as Record<string, unknown>)[key] =
                 input.value.trim() || undefined;
             this.debouncedFilterText();
@@ -1197,6 +1198,7 @@ export class AuditLogViewer
 
     private onTableKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.tableBodyEl) { return; }
         const rows = this.tableBodyEl.querySelectorAll(`.${CLS}-row`);
         if (rows.length === 0) { return; }

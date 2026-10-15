@@ -1108,6 +1108,7 @@ export class EditableComboBox
     // <- Handles: input event on combobox-input
     private onInput(): void
     {
+        logTrace("input handler");
         const text = this.inputEl?.value ?? "";
 
         // Clear selection if text no longer matches
@@ -1132,6 +1133,7 @@ export class EditableComboBox
     // <- Handles: keydown event on combobox-input
     private onKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleNavKeys(e)) { return; }
         this.handlePositionKeys(e);
     }

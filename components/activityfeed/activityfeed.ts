@@ -773,6 +773,7 @@ export class ActivityFeed
         entries: IntersectionObserverEntry[]
     ): Promise<void>
     {
+        logTrace("intersection observer fired");
         if (this.loading || this.endReached || this.destroyed) { return; }
         const entry = entries[0];
         if (!entry || !entry.isIntersecting) { return; }

@@ -561,6 +561,7 @@ class NotificationCenter
         row.addEventListener("click", () => this.handleNotificationClick(n));
         row.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter" || e.key === " ")
             {
                 e.preventDefault();
@@ -739,6 +740,7 @@ class NotificationCenter
 
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape" && this.isOpen)
         {
             e.preventDefault();

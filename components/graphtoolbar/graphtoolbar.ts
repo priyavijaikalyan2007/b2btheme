@@ -407,6 +407,7 @@ function registerShortcuts(
 {
     ctx.handler = (e: KeyboardEvent) =>
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (ctx.destroyed) { return; }
         if (isInputFocused()) { return; }
         if (isModalOpen()) { return; }

@@ -1763,6 +1763,7 @@ export class DatePicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -1787,6 +1788,7 @@ export class DatePicker
 
     private onCalendarKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.viewMode === "day")
         {
             this.onDayViewKeydown(e);

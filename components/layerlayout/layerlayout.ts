@@ -580,6 +580,7 @@ export class LayerLayout
 
         this.resizeObserver = new ResizeObserver(() =>
         {
+            logTrace("resize observer fired");
             this.fireOnLayoutChange();
         });
 

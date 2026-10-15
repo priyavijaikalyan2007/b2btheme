@@ -1696,6 +1696,7 @@ export class Conversation
         });
         this.textareaEl.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.autoResizeTextarea();
             this.updateSendButtonState();
         });
@@ -2529,6 +2530,7 @@ export class Conversation
         e: PointerEvent, startX: number, startWidth: number
     ): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         const dx = startX - e.clientX;
         const minW = this.opts.canvasMinWidth || DEFAULT_CANVAS_MIN_WIDTH;
         const maxFraction = this.opts.canvasMaxWidthFraction
@@ -2558,6 +2560,7 @@ export class Conversation
 
         this.canvasEl.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Escape" && this.canvasOpen)
             {
                 this.hideCanvasPanel();
@@ -2570,6 +2573,7 @@ export class Conversation
      */
     private onCanvasHandleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") { return; }
         e.preventDefault();
         const delta = e.key === "ArrowLeft"
@@ -2793,6 +2797,7 @@ export class Conversation
      */
     private onTextareaKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "submit"))
         {
             e.preventDefault();
@@ -2953,6 +2958,7 @@ export class Conversation
      */
     private onMessageListScroll(): void
     {
+        logTrace("scroll handler");
         if (!this.messageListEl) { return; }
         const threshold = 5;
         const atBottom =

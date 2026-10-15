@@ -1249,6 +1249,7 @@ export class RibbonImpl implements Ribbon
         entry.addEventListener("mouseleave", () => this.scheduleSubmenu(item.id, sub, false));
         entry.addEventListener("keydown", (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (e.key === "ArrowRight")
             {
                 e.preventDefault();
@@ -2169,9 +2170,14 @@ export class RibbonImpl implements Ribbon
         if (input.width) { inp.style.width = input.width; }
         if (input.disabled) { inp.disabled = true; }
         if (input.tooltip) { inp.title = input.tooltip; }
-        inp.addEventListener("input", () => safeCallback(input.onInput, inp.value));
+        inp.addEventListener("input", () =>
+        {
+            logTrace("input input handler");
+            safeCallback(input.onInput, inp.value);
+        });
         inp.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter") { safeCallback(input.onSubmit, inp.value); }
         });
         wrap.appendChild(inp);
@@ -2192,7 +2198,11 @@ export class RibbonImpl implements Ribbon
         inp.value = color.value || "#000000";
         if (color.disabled) { inp.disabled = true; }
         if (color.tooltip) { inp.title = color.tooltip; }
-        inp.addEventListener("input", () => safeCallback(color.onInput, inp.value));
+        inp.addEventListener("input", () =>
+        {
+            logTrace("color input handler");
+            safeCallback(color.onInput, inp.value);
+        });
         inp.addEventListener("change", () =>
         {
             safeCallback(color.onChange, inp.value);
@@ -2202,7 +2212,11 @@ export class RibbonImpl implements Ribbon
         if (color.showLabel)
         {
             const hex = createElement("span", [`${CLS}-color-hex`], inp.value);
-            inp.addEventListener("input", () => { hex.textContent = inp.value; });
+            inp.addEventListener("input", () =>
+            {
+                logTrace("hex swatch input handler");
+                hex.textContent = inp.value;
+            });
             wrap.appendChild(hex);
         }
         return wrap;
@@ -2948,6 +2962,7 @@ export class RibbonImpl implements Ribbon
 
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "collapseRibbon"))
         {
             e.preventDefault();

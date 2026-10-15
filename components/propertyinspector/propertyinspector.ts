@@ -596,6 +596,7 @@ class PropertyInspector
 
         const onMove = (ev: PointerEvent) =>
         {
+            logTrace("pointermove handler:", { x: ev.clientX, y: ev.clientY });
             this.applyResize(startX, startWidth, ev.clientX);
         };
 
@@ -635,6 +636,7 @@ class PropertyInspector
 
     private handleKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Escape" && this.open_)
         {
             e.preventDefault();

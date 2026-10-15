@@ -619,6 +619,7 @@ export class AppLauncher
 
     private onSearchKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "focusDown"))
         {
             e.preventDefault();
@@ -1033,6 +1034,7 @@ export class AppLauncher
 
     private onSearchInput(): void
     {
+        logTrace("input handler");
         this.searchQuery = this.searchInputEl?.value.trim() ?? "";
         this.debouncedSearch();
     }
@@ -1259,6 +1261,7 @@ export class AppLauncher
 
     private handleGridKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "focusDown"))
         {
             e.preventDefault();
@@ -1371,6 +1374,7 @@ export class AppLauncher
 
     private onDocKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.opened) { return; }
         if (this.matchesKeyCombo(e, "close"))
         {

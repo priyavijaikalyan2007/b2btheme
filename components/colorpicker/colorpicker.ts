@@ -1095,6 +1095,7 @@ export class ColorPicker
         e: PointerEvent, canvas: HTMLCanvasElement
     ): void
     {
+        logTrace("palette pointer update:", { x: e.clientX, y: e.clientY });
         const rect = canvas.getBoundingClientRect();
         const x = clamp(e.clientX - rect.left, 0, rect.width);
         const y = clamp(e.clientY - rect.top, 0, rect.height);
@@ -1146,6 +1147,7 @@ export class ColorPicker
         e: PointerEvent, canvas: HTMLCanvasElement
     ): void
     {
+        logTrace("hue pointer update:", { x: e.clientX, y: e.clientY });
         const rect = canvas.getBoundingClientRect();
         const y = clamp(e.clientY - rect.top, 0, rect.height);
         this.hue = Math.round((y / rect.height) * 360);
@@ -1187,6 +1189,7 @@ export class ColorPicker
     /** Update alpha from pointer position on opacity bar. */
     private updateOpacityFromPointer(e: PointerEvent, bar: HTMLElement): void
     {
+        logTrace("opacity pointer update:", { x: e.clientX, y: e.clientY });
         const rect = bar.getBoundingClientRect();
         const x = clamp(e.clientX - rect.left, 0, rect.width);
         this.alpha = Math.round((x / rect.width) * 100) / 100;
@@ -1200,6 +1203,7 @@ export class ColorPicker
     /** Handle keyboard on palette canvas. */
     private handlePaletteKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const step = e.shiftKey ? 10 : 1;
         const hsv = hslToHsv(this.hue, this.saturation, this.lightness);
         let handled = true;
@@ -1238,6 +1242,7 @@ export class ColorPicker
     /** Handle keyboard on hue strip. */
     private handleHueKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const step = e.shiftKey ? 10 : 1;
         let handled = true;
 
@@ -1265,6 +1270,7 @@ export class ColorPicker
     /** Handle keyboard on opacity bar. */
     private handleOpacityKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const step = e.shiftKey ? 0.1 : 0.01;
         let handled = true;
 
@@ -1291,6 +1297,7 @@ export class ColorPicker
     /** Handle Enter key on hex input. */
     private handleHexKey(e: KeyboardEvent, input: HTMLInputElement): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter")
         {
             e.preventDefault();
@@ -1690,6 +1697,7 @@ export class ColorPicker
         };
         this.boundEscapeKey = (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (this.matchesKeyCombo(e, "closePopup"))
             {
                 this.close();

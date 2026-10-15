@@ -592,6 +592,7 @@ export class PersonChip
     /** Handle keyboard activation (Enter/Space). */
     private handleKeydown(e: Event): void
     {
+        logTrace("keydown handler");
         const key = (e as KeyboardEvent).key;
 
         if (key !== "Enter" && key !== " ")

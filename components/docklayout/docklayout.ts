@@ -711,6 +711,7 @@ export class DockLayout
 
         this.toolbarObserver = new ResizeObserver(() =>
         {
+            logTrace("resize observer fired");
             this.updateGridTemplate();
             this.fireOnLayoutChange();
         });

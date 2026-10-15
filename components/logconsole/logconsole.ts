@@ -742,6 +742,7 @@ export class LogConsole
 
         this.rafId = requestAnimationFrame(() =>
         {
+            logTrace("frame flush scheduled");
             this.rafId = null;
             this.flushPending();
         });

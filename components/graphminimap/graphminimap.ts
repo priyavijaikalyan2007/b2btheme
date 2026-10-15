@@ -409,6 +409,7 @@ function handlePointerDown(state: MinimapState, e: PointerEvent): void
 /** Handle pointermove — drag the viewport if dragging is active. */
 function handlePointerMove(state: MinimapState, e: PointerEvent): void
 {
+    logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
     if (!state.isDragging || state.destroyed)
     {
         return;

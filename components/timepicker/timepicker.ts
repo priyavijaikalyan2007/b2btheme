@@ -1540,6 +1540,7 @@ export class TimePicker
         setAttr(this.tzSearchEl, "aria-label", "Search timezones");
         this.tzSearchEl.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.filterTimezones();
         });
         this.tzSearchEl.addEventListener("keydown", (e) =>
@@ -2257,6 +2258,7 @@ export class TimePicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -2281,6 +2283,7 @@ export class TimePicker
 
     private onDropdownKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         const spinnerEl = this.spinnerEls[this.focusedSpinnerIndex];
         const type = spinnerEl?.getAttribute("data-type") ?? "hours";
 
@@ -2457,6 +2460,7 @@ export class TimePicker
 
     private onTzInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "tzInputOpen"))
         {
             e.preventDefault();
@@ -2491,6 +2495,7 @@ export class TimePicker
 
     private onTzSearchKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "tzSearchDown"))
         {
             e.preventDefault();

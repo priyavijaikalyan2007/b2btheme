@@ -384,6 +384,7 @@ export class PromptTemplateManager
 
         const onMove = (e: PointerEvent): void =>
         {
+            logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
             if (!this.listPaneEl) { return; }
             const delta = e.clientX - startX;
             const newWidth = Math.max(200, startWidth + delta);
@@ -449,6 +450,7 @@ export class PromptTemplateManager
         setAttr(this.searchInput, "aria-label", "Search templates");
         this.searchInput.addEventListener("input", () =>
         {
+            logTrace("input handler");
             if (this.debouncedSearch) { this.debouncedSearch(); }
         });
         this.searchInput.addEventListener("keydown", (e) =>
@@ -662,6 +664,7 @@ export class PromptTemplateManager
 
         this.editorEl.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.onFieldChange();
             if (this.debouncedExtract) { this.debouncedExtract(); }
         });
@@ -877,6 +880,7 @@ export class PromptTemplateManager
 
     private onTagKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === ",")
         {
             e.preventDefault();
@@ -1062,6 +1066,7 @@ export class PromptTemplateManager
         tplId: string, name: string, value: string
     ): void
     {
+        logTrace("variable input");
         const values = this.variableValues.get(tplId) || {};
         values[name] = value;
         this.variableValues.set(tplId, values);
@@ -1262,6 +1267,7 @@ export class PromptTemplateManager
 
     private onSearchKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "clearSearch"))
         {
             if (this.searchInput) { this.searchInput.value = ""; }
@@ -1281,6 +1287,7 @@ export class PromptTemplateManager
 
     private onFieldChange(): void
     {
+        logTrace("field input");
         const tpl = this.getSelectedTemplate();
         if (!tpl) { return; }
 
@@ -1661,6 +1668,7 @@ export class PromptTemplateManager
 
     private onGlobalKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "save"))
         {
             e.preventDefault();

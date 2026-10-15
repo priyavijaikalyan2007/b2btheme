@@ -2160,6 +2160,7 @@ class GraphCanvasImpl implements GraphCanvas
 
     private onWheel(e: WheelEvent): void
     {
+        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
         if (this.opts.zoomEnabled === false) { return; }
         e.preventDefault();
         const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
@@ -2310,6 +2311,7 @@ class GraphCanvasImpl implements GraphCanvas
 
     private onPointerMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (this.isDragging) { this.doDrag(e); return; }
         if (this.isPanning) { this.doPan(e); return; }
         if (this.isRubberBand) { this.doRubberBand(e); return; }
@@ -2488,6 +2490,7 @@ class GraphCanvasImpl implements GraphCanvas
 
     private onKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.root || document.activeElement !== this.root) { return; }
 
         switch (e.key)

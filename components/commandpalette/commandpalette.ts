@@ -503,6 +503,7 @@ export class CommandPalette
         const hk = this.parseHotkey();
         this.hotkeyHandler = function(e: KeyboardEvent)
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (self.matchesHotkey(e, hk))
             {
                 e.preventDefault();
@@ -648,6 +649,7 @@ export class CommandPalette
 
     private onInputChange(): void
     {
+        logTrace("input handler");
         this.showAll = false;
         const query = this.inputEl ? this.inputEl.value : "";
         if (this.opts.onSearch)
@@ -710,6 +712,7 @@ export class CommandPalette
 
     private onPaletteKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "close"))
         {
             e.preventDefault();

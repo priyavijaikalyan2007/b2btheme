@@ -3453,3 +3453,58 @@ return a class rather than a handle, against an entry reading "some" and
 filed MINOR. Tracker 45 resolved / 25 open.
 
 **Still waiting on the user.** LOG-4, LOG-5, ANY-3, DEBT-SEC-5, DEBT-ERR-2.
+
+---
+
+## LOG-4 — trace instrumentation (2026-10-15)
+
+**The user chose to instrument rather than delete.** `logTrace` was declared
+in 108 components and called in 2, so a drag or a scroll produced no trace
+output anywhere. The shims were a coverage gap, not dead code: the pattern
+was followed as far as declaring the helper.
+
+**96 components now carry 268 calls**, up from 2 and 10. 94 newly
+instrumented, 2 deepened.
+
+**The entry said 80 and the number is 83.** Not reproducible from any single
+change to the event list. The likely cause is three components that attach a
+bound method reference rather than an inline handler, which a body-seeking
+scan would miss. The definition now lives in `scripts/trace-scan.mjs`.
+
+**The population was wider than the entry's list.** richtextinput uses
+`selectionchange`. Eight layout components register no high-frequency
+listener at all and relayout on every `ResizeObserver` callback.
+activityfeed uses an `IntersectionObserver`.
+
+**Where the call goes was the whole problem.** 99 of 229 listener sites
+attach by reference and the commonest remaining shape is a thunk, so
+inserting at the registration site would have missed the first group and
+instrumented a wrapper for the second. An AST transform resolved each
+listener to the function that runs, and followed a delegation only when the
+event was forwarded or the callee was referenced once. Without that guard,
+four handlers resolved to helpers taking a `string` or a `number`. 222 of
+246 resolved; 24 refusals done by hand.
+
+**Payloads are metadata, never content.** A key name only when
+`key.length > 1`, `inputType` and never a value, and nothing read from
+layout in a scroll or resize handler.
+
+**12 dead shims removed** from components that do no high-frequency work,
+which FRONTEND_LOGGING.md already asked for and nothing enforced.
+
+**The ratchet is the second floor.** `tracedComponents` at 96, three
+ceilings at 0/0/13, all mutation-proved, plus an emission test that drives a
+real mousemove and pins the payload to exactly `{ x, y }`.
+
+**Cost paid, not hidden.** `dist/components` grew 22,651 bytes (0.60%).
+Nothing was saved.
+
+**Two entries opened.** LOG-4a: 13 components do high-frequency work and
+never declared a shim, so they were never in LOG-4. LOG-6:
+FRONTEND_LOGGING.md section 6 promises a runtime console toggle the fallback
+branch cannot keep, because 109 components read the trace flag once at
+script load. It affects debug equally, so it is filed apart.
+
+**Tracker 46 resolved / 26 open.**
+
+**Still waiting on the user.** LOG-5, LOG-6, ANY-3, DEBT-SEC-5, DEBT-ERR-2.

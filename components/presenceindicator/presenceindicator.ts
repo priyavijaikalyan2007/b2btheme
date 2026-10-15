@@ -618,6 +618,7 @@ export class PresenceIndicator
     /** Handle keyboard on collapsed stack. */
     private handleStackKeydown(e: Event): void
     {
+        logTrace("keydown handler");
         const key = (e as KeyboardEvent).key;
 
         if (key === "Enter" || key === " ")
@@ -630,6 +631,7 @@ export class PresenceIndicator
     /** Handle document Escape to collapse. */
     private handleDocKeydown(e: Event): void
     {
+        logTrace("keydown handler");
         const key = (e as KeyboardEvent).key;
 
         if (key !== "Escape" || !this.expanded)

@@ -574,6 +574,7 @@ export class ConfirmDialog
      */
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         // Ctrl+C — copy dialog content (Windows native dialog behaviour)
         if (e.ctrlKey && e.key === "c" && !window.getSelection()?.toString())
         {

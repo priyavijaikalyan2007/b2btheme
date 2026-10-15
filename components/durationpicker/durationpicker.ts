@@ -1648,6 +1648,7 @@ export class DurationPicker
 
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -1675,6 +1676,7 @@ export class DurationPicker
 
     private onDropdownKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesDropdownNavKey(e)) { return; }
         if (this.matchesDropdownActionKey(e)) { return; }
         this.handleNumericEntry(e);

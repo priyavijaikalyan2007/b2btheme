@@ -1086,6 +1086,7 @@ export class GradientPicker
     /** Handle pointer movement during stop drag. */
     private handleDragMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.trackEl) { return; }
         this.dragMoved = true;
         const rect = this.trackEl.getBoundingClientRect();
@@ -1364,6 +1365,7 @@ export class GradientPicker
     /** Handle arrow keys in the position input for fine adjustment. */
     private handlePositionInputKey(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key !== "ArrowUp" && e.key !== "ArrowDown")
         {
             return;
@@ -1502,6 +1504,7 @@ export class GradientPicker
         setAttr(colorInput, { "aria-label": "Stop colour" });
         colorInput.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.updateStopColor(colorInput.value, undefined);
             this.emitInput();
         });
@@ -1531,6 +1534,7 @@ export class GradientPicker
 
         slider.addEventListener("input", () =>
         {
+            logTrace("input handler");
             const alpha = parseInt(slider.value, 10) / 100;
             this.updateStopColor(undefined, alpha);
             this.emitInput();
@@ -1883,6 +1887,7 @@ export class GradientPicker
     /** Handle keydown on the stop track for keyboard navigation. */
     private handleTrackKeyDown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "ArrowLeft" || e.key === "ArrowRight")
         {
             this.handleArrowKey(e, e.key === "ArrowLeft" ? -1 : 1);
@@ -2093,6 +2098,7 @@ export class GradientPicker
 
         this.boundEscapeKey = (e: KeyboardEvent) =>
         {
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             if (e.key === "Escape")
             {
                 this.close();

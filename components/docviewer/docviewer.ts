@@ -364,6 +364,7 @@ class DocViewer
         this.tocSearchInput.placeholder = "Search...";
         this.tocSearchInput.addEventListener("input", () =>
         {
+            logTrace("input handler");
             this.searchToc(this.tocSearchInput?.value ?? "");
         });
         toc.appendChild(this.tocSearchInput);
@@ -499,6 +500,7 @@ class DocViewer
 
     private handleTocKeyDown(e: KeyboardEvent, page: DocPage): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter")
         {
             this.navigateToPage(page.id);
@@ -944,6 +946,7 @@ class DocViewer
 
     private handleResize(): void
     {
+        logTrace("resize handler");
         const w = window.innerWidth;
 
         if (this.outlineEl)

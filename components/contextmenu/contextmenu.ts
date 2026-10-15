@@ -708,6 +708,7 @@ function onOutsideClick(state: MenuState, e: MouseEvent): void
 /** Handle keyboard navigation within the menu. */
 function onKeyDown(state: MenuState, e: KeyboardEvent): void
 {
+    logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
     switch (e.key)
     {
         case "Escape":
@@ -872,6 +873,7 @@ export function attachLongPress(
 
     const onMove = (e: PointerEvent) =>
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (Math.abs(e.clientX - startX) > LONG_PRESS_MOVE_THRESHOLD
             || Math.abs(e.clientY - startY) > LONG_PRESS_MOVE_THRESHOLD)
         {

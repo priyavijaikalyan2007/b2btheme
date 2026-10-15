@@ -858,6 +858,7 @@ export class TimezonePicker
      */
     private filterTimezones(): void
     {
+        logTrace("input handler");
         const query = this.searchEl?.value.toLowerCase() ?? "";
         let anyVisible = false;
 
@@ -1303,6 +1304,7 @@ export class TimezonePicker
      */
     private onInputKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.options.disabled)
         {
             return;
@@ -1345,6 +1347,7 @@ export class TimezonePicker
      */
     private onSearchKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "searchDown"))
         {
             e.preventDefault();

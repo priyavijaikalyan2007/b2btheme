@@ -1756,6 +1756,7 @@ export class TreeGrid
      */
     private onDocumentKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.destroyed || !this.rootEl)
         {
             return;
@@ -2271,6 +2272,7 @@ export class TreeGrid
     {
         editor.addEventListener("keydown", (e: Event) =>
         {
+            logTrace("keydown handler");
             const ke = e as KeyboardEvent;
             switch (ke.key)
             {
@@ -2614,6 +2616,7 @@ export class TreeGrid
             });
             this.bodyEl.addEventListener("dragover", (e) =>
             {
+                logTrace("dragover handler");
                 const row = (e.target as HTMLElement).closest(".treegrid-row") as HTMLElement;
                 if (row)
                 {
@@ -2805,6 +2808,7 @@ export class TreeGrid
      */
     private onBodyScroll(_e: Event): void
     {
+        logTrace("scroll handler");
         // Sync header horizontal scroll with body
         if (this.headerEl && this.bodyEl)
         {
@@ -2939,6 +2943,7 @@ export class TreeGrid
      */
     private onResizeMove(e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!this.resizeColId)
         {
             return;
@@ -3163,6 +3168,7 @@ export class TreeGrid
      */
     private onHeaderDragOver(e: DragEvent, cell: HTMLElement): void
     {
+        logTrace("dragover handler:", { x: e.clientX, y: e.clientY });
         if (!this.reorderSourceId)
         {
             return;
@@ -4209,6 +4215,7 @@ export class TreeGrid
      */
     private onContextMenuKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.contextMenuEl)
         {
             return;

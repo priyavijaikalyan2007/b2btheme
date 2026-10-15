@@ -581,6 +581,7 @@ class ToastContainerInstance
         this.bindActionBtn(state);
         state.element.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (this.matchesKeyCombo(e as KeyboardEvent, "dismissToast"))
             {
                 this.dismiss(state);

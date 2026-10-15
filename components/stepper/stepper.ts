@@ -447,6 +447,7 @@ class Stepper
     /** Handle Enter/Space on a clickable step indicator. */
     private handleStepKeyDown(e: KeyboardEvent, index: number): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();

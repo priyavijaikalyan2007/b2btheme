@@ -936,6 +936,7 @@ export class FileExplorer
 
         const onMove = (e: PointerEvent): void =>
         {
+            logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
             if (!this.treeContainer) { return; }
             const delta = e.clientX - startX;
             const newW = Math.max(
@@ -2195,6 +2196,7 @@ export class FileExplorer
 
         input.addEventListener("keydown", (e) =>
         {
+            logTrace("keydown handler");
             if (e.key === "Enter") { e.preventDefault(); commit(); }
             if (e.key === "Escape")
             {
@@ -2366,6 +2368,7 @@ export class FileExplorer
 
     private onContentKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.handleKeyOpen(e)) { return; }
         if (this.handleKeyRename(e)) { return; }
         if (this.handleKeyDelete(e)) { return; }
@@ -2622,6 +2625,7 @@ export class FileExplorer
     {
         el.addEventListener("dragover", (e: DragEvent) =>
         {
+            logTrace("dragover handler:", { x: e.clientX, y: e.clientY });
             e.preventDefault();
             el.classList.add("fileexplorer-drop-target");
         });

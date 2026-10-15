@@ -603,6 +603,7 @@ function wireKeyboardEvent(
 {
     el.addEventListener("keydown", (e: Event) =>
     {
+        logTrace("keydown handler");
         const ke = e as KeyboardEvent;
 
         if (ke.key === "Enter" || ke.key === " ")

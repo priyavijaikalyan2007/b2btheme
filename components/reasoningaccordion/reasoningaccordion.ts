@@ -783,6 +783,7 @@ export class ReasoningAccordion
 
     private handleStepKeydown(e: KeyboardEvent, step: ReasoningStep): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "toggleStep") ||
             this.matchesKeyCombo(e, "toggleStepSpace"))
         {

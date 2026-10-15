@@ -1092,6 +1092,7 @@ export class MarkdownEditor
 
         const onPointerMove = (e: PointerEvent): void =>
         {
+            logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
             const deltaY = e.clientY - startY;
             const newHeight = Math.max(
                 this.options.minHeight,
@@ -1457,6 +1458,7 @@ export class MarkdownEditor
         // Escape closes inline toolbar and fullscreen
         this.boundHandlers.keydown = (e: Event) =>
         {
+            logTrace("keydown handler");
             const ke = e as KeyboardEvent;
             if (this.matchesKeyCombo(ke, "escape"))
             {

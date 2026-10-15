@@ -416,6 +416,7 @@ export class Magnifier
     /** Handle mouse movement over the target — reposition lens and offset clone. */
     private handleMouseMove(e: MouseEvent): void
     {
+        logTrace("mousemove handler:", { x: e.clientX, y: e.clientY });
         if (!this.enabled || !this.lensEl || !this.cloneEl || !this.targetEl)
         {
             return;

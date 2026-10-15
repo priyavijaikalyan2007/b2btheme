@@ -172,6 +172,7 @@ function attachClickBehavior(
     el.addEventListener("click", () => { onClick(); });
     el.addEventListener("keydown", (e: KeyboardEvent) =>
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (e.key === "Enter" || e.key === " ")
         {
             e.preventDefault();

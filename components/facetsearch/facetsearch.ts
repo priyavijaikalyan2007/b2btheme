@@ -1394,6 +1394,7 @@ export class FacetSearch
 
     private handleInput(): void
     {
+        logTrace("input handler");
         this.updateClearBtnVisibility();
 
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }
@@ -1410,6 +1411,7 @@ export class FacetSearch
 
     private handleKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "moveDown"))
         {
             e.preventDefault();

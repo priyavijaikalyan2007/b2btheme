@@ -54,6 +54,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { scanComponents } from "./trace-scan.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -297,6 +298,9 @@ const BASELINES = {
     diagramengineSrcMissingMarker: 2,
     scssMissingMarker: 4,
     diagramengineLines: 30488,
+    untracedHotShims: 0,
+    deadTraceShims: 0,
+    hotWithoutTraceShim: 13,
 };
 
 /*
@@ -315,9 +319,20 @@ const BASELINES = {
  * on a defect, and a missing export is an absence. Restoring the strip is
  * a one character edit to a build script, and the only visible effect
  * would be a d.ts quietly going back to one export, which no test read.
+ *
+ * tracedComponents is the second, and LOG-4 is the same shape again. 108
+ * components declared a logTrace shim and 2 called it, so a drag or a
+ * scroll produced no trace anywhere. An uncalled helper costs nothing and
+ * breaks nothing, which is why it survived seven months. The ceilings
+ * beside it close the other three doors: untracedHotShims fails if a
+ * high-frequency component stops calling the shim it declares,
+ * deadTraceShims fails if a component that does no high-frequency work
+ * carries one, and hotWithoutTraceShim holds the 13 components that never
+ * declared a shim and were therefore never part of LOG-4.
  */
 const FLOORS = {
     diagramengineBundleExports: 138,
+    tracedComponents: 96,
 };
 
 /**
@@ -658,6 +673,14 @@ function measure()
         readFileSync("components/diagramengine/diagramengine.ts", "utf8"));
     counts.diagramengineLines = readFileSync("components/diagramengine/diagramengine.ts", "utf8")
         .split("\n").length - 1;
+
+    // LOG-4. Trace coverage, measured by scripts/trace-scan.mjs, which owns
+    // the definition of what counts as high-frequency work.
+    const trace = scanComponents();
+    counts.tracedComponents = trace.traced.length;
+    counts.untracedHotShims = trace.untracedHotShim.length;
+    counts.deadTraceShims = trace.deadTraceShim.length;
+    counts.hotWithoutTraceShim = trace.hotWithoutShim.length;
 
     return { counts, consoleLogKinds, windowCastKinds, callSites, nonConforming, unmarked, fileCount: files.length };
 }

@@ -526,6 +526,7 @@ export class CommentOverlay
         });
         el.addEventListener("keydown", function(e)
         {
+            logTrace("keydown handler");
             if (self.matchesKeyCombo(e, "openPin") ||
                 self.matchesKeyCombo(e, "openPinSpace"))
             {
@@ -727,6 +728,7 @@ export class CommentOverlay
 
     private onPinDragMove(state: PinState, e: PointerEvent): void
     {
+        logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
         if (!state.dragActive) { return; }
         e.preventDefault();
         const ps = this.opts.pinSize ?? DEFAULT_PIN_SIZE;
@@ -783,6 +785,7 @@ export class CommentOverlay
         this.placementClickFn = function(e) { self.handlePlaceClick(e); };
         this.placementEscFn = function(e)
         {
+            logTrace("keydown handler");
             if (self.matchesKeyCombo(e, "escape")) { self.exitPlacementMode(); }
         };
         this.overlayEl!.addEventListener("click", this.placementClickFn);
@@ -966,6 +969,7 @@ export class CommentOverlay
         const self = this;
         el.addEventListener("keydown", function(e)
         {
+            logTrace("keydown handler");
             if (self.matchesKeyCombo(e, "escape"))
             {
                 e.stopPropagation();
@@ -1206,6 +1210,7 @@ export class CommentOverlay
         });
         ta.addEventListener("keydown", function(e)
         {
+            logTrace("keydown handler");
             if (self.matchesKeyCombo(e, "submit"))
             {
                 e.preventDefault();
@@ -1443,6 +1448,7 @@ export class CommentOverlay
         const self = this;
         ta.addEventListener("keydown", function(e)
         {
+            logTrace("keydown handler");
             if (self.matchesKeyCombo(e, "saveEdit"))
             {
                 e.preventDefault();
@@ -1583,6 +1589,7 @@ export class CommentOverlay
         const self = this;
         ta.addEventListener("input", function()
         {
+            logTrace("input handler");
             self.mTextarea = ta;
             self.mThreadId = threadId;
             self.handleMentionInput(ta);
@@ -1754,6 +1761,7 @@ export class CommentOverlay
 
     private handleMentionKeydown(e: KeyboardEvent): void
     {
+        logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (!this.mDropdown) { return; }
         if (e.key === "ArrowDown")
         {
@@ -1850,14 +1858,17 @@ export class CommentOverlay
         const self = this;
         const dScroll = debounce(function()
         {
+            logTrace("scroll reposition");
             self.reposition();
         }, REPOSITION_DEBOUNCE_MS);
         const dResize = debounce(function()
         {
+            logTrace("resize reposition");
             self.reposition();
         }, RESIZE_DEBOUNCE_MS);
         const dMutate = debounce(function()
         {
+            logTrace("mutation reposition");
             self.reposition();
         }, MUTATION_DEBOUNCE_MS);
         this.scrollFn = dScroll;

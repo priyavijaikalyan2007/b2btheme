@@ -6770,3 +6770,119 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-178
+  title: Trace was declared in 108 components and called in 2, and the gap needed a floor plus a resolver that refused the cases it could not place
+  date: 2026-10-15
+  status: accepted
+  context: |
+    LOG-4 recorded that logTrace was declared in 108 components and called
+    in 2, latexeditor and visualtableeditor, 10 call sites in all. The
+    entry asked for a binary decision: instrument the components with
+    high-frequency handlers, or take trace out and remove the dead gates
+    with it. The user chose to instrument.
+
+    THE ENTRY SAID 80 AND THE NUMBER IS 83. No single change to the event
+    list reproduces 80. The three components that are only reachable
+    through a bound method reference, magnifier, graphminimap and ruler,
+    are the likely cause, because a scan looking for an inline handler
+    body would miss exactly those. 83 minus 3 is 80. That is an
+    explanation, not a derivation, and it is recorded as one.
+
+    THE ENTRY ALSO UNDERSTATED THE POPULATION. Its event list omitted
+    selectionchange, which richtextinput uses, and it looked only at
+    listeners. Eight layout components register no high-frequency listener
+    and relayout on every ResizeObserver callback, which during a window
+    drag is frame rate. activityfeed does the same through an
+    IntersectionObserver.
+
+    NOTHING COULD HAVE CAUGHT ANY OF IT. Every count in audit-counts.mjs
+    before STD-1 measured an unwanted thing and held it down. An uncalled
+    helper costs nothing and breaks nothing, which is why it survived
+    seven months.
+  decision: |
+    D1. THE SCOPE IS THE 106 THAT DECLARED A SHIM. LOG-4 was defined over
+        the components that declared logTrace and never called it. 13
+        components do high-frequency work and never declared one. They are
+        a real gap and they are not this one, so they are filed as LOG-4a
+        and held at 13 by a ceiling. diagramengine is among them and is
+        the multi-namespace bundle with a line ratchet, which is a second
+        reason not to fold it in here.
+
+    D2. HIGH FREQUENCY MEANS REPEATS WITHIN ONE GESTURE, OR OBSERVES.
+        Fourteen DOM events qualify. So do ResizeObserver,
+        IntersectionObserver and MutationObserver. A one-shot
+        requestAnimationFrame that starts a CSS transition does not, and
+        neither does setInterval, which in this repository is a countdown
+        tick. bannerbar, codeeditor and gauge turn on that distinction and
+        all three lost their shim rather than gained a call. The rule is
+        code in scripts/trace-scan.mjs, not prose, because the last count
+        described in prose was wrong.
+
+    D3. THE CALL GOES ON THE HANDLER, NOT THE REGISTRATION. 99 of 229
+        listener sites attach by reference and the commonest remaining
+        shape is a delegating thunk. Inserting at the registration site
+        would have missed the first group entirely and instrumented a
+        wrapper rather than a handler in the second. The transform worked
+        on the TypeScript AST and resolved each listener through
+        .bind(this), name aliases and thunks to the function that runs.
+
+    D4. A DELEGATION IS FOLLOWED ONLY WHEN IT IS PROVABLY THE HANDLER.
+        Either the wrapper forwards its own event argument, or the callee
+        is referenced exactly once in the file. Without the second
+        condition the resolver reached helpers whose first parameter was a
+        string or a number, and four handlers would have been instrumented
+        as input events inside a shared method with other callers. The
+        guard caught all four and they were done by hand. 222 of 246 sites
+        resolved and the 24 refusals were deliberate.
+
+    D5. THE PAYLOAD IS METADATA AND NEVER CONTENT. Trace runs inside text
+        and password fields, and a payload is read by whoever turns the
+        flag on. keydown logs a key NAME and only when key.length is
+        greater than 1, so a single character reports as "(char)". input
+        logs inputType and never the value or its length, because a length
+        leaks a password. scroll and resize read nothing from layout,
+        since a forced reflow inside a scroll handler is the bug trace
+        exists to find. One limit is accepted and written down: a
+        surrogate-pair key such as an emoji has length 2 and is logged.
+
+    D6. THE RATCHET IS A FLOOR AND THREE CEILINGS. tracedComponents is the
+        second floor in the table, for the same reason as the first: a
+        missing logTrace is an absence. untracedHotShims and
+        deadTraceShims sit at 0 and hotWithoutTraceShim at 13. All four
+        were mutation-proved, and a separate test drives a real mousemove
+        through a real Magnifier and asserts the payload is exactly
+        { x, y }, because a count cannot tell whether a line reaches a
+        console.
+
+    D7. THE COST IS PAID AND NOT HIDDEN. dist/components grew 22,651
+        bytes, 0.60 percent, against the on-disk e361179 build. Nothing
+        was saved. The branch that saved the 15,485 bytes of LOG-3 gates
+        was the branch that deleted trace, and it was not taken.
+  consequences: |
+    + A DRAG OR A SCROLL NOW PRODUCES TRACE in 96 components rather than
+      2, across 268 call sites, with one flag.
+    + THE GAP CANNOT REOPEN QUIETLY. Four counts and 23 unit cases hold
+      the shape, and removing a single trace call fails two of each.
+    + TWELVE DEAD HELPERS ARE GONE, which FRONTEND_LOGGING.md already
+      asked for and nothing enforced.
+    - BUNDLES ARE 22,651 BYTES LARGER. Trace is not free and the entry
+      offered a cheaper branch.
+    - THIRTEEN COMPONENTS STILL HAVE NO SHIM, including diagramengine.
+      Held at a ceiling, filed as LOG-4a.
+    ? LOG-6 WAS FOUND WHILE READING THE GATES. FRONTEND_LOGGING.md
+      section 6 promises a runtime console toggle that the fallback branch
+      cannot deliver, because 109 components capture the trace flag once
+      at script load. It affects debug equally, so it is filed separately
+      and section 6 now carries a caveat instead of a false sentence.
+  files:
+    - "scripts/trace-scan.mjs"
+    - "scripts/trace-scan.test.ts"
+    - "scripts/audit-counts.mjs"
+    - "components/magnifier/magnifier.trace.test.ts"
+    - "FRONTEND_LOGGING.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"
