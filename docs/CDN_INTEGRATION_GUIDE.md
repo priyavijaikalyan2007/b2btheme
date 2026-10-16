@@ -326,6 +326,30 @@ content**"`, which means every MarkdownRenderer embed on every diagram
 showed those two words in place of what its author wrote. An empty string
 is accepted, because empty is an answer. Anything else throws.
 
+### Toolbar requires the tooltip its types already declared (2026-10-16, breaking)
+
+**Every tool, split button and gallery must declare a `tooltip`.** All
+three types have declared it required since they were written, with the
+comment "Required for accessibility", because it is the accessible name of
+a button that may show nothing but an icon. A type cannot enforce that
+against a host written in JavaScript, and an omitted tooltip used to reach
+the DOM as `title="undefined"` and `aria-label="undefined"`, with a
+Bootstrap trigger attached to show the word "undefined" on hover. A screen
+reader read the fabricated name out.
+
+```js
+// Omitting the tooltip previously built a button announced as
+// "undefined". It now throws:
+//   Toolbar tool "save" has no tooltip. The tooltip is the accessible
+//   name of an icon-only button, so every tool, split button and gallery
+//   must declare one.
+```
+
+A whitespace-only tooltip is treated as absent, because it names nothing.
+The item types that declare `tooltip?` optional are unaffected: inputs,
+dropdowns, labels, checkboxes, switches, numbers and colour pickers each
+carry their own visible label.
+
 ### This library will now throw at you
 
 Two consequences of ADR-148 that consuming code must handle:

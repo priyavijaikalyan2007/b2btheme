@@ -918,6 +918,35 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 }
 
 /**
+ * Returns the item's tooltip, or throws naming the item.
+ *
+ * ToolItem, SplitButtonItem and GalleryItem all declare tooltip as
+ * required and say why: it is the accessible name of a button that may
+ * show nothing but an icon. A type cannot enforce that against a host
+ * written in JavaScript, and a missing one used to reach the DOM as
+ * title="undefined" and aria-label="undefined", with a Bootstrap trigger
+ * attached to show the word "undefined" on hover. Both are worse than no
+ * tooltip, because a screen reader reads the fabricated name out.
+ *
+ * @param kind - The item kind, for the message
+ * @param id - The item id, for the message
+ * @param tooltip - The declared tooltip
+ * @returns The tooltip, once it is known to be one
+ */
+function requireTooltip(kind: string, id: string, tooltip: string): string
+{
+    if (typeof tooltip !== "string" || tooltip.trim().length === 0)
+    {
+        throw new Error(
+            `Toolbar ${kind} "${id}" has no tooltip. The tooltip is the `
+            + "accessible name of an icon-only button, so every tool, "
+            + "split button and gallery must declare one.");
+    }
+
+    return tooltip;
+}
+
+/**
  * Clamps a number between a minimum and maximum value.
  *
  * @param value - The value to clamp
@@ -2512,6 +2541,7 @@ export class Toolbar
         tool: ToolItem, region: ToolbarRegion
     ): HTMLElement
     {
+        const tooltip = requireTooltip("tool", tool.id, tool.tooltip);
         const effectiveStyle = tool.style || region.style || this.currentStyle;
 
         const btn = createElement("button", ["toolbar-tool", `toolbar-${effectiveStyle}`]);
@@ -2519,11 +2549,11 @@ export class Toolbar
         setAttr(btn, {
             "type": "button",
             "data-tool-id": tool.id,
-            "aria-label": tool.tooltip,
+            "aria-label": tooltip,
             "data-bs-toggle": "tooltip",
             "data-bs-placement": this.currentOrientation === "horizontal"
                 ? "bottom" : "right",
-            "title": tool.tooltip,
+            "title": tooltip,
         });
 
         // Roving tabindex — first tool gets 0, rest get -1
@@ -2573,6 +2603,8 @@ export class Toolbar
         split: SplitButtonItem, region: ToolbarRegion
     ): HTMLElement
     {
+        requireTooltip("split button", split.id, split.tooltip);
+
         const effectiveStyle = split.style || region.style || this.currentStyle;
         const container = createElement("div", ["toolbar-split"]);
         setAttr(container, { "data-tool-id": split.id });
@@ -2706,6 +2738,8 @@ export class Toolbar
         gallery: GalleryItem, region: ToolbarRegion
     ): HTMLElement
     {
+        requireTooltip("gallery", gallery.id, gallery.tooltip);
+
         const effectiveStyle = gallery.style || region.style || this.currentStyle;
         const container = createElement("div", ["toolbar-gallery"]);
         setAttr(container, { "data-tool-id": gallery.id });

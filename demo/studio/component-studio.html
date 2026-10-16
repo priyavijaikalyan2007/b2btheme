@@ -982,7 +982,7 @@
             { name: "toolbar", label: "Toolbar", icon: "bi-wrench",
               category: "Navigation", factory: "createToolbar", width: 500, height: 40,
               pattern: "opts",
-              defaults: { label: "Sample Toolbar", contained: true, regions: [{id:"main",items:[{id:"new",icon:"bi-plus",label:"New"},{id:"edit",icon:"bi-pencil",label:"Edit"},{id:"delete",icon:"bi-trash",label:"Delete"}]}] } },
+              defaults: { label: "Sample Toolbar", contained: true, regions: [{id:"main",items:[{id:"new",icon:"bi-plus",label:"New",tooltip:"New document"},{id:"edit",icon:"bi-pencil",label:"Edit",tooltip:"Edit document"},{id:"delete",icon:"bi-trash",label:"Delete",tooltip:"Delete document"}]}] } },
             { name: "sidebar", label: "Sidebar", icon: "bi-layout-sidebar",
               category: "Navigation", factory: "createSidebar", width: 250, height: 400,
               pattern: "opts",

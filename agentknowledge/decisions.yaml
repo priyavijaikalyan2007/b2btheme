@@ -7637,3 +7637,57 @@
     - "components/diagramengine/diagramengine-core.test.ts"
     - "scripts/audit-counts.mjs"
     - "docs/CDN_INTEGRATION_GUIDE.md"
+
+- id: ADR-188
+  title: A toolbar item that omits its required tooltip throws, rather than the component tolerating a contract it declares
+  date: 2026-10-16
+  status: accepted
+  context: |
+    FALLBACK-9 item 3 was recorded as a dependency-width problem: toolbar
+    sets data-bs-toggle="tooltip" on every tool button whether or not a
+    tooltip was given, so any toolbar with tools needs Bootstrap. The
+    recorded fix was to make the attribute conditional.
+
+    That fix was wrong under the rule the owner reaffirmed. ToolItem,
+    SplitButtonItem and GalleryItem all declare `tooltip: string`, each
+    with the comment "Required for accessibility". Making the component
+    cope with a missing one builds tolerance for a violated contract,
+    which is a fallback wearing a narrowing costume.
+  decision: |
+    D1. THE TOOLTIP IS REQUIRED, SO A MISSING ONE THROWS. requireTooltip
+        runs at the top of buildToolButton, buildSplitButton and
+        buildGalleryControl, and names the kind and the id.
+
+    D2. WHITESPACE IS ABSENCE. A tooltip of spaces names nothing, so it
+        is treated as missing rather than set.
+
+    D3. THE DEPENDENCY QUESTION ANSWERS ITSELF. Every tool now has a
+        tooltip, so every tool is a trigger, so a toolbar with tools
+        needs Bootstrap. That is what the FALLBACK-5 throw in
+        initTooltips already said, and the two now agree.
+
+    D4. THE OPTIONAL ONES STAY OPTIONAL. Inputs, dropdowns, labels,
+        checkboxes, switches, numbers and colour pickers declare
+        `tooltip?` and carry their own visible label, so
+        applyItemTooltip's `if (tooltip)` is a real optional field and
+        not a fallback. It is untouched.
+
+    D5. THE OLD TEST COMMENT WAS THE RECORD OF THE DEFECT. The
+        FALLBACK-5 test explained that a toolbar with tools always needs
+        Bootstrap "because buildTool sets data-bs-toggle on every button
+        whether or not a tooltip was given". That sentence is now false
+        and is rewritten, rather than left to mislead the next reader.
+  consequences: |
+    + AN ICON-ONLY BUTTON CAN NO LONGER BE ANNOUNCED AS "undefined".
+      This is the only accessibility defect the sweep found.
+    + THE RECORDED FIX IS CORRECTED IN PLACE in CODEBASE_FIXES, so the
+      next sweep does not implement the wrong one.
+    - BREAKING FOR JAVASCRIPT HOSTS that omitted a tooltip. TypeScript
+      hosts were already failing to compile.
+    ? ONE DEMO WAS BROKEN BY THE CHANGE AND FIXED: the Toolbar preview in
+      component-studio declared three tools with no tooltips.
+  files:
+    - "components/toolbar/toolbar.ts"
+    - "components/toolbar/toolbar.nofallback.test.ts"
+    - "demo/studio/component-studio.html"
+    - "docs/CDN_INTEGRATION_GUIDE.md"
