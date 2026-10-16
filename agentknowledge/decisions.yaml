@@ -7574,3 +7574,66 @@
     - "components/ribbonbuilder/ribbonbuilder.nofallback.test.ts"
     - "scripts/audit-counts.mjs"
     - "docs/CDN_INTEGRATION_GUIDE.md"
+
+- id: ADR-187
+  title: A diagram embed that cannot mount throws, and a render()-only embed carries its own content
+  date: 2026-10-16
+  status: accepted
+  context: |
+    FALLBACK-9 item 2 recorded one defect: tryRenderFallback passed the
+    literal string "**Embedded content**" to render(). Writing the test
+    for it exposed that the refusal could never be seen. invokeFactory
+    wrapped the whole mount chain in a catch that logged and drew a
+    placeholder, so the new throw was swallowed by the fallback two
+    functions above it. The two could not be separated.
+
+    MarkdownRendererHandle is `{ render, toHtml }`. It has no show() and
+    no getElement(), so every markdownrenderer embed on every diagram
+    went down the render() path and showed those two words.
+  decision: |
+    D1. RENDER() GETS options.content, OR NOTHING MOUNTS. A render()-only
+        component holds no content, so the embed definition is the only
+        source. The key is named rather than probed, and a value that is
+        not a string throws naming it. An empty string is accepted,
+        because empty is an answer, the same exemption refuseRawValue
+        makes for a field the user cleared.
+
+    D2. A MISSING FACTORY THROWS. It used to draw a dashed grey box with
+        a puzzle icon and the component name. That reads as a deliberate
+        part of the diagram, which is worse than an empty space: a broken
+        embed looked designed and nobody went looking.
+
+    D3. A THROWING FACTORY PROPAGATES. invokeFactory still logs, and then
+        rethrows rather than drawing the same box.
+
+    D4. THE BLAST RADIUS IS ONE EMBED. instantiateEmbed runs from a
+        requestAnimationFrame callback, so the throw does not reach the
+        renderer and the rest of the diagram still draws. The error
+        surfaces as an uncaught one on window, which is loud in a console
+        and catchable by a reporter.
+
+    D5. THE EXISTING TEST WAS NAMED FOR THE FALLBACK. "addObject with
+        embed renders placeholder when factory missing" asserted only
+        that a foreignObject exists, which stays true either way. It now
+        waits two frames and asserts the refusal, so it cannot pass for
+        the wrong reason.
+  consequences: |
+    + EVERY MARKDOWNRENDERER EMBED EVER PLACED ON A DIAGRAM was showing
+      "Embedded content" instead of its author's text. That is the third
+      defect of this shape, after the timeline zones and markdowneditor
+      display mode.
+    + diagramengineLines FELL FOR THE FIRST TIME, 30562 to 30522. The
+      counter has only ever risen, so the descent is recorded in the
+      raise log with the same care as a raise.
+    - BREAKING. A diagram whose embed bundle is absent now reports an
+      uncaught error per embed instead of drawing a box.
+    ? THE REFUSAL ARRIVES OUT OF BAND. A consumer who wants it in-band
+      has no hook, because the mount is deferred by design so the
+      foreignObject is in the DOM first.
+  files:
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/diagramengine.ts"
+    - "components/diagramengine/diagramengine.nofallback.test.ts"
+    - "components/diagramengine/diagramengine-core.test.ts"
+    - "scripts/audit-counts.mjs"
+    - "docs/CDN_INTEGRATION_GUIDE.md"

@@ -250,6 +250,18 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
+ * THE EIGHTH CHANGE IS THE FIRST FALL, 30562 -> 30522, and it is recorded
+ * here because a counter that has only ever gone up needs its one descent
+ * explained as carefully as a raise. FALLBACK-9 item 2 took forty lines
+ * out of `src/render-engine.ts`: renderEmbedPlaceholder and
+ * appendPlaceholderContent are gone, and what they drew is gone with them.
+ * A missing factory used to draw a dashed grey box with a puzzle icon and
+ * the component name, which looks like a deliberate part of a diagram, so
+ * a broken embed read as a designed one. The same placeholder stood in
+ * for a factory that threw. Thirty lines came back to plumb the embed
+ * definition into the render() mount path, which had been passing the
+ * literal string "**Embedded content**" to every render()-only embed.
+ *
  * The seventh raise was FALLBACK-8, 30551 -> 30562: eleven lines in
  * `src/engine.ts`, replacing `catch { return String(v); }` in
  * stringifyValue with a refusal carrying the original as cause. That
@@ -373,7 +385,7 @@ const BASELINES = {
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
-    diagramengineLines: 30562,
+    diagramengineLines: 30522,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

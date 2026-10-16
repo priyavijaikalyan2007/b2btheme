@@ -298,6 +298,34 @@ throws.
 A `createSymbolPicker` that is present but throws now surfaces at `show()`
 instead of hiding the host and leaving the designer with the short list.
 
+### DiagramEngine refuses a broken embed instead of drawing one (2026-10-16, breaking)
+
+**If a diagram object carries an `embed`, load that component's bundle.**
+A missing factory used to draw a dashed grey box with a puzzle icon and the
+component name. That looks like a deliberate part of a diagram, so a broken
+embed read as a designed one and nobody went looking. The same box stood in
+for a factory that threw.
+
+```js
+// Loading diagramengine.js without datagrid.js previously drew a dashed
+// box reading "datagrid". It now throws:
+//   DiagramEngine cannot mount its "datagrid" embed, because
+//   createDataGrid is not defined. Load the datagrid bundle before
+//   diagramengine.js, or remove the embed from the object.
+```
+
+Embeds mount from a `requestAnimationFrame` callback, so the refusal
+arrives as an uncaught error rather than from `addObject`. The rest of the
+diagram still renders. Listen on `window` for `error` if you report these.
+
+**A render()-only embed must carry `options.content`.** Components such as
+MarkdownRenderer expose `render(content, target)` and hold no content of
+their own, so the embed definition is the only place content can come
+from. DiagramEngine used to pass the literal string `"**Embedded
+content**"`, which means every MarkdownRenderer embed on every diagram
+showed those two words in place of what its author wrote. An empty string
+is accepted, because empty is an answer. Anything else throws.
+
 ### This library will now throw at you
 
 Two consequences of ADR-148 that consuming code must handle:

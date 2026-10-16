@@ -1009,9 +1009,8 @@ export class RenderEngine
     }
 
     /**
-     * Attempts to instantiate an embedded component via its factory
-     * function on window. Falls back to rendering a placeholder
-     * if the factory is not found.
+     * Instantiates an embedded component via its factory function on
+     * window, or throws naming the factory that is missing.
      *
      * @param container - The HTML container element.
      * @param objId - The diagram object ID.
@@ -1028,8 +1027,11 @@ export class RenderEngine
 
         if (typeof factory !== "function")
         {
-            this.renderEmbedPlaceholder(container, embed.component);
-            return;
+            throw new Error(
+                `DiagramEngine cannot mount its "${embed.component}" embed, `
+                + `because ${factoryName} is not defined. Load the `
+                + `${embed.component} bundle before diagramengine.js, or `
+                + "remove the embed from the object.");
         }
 
         this.invokeFactory(container, objId, embed, factory);
@@ -1088,37 +1090,37 @@ export class RenderEngine
         embed: EmbedDefinition,
         factory: unknown): void
     {
+        const fn = factory as Function;
+        const containerId = container.id;
+        const merged = {
+            ...embed.options,
+            container: container,
+            containerId: containerId,
+        };
+
+        const factoryName = this.resolveFactoryName(embed.component);
+
         try
         {
-            const fn = factory as Function;
-            const containerId = container.id;
-            const merged = {
-                ...embed.options,
-                container: container,
-                containerId: containerId,
-            };
-
-            const factoryName = this.resolveFactoryName(embed.component);
             const instance = this.callFactory(
-                fn, factoryName, containerId, merged
+                fn, factoryName, containerId, merged, embed
             );
 
             this.embedInstances.set(objId, instance);
             this.restoreEmbedState(instance, embed);
-
-            logInfo(`Embed instantiated: ${embed.component}`
-                + ` (${objId})`
-            );
         }
         catch (err)
         {
-            logError("Embed factory error:",
-                embed.component,
-                err
-            );
-
-            this.renderEmbedPlaceholder(container, embed.component);
+            // A dashed box reading the component name used to stand here.
+            // It looked like a deliberate part of the diagram, so a broken
+            // embed read as a designed one and nobody went looking.
+            logError("Embed factory error:", embed.component, err);
+            throw err;
         }
+
+        logInfo(`Embed instantiated: ${embed.component}`
+            + ` (${objId})`
+        );
     }
 
     /**
@@ -1142,13 +1144,15 @@ export class RenderEngine
      * @param factoryName - The factory function name for lookup.
      * @param containerId - The container element ID.
      * @param opts - Merged options with container references.
+     * @param embed - The embed definition, read for render() content.
      * @returns The component instance.
      */
     private callFactory(
         fn: Function,
         factoryName: string,
         containerId: string,
-        opts: Record<string, unknown>): unknown
+        opts: Record<string, unknown>,
+        embed: EmbedDefinition): unknown
     {
         let instance: unknown;
 
@@ -1165,7 +1169,7 @@ export class RenderEngine
             instance = fn(containerId, opts);
         }
 
-        this.tryShowOnContainer(instance, containerId);
+        this.tryShowOnContainer(instance, containerId, embed);
 
         return instance;
     }
@@ -1174,15 +1178,17 @@ export class RenderEngine
      * Mounts a component instance into the embed container.
      * Tries strategies in order:
      * 1. show(containerId) — most components
-     * 2. render(sampleContent, container) — MarkdownRenderer pattern
+     * 2. render(options.content, container) — MarkdownRenderer pattern
      * 3. getElement() + appendChild — LogConsole pattern
      *
      * @param instance - The component instance.
      * @param containerId - The container element ID.
+     * @param embed - The embed definition, read for render() content.
      */
     private tryShowOnContainer(
         instance: unknown,
-        containerId: string): void
+        containerId: string,
+        embed: EmbedDefinition): void
     {
         if (!instance || typeof instance !== "object")
         {
@@ -1211,7 +1217,7 @@ export class RenderEngine
             }
         }
 
-        this.tryRenderFallback(obj, containerId, failures);
+        this.tryRenderFallback(obj, containerId, failures, embed);
     }
 
     /**
@@ -1221,11 +1227,14 @@ export class RenderEngine
      *
      * @param obj - The component instance as a record.
      * @param containerId - The container element ID.
+     * @param failures - Collected failures from earlier strategies.
+     * @param embed - The embed definition, read for render() content.
      */
     private tryRenderFallback(
         obj: Record<string, unknown>,
         containerId: string,
-        failures: unknown[]): void
+        failures: unknown[],
+        embed: EmbedDefinition): void
     {
         const container = document.getElementById(containerId);
 
@@ -1236,15 +1245,28 @@ export class RenderEngine
                 + `"${containerId}" does not exist.`);
         }
 
-        // MarkdownRenderer pattern: render(content, target)
+        // MarkdownRenderer pattern: render(content, target). A
+        // render()-only component holds no content of its own, so the
+        // embed definition is the only place the content can come from.
+        // This used to pass the literal string "**Embedded content**",
+        // which every markdownrenderer embed on every diagram rendered
+        // in place of what its author wrote.
         if (typeof obj["render"] === "function")
         {
+            const content = embed.options["content"];
+
+            if (typeof content !== "string")
+            {
+                throw new Error(
+                    `DiagramEngine cannot mount a "${embed.component}" `
+                    + "embed, because it renders through render(content, "
+                    + "target) and options.content is not a string. Set "
+                    + "options.content on the embed definition.");
+            }
+
             try
             {
-                (obj["render"] as Function)(
-                    "**Embedded content**",
-                    container
-                );
+                (obj["render"] as Function)(content, container);
 
                 return;
             }
@@ -1311,68 +1333,6 @@ export class RenderEngine
         {
             (inst["setValue"] as Function)(embed.state);
         }
-    }
-
-    /**
-     * Renders a placeholder div when the component factory is not
-     * available. Shows the component name and a generic icon.
-     *
-     * @param container - The HTML container element.
-     * @param componentName - The component name for display.
-     */
-    private renderEmbedPlaceholder(
-        container: HTMLDivElement,
-        componentName: string): void
-    {
-        const placeholder = document.createElementNS(
-            XHTML_NS, "div"
-        ) as HTMLDivElement;
-
-        placeholder.setAttribute("xmlns", XHTML_NS);
-
-        placeholder.style.cssText = [
-            "display: flex",
-            "flex-direction: column",
-            "align-items: center",
-            "justify-content: center",
-            "width: 100%",
-            "height: 100%",
-            "background: rgba(108, 117, 125, 0.08)",
-            "border: 1px dashed rgba(108, 117, 125, 0.4)",
-            "color: #6c757d",
-            "font-size: 12px",
-            "gap: 4px"
-        ].join("; ");
-
-        this.appendPlaceholderContent(placeholder, componentName);
-
-        container.appendChild(placeholder);
-    }
-
-    /**
-     * Appends icon and label elements to a placeholder div.
-     *
-     * @param placeholder - The placeholder container.
-     * @param componentName - The component name for display.
-     */
-    private appendPlaceholderContent(
-        placeholder: HTMLDivElement,
-        componentName: string): void
-    {
-        const icon = document.createElementNS(
-            XHTML_NS, "i"
-        ) as HTMLElement;
-
-        icon.setAttribute("class", "bi bi-puzzle");
-        icon.style.fontSize = "24px";
-        placeholder.appendChild(icon);
-
-        const label = document.createElementNS(
-            XHTML_NS, "span"
-        ) as HTMLSpanElement;
-
-        label.textContent = componentName;
-        placeholder.appendChild(label);
     }
 
     /**

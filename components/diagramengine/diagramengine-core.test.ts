@@ -922,8 +922,17 @@ describe("DiagramEngine — Serialisation", () =>
         expect(registry.get("test-widget")!.factory).toBe("createTestWidget");
     });
 
-    test("addObject with embed renders placeholder when factory missing", () =>
+    test("addObject with embed refuses when the factory is missing", async () =>
     {
+        const errors: unknown[] = [];
+        const onError = (e: ErrorEvent): void =>
+        {
+            e.preventDefault();
+            errors.push(e.error);
+        };
+
+        window.addEventListener("error", onError);
+
         engine.registerEmbeddableComponent("fake-comp", {
             factory: "createFakeComp",
             label: "Fake Component",
@@ -958,6 +967,24 @@ describe("DiagramEngine — Serialisation", () =>
         const fo = g!.querySelector("foreignObject");
 
         expect(fo).not.toBeNull();
+
+        // Embeds mount from a requestAnimationFrame callback, so the
+        // refusal arrives as an uncaught error rather than at addObject.
+        // A dashed placeholder used to stand here instead.
+        await new Promise<void>((resolve) =>
+        {
+            requestAnimationFrame(() =>
+            {
+                requestAnimationFrame(() => resolve());
+            });
+        });
+
+        window.removeEventListener("error", onError);
+
+        expect(errors.length).toBe(1);
+        expect((errors[0] as Error).message)
+            .toMatch(/createFakeComp is not defined/);
+        expect(fo!.querySelector(".bi-puzzle")).toBeNull();
     });
 
     test("exportJSON returns JSON string", () =>
