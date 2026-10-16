@@ -701,7 +701,10 @@ function isValidTimezone(tz: string): boolean
 
 /**
  * Returns the list of IANA timezones supported by this browser.
- * Falls back to a common subset if Intl.supportedValuesOf is unavailable.
+ * FALLBACK-8. This used to answer with a curated list of eighteen zones
+ * when Intl.supportedValuesOf was unavailable. That list was presented as
+ * the IANA set and is not it, so a user searching for their own zone was
+ * told it does not exist. A short wrong answer is worse than no answer.
  */
 function getIANATimezones(): string[]
 {
@@ -709,20 +712,15 @@ function getIANATimezones(): string[]
     {
         return Intl.supportedValuesOf("timeZone");
     }
-    catch
+    catch (e)
     {
-        return [
-            "UTC",
-            "America/New_York", "America/Chicago",
-            "America/Denver", "America/Los_Angeles",
-            "America/Toronto", "America/Sao_Paulo",
-            "Europe/London", "Europe/Paris", "Europe/Berlin",
-            "Europe/Moscow",
-            "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata",
-            "Asia/Dubai", "Asia/Singapore",
-            "Australia/Sydney",
-            "Pacific/Auckland",
-        ];
+        const err = new Error(
+            "Timeline cannot list time zones, because "
+            + "Intl.supportedValuesOf is unavailable in this runtime. "
+            + "Pass an explicit timezone list instead of relying on the "
+            + "platform.");
+        (err as Error & { cause?: unknown }).cause = e;
+        throw err;
     }
 }
 

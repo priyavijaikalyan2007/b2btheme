@@ -360,8 +360,19 @@ function stringifyPropValue(v: unknown): string
     if (v === null || v === undefined) { return ""; }
     if (typeof v === "string") { return v; }
     if (typeof v === "number" || typeof v === "boolean") { return String(v); }
+    // FALLBACK-8. `String(v)` here rendered a circular or otherwise
+    // unstringifiable value as "[object Object]", which reads as data
+    // rather than as a failure to read it. Same shape as spinemap's
+    // stringifyForView, fixed under FALLBACK-4.
     try { return JSON.stringify(v); }
-    catch { return String(v); }
+    catch (e)
+    {
+        const err = new Error(
+            "GraphCanvas cannot stringify a property value. A circular "
+            + "structure is the usual cause.");
+        (err as Error & { cause?: unknown }).cause = e;
+        throw err;
+    }
 }
 
 function svgCreate(

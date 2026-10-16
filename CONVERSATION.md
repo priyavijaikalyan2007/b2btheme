@@ -3768,3 +3768,52 @@ because `execCommand` is a capability difference rather than a missing
 dependency.
 
 **Tracker 57 resolved / 20 open.**
+
+---
+
+## 2026-10-16 (cont.) — The full fallback review
+
+**"Yes, review all fallbacks; fail fast is the rule so it exposes real
+issues faster."** It did, four times over.
+
+**Four live data-losing defects, none with a failing test:**
+
+- FormDialog closed a dirty form **with no prompt** whenever
+  `showConfirmDialog` was absent. The edits went with it.
+- SpineMap presented a corrupt stored value as an **empty field**, and
+  saving the popover overwrote the real data.
+- MarkdownEditor put **raw markdown** into `innerHTML` and then called
+  `fireDisplayReady()`, reporting success while showing literal asterisks.
+- Both copy buttons ran `execCommand("copy")`, **never read the boolean it
+  returns**, and showed a success tick regardless.
+
+**The demos were the proof.** `demo/components/formdialog.html` loaded
+FormDialog without confirmdialog, so its unsaved-changes prompt had never
+once fired. Toolbar's own suite never loaded Bootstrap, so every tooltip
+across 22 passing tests silently did nothing. Both looked perfect, because
+a fallback draws something plausible.
+
+**Eight items were cleared, and that mattered as much as the removals.**
+The line that did the work: probing several APIs of **one** dependency is
+normalisation, substituting for a **missing** dependency is a fallback.
+`getDriverJs`, MarkdownEditor's `getHTML()` path and DiagramEngine's
+show/render/getElement probing are all the first kind. A blanket sweep
+would have deleted correct code.
+
+**My provisional list of eleven was both too long and too short.** Eight
+of it was cleared and the review added seven items it never named. That is
+what a list made by grepping for the word "fallback" is worth.
+
+**My own audit tool was wrong first.** It reported 71 silent catches
+because it matched `catch {` inside a comment I had written minutes
+earlier. Stripping comments first gives 61.
+
+**Two things I did not do.** RibbonBuilder's icon picker falls back to a
+whole second curated picker, so removing the fallback means deleting a
+working feature — a product call. And DiagramEngine's embed renderer passes
+a hardcoded `"**Embedded content**"` placeholder, which needs the embed
+plumbed through rather than a guard removed. Both are FALLBACK-9.
+
+**Six commits, one per family, each with its own revert boundary.**
+
+**Tracker 64 resolved / 19 open.**

@@ -513,36 +513,64 @@ quiet wrong answer.
   an object literal. That residue is why a green check `[16]` stays a ratchet
   rather than a clearance.
 
-- [ ] **FALLBACK-2** **Eight surviving fallbacks, each consumer-visible.**
-  Found by the FALLBACK-1 sweep and deliberately not changed in the same
-  commit, because every one alters what a host sees when a dependency is
-  absent. They are listed so they are decided rather than inherited:
+- [x] **FALLBACK-2** **Full fallback review, requested 2026-10-16.** The
+  owner asked for every fallback in the library to be reviewed with
+  fail-fast as the rule, "so it exposes real issues faster". It did. Every
+  `catch` in the tracked sources was classified by a brace-matching pass
+  that strips comments first: **7 rethrow, 149 log and continue, 61
+  silent**. The first run of that scan reported 71 silent and was wrong,
+  because it matched the words `catch {` inside a comment I had just
+  written. The classified outcome:
 
-  | Location | Current fallback |
+  **Removed (FALLBACK-3 to FALLBACK-8), each with its own commit:**
+
+  | Item | What it did |
   |---|---|
-  | `toolbar/toolbar.ts:4981` | Bootstrap Tooltip absent, drops to the `title` attribute |
-  | `markdowneditor/markdowneditor.ts:2047` | Bootstrap Modal absent, shows the modal by hand |
-  | `markdowneditor/markdowneditor.ts:967` | `Vditor.preview` absent, uses `getHTML()` |
-  | `markdowneditor/markdowneditor.ts:583` | Vditor instance absent, DOMPurify render |
-  | `formdialog/formdialog.ts:1743` | closes without the confirm prompt |
-  | `guidedtour/guidedtour.ts:186` | reaches for `window.driver.driver` |
-  | `sidebar/sidebar.ts:2315` | measures the first visible sidebar instead |
-  | `errordialog/errordialog.ts:418`, `codeeditor/codeeditor.ts:1107` | Clipboard API fails, `execCommand` via a temporary textarea |
+  | `formdialog` dirty close | Closed **without prompting** when `showConfirmDialog` was absent, discarding unsaved edits. Its `.catch(() => {})` also left a failed confirm doing nothing at all. |
+  | `spinemap` `defaultDeserialize` | Returned the raw string on a JSON parse failure, so a corrupt value showed as an empty field and saving overwrote it. |
+  | `spinemap` `confirmRemove` | Fell through to the browser's `confirm()` for a destructive action. |
+  | `spinemap` `stringifyForView`, `graphcanvas`, `diagramengine/src/engine.ts` | Rendered an unstringifiable value as `[object Object]`. |
+  | `spinemap` nine `destroy()` | `catch { /* safe */ }` made a broken widget teardown invisible. |
+  | `markdowneditor` display mode | Injected **raw markdown** as HTML and then called `fireDisplayReady()`. |
+  | `markdowneditor` modal | Hand-rolled a modal with no focus trap, escape handling or scroll lock. |
+  | `toolbar` tooltips | Returned quietly, so tooltips silently never appeared, and the `catch` hid real `Tooltip` failures. |
+  | `guidedtour` call site | Resolved Driver.js to `null` and carried on, so the tour did nothing. |
+  | `errordialog`, `codeeditor` copy | `execCommand` with its **boolean return unread**, then an unconditional success tick. |
+  | `diagramengine` embed mount | `show` → `render` → `getElement`, each swallowing, ending in silence. |
+  | `timeline` timezone list | Answered with **18 curated zones presented as the IANA set**, so a user's own zone appeared not to exist. |
 
-  The last row is the weakest candidate for removal, because `execCommand` is
-  a genuine capability difference rather than a missing dependency. The other
-  seven are the same shape as FALLBACK-1.
+  **Kept, with the reason recorded rather than swept:**
 
-  **SpineMap itself is not clean, and FALLBACK-1 should not be read as
-  saying so.** FALLBACK-1 removed the ten adapter stand-ins. Three further
-  shapes survive in the same file and were left because they are a
-  different kind of decision:
+  | Item | Why it is not a fallback |
+  |---|---|
+  | `guidedtour` `getDriverJs` | Probes two export shapes of **one** library. Normalisation, not substitution. |
+  | `markdowneditor` `getHTML()` preview | An alternate API of the **same live Vditor instance**, guarded on `this.vditor`, returning genuinely rendered HTML. |
+  | `diagramengine` show/render/getElement probing | Three mount APIs across heterogeneous embeds. Only the silence was removed. |
+  | `sidebar` returning `0` | Nothing visible means zero width. An honest empty read. |
+  | `chartpanel` `return fallback` | A documented default-parameter API, like diagramengine's stroke defaults. |
+  | `timezonepicker` `"--:--:--"` | Announces itself as no-value. Nobody reads it as a time. |
+  | `navrail` storage catches | AGENTS.md permits an empty read from failed storage, provided nothing is written back. |
+  | `markdownrenderer` error blocks | Renders a visible error state, which is a legitimate degraded mode. |
 
-  | Location | Current behaviour | Note |
-  |---|---|---|
-  | `spinemap.ts:523` | `defaultDeserialize` returns the raw string when stored JSON fails to parse | **The strongest candidate.** It is a fallback chain: `isRawFallback` exists only to route around it, and StandardComponentAdapter then declines to pass the value to the widget. A corrupt stored value therefore presents as an empty field, and saving the popover overwrites it. |
-  | `spinemap.ts:1659` | `stringifyForView` returns `String(value)` when `JSON.stringify` throws | View only, with no write path, so a circular value renders as `[object Object]` rather than corrupting anything. Lowest severity of the three. |
-  | `spinemap.ts`, 9 sites | `catch { /* safe */ }` inside each adapter's `destroy()` | Error **suppression** rather than value fabrication, so it is a different family. Worth deciding under the same rule, noting that a throw here can strand the teardown of the adapters after it. |
+- [ ] **FALLBACK-9** **Three findings the sweep surfaced that are NOT
+  fallbacks, and need their own decision.**
+
+  1. **`ribbonbuilder`'s icon picker falls back to a whole second curated
+     picker.** Removing the fallback means deleting ~150 lines of working
+     UI (`buildIconPickerHeader`, `buildIconPickerGrid`), and the eager
+     `initSymbolPicker()` on mount makes the curated path unreachable the
+     moment a throw is added. The two are coupled, so this is a product
+     decision rather than code hygiene. **Recommendation: throw at the
+     point of use in `showIconPicker` and delete the curated picker.**
+  2. **`diagramengine`'s `tryRenderFallback` passes a hardcoded
+     `"**Embedded content**"`** to `render()`, so that mount path shows
+     placeholder text instead of the embed's real content. Fixing it means
+     plumbing the embed definition through to the mount helper.
+  3. **`toolbar` sets `data-bs-toggle="tooltip"` on every tool button**
+     whether or not a tooltip was given, with `title` and `aria-label` set
+     to `undefined`. That is why a toolbar with any tool requires
+     Bootstrap. Not a fallback, but it makes the dependency wider than it
+     needs to be.
 
 ## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 

@@ -250,6 +250,13 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
+ * The seventh raise was FALLBACK-8, 30551 -> 30562: eleven lines in
+ * `src/engine.ts`, replacing `catch { return String(v); }` in
+ * stringifyValue with a refusal carrying the original as cause. That
+ * catch rendered a circular value as "[object Object]", which reads as
+ * data rather than as a failure to read it. The same shape was fixed in
+ * spinemap under FALLBACK-4 and in graphcanvas in the same commit.
+ *
  * The sixth raise was FALLBACK-7, 30529 -> 30551: twenty-two lines in
  * `src/render-engine.ts`. The embed mount chain tried show(), then
  * render(), then getElement(), and each one swallowed its own error with
@@ -280,7 +287,7 @@ export function countOccurrences(text, needle)
  * whole cost of making the engine's console fallback respond to a flag set
  * after the bundle loaded.
  *
- * The rule is still ratchet down only. All six raises are exceptions,
+ * The rule is still ratchet down only. All seven raises are exceptions,
  * taken deliberately, measured at their minimum, and written here rather
  * than quietly absorbed. A ratchet that cannot record a justified exception
  * gets worked around instead, and a worked-around ratchet measures
@@ -366,7 +373,7 @@ const BASELINES = {
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
-    diagramengineLines: 30551,
+    diagramengineLines: 30562,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

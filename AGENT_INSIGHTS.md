@@ -1331,3 +1331,68 @@ no cast at all.
 instinct when removing a bad pattern is to lift what the bad code did into
 the replacement, and what it did was itself a tracked debt. The counts
 noticed. Nothing else would have.
+
+### 6.88 A Fallback Is Where Two Implementations Drift Apart Unwatched (2026-10-16)
+
+The full sweep found the same defect shape four times, in four unrelated
+components, and in every case the fallback *looked* right:
+
+- `multiselectcombo`'s stand-in exposed `getValue()`, the adapter read
+  `getSelected()`. Every keystroke discarded.
+- Both copy buttons called `execCommand("copy")` and never read the
+  boolean it returns, then showed a success tick.
+- MarkdownEditor's display fallback put **markdown** into `innerHTML` and
+  called `fireDisplayReady()`.
+- FormDialog's dirty-close fallback called `doClose()` directly.
+
+None had a failing test. None had a bug report. The fallback is a second
+implementation of a path the first implementation also serves, and only
+one of the two is ever exercised. The unexercised one drifts, and the
+moment it runs is the moment nobody is watching.
+
+**This is why "fail fast exposes real issues faster" is a stronger claim
+than it sounds.** It is not mainly about debuggability. A fallback is
+code with no users, and code with no users is wrong by the time it runs.
+
+### 6.89 The Demo Page Is the Integration Test You Already Wrote (2026-10-16)
+
+Two pages in this repository had never worked:
+`demo/components/spinemap.html` configured a `periodpicker` and a
+`richtextinput` and loaded neither bundle, and
+`demo/components/formdialog.html` loaded FormDialog without
+confirmdialog, so its unsaved-changes prompt had never once fired.
+
+Both looked perfect. The fallbacks drew a text box and closed the dialog,
+which is exactly what a casual look expects to see.
+
+Removing the fallback is what surfaced them, and in the same motion
+Toolbar's own unit suite turned out never to have loaded Bootstrap — 22
+passing tests in which every tooltip silently did nothing.
+
+**A demo page is a consumer, and it is the one consumer whose breakage
+you can see for free.** When changing what a component demands, grep the
+demos before pushing. The first time, this was luck. The second time it
+was a checklist item, and it found a second page.
+
+### 6.90 Normalisation Is Not Substitution, and the Sweep Needs That Line (2026-10-16)
+
+A blanket "remove every fallback" would have deleted correct code. Three
+cases branch on which API is available and are right to:
+
+- `getDriverJs` probes `driver.js.driver` and `driver.driver`, two export
+  shapes of **one** library.
+- MarkdownEditor's `getHTML()` path uses another method of the **same
+  live Vditor instance** it already holds.
+- DiagramEngine tries `show`, `render` and `getElement` across
+  **heterogeneous** embedded components.
+
+The distinguishing question is not "does this code have a second branch".
+It is **"is the thing I am reaching for missing, or merely shaped
+differently?"** Normalising a shape yields the real result. Substituting
+for something missing yields a different result wearing the same name.
+
+Of the eleven items on the provisional list, eight were cleared on this
+test and the review added seven that were not on it. **The list produced
+by grepping for the word "fallback" was both too long and too short**,
+which is the ordinary condition of a list made from a name rather than a
+behaviour.

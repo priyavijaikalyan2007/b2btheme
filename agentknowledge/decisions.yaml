@@ -7409,3 +7409,102 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-185
+  title: The full fallback review, where fail-fast exposed four live data-losing defects and cleared eight false positives
+  date: 2026-10-16
+  status: accepted
+  context: |
+    After FALLBACK-1 the owner asked for every fallback in the library to
+    be reviewed, with fail-fast as the rule, "so it exposes real issues
+    faster". The provisional list from the FALLBACK-1 sweep named eleven
+    items. That list was both too long and too short.
+  decision: |
+    D1. EVERY CATCH WAS CLASSIFIED, not grepped. A brace-matching pass
+        that strips comments first found 7 rethrows, 149 that log and
+        continue, and 61 silent. The first run said 71 silent and was
+        wrong: it matched `catch {` inside a comment written minutes
+        earlier. A scan over source that includes its own prose is
+        measuring the wrong text.
+
+    D2. FAIL-FAST DID WHAT THE OWNER SAID IT WOULD. Four defects were
+        live and losing data, and none had a failing test:
+        formdialog discarded unsaved edits whenever showConfirmDialog was
+        absent, spinemap presented a corrupt stored value as an empty
+        field and then overwrote it, markdowneditor rendered raw markdown
+        and called fireDisplayReady, and both copy buttons showed a
+        success tick without reading execCommand's boolean return.
+
+    D3. THE DEMOS WERE THE PROOF. demo/components/formdialog.html loaded
+        formdialog.js and not confirmdialog.js, so its unsaved-changes
+        prompt had never once fired. demo/components/spinemap.html
+        configured two pickers and loaded neither bundle. Both pages
+        looked correct because the fallbacks drew something plausible.
+
+    D4. TOOLBAR'S OWN SUITE WAS THE SAME STORY. It never loaded
+        Bootstrap, so every tooltip across 22 passing tests had silently
+        never initialised. The tests now stub Tooltip. The component
+        staying quiet was what let the suite pass.
+
+    D5. EIGHT ITEMS WERE CLEARED, and the reasons are recorded. The
+        distinction that did the work: probing several APIs of ONE
+        dependency is normalisation, substituting for a MISSING
+        dependency is a fallback. guidedtour's getDriverJs,
+        markdowneditor's getHTML path and diagramengine's
+        show/render/getElement probing are all the former. sidebar
+        returning 0 is an honest empty read, chartpanel's is a
+        default-parameter API, and timezonepicker's "--:--:--"
+        announces itself.
+
+    D6. A DEMAND IS SCOPED TO THE FEATURE, NOT THE COMPONENT. Toolbar
+        counts tooltip triggers before requiring Bootstrap. Requiring it
+        from a toolbar that asked for no tooltips would be a different
+        bug. In practice every toolbar with tools does require it,
+        because buildTool marks every button as a trigger, and that is
+        recorded as FALLBACK-9 rather than hidden by the fix.
+
+    D7. TEARDOWN COLLECTS RATHER THAN SWALLOWS. spinemap's nine adapter
+        destroys and toolbar's tooltip disposal both ran under
+        `catch { }`. Throwing from inside the loop would strand the
+        teardown of everything after the failure, so the loops collect
+        and report after the last one, with the first failure as cause.
+        Each adapter also clears its instance BEFORE calling the widget.
+
+    D8. RIBBONBUILDER WAS DELIBERATELY NOT DONE. Its icon picker falls
+        back to a whole second curated picker, and an eager
+        initSymbolPicker makes that path unreachable the moment a throw
+        is added, so removing the fallback means deleting a working
+        feature. That is the owner's call, not a hygiene fix.
+
+    D9. THE TIMELINE LIST IS THE SHARPEST SMALL ONE. Eighteen curated
+        zones were returned as the IANA set, so a user searching for
+        their own zone was told it does not exist. A short wrong answer
+        is worse than no answer.
+  consequences: |
+    + FOUR LIVE DATA-LOSING DEFECTS ARE FIXED, each found by applying the
+      rule rather than by a bug report.
+    + TWO DEMO PAGES THAT HAD NEVER WORKED now load what they configure.
+    + THE REVIEW IS WRITTEN DOWN WITH ITS NEGATIVES, so the eight cleared
+      items do not get re-litigated every sweep.
+    + SIX COMMITS, one per family, each with its own revert boundary.
+    - BREAKING FOR CONSUMERS IN SEVEN PLACES. A host that relied on any
+      removed fallback now gets a thrown error naming what to load.
+    - THE DIAGRAMENGINE CEILING ROSE TWICE in one session, 30529 to
+      30551 to 30562, both recorded in the raise log.
+    ? THREE FINDINGS ARE OPEN AS FALLBACK-9, and the ribbonbuilder one
+      needs a product decision before any code moves.
+  files:
+    - "components/formdialog/formdialog.ts"
+    - "components/spinemap/spinemap.ts"
+    - "components/markdowneditor/markdowneditor.ts"
+    - "components/toolbar/toolbar.ts"
+    - "components/guidedtour/guidedtour.ts"
+    - "components/errordialog/errordialog.ts"
+    - "components/codeeditor/codeeditor.ts"
+    - "components/graphcanvas/graphcanvas.ts"
+    - "components/timeline/timeline.ts"
+    - "components/diagramengine/src/render-engine.ts"
+    - "components/diagramengine/src/engine.ts"
+    - "scripts/audit-counts.mjs"
+    - "CODEBASE_FIXES.md"
+    - "CHANGELOG.md"
