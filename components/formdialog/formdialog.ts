@@ -1721,28 +1721,47 @@ class FormDialogImpl implements FormDialog
     private promptDirtyClose(): void
     {
         const win = window;
-        if (typeof win.showConfirmDialog === "function")
+
+        // FALLBACK-3. This used to call doClose() when the global was
+        // absent, so a dirty form closed with no prompt at all and the
+        // user's edits went with it. Nothing in this repository defines
+        // showConfirmDialog except the confirmdialog bundle, so any page
+        // that loaded formdialog.js without it discarded work silently.
+        if (typeof win.showConfirmDialog !== "function")
         {
-            // Kept as a local rather than called as `win.showConfirmDialog(...)`
-            // so the call stays unbound, which is how it has always been
-            // emitted. Removing the local would silently change `this` from
-            // undefined to window.
-            const showConfirm = win.showConfirmDialog;
-            showConfirm({
-                title: "Unsaved Changes",
-                message: "You have unsaved changes. Discard them?",
-                confirmLabel: "Discard",
-                variant: "warning"
-            }).then((confirmed: boolean) =>
-            {
-                if (confirmed) { this.doClose(); }
-            }).catch(() => { /* noop */ });
+            logError(
+                "Cannot prompt before discarding unsaved changes, because "
+                + "showConfirmDialog is not defined.");
+
+            throw new Error(
+                "FormDialog needs showConfirmDialog before it can discard "
+                + "unsaved changes. Load the confirmdialog bundle before "
+                + "formdialog.js.");
         }
-        else
+
+        // Kept as a local rather than called as `win.showConfirmDialog(...)`
+        // so the call stays unbound, which is how it has always been
+        // emitted. Removing the local would silently change `this` from
+        // undefined to window.
+        const showConfirm = win.showConfirmDialog;
+        showConfirm({
+            title: "Unsaved Changes",
+            message: "You have unsaved changes. Discard them?",
+            confirmLabel: "Discard",
+            variant: "warning"
+        }).then((confirmed: boolean) =>
         {
-            // Fallback: close without prompt
-            this.doClose();
-        }
+            if (confirmed) { this.doClose(); }
+        }).catch((err: unknown) =>
+        {
+            // The old `.catch(() => {})` left the user with no answer: they
+            // clicked close and nothing happened, with nothing logged. The
+            // form stays open, which is the safe side, and the rejection
+            // surfaces rather than being absorbed here.
+            logError("The confirm dialog failed, so the form stays open:",
+                err);
+            throw err;
+        });
     }
 
     // ====================================================================

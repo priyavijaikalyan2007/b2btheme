@@ -84,6 +84,11 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <!-- FormDialog asks showConfirmDialog before discarding unsaved
+         changes, and only the confirmdialog bundle defines it. Without this
+         line the prompt never appeared and a dirty form closed silently
+         (FALLBACK-3). FormDialog now throws instead. -->
+    <script src="../../dist/components/confirmdialog/confirmdialog.js"></script>
     <script src="../../dist/components/formdialog/formdialog.js"></script>
 
     <script>
