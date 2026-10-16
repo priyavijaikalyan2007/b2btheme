@@ -572,11 +572,21 @@ class GuidedTour
             this.driverInstance = null;
         }
 
+        // FALLBACK-5. getDriverJs probes two export shapes of ONE library,
+        // which is normalisation and stays. Returning null here and
+        // carrying on was the fallback: the tour silently did nothing.
         const DriverClass = getDriverJs();
-        if (DriverClass)
+        if (!DriverClass)
         {
-            this.driverInstance = this.createDriverInstance(DriverClass);
+            logError("Cannot start the tour, because Driver.js is not "
+                + "loaded.");
+
+            throw new Error(
+                "GuidedTour needs Driver.js. Load the driver.js bundle "
+                + "before guidedtour.js.");
         }
+
+        this.driverInstance = this.createDriverInstance(DriverClass);
     }
 
     private markComplete(): void

@@ -4976,20 +4976,36 @@ export class Toolbar
      */
     private initTooltips(container: HTMLElement): void
     {
+        // FALLBACK-5. This used to return quietly whenever Bootstrap was
+        // absent, so a page without the bundle simply had no tooltips and
+        // nothing said so.
+        //
+        // The demand is made only when there is something to initialise.
+        // A toolbar whose tools declare no tooltip does not need Bootstrap
+        // for this, and requiring it there would be a different bug.
+        const triggers = container.querySelectorAll<HTMLElement>(
+            '[data-bs-toggle="tooltip"]'
+        );
+
+        if (triggers.length === 0) { return; }
+
+        if (typeof bootstrap === "undefined" || !bootstrap.Tooltip)
+        {
+            logError("Cannot initialise tooltips, because Bootstrap JS is "
+                + "not loaded.");
+
+            throw new Error(
+                `Toolbar has ${triggers.length} tooltip trigger(s) but the `
+                + "Bootstrap JavaScript bundle is not loaded. Load "
+                + "dist/js/bootstrap.bundle.min.js before toolbar.js.");
+        }
+
         try
         {
-            if (typeof bootstrap === "undefined" || !bootstrap.Tooltip)
-            {
-                return;
-            }
 
-            // Held in a local because the guard above does not narrow inside
-            // the callback below, and `querySelectorAll` is given its element
-            // type because the Tooltip constructor wants an HTMLElement.
+            // Held in a local because the guard above does not narrow
+            // inside the callback below.
             const Tooltip = bootstrap.Tooltip;
-            const triggers = container.querySelectorAll<HTMLElement>(
-                '[data-bs-toggle="tooltip"]'
-            );
 
             triggers.forEach((el) =>
             {
@@ -4999,8 +5015,13 @@ export class Toolbar
         }
         catch (e)
         {
-            // Bootstrap JS not available — tooltips degrade to title attribute
-            logDebug("Tooltip init skipped; Bootstrap JS not available.");
+            // The guard above has already established that Bootstrap is
+            // loaded, so anything caught here is a real Tooltip failure.
+            // The old comment claimed otherwise and swallowed it.
+            const err = new Error(
+                "Toolbar failed to initialise its Bootstrap tooltips.");
+            (err as Error & { cause?: unknown }).cause = e;
+            throw err;
         }
     }
 
@@ -5009,19 +5030,26 @@ export class Toolbar
      */
     private disposeTooltips(): void
     {
+        // Every tooltip is disposed even when one throws, because a
+        // half-disposed toolbar leaks instances. Failures are reported
+        // after the last one rather than ignored.
+        const failures: unknown[] = [];
         for (const instance of this.tooltipInstances)
         {
-            try
-            {
-                instance.dispose();
-            }
-            catch (e)
-            {
-                // Ignore disposal errors
-            }
+            try { instance.dispose(); }
+            catch (e) { failures.push(e); }
         }
 
         this.tooltipInstances = [];
+
+        if (failures.length > 0)
+        {
+            const err = new Error(
+                `${failures.length} Toolbar tooltip(s) failed to dispose. `
+                + "The first failure is attached as cause.");
+            (err as Error & { cause?: unknown }).cause = failures[0];
+            throw err;
+        }
     }
 
     /**

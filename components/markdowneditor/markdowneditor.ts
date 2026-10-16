@@ -614,8 +614,18 @@ export class MarkdownEditor
         }
         else
         {
-            this.previewArea.innerHTML = sanitiseHTML(this.displayValue);
-            this.fireDisplayReady();
+            // FALLBACK-5. This used to inject displayValue, which is
+            // MARKDOWN, straight into innerHTML, so the reader saw literal
+            // asterisks and hashes. It then called fireDisplayReady(),
+            // which is ADR-148 clause 1 exactly: a degraded component
+            // reported success, and the host had no way to tell.
+            logError(
+                "Cannot render display mode, because Vditor.preview is "
+                + "not available.");
+
+            throw new Error(
+                "MarkdownEditor needs Vditor to render markdown. Load the "
+                + "Vditor bundle before markdowneditor.js.");
         }
     }
 
@@ -2044,10 +2054,17 @@ function showMarkdownEditorModalFn(
     }
     else
     {
-        // Fallback: show modal manually
-        logWarn("Bootstrap JS not found — showing modal with basic CSS");
-        backdrop.classList.add("show");
-        backdrop.style.display = "block";
+        // FALLBACK-5. A hand-rolled modal with none of Bootstrap's focus
+        // trapping, escape handling or scroll locking is not the modal
+        // this component documents, and nothing told the host which one
+        // they got.
+        logError("Cannot show the editor modal, because Bootstrap JS is "
+            + "not loaded.");
+
+        throw new Error(
+            "MarkdownEditor needs the Bootstrap JavaScript bundle to show "
+            + "a modal. Load dist/js/bootstrap.bundle.min.js before "
+            + "markdowneditor.js.");
 
         closeBtn.addEventListener("click", () =>
         {

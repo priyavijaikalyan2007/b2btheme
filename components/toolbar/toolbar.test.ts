@@ -103,8 +103,23 @@ function makeSplitButtonRegion(): ToolbarRegion
 // SETUP / TEARDOWN
 // ============================================================================
 
+// Toolbar needs Bootstrap's Tooltip whenever a tool declares a tooltip,
+// and jsdom has no Bootstrap. Until FALLBACK-5 the component returned
+// quietly here, so every tooltip in this file silently never initialised
+// and the suite still passed. The stub makes the dependency explicit.
+interface TooltipStub { dispose(): void }
+
+const bootstrapStub = {
+    Tooltip: class implements TooltipStub
+    {
+        dispose(): void { /* no-op */ }
+    }
+};
+
 beforeEach(() =>
 {
+    (window as unknown as Record<string, unknown>)["bootstrap"] =
+        bootstrapStub;
     container = document.createElement("div");
     container.id = "toolbar-test-container";
     document.body.appendChild(container);
@@ -113,6 +128,7 @@ beforeEach(() =>
 afterEach(() =>
 {
     container.remove();
+    delete (window as unknown as Record<string, unknown>)["bootstrap"];
 });
 
 // ============================================================================
