@@ -42,7 +42,6 @@ export const RIBBONBUILDER_MANIFEST: CapabilityManifest =
     regions: [
         "ribbonbuilder:tree-body",
         "ribbonbuilder:props",
-        "ribbonbuilder:iconpicker",
         "ribbonbuilder:symbolpicker-host",
         "ribbonbuilder:control-menu",
     ],

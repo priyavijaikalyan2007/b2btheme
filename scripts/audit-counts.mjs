@@ -362,7 +362,7 @@ const BASELINES = {
     driftedHostRule: 0,
     overLengthLines: 288,
     unpinnedCdnRefs: 0,
-    unusedLocals: 308,
+    unusedLocals: 306,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,

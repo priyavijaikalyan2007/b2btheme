@@ -381,15 +381,8 @@
 }
 
 // ============================================================================
-// ICON PICKER
+// SYMBOLPICKER OVERLAY
 // ============================================================================
-
-.ribbonbuilder-iconpicker {
-    border-top: 1px solid var(--theme-border-color);
-    background: var(--theme-surface-raised-bg);
-    max-height: 280px;
-    overflow-y: auto;
-}
 
 // SymbolPicker overlay (modal dialog)
 .ribbonbuilder-symbolpicker-overlay {
@@ -436,97 +429,6 @@
         // stylelint-disable-next-line declaration-no-important
         grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)) !important;
     }
-}
-
-.ribbonbuilder-iconpicker-header {
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--theme-border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: sticky;
-    top: 0;
-    background: var(--theme-surface-raised-bg);
-    z-index: 1;
-}
-
-.ribbonbuilder-iconpicker-search {
-    padding: 3px 6px;
-    border: 1px solid var(--theme-input-border);
-    background: var(--theme-input-bg);
-    border-radius: $border-radius;
-    font-size: $font-size-xs;
-    width: 100%;
-
-    &:focus {
-        outline: none;
-        border-color: var(--theme-focus-border);
-    }
-}
-
-.ribbonbuilder-iconpicker-cats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-}
-
-.ribbonbuilder-iconpicker-cat {
-    padding: 2px 6px;
-    border: 1px solid transparent;
-    background: transparent;
-    font-size: $font-size-2xs;
-    color: var(--theme-text-secondary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background-color 0.1s;
-
-    &:hover {
-        background: var(--theme-hover-bg);
-    }
-
-    &--active {
-        background: var(--theme-selected-bg);
-        color: var(--theme-primary);
-        border-color: var(--theme-focus-border);
-    }
-}
-
-.ribbonbuilder-iconpicker-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: 1px;
-    padding: 4px;
-}
-
-.ribbonbuilder-iconpicker-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: 1px solid transparent;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color 0.1s, border-color 0.1s;
-
-    &:hover {
-        background: var(--theme-selected-bg);
-        border-color: var(--theme-focus-border);
-    }
-
-    i {
-        font-size: $font-size-base;
-        color: var(--theme-text-secondary);
-    }
-}
-
-.ribbonbuilder-iconpicker-empty {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 16px;
-    color: var(--theme-text-muted);
-    font-style: italic;
-    font-size: $font-size-xs;
 }
 
 // ============================================================================

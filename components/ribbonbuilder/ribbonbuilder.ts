@@ -268,149 +268,6 @@ function setAttr(
 }
 
 // ============================================================================
-// S3: BOOTSTRAP ICON DATA (CURATED)
-// ============================================================================
-
-/** Icon category for the picker grid. */
-interface IconCategory
-{
-    id: string;
-    label: string;
-    icons: string[];
-}
-
-/** Curated Bootstrap Icons grouped by category. */
-const ICON_CATEGORIES: IconCategory[] =
-[
-    {
-        id: "actions",
-        label: "Actions",
-        icons: [
-            "bi-plus", "bi-dash", "bi-x", "bi-check", "bi-check2",
-            "bi-pencil", "bi-trash", "bi-gear", "bi-sliders",
-            "bi-funnel", "bi-search", "bi-zoom-in", "bi-zoom-out",
-            "bi-download", "bi-upload", "bi-cloud-download",
-            "bi-cloud-upload", "bi-share", "bi-link", "bi-pin",
-            "bi-bookmark", "bi-star", "bi-heart", "bi-flag",
-            "bi-bell", "bi-eye", "bi-eye-slash", "bi-lock",
-            "bi-unlock", "bi-key", "bi-shield-check",
-        ],
-    },
-    {
-        id: "arrows",
-        label: "Arrows",
-        icons: [
-            "bi-arrow-left", "bi-arrow-right", "bi-arrow-up",
-            "bi-arrow-down", "bi-arrow-clockwise",
-            "bi-arrow-counterclockwise", "bi-arrows-move",
-            "bi-box-arrow-up-right", "bi-chevron-left",
-            "bi-chevron-right", "bi-chevron-up", "bi-chevron-down",
-            "bi-caret-left-fill", "bi-caret-right-fill",
-            "bi-caret-up-fill", "bi-caret-down-fill",
-            "bi-arrow-repeat", "bi-arrow-return-left",
-            "bi-arrow-bar-up", "bi-arrow-bar-down",
-        ],
-    },
-    {
-        id: "files",
-        label: "Files",
-        icons: [
-            "bi-file-earmark", "bi-file-earmark-text",
-            "bi-file-earmark-code", "bi-file-earmark-image",
-            "bi-file-earmark-pdf", "bi-file-earmark-spreadsheet",
-            "bi-file-earmark-zip", "bi-file-earmark-plus",
-            "bi-folder", "bi-folder-plus", "bi-folder2-open",
-            "bi-clipboard", "bi-clipboard2", "bi-clipboard-check",
-            "bi-clipboard-data", "bi-files", "bi-floppy",
-            "bi-save", "bi-printer", "bi-archive",
-        ],
-    },
-    {
-        id: "communication",
-        label: "Communication",
-        icons: [
-            "bi-envelope", "bi-chat", "bi-chat-dots",
-            "bi-chat-left-text", "bi-telephone", "bi-camera-video",
-            "bi-megaphone", "bi-broadcast", "bi-rss",
-            "bi-globe", "bi-translate", "bi-at",
-            "bi-send", "bi-reply", "bi-forward",
-            "bi-people", "bi-person", "bi-person-plus",
-            "bi-person-check", "bi-building",
-        ],
-    },
-    {
-        id: "media",
-        label: "Media",
-        icons: [
-            "bi-image", "bi-camera", "bi-film", "bi-music-note",
-            "bi-play-fill", "bi-pause-fill", "bi-stop-fill",
-            "bi-skip-forward-fill", "bi-skip-backward-fill",
-            "bi-volume-up", "bi-volume-mute", "bi-mic",
-            "bi-record-circle", "bi-cast", "bi-fullscreen",
-            "bi-aspect-ratio", "bi-crop", "bi-palette",
-            "bi-paint-bucket", "bi-brush",
-        ],
-    },
-    {
-        id: "charts",
-        label: "Charts",
-        icons: [
-            "bi-bar-chart", "bi-bar-chart-line", "bi-graph-up",
-            "bi-graph-down", "bi-pie-chart", "bi-speedometer2",
-            "bi-activity", "bi-clipboard-data",
-            "bi-diagram-3", "bi-grid", "bi-grid-3x3",
-            "bi-kanban", "bi-list-task", "bi-calendar",
-            "bi-calendar-event", "bi-clock", "bi-hourglass",
-            "bi-percent", "bi-hash", "bi-calculator",
-        ],
-    },
-    {
-        id: "text",
-        label: "Text",
-        icons: [
-            "bi-type-bold", "bi-type-italic", "bi-type-underline",
-            "bi-type-strikethrough", "bi-type-h1", "bi-type-h2",
-            "bi-type-h3", "bi-text-left", "bi-text-center",
-            "bi-text-right", "bi-justify", "bi-list-ul",
-            "bi-list-ol", "bi-text-indent-left",
-            "bi-text-indent-right", "bi-blockquote-left",
-            "bi-code", "bi-code-slash", "bi-braces",
-            "bi-quote", "bi-fonts", "bi-scissors",
-        ],
-    },
-    {
-        id: "misc",
-        label: "Misc",
-        icons: [
-            "bi-house", "bi-box", "bi-truck", "bi-cart",
-            "bi-bag", "bi-gift", "bi-cup-hot", "bi-lightning",
-            "bi-sun", "bi-moon", "bi-cloud", "bi-snow",
-            "bi-tree", "bi-bug", "bi-wrench", "bi-hammer",
-            "bi-puzzle", "bi-joystick", "bi-trophy",
-            "bi-emoji-smile", "bi-hand-thumbs-up",
-            "bi-exclamation-triangle", "bi-info-circle",
-            "bi-question-circle",
-        ],
-    },
-];
-
-/** Flat list of all icon names for search. */
-function getAllIcons(): string[]
-{
-    const result: string[] = [];
-
-    for (const cat of ICON_CATEGORIES)
-    {
-        for (const icon of cat.icons)
-        {
-            result.push(icon);
-        }
-    }
-
-    return result;
-}
-
-// ============================================================================
 // S4: CLASS SHELL & CONSTRUCTOR
 // ============================================================================
 
@@ -448,7 +305,6 @@ class RibbonBuilderImpl
     private previewContainerEl!: HTMLElement;
     private treeEl!: HTMLElement;
     private propsEl!: HTMLElement;
-    private iconPickerEl!: HTMLElement;
 
     // State
     private selectedNode: TreeNodeRef | null = null;
@@ -456,7 +312,6 @@ class RibbonBuilderImpl
     private previewInstance: { destroy(): void } | null = null;
     private expandedNodes: Set<string> = new Set();
     private controlTypeMenuEl: HTMLElement | null = null;
-    private activeIconField = false;
     private symbolPickerInstance: Record<string, Function> | null = null;
     private symbolPickerHostEl!: HTMLElement;
     private symbolPickerOverlay!: HTMLElement;
@@ -951,19 +806,15 @@ class RibbonBuilderImpl
         return divider;
     }
 
-    /** Build the right panel (properties + icon picker). */
+    /** Build the right panel (properties). */
     private buildRightPanel(): HTMLElement
     {
         const panel = createElement("div", [`${CLS}-right`]);
 
         this.propsEl = createElement("div", [`${CLS}-props`]);
         this.propsEl.setAttribute("data-dui-region", "ribbonbuilder:props");
-        this.iconPickerEl = createElement("div", [`${CLS}-iconpicker`]);
-        this.iconPickerEl.setAttribute("data-dui-region", "ribbonbuilder:iconpicker");
-        this.iconPickerEl.style.display = "none";
 
         panel.appendChild(this.propsEl);
-        panel.appendChild(this.iconPickerEl);
 
         this.renderProperties();
 
@@ -1193,7 +1044,6 @@ class RibbonBuilderImpl
     private selectNode(ref: TreeNodeRef): void
     {
         this.selectedNode = ref;
-        this.activeIconField = false;
         this.renderTree();
         this.renderProperties();
         this.hideIconPicker();
@@ -2068,7 +1918,6 @@ class RibbonBuilderImpl
 
         pickerBtn.addEventListener("click", () =>
         {
-            this.activeIconField = true;
             this.showIconPicker(input, onChange);
         });
 
@@ -2125,6 +1974,10 @@ class RibbonBuilderImpl
 
         if (typeof win["createSymbolPicker"] !== "function")
         {
+            // The refusal belongs at the point of use, not here. A ribbon
+            // with no icon field never opens the picker, so a missing
+            // bundle must not stop the builder from mounting.
+            // showIconPicker says the rest.
             this.symbolPickerHostEl.style.display = "none";
             return;
         }
@@ -2132,19 +1985,11 @@ class RibbonBuilderImpl
         const containerId = `${CLS}-symbolpicker-host-${this.instanceId}`;
         this.symbolPickerHostEl.id = containerId;
 
-        try
-        {
-            const opts = this.buildSymbolPickerOpts();
-            this.symbolPickerInstance =
-                (win["createSymbolPicker"] as Function)(
-                    containerId, opts
-                ) as Record<string, Function>;
-        }
-        catch (err)
-        {
-            logWarn("SymbolPicker init failed:", err);
-            this.symbolPickerHostEl.style.display = "none";
-        }
+        const opts = this.buildSymbolPickerOpts();
+        this.symbolPickerInstance =
+            (win["createSymbolPicker"] as Function)(
+                containerId, opts
+            ) as Record<string, Function>;
     }
 
     /** Build SymbolPicker configuration object. */
@@ -2188,39 +2033,36 @@ class RibbonBuilderImpl
         this.hideIconPicker();
     }
 
-    /** Show the icon picker in a modal overlay. */
+    /** Show the icon picker, or refuse when SymbolPicker is absent. */
     private showIconPicker(
         input: HTMLInputElement,
         onChange: (v: string) => void
     ): void
     {
-        if (this.symbolPickerInstance)
+        if (!this.symbolPickerInstance)
         {
-            this.activeIconInput = input;
-            this.activeIconOnChange = onChange;
-            this.symbolPickerInstance["enable"]();
-            this.symbolPickerHostEl.style.display = "";
-            this.symbolPickerOverlay.style.display = "";
-            this.iconPickerEl.style.display = "none";
-            this.iconPickerEl.innerHTML = "";
-            return;
+            logError("Icon picker unavailable: SymbolPicker is not loaded.");
+            throw new Error(
+                "RibbonBuilder cannot open its icon picker, because "
+                + "createSymbolPicker is not defined. Load the symbolpicker "
+                + "bundle before ribbonbuilder.js.");
         }
 
-        // Fallback: curated BI-only picker
-        this.iconPickerEl.style.display = "";
-        this.iconPickerEl.innerHTML = "";
-        this.buildIconPickerHeader(input, onChange);
-        this.buildIconPickerGrid("", null, input, onChange);
+        logTrace("icon picker opened");
+
+        this.activeIconInput = input;
+        this.activeIconOnChange = onChange;
+        this.symbolPickerInstance["enable"]();
+        this.symbolPickerHostEl.style.display = "";
+        this.symbolPickerOverlay.style.display = "";
     }
 
-    /** Hide the icon picker (curated fallback) or deactivate SymbolPicker. */
+    /** Hide the SymbolPicker overlay and clear the active field. */
     private hideIconPicker(): void
     {
         this.deactivateIconPicker();
         this.symbolPickerOverlay.style.display = "none";
         this.symbolPickerHostEl.style.display = "none";
-        this.iconPickerEl.style.display = "none";
-        this.iconPickerEl.innerHTML = "";
     }
 
     /** Deactivate the persistent SymbolPicker (disable, clear refs). */
@@ -2231,29 +2073,19 @@ class RibbonBuilderImpl
 
         if (this.symbolPickerInstance)
         {
-            try { this.symbolPickerInstance["disable"](); }
-            catch (err)
-            {
-                logWarn("SymbolPicker disable error:", err);
-            }
+            this.symbolPickerInstance["disable"]();
         }
     }
 
     /** Destroy the SymbolPicker instance permanently (used in destroy()). */
     private destroySymbolPicker(): void
     {
-        if (this.symbolPickerInstance)
-        {
-            try { this.symbolPickerInstance["destroy"](); }
-            catch (err)
-            {
-                logWarn("SymbolPicker destroy error:", err);
-            }
-            this.symbolPickerInstance = null;
-        }
-
+        const inst = this.symbolPickerInstance;
+        this.symbolPickerInstance = null;
         this.activeIconInput = null;
         this.activeIconOnChange = null;
+
+        if (inst) { inst["destroy"](); }
     }
 
     /** Build full CSS icon class from a SymbolItem char value. */
@@ -2269,142 +2101,6 @@ class RibbonBuilderImpl
         }
 
         return char;
-    }
-
-    /** Build icon picker search + category filter header. */
-    private buildIconPickerHeader(
-        input: HTMLInputElement,
-        onChange: (v: string) => void
-    ): void
-    {
-        const header = createElement("div", [`${CLS}-iconpicker-header`]);
-
-        const searchInput = document.createElement("input");
-        searchInput.type = "text";
-        searchInput.className = `${CLS}-iconpicker-search`;
-        searchInput.placeholder = "Search icons...";
-
-        let activeCategory: string | null = null;
-
-        const catBar = this.buildCategoryBar((catId) =>
-        {
-            activeCategory = catId;
-            this.buildIconPickerGrid(searchInput.value, activeCategory, input, onChange);
-        });
-
-        searchInput.addEventListener("input", () =>
-        {
-            logTrace("input handler");
-            this.buildIconPickerGrid(searchInput.value, activeCategory, input, onChange);
-        });
-
-        header.appendChild(searchInput);
-        header.appendChild(catBar);
-        this.iconPickerEl.appendChild(header);
-    }
-
-    /** Build category filter button bar for icon picker. */
-    private buildCategoryBar(onSelect: (catId: string | null) => void): HTMLElement
-    {
-        const bar = createElement("div", [`${CLS}-iconpicker-cats`]);
-
-        const allBtn = createElement("button", [`${CLS}-iconpicker-cat`, `${CLS}-iconpicker-cat--active`], "All");
-        setAttr(allBtn, { type: "button", "data-cat": "" });
-        bar.appendChild(allBtn);
-
-        for (const cat of ICON_CATEGORIES)
-        {
-            const btn = createElement("button", [`${CLS}-iconpicker-cat`], cat.label);
-            setAttr(btn, { type: "button", "data-cat": cat.id });
-            bar.appendChild(btn);
-        }
-
-        bar.addEventListener("click", (e) =>
-        {
-            const target = (e.target as HTMLElement).closest(`.${CLS}-iconpicker-cat`) as HTMLElement | null;
-
-            if (!target)
-            {
-                return;
-            }
-
-            bar.querySelectorAll(`.${CLS}-iconpicker-cat`).forEach((b) =>
-            {
-                b.classList.remove(`${CLS}-iconpicker-cat--active`);
-            });
-            target.classList.add(`${CLS}-iconpicker-cat--active`);
-            onSelect(target.getAttribute("data-cat") || null);
-        });
-
-        return bar;
-    }
-
-    /** Build or rebuild the icon grid based on filters. */
-    private buildIconPickerGrid(
-        searchTerm: string,
-        categoryId: string | null,
-        input: HTMLInputElement,
-        onChange: (v: string) => void
-    ): void
-    {
-        const existingGrid = this.iconPickerEl.querySelector(`.${CLS}-iconpicker-grid`);
-
-        if (existingGrid)
-        {
-            existingGrid.remove();
-        }
-
-        const grid = createElement("div", [`${CLS}-iconpicker-grid`]);
-        const lowerSearch = searchTerm.toLowerCase();
-
-        const categories = categoryId
-            ? ICON_CATEGORIES.filter((c) => c.id === categoryId)
-            : ICON_CATEGORIES;
-
-        for (const cat of categories)
-        {
-            for (const iconName of cat.icons)
-            {
-                if (lowerSearch && !iconName.toLowerCase().includes(lowerSearch))
-                {
-                    continue;
-                }
-
-                const cell = this.createIconCell(iconName, input, onChange);
-                grid.appendChild(cell);
-            }
-        }
-
-        if (grid.children.length === 0)
-        {
-            const empty = createElement("div", [`${CLS}-iconpicker-empty`], "No icons found");
-            grid.appendChild(empty);
-        }
-
-        this.iconPickerEl.appendChild(grid);
-    }
-
-    /** Create a single icon cell in the picker grid. */
-    private createIconCell(
-        iconName: string,
-        input: HTMLInputElement,
-        onChange: (v: string) => void
-    ): HTMLElement
-    {
-        const cell = createElement("button", [`${CLS}-iconpicker-cell`]);
-        setAttr(cell, { type: "button", title: iconName });
-
-        const icon = createElement("i", ["bi", iconName]);
-        cell.appendChild(icon);
-
-        cell.addEventListener("click", () =>
-        {
-            const fullClass = `bi ${iconName}`;
-            input.value = fullClass;
-            onChange(fullClass);
-        });
-
-        return cell;
     }
 
     // ========================================================================

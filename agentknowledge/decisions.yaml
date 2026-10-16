@@ -7508,3 +7508,69 @@
     - "scripts/audit-counts.mjs"
     - "CODEBASE_FIXES.md"
     - "CHANGELOG.md"
+
+- id: ADR-186
+  title: RibbonBuilder's second curated icon picker is deleted, and the icon button refuses at the point of use
+  date: 2026-10-16
+  status: accepted
+  context: |
+    ADR-185 D8 left this one open because removing the fallback deletes a
+    working feature, which is a product call. The owner answered it:
+    "Yes to FALLBACK-9. No fallbacks. Period."
+
+    The fallback was a whole second picker. When createSymbolPicker was
+    absent, the icon field opened a grid of 176 hand-listed Bootstrap
+    Icons in eight categories, with its own search box and category bar.
+    A designer who searched for anything outside that list was told
+    "No icons found", which reads as "this icon does not exist" rather
+    than "this picker only knows 176 of them".
+  decision: |
+    D1. THE CURATED PICKER IS DELETED. ICON_CATEGORIES, getAllIcons,
+        buildIconPickerHeader, buildCategoryBar, buildIconPickerGrid,
+        createIconCell, the iconPickerEl field and its eight stylesheet
+        rules are gone. 334 lines out, 30 in.
+
+    D2. THE REFUSAL IS AT THE POINT OF USE, NOT AT MOUNT. initSymbolPicker
+        runs from show(), so throwing there would stop a builder from
+        mounting over a picker its user may never open. showIconPicker
+        throws instead, naming createSymbolPicker and the bundle. A
+        ribbon with no icon field never reaches it.
+
+    D3. A PRESENT-BUT-FAILING FACTORY NO LONGER HIDES. initSymbolPicker
+        wrapped the factory call in `catch { logWarn; hide the host }`.
+        Left alone, the later throw would have said "is not defined"
+        about a factory that is defined and broken, which is a lie about
+        the actual failure. The catch is gone.
+
+    D4. THE TWO TEARDOWN SWALLOWS WENT WITH IT. deactivateIconPicker and
+        destroySymbolPicker both ran `try { ... } catch { logWarn }`,
+        the pattern replaced in spinemap's ten destroys under ADR-185 D7.
+        destroySymbolPicker now clears its field before calling the
+        widget, so a throwing destroy cannot leave a half-dead instance.
+
+    D5. THE SECTION NUMBER GAP IS DELIBERATE. S3 was the curated icon
+        data and the file now runs S1, S2, S4. Section numbers are cited
+        from CODEBASE_FIXES and the insight log, so renumbering would
+        invalidate references to buy tidiness.
+  consequences: |
+    + A DESIGNER NOW SEES EVERY ICON OR AN ERROR, never a short list
+      presented as the whole set. This is the timeline defect of ADR-185
+      D9 in a second place.
+    + MOUNTING STILL WORKS WITHOUT THE BUNDLE, so the refusal costs
+      nothing to a consumer who never opens the picker.
+    + 334 LINES OF UI CODE AND EIGHT SCSS RULES LEFT THE TREE.
+      unusedLocals fell 308 to 306 and the baseline is tightened.
+    - BREAKING. A host that mounts RibbonBuilder without symbolpicker.js
+      and clicks the icon button now gets a thrown error. Every demo in
+      the tree already loads the bundle.
+    ? THE THROW LIVES IN A CLICK LISTENER, which jsdom does not propagate
+      to the caller of click(). The test captures it from the window
+      error event, because an uncaught listener error fails a Vitest run
+      with every test green. That is the 4cbea9e failure class.
+  files:
+    - "components/ribbonbuilder/ribbonbuilder.ts"
+    - "components/ribbonbuilder/ribbonbuilder.scss"
+    - "components/ribbonbuilder/ribbonbuilder.manifest.ts"
+    - "components/ribbonbuilder/ribbonbuilder.nofallback.test.ts"
+    - "scripts/audit-counts.mjs"
+    - "docs/CDN_INTEGRATION_GUIDE.md"

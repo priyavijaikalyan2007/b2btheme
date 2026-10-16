@@ -279,6 +279,25 @@ user input at all.
 To keep a field working without its bundle, remove it from `popoverFields`
 rather than letting the mount fail.
 
+### RibbonBuilder refuses to pick an icon without SymbolPicker (2026-10-16, breaking)
+
+**If you mount a RibbonBuilder, load `symbolpicker.js`.** The icon field in
+the properties panel used to open a second, curated picker when
+`createSymbolPicker` was absent. That picker carried 176 hand-listed
+Bootstrap Icons in eight categories, a small fraction of the icon font, so a
+designer searching for anything outside the list was told "No icons found". The curated picker is gone and the button now
+throws.
+
+```js
+// Mounting still works without the bundle, because a ribbon with no icon
+// field never opens the picker. Clicking the pick button throws:
+//   RibbonBuilder cannot open its icon picker, because createSymbolPicker
+//   is not defined. Load the symbolpicker bundle before ribbonbuilder.js.
+```
+
+A `createSymbolPicker` that is present but throws now surfaces at `show()`
+instead of hiding the host and leaving the designer with the short list.
+
 ### This library will now throw at you
 
 Two consequences of ADR-148 that consuming code must handle:
