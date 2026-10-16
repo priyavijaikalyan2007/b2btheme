@@ -76,6 +76,13 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <!-- The popover-fields demo below configures a periodpicker and a
+         richtextinput field. SpineMap throws when their bundles are absent
+         (FALLBACK-1), and it is right to. This page looked correct for
+         months without them, because the old fallback quietly mounted
+         plain text boxes in their place. -->
+    <script src="../../dist/components/periodpicker/periodpicker.js"></script>
+    <script src="../../dist/components/richtextinput/richtextinput.js"></script>
     <script src="../../dist/components/spinemap/spinemap.js"></script>
 
     <script>

@@ -210,8 +210,9 @@ function visit(node, file)
     //     }
     //
     // Every probe above anchors on a `return` inside a lexical failure
-    // context, so all ten SpineMap adapters walked past them from March to
-    // October. An assignment of a read-bearing object literal is flagged
+    // context, so all ten SpineMap adapters walked past them for as long as
+    // this gate has existed. An assignment of a read-bearing object literal
+    // is flagged
     // when it sits in a failure branch, or in a function whose own name
     // admits it is a stand-in.
     if (ts.isBinaryExpression(node)

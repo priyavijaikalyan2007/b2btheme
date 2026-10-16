@@ -533,6 +533,17 @@ quiet wrong answer.
   a genuine capability difference rather than a missing dependency. The other
   seven are the same shape as FALLBACK-1.
 
+  **SpineMap itself is not clean, and FALLBACK-1 should not be read as
+  saying so.** FALLBACK-1 removed the ten adapter stand-ins. Three further
+  shapes survive in the same file and were left because they are a
+  different kind of decision:
+
+  | Location | Current behaviour | Note |
+  |---|---|---|
+  | `spinemap.ts:523` | `defaultDeserialize` returns the raw string when stored JSON fails to parse | **The strongest candidate.** It is a fallback chain: `isRawFallback` exists only to route around it, and StandardComponentAdapter then declines to pass the value to the widget. A corrupt stored value therefore presents as an empty field, and saving the popover overwrites it. |
+  | `spinemap.ts:1659` | `stringifyForView` returns `String(value)` when `JSON.stringify` throws | View only, with no write path, so a circular value renders as `[object Object]` rather than corrupting anything. Lowest severity of the three. |
+  | `spinemap.ts`, 9 sites | `catch { /* safe */ }` inside each adapter's `destroy()` | Error **suppression** rather than value fabrication, so it is a different family. Worth deciding under the same rule, noting that a throw here can strand the teardown of the adapters after it. |
+
 ## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 
 Per CODING_STYLE.md, `!important` should only be used when overriding third-party styles or for accessibility-critical rules (e.g., `prefers-reduced-motion`). All other uses indicate specificity problems that should be fixed structurally.

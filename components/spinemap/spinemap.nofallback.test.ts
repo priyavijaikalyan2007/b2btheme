@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan@proton.me>
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
  * SPDX-License-Identifier: MIT
  */
 /**
