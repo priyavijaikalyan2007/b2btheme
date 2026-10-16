@@ -519,8 +519,20 @@ function defaultDeserialize(
     if (type === "datepicker") { return new Date(stored); }
     if (isStructuredType(type))
     {
+        // FALLBACK-4. This used to `catch { return stored; }`, and
+        // isRawFallback existed only to route that raw string away from
+        // the widget, so a corrupt stored value presented as an EMPTY
+        // field and saving the popover overwrote it.
         try { return JSON.parse(stored); }
-        catch { return stored; }
+        catch (e)
+        {
+            const err = new Error(
+                `SpineMap cannot read a stored "${type}" field, because its `
+                + "value is not valid JSON. Fix or clear the stored value, "
+                + "because editing the field would overwrite it.");
+            (err as Error & { cause?: unknown }).cause = e;
+            throw err;
+        }
     }
     if (type === "number" || type === "range")
     {
@@ -1014,10 +1026,8 @@ class StandardComponentAdapter implements SpineFieldAdapter
     ): void
     {
         const opts = { ...this.compOpts };
-        if (value != null && !this.isRawFallback(value))
-        {
-            opts["value"] = value;
-        }
+        if (value != null) { this.refuseRawValue(value); }
+        if (value != null && value !== "") { opts["value"] = value; }
         try
         {
             this.instance = factory(
@@ -1032,17 +1042,23 @@ class StandardComponentAdapter implements SpineFieldAdapter
     }
 
     /**
-     * Returns true if value is a raw string that
-     * failed deserialization — should not be passed
-     * to library components expecting typed objects.
+     * FALLBACK-4. A structured field whose value arrived as a non-empty
+     * string means a deserializer handed back something the widget cannot
+     * take. This used to drop the value silently, so the field opened
+     * empty and saving wrote that emptiness over the stored data.
+     *
+     * An EMPTY string is not a failure. It is a field the user cleared,
+     * and `defaultDeserialize` returns it before any parsing happens.
      */
-    private isRawFallback(value: unknown): boolean
+    private refuseRawValue(value: unknown): void
     {
-        if (!isStructuredType(this.fieldType))
-        {
-            return false;
-        }
-        return typeof value === "string";
+        if (!isStructuredType(this.fieldType)) { return; }
+        if (typeof value !== "string" || value === "") { return; }
+
+        throw new Error(
+            `SpineMap received a raw string for its "${this.fieldType}" `
+            + "popover field, which expects a structured value. A custom "
+            + "deserialize for this field returned the wrong shape.");
     }
 
     getValue(): unknown
@@ -1057,16 +1073,14 @@ class StandardComponentAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance &&
-            typeof this.instance["destroy"] === "function")
-        {
-            try { this.instance["destroy"](); }
-            catch (e)
-            {
-                logWarn("adapter destroy error", e);
-            }
-        }
+        // Cleared before the call, for the reason given on the adapters
+        // below. A logWarn here was still a swallow.
+        const inst = this.instance;
         this.instance = null;
+        if (inst && typeof inst["destroy"] === "function")
+        {
+            inst["destroy"]();
+        }
     }
 }
 
@@ -1103,12 +1117,14 @@ class SprintPickerAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1141,12 +1157,14 @@ class FontDropdownAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1179,12 +1197,14 @@ class EditableComboBoxAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1217,12 +1237,14 @@ class MultiselectComboAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1255,12 +1277,14 @@ class TaggerAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1293,12 +1317,14 @@ class PeoplePickerAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1364,12 +1390,14 @@ class RichTextInputAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1422,12 +1450,14 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1464,12 +1494,14 @@ class SymbolPickerAdapter implements SpineFieldAdapter
 
     destroy(): void
     {
-        if (this.instance?.["destroy"])
-        {
-            try { this.instance["destroy"](); }
-            catch { /* safe */ }
-        }
+        // Cleared BEFORE the call, so a throwing destroy cannot leave a
+        // dead instance for a second teardown to call again. The throw
+        // reaches clearPopoverContent, which finishes the teardown and
+        // then reports. This used to be `catch { /* safe */ }`, which
+        // made a broken widget destroy invisible forever.
+        const inst = this.instance;
         this.instance = null;
+        if (inst?.["destroy"]) { inst["destroy"](); }
     }
 }
 
@@ -1655,8 +1687,18 @@ function stringifyForView(value: unknown): string
     {
         return String(value);
     }
+    // FALLBACK-4. `String(value)` here rendered a circular or unstringifiable
+    // value as "[object Object]" in the popover, which reads as data rather
+    // than as a failure to read it.
     try { return JSON.stringify(value); }
-    catch { return String(value); }
+    catch (e)
+    {
+        const err = new Error(
+            "SpineMap cannot render a popover value, because it could not "
+            + "be stringified. A circular structure is the usual cause.");
+        (err as Error & { cause?: unknown }).cause = e;
+        throw err;
+    }
 }
 
 /**
@@ -3726,12 +3768,27 @@ export class SpineMap
 
     private clearPopoverContent(): void
     {
+        // Every adapter is torn down even when one throws, because a
+        // half-released popover leaks widgets. The failures are reported
+        // after the last one rather than swallowed per adapter.
+        const failures: unknown[] = [];
         for (const adapter of this.activeFieldAdapters)
         {
-            adapter.destroy();
+            try { adapter.destroy(); }
+            catch (e) { failures.push(e); }
         }
         this.activeFieldAdapters = [];
         this.popoverEl.replaceChildren();
+
+        if (failures.length > 0)
+        {
+            const err = new Error(
+                `${failures.length} SpineMap field adapter(s) failed to `
+                + "destroy. The popover is cleared, but a widget may have "
+                + "leaked. The first failure is attached as cause.");
+            (err as Error & { cause?: unknown }).cause = failures[0];
+            throw err;
+        }
     }
 
     private showPopover(nodeId: string, editMode = false): void
@@ -4657,13 +4714,20 @@ export class SpineMap
         }
 
         const win = window;
-        if (typeof win["showDangerConfirmDialog"] === "function")
+
+        // FALLBACK-4. This used to fall through to the browser's confirm(),
+        // so a host that configured neither path got a different dialog
+        // from the one this library documents, with nothing to say so.
+        if (typeof win["showDangerConfirmDialog"] !== "function")
         {
-            return (win["showDangerConfirmDialog"] as
-                (msg: string) => Promise<boolean>)(message);
+            throw new Error(
+                "SpineMap cannot confirm a destructive action. Load the "
+                + "confirmdialog bundle, which defines "
+                + "showDangerConfirmDialog, or pass onConfirmRemove.");
         }
 
-        return Promise.resolve(confirm(message));
+        return (win["showDangerConfirmDialog"] as
+            (msg: string) => Promise<boolean>)(message);
     }
 
     private announce(msg: string): void
