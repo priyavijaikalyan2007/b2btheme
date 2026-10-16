@@ -1096,35 +1096,34 @@ export class CodeEditor
         this.focus();
     }
 
+    /**
+     * FALLBACK-6. The removed execCommand path called showCopyFeedback()
+     * unconditionally and never looked at the boolean execCommand returns,
+     * so the tick appeared whether or not anything reached the clipboard.
+     */
     private copyToClipboard(): void
     {
         const text = this.getValue();
 
-        if (navigator.clipboard?.writeText)
+        if (!navigator.clipboard?.writeText)
         {
-            navigator.clipboard.writeText(text)
-                .then(() => this.showCopyFeedback())
-                .catch(err => this.fallbackCopy(text, err));
-        }
-        else
-        {
-            this.fallbackCopy(text);
-        }
-    }
+            logError("Cannot copy, because the Clipboard API is "
+                + "unavailable.");
 
-    private fallbackCopy(text: string, err?: unknown): void
-    {
-        if (err) { logWarn("Clipboard write failed:", err); }
+            throw new Error(
+                "CodeEditor cannot copy to the clipboard. The Clipboard "
+                + "API needs a secure context, so serve the page over "
+                + "https or localhost.");
+        }
 
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        this.showCopyFeedback();
+        navigator.clipboard.writeText(text)
+            .then(() => this.showCopyFeedback())
+            .catch(err =>
+            {
+                logError("The clipboard write failed, so nothing was "
+                    + "copied:", err);
+                throw err;
+            });
     }
 
     private showCopyFeedback(): void

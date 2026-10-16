@@ -415,54 +415,34 @@ function buildCopyButton(id: string, error: LiterateError): HTMLElement
 }
 
 /**
- * Copies text to the clipboard using the Clipboard API with a fallback.
+ * Copies text to the clipboard, or refuses.
+ *
+ * FALLBACK-6. The execCommand path this replaces never checked the boolean
+ * execCommand returns, so showCopyFeedback() ran whether or not anything
+ * reached the clipboard. A tick that means nothing is worse than no tick,
+ * because the user walks away believing they have the text.
  */
 function copyToClipboard(text: string, btn: HTMLElement): void
 {
-    if (navigator.clipboard)
+    if (!navigator.clipboard)
     {
-        navigator.clipboard.writeText(text).then(() =>
-        {
-            showCopyFeedback(btn);
-            logDebug("Technical details copied to clipboard");
-        }).catch((err) =>
-        {
-            logWarn("Clipboard API failed, trying fallback:", err);
-            fallbackCopy(text, btn);
-        });
-    }
-    else
-    {
-        fallbackCopy(text, btn);
-    }
-}
+        logError("Cannot copy, because the Clipboard API is unavailable.");
 
-/**
- * Fallback clipboard copy using a temporary textarea.
- */
-function fallbackCopy(text: string, btn: HTMLElement): void
-{
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
+        throw new Error(
+            "ErrorDialog cannot copy to the clipboard. The Clipboard API "
+            + "needs a secure context, so serve the page over https or "
+            + "localhost.");
+    }
 
-    try
+    navigator.clipboard.writeText(text).then(() =>
     {
-        document.execCommand("copy");
         showCopyFeedback(btn);
-        logDebug("Technical details copied (fallback)");
-    }
-    catch (err)
+        logDebug("Technical details copied to clipboard");
+    }).catch((err) =>
     {
-        logError("Failed to copy to clipboard:", err);
-    }
-    finally
-    {
-        document.body.removeChild(textarea);
-    }
+        logError("The clipboard write failed, so nothing was copied:", err);
+        throw err;
+    });
 }
 
 /**
