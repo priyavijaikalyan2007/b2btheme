@@ -3817,3 +3817,62 @@ plumbed through rather than a guard removed. Both are FALLBACK-9.
 **Six commits, one per family, each with its own revert boundary.**
 
 **Tracker 64 resolved / 19 open.**
+
+---
+
+## 2026-10-16 (cont.) — FALLBACK-9, and what a deferral list is worth
+
+**"Yes to FALLBACK-9. No fallbacks. Period."** Three findings had been
+parked as "not fallbacks, need their own decision". Working them produced
+three corrections to the entry that described them.
+
+**The estimate was low.** RibbonBuilder's second curated icon picker was
+recorded as ~150 lines of working UI. It was **334**, and it held **176
+hand-listed icons in eight categories**, so a designer who searched for
+anything outside that list read "No icons found". That reads as the icon
+not existing. The eighteen timezones of FALLBACK-8 again, with a search
+box on top.
+
+**The fix was invisible until the test said so.** DiagramEngine's
+hardcoded `"**Embedded content**"` was one line to replace. The test for
+it failed with no error and nothing rendered: `invokeFactory` wrapped the
+whole mount chain in a catch that logged and drew a dashed grey
+placeholder, so the new refusal was **swallowed by a fallback two
+functions above it**. A refusal is only as loud as the quietest catch
+between it and the user. The placeholder had to go in the same commit.
+
+That placeholder also stood in for a missing factory, and this is the part
+worth keeping: a dashed box with an icon and the component name **looks
+like a deliberate part of a diagram**. A broken embed read as a designed
+one, so nobody went looking. An ugly stand-in is worse than an empty
+space, because an empty space provokes a question.
+
+**And `MarkdownRendererHandle` is `{ render, toHtml }`** — no `show()`, no
+`getElement()`. So every MarkdownRenderer embed ever placed on a diagram
+rendered those two words instead of its author's text.
+
+**One of the three recorded the wrong fix.** Toolbar's finding read as a
+dependency-width problem and prescribed making `data-bs-toggle`
+conditional. The real defect was that `ToolItem`, `SplitButtonItem` and
+`GalleryItem` all declare `tooltip: string` commented "Required for
+accessibility", and nothing enforced it, so an icon-only button reached
+the DOM announced as **"undefined"**. Narrowing the attribute would have
+built tolerance for violating the contract. **The only accessibility
+defect the whole sweep found, and the entry prescribed papering over it.**
+
+**A deferral written while the real work happens elsewhere is a note about
+code nobody has touched.** Its cost estimate, its severity and its
+prescribed fix are all guesses made at the moment of lowest information.
+
+**Two counts moved in the direction they rarely move.**
+`diagramengineLines` fell 30562 to 30522 — its largest fall, and the first
+the raise log records, though it fell twice before as a side effect of
+LOG-2 and WIN-1. `unusedLocals` fell 308 to 306, again as a side effect,
+this time of deleting the icon picker. Both baselines are tightened.
+
+**Three commits, one per finding, each with its own revert boundary.**
+
+**Tracker 59 resolved / 19 open.** The previous entry here said 64 / 19
+and that number is not re-derivable from the file: FALLBACK-3 to
+FALLBACK-8 live inside FALLBACK-2's prose and carry no checkbox of their
+own, so they were counted twice.

@@ -7622,9 +7622,12 @@
       "Embedded content" instead of its author's text. That is the third
       defect of this shape, after the timeline zones and markdowneditor
       display mode.
-    + diagramengineLines FELL FOR THE FIRST TIME, 30562 to 30522. The
-      counter has only ever risen, so the descent is recorded in the
-      raise log with the same care as a raise.
+    + diagramengineLines FELL 30562 TO 30522, its largest fall and the
+      first the raise log records. It fell twice before, after LOG-2 and
+      WIN-1, both written up as re-measurements of other work. This one
+      is deliberate, so it is recorded as carefully as a raise. The
+      commit message on 38f2a44 says "for the first time" and overstates
+      it.
     - BREAKING. A diagram whose embed bundle is absent now reports an
       uncaught error per embed instead of drawing a box.
     ? THE REFUSAL ARRIVES OUT OF BAND. A consumer who wants it in-band

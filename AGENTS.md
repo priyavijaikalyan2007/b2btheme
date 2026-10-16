@@ -429,6 +429,20 @@ tell that the real dependency never loaded.
 Do not cite an existing fallback elsewhere in this library as precedent. The
 survivors are tracked as FALLBACK-2 and they are debt, not a pattern.
 
+**A refusal is only as loud as the quietest catch between it and the user.**
+Before adding a throw, walk the call tree above it. FALLBACK-9 replaced an
+invented string in DiagramEngine with a throw, and the behaviour did not
+change at all: a catch two functions up logged it and drew a placeholder, so
+the new refusal was turned back into the old fallback. Removing one fallback
+under another moves which one answers. The test is what proves the
+difference, because the diff looks complete either way.
+
+**A required field that a type cannot enforce needs a runtime check.** The
+tell is interpolation. `aria-label: item.tooltip` on a field declared
+`tooltip: string` cannot fail against a JavaScript host, it can only write
+the string `"undefined"` into the DOM. Narrowing the component to tolerate
+the absence is a fallback wearing a narrowing costume.
+
 Enforced in part by `scripts/check-fabricated-reads.mjs` (check `[16]`), which
 gained the assignment shape on 2026-10-16. A gate that passes is a ratchet
 rather than a clearance, because a fallback that fabricates through a field

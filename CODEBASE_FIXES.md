@@ -552,25 +552,92 @@ quiet wrong answer.
   | `navrail` storage catches | AGENTS.md permits an empty read from failed storage, provided nothing is written back. |
   | `markdownrenderer` error blocks | Renders a visible error state, which is a legitimate degraded mode. |
 
-- [ ] **FALLBACK-9** **Three findings the sweep surfaced that are NOT
-  fallbacks, and need their own decision.**
+- [x] **FALLBACK-9** **The three findings the sweep surfaced that were not
+  themselves fallbacks. CLOSED 2026-10-16.** The owner answered the open
+  product question: *"Yes to FALLBACK-9. No fallbacks. Period."* All three
+  are done, one commit each. **Two of the three turned out to be live
+  defects, and the third was recorded with the wrong fix.**
 
-  1. **`ribbonbuilder`'s icon picker falls back to a whole second curated
-     picker.** Removing the fallback means deleting ~150 lines of working
-     UI (`buildIconPickerHeader`, `buildIconPickerGrid`), and the eager
-     `initSymbolPicker()` on mount makes the curated path unreachable the
-     moment a throw is added. The two are coupled, so this is a product
-     decision rather than code hygiene. **Recommendation: throw at the
-     point of use in `showIconPicker` and delete the curated picker.**
-  2. **`diagramengine`'s `tryRenderFallback` passes a hardcoded
-     `"**Embedded content**"`** to `render()`, so that mount path shows
-     placeholder text instead of the embed's real content. Fixing it means
-     plumbing the embed definition through to the mount helper.
-  3. **`toolbar` sets `data-bs-toggle="tooltip"` on every tool button**
-     whether or not a tooltip was given, with `title` and `aria-label` set
-     to `undefined`. That is why a toolbar with any tool requires
-     Bootstrap. Not a fallback, but it makes the dependency wider than it
-     needs to be.
+  1. **`ribbonbuilder`'s second curated icon picker is deleted (ADR-186).**
+     The estimate of ~150 lines was low: 334 came out. The fallback was a
+     whole second picker with its own search box and category bar, holding
+     **176 hand-listed icons in eight categories**, so a designer who
+     searched for anything outside that list read "No icons found". That
+     reads as the icon not existing. Same shape as FALLBACK-8's eighteen
+     timezones, with a search box on top.
+
+     The refusal is at the point of use, not at mount, because
+     `initSymbolPicker` runs from `show()` and a ribbon with no icon field
+     never opens the picker. Two swallows went with it: a
+     present-but-failing factory used to be caught and the host hidden, so
+     the later throw would have said "is not defined" about a factory that
+     is defined and broken.
+
+     `unusedLocals` fell **308 → 306** and the baseline is tightened.
+     `getAllIcons` was already dead and went with its data.
+
+  2. **`diagramengine` renders the embed's own content, and the two embed
+     placeholders are gone (ADR-187).** The recorded finding was accurate
+     and incomplete. `MarkdownRendererHandle` is `{ render, toHtml }` with
+     no `show()` and no `getElement()`, so **every markdownrenderer embed
+     on every diagram** went down the `render()` path and displayed the
+     literal `"**Embedded content**"` in place of its author's text. Third
+     defect of this shape after the timeline zones and markdowneditor
+     display mode.
+
+     **Writing the test showed the fix could not be seen.** `invokeFactory`
+     wrapped the whole mount chain in a catch that logged and drew a dashed
+     grey box with a puzzle icon and the component name, so the new throw
+     was swallowed by a fallback two functions above it. The two could not
+     be separated. That box also stood in for a missing factory, and it
+     looks like a deliberate part of a diagram, so a broken embed read as a
+     designed one. `renderEmbedPlaceholder` and `appendPlaceholderContent`
+     are deleted.
+
+     The content key is **named rather than probed**: `options.content`, a
+     string, or it throws naming it. An empty string is accepted, the same
+     exemption `refuseRawValue` makes for a field the user cleared. The
+     blast radius is one embed, because `instantiateEmbed` runs from a
+     `requestAnimationFrame` callback and the rest of the diagram still
+     draws.
+
+     **`diagramengineLines` fell 30562 → 30522, its largest fall and the
+     first this log records.** It fell twice before, after LOG-2 and WIN-1,
+     both written up as re-measurements of other work. This one is
+     deliberate, so it is recorded as carefully as a raise.
+
+  3. **`toolbar` throws when a required tooltip is missing, and THE FIX
+     RECORDED HERE WAS WRONG (ADR-188).** This entry read it as a
+     dependency-width problem and prescribed making `data-bs-toggle`
+     conditional. Under the rule the owner reaffirmed, that is building
+     tolerance for a contract the component declares: `ToolItem`,
+     `SplitButtonItem` and `GalleryItem` have all declared
+     `tooltip: string` since they were written, each with the comment
+     "Required for accessibility".
+
+     A type cannot enforce that against a host written in JavaScript, and
+     an omitted tooltip reached the DOM as `title="undefined"` and
+     `aria-label="undefined"`, with a Bootstrap trigger attached to show
+     the word "undefined" on hover. **A screen reader read the fabricated
+     name out. This is the only accessibility defect the sweep found.**
+
+     `requireTooltip` now runs at the top of the three builders. Whitespace
+     is absence. The dependency question answers itself: every tool has a
+     tooltip, so every tool is a trigger, so a toolbar with tools needs
+     Bootstrap, which is what the FALLBACK-5 throw already said. The
+     FALLBACK-5 test carried the old behaviour in a comment that is now
+     false, and it is rewritten rather than left to mislead.
+
+     The item types that declare `tooltip?` are untouched. They carry their
+     own visible label, so `applyItemTooltip`'s guard is a real optional
+     field.
+
+  **THE LESSON THIS ENTRY RECORDS IS ABOUT THE ENTRY ITSELF.** Three
+  findings were parked here as "not fallbacks, needs a decision". Two were
+  live defects that had been shipping, and one prescribed the wrong fix. A
+  deferral list written while the real work is happening elsewhere gets the
+  severity wrong in both directions, because nothing in it has been tested
+  against the code.
 
 ## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 
@@ -1259,7 +1326,7 @@ the step exits 1 and the workflow fails.
 | MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
 | MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | **0 open, 3 closed 2026-10-15.** All three counts at 0 |
 | MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
-| MEDIUM — Unused Variables | 1 (**308** errors, ratcheted 2026-10-15; the 414 was stale) | Open, and now held |
+| MEDIUM — Unused Variables | 1 (**306** errors, ratcheted 2026-10-15 at 308, lowered 2026-10-16; the 414 was stale) | Open, and now held |
 | MEASUREMENT — Re-derivable counts | 1 | **Closed** |
 | CI — Node version gap | 1 | **Closed** |
 | **Total** | **36 items** | **24 resolved** |
@@ -1275,7 +1342,7 @@ the step exits 1 and the workflow fails.
 | IMP-1 | 47 | 113 | far larger |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
-| UNUSED-1 | 119 | 308 | far larger |
+| UNUSED-1 | 119 | 306 | far larger |
 | STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |
 
@@ -1316,7 +1383,13 @@ which way a stale number leans.
   by hand is a memory of a measurement rather than a measurement. This one
   was four commits stale within a day of being recorded.
 
-  The 308 are still real work: **103 in the generated `diagramengine.ts`**
+  **LOWERED TO 306 ON 2026-10-16**, by FALLBACK-9 rather than by anyone
+  working this entry. Deleting ribbonbuilder's curated icon picker took
+  `ICON_CATEGORIES` and `getAllIcons` with it, and `getAllIcons` was
+  already dead. A ceiling that is only ever lowered as a side effect is
+  still doing its job, but it says this entry has no owner.
+
+  The 306 are still real work: **103 in the generated `diagramengine.ts`**
   and no other file above 10. The ceiling stops them growing while they are
   dealt with, which is all a ceiling has ever been for here.
   The two items are separate work.

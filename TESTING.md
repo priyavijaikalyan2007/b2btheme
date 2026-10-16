@@ -381,6 +381,49 @@ re-examined.
 no new violation is what separates a gate from a tripwire, and it has to be
 observed after the extension rather than assumed from the fix.
 
+### 2.7e Test a Refusal That Is Thrown Out of Band
+
+A throw only reaches `expect(...).toThrow()` when the test is on the call
+stack. Two of the refusals added for FALLBACK-9 are not.
+
+- **RibbonBuilder** throws inside the icon button's `click` listener.
+  jsdom catches a listener exception and reports it rather than letting
+  it escape `element.click()`.
+- **DiagramEngine** throws inside a `requestAnimationFrame` callback,
+  because an embed mounts after the `foreignObject` is in the DOM.
+
+In both cases the error arrives as an uncaught one on `window`. Vitest
+counts an uncaught error as a run failure and exits 1 **with every test
+reported green**, which is the `4cbea9e` failure class. The test must
+therefore capture it:
+
+```ts
+const errors: unknown[] = [];
+const onError = (e: ErrorEvent): void =>
+{
+    e.preventDefault();
+    errors.push(e.error);
+};
+
+window.addEventListener("error", onError);
+// ... click, or await two animation frames ...
+window.removeEventListener("error", onError);
+
+expect((errors[0] as Error).message).toMatch(/what it should say/);
+```
+
+`preventDefault()` is the part that matters: it marks the error handled so
+the runner does not fail the file. Register the listener **before** the
+action and remove it after, or an unrelated error later in the file lands
+in the same array.
+
+Two frames, not one. The mount is scheduled from inside a frame callback,
+so the work happens on the frame after the one the test schedules.
+
+**The check is the exit code of `vitest run --coverage`, not the tick next
+to the test name.** A test that asserts a refusal can pass while the run
+it belongs to fails.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

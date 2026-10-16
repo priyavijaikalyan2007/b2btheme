@@ -1396,3 +1396,65 @@ test and the review added seven that were not on it. **The list produced
 by grepping for the word "fallback" was both too long and too short**,
 which is the ordinary condition of a list made from a name rather than a
 behaviour.
+
+### 6.91 A Deferral List Gets Severity Wrong in Both Directions (2026-10-16)
+
+Three findings were parked as FALLBACK-9: "not fallbacks, need their own
+decision". Working them produced three different corrections to the
+entry that described them.
+
+- **RibbonBuilder** was estimated at ~150 lines of working UI to delete.
+  It was 334, and the picker held 176 hand-listed icons, so the entry
+  undersold both the cost and the defect.
+- **DiagramEngine** was recorded as one hardcoded string. It was that,
+  plus two placeholder fallbacks that made the fix invisible, and the
+  hardcoded string had been displaying on every markdownrenderer embed
+  ever placed on a diagram.
+- **Toolbar** was recorded with the wrong fix. The entry read it as a
+  dependency-width problem and prescribed narrowing; the real problem
+  was a declared contract nothing enforced, and narrowing would have
+  built tolerance for violating it.
+
+**Principle**: a deferral written while the real work is happening
+elsewhere is a note about code nobody has touched. Nothing in it has
+been run, so its cost estimates, its severity and its prescribed fix are
+all guesses made at the moment of lowest information. Re-read the code
+before acting on your own deferral, and expect the entry to be wrong.
+
+### 6.92 The Fallback Two Functions Up Swallowed the Refusal (2026-10-16)
+
+The DiagramEngine fix replaced an invented string with a throw. The test
+for it failed: no error arrived, nothing rendered. `invokeFactory`
+wrapped the entire mount chain in a catch that logged and drew a
+placeholder, so the new refusal was caught by a fallback two frames above
+it and turned back into a dashed grey box.
+
+**A refusal is only as loud as the quietest catch between it and the
+user.** Removing one fallback inside a call tree that still has another
+above it does not change behaviour; it moves which fallback answers. The
+test is what proved it, because the code change looked complete.
+
+The corollary is about the placeholder itself. A dashed box with an icon
+and the component name **looks like a deliberate part of a diagram**, so
+a broken embed read as a designed one and nobody went looking. An ugly
+stand-in is worse than an empty space, because an empty space provokes a
+question.
+
+### 6.93 A Required Field a Type Cannot Enforce Is a Runtime Check (2026-10-16)
+
+`ToolItem.tooltip` has been `tooltip: string` since the file was written,
+commented "Required for accessibility". The component trusted the type
+and interpolated it straight into `title` and `aria-label`. A host
+written in JavaScript — every demo page in this repository — could omit
+it, and the button went to the DOM announced as "undefined", with a
+Bootstrap trigger attached to show that word on hover.
+
+**Principle**: a published component's types are documentation to half
+its callers. Where a field is required *and* its absence produces a
+fabricated value rather than a visible gap, the type needs a runtime
+companion. The tell is interpolation: `aria-label: item.tooltip` cannot
+fail, it can only produce the string "undefined".
+
+Note which direction the fix goes. The tempting fix is to stop setting
+the attribute when the value is missing, which is tolerance for a
+violated contract — a fallback wearing a narrowing costume.

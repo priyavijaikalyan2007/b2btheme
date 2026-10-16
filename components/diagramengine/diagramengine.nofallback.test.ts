@@ -6,9 +6,9 @@
  * ⚓ TESTS: DiagramEngine renders the embed's own content
  * 📜 PURPOSE: Proves FALLBACK-9 item 2. A render()-only embed such as
  * MarkdownRenderer was mounted by passing the literal string
- * "**Embedded content**", so every such embed on every diagram showed
- * that in place of what its author wrote. The content now comes from
- * options.content, and a missing one throws.
+ * "**Embedded content**". Every such embed on every diagram showed those
+ * two words in place of what its author wrote. The content now comes
+ * from options.content, and a missing one throws.
  * 🔗 RELATED: AGENTS.md "No Fallback Code", ADR-187
  */
 

@@ -250,9 +250,12 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
- * THE EIGHTH CHANGE IS THE FIRST FALL, 30562 -> 30522, and it is recorded
- * here because a counter that has only ever gone up needs its one descent
- * explained as carefully as a raise. FALLBACK-9 item 2 took forty lines
+ * THE EIGHTH CHANGE IS THE FIRST FALL THIS LOG RECORDS, 30562 -> 30522,
+ * and the largest fall the number has ever taken. It has fallen twice
+ * before, 30693 -> 30479 after LOG-2 and 30479 -> 30478 after WIN-1, both
+ * written up as re-measurements of other work rather than as entries here.
+ * This one is deliberate, so it is recorded as carefully as a raise.
+ * FALLBACK-9 item 2 took forty lines
  * out of `src/render-engine.ts`: renderEmbedPlaceholder and
  * appendPlaceholderContent are gone, and what they drew is gone with them.
  * A missing factory used to draw a dashed grey box with a puzzle icon and

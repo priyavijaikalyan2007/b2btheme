@@ -921,12 +921,12 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
  * Returns the item's tooltip, or throws naming the item.
  *
  * ToolItem, SplitButtonItem and GalleryItem all declare tooltip as
- * required and say why: it is the accessible name of a button that may
+ * required and say why. It is the accessible name of a button that may
  * show nothing but an icon. A type cannot enforce that against a host
- * written in JavaScript, and a missing one used to reach the DOM as
+ * written in JavaScript. A missing one used to reach the DOM as
  * title="undefined" and aria-label="undefined", with a Bootstrap trigger
- * attached to show the word "undefined" on hover. Both are worse than no
- * tooltip, because a screen reader reads the fabricated name out.
+ * attached to show that word on hover. Both are worse than no tooltip,
+ * because a screen reader reads the fabricated name out.
  *
  * @param kind - The item kind, for the message
  * @param id - The item id, for the message
