@@ -1718,7 +1718,12 @@ class FormDialogImpl implements FormDialog
         return false;
     }
 
-    private promptDirtyClose(): void
+    /**
+     * Returns the confirm round trip so a caller can await or handle it.
+     * It used to return void and float the promise, which made a rejected
+     * confirm an unhandled rejection with nowhere to go.
+     */
+    private promptDirtyClose(): Promise<void>
     {
         const win = window;
 
@@ -1744,7 +1749,8 @@ class FormDialogImpl implements FormDialog
         // emitted. Removing the local would silently change `this` from
         // undefined to window.
         const showConfirm = win.showConfirmDialog;
-        showConfirm({
+
+        return showConfirm({
             title: "Unsaved Changes",
             message: "You have unsaved changes. Discard them?",
             confirmLabel: "Discard",
@@ -1757,7 +1763,7 @@ class FormDialogImpl implements FormDialog
             // The old `.catch(() => {})` left the user with no answer: they
             // clicked close and nothing happened, with nothing logged. The
             // form stays open, which is the safe side, and the rejection
-            // surfaces rather than being absorbed here.
+            // reaches the caller rather than being absorbed here.
             logError("The confirm dialog failed, so the form stays open:",
                 err);
             throw err;

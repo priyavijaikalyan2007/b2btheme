@@ -16,7 +16,7 @@ import type { FormDialogOptions } from "./formdialog";
 
 interface DirtyClosable
 {
-    promptDirtyClose(): void;
+    promptDirtyClose(): Promise<void>;
 }
 
 /** The element only enters the DOM on show(), so every DOM case opens it. */
@@ -92,19 +92,14 @@ describe("FormDialog with no confirm dialog available", () =>
             () => Promise.reject(boom);
 
         const dialog = openDialog();
-        const errors: unknown[] = [];
-        const onError = (e: PromiseRejectionEvent | ErrorEvent) =>
-            errors.push(e);
-        window.addEventListener("unhandledrejection", onError as EventListener);
-
-        dialog.promptDirtyClose();
-        await new Promise(r => setTimeout(r, 0));
-        window.removeEventListener(
-            "unhandledrejection", onError as EventListener);
 
         // The old `.catch(() => {})` swallowed this, so the user clicked
-        // close and nothing at all happened. The dialog must not have
-        // closed itself either.
+        // close and nothing at all happened. The rejection now reaches the
+        // caller, which is why promptDirtyClose returns its promise.
+        await expect(dialog.promptDirtyClose()).rejects.toThrow(
+            /failed to render/);
+
+        // Refusing is not a disguised close.
         expect(document.querySelector(".formdialog-overlay")).toBeTruthy();
     });
 
