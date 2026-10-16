@@ -351,6 +351,36 @@ not less. In CI the build completes before the tests start, so the order is
 safe there. Locally it is only safe if nothing else is writing. Before
 treating an intermittent failure as flakiness, check what else was running.
 
+### 2.7d Mutation-Prove a Structure Check Against the Code It Missed
+
+A structure check has no unit test here, because the scripts run their work
+at module load and cannot be imported. The evidence that an extended gate
+catches anything is therefore a mutation, and the best mutation is already
+in the history: the code the gate failed to catch.
+
+For `check-fabricated-reads.mjs` on 2026-10-16 that was a three-step run.
+Copy the fixed file aside, restore the shipped one with
+`git show HEAD:<path>`, run the gate, then put the fixed file back and run
+it again. The first run must fail and name the lines, the second must pass.
+
+```bash
+cp components/spinemap/spinemap.ts "$SCRATCH/fixed.ts"
+git show HEAD:components/spinemap/spinemap.ts > components/spinemap/spinemap.ts
+node scripts/check-fabricated-reads.mjs          # must FAIL
+cp "$SCRATCH/fixed.ts" components/spinemap/spinemap.ts
+node scripts/check-fabricated-reads.mjs          # must PASS
+```
+
+**Report the count the mutation actually produced.** That run caught 9 of
+the 10 removed fallbacks. SymbolPicker escaped, because it fabricated
+through a field rather than an object literal. Recording 10 would have
+described the gate as complete, and a gate described as complete stops being
+re-examined.
+
+**A gate extension also needs the clean run.** Passing on 137 sources with
+no new violation is what separates a gate from a tripwire, and it has to be
+observed after the extension rather than assumed from the fix.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

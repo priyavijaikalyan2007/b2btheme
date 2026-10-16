@@ -3705,3 +3705,66 @@ specificity, specificity is visual, and that belongs with a visual check
 rather than beside a logging change.
 
 **Tracker 55 resolved / 20 open.**
+
+---
+
+## 2026-10-16 — No fallback code: the rule, and the ten adapters that broke it
+
+**The instruction.** "Don't implement any sort of fallback code. When
+something is broken, let it break," followed by "this fallback behavior has
+already caused too many silent bugs." The owner noted having said it many
+times.
+
+**My pending recommendation was the opposite of it.** I had asked for a
+decision on DEBT-ERR-2, recommending that ErrorDialog degrade rather than
+throw. The answer closes the entry with no code change: ErrorDialog already
+threw, and only the question was open. I had also cited Toolbar and
+MarkdownEditor as precedent for degrading. They are not precedent, they are
+debt, and they are now FALLBACK-2.
+
+**The rule is written down now, and saved as a memory.** An instruction
+given many times and still absent from `AGENTS.md` is an instruction that
+cannot survive a session boundary. It is a CRITICAL section, placed beside
+"No Fabricated Reads", which governs what a broken component may ANSWER
+while this one governs whether it may CONTINUE.
+
+**The real instance was SpineMap, and it was worse than a style problem.**
+Ten field adapters answered a missing library picker with a bare text input.
+Three of them — `multiselectcombo`, `tagger` and `peoplepicker` — read
+through `getSelected()` and `getTags()` while the stand-in supplied
+`getValue()` only. **Those three silently discarded every keystroke** and
+answered empty. Live, in the shipped bundle.
+
+**Nothing could have caught it.** The instance is typed
+`Record<string, Function>`, so the compiler cannot see the mismatch. No test
+asserted the fallback, because a fallback runs only when the environment is
+already broken and the test environment was complete. A fallback is a second
+implementation with no users, and it rots before it runs.
+
+**The gate missed all ten for a structural reason.** Check `[16]` anchors
+every probe on a `return` inside a lexical failure context. These were
+**assignments**, from a method whose failure branch was in the caller. It
+gained that fourth shape and catches **9 of the 10** against the shipped
+file. SymbolPicker escapes, because it fabricated through a field rather
+than an object literal. Reporting 10 would have described the gate as
+complete.
+
+**My first helper reintroduced a tracked debt.** It opened with
+`window as unknown as Record<string, unknown>`, copying the idiom the bad
+code used, and moved three WIN-2 ratchets at once. All nine globals are
+declared, so the parameter types as `keyof Window` and no cast is needed.
+Deleting code is where a ratchet is most likely to be surprised.
+
+**Breaking, and documented as such.** A host loading `spinemap.js` without a
+picker bundle now gets a thrown error where it previously got an editable
+field. `docs/CDN_INTEGRATION_GUIDE.md` §5 says so, and names the three field
+types that were losing data.
+
+**Eight fallbacks survive and are listed, not swept.** Toolbar, three in
+MarkdownEditor, FormDialog, GuidedTour, Sidebar, and the clipboard pair.
+Each changes what a host sees when a dependency is absent, so each is a
+decision rather than a sweep. The clipboard pair is the weakest candidate,
+because `execCommand` is a capability difference rather than a missing
+dependency.
+
+**Tracker 57 resolved / 20 open.**

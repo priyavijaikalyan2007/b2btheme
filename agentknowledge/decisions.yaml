@@ -7301,3 +7301,111 @@
     - "CHANGELOG.md"
     - "agentknowledge/decisions.yaml"
     - "agentknowledge/history.jsonl"
+
+- id: ADR-184
+  title: Ten SpineMap adapters answered a missing picker with a text input, and three of them discarded every keystroke
+  date: 2026-10-16
+  status: accepted
+  context: |
+    The repository owner restated a standing instruction: do not write
+    fallback code, and when something is broken let it break. The
+    instruction arrived while DEBT-ERR-2 was waiting on the opposite
+    recommendation, which was to let ErrorDialog degrade rather than throw.
+    AGENTS.md already carried "No Fabricated Reads", which governs what a
+    broken component may ANSWER. It did not govern whether a broken
+    component may CONTINUE.
+  decision: |
+    D1. THE RULE IS WRITTEN DOWN. AGENTS.md gains "No Fallback Code" as a
+        CRITICAL section. The owner reported having given the instruction
+        many times, which is evidence that an unwritten rule does not
+        survive a session boundary. It is also saved as a durable memory.
+
+    D2. DEBT-ERR-2 CLOSES WITH NO CODE CHANGE. ErrorDialog already threw.
+        The entry was open only because the question "should it degrade
+        instead" had been asked. The question was wrong, so the entry
+        closes rather than being decided.
+
+    D3. THE PRECEDENT CITED IN THAT ENTRY WAS BACKWARDS. It named Toolbar
+        and MarkdownEditor as components that degrade, and read that as
+        support for degrading. They are not precedent, they are debt, and
+        they are now tracked as FALLBACK-2.
+
+    D4. TEN SPINEMAP ADAPTERS ARE THE REAL INSTANCE. Each assigned
+        this.instance = { getValue: () => inp.value } from a fallback()
+        that mounted a bare text input. StandardComponentAdapter serves
+        nine field types by itself, so the reach was wide.
+
+    D5. THREE OF THE TEN WERE WORSE THAN DEGRADED. multiselectcombo,
+        tagger and peoplepicker read through getSelected() and getTags(),
+        while the stand-in supplied getValue() only. The type system could
+        not see it because the instance is Record<string, Function>. Those
+        three discarded every keystroke and answered "" or []. This is the
+        clearest evidence for the owner's instruction found in the sweep,
+        and it was found by reading the adapters rather than by any gate.
+
+    D6. RESOLUTION IS SHARED, NOT REPEATED TEN TIMES. Four helpers carry
+        it: requireLibraryFactory, libraryBuildFailed, mountFactoryWidget
+        and readWidgetValue. The rule is then stated once.
+
+    D7. THE WIDGET IS RESOLVED BEFORE THE DOM IS TOUCHED, so a refused
+        mount leaves no half-built widget behind in the popover.
+
+    D8. THE ORIGINAL ERROR SURVIVES. Every bare catch is replaced by a
+        rethrow carrying cause. The property is assigned rather than passed
+        as ErrorOptions, because this build targets ES2020 and the second
+        Error argument does not typecheck there.
+
+    D9. THE GATE GAINED THE FOURTH SHAPE. check-fabricated-reads.mjs
+        anchored every probe on a return inside a lexical failure context.
+        These were assignments, and the failure branch was in the CALLER,
+        so all ten walked past it. The check now also flags an assignment
+        of a read-bearing object literal inside a failure branch or inside
+        a function whose name admits it is a stand-in.
+
+    D10. THE MUTATION PROOF IS REPORTED AS 9 OF 10, NOT 10 OF 10. Run
+        against the shipped file the extended gate catches nine.
+        SymbolPicker escapes, because it fabricated through this.selected
+        rather than through an object literal. Reporting ten would have
+        overstated the ratchet.
+
+    D11. NO WINDOW CAST WAS ADDED. The first helper used
+        `window as unknown as Record<string, unknown>` and moved three
+        ratchets at once: windowCasts 6 to 7, windowAliasDecls 1 to 2 and
+        windowAliasUses 1 to 4. WIN-2 had driven those down deliberately.
+        All nine globals are declared in components/globals.d.ts, so the
+        parameter is typed `keyof Window | ""` and the global reads
+        directly.
+
+    D12. FALLBACK-2 IS LISTED AND LEFT. Eight surviving fallbacks are
+        recorded by file and line. Each changes what a host sees when a
+        dependency is absent, so they are a decision for the owner rather
+        than a sweep to be done in the same commit.
+  consequences: |
+    + A MISSING PICKER NOW FAILS LOUDLY, naming the global and what to
+      load, instead of mounting a text box that looks like a picker.
+    + THREE FIELD TYPES STOP DISCARDING USER INPUT. That was a live bug in
+      the shipped bundle, not a theoretical one.
+    + THE FAILURE IS DEBUGGABLE. A construction error keeps its cause.
+    + THE GATE SEES A SHAPE IT COULD NOT SEE, and the extension found no
+      false positive across 137 sources.
+    + 383 LINES DELETED AGAINST 183 ADDED.
+    - THIS IS A BREAKING CHANGE FOR ANY HOST that relied on the text-input
+      behaviour. A host that loads spinemap.js without the picker bundles
+      now gets a thrown error where it previously got an editable field.
+      That is the intended behaviour and it needs the CDN integration guide
+      to say so.
+    - SYMBOLPICKER'S SHAPE STILL ESCAPES CHECK [16]. A fallback that
+      fabricates through a field is not yet gated.
+    ? THE OTHER EIGHT FALLBACKS ARE UNDECIDED, and the clipboard pair may
+      be a genuine capability difference rather than a missing dependency.
+  files:
+    - "components/spinemap/spinemap.ts"
+    - "components/spinemap/spinemap.nofallback.test.ts"
+    - "scripts/check-fabricated-reads.mjs"
+    - "AGENTS.md"
+    - "CODEBASE_FIXES.md"
+    - "AGENT_INSIGHTS.md"
+    - "TESTING.md"
+    - "CHANGELOG.md"
+    - "agentknowledge/decisions.yaml"
+    - "agentknowledge/history.jsonl"

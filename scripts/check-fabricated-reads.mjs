@@ -25,7 +25,8 @@
  *
  * WHAT IT FLAGS
  * -------------
- * A `return` that is lexically inside a failure context — a `catch` clause,
+ * A `return`, or an ASSIGNMENT of an object literal, that is inside a
+ * failure context — a `catch` clause,
  * or an `if` whose condition tests for absence (`!x`, `x == null`,
  * `x === undefined`) — and whose value is either:
  *
@@ -199,6 +200,45 @@ function visit(node, file)
         }
     }
 
+    // FOURTH SHAPE (FALLBACK-1, 2026-10-16). The fabrication is ASSIGNED
+    // rather than returned, and the failure branch is in the CALLER:
+    //
+    //     catch { this.fallback(wrap, value); }          // failure branch
+    //
+    //     private fallback(wrap, value) {
+    //         this.instance = { getValue: () => inp.value };   // the lie
+    //     }
+    //
+    // Every probe above anchors on a `return` inside a lexical failure
+    // context, so all ten SpineMap adapters walked past them from March to
+    // October. An assignment of a read-bearing object literal is flagged
+    // when it sits in a failure branch, or in a function whose own name
+    // admits it is a stand-in.
+    if (ts.isBinaryExpression(node)
+        && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        && ts.isObjectLiteralExpression(node.right))
+    {
+        const fn = enclosingName(node);
+        const where = failureContext(node)
+            || (FALLBACK_NAME.test(fn) ? "stand-in builder" : null);
+
+        if (where && !CACHE_NAME.test(fn))
+        {
+            const reads = readMethodsIn(node.right);
+
+            if (reads.length > 0)
+            {
+                const line = file.getLineAndCharacterOfPosition(
+                    node.getStart()).line + 1;
+
+                violations.push({
+                    file: file.fileName, line, fn, where,
+                    detail: `assigns an object exposing ${reads.join(", ")}`,
+                });
+            }
+        }
+    }
+
     ts.forEachChild(node, (c) => visit(c, file));
 }
 
@@ -222,7 +262,7 @@ for (const path of files)
 
 if (violations.length > 0)
 {
-    console.log(`  FAIL: ${violations.length} failure branch(es) return `
+    console.log(`  FAIL: ${violations.length} failure branch(es) produce `
         + `something readable\n`);
 
     for (const v of violations)
@@ -238,5 +278,5 @@ if (violations.length > 0)
     process.exit(1);
 }
 
-console.log(`  PASS: ${files.length} sources — no failure branch returns a `
-    + `readable stand-in`);
+console.log(`  PASS: ${files.length} sources — no failure branch produces `
+    + `a readable stand-in`);

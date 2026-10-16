@@ -452,7 +452,7 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
 
 ---
 
-- [ ] **DEBT-ERR-2** `components/errordialog/errordialog.ts` has no fallback
+- [x] **DEBT-ERR-2** `components/errordialog/errordialog.ts` has no fallback
   when Bootstrap's JavaScript is absent. `show()` called
   `new bootstrap.Modal(...)` with no guard and no `try`, so a page without
   the bundle got a bare `ReferenceError` out of the dialog whose job is to
@@ -460,13 +460,78 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
   `@ts-expect-error` on that line had been suppressing the missing
   declaration, and it was the only type suppression in the tracked sources.
 
-  The throw is kept and now names what is missing, because an error dialog
-  that silently shows nothing is worse than one that fails loudly. What is
-  open is whether it should degrade instead. Every other consumer of the
-  global does: Toolbar falls back to the title attribute, MarkdownEditor
-  skips its backdrop. A Bootstrap modal is markup plus CSS classes, so
-  showing the dialog without the JavaScript is feasible and is a behavior
-  decision rather than a typing one.
+  **CLOSED 2026-10-16, no code change.** The throw was already correct and
+  the question was wrong. The repository owner settled it as policy: when
+  something is broken, let it break. Degrading was never an option, so the
+  entry closes with the `throw` exactly as it stands.
+
+  The reasoning recorded here was also wrong in a second way. It cited
+  Toolbar and MarkdownEditor as precedent for degrading. Those two are not
+  precedent, they are FALLBACK-2, and they are debt. The rule now lives in
+  AGENTS.md under "No Fallback Code" so it is not reasoned about again.
+
+  This also settles **ERR-1**. Validation that throws is fail-fast, which the
+  rule asks for, so the ten unvalidated factories can proceed without a
+  policy question blocking them.
+
+## CRITICAL — Fallback Code
+
+Per AGENTS.md "No Fallback Code". A fallback converts a loud failure into a
+quiet wrong answer.
+
+- [x] **FALLBACK-1** **Ten SpineMap field adapters answered a missing library
+  picker with a bare text input.** `StandardComponentAdapter` (which serves
+  datepicker, timepicker, durationpicker, cronpicker, timezonepicker,
+  periodpicker, colorpicker, codeeditor and maskedentry) plus the nine
+  non-standard adapters each carried a `fallback()` that assigned
+  `this.instance = { getValue: () => inp.value }`.
+
+  Three of the ten were worse than a degraded widget. `multiselectcombo`,
+  `tagger` and `peoplepicker` read through `getSelected()` and `getTags()`,
+  while the stand-in supplied `getValue()` only. Those three **silently
+  discarded every keystroke** and answered `""` or `[]`. A host persisting
+  the answer overwrote a real selection with nothing.
+
+  Every construction failure also ran through a bare `catch { this.fallback(
+  ...) }`, which discarded the original error, so none of this was
+  debuggable from a log.
+
+  **FIXED 2026-10-16.** All ten removed. Resolution now runs through four
+  shared helpers: `requireLibraryFactory` throws naming the missing global
+  and what to load, `libraryBuildFailed` rethrows with the original attached
+  as `cause`, `mountFactoryWidget` resolves before touching the DOM so a
+  refused mount leaves no half-built widget, and `readWidgetValue` refuses an
+  unmounted read instead of answering `""`. Net 183 insertions against 383
+  deletions. Proved by `components/spinemap/spinemap.nofallback.test.ts`,
+  22 cases, 20 of which fail against the shipped code.
+
+  Check `[16]` could not see any of it, because the probe anchors on a
+  `return` inside a lexical failure context and these were **assignments**
+  whose failure branch was in the caller. The gate gained that fourth shape
+  in the same commit and catches 9 of the 10 when run against the shipped
+  file. It misses SymbolPicker, which fabricated through a field rather than
+  an object literal. That residue is why a green check `[16]` stays a ratchet
+  rather than a clearance.
+
+- [ ] **FALLBACK-2** **Eight surviving fallbacks, each consumer-visible.**
+  Found by the FALLBACK-1 sweep and deliberately not changed in the same
+  commit, because every one alters what a host sees when a dependency is
+  absent. They are listed so they are decided rather than inherited:
+
+  | Location | Current fallback |
+  |---|---|
+  | `toolbar/toolbar.ts:4981` | Bootstrap Tooltip absent, drops to the `title` attribute |
+  | `markdowneditor/markdowneditor.ts:2047` | Bootstrap Modal absent, shows the modal by hand |
+  | `markdowneditor/markdowneditor.ts:967` | `Vditor.preview` absent, uses `getHTML()` |
+  | `markdowneditor/markdowneditor.ts:583` | Vditor instance absent, DOMPurify render |
+  | `formdialog/formdialog.ts:1743` | closes without the confirm prompt |
+  | `guidedtour/guidedtour.ts:186` | reaches for `window.driver.driver` |
+  | `sidebar/sidebar.ts:2315` | measures the first visible sidebar instead |
+  | `errordialog/errordialog.ts:418`, `codeeditor/codeeditor.ts:1107` | Clipboard API fails, `execCommand` via a temporary textarea |
+
+  The last row is the weakest candidate for removal, because `execCommand` is
+  a genuine capability difference rather than a missing dependency. The other
+  seven are the same shape as FALLBACK-1.
 
 ## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 
@@ -1147,7 +1212,8 @@ the step exits 1 and the workflow fails.
 | CRITICAL — Standards | 2 | **0 open, 2 closed 2026-10-15.** Both entries were wrong. STD-1 hid a real defect, STD-2 contradicted PAT-1 |
 | HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
 | HIGH — Function Length | 3 (14 functions total) | Open |
-| HIGH — Error Handling | 2 (DEBT-ERR-2 opened 2026-10-14) | Open |
+| HIGH — Error Handling | 1 (DEBT-ERR-2 closed 2026-10-16) | Open |
+| CRITICAL — Fallback Code | 2 (FALLBACK-1 closed, FALLBACK-2 open, 2026-10-16) | Open |
 | MEDIUM — !important | 3 (**54** real in 18 component files, re-measured 2026-10-15; 113 was all stylesheets) | **1 closed, 2 open.** Real target is 29 |
 | MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **0 open, 7 closed.** Trace reaches 109 components and 301 calls |
 | DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |

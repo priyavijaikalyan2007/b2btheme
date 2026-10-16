@@ -390,6 +390,50 @@ Two gaps remain, both recorded in ADR-157: a class-property arrow
 `return` inside a callback arrow nested in a guard is attributed to that
 guard. Treat a green check as a ratchet, not a clearance.
 
+## (CRITICAL) No Fallback Code
+
+**When something is broken, let it break.** Do not write a fallback. If a
+dependency is missing, a global is absent, or a construction fails, throw a
+literate error and let it reach the host. Do not substitute a stand-in widget,
+a plain input, a default value, or a reduced rendering.
+
+This is a standing instruction from the repository owner, restated on
+2026-10-16 after it had been given many times. The reason is not taste. A
+fallback converts a loud failure into a quiet wrong answer, and the quiet
+wrong answer is the one that reaches production.
+
+The evidence is FALLBACK-1. Ten SpineMap field adapters answered a missing
+library picker with a bare text input. Three of them were worse than a
+degraded widget: `multiselectcombo`, `tagger` and `peoplepicker` read through
+`getSelected()` and `getTags()`, while the stand-in supplied `getValue()`
+only. Those three silently discarded everything the user typed and returned
+an empty value. The code shipped, the gate did not see it, and the only trace
+was a `logWarn` nobody reads.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| A library global is absent | `throw`, naming the global and what to load | mount a plain input |
+| A constructor throws | rethrow, attaching the original as `cause` | `catch` and substitute |
+| An option is missing | `throw` a literate error | apply a silent default |
+| A capability is unavailable | `throw`, or refuse the one feature loudly | render a reduced version |
+
+**Validation that throws is wanted.** Fail-fast input checking is the rule
+working, not an exception to it. See LITERATE_ERRORS.md for the message shape.
+
+**This rule is wider than [No Fabricated Reads](#critical-no-fabricated-reads)
+above.** That section governs what a broken component may ANSWER. This one
+governs whether a broken component may CONTINUE. A fallback that renders
+correctly and reads correctly is still prohibited, because the host cannot
+tell that the real dependency never loaded.
+
+Do not cite an existing fallback elsewhere in this library as precedent. The
+survivors are tracked as FALLBACK-2 and they are debt, not a pattern.
+
+Enforced in part by `scripts/check-fabricated-reads.mjs` (check `[16]`), which
+gained the assignment shape on 2026-10-16. A gate that passes is a ratchet
+rather than a clearance, because a fallback that fabricates through a field
+rather than an object literal still escapes it.
+
 ## Operating Style
 
 Use the **V-V-P-T-I-R-V-C** loop (Plan → Test → Implement → Refactor → Verify) for your core workflow. 

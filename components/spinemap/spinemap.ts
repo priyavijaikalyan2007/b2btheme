@@ -844,6 +844,133 @@ const STANDARD_FACTORY_MAP: Record<string, keyof Window> =
     "maskedentry": "createMaskedEntry"
 };
 
+// ============================================================================
+// LIBRARY WIDGET RESOLUTION (FALLBACK-1)
+// ============================================================================
+
+/**
+ * ⚓ FALLBACK-1
+ * 📜 PURPOSE: Resolves a library factory from the global scope, or throws.
+ *
+ * THERE IS DELIBERATELY NO STAND-IN BELOW THIS POINT. Ten adapters used to
+ * answer a missing picker with a bare text input, and the getValue() of that
+ * input returned a string no host could tell apart from a real selection. A
+ * host that persisted the answer overwrote structured data with free text,
+ * and the only trace was a logWarn nobody reads. Throwing is the feature.
+ * See AGENTS.md "No Fabricated Reads" and ADR-184.
+ */
+function requireLibraryFactory(
+    factoryName: keyof Window | "",
+    fieldType: string
+): Function
+{
+    if (!factoryName)
+    {
+        throw new Error(
+            `SpineMap has no factory mapped for its "${fieldType}" popover `
+            + "field. STANDARD_LIBRARY_TYPES and STANDARD_FACTORY_MAP have "
+            + "drifted apart. This is a SpineMap bug: report the type above.");
+    }
+    // Typed `keyof Window` so the global reads without a cast. WIN-2 drove
+    // window casts down to six and this is not the place to add a seventh.
+    const name = String(factoryName);
+    const factory = window[factoryName];
+    if (typeof factory !== "function")
+    {
+        throw new Error(
+            `SpineMap cannot build its "${fieldType}" popover field, because `
+            + `${name} is not defined. Load the ${fieldType} bundle `
+            + "before spinemap.js, or remove that field from popoverFields.");
+    }
+    return factory as Function;
+}
+
+/**
+ * Wraps a construction failure so the original error survives as `cause`.
+ * The bare `catch` this replaces discarded it.
+ */
+function libraryBuildFailed(
+    factoryName: keyof Window | "",
+    fieldType: string,
+    cause: unknown
+): Error
+{
+    const err = new Error(
+        `${String(factoryName)} threw while building the SpineMap "${fieldType}" `
+        + "popover field. Load a version of that bundle which matches this "
+        + "SpineMap build.");
+    // `cause` is ES2022 and this build targets ES2020, so the second Error
+    // argument does not typecheck. Every runtime the bundle ships to
+    // supports the property, so it is assigned instead of dropped. Losing
+    // it is what made the old bare `catch` undebuggable.
+    (err as Error & { cause?: unknown }).cause = cause;
+    return err;
+}
+
+/** Copies the component options and adds `value` when there is one. */
+function widgetOpts(
+    compOpts: Record<string, unknown>,
+    value: unknown
+): Record<string, unknown>
+{
+    const opts = { ...compOpts };
+    if (value != null) { opts["value"] = value; }
+    return opts;
+}
+
+/**
+ * Mounts a `createXxx(id, opts)` style widget, or throws naming what is
+ * missing. The wrapper is only appended once the factory is known to exist,
+ * so a refused mount leaves no half-built widget in the popover.
+ */
+function mountFactoryWidget(
+    factoryName: keyof Window | "",
+    fieldType: string,
+    container: HTMLElement,
+    opts: Record<string, unknown>
+): Record<string, Function>
+{
+    const factory = requireLibraryFactory(factoryName, fieldType);
+    const id = nextAdapterId();
+    const wrap = htmlEl("div", { id, class: "spinemap-edit-widget" });
+    container.appendChild(wrap);
+    try
+    {
+        const built = factory(id, opts) as Record<string, Function>;
+        logTrace("library widget built:",
+            { factory: String(factoryName), field: fieldType });
+        return built;
+    }
+    catch (e)
+    {
+        throw libraryBuildFailed(factoryName, fieldType, e);
+    }
+}
+
+/**
+ * Reads a mounted widget, or refuses. An unmounted adapter used to answer
+ * `""`, which a host could not tell from a field the user had cleared.
+ */
+function readWidgetValue(
+    instance: Record<string, Function> | null,
+    fieldType: string,
+    method: string = "getValue"
+): unknown
+{
+    // The method varies: Tagger exposes getTags, the two combo widgets
+    // expose getSelected. The old fallback supplied getValue only, so for
+    // those three a stand-in silently answered "" no matter what the user
+    // typed. That is the FALLBACK-1 bug in its purest form.
+    if (!instance || typeof instance[method] !== "function")
+    {
+        throw new Error(
+            `SpineMap cannot read its "${fieldType}" popover field, because `
+            + `the widget does not expose ${method}(). This is a SpineMap `
+            + "bug: report it with the field type above.");
+    }
+    return instance[method]();
+}
+
 class StandardComponentAdapter implements SpineFieldAdapter
 {
     /**
@@ -869,37 +996,21 @@ class StandardComponentAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
+        // Resolve before touching the DOM, so a refused mount leaves no
+        // half-built widget behind in the popover.
+        const factory = requireLibraryFactory(
+            this.factoryName, this.fieldType);
         this.wrapperId = nextAdapterId();
         const wrap = htmlEl("div", {
             id: this.wrapperId,
             class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const factory = this.resolveFactory();
-        if (!factory)
-        {
-            this.mountFallbackInput(wrap, value);
-            return;
-        }
-        this.invokeFactory(factory, wrap, value);
-    }
-
-    private resolveFactory(): Function | null
-    {
-        const fn = this.factoryName ? window[this.factoryName] : undefined;
-        if (typeof fn !== "function")
-        {
-            logWarn(`${this.factoryName}` +
-                " unavailable, falling back to text"
-            );
-            return null;
-        }
-        return fn as Function;
+        this.invokeFactory(factory, value);
     }
 
     private invokeFactory(
-        factory: Function,
-        wrap: HTMLElement, value: unknown
+        factory: Function, value: unknown
     ): void
     {
         const opts = { ...this.compOpts };
@@ -915,10 +1026,8 @@ class StandardComponentAdapter implements SpineFieldAdapter
         }
         catch (e)
         {
-            logError(`${this.factoryName}` +
-                " mount error", e
-            );
-            this.mountFallbackInput(wrap, value);
+            throw libraryBuildFailed(
+                this.factoryName, this.fieldType, e);
         }
     }
 
@@ -936,31 +1045,9 @@ class StandardComponentAdapter implements SpineFieldAdapter
         return typeof value === "string";
     }
 
-    private mountFallbackInput(
-        wrap: HTMLElement,
-        value: unknown
-    ): void
-    {
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
-    }
-
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        if (typeof this.instance["getValue"] === "function")
-        {
-            return this.instance["getValue"]();
-        }
-        return "";
+        return readWidgetValue(this.instance, this.fieldType);
     }
 
     renderView(value: unknown): HTMLElement
@@ -999,48 +1086,14 @@ class SprintPickerAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createSprintPicker"] !== "function")
-        {
-            this.fallback(wrap, value);
-            return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            this.instance = (win["createSprintPicker"] as Function)(
-                id, opts
-            ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createSprintPicker unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createSprintPicker", "sprintpicker", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        return typeof this.instance["getValue"] === "function"
-            ? this.instance["getValue"]() : "";
+        return readWidgetValue(this.instance, "sprintpicker");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1071,47 +1124,14 @@ class FontDropdownAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createFontDropdown"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            this.instance = (win["createFontDropdown"] as Function)(
-                id, opts
-            ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createFontDropdown unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createFontDropdown", "fontdropdown", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        return typeof this.instance["getValue"] === "function"
-            ? this.instance["getValue"]() : "";
+        return readWidgetValue(this.instance, "fontdropdown");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1142,48 +1162,14 @@ class EditableComboBoxAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createEditableComboBox"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            this.instance =
-                (win["createEditableComboBox"] as Function)(
-                    id, opts
-                ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createEditableComboBox unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createEditableComboBox", "editablecombobox", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        return typeof this.instance["getValue"] === "function"
-            ? this.instance["getValue"]() : "";
+        return readWidgetValue(this.instance, "editablecombobox");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1214,50 +1200,14 @@ class MultiselectComboAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createMultiselectCombo"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            // Inverted params: (opts, containerId)
-            this.instance =
-                (win["createMultiselectCombo"] as Function)(
-                    opts, id
-                ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createMultiselectCombo unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createMultiselectCombo", "multiselectcombo", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        // getSelected() instead of getValue()
-        return typeof this.instance["getSelected"] === "function"
-            ? this.instance["getSelected"]() : "";
+        return readWidgetValue(this.instance, "multiselectcombo", "getSelected");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1288,48 +1238,14 @@ class TaggerAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createTagger"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            this.instance = (win["createTagger"] as Function)(
-                id, opts
-            ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createTagger unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createTagger", "tagger", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return []; }
-        // getTags() instead of getValue()
-        return typeof this.instance["getTags"] === "function"
-            ? this.instance["getTags"]() : [];
+        return readWidgetValue(this.instance, "tagger", "getTags");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1360,49 +1276,14 @@ class PeoplePickerAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createPeoplePicker"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
-        try
-        {
-            this.instance =
-                (win["createPeoplePicker"] as Function)(
-                    id, opts
-                ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createPeoplePicker unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        wrap.appendChild(inp);
-        this.instance = {
-            getValue: () => inp.value,
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createPeoplePicker", "peoplepicker", container,
+            widgetOpts(this.compOpts, value));
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return []; }
-        // getSelected() instead of getValue()
-        return typeof this.instance["getSelected"] === "function"
-            ? this.instance["getSelected"]() : [];
+        return readWidgetValue(this.instance, "peoplepicker", "getSelected");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1433,16 +1314,12 @@ class RichTextInputAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
+        const Ctor = requireLibraryFactory(
+            "RichTextInput", "richtextinput");
         const wrap = htmlEl("div", {
             class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        const win = window;
-        const Ctor = win["RichTextInput"];
-        if (typeof Ctor !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
         this.invokeRTI(Ctor, wrap, value);
     }
 
@@ -1466,37 +1343,14 @@ class RichTextInputAdapter implements SpineFieldAdapter
         }
         catch (e)
         {
-            logError("RichTextInput mount" +
-                " error", e
-            );
-            this.fallback(wrap, value);
+            throw libraryBuildFailed(
+                "RichTextInput", "richtextinput", e);
         }
-    }
-
-    private fallback(
-        wrap: HTMLElement,
-        value: unknown
-    ): void
-    {
-        logWarn("RichTextInput fallback");
-        const ta = htmlEl("textarea", {
-            class: "spinemap-edit-textarea",
-            rows: "3"
-        }) as HTMLTextAreaElement;
-        ta.value = String(value ?? "");
-        wrap.appendChild(ta);
-        this.instance = {
-            getValue: () => ta.value,
-            destroy: () => { /* no-op */ }
-        };
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        return typeof this.instance["getValue"] ===
-            "function"
-            ? this.instance["getValue"]() : "";
+        return readWidgetValue(this.instance, "richtextinput");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1531,49 +1385,30 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
+        const Ctor = requireLibraryFactory(
+            "MarkdownEditor", "markdowneditor") as unknown as
+                new (el: HTMLElement, o: Record<string, unknown>) =>
+                    Record<string, Function>;
         const wrap = htmlEl("div", {
             class: "spinemap-edit-widget"
         });
         container.appendChild(wrap);
-        // Read once and guard the value, not the property. Guarding
-        // `win["MarkdownEditor"]` and then reading `win.MarkdownEditor`
-        // leaves the second read optional, which costs a second guard that
-        // can never fire.
-        const Ctor = window.MarkdownEditor;
-        if (typeof Ctor !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = { ...this.compOpts };
-        if (value != null) { opts["value"] = value; }
         try
         {
             // new MarkdownEditor(element, opts)
-            this.instance = new Ctor(wrap, opts) as unknown as Record<string, Function>;
+            this.instance = new Ctor(
+                wrap, widgetOpts(this.compOpts, value));
         }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("MarkdownEditor unavailable");
-        const ta = htmlEl("textarea", {
-            class: "spinemap-edit-textarea",
-            rows: "3"
-        }) as HTMLTextAreaElement;
-        ta.value = String(value ?? "");
-        wrap.appendChild(ta);
-        this.instance = {
-            getValue: () => ta.value,
-            destroy: () => { /* no-op */ }
-        };
+        catch (e)
+        {
+            throw libraryBuildFailed(
+                "MarkdownEditor", "markdowneditor", e);
+        }
     }
 
     getValue(): unknown
     {
-        if (!this.instance) { return ""; }
-        return typeof this.instance["getValue"] === "function"
-            ? this.instance["getValue"]() : "";
+        return readWidgetValue(this.instance, "markdowneditor");
     }
 
     renderView(value: unknown): HTMLElement
@@ -1610,47 +1445,12 @@ class SymbolPickerAdapter implements SpineFieldAdapter
     mount(container: HTMLElement, value: unknown): void
     {
         this.selected = String(value ?? "");
-        const id = nextAdapterId();
-        const wrap = htmlEl("div", {
-            id, class: "spinemap-edit-widget"
-        });
-        container.appendChild(wrap);
-        const win = window;
-        if (typeof win["createSymbolPicker"] !== "function")
-        {
-            this.fallback(wrap, value); return;
-        }
-        const opts = {
-            ...this.compOpts,
-            onSelect: (sym: string) => { this.selected = sym; }
-        };
-        try
-        {
-            this.instance =
-                (win["createSymbolPicker"] as Function)(
-                    id, opts
-                ) as Record<string, Function>;
-        }
-        catch { this.fallback(wrap, value); }
-    }
-
-    private fallback(wrap: HTMLElement, value: unknown): void
-    {
-        logWarn("createSymbolPicker unavailable");
-        const inp = htmlEl("input", {
-            type: "text",
-            class: "spinemap-edit-input",
-            value: String(value ?? "")
-        }) as HTMLInputElement;
-        inp.addEventListener("input", () =>
-        {
-            logTrace("input handler");
-            this.selected = inp.value;
-        });
-        wrap.appendChild(inp);
-        this.instance = {
-            destroy: () => { /* no-op */ }
-        };
+        this.instance = mountFactoryWidget(
+            "createSymbolPicker", "symbolpicker", container,
+            {
+                ...this.compOpts,
+                onSelect: (sym: string) => { this.selected = sym; }
+            });
     }
 
     getValue(): unknown { return this.selected; }

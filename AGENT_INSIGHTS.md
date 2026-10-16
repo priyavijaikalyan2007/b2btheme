@@ -1255,3 +1255,79 @@ tracks nesting for the same mistake.
 **The general shape: a scanner written against a language is wrong when the
 codebase has a dialect.** The style guide is a fact about the input, and a
 scan that has not read it is guessing.
+
+### 6.85 A Fallback Is a Bug That Passes Its Own Tests (2026-10-16)
+
+Ten SpineMap adapters mounted a bare text input when a library picker was
+missing. Nine of them worked, in the sense that a user could type and the
+value came back. Three did not: `multiselectcombo`, `tagger` and
+`peoplepicker` read through `getSelected()` and `getTags()`, while the
+stand-in supplied `getValue()` only. Those three **discarded every keystroke
+and answered `""` or `[]`**.
+
+Nothing caught it. The instance is typed `Record<string, Function>`, so the
+mismatch between the method the stand-in supplies and the method the adapter
+reads is invisible to the compiler. No test asserted the fallback, because a
+fallback is what happens when the test environment is incomplete, and the
+test environment was complete. The only runtime trace was a `logWarn`.
+
+**The failure mode is specific to fallbacks.** Real code is exercised, so a
+drift between two sides of it gets caught. A fallback runs only when
+something else is already broken, which is exactly when nobody is watching.
+It rots silently and then answers confidently.
+
+**This is the argument for letting it break that the policy argument misses.**
+"Fail loudly" is usually defended on debuggability. The stronger reason is
+that a fallback is a second implementation with no users, and a second
+implementation with no users is wrong by the time it runs.
+
+### 6.86 A Gate Anchored on a Keyword Cannot See the Other Grammar (2026-10-16)
+
+`check-fabricated-reads.mjs` walks the TypeScript AST precisely because a
+regex could not tell whether a `return` sat inside a `catch`. It was right
+about that and it still missed all ten adapters, because every probe in it
+begins `ts.isReturnStatement(node)`. The adapters did not return a
+fabrication. They **assigned** one, from a method whose own failure context
+was in the caller:
+
+```ts
+catch { this.fallback(wrap, value); }          // the failure branch
+
+private fallback(wrap, value) {
+    this.instance = { getValue: () => inp.value };   // the fabrication
+}
+```
+
+Two separate things defeated it. The grammar was assignment rather than
+return, and the failure context was one stack frame up. ADR-157 had
+enumerated three shapes and recorded two known gaps, and this was a fourth
+shape that none of them described.
+
+**Moving from regex to AST raises the floor and does not change the
+question.** Both ask "does this keyword appear in that context". A
+fabrication is a semantic event, and it has at least as many grammars as
+JavaScript has ways to put a value somewhere.
+
+**The honest way to report the fix is the one that admits the residue.** The
+extended gate catches 9 of the 10. SymbolPicker escapes, because it
+fabricated through `this.selected` rather than an object literal. Reporting
+10 of 10 would have turned a ratchet back into a clearance.
+
+### 6.87 The Fix That Satisfies Four Ratchets by Breaking Three Others (2026-10-16)
+
+The first version of the shared helper opened with
+`const win = window as unknown as Record<string, unknown>`, copying the
+idiom the ten adapters already used. It typechecked, the 22 new tests
+passed, and the audit then failed three counts at once: `windowCasts` 6 to
+7, `windowAliasDecls` 1 to 2, `windowAliasUses` 1 to 4.
+
+WIN-2 had driven those three from 237, 42 and 73 down to 6, 1 and 1. The
+helper was about to spend a finished piece of work to save four lines, and
+it was unnecessary: all nine globals are declared in `globals.d.ts`, so the
+parameter types as `keyof Window | ""` and `window[factoryName]` reads with
+no cast at all.
+
+**Deleting code is where a ratchet is most likely to be surprised.** The
+instinct when removing a bad pattern is to lift what the bad code did into
+the replacement, and what it did was itself a tracked debt. The counts
+noticed. Nothing else would have.

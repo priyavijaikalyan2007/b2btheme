@@ -246,6 +246,39 @@ read-only when the write path is down, a value labelled stale, an empty state
 that says it could not load. What is prohibited is a stand-in indistinguishable
 from the real thing.
 
+### SpineMap throws when a picker bundle is missing (2026-10-16, breaking)
+
+**If you render a SpineMap popover field backed by a library picker, load
+that picker's bundle.** SpineMap used to mount a plain text input when the
+factory was absent. It now throws, naming the missing global and what to
+load.
+
+```js
+// Loading spinemap.js without sprintpicker.js previously gave you an
+// editable text box. It now throws:
+//   SpineMap cannot build its "sprintpicker" popover field, because
+//   createSprintPicker is not defined. Load the sprintpicker bundle
+//   before spinemap.js, or remove that field from popoverFields.
+```
+
+Affected field types: `datepicker`, `timepicker`, `durationpicker`,
+`cronpicker`, `timezonepicker`, `periodpicker`, `colorpicker`, `codeeditor`,
+`maskedentry`, `sprintpicker`, `fontdropdown`, `editablecombobox`,
+`multiselectcombo`, `tagger`, `peoplepicker`, `richtextinput`,
+`markdowneditor` and `symbolpicker`. Native field types such as `text`,
+`textarea`, `select`, `checkbox`, `range` and `link` are unaffected, because
+they render their own input rather than borrowing one.
+
+**Three of these were previously losing data.** The stand-in for
+`multiselectcombo`, `tagger` and `peoplepicker` exposed `getValue()`, while
+those adapters read through `getSelected()` and `getTags()`. Everything a
+user typed into the substitute was discarded and the field answered empty.
+If you relied on the old behaviour for those three, you were not reading
+user input at all.
+
+To keep a field working without its bundle, remove it from `popoverFields`
+rather than letting the mount fail.
+
 ### This library will now throw at you
 
 Two consequences of ADR-148 that consuming code must handle:
