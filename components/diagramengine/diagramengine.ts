@@ -16611,6 +16611,13 @@ export class RenderEngine
 
         const obj = instance as Record<string, unknown>;
 
+        // FALLBACK-7. Probing show/render/getElement is normalisation
+        // across heterogeneous embedded components and stays. What went
+        // is the silence: each strategy swallowed its error and the chain
+        // ended by doing nothing, so a failed embed left an empty
+        // container and no trace anywhere.
+        const failures: unknown[] = [];
+
         if (typeof obj["show"] === "function")
         {
             try
@@ -16618,13 +16625,13 @@ export class RenderEngine
                 (obj["show"] as Function)(containerId);
                 return;
             }
-            catch (_)
+            catch (e)
             {
-                // Fall through to alternative strategies
+                failures.push(e);
             }
         }
 
-        this.tryRenderFallback(obj, containerId);
+        this.tryRenderFallback(obj, containerId, failures);
     }
 
     /**
@@ -16637,13 +16644,16 @@ export class RenderEngine
      */
     private tryRenderFallback(
         obj: Record<string, unknown>,
-        containerId: string): void
+        containerId: string,
+        failures: unknown[]): void
     {
         const container = document.getElementById(containerId);
 
         if (!container)
         {
-            return;
+            throw new Error(
+                `DiagramEngine cannot mount an embed, because container `
+                + `"${containerId}" does not exist.`);
         }
 
         // MarkdownRenderer pattern: render(content, target)
@@ -16658,9 +16668,9 @@ export class RenderEngine
 
                 return;
             }
-            catch (_)
+            catch (e)
             {
-                // Fall through to getElement
+                failures.push(e);
             }
         }
 
@@ -16674,13 +16684,25 @@ export class RenderEngine
                 if (el instanceof HTMLElement)
                 {
                     container.appendChild(el);
+                    return;
                 }
+
+                failures.push(new Error(
+                    "getElement() did not return an HTMLElement."));
             }
-            catch (_)
+            catch (e)
             {
-                // Component cannot be mounted
+                failures.push(e);
             }
         }
+
+        const err = new Error(
+            "DiagramEngine could not mount an embedded component. It "
+            + "accepts show(containerId), render(content, target) or "
+            + "getElement(), and none of them succeeded. The first "
+            + `failure of ${failures.length} is attached as cause.`);
+        (err as Error & { cause?: unknown }).cause = failures[0];
+        throw err;
     }
 
     /**

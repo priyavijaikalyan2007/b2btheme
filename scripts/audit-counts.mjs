@@ -250,6 +250,16 @@ export function countOccurrences(text, needle)
  * this counter is the only thing watching the size, and the two were
  * conflated. STD-1 now reads as what it is, a build-script defect.
  *
+ * The sixth raise was FALLBACK-7, 30529 -> 30551: twenty-two lines in
+ * `src/render-engine.ts`. The embed mount chain tried show(), then
+ * render(), then getElement(), and each one swallowed its own error with
+ * `catch (_)`. When all three missed, the chain simply returned, so a
+ * failed embed left an empty container and no trace anywhere at all. The
+ * probing itself is normalisation across heterogeneous components and is
+ * kept. The lines pay for a failures array, a container check that throws
+ * instead of returning, and a final throw naming the three strategies with
+ * the first failure attached as cause.
+ *
  * The fifth raise was MRK-1 and MRK-2, 30524 -> 30529: five lines across
  * `src/engine.ts` and `src/types.ts`, which carried a plain description
  * comment and not the marker block MARKERS.md requires. The three marker
@@ -270,7 +280,7 @@ export function countOccurrences(text, needle)
  * whole cost of making the engine's console fallback respond to a flag set
  * after the bundle loaded.
  *
- * The rule is still ratchet down only. All five raises are exceptions,
+ * The rule is still ratchet down only. All six raises are exceptions,
  * taken deliberately, measured at their minimum, and written here rather
  * than quietly absorbed. A ratchet that cannot record a justified exception
  * gets worked around instead, and a worked-around ratchet measures
@@ -356,7 +366,7 @@ const BASELINES = {
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
-    diagramengineLines: 30529,
+    diagramengineLines: 30551,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
