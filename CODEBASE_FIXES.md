@@ -136,12 +136,17 @@ These issues involve potential XSS or script injection vectors and must be addre
   |---|---|---|
   | bootstrap | 5.3.8 | 5.3.3 **and** 5.3.8, in different files |
   | bootstrap-icons | 1.13.1 | 1.11.3 **and** 1.13.1 |
-  | chart.js | 4.5.1 | 4.4.7 |
+  | chart.js | 4.5.1 | ~~4.4.7~~ **fixed 2026-10-17** |
   | marked | 18.0.12 | 15.0.7 |
 
-  `chart.js` is the one that matters most, because it is **vendored**: the
-  repository serves a hashed 4.5.1 at `dist/lib` and the documentation sends
-  consumers to an unhashed 4.4.7 elsewhere. `bootstrap` matters next,
+  `chart.js` is **closed**, under ADR-191 with the rest of the vendored
+  rows. It was the one that mattered most, because it is vendored: the
+  repository serves a hashed 4.5.1 at `dist/lib` and the documentation sent
+  consumers to an unhashed 4.4.7. `components/chartpanel/README.md` now
+  offers the hashed versioned URL first, and keeps the unversioned
+  `vendor/chart.js/` copy as a second option labelled as what it is, which
+  is the same 4.5.1 bytes at a path that carries no version and therefore
+  cannot be hashed. `bootstrap` and `bootstrap-icons` remain open. `bootstrap` matters next,
   because the theme's CSS is compiled against the installed version and a
   consumer following the older number gets a stylesheet built against a
   different Bootstrap.
@@ -156,16 +161,14 @@ These issues involve potential XSS or script injection vectors and must be addre
   **Overlaps DEBT-SEC-8** on `bootstrap`, `bootstrap-icons` and `chart.js`.
   Kept as two entries: this one is about which version a document names,
   and that one is about whether the tag carries a hash. For `chart.js` they
-  are the same edit, and 2026-10-17 gave it a known shape — DOMPurify and
-  font-awesome were fixed by pointing the documentation at the vendored
-  copy with the hash `dist/lib-manifest.json` publishes. Two references.
-  Offered three times without an answer, so it stays open rather than
-  being swept in on the strength of the fix being cheap.
+  were the same edit, and `chart.js` was taken on 2026-10-17 once the owner
+  answered. `bootstrap` and `bootstrap-icons` are not vendored here, so
+  they are a genuine compatibility decision and stay open.
 
 - [ ] **DEBT-SEC-8** **Third-party libraries recommended with no integrity
-  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **65** by the
-  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Was 76 before
-  the first slice. **Ten of the remainder are in dated `specs/*.prd.md`
+  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **35** by the
+  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Was 76 before the
+  first slice and 65 before the second. **Ten of the remainder are in dated `specs/*.prd.md`
   planning documents** rather than in anything a consumer copies, so this
   count cannot reach zero without editing a historical record. Do not chase
   it below 10.
@@ -182,24 +185,47 @@ These issues involve potential XSS or script injection vectors and must be addre
   four cases at an OLDER version. `lib-manifest.json` serves seven assets,
   not the four ADR-149 recorded. Nobody widened the entry when it grew.
 
-  | Library | This origin serves | Docs hand out | State |
+  | Library | This origin serves | Docs handed out | State |
   |---|---|---|---|
   | dompurify | 3.4.16 hashed | unpkg 3.2.4 ×8, jsdelivr 3.4.16 unhashed ×2 | **fixed** |
   | font-awesome | 6.5.1 hashed | cdnjs 6.5.0 ×2 | **fixed** |
-  | vditor | 3.11.2 hashed | unpkg ×13, jsdelivr ×2 | same fix, awaiting a yes |
-  | chart.js | 4.5.1 hashed | jsdelivr 4.4.7 ×2 | same fix, offered three times |
-  | mathlive | not served | jsdelivr 0.107.3 ×2 — **404** | blocked, see below |
+  | vditor | 3.11.2 hashed | unpkg ×13, jsdelivr ×2 | **fixed** |
+  | chart.js | 4.5.1 hashed | jsdelivr 4.4.7 ×2 | **fixed** |
+  | mathlive | not served | jsdelivr 0.107.3 ×2, a 404 | **fixed**, hashed at 0.111.1 |
   | driver.js | not served | 1.4.0 in demos, 1.4.1 in the README | pick one version |
   | bootstrap | not served | 5.3.3 and 5.3.8 | the DEBT-SEC-7 row |
   | bootstrap-icons | not served | 1.11.3 and 1.13.1 | the DEBT-SEC-7 row |
 
-  **`vditor` is not "pick one registry", which is what this entry used to
-  say.** Both registries serve the same 3.11.2 that `/lib/` serves. The
-  registry was never the question. It is fifteen references away from being
-  the same one-line fix DOMPurify just had, and it is the largest single
-  block left.
+  **SECOND SLICE DONE 2026-10-17 (ADR-191): vditor, chart.js, mathlive.**
+  Thirty more references. `thirdPartyTagsWithoutSri` 65 to **35**. The
+  pairing gate went from 9 inspected tags to 21.
 
-  **mathlive is blocked on a real question, not a hash.**
+  **vditor was not the one-line fix the others were, and the difference is
+  worth keeping.** Its entry script is one file and is hashed. The rest of
+  the library is not. vditor lazily injects script tags for its markdown
+  engine, icon set, language pack and every optional renderer, and its
+  built-in default for those is a hardcoded `https://unpkg.com/vditor@3.11.2`.
+  `MarkdownEditor` already overrode that, pointing vditor's `cdn` option at
+  `<origin>/lib/vditor-3.11.2`, where the origin is read from the `src` of
+  the `markdowneditor.js` tag. So a consumer who self-hosts the component
+  makes vditor look for chunks under their OWN origin. That constraint is
+  now stated in `components/markdowneditor/README.md` rather than left for
+  someone to discover. **Residue:** `index.css` is served from `/lib/` but
+  is not in `lib-manifest.json`, so it carries no hash and neither ceiling
+  counts it. Hand-computing one would be the transcribed hash with no
+  custody that the manifest exists to prevent.
+
+  **`components/conversation/README.md` documents vditor's script and not
+  its stylesheet.** Noticed while fixing the script tag, left alone because
+  adding a missing dependency to a quick-start block is a different
+  change.
+
+  **`vditor` was not "pick one registry", which is what this entry used to
+  say.** Both registries served the same 3.11.2 that `/lib/` serves. The
+  registry was never the question.
+
+  **mathlive was blocked on a real question, not a hash, and the owner
+  answered it on 2026-10-17: 0.111.1.**
   `components/latexeditor/README.md` and the generated reference both cite
   `cdn.jsdelivr.net/npm/mathlive@0.107.3/dist/mathlive.min.js`. That URL
   **404s, and always has.** Version 0.107.3 was never published — the 0.107
@@ -208,8 +234,14 @@ These issues involve potential XSS or script injection vectors and must be addre
   editing mode has never been loadable from the documented snippet. MathLive
   is optional and detected through `customElements.get("math-field")`, and
   `getMathML()` is still a Phase 4 stub, so nothing broke loudly enough to
-  be noticed. Choosing 0.107.1 or 0.111.1 is a decision about an untested
-  integration and is not taken here.
+  be noticed. 0.111.1 was chosen over 0.107.1 because the component needs
+  only the `<math-field>` custom element, which every published version
+  registers, and there is no installed version to match. Pinning to a
+  superseded line had no API argument behind it. It is hashed in
+  `scripts/third-party-sri.json` and remains untested against a real
+  MathLive load. Its fonts load from a directory relative to the script
+  and cannot carry an integrity attribute, which is the residual
+  `katex-css` already records for its 60 `@font-face` files.
 
   **What the ceilings still cannot see, and what now covers it.**
   `thirdPartyTagsWithoutSri` counts tags carrying no `integrity` at all, so

@@ -1614,3 +1614,45 @@ counting whether the tag carried a hash and no check on whether the tag
 resolved. Pinning and hashing a URL says nothing about whether it is
 real — SEC-6 found `bootstrap@5/css/bootstrap.min.css` returning 404 in
 the same way, and this is the second instance.
+
+### 6.101 What a Hash Covers Is Narrower Than the Library (2026-10-17)
+
+Four of the eight assets hashed this week pull something at run time
+that the hash does not reach. KaTeX's stylesheet names 60 `@font-face`
+files. Font Awesome is a stylesheet plus webfonts. MathLive reads
+`fontsDirectory` relative to its own script URL. vditor injects its
+markdown engine, icon set, language pack and every optional renderer as
+script tags it writes itself, defaulting to a hardcoded unpkg URL.
+
+Only three of the eight are honestly `"closure": "complete"`.
+
+**Principle**: record what the hash covers in the same field that
+records the hash, in the artifact rather than in prose somewhere else.
+`scripts/third-party-sri.json` has a `closure` key for exactly this, and
+the useful entries are the ones that are not the word "complete". An
+`integrity` attribute invites the reader to believe the library is
+verified. What is verified is one file.
+
+vditor is the sharpest case, because the gap is not a font. A
+substituted font renders wrong glyphs. A substituted markdown engine
+runs.
+
+### 6.102 An Override Written to Close a Hole Can Open a Different One (2026-10-17)
+
+`MarkdownEditor` sets vditor's `cdn` option so the lazily-injected
+chunks never reach unpkg, and the constant's own comment says so:
+"Never fall through to a public CDN: that is the behaviour this
+constant exists to remove." It is the right call and it is working.
+
+It resolves the origin from `document.currentScript.src`. So a consumer
+who self-hosts `markdowneditor.js` makes vditor look for
+`/lib/vditor-3.11.2/` on their own origin, which they will not have
+unless they mirrored it. The component refuses to paper over that, which
+is the no-fallback rule doing its job, and the README said nothing about
+it until now.
+
+**Principle**: an override that derives its target from the environment
+has moved the requirement rather than removed it. Write down where the
+requirement landed. The fix here was a paragraph, not code, and it was
+only visible because repointing the entry tag forced someone to ask
+where the rest of the library comes from.

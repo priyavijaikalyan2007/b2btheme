@@ -3988,3 +3988,49 @@ only ever checking half of it. `scripts/check-closure.mjs` now asserts
 the other half and reports how many tags it inspected, because a gate
 that says PASS without saying what it looked at is the DEBT-GATE-1
 shape again.
+
+## 2026-10-17 (cont.) — DEBT-SEC-8, the rest
+
+*"Yes MathLive to 0.111.1 sounds good. Yes to the rest."* Two sentences
+closed four rows.
+
+**MathLive was the only one with a real question in it**, and the
+question was not which version to hash. It was that the documented URL
+had never resolved. Choosing 0.111.1 over 0.107.1 came down to there
+being no argument for the older line: the component needs the
+`<math-field>` element, every published version registers it, and no
+installed version exists to match. Pinning to a superseded release
+would have been choosing staleness for its own sake.
+
+**vditor was the interesting one.** It looked like the same one-line
+fix as DOMPurify and is not. Its entry script is one file and hashes
+cleanly. The rest of the library arrives as script tags vditor writes
+itself at run time, defaulting to a hardcoded unpkg URL.
+
+`MarkdownEditor` had already closed that, pointing vditor's `cdn`
+option at `<origin>/lib/vditor-3.11.2` with the origin read from its own
+script tag. The constant's comment is emphatic about why: never fall
+through to a public CDN. Correct, and still working.
+
+But resolving from the environment moves a requirement rather than
+removing it. A consumer who self-hosts `markdowneditor.js` sends vditor
+looking for `/lib/vditor-3.11.2/` on their own origin, which they will
+not have. The component refuses to paper over it, which is the rule
+working, and nothing told them. That was a paragraph, not code, and it
+only surfaced because repointing the entry tag forced the question of
+where the rest of the library comes from.
+
+**The honest line of the day is about what a hash covers.** Eight
+builds are recorded now and only three are `"closure": "complete"`.
+KaTeX's stylesheet pulls 60 font files. Font Awesome is CSS plus
+webfonts. MathLive reads a fonts directory relative to its own script.
+vditor injects an entire tree. An `integrity` attribute reads as a
+claim about a library and is a claim about one file. The `closure`
+field exists so the narrower truth travels with the hash instead of
+living in prose nobody opens.
+
+**One thing left undone on purpose.**
+`components/conversation/README.md` documents vditor's script and not
+its stylesheet. Found while fixing the script tag. Adding a missing
+dependency to a quick-start block is a different change from
+repointing an existing one, so it is recorded rather than slipped in.

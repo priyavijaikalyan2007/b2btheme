@@ -7874,3 +7874,72 @@
     four assets to seven and no document followed. The remaining two,
     vditor at fifteen references and chart.js at two, are the same gap
     and sit one yes away.
+
+- id: ADR-191
+  title: The rest of DEBT-SEC-8's vendored rows, and MathLive pinned at 0.111.1
+  date: 2026-10-17
+  status: accepted
+  context: |
+    ADR-190 fixed two of the four rows where this origin already serves the
+    library. The owner approved the remaining two, vditor and chart.js, and
+    chose 0.111.1 for MathLive.
+
+    MathLive was the one row needing a real answer. The documented URL,
+    mathlive@0.107.3/dist/mathlive.min.js, returns 52 bytes saying the
+    release does not exist. That version was never published, the 0.107
+    line stops at 0.107.1, and the asset sits at the package root rather
+    than under dist/. The URL was wrong twice over and had never resolved.
+  decision: |
+    D1. MATHLIVE IS PINNED AT 0.111.1 AND HASHED WHERE IT STANDS. This
+        origin does not serve it, so it joins scripts/third-party-sri.json
+        beside marked and katex rather than lib-manifest.json. The
+        component needs only the <math-field> custom element, which every
+        published version registers, and there is no installed version to
+        match, so a superseded line had no API argument behind it.
+
+    D2. MATHLIVE'S FONTS ARE A STATED RESIDUAL, NOT A GAP. MathfieldElement
+        reads fontsDirectory relative to the script URL and fetches font
+        files that cannot carry an integrity attribute. The closure field
+        says so, in the same words katex-css uses for its 60 @font-face
+        files. A substituted font renders wrong glyphs and does not run.
+
+    D3. VDITOR'S ENTRY IS HASHED AND ITS TREE IS NOT, AND THE README NOW
+        SAYS WHY. vditor lazily injects its markdown engine, icon set,
+        language pack and optional renderers, defaulting to a hardcoded
+        unpkg URL. MarkdownEditor already overrides that with vditor's cdn
+        option, resolved from the src of its own script tag. A consumer who
+        self-hosts the component therefore makes vditor look under THEIR
+        origin for /lib/vditor-3.11.2/. That is now stated rather than
+        discovered.
+
+    D4. VDITOR'S index.css CARRIES NO HASH. It is served from /lib/ but is
+        not in lib-manifest.json, so there is nothing to transcribe.
+        Computing one here would be a hash with no custody behind it,
+        which is what the manifest exists to prevent. Recorded as residue.
+
+    D5. CHARTPANEL OFFERS THE HASHED VERSIONED URL FIRST. The unversioned
+        /vendor/chart.js/ copy stays as a second option, labelled as the
+        same 4.5.1 bytes at a path that carries no version and therefore
+        cannot be hashed.
+  consequences: |
+    Thirty more references moved. thirdPartyTagsWithoutSri falls 65 to 35,
+    and the pairing gate in scripts/check-closure.mjs went from 9 inspected
+    tags to 21. Four mutations run against the new tags, all caught: a
+    vditor stylesheet reverted to unpkg moved the ceiling, a vditor script
+    and a chart.js script reverted with their hashes left attached were
+    caught by the pairing gate, and crossorigin stripped from the MathLive
+    tag moved tagsMissingSri to 1.
+
+    DEBT-SEC-7's chart.js row closes with this. bootstrap and
+    bootstrap-icons stay open there, because this origin does not serve
+    them and the version choice is a real compatibility decision.
+
+    THE REMAINING 35 ARE MOSTLY NOT FIXABLE BY A SWEEP. Ten sit in dated
+    specs/*.prd.md planning documents that are a historical record. The
+    live remainder is driver.js, which needs one version picked, and
+    bootstrap with bootstrap-icons, which are DEBT-SEC-7.
+
+    components/conversation/README.md documents vditor's script and not
+    its stylesheet. Found while fixing the script tag and left alone,
+    because adding a missing dependency to a quick-start block is a
+    different change from repointing an existing one.
