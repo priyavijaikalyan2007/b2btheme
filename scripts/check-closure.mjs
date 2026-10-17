@@ -100,11 +100,27 @@ function checkDocumentedPairings(manifest, problems, thirdParty)
 
             inspected += 1;
 
-            if (!tag.includes(pair.url))
+            // The ATTRIBUTE VALUE, not a substring of the tag. An
+            // unterminated href swallows everything after it, so
+            // `href="...driver.css integrity="sha384-..."` leaves the
+            // url and the hash both present in the text and neither of
+            // them doing anything. That exact tag shipped on
+            // 2026-10-18 and this check passed it.
+            const target = tag.match(/\b(?:href|src)="([^"]*)"/)?.[1];
+
+            // dist/lib-manifest.json stores a root-relative path and the
+            // documented tags name the origin, so one scheme-and-host
+            // prefix is allowed and nothing else is. No query string, no
+            // trailing text, no second attribute folded in.
+            const matches = target === pair.url
+                || (pair.url.startsWith("/")
+                    && new RegExp(`^https://[^/]+${pair.url}$`).test(target ?? ""));
+
+            if (!matches)
             {
                 problems.push(
                     `${file}: a tag carries the published ${pair.name} hash but ` +
-                    `does not point at ${pair.url}`);
+                    `its href/src is ${target ?? "(unreadable)"}, not ${pair.url}`);
             }
             else if (!tag.includes('crossorigin="anonymous"'))
             {

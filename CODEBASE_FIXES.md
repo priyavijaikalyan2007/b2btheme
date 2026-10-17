@@ -167,14 +167,32 @@ These issues involve potential XSS or script injection vectors and must be addre
   after `bootstrap@5/css/bootstrap.min.css` under DEBT-SEC-6 and
   `mathlive@0.107.3/dist/` under DEBT-SEC-8.
 
-  **AND THE GATE COULD NOT SEE IT.** Mutation M1 — point a documented
-  tag back at the never-published 1.4.1 — passed. `npm run sri:verify`
+  **AND THE GATE COULD NOT SEE IT, TWICE.** Mutation M1 — point a
+  documented tag back at the never-published 1.4.1 — passed. `npm run sri:verify`
   checks the manifest's own URLs, not the tags the documentation hands
   a consumer, and structure check `[10]`'s pairing assertion covered
   only `dist/lib-manifest.json`, the assets this origin serves.
   `scripts/third-party-sri.json` was outside it. The check now reads
   both, and its coverage went from **21 documented tags to 64**. M1 and
   a crossorigin-stripping mutation are both caught now.
+
+  **THEN THE WIDENED CHECK PASSED A MALFORMED TAG I HAD JUST WRITTEN.**
+  The script that added `integrity` to the demo pages assumed every
+  `<link>` closes with `/>`. Two of the three close with `">`, so
+  stripping two characters ate the closing quote and produced
+  `href="…driver.css integrity="sha384-…"`. The href swallows the rest,
+  the browser requests a URL that does not exist, and SRI is not
+  bypassed so much as irrelevant — the stylesheet simply never loads.
+  Caught by an automated security review of the commit, not by this
+  repository.
+
+  The pairing assertion passed it because it asked
+  `tag.includes(pair.url)`, and the URL text **is** present, inside a
+  broken attribute. It now reads the href/src **attribute value** and
+  requires it to equal the published URL, allowing one scheme-and-host
+  prefix because `dist/lib-manifest.json` stores a root-relative path.
+  No query string, no trailing text, no second attribute folded in.
+  Both the malformed tag and a `?v=2` cache-buster are caught.
 
   Below is the entry as it stood, measured 2026-10-15 while closing
   DEBT-SEC-6, and not ratcheted.

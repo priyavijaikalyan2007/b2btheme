@@ -443,10 +443,19 @@ const BASELINES = {
     // reaching every declaration, which is how the set is kept honest.
     testsWithoutAssertion: 0,
     // DEBT-TEST-1, ADR-196. A test block whose every assertion passes
-    // for any value that is not null. 204 of the 341 are a bare
-    // `.not.toThrow()`, which asserts the absence of a crash and
-    // nothing about behaviour, and which is the literal negation of
-    // the rule AGENTS.md states for a factory given no container.
+    // for any value that is not null. Recounted against the current
+    // parser on 2026-10-18, after the subject/matcher split:
+    //
+    //   204  a bare `.not.toThrow()`
+    //    47  `.toBeDefined()`
+    //    38  `.toBeTruthy()`
+    //    26  `.toBeDefined()` with `expect(typeof x)`
+    //    22  `expect(typeof x)`
+    //     4  other mixes
+    //
+    // `.not.toThrow()` asserts the absence of a crash and nothing
+    // about behaviour, and it is the literal negation of the rule
+    // AGENTS.md states for a factory given no container.
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.

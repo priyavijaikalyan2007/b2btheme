@@ -389,6 +389,14 @@ describe("callbacks", () =>
         picker.show("test-colorpicker-container");
 
         picker.setValue("#AABBCC");
+
+        // WHEN THE LINE BELOW FAILS, THE DEFECT IS FIXED: delete this
+        // whole test. It is a pin, not a snapshot, and the difference
+        // matters because the exact-value assertion after it would
+        // also fail for a DIFFERENT wrong hex, and the reflex then is
+        // to update the expected string rather than to notice.
+        expect(picker.getValue().toUpperCase()).not.toBe("#AABBCC");
+
         expect(picker.getValue().toUpperCase()).toBe("#A9BACB");
 
         // A hex that IS representable survives, so the drift is the
