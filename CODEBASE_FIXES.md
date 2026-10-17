@@ -1685,16 +1685,39 @@ default". ERR-1 conflated the two from the start — its entry said "no
 container **or option** validation" and every number it carried was
 about containers. This is the other row.
 
-- [ ] **ERR-2** **67 of 104 required options are not refused when they
-  are absent.** Held by `SILENT_DEFAULT_FOR_REQUIRED_OPTION` in
-  `scripts/factory-options.test.ts`, ADR-197.
+- [ ] **ERR-2** **39 of 73 required options are still not refused when
+  they are absent, down from 66.** Held by
+  `SILENT_DEFAULT_FOR_REQUIRED_OPTION` in
+  `scripts/factory-options.test.ts`, ADR-197 and ADR-198.
 
-  | What the factory does with a required option that is absent | Count |
-  |---|---|
-  | Applies a silent default | 40 |
-  | Crashes later with a `TypeError` naming the field | 27 |
-  | Refuses, naming the option | 5 |
-  | Verdict unreachable | 2 |
+  | What the factory does with a required option that is absent | Before | Now |
+  |---|---|---|
+  | Applies a silent default | 39 | 39 |
+  | Crashes later with a `TypeError` naming the field | 27 | 0 |
+  | Refuses, naming the option | 5 | 33 |
+  | Verdict unreachable | 2 | 1 |
+
+  **THE 27 CRASHING ONES ARE CLOSED (ADR-198).** They were one
+  mechanical slice, because a component that already dies on
+  `options.roots is not iterable` cannot have a caller who omits the
+  field. Twenty-eight guards across twenty-two factories, all of the
+  shape `if (options.X === undefined) { throw ... }`. Absent means
+  undefined, so an empty array and a zero are present and pass. No test
+  broke, which is what "it already crashes" predicts.
+
+  `createWorkspaceSwitcher` takes the pair rather than the field. It
+  accepts either shape and reads `current.tenants ?? legacy.workspaces`,
+  so guarding `workspaces` alone would reject a caller who correctly
+  used the new name, and delegating to `createTenantSwitcher` would
+  answer a WorkspaceSwitcher caller with a message about `tenants`.
+
+  **The 39 remaining are not one slice.** Each is a question with two
+  possible answers, and only one of them is a throw. A silent default
+  the README documents means the interface is missing a `?`, and
+  marking the field optional is the honest fix. A default nobody
+  documented is the defect the rule is about. Deciding that per field
+  is the work, and a bulk transform would make an API change with a
+  rule as cover.
 
   Measured by calling each factory twice: once with a complete stub,
   once with one required field removed. Omitting one at a time rather
@@ -1799,6 +1822,29 @@ offered as the evidence for it.
   assertion of the wrong thing. Only running the code finds those, which
   is what `scripts/factory-census.test.ts` does. Two different families,
   and this one is the half a text scan can see.
+
+- [x] **DEBT-MSC-1** **CLOSED 2026-10-17, ADR-198. A MultiselectCombo
+  with an empty item list threw a TypeError.**
+  `createMultiselectCombo({ items: [] }, "host")` died with "Cannot set
+  properties of undefined (setting 'textContent')". With one item it
+  worked.
+
+  `buildRoot` assigned `this.dropdownEl = this.buildDropdown()` on the
+  line **before** `this.liveRegionEl = this.buildLiveRegion()`. With no
+  items the dropdown reaches `renderNoResults`, which announces the
+  "No results found" text, and the announcement went to a live region
+  that did not exist yet. The two lines are swapped. The DOM is
+  unchanged, because the appends were already in the right order.
+
+  **`private liveRegionEl!: HTMLElement` is what hid it.** A definite
+  assignment assertion is a promise to the compiler, and this one was
+  not true on every path. Third instance of a type assertion concealing
+  a real defect, after `as never` in `runtime/integration.test.ts` and
+  the magnifier fixtures.
+
+  Found by the ERR-2 probe, whose control call supplies an EMPTY array
+  for every required list. Nothing in the suite had ever built this
+  component with no items.
 
 - [ ] **DEBT-COLOR-1** **A hex colour does not survive a `setValue` /
   `getValue` round trip in ColorPicker.** `setValue("#AABBCC")` returns

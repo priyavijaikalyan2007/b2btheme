@@ -56,6 +56,29 @@ afterEach(() =>
 // FACTORY — createMultiselectCombo
 // ============================================================================
 
+describe("MultiselectCombo — an empty item list", () =>
+{
+    test("emptyItems_RendersNoResults_AndDoesNotCrash", () =>
+    {
+        // ERR-2. Found by the required-option probe, whose control call
+        // supplies an EMPTY array for every required list. With no
+        // items buildDropdown reaches renderNoResults, which announces
+        // into the live region, and the live region was built on the
+        // next line. `liveRegionEl!` hid that from the compiler, the
+        // same way `as never` hid the TreeView harness in ERR-1.
+        const host = document.createElement("div");
+        host.id = "msc-empty-host";
+        document.body.appendChild(host);
+
+        const combo = createMultiselectCombo({ items: [] }, "msc-empty-host");
+
+        expect(host.querySelector(".multiselectcombo-no-results")).not.toBeNull();
+        combo.destroy();
+        host.remove();
+    });
+});
+
+
 describe("createMultiselectCombo", () =>
 {
     test("withContainerId_MountsInContainer", () =>

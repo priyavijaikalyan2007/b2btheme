@@ -215,6 +215,18 @@ function attachClickBehavior(
 // @entrypoint
 export function createTypeBadge(options: TypeBadgeOptions): HTMLElement
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.typeKey === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.typeKey is required. `
+            + "Pass it when creating the TypeBadge.");
+    }
+
     const size = options.size ?? "sm";
     const variant = options.variant ?? "subtle";
     const color = resolveColor(options.color);

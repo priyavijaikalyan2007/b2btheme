@@ -721,8 +721,13 @@ export class MultiselectCombo
         this.applyOptionClasses(root);
 
         this.inputAreaEl = this.buildInputArea();
-        this.dropdownEl = this.buildDropdown();
+
+        // The live region is built BEFORE the dropdown. With no items,
+        // buildDropdown reaches renderNoResults, which announces, and
+        // the announcement went to an element one line further down.
+        // `liveRegionEl!` told the compiler that could not happen.
         this.liveRegionEl = this.buildLiveRegion();
+        this.dropdownEl = this.buildDropdown();
 
         root.appendChild(this.inputAreaEl);
         root.appendChild(this.dropdownEl);
@@ -2004,6 +2009,16 @@ export function createMultiselectCombo(
     options: MultiselectComboOptions,
     containerId?: string): MultiselectCombo
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not get a
+    // silent default. Absent means undefined, so an empty list is
+    // present and renders the no-results row.
+    if (options.items === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.items is required. `
+            + "Pass it when creating the MultiselectCombo.");
+    }
+
     const instance = new MultiselectCombo(options);
 
     if (containerId)

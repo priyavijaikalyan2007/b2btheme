@@ -784,6 +784,18 @@ export class PersonChip
  */
 export function createPersonChip(options: PersonChipOptions): PersonChip
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.name === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.name is required. `
+            + "Pass it when creating the PersonChip.");
+    }
+
     return new PersonChip(options);
 }
 

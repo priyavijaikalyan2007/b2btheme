@@ -1449,6 +1449,32 @@ export function createPermissionMatrix(
     containerId?: string
 ): PermissionMatrix
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.roles === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.roles is required. `
+            + "Pass it when creating the PermissionMatrix.");
+    }
+
+    if (options.groups === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.groups is required. `
+            + "Pass it when creating the PermissionMatrix.");
+    }
+
+    if (options.cells === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.cells is required. `
+            + "Pass it when creating the PermissionMatrix.");
+    }
+
     const instance = new PermissionMatrix(options);
     if (containerId) { instance.show(containerId); }
     return instance;

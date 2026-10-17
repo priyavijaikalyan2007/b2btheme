@@ -3134,6 +3134,25 @@ export class Timeline
  */
 export function createTimeline(options: TimelineOptions): Timeline
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.start === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.start is required. `
+            + "Pass it when creating the Timeline.");
+    }
+
+    if (options.end === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.end is required. `
+            + "Pass it when creating the Timeline.");
+    }
+
     return new Timeline(options);
 }
 

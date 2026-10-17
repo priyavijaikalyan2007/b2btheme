@@ -196,6 +196,18 @@ interface PanelState
  */
 export function createStackLayout(options: StackLayoutOptions): StackLayout
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.panels === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.panels is required. `
+            + "Pass it when creating the StackLayout.");
+    }
+
     // ERR-1. A caller that named a container asked for that container.
     // `options.container.appendChild` on a null container used to throw
     // "Cannot read properties of null", which names the line that broke

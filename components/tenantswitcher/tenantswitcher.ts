@@ -999,6 +999,18 @@ export function createTenantSwitcher(
     containerId?: string
 ): TenantSwitcher
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.tenants === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.tenants is required. `
+            + "Pass it when creating the TenantSwitcher.");
+    }
+
     const instance = new TenantSwitcher(options);
     if (containerId) { instance.show(containerId); }
     return instance;
@@ -1054,6 +1066,20 @@ export function createWorkspaceSwitcher(
 {
     const legacy = options as WorkspaceSwitcherOptions;
     const current = options as TenantSwitcherOptions;
+
+    // ERR-2, and the pair rather than one field, because this
+    // deprecated entry point accepts either shape and the body below
+    // reads `current.tenants ?? legacy.workspaces`. Guarding only
+    // `workspaces` would reject a caller who correctly passed the new
+    // name, and leaving it to createTenantSwitcher would answer a
+    // WorkspaceSwitcher caller with a message about `tenants`.
+    if (legacy.workspaces === undefined && current.tenants === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.workspaces is required. `
+            + "Pass it when creating the WorkspaceSwitcher, or move to "
+            + "createTenantSwitcher and pass options.tenants.");
+    }
 
     logWarn(
         "createWorkspaceSwitcher is deprecated — use createTenantSwitcher. The "

@@ -810,6 +810,18 @@ function reRenderBody(
 // @entrypoint
 export function createGraphLegend(options: GraphLegendOptions): GraphLegend
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.nodeTypes === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.nodeTypes is required. `
+            + "Pass it when creating the GraphLegend.");
+    }
+
     const container = options.container;
 
     if (!container)

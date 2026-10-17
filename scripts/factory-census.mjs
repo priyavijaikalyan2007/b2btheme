@@ -238,7 +238,14 @@ export function factoryInventory(root = ROOT)
 
             const parts = splitParams(sig.text);
             const names = parts.map((p) => p.split(":")[0].trim().replace(/[?\s=].*$/, ""));
-            const types = parts.map((p) => (p.split(":")[1] ?? "").trim());
+
+            // A parameter default belongs to the value, not to the type.
+            // `options: Omit<ActionItemsOptions, "container"> = {}` kept
+            // the ` = {}`, and the Omit match is anchored at the end, so
+            // createActionItems was reported as not validating an option
+            // its own signature removes.
+            const types = parts.map(
+                (p) => (p.split(":")[1] ?? "").replace(/=[\s\S]*$/, "").trim());
             const ci = names.findIndex((n) => CONTAINER_PARAM.test(n));
             const oi = names.findIndex((n, i) => i !== ci && /opt/i.test(n));
             const optionType = oi >= 0 ? (/([A-Z]\w*Options)/.exec(types[oi]) ?? [])[1] ?? null : null;

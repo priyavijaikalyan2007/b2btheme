@@ -43,7 +43,7 @@
  */
 
 import { describe, test, expect, vi } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { factoryInventory, interfaceFields, emptyFor, omittedKeys } from "./factory-census.mjs";
 
 type Field = { name: string; optional: boolean; type: string };
@@ -81,10 +81,10 @@ type Row = {
  * iterable` had been passing off as refusals, because the message
  * happens to contain the field name.
  */
-const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 67;
+const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 39;
 
 /** Factories whose option verdict a call cannot reach. See the header. */
-const VERDICT_UNREACHABLE = 2;
+const VERDICT_UNREACHABLE = 1;
 
 /** Every required option the probe can supply a value for. */
 function requiredFields(r: Row): Field[]
@@ -255,6 +255,7 @@ describe("ERR-1 — a factory given no value for a required option", () =>
         const silent = all.filter((x) => x.verdict === "SILENT" || x.verdict === "OPAQUE");
         const unreachable = all.filter((x) => x.verdict === "UNREACHABLE");
         const names = silent.map((x) => `${x.verdict} ${x.field}`).sort().join("\n  ");
+        writeFileSync("/tmp/optverdicts.txt", all.map((x) => `${x.verdict} ${x.field}`).join("\n"));
 
         expect(silent.length, `required options silently defaulted:\n  ${names}`)
             .toBeLessThanOrEqual(SILENT_DEFAULT_FOR_REQUIRED_OPTION);

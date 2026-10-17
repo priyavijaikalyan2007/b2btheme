@@ -799,6 +799,18 @@ export function createStatusBar(
     options: StatusBarOptions
 ): StatusBar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.regions === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.regions is required. `
+            + "Pass it when creating the StatusBar.");
+    }
+
     const bar = new StatusBar(options);
     bar.show();
     return bar;

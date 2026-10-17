@@ -990,6 +990,25 @@ export function createUserMenu(
     options: UserMenuOptions
 ): UserMenu
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. This used to reach the field and
+    // crash a frame later with a TypeError that names the line
+    // rather than the thing the caller left out. Absent means
+    // undefined, so an empty array or a zero is present.
+    if (options.userName === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.userName is required. `
+            + "Pass it when creating the UserMenu.");
+    }
+
+    if (options.menuItems === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.menuItems is required. `
+            + "Pass it when creating the UserMenu.");
+    }
+
     const instance = new UserMenu(options);
     instance.show(containerId);
     return instance;
