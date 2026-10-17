@@ -128,8 +128,55 @@ These issues involve potential XSS or script injection vectors and must be addre
   name the path without spelling it. An allowlist here would be a hole
   shaped exactly like the thing being guarded against.
 
-- [ ] **DEBT-SEC-7** **Documented CDN versions drift from the versions this
-  repository actually builds and serves.** Measured 2026-10-15 while closing
+- [x] **DEBT-SEC-7** **CLOSED 2026-10-18, ADR-199. Every remaining row
+  was a different kind of thing, and only one was a version drift.**
+  `thirdPartyTagsWithoutSri` fell **35 to 17** on the way.
+
+  **bootstrap and bootstrap-icons: two files, and the fix removes the
+  category.** Ten component READMEs already load `css/custom.css` and
+  six load `icons/bootstrap-icons.css`, both from this origin. Exactly
+  two named a jsdelivr version: `gradientpicker` at the stale 5.3.3 and
+  1.11.3, `conversation` at the current 5.3.8 and 1.13.1. Both now use
+  the pattern the other ten use. `custom.css` **is** Bootstrap with the
+  theme's customizations compiled in, so it replaces `bootstrap.min.css`
+  rather than sitting beside it, and a path with no version in it cannot
+  drift from the version this repository builds.
+
+  **marked was never a drift.** The row compared `18.0.12` installed
+  against `15.0.7` documented, and those are two different populations.
+  `marked` is a **devDependency** used by `scripts/generate-docs.js`,
+  this package declares **zero runtime dependencies**, and
+  `markdownrenderer` never imports it — it probes `window.marked`,
+  supplied by the host. 15.0.7 is what consumers are told to load and
+  what `third-party-sri.json` hashes. The two numbers were never
+  comparable. Same category error as the four DEBT-SEC-8 rows that
+  turned out to be vendored already.
+
+  **driver.js was worse than a drift: the recommended version has never
+  existed.** `components/guidedtour/README.md` named `1.4.1` for both
+  its stylesheet and its script. **The 1.4.x line stops at 1.4.0.** Both
+  URLs return 404 with the 50-byte body "Couldn't find the requested
+  release version 1.4.1", and latest is 1.10.1. Anyone following that
+  README got two 404s and a GuidedTour that cannot work. The three demo
+  pages were already on 1.4.0, so the repository disagreed with itself
+  and the demos were right. Now 1.4.0 everywhere, hashed in
+  `third-party-sri.json` as two entries, and all ten tags carry
+  `integrity` and `crossorigin`.
+
+  **Third instance of a documented CDN URL that has never resolved**,
+  after `bootstrap@5/css/bootstrap.min.css` under DEBT-SEC-6 and
+  `mathlive@0.107.3/dist/` under DEBT-SEC-8.
+
+  **AND THE GATE COULD NOT SEE IT.** Mutation M1 — point a documented
+  tag back at the never-published 1.4.1 — passed. `npm run sri:verify`
+  checks the manifest's own URLs, not the tags the documentation hands
+  a consumer, and structure check `[10]`'s pairing assertion covered
+  only `dist/lib-manifest.json`, the assets this origin serves.
+  `scripts/third-party-sri.json` was outside it. The check now reads
+  both, and its coverage went from **21 documented tags to 64**. M1 and
+  a crossorigin-stripping mutation are both caught now.
+
+  Below is the entry as it stood, measured 2026-10-15 while closing
   DEBT-SEC-6, and not ratcheted.
 
   | Package | Installed | Documented |

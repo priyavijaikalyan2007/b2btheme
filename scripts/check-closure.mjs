@@ -58,11 +58,23 @@ function sriOf(buffer)
  * reached nothing, which is the failure mode DEBT-GATE-1 and DEBT-SEC-6
  * both were.
  */
-function checkDocumentedPairings(manifest, problems)
+function checkDocumentedPairings(manifest, problems, thirdParty)
 {
     const byHash = new Map();
 
     for (const [name, asset] of Object.entries(manifest.assets ?? {}))
+    {
+        byHash.set(asset.integrity, { name, url: asset.url });
+    }
+
+    // Third-party builds this repository does NOT serve are hashed in
+    // scripts/third-party-sri.json and pair the same way. They were
+    // outside this check until 2026-10-18, and the gap is exactly how
+    // `driver.js@1.4.1` lived in a README: that version was never
+    // published, both its URLs returned 404, and `npm run sri:verify`
+    // did not notice because it checks the manifest's own URLs rather
+    // than the tags the documentation hands a consumer.
+    for (const [name, asset] of Object.entries(thirdParty.assets ?? {}))
     {
         byHash.set(asset.integrity, { name, url: asset.url });
     }
@@ -162,7 +174,9 @@ function main()
         }
     }
 
-    const paired = checkDocumentedPairings(manifest, problems);
+    const thirdParty = JSON.parse(
+        readFileSync("scripts/third-party-sri.json", "utf8"));
+    const paired = checkDocumentedPairings(manifest, problems, thirdParty);
 
     if (problems.length > 0)
     {

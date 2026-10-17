@@ -8412,3 +8412,63 @@
     dropdown reaches renderNoResults, which announces. The lines are
     swapped. `private liveRegionEl!: HTMLElement` hid it, the third
     type assertion in this tracker to conceal a real defect.
+
+- id: ADR-199
+  title: DEBT-SEC-7 closed, and the recommended driver.js version had never existed
+  date: 2026-10-18
+  status: accepted
+  context: |
+    DEBT-SEC-7 recorded four rows of "documented CDN versions drift
+    from what this repository builds". chart.js closed under ADR-191.
+    bootstrap, bootstrap-icons and marked remained, plus driver.js
+    carried over from DEBT-SEC-8 as a 1.4.0-against-1.4.1 split.
+  decision: |
+    D1. THE BOOTSTRAP FIX REMOVES THE CATEGORY, NOT THE INSTANCE. Ten
+        component READMEs already load css/custom.css from this origin
+        and six load icons/bootstrap-icons.css. Exactly two named a
+        jsdelivr version. Both now use the majority pattern, and a path
+        with no version in it cannot drift. custom.css IS Bootstrap
+        with the theme compiled in, so it replaces bootstrap.min.css
+        rather than sitting beside it.
+
+    D2. MARKED WAS NEVER A DRIFT. 18.0.12 is a devDependency used by
+        scripts/generate-docs.js. This package declares zero runtime
+        dependencies, markdownrenderer probes window.marked rather
+        than importing it, and 15.0.7 is what consumers are told to
+        load and what third-party-sri.json hashes. The row compared
+        two different populations.
+
+    D3. DRIVER.JS GOES TO 1.4.0, THE VERSION THAT EXISTS. The README
+        named 1.4.1 for both assets and 1.4.1 was never published: the
+        1.4.x line stops at 1.4.0 and both URLs return 404. The three
+        demo pages were already on 1.4.0, so the repository disagreed
+        with itself and the demos were right. Latest is 1.10.1, and
+        moving there is a compatibility decision for a consumer-facing
+        recommendation rather than part of fixing a dead link.
+
+    D4. THE PAIRING CHECK READS BOTH MANIFESTS. It covered only
+        dist/lib-manifest.json, the assets this origin serves, so a
+        documented tag bearing a third-party hash could name any URL
+        at all.
+  consequences: |
+    thirdPartyTagsWithoutSri 35 -> 17. The remaining 17 are two
+    populations and neither is a slice: ten in dated specs/*.prd.md
+    historical records, and CodeMirror's bare ESM specifiers, which
+    cannot carry an integrity attribute because the attribute belongs
+    to a script tag and these are import statements inside a module.
+
+    THIRD INSTANCE OF A DOCUMENTED CDN URL THAT HAS NEVER RESOLVED,
+    after bootstrap@5/css/bootstrap.min.css under DEBT-SEC-6 and
+    mathlive@0.107.3/dist/ under DEBT-SEC-8. The pattern is a version
+    number written from memory or incremented by hand, never fetched.
+
+    AND THE GATE COULD NOT SEE IT. Pointing a documented tag back at
+    the never-published 1.4.1 passed every check. `npm run sri:verify`
+    fetches the MANIFEST's urls, which are correct by construction,
+    and the pairing assertion added under ADR-190 covered only the
+    vendored manifest. Reading both takes the pairing coverage from 21
+    documented tags to 64, and the mutation is caught.
+
+    The lesson generalises past SRI: a verifier that reads the same
+    source the artifact was generated from confirms the generator, not
+    the documentation. The thing a consumer copies is the tag.

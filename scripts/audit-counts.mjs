@@ -385,17 +385,25 @@ const BASELINES = {
     // because the fifteen packages have to interoperate.
     unpinnedCdnRefs: 77,
     tagsMissingSri: 0,
-    // DEBT-SEC-8. 76 -> 65 -> 35 across two slices. The first pointed
-    // DOMPurify and font-awesome at the copies this origin serves. The
-    // second did the same for vditor and chart.js, and hashed mathlive
-    // in place on jsdelivr, because this origin does not serve it.
+    // DEBT-SEC-8 and DEBT-SEC-7. 76 -> 65 -> 35 -> 17 across three
+    // slices. The first pointed DOMPurify and font-awesome at the
+    // copies this origin serves. The second did the same for vditor
+    // and chart.js, and hashed mathlive in place on jsdelivr, because
+    // this origin does not serve it. The third hashed driver.js and
+    // moved the last two Bootstrap references onto this origin.
     //
     // A static.knobby.io host is outside CDN_HOSTS, so nothing HERE
     // re-checks those tags. Structure check [10] does, by pairing each
-    // published hash with the URL it was computed from. The remaining
-    // 35 include ten in dated specs/*.prd.md planning documents, which
-    // are a historical record. Do not chase this below 10.
-    thirdPartyTagsWithoutSri: 35,
+    // published hash with the URL it was computed from.
+    //
+    // THE REMAINING 17 ARE TWO POPULATIONS AND NEITHER IS A SLICE.
+    // Ten sit in dated specs/*.prd.md planning documents, which are a
+    // historical record. Do not chase this below 10. The rest are
+    // CodeMirror's bare ESM import specifiers, which cannot carry an
+    // integrity attribute at all: the attribute belongs to a script
+    // tag and these are import statements inside a module. ADR-189 D4
+    // records the two honest options and neither is a hash.
+    thirdPartyTagsWithoutSri: 17,
     // ERR-1. 306 -> 329 -> 330. Replacing 63 quiet container branches with
     // a throw orphaned the logWarn or logError helper in 23 components,
     // and the second census added visualtableeditor, which logged the

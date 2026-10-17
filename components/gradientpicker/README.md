@@ -330,9 +330,13 @@ var gradient = createGradientPicker("shape-fill", {
 ## CDN Usage
 
 ```html
-<!-- Bootstrap CSS and Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- Bootstrap CSS and Icons, from this origin. custom.css IS Bootstrap
+     with the theme's customizations compiled in, so it replaces
+     bootstrap.min.css rather than sitting beside it. Ten other component
+     READMEs already load it this way, and a path with no version in it
+     cannot drift from the version this repository builds. -->
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
 
 <!-- Optional: ColorPicker (for full colour editing) -->
 <link rel="stylesheet" href="components/colorpicker/colorpicker.css">

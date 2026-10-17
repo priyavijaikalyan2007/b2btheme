@@ -9,9 +9,15 @@ GuidedTour creates in-app product tours using [Driver.js](https://driverjs.com/)
 ## Usage
 
 ```html
-<!-- Driver.js CDN (required) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.css" />
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.js.iife.js"></script>
+<!-- Driver.js CDN (required). 1.4.0, and not the 1.4.1 this file named
+     until 2026-10-18: that version was never published, the 1.4.x line
+     stops at 1.4.0, and both 1.4.1 URLs return 404. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css"
+      integrity="sha384-eyrYgcjChmzD338JTHFZssgJHOqqOZbajet8yZpCw8ESroLDi28BarMEKCImNGHC"
+      crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"
+        integrity="sha384-D/8HPEJGB9NkJIaVmIK644a6Z5B2u4UzQYXiEFJifVxAt6vwDyf5ODa1U8XxXCjD"
+        crossorigin="anonymous"></script>
 
 <!-- GuidedTour -->
 <link rel="stylesheet" href="components/guidedtour/guidedtour.css" />

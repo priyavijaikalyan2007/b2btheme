@@ -1482,3 +1482,18 @@
   related:
   - RefusalsExposeTheBacklog
   - ATestThatCannotFail
+
+- name: AVerifierMustReadWhatTheConsumerCopies
+  definition: "ADR-199. `npm run sri:verify` fetched every URL in third-party-sri.json and reported 10 of 10 live, while components/guidedtour/README.md recommended driver.js@1.4.1, a version that was never published and whose URLs both returned 404. The verifier was reading the manifest, which is correct by construction because the hashes were generated from it. It confirmed the generator and said nothing about the documentation. The pairing assertion that would have caught it existed since ADR-190 and covered only dist/lib-manifest.json, the assets this origin serves. Reading both manifests took its coverage from 21 documented tags to 64. The general form: when a check validates the source an artifact was generated from, it proves the generation step and nothing downstream of it. Point it at the thing a consumer actually copies."
+  anchor_file: scripts/check-closure.mjs
+  related:
+  - HashedEntryUnhashedTree
+  - AttributePresenceIsNotAttributeCorrectness
+  - VendoredButUndocumented
+
+- name: AVersionNumberWrittenFromMemory
+  definition: "ADR-199. Three documented CDN URLs in this repository have pointed at versions that were never published: bootstrap@5/css/bootstrap.min.css under DEBT-SEC-6, mathlive@0.107.3/dist/mathlive.min.js under DEBT-SEC-8, and driver.js@1.4.1 under DEBT-SEC-7. Each returns a short 404 body rather than an error a reader would notice, and each survived because the component treats the library as optional, so a dead URL and a consumer who declined the library look identical from inside. The tell is a version incremented by hand rather than fetched: 1.4.0 became 1.4.1, and the 1.4.x line stops at 1.4.0. The check is a HEAD request, and the durable fix is a hash, because a hash cannot be computed for a file that does not exist."
+  anchor_file: scripts/third-party-sri.json
+  related:
+  - AVerifierMustReadWhatTheConsumerCopies
+  - VendoredButUndocumented

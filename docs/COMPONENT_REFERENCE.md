@@ -3552,8 +3552,8 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
 <link rel="stylesheet" href="components/conversation/conversation.css">
 
 <script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
@@ -8298,9 +8298,13 @@ var gradient = createGradientPicker("shape-fill", {
 ## CDN Usage
 
 ```html
-<!-- Bootstrap CSS and Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- Bootstrap CSS and Icons, from this origin. custom.css IS Bootstrap
+     with the theme's customizations compiled in, so it replaces
+     bootstrap.min.css rather than sitting beside it. Ten other component
+     READMEs already load it this way, and a path with no version in it
+     cannot drift from the version this repository builds. -->
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
 
 <!-- Optional: ColorPicker (for full colour editing) -->
 <link rel="stylesheet" href="components/colorpicker/colorpicker.css">
@@ -8962,9 +8966,15 @@ GuidedTour creates in-app product tours using [Driver.js](https://driverjs.com/)
 ## Usage
 
 ```html
-<!-- Driver.js CDN (required) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.css" />
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.1/dist/driver.js.iife.js"></script>
+<!-- Driver.js CDN (required). 1.4.0, and not the 1.4.1 this file named
+     until 2026-10-18: that version was never published, the 1.4.x line
+     stops at 1.4.0, and both 1.4.1 URLs return 404. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css"
+      integrity="sha384-eyrYgcjChmzD338JTHFZssgJHOqqOZbajet8yZpCw8ESroLDi28BarMEKCImNGHC"
+      crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"
+        integrity="sha384-D/8HPEJGB9NkJIaVmIK644a6Z5B2u4UzQYXiEFJifVxAt6vwDyf5ODa1U8XxXCjD"
+        crossorigin="anonymous"></script>
 
 <!-- GuidedTour -->
 <link rel="stylesheet" href="components/guidedtour/guidedtour.css" />

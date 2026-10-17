@@ -39,8 +39,8 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 ## Quick Start
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="icons/bootstrap-icons.css">
 <link rel="stylesheet" href="components/conversation/conversation.css">
 
 <script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"

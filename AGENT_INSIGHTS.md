@@ -1936,3 +1936,41 @@ scepticism a tool that reads code gets. Both are parsers over a format
 with escapes, and both get verified the same way — against the thing
 being described. "The docs say X" is a measurement, with an instrument
 behind it that can be wrong.
+
+### 6.112 A Verifier That Reads the Manifest Confirms the Generator (2026-10-18)
+
+`npm run sri:verify` fetched all ten entries in
+`scripts/third-party-sri.json` and reported **10 of 10 verified against
+the live builds**. At the same moment,
+`components/guidedtour/README.md` told consumers to load
+`driver.js@1.4.1`, a version **that was never published**. Both its
+URLs return 404. The 1.4.x line stops at 1.4.0, and latest is 1.10.1.
+
+The verifier was right and useless. It reads the manifest's own URLs —
+the ones the hashes were computed from — so it is correct by
+construction. It confirms the generation step and says nothing about
+the tag a consumer copies.
+
+The assertion that would have caught it already existed. ADR-190 added
+a reverse pairing check: a tag bearing a published hash must point at
+the URL that hash came from. It read only `dist/lib-manifest.json`, the
+assets this origin serves. The third-party manifest was outside it.
+Reading both took its coverage from **21 documented tags to 64**, and
+the mutation that had passed now fails.
+
+This is the third documented CDN URL here that has never resolved,
+after `bootstrap@5/css/bootstrap.min.css` and
+`mathlive@0.107.3/dist/mathlive.min.js`. All three share a shape: a
+version incremented by hand rather than fetched, in a library the
+component treats as optional — so a dead URL and a consumer who
+declined the library look identical from inside the component. And in
+this case the repository disagreed with itself for however long: three
+demo pages loaded 1.4.0 while the README recommended 1.4.1, and nothing
+compared them.
+
+**Principle**: ask what source your check reads, and whether a bug
+could live in the gap between that source and the thing someone
+actually uses. A check fed from the artifact's own generator will
+always pass. The durable fix here is a hash, because a hash cannot be
+computed for a file that does not exist — but only if the check reads
+the tag, not the manifest.

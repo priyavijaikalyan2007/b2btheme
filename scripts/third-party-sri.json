@@ -99,6 +99,26 @@
       "closure": "complete",
       "requirement": "optional",
       "note": "The standalone build embeds its WASM, so it fetches nothing at runtime."
+    },
+    "driver.js": {
+      "version": "1.4.0",
+      "url": "https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js",
+      "integrity": "sha384-D/8HPEJGB9NkJIaVmIK644a6Z5B2u4UzQYXiEFJifVxAt6vwDyf5ODa1U8XxXCjD",
+      "type": "script",
+      "global": "driver",
+      "bytes": 21302,
+      "closure": "script hashed; the stylesheet below is a separate entry and carries its own hash",
+      "requirement": "optional",
+      "note": "1.4.0 and not the 1.4.1 the README named, because 1.4.1 was never published: the 1.4.x line stops at 1.4.0 and both 1.4.1 URLs return 404. The three demo pages were already on 1.4.0."
+    },
+    "driver.js-css": {
+      "version": "1.4.0",
+      "url": "https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css",
+      "integrity": "sha384-eyrYgcjChmzD338JTHFZssgJHOqqOZbajet8yZpCw8ESroLDi28BarMEKCImNGHC",
+      "type": "stylesheet",
+      "bytes": 3938,
+      "closure": "complete; this stylesheet pulls no fonts and no further assets",
+      "requirement": "optional"
     }
   },
   "unhashable": {
