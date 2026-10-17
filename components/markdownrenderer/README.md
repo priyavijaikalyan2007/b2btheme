@@ -6,20 +6,64 @@ Shared markdown-to-HTML rendering utility for the Enterprise Theme. Converts mar
 
 ### Required
 
-| Library | Global | CDN | Purpose |
-|---------|--------|-----|---------|
-| [marked](https://marked.js.org/) | `window.marked` | `https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js` | Markdown parsing |
+| Library | Global | Version | Purpose |
+|---------|--------|---------|---------|
+| [marked](https://marked.js.org/) | `window.marked` | 15.0.7 | Markdown parsing |
 
 ### Optional (auto-detected)
 
 These libraries are probed on `window` at render time. If present, they are used automatically. If absent, the corresponding features are silently skipped.
 
-| Library | Global | CDN | Purpose |
-|---------|--------|-----|---------|
-| [highlight.js](https://highlightjs.org/) | `window.hljs` | `https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js` | Code syntax highlighting |
-| [KaTeX](https://katex.org/) | `window.katex` | `https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js` | LaTeX/MathML math rendering |
-| [Mermaid](https://mermaid.js.org/) | `window.mermaid` | `https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js` | Mermaid diagrams |
-| [@viz-js/viz](https://viz-js.com/) | `window.Viz` | `https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js` | Graphviz/dot diagrams (client-side WASM, no server) |
+| Library | Global | Version | Purpose |
+|---------|--------|---------|---------|
+| [highlight.js](https://highlightjs.org/) | `window.hljs` | 11.11.1 | Code syntax highlighting |
+| [KaTeX](https://katex.org/) | `window.katex` | 0.16.22 | LaTeX/MathML math rendering |
+| [Mermaid](https://mermaid.js.org/) | `window.mermaid` | 11.17.2 | Mermaid diagrams |
+| [@viz-js/viz](https://viz-js.com/) | `window.Viz` | 3.11.0 | Graphviz/dot diagrams (client-side WASM, no server) |
+
+### Loading them, with subresource integrity
+
+This repository does not serve these libraries, so the host page chooses the
+build. Every tag below carries the hash of the exact build named above. A
+substituted file fails the check, the browser refuses it, and the global is
+absent. Copy the tags as they stand.
+
+The same hashes are published as machine-readable JSON at
+`/third-party-sri.json`. Run `npm run sri:verify` to refetch each URL and
+diff. DEBT-SEC-5 records why these are hashed rather than vendored here.
+
+```html
+<!-- Required -->
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"
+        integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR"
+        crossorigin="anonymous"></script>
+
+<!-- Optional: code highlighting -->
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"
+        integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU"
+        crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css"
+      integrity="sha384-eFTL69TLRZTkNfYZOLM+G04821K1qZao/4QLJbet1pP4tcF+fdXq/9CdqAbWRl/L"
+      crossorigin="anonymous">
+
+<!-- Optional: math -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"
+        integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6"
+        crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css"
+      integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP"
+      crossorigin="anonymous">
+
+<!-- Optional: Mermaid diagrams -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"
+        integrity="sha384-EOXBFmc3gx5mb+vn0vPvvGqACToJD24hhacX5Yx+8NUUQrHIle/Qi5Bg9o3zKwW2"
+        crossorigin="anonymous"></script>
+
+<!-- Optional: Graphviz diagrams -->
+<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js"
+        integrity="sha384-6ECxW8G4FmLMEr8fKkk617NsYhxb7AhsiyyT6Gey/Sru4R+lyRpVM12ekzlOD08g"
+        crossorigin="anonymous"></script>
+```
 
 ### PlantUML (server-based)
 

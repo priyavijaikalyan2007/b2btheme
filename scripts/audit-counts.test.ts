@@ -33,6 +33,9 @@ import
     countOccurrences,
     countUngatedVerboseShims,
     countUnpinnedCdnRefs,
+    countTagsMissingSri,
+    countThirdPartyTagsWithoutSri,
+    versionOfCdnUrl,
     countBundleExports,
     countWindowAliases,
     floorStatus,
@@ -642,5 +645,147 @@ describe("countUnpinnedCdnRefs", () =>
     test("a file with no CDN URLs costs nothing", () =>
     {
         expect(countUnpinnedCdnRefs("# Heading\n\nSome prose.")).toBe(0);
+    });
+});
+
+/**
+ * DEBT-SEC-5 widened `countUnpinnedCdnRefs` from one registry to four.
+ *
+ * The previous predicate matched `cdn.jsdelivr.net` alone and reported 0,
+ * while 77 CodeMirror references floated on unpkg and esm.sh the whole
+ * time. A ceiling of zero measured by a predicate that cannot reach the
+ * thing it guards is the DEBT-GATE-1 failure again, so each registry gets
+ * a pinned case and an unpinned one.
+ */
+describe("versionOfCdnUrl across registries", () =>
+{
+    test("unpkg carries the version on the package, with no registry segment", () =>
+    {
+        expect(versionOfCdnUrl("unpkg.com/vditor@3.11.2/dist/index.min.js")).toBe("3.11.2");
+        expect(versionOfCdnUrl("unpkg.com/@codemirror/view/dist/index.cjs")).toBe("");
+    });
+
+    test("esm.sh floats when it names a bare major", () =>
+    {
+        expect(versionOfCdnUrl("esm.sh/@codemirror/view@6")).toBe("6");
+        expect(countUnpinnedCdnRefs("https://esm.sh/@codemirror/view@6")).toBe(1);
+        expect(countUnpinnedCdnRefs("https://esm.sh/@codemirror/view@6.26.3")).toBe(0);
+    });
+
+    // cdnjs spells the version as a path segment and uses no at-sign at
+    // all, so the at-sign parser the other three share returns nothing.
+    test("cdnjs puts the version in its own path segment", () =>
+    {
+        const u = "cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css";
+        expect(versionOfCdnUrl(u)).toBe("6.5.0");
+        expect(countUnpinnedCdnRefs(`https://${u}`)).toBe(0);
+        expect(countUnpinnedCdnRefs("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/css/all.min.css"))
+            .toBe(1);
+    });
+
+    test("the jsdelivr cases the widening had to leave alone", () =>
+    {
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js")).toBe(0);
+        expect(countUnpinnedCdnRefs("https://cdn.jsdelivr.net/npm/marked/marked.min.js")).toBe(1);
+    });
+});
+
+/**
+ * DEBT-SEC-5, the correctness ceiling. A tag pointing at a build the
+ * manifest records must carry that manifest's hash AND `crossorigin`.
+ *
+ * The `crossorigin` half is not style. Without it the browser issues an
+ * opaque request, cannot read the body in order to hash it, and skips the
+ * integrity check instead of failing it. A hash with no `crossorigin` is
+ * the most convincing way to have no protection at all, which is why it
+ * is a failure here rather than a warning.
+ */
+describe("countTagsMissingSri", () =>
+{
+    // Real CDN URLs, because the check matches tags on a CDN host first.
+    // A fixture on no host is filtered out before the hash is ever read,
+    // which is how the first draft of these cases passed while asserting
+    // the opposite of what they meant.
+    const URL = "https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js";
+    const HASH = "sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR";
+    const byUrl = { [URL]: HASH };
+    const good = `<script src="${URL}" integrity="${HASH}" crossorigin="anonymous"></script>`;
+
+    test("a correctly hashed tag costs nothing", () =>
+    {
+        expect(countTagsMissingSri(good, byUrl)).toBe(0);
+    });
+
+    test("a tag with no integrity is counted", () =>
+    {
+        expect(countTagsMissingSri(`<script src="${URL}"></script>`, byUrl)).toBe(1);
+    });
+
+    test("a tag carrying the WRONG hash is counted", () =>
+    {
+        const t = `<script src="${URL}" integrity="sha384-other" crossorigin="anonymous"></script>`;
+        expect(countTagsMissingSri(t, byUrl)).toBe(1);
+    });
+
+    test("a hash with no crossorigin is counted", () =>
+    {
+        expect(countTagsMissingSri(`<script src="${URL}" integrity="${HASH}"></script>`, byUrl)).toBe(1);
+    });
+
+    test("a stylesheet link is held to the same rule", () =>
+    {
+        const css = "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css";
+        const u = { [css]: "sha384-css" };
+        expect(countTagsMissingSri(`<link rel="stylesheet" href="${css}">`, u)).toBe(1);
+        expect(countTagsMissingSri(
+            `<link rel="stylesheet" href="${css}" integrity="sha384-css" crossorigin="anonymous">`,
+            u)).toBe(0);
+    });
+
+    // The manifest covers seven builds. A tag for a library nobody has
+    // decided about is not a correctness failure here, and the coverage
+    // count below is the check that can see it.
+    test("a tag for a library the manifest does not record is not counted here", () =>
+    {
+        const t = '<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>';
+        expect(countTagsMissingSri(t, byUrl)).toBe(0);
+    });
+});
+
+/**
+ * DEBT-SEC-5, the coverage ceiling, and the only one of the three that can
+ * see a library this repository has not decided about yet. It counts
+ * third-party tags carrying no `integrity` at all, on any of the four
+ * registries, whether or not the manifest knows them.
+ */
+describe("countThirdPartyTagsWithoutSri", () =>
+{
+    test("an unhashed tag on each registry is counted", () =>
+    {
+        const t = '<script src="https://cdn.jsdelivr.net/npm/a@1.0/a.js"></script>\n'
+            + '<script src="https://unpkg.com/b@1.0/b.js"></script>\n'
+            + '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c/1.0/c.css">\n'
+            + '<script type="module" src="https://esm.sh/d@1.0"></script>';
+        expect(countThirdPartyTagsWithoutSri(t)).toBe(4);
+    });
+
+    test("a hashed tag costs nothing", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri(
+            `<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>`)).toBe(0);
+    });
+
+    test("a tag served from this origin is not third-party", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri('<script src="components/toolbar/toolbar.js"></script>')).toBe(0);
+    });
+
+    // A bare URL in a table or a sentence is not a tag. The coverage count
+    // matches on tags, because a URL in prose is not something a browser
+    // ever loads.
+    test("a bare URL in prose is not a tag", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri("See https://unpkg.com/vditor@3.11.2/dist/index.min.js here."))
+            .toBe(0);
     });
 });

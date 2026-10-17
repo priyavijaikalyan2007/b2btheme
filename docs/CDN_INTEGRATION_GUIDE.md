@@ -188,6 +188,55 @@ forever, so a page cached mid-rollout still resolves. Because you read the URL
 and the hash from the same manifest fetch, you get both halves of the change
 at once — which is the failure mode this design exists to prevent.
 
+### Libraries this origin does NOT serve
+
+Six renderers are read from `window` but fetched from jsdelivr, not from
+here: **marked, highlight.js, KaTeX, Mermaid, @viz-js/viz and CodeMirror 6**.
+They are optional by design and most consumers never load them. Vendoring
+all six would add roughly 6 MB to this CDN, for renderers a page uses only
+if it has diagrams or maths.
+
+So they are **hashed rather than vendored** (DEBT-SEC-5, ADR-189). The hash
+of each recommended build is published at `/third-party-sri.json`, in the
+same shape as `/lib-manifest.json`:
+
+| Asset | Version | Type | Requirement |
+|---|---|---|---|
+| marked | 15.0.7 | script | required |
+| highlight.js | 11.11.1 | script | optional |
+| highlight.js-theme | 11.11.1 | stylesheet | optional |
+| katex | 0.16.22 | script | optional |
+| katex-css | 0.16.22 | stylesheet | optional |
+| mermaid | 11.17.2 | script | optional |
+| viz | 3.11.0 | script | optional |
+
+Each component README gives the tags with the hash already filled in. If you
+build them yourself, the shape is:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"
+        integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR"
+        crossorigin="anonymous"></script>
+```
+
+**`crossorigin="anonymous"` is not optional.** Without it the browser makes
+an opaque request to the other origin and cannot read the body in order to
+hash it. It then **skips** the integrity check instead of failing it. The script then
+runs unverified, and the tag still looks protected.
+
+This repository does not own these builds, so a hash here is a statement
+about a named immutable URL and not custody of the bytes. `npm run sri:verify`
+refetches every URL and compares. A versioned jsdelivr URL is immutable, so a
+mismatch is a supply-chain incident rather than a version bump.
+
+**CodeMirror 6 is the exception, and it cannot be fixed here.** An `integrity`
+attribute attaches to a `<script src>` tag. It cannot attach to an import
+specifier inside a module, and `components/codeeditor/README.md` documents
+CodeMirror as fifteen bare ESM imports. Those arrive unverified whatever this
+repository publishes. If you need the guarantee, bundle CodeMirror into one
+self-contained file and hash that file, or serve it from an origin you
+control.
+
 ## 4. Static tags, if you cannot fetch the manifest at runtime
 
 Generate them at build time from the manifest and commit the result. Never

@@ -85,6 +85,27 @@ CodeMirror 6 is ESM-native. Use a `<script type="module">` with an ESM CDN to ex
 
 Alternatively, provide a pre-bundled UMD build that sets these globals.
 
+### Subresource integrity is not available for this form
+
+Every other third-party library this repository recommends carries an
+`integrity` hash, recorded in `scripts/third-party-sri.json` and published at
+`/third-party-sri.json`. CodeMirror 6 carries none, and the reason is
+structural rather than an oversight.
+
+An `integrity` attribute attaches to a `<script src>` tag. It cannot attach to
+an import specifier inside a module, which is the constraint
+`scripts/vendor-closure.mjs` states in its own header. The fifteen imports
+above therefore arrive unverified, and so does whatever the ESM CDN resolves
+behind them. The specifiers also float at major `@6`, so the version is chosen
+at request time rather than here.
+
+A deployment that needs the guarantee has two honest options. Bundle
+CodeMirror into one self-contained file and hash that file, or serve it from
+an origin under your own control. The pre-bundled UMD build named above is the
+first option, and it is the one that restores SRI.
+
+This is recorded as DEBT-SEC-5.
+
 ## Quick Start
 
 ```html

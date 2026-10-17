@@ -376,7 +376,15 @@ const BASELINES = {
     ungatedVerboseShims: 0,
     driftedHostRule: 0,
     overLengthLines: 288,
-    unpinnedCdnRefs: 0,
+    // DEBT-SEC-5. 77 is every CodeMirror specifier and nothing else:
+    // fourteen esm.sh imports floating at major @6 and eight unpkg
+    // paths with no version. The previous 0 was measured by a
+    // predicate that matched cdn.jsdelivr.net alone, so it never
+    // reached either registry. Pinning them is a separate decision,
+    // because the fifteen packages have to interoperate.
+    unpinnedCdnRefs: 77,
+    tagsMissingSri: 0,
+    thirdPartyTagsWithoutSri: 76,
     unusedLocals: 306,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
@@ -482,22 +490,113 @@ const FLOORS = {
  * wrong here is served to a consumer rather than executed by us, which is
  * why nothing else in this file was looking at it.
  */
+export const CDN_HOSTS = /(?:cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|esm\.sh)/;
+
+/** Every third-party CDN URL in a blob of documentation or markup. */
+export function cdnUrlsIn(text)
+{
+    const pattern = new RegExp(`${CDN_HOSTS.source}\\/[^\\s"'\`)|<>]+`, "g");
+
+    return text.match(pattern) ?? [];
+}
+
+/**
+ * The version a CDN URL pins, or "" when it pins none. Each registry spells
+ * the version somewhere different, which is the whole difficulty.
+ */
+export function versionOfCdnUrl(url)
+{
+    const parts = url.split("/");
+    const host = parts[0];
+    const rest = parts.slice(1);
+
+    if (host === "cdnjs.cloudflare.com")
+    {
+        // ajax/libs/<name>/<version>/<path>. The version is a path segment
+        // of its own and there is no at-sign anywhere in the URL.
+        return rest[0] === "ajax" && rest[1] === "libs" ? (rest[3] ?? "") : "";
+    }
+
+    // jsdelivr carries the registry in the path. unpkg and esm.sh do not.
+    const registry = host === "cdn.jsdelivr.net" ? rest[0] : "npm";
+    const tail = host === "cdn.jsdelivr.net" ? rest.slice(1) : rest;
+
+    if (tail.length === 0) { return ""; }
+
+    const segments = (registry === "gh" || tail[0].startsWith("@")) ? 2 : 1;
+    const pkg = tail.slice(0, segments).join("/");
+    const at = pkg.lastIndexOf("@");
+
+    return at > 0 ? pkg.slice(at + 1) : "";
+}
+
 export function countUnpinnedCdnRefs(text)
 {
-    const urls = text.match(/cdn\.jsdelivr\.net\/(?:npm|gh)\/[^\s"'`)|<>]+/g) ?? [];
     let unpinned = 0;
-    for (const url of urls)
+
+    for (const url of cdnUrlsIn(text))
     {
-        const parts = url.split("/");
-        const registry = parts[1];
-        const rest = parts.slice(2);
-        const segments = (registry === "gh" || rest[0].startsWith("@")) ? 2 : 1;
-        const pkg = rest.slice(0, segments).join("/");
-        const at = pkg.lastIndexOf("@");
-        const version = at > 0 ? pkg.slice(at + 1) : "";
-        if (!/^\d+\.\d/.test(version)) { unpinned += 1; }
+        if (!/^\d+\.\d/.test(versionOfCdnUrl(url))) { unpinned += 1; }
     }
+
     return unpinned;
+}
+
+/** Every <script src> and <link href> tag, whatever attributes it carries. */
+export function cdnTagsIn(text)
+{
+    return (text.match(/<(?:script|link)\b[^>]*>/g) ?? [])
+        .filter((tag) => CDN_HOSTS.test(tag));
+}
+
+/**
+ * DEBT-SEC-5, part one: CORRECTNESS. A tag pointing at a build the SRI
+ * manifest records must carry that manifest's hash and `crossorigin`.
+ *
+ * `crossorigin` is not decoration. Without it the browser makes an opaque
+ * request, cannot read the body to hash it, and the integrity check is
+ * skipped rather than failed. A hash with no `crossorigin` therefore looks
+ * like protection and is none.
+ *
+ * This is a ceiling of zero, because every URL it matches is one this
+ * repository chose and hashed.
+ */
+export function countTagsMissingSri(text, byUrl)
+{
+    let missing = 0;
+
+    for (const tag of cdnTagsIn(text))
+    {
+        const url = Object.keys(byUrl).find((u) => tag.includes(u));
+
+        if (url === undefined) { continue; }
+
+        const hashed = tag.includes(`integrity="${byUrl[url]}"`);
+        const cors = tag.includes('crossorigin="anonymous"');
+
+        if (!hashed || !cors) { missing += 1; }
+    }
+
+    return missing;
+}
+
+/**
+ * DEBT-SEC-5, part two: COVERAGE, and the only one of the three that can
+ * see a library nobody has decided about yet.
+ *
+ * A ceiling on manifest URLs cannot see a bare vditor tag, because a
+ * vditor tag matches no manifest URL. That is the same blindness
+ * DEBT-GATE-1 and DEBT-SEC-6 were: a check that passes because its
+ * predicate never reached the thing it was meant to guard. So this one
+ * counts third-party tags carrying no `integrity` AT ALL, on any of the
+ * four registries, whether or not the manifest knows the library.
+ *
+ * The baseline is therefore not zero. It is the set of libraries that
+ * still need a version or registry decision, and it only goes down.
+ */
+export function countThirdPartyTagsWithoutSri(text)
+{
+    return cdnTagsIn(text).filter((tag) => !tag.includes("integrity=")).length;
 }
 
 /**
@@ -798,6 +897,8 @@ function measure()
         dynamicVerboseShims: 0,
         overLengthLines: 0,
         unpinnedCdnRefs: 0,
+        tagsMissingSri: 0,
+        thirdPartyTagsWithoutSri: 0,
         unusedLocals: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
@@ -908,12 +1009,25 @@ function measure()
     counts.unusedLocals = countUnusedLocals();
 
     // DEBT-SEC-5. Documentation and demo pages hand consumers third-party
-    // URLs. One without an exact version is a floating dependency.
+    // URLs. One without an exact version is a floating dependency, and one
+    // without an integrity hash is a build the host page cannot verify.
+    const sri = JSON.parse(readFileSync("scripts/third-party-sri.json", "utf8"));
+    const hashByUrl = Object.fromEntries(
+        Object.values(sri.assets).map((a) => [a.url, a.integrity]));
+
     const published = execFileSync("git", ["ls-files", "*.md", "*.html"], { encoding: "utf8" })
         .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
     for (const file of published)
     {
-        counts.unpinnedCdnRefs += countUnpinnedCdnRefs(readFileSync(file, "utf8"));
+        // One file in the repository is not valid UTF-8. Reading it as
+        // UTF-8 substitutes replacement characters rather than throwing,
+        // and no CDN URL survives that intact, so it is read and counted
+        // like any other rather than skipped silently.
+        const text = readFileSync(file, "utf8");
+
+        counts.unpinnedCdnRefs += countUnpinnedCdnRefs(text);
+        counts.tagsMissingSri += countTagsMissingSri(text, hashByUrl);
+        counts.thirdPartyTagsWithoutSri += countThirdPartyTagsWithoutSri(text);
     }
 
     // STD-1. The file is the single largest in the repository and the entry

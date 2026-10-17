@@ -19,7 +19,7 @@
     "build:docs": "npm run generate:docs && npm run copy:docs",
     "build:info": "bash scripts/build-info.sh",
     "build:manifest": "node scripts/build-manifest.js",
-    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run copy:compat && npm run build:vendor && npm run copy:cdn && npm run build:docs && npm run build:info",
+    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run copy:js && npm run copy:compat && npm run build:vendor && npm run build:sri && npm run copy:cdn && npm run build:docs && npm run build:info",
     "copy:cdn": "cp cdn/_headers dist/_headers",
     "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && cp dist/components/themeinit/themeinit.js dist/js/theme-init.js && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
     "watch": "npm run watch:scss",
@@ -37,6 +37,8 @@
     "test:cdn": "bash test-cdn.sh",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
+    "build:sri": "node scripts/sri-manifest.mjs",
+    "sri:verify": "node scripts/sri-manifest.mjs --verify",
     "copy:compat": "mkdir -p dist/components/workspaceswitcher && cp dist/components/tenantswitcher/tenantswitcher.js dist/components/workspaceswitcher/workspaceswitcher.js && cp dist/components/tenantswitcher/tenantswitcher.css dist/components/workspaceswitcher/workspaceswitcher.css"
   },
   "keywords": [

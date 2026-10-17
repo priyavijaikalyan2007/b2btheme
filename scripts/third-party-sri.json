@@ -1,0 +1,114 @@
+{
+  "$comment": [
+    "DEBT-SEC-5. Subresource integrity for the third-party libraries this",
+    "repository RECOMMENDS but does NOT serve. dist/lib-manifest.json is the",
+    "sibling of this file and makes a different promise: it covers assets",
+    "scripts/vendor-closure.mjs builds and this origin serves. These are",
+    "chosen by the host page, so the guarantee here is the hash of a named",
+    "immutable build, not custody of the bytes.",
+    "",
+    "Hashes are recorded rather than computed at build time, deliberately.",
+    "A network fetch inside the build gate makes CI non-hermetic and flaky.",
+    "jsdelivr versioned URLs are immutable, so a mismatch is an incident and",
+    "not drift. Run `npm run sri:verify` to refetch and diff.",
+    "",
+    "CodeMirror 6 is absent on purpose. See the codemirror6 key below."
+  ],
+  "recorded": "2026-10-17",
+  "assets": {
+    "marked": {
+      "version": "15.0.7",
+      "url": "https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js",
+      "integrity": "sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR",
+      "type": "script",
+      "global": "marked",
+      "bytes": 39589,
+      "closure": "complete",
+      "requirement": "required",
+      "note": "The only required entry. MarkdownRenderer cannot parse without it."
+    },
+    "highlight.js": {
+      "version": "11.11.1",
+      "url": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js",
+      "integrity": "sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU",
+      "type": "script",
+      "global": "hljs",
+      "bytes": 127496,
+      "closure": "complete",
+      "requirement": "optional"
+    },
+    "highlight.js-theme": {
+      "version": "11.11.1",
+      "url": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css",
+      "integrity": "sha384-eFTL69TLRZTkNfYZOLM+G04821K1qZao/4QLJbet1pP4tcF+fdXq/9CdqAbWRl/L",
+      "type": "stylesheet",
+      "bytes": 1309,
+      "closure": "complete",
+      "requirement": "optional",
+      "note": "Declares no @font-face, so the hash covers the whole stylesheet."
+    },
+    "katex": {
+      "version": "0.16.22",
+      "url": "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js",
+      "integrity": "sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6",
+      "type": "script",
+      "global": "katex",
+      "bytes": 276701,
+      "closure": "complete",
+      "requirement": "optional"
+    },
+    "katex-css": {
+      "version": "0.16.22",
+      "url": "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css",
+      "integrity": "sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP",
+      "type": "stylesheet",
+      "bytes": 23352,
+      "closure": "stylesheet hashed; the 60 @font-face files it pulls are not SRI-able",
+      "requirement": "optional",
+      "note": "Same residual dist/lib-manifest.json records for bootstrap-icons."
+    },
+    "mermaid": {
+      "version": "11.17.2",
+      "url": "https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js",
+      "integrity": "sha384-EOXBFmc3gx5mb+vn0vPvvGqACToJD24hhacX5Yx+8NUUQrHIle/Qi5Bg9o3zKwW2",
+      "type": "script",
+      "global": "mermaid",
+      "bytes": 3572661,
+      "closure": "complete",
+      "requirement": "optional",
+      "note": "Mermaid 12 is published. This stays at 11 until the upgrade is reviewed."
+    },
+    "viz": {
+      "version": "3.11.0",
+      "url": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js",
+      "integrity": "sha384-6ECxW8G4FmLMEr8fKkk617NsYhxb7AhsiyyT6Gey/Sru4R+lyRpVM12ekzlOD08g",
+      "type": "script",
+      "global": "Viz",
+      "bytes": 1390377,
+      "closure": "complete",
+      "requirement": "optional",
+      "note": "The standalone build embeds its WASM, so it fetches nothing at runtime."
+    }
+  },
+  "unhashable": {
+    "codemirror6": {
+      "reason": [
+        "CodeEditor documents CodeMirror 6 as fifteen bare ESM import",
+        "specifiers from esm.sh. An integrity attribute attaches to a",
+        "<script src> tag and cannot attach to an import specifier inside a",
+        "module, which scripts/vendor-closure.mjs states in its own header.",
+        "Every one of those fifteen therefore arrives unverified, and so does",
+        "whatever esm.sh resolves behind them.",
+        "",
+        "The specifiers also float at major @6, so the version is chosen at",
+        "request time. Pinning them is a separate decision, because the",
+        "fifteen packages have to interoperate at the versions chosen.",
+        "",
+        "A consumer who needs the guarantee has two honest options: bundle",
+        "CodeMirror into one self-contained file and hash that, or serve it",
+        "from an origin they control. Neither is something this repository",
+        "can do on their behalf."
+      ]
+    }
+  }
+}
