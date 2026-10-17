@@ -236,10 +236,21 @@ describe("selection updates", () =>
             "test-lineshapepicker-container",
             { onChange }
         );
-        // Opening dropdown and clicking a shape simulates user trigger.
-        // Programmatic setValue(value, false) does NOT fire onChange.
+
+        // The name says WhenUserTriggered and the body only ever called
+        // setValue, which selectShape(item, false) deliberately keeps
+        // quiet. Both halves of that contract are checked here.
         picker.setValue("segment");
-        // Note: setValue programmatic is documented to NOT fire onChange
+        expect(picker.getValue()).toBe("segment");
+        expect(onChange).not.toHaveBeenCalled();
+
+        picker.open();
+        const items = document.querySelectorAll<HTMLElement>(".lineshapepicker-item");
+        expect(items.length).toBeGreaterThan(1);
+        items[1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(onChange).toHaveBeenCalledTimes(1);
+
         picker.destroy();
     });
 });

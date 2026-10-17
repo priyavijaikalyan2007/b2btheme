@@ -242,10 +242,30 @@ describe("title and message", () =>
     test("show_WithoutTitle_DefaultsToError", () =>
     {
         const dialog = new ErrorDialog("test-error-container");
+
+        // The three comments this replaces are the author reasoning
+        // aloud and stopping at "Let's use undefined title", with no
+        // assertion written. They also got the guard backwards: it is
+        // `!title && !message`, so a message alone is shown.
         dialog.show({ title: "", message: "Msg goes here" });
-        // No title and no message => not shown, so provide message only
-        // Actually title="" and message="Msg" => not shown because !error.title && !error.message checks both
-        // Let's use undefined title
+
+        expect(getTitleText()).toBe("Error");
+        expect(getMessageText()).toBe("Msg goes here");
+
+        dialog.destroy();
+    });
+
+    test("show_WithNeitherTitleNorMessage_IsNotShown", () =>
+    {
+        // The other half of the guard, which the abandoned comment was
+        // reaching for and never reached.
+        const dialog = new ErrorDialog("test-error-container");
+
+        dialog.show({ title: "", message: "" });
+
+        expect(container.querySelector(".modal")).toBeNull();
+
+        dialog.destroy();
     });
 
     test("show_WithOnlyMessage_StillShowsDialog", () =>

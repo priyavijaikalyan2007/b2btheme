@@ -360,9 +360,42 @@ describe("callbacks", () =>
         const onChange = vi.fn();
         const picker = new ColorPicker({ onChange });
         picker.show("test-colorpicker-container");
-        // setValue does not fire onChange per spec (only commits fire it)
+
         picker.setValue("#AABBCC");
-        // onChange is only fired on user commit interactions
+
+        // The two comments this replaces stated the contract and left
+        // it unchecked. Only a user commit fires onChange, so a
+        // programmatic setValue must take the value and stay quiet.
+        expect(onChange).not.toHaveBeenCalled();
+
+        picker.destroy();
+    });
+
+    test("setValue_HexDoesNotSurviveTheRoundTrip", () =>
+    {
+        // DEBT-COLOR-1. Found by writing the assertion above, which
+        // expected #AABBCC back and got #A9BACB.
+        //
+        // The component holds its colour as HSL with saturation and
+        // lightness rounded to whole percents by rgbToHsl, so a hex
+        // that is not representable at that precision comes back as
+        // the nearest one that is. #AABBCC has lightness 73.33%, which
+        // stores as 73, and every channel returns one low.
+        //
+        // Pinned rather than fixed, because the fix is a change to the
+        // colour model and not to a test. This test fails when that
+        // change lands, which is the point of writing it down.
+        const picker = new ColorPicker({});
+        picker.show("test-colorpicker-container");
+
+        picker.setValue("#AABBCC");
+        expect(picker.getValue().toUpperCase()).toBe("#A9BACB");
+
+        // A hex that IS representable survives, so the drift is the
+        // quantisation and not the parser.
+        picker.setValue("#FF0000");
+        expect(picker.getValue().toUpperCase()).toBe("#FF0000");
+
         picker.destroy();
     });
 });

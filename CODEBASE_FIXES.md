@@ -1677,6 +1677,98 @@ which way a stale number leans.
 
 ---
 
+## MEDIUM — Tests That Cannot Fail (21 closed, 341 held, measured 2026-10-17)
+
+A test that cannot fail is worse than no test. No test is an absence
+somebody can count. A passing test is a claim, with the suite's green
+offered as the evidence for it.
+
+- [x] **DEBT-TEST-1a** **CLOSED 2026-10-17, ADR-196. The 21 test blocks
+  with no `expect()` at all now assert something.** `testsWithoutAssertion`
+  went **21 to 0** and `scripts/audit-counts.mjs` holds it there.
+
+  Every one was named for a behaviour: `setFilters_UpdatesFilterState`,
+  `expandAll_ExpandsAllSteps`, `iconResolver_TakesPriority`,
+  `removeRelationship_RemovesFromList`. Only one,
+  `closeMenusByEscape_WhenNoMenuOpen_DoesNotCrash`, was named for what
+  it actually did.
+
+  **SEVERAL CARRIED THE ASSERTION THAT WAS NEVER WRITTEN, AS A COMMENT.**
+  `// After clearing, all entries should be visible`.
+  `// After expanding, content panels should be visible`.
+  `errordialog :: show_WithoutTitle_DefaultsToError` is three lines of
+  the author reasoning aloud, ending `// Let's use undefined title`, with
+  no assertion and no second call. It also had the guard backwards.
+
+  **WRITING THE TWENTY-ONE ASSERTIONS WAS THE POINT, AND IT PAID.**
+
+  - **One defect found**, DEBT-COLOR-1 below.
+  - **Four contracts read that no test had stated.**
+    `setReadOnly(true)` removes the delete affordance and keeps
+    navigation, so the first assertion written for it was wrong and the
+    component was right. `escape_FromGroupLevel_ShowsTabKeytips` never
+    pressed Escape. `onChange_FiresOnConfigMutation` hedged "may fire"
+    about a call that is unconditional. `setValue_FiresOnChange_WhenUser
+    Triggered` only ever called `setValue`, which deliberately stays
+    quiet, so the user trigger the name describes was never exercised.
+  - **One environment limit documented rather than asserted around.**
+    `showGroupKeyTips` skips any control whose `offsetParent` is null,
+    and in jsdom that is every control, so group-level badges cannot be
+    seen from a unit test. The test says so and asserts the half that is
+    observable.
+
+- [ ] **DEBT-TEST-1b** **341 test blocks where every assertion passes for
+  any value that is not null.** Held by the `testsThatCannotFail`
+  ceiling. A backlog, not a debt owed in one sitting: each one is a
+  question about what the component should do, and the answer belongs to
+  whoever next touches the file.
+
+  | Shape | Count |
+  |---|---|
+  | a bare `.not.toThrow()` | 204 |
+  | `.toBeTruthy()` | 50 |
+  | `.toBeDefined()` | 48 |
+  | `.toBeDefined()` with `expect(typeof x)` | 26 |
+  | `expect(typeof x)` | 22 |
+  | other mixes | 4 |
+
+  **`.not.toThrow()` is the literal negation of the house rule.**
+  AGENTS.md says a factory given no container must throw, and 204 blocks
+  assert that something does not. Not all of them are about containers,
+  and the overlap with ERR-1 is the reason this sits at the top.
+
+  **THE PREDICATE IS DELIBERATELY NARROW.** `.not.toBeNull()` on a
+  queried element is a real check, because the query carries a selector.
+  `.toBeInstanceOf(HTMLElement)` is weak and not empty. Counting those
+  adds 215 members and every one is an argument. The subject decides
+  rather than the matcher: `expect(root.querySelector(".x")).toBeTruthy()`
+  makes exactly the claim `.not.toBeNull()` makes and is not counted.
+
+  **THIS GATE WOULD NOT HAVE CAUGHT THE 23 ERR-1 TESTS.** They asserted
+  `toHaveBeenCalled()` against a contract that was wrong, which is a real
+  assertion of the wrong thing. Only running the code finds those, which
+  is what `scripts/factory-census.test.ts` does. Two different families,
+  and this one is the half a text scan can see.
+
+- [ ] **DEBT-COLOR-1** **A hex colour does not survive a `setValue` /
+  `getValue` round trip in ColorPicker.** `setValue("#AABBCC")` returns
+  `#A9BACB`, every channel one low.
+
+  `rgbToHsl` rounds saturation and lightness to whole percents, and the
+  component holds its colour in that form. `#AABBCC` has lightness
+  73.33%, which stores as 73. Any hex not representable at one-percent
+  precision comes back as the nearest one that is, up to roughly 3/255
+  per channel. `#FF0000` survives, so the loss is the quantisation and
+  not the parser.
+
+  Invisible to the eye and visible in a diff, which matters for a brand
+  colour a consumer sets and later reads back. **Pinned, not fixed**, by
+  `setValue_HexDoesNotSurviveTheRoundTrip`, which fails when the colour
+  model changes. The fix is to keep the exact RGB alongside the HSL and
+  return it until a slider moves, and that is a change to the component's
+  colour model rather than to a test. Found by writing an assertion for
+  DEBT-TEST-1a.
+
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
 - [ ] **UNUSED-1**: **329 as measured by `scripts/audit-counts.mjs` on

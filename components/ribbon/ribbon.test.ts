@@ -4055,10 +4055,23 @@ describe("close all menus when none open", () =>
                 },
             ],
         }), "test-ribbon");
-        // Escape should not crash when no menu/popup is open
+        const root = ribbon.getElement();
+        const trigger = root.querySelector(".ribbon-menu-trigger")!;
+        const dropdown = root.querySelector<HTMLElement>(".ribbon-menu-dropdown")!;
+
+        // Honestly named, and a non-crash is still not a claim. What
+        // Escape must do with nothing open is leave everything shut and
+        // leave the menu bar usable afterwards.
         document.dispatchEvent(new KeyboardEvent("keydown", {
             key: "Escape", bubbles: true,
         }));
+
+        expect(dropdown.style.display).not.toBe("flex");
+        expect(trigger.getAttribute("aria-expanded")).not.toBe("true");
+
+        trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        expect(dropdown.style.display).toBe("flex");
+
         ribbon.destroy();
     });
 });
@@ -4373,7 +4386,7 @@ describe("auto-collapse timer", () =>
 
 describe("escape from group keytip level", () =>
 {
-    test("escape_FromGroupLevel_ShowsTabKeytips", () =>
+    test("escape_FromGroupLevel_ShowsTabKeytips", async () =>
     {
         const ribbon = createRibbon(makeOptions({
             keyTips: true,
@@ -4386,17 +4399,41 @@ describe("escape from group keytip level", () =>
                 }),
             ],
         }), "test-ribbon");
-        // Enter keytip mode at tabs level
+        const root = ribbon.getElement();
+        const tips = (): string[] =>
+            [...root.querySelectorAll(".ribbon-keytip")].map((el) => el.textContent ?? "");
+
+        // THE OLD BODY NEVER PRESSED ESCAPE. It pressed Alt, then H,
+        // then explained in a comment why it was not going to check
+        // anything, and the name of the test is about Escape.
         document.dispatchEvent(new KeyboardEvent("keydown", {
             key: "Alt", bubbles: true,
         }));
-        // Type "H" to go to groups level — internally this calls showGroupKeyTips
-        // via requestAnimationFrame, but the tab switch is synchronous
+        expect(tips()).toContain("H");
+
         document.dispatchEvent(new KeyboardEvent("keydown", {
             key: "H", bubbles: true,
         }));
-        // The tab keytip was matched, so keyTipLevel was set to "none" then
-        // rAF would set to "groups". We can still verify the flow works.
+        await new Promise((r) => requestAnimationFrame(r));
+
+        // Group level is reached, and its badges cannot be seen from
+        // here: showGroupKeyTips skips any control whose offsetParent
+        // is null, and in jsdom that is every control. The tab badges
+        // going away is the observable half, and the Escape branch
+        // below is what this test is named for.
+        expect(ribbon.getActiveTab()).toBe("home");
+        expect(tips()).not.toContain("H");
+
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", bubbles: true,
+        }));
+
+        // Escape at group level goes back to the tabs, and does not
+        // dismiss keytips altogether. That is the second branch of
+        // handleEscape, and nothing asserted it.
+        expect(root.classList.contains("ribbon-keytips-active")).toBe(true);
+        expect(tips()).toContain("H");
+
         ribbon.destroy();
     });
 });

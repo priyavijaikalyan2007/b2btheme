@@ -55,6 +55,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
+import { census as testCensus } from "./test-assertions.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -421,6 +422,27 @@ const BASELINES = {
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
+    // DEBT-TEST-1, ADR-196. A test block with no expect() at all. It
+    // passes unless the code under it throws, and every one of the 21
+    // was named for a behaviour: setFilters_UpdatesFilterState,
+    // expandAll_ExpandsAllSteps, iconResolver_TakesPriority. Several
+    // carried the assertion that was never written, as a comment.
+    //
+    // 21 -> 0 on 2026-10-17. Writing the twenty-one assertions found
+    // one defect (DEBT-COLOR-1) and read four contracts that no test
+    // had stated. A zero here is a real zero: the companion case in
+    // scripts/test-assertions.test.ts fails if the parser ever stops
+    // reaching every declaration, which is how the set is kept honest.
+    testsWithoutAssertion: 0,
+    // DEBT-TEST-1, ADR-196. A test block whose every assertion passes
+    // for any value that is not null. 204 of the 341 are a bare
+    // `.not.toThrow()`, which asserts the absence of a crash and
+    // nothing about behaviour, and which is the literal negation of
+    // the rule AGENTS.md states for a factory given no container.
+    //
+    // A toBeDefined() on a factory's return value cannot see a factory
+    // that built nothing, and ERR-1 was 65 of those.
+    testsThatCannotFail: 341,
 };
 
 /*
@@ -933,6 +955,8 @@ function measure()
         scssMissingMarker: 0,
         diagramengineLines: 0,
         traceCalls: 0,
+        testsWithoutAssertion: 0,
+        testsThatCannotFail: 0,
     };
     const consoleLogKinds = {};
     const windowCastKinds = {};
@@ -1028,6 +1052,13 @@ function measure()
 
     // UNUSED-1. The compiler, not a scan: an unused binding is an absence.
     counts.unusedLocals = countUnusedLocals();
+
+    // DEBT-TEST-1. A test that cannot fail is worse than no test. No
+    // test is an absence somebody can count, and a passing test is a
+    // claim with the suite's green offered as its evidence.
+    const blocks = testCensus();
+    counts.testsWithoutAssertion = blocks.filter((b) => b.verdict === "none").length;
+    counts.testsThatCannotFail = blocks.filter((b) => b.verdict === "vacuous").length;
 
     // DEBT-SEC-5. Documentation and demo pages hand consumers third-party
     // URLs. One without an exact version is a floating dependency, and one

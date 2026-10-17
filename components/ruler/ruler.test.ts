@@ -163,8 +163,16 @@ describe("orientation", () =>
     test("setOrientation_ChangesOrientation", () =>
     {
         const ruler = createRuler("test-ruler", { orientation: "horizontal" });
+        const wrap = (): HTMLElement =>
+            container.querySelector<HTMLElement>(".ruler")!;
+
+        expect(wrap().classList.contains("ruler-horizontal")).toBe(true);
+
         ruler.setOrientation("vertical");
-        // Should not throw
+
+        expect(wrap().classList.contains("ruler-vertical")).toBe(true);
+        expect(wrap().classList.contains("ruler-horizontal")).toBe(false);
+
         ruler.destroy();
     });
 });

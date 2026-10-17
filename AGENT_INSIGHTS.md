@@ -1832,3 +1832,52 @@ factory that logs and returns a handle — both report success for
 something that did not happen. The greppable shapes are an unused query
 result, an `if (x)` wrapping the only assertions, `toBeDefined()`, and
 `typeof x === "string"`: four ways to write a body that cannot fail.
+
+### 6.109 Writing the Assertion Is How You Read the Contract (2026-10-17)
+
+Twenty-one test blocks in this repository contained no `expect()` at
+all. They pass unless the code under them throws. Every one was named
+for a behaviour — `setFilters_UpdatesFilterState`,
+`expandAll_ExpandsAllSteps`, `removeRelationship_RemovesFromList` — and
+only one, `closeMenusByEscape_WhenNoMenuOpen_DoesNotCrash`, was named
+for what it actually did.
+
+Several carried the missing assertion as a comment:
+
+```
+viewer.clearFilters();
+// After clearing, all entries should be visible
+viewer.destroy();
+```
+
+One was three lines of the author thinking aloud, ending
+`// Let's use undefined title`, with no assertion and no second call.
+It also had the component's guard backwards.
+
+**The value was not in the tests.** It was that you cannot write an
+assertion without deciding what the component should do, and in each
+case that decision had never been made in writing. Twenty-one of them
+produced one defect — ColorPicker stores its colour as HSL rounded to
+whole percents, so `setValue("#AABBCC")` reads back `#A9BACB` — and
+four contracts nobody had stated. A test named for Escape never pressed
+Escape. A `// may fire` comment hedged a call that is unconditional.
+
+**Note which way the first one went.** I asserted that read-only
+removes the whole item-actions row. It does not, because read-only
+removes the delete button and keeps navigation, which is correct. The
+assertion was wrong and the component was right. That is the ordinary
+outcome and the reason this work is worth doing: the contract gets read.
+
+**Principle**: when a gate finds a test that asserts nothing, the fix is
+not a transform. ERR-1's 23 took a transform because the correction was
+mechanical — `_DoesNotThrow` became `_Throws` everywhere. Here each one
+is a question, and batching them would have skipped the only step that
+pays.
+
+**And state what your new gate cannot see.** This one would not have
+caught any of ERR-1's 23. Those asserted `toHaveBeenCalled()` against a
+contract that was wrong, which is a well-formed assertion of the wrong
+thing, and no text scan finds it — only running the code does. Two
+families: a wrong contract honestly asserted, and no contract asserted
+at all. A gate that covers one will be trusted for both unless its own
+record says otherwise.

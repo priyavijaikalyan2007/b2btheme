@@ -276,8 +276,14 @@ describe("callbacks", () =>
             makeOptions({ onChange }), "test-ribbonbuilder"
         );
         const config = makeConfig();
+
         builder.setConfig(config);
-        // onChange may fire during setConfig
+
+        // "may fire" was a hedge. setConfig calls mutateConfig, which
+        // calls onChange unconditionally, and the test is named for it.
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange.mock.calls[0][0]).toMatchObject({ tabs: config.tabs });
+
         builder.destroy();
     });
 });

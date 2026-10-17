@@ -8223,3 +8223,77 @@
     The README said the default was "visual" while the code defaulted to
     source, and described the component as having two editing modes. Both
     are corrected and the MathLive dependency row reads Unused.
+
+- id: ADR-196
+  title: Two ceilings on tests that cannot fail, and the twenty-one with no assertion at all
+  date: 2026-10-17
+  status: accepted
+  context: |
+    Twice in one session the defect was in the suite rather than in the
+    code, and both times it was found by accident while fixing
+    something else. ERR-1 turned 65 quiet factories into throws and
+    broke 25 tests, 23 of which had written the forbidden behaviour
+    into the contract and had been passing on every run. FALLBACK-10
+    found five more asserting a feature the component does not build.
+
+    Measuring the family found 21 test blocks with no `expect()` at all
+    and 341 whose every assertion passes for any value that is not
+    null, out of 4896.
+  decision: |
+    D1. TWO CEILINGS, NOT ONE. `testsWithoutAssertion` is unarguable
+        and went straight to 0. `testsThatCannotFail` is a backlog at
+        341, burned down by whoever next touches the file. Merging
+        them would have hidden a clean zero inside a large number.
+
+    D2. THE PREDICATE IS NARROW ON PURPOSE. Four matchers:
+        toBeDefined, a bare not.toThrow, toBeTruthy, and
+        expect(typeof x). `.not.toBeNull()` on a queried element is a
+        real check and `.toBeInstanceOf(HTMLElement)` is weak rather
+        than empty. Counting those adds 215 members and every one is
+        an argument. A number nobody argues with gets acted on.
+
+    D3. THE SUBJECT DECIDES, NOT THE MATCHER.
+        `expect(root.querySelector(".x")).toBeTruthy()` makes exactly
+        the claim `.not.toBeNull()` makes, so an existence matcher
+        with a DOM-query subject is exempt. Twelve blocks turn on this,
+        and without the rule the predicate contradicts itself.
+
+    D4. THE PARSER BALANCES BRACES AND KNOWS ABOUT STRINGS. An
+        indentation-anchored regex ends a block at the first closing
+        brace in the right column, and a naive balance counts the
+        brace inside `"\\invalid{"`. Both were real: the first lost
+        every nested assertion, the second lost eight whole blocks.
+
+    D5. THE COVERAGE ASSERTION IS DERIVED, NOT WRITTEN DOWN. The
+        companion test compares parsed blocks against declarations
+        counted another way, per file. A hardcoded total would need
+        editing every time anyone adds a test, and the edit that
+        silences it looks exactly like the edit that keeps it honest.
+
+    D6. THE TWENTY-ONE ARE FIXED BY HAND, ONE AT A TIME. The 23 ERR-1
+        tests took a transform because the fix was mechanical. Here
+        each one is a question about what the component should do.
+  consequences: |
+    testsWithoutAssertion 21 to 0, mutation-proved in both directions.
+    testsThatCannotFail recorded at 341. 5194 tests pass.
+
+    WRITING THE TWENTY-ONE ASSERTIONS FOUND ONE DEFECT AND READ FOUR
+    CONTRACTS NO TEST HAD STATED. DEBT-COLOR-1: ColorPicker holds its
+    colour as HSL with saturation and lightness rounded to whole
+    percents, so setValue("#AABBCC") reads back as #A9BACB. Pinned
+    rather than fixed, because the fix is a change to the colour model.
+
+    The four contracts: setReadOnly removes the delete affordance and
+    keeps navigation, so the first assertion written for it was wrong
+    and the component was right. escape_FromGroupLevel_ShowsTabKeytips
+    never pressed Escape. onChange_FiresOnConfigMutation hedged "may
+    fire" about an unconditional call. setValue_FiresOnChange_When
+    UserTriggered only ever called setValue, which stays quiet by
+    design, so the user trigger in its name was never exercised.
+
+    THIS GATE WOULD NOT HAVE CAUGHT THE 23 ERR-1 TESTS, and saying so
+    is part of recording it. They asserted toHaveBeenCalled() against a
+    contract that was wrong, which is a real assertion of the wrong
+    thing, and only running the code finds that. Two families: a wrong
+    contract honestly asserted, and no contract asserted at all. A text
+    scan can see the second. ADR-192's census is what sees the first.

@@ -201,17 +201,36 @@ describe("filters", () =>
     test("setFilters_UpdatesFilterState", () =>
     {
         const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+
+        // "filter state is internal" was the reason given for asserting
+        // nothing, and getFilters() has been on the handle all along.
+        expect(viewer.getFilters()).toEqual({});
+
         viewer.setFilters({ actor: "admin@example.com" });
-        // No throw expected; filter state is internal
+
+        expect(viewer.getFilters()).toEqual({ actor: "admin@example.com" });
+        expect(container.querySelectorAll(".auditlog-chip")).toHaveLength(1);
+
         viewer.destroy();
     });
 
     test("clearFilters_ResetsFilters", () =>
     {
         const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
-        viewer.setFilters({ actor: "admin@example.com" });
+        const rows = (): number => container.querySelectorAll(".auditlog-row").length;
+        const all = rows();
+
+        viewer.setFilters({ actor: "nobody@example.com" });
+        expect(rows()).toBeLessThan(all);
+
         viewer.clearFilters();
-        // After clearing, all entries should be visible
+
+        // The comment this replaces already said it: "After clearing,
+        // all entries should be visible."
+        expect(viewer.getFilters()).toEqual({});
+        expect(rows()).toBe(all);
+        expect(container.querySelectorAll(".auditlog-chip")).toHaveLength(0);
+
         viewer.destroy();
     });
 });

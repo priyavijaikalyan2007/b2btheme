@@ -1437,3 +1437,26 @@
   related:
   - RefusalsExposeTheBacklog
   - AbsentFeatureNamedAsAbsentLibrary
+
+- name: ATestThatCannotFail
+  definition: "ADR-196. Worse than no test, because no test is an absence somebody can count while a passing test is a claim with the suite's green offered as its evidence. Two measurable populations. A block with no `expect()` at all passes unless the code throws: there were 21, every one named for a behaviour, and several carried the assertion that was never written as a comment. A block whose every assertion passes for any value that is not null: there are 341, and 204 of those are a bare `.not.toThrow()`, which asserts the absence of a crash and is the literal negation of the rule AGENTS.md states for a factory given no container. The predicate stays narrow because a ceiling with arguable members stops being believed, and the subject decides rather than the matcher, so an existence check on a DOM query is exempt."
+  anchor_file: scripts/test-assertions.mjs
+  related:
+  - TestNamesThatClaimAMechanism
+  - RefusalsExposeTheBacklog
+  - ZeroOverTheWrongSet
+
+- name: WritingTheAssertionIsHowYouReadTheContract
+  definition: "ADR-196. The value in fixing a test that asserts nothing is not the test. It is that you cannot write the assertion without deciding what the component should do, and that decision has usually never been made in writing. Twenty-one of them yielded one defect (DEBT-COLOR-1, a hex that does not survive a setValue/getValue round trip) and four contracts no test had stated: read-only removes the delete affordance and keeps navigation, a test named for Escape never pressed Escape, a `may fire` comment hedged an unconditional call, and a test named WhenUserTriggered only ever called the programmatic path. Note which way the first one went. The assertion written was wrong and the component was right, and that is the ordinary case rather than the embarrassing one."
+  anchor_file: CODEBASE_FIXES.md
+  related:
+  - ATestThatCannotFail
+  - TestNamesThatClaimAMechanism
+
+- name: TwoFamiliesOfBadTest
+  definition: "ADR-196. A wrong contract honestly asserted, and no contract asserted at all. The 23 tests ERR-1 broke were the first kind: `expect(errorSpy).toHaveBeenCalled()` is a real assertion, and what was wrong was the rule it encoded. A text scan cannot see those, because the assertion is well formed. Only running the code against the intended contract finds them, which is what the factory census does. The 362 this gate counts are the second kind, and a text scan is exactly the right instrument. Claiming one tool covers both is the mistake to avoid: when a new gate goes in, state which family it sees and which it does not, or the next reader will trust it for both."
+  anchor_file: scripts/test-assertions.test.ts
+  related:
+  - ATestThatCannotFail
+  - SweepCoverageIsItsPatterns
+  - FactoryContainerContract

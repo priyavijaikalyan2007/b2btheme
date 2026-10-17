@@ -27,6 +27,20 @@ import type
 let container: HTMLElement;
 let targetEl: HTMLElement;
 
+/** The lens this instance appended to the body, by its class. */
+function lensEl(): HTMLElement
+{
+    const el = document.body.querySelector<HTMLElement>(".magnifier-lens");
+    if (!el) { throw new Error("no lens in the document"); }
+    return el;
+}
+
+/** Move the pointer onto the target, which is what shows the lens. */
+function hoverTarget(): void
+{
+    targetEl.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+}
+
 // ============================================================================
 // SETUP / TEARDOWN
 // ============================================================================
@@ -162,8 +176,17 @@ describe("enable and disable", () =>
             target: "magnifier-target",
             disabled: true,
         });
+
+        // Disabled, so hovering does nothing. The name claims enable()
+        // RESUMES magnification, and nothing here checked that it did.
+        hoverTarget();
+        expect(lensEl().style.display).not.toBe("block");
+
         mag.enable();
-        // Should not crash and enable tracking
+        hoverTarget();
+
+        expect(lensEl().style.display).toBe("block");
+
         mag.destroy();
     });
 
@@ -172,8 +195,17 @@ describe("enable and disable", () =>
         const mag = createMagnifier("test-magnifier", {
             target: "magnifier-target",
         });
+
+        // Idempotent means the second call leaves the first alone, not
+        // that it fails to throw. enable() early-returns when already
+        // enabled, so the listeners must not be attached twice.
         mag.enable();
-        // No error expected
+        mag.enable();
+        hoverTarget();
+
+        expect(lensEl().style.display).toBe("block");
+        expect(lensEl().querySelectorAll(".magnifier-inner > *")).toHaveLength(1);
+
         mag.destroy();
     });
 
@@ -183,8 +215,17 @@ describe("enable and disable", () =>
             target: "magnifier-target",
             disabled: true,
         });
+
         mag.disable();
-        // No error expected
+        hoverTarget();
+
+        expect(lensEl().style.display).not.toBe("block");
+
+        // And it is still disabled rather than toggled by the call.
+        mag.enable();
+        hoverTarget();
+        expect(lensEl().style.display).toBe("block");
+
         mag.destroy();
     });
 });

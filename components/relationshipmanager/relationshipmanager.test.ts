@@ -208,16 +208,36 @@ describe("relationship API", () =>
     test("removeRelationship_RemovesFromList", () =>
     {
         const rm = createRelationshipManager(makeOptions());
+        expect(container.querySelectorAll(".rm-item")).toHaveLength(2);
+
         rm.removeRelationship("rel-1");
         rm.refresh();
+
+        // DEBT-TEST-1. This asserted nothing, so it passed whether or
+        // not the relationship was removed, which is the whole claim.
+        const names = [...container.querySelectorAll(".rm-item-name")]
+            .map((el) => el.textContent);
+        expect(container.querySelectorAll(".rm-item")).toHaveLength(1);
+        expect(names.join(" ")).not.toContain("rel-1");
+
         rm.destroy();
     });
 
     test("setReadOnly_DisablesEditing", () =>
     {
         const rm = createRelationshipManager(makeOptions({ readOnly: false }));
+        expect(container.querySelectorAll(".rm-more-btn").length).toBeGreaterThan(0);
+
         rm.setReadOnly(true);
         rm.refresh();
+
+        // Read-only removes the delete affordance and keeps navigation,
+        // which is the right contract and was asserted nowhere. Writing
+        // the assertion is how the contract got read: the first attempt
+        // expected the whole .rm-item-actions row to go, and it does not.
+        expect(container.querySelectorAll(".rm-more-btn")).toHaveLength(0);
+        expect(container.querySelectorAll(".rm-item-actions").length).toBeGreaterThan(0);
+
         rm.destroy();
     });
 });
@@ -231,7 +251,16 @@ describe("group operations", () =>
     test("expandAll_ExpandsAllGroups", () =>
     {
         const rm = createRelationshipManager(makeOptions({ groupByType: true }));
+        rm.collapseAll();
+        expect([...container.querySelectorAll<HTMLElement>(".rm-group-body")]
+            .every((x) => x.style.display === "none")).toBe(true);
+
         rm.expandAll();
+
+        const bodies = [...container.querySelectorAll<HTMLElement>(".rm-group-body")];
+        expect(bodies.length).toBeGreaterThan(0);
+        expect(bodies.some((x) => x.style.display === "none")).toBe(false);
+
         rm.destroy();
     });
 
@@ -239,6 +268,11 @@ describe("group operations", () =>
     {
         const rm = createRelationshipManager(makeOptions({ groupByType: true }));
         rm.collapseAll();
+
+        const bodies = [...container.querySelectorAll<HTMLElement>(".rm-group-body")];
+        expect(bodies.length).toBeGreaterThan(0);
+        expect(bodies.every((b) => b.style.display === "none")).toBe(true);
+
         rm.destroy();
     });
 });

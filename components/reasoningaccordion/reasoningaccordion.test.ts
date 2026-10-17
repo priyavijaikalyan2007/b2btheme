@@ -205,8 +205,19 @@ describe("step management", () =>
     test("updateStep_ChangesStepStatus", () =>
     {
         const acc = createReasoningAccordion("test-reasoning", makeOptions());
+        const root = acc.getElement()!;
+        const statusOf = (i: number): string | null =>
+            root.querySelectorAll(".reasoning-step-status")[i]
+                .getAttribute("aria-label");
+
+        // s3 starts "pending". The name claims the status changes, and
+        // nothing checked that it did.
+        expect(statusOf(2)).toBe("Pending");
+
         acc.updateStep("s3", { status: "complete" });
-        // Should not throw; step status updated
+
+        expect(statusOf(2)).toBe("Complete");
+
         acc.destroy();
     });
 
@@ -229,8 +240,20 @@ describe("expand and collapse", () =>
     test("expandAll_ExpandsAllSteps", () =>
     {
         const acc = createReasoningAccordion("test-reasoning", makeOptions());
+        const root = acc.getElement()!;
+        const headers = (): HTMLElement[] =>
+            [...root.querySelectorAll<HTMLElement>(".reasoning-step-header")];
+
+        acc.collapseAll();
+        expect(headers().every((h) => h.getAttribute("aria-expanded") === "false")).toBe(true);
+
         acc.expandAll();
-        // After expanding, content panels should be visible
+
+        // The comment this replaces already said it: "After expanding,
+        // content panels should be visible."
+        expect(headers()).toHaveLength(3);
+        expect(headers().every((h) => h.getAttribute("aria-expanded") === "true")).toBe(true);
+
         acc.destroy();
     });
 
@@ -239,7 +262,17 @@ describe("expand and collapse", () =>
         const acc = createReasoningAccordion("test-reasoning", makeOptions({
             expandAll: true,
         }));
+        const root = acc.getElement()!;
+        const headers = (): HTMLElement[] =>
+            [...root.querySelectorAll<HTMLElement>(".reasoning-step-header")];
+
+        expect(headers().every((h) => h.getAttribute("aria-expanded") === "true")).toBe(true);
+
         acc.collapseAll();
+
+        expect(headers()).toHaveLength(3);
+        expect(headers().every((h) => h.getAttribute("aria-expanded") === "false")).toBe(true);
+
         acc.destroy();
     });
 });

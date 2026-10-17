@@ -885,16 +885,40 @@ describe("ontology integration", () =>
                 color: "#2563EB",
             },
         ];
-        const picker = createExplorerPicker(
-            defaultOpts({ ontologyTypes }));
+        // Flat, so the asset renders without an expand. The old body
+        // used the nested mock tree, never rendered the asset, and
+        // asserted nothing about the icon it is named for.
+        const picker = createExplorerPicker(defaultOpts({
+            staticNodes: [makeAsset("a1", "Asset One")],
+            ontologyTypes,
+        }));
+
+        const icon = queryNodeRow("a1")!.querySelector<HTMLElement>(".explorerpicker-icon");
+        expect(icon).not.toBeNull();
+        expect(icon!.classList.contains("bi-diagram-3")).toBe(true);
+        expect(icon!.style.color).toBe("rgb(37, 99, 235)");
+
         picker.destroy();
     });
 
     test("iconResolver_TakesPriority", () =>
     {
         const iconResolver = vi.fn().mockReturnValue("bi-custom");
-        const picker = createExplorerPicker(
-            defaultOpts({ iconResolver }));
+        // Priority over WHAT was never stated. resolveAssetIcon reads
+        // the resolver, then node.icon, then the ontology entry, so the
+        // node carries both of the losers.
+        const picker = createExplorerPicker(defaultOpts({
+            staticNodes: [{ ...makeAsset("a1", "Asset One"), icon: "bi-node-own" }],
+            ontologyTypes: [{ key: "diagrams.diagram", icon: "bi-from-ontology" }],
+            iconResolver,
+        }));
+
+        const icon = queryNodeRow("a1")!.querySelector(".explorerpicker-icon")!;
+        expect(iconResolver).toHaveBeenCalled();
+        expect(icon.classList.contains("bi-custom")).toBe(true);
+        expect(icon.classList.contains("bi-node-own")).toBe(false);
+        expect(icon.classList.contains("bi-from-ontology")).toBe(false);
+
         picker.destroy();
     });
 
