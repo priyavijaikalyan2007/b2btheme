@@ -50,12 +50,21 @@ function consoleDebugDuring(run: () => void): unknown[][]
     return calls.filter(args => args.some(a => a === "[TRACE]"));
 }
 
+/**
+ * The value typed into the password field. Both the value and its LENGTH
+ * are content under FRONTEND_LOGGING.md section 5, so the assertions below
+ * derive the length from this constant rather than transcribing it. A
+ * transcribed number stops checking the right thing the moment the fixture
+ * changes, and says nothing when it does.
+ */
+const SECRET = "hunter2-correct-horse";
+
 /** Types a secret into the password field and fires a real input event. */
 function typeIntoThePasswordField(): void
 {
     const field = container.querySelector<HTMLInputElement>('input[type="password"]');
     if (!field) { throw new Error("fixture has no password field"); }
-    field.value = "hunter2-correct-horse";
+    field.value = SECRET;
     field.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
@@ -131,8 +140,18 @@ describe("the payload is the field name and nothing else", () =>
 
         // The secret must not reach the console by any route, including the
         // level tag and the prefix arguments.
-        const everything = JSON.stringify(traces);
-        expect(everything).not.toContain("hunter2");
-        expect(everything).not.toContain("21");
+        //
+        // THE TIMESTAMP IS DROPPED FIRST, AND THAT IS NOT A WEAKENING. The
+        // logger writes an ISO timestamp as argument zero. The secret is 21
+        // characters long, and "21" appears in that timestamp for one minute
+        // of every hour, for every 21st minute, and on every 21st day. This
+        // assertion failed in CI at 12:21 UTC against a trace that was
+        // correct, which is the worst way for a test to fail: it accuses the
+        // code of leaking a password and it is wrong. Nothing the component
+        // writes is excluded, only the clock reading the logger prepends.
+        const written = JSON.stringify(traces.map(args => args.slice(1)));
+        expect(written).not.toContain(SECRET);
+        expect(written).not.toContain("hunter2");
+        expect(written).not.toContain(String(SECRET.length));
     });
 });
