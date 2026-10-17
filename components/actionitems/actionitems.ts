@@ -1780,8 +1780,11 @@ export class ActionItems
 
             if (!el)
             {
-                logError("Container not found:", container);
-                return null;
+                // ERR-1. This logged and carried on, so the caller got a
+                // handle to a component that was never mounted.
+                throw new Error(
+                    `${LOG_PREFIX} Container "${container}" was not found. `
+                    + "Insert the element before showing it.");
             }
 
             return el;

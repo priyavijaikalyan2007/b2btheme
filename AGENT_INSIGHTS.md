@@ -1712,3 +1712,59 @@ second one was true.
 
 ERR-1 and the fallback review turn out to be the same work. Neither
 entry says so.
+
+### 6.105 The Suite Had Written the Defect Into the Contract (2026-10-17)
+
+Making 65 factories refuse a missing container broke 25 tests. Two were
+real regressions. The other 23 were named like this:
+
+- `showInMissingContainer_LogsError`
+- `Factory_WithInvalidContainer_DoesNotThrow`
+- `Show_UnknownContainer_LogsAndDoesNotThrow`
+- `constructor_WithMissingContainer_LogsError`
+
+Every one of them passed, every run, for as long as it had existed.
+AGENTS.md says a container that is not found must throw. Twenty-three
+cases asserted that it must not.
+
+**Principle**: a test written from the implementation records what the
+code does, and then defends it. A test written from the rule records
+what the code should do, and then finds the gap. The names are the tell:
+`_DoesNotThrow` and `_LogsError` describe a mechanism, while
+`_Throws` describes a contract. When a rule change breaks a block of
+tests, read their names before their bodies — if they describe the old
+mechanism, they were never checking the rule.
+
+None of these were wrong when written. They were written to pin down
+observed behaviour, which is a reasonable thing to do, and nobody went
+back when AGENTS.md took a position.
+
+### 6.106 What a Refusal Is Worth Is What It Exposes (2026-10-17)
+
+The ERR-1 fix changed log statements into throws. It found four defects
+that no amount of reading would have found, because all four were
+invisible precisely while the failure stayed quiet:
+
+- `runtime/integration.test.ts` had **never mounted its TreeView**. The
+  harness passed the host element where `containerId: string` is
+  declared, with `as never` hiding it from the compiler. TreeView
+  resolved `getElementById("[object HTMLDivElement]")`, logged, and
+  carried on. The test passed because it asserted the lifecycle flag and
+  not the DOM.
+- Two `magnifier` fixtures called the published factory with the wrong
+  signature for as long as they had existed, because the parameter they
+  got wrong was stored and never read.
+- `GradientPicker` deferred its child AnglePicker to the next frame, and
+  that child resolves its container BY ID. On a picker that was never
+  mounted the element is not in the document, so the angle control
+  silently never appeared.
+- Three components answered a container that did not exist by mounting
+  on `document.body`, two of them saying "falling back to document.body"
+  in the log text nobody read.
+
+**Principle**: the argument for fail-fast is usually made about the
+future, as a bug you will catch next time. The larger return is
+immediate and backward-looking. A quiet failure hides every caller that
+is already wrong, and the day it starts shouting, they all surface at
+once. Budget for that: the fix is not the change, it is the change plus
+the backlog it uncovers.

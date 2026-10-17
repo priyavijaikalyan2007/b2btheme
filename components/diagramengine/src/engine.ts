@@ -5100,7 +5100,8 @@ export function createDiagramEngine(
         if (!found)
         {
             throw new Error(
-                `${LOG_PREFIX} Container not found: ${container}`
+                `${LOG_PREFIX} Container "${container}" was not found. `
+                + "Insert the element before creating the diagram."
             );
         }
 

@@ -407,8 +407,14 @@ export class MultiselectCombo
 
         if (!container)
         {
-            logError(`Container not found: ${containerId}`);
-            return;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted. The census
+            // cannot reach this branch, because the probe's stub options
+            // crash the component first, so it is fixed on inspection
+            // rather than on a measurement.
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before showing it.");
         }
 
         container.appendChild(this.rootEl);

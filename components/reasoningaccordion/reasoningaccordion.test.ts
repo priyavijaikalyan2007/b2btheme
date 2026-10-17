@@ -301,13 +301,13 @@ describe("lifecycle", () =>
 
 describe("edge cases", () =>
 {
-    test("showInMissingContainer_LogsError", () =>
+    test("showInMissingContainer_Throws", () =>
     {
-        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         const acc = new ReasoningAccordion(makeOptions());
-        acc.show("nonexistent");
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockRestore();
+        expect(() => acc.show("nonexistent")).toThrow(/was not found/);
         acc.destroy();
     });
 

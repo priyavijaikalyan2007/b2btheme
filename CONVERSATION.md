@@ -4079,3 +4079,61 @@ subject's, which is the worst class of measurement error, so
 
 No factory changed. Making 65 of them throw is a breaking change for
 any consumer relying on the silent no-op, and it wants its own slice.
+
+## 2026-10-17 (cont.) — ERR-1 closed, and what the refusals turned up
+
+*"Finish the 14 first. Then continue fixing the rest. Don't worry about
+consumers at this time. There aren't any."*
+
+The fourteen were the ones that failed without a word. Eight were the
+layout family, byte-identical. Two, `ribbon` and `tabbedpanel`, turned
+out to be worse than silent: they resolved a named container with
+`el || document.body`, so a container that did not exist put the
+component somewhere the caller never asked for. That looks like it
+worked, which is the worst outcome available.
+
+`magnifier` was a different defect wearing the same clothes. Its
+`containerId` was assigned to a field and never read again. Two of its
+own test files had been passing an options object into that slot for as
+long as they had existed, and nothing could notice.
+
+Then the fifty-one. Those were mechanical — 53 sites matching one log
+idiom — and the interesting part was not the change but the fallout.
+
+**Twenty-five tests broke. Twenty-three of them were asserting the
+defect.** `showInMissingContainer_LogsError`.
+`Factory_WithInvalidContainer_DoesNotThrow`.
+`Show_UnknownContainer_LogsAndDoesNotThrow`. AGENTS.md says a container
+that is not found must throw, and twenty-three cases asserted that it
+must not. All of them passed on every run. The names are the tell:
+`_DoesNotThrow` describes a mechanism, `_Throws` describes a contract,
+and a test written from the implementation will defend the
+implementation.
+
+**The other two were real, and one was a years-old vacuum.**
+`runtime/integration.test.ts` had never mounted its TreeView. The
+harness passes the host ELEMENT where `containerId: string` is declared,
+with `as never` hiding it from the compiler, so TreeView called
+`getElementById("[object HTMLDivElement]")`, logged, and carried on. The
+test passed because it checked the lifecycle bookkeeping flag rather
+than the DOM.
+
+**And GradientPicker's angle control had been quietly absent.** It
+builds the control, assigns an id, and defers the child factory to the
+next frame — and that factory resolves by id. On a picker that was never
+mounted, the element is not in the document. The deferred init now
+checks `isConnected` and returns, which is not a fallback: nobody asked
+for an angle control on a picker that is not on the page.
+
+**Two ratchets moved the wrong way and I did not absorb either.**
+`diagramengineLines` by one line, for a remedy clause. `unusedLocals`
+from 306 to 329, because taking the log out before a throw orphans the
+helper in 23 components. Keeping the log would have printed the message
+twice, which is exactly what FALLBACK-1 to 9 removed, so the rise is the
+right trade and it is written down rather than hidden. UNUSED-1's own
+recorded number was stale by 108 and is corrected.
+
+The thing worth keeping: the case for fail-fast is normally argued about
+the future. The bigger return came straight away and pointed backwards.
+A quiet failure conceals every caller that is already wrong, and the
+day it starts shouting they all arrive at once.

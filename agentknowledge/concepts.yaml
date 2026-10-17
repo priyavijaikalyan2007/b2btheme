@@ -1378,7 +1378,7 @@
   - NoFallbackCode
 
 - name: FactoryContainerContract
-  definition: "ERR-1, ADR-192. AGENTS.md states it as a table row: container not found means throw a literate error, and the wrong answer is to return a null object. Measured 2026-10-17 by CALLING every published create* factory rather than reading it. The factories are thin wrappers, and the decision is taken two hops away in a constructor or in show(). 128 published factories: 76 take a container, 52 take options only. Of the 74 with a reachable verdict, 9 throw, 51 log and return a handle, 14 do nothing at all. The ceiling SILENT_ON_MISSING_CONTAINER sits in scripts/factory-census.test.ts rather than in audit-counts.mjs, which has no DOM. It is a ceiling on the quiet ones and not a floor on the throwing ones. A floor cannot see a new unvalidated factory added beside the old ones. scripts/factory-census.mjs builds the inventory and the per-factory options stub."
+  definition: "ERR-1, ADR-192. AGENTS.md states it as a table row: container not found means throw a literate error, and the wrong answer is to return a null object. Measured 2026-10-17 by CALLING every published create* factory rather than reading it. The factories are thin wrappers, and the decision is taken two hops away in a constructor or in show(). 128 published factories: 76 take a container, 52 take options only. Of the 74 with a reachable verdict, 9 threw, 51 logged and returned a handle, and 14 did nothing at all. ADR-193 closed it on the same day: all 65 now throw and the ceiling is 0. The ceiling SILENT_ON_MISSING_CONTAINER sits in scripts/factory-census.test.ts rather than in audit-counts.mjs, which has no DOM. It is a ceiling on the quiet ones and not a floor on the throwing ones. A floor cannot see a new unvalidated factory added beside the old ones. scripts/factory-census.mjs builds the inventory and the per-factory options stub."
   anchor_file: scripts/factory-census.mjs
   related:
   - NoFallbackCode
@@ -1392,3 +1392,11 @@
   - NoFallbackCode
   - FactoryContainerContract
   - AttributePresenceIsNotAttributeCorrectness
+
+- name: RefusalsExposeTheBacklog
+  definition: "ADR-193. The case for fail-fast is usually made about the future, as a bug caught next time. The larger return is immediate and backward-looking. Turning 65 quiet container branches into throws broke 25 tests. Two were real regressions. The other 23 had written the forbidden behaviour into the contract, named showInMissingContainer_LogsError and Factory_WithInvalidContainer_DoesNotThrow. It also showed that runtime/integration.test.ts had never mounted its TreeView. Two magnifier fixtures had been calling the factory with the wrong signature, and GradientPicker's deferred AnglePicker silently never appeared on an unmounted picker. Every one was invisible while the failure was quiet. Budget for it: the fix is the change plus the backlog it uncovers."
+  anchor_file: scripts/factory-census.test.ts
+  related:
+  - FactoryContainerContract
+  - NoFallbackCode
+  - SweepCoverageIsItsPatterns

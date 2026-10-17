@@ -102,8 +102,14 @@ function mountNode(n: CanvasNode): Surface | null
         const key = manifest.containerOption ?? "container";
         const factory = n.component === "treeview" ? createTreeView : null;
 
+        // ERR-1. This passed the host ELEMENT where TreeView declares
+        // `containerId: string`, and `as never` hid it from the compiler.
+        // TreeView called getElementById("[object HTMLDivElement]", logged
+        // an error and carried on, so the tree never rendered. The test
+        // still passed, because it asserts the lifecycle flag rather than
+        // the DOM. The refusal is what made it visible.
         return factory
-            ? factory({ ...opts, [key]: host } as never) as unknown as Surface
+            ? factory({ ...opts, [key]: host.id } as never) as unknown as Surface
             : null;
     }
 

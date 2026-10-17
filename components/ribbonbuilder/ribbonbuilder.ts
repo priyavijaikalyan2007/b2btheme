@@ -3151,7 +3151,11 @@ class RibbonBuilderImpl
 
             if (!el)
             {
-                logError("container not found:", containerId);
+                // ERR-1. This logged and returned null, which every caller
+                // then had to re-check or quietly skip.
+                throw new Error(
+                    `${LOG_PREFIX} Container "${containerId}" was not found. `
+                    + "Insert the element before showing the ribbon.");
             }
 
             return el;
@@ -3165,7 +3169,11 @@ class RibbonBuilderImpl
 
                 if (!el)
                 {
-                    logError("container not found:", this.opts.container);
+                    // ERR-1. This logged and returned null, which every caller
+                    // then had to re-check or quietly skip.
+                    throw new Error(
+                        `${LOG_PREFIX} Container "${this.opts.container}" was not found. `
+                        + "Insert the element before showing the ribbon.");
                 }
 
                 return el;

@@ -349,13 +349,13 @@ describe("accessibility", () =>
 
 describe("edge cases", () =>
 {
-    test("showInMissingContainer_LogsError", () =>
+    test("showInMissingContainer_Throws", () =>
     {
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         const ce = new CodeEditor({});
-        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-        ce.show("nonexistent-id");
-        expect(spy).toHaveBeenCalled();
-        spy.mockRestore();
+        expect(() => ce.show("nonexistent-id")).toThrow(/was not found/);
     });
 
     test("diagnostics_WithNoCM_DoesNotThrow", () =>

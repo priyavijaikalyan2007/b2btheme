@@ -677,8 +677,11 @@ export class GradientPicker
         const container = document.getElementById(containerId);
         if (!container)
         {
-            logWarn("Container not found:", containerId);
-            return;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted.
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before showing it.");
         }
 
         if (this.rootEl)
@@ -1661,8 +1664,20 @@ export class GradientPicker
         const container = createElement("div", "gradientpicker-angle");
         container.id = `${this.instanceId}-angle`;
 
-        // Defer AnglePicker init until after mount
-        requestAnimationFrame(() => this.initAnglePicker(container));
+        // Defer AnglePicker init until after mount.
+        //
+        // ERR-1. AnglePicker resolves its container BY ID, so this element
+        // has to be in the document by the time the frame runs. It is not
+        // when the GradientPicker was destroyed, or never mounted, in the
+        // meantime. That is not a failure to report: nobody asked for an
+        // angle control on a picker that is not on the page. Before
+        // AnglePicker refused a missing container this read as working,
+        // because the warning it logged went nowhere anyone looked.
+        requestAnimationFrame(() =>
+        {
+            if (!container.isConnected) { return; }
+            this.initAnglePicker(container);
+        });
         return container;
     }
 

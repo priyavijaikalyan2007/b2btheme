@@ -656,8 +656,11 @@ function resolveContainer(
         const el = document.getElementById(container);
         if (!el)
         {
-            logError("Container not found:", container);
-            return document.body;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted.
+            throw new Error(
+                `${LOG_PREFIX} Container "${container}" was not found. `
+                + "Insert the element before showing it, or omit the container to mount on document.body.");
         }
         return el;
     }

@@ -246,14 +246,17 @@ describe("createExplorerPicker factory", () =>
         picker.destroy();
     });
 
-    test("withInvalidContainerId_DoesNotThrow", () =>
+    test("withInvalidContainerId_Throws", () =>
     {
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         expect(() =>
         {
             const picker = createExplorerPicker(
                 defaultOpts({ container: "nonexistent" }));
             picker.destroy();
-        }).not.toThrow();
+        }).toThrow(/was not found/);
     });
 });
 

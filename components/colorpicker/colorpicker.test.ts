@@ -77,13 +77,16 @@ describe("createColorPicker", () =>
         picker.destroy();
     });
 
-    test("Factory_WithInvalidContainer_DoesNotThrow", () =>
+    test("Factory_WithInvalidContainer_Throws", () =>
     {
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         expect(() =>
         {
             const picker = createColorPicker("nonexistent-container-id");
             picker.destroy();
-        }).not.toThrow();
+        }).toThrow(/was not found/);
     });
 
     test("Factory_MountsElementInContainer", () =>

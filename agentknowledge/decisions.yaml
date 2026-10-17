@@ -8018,3 +8018,69 @@
     every comma read `Omit<GaugeOptions, "shape">` as two parameters and
     moved the container index for all four gauge factories, which the
     census then reported as a finding rather than as its own bug.
+
+- id: ADR-193
+  title: Every factory that takes a container now throws when it is not there
+  date: 2026-10-17
+  status: accepted
+  context: |
+    ADR-192 measured ERR-1 by calling every published factory. 65 of 74
+    answered a missing container without throwing: 51 logged and returned
+    a handle, 14 did nothing at all. The owner approved fixing all of
+    them, the fourteen silent ones first, and said not to weigh consumer
+    breakage because there are no consumers yet.
+  decision: |
+    D1. THE REFUSAL NAMES THE CONTAINER AND THE REMEDY. The wording is
+        FALLBACK-9's: what was not found, then what to do. The census
+        asserts both, because a ceiling can count refusals and cannot
+        tell a literate one from `throw new Error("failed")`.
+
+    D2. A COMPONENT THAT RESOLVED TO document.body REFUSES INSTEAD. ribbon
+        and tabbedpanel answered `el || document.body`, and docklayout,
+        fileupload and gauge said "falling back to document.body" in the
+        log text itself. Mounting somewhere the caller did not name is
+        worse than not mounting, because it looks like it worked.
+
+    D3. THE LOG BEFORE THE THROW IS REMOVED, NOT KEPT. The refusal carries
+        the whole message. Logging it first prints it twice, which is the
+        duplication FALLBACK-1 to 9 took out. This orphans the logWarn or
+        logError helper in 23 components and unusedLocals rises 306 to
+        329 as a result. The helpers are the LOG-4a preamble and exist
+        whether or not a component calls them.
+
+    D4. GRADIENTPICKER'S DEFERRED CHILD CHECKS isConnected. It builds the
+        angle control, assigns an id and defers the AnglePicker factory to
+        the next frame, and that factory resolves BY ID. A picker that was
+        never mounted has no such element. Returning early there is not a
+        fallback: nobody asked for an angle control on a picker that is
+        not on the page.
+
+    D5. MAGNIFIER'S CONTAINER IS VALIDATED EVEN THOUGH IT IS NOT A MOUNT
+        POINT. The lens appends to document.body and the id was stored
+        and never read again. A parameter accepted and discarded is its
+        own quiet lie, and two of its own test files had been passing an
+        options object there for as long as they existed.
+
+    D6. THE 23 TESTS THAT ASSERTED THE DEFECT ARE REWRITTEN, NOT DELETED.
+        Each now asserts the refusal and keeps its place in the file.
+  consequences: |
+    SILENT_ON_MISSING_CONTAINER reaches 0 and stays there. 74 of 76
+    published container-taking factories refuse. The other two refuse a
+    missing dependency before reaching the container.
+
+    A FAIL-FAST CHANGE IS WORTH WHAT IT EXPOSES, AND THIS ONE EXPOSED
+    FOUR THINGS. 23 of this repository's own tests had written the
+    forbidden behaviour into the contract and all of them passed.
+    runtime/integration.test.ts had never mounted its TreeView, because
+    the harness passed the host element where a string id belongs with
+    `as never` hiding it from the compiler, and the test asserted the
+    lifecycle flag rather than the DOM. Two magnifier fixtures called the
+    factory with the wrong signature. GradientPicker's angle control
+    silently never appeared on an unmounted picker.
+
+    Every one of those was invisible while the failure was quiet. None of
+    them needed new tooling to find once the components said no.
+
+    diagramengineLines rises 30522 to 30523 for one line of remedy text,
+    the seventh recorded raise. unusedLocals rises 306 to 329, recorded
+    against UNUSED-1 rather than absorbed.

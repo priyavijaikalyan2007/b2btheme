@@ -560,10 +560,16 @@ Per CODING_STYLE.md, functions must be 25-30 lines maximum. These functions sign
 
 Per LITERATE_ERRORS.md, factory functions must validate their inputs (container element, options object) and produce literate, actionable error messages.
 
-- [ ] **ERR-1** **65 of 74 published factories answer a missing container
-  without throwing.** Measured 2026-10-17 by calling every one of them,
-  ADR-192. Held by `SILENT_ON_MISSING_CONTAINER` in
-  `scripts/factory-census.test.ts`, a ceiling that can only fall.
+- [x] **ERR-1** **CLOSED 2026-10-17, ADR-193. Every published factory that
+  takes a container now throws when it is not there.**
+  `SILENT_ON_MISSING_CONTAINER` went 65, then 51, then **0**, and
+  `scripts/factory-census.test.ts` holds it there. 74 of 76 refuse, and
+  the other two refuse a missing dependency before they reach the
+  container.
+
+  Measured by calling every factory, ADR-192. Fixed in two slices: the
+  fourteen that failed without a word, then the fifty-one that logged and
+  carried on.
 
   AGENTS.md states the rule as a table: "Container not found -> `throw` a
   literate error", against "return a null object". A factory that warns and
@@ -644,10 +650,61 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
   that throw, because **a floor cannot see a new unvalidated factory added
   beside the old ones.**
 
-  The fix for each is the AGENTS.md row: throw, naming the container that
-  was not found and what to do about it, in the wording FALLBACK-9 used.
-  That is a breaking change for any consumer currently relying on the
-  silent no-op, so it wants its own slice rather than a sweep.
+  **WHAT THE REFUSALS FOUND ON THE WAY IN.** A fail-fast change earns its
+  keep by what it exposes, and this one exposed four things that were
+  invisible while the failure was quiet:
+
+  - **23 of the repository's own tests asserted the defect.** They are
+    named `showInMissingContainer_LogsError`,
+    `Factory_WithInvalidContainer_DoesNotThrow`,
+    `Show_UnknownContainer_LogsAndDoesNotThrow` and so on. The suite had
+    written the behaviour AGENTS.md forbids into the contract, and every
+    one of them passed. All 23 now assert the refusal.
+  - **`runtime/integration.test.ts` never mounted its TreeView.** The
+    harness passed the host ELEMENT where TreeView declares
+    `containerId: string`, hidden from the compiler by `as never`.
+    TreeView called `getElementById("[object HTMLDivElement]")`, logged,
+    and carried on. The test passed because it asserts the lifecycle flag
+    rather than the DOM.
+  - **Two `magnifier` test files called the factory with the wrong
+    signature**, passing an options object where the owner id belongs. It
+    could not be noticed while the id was stored and never read.
+  - **GradientPicker composed an AnglePicker against a detached element.**
+    It builds the angle control, assigns an id and defers the child
+    factory to the next frame, which resolves BY ID. When the picker was
+    never mounted the element was not in the document, so the angle
+    control silently never appeared. The deferred init now checks
+    `isConnected` and returns, because nobody asked for an angle control
+    on a picker that is not on the page.
+
+  **TWO RATCHETS MOVED THE WRONG WAY AND BOTH ARE RECORDED.**
+  `diagramengineLines` 30522 to 30523, for the one line DiagramEngine's
+  remedy needed. `unusedLocals` 306 to 329, because replacing 63 quiet
+  branches with a throw orphaned the `logWarn` or `logError` helper in 23
+  components. The refusal already carries the message and logging it first
+  would print it twice, which is the duplication FALLBACK-1 to 9 removed.
+  See UNUSED-1.
+
+  **Three shapes were worse than a no-op and are worth naming.** `ribbon`
+  and `tabbedpanel` resolved a named container with
+  `return el || document.body`, so a container that did not exist mounted
+  the component somewhere the caller never named. `docklayout`,
+  `fileupload` and `gauge` did the same and said so in the log text they
+  emitted: "falling back to document.body". `commentoverlay` dropped the
+  resolved element and built detached.
+
+  Mutation-proved three ways: replacing a refusal with a log takes the
+  ceiling off zero, and stripping the remedy from one message fails the
+  wording case.
+
+  **One of the fixes was written to a generated file and the build threw
+  it away.** `components/diagramengine/diagramengine.ts` is assembled from
+  30 files under `components/diagramengine/src/` by
+  `scripts/bundle-diagramengine.sh`, which `npm run build:ts` runs first.
+  The edit survived every check until a full build ran, and then the
+  wording case failed on its own. The same trap as
+  `docs/COMPONENT_REFERENCE.md`, in a `.ts` file where it reads like
+  ordinary source. Fixed in `src/engine.ts` and re-bundled.
 
 ---
 
@@ -1552,7 +1609,13 @@ which way a stale number leans.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **414 unused local/parameter errors, re-measured 2026-10-15** (421 on 2026-10-13, reduced by STD-1, see below), not the 119 recorded in March 2026. The original text follows: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
+- [ ] **UNUSED-1**: **329 as measured by `scripts/audit-counts.mjs` on
+  2026-10-17**, not the 414 below. It was 306 until ERR-1 replaced 63
+  quiet container branches with a throw, which orphaned the `logWarn` or
+  `logError` helper in 23 components. The five helpers are the LOG-4a
+  preamble and are present whether a component uses them or not, which is
+  why this count was never near zero. **The original text follows and its
+  414 is stale.** **414 unused local/parameter errors, re-measured 2026-10-15** (421 on 2026-10-13, reduced by STD-1, see below), not the 119 recorded in March 2026. The original text follows: 119 unused local/parameter errors detected by `noUnusedLocals` / `noUnusedParameters`. These flags are currently set to `false` in tsconfig.json. Fix all 119 occurrences then enable the flags. Run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` to see full list.
 
   **Measured 2026-10-15.** All 414 are `TS6133`, "declared but its value is
   never read". The distribution is lopsided: **110 are in the generated

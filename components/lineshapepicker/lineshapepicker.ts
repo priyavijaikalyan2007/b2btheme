@@ -413,8 +413,11 @@ export class LineShapePicker
         const container = document.getElementById(containerId);
         if (!container)
         {
-            logWarn("container not found:", containerId);
-            return;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted.
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before showing it.");
         }
         this.rootEl = this.buildWrapper();
         container.appendChild(this.rootEl);

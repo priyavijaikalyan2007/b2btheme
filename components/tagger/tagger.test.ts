@@ -397,13 +397,13 @@ describe("edge cases", () =>
         expect(tagger.getTags().length).toBeLessThanOrEqual(2);
     });
 
-    test("showInMissingContainer_LogsError", () =>
+    test("showInMissingContainer_Throws", () =>
     {
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         const tagger = new Tagger({});
-        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-        tagger.show("nonexistent-id");
-        expect(spy).toHaveBeenCalled();
-        spy.mockRestore();
+        expect(() => tagger.show("nonexistent-id")).toThrow(/was not found/);
     });
 
     test("disabledState_PreventsAddTag", () =>

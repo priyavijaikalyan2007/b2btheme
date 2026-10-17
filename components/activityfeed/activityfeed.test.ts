@@ -286,13 +286,13 @@ describe("callbacks", () =>
 
 describe("edge cases", () =>
 {
-    test("showInMissingContainer_LogsError", () =>
+    test("showInMissingContainer_Throws", () =>
     {
-        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
         const feed = new ActivityFeed(makeOptions());
-        feed.show("nonexistent-container");
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockRestore();
+        expect(() => feed.show("nonexistent-container")).toThrow(/was not found/);
         feed.destroy();
     });
 

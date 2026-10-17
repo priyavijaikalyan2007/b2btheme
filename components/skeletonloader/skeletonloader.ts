@@ -208,8 +208,11 @@ export class SkeletonLoader
         const el = document.getElementById(containerId);
         if (!el)
         {
-            logWarn("Container not found:", containerId);
-            return document.body;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted.
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before showing it, or omit the container to mount on document.body.");
         }
         return el;
     }

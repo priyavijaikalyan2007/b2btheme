@@ -46,8 +46,15 @@ type Row = {
  * is absent. A ceiling, so it can only fall. It is not a floor on the ones
  * that do throw, because a floor cannot see a new unvalidated factory being
  * added beside the old ones.
+ *
+ * It was 65 when the census was first taken on 2026-10-17, then 51 after
+ * the fourteen that failed without a word, and it is 0 now. A zero here is
+ * worth more than the number it replaced only because the two tests below
+ * check the WORDING as well, and because "the inventory reaches the fleet"
+ * fails if the scan ever finds nothing. A zero measured over an empty set
+ * is the failure DEBT-GATE-1 and DEBT-SEC-6 both were.
  */
-const SILENT_ON_MISSING_CONTAINER = 51;
+const SILENT_ON_MISSING_CONTAINER = 0;
 
 /** Factories whose container verdict a call cannot reach. See the header. */
 const VERDICT_UNREACHABLE = 2;

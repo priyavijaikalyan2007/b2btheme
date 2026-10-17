@@ -918,14 +918,16 @@ export function createSlider(
 
     const container = document.getElementById(containerId);
 
-    if (container)
+    // ERR-1. The else branch used to warn and carry on, so the caller got
+    // a working handle to a slider that was nowhere on the page.
+    if (!container)
     {
-        container.appendChild(impl.getElement());
+        throw new Error(
+            `${LOG_PREFIX} Container "${containerId}" was not found. `
+            + "Insert the element before creating the slider.");
     }
-    else
-    {
-        logWarn("container not found:", containerId);
-    }
+
+    container.appendChild(impl.getElement());
 
     return {
         getValue: () => impl.getValue(),

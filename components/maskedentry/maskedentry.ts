@@ -749,8 +749,11 @@ export class MaskedEntry
 
         if (!container)
         {
-            logError("Container not found:", containerId);
-            return;
+            // ERR-1. This logged and carried on, so the caller got a
+            // handle to a component that was never mounted.
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before showing it.");
         }
 
         if (this.rootEl)

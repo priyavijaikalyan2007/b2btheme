@@ -616,8 +616,12 @@ export function createGraphToolbar(
             const container = document.getElementById(containerId);
             if (!container)
             {
-                logError("Container not found:", containerId);
-                throw new Error("Container not found: " + containerId);
+                // ERR-1. The refusal was right and the message was not:
+                // it named neither the component nor the remedy.
+                throw new Error(
+                    `${LOG_PREFIX} Container "${containerId}" was not `
+                    + "found. Insert the element before showing the "
+                    + "toolbar.");
             }
             const tb = new ToolbarClass(toolbarConfig);
             tb.show(container);

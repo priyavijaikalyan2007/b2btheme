@@ -165,11 +165,12 @@ describe("createDatePicker", () =>
 
 describe("DatePicker constructor", () =>
 {
-    test("constructor_WithMissingContainer_LogsError", () =>
+    test("constructor_WithMissingContainer_Throws", () =>
     {
-        const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-        new DatePicker("nonexistent", defaultOpts());
-        expect(spy).toHaveBeenCalled();
+        // ERR-1. This case asserted the defect: a container that is
+        // not there used to be logged and walked past. AGENTS.md
+        // calls that returning a null object.
+        expect(() => new DatePicker("nonexistent", defaultOpts())).toThrow(/was not found/);
     });
 
     test("constructor_WithDisabled_AddsDisabledClass", () =>
