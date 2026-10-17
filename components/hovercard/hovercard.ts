@@ -767,10 +767,16 @@ export function createHoverCard(options?: HoverCardOptions): HoverCardHandle
     // container is a caller who said nothing, and the README documents
     // document.body for that. An explicit null is a caller who resolved a
     // container and did not get one, which is the ERR-1 case.
-    if (options !== undefined && "container" in options && !options.container)
+    // Object.is rather than `=== null`, which TypeScript rejects as an
+    // impossible comparison against `HTMLElement | undefined`. The null
+    // arrives from JavaScript consumers and from getElementById, which
+    // the declared type does not describe. Key presence is the WRONG
+    // test here: `{ ...defaults, container: cfg.container }` is the
+    // ordinary way to compose options, and it sets the key to undefined.
+    if (Object.is(options?.container, null))
     {
         throw new Error(
-            `${LOG_PREFIX} options.container was named and was not an element. `
+            `${LOG_PREFIX} options.container was null. `
             + "Pass the portal element, or omit the option to use document.body.");
     }
 

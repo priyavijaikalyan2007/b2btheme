@@ -108,6 +108,43 @@ describe("createHoverCard — handle", () =>
 // DEFAULT RENDERER
 // ============================================================================
 
+describe("createHoverCard — the container option", () =>
+{
+    /*
+     * ERR-1 / ADR-194 D5. `?? document.body` collapsed two different
+     * things, and the first fix collapsed two others. These three cases
+     * pin all three states apart, because nothing else does: the census
+     * probes null only, and a guard keyed on key presence passes it.
+     */
+
+    test("omitted_UsesDocumentBody", () =>
+    {
+        const handle = createHoverCard();
+
+        expect(() => handle.show({ title: "x" })).not.toThrow();
+        handle.destroy();
+    });
+
+    test("explicitUndefined_UsesDocumentBody", () =>
+    {
+        // `{ ...defaults, container: cfg.container }` is the ordinary way
+        // to compose options, and it sets the key to undefined. That
+        // caller said nothing, so it gets the documented default.
+        const handle = createHoverCard({ container: undefined });
+
+        expect(() => handle.show({ title: "x" })).not.toThrow();
+        handle.destroy();
+    });
+
+    test("null_Throws", () =>
+    {
+        // A caller who resolved a container and did not get one. This is
+        // what document.getElementById returns for a wrong id.
+        expect(() => createHoverCard({ container: null as unknown as HTMLElement }))
+            .toThrow(/container was null.*Pass the portal element/s);
+    });
+});
+
 describe("renderCardContent — declarative path", () =>
 {
     test("omits header when no title/subtitle/icon", () =>

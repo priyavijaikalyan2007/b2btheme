@@ -8125,8 +8125,18 @@
     D5. HOVERCARD SPLITS NULL FROM UNDEFINED. `?? document.body`
         collapsed two different things. An omitted container is a caller
         who said nothing, and the README documents document.body for
-        that, so it stays a default. A container named and empty is a
-        caller who resolved one and did not get it, and that throws.
+        that, so it stays a default. A null container is a caller who
+        resolved one and did not get it, and that throws.
+
+        THE FIRST ATTEMPT AT THIS SPLIT COLLAPSED A DIFFERENT PAIR. It
+        tested key presence, `"container" in options`, to avoid the
+        TS2367 that `=== null` raises against `HTMLElement | undefined`.
+        That throws on `{ container: undefined }`, which is what
+        `{ ...defaults, container: cfg.container }` produces and is the
+        ordinary way to compose options. `Object.is(options?.container,
+        null)` takes `any` on both sides and needs no cast. The census
+        probes null only, so it could not see the difference, and three
+        cases in hovercard.test.ts now pin all three states apart.
 
     D6. THE WORDING TESTS COLLECT RATHER THAN ASSERT ONE AT A TIME. A
         gate that stops at the first name makes you re-run it once per
