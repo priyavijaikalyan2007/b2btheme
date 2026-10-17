@@ -560,16 +560,37 @@ Per CODING_STYLE.md, functions must be 25-30 lines maximum. These functions sign
 
 Per LITERATE_ERRORS.md, factory functions must validate their inputs (container element, options object) and produce literate, actionable error messages.
 
-- [x] **ERR-1** **CLOSED 2026-10-17, ADR-193. Every published factory that
-  takes a container now throws when it is not there.**
-  `SILENT_ON_MISSING_CONTAINER` went 65, then 51, then **0**, and
-  `scripts/factory-census.test.ts` holds it there. 74 of 76 refuse, and
-  the other two refuse a missing dependency before they reach the
-  container.
+- [x] **ERR-1** **CLOSED 2026-10-17, ADR-193 and ADR-194. Every published
+  factory that takes a container now throws when it is not there.**
+  `SILENT_ON_MISSING_CONTAINER` went 65, then 51, then 0, then **0 over a
+  set half as large again**. `scripts/factory-census.test.ts` holds it.
+  105 of 107 refuse, and the other two refuse a missing dependency before
+  they reach the container.
 
-  Measured by calling every factory, ADR-192. Fixed in two slices: the
+  Measured by calling every factory, ADR-192. Fixed in three slices: the
   fourteen that failed without a word, then the fifty-one that logged and
-  carried on.
+  carried on, then the thirty-one the census had never looked at.
+
+  **THE FIRST ZERO WAS MEASURED OVER THE WRONG SET, AND READ EXACTLY LIKE
+  THE RIGHT ONE.** The census asked which PARAMETER was the container.
+  `createLatexEditor(opts)` carries its container as `opts.container`, and
+  31 factories do the same, so all 31 were filtered out before the probe
+  ran. A ceiling of 0 was declared over 76 of the 107 factories that take
+  a container. Widening the scan the same day found:
+
+  | What the thirty-one did on a container that is not there | Count |
+  |---|---|
+  | Threw an opaque TypeError from `container.appendChild` | 7 |
+  | Threw literately, with no remedy in the message | 8 |
+  | Threw literately, without naming the container | 1 |
+  | Logged and returned a handle | 2 |
+  | Mounted into `document.body` through `?? ` | 1 |
+  | Already refused correctly | 12 |
+
+  The 7 opaque ones were reported as SILENT, because a TypeError reading
+  "Cannot read properties of null" matches no container vocabulary. The
+  verdict `OPAQUE` now names that case: a refusal that gives the line that
+  broke rather than the thing the caller got wrong. ADR-194.
 
   AGENTS.md states the rule as a table: "Container not found -> `throw` a
   literate error", against "return a null object". A factory that warns and
@@ -582,10 +603,11 @@ Per LITERATE_ERRORS.md, factory functions must validate their inputs (container 
   | Does nothing at all, no log, returns a handle | 14 |
   | Verdict unreachable, refuses a missing dependency first | 2 |
 
-  128 published `create*` factories exist. 76 take a container and 52 take
-  options only, so the container rule does not apply to over a third of
-  them. **Required-option validation is a different measurement and is not
-  in this count.**
+  128 published `create*` factories exist. 76 name a container parameter,
+  31 carry one on their options and 21 take no container at all, so the
+  container rule does not apply to a sixth of them rather than a third.
+  **Required-option validation is a different measurement and is not in
+  this count.**
 
   **THE ENTRY WAS WRONG ABOUT ITS OWN NUMBER, ITS UNIT AND ITS SOURCE.**
   It read: "10 of 15 sampled factory functions have no container or option
@@ -894,6 +916,54 @@ quiet wrong answer.
   deferral list written while the real work is happening elsewhere gets the
   severity wrong in both directions, because nothing in it has been tested
   against the code.
+
+- [x] **FALLBACK-10** **CLOSED 2026-10-17, ADR-195. LatexEditor refuses
+  visual mode, because visual mode does not exist.**
+
+  The finding was recorded as a silent downgrade: `editMode: "visual"` with
+  MathLive absent gave source mode and a console warning. That was real,
+  and it asked the wrong question. **Nothing in `latexeditor.ts` creates a
+  `math-field`, with MathLive loaded or without it.** `renderEditorArea`
+  builds a textarea on every path, `getMathMLInternal` returns `""` under
+  a comment that says "stub until MathLive Phase 4", and the only thing
+  "visual mode" ever changed was a string on the state object and which
+  toolbar button carried the `active` class.
+
+  So "MathLive not loaded" named a remedy that does not work. A consumer
+  who read that warning and loaded MathLive got a textarea with the Visual
+  button lit. **The fault is the absent feature, and the message has to
+  say that.** One fault with four doors, all now closed:
+
+  | Door | Before | After |
+  |---|---|---|
+  | `createLatexEditor({ editMode: "visual" })` | warn, downgrade | throws |
+  | `setEditMode("visual")` | sets the flag | throws |
+  | The Visual toolbar button | enabled unless MathLive absent | always disabled, and says why |
+  | Ctrl+Shift+M | flips the flag | refuses in the log |
+
+  The two user-facing doors refuse in the log rather than by throwing,
+  because a person cannot catch a throw. Nothing is substituted either way,
+  which is the distinction: a refusal that says so is not a fallback.
+
+  `getMathML()` is left returning `""`. It is the same absence, and
+  `getValue()` composes it, so a throw there would break the primary
+  accessor for every caller. Recorded rather than changed behind the
+  owner's back.
+
+  **FIVE TESTS ASSERTED THE ABSENT FEATURE AND ALL FIVE PASSED.** One was
+  called `setEditMode_ToVisual_CreatesMathField`. It queried for a
+  `math-field`, put the result in an unused variable under the comment
+  "May or may not create depending on implementation", and then asserted
+  the mode flag. `getMathML_WithMathField_ReturnsMathML` asserted
+  `typeof mathml === "string"`, which is true of `""`. The keyboard case
+  asserted `toBeDefined()`, true of both answers. The `beforeEach` that
+  mocked MathLive was mocking nothing, because no code path consults it.
+  Same shape as the 23 ERR-1 tests, and a name that claims a mechanism it
+  never checked.
+
+  The README said the default was `"visual"` and the code's default was
+  source. Both the option table and the opening paragraph are corrected,
+  and the MathLive row now reads **Unused**.
 
 ## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
 

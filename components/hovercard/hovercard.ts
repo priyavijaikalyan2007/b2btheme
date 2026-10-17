@@ -763,6 +763,17 @@ function resolveOptions(opts: HoverCardOptions): CardState["options"]
  */
 export function createHoverCard(options?: HoverCardOptions): HoverCardHandle
 {
+    // ERR-1. `?? document.body` collapsed two different things. An omitted
+    // container is a caller who said nothing, and the README documents
+    // document.body for that. An explicit null is a caller who resolved a
+    // container and did not get one, which is the ERR-1 case.
+    if (options !== undefined && "container" in options && !options.container)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.container was named and was not an element. `
+            + "Pass the portal element, or omit the option to use document.body.");
+    }
+
     const state = buildState(options);
     attachGlobalListeners(state);
     logDebug("created", state.id);

@@ -78,17 +78,13 @@ describe("LatexEditor — Factory", () =>
         editor.destroy();
     });
 
-    test("createLatexEditor_WithInvalidSelector_ReturnsEditorAndLogsWarning", () =>
+    test("createLatexEditor_WithInvalidSelector_Throws", () =>
     {
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-        const editor = createLatexEditor({ container: "#nonexistent" });
-
-        expect(editor).toBeDefined();
-        expect(warnSpy).toHaveBeenCalled();
-
-        editor.destroy();
-        warnSpy.mockRestore();
+        // ERR-1. The old name said ReturnsEditorAndLogsWarning, and that
+        // was accurate: the editor was built into nothing and the handle
+        // worked on a document that never held it.
+        expect(() => createLatexEditor({ container: "#nonexistent" }))
+            .toThrow(/#nonexistent/);
     });
 
     test("createLatexEditor_WithInitialExpression_SetsValue", () =>
@@ -290,7 +286,6 @@ describe("LatexEditor — Edit Mode", () =>
     {
         const editor = createLatexEditor(defaultOptions());
 
-        // Without MathLive loaded, should default to source
         expect(editor.getEditMode()).toBe("source");
 
         editor.destroy();
@@ -1335,9 +1330,10 @@ describe("LatexEditor — Toolbar Keyboard Shortcuts", () =>
             bubbles: true,
         }));
 
-        // Mode should toggle (to visual if MathLive were present, stays source without)
-        // At least the handler fires without error
-        expect(editor.getEditMode()).toBeDefined();
+        // FALLBACK-10. This asserted toBeDefined(), which is true of both
+        // answers. Visual mode is not built, so the shortcut has one
+        // destination and says so rather than flipping a flag.
+        expect(editor.getEditMode()).toBe("source");
 
         editor.destroy();
     });
@@ -1392,117 +1388,63 @@ describe("LatexEditor — Size Dropdown", () =>
 // PHASE 4 — VISUAL MODE (MATHLIVE)
 // ============================================================================
 
-describe("LatexEditor — Visual Mode Degradation", () =>
+describe("LatexEditor — Visual Mode Is Not Implemented", () =>
 {
-    test("defaultsToSourceMode_WhenMathLiveNotLoaded", () =>
-    {
-        const editor = createLatexEditor(defaultOptions({ editMode: "visual" }));
+    /*
+     * FALLBACK-10, and more than FALLBACK-10. The tracker recorded this as
+     * a silent downgrade to source mode when MathLive was absent. The
+     * downgrade was real, and the question it asked was the wrong one:
+     * nothing in latexeditor.ts creates a `math-field` whether MathLive is
+     * loaded or not, so "MathLive not loaded" named a remedy that does not
+     * work. `getMathMLInternal` is the same absence and still returns "".
+     *
+     * These four cases replace five that asserted the downgrade. One of
+     * them was called setEditMode_ToVisual_CreatesMathField, queried for a
+     * math-field, put it in an unused variable under the comment "may or
+     * may not create depending on implementation", and then asserted the
+     * flag. That is the ERR-1 _DoesNotThrow shape with a name that claims
+     * a mechanism it never checked.
+     */
 
-        // Without MathLive, should fall back to source
+    test("createLatexEditor_VisualMode_Throws", () =>
+    {
+        expect(() => createLatexEditor(defaultOptions({ editMode: "visual" })))
+            .toThrow(/not implemented/i);
+    });
+
+    test("setEditMode_ToVisual_Throws", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+
+        expect(() => editor.setEditMode("visual")).toThrow(/not implemented/i);
         expect(editor.getEditMode()).toBe("source");
 
         editor.destroy();
     });
 
-    test("getMathML_ReturnsEmptyString_WhenMathLiveNotLoaded", () =>
+    test("visualButton_IsDisabled_AndSaysWhy", () =>
     {
+        const editor = createLatexEditor(defaultOptions());
+        const visualBtn = editor.getElement()
+            .querySelector("[data-mode='visual']") as HTMLButtonElement;
+
+        // Not conditioned on MathLive any more. A control that lights up
+        // for a mode the renderer does not build is a lie told to a person.
+        expect(visualBtn).not.toBeNull();
+        expect(visualBtn.disabled).toBe(true);
+        expect(visualBtn.title).toMatch(/not implemented/i);
+
+        editor.destroy();
+    });
+
+    test("getMathML_IsEmpty_BecauseTheConversionIsAbsentToo", () =>
+    {
+        // Left as "" deliberately. getValue() composes it, so a throw here
+        // would break the primary accessor for every caller. Recorded as
+        // the same absence rather than fixed behind the owner's back.
         const editor = createLatexEditor(defaultOptions({ expression: "x^2" }));
 
         expect(editor.getMathML()).toBe("");
-
-        editor.destroy();
-    });
-
-    test("visualButtonDisabled_WhenMathLiveNotLoaded", () =>
-    {
-        const editor = createLatexEditor(defaultOptions());
-        const root = editor.getElement();
-
-        const visualBtn = root.querySelector("[data-mode='visual']") as HTMLButtonElement;
-        if (visualBtn)
-        {
-            expect(visualBtn.disabled).toBe(true);
-        }
-
-        editor.destroy();
-    });
-});
-
-describe("LatexEditor — Visual Mode with Mock MathLive", () =>
-{
-    let originalMathField: unknown;
-
-    beforeEach(() =>
-    {
-        // Mock MathLive's math-field custom element
-        originalMathField = (window as any).MathfieldElement;
-        (window as any).MathfieldElement = class
-        {
-            value = "";
-            readonly = false;
-            constructor() { /* mock */ }
-            getValue(_format?: string): string { return ""; }
-            setValue(val: string): void { this.value = val; }
-            addEventListener(_evt: string, _fn: unknown): void { /* mock */ }
-            removeEventListener(_evt: string, _fn: unknown): void { /* mock */ }
-            focus(): void { /* mock */ }
-        };
-
-        // Register custom element if not already
-        if (!customElements.get("math-field"))
-        {
-            customElements.define("math-field", class extends HTMLElement
-            {
-                value = "";
-                getValue(format?: string): string
-                {
-                    if (format === "math-ml") { return "<math></math>"; }
-                    return this.value;
-                }
-                setValue(val: string): void { this.value = val; }
-            });
-        }
-    });
-
-    afterEach(() =>
-    {
-        (window as any).MathfieldElement = originalMathField;
-    });
-
-    test("setEditMode_ToVisual_CreatesMathField", () =>
-    {
-        const editor = createLatexEditor(defaultOptions());
-        editor.setEditMode("visual");
-
-        const root = editor.getElement();
-        const mathField = root.querySelector("math-field");
-        // May or may not create depending on implementation
-        // At minimum, the mode should be set
-        expect(editor.getEditMode()).toBe("visual");
-
-        editor.destroy();
-    });
-
-    test("setEditMode_BackToSource_ShowsTextarea", () =>
-    {
-        const editor = createLatexEditor(defaultOptions());
-        editor.setEditMode("visual");
-        editor.setEditMode("source");
-
-        expect(editor.getEditMode()).toBe("source");
-        const textarea = editor.getElement().querySelector(".le-source");
-        expect(textarea).toBeTruthy();
-
-        editor.destroy();
-    });
-
-    test("getMathML_WithMathField_ReturnsMathML", () =>
-    {
-        const editor = createLatexEditor(defaultOptions({ expression: "x^2" }));
-
-        // Without real MathLive, still returns empty
-        const mathml = editor.getMathML();
-        expect(typeof mathml).toBe("string");
 
         editor.destroy();
     });
@@ -1529,16 +1471,18 @@ describe("LatexEditor — Mode Toggle Sync", () =>
         const editor = createLatexEditor(defaultOptions());
         const root = editor.getElement();
 
-        editor.setEditMode("visual");
+        editor.setEditMode("source");
 
         const visualBtn = root.querySelector("[data-mode='visual']");
         const sourceBtn = root.querySelector("[data-mode='source']");
 
-        if (visualBtn && sourceBtn)
-        {
-            expect(visualBtn.classList.contains("active")).toBe(true);
-            expect(sourceBtn.classList.contains("active")).toBe(false);
-        }
+        // FALLBACK-10. This used to set visual and assert that Visual lit
+        // up, inside an `if` that skipped the assertions when either
+        // button was missing. Visual never lights, because it is not built.
+        expect(visualBtn).not.toBeNull();
+        expect(sourceBtn).not.toBeNull();
+        expect(sourceBtn!.classList.contains("active")).toBe(true);
+        expect(visualBtn!.classList.contains("active")).toBe(false);
 
         editor.destroy();
     });

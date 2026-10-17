@@ -815,7 +815,9 @@ export function createGraphLegend(options: GraphLegendOptions): GraphLegend
     if (!container)
     {
         logError("No container element provided");
-        throw new Error("GraphLegend requires a container element");
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
     }
 
     const state = initState(options);

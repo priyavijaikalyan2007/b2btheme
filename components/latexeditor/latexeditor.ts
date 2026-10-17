@@ -700,12 +700,19 @@ function buildErrorHtml(latex: string, error: string): string
            "<div class=\"le-preview-raw\">" + escaped + "</div>";
 }
 
-/** Check if MathLive is available. */
-function hasMathLive(): boolean
-{
-    return typeof customElements !== "undefined" &&
-           customElements.get("math-field") !== undefined;
-}
+/**
+ * FALLBACK-10. Visual mode is declared in the options type, named in the
+ * README and lit in the toolbar, and `renderEditorArea` only ever builds a
+ * textarea. Nothing in this file creates a `math-field`.
+ *
+ * The check this replaces asked whether MathLive was loaded, and that was
+ * the wrong question. Loading MathLive does not make visual mode appear,
+ * so "MathLive not loaded" named a remedy that does not work. The fault is
+ * the absent feature, and the message has to say that.
+ */
+const VISUAL_NOT_IMPLEMENTED =
+    "Visual mode is not implemented yet. "
+    + "Pass editMode: \"source\", or omit the option.";
 
 /** Escape HTML special characters. */
 function escapeHtml(text: string): string
@@ -745,18 +752,16 @@ function resolveOptions(
 /** Create initial internal state. */
 function createState(opts: LatexEditorOptions): InternalState
 {
-    const wantsVisual = opts.editMode === "visual";
-    const canVisual = hasMathLive();
-    if (wantsVisual && !canVisual)
+    if (opts.editMode === "visual")
     {
-        logWarn("MathLive not loaded, falling back to source mode");
+        throw new Error(`${LOG_PREFIX} ${VISUAL_NOT_IMPLEMENTED}`);
     }
 
     return {
         id: ++_instanceId,
         options: resolveOptions(opts),
         expression: opts.expression ?? opts.value ?? "",
-        editMode: (wantsVisual && canVisual) ? "visual" : "source",
+        editMode: "source",
         rootEl: null,
         containerEl: null,
         sourceEl: null,
@@ -916,11 +921,11 @@ function appendModeToggle(
     const visualBtn = createModeBtn(state, "visual", "Visual");
     const sourceBtn = createModeBtn(state, "source", "Source");
 
-    if (!hasMathLive())
-    {
-        visualBtn.disabled = true;
-        visualBtn.title = "MathLive not loaded";
-    }
+    // Disabled unconditionally. A control that lights up for a mode the
+    // renderer does not build is a lie told to a person, and a person
+    // cannot catch a throw.
+    visualBtn.disabled = true;
+    visualBtn.title = "Visual mode is not implemented yet";
 
     const activeBtn = state.editMode === "source" ? sourceBtn : visualBtn;
     activeBtn.classList.add("active");
@@ -935,6 +940,14 @@ function setModeViaToggle(
     state: InternalState,
     mode: "visual" | "source"): void
 {
+    // Reached by a person, not by a caller, so it refuses in the log
+    // rather than by throwing. Nothing is substituted either way.
+    if (mode === "visual")
+    {
+        logWarn(VISUAL_NOT_IMPLEMENTED);
+        return;
+    }
+
     state.editMode = mode;
     updateModeToggleUI(state);
     logDebug("Mode toggled:", mode);
@@ -1460,6 +1473,14 @@ function handleKeyDown(state: InternalState, e: KeyboardEvent): void
 function toggleEditMode(state: InternalState): void
 {
     const next = state.editMode === "source" ? "visual" : "source";
+
+    // Ctrl+Shift+M has one destination while visual mode does not exist.
+    if (next === "visual")
+    {
+        logWarn(VISUAL_NOT_IMPLEMENTED);
+        return;
+    }
+
     state.editMode = next;
     updateModeToggleUI(state);
     logDebug("Mode toggled via shortcut:", next);
@@ -1540,9 +1561,14 @@ export function createLatexEditor(opts: LatexEditorOptions): LatexEditor
     const state = createState(opts);
 
     state.containerEl = resolveContainer(opts.container);
+
+    // ERR-1. This used to warn and carry on, which built the editor into
+    // nothing and handed back a working-looking handle.
     if (!state.containerEl)
     {
-        logWarn("Container not found:", opts.container);
+        throw new Error(
+            `${LOG_PREFIX} Container "${String(opts.container)}" was not found. `
+            + "Insert the element before creating the editor.");
     }
 
     renderRoot(state);
@@ -1616,6 +1642,11 @@ function teardownDom(state: InternalState): void
 function setEditModePublic(
     state: InternalState, mode: "visual" | "source"): void
 {
+    if (mode === "visual")
+    {
+        throw new Error(`${LOG_PREFIX} ${VISUAL_NOT_IMPLEMENTED}`);
+    }
+
     state.editMode = mode;
     updateModeToggleUI(state);
     logDebug("Edit mode set:", mode);

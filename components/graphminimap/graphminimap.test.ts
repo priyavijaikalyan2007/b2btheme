@@ -183,7 +183,7 @@ describe("createGraphMinimap", () =>
                 container: null as unknown as HTMLElement,
                 graphCanvas: createMockCanvas(),
             });
-        }).toThrow("GraphMinimap requires a container element");
+        }).toThrow(/container was not an element.*Pass the element/s);
     });
 
     test("withNoGraphCanvas_ThrowsError", () =>

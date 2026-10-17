@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: MIT
  *
  * ⚓ COMPONENT: FactoryCensus
- * 📜 PURPOSE: Enumerate every published `create*` factory, say which
- *    parameter is its container, and build a minimal options stub so the
- *    factory can be called. ERR-1 / ADR-192.
+ * 📜 PURPOSE: Enumerate every published `create*` factory, say where its
+ *    container is (a parameter for 76, an options field for 31), and build
+ *    a minimal options stub so the factory can be called. ERR-1 / ADR-192.
  * 🔗 RELATES: [[DocGenerator]], [[NoFallbackCode]], [[LiterateErrors]]
  * ⚡ FLOW: [components/<name>/<name>.ts] -> [extractGlobals] -> [inventory]
  *          -> [factory-census.test.ts calls each one] -> [a ceiling]
@@ -34,6 +34,16 @@
  * gauge factories, so the census passed an options object where a container
  * belonged and read the resulting TypeError as a finding. Angle brackets,
  * parentheses and braces are tracked.
+ *
+ * WHY A CONTAINER IS NOT ALWAYS A PARAMETER
+ * -------------------------------------------
+ * The first census asked "which PARAMETER is the container", and that
+ * question has no answer for `createLatexEditor(opts)`, which carries its
+ * container as `opts.container`. Thirty-one factories do it that way, and
+ * all thirty-one fell out of the scan before the probe ran, so a ceiling of
+ * zero was measured over seventy-six of the hundred and seven factories
+ * that take a container at all. A container is located here in either
+ * place, and the probe writes to whichever one the factory declares.
  *
  * WHY THE OPTIONS STUB EXISTS
  * ----------------------------
@@ -116,27 +126,55 @@ export function emptyFor(type)
     if (/^boolean\b/.test(t)) { return false; }
     if (/^Record</.test(t) || /^\{/.test(t)) { return {}; }
     if (/^Map</.test(t)) { return new Map(); }
+    if (/^Date\b/.test(t)) { return new Date(0); }
     return undefined;
+}
+
+/**
+ * The declared fields of `interface <name>`, in source order, including
+ * the ones it inherits. `AttachHoverCardOptions extends HoverCardOptions`
+ * carries HoverCardOptions.container without restating it, and a scan that
+ * stops at the brace would call that factory container-less.
+ */
+export function interfaceFields(src, name, seen = new Set())
+{
+    if (seen.has(name)) { return []; }
+    seen.add(name);
+
+    const m = new RegExp(`(?:export )?interface ${name}\\s*(extends ([^{]*))?\\{`).exec(src);
+    if (m === null) { return []; }
+
+    const block = balanced(src, src.indexOf("{", m.index), "{", "}");
+    if (block === null) { return []; }
+
+    const fields = [];
+
+    for (const base of (m[2] ?? "").split(",").map((b) => b.trim()).filter(Boolean))
+    {
+        fields.push(...interfaceFields(src, base.replace(/<.*$/, ""), seen));
+    }
+
+    for (const line of block.text.split("\n"))
+    {
+        const f = /^\s*(?:readonly\s+)?([A-Za-z_]\w*)(\??)\s*:\s*([^;]+);/.exec(line);
+        if (f === null) { continue; }
+
+        fields.push({ name: f[1], optional: f[2] === "?", type: f[3].trim() });
+    }
+    return fields;
 }
 
 /** Every required field of `interface <name>`, filled with an empty value. */
 export function stubFromInterface(src, name)
 {
-    const m = new RegExp(`(?:export )?interface ${name}\\s*(?:extends [^{]*)?\\{`).exec(src);
-    if (m === null) { return {}; }
-
-    const block = balanced(src, src.indexOf("{", m.index), "{", "}");
-    if (block === null) { return {}; }
-
     const stub = {};
 
-    for (const line of block.text.split("\n"))
+    for (const f of interfaceFields(src, name))
     {
-        const f = /^\s*(?:readonly\s+)?([A-Za-z_]\w*)(\??)\s*:\s*([^;]+);/.exec(line);
-        if (f === null || f[2] === "?") { continue; }
+        if (f.optional) { continue; }
 
-        const v = emptyFor(f[3]);
-        if (v !== undefined) { stub[f[1]] = v; }
+        const v = emptyFor(f.type);
+        if (v !== undefined) { stub[f.name] = v; }
     }
     return stub;
 }
@@ -168,6 +206,12 @@ export function factoryInventory(root = ROOT)
             const oi = names.findIndex((n, i) => i !== ci && /opt/i.test(n));
             const optionType = oi >= 0 ? (/([A-Z]\w*Options)/.exec(types[oi]) ?? [])[1] ?? null : null;
 
+            // A container the factory never names as a parameter. See the
+            // header: thirty-one factories declare it on their options.
+            const field = ci >= 0 || optionType === null
+                ? null
+                : interfaceFields(src, optionType).find((f) => CONTAINER_PARAM.test(f.name)) ?? null;
+
             rows.push({
                 component: dir,
                 name,
@@ -175,6 +219,8 @@ export function factoryInventory(root = ROOT)
                 paramNames: names,
                 containerIndex: ci,
                 containerType: ci >= 0 ? types[ci] : null,
+                containerField: field === null ? null : field.name,
+                containerFieldType: field === null ? null : field.type,
                 optionsIndex: oi,
                 optionsStub: optionType === null ? {} : stubFromInterface(src, optionType),
             });
@@ -187,10 +233,13 @@ function main()
 {
     const rows = factoryInventory();
     const pub = rows.filter((r) => r.published);
-    const withContainer = pub.filter((r) => r.containerIndex >= 0);
+    const byParam = pub.filter((r) => r.containerIndex >= 0);
+    const byField = pub.filter((r) => r.containerIndex < 0 && r.containerField !== null);
+    const neither = pub.length - byParam.length - byField.length;
 
     console.log(`  ${rows.length} exported create* factories, ${pub.length} published`);
-    console.log(`  ${withContainer.length} take a container, ${pub.length - withContainer.length} take options only`);
+    console.log(`  ${byParam.length} name a container parameter, ${byField.length} carry one on their options`);
+    console.log(`  ${neither} take no container at all`);
     return 0;
 }
 

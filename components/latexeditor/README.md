@@ -8,10 +8,17 @@ Created: 2026
 
 # LatexEditor
 
-A LaTeX equation editor component with two editing modes: **Visual** (WYSIWYG
-via MathLive) and **Source** (raw LaTeX textarea). Includes a live KaTeX-rendered
-preview, tabbed symbol palette with 12 categories (including chemistry via
-mhchem), and styling controls for colour, bold, size, and highlight.
+A LaTeX equation editor component. Editing is **Source** mode, a raw LaTeX
+textarea. Includes a live KaTeX-rendered preview, tabbed symbol palette with
+12 categories (including chemistry via mhchem), and styling controls for
+colour, bold, size, and highlight.
+
+> **Visual mode is not implemented.** The option, the toolbar button and
+> `setEditMode("visual")` are all present, and nothing in the component builds
+> a MathLive `math-field`. Passing `editMode: "visual"` throws, the toolbar
+> button is disabled, and `getMathML()` returns `""`. Loading MathLive does
+> not change any of this. The component used to downgrade to source mode with
+> a console warning that named MathLive as the remedy, which was wrong.
 
 Designed for embedding in DiagramEngine shapes, FormDialog popups, Sidebar tabs,
 and standalone page layouts.
@@ -30,14 +37,16 @@ and standalone page layouts.
 | Library | Role | Loading |
 |---------|------|---------|
 | [KaTeX](https://katex.org) | Live preview rendering | Include before component |
-| [MathLive](https://mathlive.io) | WYSIWYG visual editor | Optional, loaded on demand |
+| [MathLive](https://mathlive.io) | WYSIWYG visual editor | **Unused.** Visual mode is not implemented. |
 
 ```html
 <!-- KaTeX (required for preview) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
 
-<!-- MathLive (optional, for visual editing mode).
+<!-- MathLive. The component does not use this yet, and the tag is kept
+     against the day visual mode exists.
+
      The tag below replaces a 0.107.3/dist/ URL that had never resolved:
      that version was never published and the asset is at the package
      root, not under dist/. MathLive loads its fonts from a directory
@@ -74,7 +83,7 @@ Creates and mounts a LatexEditor instance.
 |--------|------|---------|-------------|
 | `container` | `HTMLElement \| string` | **required** | Container element or CSS selector |
 | `expression` | `string` | `""` | Initial LaTeX expression |
-| `editMode` | `"visual" \| "source"` | `"visual"` | Initial editing mode |
+| `editMode` | `"source"` | `"source"` | Initial editing mode. `"visual"` throws: see below. |
 | `displayMode` | `boolean` | `true` | Display mode (block) or inline |
 | `showToolbar` | `boolean` | `true` | Show the styling toolbar |
 | `showSymbolPalette` | `boolean` | `true` | Show the symbol palette |
@@ -94,10 +103,10 @@ Creates and mounts a LatexEditor instance.
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `getLatex()` | `string` | Current LaTeX expression |
-| `getMathML()` | `string` | MathML output (requires MathLive) |
+| `getMathML()` | `string` | Always `""`. MathML conversion is not implemented. |
 | `getValue()` | `{ latex, mathml }` | Both formats |
 | `setExpression(latex)` | `void` | Set expression programmatically |
-| `setEditMode(mode)` | `void` | Switch to `"visual"` or `"source"` |
+| `setEditMode(mode)` | `void` | Switch to `"source"`. `"visual"` throws. |
 | `getEditMode()` | `string` | Current mode |
 | `insertAtCursor(latex)` | `void` | Insert LaTeX at cursor |
 | `setReadOnly(bool)` | `void` | Toggle read-only |

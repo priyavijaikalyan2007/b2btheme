@@ -1400,3 +1400,40 @@
   - FactoryContainerContract
   - NoFallbackCode
   - SweepCoverageIsItsPatterns
+
+- name: ZeroOverTheWrongSet
+  definition: "ADR-194. A finished-looking measurement is the hardest kind to audit, because a zero over the wrong population is byte-identical to a zero over the right one. ERR-1 reached SILENT_ON_MISSING_CONTAINER = 0 and the ceiling was measured over the 76 factories that NAME a container parameter. 31 more carry the container on their options and were filtered out by `containerIndex >= 0` before the probe ran. Widening the predicate the same day found ten quiet, nine refusing with no remedy, and one refusing without naming the container. The defence is not a better predicate, because the next predicate has edges too. It is a companion assertion on the SIZE of the scanned set, and a comment recording that this particular zero has been wrong once. Third of the family, after a ceiling cannot see an absence and a ceiling cannot see a predicate narrowing. Those two are about what a measurement counts. This one is about WHO it counts, and it is the more expensive mistake because the number looks done."
+  anchor_file: scripts/factory-census.test.ts
+  related:
+  - FactoryContainerContract
+  - SweepCoverageIsItsPatterns
+  - AttributePresenceIsNotAttributeCorrectness
+
+- name: ContainerIsNotAlwaysAParameter
+  definition: "ADR-194. Two conventions for the same contract live side by side in this fleet: 76 published factories name the container as a positional parameter, and 31 declare it as a field of their options interface. Any instrument that locates a container by reading parameter names is blind to a quarter of the fleet, and any instrument that reads only the options interface is blind to three quarters. `scripts/factory-census.mjs` looks in both, and `interfaceFields` follows `extends` so a container inherited from a base interface counts too. The general form: when a codebase has two spellings for one concept, a tool that knows one spelling reports clean coverage of half the problem."
+  anchor_file: scripts/factory-census.mjs
+  related:
+  - FactoryContainerContract
+  - ZeroOverTheWrongSet
+
+- name: OpaqueRefusal
+  definition: "ADR-194. A throw is not automatically a refusal. `options.container.appendChild(root)` on a null container throws \"Cannot read properties of null (reading 'appendChild')\", which names the line that broke rather than the thing the caller got wrong, and gives no remedy. Seven factories refused this way and the census had been filing them as SILENT, because the message matches no container vocabulary. OPAQUE is now a verdict of its own: it counts against the ceiling like silence does, and it is reported differently so the fix is obvious. A runtime guard is still warranted where TypeScript declares the field non-nullable, because `document.getElementById` returns `HTMLElement | null` and the IIFE bundles ship to JavaScript."
+  anchor_file: scripts/factory-census.test.ts
+  related:
+  - FactoryContainerContract
+  - LiterateErrors
+
+- name: AbsentFeatureNamedAsAbsentLibrary
+  definition: "ADR-195. LatexEditor warned \"MathLive not loaded, falling back to source mode\" and no code path in the component creates a `math-field` whether MathLive is loaded or not. The message named a remedy that does not work: a consumer who read it and loaded MathLive got a textarea with the Visual button lit. A degradation message is a claim about the cause, and it has to be checked like any other claim. Ask what the stated remedy would actually produce. If the answer is the same output, the message is naming a dependency to avoid naming the gap. The fix is to say the feature is not implemented, at every door that offers it, and to leave the planned API in the type so the roadmap is not quietly edited."
+  anchor_file: components/latexeditor/latexeditor.ts
+  related:
+  - NoFallbackCode
+  - LiterateErrors
+  - TestNamesThatClaimAMechanism
+
+- name: TestNamesThatClaimAMechanism
+  definition: "ADR-195. `setEditMode_ToVisual_CreatesMathField` queried the DOM for a math-field, assigned it to an unused variable under the comment \"May or may not create depending on implementation\", and then asserted the mode flag. It passed for the life of the component, which never built one. A test name is a claim, and the body is the evidence. When the two disagree, the name is usually right about what SHOULD be checked and the body records what the author could get green. This is the same defect as a factory that logs and returns a handle: both report success for something that did not happen. Grep for the shape, not the subject. An unused query result, an `if (x)` wrapping the only assertions, `toBeDefined()`, and `typeof x === \"string\"` all mark a body that cannot fail."
+  anchor_file: components/latexeditor/latexeditor.test.ts
+  related:
+  - RefusalsExposeTheBacklog
+  - AbsentFeatureNamedAsAbsentLibrary

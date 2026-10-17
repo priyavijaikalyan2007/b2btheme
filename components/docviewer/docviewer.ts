@@ -1037,7 +1037,9 @@ export function createDocViewer(
     if (!options.container)
     {
         logError("No container provided");
-        throw new Error(`${LOG_PREFIX} container is required`);
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
     }
 
     if (!options.pages || options.pages.length === 0)

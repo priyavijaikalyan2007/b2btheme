@@ -85,7 +85,7 @@ describe("createInlineToolbar", () =>
                 container: null as unknown as HTMLElement,
                 items: [],
             });
-        }).toThrow("InlineToolbar requires a container element");
+        }).toThrow(/container was not an element.*Pass the element/s);
     });
 
     test("withEmptyItems_RendersEmptyToolbar", () =>

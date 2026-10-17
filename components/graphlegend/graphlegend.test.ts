@@ -190,7 +190,7 @@ describe("createGraphLegend", () =>
                 container: null as unknown as HTMLElement,
                 nodeTypes: []
             });
-        }).toThrow("GraphLegend requires a container element");
+        }).toThrow(/container was not an element.*Pass the element/s);
     });
 
     test("withDefaultTitle_RendersLegendTitle", () =>

@@ -8084,3 +8084,132 @@
     diagramengineLines rises 30522 to 30523 for one line of remedy text,
     the seventh recorded raise. unusedLocals rises 306 to 329, recorded
     against UNUSED-1 rather than absorbed.
+
+- id: ADR-194
+  title: A container is a parameter for 76 factories and an options field for 31
+  date: 2026-10-17
+  status: accepted
+  context: |
+    ADR-193 closed ERR-1 at SILENT_ON_MISSING_CONTAINER = 0. The census
+    located a container by scanning PARAMETER NAMES, and
+    `createLatexEditor(opts)` carries its container as `opts.container`.
+    31 published factories do the same. All 31 were filtered out by
+    `containerIndex >= 0` before the probe ran, so the zero was measured
+    over 76 of the 107 factories that take a container at all.
+
+    The zero was found by reading `latexeditor.ts` for an unrelated
+    finding and seeing `logWarn("Container not found:", opts.container)`
+    in a factory the census had reported as clean.
+  decision: |
+    D1. THE CENSUS LOCATES A CONTAINER IN EITHER PLACE, and the probe
+        writes to whichever one the factory declares. `interfaceFields`
+        is factored out of `stubFromInterface` and follows `extends`, so
+        a container on a base interface is found too.
+
+    D2. OPAQUE IS A VERDICT OF ITS OWN. Seven factories did
+        `options.container.appendChild(...)` on a required non-nullable
+        field. With null that throws "Cannot read properties of null",
+        which names the line that broke rather than the thing the caller
+        got wrong, and the probe had been filing it as SILENT. It is a
+        refusal, and it is not the refusal the rule asks for.
+
+    D3. THE GUARD GOES AT THE DOOR, not at the appendChild. ChartPanel
+        also hands the container to a ResizeObserver, and one guard in
+        the factory covers every later use.
+
+    D4. TYPESCRIPT SAYING `HTMLElement` IS NOT A REASON TO SKIP THE
+        GUARD. `document.getElementById("app")` returns
+        `HTMLElement | null`, the IIFE bundles ship to JavaScript
+        consumers, and that is the canonical way the null arrives.
+
+    D5. HOVERCARD SPLITS NULL FROM UNDEFINED. `?? document.body`
+        collapsed two different things. An omitted container is a caller
+        who said nothing, and the README documents document.body for
+        that, so it stays a default. A container named and empty is a
+        caller who resolved one and did not get it, and that throws.
+
+    D6. THE WORDING TESTS COLLECT RATHER THAN ASSERT ONE AT A TIME. A
+        gate that stops at the first name makes you re-run it once per
+        offender, and this census found ten at once.
+
+    D7. emptyFor LEARNS Date. createTimeline requires start and end, and
+        `new Date(undefined)` made both calls throw identically, which
+        read as "verdict unreachable". Teaching the stub shrinks the
+        blind spot instead of raising the ceiling.
+  consequences: |
+    The ceiling is 0 again, now over 107 rather than 76. 105 refuse and
+    2 refuse a missing dependency first. Four mutations were caught:
+    dropping a guard, removing a remedy, blinding the scan to option-borne
+    containers, and reverting the latexeditor refusal.
+
+    A CEILING CANNOT SEE WHAT ITS PREDICATE EXCLUDES, AND A ZERO OVER THE
+    WRONG SET READS EXACTLY LIKE A ZERO OVER THE RIGHT ONE. This is the
+    third member of the family, after "a ceiling cannot see an absence"
+    and "a ceiling cannot see a predicate narrowing". The first two were
+    about what the measurement counts. This one is about who it counts,
+    and it is the more expensive mistake, because the number looks
+    finished.
+
+    The comment above SILENT_ON_MISSING_CONTAINER now records that this
+    particular zero has been wrong once, so the next reader weighs it
+    against its company rather than on its own.
+
+    unusedLocals rises 329 to 330. visualtableeditor logged the fault and
+    then threw it, and removing the duplicate log orphaned logError.
+
+- id: ADR-195
+  title: LatexEditor refuses visual mode, because visual mode does not exist
+  date: 2026-10-17
+  status: accepted
+  context: |
+    FALLBACK-10 was recorded as a silent downgrade: `editMode: "visual"`
+    with MathLive absent gave source mode and a console warning. The
+    downgrade was real and the question behind it was wrong. Nothing in
+    latexeditor.ts creates a `math-field`. renderEditorArea builds a
+    textarea on every path, getMathMLInternal returns "" under a comment
+    reading "stub until MathLive Phase 4", and visual mode only ever
+    changed a string on the state object and which button carried the
+    `active` class.
+  decision: |
+    D1. THE MESSAGE NAMES THE ABSENT FEATURE, NOT THE ABSENT LIBRARY.
+        "MathLive not loaded" named a remedy that does not work: a
+        consumer who loaded MathLive got a textarea with the Visual
+        button lit. A literate refusal has to be literate about the
+        right fault.
+
+    D2. ONE FAULT, FOUR DOORS. The factory and setEditMode throw. The
+        toolbar button is disabled unconditionally and says why. The
+        Ctrl+Shift+M shortcut refuses in the log.
+
+    D3. THE TWO USER-FACING DOORS DO NOT THROW, because a person cannot
+        catch a throw. Nothing is substituted either way, and that is the
+        distinction that matters: a refusal that says so is not a
+        fallback.
+
+    D4. THE "visual" MEMBER STAYS IN THE TYPE UNION. The stub says Phase
+        4, so the feature is planned. A runtime refusal is fail-fast.
+        Deleting a planned API is a roadmap decision and not one to take
+        while fixing a fallback.
+
+    D5. getMathML KEEPS RETURNING "". It is the same absence, and
+        getValue composes it, so a throw there breaks the primary
+        accessor for every caller. Recorded, not changed unasked.
+  consequences: |
+    FIVE TESTS ASSERTED THE ABSENT FEATURE AND ALL FIVE PASSED. One was
+    named setEditMode_ToVisual_CreatesMathField: it queried for a
+    math-field, put the result in an unused variable under the comment
+    "May or may not create depending on implementation", and asserted the
+    mode flag instead. Another asserted `typeof mathml === "string"`,
+    true of "". The keyboard case asserted toBeDefined(), true of both
+    answers. A beforeEach mocked MathLive, and no code path consults it.
+
+    A TEST THAT NAMES A MECHANISM AND ASSERTS A FLAG IS THE SAME DEFECT
+    AS A FACTORY THAT LOGS AND RETURNS A HANDLE. Both report success for
+    something that did not happen, and both were written by someone
+    making the suite green rather than making the claim true. The ERR-1
+    sweep found 23 of these. The name is the tell, and here the name was
+    the most accurate thing in the file.
+
+    The README said the default was "visual" while the code defaulted to
+    source, and described the component as having two editing modes. Both
+    are corrected and the MathLive dependency row reads Unused.

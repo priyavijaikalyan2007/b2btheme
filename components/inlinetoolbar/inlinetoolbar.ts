@@ -253,7 +253,9 @@ export function createInlineToolbar(options: InlineToolbarOptions): InlineToolba
     if (!options.container)
     {
         logError("No container element provided");
-        throw new Error("InlineToolbar requires a container element");
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
     }
 
     if (!options.items || options.items.length === 0)

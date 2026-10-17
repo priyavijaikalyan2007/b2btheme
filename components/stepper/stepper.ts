@@ -607,7 +607,9 @@ export function createStepper(options: StepperOptions): StepperHandle
     if (!options.container)
     {
         logError("No container provided");
-        throw new Error(`${LOG_PREFIX} container is required`);
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
     }
     if (!options.steps || options.steps.length === 0)
     {

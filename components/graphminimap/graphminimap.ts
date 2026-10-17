@@ -233,7 +233,9 @@ export function createGraphMinimap(options: GraphMinimapOptions): GraphMinimap
     if (!options.container)
     {
         logError("No container element provided");
-        throw new Error("GraphMinimap requires a container element");
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
     }
 
     if (!options.graphCanvas)

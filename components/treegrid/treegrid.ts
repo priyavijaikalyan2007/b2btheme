@@ -778,10 +778,14 @@ export class TreeGrid
     private render(): void
     {
         const container = document.getElementById(this.options.containerId);
+
+        // ERR-1. This used to log and return, which left a handle whose
+        // every method operated on a grid that was never in the document.
         if (!container)
         {
-            logError(`Container not found: ${this.options.containerId}`);
-            return;
+            throw new Error(
+                `${LOG_PREFIX} Container "${this.options.containerId}" was not found. `
+                + "Insert the element before creating the grid.");
         }
         this.containerEl = container;
         this.rootEl = this.buildRoot();

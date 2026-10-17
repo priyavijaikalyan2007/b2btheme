@@ -4276,8 +4276,9 @@ export function createVisualTableEditor(options: VisualTableEditorOptions): Visu
 
     if (!container)
     {
-        logError("Container not found:", options.container);
-        throw new Error(LOG_PREFIX + " Container not found");
+        throw new Error(
+            `${LOG_PREFIX} Container "${String(options.container)}" was not found. `
+            + "Insert the element before creating the editor, or pass the element itself.");
     }
 
     const state = initializeState(options, container);

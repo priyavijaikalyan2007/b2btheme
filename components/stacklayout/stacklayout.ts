@@ -196,6 +196,17 @@ interface PanelState
  */
 export function createStackLayout(options: StackLayoutOptions): StackLayout
 {
+    // ERR-1. A caller that named a container asked for that container.
+    // `options.container.appendChild` on a null container used to throw
+    // "Cannot read properties of null", which names the line that broke
+    // rather than the thing the caller got wrong.
+    if (!options.container)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to mount into, and check it for null before you do.");
+    }
+
     const id = ++instanceCounter;
     const resizable = options.resizable !== false;
     const orientation = options.orientation || "vertical";

@@ -283,12 +283,13 @@ describe("lifecycle", () =>
 
 describe("edge cases", () =>
 {
-    test("missingContainer_LogsError", () =>
+    test("missingContainer_Throws", () =>
     {
-        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-        createTreeGrid(makeOptions({ containerId: "nonexistent" }));
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockRestore();
+        // ERR-1. This asserted LogsError and passed, which is how a rule
+        // AGENTS.md states as "throw a literate error" survived in a
+        // component that logged and returned a handle to nothing.
+        expect(() => createTreeGrid(makeOptions({ containerId: "nonexistent" })))
+            .toThrow(/nonexistent/);
     });
 
     test("emptyNodes_RendersEmptyGrid", () =>

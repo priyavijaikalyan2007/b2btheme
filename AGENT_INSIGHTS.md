@@ -1768,3 +1768,67 @@ immediate and backward-looking. A quiet failure hides every caller that
 is already wrong, and the day it starts shouting, they all surface at
 once. Budget for that: the fix is not the change, it is the change plus
 the backlog it uncovers.
+
+### 6.107 A Zero Over the Wrong Set Reads Exactly Like a Zero Over the Right One (2026-10-17)
+
+ERR-1 closed at `SILENT_ON_MISSING_CONTAINER = 0`, mutation-proved, with
+two wording tests beside it and an assertion that the scan reached more
+than fifty factories. It was still wrong. The census located a container
+by scanning **parameter names**, and `createLatexEditor(opts)` carries
+its container as `opts.container`. Thirty-one published factories do the
+same, and `filter(r => r.containerIndex >= 0)` dropped every one of them
+before the probe ran. The zero covered 76 of the 107 factories that take
+a container.
+
+Widening the predicate the same day found ten quiet, nine refusing with
+no remedy, and one refusing without naming the container.
+
+The find was accidental. I opened `latexeditor.ts` for an unrelated
+item, saw `logWarn("Container not found:", opts.container)` in a factory
+the census had called clean, and the number stopped being trustworthy.
+
+**This is the third member of a family.** A ceiling cannot see an
+absence. A ceiling cannot see a predicate narrowing. Now: a ceiling
+cannot see what its predicate excludes. The first two are about what a
+measurement counts. This one is about **who** it counts, and it is the
+more expensive error, because a partial count still looks unfinished
+while a zero looks done.
+
+**Principle**: a gate needs a companion assertion on the SIZE of the set
+it scanned, and that assertion has to be calibrated against a number
+derived some other way — here, the 128 published factories minus the 21
+that genuinely take no container. `rows.length > 50` passed happily at
+76. It passes at 107 too, which is the problem with a floor chosen to be
+comfortably below the number you already have. When a zero arrives, the
+question to ask is not "is this correct" but "over what".
+
+### 6.108 Ask What the Stated Remedy Would Actually Produce (2026-10-17)
+
+LatexEditor warned `"MathLive not loaded, falling back to source mode"`.
+Filed as FALLBACK-10: a silent downgrade, fix by throwing when MathLive
+is absent. That fix would have shipped a false remedy, because **nothing
+in the component creates a `math-field` whether MathLive is loaded or
+not**. `renderEditorArea` builds a textarea on every path. A consumer who
+read the warning and loaded the library would have got a textarea with
+the Visual button lit, and no warning this time.
+
+A degradation message is a claim about a cause, and it deserves the same
+scepticism as any other claim in a comment. The test is cheap: **take the
+message at its word, imagine the remedy applied, and ask what changes.**
+If the answer is "nothing", the message is naming a dependency in order
+not to name a gap.
+
+Five tests asserted the absent feature and all five passed. One was
+called `setEditMode_ToVisual_CreatesMathField`. It queried the DOM for a
+`math-field`, put the result in an unused variable under the comment
+`// May or may not create depending on implementation`, and then
+asserted the mode flag. A `beforeEach` mocked MathLive that no code path
+consults.
+
+**Principle**: when a test name claims a mechanism and the body asserts a
+flag, the name is usually right about what should be checked and the body
+records what the author could get green. It is the same defect as a
+factory that logs and returns a handle — both report success for
+something that did not happen. The greppable shapes are an unused query
+result, an `if (x)` wrapping the only assertions, `toBeDefined()`, and
+`typeof x === "string"`: four ways to write a body that cannot fail.

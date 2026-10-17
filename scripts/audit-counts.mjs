@@ -395,14 +395,15 @@ const BASELINES = {
     // 35 include ten in dated specs/*.prd.md planning documents, which
     // are a historical record. Do not chase this below 10.
     thirdPartyTagsWithoutSri: 35,
-    // ERR-1. 306 -> 329. Replacing 63 quiet container branches with a
-    // throw orphaned the logWarn or logError helper in 23 components.
-    // The refusal already carries the whole message, and logging it first
-    // would print it twice, which is the duplication FALLBACK-1 to 9
-    // removed. The five helpers are the LOG-4a preamble and are present
-    // whether or not a component uses them, which is why this count was
-    // already 306 rather than 0. Recorded under UNUSED-1.
-    unusedLocals: 329,
+    // ERR-1. 306 -> 329 -> 330. Replacing 63 quiet container branches with
+    // a throw orphaned the logWarn or logError helper in 23 components,
+    // and the second census added visualtableeditor, which logged the
+    // fault and then threw it. The refusal already carries the whole
+    // message, and logging it first would print it twice, which is the
+    // duplication FALLBACK-1 to 9 removed. The five helpers are the LOG-4a
+    // preamble and are present whether or not a component uses them, which
+    // is why this count was already 306 rather than 0. Under UNUSED-1.
+    unusedLocals: 330,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
