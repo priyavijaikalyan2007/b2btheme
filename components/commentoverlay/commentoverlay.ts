@@ -2031,7 +2031,18 @@ export function createCommentOverlay(
 ): CommentOverlay
 {
     const el = document.getElementById(containerId);
-    if (el) { options.container = el; }
+
+    // ERR-1. The resolved element used to be dropped when it was absent,
+    // so the overlay was built detached and the caller got a handle to
+    // something anchored to nothing.
+    if (!el)
+    {
+        throw new Error(
+            `${LOG_PREFIX} Container "${containerId}" was not found. `
+            + "Insert the element before creating the comment overlay.");
+    }
+
+    options.container = el;
     return new CommentOverlay(options);
 }
 

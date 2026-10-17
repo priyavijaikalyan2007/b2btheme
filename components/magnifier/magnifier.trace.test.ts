@@ -45,7 +45,7 @@ async function traceCallsForAMouseMove(flag: boolean | undefined): Promise<unkno
     });
 
     const { createMagnifier } = await import("./magnifier");
-    const instance = createMagnifier({ target: targetEl, enabled: true });
+    const instance = createMagnifier("magnifier-owner", { target: targetEl, enabled: true });
     targetEl.dispatchEvent(new MouseEvent("mousemove", { clientX: 42, clientY: 7, bubbles: true }));
     instance.destroy();
     spy.mockRestore();
@@ -61,6 +61,10 @@ function traceCalls(calls: unknown[][]): unknown[][]
 beforeEach(() =>
 {
     container = document.createElement("div");
+    // ERR-1. createMagnifier's first parameter is the owner container ID,
+    // and this fixture used to pass the options object there. It went
+    // unnoticed because the id was stored and never read.
+    container.id = "magnifier-owner";
     document.body.appendChild(container);
     targetEl = document.createElement("div");
     targetEl.style.width = "200px";

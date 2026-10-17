@@ -155,6 +155,19 @@ export class Magnifier
     constructor(containerId: string, options: MagnifierOptions = {})
     {
         instanceCounter++;
+
+        // ERR-1. The lens is appended to document.body, so this id is the
+        // logical owner rather than a mount point. It was still accepted
+        // without a check and then never read again, which made a typo
+        // here completely invisible. A named owner has to exist.
+        if (document.getElementById(containerId) === null)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Owner container "${containerId}" was not `
+                + "found. Insert the element before creating the "
+                + "magnifier. The lens itself mounts on document.body.");
+        }
+
         this.containerId = containerId;
         this.options = options;
         this.zoom = options.zoom ?? DEFAULT_ZOOM;
@@ -545,7 +558,8 @@ export class Magnifier
 /**
  * Create a Magnifier instance.
  *
- * @param containerId - Logical owner container ID (lens is appended to body)
+ * @param containerId - Logical owner container ID (lens is appended to
+ *     body). The element must exist, and creation throws when it does not.
  * @param options - Configuration options
  * @returns Magnifier instance
  */

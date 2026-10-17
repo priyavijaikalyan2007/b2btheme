@@ -71,9 +71,16 @@ function moveTheMouse(): void
 
 beforeEach(() =>
 {
+    // ERR-1. The owner container is a real element now. This fixture used
+    // to pass the options object as the container ID, which the component
+    // accepted and discarded.
+    const owner = document.createElement("div");
+    owner.id = "magnifier-owner";
+    document.body.appendChild(owner);
+
     targetEl = document.createElement("div");
-    document.body.appendChild(targetEl);
-    instance = createMagnifier({ target: targetEl, enabled: true });
+    owner.appendChild(targetEl);
+    instance = createMagnifier("magnifier-owner", { target: targetEl, enabled: true });
 });
 
 afterEach(() =>

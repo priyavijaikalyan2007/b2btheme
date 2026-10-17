@@ -406,7 +406,10 @@ const BASELINES = {
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
-    diagramengineLines: 30522,
+    // ERR-1. 30522 -> 30523. DiagramEngine's container refusal named the
+    // container and not the remedy, so it said what was wrong and not what
+    // to do. One line, and the seventh recorded raise of this ceiling.
+    diagramengineLines: 30523,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

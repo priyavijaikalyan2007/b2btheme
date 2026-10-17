@@ -47,7 +47,7 @@ type Row = {
  * that do throw, because a floor cannot see a new unvalidated factory being
  * added beside the old ones.
  */
-const SILENT_ON_MISSING_CONTAINER = 65;
+const SILENT_ON_MISSING_CONTAINER = 51;
 
 /** Factories whose container verdict a call cannot reach. See the header. */
 const VERDICT_UNREACHABLE = 2;
@@ -58,6 +58,9 @@ const rows: Row[] = (factoryInventory() as Row[])
 const MENTIONS = /container|no element with id|not found|no such|selector|is required/i;
 
 type Verdict = "THROWS" | "WARNS-AND-RETURNS" | "SILENT" | "UNREACHABLE";
+
+/** The refusal message, kept so its wording can be asserted as well as counted. */
+const refusals = new Map<string, { message: string; byId: boolean }>();
 
 async function verdictFor(r: Row): Promise<Verdict>
 {
@@ -97,7 +100,14 @@ async function verdictFor(r: Row): Promise<Verdict>
     spies.forEach((s) => s.mockRestore());
     document.body.textContent = "";
 
-    if (absent.threw !== null && MENTIONS.test(absent.threw)) { return "THROWS"; }
+    if (absent.threw !== null && MENTIONS.test(absent.threw))
+    {
+        refusals.set(`${r.component}/${r.name}`, {
+            message: absent.threw,
+            byId: (r.containerType ?? "").toLowerCase().includes("string"),
+        });
+        return "THROWS";
+    }
 
     const strip = (s: string): string => s.replace(/ebt-census-\S+/g, "");
     if (control.threw !== null && absent.threw !== null
@@ -182,5 +192,33 @@ describe("ERR-1 — a factory given a container that is not there", () =>
         expect(quiet.length, `factories quiet on a missing container:\n  ${names}`)
             .toBeLessThanOrEqual(SILENT_ON_MISSING_CONTAINER);
         expect(unreachable.length).toBeLessThanOrEqual(VERDICT_UNREACHABLE);
+    });
+
+    test("every refusal names the container it could not find", () =>
+    {
+        // A ceiling counts refusals. It cannot tell a literate one from
+        // `throw new Error("failed")`, and the rule asks for literate.
+        // The container the caller actually passed has to appear, because
+        // a message that does not name it cannot be acted on.
+        expect(refusals.size).toBeGreaterThan(0);
+
+        // Only when there was a value to name. A container typed as an
+        // element is probed with null, and quoting "null" back at the
+        // caller tells them nothing they did not just type.
+        for (const [who, r] of refusals)
+        {
+            if (!r.byId) { continue; }
+            expect(r.message, who).toContain("ebt-census-absent");
+        }
+    });
+
+    test("every refusal says what to do about it", () =>
+    {
+        for (const [who, r] of refusals)
+        {
+            // FALLBACK-9's wording: name the fault, then the remedy.
+            expect(r.message, `${who}: ${r.message}`)
+                .toMatch(/insert|load|create|provide|pass|omit|before/i);
+        }
     });
 });

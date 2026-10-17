@@ -415,7 +415,9 @@ export function createHelpTooltip(
     if (!target)
     {
         logError("No target element provided");
-        throw new Error(`${LOG_PREFIX} target is required`);
+        throw new Error(
+            `${LOG_PREFIX} A target element is required. Pass the element `
+            + "the tooltip should attach to.");
     }
 
     const inst = new HelpTooltip(target, options);

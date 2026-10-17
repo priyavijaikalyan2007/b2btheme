@@ -721,7 +721,19 @@ export function createBorderLayout(
     if (containerId)
     {
         const el = document.getElementById(containerId);
-        if (el) { layout.show(el); }
+
+        // ERR-1. A caller that named a container asked for that container.
+        // This used to fall through to nothing: no mount, no log, and a
+        // handle returned for a layout that was never shown.
+        if (!el)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Container "${containerId}" was not found. `
+                + "Insert the element before creating the layout, or omit "
+                + "the container to render detached.");
+        }
+
+        layout.show(el);
     }
     else
     {

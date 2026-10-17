@@ -1093,7 +1093,19 @@ export class RibbonImpl implements Ribbon
         if (typeof container === "string")
         {
             const el = document.getElementById(container);
-            return el || document.body;
+
+            // ERR-1. This used to answer `el || document.body`, so a
+            // container that did not exist mounted the ribbon somewhere
+            // the caller never named instead of saying so.
+            if (!el)
+            {
+                throw new Error(
+                    `${LOG_PREFIX} Container "${container}" was not found. `
+                    + "Insert the element before showing the ribbon, or omit "
+                    + "the container to mount on document.body.");
+            }
+
+            return el;
         }
         return container;
     }

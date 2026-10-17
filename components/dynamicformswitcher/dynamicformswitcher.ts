@@ -373,7 +373,9 @@ function resolveContainer(target: string | HTMLElement): HTMLElement
         const el = document.getElementById(target);
         if (!el)
         {
-            throw new Error(`${LOG_PREFIX} container '${target}' not found`);
+            throw new Error(
+                `${LOG_PREFIX} Container "${target}" was not found. Insert `
+                + "the element before creating the switcher.");
         }
         return el;
     }
