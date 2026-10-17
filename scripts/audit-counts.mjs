@@ -384,7 +384,13 @@ const BASELINES = {
     // because the fifteen packages have to interoperate.
     unpinnedCdnRefs: 77,
     tagsMissingSri: 0,
-    thirdPartyTagsWithoutSri: 76,
+    // DEBT-SEC-8, first slice. 76 -> 65 by pointing DOMPurify and
+    // font-awesome at the copies this origin already serves, hashed.
+    // Those tags now carry a static.knobby.io host, which is outside
+    // CDN_HOSTS, so nothing here re-checks their integrity attribute.
+    // The browser does. A same-origin ceiling would be a different
+    // measurement and is not what this one promises.
+    thirdPartyTagsWithoutSri: 65,
     unusedLocals: 306,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,

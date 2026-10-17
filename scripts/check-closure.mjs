@@ -22,9 +22,22 @@
  * fetches a file that no longer matches gets a hard load failure in the
  * browser, which is exactly the outage SRI is supposed to prevent on OUR
  * side rather than cause. So the gate re-pairs them.
+ *
+ * WHAT THE AUDIT CEILINGS CANNOT SEE (DEBT-SEC-8)
+ * -----------------------------------------------
+ * `thirdPartyTagsWithoutSri` in scripts/audit-counts.mjs counts tags that
+ * carry no `integrity` at all. It therefore sees an UNHASHED tag and is
+ * blind to a MIS-hashed one. Repointing a documented tag from this origin
+ * back to a public CDN, while leaving the hash attached, keeps that count
+ * unchanged — the tag still has an `integrity`, it is simply the wrong one.
+ *
+ * A hash is a claim about exactly one URL. So this gate also asserts the
+ * pairing in the other direction: a tag carrying a hash this manifest
+ * publishes must point at the URL that hash was computed from.
  */
 
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
 const MANIFEST = "dist/lib-manifest.json";
@@ -32,6 +45,63 @@ const MANIFEST = "dist/lib-manifest.json";
 function sriOf(buffer)
 {
     return "sha384-" + createHash("sha384").update(buffer).digest("base64");
+}
+
+/**
+ * DEBT-SEC-8. Assert that documentation citing a published hash cites the
+ * URL that hash belongs to.
+ *
+ * Returns the number of tags inspected, so a PASS reports coverage rather
+ * than only the absence of a complaint. A zero here would mean the scan
+ * reached nothing, which is the failure mode DEBT-GATE-1 and DEBT-SEC-6
+ * both were.
+ */
+function checkDocumentedPairings(manifest, problems)
+{
+    const byHash = new Map();
+
+    for (const [name, asset] of Object.entries(manifest.assets ?? {}))
+    {
+        byHash.set(asset.integrity, { name, url: asset.url });
+    }
+
+    const files = execFileSync("git", ["ls-files", "*.md", "*.html"], { encoding: "utf8" })
+        .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
+
+    let inspected = 0;
+
+    for (const file of files)
+    {
+        const text = readFileSync(file, "utf8");
+
+        for (const tag of text.match(/<(?:script|link)\b[^>]*>/g) ?? [])
+        {
+            const hash = tag.match(/integrity="([^"]+)"/)?.[1];
+
+            if (hash === undefined) { continue; }
+
+            const pair = byHash.get(hash);
+
+            if (pair === undefined) { continue; }
+
+            inspected += 1;
+
+            if (!tag.includes(pair.url))
+            {
+                problems.push(
+                    `${file}: a tag carries the published ${pair.name} hash but ` +
+                    `does not point at ${pair.url}`);
+            }
+            else if (!tag.includes('crossorigin="anonymous"'))
+            {
+                problems.push(
+                    `${file}: ${pair.name} is hashed with no crossorigin, so the ` +
+                    `browser SKIPS the check instead of failing it`);
+            }
+        }
+    }
+
+    return inspected;
 }
 
 function main()
@@ -90,17 +160,23 @@ function main()
         }
     }
 
+    const paired = checkDocumentedPairings(manifest, problems);
+
     if (problems.length > 0)
     {
         console.log(`  FAIL: ${problems.length} problem(s) in the dependency closure\n`);
         for (const p of problems) { console.log(`    ${p}`); }
         console.log("\n  A consumer pins integrity from this manifest. A hash that");
-        console.log("  does not match the file is a hard load failure in the browser.");
-        console.log("  Re-run `npm run build:vendor`.");
+        console.log("  does not match the file it names is a hard load failure in");
+        console.log("  the browser, which is the outage SRI exists to prevent.");
+        console.log("  An artifact problem means `npm run build:vendor`. A tag");
+        console.log("  problem means the documentation, not the build.");
         return 1;
     }
 
-    console.log(`  PASS: ${checked} vendored artifact(s) match their published hash`);
+    console.log(
+        `  PASS: ${checked} vendored artifact(s) match their published hash, ` +
+        `${paired} documented tag(s) correctly paired`);
     return 0;
 }
 

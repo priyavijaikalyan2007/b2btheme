@@ -165,9 +165,13 @@ The SymbolPicker automatically scans all loaded CSS stylesheets at initializatio
 When Font Awesome CSS is loaded, the picker detects the available style class (`fa-solid`, `fa-regular`, `fa-brands`, `fa-light`, or `fa-thin`) by probing the DOM. Icons render with the correct style prefix automatically.
 
 ```html
-<!-- Load Font Awesome alongside Bootstrap Icons -->
+<!-- Load Font Awesome alongside Bootstrap Icons. 6.5.1 is the only version
+     this origin serves, and it is a verified superset of 6.5.0. -->
 <link rel="stylesheet" href="icons/bootstrap-icons.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet"
+      href="https://static.knobby.io/lib/font-awesome-6.5.1/css/all.min.css"
+      integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g"
+      crossorigin="anonymous">
 
 <script>
     // SymbolPicker will auto-discover both BI and FA icons

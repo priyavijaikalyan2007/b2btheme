@@ -13,8 +13,12 @@ This component requires external libraries loaded before the component script:
 <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
 <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
 
-<!-- DOMPurify (strongly recommended for XSS protection) -->
-<script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+<!-- DOMPurify, strongly recommended for XSS protection. This origin serves
+     it at 3.4.16 with a published hash. Do NOT load 3.2.4, which carries 19
+     open advisories including cross-site-scripting bypasses. -->
+<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
+        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+        crossorigin="anonymous"></script>
 
 <!-- Component CSS + JS -->
 <link rel="stylesheet" href="components/markdowneditor/markdowneditor.css">

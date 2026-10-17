@@ -260,14 +260,17 @@ A Bootstrap 5-themed Markdown editor wrapper around Vditor with tab/side-by-side
 | JS | `dist/components/markdowneditor/markdowneditor.js` |
 | Types | `dist/components/markdowneditor/markdowneditor.d.ts` |
 
-**Requires:** Bootstrap CSS, Bootstrap Icons CSS, Bootstrap JS (Modal API for modal hosting), [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (CDN, strongly recommended).
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS, Bootstrap JS (Modal API for modal hosting), [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (**served by this origin**
+at 3.4.16 with a published hash, strongly recommended).
 
 **Usage (script tag):**
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
 <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
-<script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
+        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+        crossorigin="anonymous"></script>
 <script src="dist/components/markdowneditor/markdowneditor.js"></script>
 <script>
     var editor = createMarkdownEditor("container-id", {
@@ -514,14 +517,17 @@ A turn-by-turn AI chat UI component with rich text rendering via Vditor, streami
 | JS | `dist/components/conversation/conversation.js` |
 | Types | `dist/components/conversation/conversation.d.ts` |
 
-**Requires:** Bootstrap CSS, Bootstrap Icons CSS, [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (CDN, recommended). Does **not** require Bootstrap JS.
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS, [Vditor](https://github.com/Vanessa219/vditor) >= 3.8.13 (CDN), [DOMPurify](https://github.com/cure53/DOMPurify) (**served by this origin**
+at 3.4.16 with a published hash, recommended). Does **not** require Bootstrap JS.
 
 **Usage (script tag):**
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
 <script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
-<script src="https://unpkg.com/dompurify@3.2.4/dist/purify.min.js"></script>
+<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
+        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+        crossorigin="anonymous"></script>
 <script src="dist/components/conversation/conversation.js"></script>
 <script>
     var chat = createConversation({

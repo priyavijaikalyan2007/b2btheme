@@ -34,7 +34,7 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 | Bootstrap CSS | Layout and base styles | Yes |
 | Bootstrap Icons | Avatar and action button icons | Yes |
 | Vditor (CDN) | Markdown rendering for assistant messages | Yes |
-| DOMPurify (CDN) | HTML sanitisation on copy export paths | Recommended |
+| DOMPurify (this origin, 3.4.16, hashed) | HTML sanitisation on copy export paths | Recommended |
 
 ## Quick Start
 
@@ -44,7 +44,9 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 <link rel="stylesheet" href="components/conversation/conversation.css">
 
 <script src="https://cdn.jsdelivr.net/npm/vditor@3.11.2/dist/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.16/dist/purify.min.js"></script>
+<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
+        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+        crossorigin="anonymous"></script>
 <script src="components/conversation/conversation.js"></script>
 
 <div id="chat-container" style="height: 600px;"></div>
