@@ -68,22 +68,33 @@ type Row = {
  * for a REQUIRED option rather than refusing it. A ceiling, so it can
  * only fall.
  *
- * 67 when first measured on 2026-10-17: 40 that take a silent default
- * and 27 that crash one frame later with a TypeError naming the field.
- * Against 5 that refuse and 2 whose verdict a call cannot reach.
+ * 67 when first measured on 2026-10-17, then 66, then 39 after the
+ * crashing slice, and 0 now. 72 refuse and 1 refuses a missing
+ * dependency before it reaches the options.
  *
- * FOUR NUMBERS CAME OUT OF THIS PROBE BEFORE THIS ONE, AND EVERY
+ * FIVE NUMBERS CAME OUT OF THIS PROBE BEFORE THE FIRST FIX, AND EVERY
  * CORRECTION MADE IT STRICTER ABOUT WHAT IT WAS ALLOWED TO BLAME. 44
  * counted three gauges for an option their signature omits. 40 moved
  * four components into the refusing column once rejecting an empty
  * array was read as validation rather than as an unreachable verdict.
- * 67 is 40 again plus the 27 that `TypeError: options.roots is not
- * iterable` had been passing off as refusals, because the message
- * happens to contain the field name.
+ * 67 added back the 27 that `TypeError: options.roots is not iterable`
+ * had been passing off as refusals, because the message happens to
+ * contain the field name. 66 dropped createActionItems, whose ` = {}`
+ * default had hidden the `Omit` in its own parameter type.
+ *
+ * A ZERO HERE IS WORTH WHAT ITS COMPANIONS ARE WORTH. "The inventory
+ * reaches the fleet" fails if the scan stops finding the factories,
+ * and the two wording tests fail if a refusal stops naming the option
+ * or stops saying what to do. The container half held a zero over
+ * three quarters of its population for a day without them.
  */
-const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 39;
+const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 0;
 
-/** Factories whose option verdict a call cannot reach. See the header. */
+/**
+ * Factories whose option verdict a call cannot reach. One: DynamicCanvas
+ * refuses a missing window.EnterpriseRuntime before it reads an option,
+ * which is the dependency rule doing its job one step earlier.
+ */
 const VERDICT_UNREACHABLE = 1;
 
 /** Every required option the probe can supply a value for. */

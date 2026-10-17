@@ -5495,6 +5495,23 @@ export class Toolbar
  */
 export function createToolbar(options: ToolbarOptions): Toolbar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
+    if (options.regions === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.regions is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
     const toolbar = new Toolbar(options);
     toolbar.show();
     return toolbar;
@@ -5508,6 +5525,23 @@ export function createToolbar(options: ToolbarOptions): Toolbar
  */
 export function createDockedToolbar(options: ToolbarOptions): Toolbar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
+    if (options.regions === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.regions is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
     return createToolbar({ mode: "docked", ...options });
 }
 
@@ -5519,6 +5553,23 @@ export function createDockedToolbar(options: ToolbarOptions): Toolbar
  */
 export function createFloatingToolbar(options: ToolbarOptions): Toolbar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
+    if (options.regions === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.regions is required. `
+            + "Pass it when creating the Toolbar.");
+    }
+
     return createToolbar({ mode: "floating", ...options });
 }
 

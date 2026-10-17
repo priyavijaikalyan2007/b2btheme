@@ -1489,6 +1489,23 @@ export function createSplitLayout(
     options: SplitLayoutOptions,
     containerId?: string): SplitLayout
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.orientation === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.orientation is required. `
+            + "Pass it when creating the SplitLayout.");
+    }
+
+    if (options.panes === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.panes is required. `
+            + "Pass it when creating the SplitLayout.");
+    }
+
     const layout = new SplitLayout(options);
     layout.show(containerId);
     return layout;

@@ -8297,3 +8297,118 @@
     thing, and only running the code finds that. Two families: a wrong
     contract honestly asserted, and no contract asserted at all. A text
     scan can see the second. ADR-192's census is what sees the first.
+
+- id: ADR-197
+  title: Measure the option half of the factory rule by omitting one field at a time
+  date: 2026-10-17
+  status: accepted
+  context: |
+    AGENTS.md states two rows in one table. "Container not found ->
+    throw a literate error" reached zero under ADR-193 and ADR-194.
+    "An option is missing -> throw a literate error, not apply a silent
+    default" had never been measured. ERR-1 conflated the two from the
+    start: its entry said "no container OR OPTION validation" and every
+    number it carried was about containers.
+  decision: |
+    D1. REQUIRED MEANS THE INTERFACE SAYS SO. A field declared `?` is
+        optional by construction and a default for it is the point of
+        the option. A field declared without `?` is one the caller must
+        supply.
+
+    D2. OMIT ONE FIELD AT A TIME, from an otherwise complete stub.
+        Calling with `{}` makes the first guard fire and says nothing
+        about the other seven options.
+
+    D3. A COMPONENT THAT REJECTS AN EMPTY ARRAY HAS VALIDATED THE
+        FIELD. The stub supplies `[]` and Stepper answers "steps are
+        required". That is stricter than a presence check, not weaker.
+
+    D4. A CRASH THAT NAMES THE FIELD IS NOT A REFUSAL.
+        `TypeError: options.roots is not iterable` contains "roots" and
+        carries no remedy, because it is the component reaching for a
+        value one frame later. OPAQUE, as in ADR-194.
+
+    D5. A PARAMETER DEFAULT BELONGS TO THE VALUE, NOT THE TYPE.
+        `options: Omit<ActionItemsOptions, "container"> = {}` kept its
+        ` = {}`, the Omit match is anchored at the end, and the factory
+        was blamed for an option its own signature removes.
+  consequences: |
+    67 of 104 declared required options were not refused when absent:
+    40 silent, 27 crashing. 5 refused and 2 were unreachable.
+
+    FIVE NUMBERS CAME OUT OF THIS PROBE BEFORE THE FIRST FIX, AND EVERY
+    CORRECTION MADE IT STRICTER ABOUT WHAT IT WAS ALLOWED TO BLAME: 44,
+    40, 67, 66. An instrument that is still moving has not earned a
+    verdict, and each move here removed a component from the accused
+    list rather than adding one.
+
+    emptyFor learned string-literal unions and their named aliases,
+    which brought GaugeShape and ChartPanelKind into reach.
+    interfaceFields learned `extends Omit<X, "a" | "b">` and keeps only
+    the nearest declaration of a restated field. 5 of 79 probed fields
+    stay beyond the stub, three callbacks and two named object types,
+    and are excluded rather than guessed at.
+
+- id: ADR-198
+  title: Every factory refuses a required option that is not there
+  date: 2026-10-18
+  status: accepted
+  context: |
+    ADR-197 measured 66 required options not refused when absent, in
+    two populations that want different handling: 27 that crash a frame
+    later, and 39 that work without the field.
+  decision: |
+    D1. TWO SLICES, BECAUSE THE SECOND IS NOT MECHANICAL. A component
+        that already dies on `options.roots is not iterable` cannot
+        have a caller who omits the field, so the 27 went in one pass
+        and no test broke. The 39 work without the field, which is the
+        whole problem, and each needed a decision.
+
+    D2. THE DISCRIMINATOR IS THE README'S DEFAULT COLUMN. A silent
+        default the documentation promises means the interface is
+        missing a `?`, and marking the field optional is the honest
+        fix rather than adding a throw. A default nobody documented is
+        the defect the rule is about. All 39 turned out to be the
+        second kind.
+
+    D3. `=== undefined`, NOT `!options.x`. Absent is what the rule is
+        about. An empty array, a zero and an empty string are present,
+        and contextmenu.x of 0 is a legitimate coordinate.
+
+    D4. createWorkspaceSwitcher GUARDS THE PAIR. It accepts either
+        shape and reads `current.tenants ?? legacy.workspaces`, so
+        guarding one name would reject a caller who used the other,
+        and delegating would answer a WorkspaceSwitcher caller with a
+        message about tenants.
+
+    D5. MOUNT FIXTURES GO IN `<name>.conformance.ts`, not in the
+        manifest. defaultOptions is published to consumers, and the
+        fleet gate has its own check forbidding placeholder content
+        there.
+  consequences: |
+    SILENT_DEFAULT_FOR_REQUIRED_OPTION went 67, 66, 39, 0. 72 of 73
+    refuse and 1 refuses a missing dependency first. Mutation-proved.
+
+    THE DISCRIMINATOR'S FIRST ANSWER WAS WRONG, AND THE READER WAS AT
+    FAULT RATHER THAN THE DOCUMENTATION. A first pass reported five
+    fields documenting defaults, `boxlayout.direction` as "vertical"
+    and `gauge.shape` as "ring". Those strings are fragments of the
+    TYPE cell: a Markdown table splits on `|`, a TypeScript union in a
+    table escapes its pipes as `\|`, and splitting naively cuts through
+    `"horizontal" \| "vertical"` and shifts every later cell left.
+    Checking the code before acting on it found no default applied
+    anywhere, and `gauge.shape` declared "Required" in its own comment.
+    No README needed changing. A tool that reads documentation needs
+    the same scepticism as a tool that reads code, and the check is the
+    same one: confirm against the thing being described.
+
+    Ten components needed a mount fixture, because the fleet
+    conformance gate had been building them with `{}` and nothing had
+    ever said so.
+
+    DEBT-MSC-1 found on the way: createMultiselectCombo with an empty
+    item list threw "Cannot set properties of undefined". buildRoot
+    assigned the dropdown before the live region, and with no items the
+    dropdown reaches renderNoResults, which announces. The lines are
+    swapped. `private liveRegionEl!: HTMLElement` hid it, the third
+    type assertion in this tracker to conceal a real defect.

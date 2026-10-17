@@ -1004,6 +1004,12 @@ export function createTenantSwitcher(
     // crash a frame later with a TypeError that names the line
     // rather than the thing the caller left out. Absent means
     // undefined, so an empty array or a zero is present.
+    if (options.activeTenantId === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.activeTenantId is required. `
+            + "Pass it when creating the TenantSwitcher.");
+    }
     if (options.tenants === undefined)
     {
         throw new Error(
@@ -1079,6 +1085,14 @@ export function createWorkspaceSwitcher(
             `${LOG_PREFIX} options.workspaces is required. `
             + "Pass it when creating the WorkspaceSwitcher, or move to "
             + "createTenantSwitcher and pass options.tenants.");
+    }
+
+    if (legacy.activeWorkspaceId === undefined && current.activeTenantId === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.activeWorkspaceId is required. `
+            + "Pass it when creating the WorkspaceSwitcher, or move to "
+            + "createTenantSwitcher and pass options.activeTenantId.");
     }
 
     logWarn(

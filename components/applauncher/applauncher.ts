@@ -1637,6 +1637,16 @@ export function createAppLauncher(
     containerId?: string
 ): AppLauncher
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.apps === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.apps is required. `
+            + "Pass it when creating the AppLauncher.");
+    }
+
     const launcher = new AppLauncher(options);
     if (containerId)
     {

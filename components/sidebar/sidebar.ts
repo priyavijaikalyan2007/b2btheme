@@ -2342,6 +2342,16 @@ export class SidebarManager
  */
 export function createSidebar(options: SidebarOptions): Sidebar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.title === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.title is required. `
+            + "Pass it when creating the Sidebar.");
+    }
+
     const sidebar = new Sidebar(options);
     sidebar.show();
     return sidebar;
@@ -2355,6 +2365,16 @@ export function createSidebar(options: SidebarOptions): Sidebar
  */
 export function createDockedSidebar(options: SidebarOptions): Sidebar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.title === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.title is required. `
+            + "Pass it when creating the Sidebar.");
+    }
+
     return createSidebar({ mode: "docked", ...options });
 }
 
@@ -2366,6 +2386,16 @@ export function createDockedSidebar(options: SidebarOptions): Sidebar
  */
 export function createFloatingSidebar(options: SidebarOptions): Sidebar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.title === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.title is required. `
+            + "Pass it when creating the Sidebar.");
+    }
+
     return createSidebar({ mode: "floating", ...options });
 }
 

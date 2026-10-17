@@ -454,6 +454,16 @@ export class Pill
 // @entrypoint
 export function createPill(options: PillOptions): Pill
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the Pill.");
+    }
+
     return new Pill(options);
 }
 

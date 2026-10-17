@@ -4775,6 +4775,12 @@ export function createTreeGrid(options: TreeGridOptions): TreeGrid
     // crash a frame later with a TypeError that names the line
     // rather than the thing the caller left out. Absent means
     // undefined, so an empty array or a zero is present.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the TreeGrid.");
+    }
     if (options.nodes === undefined)
     {
         throw new Error(

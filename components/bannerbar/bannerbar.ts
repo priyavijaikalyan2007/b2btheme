@@ -928,6 +928,16 @@ export class BannerBar
  */
 export function createBannerBar(options: BannerBarOptions): BannerBar
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.message === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.message is required. `
+            + "Pass it when creating the BannerBar.");
+    }
+
     const banner = new BannerBar(options);
     banner.show();
     return banner;

@@ -1881,3 +1881,58 @@ thing, and no text scan finds it — only running the code does. Two
 families: a wrong contract honestly asserted, and no contract asserted
 at all. A gate that covers one will be trusted for both unless its own
 record says otherwise.
+
+### 6.110 An Instrument That Is Still Moving Has Not Earned a Verdict (2026-10-18)
+
+The required-option probe produced four numbers before a single guard
+was written: **44, then 40, then 67, then 66.**
+
+- 44 blamed three gauges for `shape`, which `Omit<GaugeOptions,
+  "shape">` removes from their signature.
+- 40 moved four components out of "unreachable" once I noticed that a
+  component rejecting the empty array my stub supplied had *validated*
+  the field, more strictly than a presence check, not less.
+- 67 added back 27 that `TypeError: options.roots is not iterable` had
+  been passing off as refusals, because the message happens to contain
+  the field name.
+- 66 dropped one more whose ` = {}` parameter default hid the `Omit` in
+  its own type.
+
+Every correction removed a component from the accused list. That
+direction is the tell: **the instrument was biased toward blame**, and
+blame is the thing that gets acted on. A measurement biased the other
+way reports a comfortable number nobody checks.
+
+**Principle**: publish nothing from a measurement that is still
+changing, and when it settles, look at which way the corrections ran.
+Here the first number would have had me adding guards to three gauges
+for an option their callers cannot pass.
+
+### 6.111 Reading Documentation Is Also Parsing (2026-10-18)
+
+Thirty-nine required options took a silent default, and only one of the
+two possible fixes is a throw. If the README documents a default, the
+interface is missing a `?` and marking the field optional is the honest
+answer. If it documents none, the silent default is the defect, so I
+read every Default column.
+
+Five came back documenting defaults — `boxlayout.direction` as
+`"vertical"`, `gauge.shape` as `"ring"`. I nearly marked five fields
+optional on that basis.
+
+Those strings are fragments of the **Type** cell. A Markdown table
+splits on `|`; a TypeScript union inside one escapes its pipes as `\|`;
+and splitting naively cuts through `` `"horizontal" \| "vertical"` ``
+and shifts every later cell one place left. The real Default cells all
+said *required*. The code applies no default anywhere, and
+`gauge.shape` is declared `/** Visual shape of the gauge. Required. */`.
+
+I caught it only because I checked the claim against the code before
+acting on it — and the correction, honestly, belonged in my parser and
+not in five READMEs I had already started editing.
+
+**Principle**: a tool that reads documentation deserves exactly the
+scepticism a tool that reads code gets. Both are parsers over a format
+with escapes, and both get verified the same way — against the thing
+being described. "The docs say X" is a measurement, with an instrument
+behind it that can be wrong.

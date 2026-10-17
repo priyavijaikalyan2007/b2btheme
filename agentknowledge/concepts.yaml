@@ -1460,3 +1460,25 @@
   - ATestThatCannotFail
   - SweepCoverageIsItsPatterns
   - FactoryContainerContract
+
+- name: AnInstrumentStillMovingHasNotEarnedAVerdict
+  definition: "ADR-197. The required-option probe produced 44, then 40, then 67, then 66 before a single guard was written, and every correction removed a component from the accused list rather than adding one. 44 blamed three gauges for an option `Omit<GaugeOptions, \"shape\">` removes from their signature. 40 counted four components as unreachable when they were in fact rejecting the empty array the stub supplied, which is stricter validation and not weaker. 67 added back 27 that a TypeError naming the field had been passing off as refusals. 66 dropped a factory whose ` = {}` parameter default hid the Omit in its own type. The rule: when a measurement is still moving, publish nothing from it. Watch the direction too, because corrections that consistently shrink the accusation mean the instrument was biased toward blame, and that bias is the one that gets acted on."
+  anchor_file: scripts/factory-options.test.ts
+  related:
+  - ZeroOverTheWrongSet
+  - OpaqueRefusal
+  - FactoryContainerContract
+
+- name: ReadingDocumentationIsAlsoParsing
+  definition: "ADR-198. The discriminator for 39 silently-defaulted options was the README's Default column: a documented default means the interface is missing a `?`, no documented default means the rule's throw applies. The first pass reported five fields documenting defaults like \"vertical\" and \"ring\". Those strings were fragments of the TYPE cell. A Markdown table splits on `|`, a TypeScript union inside one escapes its pipes as `\\|`, and splitting naively cuts through `\"horizontal\" \\| \"vertical\"` and shifts every later cell left. The answer was checked against the code before being acted on, which found no default applied anywhere and a comment reading \"Required\". A tool that reads documentation deserves the same scepticism as a tool that reads code, and it gets verified the same way: against the thing being described."
+  anchor_file: CODEBASE_FIXES.md
+  related:
+  - AnInstrumentStillMovingHasNotEarnedAVerdict
+  - WritingTheAssertionIsHowYouReadTheContract
+
+- name: ADefiniteAssignmentAssertionIsAPromise
+  definition: "ADR-198. `private liveRegionEl!: HTMLElement` tells the compiler the field is assigned before use, and in MultiselectCombo it was not. buildRoot assigned the dropdown on the line before the live region, and with no items the dropdown reaches renderNoResults, which announces into a region that does not exist yet. So `createMultiselectCombo({ items: [] })` threw \"Cannot set properties of undefined\" while one item worked. Third instance in this tracker of a type assertion concealing a live defect, after `as never` hiding an element passed where a string id belonged in runtime/integration.test.ts, and the magnifier fixtures. The pattern to watch for: `!`, `as never` and `as unknown as X` are all places where someone told the compiler to stop checking, and each one is a claim nobody tested."
+  anchor_file: components/multiselectcombo/multiselectcombo.ts
+  related:
+  - RefusalsExposeTheBacklog
+  - ATestThatCannotFail

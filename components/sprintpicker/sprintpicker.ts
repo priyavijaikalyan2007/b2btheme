@@ -1501,6 +1501,16 @@ export function createSprintPicker(
     options: SprintPickerOptions
 ): SprintPicker
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.anchorDate === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.anchorDate is required. `
+            + "Pass it when creating the SprintPicker.");
+    }
+
     return new SprintPicker(containerId, options);
 }
 

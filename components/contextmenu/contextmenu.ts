@@ -178,6 +178,19 @@ export function createContextMenu(options: ContextMenuOptions): ContextMenu
     // crash a frame later with a TypeError that names the line
     // rather than the thing the caller left out. Absent means
     // undefined, so an empty array or a zero is present.
+    if (options.x === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.x is required. `
+            + "Pass it when creating the ContextMenu.");
+    }
+
+    if (options.y === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.y is required. `
+            + "Pass it when creating the ContextMenu.");
+    }
     if (options.items === undefined)
     {
         throw new Error(

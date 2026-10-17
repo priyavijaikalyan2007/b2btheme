@@ -1685,16 +1685,17 @@ default". ERR-1 conflated the two from the start — its entry said "no
 container **or option** validation" and every number it carried was
 about containers. This is the other row.
 
-- [ ] **ERR-2** **39 of 73 required options are still not refused when
-  they are absent, down from 66.** Held by
-  `SILENT_DEFAULT_FOR_REQUIRED_OPTION` in
-  `scripts/factory-options.test.ts`, ADR-197 and ADR-198.
+- [x] **ERR-2** **CLOSED 2026-10-18, ADR-197 and ADR-198. Every
+  published factory refuses a required option that is not there.**
+  `SILENT_DEFAULT_FOR_REQUIRED_OPTION` went **67, 66, 39, 0**. 72 of 73
+  refuse, and the other refuses a missing dependency before it reads an
+  option.
 
   | What the factory does with a required option that is absent | Before | Now |
   |---|---|---|
-  | Applies a silent default | 39 | 39 |
+  | Applies a silent default | 39 | 0 |
   | Crashes later with a `TypeError` naming the field | 27 | 0 |
-  | Refuses, naming the option | 5 | 33 |
+  | Refuses, naming the option | 5 | 72 |
   | Verdict unreachable | 2 | 1 |
 
   **THE 27 CRASHING ONES ARE CLOSED (ADR-198).** They were one
@@ -1711,13 +1712,39 @@ about containers. This is the other row.
   used the new name, and delegating to `createTenantSwitcher` would
   answer a WorkspaceSwitcher caller with a message about `tenants`.
 
-  **The 39 remaining are not one slice.** Each is a question with two
-  possible answers, and only one of them is a throw. A silent default
-  the README documents means the interface is missing a `?`, and
-  marking the field optional is the honest fix. A default nobody
-  documented is the defect the rule is about. Deciding that per field
-  is the work, and a bulk transform would make an API change with a
-  rule as cover.
+  **THE SECOND SLICE WAS 39 QUESTIONS, AND THE ANSWER CAME OUT THE SAME
+  WAY FOR ALL OF THEM — BUT ONLY AFTER CHECKING.** A silent default the
+  README documents would mean the interface is missing a `?`, and
+  marking the field optional would be the honest fix rather than adding
+  a throw. So every one of the 39 was read against its README options
+  table first.
+
+  **Not one of the 39 documents a default.** Most say *required* in the
+  Default column outright. The `relationshipmanager` four and
+  `marketinghero.title` carry an em dash there, which is the absence of
+  a default rather than the presence of one, and `marketinghero` says
+  **Required** in its description. `tenantswitcher.activeWorkspaceId`
+  is in no table at all and takes a pair guard beside `workspaces`. So
+  every one of the 39 is a throw, and no interface needed a `?`.
+
+  **THE FIRST READING OF THAT TABLE SAID OTHERWISE, AND THE READER WAS
+  AT FAULT.** A first pass reported that five fields documented
+  defaults — `boxlayout.direction` as `"vertical"`, `gauge.shape` as
+  `"ring"` — which would have made them candidates for `?` instead of a
+  throw. Those strings are fragments of the **Type** cell. A Markdown
+  table splits on `|`, and a TypeScript union in a table escapes its
+  pipes as `\|`, so splitting naively cuts through
+  `` `"horizontal" \| "vertical"` `` and shifts every later cell left.
+  Checked against the code before acting on it: none of the five
+  applies a default anywhere, and `gauge.shape` is declared
+  `/** Visual shape of the gauge. Required. */`. The READMEs were right
+  and needed no change.
+
+  **Ten components needed a mount fixture** in
+  `<name>.conformance.ts`, because the fleet conformance gate had been
+  building them with `{}`. The fixture goes there rather than in the
+  manifest, since `defaultOptions` is published to consumers and the
+  gate has its own check forbidding placeholder content in it.
 
   Measured by calling each factory twice: once with a complete stub,
   once with one required field removed. Omitting one at a time rather

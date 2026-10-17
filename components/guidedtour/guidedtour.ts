@@ -690,6 +690,23 @@ export function createGuidedTour(
     options: GuidedTourOptions
 ): GuidedTourHandle | null
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.tourId === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.tourId is required. `
+            + "Pass it when creating the GuidedTour.");
+    }
+
+    if (options.steps === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.steps is required. `
+            + "Pass it when creating the GuidedTour.");
+    }
+
     if (!options.tourId)
     {
         logError("tourId is required");

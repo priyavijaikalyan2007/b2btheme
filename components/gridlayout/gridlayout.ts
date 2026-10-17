@@ -756,6 +756,16 @@ export function createGridLayout(
     containerId?: string
 ): GridLayout
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.columns === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.columns is required. `
+            + "Pass it when creating the GridLayout.");
+    }
+
     const layout = new GridLayout(options);
 
     if (containerId)

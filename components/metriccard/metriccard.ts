@@ -709,6 +709,23 @@ export function createMetricCard(
     options: MetricCardOptions
 ): MetricCardHandle
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.label === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.label is required. `
+            + "Pass it when creating the MetricCard.");
+    }
+
+    if (options.value === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.value is required. `
+            + "Pass it when creating the MetricCard.");
+    }
+
     // ERR-1. A caller that named a container asked for that container.
     // `options.container.appendChild` on a null container used to throw
     // "Cannot read properties of null", which names the line that broke

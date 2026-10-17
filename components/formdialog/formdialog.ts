@@ -2193,6 +2193,16 @@ function buildRichTextMirror(field: FormFieldDef): HTMLInputElement
 
 export function createFormDialog(options: FormDialogOptions): FormDialog
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not
+    // get a silent default. Absent means undefined, so an empty
+    // array and a zero are present and pass.
+    if (options.title === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.title is required. `
+            + "Pass it when creating the FormDialog.");
+    }
+
     return new FormDialogImpl(options);
 }
 

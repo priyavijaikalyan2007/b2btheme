@@ -1207,6 +1207,33 @@ export function createRelationshipManager(
     // crash a frame later with a TypeError that names the line
     // rather than the thing the caller left out. Absent means
     // undefined, so an empty array or a zero is present.
+    if (options.resourceId === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.resourceId is required. `
+            + "Pass it when creating the RelationshipManager.");
+    }
+
+    if (options.resourceType === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.resourceType is required. `
+            + "Pass it when creating the RelationshipManager.");
+    }
+
+    if (options.resourceDisplayName === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.resourceDisplayName is required. `
+            + "Pass it when creating the RelationshipManager.");
+    }
+
+    if (options.relationshipDefinitions === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.relationshipDefinitions is required. `
+            + "Pass it when creating the RelationshipManager.");
+    }
     if (options.relationships === undefined)
     {
         throw new Error(

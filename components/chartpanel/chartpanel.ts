@@ -888,6 +888,19 @@ export function createChartPanel(
     // crash a frame later with a TypeError that names the line
     // rather than the thing the caller left out. Absent means
     // undefined, so an empty array or a zero is present.
+    if (options.kind === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.kind is required. `
+            + "Pass it when creating the ChartPanel.");
+    }
+
+    if (options.ariaLabel === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.ariaLabel is required. `
+            + "Pass it when creating the ChartPanel.");
+    }
     if (options.categories === undefined)
     {
         throw new Error(
