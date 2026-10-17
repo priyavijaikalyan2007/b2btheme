@@ -1539,3 +1539,78 @@ the code, and only then does the zero mean anything.
 
 This is the same shape as the DiagramEngine suite that stayed green for
 months while pointed at a page that loaded nothing.
+
+### 6.98 A Count of Attributes Cannot See a Wrong Attribute (2026-10-17)
+
+`thirdPartyTagsWithoutSri` counts third-party tags carrying no
+`integrity` at all. That is the right predicate for coverage, and it is
+blind to the failure one step along: a tag that carries an integrity
+attribute belonging to a different file.
+
+The mutation was small. Take a fixed DOMPurify tag, swap
+`static.knobby.io/lib/dompurify-3.4.16.js` back to
+`unpkg.com/dompurify@3.2.4/dist/purify.min.js`, leave the hash where it
+is. The count stayed at 65. Nothing in the audit moved, because the tag
+still has an `integrity` attribute. The browser would have refused the
+script, which is the correct outcome, but no gate in this repository
+would have told anyone before a consumer hit it.
+
+**Principle**: a hash is a claim about exactly one URL, so a check on
+the presence of the hash measures half of the claim. The other half
+needs asserting in the opposite direction — given a published hash,
+does the tag carrying it point at the URL that hash came from.
+`scripts/check-closure.mjs` now does that, and the gate reports how
+many tags it inspected so a PASS states coverage rather than only the
+absence of a complaint.
+
+Third of this family after 6.94 and 6.95. A zero was a claim about a
+predicate, a ceiling could not see a predicate narrowing, and now a
+ceiling cannot see a predicate that was always too weak.
+
+### 6.99 Check What the Manifest Serves Before Believing What the Entry Lists (2026-10-17)
+
+DEBT-SEC-8 described eight libraries each needing its own version or
+registry answer. Half the list was wrong, and the error was one lookup
+deep. `dist/lib-manifest.json` serves seven assets. ADR-149 recorded
+four. Nobody widened the entry when chart.js, vditor and font-awesome
+were added, so three libraries this origin already vendors and hashes
+were filed as open third-party decisions, next to a fourth, DOMPurify,
+that the entry did identify.
+
+The entry said font-awesome was "hashable in one line, cdnjs". The
+truth was that `/lib/font-awesome-6.5.1/css/all.min.css` had been
+serving all along while a README handed out cdnjs 6.5.0. It said
+vditor needed a registry picked. Both registries serve the same 3.11.2
+that `/lib/` serves, so the registry was never the question.
+
+**Principle**: an entry describing external state is a snapshot of when
+somebody last looked. Before acting on its shape, re-read the artifact
+it describes. One `curl` of the manifest reframed four of eight rows
+from "needs a decision" to "needs a line of documentation".
+
+Same family as DEBT-SEC-3, where a deferral rested on "`npm audit` is
+already 0" and the premise had quietly expired. A deferral justified by
+a measurement needs the measurement re-taken, not the conclusion
+re-read.
+
+### 6.100 A URL Nobody Fetches Is a URL Nobody Checks (2026-10-17)
+
+`components/latexeditor/README.md` documented MathLive at
+`cdn.jsdelivr.net/npm/mathlive@0.107.3/dist/mathlive.min.js`. The fetch
+returned 52 bytes: "Couldn't find the requested release version
+0.107.3." Version 0.107.3 was never published. The 0.107 line stops at
+0.107.1. The real asset is `mathlive.min.js` at the package root, not
+under `dist/`.
+
+So the URL is wrong twice over, and it has never worked. It survived
+because MathLive is optional, detected with
+`customElements.get("math-field")`, and the component drops to source
+mode when the element is absent. A capability probe that finds nothing
+looks exactly like a consumer who chose not to load the library.
+
+**Principle**: an optional dependency is an untested dependency unless
+something fetches its documented URL. The repository had a ceiling
+counting whether the tag carried a hash and no check on whether the tag
+resolved. Pinning and hashing a URL says nothing about whether it is
+real — SEC-6 found `bootstrap@5/css/bootstrap.min.css` returning 404 in
+the same way, and this is the second instance.

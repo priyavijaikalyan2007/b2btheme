@@ -153,47 +153,84 @@ These issues involve potential XSS or script injection vectors and must be addre
   Changing a recommended version is a compatibility decision for consumers
   and not a lint fix.
 
-- [ ] **DEBT-SEC-8** **Eight third-party libraries are recommended with no
-  integrity hash**, left over from DEBT-SEC-5 (ADR-189) because each needs a
-  version or registry answer and not a hash. Held at 76 by the
-  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Measured
-  2026-10-17. **Ten of the 76 are in dated `specs/*.prd.md` planning
-  documents** rather than in anything a consumer copies, so this count
-  cannot reach zero without editing a historical record. Do not chase it
-  below 10.
+  **Overlaps DEBT-SEC-8** on `bootstrap`, `bootstrap-icons` and `chart.js`.
+  Kept as two entries: this one is about which version a document names,
+  and that one is about whether the tag carries a hash. For `chart.js` they
+  are the same edit, and 2026-10-17 gave it a known shape — DOMPurify and
+  font-awesome were fixed by pointing the documentation at the vendored
+  copy with the hash `dist/lib-manifest.json` publishes. Two references.
+  Offered three times without an answer, so it stays open rather than
+  being swept in on the strength of the fix being cheap.
 
-  **DOMPurify first, because the decision was already taken and the
-  component documentation routes around it.** `scripts/vendor-closure.mjs`
-  names it as the highest-value asset to remove third-party trust from,
-  ADR-149 vendored it, and `docs/CDN_INTEGRATION_GUIDE.md` correctly offers
-  `/lib/dompurify-3.4.16.js` with its hash. But eight references across seven files send
-  consumers to an unhashed **3.2.4** on unpkg, among them `COMPONENTS.md`
-  twice, `components/markdowneditor/README.md` and three demo pages. Two
-  more name an unhashed 3.4.16 on jsdelivr. Nothing outside the integration
-  guide points at the verified copy that is already served.
-  **This one is a correctness fix and not a compatibility decision**, so it
-  should go first. And 3.2.4 is not merely older. `docs/CDN_INTEGRATION_GUIDE.md`
-  §6 already records **19 open advisories against 3.2.4, including
-  cross-site-scripting bypasses**, found when vendoring first put DOMPurify
-  under this repository's `npm audit`. The guide warns consumers off that
-  version while seven other files hand it to them.
+- [ ] **DEBT-SEC-8** **Third-party libraries recommended with no integrity
+  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **65** by the
+  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Was 76 before
+  the first slice. **Ten of the remainder are in dated `specs/*.prd.md`
+  planning documents** rather than in anything a consumer copies, so this
+  count cannot reach zero without editing a historical record. Do not chase
+  it below 10.
 
-  | Library | Recommended as | Needs |
-  |---|---|---|
-  | dompurify | unpkg 3.2.4 (8 refs, 7 files), jsdelivr 3.4.16 (2 refs) | point at the vendored `/lib/dompurify-3.4.16.js` |
-  | vditor 3.11.2 | unpkg (×13) and jsdelivr (×2) | pick one registry |
-  | driver.js | 1.4.0 in demos, 1.4.1 in the README | pick one version |
-  | chart.js | docs say 4.4.7, `dist/lib` serves 4.5.1 | the DEBT-SEC-7 row |
-  | bootstrap | 5.3.3 and 5.3.8 | the DEBT-SEC-7 row |
-  | bootstrap-icons | 1.11.3 and 1.13.1 | the DEBT-SEC-7 row |
-  | mathlive 0.107.3 | single pinned version | hashable in one line |
-  | font-awesome 6.5.0 | single pinned version, cdnjs | hashable in one line |
+  **FIRST SLICE DONE 2026-10-17 (ADR-190): DOMPurify and font-awesome.**
+  Eleven tags across eight files now point at the copies this origin
+  already serves, with the hash `dist/lib-manifest.json` publishes.
 
-  The last two need no decision beyond a yes. They sit here rather than in
-  the manifest only so the dividing line stays "what DEBT-SEC-5 named", and
-  the coverage ceiling already sees them. `mathlive` sits bare in
-  `components/latexeditor/README.md` directly beside a hashed KaTeX tag,
-  which is the clearest argument for finishing the list.
+  **THE ENTRY'S OWN TABLE WAS WRONG ABOUT WHY THESE ARE OPEN.** It read as
+  eight libraries each needing a different version or registry answer. Four
+  of them are the same defect and need no answer at all: the library is
+  **already vendored, hashed and served from `/lib/`**, and the
+  documentation routes consumers to a public CDN instead — in three of the
+  four cases at an OLDER version. `lib-manifest.json` serves seven assets,
+  not the four ADR-149 recorded. Nobody widened the entry when it grew.
+
+  | Library | This origin serves | Docs hand out | State |
+  |---|---|---|---|
+  | dompurify | 3.4.16 hashed | unpkg 3.2.4 ×8, jsdelivr 3.4.16 unhashed ×2 | **fixed** |
+  | font-awesome | 6.5.1 hashed | cdnjs 6.5.0 ×2 | **fixed** |
+  | vditor | 3.11.2 hashed | unpkg ×13, jsdelivr ×2 | same fix, awaiting a yes |
+  | chart.js | 4.5.1 hashed | jsdelivr 4.4.7 ×2 | same fix, offered three times |
+  | mathlive | not served | jsdelivr 0.107.3 ×2 — **404** | blocked, see below |
+  | driver.js | not served | 1.4.0 in demos, 1.4.1 in the README | pick one version |
+  | bootstrap | not served | 5.3.3 and 5.3.8 | the DEBT-SEC-7 row |
+  | bootstrap-icons | not served | 1.11.3 and 1.13.1 | the DEBT-SEC-7 row |
+
+  **`vditor` is not "pick one registry", which is what this entry used to
+  say.** Both registries serve the same 3.11.2 that `/lib/` serves. The
+  registry was never the question. It is fifteen references away from being
+  the same one-line fix DOMPurify just had, and it is the largest single
+  block left.
+
+  **mathlive is blocked on a real question, not a hash.**
+  `components/latexeditor/README.md` and the generated reference both cite
+  `cdn.jsdelivr.net/npm/mathlive@0.107.3/dist/mathlive.min.js`. That URL
+  **404s, and always has.** Version 0.107.3 was never published — the 0.107
+  line stops at 0.107.1 and latest is 0.111.1 — and the real asset sits at
+  the package root as `mathlive.min.js`, not under `dist/`. So the visual
+  editing mode has never been loadable from the documented snippet. MathLive
+  is optional and detected through `customElements.get("math-field")`, and
+  `getMathML()` is still a Phase 4 stub, so nothing broke loudly enough to
+  be noticed. Choosing 0.107.1 or 0.111.1 is a decision about an untested
+  integration and is not taken here.
+
+  **What the ceilings still cannot see, and what now covers it.**
+  `thirdPartyTagsWithoutSri` counts tags carrying no `integrity` at all, so
+  it sees an UNHASHED tag and is blind to a MIS-hashed one. Repointing a
+  fixed tag back to a public CDN while leaving the hash attached left the
+  count unchanged at 65, which a mutation proved. A hash is a claim about
+  exactly one URL, so the pairing is now asserted in the other direction by
+  structure check `[10]` (`scripts/check-closure.mjs`): a tag carrying a
+  hash the manifest publishes must point at the URL that hash came from,
+  and must carry `crossorigin`. It reports how many tags it inspected, so a
+  PASS states coverage rather than only the absence of a complaint. Both
+  directions are mutation-proved.
+
+  Note also that the fixed tags now carry a `static.knobby.io` host, which
+  is **outside `CDN_HOSTS`** in `scripts/audit-counts.mjs`. Nothing in the
+  audit re-checks them. That is correct for own-origin assets and is why
+  the pairing check lives in the closure gate instead.
+
+  **DEBT-SEC-7 overlaps this entry** on chart.js, bootstrap and
+  bootstrap-icons. Both describe documented versions drifting from what
+  this origin serves. They are left as two entries rather than merged.
 
   **CodeMirror 6 is NOT on this list and never will be.** Its fifteen ESM
   specifiers cannot carry an integrity attribute at all. See DEBT-SEC-5 and

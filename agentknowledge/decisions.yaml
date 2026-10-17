@@ -7783,3 +7783,94 @@
     from 76 to 28, and both read as improvement. Three unit cases catch
     it, which is why the registries are pinned in tests and not only in a
     baseline.
+
+- id: ADR-190
+  title: Documentation points at the vendored copy when this origin already serves the library
+  date: 2026-10-17
+  status: accepted
+  context: |
+    DEBT-SEC-8 listed eight libraries recommended without an integrity
+    hash, and read as eight separate version or registry questions. It
+    was wrong about four of them.
+
+    dist/lib-manifest.json serves seven assets, not the four ADR-149
+    recorded: dompurify, maxgraph, signalr, cytoscape, chart.js, vditor
+    and font-awesome. Nobody widened the entry when the manifest grew.
+    So dompurify, vditor, chart.js and font-awesome are not awaiting a
+    decision. Each is already vendored, hashed and served from /lib/,
+    while the documentation sends consumers to a public CDN, and in
+    three of the four cases to an OLDER version.
+
+    DOMPurify was the sharpest case. scripts/vendor-closure.mjs names it
+    as the highest-value asset to remove third-party trust from, because
+    a substituted sanitizer becomes the attack. This origin serves
+    3.4.16. Eight references across seven files sent consumers to 3.2.4
+    on unpkg, which docs/CDN_INTEGRATION_GUIDE.md itself records as
+    carrying 19 open advisories including cross-site-scripting bypasses.
+    The guide warned readers off the version seven other files handed
+    them.
+  decision: |
+    D1. WHEN THIS ORIGIN SERVES IT, THE DOCUMENTATION POINTS HERE. Not at
+        a public CDN with a transcribed third-party hash. The bytes are
+        already under custody and structure check [10] already re-pairs
+        them with their published hash every run.
+
+    D2. THE HASH IS TRANSCRIBED INTO THE SNIPPET, NOT PLACEHOLDERED.
+        docs/CDN_INTEGRATION_GUIDE.md uses a placeholder because it
+        teaches reading the manifest at runtime. A component README is a
+        copy-paste snippet, so it carries the literal hash and
+        crossorigin="anonymous". The URL is immutable, so the pair
+        cannot go stale, and a wrong hash fails loudly in the browser.
+
+    D3. HOST IS static.knobby.io. It is the only host that appears in a
+        documented /lib/ URL, and it is what CDN_CONTRACT.md and the
+        integration guide already use. The workers.dev name appears 66
+        times in the documentation but never for /lib/.
+
+    D4. DEMO PAGES USE THE RELATIVE PATH, WITH NO INTEGRITY ATTRIBUTE.
+        scripts/copy-docs.sh rewrites ../../dist/ to ../../ on deploy, so
+        ../../dist/lib/dompurify-3.4.16.js resolves to /lib/... on the
+        CDN and to the local build in a checkout. Same origin, so SRI
+        would add nothing, and every other tag on those pages is already
+        a relative path.
+
+    D5. SCOPE WAS DOMPURIFY AND FONT-AWESOME ONLY. vditor and chart.js
+        are the same defect and the same one-line fix, found during this
+        change rather than approved before it. Finding that a fix is
+        cheaper than recorded is not authority to widen the change.
+        chart.js has been offered three times without an answer.
+
+    D6. MATHLIVE WAS DROPPED FROM THE SLICE. It was listed as hashable in
+        one line. The documented URL 404s: version 0.107.3 was never
+        published, and the asset sits at the package root rather than
+        under dist/. Picking a real version is a decision about an
+        untested optional integration.
+
+    D7. THE PAIRING IS ASSERTED IN BOTH DIRECTIONS. thirdPartyTagsWithoutSri
+        counts tags carrying no integrity at all, so it is blind to a tag
+        carrying the WRONG one. scripts/check-closure.mjs now also
+        asserts that a tag bearing a published hash points at the URL
+        that hash was computed from.
+  consequences: |
+    Eleven tags across eight files now resolve to bytes this repository
+    builds, hashes and serves. thirdPartyTagsWithoutSri drops from 76 to
+    65 and the ceiling moves with it.
+
+    A CEILING ON ATTRIBUTE PRESENCE CANNOT SEE ATTRIBUTE CORRECTNESS.
+    Repointing a fixed tag back to unpkg while leaving its hash attached
+    left the count unchanged at 65, because the tag still has an
+    integrity attribute. The browser would reject it, which is correct,
+    but no gate here saw it. That is what D7 closes, and both directions
+    are mutation-proved.
+
+    The fixed tags now carry a static.knobby.io host, which is outside
+    CDN_HOSTS in scripts/audit-counts.mjs. The audit no longer sees
+    them at all. That is right for own-origin assets and is why the new
+    assertion lives in the closure gate, which already reads the
+    manifest, rather than in the audit, which does not.
+
+    A LIBRARY CAN BE VENDORED AND STILL BE UNDOCUMENTED AS VENDORED. The
+    gap here was never the hash. It was that lib-manifest.json grew from
+    four assets to seven and no document followed. The remaining two,
+    vditor at fifteen references and chart.js at two, are the same gap
+    and sit one yes away.

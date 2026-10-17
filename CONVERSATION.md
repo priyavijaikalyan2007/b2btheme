@@ -3929,3 +3929,62 @@ and a fifth would have hidden it forever.
 
 **Tracker 60 resolved / 19 open.** DEBT-SEC-5 closed, DEBT-SEC-8 opened
 in its place.
+
+## 2026-10-17 (cont.) — DEBT-SEC-8: the list was wrong about itself
+
+The owner asked what was next, took the recommendation, and said *"go
+ahead."* The recommendation was DOMPurify, on the grounds that it was
+the one open item that was a defect rather than a decision. That part
+held. The reasoning around it did not.
+
+**One `curl` of the manifest reframed half the entry.** DEBT-SEC-8
+listed eight libraries needing an integrity hash and read as eight
+separate version or registry questions. `dist/lib-manifest.json` serves
+seven assets. ADR-149 recorded four. Nobody updated the entry when
+`chart.js`, `vditor` and `font-awesome` were added, so three libraries
+this origin already vendors and hashes sat on a list of third-party
+decisions, beside a fourth that the entry did name.
+
+So the entry's own table was wrong in a way that made the work look
+harder than it was. It called font-awesome "hashable in one line,
+cdnjs" while `/lib/font-awesome-6.5.1/css/all.min.css` had been
+serving all along and a README handed out cdnjs 6.5.0. It called
+vditor "pick one registry" when both registries serve the same 3.11.2
+that `/lib/` serves. The registry was never the question.
+
+**DOMPurify was the sharpest version of the same thing.** This origin
+serves 3.4.16. Seven files sent consumers to 3.2.4 on unpkg, which the
+integration guide itself records as carrying 19 open advisories
+including cross-site-scripting bypasses. One document warned readers
+off the version the others handed them.
+
+**I did not widen the change.** vditor and chart.js are the same
+one-line fix, now obviously so, and the temptation was to sweep them
+in while the context was loaded. The approval came from a framing I
+had given the owner that turned out to be false, so acting on the
+corrected framing would have been acting on my own authority. chart.js
+in particular has been offered three times without an answer. Three
+silences are an answer about priority, not an invitation.
+
+**mathlive was approved and then dropped, which is the honest
+outcome.** I had told the owner it was "a hash in one line". The
+documented URL returns 52 bytes saying the release does not exist.
+Version 0.107.3 was never published, and the asset is at the package
+root rather than under `dist/`. The URL is wrong twice and has never
+worked. It survived because MathLive is optional and probed with
+`customElements.get("math-field")`, so a dead URL and a consumer who
+declined the library are indistinguishable to the component. Choosing
+a real version is a decision about an untested integration, so it went
+into the entry instead of into the commit.
+
+**The mutation that did not fail taught the most.** After the fix I
+reverted a tag from `static.knobby.io` back to unpkg and left the hash
+attached. `thirdPartyTagsWithoutSri` stayed at 65. The count asks
+whether a tag has an `integrity` attribute, and that tag still had
+one — just a hash belonging to a different file. The browser would
+have refused the script, correctly, but no gate here would have said
+so first. A hash is a claim about exactly one URL, and the ceiling was
+only ever checking half of it. `scripts/check-closure.mjs` now asserts
+the other half and reports how many tags it inspected, because a gate
+that says PASS without saying what it looked at is the DEBT-GATE-1
+shape again.
