@@ -6,7 +6,9 @@
  *
  * ⚓ COMPONENT: ClosureGate
  * 📜 PURPOSE: Verify every published SRI hash still matches the artifact on
- *    disk, and that each vendored file is present and non-empty. DEBT-SEC-4.
+ *    disk, that each vendored file is present and non-empty, and that any
+ *    document citing a published hash cites the URL that hash belongs to.
+ *    DEBT-SEC-4, extended by DEBT-SEC-8.
  * 🔗 RELATES: [[VendorClosure]], [[CdnContract]]
  *
  * WHY THIS EXISTS SEPARATELY FROM THE BUILD
