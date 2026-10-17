@@ -7694,3 +7694,92 @@
     - "components/toolbar/toolbar.nofallback.test.ts"
     - "demo/studio/component-studio.html"
     - "docs/CDN_INTEGRATION_GUIDE.md"
+- id: ADR-189
+  title: The six libraries this repository recommends but does not serve get a published SRI hash, not a vendored copy
+  date: 2026-10-17
+  status: accepted
+  context: |
+    DEBT-SEC-5 asked whether the dist/lib integrity guarantee should cover
+    six third-party libraries that are read from window, named with a CDN
+    URL in the documentation, and served by jsdelivr rather than by this
+    origin. The entry already carried a recommendation and had left it
+    untaken since 2026-10-15. The owner took it on 2026-10-17.
+
+    Vendoring the six would mean six new devDependencies and roughly 6 MB
+    more on the CDN, for renderers that are optional by design. It would
+    also put this repository on the upgrade treadmill for six projects it
+    does not own.
+
+    The entry said six. The published surface is larger. Fourteen distinct
+    third-party libraries are recommended across four registries, and
+    several are named at two different versions in different files.
+  decision: |
+    D1. HASH, DO NOT VENDOR. scripts/third-party-sri.json records the
+        version, URL, sha384 hash, byte count and closure of each build.
+        scripts/sri-manifest.mjs publishes it to dist/third-party-sri.json
+        and consumers paste tags that already carry the hash.
+
+    D2. THE HASHES ARE RECORDED, NOT COMPUTED AT BUILD TIME. Fetching nine
+        URLs inside the build gate would make CI depend on a third party
+        being reachable. A versioned jsdelivr URL is immutable, so the
+        hash of a pinned build does not drift. `npm run sri:verify`
+        refetches and diffs, and it is deliberately outside the gate.
+
+    D3. KATEX UNIFIES ON 0.16.22. It was named at 0.16.21 in four files
+        and 0.16.22 in two, with docs/COMPONENT_REFERENCE.md carrying
+        both. A recommended-version change is a compatibility decision
+        under DEBT-SEC-7, so it is recorded here rather than left to read
+        as cleanup. It is a patch bump inside one minor, and the newer
+        number was already what markdownrenderer named.
+
+    D4. CODEMIRROR 6 IS RECORDED AS UNHASHABLE, WITH THE REASON. An
+        integrity attribute attaches to a script tag and cannot attach to
+        an import specifier inside a module, which scripts/vendor-closure.mjs
+        states in its own header. CodeEditor documents fifteen bare ESM
+        imports, so SRI is structurally unavailable and not merely absent.
+
+    D5. THE RATCHET IS THREE COUNTS, NOT ONE. tagsMissingSri is a ceiling
+        of zero over tags pointing at a recorded build. thirdPartyTagsWithoutSri
+        is a ceiling of 76 over every third-party tag with no integrity at
+        all. It is the only one of the three that can see a library
+        nobody has decided about. countUnpinnedCdnRefs widens from one registry to
+        four.
+
+    D6. CROSSORIGIN IS PART OF THE CHECK, NOT STYLE. Without it the
+        browser makes an opaque request, cannot read the body to hash it,
+        and skips the integrity check rather than failing it. A hash with
+        no crossorigin is the most convincing way to have no protection.
+  consequences: |
+    A consumer who pastes the documented tags gets a verified build. A
+    substituted file fails the check, the browser refuses it, the global
+    is absent, and the component that needs it throws. SRI is the
+    no-fallback rule applied at the network boundary, which is the one
+    boundary a runtime check in this repository cannot reach.
+
+    unpinnedCdnRefs moved from 0 to 77, and the 77 is not a regression.
+    The previous predicate matched cdn.jsdelivr.net alone. Fourteen
+    esm.sh specifiers floating at major @6, and eight unpkg paths with
+    no version, were never inside it. DEBT-SEC-6 closed as "held at 0" and
+    that zero was partly vacuous. Same family as DEBT-GATE-1, where three
+    checks passed because grep aborted, and DEBT-DUI-5, where a
+    measurement used the wrong predicate.
+
+    All 77 are CodeMirror, which is also the one library that cannot be
+    hashed. The unpinned surface and the unhashable surface are the same
+    library. Pinning the fifteen is a separate decision, because they
+    have to interoperate at the versions chosen.
+
+    Eight libraries remain unhashed and are recorded as DEBT-SEC-8, each
+    needing a version or registry answer rather than a lint pass.
+    DOMPurify leads that list. This repository vendors 3.4.16 with a
+    hash and calls it the highest-value asset to remove third-party
+    trust from. Eight references across seven files still send consumers
+    to an unhashed 3.2.4 on unpkg, and two more to an unhashed 3.4.16 on
+    jsdelivr. Nothing outside the integration guide points at the
+    verified copy already served.
+
+    A CEILING CANNOT SEE A PREDICATE NARROWING. Reverting the registry
+    widening takes unpinnedCdnRefs from 77 to 0 and thirdPartyTagsWithoutSri
+    from 76 to 28, and both read as improvement. Three unit cases catch
+    it, which is why the registries are pinned in tests and not only in a
+    baseline.

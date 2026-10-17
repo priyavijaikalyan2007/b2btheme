@@ -3876,3 +3876,56 @@ this time of deleting the icon picker. Both baselines are tightened.
 and that number is not re-derivable from the file: FALLBACK-3 to
 FALLBACK-8 live inside FALLBACK-2's prose and carry no checkbox of their
 own, so they were counted twice.
+
+## 2026-10-17 — DEBT-SEC-5: publishing a hash for what we do not serve
+
+The owner answered the question the entry had been holding since
+2026-10-15: *"Yes publish the hash for sec-5 and continue."* The entry
+had already written the recommendation and left it untaken, because
+taking it is a statement about what the library guarantees.
+
+**Publish the hash, do not vendor.** Vendoring six renderers means six
+devDependencies and roughly 6 MB more on the CDN, for libraries most
+consumers never load. It also puts this repository on the upgrade
+treadmill for six projects it does not own. A hash gives the consumer
+the same protection and claims only what is true: a named immutable
+build has these bytes.
+
+**The hashes are recorded, not computed during the build.** Fetching
+nine URLs inside the gate would make CI depend on jsdelivr being
+reachable. That is a new way for a green suite to go red for no
+reason. A versioned jsdelivr URL is immutable, so the hash of a pinned
+build does not drift, and a mismatch is an incident. `npm run
+sri:verify` is the thing that reports it, outside the gate.
+
+**The entry's count was wrong, the same way FALLBACK-9's was.** It said
+five, corrected itself to six, and the published surface is fourteen
+libraries across four registries. Six of them are named at two
+different versions in different files. The eight that remain are
+DEBT-SEC-8, and DOMPurify leads it. This repository vendors 3.4.16 with
+a hash, and `docs/CDN_INTEGRATION_GUIDE.md` §6 records 19 open
+advisories against 3.2.4, including cross-site-scripting bypasses.
+Eight references across seven files still hand consumers 3.2.4.
+
+**`unpinnedCdnRefs` moved 0 to 77 with no document changed.** The
+predicate matched `cdn.jsdelivr.net` and nothing else. Fourteen esm.sh
+specifiers floating at major `@6`, and eight unpkg paths with no
+version, were never inside it. DEBT-SEC-6 closed as "held at 0" eleven
+URLs ago, and the earning is what stopped anyone asking what else the
+pattern missed. Third instance after DEBT-GATE-1 and DEBT-DUI-5.
+
+All 77 are CodeMirror, which is also the one library that cannot carry
+a hash at all. An `integrity` attribute cannot attach to an ESM import
+specifier. The unpinned surface and the unhashable surface turn out to
+be the same library, and it is recorded in the manifest under
+`unhashable` rather than left absent.
+
+**Ten mutations, all caught, and one residue worth stating.** Reverting
+the registry widening takes both new ceilings DOWN and the audit still
+prints PASS. A ratchet guards a quantity and never the meaning of one. The four registries are therefore pinned in unit cases. The
+first draft of the tag cases also used placeholder URLs that the code
+filters out before the assertion runs. Four cases caught that loudly,
+and a fifth would have hidden it forever.
+
+**Tracker 60 resolved / 19 open.** DEBT-SEC-5 closed, DEBT-SEC-8 opened
+in its place.

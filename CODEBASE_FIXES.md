@@ -40,43 +40,51 @@ These issues involve potential XSS or script injection vectors and must be addre
 
   **Cost to consumers, stated in the README:** text inside a PlantUML diagram is no longer selectable, a link inside one no longer works, and CSS targeting the inner `svg` no longer reaches it. The diagram source stays in `data-source` and in a visually hidden `pre` that `aria-describedby` points at. Mermaid and Graphviz are unaffected, because both render locally from author-written source and neither inserts a markup string.
 
-- [ ] **DEBT-SEC-5** Five third-party browser libraries are read from
-  `window` but are not vendored into `dist/lib`, so the host page chooses the
-  build and this repository applies no SRI to it: **highlight.js, KaTeX,
-  Mermaid, @viz-js/viz and CodeMirror 6**. `scripts/vendor-closure.mjs`
-  vendors seven assets with a published hash, and these five sit outside that
-  guarantee. `components/markdownrenderer/README.md` names a jsdelivr build
-  for each of the first four.
+- [x] **DEBT-SEC-5** Third-party libraries this repository recommends but
+  does not serve carried no integrity hash. The host page chose the build,
+  and nothing here verified it. **CLOSED 2026-10-17, ADR-189.** The answer is
+  the one the entry already recommended and had not taken: **publish a hash,
+  do not vendor.**
 
-  This surfaced during WIN-2, because these are exactly the globals no
-  declaration of ours can own, and CodeMirror 6 is the reason
-  `components/codeeditor/codeeditor.ts` keeps one of the six remaining
-  assertions. **Vendoring them would not remove that assertion** — codeeditor
-  probes about thirty names and asks for alternatives when the first spelling
-  is absent — so this is a supply-chain question in the shape of DEBT-SEC-4,
-  not a continuation of WIN-2. Decide whether the SRI guarantee should cover
-  them, and if so whether the optional renderers stay optional.
+  `scripts/third-party-sri.json` records the version, URL, sha384 hash, byte
+  count and closure of seven builds covering five libraries.
+  `scripts/sri-manifest.mjs` publishes it to `dist/third-party-sri.json`, and
+  `npm run sri:verify` refetches every URL and diffs. The documented tags in
+  the READMEs and in this repository's own demo pages now carry
+  `integrity` and `crossorigin="anonymous"` already filled in.
 
-  **It is six, not five. `marked` is in exactly the same position** — probed
-  on `window`, named with a jsdelivr URL in the same README table, not
-  vendored — and it is the only one marked **Required** rather than
-  Optional. It was missed because WIN-2, which surfaced this entry, was
-  looking at globals no declaration of ours can own, and `marked` has one.
+  **The entry's count was wrong, the same way FALLBACK-9's was.** It said
+  five and corrected itself to six. The real published surface is
+  **fourteen distinct third-party libraries across four registries** —
+  jsdelivr, unpkg, cdnjs and esm.sh. Six of them are named at two different
+  versions in different files. The eight that remain are **DEBT-SEC-8**,
+  below, because each needs a version or registry answer rather than a hash.
 
-  **None of the six is installed**, so vendoring means six new
-  devDependencies and roughly 6 MB more on the CDN, for renderers that are
-  optional by design and that most consumers will never load. The
-  recommendation here is NOT to vendor them. The guarantee `dist/lib` makes
-  is "we serve this and we hash it", and it is worth making for a sanitizer
-  and worth questioning for a 3 MB diagram renderer that a page loads only
-  if it has diagrams. Publishing an SRI hash for each recommended build
-  gives a consumer the same protection without this repository taking
-  ownership of the upgrade treadmill for six projects. **That is a decision
-  about what the library guarantees, so it is left open rather than taken.**
+  **CodeMirror 6 cannot be hashed and that is structural.** An `integrity`
+  attribute attaches to a `<script src>` tag. It cannot attach to an import
+  specifier inside a module, which `scripts/vendor-closure.mjs` states in
+  its own header. CodeEditor documents fifteen bare ESM imports from esm.sh, so
+  every one of them arrives unverified. It is recorded in the manifest under
+  `unhashable`, with the reason, rather than left absent and looking like an
+  omission.
 
-  **What was NOT a decision has been fixed separately as DEBT-SEC-6.**
-  Reading this entry turned up eight CDN URLs in the documentation with no
-  version at all, one of them DOMPurify.
+  **`unpinnedCdnRefs` moved 0 -> 77, and the 77 is not a regression.** The
+  old predicate matched `cdn.jsdelivr.net` alone. Fourteen esm.sh specifiers
+  floating at major `@6`, and eight unpkg paths with no version at all, were
+  never inside it. So **DEBT-SEC-6 closed as "held at 0" and that zero was
+  partly vacuous.** It is the same family as DEBT-GATE-1, where three checks
+  passed because grep aborted. All 77 are CodeMirror, which is also the one
+  library that cannot be hashed. The unpinned surface and the unhashable
+  surface turn out to be the same library.
+
+  Two ceilings hold the line. `tagsMissingSri` is **0** over tags pointing at
+  a recorded build, and it fails on a tampered hash, a stripped
+  `crossorigin`, or a stripped `integrity`. `thirdPartyTagsWithoutSri` is
+  **76** over every third-party tag carrying no `integrity` at all. It is the
+  only one of the three that can see a library nobody has decided about.
+  **A ceiling cannot see a predicate narrowing.** Reverting the registry
+  widening takes 77 to 0 and 76 to 28, and both read as improvement. So the
+  four registries are pinned in unit cases and not only in a baseline.
 
 - [x] **DEBT-SEC-6** **11 third-party CDN URLs in documentation and demo
   pages carried no exact version**, so jsdelivr resolved them to whatever
@@ -144,6 +152,53 @@ These issues involve potential XSS or script injection vectors and must be addre
   needs its own answer, which is why this is open rather than swept.
   Changing a recommended version is a compatibility decision for consumers
   and not a lint fix.
+
+- [ ] **DEBT-SEC-8** **Eight third-party libraries are recommended with no
+  integrity hash**, left over from DEBT-SEC-5 (ADR-189) because each needs a
+  version or registry answer and not a hash. Held at 76 by the
+  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Measured
+  2026-10-17. **Ten of the 76 are in dated `specs/*.prd.md` planning
+  documents** rather than in anything a consumer copies, so this count
+  cannot reach zero without editing a historical record. Do not chase it
+  below 10.
+
+  **DOMPurify first, because the decision was already taken and the
+  component documentation routes around it.** `scripts/vendor-closure.mjs`
+  names it as the highest-value asset to remove third-party trust from,
+  ADR-149 vendored it, and `docs/CDN_INTEGRATION_GUIDE.md` correctly offers
+  `/lib/dompurify-3.4.16.js` with its hash. But eight references across seven files send
+  consumers to an unhashed **3.2.4** on unpkg, among them `COMPONENTS.md`
+  twice, `components/markdowneditor/README.md` and three demo pages. Two
+  more name an unhashed 3.4.16 on jsdelivr. Nothing outside the integration
+  guide points at the verified copy that is already served.
+  **This one is a correctness fix and not a compatibility decision**, so it
+  should go first. And 3.2.4 is not merely older. `docs/CDN_INTEGRATION_GUIDE.md`
+  §6 already records **19 open advisories against 3.2.4, including
+  cross-site-scripting bypasses**, found when vendoring first put DOMPurify
+  under this repository's `npm audit`. The guide warns consumers off that
+  version while seven other files hand it to them.
+
+  | Library | Recommended as | Needs |
+  |---|---|---|
+  | dompurify | unpkg 3.2.4 (8 refs, 7 files), jsdelivr 3.4.16 (2 refs) | point at the vendored `/lib/dompurify-3.4.16.js` |
+  | vditor 3.11.2 | unpkg (×13) and jsdelivr (×2) | pick one registry |
+  | driver.js | 1.4.0 in demos, 1.4.1 in the README | pick one version |
+  | chart.js | docs say 4.4.7, `dist/lib` serves 4.5.1 | the DEBT-SEC-7 row |
+  | bootstrap | 5.3.3 and 5.3.8 | the DEBT-SEC-7 row |
+  | bootstrap-icons | 1.11.3 and 1.13.1 | the DEBT-SEC-7 row |
+  | mathlive 0.107.3 | single pinned version | hashable in one line |
+  | font-awesome 6.5.0 | single pinned version, cdnjs | hashable in one line |
+
+  The last two need no decision beyond a yes. They sit here rather than in
+  the manifest only so the dividing line stays "what DEBT-SEC-5 named", and
+  the coverage ceiling already sees them. `mathlive` sits bare in
+  `components/latexeditor/README.md` directly beside a hashed KaTeX tag,
+  which is the clearest argument for finishing the list.
+
+  **CodeMirror 6 is NOT on this list and never will be.** Its fifteen ESM
+  specifiers cannot carry an integrity attribute at all. See DEBT-SEC-5 and
+  the `unhashable` key in `scripts/third-party-sri.json`.
+
 
 ---
 

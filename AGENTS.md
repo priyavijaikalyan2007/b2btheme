@@ -437,6 +437,16 @@ the new refusal was turned back into the old fallback. Removing one fallback
 under another moves which one answers. The test is what proves the
 difference, because the diff looks complete either way.
 
+**Subresource integrity is this rule at the network boundary.** A runtime
+check in this repository cannot reach a third-party script that arrives
+substituted. An `integrity` hash can, and it fails in the right direction.
+The browser refuses the file and the global is absent, so the component
+that needs it throws the refusal the rule already asks for. So a recommended
+third-party build carries a hash (`scripts/third-party-sri.json`, ADR-189).
+Note the trap. Without `crossorigin="anonymous"` the browser cannot read the
+body to hash it, so it **skips** the check rather than failing it. That is a
+control which is present, correct and inert.
+
 **A required field that a type cannot enforce needs a runtime check.** The
 tell is interpolation. `aria-label: item.tooltip` on a field declared
 `tooltip: string` cannot fail against a JavaScript host, it can only write

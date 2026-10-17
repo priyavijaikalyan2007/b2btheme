@@ -1458,3 +1458,84 @@ fail, it can only produce the string "undefined".
 Note which direction the fix goes. The tempting fix is to stop setting
 the attribute when the value is missing, which is tolerance for a
 violated contract — a fallback wearing a narrowing costume.
+
+### 6.94 A Zero Is a Claim About a Predicate, Not About the World (2026-10-17)
+
+DEBT-SEC-6 closed on 2026-10-15 having pinned eleven floating CDN URLs,
+and `unpinnedCdnRefs` was reported as "held at 0". On 2026-10-17 the
+same check, with its registry list widened from one host to four,
+returned **77** — against documents nobody had touched in between.
+
+The predicate matched `cdn.jsdelivr.net` and nothing else. Fourteen
+esm.sh specifiers floating at major `@6` and eight unpkg paths carrying
+no version at all had been outside it the whole time. The zero was true
+of the predicate and false of the repository.
+
+**Principle**: when a check reports zero, the question to ask is not
+"is this right" but "what can this check see". A green count names the
+intersection of the defect and the predicate, and only the predicate is
+written down. This is the third time in this repository. DEBT-GATE-1 was the
+first, where `grep -oP` aborted on macOS and three checks passed on
+an empty list. DEBT-DUI-5 was the second, where a measurement matched
+the wrong CSS property and the wrong unit.
+
+The tell is a zero that arrived without effort. Eleven URLs were fixed
+to reach that zero, which made it feel earned. The earning is what
+stopped anyone asking what else the pattern missed.
+
+### 6.95 A Ceiling Cannot See a Predicate Narrowing (2026-10-17)
+
+This repository already knows that a ceiling cannot see an absence. The
+sharper case is a ceiling watching a count whose *definition* changes.
+
+Reverting the registry widening above takes `unpinnedCdnRefs` from 77 to
+0 and `thirdPartyTagsWithoutSri` from 76 to 28. Both are ceilings. Both
+report "under baseline". The audit prints PASS, and the only thing that
+happened is that the check stopped looking at three registries.
+
+**Principle**: a ratchet guards the number, never the meaning of the
+number. Anything load-bearing about *what* is counted belongs in unit
+cases, where narrowing the predicate fails a test instead of relaxing a
+ceiling. The four registries are therefore pinned in
+`scripts/audit-counts.test.ts`, with a pinned and an unpinned case each.
+The mutation that narrows the host pattern fails three of those cases
+while the audit still passes.
+
+A baseline is a promise about a quantity. A test is a promise about a
+definition. Only one of them notices when the definition moves.
+
+### 6.96 An `integrity` Attribute With No `crossorigin` Is Not Protection (2026-10-17)
+
+A `<script src>` on another origin, carrying a correct `integrity` hash
+and no `crossorigin` attribute, is fetched as an opaque response. The
+browser cannot read the body, so it cannot hash it, so it **skips** the
+integrity check rather than failing it. The script runs unverified.
+
+**Principle**: this is the worst shape a security control can take. It
+is not absent, which somebody would notice. It is present, correct, and
+inert. A reviewer reading the tag sees a hash and stops reading.
+
+So the check that guards this repository's documented tags requires both
+attributes and counts a tag carrying only the hash as a failure. The
+mutation that drops the `crossorigin` half of the condition fails a case
+written for exactly that half.
+
+### 6.97 A Fixture the Code Filters Out Never Reaches the Assertion (2026-10-17)
+
+The first draft of the `countTagsMissingSri` cases used placeholder URLs
+— `src="URL"`, `href="S.css"`. The function matches tags on a CDN host
+before it reads any hash, so every fixture was discarded before the
+logic under test ran. Four cases failed loudly and were fixed.
+
+The fifth did not fail. "A correctly hashed tag costs nothing" expects
+zero, and a fixture that is filtered out also returns zero. It would
+have passed for the rest of its life while testing nothing.
+
+**Principle**: a case whose expected value is zero, absence or no-op
+cannot distinguish "the code did the right thing" from "the code never
+saw the input". Give such a case a sibling on the same fixture that
+expects a non-zero result. If the sibling passes, the fixture reaches
+the code, and only then does the zero mean anything.
+
+This is the same shape as the DiagramEngine suite that stayed green for
+months while pointed at a page that loaded nothing.
