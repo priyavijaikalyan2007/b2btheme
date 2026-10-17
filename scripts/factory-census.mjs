@@ -115,8 +115,15 @@ function balanced(src, from, open, close)
     return null;
 }
 
-/** An empty value of the right shape, or undefined to leave the field out. */
-export function emptyFor(type)
+/**
+ * An empty value of the right shape, or undefined to leave the field out.
+ *
+ * `src` is optional and lets a named type alias be resolved. `GaugeShape`
+ * says nothing on its own, and `type GaugeShape = "arc" | "dial"` says
+ * which values exist. Seven required fields across six components are
+ * declared that way, and without the lookup they read as unfillable.
+ */
+export function emptyFor(type, src = null)
 {
     const t = type.trim();
 
@@ -127,6 +134,17 @@ export function emptyFor(type)
     if (/^Record</.test(t) || /^\{/.test(t)) { return {}; }
     if (/^Map</.test(t)) { return new Map(); }
     if (/^Date\b/.test(t)) { return new Date(0); }
+
+    // A union of string literals. The first member is as good as any,
+    // and a component that rejects it has said something worth knowing.
+    const literal = /^"([^"]*)"/.exec(t);
+    if (literal !== null && /^(\s*"[^"]*"\s*\|?)+$/.test(t)) { return literal[1]; }
+
+    if (src !== null && /^[A-Z]\w*$/.test(t))
+    {
+        const alias = new RegExp(`type ${t}\\s*=\\s*([^;]+);`).exec(src);
+        if (alias !== null) { return emptyFor(alias[1], null); }
+    }
     return undefined;
 }
 
@@ -149,9 +167,17 @@ export function interfaceFields(src, name, seen = new Set())
 
     const fields = [];
 
-    for (const base of (m[2] ?? "").split(",").map((b) => b.trim()).filter(Boolean))
+    for (const base of splitParams(m[2] ?? "").map((b) => b.trim()).filter(Boolean))
     {
-        fields.push(...interfaceFields(src, base.replace(/<.*$/, ""), seen));
+        // `extends Omit<TenantSwitcherOptions, "tenants" | "activeTenantId">`
+        // inherits the base minus the named keys, and reading the base
+        // name as "Omit" inherits nothing at all.
+        const omit = /^Omit\s*<\s*(\w+)\s*,([\s\S]*)>$/.exec(base);
+        const name = omit !== null ? omit[1] : base.replace(/<.*$/, "");
+        const dropped = omit === null ? [] : omittedKeys(omit[2]);
+
+        fields.push(...interfaceFields(src, name, seen)
+            .filter((f) => !dropped.includes(f.name)));
     }
 
     for (const line of block.text.split("\n"))
@@ -161,7 +187,18 @@ export function interfaceFields(src, name, seen = new Set())
 
         fields.push({ name: f[1], optional: f[2] === "?", type: f[3].trim() });
     }
-    return fields;
+
+    // A derived interface may restate a field of its base. The nearer
+    // declaration is the one that applies, and counting both reported
+    // WorkspaceSwitcherOptions.activeWorkspaceId twice.
+    const names = fields.map((f) => f.name);
+    return fields.filter((f, i) => names.lastIndexOf(f.name) === i);
+}
+
+/** The key names inside an `Omit<X, "a" | "b">` second argument. */
+export function omittedKeys(text)
+{
+    return [...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
 }
 
 /** Every required field of `interface <name>`, filled with an empty value. */
@@ -173,7 +210,7 @@ export function stubFromInterface(src, name)
     {
         if (f.optional) { continue; }
 
-        const v = emptyFor(f.type);
+        const v = emptyFor(f.type, src);
         if (v !== undefined) { stub[f.name] = v; }
     }
     return stub;
@@ -206,6 +243,14 @@ export function factoryInventory(root = ROOT)
             const oi = names.findIndex((n, i) => i !== ci && /opt/i.test(n));
             const optionType = oi >= 0 ? (/([A-Z]\w*Options)/.exec(types[oi]) ?? [])[1] ?? null : null;
 
+            // `createTileGauge(options: Omit<GaugeOptions, "shape">)` means
+            // the caller must NOT pass shape, and reading GaugeOptions
+            // whole reported three gauges as missing an option they are
+            // declared never to receive.
+            const omitted = oi < 0
+                ? []
+                : omittedKeys((/^Omit\s*<\s*\w+\s*,([\s\S]*)>$/.exec(types[oi].trim()) ?? [])[1] ?? "");
+
             // A container the factory never names as a parameter. See the
             // header: thirty-one factories declare it on their options.
             const field = ci >= 0 || optionType === null
@@ -222,6 +267,8 @@ export function factoryInventory(root = ROOT)
                 containerField: field === null ? null : field.name,
                 containerFieldType: field === null ? null : field.type,
                 optionsIndex: oi,
+                optionsType: optionType,
+                optionsOmits: omitted,
                 optionsStub: optionType === null ? {} : stubFromInterface(src, optionType),
             });
         }

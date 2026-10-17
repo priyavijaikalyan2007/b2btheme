@@ -130,6 +130,14 @@ describe("the predicate fires for the reason it was written", () =>
         expect(isVacuous('expect(typeof mathml).toBe("string")')).toBe(true);
     });
 
+    test("a matcher quoted inside a subject is not the assertion", () =>
+    {
+        // This instrument's own tests pass assertion text as data. The
+        // outer call is a real .toBe(), and matching the patterns
+        // against the whole line called two of them vacuous.
+        expect(isVacuous('expect(isVacuous("expect(h).toBeDefined()")).toBe(true)')).toBe(false);
+    });
+
     test("an existence matcher on a DOM query is a real check", () =>
     {
         // THE SUBJECT DECIDES, NOT THE MATCHER. This makes exactly the

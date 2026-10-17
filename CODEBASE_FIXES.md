@@ -1677,6 +1677,56 @@ which way a stale number leans.
 
 ---
 
+## MEDIUM — Required Options Silently Defaulted (67 measured 2026-10-17)
+
+AGENTS.md states this in the same table as the container rule: "An
+option is missing -> `throw` a literate error", against "apply a silent
+default". ERR-1 conflated the two from the start — its entry said "no
+container **or option** validation" and every number it carried was
+about containers. This is the other row.
+
+- [ ] **ERR-2** **67 of 104 required options are not refused when they
+  are absent.** Held by `SILENT_DEFAULT_FOR_REQUIRED_OPTION` in
+  `scripts/factory-options.test.ts`, ADR-197.
+
+  | What the factory does with a required option that is absent | Count |
+  |---|---|
+  | Applies a silent default | 40 |
+  | Crashes later with a `TypeError` naming the field | 27 |
+  | Refuses, naming the option | 5 |
+  | Verdict unreachable | 2 |
+
+  Measured by calling each factory twice: once with a complete stub,
+  once with one required field removed. Omitting one at a time rather
+  than passing `{}`, because the first guard firing says nothing about
+  the other seven options.
+
+  **FOUR NUMBERS CAME OUT OF THIS PROBE BEFORE 67, AND EVERY CORRECTION
+  MADE IT STRICTER ABOUT WHAT IT WAS ALLOWED TO BLAME.**
+
+  - **84 required fields, not 104.** `createTileGauge(options:
+    Omit<GaugeOptions, "shape">)` declares that the caller must not
+    pass shape, and reading `GaugeOptions` whole blamed three gauges
+    for an option they can never receive.
+    `WorkspaceSwitcherOptions extends Omit<TenantSwitcherOptions, ...>`
+    inherits the base minus two keys, and a field the derived
+    interface restates was counted twice.
+  - **A component that rejects an empty array has validated the
+    field.** The stub supplies `[]`, and Stepper answers "steps are
+    required". That is stricter than a presence check, and four
+    components were sitting in the unreachable column because of it.
+  - **`TypeError: options.roots is not iterable` is not a refusal.**
+    It contains the field name, so it had been passing as one. It is
+    the component reaching for a value that is not there, one frame
+    later, with no remedy attached. Twenty-seven of those. Same
+    distinction as `OPAQUE` in the container census, ADR-194.
+
+  **5 of 79 probed fields are beyond the stub** — three callbacks,
+  `MentionUser` and `GraphCanvasHandle` — and are excluded rather than
+  guessed at. `emptyFor` learned string-literal unions and their named
+  aliases on the way, which brought `GaugeShape` and `ChartPanelKind`
+  into reach.
+
 ## MEDIUM — Tests That Cannot Fail (21 closed, 341 held, measured 2026-10-17)
 
 A test that cannot fail is worse than no test. No test is an absence

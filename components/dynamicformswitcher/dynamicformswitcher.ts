@@ -451,7 +451,8 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         {
             throw new Error(
                 `${LOG_PREFIX} initialVariant '${this.opts.initialVariant}' `
-                + `is not a key of variants`);
+                + `is not a key of variants. Pass one of `
+                + `${Object.keys(vs).join(", ") || "(variants is empty)"}.`);
         }
     }
 

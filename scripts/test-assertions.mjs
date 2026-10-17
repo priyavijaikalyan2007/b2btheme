@@ -68,12 +68,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
-/** Assertions that pass for any value that is not null or undefined. */
-const VACUOUS = [
-    /\.toBeDefined\s*\(\s*\)/,
-    /\.not\s*\.\s*toThrow\s*\(/,
-    /\.toBeTruthy\s*\(\s*\)/,
-    /^expect\s*\(\s*typeof\b/,
+/** Matchers that pass for any value that is not null or undefined. */
+const MATCHERS = [
+    /^\s*\.toBeDefined\s*\(\s*\)/,
+    /^\s*\.not\s*\.\s*toThrow\s*\(/,
+    /^\s*\.toBeTruthy\s*\(\s*\)/,
 ];
 
 /** Existence matchers, whose claim depends on what they are given. */
@@ -82,11 +81,21 @@ const EXISTENCE = /\.toBeDefined\s*\(\s*\)|\.toBeTruthy\s*\(\s*\)/;
 /** A subject that carries its own claim, because it names what to find. */
 const QUERY = /querySelector(All)?\s*\(|getElementById\s*\(|getElementsBy\w+\s*\(|\.closest\s*\(/;
 
-/** True when this one assertion could not fail for a live component. */
+/**
+ * True when this one assertion could not fail for a live component.
+ *
+ * Takes either the split form from `assertionsIn` or the whole text,
+ * and splits the text itself when given one, so a caller can ask about
+ * a single line without parsing it first.
+ */
 export function isVacuous(assertion)
 {
-    if (EXISTENCE.test(assertion) && QUERY.test(assertion)) { return false; }
-    return VACUOUS.some((v) => v.test(assertion));
+    const a = typeof assertion === "string" ? (assertionsIn(assertion)[0] ?? null) : assertion;
+    if (a === null) { return false; }
+
+    if (/^\s*typeof\b/.test(a.subject)) { return true; }
+    if (EXISTENCE.test(a.matcher) && QUERY.test(a.subject)) { return false; }
+    return MATCHERS.some((v) => v.test(a.matcher));
 }
 
 /**
@@ -174,6 +183,50 @@ function endOfString(src, from)
     return -1;
 }
 
+/** The [start, end) spans of `src` that are code, not string or comment. */
+function codeRanges(src)
+{
+    const ranges = [];
+    let start = 0;
+    let i = 0;
+
+    while (i < src.length)
+    {
+        const ch = src[i];
+
+        if (ch === "/" && src[i + 1] === "/")
+        {
+            ranges.push([start, i]);
+            i = src.indexOf("\n", i);
+            if (i < 0) { return ranges; }
+            start = i;
+            continue;
+        }
+
+        if (ch === "/" && src[i + 1] === "*")
+        {
+            ranges.push([start, i]);
+            i = src.indexOf("*/", i + 2);
+            if (i < 0) { return ranges; }
+            i += 2;
+            start = i;
+            continue;
+        }
+
+        if (ch === "\"" || ch === "'" || ch === "`")
+        {
+            ranges.push([start, i]);
+            i = endOfString(src, i);
+            if (i < 0) { return ranges; }
+            start = i;
+            continue;
+        }
+        i += 1;
+    }
+    ranges.push([start, src.length]);
+    return ranges;
+}
+
 /** Every `test(...)` block in one source, with its name and its body. */
 export function testBlocks(src)
 {
@@ -181,8 +234,16 @@ export function testBlocks(src)
 
     // `(?<!\.)` because `MENTIONS.test(x)` is a RegExp call, not a block,
     // and 25 of them across 11 files made the parsed count look short.
+    // The positions are filtered to code, because a fixture that holds
+    // the text of a test block is data: this file's own test cases pass
+    // `'test("t", () => { ... }'` as a string, and counting those made
+    // it report 18 blocks where 14 are declared.
+    const code = codeRanges(src);
+    const inCode = (i) => code.some(([a, b]) => i >= a && i < b);
+
     for (const m of src.matchAll(/(?<!\.)\btest(?:\.each)?\s*\(/g))
     {
+        if (!inCode(m.index)) { continue; }
         let args = balanced(src, m.index + m[0].length - 1, "(", ")");
         if (args === null) { continue; }
 
@@ -209,21 +270,32 @@ export function testBlocks(src)
     return blocks;
 }
 
-/** The `expect(...)` calls in a body, each with its matcher tail. */
+/**
+ * The `expect(...)` calls in a body, split into subject and matcher.
+ *
+ * SPLIT, BECAUSE A SUBJECT CAN CONTAIN THE TEXT OF A MATCHER. The case
+ * that forced it is in this instrument's own tests:
+ * `expect(isVacuous("expect(h).toBeDefined()")).toBe(true)` is a real
+ * assertion whose subject quotes a vacuous one, and matching the
+ * patterns against the whole line called it vacuous.
+ */
 export function assertionsIn(body)
 {
     const found = [];
+    const code = codeRanges(body);
 
     for (const m of body.matchAll(/\bexpect\s*\(/g))
     {
+        if (!code.some(([a, b]) => m.index >= a && m.index < b)) { continue; }
+
         const args = balanced(body, m.index + m[0].length - 1, "(", ")");
         if (args === null) { continue; }
 
         // The matcher runs to the end of the statement, and a matcher
         // argument can itself hold a newline, so take the balanced tail
         // rather than the rest of the line.
-        const tail = body.slice(args.end + 1).split(/;\s*\n|\n\s*\n/)[0];
-        found.push(`expect(${args.text})${tail}`);
+        const matcher = body.slice(args.end + 1).split(/;\s*\n|\n\s*\n/)[0];
+        found.push({ subject: args.text, matcher, text: `expect(${args.text})${matcher}` });
     }
     return found;
 }
