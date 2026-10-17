@@ -43,7 +43,9 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="components/conversation/conversation.css">
 
-<script src="https://cdn.jsdelivr.net/npm/vditor@3.11.2/dist/index.min.js"></script>
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 <script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
         integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
         crossorigin="anonymous"></script>

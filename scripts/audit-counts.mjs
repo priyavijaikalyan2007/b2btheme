@@ -384,13 +384,17 @@ const BASELINES = {
     // because the fifteen packages have to interoperate.
     unpinnedCdnRefs: 77,
     tagsMissingSri: 0,
-    // DEBT-SEC-8, first slice. 76 -> 65 by pointing DOMPurify and
-    // font-awesome at the copies this origin already serves, hashed.
-    // Those tags now carry a static.knobby.io host, which is outside
-    // CDN_HOSTS, so nothing here re-checks their integrity attribute.
-    // The browser does. A same-origin ceiling would be a different
-    // measurement and is not what this one promises.
-    thirdPartyTagsWithoutSri: 65,
+    // DEBT-SEC-8. 76 -> 65 -> 35 across two slices. The first pointed
+    // DOMPurify and font-awesome at the copies this origin serves. The
+    // second did the same for vditor and chart.js, and hashed mathlive
+    // in place on jsdelivr, because this origin does not serve it.
+    //
+    // A static.knobby.io host is outside CDN_HOSTS, so nothing HERE
+    // re-checks those tags. Structure check [10] does, by pairing each
+    // published hash with the URL it was computed from. The remaining
+    // 35 include ten in dated specs/*.prd.md planning documents, which
+    // are a historical record. Do not chase this below 10.
+    thirdPartyTagsWithoutSri: 35,
     unusedLocals: 306,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,

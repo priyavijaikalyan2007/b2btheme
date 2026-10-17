@@ -16,11 +16,15 @@ Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. Reads `w
 Chart.js must be loaded **before** `chartpanel.js`. The build vendors a copy under `dist/vendor/chart.js/` (via `npm run copy:js`), so the demos and apps that ship from this CDN can load it locally:
 
 ```html
-<!-- Option A: vendored alongside this CDN bundle -->
-<script src="vendor/chart.js/chart.umd.min.js"></script>
+<!-- Option A: this origin, versioned and hashed. Preferred. -->
+<script src="https://static.knobby.io/lib/chart.js-4.5.1.js"
+        integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+        crossorigin="anonymous"></script>
 
-<!-- Option B: external CDN, if your app prefers public caching -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- Option B: the unversioned copy, for bundles that ship from this CDN. -->
+<!-- Same 4.5.1 bytes today, but the path carries no version, so it is -->
+<!-- not immutable and cannot be hashed. -->
+<script src="vendor/chart.js/chart.umd.min.js"></script>
 
 <link rel="stylesheet" href="components/chartpanel/chartpanel.css">
 <script src="components/chartpanel/chartpanel.js"></script>

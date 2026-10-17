@@ -10,8 +10,10 @@ HelpDrawer is a **singleton** component — one per page. It slides in from the 
 
 ```html
 <!-- Vditor CDN (required for markdown rendering) -->
-<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
-<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 
 <!-- HelpDrawer -->
 <link rel="stylesheet" href="components/helpdrawer/helpdrawer.css" />

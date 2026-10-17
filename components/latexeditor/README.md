@@ -37,8 +37,15 @@ and standalone page layouts.
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
 
-<!-- MathLive (optional, for visual editing mode) -->
-<script src="https://cdn.jsdelivr.net/npm/mathlive@0.107.3/dist/mathlive.min.js"></script>
+<!-- MathLive (optional, for visual editing mode).
+     The tag below replaces a 0.107.3/dist/ URL that had never resolved:
+     that version was never published and the asset is at the package
+     root, not under dist/. MathLive loads its fonts from a directory
+     relative to this script, and those font files cannot carry an
+     integrity attribute. The script itself is hashed. -->
+<script src="https://cdn.jsdelivr.net/npm/mathlive@0.111.1/mathlive.min.js"
+        integrity="sha384-fnT74hn6eDg87dvsrlWHThK0ymBGqcjBpUEH0G2PGfpjT1Np0HMWfmheS3xKuzoX"
+        crossorigin="anonymous"></script>
 
 <!-- LatexEditor -->
 <link rel="stylesheet" href="components/latexeditor/latexeditor.css">

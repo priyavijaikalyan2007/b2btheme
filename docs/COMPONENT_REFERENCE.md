@@ -2135,11 +2135,15 @@ Theme-aware Chart.js wrapper for bar, line, area, and sparkline charts. Reads `w
 Chart.js must be loaded **before** `chartpanel.js`. The build vendors a copy under `dist/vendor/chart.js/` (via `npm run copy:js`), so the demos and apps that ship from this CDN can load it locally:
 
 ```html
-<!-- Option A: vendored alongside this CDN bundle -->
-<script src="vendor/chart.js/chart.umd.min.js"></script>
+<!-- Option A: this origin, versioned and hashed. Preferred. -->
+<script src="https://static.knobby.io/lib/chart.js-4.5.1.js"
+        integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+        crossorigin="anonymous"></script>
 
-<!-- Option B: external CDN, if your app prefers public caching -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<!-- Option B: the unversioned copy, for bundles that ship from this CDN. -->
+<!-- Same 4.5.1 bytes today, but the path carries no version, so it is -->
+<!-- not immutable and cannot be hashed. -->
+<script src="vendor/chart.js/chart.umd.min.js"></script>
 
 <link rel="stylesheet" href="components/chartpanel/chartpanel.css">
 <script src="components/chartpanel/chartpanel.js"></script>
@@ -3552,7 +3556,9 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="components/conversation/conversation.css">
 
-<script src="https://cdn.jsdelivr.net/npm/vditor@3.11.2/dist/index.min.js"></script>
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 <script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
         integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
         crossorigin="anonymous"></script>
@@ -5192,8 +5198,10 @@ DocViewer renders documentation in a three-column CSS Grid layout: a hierarchica
 
 ```html
 <!-- Vditor CDN (required) -->
-<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
-<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 
 <!-- DocViewer -->
 <link rel="stylesheet" href="components/docviewer/docviewer.css" />
@@ -9086,8 +9094,10 @@ HelpDrawer is a **singleton** component — one per page. It slides in from the 
 
 ```html
 <!-- Vditor CDN (required for markdown rendering) -->
-<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
-<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 
 <!-- HelpDrawer -->
 <link rel="stylesheet" href="components/helpdrawer/helpdrawer.css" />
@@ -9640,8 +9650,15 @@ and standalone page layouts.
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" integrity="sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" integrity="sha384-cMkvdD8LoxVzGF/RPUKAcvmm49FQ0oxwDF3BGKtDXcEc+T1b2N+teh/OJfpU0jr6" crossorigin="anonymous"></script>
 
-<!-- MathLive (optional, for visual editing mode) -->
-<script src="https://cdn.jsdelivr.net/npm/mathlive@0.107.3/dist/mathlive.min.js"></script>
+<!-- MathLive (optional, for visual editing mode).
+     The tag below replaces a 0.107.3/dist/ URL that had never resolved:
+     that version was never published and the asset is at the package
+     root, not under dist/. MathLive loads its fonts from a directory
+     relative to this script, and those font files cannot carry an
+     integrity attribute. The script itself is hashed. -->
+<script src="https://cdn.jsdelivr.net/npm/mathlive@0.111.1/mathlive.min.js"
+        integrity="sha384-fnT74hn6eDg87dvsrlWHThK0ymBGqcjBpUEH0G2PGfpjT1Np0HMWfmheS3xKuzoX"
+        crossorigin="anonymous"></script>
 
 <!-- LatexEditor -->
 <link rel="stylesheet" href="components/latexeditor/latexeditor.css">
@@ -11105,8 +11122,10 @@ This component requires external libraries loaded before the component script:
 
 ```html
 <!-- Vditor (>= 3.8.13 required for security fixes; 3.11.2 recommended) -->
-<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
-<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 
 <!-- DOMPurify, strongly recommended for XSS protection. This origin serves
      it at 3.4.16 with a published hash. Do NOT load 3.2.4, which carries 19
@@ -11119,6 +11138,30 @@ This component requires external libraries loaded before the component script:
 <link rel="stylesheet" href="components/markdowneditor/markdowneditor.css">
 <script src="components/markdowneditor/markdowneditor.js"></script>
 ```
+
+### Where Vditor fetches the rest of itself
+
+**The tag above is the entry point, not the whole library.** Vditor lazily
+injects script tags for its markdown engine, its icon set, its language
+pack and every optional renderer. Its built-in default for those is
+`https://unpkg.com/vditor@3.11.2`, hardcoded.
+
+This component does not leave that at the default. It sets Vditor's `cdn`
+option to `<origin>/lib/vditor-3.11.2`, where `<origin>` is read from the
+`src` of the `markdowneditor.js` tag itself. So the whole tree comes from
+wherever you loaded the component from.
+
+**That has one consequence worth knowing before you self-host.** If you
+serve `markdowneditor.js` from your own origin, as the snippet above does,
+Vditor will look for its chunks under `/lib/vditor-3.11.2/` on *your*
+origin. Either load `markdowneditor.js` from `https://static.knobby.io`,
+or mirror `/lib/vditor-3.11.2/` alongside it. The component will not
+silently reach for a public CDN to cover the gap.
+
+The lazily-injected chunks carry no `integrity` attribute. They are served
+from this origin rather than a third party, which is the guarantee on
+offer. The stylesheet above likewise carries no hash, because it is part of
+that tree rather than a separately published build.
 
 ## Quick Start
 

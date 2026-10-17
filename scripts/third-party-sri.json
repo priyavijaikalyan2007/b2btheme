@@ -78,6 +78,17 @@
       "requirement": "optional",
       "note": "Mermaid 12 is published. This stays at 11 until the upgrade is reviewed."
     },
+    "mathlive": {
+      "version": "0.111.1",
+      "url": "https://cdn.jsdelivr.net/npm/mathlive@0.111.1/mathlive.min.js",
+      "integrity": "sha384-fnT74hn6eDg87dvsrlWHThK0ymBGqcjBpUEH0G2PGfpjT1Np0HMWfmheS3xKuzoX",
+      "type": "script",
+      "global": "MathfieldElement",
+      "bytes": 843924,
+      "closure": "script hashed; fonts load from fontsDirectory relative to the script and are not SRI-able",
+      "requirement": "optional",
+      "note": "LatexEditor documented 0.107.3/dist/mathlive.min.js, which 404s twice over. That version was never published and the asset is at the package root, not under dist/. ADR-191."
+    },
     "viz": {
       "version": "3.11.0",
       "url": "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.js",

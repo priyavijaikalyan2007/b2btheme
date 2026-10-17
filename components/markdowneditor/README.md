@@ -10,8 +10,10 @@ This component requires external libraries loaded before the component script:
 
 ```html
 <!-- Vditor (>= 3.8.13 required for security fixes; 3.11.2 recommended) -->
-<link rel="stylesheet" href="https://unpkg.com/vditor@3.11.2/dist/index.css" />
-<script src="https://unpkg.com/vditor@3.11.2/dist/index.min.js"></script>
+<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
+<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
+        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+        crossorigin="anonymous"></script>
 
 <!-- DOMPurify, strongly recommended for XSS protection. This origin serves
      it at 3.4.16 with a published hash. Do NOT load 3.2.4, which carries 19
@@ -24,6 +26,30 @@ This component requires external libraries loaded before the component script:
 <link rel="stylesheet" href="components/markdowneditor/markdowneditor.css">
 <script src="components/markdowneditor/markdowneditor.js"></script>
 ```
+
+### Where Vditor fetches the rest of itself
+
+**The tag above is the entry point, not the whole library.** Vditor lazily
+injects script tags for its markdown engine, its icon set, its language
+pack and every optional renderer. Its built-in default for those is
+`https://unpkg.com/vditor@3.11.2`, hardcoded.
+
+This component does not leave that at the default. It sets Vditor's `cdn`
+option to `<origin>/lib/vditor-3.11.2`, where `<origin>` is read from the
+`src` of the `markdowneditor.js` tag itself. So the whole tree comes from
+wherever you loaded the component from.
+
+**That has one consequence worth knowing before you self-host.** If you
+serve `markdowneditor.js` from your own origin, as the snippet above does,
+Vditor will look for its chunks under `/lib/vditor-3.11.2/` on *your*
+origin. Either load `markdowneditor.js` from `https://static.knobby.io`,
+or mirror `/lib/vditor-3.11.2/` alongside it. The component will not
+silently reach for a public CDN to cover the gap.
+
+The lazily-injected chunks carry no `integrity` attribute. They are served
+from this origin rather than a third party, which is the guarantee on
+offer. The stylesheet above likewise carries no hash, because it is part of
+that tree rather than a separately published build.
 
 ## Quick Start
 

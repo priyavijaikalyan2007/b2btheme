@@ -190,13 +190,13 @@ at once — which is the failure mode this design exists to prevent.
 
 ### Libraries this origin does NOT serve
 
-Six renderers are read from `window` but fetched from jsdelivr, not from
-here: **marked, highlight.js, KaTeX, Mermaid, @viz-js/viz and CodeMirror 6**.
-They are optional by design and most consumers never load them. Vendoring
-all six would add roughly 6 MB to this CDN, for renderers a page uses only
-if it has diagrams or maths.
+Seven libraries are read from `window` but fetched from jsdelivr, not from
+here: **marked, highlight.js, KaTeX, Mermaid, @viz-js/viz, MathLive and
+CodeMirror 6**. They are optional by design and most consumers never load
+them. Vendoring them all would add roughly 7 MB to this CDN, for renderers
+a page uses only if it has diagrams or maths.
 
-So they are **hashed rather than vendored** (DEBT-SEC-5, ADR-189). The hash
+So they are **hashed rather than vendored** (DEBT-SEC-5, ADR-189, and MathLive added by ADR-191). The hash
 of each recommended build is published at `/third-party-sri.json`, in the
 same shape as `/lib-manifest.json`:
 
@@ -208,6 +208,7 @@ same shape as `/lib-manifest.json`:
 | katex | 0.16.22 | script | optional |
 | katex-css | 0.16.22 | stylesheet | optional |
 | mermaid | 11.17.2 | script | optional |
+| mathlive | 0.111.1 | script | optional |
 | viz | 3.11.0 | script | optional |
 
 Each component README gives the tags with the hash already filled in. If you
