@@ -560,19 +560,94 @@ Per CODING_STYLE.md, functions must be 25-30 lines maximum. These functions sign
 
 Per LITERATE_ERRORS.md, factory functions must validate their inputs (container element, options object) and produce literate, actionable error messages.
 
-- [ ] **ERR-1** 10 of 15 sampled factory functions have no container or option validation. Missing from:
-  - `components/colorpicker/colorpicker.ts`
-  - `components/datepicker/datepicker.ts`
-  - `components/timeline/timeline.ts`
-  - `components/gauge/gauge.ts`
-  - `components/toast/toast.ts`
-  - `components/tabbedpanel/tabbedpanel.ts`
-  - `components/logconsole/logconsole.ts`
-  - `components/sidebar/sidebar.ts`
-  - `components/skeletonloader/skeletonloader.ts`
-  - `components/toolbar/toolbar.ts`
+- [ ] **ERR-1** **65 of 74 published factories answer a missing container
+  without throwing.** Measured 2026-10-17 by calling every one of them,
+  ADR-192. Held by `SILENT_ON_MISSING_CONTAINER` in
+  `scripts/factory-census.test.ts`, a ceiling that can only fall.
 
-  Each should validate that the container element exists and is a valid DOM node, and that required options are present, using literate error messages that tell the developer exactly what went wrong and how to fix it.
+  AGENTS.md states the rule as a table: "Container not found -> `throw` a
+  literate error", against "return a null object". A factory that warns and
+  returns a handle has returned the null object.
+
+  | Behaviour on a container that is not there | Count |
+  |---|---|
+  | Throws a literate error | 9 |
+  | Logs a warning or an error, then returns a handle | 51 |
+  | Does nothing at all, no log, returns a handle | 14 |
+  | Verdict unreachable, refuses a missing dependency first | 2 |
+
+  128 published `create*` factories exist. 76 take a container and 52 take
+  options only, so the container rule does not apply to over a third of
+  them. **Required-option validation is a different measurement and is not
+  in this count.**
+
+  **THE ENTRY WAS WRONG ABOUT ITS OWN NUMBER, ITS UNIT AND ITS SOURCE.**
+  It read: "10 of 15 sampled factory functions have no container or option
+  validation", citing `LITERATE_ERRORS.md`. Taking those in turn:
+
+  - **The number.** 10 of 15 sampled suggested two thirds of a small
+    surface. The real figure is 65 of 74, and the surface is the whole
+    fleet.
+  - **The source.** `LITERATE_ERRORS.md` is about user-facing ErrorDialog
+    copy, Layer A and Layer B, correlation IDs and the `LiterateError`
+    interface. It says nothing about factories. The rule is in AGENTS.md,
+    and the house precedent for the wording is the developer-facing refusal
+    FALLBACK-1 through 9 settled on.
+  - **The list.** Of the ten components named, five are confirmed:
+    `colorpicker`, `datepicker`, `gauge`, `tabbedpanel` and
+    `skeletonloader`. Four take options only, so "validate that the
+    container element exists" cannot apply to them at all: `timeline`,
+    `logconsole`, `sidebar` and `toolbar`. One, `toast`, **publishes no
+    `create*` factory of any kind** — its surface is `showSuccessToast` and
+    its siblings.
+
+  **THIS IS THE SAME WORK AS THE FALLBACK REVIEW, ON A SHAPE THE SWEEP DID
+  NOT MATCH.** `colorpicker.show()` is the clearest instance:
+
+  ```ts
+  if (!container)
+  {
+      logWarn("Container not found:", containerId);
+      return;
+  }
+  ```
+
+  That is a fallback by the owner's definition, a loud failure converted to
+  a quiet wrong answer. FALLBACK-1 through 9 did not reach it because the
+  sweep keyed on `catch`, on a method named `fallback()`, and on `??`.
+  `if (!container) { return; }` matches none of those. `boxlayout` is the
+  purest form, with no log at all:
+
+  ```ts
+  if (containerId)
+  {
+      const el = document.getElementById(containerId);
+      if (el) { layout.show(el); }
+  }
+  ```
+
+  No `else`. The container is absent, nothing happens, and the caller gets
+  a handle back for a component that was never mounted.
+
+  **WHY THE CEILING IS A TEST AND NOT A LINE IN `audit-counts.mjs`.** Every
+  ratchet there reads source text, and this cannot be read from text. The
+  factories are thin: `createDatePicker` forwards to a constructor and
+  `createColorPicker` forwards to `show()`, so the decision to warn rather
+  than throw is taken two hops away. A static read of the factory bodies
+  reported 2 of 46 validating, which was wrong in both directions. Calling
+  them reports 9 of 74. `scripts/factory-census.mjs` builds the inventory
+  and the options stubs, and `scripts/factory-census.test.ts` calls each
+  factory twice, once with a container that exists to prove the call
+  reached the component and once with one that does not.
+
+  It is a ceiling on factories that stay quiet, not a floor on factories
+  that throw, because **a floor cannot see a new unvalidated factory added
+  beside the old ones.**
+
+  The fix for each is the AGENTS.md row: throw, naming the container that
+  was not found and what to do about it, in the wording FALLBACK-9 used.
+  That is a breaking change for any consumer currently relying on the
+  silent no-op, so it wants its own slice rather than a sweep.
 
 ---
 

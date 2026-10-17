@@ -1376,3 +1376,19 @@
   - VendoredButUndocumented
   - ThirdPartySriManifest
   - NoFallbackCode
+
+- name: FactoryContainerContract
+  definition: "ERR-1, ADR-192. AGENTS.md states it as a table row: container not found means throw a literate error, and the wrong answer is to return a null object. Measured 2026-10-17 by CALLING every published create* factory rather than reading it. The factories are thin wrappers, and the decision is taken two hops away in a constructor or in show(). 128 published factories: 76 take a container, 52 take options only. Of the 74 with a reachable verdict, 9 throw, 51 log and return a handle, 14 do nothing at all. The ceiling SILENT_ON_MISSING_CONTAINER sits in scripts/factory-census.test.ts rather than in audit-counts.mjs, which has no DOM. It is a ceiling on the quiet ones and not a floor on the throwing ones. A floor cannot see a new unvalidated factory added beside the old ones. scripts/factory-census.mjs builds the inventory and the per-factory options stub."
+  anchor_file: scripts/factory-census.mjs
+  related:
+  - NoFallbackCode
+  - LiterateErrors
+  - RatchetBaseline
+
+- name: SweepCoverageIsItsPatterns
+  definition: "ADR-192. A review covers the union of the patterns it matched, never the concept it was named after. FALLBACK-1 through 9 reviewed the fleet for fallbacks and keyed on `catch`, on a method named `fallback()`, and on `??`. The shape `if (!container) { logWarn(...); return; }` matches none of the three, and 65 factories do exactly that. So ERR-1 and the fallback review are the same work, and neither entry says so. The remedy is to record the PATTERNS a sweep used and not only its subject. A later reader then knows what was never looked at, instead of inferring completeness from the title. Same family as a ceiling that cannot see an absence, a predicate narrowing, or a wrong attribute."
+  anchor_file: CODEBASE_FIXES.md
+  related:
+  - NoFallbackCode
+  - FactoryContainerContract
+  - AttributePresenceIsNotAttributeCorrectness

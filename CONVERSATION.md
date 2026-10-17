@@ -4034,3 +4034,48 @@ living in prose nobody opens.
 its stylesheet. Found while fixing the script tag. Adding a missing
 dependency to a quick-start block is a different change from
 repointing an existing one, so it is recorded rather than slipped in.
+
+## 2026-10-17 (cont.) — ERR-1, measured by calling it
+
+The census was the thing I had been promising for three sessions, and
+the reason it kept slipping is that I kept trying to read it.
+
+**The first classifier reported 2 of 46 factories validating.** The
+second, after calling them, reported 9 of 74. Both cannot be right, and
+the static one was wrong in both directions at once. The cause is not a
+weak regex. `createDatePicker` is one line forwarding to a constructor.
+`createColorPicker` forwards to `show()`. The decision to warn rather
+than throw is taken two hops from the text any reader of the factory
+body is looking at.
+
+So the census calls each factory twice, with a container that exists and
+with one that does not, and records what the component actually did.
+
+**65 of 74.** Fifty-one log a warning or an error and return a handle
+anyway. Fourteen do nothing at all. Nine throw.
+
+**ERR-1 was wrong about three of its four claims**, and the one it got
+right it understated. It cited `LITERATE_ERRORS.md`, which is about
+ErrorDialog copy for users and says nothing about factories. Of the ten
+components it named, four take options only, so the thing it asked for
+cannot apply to them, and `toast` publishes no `create*` factory at all.
+
+**The finding I did not expect is that this is the fallback review.**
+`colorpicker.show()` logs "Container not found" and returns. That is the
+owner's definition of a fallback, word for word, and the nine-part
+sweep walked past it along with sixty-four others. The sweep keyed on
+`catch`, on a method named `fallback()`, and on `??`. `if (!container)
+{ return; }` matches none of them. A sweep covers the union of its
+patterns, never the concept in its title, and the record should say
+which patterns rather than letting the title imply completeness.
+
+**The parser needed its own tests before I could trust the number.**
+Splitting a parameter list on every comma reads
+`Omit<GaugeOptions, "shape">` as two parameters, which moved the
+container index for all four gauge factories. The census duly reported
+a TypeError as a finding. That is the instrument's bug reported as the
+subject's, which is the worst class of measurement error, so
+`splitParams` now has a case named after it.
+
+No factory changed. Making 65 of them throw is a breaking change for
+any consumer relying on the silent no-op, and it wants its own slice.

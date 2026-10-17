@@ -7943,3 +7943,78 @@
     its stylesheet. Found while fixing the script tag and left alone,
     because adding a missing dependency to a quick-start block is a
     different change from repointing an existing one.
+
+- id: ADR-192
+  title: ERR-1's census is taken by calling every factory, and its ceiling lives in a test
+  date: 2026-10-17
+  status: accepted
+  context: |
+    ERR-1 said "10 of 15 sampled factory functions have no container or
+    option validation", citing LITERATE_ERRORS.md. Three of those four
+    claims were wrong, and checking them needed a new instrument.
+
+    LITERATE_ERRORS.md is about user-facing ErrorDialog copy. The rule is
+    in AGENTS.md, stated as a table: "Container not found -> throw a
+    literate error", against "return a null object".
+
+    A static read cannot settle the question. The factories are thin.
+    createDatePicker forwards to a constructor, createColorPicker forwards
+    to show(), and whatever happens to a missing container happens two hops
+    away. The first attempt read the factory bodies and reported 2 of 46
+    validating, which was wrong in both directions.
+  decision: |
+    D1. THE CENSUS CALLS EACH FACTORY RATHER THAN READING IT. Twice: once
+        with a container that exists, which proves the call reached the
+        component, and once with one that does not. The verdict is what
+        the component did, which is what the rule is about and what a
+        consumer meets.
+
+    D2. THE CEILING IS A TEST, NOT A LINE IN audit-counts.mjs. Every
+        ratchet there reads source text and this is not readable from
+        text. SILENT_ON_MISSING_CONTAINER lives in
+        scripts/factory-census.test.ts, which has a DOM.
+
+    D3. IT IS A CEILING ON FACTORIES THAT STAY QUIET, NOT A FLOOR ON ONES
+        THAT THROW. A floor cannot see a new unvalidated factory added
+        beside the old ones.
+
+    D4. A FACTORY THAT REFUSES A MISSING DEPENDENCY FIRST IS COUNTED
+        APART. It never reached the container, so counting it as passing
+        would be the vacuous kind of green this repository keeps finding.
+        Two factories are in that state and they have their own small
+        ceiling.
+
+    D5. THE OPTIONS STUB FILLS REQUIRED FIELDS AND LEAVES CALLBACKS OUT.
+        Calling with {} makes components with required options throw
+        before they look at the container, hiding the verdict behind an
+        unrelated one. A callback is left absent on purpose, because a
+        component that needs one should say so.
+
+    D6. REQUIRED-OPTION VALIDATION IS NOT IN THIS COUNT. ERR-1 conflated
+        it with container validation. 52 of the 128 published factories
+        take options only, so the container rule cannot apply to them.
+        That measurement needs a different instrument.
+  consequences: |
+    65 of 74 published factories with a reachable verdict answer a missing
+    container without throwing. 51 log a warning or an error and return a
+    handle. 14 do nothing at all. 9 throw.
+
+    ERR-1 SAID 10 OF 15 AND NAMED TEN COMPONENTS. Five are confirmed:
+    colorpicker, datepicker, gauge, tabbedpanel, skeletonloader. Four take
+    options only, so "validate that the container element exists" cannot
+    apply: timeline, logconsole, sidebar, toolbar. One, toast, publishes no
+    create* factory at all.
+
+    THIS IS THE FALLBACK REVIEW ON A SHAPE THE SWEEP DID NOT MATCH.
+    colorpicker.show() logs "Container not found" and returns. That is a
+    loud failure converted to a quiet wrong answer, which is the owner's
+    definition. FALLBACK-1 through 9 keyed on catch, on a method named
+    fallback(), and on ??. `if (!container) { return; }` matches none of
+    them. boxlayout is the purest form: `if (el) { layout.show(el); }` with
+    no else, no log, and a handle returned for a component never mounted.
+
+    A STATIC READ OF A THIN WRAPPER MEASURES THE WRAPPER. The parameter
+    parser needed its own tests, because splitting a parameter list on
+    every comma read `Omit<GaugeOptions, "shape">` as two parameters and
+    moved the container index for all four gauge factories, which the
+    census then reported as a finding rather than as its own bug.

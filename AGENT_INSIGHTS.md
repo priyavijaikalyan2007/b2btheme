@@ -1656,3 +1656,59 @@ has moved the requirement rather than removed it. Write down where the
 requirement landed. The fix here was a paragraph, not code, and it was
 only visible because repointing the entry tag forced someone to ask
 where the rest of the library comes from.
+
+### 6.103 To Measure What Code Does, Run It (2026-10-17)
+
+ERR-1 asked how many factories validate their container. The first
+attempt read each factory body and reported 2 of 46. Calling them
+reported 9 of 74. The static read was wrong in both directions at once,
+and the reason is structural rather than a bug in the regex.
+
+The factories are thin. `createDatePicker` forwards to a constructor.
+`createColorPicker` forwards to `show()`. The decision to warn rather
+than throw is taken two hops from the text being read, so a reader of
+the factory body is measuring the wrapper.
+
+**Principle**: when the property under measurement is behaviour, the
+instrument is a call, not a pattern. The census imports each component,
+calls each factory with a container that exists and then with one that
+does not, and records what happened. The ceiling lives in a test file
+because `scripts/audit-counts.mjs` has no DOM, and that is the right
+trade: a ratchet that measures the wrong thing cheaply is worse than one
+that measures the right thing in a test.
+
+The control call matters as much as the real one. A component that
+refuses a missing dependency throws on both calls and never reaches the
+container, so counting it as validating would be the vacuous green this
+repository keeps finding.
+
+### 6.104 A Sweep Finds the Shapes It Was Written to Match (2026-10-17)
+
+FALLBACK-1 through 9 reviewed every fallback in the fleet, and the
+review was thorough. It keyed on `catch`, on a method literally named
+`fallback()`, and on `??`.
+
+`colorpicker.show()` is this:
+
+```ts
+if (!container)
+{
+    logWarn("Container not found:", containerId);
+    return;
+}
+```
+
+A loud failure converted to a quiet wrong answer, which is the owner's
+definition exactly. It matches none of the three keys. Fifty-one
+factories do this and fourteen more do it with no log at all, and the
+nine-part sweep walked past all sixty-five.
+
+**Principle**: a sweep's coverage is the union of its patterns, never
+the concept it was named after. State the patterns in the record, so the
+next reader knows what was not looked at rather than inferring from the
+title that everything was. "Reviewed all fallbacks" and "reviewed every
+`catch`, `fallback()` and `??`" are different claims, and only the
+second one was true.
+
+ERR-1 and the fallback review turn out to be the same work. Neither
+entry says so.
