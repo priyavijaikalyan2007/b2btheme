@@ -326,10 +326,69 @@ export function census(files = null)
     {
         for (const block of testBlocks(readFileSync(file, "utf8")))
         {
-            rows.push({ file, name: block.name, verdict: verdictFor(block) });
+            rows.push({
+                file,
+                name: block.name,
+                body: block.body,
+                verdict: verdictFor(block),
+            });
         }
     }
     return rows;
+}
+
+/**
+ * The shapes a vacuous block takes, as a count per shape.
+ *
+ * THE FIRST VERSION OF THIS SPLIT WAS NOT COMMITTED, AND THE TABLE IT
+ * PRODUCED COULD NOT BE REPRODUCED A DAY LATER. A classification that
+ * steers the next piece of work is an instrument, not a note, so it
+ * lives here beside the census it partitions. ADR-203.
+ *
+ * ABSENT is the FALLBACK shape: the block runs with a dependency
+ * withheld and asserts only that nothing crashed. IDEMPOTENT is a
+ * second call to the same method OR a call that reaches an early
+ * return — `destroy_CalledTwice`, `removeNonexistentPin`,
+ * `setLayout_UnknownId` — because both answer "nothing should
+ * happen" and the right assertion for both is that nothing did.
+ * NAMES-A-CHANGE is the rest of the `.not.toThrow()` family, where
+ * the title states an effect the body never looks for. EXISTENCE is
+ * `.toBeDefined()` and `.toBeTruthy()`.
+ */
+export function shapesOf(rows)
+{
+    const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
+    const IDEMPOTENT = /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+    const withheld = new Set();
+
+    for (const r of rows)
+    {
+        if (WITHHELD.test(readFileSync(r.file, "utf8"))) { withheld.add(r.file); }
+    }
+
+    const tally = {
+        absentDependency: 0,
+        idempotent: 0,
+        namesAChange: 0,
+        existence: 0,
+    };
+
+    for (const r of rows)
+    {
+        if (r.verdict !== "vacuous") { continue; }
+
+        if (!/\.not\s*\.\s*toThrow/.test(r.body)) { tally.existence++; continue; }
+
+        // IDEMPOTENCY IS TESTED FIRST, AND THE ORDER IS THE WHOLE
+        // CLASSIFIER. Withholding is detected per FILE, because a suite
+        // states the absence once in its setup, and a file that deletes
+        // a global in teardown would otherwise claim every destroy_
+        // CalledTwice block inside it. ADR-203.
+        if (IDEMPOTENT.test(r.name)) { tally.idempotent++; continue; }
+        if (withheld.has(r.file)) { tally.absentDependency++; continue; }
+        tally.namesAChange++;
+    }
+    return tally;
 }
 
 function main()
@@ -341,6 +400,16 @@ function main()
     console.log(`  ${rows.length} test block(s) parsed`);
     console.log(`  ${none.length} with no expect() at all`);
     console.log(`  ${vacuous.length} where every assertion cannot fail`);
+
+    if (process.argv.includes("--shapes"))
+    {
+        const shapes = shapesOf(rows);
+
+        for (const [k, v] of Object.entries(shapes))
+        {
+            console.log(`    ${String(v).padStart(4)}  ${k}`);
+        }
+    }
 
     if (process.argv.includes("--list"))
     {

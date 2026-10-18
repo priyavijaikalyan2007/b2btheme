@@ -19,9 +19,11 @@ const handle = createGraphToolbar({
     onRedo: () => graph.redo(),
     onDelete: () => graph.deleteSelected(),
     onApplyLayout: (id) => graph.applyLayout(id),
-    onZoomIn: () => { graph.zoomIn(); handle.setZoomLabel(graph.getZoom()); },
-    onZoomOut: () => { graph.zoomOut(); handle.setZoomLabel(graph.getZoom()); },
-    onZoomToFit: () => { graph.fitToView(); handle.setZoomLabel(graph.getZoom()); },
+    // setZoomLabel takes a PERCENTAGE. GraphCanvas reports a scale
+    // factor, where 1 is 100%, so multiply before you pass it.
+    onZoomIn: () => { graph.zoomIn(); handle.setZoomLabel(graph.getZoomLevel() * 100); },
+    onZoomOut: () => { graph.zoomOut(); handle.setZoomLabel(graph.getZoomLevel() * 100); },
+    onZoomToFit: () => { graph.fitToView(); handle.setZoomLabel(graph.getZoomLevel() * 100); },
     onGridSnapToggle: (on) => graph.setGridSnap(on),
     onMinimapToggle: (on) => graph.setMinimapVisible(on),
     onExport: (format) => graph.export(format),

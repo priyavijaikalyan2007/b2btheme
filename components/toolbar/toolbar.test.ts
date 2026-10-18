@@ -19,6 +19,7 @@ import type
 {
     ToolbarOptions,
     ToolbarRegion,
+    ToolbarItem,
     ToolItem,
     SplitButtonItem,
     SplitMenuItem,
@@ -418,6 +419,51 @@ describe("Toolbar setToolState / getToolState", () =>
         tb.setToolState("t1", { active: true });
         const state = tb.getToolState("t1");
         expect(state.active).toBe(true);
+        tb.destroy();
+    });
+
+    test("setToolState_Label_UpdatesALabelItemsText", () =>
+    {
+        // ADR-203. The generic DOM write looked only for
+        // `.toolbar-tool-label`, which a `type: "label"` item never
+        // renders, so this call changed nothing. GraphToolbar's zoom
+        // reading was frozen at its build-time value because of it.
+        const opts = makeOptions({
+            regions: [
+                {
+                    id: "r1",
+                    items: [
+                        { type: "label", id: "lbl", text: "100%" } as ToolbarItem,
+                    ],
+                },
+            ],
+        });
+        const tb = new Toolbar(opts);
+        tb.show(container);
+        tb.setToolState("lbl", { label: "150%" });
+        const el = container.querySelector("[data-tool-id=\"lbl\"]");
+        expect(el?.textContent).toBe("150%");
+        tb.destroy();
+    });
+
+    test("setToolState_Label_KeepsTheLiveConfigReadable", () =>
+    {
+        // A label item is read back through `text`, so writing only
+        // `label` left getTool() reporting the stale build-time string.
+        const opts = makeOptions({
+            regions: [
+                {
+                    id: "r1",
+                    items: [
+                        { type: "label", id: "lbl", text: "100%" } as ToolbarItem,
+                    ],
+                },
+            ],
+        });
+        const tb = new Toolbar(opts);
+        tb.show(container);
+        tb.setToolState("lbl", { label: "150%" });
+        expect((tb.getTool("lbl") as { text?: string })?.text).toBe("150%");
         tb.destroy();
     });
 

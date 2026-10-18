@@ -146,13 +146,24 @@ describe("SpineMap adapters without their library factory", () =>
 
     test("aWorkingFactoryStillMounts_SoTheGuardIsNotTooBroad", () =>
     {
+        // DEBT-TEST-1b. "Still mounts" is the claim this control makes,
+        // and a bare not.toThrow() never checked that anything mounted.
+        // The factory is called once, and the editor renders.
+        let mounted = 0;
         const win = window as unknown as Record<string, unknown>;
-        win["createSprintPicker"] = () => ({
-            getValue: () => "sprint-7",
-            destroy: () => { /* no-op */ }
-        });
+        win["createSprintPicker"] = () =>
+        {
+            mounted++;
+            return {
+                getValue: () => "sprint-7",
+                destroy: () => { /* no-op */ }
+            };
+        };
         planted.push("createSprintPicker");
 
-        expect(() => openEditor(container, "sprintpicker")).not.toThrow();
+        openEditor(container, "sprintpicker");
+
+        expect(mounted).toBe(1);
+        expect(document.querySelector(".spinemap-popover-body")).not.toBeNull();
     });
 });

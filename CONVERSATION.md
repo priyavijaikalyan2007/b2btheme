@@ -4137,3 +4137,44 @@ The thing worth keeping: the case for fail-fast is normally argued about
 the future. The bigger return came straight away and pointed backwards.
 A quiet failure conceals every caller that is already wrong, and the
 day it starts shouting they all arrive at once.
+
+---
+
+## 2026-10-18 — The nine were a dud and the suite next door was the find
+
+I set out to close the nine `.not.toThrow()` blocks I had labelled the
+highest yield left in DEBT-TEST-1b, and I could not find them. The
+classifier that produced the table had been a scratch file. The number
+was the only surviving evidence of its own derivation, and recovering
+the set took four scripts and two wrong guesses — one returned 123
+blocks, another returned one.
+
+**They were worth little once found.** Six were positive controls in
+nofallback suites, where "does not throw" is the right shape for the
+claim and the missing half is only "assert the mount produced
+something". One was a duplicate of the block above it under a name
+describing a case it never reached.
+
+**The find came from a file the classifier never pointed at.**
+GraphToolbar's whole suite ran against a stand-in Toolbar whose
+`setToolState` had an empty body. Five of the nine blocks called a
+state setter that delegates to it and returns nothing, so no assertion
+was available to them. Mounting the real Toolbar exposed a defect in
+Toolbar itself: a `type: "label"` item renders `.toolbar-label-text`
+and the generic write path only ever looked for `.toolbar-tool-label`,
+so `setToolState({ label })` had never updated a label item in the
+library. GraphToolbar's zoom reading was frozen for the life of the
+toolbar.
+
+That is ADR-200's finding a second time in two days. A classifier sorts
+by the shape of the test, and a defect lives in the relationship
+between a test and its dependency. The better question is not which
+assertion is weakest but **which suite has never run against the real
+thing**.
+
+Three documents also told integrators to call `graph.getZoom()`, which
+GraphCanvas does not have, and to feed a scale factor into a parameter
+documented as a percentage. The demo pages had been right all along.
+
+`--shapes` is now a committed mode of the census, so the next person to
+read the table can re-derive it. Including me, tomorrow.

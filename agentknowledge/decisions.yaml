@@ -8672,3 +8672,87 @@
     DEBT-TEST-1b is 284 and classified rather than closed: 116
     idempotency, 73 where the name states a change, 9 on an absent
     dependency, 86 handle checks. The 9 are the highest yield left.
+
+- id: ADR-203
+  title: A classification is an instrument, and the suite that never mounted its dependency is where the defects are
+  date: 2026-10-18
+  status: accepted
+  context: |
+    DEBT-TEST-1b had been split into four shapes the day before, and
+    one bucket of nine was labelled the highest yield per item left.
+    Going to work on those nine, the classifier that produced the
+    split could not be found: it had been run from a scratch file and
+    never committed. The table in CODEBASE_FIXES.md and
+    scripts/audit-counts.mjs was a claim about the repository that the
+    repository could no longer check. Recovering the set took four
+    scripts. One heuristic returned 123 blocks and another returned
+    one, and the set that summed to nine appeared only after the shape
+    was guessed and then tested against the recorded count.
+  decision: |
+    D1. THE SHAPE SPLIT IS A COMMITTED MODE OF THE CENSUS.
+        `node scripts/test-assertions.mjs --shapes` regenerates the
+        table. census() now carries each block's body, because the
+        split needs it. Four cases in the companion file pin the one
+        decision the split rests on: which bucket claims a block when
+        two rules match.
+
+    D2. WITHHOLDING IS DETECTED PER FILE, SO IDEMPOTENCY IS TESTED
+        FIRST. A suite states an absent dependency once in its setup,
+        so the signal is file-level. Ordered the other way, a file
+        that deletes a global in teardown claims every
+        destroy_CalledTwice inside it, and the bucket reported 17
+        where 6 is right. The name is the fact, the file is the
+        hypothesis.
+
+    D3. setToolState({ label }) UPDATES A type:"label" ITEM.
+        applyToolStateToDOM wrote into `.toolbar-tool-label`, which a
+        button renders. A label item renders `.toolbar-label-text`, so
+        the write silently did nothing to every label item in the
+        library. The live config is kept truthful too, because a label
+        item is read back through `text`. `text` joins
+        ToolbarItemFields so the generic paths can reach it.
+
+    D4. GRAPHTOOLBAR'S SUITE MOUNTS THE REAL TOOLBAR. It imports
+        ../toolbar/toolbar for the globals and stubs only Bootstrap's
+        Tooltip, which is a third-party bundle rather than a component
+        of this library.
+  consequences: |
+    THE NINE WERE NOT THE HIGHEST YIELD. Six were positive controls in
+    *.nofallback.test.ts suites, where .not.toThrow() is the correct
+    shape for the claim and the missing half is "assert the mount
+    produced something" rather than a refusal. Two were CodeEditor
+    survivors of ADR-200. One was a duplicate of the block above it
+    under a name describing a case it never reached. All nine closed,
+    testsThatCannotFail 284 -> 267.
+
+    THE YIELD CAME FROM A FILE THE CLASSIFIER NEVER POINTED AT.
+    GraphToolbar's suite mounted a stand-in Toolbar whose setToolState
+    had an empty body, so eight of its nine blocks could not fail and
+    all eight looked like ordinary idempotency to any name-based rule.
+    Mounting the real Toolbar found D3. GraphToolbar's zoom reading
+    had been frozen at its build-time value for the life of the
+    toolbar, and the PRD's section 8.2 acceptance had never been true.
+    Nine blocks became fifteen, three of which fail if D3 is reverted.
+
+    A CLASSIFIER SORTS BY THE SHAPE OF THE TEST, AND A DEFECT LIVES IN
+    THE RELATIONSHIP BETWEEN A TEST AND ITS DEPENDENCY. ADR-200 for
+    CodeEditor and CodeMirror, ADR-203 for GraphToolbar and Toolbar:
+    the same finding twice in two days. Rank suites by stand-in, not
+    by matcher.
+
+    THREE DOCUMENTS TOLD INTEGRATORS TO WIRE setZoomLabel WRONG. The
+    README and the reference generated from it called graph.getZoom(),
+    which GraphCanvas does not have, and fed a scale factor into a
+    parameter the PRD documents as a percentage. COMPONENTS.md passed
+    graph.zoomIn(), which returns void, so the label would have read
+    an em dash. The demo pages were right all along.
+
+    RECORDED RATHER THAN TAKEN. DEBT-CE-1: toggleWordWrap() presses
+    its button when CodeMirror is absent and nothing wrapped, which is
+    a behaviour change rather than a test fix. DEBT-TB-1: a Toolbar
+    label item cannot be an ARIA live region, which the GraphToolbar
+    PRD says the zoom reading is.
+
+    DEBT-TEST-1b is 267 and regenerable: 110 idempotency, 66 where the
+    name states a change, 6 on an absent dependency, 85 handle checks.
+    Each of the 6 states a change in its name.

@@ -1557,3 +1557,17 @@
   related:
   - ATestThatCannotFail
   - WritingTheAssertionIsHowYouReadTheContract
+
+- name: AClassificationIsAnInstrumentNotANote
+  definition: "ADR-203. A four-way split of 284 unfailable test blocks was written into two tracked documents and the classifier that produced it was left in a scratch file. A day later the bucket of nine labelled the highest yield could not be found: one reconstruction heuristic returned 123 blocks and another returned one, and the correct set appeared only after the shape was guessed and tested against the recorded count. The number was the only surviving evidence of its own derivation. If a measurement will steer the next piece of work, it has to be re-runnable by whoever reads it next, and that includes you tomorrow. Commit the thing that produced the count, or do not write the count down."
+  anchor_file: scripts/test-assertions.mjs
+  related:
+  - ATestThatCannotFail
+  - EveryGateHereIsACeiling
+
+- name: RankSuitesByStandInNotByMatcher
+  definition: "ADR-203. The nine blocks a shape classifier named the highest yield were nearly all duds: six were positive controls in *.nofallback.test.ts suites, where `.not.toThrow()` is the correct shape for the claim and the missing half is only an assertion that the mount produced something. The real find was GraphToolbar, whose whole suite mounted a stand-in Toolbar with an empty-bodied setToolState, so eight of nine blocks could not fail and every one looked like ordinary idempotency to a name-based rule. Mounting the real Toolbar exposed a defect in Toolbar: a type:\"label\" item renders .toolbar-label-text and the generic write path only looked for .toolbar-tool-label, so setToolState({label}) had never updated a label item in the library. A classifier sorts by the shape of the TEST, and a defect lives in the relationship between a test and its DEPENDENCY. The question with yield is not which assertion is weakest but which suite has never run against the real thing. ADR-200 found the same thing for CodeEditor and CodeMirror two days earlier."
+  anchor_file: components/graphtoolbar/graphtoolbar.test.ts
+  related:
+  - AClassificationIsAnInstrumentNotANote
+  - ATestThatCannotFail

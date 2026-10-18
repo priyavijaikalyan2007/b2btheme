@@ -638,11 +638,28 @@ describe("edge cases", () =>
         expect(html).toBe("");
     });
 
-    test("nullishContent_HandledGracefully", () =>
+    test("nullishContent_SurfacesWhateverMarkedDoesWithIt", () =>
     {
-        vi.stubGlobal("marked", buildMarkedMock(() => ""));
+        // DEBT-TEST-1b. This block passed "" and asserted no throw, so
+        // it was a copy of emptyContent above it under a name about a
+        // case it never reached. What the renderer owns here is that it
+        // adds no catch of its own: a parser that rejects the argument
+        // must reach the caller. FALLBACK-13 removed the handle that
+        // used to swallow exactly this.
+        vi.stubGlobal("marked", buildMarkedMock((md: string) =>
+        {
+            if (md === null || md === undefined)
+            {
+                throw new TypeError("marked: md is not a string");
+            }
+            return `<p>${md}</p>`;
+        }));
         const handle = createMarkdownRenderer();
-        expect(() => handle.toHtml("")).not.toThrow();
+
+        expect(() => handle.toHtml(null as unknown as string))
+            .toThrow(/not a string/);
+        expect(() => handle.toHtml(undefined as unknown as string))
+            .toThrow(/not a string/);
     });
 
     test("multipleScriptTags_AllStripped", () =>

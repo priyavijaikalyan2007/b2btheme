@@ -23,7 +23,7 @@ import { describe, test, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import {
-    testBlocks, assertionsIn, isVacuous, verdictFor,
+    testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf,
 } from "./test-assertions.mjs";
 
 type Block = { name: string; body: string };
@@ -176,5 +176,63 @@ describe("the predicate fires for the reason it was written", () =>
         };
 
         expect(verdictFor(block)).toBe("asserts");
+    });
+});
+
+describe("the shape split is an instrument, not a note", () =>
+{
+    // ADR-203. The first split was run from a scratch file and could not
+    // be reproduced the next day, so the table it produced had to be
+    // taken on trust. These cases pin the one decision that table rests
+    // on: which bucket a block falls into when two rules both match.
+
+    const row = (name: string, body: string, file: string) =>
+        ({ file, name, body, verdict: "vacuous" as const });
+
+    test("an existence matcher never reaches the not.toThrow buckets", () =>
+    {
+        const rows = [row(
+            "createX_ReturnsHandle",
+            "expect(h).toBeDefined();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows)).toMatchObject({ existence: 1, absentDependency: 0 });
+    });
+
+    test("idempotency wins over the file that withholds a global", () =>
+    {
+        // The ordering that matters. graphtoolbar.test.ts deleted
+        // window.Toolbar in its teardown, and classifying by file alone
+        // called every destroy_CalledTwice inside it an absent
+        // dependency. The name is the fact, the file is the hypothesis.
+        const rows = [row(
+            "destroy_CalledTwice_DoesNotThrow",
+            "expect(() => h.destroy()).not.toThrow();",
+            "scripts/test-assertions.test.ts")];
+
+        expect(shapesOf(rows)).toMatchObject({ idempotent: 1, absentDependency: 0 });
+    });
+
+    test("a name that states a change lands in its own bucket", () =>
+    {
+        const rows = [row(
+            "setFilters_UpdatesFilterState",
+            "expect(() => h.setFilters([])).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows)).toMatchObject({ namesAChange: 1, absentDependency: 0 });
+    });
+
+    test("a block that asserts is in no bucket at all", () =>
+    {
+        const rows = [{
+            file: "scripts/audit-counts.mjs",
+            name: "t",
+            body: 'expect(h.getMode()).toBe("source");',
+            verdict: "asserts" as const,
+        }];
+        const shapes = shapesOf(rows);
+
+        expect(Object.values(shapes).reduce((a, b) => a + b, 0)).toBe(0);
     });
 });

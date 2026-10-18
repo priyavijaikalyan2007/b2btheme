@@ -456,22 +456,40 @@ const BASELINES = {
     // for any value that is not null. Recounted against the current
     // parser on 2026-10-18, after the subject/matcher split:
     //
-    // Classified 2026-10-18 so the remainder is navigable:
+    // Classified by `node scripts/test-assertions.mjs --shapes`, which
+    // prints the split below. THE FIRST VERSION OF THIS TABLE WAS RUN
+    // FROM A SCRATCH FILE AND COULD NOT BE REPRODUCED THE NEXT DAY, so
+    // the classifier is now committed beside the census. ADR-203.
     //
-    //   116  `.not.toThrow()` on IDEMPOTENCY — destroy_CalledTwice,
+    // Counts are before -> now, both from the committed classifier,
+    // run on 9ff3965 and on HEAD. The hand-run split it replaces said
+    // 116 / 73 / 9 / 86, which nothing here can now reproduce.
+    //
+    //   113 -> 110  `.not.toThrow()` on IDEMPOTENCY — destroy_CalledTwice,
     //        closeWhenNotOpen. Weak but honest, and the right
     //        assertion is uniform: the DOM is clean and the handle is
     //        inert. Per-component selectors, near-zero expected yield.
-    //    73  `.not.toThrow()` on something else — the name states a
+    //    68 ->  66  `.not.toThrow()` on something else — the name states a
     //        change and the body asserts non-crash. Same family as the
     //        21 with no assertion at all, so expect contracts to read
     //        rather than defects. This is where to go next.
-    //     9  `.not.toThrow()` on an ABSENT DEPENDENCY — the FALLBACK
-    //        shape, and the highest yield per item left.
-    //    86  `.toBeDefined()` / `.toBeTruthy()` — mostly
+    //    17 ->   6  `.not.toThrow()` on an ABSENT DEPENDENCY — the FALLBACK
+    //        shape. The nine of 2026-10-18 are closed, and the six
+    //        that remain each state a change in their name.
+    //    86 ->  85  `.toBeDefined()` / `.toBeTruthy()` — mostly
     //        createX_ReturnsHandle. Redundant with the factory census
     //        since ERR-1 and ERR-2: every factory now throws or
     //        returns a real handle.
+    //
+    // 284 -> 267 on 2026-10-18. THE NINE WERE NOT THE HIGHEST YIELD,
+    // and calling them that was wrong: six were positive controls in
+    // nofallback suites, where `.not.toThrow()` is the correct shape
+    // and the missing half is "assert the mount produced something".
+    // The yield came from somewhere the classifier never pointed at.
+    // GraphToolbar's suite mounted a stand-in Toolbar whose
+    // setToolState had an empty body, so eight of its nine blocks
+    // could not fail, and the real component exposed the defect the
+    // stand-in hid. ADR-203, DEBT-GATE-2's lesson a second time.
     //
     // 341 -> 335 -> 285 on 2026-10-18. Six of CodeEditor's eight
     // `_DoesNotThrow` cases were asserting that a public method does
@@ -491,7 +509,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 284,
+    testsThatCannotFail: 267,
 };
 
 /*
@@ -563,7 +581,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4930,
+    testBlocks: 4942,
 };
 
 /**

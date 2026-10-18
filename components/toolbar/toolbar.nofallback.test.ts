@@ -83,7 +83,17 @@ describe("Toolbar tooltips with no Bootstrap", () =>
         // Bootstrap. A toolbar WITH tools always does, because every tool
         // must declare a tooltip and every tooltip is a trigger. An empty
         // region is the real boundary.
-        expect(() => createToolbar(options([]))).not.toThrow();
+        //
+        // DEBT-TEST-1b. A bare not.toThrow() could not tell a toolbar
+        // that mounted from one that refused quietly, so the control
+        // asserts the region reached the DOM with no trigger in it.
+        const tb = createToolbar(options([]));
+        const root = tb.getElement() as HTMLElement;
+
+        expect(root.querySelector("[data-region-id=\"rgn1\"]")).not.toBeNull();
+        expect(root.querySelectorAll("[data-bs-toggle=\"tooltip\"]").length)
+            .toBe(0);
+        tb.destroy();
     });
 });
 
@@ -147,12 +157,23 @@ describe("Toolbar items that omit a required tooltip", () =>
         // ToolToggleSwitchItem declares tooltip?, and it carries its own
         // visible label, so there is no fabricated accessible name to
         // guard against. It also sets no trigger, so Bootstrap stays out.
-        expect(() => createToolbar(options([
+        //
+        // DEBT-TEST-1b. The claim is that the switch MOUNTS without one,
+        // and only the absence of a throw was ever checked. The visible
+        // label is what stands in for the tooltip, so assert it is there.
+        const tb = createToolbar(options([
             {
                 type: "switch",
                 id: "sw1",
                 label: "Live preview"
             } as unknown as ToolItem
-        ]))).not.toThrow();
+        ]));
+        const root = tb.getElement() as HTMLElement;
+        const sw = root.querySelector("[data-tool-id=\"sw1\"]");
+
+        expect(sw).not.toBeNull();
+        expect(sw?.textContent).toContain("Live preview");
+        expect(sw?.querySelector("[data-bs-toggle=\"tooltip\"]")).toBeNull();
+        tb.destroy();
     });
 });

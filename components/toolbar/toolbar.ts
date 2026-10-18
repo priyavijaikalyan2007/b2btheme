@@ -602,6 +602,16 @@ export interface ToolbarItemFields
     type: string;
     icon: string;
     label: string;
+
+    /**
+     * The string a `type: "label"` item renders.
+     *
+     * It is the one presentation field that is spelled differently per
+     * member, and leaving it out of this set is what let the generic
+     * write path miss label items entirely. ADR-203.
+     */
+    text: string;
+
     tooltip: string;
     keyTip: string;
     active: boolean;
@@ -1529,6 +1539,11 @@ export class Toolbar
         if (state.label !== undefined)
         {
             config.label = state.label;
+
+            // A label item is read back through `text`, so writing only
+            // `label` would leave `getTool()` reporting the string the
+            // consumer passed at build time. ADR-203.
+            if (config.type === "label") { config.text = state.label; }
         }
 
         if (state.tooltip !== undefined)
@@ -4248,14 +4263,21 @@ export class Toolbar
         }
 
         // Update label
-        if (config.label)
-        {
-            const labelEl = el.querySelector(".toolbar-tool-label");
+        //
+        // A `type: "label"` item renders its string into
+        // `.toolbar-label-text`, and every other item renders it into
+        // `.toolbar-tool-label`. This branch looked only for the second,
+        // so `setToolState({ label })` silently did nothing to every
+        // label item in the library. GraphToolbar's zoom reading is one
+        // of them, and it stayed at its initial value for the life of
+        // the toolbar. ADR-203.
+        const labelEl = config.type === "label"
+            ? el.querySelector(".toolbar-label-text")
+            : el.querySelector(".toolbar-tool-label");
 
-            if (labelEl)
-            {
-                labelEl.textContent = config.label;
-            }
+        if (config.label && labelEl)
+        {
+            labelEl.textContent = config.label;
         }
 
         // Update tooltip

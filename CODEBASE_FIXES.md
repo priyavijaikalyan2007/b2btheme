@@ -1988,6 +1988,63 @@ reduced version".
   which is the failure ADR-196 D2 was written to avoid. The work is to
   classify the 235, not to flip a flag.
 
+- [x] **DEBT-GT-1** **CLOSED 2026-10-18, ADR-203. GraphToolbar's whole
+  suite ran against a stand-in Toolbar whose `setToolState` had an
+  empty body, and it hid a defect in the real one.**
+
+  Eight of the nine blocks could not fail. Five of them called a state
+  setter — `setZoomLabel`, `setGridSnapState`, `setUndoEnabled`,
+  `setRedoEnabled`, `setDeleteEnabled` — and every one of those
+  delegates to `tb.setToolState(id, state)` and returns nothing, so a
+  stand-in that discarded its arguments left `.not.toThrow()` as the
+  only claim available. A sixth carried the assertion as a comment:
+  `// Callback is wired internally via Toolbar item click`.
+
+  **THE DEFECT THE STAND-IN HID IS IN TOOLBAR, NOT GRAPHTOOLBAR.**
+  `applyToolStateToDOM` wrote a new label into `.toolbar-tool-label`,
+  which is what a button renders. A `type: "label"` item renders
+  `.toolbar-label-text`, so `setToolState({ label })` silently did
+  nothing to every label item in the library. GraphToolbar's zoom
+  reading was frozen at its build-time value for the life of the
+  toolbar, and the PRD's §8.2 acceptance — "the text content updates"
+  — had never been true. The live config was stale with it, because a
+  label item is read back through `text` and only `label` was written.
+
+  Mounting the real Toolbar is what found it, which is ADR-200's
+  lesson a second time: **a component that has never been mounted
+  against its real dependency has never been tested.** The suite now
+  imports `../toolbar/toolbar` for the globals and stubs only
+  Bootstrap's `Tooltip`, which is a third-party bundle rather than a
+  component of this library. Nine blocks became fifteen, and three of
+  them fail if the Toolbar fix is reverted.
+
+- [ ] **DEBT-CE-1** **`toggleWordWrap()` presses its button when there
+  is no editor to wrap.**
+
+  Found while giving `toggleWordWrap_DoesNotThrow` an assertion.
+  The method flips `wordWrapEnabled` and calls `updateWrapBtnState()`
+  unconditionally, and reconfigures CodeMirror only `if (this.cmView)`.
+  With CodeMirror absent the button reads `aria-pressed="true"` and
+  nothing wrapped, which is the shape AGENTS.md's fourth row forbids:
+  a capability that is unavailable renders a reduced version instead
+  of refusing. The mount already shows a missing-dependency notice, so
+  the button may be decoration over a refusal rather than a lie about
+  content. **That is the question to answer, and it is a behaviour
+  change rather than a test fix**, so it is recorded instead of taken.
+  The test now pins the half that works.
+
+- [ ] **DEBT-TB-1** **A Toolbar label item cannot be a live region,
+  and the GraphToolbar PRD says the zoom reading is one.**
+
+  `specs/graphtoolbar.prd.md` §8.2 shows
+  `<span class="toolbar-label" aria-live="polite" aria-atomic="true">`
+  and says a screen reader announces each new zoom level.
+  `buildLabelItem` sets no `aria-live`, and `ToolLabelItem` has no
+  field that would ask for one. Now that `setToolState({ label })`
+  actually changes the text, the announcement is the part still
+  missing. Adding `aria-live` to every label item is wider than the
+  spec asks, so this needs an opt-in field rather than a one-line fix.
+
 - [x] **FALLBACK-13** **CLOSED 2026-10-18, ADR-202. MarkdownRenderer
   itself returned a fallback handle, and it is the root the other four
   grew from.**
@@ -2074,16 +2131,43 @@ offered as the evidence for it.
     seen from a unit test. The test says so and asserts the half that is
     observable.
 
-- [ ] **DEBT-TEST-1b** **284 test blocks where every assertion passes
-  for any value that is not null, down from 341, and now classified so
-  the remainder is navigable.**
+- [ ] **DEBT-TEST-1b** **267 test blocks where every assertion passes
+  for any value that is not null, down from 341, and now classified by
+  a committed instrument rather than by a note.**
 
-  | Shape | Count | Expected yield |
-  |---|---|---|
-  | `.not.toThrow()` on idempotency | 116 | near zero |
-  | `.not.toThrow()`, name states a change | 73 | contracts to read |
-  | `.not.toThrow()` on an absent dependency | 9 | **highest left** |
-  | `.toBeDefined()` / `.toBeTruthy()` | 86 | near zero |
+  Regenerate with `node scripts/test-assertions.mjs --shapes`.
+
+  Both columns are the committed classifier, run on `9ff3965` and on
+  `HEAD`. The hand-run split it replaces reported 116 / 73 / 9 / 86,
+  which no instrument in the repository can now produce.
+
+  | Shape | Before | Now | Expected yield |
+  |---|---|---|---|
+  | `.not.toThrow()` on idempotency | 113 | 110 | near zero |
+  | `.not.toThrow()`, name states a change | 68 | 66 | contracts to read |
+  | `.not.toThrow()` on an absent dependency | 17 | 6 | each states a change |
+  | `.toBeDefined()` / `.toBeTruthy()` | 86 | 85 | near zero |
+
+  **THE FIRST VERSION OF THIS TABLE COULD NOT BE REPRODUCED.** The
+  classifier that produced 116 / 73 / 9 / 86 was run from a scratch
+  file and never committed, so a day later the nine had to be
+  rediscovered by guesswork. A classification that steers the next
+  piece of work is an instrument, and it now lives in
+  `scripts/test-assertions.mjs` with four cases pinning the one
+  decision it rests on: which bucket claims a block when two rules
+  match. Withholding is detected per FILE, because a suite states the
+  absence once in its setup, so idempotency is tested FIRST or a file
+  that deletes a global in teardown claims every `destroy_CalledTwice`
+  inside it. ADR-203.
+
+  **AND THE NINE WERE NOT THE HIGHEST YIELD.** Six were positive
+  controls in `*.nofallback.test.ts` suites, where `.not.toThrow()` is
+  the correct shape for the claim and the missing half is not a
+  refusal but "assert the mount produced something". Two were
+  CodeEditor survivors of ADR-200 and one was a duplicate of the block
+  above it under a name describing a case it never reached. All nine
+  are closed, and the real yield came from a file the classifier never
+  pointed at. See DEBT-GT-1 below.
 
   **335 TO 285 IS A CORRECTION, NOT A RELAXATION.** `expect(typeof x)`
   was counted as unable to fail, and it can: `typeof undefined` is

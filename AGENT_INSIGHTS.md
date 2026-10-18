@@ -2169,3 +2169,56 @@ manifest instead of the published tag. Ask what source your check
 enumerates, and whether the thing you just wrote is in that source
 yet. A clean local run proves something about a repository state, and
 it is worth knowing which one.
+
+### 6.119 A Classification Is an Instrument, Not a Note (2026-10-18)
+
+Yesterday I split 284 unfailable test blocks into four shapes, wrote
+the table into two tracked files, and named one bucket of nine "the
+highest yield per item left". Today I went to work on those nine and
+could not find them. **The classifier had been a scratch file.** The
+table it produced was a claim about the repository that the
+repository could no longer check.
+
+Reconstructing it cost four scripts and several wrong guesses. My
+first heuristic returned 123 blocks, my second returned one, and the
+set that actually summed to nine only appeared after a reviewer
+suggested the shape I had used and I tested that guess against the
+count. **The number was the only surviving evidence of its own
+derivation.**
+
+`--shapes` is now a mode of `scripts/test-assertions.mjs`, with four
+cases in its companion file pinning the one decision the split rests
+on: which bucket claims a block when two rules match.
+
+**Principle**: if a measurement is going to steer the next piece of
+work, it has to be re-runnable by the next person who reads it, and
+"the next person" includes you tomorrow. A count in a document is a
+fact with no provenance. Commit the thing that produced it, or do
+not write the number down.
+
+### 6.120 The Classifier Pointed Away From the Yield (2026-10-18)
+
+Having recovered the nine, I fixed them, and they were nearly all
+duds. Six were **positive controls** in `*.nofallback.test.ts`
+suites — `aWorkingFactoryStillMounts_SoTheGuardIsNotTooBroad` — where
+`.not.toThrow()` is the correct shape for the claim being made. They
+were weak, not wrong, and the missing half was "assert the mount
+produced something", not a refusal.
+
+The real find came from a file the classifier never pointed at.
+GraphToolbar's suite mounted a stand-in Toolbar whose `setToolState`
+had an empty body, so **eight of its nine blocks could not fail** and
+all eight looked like ordinary idempotency to any name-based rule.
+Mounting the real Toolbar exposed a defect in Toolbar itself: a
+`type: "label"` item renders `.toolbar-label-text` and the generic
+write path only ever looked for `.toolbar-tool-label`, so
+`setToolState({ label })` had never updated a label item in the
+library. GraphToolbar's zoom reading was frozen for the life of the
+toolbar.
+
+**Principle**: a classifier sorts by the shape of the *test*, and a
+defect lives in the relationship between a test and its *dependency*.
+The highest-yield question is not "which assertion is weakest" but
+**"which suite has never run against the real thing"** — ADR-200 for
+CodeEditor and CodeMirror, ADR-203 for GraphToolbar and Toolbar, the
+same finding twice in two days. Rank by stand-in, not by matcher.

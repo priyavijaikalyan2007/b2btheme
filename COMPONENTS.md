@@ -1567,7 +1567,11 @@ Factory function that creates a preconfigured Toolbar instance for graph visuali
 <script>
     var handle = createGraphToolbar({
         onUndo: function() { graph.undo(); },
-        onZoomIn: function() { handle.setZoomLabel(graph.zoomIn()); },
+        onZoomIn: function() {
+            graph.zoomIn();
+            // A percentage, and getZoomLevel() reports a scale factor.
+            handle.setZoomLabel(graph.getZoomLevel() * 100);
+        },
         onExport: function(fmt) { graph.export(fmt); }
     });
 </script>

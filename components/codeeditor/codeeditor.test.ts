@@ -140,11 +140,17 @@ describe("lifecycle", () =>
         expect(queryRoot()).toBeNull();
     });
 
-    test("destroyTwice_DoesNotThrow", () =>
+    test("destroyTwice_LeavesTheEditorDestroyedAndRefusing", () =>
     {
+        // DEBT-TEST-1b. Idempotency is the weakest claim a test can make
+        // and the old block made only half of it. The second call is a
+        // no-op AND the handle stays refusing, which is what ADR-200
+        // made the contract after destroy.
         const ce = new CodeEditor({});
         ce.destroy();
-        expect(() => ce.destroy()).not.toThrow();
+        ce.destroy();
+
+        expect(() => ce.getValue()).toThrow();
     });
 });
 
@@ -298,11 +304,27 @@ describe("editing actions without CodeMirror", () =>
         expect(() => ce.format()).toThrow(/format\(\).*CodeMirror/s);
     });
 
-    test("toggleWordWrap_DoesNotThrow", () =>
+    test("toggleWordWrap_FlipsThePressedStateOfTheButton", () =>
     {
+        // DEBT-TEST-1b. The old block asserted only that the call did
+        // not throw, which is true of a method with an empty body. The
+        // button is the observable half, and it is the half that works
+        // when CodeMirror is absent. DEBT-CE-1 records the other half:
+        // the pressed button claims a wrap that no editor performed.
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.toggleWordWrap()).not.toThrow();
+        const btn = document.querySelector(
+            "#test-codeeditor [data-action=\"wordwrap\"]");
+
+        if (btn === null) { throw new Error("the word-wrap button did not render"); }
+
+        const before = btn.getAttribute("aria-pressed");
+        ce.toggleWordWrap();
+        const after = btn.getAttribute("aria-pressed");
+
+        expect(after).not.toBe(before);
+        ce.toggleWordWrap();
+        expect(btn.getAttribute("aria-pressed")).toBe(before);
     });
 
     test("getSelection_WithNoCM_Throws", () =>

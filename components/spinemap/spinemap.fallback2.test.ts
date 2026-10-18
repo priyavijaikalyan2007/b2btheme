@@ -79,9 +79,17 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
 
     test("validStoredJson_StillOpens_SoTheGuardIsNotTooBroad", () =>
     {
-        (window as Globals)["createTagger"] = () => ({
-            getTags: () => ["a"], destroy: () => { /* no-op */ }
-        });
+        // DEBT-TEST-1b. The positive control is correctly shaped as "this
+        // still works", but asserting only that nothing threw could not
+        // see whether the parsed value ever reached the widget. It does:
+        // the adapter is handed the array, not the raw string.
+        let received: unknown = "NEVER CALLED";
+        (window as Globals)["createTagger"] =
+            (_id: string, opts: Record<string, unknown>) =>
+        {
+            received = opts["value"];
+            return { getTags: () => ["a"], destroy: () => { /* no-op */ } };
+        };
         planted.push("createTagger");
 
         const map = createSpineMap({
@@ -92,8 +100,10 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
             }]
         });
 
-        expect(() => (map as unknown as Internals).showPopover("solo", true))
-            .not.toThrow();
+        (map as unknown as Internals).showPopover("solo", true);
+
+        expect(received).toEqual(["a", "b"]);
+        expect(document.querySelector(".spinemap-popover-body")).not.toBeNull();
     });
 
     // ── confirmRemove ───────────────────────────────────────────────────
@@ -148,13 +158,23 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
 
     test("anEmptyStoredValue_IsNotTreatedAsAFailure", () =>
     {
-        (window as Globals)["createPeriodPicker"] = () => ({
-            getValue: () => null, destroy: () => { /* no-op */ }
-        });
-        planted.push("createPeriodPicker");
-
         // An empty structured field is a field the user cleared, not a
         // deserializer that went wrong. It must still open.
+        //
+        // DEBT-TEST-1b. "It must still open" is the claim, and a bare
+        // not.toThrow() never checked that it opened. The widget mounts
+        // and is handed no value, which is what an empty field means.
+        let mounted = 0;
+        let received: unknown = "NEVER CALLED";
+        (window as Globals)["createPeriodPicker"] =
+            (_id: string, opts: Record<string, unknown>) =>
+        {
+            mounted++;
+            received = opts["value"];
+            return { getValue: () => null, destroy: () => { /* no-op */ } };
+        };
+        planted.push("createPeriodPicker");
+
         const map = createSpineMap({
             container, data: dataWith(""), editable: true,
             popoverFields: [{
@@ -163,8 +183,11 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
             }]
         });
 
-        expect(() => (map as unknown as Internals).showPopover("solo", true))
-            .not.toThrow();
+        (map as unknown as Internals).showPopover("solo", true);
+
+        expect(mounted).toBe(1);
+        expect(received).toBeUndefined();
+        expect(document.querySelector(".spinemap-popover-body")).not.toBeNull();
     });
 
     // ── adapter teardown ────────────────────────────────────────────────
@@ -202,10 +225,14 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
             .toBe(0);
     });
 
-    test("aCleanTeardown_DoesNotThrow", () =>
+    test("aCleanTeardown_DestroysTheWidgetAndClearsThePopover", () =>
     {
+        // DEBT-TEST-1b. The partner of the throwing-destroy case above.
+        // It proved the throw is reported, and this proves the quiet
+        // path still tears down, which a not.toThrow() could not see.
+        let destroys = 0;
         (window as Globals)["createTagger"] = () => ({
-            getTags: () => [], destroy: () => { /* no-op */ }
+            getTags: () => [], destroy: () => { destroys++; }
         });
         planted.push("createTagger");
 
@@ -218,7 +245,11 @@ describe("SpineMap, the fallbacks FALLBACK-1 left behind", () =>
         });
         const internals = map as unknown as Internals;
         internals.showPopover("solo", true);
+        expect(document.querySelector(".spinemap-popover-body")).not.toBeNull();
 
-        expect(() => internals.hidePopover()).not.toThrow();
+        internals.hidePopover();
+
+        expect(destroys).toBe(1);
+        expect(document.querySelector(".spinemap-popover-body")).toBeNull();
     });
 });
