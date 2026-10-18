@@ -709,10 +709,25 @@ export function createMarkdownRenderer(
 {
     const marked = probe<MarkedStatic>("marked");
 
+    // ADR-202. This used to return buildFallbackHandle(), whose
+    // `render` put the raw markdown in as pre-wrap text and whose
+    // `toHtml` escaped it instead of rendering it. A reader then saw
+    // "## Heading" and "**bold**" as literal characters, which looks
+    // like badly written documentation rather than a missing library.
+    //
+    // THIS IS THE ROOT OF A FAMILY. Every component that renders
+    // markdown asks window.createMarkdownRenderer for a handle, so
+    // each of them inherited the substitution, and FALLBACK-9 and
+    // ADR-200 fixed four of them one at a time further downstream.
+    // Their guards only fire when the COMPONENT is absent, and this
+    // branch fires when `marked` is absent, which produces the same
+    // output from one layer deeper.
     if (!marked)
     {
-        logWarn("marked not found on window");
-        return buildFallbackHandle();
+        throw new Error(
+            `${LOG_PREFIX} marked was not found on window. `
+            + "Load https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js "
+            + "before creating a renderer.");
     }
 
     if (!configured)
@@ -767,18 +782,6 @@ function logCapabilities(opts: MarkdownRendererOptions): void
 }
 
 /** Fallback when marked is not available — plain text only. */
-function buildFallbackHandle(): MarkdownRendererHandle
-{
-    return {
-        toHtml: (md: string): string => escapeHtml(md),
-        render: (md: string, target: HTMLElement): void =>
-        {
-            target.textContent = md;
-            target.style.whiteSpace = "pre-wrap";
-        },
-    };
-}
-
 // ============================================================================
 // WINDOW REGISTRATION
 // ============================================================================

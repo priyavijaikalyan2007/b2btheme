@@ -76,13 +76,23 @@ import { census as testCensus } from "./test-assertions.mjs";
  * over", which was false twice. Those two files contribute exactly that one
  * occurrence and nothing else to any count here, so stating the set
  * correctly moves no baseline. See insight 6.64.
+ *
+ * `.mock.ts` JOINED `.test.ts` ON 2026-10-18, and the reason it had to
+ * is worth the line. A CodeMirror mock lives beside its component so
+ * two test files can share it, and it writes to `window`, which is
+ * what a mock is for. Counted as component source it pushed
+ * windowCasts, windowAliasDecls and windowAliasUses over their
+ * baselines. These ratchets exist to keep untyped window access out of
+ * SHIPPED code, and a mock is not shipped: nothing bundles it, the
+ * `dist/` and `tests/` exclusions below are the same judgement, and
+ * the suffix is narrow enough to read in a file listing.
  */
 export function sourceFiles()
 {
     const out = execFileSync("git", ["ls-files", "*.ts"], { encoding: "utf8" });
     return out.split("\n")
         .filter(Boolean)
-        .filter((f) => !/\.(test|spec)\.ts$/.test(f))
+        .filter((f) => !/\.(test|spec|mock)\.ts$/.test(f))
         .filter((f) => !/\.d\.ts$/.test(f))
         .filter((f) => !f.startsWith("tests/"))
         .filter((f) => !f.startsWith("dist/"));
@@ -463,7 +473,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 335,
+    testsThatCannotFail: 334,
 };
 
 /*
@@ -523,6 +533,19 @@ const FLOORS = {
     tracedComponents: 109,
     traceCalls: 301,
     dynamicVerboseShims: 225,
+    // DEBT-TEST-1, added 2026-10-18 after deleting 23 tests by
+    // accident. A regex meant to replace one `describe` matched a
+    // closing brace further down and took the XSS sanitisation suite
+    // with it — stripsScriptTags, stripsJavascriptUrls and fourteen
+    // more — and every gate here passed, because every gate here is a
+    // CEILING and a mass deletion only makes a ceiling happier.
+    //
+    // The suite reported "5191 passed" in green. Nothing said that
+    // 5214 had passed twenty minutes earlier.
+    //
+    // A floor is cheap and it is the only thing that can see this.
+    // Raise it when the count rises, the same as any other floor.
+    testBlocks: 4930,
 };
 
 /**
@@ -978,6 +1001,7 @@ function measure()
         traceCalls: 0,
         testsWithoutAssertion: 0,
         testsThatCannotFail: 0,
+        testBlocks: 0,
     };
     const consoleLogKinds = {};
     const windowCastKinds = {};
@@ -1078,6 +1102,7 @@ function measure()
     // test is an absence somebody can count, and a passing test is a
     // claim with the suite's green offered as its evidence.
     const blocks = testCensus();
+    counts.testBlocks = blocks.length;
     counts.testsWithoutAssertion = blocks.filter((b) => b.verdict === "none").length;
     counts.testsThatCannotFail = blocks.filter((b) => b.verdict === "vacuous").length;
 

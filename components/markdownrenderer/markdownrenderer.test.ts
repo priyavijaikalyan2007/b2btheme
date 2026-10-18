@@ -96,30 +96,24 @@ describe("createMarkdownRenderer", () =>
         expect(typeof handle.toHtml).toBe("function");
     });
 
-    test("withoutMarked_ReturnsFallbackHandle", () =>
+    test("withoutMarked_Throws", () =>
     {
-        // marked is undefined on window
-        const handle = createMarkdownRenderer();
-        expect(handle).toBeDefined();
-        expect(typeof handle.render).toBe("function");
-        expect(typeof handle.toHtml).toBe("function");
-    });
-
-    test("withoutMarked_toHtml_EscapesHtml", () =>
-    {
-        const handle = createMarkdownRenderer();
-        const result = handle.toHtml("<script>alert(1)</script>");
-        expect(result).not.toContain("<script>");
-        expect(result).toContain("&lt;script&gt;");
-    });
-
-    test("withoutMarked_render_SetsTextContent", () =>
-    {
-        const handle = createMarkdownRenderer();
-        const target = document.createElement("div");
-        handle.render("Hello **world**", target);
-        expect(target.textContent).toBe("Hello **world**");
-        expect(target.style.whiteSpace).toBe("pre-wrap");
+        /*
+         * ADR-202. These three cases specified a fallback handle whose
+         * `render` put the raw markdown in as pre-wrap text and whose
+         * `toHtml` escaped it rather than rendering it. A reader saw
+         * "## Heading" and "**bold**" as literal characters.
+         *
+         * THIS WAS THE ROOT OF A FAMILY. Every markdown-rendering
+         * component asks window.createMarkdownRenderer for a handle,
+         * so each inherited the substitution, and FALLBACK-9 and
+         * ADR-200 fixed four of them one at a time downstream. Their
+         * guards fire when the COMPONENT is absent. This one fires
+         * when `marked` is absent and produced the same output from a
+         * layer deeper, so those four fixes did not cover it.
+         */
+        expect(() => createMarkdownRenderer())
+            .toThrow(/marked was not found.*marked@15/s);
     });
 
     test("withMarked_toHtml_ReturnsRenderedHtml", () =>
@@ -556,29 +550,45 @@ describe("post-render Graphviz", () =>
 // ESCAPE HTML UTILITY
 // ============================================================================
 
-describe("escapeHtml via fallback", () =>
+describe("escapeHtml, through the code-block renderer", () =>
 {
+    /*
+     * ADR-202. These reached `escapeHtml` through the fallback
+     * handle's toHtml, which no longer exists. The helper does, in
+     * five places, and the code-block renderer is the one a consumer
+     * meets. Same subject, through a door that is still open.
+     */
+    function renderFence(body: string): string
+    {
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => `<pre><code>${body}</code></pre>`));
+        return createMarkdownRenderer().toHtml("```\n" + body + "\n```");
+    }
+
     test("escapesAngleBrackets", () =>
     {
-        const handle = createMarkdownRenderer(); // no marked => fallback
-        const result = handle.toHtml("<script>alert(1)</script>");
-        expect(result).toContain("&lt;");
-        expect(result).toContain("&gt;");
+        const result = renderFence("<script>alert(1)</script>");
+
         expect(result).not.toContain("<script>");
     });
 
     test("escapesAmpersands", () =>
     {
-        const handle = createMarkdownRenderer();
-        const result = handle.toHtml("A & B");
+        const result = renderFence("A & B");
+
         expect(result).toContain("&amp;");
     });
 
-    test("escapesQuotes", () =>
+    test("aQuoteInTextContentComesBackAsAQuote", () =>
     {
-        const handle = createMarkdownRenderer();
-        const result = handle.toHtml('key="value"');
-        expect(result).toContain("&quot;");
+        // escapeHtml turns `"` into `&quot;`, and the sanitiser that
+        // runs after it re-serialises that back to `"`, because a
+        // quote in text content is not markup. Written down because
+        // the obvious assertion here is the wrong one, and I made it.
+        const result = renderFence('key="value"');
+
+        expect(result).toContain('key="value"');
+        expect(result).not.toContain("&quot;");
     });
 });
 

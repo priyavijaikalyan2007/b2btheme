@@ -13,7 +13,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createCodeEditor } from "./codeeditor";
-import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm-mock";
+import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm.mock";
 
 interface Copyable { copyToClipboard(): void }
 

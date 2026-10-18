@@ -14,7 +14,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { CodeEditor, createCodeEditor } from "./codeeditor";
-import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm-mock";
+import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm.mock";
 
 import type { CodeEditorOptions, CodeEditorLanguage } from "./codeeditor";
 

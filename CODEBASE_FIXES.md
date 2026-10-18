@@ -1988,6 +1988,52 @@ reduced version".
   which is the failure ADR-196 D2 was written to avoid. The work is to
   classify the 235, not to flip a flag.
 
+- [x] **FALLBACK-13** **CLOSED 2026-10-18, ADR-202. MarkdownRenderer
+  itself returned a fallback handle, and it is the root the other four
+  grew from.**
+
+  `createMarkdownRenderer()` answered an absent `marked` with
+  `buildFallbackHandle()`, whose `render` set the raw markdown as
+  pre-wrap `textContent` and whose `toHtml` escaped it rather than
+  rendering it. The reader saw `## Heading` and `**bold**` as literal
+  characters.
+
+  **MY OWN DOCVIEWER FIX FROM EARLIER TODAY DID NOT COVER THIS.**
+  DocViewer's guard fires when `window.createMarkdownRenderer` is
+  absent. This branch fires when the component is loaded and `marked`
+  is not, and it produced the same plain-text output from one layer
+  deeper. The same is true of the three FALLBACK-9 fixed. Five
+  components were patched one at a time around a substitution that
+  lives in the library they all call.
+
+  **THE GATE HAD THREE SEPARATE HOLES AND THIS SAT IN ALL OF THEM.**
+  `READ_NAMES` is a hardcoded allowlist and nobody had added
+  `toHtml`. The object-literal probe needs a `failureContext`, and
+  this return is the whole function body, because the CALLER took the
+  branch. And the stand-in-name rule applied only to assignments.
+  Fixed: `toHtml`, `toMarkdown`, `getHtml` and `getMarkdown` added,
+  and a stand-in NAME now counts as a context for a returned object
+  with read methods — narrowly, because a `buildFallbackAvatar` that
+  returns a DOM element is a view and those were reviewed under
+  ADR-148.
+
+- [x] **DEBT-TEST-2** **CLOSED 2026-10-18, ADR-202. A floor on the
+  total test-block count, because every gate here is a ceiling.**
+
+  While editing `markdownrenderer.test.ts` a slice boundary matched a
+  closing brace further down the file and **deleted twenty-three
+  tests**, among them the whole XSS suite: `stripsScriptTags`,
+  `stripsJavascriptUrls`, `stripsOnclickHandlers` and fourteen more.
+
+  Every gate passed. The suite reported **5191 passed** in green, and
+  nothing said that 5214 had passed twenty minutes earlier.
+  `testsWithoutAssertion` and `testsThatCannotFail` are ceilings, and
+  a mass deletion only makes a ceiling happier.
+
+  `testBlocks` is now a FLOOR at 4930. Mutation: deleting one
+  `describe` takes it to 4925 and fails. Found because the full-suite
+  number looked wrong, not because anything checked it.
+
 ## MEDIUM — Tests That Cannot Fail (21 closed, 341 held, measured 2026-10-17)
 
 A test that cannot fail is worse than no test. No test is an absence

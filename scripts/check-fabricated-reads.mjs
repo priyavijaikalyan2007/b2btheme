@@ -49,6 +49,12 @@ const READ_NAMES = new Set([
     "getValue", "getState", "serialize", "getData", "getSelected", "toJSON",
     "getConfig", "getContent", "getItems", "getRows", "getText", "getSettings",
     "getSelection", "getValues", "getAllValues",
+    // Added 2026-10-18. An allowlist only sees the names someone
+    // remembered to add, and `toHtml` was missing, so
+    // markdownrenderer's `buildFallbackHandle` — a function whose own
+    // name admits what it is — returned `{ toHtml, render }` past this
+    // gate for as long as the gate has existed.
+    "toHtml", "toMarkdown", "getHtml", "getMarkdown",
 ]);
 
 /* Functions whose name admits they fabricate, so a primitive return counts.
@@ -275,11 +281,28 @@ function visit(node, file)
             });
         }
 
-        const where = failureContext(node);
+        // A function whose own name admits it is a stand-in counts as
+        // a failure context, the same way it already does for the
+        // ASSIGNMENT shape below. Without this, `buildFallbackHandle`
+        // returning `{ toHtml, render }` as its whole body is invisible:
+        // the return sits in no catch and no absence guard, because
+        // the branch was taken by the caller.
+        const fn0 = enclosingName(node);
+        const named = FALLBACK_NAME.test(fn0) && !CACHE_NAME.test(fn0);
+
+        // The name counts as a context for an OBJECT WITH READ METHODS
+        // only. A stand-in builder returning a DOM element is a view,
+        // and those were reviewed under ADR-148. A stand-in builder
+        // returning something a caller will READ is the defect, and it
+        // sits in no catch and no absence guard because the caller
+        // took the branch.
+        const where = failureContext(node)
+            || (named && ts.isObjectLiteralExpression(node.expression)
+                ? "stand-in builder" : null);
 
         if (where)
         {
-            const fn = enclosingName(node);
+            const fn = fn0;
             const expr = node.expression;
             const line = file.getLineAndCharacterOfPosition(node.getStart()).line + 1;
 
