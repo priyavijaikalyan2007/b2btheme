@@ -406,9 +406,36 @@ describe("edge cases", () =>
 
     test("setMode_ChangesResolution", () =>
     {
+        /*
+         * The old body called setMode and asserted it did not throw.
+         * It could not have observed its own claim: setMode only
+         * recomputes when a sprint is SELECTED, and nothing here
+         * selected one, so the method it tests did nothing at all.
+         *
+         * A missing precondition is the quieter sibling of a missing
+         * assertion. The test ran the right method, in a state where
+         * that method has no work to do.
+         */
         const sp = new SprintPicker("test-sprintpicker", {
             anchorDate: ANCHOR,
         });
-        expect(() => sp.setMode("end")).not.toThrow();
+
+        sp.setValue({
+            sprintIndex: 0,
+            sprintName: "Sprint 1",
+            startDate: new Date(2026, 0, 5),
+            endDate: new Date(2026, 0, 16),
+            date: new Date(2026, 0, 5),
+        });
+
+        expect(sp.getValue()!.date).toEqual(new Date(2026, 0, 5));
+
+        sp.setMode("end");
+
+        expect(sp.getValue()!.date).toEqual(new Date(2026, 0, 16));
+
+        sp.setMode("start");
+
+        expect(sp.getValue()!.date).toEqual(new Date(2026, 0, 5));
     });
 });

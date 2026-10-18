@@ -456,16 +456,34 @@ const BASELINES = {
     // for any value that is not null. Recounted against the current
     // parser on 2026-10-18, after the subject/matcher split:
     //
-    //   198  a bare `.not.toThrow()`
-    //    47  `.toBeDefined()`
-    //    38  `.toBeTruthy()`
-    //    26  `.toBeDefined()` with `expect(typeof x)`
-    //    22  `expect(typeof x)`
-    //     4  other mixes
+    // Classified 2026-10-18 so the remainder is navigable:
     //
-    // 341 -> 335 on 2026-10-18. Six of CodeEditor's eight
+    //   116  `.not.toThrow()` on IDEMPOTENCY — destroy_CalledTwice,
+    //        closeWhenNotOpen. Weak but honest, and the right
+    //        assertion is uniform: the DOM is clean and the handle is
+    //        inert. Per-component selectors, near-zero expected yield.
+    //    73  `.not.toThrow()` on something else — the name states a
+    //        change and the body asserts non-crash. Same family as the
+    //        21 with no assertion at all, so expect contracts to read
+    //        rather than defects. This is where to go next.
+    //     9  `.not.toThrow()` on an ABSENT DEPENDENCY — the FALLBACK
+    //        shape, and the highest yield per item left.
+    //    86  `.toBeDefined()` / `.toBeTruthy()` — mostly
+    //        createX_ReturnsHandle. Redundant with the factory census
+    //        since ERR-1 and ERR-2: every factory now throws or
+    //        returns a real handle.
+    //
+    // 341 -> 335 -> 285 on 2026-10-18. Six of CodeEditor's eight
     // `_DoesNotThrow` cases were asserting that a public method does
     // nothing when CodeMirror is absent, which ADR-200 made a refusal.
+    //
+    // THE DROP FROM 335 TO 285 IS A CORRECTION, NOT A RELAXATION.
+    // `expect(typeof x)` was counted as unable to fail and it can:
+    // `typeof undefined` is "undefined", so the assertion fails for a
+    // missing value. It is too LOOSE for the claim its test usually
+    // makes, which is a real fault and a different one. Keeping 45
+    // arguable members in a ceiling whose only value is that nobody
+    // argues with it was the mistake ADR-196 D2 was written against.
     //
     // `.not.toThrow()` asserts the absence of a crash and nothing
     // about behaviour, and it is the literal negation of the rule
@@ -473,7 +491,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 334,
+    testsThatCannotFail: 284,
 };
 
 /*

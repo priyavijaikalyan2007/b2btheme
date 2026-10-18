@@ -124,10 +124,17 @@ describe("the predicate fires for the reason it was written", () =>
         expect(isVacuous("expect(() => f()).not.toThrow()")).toBe(true);
     });
 
-    test("typeof is vacuous because the empty string is a string", () =>
+    test("typeof is NOT vacuous, because it fails for a missing value", () =>
     {
-        // getMathML returns "" and its test asserted typeof === "string".
-        expect(isVacuous('expect(typeof mathml).toBe("string")')).toBe(true);
+        // This was the other way round until 2026-10-18. The case that
+        // put typeof in the list was getMathML returning "" and
+        // passing `typeof === "string"`, which is a real defect and
+        // the wrong gate for it: `typeof undefined` is "undefined", so
+        // the assertion fails for a missing value. Too LOOSE for the
+        // claim is a different fault from cannot fail, and mixing them
+        // put 45 arguable members in the ceiling.
+        expect(isVacuous('expect(typeof mathml).toBe("string")')).toBe(false);
+        expect(isVacuous('expect(typeof h.render).toBe("function")')).toBe(false);
     });
 
     test("a matcher quoted inside a subject is not the assertion", () =>

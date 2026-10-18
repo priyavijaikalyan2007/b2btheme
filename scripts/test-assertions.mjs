@@ -38,9 +38,17 @@
  *                      the house rule: AGENTS.md says a factory given
  *                      no container must throw.
  *   .toBeTruthy()      the same reach as toBeDefined, one step wider.
- *   expect(typeof x)   `typeof mathml === "string"` is true of "", which
- *                      is what getMathML returns when the conversion it
- *                      names is not implemented.
+ * `expect(typeof x)` WAS IN THIS LIST UNTIL 2026-10-18 AND DID NOT
+ * BELONG. The case that put it there was
+ * `expect(typeof mathml).toBe("string")` passing against the "" that
+ * getMathML returns for a conversion nobody implemented. That is a
+ * real defect and this is the wrong gate for it: `typeof undefined`
+ * is "undefined", so the assertion FAILS for a missing value and does
+ * not meet the definition above. It is too LOOSE for the claim its
+ * test makes, which is a different fault from one that cannot fail,
+ * and mixing the two put 45 arguable members in a ceiling whose whole
+ * value is that nobody argues with it. Removing them is a correction,
+ * not a relaxation: all 45 are still weak, and none of them is blind.
  *
  * WHAT IS DELIBERATELY NOT COUNTED. `.not.toBeNull()` on a queried
  * element is a real check: the query carries a selector, and the element
@@ -93,7 +101,6 @@ export function isVacuous(assertion)
     const a = typeof assertion === "string" ? (assertionsIn(assertion)[0] ?? null) : assertion;
     if (a === null) { return false; }
 
-    if (/^\s*typeof\b/.test(a.subject)) { return true; }
     if (EXISTENCE.test(a.matcher) && QUERY.test(a.subject)) { return false; }
     return MATCHERS.some((v) => v.test(a.matcher));
 }

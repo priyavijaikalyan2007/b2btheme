@@ -117,8 +117,11 @@ describe("MarkdownEditor value", () =>
         const editor = new MarkdownEditor(
             container, makeOptions({ value: "# Test" })
         );
-        const val = editor.getValue();
-        expect(typeof val).toBe("string");
+
+        // "" is a string too, and "" is what a broken editor returns.
+        // The value the caller passed in is the thing being claimed.
+        expect(editor.getValue()).toBe("# Test");
+
         editor.destroy();
     });
 

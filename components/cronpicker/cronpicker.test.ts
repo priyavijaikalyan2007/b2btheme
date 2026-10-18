@@ -271,9 +271,12 @@ describe("getDescription", () =>
     test("getDescription_ReturnsNonEmptyString", () =>
     {
         const picker = new CronPicker("test-cronpicker-container");
-        const desc = picker.getDescription();
-        expect(desc).toBeTruthy();
-        expect(typeof desc).toBe("string");
+
+        // The name said NonEmptyString and the body checked it was a
+        // string, which is true of "". What getDescription() is for is
+        // turning the expression into something a person can read.
+        expect(picker.getDescription()).toBe("Every minute");
+
         picker.destroy();
     });
 });

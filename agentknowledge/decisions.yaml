@@ -8608,3 +8608,67 @@
     data-guarded reader renamed to look like the others correctly left
     alone, which is the check that the predicate is about the guard
     and not the name.
+
+- id: ADR-202
+  title: MarkdownRenderer was the root of the substitution family, and a floor for deleted tests
+  date: 2026-10-18
+  status: accepted
+  context: |
+    Triaging DEBT-TEST-1b by claim type rather than by file size, the
+    `expect(typeof x)` group was predicted to have the highest yield.
+    It did: `withoutMarked_ReturnsFallbackHandle` led to
+    createMarkdownRenderer returning buildFallbackHandle().
+  decision: |
+    D1. createMarkdownRenderer THROWS WHEN marked IS ABSENT. The
+        fallback handle rendered raw markdown as pre-wrap text and
+        escaped rather than rendered in toHtml.
+
+    D2. THIS IS THE ROOT AND THE FOUR EARLIER FIXES WERE BRANCHES.
+        DocViewer, two diagramengine paths and helpdrawer each guard
+        on window.createMarkdownRenderer being ABSENT. This branch
+        fires when the component is present and `marked` is not, and
+        produces the same output a layer deeper, so none of those four
+        covered it.
+
+    D3. THREE HOLES IN check-fabricated-reads, ALL CLOSED. READ_NAMES
+        is a hardcoded allowlist missing `toHtml`. The object-literal
+        probe needs a failureContext and this return is the whole
+        function body, because the CALLER took the branch. The
+        stand-in-NAME rule applied only to assignments. The third is
+        widened narrowly: a stand-in builder returning a DOM element
+        is a view, reviewed under ADR-148, so only a returned object
+        with READ METHODS counts.
+
+    D4. `expect(typeof x)` LEAVES THE VACUOUS PREDICATE. `typeof
+        undefined` is "undefined", so the assertion fails for a
+        missing value and never met the stated definition. It is too
+        LOOSE for its test's claim, which is a real and different
+        fault. 335 -> 285 is a correction.
+
+    D5. A FLOOR ON testBlocks. Every gate in this area is a ceiling,
+        and a mass deletion only makes a ceiling happier.
+
+    D6. `.mock.ts` JOINS `.test.ts` IN sourceFiles(). The window
+        ratchets keep untyped window access out of SHIPPED code, and a
+        mock is not shipped.
+  consequences: |
+    I DELETED 23 TESTS BY ACCIDENT AND NOTHING NOTICED. A slice
+    boundary matched a closing brace further down
+    markdownrenderer.test.ts and took the whole XSS suite with it:
+    stripsScriptTags, stripsJavascriptUrls, stripsOnclickHandlers and
+    fourteen more. Every gate passed. The suite reported 5191 passed
+    in green and nothing said 5214 had passed twenty minutes earlier.
+    Found by noticing the total looked wrong, which is not a method.
+    testBlocks is now a floor at 4930, mutation-proved.
+
+    AND CI WENT RED ON e2baddd WHILE I REPORTED GREEN. Three window
+    ratchets rose. Every gate scans `git ls-files`, the new mock was
+    untracked when I ran them locally, and an untracked file is
+    invisible to all of them. Running the checks before `git add`
+    gives a false pass. That is the same family as ADR-199's verifier
+    reading the manifest instead of the tag: ask what source the check
+    reads, and whether your change is in it yet.
+
+    DEBT-TEST-1b is 284 and classified rather than closed: 116
+    idempotency, 73 where the name states a change, 9 on an absent
+    dependency, 86 handle checks. The 9 are the highest yield left.

@@ -2116,3 +2116,56 @@ wrong later.
 flow through it before you design around it. Mine protected nothing and
 corrupted a caller's data, which is a different and worse thing than
 being imprecise about the user's own input.
+
+### 6.117 Every Gate Here Is a Ceiling, So Deleting Tests Is Free (2026-10-18)
+
+Editing one `describe` in `markdownrenderer.test.ts`, my slice
+boundary matched a closing brace further down the file and **deleted
+23 tests** — the whole XSS sanitisation suite among them:
+`stripsScriptTags`, `stripsJavascriptUrls`, `stripsOnclickHandlers`
+and fourteen more.
+
+Nothing noticed. The full suite reported **5191 passed** in green.
+`testsWithoutAssertion` sat at 0 and `testsThatCannotFail` went *down*.
+
+Of course it did. **Both are ceilings, and deleting tests makes a
+ceiling happier.** Fewer tests means fewer bad tests. Every
+instrument I had built for this area measured the quality of what
+remained and none measured whether anything had gone.
+
+I caught it because 5191 looked wrong next to the 5214 I had read
+twenty minutes earlier. That is not a method, it is a coincidence of
+having the earlier number in my head.
+
+`testBlocks` is now a **floor** at 4930. Deleting one `describe`
+takes it to 4925 and fails.
+
+**Principle**: for every ceiling you add, ask what a careless change
+could do to make it *happier*, and whether you would want to ship
+that change. "Delete the subject" satisfies almost every ceiling ever
+written, and a floor on population size is usually the cheapest
+answer.
+
+### 6.118 Run the Gates After `git add`, Not Before (2026-10-18)
+
+I ran the full check suite, got 32/32 and every ratchet at its line,
+pushed, and reported green. **CI failed on three window ratchets.**
+
+Every gate in this repository enumerates its inputs with
+`git ls-files`. The file that broke them — a new CodeMirror mock with
+four `window as unknown as Record<string, unknown>` casts — was
+untracked when I ran the checks. `git ls-files` does not list
+untracked files, so the gates scanned a repository that did not
+contain my change.
+
+The fix is a habit, not code: **`git add -A` before the final
+verification.** The fix for the ratchet itself was separate —
+`.mock.ts` joins `.test.ts` in the source-file exclusion, because
+those counts exist to keep untyped `window` access out of *shipped*
+code and a mock is not shipped.
+
+**Principle**: this is the same shape as a verifier reading the
+manifest instead of the published tag. Ask what source your check
+enumerates, and whether the thing you just wrote is in that source
+yet. A clean local run proves something about a repository state, and
+it is worth knowing which one.

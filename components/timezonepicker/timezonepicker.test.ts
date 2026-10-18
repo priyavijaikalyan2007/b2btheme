@@ -240,10 +240,23 @@ describe("getOffset", () =>
     test("getOffset_AfterSetValue_ReflectsNewTimezone", () =>
     {
         const picker = new TimezonePicker("test-timezonepicker-container");
+        const before = picker.getOffset();
+
         picker.setValue("America/New_York");
-        const offset = picker.getOffset();
-        expect(offset).toBeDefined();
-        expect(typeof offset).toBe("string");
+        const after = picker.getOffset();
+
+        // The name claims the offset REFLECTS the new zone, and the
+        // body checked it was a string. The change is the claim.
+        //
+        // Not asserted as a literal: New York is GMT-4 in summer and
+        // GMT-5 in winter, and a test that hardcodes one fails for
+        // half the year. That is the clock-dependent flake that had
+        // dynamicformswitcher accusing a component of leaking a
+        // password, so the shape is worth avoiding on purpose.
+        expect(before).toBe("GMT+0");
+        expect(after).toMatch(/^GMT-[45]$/);
+        expect(after).not.toBe(before);
+
         picker.destroy();
     });
 });

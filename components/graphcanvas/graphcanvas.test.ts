@@ -212,7 +212,11 @@ describe("GraphCanvas zoom", () =>
     test("GetZoomLevel_ReturnsNumber", () =>
     {
         const canvas = createGraphCanvas(makeOptions());
-        expect(typeof canvas.getZoomLevel()).toBe("number");
+
+        // NaN is a number. A fresh canvas is at 1:1, and the sibling
+        // case below moves it, so this pins the starting point.
+        expect(canvas.getZoomLevel()).toBe(1);
+
         canvas.destroy();
     });
 

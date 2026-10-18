@@ -1536,3 +1536,24 @@
   related:
   - TheGuardDecidesNotTheLiteral
   - NoFabricatedReads
+
+- name: EveryGateHereIsACeiling
+  definition: "ADR-202. Deleting 23 tests by accident, including the entire XSS sanitisation suite, moved no gate at all. testsWithoutAssertion and testsThatCannotFail are ceilings, and a mass deletion only makes a ceiling happier: fewer tests means fewer bad tests. The full suite reported 5191 passed in green, with nothing to say that 5214 had passed twenty minutes earlier, because a test count is not a tracked quantity until someone tracks it. A floor on the total block count is cheap and is the only instrument that can see this. The general rule: for every ceiling, ask what a malicious or careless change could do to make it HAPPIER, and whether that change is one you would want to ship."
+  anchor_file: scripts/audit-counts.mjs
+  related:
+  - ATestThatCannotFail
+  - ZeroOverTheWrongSet
+
+- name: AnUntrackedFileIsInvisibleToTheGates
+  definition: "ADR-202. Every ratchet and structure check in this repository enumerates its inputs with `git ls-files`, so a newly created file is not scanned until it is staged. Running the full check suite before `git add` gives a clean pass that CI then contradicts, which is exactly what happened to a new CodeMirror mock whose window casts pushed three ratchets over their baselines. The habit that fixes it is `git add -A` before the final verification, not after. Same family as a verifier reading the manifest instead of the published tag: ask what source the check actually enumerates, and whether the thing you just wrote is in it yet."
+  anchor_file: scripts/audit-counts.mjs
+  related:
+  - AVerifierMustReadWhatTheConsumerCopies
+  - EveryGateHereIsACeiling
+
+- name: AMissingPreconditionIsTheQuieterSibling
+  definition: "ADR-202. `sprintpicker :: setMode_ChangesResolution` called setMode and asserted it did not throw. setMode only recomputes the resolved date when a sprint is SELECTED, and the test selected none, so the method under test had no work to do and could not have observed its own claim whatever it asserted. A missing assertion is visible — the block has no expect. A missing precondition is not: the test runs the right method, on the right object, and exercises an early return. When rewriting a weak assertion, check that the state reaches the code the name is about before deciding what to assert."
+  anchor_file: components/sprintpicker/sprintpicker.test.ts
+  related:
+  - ATestThatCannotFail
+  - WritingTheAssertionIsHowYouReadTheContract

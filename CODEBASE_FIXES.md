@@ -2074,8 +2074,44 @@ offered as the evidence for it.
     seen from a unit test. The test says so and asserts the half that is
     observable.
 
-- [ ] **DEBT-TEST-1b** **341 test blocks where every assertion passes for
-  any value that is not null.** Held by the `testsThatCannotFail`
+- [ ] **DEBT-TEST-1b** **284 test blocks where every assertion passes
+  for any value that is not null, down from 341, and now classified so
+  the remainder is navigable.**
+
+  | Shape | Count | Expected yield |
+  |---|---|---|
+  | `.not.toThrow()` on idempotency | 116 | near zero |
+  | `.not.toThrow()`, name states a change | 73 | contracts to read |
+  | `.not.toThrow()` on an absent dependency | 9 | **highest left** |
+  | `.toBeDefined()` / `.toBeTruthy()` | 86 | near zero |
+
+  **335 TO 285 IS A CORRECTION, NOT A RELAXATION.** `expect(typeof x)`
+  was counted as unable to fail, and it can: `typeof undefined` is
+  `"undefined"`, so the assertion fails for a missing value. It is too
+  LOOSE for the claim its test usually makes, which is a real fault
+  and a different one. Keeping 45 arguable members in a ceiling whose
+  only value is that nobody argues with it is the mistake ADR-196 D2
+  warns against. All 45 are still weak and none is blind.
+
+  **What the 2026-10-18 pass fixed**, working the highest-yield shapes
+  first rather than the biggest files: **FALLBACK-13**, found through
+  `withoutMarked_ReturnsFallbackHandle`. Four value claims —
+  `cronpicker.getDescription()` is `"Every minute"`,
+  `graphcanvas.getZoomLevel()` is `1`, `markdowneditor.getValue()`
+  returns what the caller passed, and `timezonepicker.getOffset()`
+  changes from `GMT+0` to New York's, asserted as a pattern because
+  the literal is DST-dependent and that is the clock-flake shape.
+
+  **And one test that could not observe its own claim.**
+  `sprintpicker :: setMode_ChangesResolution` called `setMode` and
+  asserted no throw. `setMode` only recomputes when a sprint is
+  selected, and nothing selected one, so the method under test had no
+  work to do. **A missing precondition is the quieter sibling of a
+  missing assertion** — the test runs the right method in a state
+  where that method does nothing.
+
+  The entry as it stood: **341 test blocks where every assertion
+  passes for any value that is not null.** Held by the `testsThatCannotFail`
   ceiling. A backlog, not a debt owed in one sitting: each one is a
   question about what the component should do, and the answer belongs to
   whoever next touches the file.
