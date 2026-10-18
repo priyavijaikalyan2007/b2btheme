@@ -321,8 +321,15 @@ export class CodeEditor
 
     public getValue(): string
     {
-        if (this.cmView) { return this.getCMDoc(); }
-        return "";
+        // ADR-201. "" is what a working editor says for an empty
+        // document, so a caller could not tell that from an editor
+        // that never loaded. The sibling refusals landed under ADR-200
+        // and this one was missed, because it is the inverted form:
+        // the stand-in is the fall-through of a PRESENCE test, not the
+        // body of an absence guard, and structure check [16] reads
+        // only the latter.
+        this.requireView("getValue()");
+        return this.getCMDoc();
     }
 
     public setValue(value: string): void

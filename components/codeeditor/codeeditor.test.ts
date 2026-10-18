@@ -14,6 +14,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { CodeEditor, createCodeEditor } from "./codeeditor";
+import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm-mock";
 
 import type { CodeEditorOptions, CodeEditorLanguage } from "./codeeditor";
 
@@ -153,11 +154,16 @@ describe("lifecycle", () =>
 
 describe("getValue and setValue", () =>
 {
-    test("getValue_WithNoCM_ReturnsEmpty", () =>
+    test("getValue_WithNoCM_Throws", () =>
     {
+        // ADR-201. "" is what a working editor says for an empty
+        // document, so a caller could not tell the two apart. The
+        // sibling refusals landed under ADR-200 and this one was
+        // missed, because the stand-in is the fall-through of a
+        // PRESENCE test rather than the body of an absence guard.
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(ce.getValue()).toBe("");
+        expect(() => ce.getValue()).toThrow(/getValue\(\)/);
     });
 
     test("setValue_OnDestroyedInstance_LogsWarning", () =>
@@ -382,38 +388,8 @@ describe("accessibility", () =>
  */
 describe("CodeEditor — mounted, with a module missing", () =>
 {
-    const CM_NAMES = ["EditorView", "EditorState", "keymap", "lineNumbers"] as const;
-
-    beforeEach(() =>
-    {
-        const w = window as unknown as Record<string, unknown>;
-
-        w.EditorState = { create: (cfg: unknown) => ({ doc: cfg, cfg }) };
-        w.EditorView = class
-        {
-            public contentDOM = document.createElement("div");
-            public state: unknown;
-            constructor(cfg: { state: unknown; parent: HTMLElement })
-            {
-                this.state = cfg.state;
-                const scroller = document.createElement("div");
-                scroller.className = "cm-scroller";
-                cfg.parent.appendChild(scroller);
-            }
-            public dispatch(): void { /* no transactions in this mock */ }
-            public static updateListener = { of: (fn: unknown) => ({ fn }) };
-            public static theme = (spec: unknown): unknown => ({ spec });
-            public static lineWrapping = { ext: "lineWrapping" };
-        };
-        w.keymap = { of: (maps: unknown[]) => ({ keymap: maps }) };
-        w.lineNumbers = (): unknown => ({ ext: "lineNumbers" });
-    });
-
-    afterEach(() =>
-    {
-        const w = window as unknown as Record<string, unknown>;
-        for (const n of CM_NAMES) { delete w[n]; }
-    });
+    beforeEach(() => { installCodeMirrorMock(); });
+    afterEach(() => { removeCodeMirrorMock(); });
 
     function mounted(): CodeEditor
     {

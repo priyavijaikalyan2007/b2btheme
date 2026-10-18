@@ -1572,7 +1572,15 @@ export class MarkdownEditor
      */
     public getHTML(): string
     {
-        if (!this.vditor) return "";
+        // ADR-201. "" is what an empty document returns, so a caller
+        // could not tell that from Vditor never having loaded.
+        if (!this.vditor)
+        {
+            throw new Error(
+                `${LOG_PREFIX} getHTML() needs Vditor, which did not load. `
+                + "Load the vditor bundle before creating the editor.");
+        }
+
         const rawHTML = this.vditor.getHTML();
         return sanitiseHTML(rawHTML);
     }

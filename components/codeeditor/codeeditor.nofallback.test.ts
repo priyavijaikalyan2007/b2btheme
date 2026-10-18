@@ -13,6 +13,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createCodeEditor } from "./codeeditor";
+import { installCodeMirrorMock, removeCodeMirrorMock } from "./codeeditor.cm-mock";
 
 interface Copyable { copyToClipboard(): void }
 
@@ -27,11 +28,19 @@ describe("CodeEditor copy with no Clipboard API", () =>
         container.id = "codeeditor-nofallback";
         document.body.appendChild(container);
         original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+
+        // ADR-201. These cases want a WORKING editor and a broken
+        // clipboard. Without the mock the editor never mounts, and
+        // since getValue() began refusing that rather than answering
+        // "", copyToClipboard() stopped reaching the clipboard check
+        // at all and the tests passed on the wrong refusal.
+        installCodeMirrorMock();
     });
 
     afterEach(() =>
     {
         container.remove();
+        removeCodeMirrorMock();
         if (original)
         {
             Object.defineProperty(

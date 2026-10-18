@@ -581,7 +581,18 @@ class NativeInputAdapter implements SpineFieldAdapter
 
     getValue(): unknown
     {
-        if (!this.el) { return ""; }
+        // ADR-201. `el` exists only after mount(), so "" here is the
+        // answer an untouched input gives and the caller cannot tell
+        // the two apart. Eleventh adapter of the shape FALLBACK-9
+        // swept, and it survived because it returns a scalar rather
+        // than an object literal, which is all that gate looks for.
+        if (!this.el)
+        {
+            throw new Error(
+                `${LOG_PREFIX} getValue() was called before mount(), so this `
+                + "field has no input to read. Mount the adapter first.");
+        }
+
         if (this.inputType === "checkbox")
         {
             return this.el.checked;

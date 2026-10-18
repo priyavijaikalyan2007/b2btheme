@@ -851,7 +851,14 @@ export class RibbonImpl implements Ribbon
             {
                 return pending["value"] as string | number | boolean;
             }
-            return "";
+
+            // ADR-201. There is no control with this id and no pending
+            // value for it. "" is what an empty text field answers, so
+            // returning it here reports a value for a control that
+            // does not exist.
+            throw new Error(
+                `${LOG_PREFIX} getControlValue("${id}") found no such control. `
+                + "Check the id against the tab and group definitions.");
         }
         const input = el.querySelector("input, select") as
             HTMLInputElement | HTMLSelectElement | null;

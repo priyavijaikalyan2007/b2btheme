@@ -1521,3 +1521,18 @@
   - DidTheCallerNameIt
   - ReadingDocumentationIsAlsoParsing
   - AVersionNumberWrittenFromMemory
+
+- name: TheGuardDecidesNotTheLiteral
+  definition: "ADR-201. `return \"\"` from a reader is honest far more often than not, so a gate that flags the literal produces mostly noise. Of 38 reader-named functions returning a non-honest literal inside a failure branch, 33 guard on DATA — `resolveGap()` answering \"0\" when no gap is set, `getFormattedValue()` answering \"\" when no date is selected — and every one is true. 5 guard on INFRASTRUCTURE, where the backing object is absent: `getValue()` answering \"\" because `cmView` never loaded is indistinguishable from an empty document, and 4 of those 5 were live defects. The discriminator is what the `if` tests, reduced to its LAST path segment: `renderer.className` is a config field even though `renderer` is infrastructure. A reader whose data is empty can answer. A reader whose backing object is gone cannot."
+  anchor_file: scripts/check-fabricated-reads.mjs
+  related:
+  - NoFabricatedReads
+  - DidTheCallerNameIt
+  - ZeroOverTheWrongSet
+
+- name: RoundingIsAChoiceAboutWhoseValueItIs
+  definition: "ADR-201. ColorPicker held its colour as HSL with h, s and l rounded to whole numbers, and 84.8% of RGB colours do not survive that round trip, with a worst drift of three per channel. The fix was deleting the rounding, not adding a field to hold the exact RGB, because nothing downstream ever wanted it: the numeric readouts round where they are built, the hsl() string rounds as it formats, and a value the user sets with a slider is whole by construction. The only value carrying precision worth keeping was the one a caller passed in, and that was the one being discarded. When a transform rounds, ask which values pass through it: rounding what the user just typed is free, and rounding what a caller handed you is a silent edit of their data."
+  anchor_file: components/colorpicker/colorpicker.ts
+  related:
+  - TheGuardDecidesNotTheLiteral
+  - NoFabricatedReads

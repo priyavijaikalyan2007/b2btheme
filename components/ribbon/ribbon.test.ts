@@ -3656,10 +3656,31 @@ describe("getControlValue edge cases", () =>
         ribbon.destroy();
     });
 
-    test("getControlValue_UnknownControl_ReturnsEmptyString", () =>
+    test("getControlValue_UnknownControl_Throws", () =>
     {
+        // ADR-201. The old name was accurate and the behaviour was
+        // wrong: "" is what an empty text field answers, so a caller
+        // who mistyped a control id got a value back for a control
+        // that does not exist.
         const ribbon = createRibbon(makeOptions(), "test-ribbon");
-        expect(ribbon.getControlValue("nonexistent")).toBe("");
+
+        expect(() => ribbon.getControlValue("nonexistent"))
+            .toThrow(/no such control/);
+
+        ribbon.destroy();
+    });
+
+    test("getControlValue_PendingValue_StillAnswersBeforeRender", () =>
+    {
+        // The branch above the throw, and the reason it is a throw and
+        // not a blanket refusal: a value set before the control is
+        // rendered is a real answer and must survive.
+        const ribbon = createRibbon(makeOptions(), "test-ribbon");
+
+        ribbon.setControlValue("pending-one", "kept");
+
+        expect(ribbon.getControlValue("pending-one")).toBe("kept");
+
         ribbon.destroy();
     });
 });

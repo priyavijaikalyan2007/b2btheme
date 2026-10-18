@@ -175,7 +175,22 @@ function hexToRgb(hex: string): ColorRGBA | null
     return { r, g, b, a };
 }
 
-/** Convert RGB (0-255) to HSL (h: 0-360, s/l: 0-100). */
+/**
+ * Convert RGB (0-255) to HSL (h: 0-360, s/l: 0-100).
+ *
+ * DEBT-COLOR-1. THIS USED TO ROUND h, s AND l TO WHOLE NUMBERS, AND
+ * 84.8% of RGB colours do not survive that. The component holds its
+ * colour in this form, so `setValue("#AABBCC")` came back `#A9BACB`,
+ * every channel one low, and the worst drift measured is three per
+ * channel. Unrounded, the round trip is exact for every colour tested.
+ *
+ * Nothing downstream wanted the rounding. The numeric readouts call
+ * `Math.round` where they are built, the `hsl()` string output rounds
+ * as it formats, and a value the user sets through a slider or a
+ * number input is whole by construction. The one place precision was
+ * worth keeping is a colour parsed from a caller's string, and that
+ * was the one place it was being discarded.
+ */
 function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number }
 {
     const rn = r / 255;
@@ -186,12 +201,12 @@ function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: n
     const l = (max + min) / 2;
     if (max === min)
     {
-        return { h: 0, s: 0, l: Math.round(l * 100) };
+        return { h: 0, s: 0, l: l * 100 };
     }
     const d = max - min;
     const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     const h = computeHue(rn, gn, bn, max, d);
-    return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+    return { h, s: s * 100, l: l * 100 };
 }
 
 /** Compute hue value from RGB components. */

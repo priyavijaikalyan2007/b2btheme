@@ -8547,3 +8547,64 @@
     getSelection used. 235 bare `return ""` / `[]` / `0` / `null`
     statements exist across component sources and most are legitimate,
     so the work is classifying them rather than flipping a predicate.
+
+- id: ADR-201
+  title: The guard decides whether a stand-in is a lie, not the literal
+  date: 2026-10-18
+  status: accepted
+  context: |
+    DEBT-COLOR-1 recorded that setValue("#AABBCC") read back as
+    #A9BACB. DEBT-GATE-2 recorded that structure check [16] cannot see
+    `if (x) { return real } return stand-in`, the form CodeEditor's
+    getSelection used, and estimated 235 candidates.
+  decision: |
+    D1. rgbToHsl STOPS ROUNDING. Measured over 60,000 colours, the
+        rounded round trip drifts for 84.8% of them with a worst
+        channel delta of 3, and the unrounded one is exact for all of
+        them. Nothing downstream wanted the rounding: the readouts
+        round where they are built, the hsl() output rounds as it
+        formats, and a slider value is whole by construction. A
+        deletion, not a second field holding exact RGB.
+
+    D2. THE 235 WAS THE WRONG POPULATION. Narrowed to reader-named
+        functions returning a non-honest literal inside a failure
+        branch, it is 38.
+
+    D3. THE GUARD DECIDES, NOT THE LITERAL. Of the 38, 33 guard on
+        DATA and are honest: `resolveGap()` answering "0" when no gap
+        is set is true. 5 guard on INFRASTRUCTURE, where the backing
+        object is absent and the reader cannot answer at all. Both are
+        `return "<literal>"` in a failure branch, and only the second
+        is a fabrication.
+
+    D4. THE PREDICATE READS THE LAST PATH SEGMENT. The first version
+        read the first, saw `renderer` in `renderer.className`, and
+        reported a default CSS class as a fabricated read.
+
+    D5. THE FIFTH SHAPE COVERS BOTH DIRECTIONS. An absence guard's
+        then-branch and the fall-through of a presence test are the
+        same defect written two ways.
+  consequences: |
+    Four live defects: codeeditor.getValue() on cmView,
+    markdowneditor.getHTML() on vditor, ribbon.getControlValue() on an
+    unknown control id, and spinemap's NativeInputAdapter.getValue()
+    called before mount(). That last is the eleventh adapter of the
+    shape FALLBACK-9 swept, and it survived because it returns a
+    scalar rather than an object literal with read methods.
+
+    CODEEDITOR.getValue() IS THE ONE THAT STINGS. ADR-200 closed
+    thirteen sibling refusals in that same file an hour earlier and
+    missed this one, because it is the inverted form and I was reading
+    for `if (hasCMGlobal(...))`. A sweep finds the shapes it was
+    written to match, again.
+
+    The CodeMirror mock moved to components/codeeditor/codeeditor.cm-mock.ts
+    so the nofallback clipboard tests can use it. Those tests wanted a
+    WORKING editor and a broken clipboard, and once getValue() began
+    refusing an unmounted editor they were passing on the wrong
+    refusal.
+
+    Three mutations on the gate: both guard forms caught, and a
+    data-guarded reader renamed to look like the others correctly left
+    alone, which is the check that the predicate is about the guard
+    and not the name.

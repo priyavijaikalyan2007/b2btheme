@@ -2045,3 +2045,74 @@ when the lint module was absent and then announced "3 diagnostics" to
 the live region. The throw matters less than the order — a screen
 reader was told about diagnostics that had just been dropped, which is
 the Toolbar tooltip defect wearing a different component.
+
+### 6.115 The Guard Decides Whether a Stand-In Is a Lie (2026-10-18)
+
+I recorded DEBT-GATE-2 as "structure check `[16]` misses the inverted
+absence guard, and there are 235 candidates." Both halves were wrong in
+a way worth writing down.
+
+**235 was the raw count** of `return ""` / `[]` / `0` / `null` anywhere
+in component sources. Narrowed to what the gate could act on — a
+reader-named function returning a non-honest literal inside a failure
+branch — it is **38**.
+
+**And 33 of those 38 are correct.** `resolveGap()` answering `"0"` when
+no gap is set is true. `getFormattedValue()` answering `""` when no date
+is selected is true. Flagging the literal would have produced a ceiling
+that is 87% noise, and a ceiling with arguable members stops being
+acted on.
+
+The discriminator is **what the `if` tests**:
+
+```ts
+if (!gap)        { return "0"; }   // data absent    — honest
+if (!this.cmView) { return ""; }   // backing absent — a lie
+```
+
+A reader whose data is empty can answer. A reader whose backing object
+is gone cannot, and `""` is exactly what a real empty answer looks
+like. Five guarded on infrastructure, and **four were live defects**.
+
+**Read the last path segment, not the first.** My first predicate saw
+`renderer` in `renderer.className` and reported a default CSS class as
+a fabrication. `className` is config and `renderer` is infrastructure, and the
+guard tests the former.
+
+**The one that stings**: `codeeditor.getValue()`. I had closed thirteen
+sibling refusals in that same file an hour earlier and walked past this
+one, because I was reading for `if (hasCMGlobal(...))` and this is
+`if (this.cmView) { return real } return ""`. A sweep finds the shapes
+it was written to match — the lesson I wrote down two days ago, applied
+to me.
+
+### 6.116 Ask Whose Value Passes Through the Rounding (2026-10-18)
+
+ColorPicker stored its colour as HSL with hue, saturation and lightness
+rounded to whole numbers. The pin I wrote said `setValue("#AABBCC")`
+returns `#A9BACB` and read like an edge case.
+
+Measured over 60,000 colours: **50,859 drift. 84.8%.** Worst channel
+delta 3. Unrounded, zero.
+
+The interesting part is the fix. The obvious one — keep the exact RGB
+in a second field and return it until a slider moves — is wrong, and
+the reason is a question worth asking at every rounding step: **whose
+values pass through here?**
+
+- Values the user sets with a slider or a number input: **already
+  whole.** Rounding them is free.
+- Values displayed as text: the readouts call `Math.round` where they
+  are built, and the `hsl()` output rounds as it formats. **Already
+  handled.**
+- Values a caller hands in through `setValue`: the only ones carrying
+  precision — and the only ones the rounding destroyed.
+
+So the rounding served nothing and cost the one case that mattered. The
+fix was a deletion, and no new state means no invalidation logic to get
+wrong later.
+
+**Principle**: when you find a lossy step, enumerate the values that
+flow through it before you design around it. Mine protected nothing and
+corrupted a caller's data, which is a different and worse thing than
+being imprecise about the user's own input.

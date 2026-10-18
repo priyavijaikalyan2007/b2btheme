@@ -371,38 +371,59 @@ describe("callbacks", () =>
         picker.destroy();
     });
 
-    test("setValue_HexDoesNotSurviveTheRoundTrip", () =>
+    test("setValue_AnyHexSurvivesTheRoundTrip", () =>
     {
-        // DEBT-COLOR-1. Found by writing the assertion above, which
-        // expected #AABBCC back and got #A9BACB.
-        //
-        // The component holds its colour as HSL with saturation and
-        // lightness rounded to whole percents by rgbToHsl, so a hex
-        // that is not representable at that precision comes back as
-        // the nearest one that is. #AABBCC has lightness 73.33%, which
-        // stores as 73, and every channel returns one low.
-        //
-        // Pinned rather than fixed, because the fix is a change to the
-        // colour model and not to a test. This test fails when that
-        // change lands, which is the point of writing it down.
+        /*
+         * DEBT-COLOR-1, closed. This replaces a pin that asserted
+         * setValue("#AABBCC") came back "#A9BACB".
+         *
+         * The component holds its colour as HSL, and rgbToHsl rounded
+         * h, s and l to whole numbers. 84.8% of RGB colours do not
+         * survive that, with a worst drift of three per channel, so a
+         * consumer who set a brand colour and read it back got a
+         * different one. Unrounded the transform is exactly
+         * invertible, because hslToRgb already rounds at the end and
+         * that recovers the original integer.
+         *
+         * A spread rather than one value, because one value is what
+         * the pin had and a single hex can pass by luck.
+         */
         const picker = new ColorPicker({});
         picker.show("test-colorpicker-container");
 
-        picker.setValue("#AABBCC");
+        const cases = [
+            "#AABBCC", "#FF0000", "#000000", "#FFFFFF", "#123456",
+            "#7F7F7F", "#0A0B0C", "#FEDCBA", "#336699", "#1E90FF",
+        ];
 
-        // WHEN THE LINE BELOW FAILS, THE DEFECT IS FIXED: delete this
-        // whole test. It is a pin, not a snapshot, and the difference
-        // matters because the exact-value assertion after it would
-        // also fail for a DIFFERENT wrong hex, and the reflex then is
-        // to update the expected string rather than to notice.
-        expect(picker.getValue().toUpperCase()).not.toBe("#AABBCC");
+        for (const hex of cases)
+        {
+            picker.setValue(hex);
+            expect(picker.getValue().toUpperCase(), hex).toBe(hex);
+        }
 
-        expect(picker.getValue().toUpperCase()).toBe("#A9BACB");
+        picker.destroy();
+    });
 
-        // A hex that IS representable survives, so the drift is the
-        // quantisation and not the parser.
-        picker.setValue("#FF0000");
-        expect(picker.getValue().toUpperCase()).toBe("#FF0000");
+    test("setValue_RoundTripsEveryChannelValue", () =>
+    {
+        // The grey ramp walks all 256 values of each channel at once,
+        // including the max === min branch of rgbToHsl, which has its
+        // own return and its own rounding and was wrong the same way.
+        const picker = new ColorPicker({});
+        picker.show("test-colorpicker-container");
+
+        const drifted: string[] = [];
+
+        for (let v = 0; v < 256; v += 1)
+        {
+            const hex = `#${v.toString(16).padStart(2, "0").repeat(3)}`.toUpperCase();
+            picker.setValue(hex);
+            if (picker.getValue().toUpperCase() !== hex) { drifted.push(hex); }
+        }
+
+        expect(drifted, `greys that did not survive:\n  ${drifted.join(" ")}`)
+            .toHaveLength(0);
 
         picker.destroy();
     });

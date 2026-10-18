@@ -1921,8 +1921,53 @@ reduced version".
   was named nowhere. Corrected in all three places, with `marked` and
   `markdownrenderer.js` in the Usage block.
 
-- [ ] **DEBT-GATE-2** **Structure check `[16]` cannot see an inverted
-  absence guard.** It walks the AST for a readable stand-in inside the
+- [x] **DEBT-GATE-2** **CLOSED 2026-10-18, ADR-201. Structure check
+  `[16]` has a fifth shape, and it found four live defects.**
+
+  **THE GAP WAS WIDER THAN THE ENTRY SAID.** It is not only the
+  inverted guard. The four existing shapes flag an object literal with
+  read methods, or any literal from a function *named*
+  `fallback|stub|dummy|placeholder`. A bare `return ""` from a
+  normally-named reader was invisible **in either direction**.
+
+  **235 was the wrong number, twice over.** It counted every bare
+  `return ""` / `[]` / `0` / `null` in component sources. Narrowed to
+  reader-named functions returning a non-honest literal inside a
+  failure branch, it is **38**.
+
+  **AND THE GUARD DECIDES, NOT THE LITERAL.** Classifying the 38 by
+  what the `if` tests splits them cleanly:
+
+  | What the guard tests | Count | Verdict |
+  |---|---|---|
+  | DATA — `gap`, `selectedDate`, `endpoints`, `chain` | 33 | honest |
+  | INFRASTRUCTURE — `cmView`, `vditor`, `el`, `renderer` | 5 | 4 defects, 1 false positive |
+
+  `resolveGap()` answering `"0"` when no gap is set is true.
+  `getValue()` answering `""` when the editor never loaded is not, and
+  both are `return "<literal>"` in a failure branch. A reader whose
+  **backing object** is absent cannot answer at all.
+
+  **The four:** `codeeditor.getValue()` guarded on `cmView`,
+  `markdowneditor.getHTML()` on `vditor`, `ribbon.getControlValue()`
+  on an unknown control id, and `spinemap`'s `NativeInputAdapter
+  .getValue()` called before `mount()` — the eleventh adapter of the
+  shape FALLBACK-9 swept, which survived because it returns a scalar
+  rather than an object literal.
+
+  **`codeeditor.getValue()` is the one that stings**: ADR-200 closed
+  thirteen sibling refusals in that same file an hour earlier and
+  missed this one, because it is the inverted form.
+
+  The false positive was `smarttextinput.resolveTokenClass()`, guarded
+  on `renderer.className`. The first predicate read the first path
+  segment and saw infrastructure. It reads the **last** segment now,
+  which is the config field it actually tests.
+
+  Three mutations: both guard forms are caught, and a data-guarded
+  reader renamed to look like the others is correctly left alone.
+
+  The entry as it stood: It walks the AST for a readable stand-in inside the
   THEN branch of an `if (!x)`, so it catches
   `if (!view) { return ""; }` and misses
 
@@ -2039,9 +2084,29 @@ offered as the evidence for it.
   for every required list. Nothing in the suite had ever built this
   component with no items.
 
-- [ ] **DEBT-COLOR-1** **A hex colour does not survive a `setValue` /
-  `getValue` round trip in ColorPicker.** `setValue("#AABBCC")` returns
-  `#A9BACB`, every channel one low.
+- [x] **DEBT-COLOR-1** **CLOSED 2026-10-18, ADR-201. Every hex colour
+  survives a `setValue` / `getValue` round trip now.** `rgbToHsl`
+  stopped rounding.
+
+  **84.8% OF RGB COLOURS DID NOT SURVIVE, NOT A HANDFUL.** Measured
+  over 60,000 colours: 50,859 drifted, worst channel delta 3.
+  Unrounded, zero drift. The pin asserted one hex and read like an
+  edge case.
+
+  Nothing downstream wanted the rounding, which is why the fix is a
+  deletion rather than a second field holding the exact RGB. The
+  numeric readouts call `Math.round` where they are built, the `hsl()`
+  string output rounds as it formats, and a value the user sets
+  through a slider or a number input is whole by construction. The one
+  place precision was worth keeping is a colour parsed from a caller's
+  string, and that was the one place it was discarded.
+
+  The pin is replaced by ten named hexes and a 256-step grey ramp. The
+  ramp earns its place: `rgbToHsl`'s `max === min` branch has its own
+  return and its own rounding, and a mutation restoring only that one
+  fails only the ramp.
+
+  The entry as it stood:
 
   `rgbToHsl` rounds saturation and lightness to whole percents, and the
   component holds its colour in that form. `#AABBCC` has lightness

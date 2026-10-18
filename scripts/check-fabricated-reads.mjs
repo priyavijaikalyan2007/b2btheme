@@ -65,6 +65,99 @@ const FALLBACK_NAME = /fallback|stub|dummy|placeholder/i;
 /** Reads of a cache may honestly be empty — an empty recents list is true. */
 const CACHE_NAME = /recent|cache|history|suggestion/i;
 
+/*
+ * FIFTH SHAPE (DEBT-GATE-2, 2026-10-18). A reader returns a plausible
+ * SCALAR because its backing object is missing.
+ *
+ *     public getValue(): string
+ *     {
+ *         if (this.cmView) { return this.getCMDoc(); }
+ *         return "";                      // the lie
+ *     }
+ *
+ * Two things hid this from the four shapes above. The stand-in is a
+ * string rather than an object with read methods, and it is the
+ * fall-through of a PRESENCE test rather than the body of an absence
+ * guard, so `failureContext` could not see it either way round.
+ *
+ * WHY THE GUARD DECIDES, NOT THE LITERAL. `return ""` is honest far
+ * more often than not. A picker with no date selected, a layout with
+ * no gap set, a connector with no endpoints — all answer with the
+ * empty representation and all are true. Classifying the 38 candidates
+ * by what the `if` tests separated them cleanly: 33 guard on DATA and
+ * are correct, 5 guard on INFRASTRUCTURE, and 4 of those 5 were live
+ * defects. A reader whose BACKING OBJECT is absent cannot answer at
+ * all, and "" is indistinguishable from a real empty answer.
+ */
+const INFRA_FIELD =
+    /^(cm\w*|view|instance|root\w*|container\w*|editor|el|ctx|canvas|engine|vditor|renderer|handle|widget|chart)$/i;
+
+/** Literals a reader may honestly return when there is nothing to report. */
+const HONEST_LITERAL = new Set(["null", "undefined", "false", "[]", "{}", "0", "-1", "NaN"]);
+
+/** Function names that promise an answer rather than an action. */
+const READER_NAME = /^(get|read|to|compute|resolve|find|query|fetch|extract|parse|current|value)/i;
+
+/** The identifier an `if` tests, reduced to its last path segment. */
+function guardSubject(expr)
+{
+    const text = expr.getText().replace(/^!/, "").trim();
+    const path = (text.match(/^[\w.]+/) ?? [""])[0];
+    return path.split(".").filter((x) => x !== "this").pop() ?? "";
+}
+
+/** `x`, `this.x` or `a && b` — a test that something IS there. */
+function isPresenceTest(expr)
+{
+    if (!expr) { return false; }
+    if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) { return true; }
+    if (ts.isBinaryExpression(expr)
+        && expr.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken)
+    {
+        return isPresenceTest(expr.left) && isPresenceTest(expr.right);
+    }
+    return false;
+}
+
+/**
+ * The infrastructure field whose absence this return answers for, or
+ * null when the guard is about data and the answer is honest.
+ */
+function fabricatedOnAbsentBacking(node)
+{
+    // `if (!backing) { return "" }`
+    for (let p = node.parent; p; p = p.parent)
+    {
+        if (ts.isIfStatement(p) && isAbsenceTest(p.expression))
+        {
+            let c = node;
+            while (c.parent && c.parent !== p) { c = c.parent; }
+            if (c === p.thenStatement)
+            {
+                const on = guardSubject(p.expression);
+                return INFRA_FIELD.test(on) ? on : null;
+            }
+        }
+        if (ts.isFunctionDeclaration(p) || ts.isMethodDeclaration(p)
+            || ts.isFunctionExpression(p)) { break; }
+    }
+
+    // `if (backing) { return real } return "";`
+    const block = node.parent;
+    if (!block || !ts.isBlock(block)) { return null; }
+
+    const i = block.statements.indexOf(node);
+    if (i < 1) { return null; }
+
+    const prev = block.statements[i - 1];
+    if (!ts.isIfStatement(prev) || prev.elseStatement) { return null; }
+    if (!isPresenceTest(prev.expression)) { return null; }
+    if (!/\breturn\b/.test(prev.thenStatement.getText())) { return null; }
+
+    const on = guardSubject(prev.expression);
+    return INFRA_FIELD.test(on) ? on : null;
+}
+
 const violations = [];
 
 function isAbsenceTest(expr)
@@ -165,6 +258,23 @@ function visit(node, file)
 {
     if (ts.isReturnStatement(node) && node.expression)
     {
+        const backing = fabricatedOnAbsentBacking(node);
+        const fnName = enclosingName(node);
+        const literal = node.expression.getText();
+
+        if (backing && READER_NAME.test(fnName) && !CACHE_NAME.test(fnName)
+            && !HONEST_LITERAL.has(literal) && ts.isLiteralExpression(node.expression))
+        {
+            violations.push({
+                file: file.fileName,
+                line: file.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+                fn: fnName,
+                where: `branch where \`${backing}\` is absent`,
+                detail: `answers \`${literal.slice(0, 32)}\`, which is what a real `
+                    + "empty answer looks like, so the caller cannot tell them apart",
+            });
+        }
+
         const where = failureContext(node);
 
         if (where)
