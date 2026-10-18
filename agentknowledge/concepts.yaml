@@ -1571,3 +1571,24 @@
   related:
   - AClassificationIsAnInstrumentNotANote
   - ATestThatCannotFail
+
+- name: ATestNamedAfterTheBehaviourCannotDisagreeWithIt
+  definition: "ADR-204. Three components answered an absent InlineToolbar with a warning and an empty header strip, and all three had a test for it. They were named WarnsAndSkips, LogsWarnNoThrow and \"warns, no throw, no slot\". Each was accurate, each passed on every run since the pattern shipped, and each had written the forbidden behaviour into the contract under a name that made the behaviour sound deliberate. A name taken from what the code was observed to do records an observation, and a test records a decision. A test name can read as a description of the implementation rather than as a promise to a caller. Read the implementation against the house rules before trusting the green."
+  anchor_file: components/timeline/timeline.test.ts
+  related:
+  - RankSuitesByStandInNotByMatcher
+  - ATestThatCannotFail
+
+- name: AStubIsRightWhenTheClaimIsAboutTheCaller
+  definition: "ADR-204. A census of suites that stand in for a sibling component found eleven, and six of them were correct as they stood. Four withhold the factory on purpose, because the claim under test is that the HOST refuses when the dependency is missing, and mounting the real one removes the condition. Two install a stub that records `opts[\"value\"]`, which is what the host handed the widget, and no real component can report that about its own caller. The rule is not mount everything. It is that a stub is a lie when the claim is about the dependency, and an instrument when the claim is about the caller. Which one it is can be read off the test name."
+  anchor_file: scripts/test-assertions.mjs
+  related:
+  - RankSuitesByStandInNotByMatcher
+  - AClassificationIsAnInstrumentNotANote
+
+- name: ASpecSentenceCanBeFalseTwice
+  definition: "ADR-203 and ADR-204. Section 8.2 of the GraphToolbar PRD said the zoom label updates and a screen reader announces the new value. Both clauses were false and for unrelated reasons: setToolState({label}) never reached a label item, and buildLabelItem set no aria-live. Fixing the first made the text change, which is what made the missing announcement visible as the next thing wrong. A spec paragraph is a conjunction, and verifying it means verifying each clause separately. A fix that makes half of a sentence true is also a tool for finding the other half."
+  anchor_file: specs/graphtoolbar.prd.md
+  related:
+  - RankSuitesByStandInNotByMatcher
+  - ATestThatCannotFail

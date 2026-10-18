@@ -467,6 +467,57 @@ describe("Toolbar setToolState / getToolState", () =>
         tb.destroy();
     });
 
+    test("aLabelItemWithoutLive_IsNotALiveRegion", () =>
+    {
+        // DEBT-TB-1. The field is opt-in because most labels are
+        // static captions, and announcing all of them on mount would
+        // be noise. This is the half that keeps it opt-in.
+        const opts = makeOptions({
+            regions: [
+                {
+                    id: "r1",
+                    items: [
+                        { type: "label", id: "lbl", text: "Page 1" } as ToolbarItem,
+                    ],
+                },
+            ],
+        });
+        const tb = new Toolbar(opts);
+        tb.show(container);
+        const el = container.querySelector("[data-tool-id=\"lbl\"]");
+
+        expect(el?.hasAttribute("aria-live")).toBe(false);
+        expect(el?.hasAttribute("aria-atomic")).toBe(false);
+        tb.destroy();
+    });
+
+    test("aLabelItemWithLive_AnnouncesTheWholeReading", () =>
+    {
+        // `aria-atomic` is not decoration here. The label holds an
+        // optional icon beside the text, so without it a reader may
+        // announce only the characters that changed.
+        const opts = makeOptions({
+            regions: [
+                {
+                    id: "r1",
+                    items: [
+                        {
+                            type: "label", id: "lbl", text: "100%",
+                            live: "polite"
+                        } as ToolbarItem,
+                    ],
+                },
+            ],
+        });
+        const tb = new Toolbar(opts);
+        tb.show(container);
+        const el = container.querySelector("[data-tool-id=\"lbl\"]");
+
+        expect(el?.getAttribute("aria-live")).toBe("polite");
+        expect(el?.getAttribute("aria-atomic")).toBe("true");
+        tb.destroy();
+    });
+
     test("setToolState_Hidden_HidesTool", () =>
     {
         const opts = makeOptions();

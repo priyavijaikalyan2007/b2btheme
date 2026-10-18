@@ -89,7 +89,7 @@ When `showInlineToolbar: true` AND the InlineToolbar bundle (`components/inlinet
 | Expand all groups | `arrows-expand` | `expandAll()` |
 | Collapse all groups | `arrows-collapse` | `collapseAll()` |
 
-This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the option is a silent no-op (with a `console.warn`).
+This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the constructor **throws** and names the bundle to load (FALLBACK-14). The option is opt-in, so asking for a toolbar and receiving an empty header strip was the wrong answer.
 
 ## Public API additions (ADR-128)
 

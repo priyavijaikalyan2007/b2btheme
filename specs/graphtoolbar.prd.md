@@ -548,6 +548,12 @@ The zoom label (`gt-zoom-label`) is marked as an ARIA live region so screen read
 
 When `setZoomLabel()` is called, the text content updates and the live region announces the new value.
 
+GraphToolbar asks for this through the Toolbar label item's opt-in `live`
+field (`live: "polite"`), added in DEBT-TB-1. **Both halves of this
+paragraph were false until 2026-10-18**: `setToolState({ label })` did
+not write to a label item at all (ADR-203), and `buildLabelItem` set no
+`aria-live`, so there was neither a new value nor an announcement.
+
 ### 8.3 Toggle State Announcements
 
 Grid Snap and Minimap toggle buttons use `aria-pressed` (managed by the Toolbar component). Screen readers announce the toggle state change on activation.

@@ -358,6 +358,20 @@ export interface ToolLabelItem
     /** Text colour (CSS value). */
     color?: string;
 
+    /**
+     * Announce each new value to a screen reader. DEBT-TB-1.
+     *
+     * OPT-IN ON PURPOSE. Most labels are static captions, and a
+     * toolbar that announced every one of them on mount would be
+     * noise. Set this only where the text is a READING that changes
+     * — a zoom percentage, a selection count, a save state — which is
+     * what `setToolState({ label })` writes.
+     *
+     * The element also carries `aria-atomic`, so the whole label is
+     * read rather than the characters that changed.
+     */
+    live?: "polite" | "assertive";
+
     /** Hidden state. Default: false. */
     hidden?: boolean;
 
@@ -3063,6 +3077,14 @@ export class Toolbar
         const text = createElement("span", ["toolbar-label-text"], item.text);
         wrap.appendChild(text);
         if (item.color) { wrap.style.color = item.color; }
+
+        // DEBT-TB-1. The region goes on the WRAPPER, which is the
+        // element the GraphToolbar PRD §8.2 shows it on, and the one
+        // that stays in the DOM while the inner text node is replaced.
+        if (item.live)
+        {
+            setAttr(wrap, { "aria-live": item.live, "aria-atomic": "true" });
+        }
 
         this.registerToolItem(wrap, item.id, item, item.cssClass, item.hidden);
         return wrap;

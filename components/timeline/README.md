@@ -344,7 +344,7 @@ Default-off and host-controlled: pass `showInlineToolbar: true` to mount a small
 3. Expand all groups
 4. Collapse all groups
 
-Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, the strip is silently skipped with a warn log. See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
+Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, `createTimeline` **throws** and names the bundle to load (FALLBACK-14). See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
 
 ## Accessibility
 

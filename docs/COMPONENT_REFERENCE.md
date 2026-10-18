@@ -325,7 +325,7 @@ Compact mode reduces padding and hides comment slots and tag displays for use in
 
 When `showInlineToolbar: true` is passed, ActionItems mounts an `InlineToolbar` (size `sm`) in its panel header with **two** icon-only actions: expand-all-sections and collapse-all-sections. Sort is **deliberately excluded** from this toolbar — ActionItems already ships a multi-mode sort dropdown (priority, due date, assignee, created, modified, etc.) and adding a duplicate alpha-sort affordance to the toolbar would split the surface. Instead, the alpha sort lives in the dropdown as two new `SortOption` values: `"alpha-asc"` and `"alpha-desc"`.
 
-The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the option is a silent no-op (a warning is logged). See [ADR-128](../../agentknowledge/decisions.yaml).
+The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the constructor **throws** and names the bundle to load (FALLBACK-14). See [ADR-128](../../agentknowledge/decisions.yaml).
 
 ## Integration Notes
 
@@ -2559,6 +2559,21 @@ This is recorded as DEBT-SEC-5.
 | `toggleWordWrap()` | Toggle word wrap |
 | `toggleLineNumbers()` | Toggle line numbers |
 | `getEditorInstance()` | Get raw CodeMirror EditorView |
+
+### Methods that need CodeMirror
+
+`undo`, `redo`, `format`, `getSelection`, `replaceSelection`, `focus`,
+`blur`, `setDiagnostics`, `toggleWordWrap` and `toggleLineNumbers`
+**throw** when CodeMirror did not load, naming the method and the module
+to load. The mount already shows a missing-dependency notice in the
+container, so a caller reaching one of these has acted on an editor that
+is displaying an error.
+
+`toggleWordWrap` joined that list in DEBT-CE-1. It used to flip the
+button to `aria-pressed="true"` over an editor that had wrapped nothing.
+Word wrap also needs `EditorView.lineWrapping`, and a view bundle that
+does not export it now refuses rather than mounting with the button
+pressed.
 
 ## Features
 
@@ -14275,7 +14290,7 @@ When `showInlineToolbar: true` AND the InlineToolbar bundle (`components/inlinet
 | Expand all groups | `arrows-expand` | `expandAll()` |
 | Collapse all groups | `arrows-collapse` | `collapseAll()` |
 
-This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the option is a silent no-op (with a `console.warn`).
+This is RelationshipManager's adoption of the **CategorizedDataInlineToolbar** UX pattern (ADR-128). Defaults are off — the host opts in. All actions emit hookable callbacks (`onSortModeChange`, `onCollapseStateChange`) and apply state internally, so consuming apps can run controlled or uncontrolled. If `window.createInlineToolbar` is unavailable when opted in, the constructor **throws** and names the bundle to load (FALLBACK-14). The option is opt-in, so asking for a toolbar and receiving an empty header strip was the wrong answer.
 
 ## Public API additions (ADR-128)
 
@@ -19427,7 +19442,7 @@ Default-off and host-controlled: pass `showInlineToolbar: true` to mount a small
 3. Expand all groups
 4. Collapse all groups
 
-Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, the strip is silently skipped with a warn log. See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
+Sort buttons toggle the active mode off when clicked again. Sorting only re-orders the `TimelineGroup[]` rendered list — it does not mutate caller-owned data or touch `collapsed` flags. If `window.createInlineToolbar` is unavailable, `createTimeline` **throws** and names the bundle to load (FALLBACK-14). See [ADR-128](../../agentknowledge/decisions.yaml) for the pattern rationale.
 
 ## Accessibility
 
@@ -20039,6 +20054,23 @@ In vertical orientation, `"left"` maps to top and `"right"` maps to bottom.
     color: "#40c057"
 }
 ```
+
+A label whose text is a **reading that changes** — a zoom percentage, a
+selection count, a save state — can ask to be announced:
+
+```typescript
+{
+    type: "label",
+    id: "zoom",
+    text: "100%",
+    live: "polite"   // or "assertive"
+}
+```
+
+`live` puts `aria-live` and `aria-atomic="true"` on the label wrapper, so
+`setToolState(id, { label })` announces the whole new reading. It is
+**opt-in**, because most labels are static captions and announcing every
+one of them on mount would be noise (DEBT-TB-1).
 
 ### Separator
 

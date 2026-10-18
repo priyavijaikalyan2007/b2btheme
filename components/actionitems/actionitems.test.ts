@@ -12,6 +12,9 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createActionItems } from "./actionitems";
+// DEBT-TEST-1c. Side-effect import: the ADR-128 block below mounts the
+// real InlineToolbar rather than a stub of it.
+import "../inlinetoolbar/inlinetoolbar";
 import type
 {
     ActionItemsOptions,
@@ -355,23 +358,26 @@ describe("ActionItems destroy", () =>
 
 describe("ActionItems CategorizedDataInlineToolbar (ADR-128)", () =>
 {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const win = window as any;
-    let createInlineToolbarMock:
-        ((opts: Record<string, unknown>) => unknown) | undefined;
+    /*
+     * DEBT-TEST-1c. This block used to hand ActionItems a `vi.fn()`
+     * returning two stubs, so the assertions were about the ARGUMENT
+     * LIST the component passed and not about anything a user could
+     * reach. No button was rendered and no click was ever dispatched.
+     *
+     * The real factory arrives through the side-effect import below,
+     * which is how a CDN consumer gets it.
+     */
 
-    beforeEach(() =>
+    function toolbarButton(id: string): HTMLElement
     {
-        createInlineToolbarMock = vi.fn((_opts: Record<string, unknown>) => ({
-            setItemActive: vi.fn(),
-            destroy: vi.fn(),
-        }));
-        win.createInlineToolbar = createInlineToolbarMock;
-    });
+        const btn = container.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
+        if (btn === null) { throw new Error(`no toolbar button rendered for "${id}"`); }
+        return btn;
+    }
 
-    afterEach(() =>
+    test("theRealFactoryIsRegistered_SoTheseTestsMountIt", () =>
     {
-        delete win.createInlineToolbar;
+        expect(typeof window.createInlineToolbar).toBe("function");
     });
 
     test("ShowInlineToolbar_DefaultFalse_NoToolbarSlot", () =>
@@ -389,25 +395,50 @@ describe("ActionItems CategorizedDataInlineToolbar (ADR-128)", () =>
         expect(
             container.querySelector(".actionitems-header-toolbar")
         ).not.toBeNull();
-        expect(createInlineToolbarMock).toHaveBeenCalled();
+
+        // The slot being present said nothing about what went in it.
+        expect(toolbarButton("ai-expand-all")).not.toBeNull();
         handle.destroy();
     });
 
-    test("ShowInlineToolbar_True_NoFactory_WarnsAndSkips", () =>
+    test("ShowInlineToolbar_True_NoFactory_Refuses", () =>
     {
-        delete win.createInlineToolbar;
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
-        let handle: ActionItemsHandle | null = null;
-        expect(() =>
+        // FALLBACK-14. The old name said WarnsAndSkips and the old body
+        // asserted the slot was absent, which was true and was the
+        // defect: a page that asked for a toolbar got none, and said so
+        // only in a console.
+        const real = window.createInlineToolbar;
+        delete (window as unknown as Record<string, unknown>).createInlineToolbar;
+
+        try
         {
-            handle = createHandle({ showInlineToolbar: true });
-        }).not.toThrow();
-        expect(
-            container.querySelector(".actionitems-header-toolbar")
-        ).toBeNull();
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-        handle?.destroy();
+            expect(() => createHandle({ showInlineToolbar: true }))
+                .toThrow(/createInlineToolbar is not loaded/);
+        }
+        finally
+        {
+            window.createInlineToolbar = real;
+        }
+    });
+
+
+    test("ShowInlineToolbar_FactoryThrows_PropagatesWithItsCause", () =>
+    {
+        // FALLBACK-14. The old `catch` logged the error and set the
+        // handle to null, so the original fault never reached the
+        // caller and the toolbar silently did not exist.
+        const real = window.createInlineToolbar;
+        const boom = new Error("toolbar blew up during construction");
+        (window as unknown as Record<string, unknown>).createInlineToolbar =
+            () => { throw boom; };
+        let caught: Error | null = null;
+
+        try { createHandle({ showInlineToolbar: true }); }
+        catch (e) { caught = e as Error; }
+        finally { window.createInlineToolbar = real; }
+
+        expect(caught).not.toBeNull();
+        expect((caught as Error & { cause?: unknown }).cause).toBe(boom);
     });
 
     function getRenderedTitles(): string[]
@@ -505,17 +536,51 @@ describe("ActionItems CategorizedDataInlineToolbar (ADR-128)", () =>
     {
         // ADR-128 amended: toolbar exposes only expand-all + collapse-all.
         // Sort buttons live in the dropdown, not the InlineToolbar.
+        //
+        // Read off the RENDERED toolbar rather than the argument list,
+        // because a button the component asked for and the toolbar
+        // declined to draw is the case worth catching.
         createHandle({ showInlineToolbar: true });
-        // The mock factory was called exactly once with two non-separator items.
-        expect(createInlineToolbarMock).toHaveBeenCalledTimes(1);
-        const opts = (createInlineToolbarMock as unknown as
-            { mock: { calls: [Record<string, unknown>][] } }).mock.calls[0][0];
-        const items = opts.items as Array<{ id: string; type?: string }>;
-        const ids = items.map((i) => i.id);
-        expect(ids).toContain("ai-expand-all");
-        expect(ids).toContain("ai-collapse-all");
-        expect(ids).not.toContain("ai-sort-asc");
-        expect(ids).not.toContain("ai-sort-desc");
+        const root = container.querySelector(".actionitems-header-toolbar");
+        const ids = Array.from(root?.querySelectorAll("[data-item-id]") ?? [])
+            .map((el) => el.getAttribute("data-item-id"));
+
+        expect(ids).toEqual(["ai-expand-all", "ai-collapse-all"]);
+    });
+
+    test("Toolbar_CollapseAllButton_CollapsesEverySection", () =>
+    {
+        // The claim the old block could not make at all: a USER click
+        // on the drawn button reaches the component.
+        const handle = createHandle({ showInlineToolbar: true });
+        const headers = () => Array.from(container.querySelectorAll(
+            ".actionitems-section-header"))
+            .map((el) => el.getAttribute("aria-expanded"));
+
+        expect(headers().length).toBeGreaterThan(0);
+        expect(headers()).not.toContain("false");
+
+        toolbarButton("ai-collapse-all").click();
+
+        expect(headers()).not.toContain("true");
+        handle.destroy();
+    });
+
+    test("Toolbar_SurvivesItsOwnClick_SoTheSecondOneStillLands", () =>
+    {
+        // expandAll and collapseAll both call render(). If a re-render
+        // took the toolbar with it, the first click would work and
+        // every later one would hit a detached button. Clicking twice
+        // is what tells those two apart.
+        const handle = createHandle({ showInlineToolbar: true });
+        toolbarButton("ai-collapse-all").click();
+        toolbarButton("ai-expand-all").click();
+        const expanded = Array.from(container.querySelectorAll(
+            ".actionitems-section-header"))
+            .map((el) => el.getAttribute("aria-expanded"));
+
+        expect(expanded).not.toContain("false");
+        handle.destroy();
     });
 
     test("ExpandAll_FiresOnCollapseStateChange_AllExpanded", () =>

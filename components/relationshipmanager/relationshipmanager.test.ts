@@ -14,6 +14,9 @@ import
 {
     createRelationshipManager,
 } from "./relationshipmanager";
+// DEBT-TEST-1c. Side-effect import: the ADR-128 block mounts the real
+// InlineToolbar rather than a stub of it.
+import "../inlinetoolbar/inlinetoolbar";
 import type
 {
     RelationshipManagerOptions,
@@ -398,16 +401,27 @@ describe("add button visibility", () =>
 
 describe("InlineToolbar adoption (ADR-128)", () =>
 {
-    type ToolbarItem = { id: string; onClick?: (item: unknown, active?: boolean) => void };
-    type ToolbarOpts = { container: HTMLElement; items: ToolbarItem[] };
-    let factoryCalls: ToolbarOpts[];
-    let lastItems: Map<string, ToolbarItem>;
+    /*
+     * DEBT-TEST-1c. The fake this block used to install called the
+     * handler with ONE argument, and the real toolbar passes two: the
+     * item and its new active state. A toggle that read the second one
+     * would have behaved differently here than on a page, and nothing
+     * in the suite could have shown it.
+     *
+     * The real factory arrives through the side-effect import at the
+     * top of the file, which is how a CDN consumer gets it.
+     */
+
+    function toolbarButton(id: string): HTMLElement
+    {
+        const btn = container.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
+        if (btn === null) { throw new Error("no toolbar button rendered for " + id); }
+        return btn;
+    }
 
     function fireToolbarItem(id: string): void
     {
-        const item = lastItems.get(id);
-        if (!item) { throw new Error("toolbar item not registered: " + id); }
-        if (typeof item.onClick === "function") { item.onClick(item); }
+        toolbarButton(id).click();
     }
 
     function makeMixedRels(): RelationshipInstance[]
@@ -428,57 +442,74 @@ describe("InlineToolbar adoption (ADR-128)", () =>
         return Array.from(labels).map((el) => (el.textContent ?? "").replace(/\s*\(.*$/, ""));
     }
 
-    beforeEach(() =>
+    test("the real factory is registered, so these tests mount it", () =>
     {
-        factoryCalls = [];
-        lastItems = new Map();
-        (window as unknown as Record<string, unknown>).createInlineToolbar = (opts: ToolbarOpts) =>
-        {
-            factoryCalls.push(opts);
-            for (const it of opts.items) { lastItems.set(it.id, it); }
-            // Render the slot so the test can assert presence.
-            opts.container.setAttribute("data-toolbar-mounted", "true");
-            return {
-                setItemActive: (_id: string, _active: boolean) => {},
-                destroy: () =>
-                {
-                    opts.container.removeAttribute("data-toolbar-mounted");
-                }
-            };
-        };
-    });
-
-    afterEach(() =>
-    {
-        delete (window as unknown as Record<string, unknown>).createInlineToolbar;
+        expect(typeof window.createInlineToolbar).toBe("function");
     });
 
     test("default off — no toolbar slot mounted", () =>
     {
         const rm = createRelationshipManager(makeOptions());
         expect(container.querySelector(".rm-header-toolbar")).toBeNull();
-        expect(factoryCalls.length).toBe(0);
+        expect(container.querySelector("[data-item-id]")).toBeNull();
         rm.destroy();
     });
 
     test("opt-in mounts the toolbar via factory", () =>
     {
+        // The old version asserted an attribute its own fake had set,
+        // which proved the fake ran. A real toolbar draws buttons.
         const rm = createRelationshipManager(makeOptions({ showInlineToolbar: true }));
-        expect(factoryCalls.length).toBe(1);
         const slot = container.querySelector(".rm-header-toolbar");
+
         expect(slot).not.toBeNull();
-        expect(slot!.getAttribute("data-toolbar-mounted")).toBe("true");
+        expect(slot!.querySelector("[role=\"toolbar\"]")).not.toBeNull();
+        expect(slot!.querySelectorAll("[data-item-id]").length).toBeGreaterThan(0);
         rm.destroy();
     });
 
-    test("opt-in without factory — warns, no throw, no slot", () =>
+    test("opt-in without the component — refuses, naming what to load", () =>
     {
+        // FALLBACK-14. This used to warn and carry on, so the page got
+        // a header strip with nothing in it. `showInlineToolbar` is a
+        // capability the caller named.
+        //
+        // The restore is in a `finally` because the construction now
+        // throws, and the import registers the real factory once for
+        // the whole file.
+        const real = window.createInlineToolbar;
         delete (window as unknown as Record<string, unknown>).createInlineToolbar;
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const rm = createRelationshipManager(makeOptions({ showInlineToolbar: true }));
-        expect(container.querySelector(".rm-header-toolbar")).toBeNull();
-        warnSpy.mockRestore();
-        rm.destroy();
+
+        try
+        {
+            expect(() => createRelationshipManager(
+                makeOptions({ showInlineToolbar: true })))
+                .toThrow(/createInlineToolbar is not loaded/);
+        }
+        finally
+        {
+            window.createInlineToolbar = real;
+        }
+    });
+
+
+    test("a factory that throws — propagates with its cause attached", () =>
+    {
+        // FALLBACK-14. The old `catch` logged the error and set the
+        // handle to null, so the original fault never reached the
+        // caller and the toolbar silently did not exist.
+        const real = window.createInlineToolbar;
+        const boom = new Error("toolbar blew up during construction");
+        (window as unknown as Record<string, unknown>).createInlineToolbar =
+            () => { throw boom; };
+        let caught: Error | null = null;
+
+        try { createRelationshipManager(makeOptions({ showInlineToolbar: true })); }
+        catch (e) { caught = e as Error; }
+        finally { window.createInlineToolbar = real; }
+
+        expect(caught).not.toBeNull();
+        expect((caught as Error & { cause?: unknown }).cause).toBe(boom);
     });
 
     test("setSortMode('asc') sorts group keys A→Z", () =>

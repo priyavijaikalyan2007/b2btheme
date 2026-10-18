@@ -178,6 +178,21 @@ This is recorded as DEBT-SEC-5.
 | `toggleLineNumbers()` | Toggle line numbers |
 | `getEditorInstance()` | Get raw CodeMirror EditorView |
 
+### Methods that need CodeMirror
+
+`undo`, `redo`, `format`, `getSelection`, `replaceSelection`, `focus`,
+`blur`, `setDiagnostics`, `toggleWordWrap` and `toggleLineNumbers`
+**throw** when CodeMirror did not load, naming the method and the module
+to load. The mount already shows a missing-dependency notice in the
+container, so a caller reaching one of these has acted on an editor that
+is displaying an error.
+
+`toggleWordWrap` joined that list in DEBT-CE-1. It used to flip the
+button to `aria-pressed="true"` over an editor that had wrapped nothing.
+Word wrap also needs `EditorView.lineWrapping`, and a view bundle that
+does not export it now refuses rather than mounting with the button
+pressed.
+
 ## Features
 
 - **Syntax highlighting** — JavaScript, TypeScript, JSON, YAML, HTML, CSS, SQL, Python, Markdown

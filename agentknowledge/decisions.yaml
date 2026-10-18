@@ -8756,3 +8756,95 @@
     DEBT-TEST-1b is 267 and regenerable: 110 idempotency, 66 where the
     name states a change, 6 on an absent dependency, 85 handle checks.
     Each of the 6 states a change in its name.
+
+- id: ADR-204
+  title: Rank suites by what they stand in for, and the fallback that hid behind three stand-ins
+  date: 2026-10-18
+  status: accepted
+  context: |
+    ADR-203 closed with a sentence it could not act on: rank suites by
+    stand-in, not by matcher. Two defects in two days had come from
+    the same place, a suite that had never mounted its real
+    dependency, and neither was reachable from the shape classifier
+    that was steering the work. The instruction existed. The census
+    did not, so "which suites are those" was still a question nobody
+    could answer without reading 162 files.
+
+    DEBT-CE-1 and DEBT-TB-1 were left open the same day, each recorded
+    as a behaviour change rather than a test fix.
+  decision: |
+    D1. THE STAND-IN CENSUS IS A COMMITTED MODE OF THE SAME SCRIPT.
+        `node scripts/test-assertions.mjs --stand-ins` lists every
+        test file that writes a global another component in this
+        repository owns without importing that component. Ownership
+        comes from extractGlobals, the reader check [19] already
+        grades the published reference with, rather than a third copy
+        of the `window.x =` forms. Five cases pin it, and the
+        regression case is the pre-fix GraphToolbar suite.
+
+    D2. A THIRD-PARTY BUNDLE IS THE STUB BOUNDARY. Bootstrap, marked
+        and CodeMirror own no source here, so they never appear in
+        the census and stubbing one stays correct. A sibling
+        component can be imported, so standing in for one is a choice
+        that needs a reason.
+
+    D3. A STUB IS STILL RIGHT WHEN THE CLAIM IS ABOUT THE CALLER.
+        Six of the eleven remain, and all six are correct. Four
+        withhold the factory because the claim under test is that the
+        host refuses. Two record what the host passed, which a real
+        component cannot report.
+
+    D4. toggleWordWrap() AND toggleLineNumbers() REFUSE WITHOUT A
+        VIEW, AND THE REFUSAL COMES FIRST. A toggle that refuses and
+        still inverts its own flag is worse than one that does
+        nothing, because the next call undoes a change that never
+        happened. pushCMLineWrapping requires EditorView.lineWrapping
+        rather than testing it, matching pushCMLineNumbers.
+
+    D5. A TOOLBAR LABEL ANNOUNCES BY ASKING. ToolLabelItem gains
+        `live?: "polite" | "assertive"`, opt-in because most labels
+        are static captions. The attributes go on the wrapper, which
+        is the element that survives while the text node is replaced.
+
+    D6. showInlineToolbar REFUSES WHEN THE COMPONENT IS ABSENT, AND
+        RETHROWS WITH cause WHEN THE FACTORY FAILS. Three components
+        carry the ADR-128 pattern and all three warned and continued.
+  consequences: |
+    ELEVEN STAND-INS, AND FIVE WERE WORTH CONVERTING. Timeline,
+    ActionItems and RelationshipManager each tested their ADR-128
+    toolbar against a fake that rendered no button. Timeline invoked
+    item.onClick?.() on the captured object with no arguments, and the
+    real toolbar passes two. RelationshipManager asserted an attribute
+    its own fake had set. ActionItems read the argument list rather
+    than the rendered toolbar. Deleting the click dispatch inside
+    InlineToolbar now turns all three red, and could not have before.
+
+    FALLBACK-14 WAS FOUND BY THE CONVERSION AND BY NOTHING ELSE.
+    Each suite installed its own factory in beforeEach, so the absent
+    branch was reachable only by deleting what the suite had just
+    written, and the three tests that did so were named WarnsAndSkips,
+    LogsWarnNoThrow and "warns, no throw, no slot". Each stated the
+    defect as the contract and had passed on every run since ADR-128.
+    A TEST NAMED AFTER THE BEHAVIOUR IT OBSERVES CANNOT DISAGREE WITH
+    IT.
+
+    DOCVIEWER NOW STUBS marked INSTEAD OF THE RENDERER. Its markdown
+    path ran against four lines of its own suite, in the component
+    FALLBACK-13 lived inside. Mounting the real MarkdownRenderer made
+    two absences distinguishable for the first time, so the single
+    refusal test split in two: one withholds the component and one
+    withholds the bundle.
+
+    THE PRD PARAGRAPH WAS FALSE IN TWO INDEPENDENT WAYS. Section 8.2
+    of the GraphToolbar PRD said the text updates and a screen reader
+    announces it. ADR-203 made the first half true and D5 makes the
+    second. Fixing one is what exposed the other.
+
+    A DEFERRAL IS NOT A CONDITION UNTIL SOMEONE RE-TAKES IT. DEBT-TS-1
+    was re-checked and has not moved: the consuming app still calls
+    the deprecated surface on the same six lines. The answer is
+    written down even though it did not change.
+
+    5245 tests across 162 files, 32 of 32 structure checks, every
+    ratchet at its line. testBlocks floor 4942 -> 4963,
+    testsThatCannotFail unchanged at 267. Seven mutations caught.

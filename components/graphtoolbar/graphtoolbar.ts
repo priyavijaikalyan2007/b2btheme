@@ -308,7 +308,10 @@ function buildViewRegion(opts: GraphToolbarOptions): Record<string, unknown> | n
                 onClick: () => safeCallback(opts.onZoomOut),
             },
             {
-                type: "label", id: "gt-zoom-label",
+                // `live` is what makes §8.2 of the PRD true. The text
+                // changes on every zoom step, and until DEBT-TB-1 a
+                // Toolbar label had no way to ask to be announced.
+                type: "label", id: "gt-zoom-label", live: "polite",
                 text: zoom + "%", overflowPriority: "low",
             },
             {

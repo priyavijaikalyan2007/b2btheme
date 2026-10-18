@@ -12,25 +12,36 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createDocViewer } from "./docviewer";
 import type { DocViewerOptions, DocViewerHandle, DocPage } from "./docviewer";
+// DEBT-TEST-1c. Side-effect import: DocViewer reads
+// `window.createMarkdownRenderer`, and this registers the real one.
+import "../markdownrenderer/markdownrenderer";
 
 // ============================================================================
-// MARKDOWN RENDERER MOCK
+// MARKED MOCK — THE THIRD-PARTY HALF, WHICH IS THE ONLY HALF TO STUB
 // ============================================================================
 
+/*
+ * DEBT-TEST-1c. This file used to stub `createMarkdownRenderer` itself,
+ * so DocViewer's whole markdown path ran against four lines of the
+ * suite's own code. FALLBACK-13 lived inside the component those four
+ * lines replaced: an absent `marked` produced a handle whose render set
+ * the raw source as text, and the reader saw `## Heading` verbatim.
+ *
+ * `marked` is a bundle this repository does not build, so stubbing it
+ * is the boundary. Everything between it and DocViewer — the sanitiser
+ * above all — is now the real thing.
+ */
 function installMarkdownMock(): void
 {
-    (window as unknown as Record<string, unknown>)["createMarkdownRenderer"] = () => ({
-        render: (md: string, target: HTMLElement) =>
-        {
-            target.innerHTML = `<p>${md}</p>`;
-        },
-        toHtml: (md: string) => `<p>${md}</p>`,
-    });
+    (window as unknown as Record<string, unknown>)["marked"] = {
+        parse: (md: string) => `<p>${md}</p>`,
+        use: () => { /* this stub registers no extensions */ },
+    };
 }
 
 function removeMarkdownMock(): void
 {
-    delete (window as unknown as Record<string, unknown>)["createMarkdownRenderer"];
+    delete (window as unknown as Record<string, unknown>)["marked"];
 }
 
 // ============================================================================
@@ -389,10 +400,33 @@ describe("DocViewer edge cases", () =>
         // "## Heading" and could not tell the renderer had failed.
         // Graceful is the wrong goal when the output is indistinguishable
         // from badly written documentation.
-        removeMarkdownMock();
+        //
+        // DEBT-TEST-1c SPLIT THIS IN TWO, because mounting the real
+        // MarkdownRenderer made the two absences distinguishable for
+        // the first time. This half withholds the COMPONENT.
+        const real = (window as unknown as Record<string, unknown>)
+            ["createMarkdownRenderer"];
+        delete (window as unknown as Record<string, unknown>)
+            ["createMarkdownRenderer"];
 
         expect(() => createDocViewer(defaultOptions()))
             .toThrow(/MarkdownRenderer is required/);
+
+        (window as unknown as Record<string, unknown>)
+            ["createMarkdownRenderer"] = real;
+    });
+
+    test("withoutMarked_TheRenderersOwnRefusalReachesTheCaller", () =>
+    {
+        // The other half, and the one no stub could ever have shown.
+        // FALLBACK-13 was exactly here: the component used to answer an
+        // absent `marked` with a handle that set the raw source as
+        // text. DocViewer adds no catch of its own, so the refusal
+        // arrives naming the bundle and the URL to load.
+        removeMarkdownMock();
+
+        expect(() => createDocViewer(defaultOptions()))
+            .toThrow(/marked was not found.*cdn\.jsdelivr\.net/s);
     });
 
     test("navigateToChild_UpdatesContent", () =>

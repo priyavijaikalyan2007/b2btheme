@@ -14,6 +14,9 @@ import {
     registerDynamicFormFieldProvider,
     unregisterDynamicFormFieldProvider,
 } from "./dynamicformswitcher";
+// DEBT-TEST-1c. Side-effect import: the auto-discovery test below
+// resolves to the real createColorPicker rather than to a stub.
+import "../colorpicker/colorpicker";
 import type {
     DynamicFormSwitcherHandle,
     DynamicFormSwitcherOptions,
@@ -1005,19 +1008,23 @@ describe("autoDiscovery", () =>
     {
         // Single-token lowercase type like "colorpicker" should match
         // a createColorPicker global through the lowercase-scan fallback.
-        (window as unknown as Record<string, unknown>).createColorPicker
-            = () => ({ getValue: () => "#abc123" });
+        //
+        // DEBT-TEST-1c. The stub this used to install answered to any
+        // name the scan happened to land on, so the test could not see
+        // the scan resolving to a name no component publishes. The real
+        // ColorPicker is imported at the top of this file, and the
+        // value below is one it produced.
         const handle = createDynamicFormSwitcher(container, {
             variants: {
                 v: { label: "v", fields: [
-                    { name: "c", label: "C", type: "colorpicker" },
+                    { name: "c", label: "C", type: "colorpicker",
+                        value: "#abc123" },
                 ] },
             },
             initialVariant: "v",
         });
         expect(handle.getValues().c).toBe("#abc123");
         handle.destroy();
-        delete (window as unknown as Record<string, unknown>).createColorPicker;
     });
 
     test("pascalCaseSplitsHyphens", () =>

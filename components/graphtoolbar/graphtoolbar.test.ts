@@ -156,6 +156,28 @@ describe("GraphToolbar handle", () =>
         handle.destroy();
     });
 
+    test("TheZoomLabelIsALiveRegion_SoTheNewValueIsAnnounced", () =>
+    {
+        // DEBT-TB-1, closed. The PRD §8.2 has said since the component
+        // shipped that a screen reader announces each zoom level, and
+        // `buildLabelItem` set no `aria-live`, so it never did. The
+        // text started changing only with ADR-203, which is what made
+        // the missing announcement the next thing wrong.
+        const handle = mount();
+        const label = toolEl("gt-zoom-label");
+
+        expect(label?.getAttribute("aria-live")).toBe("polite");
+        expect(label?.getAttribute("aria-atomic")).toBe("true");
+
+        // The region must be the element that SURVIVES the update, or
+        // the announcement is attached to a node that is replaced.
+        handle.setZoomLabel(150);
+
+        expect(toolEl("gt-zoom-label")).toBe(label);
+        expect(label?.textContent).toBe("150%");
+        handle.destroy();
+    });
+
     test("SetZoomLabel_RoundsToWholePercent", () =>
     {
         // The PRD documents the parameter as a percentage, so 99.6 is

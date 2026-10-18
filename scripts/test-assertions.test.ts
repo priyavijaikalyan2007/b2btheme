@@ -19,11 +19,14 @@
  * `MENTIONS.test(x)` as a declaration. None of that is hypothetical.
  */
 
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
-    testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf,
+    testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf, standInsOf,
 } from "./test-assertions.mjs";
 
 type Block = { name: string; body: string };
@@ -234,5 +237,87 @@ describe("the shape split is an instrument, not a note", () =>
         const shapes = shapesOf(rows);
 
         expect(Object.values(shapes).reduce((a, b) => a + b, 0)).toBe(0);
+    });
+});
+
+describe("the stand-in census points at the suites that never mounted", () =>
+{
+    // ADR-203 found its defect in a suite the shape classifier never
+    // pointed at, because every block in it carried a real assertion on
+    // a real value. The value came from the suite's own fake Toolbar.
+    // These cases pin what the census calls a stand-in, and the last one
+    // is the regression: the pre-fix GraphToolbar suite must be found.
+
+    let root = "";
+
+    function write(dir: string, file: string, body: string): string
+    {
+        mkdirSync(join(root, dir), { recursive: true });
+        const path = join(root, dir, file);
+        writeFileSync(path, body, "utf8");
+        return path;
+    }
+
+    beforeEach(() => { root = mkdtempSync(join(tmpdir(), "standins-")); });
+    afterEach(() => { rmSync(root, { recursive: true, force: true }); });
+
+    test("a suite that writes a sibling global without importing it is a stand-in", () =>
+    {
+        const src = write("widget", "widget.ts", "window.createWidget = createWidget;\n");
+        const spec = write("host", "host.test.ts",
+            "(window as Globals)[\"createWidget\"] = () => ({ destroy: () => {} });\n");
+
+        expect(standInsOf([spec], [src]))
+            .toEqual([{ file: spec, global: "createWidget", owner: "widget", imported: false }]);
+    });
+
+    test("a suite that imports the owner is a positive control, not a stand-in", () =>
+    {
+        // spinemap's shape. The real component is underneath, and the
+        // write exists to make its factory throw or to count the call.
+        const src = write("widget", "widget.ts", "window.createWidget = createWidget;\n");
+        const spec = write("host", "host.test.ts",
+            "import \"../widget/widget\";\n"
+            + "(window as Globals)[\"createWidget\"] = () => { throw new Error(\"boom\"); };\n");
+
+        expect(standInsOf([spec], [src])[0]).toMatchObject({ imported: true });
+    });
+
+    test("a component registering its own global is not standing in for anything", () =>
+    {
+        const src = write("widget", "widget.ts", "window.createWidget = createWidget;\n");
+        const spec = write("widget", "widget.test.ts",
+            "(window as Globals)[\"createWidget\"] = () => ({});\n");
+
+        expect(standInsOf([spec], [src])).toEqual([]);
+    });
+
+    test("a third-party global is never reported, because no component owns it", () =>
+    {
+        // The boundary the rule turns on. Bootstrap and `marked` are
+        // bundles this repository does not build, so stubbing one is the
+        // only way to reach the branch under test.
+        const src = write("widget", "widget.ts", "window.createWidget = createWidget;\n");
+        const spec = write("host", "host.test.ts",
+            "(window as Globals)[\"bootstrap\"] = { Tooltip: class {} };\n");
+
+        expect(standInsOf([spec], [src])).toEqual([]);
+    });
+
+    test("the pre-fix GraphToolbar suite is found, which is why this exists", () =>
+    {
+        // Verbatim shape of the suite ADR-203 rewrote: it wrote both
+        // Toolbar globals and imported neither. Nine blocks asserted on
+        // the items they handed that fake, and the Toolbar defect they
+        // were meant to exercise had been live for the life of the
+        // component.
+        const src = write("toolbar", "toolbar.ts",
+            "window.Toolbar = Toolbar;\nwindow.createToolbar = createToolbar;\n");
+        const spec = write("graphtoolbar", "graphtoolbar.test.ts",
+            "(window as Globals)[\"Toolbar\"] = ToolbarStub;\n"
+            + "(window as Globals)[\"createToolbar\"] = () => stubHandle;\n");
+        const found = standInsOf([spec], [src]).filter((r) => !r.imported);
+
+        expect(found.map((r) => r.global)).toEqual(["Toolbar", "createToolbar"]);
     });
 });

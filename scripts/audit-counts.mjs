@@ -491,6 +491,20 @@ const BASELINES = {
     // could not fail, and the real component exposed the defect the
     // stand-in hid. ADR-203, DEBT-GATE-2's lesson a second time.
     //
+    // SO THE SECOND QUESTION IS NOW ASKED BY A SECOND INSTRUMENT.
+    // `node scripts/test-assertions.mjs --stand-ins` lists every test
+    // file that writes a global another component in this repository
+    // owns without importing that component. It found the pre-fix
+    // GraphToolbar suite, which is the regression case pinning it.
+    // 11 on 2026-10-18, 6 after the pass that day. The six that
+    // remain are `*.nofallback.test.ts` and `*.fallback2.test.ts`
+    // suites whose claim IS the absence, or whose stub is an
+    // instrument recording what the host handed it. DEBT-TEST-1c.
+    //
+    // THE TWO INSTRUMENTS DO NOT OVERLAP, and neither is a superset.
+    // A stand-in block can carry a real assertion on a real value and
+    // still prove nothing, because the suite wrote the value.
+    //
     // 341 -> 335 -> 285 on 2026-10-18. Six of CodeEditor's eight
     // `_DoesNotThrow` cases were asserting that a public method does
     // nothing when CodeMirror is absent, which ADR-200 made a refusal.
@@ -581,7 +595,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4942,
+    testBlocks: 4963,
 };
 
 /**

@@ -309,8 +309,8 @@ interface CodeEditorOptions
 | `undo` | `(): void` | Undoes the last edit. No-op in read-only mode. |
 | `redo` | `(): void` | Redoes the last undone edit. No-op in read-only mode. |
 | `format` | `(): void` | Auto-indents the entire document using CodeMirror's indentation commands. No-op in fallback mode. |
-| `toggleWordWrap` | `(): void` | Toggles word wrap on/off. Updates toolbar toggle state. |
-| `toggleLineNumbers` | `(): void` | Toggles line number gutter visibility. |
+| `toggleWordWrap` | `(): void` | Toggles word wrap on/off. Updates toolbar toggle state. **Throws when CodeMirror did not load** (DEBT-CE-1). |
+| `toggleLineNumbers` | `(): void` | Toggles line number gutter visibility. **Throws when CodeMirror did not load** (DEBT-CE-1). |
 | `getEditorInstance` | `(): unknown \| null` | Returns the raw CodeMirror `EditorView` instance for advanced consumer use, or `null` in fallback mode. |
 
 ### 4.3 Convenience Functions

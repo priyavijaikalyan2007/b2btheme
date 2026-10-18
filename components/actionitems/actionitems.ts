@@ -1955,9 +1955,16 @@ export class ActionItems
             | undefined;
         if (typeof factory !== "function")
         {
-            logWarn("showInlineToolbar requested but window."
-                + "createInlineToolbar is unavailable.");
-            return;
+            // FALLBACK-14. This used to warn and return, so a page that
+            // asked for the toolbar got a header strip with nothing in
+            // it and a line in a console nobody reads. `showInlineToolbar`
+            // is a capability the CALLER named, which AGENTS.md puts in
+            // the row that throws rather than renders a reduced version.
+            throw new Error(
+                `${LOG_PREFIX} showInlineToolbar is true, and `
+                + "window.createInlineToolbar is not loaded. Load the "
+                + "InlineToolbar component before this one, or leave "
+                + "showInlineToolbar off.");
         }
         const slot = createElement("span", [`${CLS}-header-toolbar`]);
         header.appendChild(slot);
@@ -1967,8 +1974,17 @@ export class ActionItems
         }
         catch (e)
         {
-            logError("InlineToolbar factory threw:", e);
-            this.toolbarHandle = null;
+            // FALLBACK-14. The old body logged and set the handle to
+            // null, so the toolbar silently did not exist and the
+            // original error never reached the caller. `cause` keeps it.
+            // `cause` is ES2022 and this build targets ES2020, so the
+            // second Error argument is assigned rather than passed.
+            const err = new Error(
+                `${LOG_PREFIX} the InlineToolbar factory threw while `
+                + "building the toolbar. The error it raised is attached "
+                + "as `cause`.");
+            (err as Error & { cause?: unknown }).cause = e;
+            throw err;
         }
     }
 

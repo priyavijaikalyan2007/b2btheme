@@ -4178,3 +4178,49 @@ documented as a percentage. The demo pages had been right all along.
 
 `--shapes` is now a committed mode of the census, so the next person to
 read the table can re-derive it. Including me, tomorrow.
+
+## 2026-10-18 (cont.) — "Let's finish up everything"
+
+The open list after the last pass was four items, and all four are
+closed or answered.
+
+Yesterday's entry ended with "rank by stand-in, not by matcher" and
+then left it as a sentence. That is the failure the entry above it had
+just named: a measurement that steers the next piece of work is an
+instrument, and prose describing one is not. So the first thing built
+was the census. `--stand-ins` lists every test file that writes a
+global another component here owns without importing that component.
+The pinning case that matters is the pre-fix GraphToolbar suite.
+An instrument that cannot find the defect it was written for is a note
+with a shebang.
+
+Eleven. Five were worth converting and six were already right, which
+was the useful surprise — the rule is not "mount everything". Four of
+the six withhold the factory because the claim under test is that the
+host refuses. Two record what the host passed the widget, and no real
+component can report that about its own caller.
+
+The conversion paid. Timeline, ActionItems and RelationshipManager all
+tested their ADR-128 toolbar against a fake that drew no button, and
+Timeline called `item.onClick?.()` with no arguments where the real
+toolbar passes two. All three now click a rendered button, and all
+three go red if InlineToolbar stops dispatching clicks.
+
+And all three answered an absent InlineToolbar with a warning and an
+empty header strip, under tests named `WarnsAndSkips`,
+`LogsWarnNoThrow` and `warns, no throw, no slot`. Every one accurate.
+Every one passing since ADR-128. A name taken from what the code was
+observed to do records an observation, and a test records a decision.
+
+DEBT-CE-1 had a third edit in it that the entry never mentioned,
+because the entry described the toggle and not the method the toggle
+calls. `pushCMLineWrapping` tested `EV.lineWrapping` instead of
+requiring it, so a view bundle missing one static mounted a normal
+editor with the button pressed and nothing wrapped.
+
+DEBT-TB-1 was the smaller half of a sentence. §8.2 of the GraphToolbar
+PRD said the text updates and a screen reader announces it, and both
+clauses were false for unrelated reasons. Fixing the first yesterday
+is what made the second visible today.
+
+DEBT-TS-1 did not move, and the grep says so with a date on it.

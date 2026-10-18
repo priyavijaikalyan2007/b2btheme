@@ -320,6 +320,23 @@ In vertical orientation, `"left"` maps to top and `"right"` maps to bottom.
 }
 ```
 
+A label whose text is a **reading that changes** — a zoom percentage, a
+selection count, a save state — can ask to be announced:
+
+```typescript
+{
+    type: "label",
+    id: "zoom",
+    text: "100%",
+    live: "polite"   // or "assertive"
+}
+```
+
+`live` puts `aria-live` and `aria-atomic="true"` on the label wrapper, so
+`setToolState(id, { label })` announces the whole new reading. It is
+**opt-in**, because most labels are static captions and announcing every
+one of them on mount would be noise (DEBT-TB-1).
+
 ### Separator
 
 ```typescript

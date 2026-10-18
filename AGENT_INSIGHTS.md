@@ -2222,3 +2222,74 @@ The highest-yield question is not "which assertion is weakest" but
 **"which suite has never run against the real thing"** — ADR-200 for
 CodeEditor and CodeMirror, ADR-203 for GraphToolbar and Toolbar, the
 same finding twice in two days. Rank by stand-in, not by matcher.
+
+### 6.121 The Instruction Existed and the Census Did Not (2026-10-18)
+
+§6.120 closed with "rank by stand-in, not by matcher" and then left it
+as a sentence. The next morning the question *which suites are those*
+still had no answer short of reading 162 files, This is the same
+failure §6.119 had just named for the shape split. **A measurement that
+steers the next piece of work is an instrument. A sentence describing
+one is not.**
+
+`node scripts/test-assertions.mjs --stand-ins` answers it in a second.
+It lists every test file that writes a global another component in this
+repository owns and does not import that component. Ownership comes
+from `extractGlobals`, which check `[19]` already grades the published
+reference with, so there is no third reader of the `window.x =` forms
+to keep correct. Eleven on the first run. **The regression case is the
+pre-fix GraphToolbar suite**, because an instrument that cannot find
+the defect it was written for is a note with a shebang.
+
+The boundary is ownership, not realism. Bootstrap, `marked` and
+CodeMirror own no source here, so stubbing one never appears and never
+needs defending. A sibling component can be imported, so standing in
+for one is a choice that needs a reason.
+
+**Six of the eleven had one.** Four withhold the factory because the
+claim under test is that the host refuses, and mounting the real one
+removes the condition. Two record `opts["value"]`, which is what
+SpineMap handed the widget, and no real component can report that about
+its own caller. The rule is not "mount everything". It is that a stub
+is a **lie** when the claim is about the dependency and an
+**instrument** when the claim is about the caller.
+
+### 6.122 Three Tests Named After the Defect (2026-10-18)
+
+Converting the five suites worth converting found FALLBACK-14, and
+nothing else could have. Timeline, ActionItems and RelationshipManager
+all answer an absent `window.createInlineToolbar` with a warning and an
+empty header strip, although `showInlineToolbar: true` is a capability
+the caller named. All three had a test for it:
+
+- `showInlineToolbar_True_NoFactory_LogsWarnNoThrow`
+- `ShowInlineToolbar_True_NoFactory_WarnsAndSkips`
+- `opt-in without factory — warns, no throw, no slot`
+
+Every one of them is accurate. Every one had passed on every run since
+ADR-128. And each had written the forbidden behaviour into the contract
+under a name that made the behaviour sound deliberate.
+
+They were also invisible from outside. Each suite installed its own
+factory in `beforeEach`, so the absent branch was reachable only by
+deleting what the suite had just written. That is why the stand-in
+census found them and the shape census could not.
+
+**Principle**: a name taken from what the code was observed to do
+records an *observation*, and a test records a *decision*. When a test
+name reads as a description of the implementation rather than as a
+promise to a caller, read the implementation against the house rules
+before trusting the green.
+
+### 6.123 A Spec Sentence Can Be False Twice (2026-10-18)
+
+Section 8.2 of the GraphToolbar PRD said the zoom label updates and a
+screen reader announces the new value. ADR-203 found the first clause
+false: `setToolState({ label })` never reached a label item. Fixing it
+is what made the second clause visible as the next thing wrong, because
+a text that never changed could not have been announced either way.
+
+**Principle**: a spec paragraph is a conjunction, and verifying it means
+verifying each clause separately. A fix that makes half of a sentence
+true is also the tool that finds the other half. When closing one,
+re-read the sentence rather than the ticket.

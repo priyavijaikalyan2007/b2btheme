@@ -49,16 +49,26 @@ export function installCodeMirrorMock(extra: Record<string, unknown> = {}): void
     {
         public contentDOM = document.createElement("div");
         public state: unknown;
+        private scroller: HTMLElement;
 
         constructor(cfg: { state: unknown; parent: HTMLElement })
         {
             this.state = cfg.state;
-            const scroller = document.createElement("div");
-            scroller.className = "cm-scroller";
-            cfg.parent.appendChild(scroller);
+            this.scroller = document.createElement("div");
+            this.scroller.className = "cm-scroller";
+            cfg.parent.appendChild(this.scroller);
         }
 
         public dispatch(): void { /* this mock records no transactions */ }
+
+        /**
+         * ADDED FOR DEBT-CE-1, AND ITS ABSENCE WAS ITS OWN SMALL
+         * FINDING. A real EditorView has `destroy`, and the component
+         * calls it from `destroyCMView`, which every reconfigure goes
+         * through. Leaving it out meant no mounted test had ever
+         * rebuilt the view or torn one down.
+         */
+        public destroy(): void { this.scroller.remove(); }
 
         public static updateListener = { of: (fn: unknown) => ({ fn }) };
         public static theme = (spec: unknown): unknown => ({ spec });

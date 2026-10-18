@@ -2018,32 +2018,103 @@ reduced version".
   component of this library. Nine blocks became fifteen, and three of
   them fail if the Toolbar fix is reverted.
 
-- [ ] **DEBT-CE-1** **`toggleWordWrap()` presses its button when there
-  is no editor to wrap.**
+- [x] **DEBT-CE-1** **CLOSED 2026-10-18, ADR-204. `toggleWordWrap()`
+  pressed its button when there was no editor to wrap, and the
+  question it raised had a third answer nobody had asked for.**
 
-  Found while giving `toggleWordWrap_DoesNotThrow` an assertion.
-  The method flips `wordWrapEnabled` and calls `updateWrapBtnState()`
-  unconditionally, and reconfigures CodeMirror only `if (this.cmView)`.
-  With CodeMirror absent the button reads `aria-pressed="true"` and
-  nothing wrapped, which is the shape AGENTS.md's fourth row forbids:
-  a capability that is unavailable renders a reduced version instead
-  of refusing. The mount already shows a missing-dependency notice, so
-  the button may be decoration over a refusal rather than a lie about
-  content. **That is the question to answer, and it is a behaviour
-  change rather than a test fix**, so it is recorded instead of taken.
-  The test now pins the half that works.
+  The original entry, kept because it was accurate: the method flipped
+  `wordWrapEnabled` and called `updateWrapBtnState()` unconditionally,
+  and reconfigured CodeMirror only `if (this.cmView)`. With CodeMirror
+  absent the button read `aria-pressed="true"` and nothing wrapped,
+  which is the shape AGENTS.md's fourth row forbids.
 
-- [ ] **DEBT-TB-1** **A Toolbar label item cannot be a live region,
-  and the GraphToolbar PRD says the zoom reading is one.**
+  **The answer is that the button is a lie and not decoration.**
+  `undo`, `redo`, `format` and six more have refused since ADR-200, so
+  a toolbar click on this editor already throws. One more method
+  joining them changes no shape. The refusal goes FIRST, before the
+  flag flips, because a toggle that refuses and still inverts its own
+  state is worse than one that does nothing: the next call then undoes
+  a change the editor never made.
 
-  `specs/graphtoolbar.prd.md` §8.2 shows
+  **`toggleLineNumbers()` had the identical shape and is the quieter
+  half.** It writes no attribute, so a caller received nothing at all,
+  not even a wrong signal. Fixing one and not the other would have
+  left the component answering the same question two ways.
+
+  **AND THE THIRD EDIT IS THE DANGEROUS ONE.** `pushCMLineWrapping`
+  read `if (EV.lineWrapping) { exts.push(...) }`, so a `@codemirror/view`
+  bundle that does not export that one static mounted a perfectly
+  normal editor with the button pressed and the lines unwrapped. Its
+  sibling `pushCMLineNumbers` has required its module since ADR-200.
+  Found by reading the method the toggle calls, which the original
+  entry never did.
+
+  **The mock was missing `destroy`, which was its own small finding.**
+  A real `EditorView` has it, and `destroyCMView` calls it on every
+  reconfigure, so no mounted test had ever rebuilt a view or torn one
+  down. Three mutations caught.
+
+- [x] **DEBT-TB-1** **CLOSED 2026-10-18, ADR-204. A Toolbar label item
+  can now be a live region, by asking.**
+
+  `specs/graphtoolbar.prd.md` §8.2 showed
   `<span class="toolbar-label" aria-live="polite" aria-atomic="true">`
-  and says a screen reader announces each new zoom level.
-  `buildLabelItem` sets no `aria-live`, and `ToolLabelItem` has no
-  field that would ask for one. Now that `setToolState({ label })`
-  actually changes the text, the announcement is the part still
-  missing. Adding `aria-live` to every label item is wider than the
-  spec asks, so this needs an opt-in field rather than a one-line fix.
+  and said a screen reader announces each new zoom level.
+  `buildLabelItem` set no `aria-live`, and `ToolLabelItem` had no field
+  that would ask for one.
+
+  **Both halves of that PRD paragraph were false until today.**
+  ADR-203 made the text change. This makes the announcement happen.
+  A spec sentence can be wrong in two independent ways at once, and
+  fixing the first one is what exposed the second.
+
+  `ToolLabelItem` gains `live?: "polite" | "assertive"`, opt-in because
+  most labels are static captions and announcing all of them on mount
+  would be noise. The attributes go on the WRAPPER, which is the
+  element §8.2 shows them on and the one that survives while the inner
+  text node is replaced. `aria-atomic` is not decoration: the label
+  holds an optional icon beside the text. GraphToolbar's `gt-zoom-label`
+  sets `live: "polite"`. One mutation, two tests red.
+
+- [x] **FALLBACK-14** **CLOSED 2026-10-18, ADR-204. Three components
+  answered a named capability with a warning and an empty header.**
+
+  Timeline, ActionItems and RelationshipManager all carry the ADR-128
+  CategorizedDataInlineToolbar pattern, and all three resolved
+  `window.createInlineToolbar` the same way:
+
+  ```ts
+  if (typeof factory !== "function")
+  {
+      logWarn("showInlineToolbar requested but window.createInlineToolbar is unavailable.");
+      return;
+  }
+  ```
+
+  `showInlineToolbar: true` is a capability the CALLER named, which is
+  the discriminator ADR-200 settled. A page that asked for a toolbar
+  got a header strip with nothing in it, and said so only in a console
+  nobody reads. All three now throw, naming the bundle to load.
+
+  **The `catch` beside it was the same fault, one layer down.** Each
+  wrapped the factory call and answered a throw with
+  `logError(...); this.toolbarHandle = null`, so the original error
+  never reached the caller and the toolbar silently did not exist. All
+  three now rethrow with the original attached as `cause`, which is
+  FALLBACK-1's shape. `cause` is assigned rather than passed, because
+  this build targets ES2020.
+
+  **FOUND BY DEBT-TEST-1c, AND IT COULD NOT HAVE BEEN FOUND ANY OTHER
+  WAY FROM A TEST.** Each suite installed its own factory in
+  `beforeEach`, so the absent branch was reachable only by deleting
+  what the suite had just written, and the three tests that did so
+  were named `WarnsAndSkips`, `LogsWarnNoThrow` and
+  `warns, no throw, no slot`. Each one stated the defect as the
+  contract and passed on every run since ADR-128.
+
+  **No demo breaks.** All four demo pages that pass
+  `showInlineToolbar` already load `inlinetoolbar.js`. Checked before
+  the change, not after.
 
 - [x] **FALLBACK-13** **CLOSED 2026-10-18, ADR-202. MarkdownRenderer
   itself returned a fallback handle, and it is the root the other four
@@ -2131,6 +2202,70 @@ offered as the evidence for it.
     seen from a unit test. The test says so and asserts the half that is
     observable.
 
+- [ ] **DEBT-TEST-1c** **6 suites stand in for a sibling component
+  they could mount, down from 11, and all six that remain are
+  correct.**
+
+  Regenerate with `node scripts/test-assertions.mjs --stand-ins`.
+
+  **WHY THIS IS A SECOND INSTRUMENT AND NOT A ROW IN THE FIRST.**
+  DEBT-TEST-1b asks whether a block's assertions could fail. This asks
+  whether the value they ran against came from the component or from
+  the suite. A block can carry a real assertion on a real value and
+  still prove nothing, because the suite wrote the value. ADR-203
+  found its defect in a file the shape classifier never pointed at,
+  for exactly that reason.
+
+  The census reports a test file that writes a global another
+  component in this repository owns, and does not import that
+  component. Ownership comes from `extractGlobals`, the same reader
+  check `[19]` grades the published reference with, so there is no
+  third copy of the `window.x =` forms to keep correct. A third-party
+  bundle such as Bootstrap or `marked` owns no source here and never
+  appears, which is the boundary: stubbing one is the only way to
+  reach the branch under test.
+
+  **The regression case is the pre-fix GraphToolbar suite.** It wrote
+  both Toolbar globals and imported neither, and the pinning test in
+  `scripts/test-assertions.test.ts` feeds the classifier that exact
+  shape. An instrument that cannot find the defect it was written for
+  is a note.
+
+  | Suite | Stood in for | Outcome |
+  |---|---|---|
+  | `timeline` | `createInlineToolbar` | converted |
+  | `actionitems` | `createInlineToolbar` | converted |
+  | `relationshipmanager` | `createInlineToolbar` | converted |
+  | `docviewer` | `createMarkdownRenderer` | converted, stubs `marked` instead |
+  | `dynamicformswitcher` | `createColorPicker` | converted |
+  | `diagramengine.nofallback` | `createMarkdownRenderer` | correct: the claim IS the absence |
+  | `formdialog.nofallback` | `showConfirmDialog` | correct: the claim IS the absence |
+  | `ribbonbuilder.nofallback` | `createSymbolPicker` | correct: the claim IS the absence |
+  | `spinemap.nofallback` | `createSprintPicker` | correct: the claim IS the absence |
+  | `spinemap.fallback2` | `createTagger` | correct: the stub RECORDS what the host passed |
+  | `spinemap.fallback2` | `createPeriodPicker` | correct: the stub returns a shape the real one cannot |
+
+  **The six that remain are not a backlog.** Four withhold the factory
+  on purpose, because the claim under test is that the host refuses.
+  Two are instruments: they capture `opts["value"]`, which is what
+  SpineMap handed the widget, and a real Tagger could not report that.
+  A stub is the right tool when the claim is about the CALLER.
+
+  **What the five conversions were worth.** Timeline, ActionItems and
+  RelationshipManager each tested their ADR-128 toolbar against a fake
+  that rendered no button. Timeline invoked `item.onClick?.()` on the
+  captured object with NO arguments, and the real toolbar passes two.
+  RelationshipManager asserted an attribute its own fake had set, which
+  proved the fake ran. ActionItems read the argument list rather than
+  the rendered toolbar. All three now click a drawn button, and
+  deleting the click dispatch inside InlineToolbar turns all three red.
+  DocViewer's whole markdown path ran against four lines of its own
+  suite, in the component FALLBACK-13 lived inside. And the
+  DynamicFormSwitcher case asserted that a name scan resolves, against
+  a stub that would have answered to any name it landed on.
+
+  **And the conversions found FALLBACK-14**, below.
+
 - [ ] **DEBT-TEST-1b** **267 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
@@ -2168,6 +2303,12 @@ offered as the evidence for it.
   above it under a name describing a case it never reached. All nine
   are closed, and the real yield came from a file the classifier never
   pointed at. See DEBT-GT-1 below.
+
+  **SO THE QUESTION THIS INSTRUMENT CANNOT ASK IS NOW ASKED BY
+  ANOTHER.** DEBT-TEST-1c censuses the suites that stand in for a
+  sibling component rather than mounting it. The two do not overlap
+  and neither is a superset: this one grades the MATCHER, and that one
+  grades the SUBJECT.
 
   **335 TO 285 IS A CORRECTION, NOT A RELAXATION.** `expect(typeof x)`
   was counted as unable to fail, and it can: `typeof undefined` is
@@ -2550,6 +2691,8 @@ limits the design knowingly accepts, not defects in shipped code.
   - **The duplicate CDN path is already dead to the consumer.** `apps/frontend/index.html` loads `tenantswitcher.css` (195) and `tenantswitcher.js` (794); nothing under `~/Work` fetches the `workspaceswitcher` path any more. Note that the alias path and the alias *functions* are independent: the consumer gets `createWorkspaceSwitcher` out of `tenantswitcher.js`, so dropping the duplicate path does not touch the API.
 
   **And the recipe above is incomplete.** "Delete `copy:compat` from `package.json`" is one of four edits — the theme's own pages still reference the duplicate path: `demo/full-demo.html` (83, 4176), `demo/components/diagramengine.html` (405, 406), and three mapping tables in `scripts/extract-demos.py` (225, 336, 590). Check `[5]` would catch the demos; nothing would catch `extract-demos.py`. Left as a single item rather than split, because retiring the path before the API is churn for no gain.
+
+  **Re-checked 2026-10-18. The condition is still not met and the item does not move.** `apps/shell/shell-tenants.ts` calls `window.createWorkspaceSwitcher` (197, 203), `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363), which are the same six lines the 2026-10-09 check found, and `shared/types/component-library.d.ts` still declares the surface. Recorded so the next reader knows the grep was run rather than skipped. **A condition-gated item needs its condition re-taken, and the answer written down even when it has not changed** — the same reason DEBT-SEC-3 was re-measured.
 
   Closing out this check found collateral from the rename that nothing was looking for: `demo/components/workspaceshell.html` linked to `workspaceswitcher.html`, a page the rename had renamed away. Fixed, and check `[4]` now validates demo-to-demo links, not only the ones the index lists.
 

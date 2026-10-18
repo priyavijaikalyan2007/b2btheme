@@ -304,13 +304,15 @@ describe("editing actions without CodeMirror", () =>
         expect(() => ce.format()).toThrow(/format\(\).*CodeMirror/s);
     });
 
-    test("toggleWordWrap_FlipsThePressedStateOfTheButton", () =>
+    test("toggleWordWrap_WithNoCM_ThrowsAndLeavesTheButtonAlone", () =>
     {
-        // DEBT-TEST-1b. The old block asserted only that the call did
-        // not throw, which is true of a method with an empty body. The
-        // button is the observable half, and it is the half that works
-        // when CodeMirror is absent. DEBT-CE-1 records the other half:
-        // the pressed button claims a wrap that no editor performed.
+        // DEBT-CE-1, closed. This block previously asserted that the
+        // button flipped, which it did, over an editor that had wrapped
+        // nothing. The pressed state WAS the defect.
+        //
+        // The second half is the part worth pinning: a refusal must not
+        // leave the flag inverted, or the next call undoes a change the
+        // editor never made.
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
         const btn = document.querySelector(
@@ -319,12 +321,19 @@ describe("editing actions without CodeMirror", () =>
         if (btn === null) { throw new Error("the word-wrap button did not render"); }
 
         const before = btn.getAttribute("aria-pressed");
-        ce.toggleWordWrap();
-        const after = btn.getAttribute("aria-pressed");
 
-        expect(after).not.toBe(before);
-        ce.toggleWordWrap();
+        expect(() => ce.toggleWordWrap()).toThrow(/toggleWordWrap\(\).*CodeMirror/s);
         expect(btn.getAttribute("aria-pressed")).toBe(before);
+    });
+
+    test("toggleLineNumbers_WithNoCM_Throws", () =>
+    {
+        // The quieter half of DEBT-CE-1. This one wrote no attribute,
+        // so a caller received nothing at all, not even a wrong signal.
+        const ce = new CodeEditor({});
+        ce.show("test-codeeditor");
+
+        expect(() => ce.toggleLineNumbers()).toThrow(/toggleLineNumbers\(\).*CodeMirror/s);
     });
 
     test("getSelection_WithNoCM_Throws", () =>
@@ -408,6 +417,21 @@ describe("accessibility", () =>
  * redo, indentSelection or setDiagnostics, which is the condition
  * under test.
  */
+/**
+ * The mock's EditorView, minus the one static that word wrap needs.
+ *
+ * A subclass keeps every other static and the constructor, so the
+ * editor still mounts. That is the condition under test: everything
+ * looks fine and one export is gone.
+ */
+function stripLineWrapping(EV: unknown): unknown
+{
+    const Base = EV as { new(cfg: unknown): unknown };
+    class NoWrap extends (Base as new (cfg: unknown) => object) { }
+    (NoWrap as unknown as Record<string, unknown>).lineWrapping = undefined;
+    return NoWrap;
+}
+
 describe("CodeEditor — mounted, with a module missing", () =>
 {
     beforeEach(() => { installCodeMirrorMock(); });
@@ -473,6 +497,54 @@ describe("CodeEditor — mounted, with a module missing", () =>
 
         expect(messages).toHaveLength(3);
         for (const m of messages) { expect(m).toMatch(/Load @codemirror\//); }
+    });
+
+    test("toggleWordWrap_Mounted_PressesTheButtonAndRebuildsTheView", () =>
+    {
+        // DEBT-CE-1. The pressed state is only honest here, where an
+        // editor exists to wrap. `reconfigureCMWordWrap` rebuilds the
+        // view, so a NEW EditorView instance is the evidence that the
+        // wrap reached CodeMirror rather than only the button.
+        const ce = mounted();
+        const btn = document.querySelector(
+            "#test-codeeditor [data-action=\"wordwrap\"]");
+
+        if (btn === null) { throw new Error("the word-wrap button did not render"); }
+
+        const firstView = ce.getEditorInstance();
+
+        expect(btn.getAttribute("aria-pressed")).toBe("false");
+
+        ce.toggleWordWrap();
+
+        expect(btn.getAttribute("aria-pressed")).toBe("true");
+        expect(ce.getEditorInstance()).not.toBe(firstView);
+    });
+
+    test("toggleLineNumbers_Mounted_RebuildsTheView", () =>
+    {
+        const ce = mounted();
+        const firstView = ce.getEditorInstance();
+
+        ce.toggleLineNumbers();
+
+        expect(ce.getEditorInstance()).not.toBe(firstView);
+    });
+
+    test("wordWrap_WithNoLineWrappingExport_NamesTheExtension", () =>
+    {
+        // DEBT-CE-1's third edit, and the dangerous one. The guard was
+        // `if (EV.lineWrapping)`, so a view bundle missing that one
+        // export mounted a normal-looking editor with the button
+        // pressed and the lines unwrapped. Nothing said so.
+        installCodeMirrorMock({
+            EditorView: stripLineWrapping(
+                (window as unknown as Record<string, unknown>).EditorView)
+        });
+        const ce = new CodeEditor({ wordWrap: true });
+
+        expect(() => ce.show("test-codeeditor"))
+            .toThrow(/"lineWrapping".*@codemirror\/view/s);
     });
 });
 

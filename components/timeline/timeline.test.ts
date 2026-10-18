@@ -22,6 +22,10 @@ import type
     TimelineGroup,
 } from "./timeline";
 
+// DEBT-TEST-1c. Side-effect import: this is how InlineToolbar reaches a
+// page, and the toolbar block below mounts the real one.
+import "../inlinetoolbar/inlinetoolbar";
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -305,38 +309,29 @@ describe("edge cases", () =>
 
 describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 {
-    type ToolbarItem = { id: string; onClick?: () => void };
-    let lastToolbarItems: ToolbarItem[] = [];
-    let activeCalls: Array<[string, boolean]> = [];
+    /*
+     * DEBT-TEST-1c. THIS BLOCK USED TO BUILD ITS OWN INLINETOOLBAR.
+     * The fake recorded `opts.items` and the click helper invoked
+     * `item.onClick?.()` on the captured object, so no button was ever
+     * rendered and nothing the real component does to a click — the
+     * delegation, the toggle flip, the two arguments it passes — was
+     * under test. The optional call made it worse: an item that lost
+     * its handler would have been silently skipped.
+     *
+     * `../inlinetoolbar/inlinetoolbar` registers the real factory as a
+     * side effect of the import, which is how a CDN consumer gets it.
+     */
 
-    function installToolbarMock(): void
+    function toolbarButton(id: string): HTMLElement
     {
-        lastToolbarItems = [];
-        activeCalls = [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).createInlineToolbar = (opts: { items: ToolbarItem[] }) =>
-        {
-            lastToolbarItems = opts.items;
-            return {
-                setItemActive: (id: string, active: boolean) =>
-                {
-                    activeCalls.push([id, active]);
-                },
-                destroy: () => { /* noop */ },
-            };
-        };
-    }
-
-    function uninstallToolbarMock(): void
-    {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (window as any).createInlineToolbar;
+        const btn = container.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
+        if (btn === null) { throw new Error(`no toolbar button rendered for "${id}"`); }
+        return btn;
     }
 
     function clickToolbarItem(id: string): void
     {
-        const item = lastToolbarItems.find((i) => i.id === id);
-        item?.onClick?.();
+        toolbarButton(id).click();
     }
 
     function makeGroupedOptions(
@@ -353,14 +348,17 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
         return makeOptions({ groups, items, showGroupLabels: true });
     }
 
-    afterEach(() =>
+    test("theRealFactoryIsRegistered_SoTheseTestsMountIt", () =>
     {
-        uninstallToolbarMock();
+        // The guard ADR-200 asks for. Every case below would pass by
+        // taking the no-factory branch if the import stopped
+        // registering, and the header assertions would read as a
+        // deliberate opt-out rather than a missing component.
+        expect(typeof window.createInlineToolbar).toBe("function");
     });
 
     test("showInlineToolbar_DefaultFalse_NoHeaderInDOM", () =>
     {
-        installToolbarMock();
         const tl = createTimeline(makeOptions());
         const header = container.querySelector(".timeline-toolbar-header");
         expect(header).toBeNull();
@@ -369,32 +367,52 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("showInlineToolbar_True_WithFactory_HeaderPresent", () =>
     {
-        installToolbarMock();
         const tl = createTimeline(makeOptions({ showInlineToolbar: true }));
         const header = container.querySelector(".timeline-toolbar-header");
         expect(header).not.toBeNull();
         tl.destroy();
     });
 
-    test("showInlineToolbar_True_NoFactory_LogsWarnNoThrow", () =>
+    test("showInlineToolbar_True_NoFactory_Refuses", () =>
     {
-        uninstallToolbarMock();
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-        let tl: ReturnType<typeof createTimeline> | null = null;
-        expect(() =>
+        // FALLBACK-14. The old name said LogsWarnNoThrow, which is an
+        // accurate description of the behaviour and of the fault.
+        const real = window.createInlineToolbar;
+        delete (window as unknown as Record<string, unknown>).createInlineToolbar;
+
+        try
         {
-            tl = createTimeline(makeOptions({ showInlineToolbar: true }));
-        }).not.toThrow();
-        const header = container.querySelector(".timeline-toolbar-header");
-        expect(header).toBeNull();
-        expect(warnSpy).toHaveBeenCalled();
-        warnSpy.mockRestore();
-        tl?.destroy();
+            expect(() => createTimeline(makeOptions({ showInlineToolbar: true })))
+                .toThrow(/createInlineToolbar is not loaded/);
+        }
+        finally
+        {
+            window.createInlineToolbar = real;
+        }
+    });
+
+
+    test("showInlineToolbar_FactoryThrows_PropagatesWithItsCause", () =>
+    {
+        // FALLBACK-14. The old `catch` logged the error and set the
+        // handle to null, so the original fault never reached the
+        // caller and the toolbar silently did not exist.
+        const real = window.createInlineToolbar;
+        const boom = new Error("toolbar blew up during construction");
+        (window as unknown as Record<string, unknown>).createInlineToolbar =
+            () => { throw boom; };
+        let caught: Error | null = null;
+
+        try { createTimeline(makeOptions({ showInlineToolbar: true })); }
+        catch (e) { caught = e as Error; }
+        finally { window.createInlineToolbar = real; }
+
+        expect(caught).not.toBeNull();
+        expect((caught as Error & { cause?: unknown }).cause).toBe(boom);
     });
 
     test("setSortMode_Asc_SortsGroupsByLabelAscending", () =>
     {
-        installToolbarMock();
         const tl = createTimeline(
             makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
         );
@@ -408,7 +426,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("setSortMode_Desc_SortsGroupsByLabelDescending", () =>
     {
-        installToolbarMock();
         const tl = createTimeline(
             makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
         );
@@ -422,7 +439,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("setSortMode_Null_RestoresOriginalOrder", () =>
     {
-        installToolbarMock();
         const tl = createTimeline(
             makeGroupedOptions(["Charlie", "Alpha", "Bravo"])
         );
@@ -437,7 +453,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("setSortMode_FiresOnSortModeChange", () =>
     {
-        installToolbarMock();
         const onSortModeChange = vi.fn();
         const tl = createTimeline(makeOptions({
             showInlineToolbar: true,
@@ -450,7 +465,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("setSortMode_Idempotent_NoCallbackWhenUnchanged", () =>
     {
-        installToolbarMock();
         const onSortModeChange = vi.fn();
         const tl = createTimeline(makeOptions({
             showInlineToolbar: true,
@@ -464,7 +478,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("expandAll_FiresOnCollapseStateChangeAllExpanded", () =>
     {
-        installToolbarMock();
         const onCollapseStateChange = vi.fn();
         const groups: TimelineGroup[] = [
             { id: "g1", label: "G1", collapsed: true },
@@ -482,7 +495,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("collapseAll_FiresOnCollapseStateChangeAllCollapsed", () =>
     {
-        installToolbarMock();
         const onCollapseStateChange = vi.fn();
         const groups: TimelineGroup[] = [
             { id: "g1", label: "G1" },
@@ -500,7 +512,6 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
 
     test("toolbarSortAscClick_TogglesAscThenNull", () =>
     {
-        installToolbarMock();
         const onSortModeChange = vi.fn();
         const tl = createTimeline(makeOptions({
             showInlineToolbar: true,

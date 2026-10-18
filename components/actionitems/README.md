@@ -185,7 +185,7 @@ Compact mode reduces padding and hides comment slots and tag displays for use in
 
 When `showInlineToolbar: true` is passed, ActionItems mounts an `InlineToolbar` (size `sm`) in its panel header with **two** icon-only actions: expand-all-sections and collapse-all-sections. Sort is **deliberately excluded** from this toolbar — ActionItems already ships a multi-mode sort dropdown (priority, due date, assignee, created, modified, etc.) and adding a duplicate alpha-sort affordance to the toolbar would split the surface. Instead, the alpha sort lives in the dropdown as two new `SortOption` values: `"alpha-asc"` and `"alpha-desc"`.
 
-The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the option is a silent no-op (a warning is logged). See [ADR-128](../../agentknowledge/decisions.yaml).
+The toolbar is **off by default**. `expandAll` / `collapseAll` emit `onCollapseStateChange` so the host can persist or react to collapse state. If the InlineToolbar bundle is not loaded the constructor **throws** and names the bundle to load (FALLBACK-14). See [ADR-128](../../agentknowledge/decisions.yaml).
 
 ## Integration Notes
 

@@ -458,22 +458,39 @@ export class CodeEditor
         this.cmFormat();
     }
 
+    /**
+     * DEBT-CE-1. This used to flip the flag, skip the reconfigure when
+     * there was no view, and press the button anyway. The reader saw
+     * `aria-pressed="true"` over an editor that had wrapped nothing.
+     *
+     * The refusal comes FIRST, so a refused call leaves the flag alone.
+     * A toggle that refuses and still inverts its own state is worse
+     * than one that does nothing, because the next call then undoes a
+     * change the editor never made.
+     */
     public toggleWordWrap(): void
     {
         if (this.guardDestroyed("toggleWordWrap")) { return; }
+
+        this.requireView("toggleWordWrap()");
         this.wordWrapEnabled = !this.wordWrapEnabled;
-
-        if (this.cmView) { this.reconfigureCMWordWrap(); }
-
+        this.reconfigureCMWordWrap();
         this.updateWrapBtnState();
     }
 
+    /**
+     * DEBT-CE-1. The same shape as `toggleWordWrap`, and the quieter
+     * half of it: this one writes no attribute, so a caller got no
+     * signal at all. Fixing one and not the other would leave the
+     * component answering the same question two ways.
+     */
     public toggleLineNumbers(): void
     {
         if (this.guardDestroyed("toggleLineNumbers")) { return; }
-        this.lineNumbersEnabled = !this.lineNumbersEnabled;
 
-        if (this.cmView) { this.reconfigureCMLineNumbers(); }
+        this.requireView("toggleLineNumbers()");
+        this.lineNumbersEnabled = !this.lineNumbersEnabled;
+        this.reconfigureCMLineNumbers();
     }
 
     public getEditorInstance(): unknown { return this.cmView; }
@@ -871,13 +888,28 @@ export class CodeEditor
         exts.push((requireCMGlobal("lineNumbers", "options.lineNumbers") as () => unknown)());
     }
 
+    /**
+     * DEBT-CE-1, found while fixing the toggle above. Reached only when
+     * word wrap is ON, which `options.wordWrap` or `toggleWordWrap()`
+     * asked for. The guard was `if (EV.lineWrapping)`, so a view bundle
+     * that does not export it mounted a perfectly normal editor with
+     * the button pressed and the lines unwrapped. Its sibling
+     * `pushCMLineNumbers` has required its module since ADR-200.
+     */
     private pushCMLineWrapping(exts: unknown[]): void
     {
-        if (hasCMGlobal("EditorView"))
+        const EV = requireCMGlobal("EditorView", "word wrap") as Record<string, unknown>;
+
+        if (!EV.lineWrapping)
         {
-            const EV = getCMGlobal("EditorView") as Record<string, unknown>;
-            if (EV.lineWrapping) { exts.push(EV.lineWrapping); }
+            throw new Error(
+                `${LOG_PREFIX} word wrap needs the "lineWrapping" extension from `
+                + "EditorView, and the @codemirror/view bundle on this page does "
+                + "not export it. Load a complete @codemirror/view, or create the "
+                + "editor with wordWrap false.");
         }
+
+        exts.push(EV.lineWrapping);
     }
 
     private pushCMReadOnly(exts: unknown[]): void

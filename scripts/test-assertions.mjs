@@ -74,7 +74,13 @@
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
+
+// The globals a component publishes are already extracted, by the function
+// check [19] grades the published reference with. A third reader of the same
+// `window.x =` forms would be a third thing to keep correct (DEBT-DOC-1).
+const { extractGlobals } = createRequire(import.meta.url)("./generate-docs.js");
 
 /** Matchers that pass for any value that is not null or undefined. */
 const MATCHERS = [
@@ -391,6 +397,79 @@ export function shapesOf(rows)
     return tally;
 }
 
+/**
+ * Every sibling component a test suite stands in for rather than mounts.
+ *
+ * WHY THIS IS A SEPARATE QUESTION FROM THE CENSUS ABOVE. A block can
+ * carry a real assertion on a real value and still prove nothing,
+ * because the thing it asserted against was written by the suite. The
+ * GraphToolbar suite asserted on the items it handed its own fake
+ * Toolbar, and the Toolbar defect those items were meant to exercise
+ * had been live for the life of the component. ADR-203 states the
+ * rule: a suite that has never mounted its real dependency has never
+ * been tested.
+ *
+ * WHAT COUNTS. A test file writes a global that another component in
+ * this repository owns, and does not import that component. Ownership
+ * comes from `extractGlobals`, so the reader here is the same one the
+ * published reference uses. The import check is textual on the sibling
+ * path, because a side-effect import is how a component registers.
+ *
+ * WHAT IS DELIBERATELY NOT FLAGGED. A stub for a THIRD-PARTY bundle,
+ * such as Bootstrap or `marked`, owns no source in this repository and
+ * never appears. A suite that already imports the owner is a positive
+ * control: it writes the global to make the factory throw, or to count
+ * calls, with the real component present underneath.
+ *
+ * WHAT THIS DOES NOT DECIDE. Several rows are correct as they stand,
+ * because the claim under test is that the host refuses when the
+ * factory is absent or throws. The instrument enumerates, and the
+ * triage lives in DEBT-TEST-1c beside the list.
+ */
+export function standInsOf(testFiles = null, sourceFiles = null)
+{
+    const dirOf = (file) => file.split("/").slice(-2, -1)[0];
+
+    const sources = sourceFiles ?? execFileSync("git", ["ls-files", "components/*/*.ts"], { encoding: "utf8" })
+        .split("\n").filter(Boolean)
+        .filter((f) => !f.endsWith(".test.ts") && !f.endsWith(".d.ts") && !f.includes(".mock."));
+
+    const owner = new Map();
+
+    for (const file of sources)
+    {
+        for (const name of extractGlobals(readFileSync(file, "utf8")))
+        {
+            // The parent directory names the component. Taken from the END
+            // of the path rather than a fixed index, so the function works
+            // on a fixture tree as well as on `components/`.
+            if (!owner.has(name)) { owner.set(name, dirOf(file)); }
+        }
+    }
+
+    const tests = testFiles ?? execFileSync("git", ["ls-files", "components/*/*.test.ts"], { encoding: "utf8" })
+        .split("\n").filter(Boolean);
+    const rows = [];
+
+    for (const file of tests)
+    {
+        const src = readFileSync(file, "utf8");
+        const dir = dirOf(file);
+
+        for (const name of extractGlobals(src))
+        {
+            const owns = owner.get(name);
+
+            // A component writing its OWN global is registering it, not
+            // standing in for anything.
+            if (!owns || owns === dir) { continue; }
+
+            rows.push({ file, global: name, owner: owns, imported: src.includes(`../${owns}/${owns}`) });
+        }
+    }
+    return rows;
+}
+
 function main()
 {
     const rows = census();
@@ -408,6 +487,17 @@ function main()
         for (const [k, v] of Object.entries(shapes))
         {
             console.log(`    ${String(v).padStart(4)}  ${k}`);
+        }
+    }
+
+    if (process.argv.includes("--stand-ins"))
+    {
+        const standIns = standInsOf().filter((r) => !r.imported);
+
+        console.log(`  ${standIns.length} sibling global(s) stood in for by a suite that does not import the owner`);
+        for (const r of standIns)
+        {
+            console.log(`    ${r.file} :: ${r.global}  (owner: ${r.owner})`);
         }
     }
 
