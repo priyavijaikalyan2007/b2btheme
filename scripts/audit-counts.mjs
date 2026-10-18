@@ -446,12 +446,16 @@ const BASELINES = {
     // for any value that is not null. Recounted against the current
     // parser on 2026-10-18, after the subject/matcher split:
     //
-    //   204  a bare `.not.toThrow()`
+    //   198  a bare `.not.toThrow()`
     //    47  `.toBeDefined()`
     //    38  `.toBeTruthy()`
     //    26  `.toBeDefined()` with `expect(typeof x)`
     //    22  `expect(typeof x)`
     //     4  other mixes
+    //
+    // 341 -> 335 on 2026-10-18. Six of CodeEditor's eight
+    // `_DoesNotThrow` cases were asserting that a public method does
+    // nothing when CodeMirror is absent, which ADR-200 made a refusal.
     //
     // `.not.toThrow()` asserts the absence of a crash and nothing
     // about behaviour, and it is the literal negation of the rule
@@ -459,7 +463,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 341,
+    testsThatCannotFail: 335,
 };
 
 /*

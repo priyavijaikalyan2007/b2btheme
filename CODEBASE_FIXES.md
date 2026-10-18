@@ -1842,6 +1842,107 @@ about containers. This is the other row.
   aliases on the way, which brought `GaugeShape` and `ChartPanelKind`
   into reach.
 
+## MEDIUM — Capabilities That Go Missing Quietly (CodeEditor closed 2026-10-18)
+
+AGENTS.md's table again, the fourth row: "A capability is unavailable
+-> `throw`, or refuse the one feature loudly", against "render a
+reduced version".
+
+- [x] **FALLBACK-11** **CLOSED 2026-10-18, ADR-200. CodeEditor had
+  fourteen places where an absent CodeMirror module produced silence,
+  and nine public methods that returned normally having done nothing.**
+
+  The shape was `if (hasCMGlobal("undo")) { ... }` with no `else`,
+  reached from `public undo()`. Thirteen such guards plus one
+  unguarded `EV.updateListener.of(...)` that died with "Cannot read
+  properties of undefined".
+
+  **THE DISCRIMINATOR IS WHETHER THE CALLER NAMED THE THING.**
+  `undo()` is a request. `bracketMatching` is not: the component
+  composes it in when the page published it, and nine of those
+  `tryPush` addons are deliberately left alone. `options.lineNumbers`
+  and `options.onSave` ARE named, so an absent `lineNumbers` or
+  `keymap` now refuses.
+
+  | Refuses now | Was |
+  |---|---|
+  | `undo()` `redo()` `format()` | silent no-op, twice over |
+  | `setDiagnostics()` `clearDiagnostics()` | discarded the list |
+  | `focus()` `blur()` `replaceSelection()` | silent no-op |
+  | `getSelection()` | returned `""`, a fabricated read |
+  | `options.lineNumbers` | no gutter, no word |
+  | `options.onSave` via `keymap` | no bindings at all |
+  | `onChange` / `onFocus` / `onBlur` via `updateListener` | opaque TypeError |
+
+  **`setDiagnostics` was the worst of them.** It called
+  `applyCMDiagnostics`, which returned quietly when `@codemirror/lint`
+  was absent, and then announced `"3 diagnostics"` to the live region
+  anyway. **A screen reader was told about three diagnostics that had
+  just been discarded.** Same class as the Toolbar tooltip reading
+  "undefined" aloud under FALLBACK-9, and the ORDER matters more here
+  than the throw does.
+
+  Each message names the missing global **and the npm module that
+  publishes it**, because CodeMirror 6 arrives as fifteen separate ESM
+  specifiers and "undo is unavailable" is not actionable. `readOnly`
+  still returns quietly: the caller configured that, and refusing it
+  would be refusing their own setting.
+
+  **NOTHING IN THE SUITE HAD EVER MOUNTED THIS COMPONENT WITH
+  CODEMIRROR PRESENT.** All 33 tests ran against an editor that failed
+  to detect it and is showing a missing-dependency notice, which is
+  exactly why `_DoesNotThrow` was the natural assertion to reach for
+  eight times. The module-absent half — the dangerous half, where the
+  editor looks perfect and the keystroke does nothing — was
+  unreachable from the suite.
+
+  A minimal mock now mounts it, and `theMockActuallyMounts` guards
+  against the trap the LaTeX editor's MathLive mock fell into, which
+  was mocking a global no code path consults. **The mock found the
+  fourteenth site on its first run.**
+
+- [x] **FALLBACK-12** **CLOSED 2026-10-18, ADR-200. DocViewer rendered
+  raw markdown as plain text when MarkdownRenderer was absent, and its
+  README named the wrong library entirely.**
+
+  `renderContent` warned to the console and then set
+  `article.textContent = md` with `white-space: pre-wrap`. A reader saw
+  `## Heading` and `**bold**` as literal characters and had no way to
+  tell the renderer had failed rather than that the documentation was
+  badly written. **Fourth component found substituting for an absent
+  MarkdownRenderer**, after the three FALLBACK-9 recorded.
+
+  **The README documented a dependency the component does not have.**
+  It told consumers to load Vditor, with two tags and a hash, called
+  the output "Vditor-rendered content" in its Overview, and listed
+  "**Vditor ≥3.11.2** — CDN; falls back to plain text" under
+  Dependencies. **There is not one reference to Vditor in
+  `docviewer.ts`.** The real dependency, `window.createMarkdownRenderer`,
+  was named nowhere. Corrected in all three places, with `marked` and
+  `markdownrenderer.js` in the Usage block.
+
+- [ ] **DEBT-GATE-2** **Structure check `[16]` cannot see an inverted
+  absence guard.** It walks the AST for a readable stand-in inside the
+  THEN branch of an `if (!x)`, so it catches
+  `if (!view) { return ""; }` and misses
+
+  ```ts
+  if (this.cmView) { return this.getCMSelection(); }
+  return "";
+  ```
+
+  which is the same defect written the other way round, and is the
+  form CodeEditor's `getSelection` used. Found while closing
+  FALLBACK-11 and fixed there by hand, not by the gate.
+
+  **Not widened yet, and deliberately.** A first measurement finds
+  **235** bare `return ""` / `[]` / `0` / `null` statements across
+  component sources, and most will be legitimate — an empty collection
+  or a correct not-found sentinel. Widening the predicate without
+  separating those first would produce a ceiling with arguable members,
+  which is the failure ADR-196 D2 was written to avoid. The work is to
+  classify the 235, not to flip a flag.
+
 ## MEDIUM — Tests That Cannot Fail (21 closed, 341 held, measured 2026-10-17)
 
 A test that cannot fail is worse than no test. No test is an absence

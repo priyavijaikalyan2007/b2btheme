@@ -257,25 +257,39 @@ describe("readOnly", () =>
 
 describe("editing actions without CodeMirror", () =>
 {
-    test("undo_DoesNotThrow", () =>
+    /*
+     * ADR-200. These seven asserted that a public method does nothing
+     * when CodeMirror is absent, and every one of them passed, because
+     * doing nothing is exactly what the component did. AGENTS.md puts
+     * this case in its table: a capability that is unavailable throws
+     * or refuses the one feature loudly, and does not render a reduced
+     * version.
+     *
+     * NOTE WHAT IS NOT MOCKED IN THIS FILE: CodeMirror. Every test here
+     * runs against an editor that failed to mount and is displaying a
+     * missing-dependency notice, which is why these were the natural
+     * assertions to reach for.
+     */
+
+    test("undo_WithNoCM_Throws", () =>
     {
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.undo()).not.toThrow();
+        expect(() => ce.undo()).toThrow(/undo\(\).*CodeMirror/s);
     });
 
-    test("redo_DoesNotThrow", () =>
+    test("redo_WithNoCM_Throws", () =>
     {
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.redo()).not.toThrow();
+        expect(() => ce.redo()).toThrow(/redo\(\).*CodeMirror/s);
     });
 
-    test("format_DoesNotThrow", () =>
+    test("format_WithNoCM_Throws", () =>
     {
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.format()).not.toThrow();
+        expect(() => ce.format()).toThrow(/format\(\).*CodeMirror/s);
     });
 
     test("toggleWordWrap_DoesNotThrow", () =>
@@ -285,18 +299,21 @@ describe("editing actions without CodeMirror", () =>
         expect(() => ce.toggleWordWrap()).not.toThrow();
     });
 
-    test("getSelection_WithNoCM_ReturnsEmpty", () =>
+    test("getSelection_WithNoCM_Throws", () =>
     {
+        // ADR-157, a fabricated read. "" is the same answer a working
+        // editor gives for an empty selection, so the caller could not
+        // tell the difference between no selection and no editor.
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(ce.getSelection()).toBe("");
+        expect(() => ce.getSelection()).toThrow(/getSelection\(\)/);
     });
 
-    test("focus_WithNoCM_DoesNotThrow", () =>
+    test("focus_WithNoCM_Throws", () =>
     {
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.focus()).not.toThrow();
+        expect(() => ce.focus()).toThrow(/focus\(\)/);
     });
 });
 
@@ -344,6 +361,124 @@ describe("accessibility", () =>
 });
 
 // ============================================================================
+// MOUNTED WITH CODEMIRROR — THE MODULE-ABSENT REFUSALS
+// ============================================================================
+
+/**
+ * ADR-200. NOTHING IN THIS FILE HAD EVER MOUNTED CODEEDITOR WITH
+ * CODEMIRROR PRESENT. Every other test runs against an editor that
+ * failed to detect it and is displaying a missing-dependency notice,
+ * so the refusals below — the ones for a module that is absent while
+ * the editor itself looks fine — were unreachable from the suite.
+ *
+ * That is the dangerous half. An editor with no `undo` export renders
+ * perfectly, takes the keystroke, and does nothing.
+ *
+ * The mock is the smallest thing that mounts: EditorState.create,
+ * an EditorView constructor, and the two view modules the extension
+ * builder asks for by name. It deliberately does NOT publish undo,
+ * redo, indentSelection or setDiagnostics, which is the condition
+ * under test.
+ */
+describe("CodeEditor — mounted, with a module missing", () =>
+{
+    const CM_NAMES = ["EditorView", "EditorState", "keymap", "lineNumbers"] as const;
+
+    beforeEach(() =>
+    {
+        const w = window as unknown as Record<string, unknown>;
+
+        w.EditorState = { create: (cfg: unknown) => ({ doc: cfg, cfg }) };
+        w.EditorView = class
+        {
+            public contentDOM = document.createElement("div");
+            public state: unknown;
+            constructor(cfg: { state: unknown; parent: HTMLElement })
+            {
+                this.state = cfg.state;
+                const scroller = document.createElement("div");
+                scroller.className = "cm-scroller";
+                cfg.parent.appendChild(scroller);
+            }
+            public dispatch(): void { /* no transactions in this mock */ }
+            public static updateListener = { of: (fn: unknown) => ({ fn }) };
+            public static theme = (spec: unknown): unknown => ({ spec });
+            public static lineWrapping = { ext: "lineWrapping" };
+        };
+        w.keymap = { of: (maps: unknown[]) => ({ keymap: maps }) };
+        w.lineNumbers = (): unknown => ({ ext: "lineNumbers" });
+    });
+
+    afterEach(() =>
+    {
+        const w = window as unknown as Record<string, unknown>;
+        for (const n of CM_NAMES) { delete w[n]; }
+    });
+
+    function mounted(): CodeEditor
+    {
+        const ce = new CodeEditor({});
+        ce.show("test-codeeditor");
+        return ce;
+    }
+
+    test("theMockActuallyMounts", () =>
+    {
+        // Without this the four cases below would pass by refusing for
+        // the WRONG reason, which is the trap the latexeditor MathLive
+        // mock fell into: it mocked a global no code path consulted.
+        const ce = mounted();
+
+        expect(ce.getEditorInstance()).not.toBeNull();
+        expect(container.querySelector(".cm-scroller")).not.toBeNull();
+    });
+
+    test("undo_WithNoCommandsModule_NamesTheModule", () =>
+    {
+        const ce = mounted();
+
+        expect(() => ce.undo()).toThrow(/"undo".*@codemirror\/commands/s);
+    });
+
+    test("redo_WithNoCommandsModule_NamesTheModule", () =>
+    {
+        const ce = mounted();
+
+        expect(() => ce.redo()).toThrow(/"redo".*@codemirror\/commands/s);
+    });
+
+    test("format_WithNoCommandsModule_NamesTheModule", () =>
+    {
+        const ce = mounted();
+
+        expect(() => ce.format()).toThrow(/"indentSelection".*@codemirror\/commands/s);
+    });
+
+    test("setDiagnostics_WithNoLintModule_NamesTheModule", () =>
+    {
+        const ce = mounted();
+
+        expect(() => ce.setDiagnostics([{ line: 1, message: "x", severity: "error" }]))
+            .toThrow(/"setDiagnostics".*@codemirror\/lint/s);
+    });
+
+    test("everyRefusalSaysWhatToLoad", () =>
+    {
+        // FALLBACK-9's wording: name the fault, then the remedy.
+        const ce = mounted();
+        const messages: string[] = [];
+
+        for (const act of [() => ce.undo(), () => ce.redo(), () => ce.format()])
+        {
+            try { act(); } catch (e) { messages.push(String(e)); }
+        }
+
+        expect(messages).toHaveLength(3);
+        for (const m of messages) { expect(m).toMatch(/Load @codemirror\//); }
+    });
+});
+
+// ============================================================================
 // EDGE CASES
 // ============================================================================
 
@@ -358,23 +493,32 @@ describe("edge cases", () =>
         expect(() => ce.show("nonexistent-id")).toThrow(/was not found/);
     });
 
-    test("diagnostics_WithNoCM_DoesNotThrow", () =>
+    test("diagnostics_WithNoCM_Throws_AndAnnouncesNothing", () =>
     {
+        // The worst of the seven. setDiagnostics discarded the list
+        // when the lint module was absent, and then announced
+        // "1 diagnostics" to the live region anyway. A screen reader
+        // was told about diagnostics that had just been dropped.
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
+
         expect(() =>
         {
             ce.setDiagnostics([
                 { line: 1, message: "Error", severity: "error" },
             ]);
-        }).not.toThrow();
+        }).toThrow(/setDiagnostics\(\)/);
+
+        const live = document.getElementById("test-codeeditor")
+            ?.querySelector("[aria-live]");
+        expect(live?.textContent ?? "").not.toContain("diagnostic");
     });
 
-    test("clearDiagnostics_DoesNotThrow", () =>
+    test("clearDiagnostics_WithNoCM_Throws", () =>
     {
         const ce = new CodeEditor({});
         ce.show("test-codeeditor");
-        expect(() => ce.clearDiagnostics()).not.toThrow();
+        expect(() => ce.clearDiagnostics()).toThrow(/setDiagnostics\(\)/);
     });
 
     test("cssClass_AddedToRoot", () =>

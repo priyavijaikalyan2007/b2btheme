@@ -1497,3 +1497,27 @@
   related:
   - AVerifierMustReadWhatTheConsumerCopies
   - VendoredButUndocumented
+
+- name: DidTheCallerNameIt
+  definition: "ADR-200. The test that separates a fallback from a legitimate composition. CodeEditor had thirteen `if (hasCMGlobal(name))` guards with no else, and they are not all the same defect. `undo()` is a public method the caller invoked, so an absent `@codemirror/commands` must refuse. `bracketMatching` is an optional addon the caller never mentioned, so composing it in when the page published it and leaving it out otherwise is correct. The line runs through options too: `options.lineNumbers` and `options.onSave` are named requests, so an absent `lineNumbers` or `keymap` refuses. Apply the question at every layer and the guards sort themselves: everything named refuses, everything unnamed composes. Without it you either guard nine harmless addons or leave nine public methods silent."
+  anchor_file: components/codeeditor/codeeditor.ts
+  related:
+  - NoFallbackCode
+  - AbsentFeatureNamedAsAbsentLibrary
+  - SweepCoverageIsItsPatterns
+
+- name: TheSuiteNeverRanTheHappyPath
+  definition: "ADR-200. Every one of CodeEditor's 33 tests ran against an editor that had failed to detect CodeMirror and was displaying a missing-dependency notice, because the test file never mocked it. That is why `_DoesNotThrow` was the natural assertion eight times: doing nothing was all the component could do under test. It also means the dangerous half was unreachable — a mounted editor whose `undo` module is absent looks perfect, takes the keystroke and does nothing, and no test could reach that state. When a component's tests all exercise its degraded path, the degraded path becomes its specification. Check what the fixtures actually construct before trusting a green suite about a dependency, and when you add the mock, assert that it mounts: `theMockActuallyMounts` exists because the LaTeX editor's MathLive mock mocked a global no code path consulted."
+  anchor_file: components/codeeditor/codeeditor.test.ts
+  related:
+  - ATestThatCannotFail
+  - TestNamesThatClaimAMechanism
+  - AbsentFeatureNamedAsAbsentLibrary
+
+- name: TheWrongDependencyDocumented
+  definition: "ADR-200. DocViewer's README told consumers to load Vditor in two tags, called the rendered output \"Vditor-rendered content\" in its Overview, and listed \"Vditor >=3.11.2 — CDN; falls back to plain text\" under Dependencies. There is not one reference to Vditor in docviewer.ts. The real dependency, window.createMarkdownRenderer, appeared nowhere. A consumer following that README loaded a library the component ignores and omitted the one it needs, and before the fix got raw markdown as plain text with a console warning. The compounding risk is that fixing the code makes the documentation worse: turning the silent substitution into a throw strands anyone who followed the README. Check what a component actually imports or probes before trusting its dependency list, and fix both in the same change."
+  anchor_file: components/docviewer/README.md
+  related:
+  - DidTheCallerNameIt
+  - ReadingDocumentationIsAlsoParsing
+  - AVersionNumberWrittenFromMemory

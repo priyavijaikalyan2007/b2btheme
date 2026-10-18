@@ -648,17 +648,24 @@ class DocViewer
         const article = createElement("article", "docviewer-article");
         const renderer = getMdRenderer();
 
-        if (renderer)
+        // ADR-200. This used to warn and then set `article.textContent
+        // = md` with pre-wrap, so a reader saw "## Heading" and
+        // "**bold**" as literal characters and had no way to tell the
+        // renderer had failed. The page looked like badly written
+        // documentation rather than like a broken dependency. Fourth
+        // component found substituting for an absent MarkdownRenderer,
+        // after the three FALLBACK-9 recorded.
+        if (!renderer)
         {
-            renderer.render(md, article);
-            logDebug("Rendered markdown");
+            throw new Error(
+                `${LOG_PREFIX} MarkdownRenderer is required and window.`
+                + "createMarkdownRenderer was not found. Load "
+                + "components/markdownrenderer/markdownrenderer.js before "
+                + "creating the viewer.");
         }
-        else
-        {
-            logWarn("MarkdownRenderer not available; plain text");
-            article.textContent = md;
-            article.style.whiteSpace = "pre-wrap";
-        }
+
+        renderer.render(md, article);
+        logDebug("Rendered markdown");
 
         this.contentEl.appendChild(article);
         this.contentEl.appendChild(this.buildPrevNextNav());

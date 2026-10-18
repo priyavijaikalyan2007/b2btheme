@@ -8472,3 +8472,78 @@
     The lesson generalises past SRI: a verifier that reads the same
     source the artifact was generated from confirms the generator, not
     the documentation. The thing a consumer copies is the tag.
+
+- id: ADR-200
+  title: A capability the caller named refuses when it is absent, and one it did not is composed from what is there
+  date: 2026-10-18
+  status: accepted
+  context: |
+    CodeEditor had thirteen `hasCMGlobal(name)` guards with no else
+    and one unguarded member access, reached from nine public methods.
+    `undo()` returned normally having done nothing. DocViewer rendered
+    raw markdown as plain text when MarkdownRenderer was absent.
+
+    Both are AGENTS.md's fourth row: a capability that is unavailable
+    throws or refuses the one feature loudly, and does not render a
+    reduced version. The earlier fallback sweeps missed them because
+    FALLBACK-1 to 9 keyed on `catch`, `fallback()` and `??`, and this
+    shape is `if (present) { do it }`.
+  decision: |
+    D1. THE DISCRIMINATOR IS WHETHER THE CALLER NAMED THE THING.
+        `undo()` is a request and `bracketMatching` is not. Nine
+        `tryPush` addons are deliberately left composing from what the
+        page published. `options.lineNumbers` and `options.onSave` are
+        named, so an absent `lineNumbers` or `keymap` refuses.
+
+    D2. THE MESSAGE NAMES THE NPM MODULE, not just the global.
+        CodeMirror 6 arrives as fifteen separate ESM specifiers, so
+        "undo is unavailable" tells a reader nothing they did not just
+        observe. "@codemirror/commands was not loaded" is actionable.
+
+    D3. TWO SILENT EXITS, TWO MESSAGES. An unmounted view already
+        refused visibly through showMissingDependencyError, so that
+        refusal points at the notice in the container. A mounted view
+        with a module missing is the dangerous one, because the editor
+        looks right, and that refusal names the module.
+
+    D4. readOnly STILL RETURNS QUIETLY. The caller configured it, and
+        refusing it would be refusing their own setting.
+
+    D5. THE ANNOUNCE ORDER MATTERS MORE THAN THE THROW.
+        setDiagnostics discarded the list and then announced
+        "3 diagnostics" to the live region. A screen reader was told
+        about diagnostics that had just been dropped, which is the
+        Toolbar tooltip defect of FALLBACK-9 in a different component.
+
+    D6. DOCVIEWER THROWS RATHER THAN SHOWING RAW MARKDOWN. Plain text
+        with pre-wrap is indistinguishable from badly written
+        documentation, so the reader cannot tell a dependency failed.
+  consequences: |
+    Fourteen sites in CodeEditor and one in DocViewer. testsThatCannotFail
+    341 -> 335. Three mutations caught.
+
+    NOTHING IN THE SUITE HAD EVER MOUNTED CODEEDITOR WITH CODEMIRROR
+    PRESENT. All 33 tests ran against an editor displaying a
+    missing-dependency notice, which is why `_DoesNotThrow` was the
+    natural assertion eight times, and why the module-absent half was
+    unreachable. A minimal mock now mounts it, guarded by
+    `theMockActuallyMounts` so it cannot become the LaTeX editor's
+    MathLive mock, which mocked a global no code path consulted. THE
+    MOCK FOUND THE FOURTEENTH SITE ON ITS FIRST RUN: an unguarded
+    `EV.updateListener.of(...)` that carries onChange, onFocus and
+    onBlur and died with "Cannot read properties of undefined".
+
+    DOCVIEWER'S README DOCUMENTED A DEPENDENCY THE COMPONENT DOES NOT
+    HAVE. It told consumers to load Vditor in two tags, called the
+    output "Vditor-rendered" in its Overview, and listed Vditor as
+    falling back to plain text. There is not one reference to Vditor in
+    docviewer.ts, and the real dependency was named nowhere. Fixing the
+    throw without fixing the README would have stranded a consumer who
+    followed it.
+
+    DEBT-GATE-2 recorded rather than fixed: structure check [16] reads
+    the THEN branch of an `if (!x)` and cannot see
+    `if (x) { return real } return stand-in`, which is the form
+    getSelection used. 235 bare `return ""` / `[]` / `0` / `null`
+    statements exist across component sources and most are legitimate,
+    so the work is classifying them rather than flipping a predicate.

@@ -5192,16 +5192,19 @@ Full-page three-column documentation layout.
 
 ## Overview
 
-DocViewer renders documentation in a three-column CSS Grid layout: a hierarchical TOC tree on the left, Vditor-rendered content in the center, and an "On This Page" outline on the right with IntersectionObserver-based scroll tracking.
+DocViewer renders documentation in a three-column CSS Grid layout: a hierarchical TOC tree on the left, MarkdownRenderer-rendered content in the center, and an "On This Page" outline on the right with IntersectionObserver-based scroll tracking.
 
 ## Usage
 
 ```html
-<!-- Vditor CDN (required) -->
-<link rel="stylesheet" href="https://static.knobby.io/lib/vditor-3.11.2/dist/index.css">
-<script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
-        integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
+<!-- marked, which MarkdownRenderer parses with (required) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"
+        integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR"
         crossorigin="anonymous"></script>
+
+<!-- MarkdownRenderer (required). DocViewer calls
+     window.createMarkdownRenderer and throws without it. -->
+<script src="components/markdownrenderer/markdownrenderer.js"></script>
 
 <!-- DocViewer -->
 <link rel="stylesheet" href="components/docviewer/docviewer.css" />
@@ -5306,8 +5309,19 @@ Three-column CSS Grid: `260px 1fr 220px` (configurable).
 
 ## Dependencies
 
-- **Vditor ≥3.11.2** — CDN; falls back to plain text
+- **MarkdownRenderer** (`window.createMarkdownRenderer`) — **required.**
+  DocViewer throws without it rather than rendering the raw markdown as
+  plain text, which it used to do: a reader then saw `## Heading` and
+  `**bold**` as literal characters, with no way to tell that the
+  renderer had failed rather than that the documentation was badly
+  written. See its own README for what `marked` and the optional
+  highlighters add.
 - **Bootstrap Icons** — TOC icons
+
+> **This section named Vditor until 2026-10-18, and DocViewer has never
+> used it.** There is not one reference to Vditor in `docviewer.ts`. The
+> Usage block above told consumers to load it, the Overview called the
+> content "Vditor-rendered", and the real dependency was named nowhere.
 
 ## Asset Paths
 

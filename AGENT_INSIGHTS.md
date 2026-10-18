@@ -1974,3 +1974,74 @@ actually uses. A check fed from the artifact's own generator will
 always pass. The durable fix here is a hash, because a hash cannot be
 computed for a file that does not exist — but only if the check reads
 the tag, not the manifest.
+
+### 6.113 When Every Test Runs the Degraded Path, the Degraded Path Is the Spec (2026-10-18)
+
+CodeEditor had 33 tests. **Not one mounted it with CodeMirror
+present** — the test file never mocked it, so every case ran against
+an editor that had failed to detect the library and was displaying a
+missing-dependency notice.
+
+That explains the eight tests named `_DoesNotThrow`. Under test,
+doing nothing was all the component could do, so "it doesn't crash"
+was the only honest assertion available. The names were accurate about
+a situation nobody had chosen.
+
+It also means the dangerous half was unreachable. An editor whose
+`EditorView` and `EditorState` are present but whose
+`@codemirror/commands` is not **looks perfect**, takes the Ctrl-Z, and
+does nothing. Thirteen `if (hasCMGlobal(name))` guards with no `else`,
+reached from nine public methods.
+
+I wrote a minimal mock — `EditorState.create`, an `EditorView`
+constructor, `keymap`, `lineNumbers` — and **it found a fourteenth site
+on its first run**: `EV.updateListener.of(...)`, unguarded, carrying
+`onChange`, `onFocus` and `onBlur`, dying with "Cannot read properties
+of undefined".
+
+The mock carries a test called `theMockActuallyMounts`, because the
+LaTeX editor's MathLive mock was mocking a global no code path
+consulted, and four tests passed against it for the life of the
+component.
+
+**Principle**: before trusting a green suite about a dependency, read
+what the fixtures construct. A suite that only ever exercises the
+absent-dependency path will specify that path, in detail, with
+confident names — and will be silent about the configuration your
+users actually run.
+
+### 6.114 "Did the Caller Name It" Sorts the Guards (2026-10-18)
+
+Thirteen identical-looking guards, and they were not the same defect.
+
+```ts
+if (hasCMGlobal("undo"))          { ...}   // reached from public undo()
+if (hasCMGlobal("bracketMatching")) { ...} // reached from mount
+```
+
+The first is a fallback: a caller invoked `undo()` and got silence.
+The second is correct composition: nobody asked for bracket matching,
+and adding it when the page published it is the component doing its
+job with what is there.
+
+One question separates them — **did the caller name this thing?** — and
+it applies at every layer, including options. `options.lineNumbers` and
+`options.onSave` are named, so an absent `lineNumbers` module or
+`keymap` must refuse. `readOnly` returning quietly stays, because the
+caller configured that and refusing it would be refusing their own
+setting.
+
+Without the question you take one of two bad branches: guard all
+thirteen and make nine harmless optional addons into hard
+dependencies, or guard none and leave nine public methods silent.
+
+**And the remedy has to be specific.** CodeMirror 6 arrives as fifteen
+separate ESM specifiers. "undo is unavailable" restates what the caller
+just observed. `"undo" was not published — load @codemirror/commands`
+is something they can act on. The module name is the literate part.
+
+**One more thing worth the note**: `setDiagnostics` discarded the list
+when the lint module was absent and then announced "3 diagnostics" to
+the live region. The throw matters less than the order — a screen
+reader was told about diagnostics that had just been dropped, which is
+the Toolbar tooltip defect wearing a different component.

@@ -186,6 +186,47 @@ function hasCMGlobal(name: string): boolean
     return typeof val === "function" || (typeof val === "object" && val !== null);
 }
 
+/**
+ * The CodeMirror package that publishes each global this component asks
+ * for by name. A refusal that says "undo is unavailable" tells a reader
+ * nothing they did not just observe. CodeMirror 6 arrives here as
+ * fifteen separate ESM specifiers, so the actionable part of the
+ * message is WHICH ONE is missing.
+ */
+const CM_MODULE: Record<string, string> = {
+    EditorState: "@codemirror/state",
+    EditorView: "@codemirror/view",
+    keymap: "@codemirror/view",
+    lineNumbers: "@codemirror/view",
+    undo: "@codemirror/commands",
+    redo: "@codemirror/commands",
+    indentSelection: "@codemirror/commands",
+    setDiagnostics: "@codemirror/lint",
+};
+
+/**
+ * A CM6 global this component was ASKED for, as opposed to one it
+ * composes with when present.
+ *
+ * The difference is whether the caller named the thing. `undo()` is a
+ * request and `bracketMatching` is not, so an absent `undo` refuses and
+ * an absent `bracketMatching` is simply not composed in. See the
+ * OPTIONAL EXTENSIONS note on getCMCoreExtensions.
+ */
+function requireCMGlobal(name: string, operation: string): unknown
+{
+    if (!hasCMGlobal(name))
+    {
+        throw new Error(
+            `${LOG_PREFIX} ${operation} needs the CodeMirror "${name}" global, `
+            + `and the host page did not publish it. Load `
+            + `${CM_MODULE[name] ?? "the module that exports it"} before `
+            + `creating the editor.`);
+    }
+
+    return getCMGlobal(name);
+}
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -334,7 +375,13 @@ export class CodeEditor
     {
         if (this.guardDestroyed("setDiagnostics")) { return; }
 
-        if (!this.cmView) { return; }
+        // The announce comes AFTER the apply, and the apply used to
+        // return quietly when the lint module was absent. So a screen
+        // reader heard "3 diagnostics" for three diagnostics that had
+        // just been discarded. Same class as a tooltip reading
+        // "undefined" out loud, and the order matters more than the
+        // throw does.
+        this.requireView("setDiagnostics()");
         this.applyCMDiagnostics(diagnostics);
         this.announce(`${diagnostics.length} diagnostics`);
     }
@@ -346,18 +393,23 @@ export class CodeEditor
 
     public focus(): void
     {
-        if (this.cmView) { this.focusCM(); }
+        this.requireView("focus()");
+        this.focusCM();
     }
 
     public blur(): void
     {
-        if (this.cmView) { this.blurCM(); }
+        this.requireView("blur()");
+        this.blurCM();
     }
 
     public getSelection(): string
     {
-        if (this.cmView) { return this.getCMSelection(); }
-        return "";
+        // ADR-157. Returning "" here is a fabricated read: it is the
+        // same answer as a real editor with nothing selected, so the
+        // caller cannot tell the difference.
+        this.requireView("getSelection()");
+        return this.getCMSelection();
     }
 
     public replaceSelection(text: string): void
@@ -365,7 +417,8 @@ export class CodeEditor
         if (this.guardDestroyed("replaceSelection")) { return; }
         if (this.options.readOnly) { return; }
 
-        if (this.cmView) { this.replaceCMSelection(text); }
+        this.requireView("replaceSelection()");
+        this.replaceCMSelection(text);
     }
 
     // ========================================================================
@@ -374,23 +427,28 @@ export class CodeEditor
 
     public undo(): void
     {
+        // readOnly returns quietly on purpose: the caller configured
+        // that, so refusing it would be refusing their own setting.
         if (this.guardDestroyed("undo") || this.options.readOnly) { return; }
 
-        if (this.cmView) { this.cmUndo(); }
+        this.requireView("undo()");
+        this.cmUndo();
     }
 
     public redo(): void
     {
         if (this.guardDestroyed("redo") || this.options.readOnly) { return; }
 
-        if (this.cmView) { this.cmRedo(); }
+        this.requireView("redo()");
+        this.cmRedo();
     }
 
     public format(): void
     {
         if (this.guardDestroyed("format") || this.options.readOnly) { return; }
 
-        if (this.cmView) { this.cmFormat(); }
+        this.requireView("format()");
+        this.cmFormat();
     }
 
     public toggleWordWrap(): void
@@ -769,9 +827,10 @@ export class CodeEditor
 
     private getCMKeyBindings(): unknown[]
     {
-        if (!hasCMGlobal("keymap")) { return []; }
-
-        const km = getCMGlobal("keymap") as { of(maps: unknown[]): unknown };
+        // The caller's own Mod-s binding rides on this keymap, so an
+        // absent one loses `onSave` as well as every default shortcut.
+        const km = requireCMGlobal("keymap", "key bindings") as
+            { of(maps: unknown[]): unknown };
         const maps: unknown[] = [];
         const tryPush = (name: string): void =>
         {
@@ -800,10 +859,9 @@ export class CodeEditor
 
     private pushCMLineNumbers(exts: unknown[]): void
     {
-        if (hasCMGlobal("lineNumbers"))
-        {
-            exts.push((getCMGlobal("lineNumbers") as () => unknown)());
-        }
+        // Only reached when `options.lineNumbers` asked for them, so an
+        // absent module is a named request this component cannot meet.
+        exts.push((requireCMGlobal("lineNumbers", "options.lineNumbers") as () => unknown)());
     }
 
     private pushCMLineWrapping(exts: unknown[]): void
@@ -861,7 +919,22 @@ export class CodeEditor
     private buildCMUpdateListener(): unknown
     {
         const EV = getCMGlobal("EditorView") as Record<string, unknown>;
-        const updateListener = EV.updateListener as { of(fn: (update: Record<string, boolean>) => void): unknown };
+        const updateListener = EV.updateListener as
+            { of(fn: (update: Record<string, boolean>) => void): unknown } | undefined;
+
+        // ADR-200. This used to call `.of` on whatever was there and
+        // die with "Cannot read properties of undefined", which names
+        // the line and not the build that is short a member. It is how
+        // onChange, onFocus and onBlur are delivered, so all three
+        // callbacks the caller passed go quiet with it.
+        if (!updateListener)
+        {
+            throw new Error(
+                `${LOG_PREFIX} the CodeMirror "EditorView" global has no `
+                + "updateListener, which is how onChange, onFocus and onBlur "
+                + "are delivered. Load a complete @codemirror/view before "
+                + "creating the editor.");
+        }
 
         return updateListener.of((update: Record<string, boolean>) =>
         {
@@ -970,28 +1043,20 @@ export class CodeEditor
 
     private cmUndo(): void
     {
-        if (hasCMGlobal("undo"))
-        {
-            (getCMGlobal("undo") as (view: unknown) => void)(this.cmView);
-        }
+        (requireCMGlobal("undo", "undo()") as (view: unknown) => void)(this.cmView);
     }
 
     private cmRedo(): void
     {
-        if (hasCMGlobal("redo"))
-        {
-            (getCMGlobal("redo") as (view: unknown) => void)(this.cmView);
-        }
+        (requireCMGlobal("redo", "redo()") as (view: unknown) => void)(this.cmView);
     }
 
     private cmFormat(): void
     {
-        if (hasCMGlobal("indentSelection"))
-        {
-            (getCMGlobal("indentSelection") as (arg: { state: unknown; dispatch: unknown }) => void)(
-                this.cmView as { state: unknown; dispatch: unknown }
-            );
-        }
+        (requireCMGlobal("indentSelection", "format()") as
+            (arg: { state: unknown; dispatch: unknown }) => void)(
+            this.cmView as { state: unknown; dispatch: unknown }
+        );
     }
 
     private destroyCMView(): void
@@ -1037,7 +1102,7 @@ export class CodeEditor
 
     private applyCMDiagnostics(diagnostics: CodeEditorDiagnostic[]): void
     {
-        if (!hasCMGlobal("setDiagnostics")) { return; }
+        const setDiagsFn = requireCMGlobal("setDiagnostics", "setDiagnostics()");
 
         const view = this.cmView as Record<string, Record<string, Record<string, unknown>>>;
         const doc = view.state.doc;
@@ -1047,7 +1112,7 @@ export class CodeEditor
             .filter(d => d.line >= 1 && d.line <= lines)
             .map(d => this.toCMDiagnostic(d, doc));
 
-        const setDiags = getCMGlobal("setDiagnostics") as (state: unknown, diags: unknown[]) => unknown;
+        const setDiags = setDiagsFn as (state: unknown, diags: unknown[]) => unknown;
         const dispatch = (this.cmView as Record<string, (tr: unknown) => void>).dispatch;
         dispatch(setDiags(view.state, cmDiags));
     }
@@ -1189,6 +1254,29 @@ export class CodeEditor
     // ========================================================================
     // UTILITIES
     // ========================================================================
+
+    /**
+     * The view, or a refusal naming the operation that wanted it.
+     *
+     * Reached when CodeMirror never loaded. The mount already said so,
+     * loudly and in the DOM, through showMissingDependencyError, so a
+     * caller arriving here has acted on an editor that is displaying an
+     * error. This used to be `if (this.cmView) { ... }` with no else in
+     * nine public methods, so every one of them returned normally
+     * having done nothing.
+     */
+    private requireView(method: string): unknown
+    {
+        if (!this.cmView)
+        {
+            throw new Error(
+                `${LOG_PREFIX} ${method} needs CodeMirror, which did not load. `
+                + "The editor is showing a missing-dependency notice in its "
+                + "container. Load the CodeMirror 6 bundle before creating it.");
+        }
+
+        return this.cmView;
+    }
 
     private guardDestroyed(method: string): boolean
     {

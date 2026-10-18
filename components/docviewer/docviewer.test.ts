@@ -381,13 +381,18 @@ describe("DocViewer edge cases", () =>
         handle.destroy();
     });
 
-    test("withoutMarkdownRenderer_FallsBackGracefully", () =>
+    test("withoutMarkdownRenderer_Throws", () =>
     {
+        // ADR-200. The old name said FallsBackGracefully and the old
+        // body asserted that the content element exists, which it did:
+        // it held the raw markdown as plain text, so a reader saw
+        // "## Heading" and could not tell the renderer had failed.
+        // Graceful is the wrong goal when the output is indistinguishable
+        // from badly written documentation.
         removeMarkdownMock();
-        const handle = createDocViewer(defaultOptions());
-        const content = getContent();
-        expect(content).not.toBeNull();
-        handle.destroy();
+
+        expect(() => createDocViewer(defaultOptions()))
+            .toThrow(/MarkdownRenderer is required/);
     });
 
     test("navigateToChild_UpdatesContent", () =>
