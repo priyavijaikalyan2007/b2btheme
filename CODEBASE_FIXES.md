@@ -231,12 +231,29 @@ These issues involve potential XSS or script injection vectors and must be addre
   they are a genuine compatibility decision and stay open.
 
 - [ ] **DEBT-SEC-8** **Third-party libraries recommended with no integrity
-  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **35** by the
+  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **17** by the
   `thirdPartyTagsWithoutSri` ceiling, which only goes down. Was 76 before the
-  first slice and 65 before the second. **Ten of the remainder are in dated `specs/*.prd.md`
+  first slice, 65 before the second and 35 before ADR-199.
+  **Ten of the remainder are in dated `specs/*.prd.md`
   planning documents** rather than in anything a consumer copies, so this
   count cannot reach zero without editing a historical record. Do not chase
   it below 10.
+
+  **THE HEADLINE READ 35 UNTIL 2026-10-19 AND THE RATCHET READ 17.**
+  ADR-199 halved it on 2026-10-18 and this entry did not follow, so the
+  tracker overstated the remaining work by a factor of two for a day. The
+  prose five paragraphs down had the right number the whole time, which is
+  worse rather than better: the document disagreed with itself and the
+  wrong copy was the one in the first sentence.
+
+  **This is the third time this exact failure has been recorded here.**
+  DEBT-SEC-8's own table once described four libraries as awaiting a
+  decision when all four were already vendored and served, and DEBT-SEC-3
+  rested on "npm audit is already 0" after that had stopped being true.
+  **An entry that states a count is a snapshot of when somebody last
+  looked**, and the only durable fix is to name the instrument beside the
+  number. The instrument here is `node scripts/audit-counts.mjs`, and the
+  line is `thirdPartyTagsWithoutSri`.
 
   **FIRST SLICE DONE 2026-10-17 (ADR-190): DOMPurify and font-awesome.**
   Eleven tags across eight files now point at the copies this origin
@@ -2202,6 +2219,86 @@ offered as the evidence for it.
     seen from a unit test. The test says so and asserts the half that is
     observable.
 
+- [x] **DEBT-DEMO-1** **CLOSED 2026-10-19, ADR-205. 129 demo pages
+  shipped and 8 had ever been opened in a browser.**
+
+  `npm run test:demos` loads every tracked page in
+  `demo/components/`, and fails the page on a non-200, an uncaught
+  error, a console error, a failed request, or a component of the
+  same name that did not register its global.
+
+  Structure checks `[4]` and `[5]` look like coverage of these pages
+  and are not. They ask whether a file exists on disk. **The
+  repository has been burned by that distinction twice and both are
+  on the record**: DEBT-DE-1 was a suite green for months while
+  pointed at a page that loaded nothing, and ADR-199 found a
+  documented driver.js version that had never been published, where
+  the demo pages were right and the README was wrong, because nothing
+  fetched either.
+
+  **Four of 129 failed on the first run, and all four were real.**
+
+  | Page | Defect | Fixed in |
+  |---|---|---|
+  | `markdowneditor` | a MutationObserver called `vditor.getValue()` before Vditor had loaded its serialiser, then `setValue()` on a Vditor still constructing. Four uncaught TypeErrors per load | the component |
+  | `dynamicformswitcher` | `mount` handed a caller a host that was not in the document, on three of four resolution paths | the component |
+  | `diagramengine` | the embed probe had no strategy for a factory that mounts itself, so a WORKING MarkdownEditor embed threw on every render | the component |
+  | `docklayout` | slots mount from the constructor, before the grid is in the document | the page, and DEBT-DL-1 |
+
+  **IT IS A LOCAL GATE AND NOT A CI ONE.** CI runs no browser today,
+  and `codeeditor.html` imports CodeMirror from esm.sh, so one of the
+  129 pages needs the network. Adding a browser job is a decision
+  about CI time and network flake rather than an oversight here.
+
+  **What it does not do.** It is smoke. A page can be badly wrong and
+  pass every line of it.
+
+- [ ] **DEBT-DL-1** **DockLayout hands a slot component a cell that is
+  not in the document.**
+
+  `mountInitialSlots()` runs from the CONSTRUCTOR (`docklayout.ts:254`),
+  and `show()` is what appends `rootEl` to the container. So every slot
+  given through `options` has its `show(cell)` called while the whole
+  grid is detached, and a slot component that resolves its container by
+  id finds nothing. Ribbon does exactly that, and the DockLayout demo
+  page threw `Container "dock-ribbon-cell-resize" was not found` on
+  every load until ADR-205 deferred the mount in the page.
+
+  **The obvious fix is only a partial one, which is why this is
+  recorded rather than taken.** Moving `mountInitialSlots()` into
+  `show()` after the append fixes the constructor path and leaves
+  `setToolbar()` called before `show()` just as broken, so the contract
+  would hold on one route and not the other. That is the shape
+  ADR-205 D-? already corrected in DynamicFormSwitcher, where three of
+  four resolution paths made a guarantee the fourth did not. Doing it
+  properly means guaranteeing attachment for every slot setter, which
+  is design work on five slots with callbacks.
+
+  Found by the demo-page smoke gate.
+
+- [ ] **DEBT-STI-1** **SmartTextInput throws inside its own input
+  handler when the explicit adapter type does not match the element.**
+
+  `attach(element, "plaintext")` on a `contenteditable` div builds the
+  PlainText adapter, which reads `element.value`. A div has none, so
+  the first keystroke produces
+  `TypeError: Cannot read properties of undefined (reading 'slice')`
+  from inside the input listener. **jsdom reports a listener throw to
+  the virtual console rather than propagating it**, so the caller sees
+  no event, no throw and no log — three ways of learning nothing.
+
+  `validateElement` rejects `<select>`, restricted input types,
+  disabled and readonly. It does not ask whether the adapter the
+  caller NAMED can read the element they passed, which is the one
+  check this case needs. The refusal belongs at `attach`, where the
+  caller is still on the stack.
+
+  Found while giving `explicitAdapterType_OverridesAutoDetect` an
+  assertion. The test was rerouted to a textarea, where both adapters
+  read something real and the override is visible without relying on
+  a crash. **A behaviour change rather than a test fix**, so it is
+  recorded instead of taken.
+
 - [ ] **DEBT-TEST-1c** **6 suites stand in for a sibling component
   they could mount, down from 11, and all six that remain are
   correct.**
@@ -2276,12 +2373,50 @@ offered as the evidence for it.
   `HEAD`. The hand-run split it replaces reported 116 / 73 / 9 / 86,
   which no instrument in the repository can now produce.
 
-  | Shape | Before | Now | Expected yield |
+  | Shape | 2026-10-18 | Now | Expected yield |
   |---|---|---|---|
-  | `.not.toThrow()` on idempotency | 113 | 110 | near zero |
-  | `.not.toThrow()`, name states a change | 68 | 66 | contracts to read |
-  | `.not.toThrow()` on an absent dependency | 17 | 6 | each states a change |
-  | `.toBeDefined()` / `.toBeTruthy()` | 86 | 85 | near zero |
+  | `.not.toThrow()` on idempotency | 110 | 110 | near zero |
+  | `.not.toThrow()`, name states a change | 66 | **35** | contracts to read |
+  | `.not.toThrow()` on an absent dependency | 6 | 6 | each states a change |
+  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | near zero |
+
+  **267 -> 236 on 2026-10-19, ADR-205, and the whole drop is one
+  bucket.** List its remaining members with
+  `node scripts/test-assertions.mjs --shapes --shape namesAChange`.
+  The tally and the listing now share one classifier, `shapeOf`,
+  because a second rule that agrees with the first by inspection is
+  what ADR-203 was written about.
+
+  **Worked by CLUSTER rather than by file size**, which is what made
+  31 tractable in one pass: Ruler 5, SmartTextInput 8, the three line
+  pickers 6, HoverCard 2, MultiselectCombo 3, DiagramEngine 7. A
+  cluster shares a component, so the setup written for the first block
+  pays for the rest.
+
+  **WHAT THE BUCKET ACTUALLY CONTAINED WAS MISSING PRECONDITIONS.**
+  The prediction was "contracts to read rather than defects" and that
+  mostly held, but the recurring find was not a weak assertion. It was
+  a test that could not have failed whatever it asserted:
+
+  - Ruler's five each called a method whose only effect is `render()`,
+    and `render()` returns on its first line without a 2D context.
+    jsdom supplies none, so five tests drove a component that had
+    nothing to redraw.
+  - `scrollToPageFrame` fits the viewport to the canvas bounding rect,
+    which jsdom reports as zeros.
+  - HoverCard's two called a two-argument `show(anchor, content)` with
+    ONE argument, so the content object arrived as the anchor.
+  - `groupedItems_RenderCorrectly` constructed the component and never
+    showed it, so nothing rendered at all.
+
+  Each rewrite is therefore half assertion and half setup, and the
+  setup is the half that was missing. **A missing precondition is the
+  quieter sibling of a missing assertion**, and this bucket is where
+  it lives.
+
+  **One defect came out of the 31 and is recorded rather than taken:
+  DEBT-STI-1.** Two blocks were deleted rather than rewritten, because
+  each was the test immediately below it with the assertion removed.
 
   **THE FIRST VERSION OF THIS TABLE COULD NOT BE REPRODUCED.** The
   classifier that produced 116 / 73 / 9 / 86 was run from a scratch
@@ -2433,7 +2568,9 @@ offered as the evidence for it.
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
 - [ ] **UNUSED-1**: **329 as measured by `scripts/audit-counts.mjs` on
-  2026-10-17**, not the 414 below. It was 306 until ERR-1 replaced 63
+  2026-10-17**, and **330 on 2026-10-19**, not the 414 below.
+  The number is dated and names its instrument on purpose, which is the
+  habit DEBT-SEC-8 above was corrected for not having. It was 306 until ERR-1 replaced 63
   quiet container branches with a throw, which orphaned the `logWarn` or
   `logError` helper in 23 components. The five helpers are the LOG-4a
   preamble and are present whether a component uses them or not, which is
@@ -2691,6 +2828,13 @@ limits the design knowingly accepts, not defects in shipped code.
   - **The duplicate CDN path is already dead to the consumer.** `apps/frontend/index.html` loads `tenantswitcher.css` (195) and `tenantswitcher.js` (794); nothing under `~/Work` fetches the `workspaceswitcher` path any more. Note that the alias path and the alias *functions* are independent: the consumer gets `createWorkspaceSwitcher` out of `tenantswitcher.js`, so dropping the duplicate path does not touch the API.
 
   **And the recipe above is incomplete.** "Delete `copy:compat` from `package.json`" is one of four edits — the theme's own pages still reference the duplicate path: `demo/full-demo.html` (83, 4176), `demo/components/diagramengine.html` (405, 406), and three mapping tables in `scripts/extract-demos.py` (225, 336, 590). Check `[5]` would catch the demos; nothing would catch `extract-demos.py`. Left as a single item rather than split, because retiring the path before the API is churn for no gain.
+
+  **And the duplicate path is now the one demo page nothing loads.** The
+  ADR-205 smoke gate enumerates demo pages with `git ls-files`, so it
+  covers the 129 tracked ones. `dist/demo/components/workspaceswitcher.html`
+  is produced by `copy:compat` and is tracked nowhere, which is correct
+  for a compat artifact and does mean it is now the single published
+  demo page no gate opens.
 
   **Re-checked 2026-10-18. The condition is still not met and the item does not move.** `apps/shell/shell-tenants.ts` calls `window.createWorkspaceSwitcher` (197, 203), `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363), which are the same six lines the 2026-10-09 check found, and `shared/types/component-library.d.ts` still declares the surface. Recorded so the next reader knows the grep was run rather than skipped. **A condition-gated item needs its condition re-taken, and the answer written down even when it has not changed** — the same reason DEBT-SEC-3 was re-measured.
 

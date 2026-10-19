@@ -2293,3 +2293,78 @@ a text that never changed could not have been announced either way.
 verifying each clause separately. A fix that makes half of a sentence
 true is also the tool that finds the other half. When closing one,
 re-read the sentence rather than the ticket.
+
+### 6.124 Eight Pages of 129 Had Ever Been Opened (2026-10-19)
+
+The pitch for the smoke gate was that nothing loads the demo pages.
+That was slightly wrong in a way worth recording: two structure checks
+walk every page, and both ask the filesystem a question. Check `[4]`
+resolves every `href`. Check `[5]` resolves every asset reference. A
+page can pass both while throwing on load, because **the gate and the
+failure mode are in different layers**.
+
+One Playwright spec, 129 pages, four failures, all four real:
+
+| Page | What was wrong |
+|---|---|
+| `markdowneditor` | four uncaught TypeErrors per load |
+| `dynamicformswitcher` | a detached host handed to a caller |
+| `diagramengine` | a working embed that threw anyway |
+| `docklayout` | slots mounted before the grid was in the document |
+
+**Three of the four are in components whose unit suites are green**,
+and none was reachable from jsdom, because each needed a real page with
+real script tags in a real order.
+
+**Principle**: when a check and a defect live in different layers, the
+check's greenness is not evidence about the defect. Ask what the check
+actually executes, and whether a user ever executes the same thing.
+
+### 6.125 Existence Is Not Readiness (2026-10-19)
+
+`if (this.vditor)` guarded MarkdownEditor's theme observer, and the
+observer threw on every page load. A Vditor instance exists the moment
+its constructor returns and **cannot answer `getValue()` until its
+`after` hook has run**, because the serialiser arrives in a separate
+chunk. The guard reads as a readiness check and is an existence check.
+
+Fixing it moved the crash one step rather than removing it. The
+re-init then called `setValue()` on a Vditor that had just been
+constructed. That was latent in the original and unreachable while
+`getValue()` threw first. Both halves are the same mistake about the same object.
+
+**Principle**: a dependency with an asynchronous init has two states a
+null check cannot tell apart. Track the second one with a flag set in
+the ready hook. Defer work that arrives early into that hook rather
+than dropping it, because dropping it is where the stale theme would
+have come from.
+
+### 6.126 The Bucket Was Mostly Missing Preconditions (2026-10-19)
+
+66 blocks whose names stated a change and whose bodies asserted no
+crash. The prediction written into `audit-counts.mjs` was "contracts to
+read rather than defects", and that mostly held — one defect came out of
+31 and it is recorded as DEBT-STI-1.
+
+What kept turning up instead was **a test that could not have failed
+whatever it asserted**:
+
+- Ruler's five each called a method whose only effect is `render()`,
+  and `render()` returns on its first line with no 2D context. jsdom
+  supplies none.
+- `scrollToPageFrame` fits the viewport to a bounding rect jsdom
+  reports as zeros.
+- HoverCard's two called a two-argument `show(anchor, content)` with
+  **one** argument, so the content arrived as the anchor.
+- `groupedItems_RenderCorrectly` constructed the component and never
+  showed it.
+
+So each rewrite is half assertion and half setup, and the setup is the
+half that was missing. §6.x's "a missing precondition is the quieter
+sibling of a missing assertion" turns out to describe this whole
+bucket, not one sprintpicker case.
+
+**Working by cluster is what made 31 tractable.** A cluster shares a
+component, so the recording 2D context written for Ruler's first block
+paid for the other four. Sorting by file size would have started with
+DiagramEngine and bought one block's setup per block.

@@ -119,15 +119,29 @@ describe("LineEndingPicker dropdown", () =>
         picker.destroy();
     });
 
-    test("Close_ClosesDropdown", () =>
+    test("Close_HidesTheDropdownAndCollapsesTheTrigger", () =>
     {
+        // DEBT-TEST-1b. The old block opened, closed, then asserted
+        // that a SECOND close did not throw — which the guard in
+        // `close()` makes true whatever `closeDropdown` does. The
+        // dropdown and the trigger both carry the state.
         const picker = new LineEndingPicker(
             "lep-test-container", makeOptions()
         );
+        const dropdown = () => container.querySelector<HTMLElement>(
+            ".lineendingpicker-dropdown");
+        const trigger = () => container.querySelector(
+            "[aria-expanded]");
+
         picker.open();
+
+        expect(dropdown()?.style.display).not.toBe("none");
+        expect(trigger()?.getAttribute("aria-expanded")).toBe("true");
+
         picker.close();
-        // After close, open+close should not throw
-        expect(() => picker.close()).not.toThrow();
+
+        expect(dropdown()?.style.display).toBe("none");
+        expect(trigger()?.getAttribute("aria-expanded")).toBe("false");
         picker.destroy();
     });
 });
@@ -172,12 +186,21 @@ describe("LineEndingPicker callbacks", () =>
 
 describe("LineEndingPicker disabled", () =>
 {
-    test("Disabled_DoesNotThrowOnOpen", () =>
+    test("Disabled_RefusesToOpen", () =>
     {
+        // DEBT-TEST-1b. A disabled picker that opened anyway passed the
+        // old assertion, and opening is exactly what disabled means it
+        // must not do. `openDropdown` returns on `opts.disabled`.
         const picker = new LineEndingPicker(
             "lep-test-container", makeOptions({ disabled: true })
         );
-        expect(() => picker.open()).not.toThrow();
+
+        picker.open();
+
+        expect(container.querySelector<HTMLElement>(
+            ".lineendingpicker-dropdown")?.style.display).toBe("none");
+        expect(container.querySelector("[aria-expanded]")
+            ?.getAttribute("aria-expanded")).toBe("false");
         picker.destroy();
     });
 });

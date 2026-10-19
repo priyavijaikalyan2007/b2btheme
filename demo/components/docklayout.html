@@ -153,12 +153,17 @@
             }
         });
 
-        // Wrapper bridges Ribbon's show(containerId) to DockLayout's show(cell) protocol
+        // Wrapper bridges Ribbon's show(containerId) to DockLayout's show(cell) protocol.
+        //
+        // ADR-205. The mount is DEFERRED because DockLayout mounts its
+        // initial slots from the constructor, before the grid is in the
+        // document. Ribbon resolves its container with getElementById,
+        // which finds nothing on a detached cell, so the original version
+        // threw "Container ... was not found" on every page load. The
+        // underlying contract is recorded as DEBT-DL-1.
+        var ribbonCell = null;
         var ribbonSlot = {
-            show: function(cell) {
-                if (!cell.id) { cell.id = "dock-ribbon-cell-resize"; }
-                ribbon.show(cell.id);
-            },
+            show: function(cell) { ribbonCell = cell; },
             hide: function() { ribbon.hide(); },
             destroy: function() { ribbon.destroy(); }
         };
@@ -238,6 +243,12 @@
                     state.toolbar ? state.toolbar.height : 0);
             }
         });
+
+        // The grid is in the document now, so the cell can be found by id.
+        if (ribbonCell) {
+            if (!ribbonCell.id) { ribbonCell.id = "dock-ribbon-cell-resize"; }
+            ribbon.show(ribbonCell.id);
+        }
     })();
 
     // Demo 1: Full Application Shell

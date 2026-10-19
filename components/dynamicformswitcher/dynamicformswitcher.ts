@@ -820,6 +820,18 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
     private resolveFieldAdapter(
         field: DynamicFormField, host: HTMLElement): DynamicFormFieldAdapter | null
     {
+        // ADR-205. THREE RESOLUTION PATHS AND ONLY ONE OF THEM USED TO
+        // MAKE THIS GUARANTEE. Auto-discovery attached the host first,
+        // because the library convention is that a factory takes a
+        // container ID and resolves it with getElementById. `mount` and
+        // a registered provider got a DETACHED host, so a caller that
+        // reached for any component of this library from inside one of
+        // them was handed a container the document does not contain.
+        // The demo page for this component did exactly that and threw
+        // on every load. A contract that holds on one branch of three
+        // is not a contract.
+        this.ensureHostInDom(host, field.name);
+
         if (field.mount)
         {
             try { return field.mount(host, field.name); }
@@ -1142,6 +1154,15 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
     {
         const host = createElement("div", [`${CLS}-custom`, `${CLS}-custom-mounted`]);
         setAttr(host, "data-field-input", "true");
+
+        // ADR-205. THE SECOND ENTRY POINT FOR `mount`, and the one the
+        // demo page uses. `type: "custom"` is a BUILT-IN type, so it
+        // never reaches resolveFieldAdapter and did not get the
+        // attachment that path makes. Four resolution paths in two
+        // methods, and only one of the four put the host in the
+        // document before handing it to a caller.
+        this.ensureHostInDom(host, field.name);
+
         try
         {
             const adapter = field.mount!(host, field.name);

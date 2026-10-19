@@ -112,34 +112,114 @@ describe("createSmartTextInput", () =>
 
 describe("attach and detach", () =>
 {
-    test("attach_ToInputElement_Succeeds", () =>
+    /*
+     * DEBT-TEST-1b. EIGHT BLOCKS IN THIS FILE SAID "SUCCEEDS", "CLEANS
+     * UP", "DETECTS CORRECTLY" OR "OVERRIDES", AND ASSERTED THAT A CALL
+     * DID NOT THROW. Attaching has two visible effects: it appends a
+     * live region to the body, and it wires the element's own events to
+     * the engine. `content:change` is emitted from `handleInput` with
+     * no trigger registered and no debounce in the way, so one `input`
+     * event is enough to ask whether the wiring happened.
+     */
+    function typeInto(el: HTMLElement, text: string): void
+    {
+        if (el instanceof HTMLInputElement
+            || el instanceof HTMLTextAreaElement)
+        {
+            el.value = text;
+        }
+        else
+        {
+            el.textContent = text;
+        }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    test("attach_ToInputElement_WiresTheElementsEvents", () =>
     {
         const engine = createSmartTextInput();
-        expect(() => engine.attach(inputEl)).not.toThrow();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(inputEl);
+        typeInto(inputEl, "hello");
+
+        expect(seen).toEqual(["hello"]);
         engine.destroy();
     });
 
-    test("attach_ToTextarea_Succeeds", () =>
+    test("attach_ToTextarea_WiresTheElementsEvents", () =>
     {
         const textarea = document.createElement("textarea");
         container.appendChild(textarea);
         const engine = createSmartTextInput();
-        expect(() => engine.attach(textarea)).not.toThrow();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(textarea);
+        typeInto(textarea, "from a textarea");
+
+        expect(seen).toEqual(["from a textarea"]);
         engine.destroy();
     });
 
-    test("detach_AfterAttach_CleansUp", () =>
+    test("attach_AddsAnAriaLiveRegionToTheDocument", () =>
     {
+        // The other half of attach, and the half a reader never sees
+        // unless it is missing. It is announced to, so it has to exist.
         const engine = createSmartTextInput();
+
+        expect(document.querySelector("[role=\"status\"][aria-live]")).toBeNull();
         engine.attach(inputEl);
-        expect(() => engine.detach()).not.toThrow();
+
+        expect(document.querySelector("[role=\"status\"][aria-live]"))
+            .not.toBeNull();
         engine.destroy();
     });
 
-    test("detach_WithoutAttach_DoesNotThrow", () =>
+    test("detach_AfterAttach_StopsEmittingAndRemovesTheLiveRegion", () =>
     {
+        // "Cleans up" was the claim and no cleanup was checked.
+        //
+        // WHAT THIS PROVES IS THAT THE EVENTS STOP, AND NOT THAT THE
+        // LISTENERS WERE REMOVED. `detach` sets `this.adapter = null`
+        // before anything else reads it, and `emitContentChange`
+        // returns on that, so deleting the unsubscribe loop leaves
+        // this test green — verified by mutation. The leak is not
+        // observable from here and the claim is not made. Same shape
+        // as GraphToolbar's Destroy_StopsTheKeyboardShortcuts.
         const engine = createSmartTextInput();
-        expect(() => engine.detach()).not.toThrow();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(inputEl);
+        typeInto(inputEl, "before");
+        engine.detach();
+        typeInto(inputEl, "after");
+
+        expect(seen).toEqual(["before"]);
+        expect(document.querySelector("[role=\"status\"][aria-live]")).toBeNull();
+        engine.destroy();
+    });
+
+    test("detach_WithoutAttach_LeavesTheEngineAttachable", () =>
+    {
+        // The claim worth making is not that the call survives but that
+        // it does not poison the engine. A detach that cleared state it
+        // did not own would show up on the attach after it.
+        const engine = createSmartTextInput();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.detach();
+        engine.attach(inputEl);
+        typeInto(inputEl, "still works");
+
+        expect(seen).toEqual(["still works"]);
         engine.destroy();
     });
 
@@ -241,11 +321,25 @@ describe("event system", () =>
         engine.destroy();
     });
 
-    test("on_CallingUnsubscribe_DoesNotThrow", () =>
+    test("on_CallingUnsubscribe_StopsTheHandler", () =>
     {
+        // DEBT-TEST-1b. An unsubscribe that returned without removing
+        // anything passed the old assertion. `content:change` needs no
+        // trigger registered, so one input event settles it.
         const engine = createSmartTextInput();
-        const unsub = engine.on("trigger:open", () => {});
-        expect(() => unsub()).not.toThrow();
+        const input = document.createElement("input");
+        container.appendChild(input);
+        let calls = 0;
+        const unsub = engine.on("content:change", () => { calls++; });
+
+        engine.attach(input);
+        input.value = "one";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        unsub();
+        input.value = "two";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect(calls).toBe(1);
         engine.destroy();
     });
 
@@ -336,23 +430,78 @@ describe("content serialization", () =>
 
 describe("edge cases", () =>
 {
-    test("attachContentEditable_DetectsCorrectly", () =>
+    test("attachContentEditable_ReadsTheElementsText", () =>
     {
+        // DEBT-TEST-1b. "Detects correctly" is a claim about WHICH
+        // adapter was built, and the two adapters are told apart by
+        // where they read from. A contenteditable div has textContent
+        // and no `value`, so content arriving at all is the proof.
         const div = document.createElement("div");
         div.contentEditable = "true";
         container.appendChild(div);
         const engine = createSmartTextInput();
-        expect(() => engine.attach(div)).not.toThrow();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(div);
+        div.textContent = "typed into a div";
+        div.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect(seen).toEqual(["typed into a div"]);
         engine.destroy();
     });
 
     test("explicitAdapterType_OverridesAutoDetect", () =>
     {
+        // The override has to be VISIBLE, or the parameter is
+        // decoration. The two adapters are told apart by where they
+        // read: PlainText reads `value`, ContentEditable reads
+        // `textContent`. A textarea has both, and they disagree the
+        // moment anything is typed, which makes it the one element
+        // that can answer this question without either adapter
+        // meeting a property its element does not have.
+        //
+        // THE OTHER DIRECTION WAS TRIED FIRST AND IS A TRAP. Forcing
+        // "plaintext" onto a contenteditable div makes the handler
+        // read `value` off a div, and the resulting TypeError is
+        // swallowed by jsdom's listener boundary — the test sees no
+        // event, no throw and no log, which is three ways of learning
+        // nothing.
+        const textarea = document.createElement("textarea");
+        container.appendChild(textarea);
         const engine = createSmartTextInput();
-        expect(() =>
-        {
-            engine.attach(inputEl, "plaintext");
-        }).not.toThrow();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(textarea, "contenteditable");
+        textarea.value = "typed";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+
+        // Auto-detection would have built the PlainText adapter and
+        // reported "typed". The override built the other one, which
+        // reads textContent, and nothing has written to that.
+        expect(seen).toEqual([""]);
+        engine.destroy();
+    });
+
+    test("autoDetectOnATextarea_IsTheControlForTheOverrideAbove", () =>
+    {
+        // Same element, same keystroke, no override. Without this the
+        // test above passes whenever `attach` quietly does nothing.
+        const textarea = document.createElement("textarea");
+        container.appendChild(textarea);
+        const engine = createSmartTextInput();
+        const seen: string[] = [];
+        engine.on("content:change",
+            (p: { content: string }) => { seen.push(p.content); });
+
+        engine.attach(textarea);
+        textarea.value = "typed";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect(seen).toEqual(["typed"]);
         engine.destroy();
     });
 });

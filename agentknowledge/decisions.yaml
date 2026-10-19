@@ -8848,3 +8848,101 @@
     5245 tests across 162 files, 32 of 32 structure checks, every
     ratchet at its line. testBlocks floor 4942 -> 4963,
     testsThatCannotFail unchanged at 267. Seven mutations caught.
+
+- id: ADR-205
+  title: The demo pages had never been opened, and the bucket of 66 was mostly missing preconditions
+  date: 2026-10-19
+  status: accepted
+  context: |
+    Two separate pieces of work, asked for in one go.
+
+    First: 129 demo pages shipped and eight had ever been loaded in a
+    browser by anything in this repository. Structure checks [4] and
+    [5] look like coverage of those pages and ask only whether files
+    exist on disk. DEBT-DE-1 and ADR-199 are both on the record as
+    what that distinction costs.
+
+    Second: DEBT-TEST-1b's namesAChange bucket stood at 66, and the
+    note in audit-counts.mjs had said for a day that this is where to
+    go next.
+  decision: |
+    D1. EVERY TRACKED DEMO PAGE LOADS CLEAN, AND A GATE SAYS SO.
+        `npm run test:demos` fails a page on a non-200, an uncaught
+        error, a console error, a failed request, or a component of
+        the same name that did not register its global. Pages are
+        enumerated with `git ls-files`, because enumerating `dist`
+        would hide a page the copy step dropped.
+
+    D2. IT IS LOCAL AND NOT WIRED INTO CI. CI runs no browser, and
+        codeeditor.html imports CodeMirror from esm.sh, so one page
+        of 129 needs the network. Wiring it up is a decision about CI
+        time and network flake, not an omission.
+
+    D3. MARKDOWNEDITOR TRACKS VDITOR READINESS, NOT VDITOR EXISTENCE.
+        `if (this.vditor)` reads as a readiness check and is an
+        existence check: the instance exists the moment the
+        constructor returns and cannot answer getValue() until its
+        `after` hook has run. A theme change that arrives mid-load is
+        deferred and applied in `after` rather than dropped, and a
+        re-init hands the document to the next instance through the
+        same hook rather than calling setValue on a constructor's
+        return value.
+
+    D4. DYNAMICFORMSWITCHER ATTACHES THE HOST ON ALL FOUR PATHS.
+        Auto-discovery did this and `mount`, a registered provider
+        and `type: "custom"` did not, so a caller reaching for any
+        component of this library from inside one of them was handed
+        a container the document does not contain.
+
+    D5. THE DIAGRAMENGINE EMBED PROBE GAINS STRATEGY 0. A factory
+        that takes a container ID may mount itself, and then there is
+        nothing for show/render/getElement to do. The container's
+        children are counted before the factory runs.
+
+    D6. THE SHAPE BUCKETS ARE LISTABLE, FROM THE SAME CLASSIFIER.
+        `--shapes --shape namesAChange` lists one bucket's members.
+        `shapeOf` is the single rule the tally and the listing share,
+        because a second rule that agrees with the first by
+        inspection is what ADR-203 was written about.
+
+    D7. THE 31 WERE WORKED BY CLUSTER, NOT BY FILE SIZE. A cluster
+        shares a component, so setup written for the first block pays
+        for the rest.
+  consequences: |
+    FOUR OF 129 PAGES FAILED AND ALL FOUR WERE REAL. MarkdownEditor
+    threw four uncaught TypeErrors per load. DynamicFormSwitcher
+    handed out a detached host. DiagramEngine threw on an embed that
+    had already succeeded. DockLayout mounts slots from its
+    constructor, before the grid is in the document, which is fixed
+    in the demo page and recorded as DEBT-DL-1 because the obvious
+    repair fixes one route of two.
+
+    EVERY ONE OF THOSE IS A COMPONENT DEFECT FOUND BY OPENING A PAGE.
+    None was reachable from a unit suite, and three of the four were
+    in components whose suites are green.
+
+    THE BUCKET OF 66 WAS MOSTLY MISSING PRECONDITIONS. 66 -> 35, and
+    the recurring find was not a weak assertion but a test that could
+    not have failed whatever it asserted. Ruler's five each called a
+    method whose only effect is a render, with no 2D context in the
+    environment. scrollToPageFrame fits the viewport to a bounding
+    rect jsdom reports as zeros. HoverCard's two called a
+    two-argument show with one argument. groupedItems_RenderCorrectly
+    never showed the component. Each rewrite is half assertion and
+    half setup, and the setup is the half that was missing.
+
+    ONE DEFECT CAME OUT OF THE 31 AND IS RECORDED. DEBT-STI-1:
+    attaching with an explicit adapter type the element cannot
+    satisfy throws inside the input handler rather than refusing at
+    attach, and jsdom's listener boundary swallows it.
+
+    TWO BLOCKS WERE DELETED RATHER THAN REWRITTEN, each being the
+    test below it with the assertion removed. The testBlocks floor
+    held at 4963 by arithmetic rather than by catching anything,
+    which is stated where the next reader will see it.
+
+    5248 tests across 162 files, 130 of 130 demo pages, 32 of 32
+    structure checks. testsThatCannotFail 267 -> 236,
+    diagramengineLines 30523 -> 30546 as the eighth recorded raise.
+    Twenty mutations caught across the pass, and one escape stated in
+    the test that cannot see it.

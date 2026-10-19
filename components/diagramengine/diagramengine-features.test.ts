@@ -516,27 +516,14 @@ describe("DiagramEngine — Groups", () =>
         expect(obj2!.presentation.groupId).toBe(groupObj.id);
     });
 
-    test("collapseGroup does not throw", () =>
-    {
-        addRect("cg1", 0, 0, 50, 50);
-        addRect("cg2", 100, 0, 50, 50);
-
-        const groupObj = engine.group(["cg1", "cg2"]);
-
-        expect(() => engine.collapseGroup(groupObj.id)).not.toThrow();
-    });
-
-    test("expandGroup does not throw", () =>
-    {
-        addRect("eg1", 0, 0, 50, 50);
-        addRect("eg2", 100, 0, 50, 50);
-
-        const groupObj = engine.group(["eg1", "eg2"]);
-
-        engine.collapseGroup(groupObj.id);
-
-        expect(() => engine.expandGroup(groupObj.id)).not.toThrow();
-    });
+    /*
+     * DEBT-TEST-1b. TWO BLOCKS DELETED HERE, NOT REWRITTEN. They were
+     * `collapseGroup does not throw` and `expandGroup does not throw`,
+     * and each was the test immediately below it with the assertion
+     * taken out: same setup, same call, no claim. Giving them a
+     * distinct claim would have meant inventing one. ADR-203 found the
+     * same shape in the GraphToolbar suite.
+     */
 
     test("collapseGroup hides child objects", () =>
     {
@@ -678,9 +665,19 @@ describe("DiagramEngine — Clipboard", () =>
     beforeEach(() => { setup(); });
     afterEach(() => { teardown(); });
 
-    test("copy() with no selection does not throw", () =>
+    test("copy() with no selection leaves the clipboard empty", () =>
     {
-        expect(() => engine.copy()).not.toThrow();
+        // DEBT-TEST-1b. The clipboard is private, so the question is
+        // asked through the only thing that reads it. A copy that
+        // captured something it should not have would paste it.
+        addRect("clip-probe", 0, 0, 10, 10);
+        const before = engine.getObjects().length;
+
+        engine.clearSelection();
+        engine.copy();
+        engine.paste();
+
+        expect(engine.getObjects().length).toBe(before);
     });
 
     test("duplicate() creates a copy of selected objects", () =>
@@ -1134,10 +1131,44 @@ describe("DiagramEngine — Page Frames", () =>
         expect(a4!.category).toBe("Paper");
     });
 
-    test("scrollToPageFrame does not throw", () =>
+    test("scrollToPageFrame moves the viewport onto that frame", () =>
     {
-        const frame = engine.addPageFrame("A4 Portrait", { x: 0, y: 0 });
+        // DEBT-TEST-1b. Scrolling is the whole method, and the viewport
+        // is public. The frame is placed far from the origin so the
+        // move cannot be confused with the starting position.
+        //
+        // THE CANVAS HAS TO HAVE A SIZE. `zoomToFit` reads the SVG's
+        // bounding rect, and jsdom reports zeros for every element, so
+        // without this the transform is computed against a canvas of
+        // no width and the viewport never moves. The original block
+        // could not have seen that, because a no-op does not throw.
+        const rect = vi.spyOn(Element.prototype, "getBoundingClientRect")
+            .mockReturnValue({
+                x: 0, y: 0, width: 800, height: 600,
+                top: 0, left: 0, right: 800, bottom: 600,
+                toJSON: () => ({}),
+            } as DOMRect);
 
-        expect(() => engine.scrollToPageFrame(frame.id)).not.toThrow();
+        const frame = engine.addPageFrame("A4 Portrait", { x: 4000, y: 3000 });
+        const before = engine.getViewport();
+
+        engine.scrollToPageFrame(frame.id);
+        const after = engine.getViewport();
+
+        expect(after).not.toEqual(before);
+        rect.mockRestore();
+    });
+
+    test("scrollToPageFrame ignores an id that is not a frame", () =>
+    {
+        // The control. `findPageFrame` returns nothing and the method
+        // returns early, so the viewport must be untouched — which is
+        // a different claim from "it did not throw".
+        engine.addPageFrame("A4 Portrait", { x: 4000, y: 3000 });
+        const before = engine.getViewport();
+
+        engine.scrollToPageFrame("no-such-frame");
+
+        expect(engine.getViewport()).toEqual(before);
     });
 });

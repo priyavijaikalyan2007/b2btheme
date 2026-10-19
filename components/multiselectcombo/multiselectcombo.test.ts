@@ -254,19 +254,32 @@ describe("lifecycle", () =>
 
 describe("open and close", () =>
 {
-    test("open_DoesNotThrow", () =>
+    test("open_ExpandsTheComboAndShowsTheItems", () =>
     {
+        // DEBT-TEST-1b. Opening is the one thing `open()` must do, and
+        // the old block asserted only that calling it did not crash.
         const combo = new MultiselectCombo({ items: MOCK_ITEMS });
         combo.show("test-multiselect");
-        expect(() => combo.open()).not.toThrow();
+        const root = () => document.querySelector("[aria-expanded]");
+
+        expect(root()?.getAttribute("aria-expanded")).toBe("false");
+
+        combo.open();
+
+        expect(root()?.getAttribute("aria-expanded")).toBe("true");
+        expect(document.querySelectorAll("[role=\"option\"]").length)
+            .toBe(MOCK_ITEMS.length);
     });
 
-    test("close_DoesNotThrow", () =>
+    test("close_CollapsesTheCombo", () =>
     {
         const combo = new MultiselectCombo({ items: MOCK_ITEMS });
         combo.show("test-multiselect");
         combo.open();
-        expect(() => combo.close()).not.toThrow();
+        combo.close();
+
+        expect(document.querySelector("[aria-expanded]")
+            ?.getAttribute("aria-expanded")).toBe("false");
     });
 });
 
@@ -424,15 +437,24 @@ describe("edge cases", () =>
         expect(() => combo.destroy()).not.toThrow();
     });
 
-    test("groupedItems_RenderCorrectly", () =>
+    test("groupedItems_RenderUnderAHeaderPerGroup", () =>
     {
+        // DEBT-TEST-1b. "Render correctly" was asserted by constructing
+        // the component and never showing it, so nothing rendered at
+        // all. A group header carries the group name and role=group.
         const groupedItems: ComboItem[] = [
             { value: "a", label: "Apple", group: "Fruits" },
             { value: "b", label: "Broccoli", group: "Vegetables" },
         ];
-        expect(() =>
-        {
-            new MultiselectCombo({ items: groupedItems });
-        }).not.toThrow();
+        const combo = new MultiselectCombo({ items: groupedItems });
+        combo.show("test-multiselect");
+        combo.open();
+        const headers = Array.from(document.querySelectorAll(
+            ".multiselectcombo-group-header"));
+
+        expect(headers.map((h) => h.textContent))
+            .toEqual(["Fruits", "Vegetables"]);
+        expect(headers.every((h) => h.getAttribute("role") === "group"))
+            .toBe(true);
     });
 });

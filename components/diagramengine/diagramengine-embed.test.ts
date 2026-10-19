@@ -560,36 +560,41 @@ describe("DiagramEngine — Page Frame Sizes", () =>
         expect(cards.length).toBeGreaterThan(0);
     });
 
-    test("addPageFrame works with new device sizes", () =>
+    /*
+     * DEBT-TEST-1b. FOUR BLOCKS SAID "works with" AND ASSERTED THAT
+     * addPageFrame DID NOT THROW. The only way it throws is an unknown
+     * size name, so between them they checked that four strings are
+     * spelled the same in two files. What "works" has to mean is that
+     * the frame carries the dimensions the catalogue lists for that
+     * name, and that it joins the document.
+     */
+    test.each([
+        ["iPhone SE"],
+        ["Icon 128x128"],
+        ["iPad Air"],
+        ["MacBook Pro 14"],
+    ])("addPageFrame(%s) adds a frame with that size's dimensions", (name) =>
     {
-        expect(() =>
-        {
-            engine.addPageFrame("iPhone SE");
-        }).not.toThrow();
+        const preset = engine.getPageFrameSizes()
+            .find((s) => s.name === name);
+
+        if (!preset) { throw new Error(`no catalogue entry for ${name}`); }
+
+        const before = engine.getPageFrames().length;
+        const frame = engine.addPageFrame(name);
+
+        expect(frame.width).toBe(preset.width);
+        expect(frame.height).toBe(preset.height);
+        expect(engine.getPageFrames().length).toBe(before + 1);
+        expect(engine.getPageFrames().map((f) => f.id)).toContain(frame.id);
     });
 
-    test("addPageFrame works with icon sizes", () =>
+    test("addPageFrame rejects a name the catalogue does not have", () =>
     {
-        expect(() =>
-        {
-            engine.addPageFrame("Icon 128x128");
-        }).not.toThrow();
-    });
-
-    test("addPageFrame works with tablet sizes", () =>
-    {
-        expect(() =>
-        {
-            engine.addPageFrame("iPad Air");
-        }).not.toThrow();
-    });
-
-    test("addPageFrame works with laptop sizes", () =>
-    {
-        expect(() =>
-        {
-            engine.addPageFrame("MacBook Pro 14");
-        }).not.toThrow();
+        // The control for the four above. Without it they pass against
+        // an addPageFrame that ignores its argument entirely.
+        expect(() => engine.addPageFrame("Not A Real Size"))
+            .toThrow(/Unknown page frame size/);
     });
 
     test("all page frame sizes have positive dimensions", () =>

@@ -27,6 +27,74 @@ import type
 let container: HTMLElement;
 
 // ============================================================================
+// RECORDING 2D CONTEXT
+// ============================================================================
+
+/*
+ * DEBT-TEST-1b. FIVE BLOCKS IN THIS FILE RAN A METHOD THAT COULD NOT DO
+ * ANYTHING. Every Ruler setter ends in `render()`, and `render()` returns
+ * on its first line when there is no 2D context. jsdom supplies none, so
+ * `setUnit`, `setOrigin`, `setCursorPosition`, `calibrate` and `resize`
+ * were each called into a component that had nothing to redraw — the
+ * missing-precondition shape from ADR-202, five times over.
+ *
+ * The canvas 2D API is a PLATFORM API rather than a component of this
+ * library, so standing in for it is the same call as stubbing Bootstrap
+ * (DEBT-TEST-1c). What it records is what the ruler drew, which is the
+ * only observable this component has.
+ */
+interface DrawLog
+{
+    texts: string[];
+    lines: number;
+    fills: number;
+}
+
+/**
+ * Give every element a real box, because jsdom gives none.
+ *
+ * `sizeCanvas` reads `wrapperEl.clientWidth`, which jsdom reports as 0,
+ * so the canvas came out 0 wide and the tick loop drew almost nothing.
+ * The first rewrite of these tests counted 2 labels against 1 and read
+ * that as a unit change. It was the length of a ruler with no length.
+ */
+function installLayout(width: number, height: number): void
+{
+    Object.defineProperty(HTMLElement.prototype, "clientWidth",
+        { configurable: true, value: width });
+    Object.defineProperty(HTMLElement.prototype, "clientHeight",
+        { configurable: true, value: height });
+}
+
+function installRecordingContext(): DrawLog
+{
+    const log: DrawLog = { texts: [], lines: 0, fills: 0 };
+    const ctx = {
+        save: () => { },
+        restore: () => { },
+        scale: () => { },
+        rotate: () => { },
+        translate: () => { },
+        beginPath: () => { },
+        moveTo: () => { },
+        lineTo: () => { log.lines++; },
+        stroke: () => { },
+        fillRect: () => { log.fills++; },
+        fillText: (t: string) => { log.texts.push(t); },
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 0,
+        font: "",
+        textAlign: "",
+        textBaseline: "",
+    };
+
+    HTMLCanvasElement.prototype.getContext =
+        (() => ctx) as unknown as HTMLCanvasElement["getContext"];
+    return log;
+}
+
+// ============================================================================
 // SETUP / TEARDOWN
 // ============================================================================
 
@@ -39,9 +107,14 @@ beforeEach(() =>
     document.body.appendChild(container);
 });
 
+const realGetContext = HTMLCanvasElement.prototype.getContext;
+
 afterEach(() =>
 {
     document.body.innerHTML = "";
+    HTMLCanvasElement.prototype.getContext = realGetContext;
+    delete (HTMLElement.prototype as Partial<HTMLElement>).clientWidth;
+    delete (HTMLElement.prototype as Partial<HTMLElement>).clientHeight;
 });
 
 // ============================================================================
@@ -144,12 +217,29 @@ describe("unit switching", () =>
         ruler.destroy();
     });
 
-    test("setUnit_DoesNotThrowForValidUnits", () =>
+    test("setUnit_ChangesTheLabelsTheRulerDraws", () =>
     {
+        // DEBT-TEST-1b. The old block called setUnit three times and
+        // asserted that none of them threw, which was true of a method
+        // whose whole effect is a render that could not run.
+        //
+        // Inches and millimetres cannot produce the same tick labels
+        // over the same 600px: 600px is about 6.25in and about 159mm.
+        // The count is the claim, and it does not depend on the label
+        // text or on the font metrics jsdom does not have.
+        installLayout(600, 30);
+        const log = installRecordingContext();
         const ruler = createRuler("test-ruler");
-        expect(() => ruler.setUnit("mm")).not.toThrow();
-        expect(() => ruler.setUnit("in")).not.toThrow();
-        expect(() => ruler.setUnit("px")).not.toThrow();
+
+        ruler.setUnit("in");
+        const inches = log.texts.length;
+        log.texts.length = 0;
+
+        ruler.setUnit("mm");
+        const millimetres = log.texts.length;
+
+        expect(inches).toBeGreaterThan(0);
+        expect(millimetres).toBeGreaterThan(inches);
         ruler.destroy();
     });
 });
@@ -183,17 +273,40 @@ describe("orientation", () =>
 
 describe("origin and cursor", () =>
 {
-    test("setOrigin_UpdatesOriginOffset", () =>
+    test("setOrigin_ShiftsTheLabelsTheRulerDraws", () =>
     {
+        // DEBT-TEST-1b. The name said the origin offset updates and the
+        // body asserted no throw. Moving the origin slides the whole
+        // scale, so the labels drawn are a different set.
+        installLayout(600, 30);
+        const log = installRecordingContext();
         const ruler = createRuler("test-ruler");
-        expect(() => ruler.setOrigin(50)).not.toThrow();
+        const before = [...log.texts];
+
+        log.texts.length = 0;
+        ruler.setOrigin(50);
+
+        expect(before.length).toBeGreaterThan(0);
+        expect(log.texts).not.toEqual(before);
         ruler.destroy();
     });
 
-    test("setCursorPosition_DoesNotCrash", () =>
+    test("setCursorPosition_DrawsTheCursorLine", () =>
     {
+        // DEBT-TEST-1b. `showCursor: true` is set here for a reason that
+        // the old assertion could not see: drawCursorLine is the only
+        // part of the render this method affects, and it is skipped
+        // entirely while the cursor position is unset.
+        installLayout(600, 30);
+        const log = installRecordingContext();
         const ruler = createRuler("test-ruler", { showCursor: true });
-        expect(() => ruler.setCursorPosition(100)).not.toThrow();
+        const beforeLines = log.lines;
+
+        log.lines = 0;
+        ruler.setCursorPosition(100);
+
+        expect(beforeLines).toBeGreaterThan(0);
+        expect(log.lines).toBeGreaterThan(beforeLines);
         ruler.destroy();
     });
 });
@@ -204,17 +317,44 @@ describe("origin and cursor", () =>
 
 describe("calibrate and resize", () =>
 {
-    test("calibrate_ReCalculatesDPI", () =>
+    test("calibrate_ReMeasuresAndRedraws", () =>
     {
+        // DEBT-TEST-1b. The DPI it measures cannot be read back, and
+        // jsdom reports zero width for the probe element so the value
+        // lands on the documented fallback either way. What IS
+        // observable is that calibrate redraws, which is the half of
+        // the name the old block never checked.
+        installLayout(600, 30);
+        const log = installRecordingContext();
         const ruler = createRuler("test-ruler");
-        expect(() => ruler.calibrate()).not.toThrow();
+
+        log.texts.length = 0;
+        log.fills = 0;
+        ruler.calibrate();
+
+        expect(log.fills).toBeGreaterThan(0);
+        expect(log.texts.length).toBeGreaterThan(0);
         ruler.destroy();
     });
 
-    test("resize_RecalculatesCanvas", () =>
+    test("resize_RecalculatesCanvasFromTheContainer", () =>
     {
+        // DEBT-TEST-1b, and the one claim here that needs no stand-in:
+        // sizeCanvas writes the backing-store size onto the element,
+        // which jsdom reports faithfully.
+        //
+        // jsdom gives every element a clientWidth of 0, so without
+        // installLayout the numbers below are both 0 and comparing them
+        // proves nothing. That missing precondition is what the original
+        // block never had.
+        installLayout(640, 24);
         const ruler = createRuler("test-ruler");
-        expect(() => ruler.resize()).not.toThrow();
+        const canvas = container.querySelector("canvas") as HTMLCanvasElement;
+
+        ruler.resize();
+
+        expect(canvas.width).toBeGreaterThan(0);
+        expect(canvas.style.width).toBe("640px");
         ruler.destroy();
     });
 });

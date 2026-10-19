@@ -1592,3 +1592,24 @@
   related:
   - RankSuitesByStandInNotByMatcher
   - ATestThatCannotFail
+
+- name: AFileOnDiskIsNotAPageThatWorks
+  definition: "ADR-205. Structure checks [4] and [5] walk every demo page and assert that the files it references exist. 129 pages passed them and four of those pages threw on load, because the checks ask a question about the filesystem and the defect lives in the browser. Opening all 129 in a real engine took one Playwright spec and found four component defects, three of them in components whose unit suites are green. The general form: when a gate and a failure mode are in different layers, the gate's greenness is not evidence. Ask what the check actually executes, and whether a user ever executes the same thing."
+  anchor_file: tests/demo-pages.spec.ts
+  related:
+  - RankSuitesByStandInNotByMatcher
+  - AVerifierMustReadWhatTheConsumerCopies
+
+- name: ExistenceIsNotReadiness
+  definition: "ADR-205. MarkdownEditor guarded its theme observer with `if (this.vditor)` and threw four uncaught TypeErrors on every page load. A Vditor INSTANCE exists the moment the constructor returns and cannot answer getValue() until its `after` hook has run, because the serialiser arrives in a separate chunk. The guard read as a readiness check and was an existence check. Any dependency with an async init has two states a null check cannot tell apart, and the fix is to track the second one: a flag set in the ready hook, and work that arrives early deferred into that hook rather than dropped."
+  anchor_file: components/markdowneditor/markdowneditor.ts
+  related:
+  - AMissingPreconditionIsTheQuieterSibling
+  - AStubIsRightWhenTheClaimIsAboutTheCaller
+
+- name: AContractHoldingOnOneBranchIsNotAContract
+  definition: "ADR-205. DynamicFormSwitcher has four ways to resolve a field component, and only auto-discovery attached the host element to the document before handing it to a factory. The library convention is that factories take a container ID and resolve it with getElementById, so `mount`, a registered provider and `type: \"custom\"` all handed callers a container the document did not contain. The same shape appeared twice more the same day: DockLayout guarantees attachment on no slot route, and fixing only the constructor route would have left setToolbar-before-show broken. When a guarantee is implemented at a call site rather than at the boundary, count the call sites before believing it."
+  anchor_file: components/dynamicformswitcher/dynamicformswitcher.ts
+  related:
+  - ExistenceIsNotReadiness
+  - AFileOnDiskIsNotAPageThatWorks

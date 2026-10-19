@@ -119,9 +119,23 @@ describe("createHoverCard — the container option", () =>
 
     test("omitted_UsesDocumentBody", () =>
     {
-        const handle = createHoverCard();
+        // DEBT-TEST-1b. The name states WHERE the card goes and the old
+        // body asserted only that showing it did not crash. A card
+        // appended to the wrong parent crashes nothing and is invisible.
+        // The old body also called `show({ title: "x" })` with ONE
+        // argument against a two-argument signature, so the content
+        // object arrived as the ANCHOR and the content was undefined.
+        // Nothing threw, which is all the old assertion asked.
+        vi.useFakeTimers();
+        const anchor = document.createElement("div");
+        document.body.appendChild(anchor);
+        const handle = createHoverCard({ openDelay: 0 });
+        handle.show(anchor, { title: "x" });
+        vi.advanceTimersByTime(1);
+        const card = document.querySelector(".hovercard");
 
-        expect(() => handle.show({ title: "x" })).not.toThrow();
+        expect(card).not.toBeNull();
+        expect(card?.parentElement).toBe(document.body);
         handle.destroy();
     });
 
@@ -130,10 +144,37 @@ describe("createHoverCard — the container option", () =>
         // `{ ...defaults, container: cfg.container }` is the ordinary way
         // to compose options, and it sets the key to undefined. That
         // caller said nothing, so it gets the documented default.
-        const handle = createHoverCard({ container: undefined });
+        vi.useFakeTimers();
+        const anchor = document.createElement("div");
+        document.body.appendChild(anchor);
+        const handle = createHoverCard({ container: undefined, openDelay: 0 });
+        handle.show(anchor, { title: "x" });
+        vi.advanceTimersByTime(1);
+        const card = document.querySelector(".hovercard");
 
-        expect(() => handle.show({ title: "x" })).not.toThrow();
+        expect(card).not.toBeNull();
+        expect(card?.parentElement).toBe(document.body);
         handle.destroy();
+    });
+
+    test("explicitContainer_IsTheControlForTheTwoAbove", () =>
+    {
+        // Without this the two cases above pass for any component that
+        // always appends to the body, including one that ignores the
+        // option entirely. ADR-194 D5 is about telling three states
+        // apart, and two of them look alike unless the third is here.
+        const portal = document.createElement("div");
+        document.body.appendChild(portal);
+        vi.useFakeTimers();
+        const anchor = document.createElement("div");
+        document.body.appendChild(anchor);
+        const handle = createHoverCard({ container: portal, openDelay: 0 });
+        handle.show(anchor, { title: "x" });
+        vi.advanceTimersByTime(1);
+
+        expect(portal.querySelector(".hovercard")).not.toBeNull();
+        handle.destroy();
+        portal.remove();
     });
 
     test("null_Throws", () =>

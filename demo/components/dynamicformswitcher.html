@@ -495,7 +495,16 @@
                             host.appendChild(helpPane);
 
                             var editor = null;
-                            if (typeof window.createCodeEditor === "function")
+                            // ADR-205. This used to test createCodeEditor,
+                            // which THIS PAGE LOADS, while the thing it
+                            // actually needs is CodeMirror, which this page
+                            // does not. The factory answered, the editor
+                            // mounted, and it logged a refusal on every
+                            // load. Guard on the DEPENDENCY, not on the
+                            // wrapper that needs it — the same mistake
+                            // DocViewer made about marked (FALLBACK-13).
+                            if (typeof window.createCodeEditor === "function"
+                                && typeof window.EditorView === "function")
                             {
                                 editor = window.createCodeEditor("demo-mount-editor-host", {
                                     value: '{\n  "source": "s3://bucket/in",\n  "destination": "s3://bucket/out",\n  "filters": []\n}',
@@ -506,7 +515,10 @@
                             else
                             {
                                 editorHost.textContent =
-                                    "CodeEditor not loaded — using textarea fallback.";
+                                    "CodeMirror 6 is not loaded on this page, "
+                                    + "so the custom field mounts a plain "
+                                    + "textarea instead. The adapter contract "
+                                    + "is identical either way.";
                                 var ta = document.createElement("textarea");
                                 ta.style.width = "100%";
                                 ta.style.height = "240px";

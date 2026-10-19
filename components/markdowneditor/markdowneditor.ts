@@ -446,6 +446,28 @@ export class MarkdownEditor
     private boundHandlers: Record<string, EventListener> = {};
     private themeObserver: MutationObserver | null = null;
 
+    /**
+     * Whether Vditor has finished loading its own lazy modules.
+     *
+     * A Vditor INSTANCE exists the moment the constructor returns, and it
+     * cannot answer getValue() until its `after` hook has run: the IR
+     * serialiser arrives in a separate chunk. `if (this.vditor)` reads as
+     * a readiness check and is only an existence check. ADR-205.
+     */
+    private vditorReady = false;
+
+    /** A theme change that arrived while Vditor was still loading. */
+    private themeChangeDeferred = false;
+
+    /**
+     * Content to restore into the NEXT Vditor once it reports ready.
+     *
+     * A re-init reads the document out of the old instance and has to put
+     * it back into the new one, and the new one cannot take it until its
+     * `after` hook runs. ADR-205.
+     */
+    private pendingValue: string | null = null;
+
     constructor(container: HTMLElement, options: MarkdownEditorOptions = {})
     {
         this.container = container;
@@ -1196,6 +1218,9 @@ export class MarkdownEditor
         const vditorMode = this.resolveVditorMode();
         const vditorOptions = this.buildVditorOptions(vditorMode);
 
+        // Cleared BEFORE the constructor, because the `after` hook that
+        // sets it can fire synchronously on a warm cache. ADR-205.
+        this.vditorReady = false;
         this.vditor = new VditorClass(this.editorArea.id, vditorOptions);
         return this.vditor;
     }
@@ -1277,10 +1302,34 @@ export class MarkdownEditor
             after: () =>
             {
                 logInfo("Vditor ready");
+                this.vditorReady = true;
+
+                // Restore the document a re-init took out of the previous
+                // instance. This used to be a synchronous setValue() on a
+                // Vditor that had just been constructed, which reached for
+                // `currentMode` on an editor that did not have one yet.
+                // ADR-205.
+                if (this.pendingValue !== null)
+                {
+                    const restore = this.pendingValue;
+                    this.pendingValue = null;
+                    this.vditor?.setValue(restore);
+                }
 
                 if (!this.options.editable)
                 {
                     this.vditor?.disabled();
+                }
+
+                // A theme change that arrived mid-load is applied now
+                // rather than dropped. The instance below was built with
+                // the palette that was current when the constructor ran,
+                // so without this the editor keeps the old one. ADR-205.
+                if (this.themeChangeDeferred)
+                {
+                    this.themeChangeDeferred = false;
+                    this.reinitVditorForTheme();
+                    return;
                 }
 
                 // Render initial preview when visible on load:
@@ -1872,17 +1921,22 @@ ${bodyHTML}
         this.themeObserver = new MutationObserver(() =>
         {
             logInfo("Theme changed, re-initialising Vditor");
-            if (this.vditor)
+
+            // ADR-205. This used to read `if (this.vditor)` and then call
+            // getValue(). A page that sets data-bs-theme on load fires the
+            // observer while Vditor is still fetching its IR serialiser,
+            // and getValue() threw an uncaught TypeError out of a
+            // MutationObserver callback, once per editor on the page.
+            // Found by the demo-page smoke gate, four times on one page.
+            if (this.vditor && !this.vditorReady)
             {
-                const currentValue = this.vditor.getValue();
-                this.vditor.destroy();
-                this.vditor = null;
-                const reinitialised = this.initVditor();
-                if (currentValue && reinitialised)
-                {
-                    reinitialised.setValue(currentValue);
-                }
+                this.themeChangeDeferred = true;
             }
+            else if (this.vditor)
+            {
+                this.reinitVditorForTheme();
+            }
+
             if (this.previewArea && this.displayValue)
             {
                 this.renderDisplayPreview();
@@ -1892,6 +1946,27 @@ ${bodyHTML}
             attributes: true,
             attributeFilter: ["data-bs-theme"],
         });
+    }
+
+    /**
+     * Rebuilds Vditor so it picks up the current light or dark palette.
+     *
+     * Only safe once `after` has run, because it reads the document back
+     * out of the instance it is about to destroy. ADR-205.
+     */
+    private reinitVditorForTheme(): void
+    {
+        if (!this.vditor) { return; }
+
+        const currentValue = this.vditor.getValue();
+        this.vditor.destroy();
+        this.vditor = null;
+        this.vditorReady = false;
+
+        // Handed to the new instance's `after` hook rather than written
+        // straight into a constructor's return value. ADR-205.
+        this.pendingValue = currentValue ? currentValue : null;
+        this.initVditor();
     }
 
     public destroy(): void
@@ -1911,6 +1986,9 @@ ${bodyHTML}
             this.vditor.destroy();
             this.vditor = null;
         }
+        this.vditorReady = false;
+        this.themeChangeDeferred = false;
+        this.pendingValue = null;
 
         if (this.wrapper)
         {

@@ -361,17 +361,57 @@ export function census(files = null)
  * the title states an effect the body never looks for. EXISTENCE is
  * `.toBeDefined()` and `.toBeTruthy()`.
  */
-export function shapesOf(rows)
+const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
+const IDEMPOTENT = /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+
+/** The set of files that withhold a global somewhere in their text. */
+function withheldFiles(rows)
 {
-    const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
-    const IDEMPOTENT = /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
     const withheld = new Set();
 
     for (const r of rows)
     {
         if (WITHHELD.test(readFileSync(r.file, "utf8"))) { withheld.add(r.file); }
     }
+    return withheld;
+}
 
+/**
+ * The shape of ONE vacuous block, or null when it is not vacuous.
+ *
+ * ONE CLASSIFIER, TWO CONSUMERS. The tally and the listing used to be
+ * the same loop, so asking WHICH blocks are in a bucket meant writing a
+ * second rule that agreed with the first by inspection. ADR-203 is the
+ * record of what that costs: the bucket of nine it named had to be
+ * rediscovered by guesswork, and the guesses returned 123 and 1.
+ */
+export function shapeOf(row, withheld)
+{
+    if (row.verdict !== "vacuous") { return null; }
+    if (!/\.not\s*\.\s*toThrow/.test(row.body)) { return "existence"; }
+
+    // IDEMPOTENCY IS TESTED FIRST, AND THE ORDER IS THE WHOLE
+    // CLASSIFIER. Withholding is detected per FILE, because a suite
+    // states the absence once in its setup, and a file that deletes
+    // a global in teardown would otherwise claim every destroy_
+    // CalledTwice block inside it. ADR-203.
+    if (IDEMPOTENT.test(row.name)) { return "idempotent"; }
+    if (withheld.has(row.file)) { return "absentDependency"; }
+    return "namesAChange";
+}
+
+/** Every vacuous block, tagged with the shape it falls into. */
+export function shapeRows(rows)
+{
+    const withheld = withheldFiles(rows);
+
+    return rows
+        .map((r) => ({ ...r, shape: shapeOf(r, withheld) }))
+        .filter((r) => r.shape !== null);
+}
+
+export function shapesOf(rows)
+{
     const tally = {
         absentDependency: 0,
         idempotent: 0,
@@ -379,21 +419,7 @@ export function shapesOf(rows)
         existence: 0,
     };
 
-    for (const r of rows)
-    {
-        if (r.verdict !== "vacuous") { continue; }
-
-        if (!/\.not\s*\.\s*toThrow/.test(r.body)) { tally.existence++; continue; }
-
-        // IDEMPOTENCY IS TESTED FIRST, AND THE ORDER IS THE WHOLE
-        // CLASSIFIER. Withholding is detected per FILE, because a suite
-        // states the absence once in its setup, and a file that deletes
-        // a global in teardown would otherwise claim every destroy_
-        // CalledTwice block inside it. ADR-203.
-        if (IDEMPOTENT.test(r.name)) { tally.idempotent++; continue; }
-        if (withheld.has(r.file)) { tally.absentDependency++; continue; }
-        tally.namesAChange++;
-    }
+    for (const r of shapeRows(rows)) { tally[r.shape]++; }
     return tally;
 }
 
@@ -487,6 +513,18 @@ function main()
         for (const [k, v] of Object.entries(shapes))
         {
             console.log(`    ${String(v).padStart(4)}  ${k}`);
+        }
+
+        // `--shapes --shape <name>` lists the members of one bucket, so
+        // the next piece of work is a command rather than a reading of
+        // a table. ADR-205.
+        const want = process.argv[process.argv.indexOf("--shape") + 1];
+        if (process.argv.includes("--shape"))
+        {
+            for (const r of shapeRows(rows).filter((x) => x.shape === want))
+            {
+                console.log(`    ${r.file} :: ${r.name}`);
+            }
         }
     }
 

@@ -436,7 +436,15 @@ const BASELINES = {
     // ERR-1. 30522 -> 30523. DiagramEngine's container refusal named the
     // container and not the remedy, so it said what was wrong and not what
     // to do. One line, and the seventh recorded raise of this ceiling.
-    diagramengineLines: 30523,
+    //
+    // ADR-205. 30523 -> 30546, the eighth raise. The embed probe had no
+    // strategy for a factory that mounts itself into the container it
+    // was handed, so a WORKING MarkdownEditor embed threw on every
+    // render of the demo page. Strategy 0 counts the container's
+    // children before the factory runs and returns when they grew.
+    // Found by the demo-page smoke gate, which is the only thing in
+    // this repository that had ever opened that page.
+    diagramengineLines: 30546,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -465,14 +473,46 @@ const BASELINES = {
     // run on 9ff3965 and on HEAD. The hand-run split it replaces said
     // 116 / 73 / 9 / 86, which nothing here can now reproduce.
     //
+    // 267 -> 236 on 2026-10-19, ADR-205. The whole drop is the
+    // namesAChange bucket, 66 -> 35, worked by cluster rather than by
+    // file size: Ruler 5, SmartTextInput 8, three line pickers 6,
+    // HoverCard 2, MultiselectCombo 3, DiagramEngine 7. Every rewrite
+    // was mutation-proven and two blocks were DELETED rather than
+    // rewritten, because each was the test below it with the assertion
+    // removed.
+    //
+    // THE testBlocks FLOOR HELD BY ARITHMETIC AND NOT BY CATCHING
+    // ANYTHING. Two deletions and four blocks collapsed into one
+    // test.each is -5, and four new controls plus a split are +5. The
+    // floor reads "at" and saw nothing, which is worth stating where
+    // the next reader can see it: this floor catches a mass deletion,
+    // not a balanced one.
+    //
+    // THE BUCKET IS NOW A COMMAND, NOT A READING.
+    // `node scripts/test-assertions.mjs --shapes --shape namesAChange`
+    // lists its members. The tally and the listing share one
+    // classifier, `shapeOf`, because a second rule that agrees with
+    // the first by inspection is the thing ADR-203 was written about.
+    //
+    // WHAT THE CLUSTER WORK KEPT FINDING WAS A MISSING PRECONDITION.
+    // Ruler's five all called a method whose only effect is a render,
+    // in an environment with no 2D context. DiagramEngine's
+    // scrollToPageFrame fits the viewport to a canvas jsdom reports as
+    // zero-sized. HoverCard's two called a two-argument `show` with
+    // one argument. None of those could have failed whatever they
+    // asserted, so the rewrite is half assertion and half setup.
+    //
     //   113 -> 110  `.not.toThrow()` on IDEMPOTENCY — destroy_CalledTwice,
     //        closeWhenNotOpen. Weak but honest, and the right
     //        assertion is uniform: the DOM is clean and the handle is
     //        inert. Per-component selectors, near-zero expected yield.
-    //    68 ->  66  `.not.toThrow()` on something else — the name states a
-    //        change and the body asserts non-crash. Same family as the
-    //        21 with no assertion at all, so expect contracts to read
-    //        rather than defects. This is where to go next.
+    //    68 ->  35  `.not.toThrow()` on something else — the name states a
+    //        change and the body asserts non-crash. 66 on 2026-10-18
+    //        and 35 after the ADR-205 pass. The expectation that this
+    //        bucket would read as contracts rather than defects MOSTLY
+    //        held. No defect was FIXED from the 31, what kept turning
+    //        up was preconditions that had never been met, and one
+    //        defect was found and recorded: DEBT-STI-1.
     //    17 ->   6  `.not.toThrow()` on an ABSENT DEPENDENCY — the FALLBACK
     //        shape. The nine of 2026-10-18 are closed, and the six
     //        that remain each state a change in their name.
@@ -523,7 +563,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 267,
+    testsThatCannotFail: 236,
 };
 
 /*

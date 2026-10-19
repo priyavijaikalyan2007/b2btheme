@@ -1156,6 +1156,12 @@ export class RenderEngine
     {
         let instance: unknown;
 
+        // ADR-205. Counted BEFORE the factory runs, because a factory
+        // that takes a container ID may mount itself, and then there is
+        // nothing left for the strategies below to do.
+        const childrenBefore = document.getElementById(containerId)
+            ?.childElementCount ?? 0;
+
         if (fn.length <= 1)
         {
             instance = fn(opts);
@@ -1169,7 +1175,7 @@ export class RenderEngine
             instance = fn(containerId, opts);
         }
 
-        this.tryShowOnContainer(instance, containerId, embed);
+        this.tryShowOnContainer(instance, containerId, embed, childrenBefore);
 
         return instance;
     }
@@ -1177,6 +1183,7 @@ export class RenderEngine
     /**
      * Mounts a component instance into the embed container.
      * Tries strategies in order:
+     * 0. the factory already mounted — MarkdownEditor pattern
      * 1. show(containerId) — most components
      * 2. render(options.content, container) — MarkdownRenderer pattern
      * 3. getElement() + appendChild — LogConsole pattern
@@ -1184,13 +1191,29 @@ export class RenderEngine
      * @param instance - The component instance.
      * @param containerId - The container element ID.
      * @param embed - The embed definition, read for render() content.
+     * @param childrenBefore - Children the container held before the
+     *   factory ran, which is how strategy 0 is detected.
      */
     private tryShowOnContainer(
         instance: unknown,
         containerId: string,
-        embed: EmbedDefinition): void
+        embed: EmbedDefinition,
+        childrenBefore: number): void
     {
         if (!instance || typeof instance !== "object")
+        {
+            return;
+        }
+
+        // ADR-205. STRATEGY 0 WAS MISSING AND MARKDOWNEDITOR IS IT.
+        // `createMarkdownEditor(containerId, options)` builds the editor
+        // INTO the container and returns an instance with no show(), no
+        // render() and no getElement(). The embed had already succeeded
+        // by the time the probe below declared that none of its three
+        // strategies worked, so a working editor threw on every render.
+        // Found by the demo-page smoke gate.
+        const mountTarget = document.getElementById(containerId);
+        if (mountTarget && mountTarget.childElementCount > childrenBefore)
         {
             return;
         }

@@ -4224,3 +4224,49 @@ clauses were false for unrelated reasons. Fixing the first yesterday
 is what made the second visible today.
 
 DEBT-TS-1 did not move, and the grep says so with a date on it.
+
+## 2026-10-19 — The pages nobody had opened
+
+Three items in order: the smoke gate, the DEBT-SEC-8 count, the 66.
+
+The gate took one spec and found four broken pages out of 129. What I
+had pitched was "nothing loads these pages". That was slightly wrong
+in a way worth keeping: two structure checks DO walk every page, and
+both ask the filesystem a question. A page passes them while
+throwing on load, because the check and the defect are in different
+layers.
+
+All four were real, and three were in components with green unit
+suites. MarkdownEditor threw four uncaught TypeErrors per load from a
+theme observer that guarded on `if (this.vditor)` — an instance exists
+before it is ready, and the guard could not tell those apart. Fixing it
+moved the crash one step, to a `setValue()` on a Vditor that had just
+been constructed. That was latent in the original and unreachable
+while the first call threw.
+
+DynamicFormSwitcher had four ways to resolve a field component and one
+of them attached the host to the document first. DiagramEngine's embed
+probe had no strategy for a factory that mounts itself, so an embed
+that had already succeeded threw anyway. DockLayout mounts its slots
+from the constructor, before the grid is in the document — fixed in the
+page, recorded as DEBT-DL-1, because the obvious repair fixes one route
+of two.
+
+The gate is local. `codeeditor.html` pulls CodeMirror from esm.sh and
+CI runs no browser, so putting it in CI is a decision about flake
+rather than something I should have done quietly.
+
+DEBT-SEC-8 said 35 and the ratchet said 17. The prose five paragraphs
+into the same entry had 17 the whole time, which is worse than being
+uniformly stale. Third time this failure is recorded here, so the fix
+names the instrument beside the number.
+
+Then the 66, down to 35. The prediction was "contracts to read rather
+than defects" and it mostly held. What I did not expect was how many
+were missing a PRECONDITION rather than an assertion. Ruler's five all
+called a method whose only effect is a render, in an environment with
+no 2D context. HoverCard's two called a two-argument `show` with one
+argument. Each rewrite turned out to be half assertion and half setup.
+
+Working by cluster is what made 31 fit in one pass. The recording
+canvas context written for Ruler's first block paid for the other four.
