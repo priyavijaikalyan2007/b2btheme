@@ -9396,3 +9396,45 @@
 
     Two new tests, mutation-proven: re-adding a no-op setter to CardLayout
     fails the absence assertion.
+
+- id: ADR-213
+  title: Six stand-ins verified one by one, and a ceiling so the number cannot grow in silence
+  date: 2026-10-20
+  status: accepted
+  context: |
+    DEBT-TEST-1c reported 6 suites that write a global another component
+    owns without importing that component, down from 11, and asserted
+    that all six remaining were correct. Nothing had checked that claim
+    since it was written, and nothing held the number.
+  decision: |
+    D1. ALL SIX ARE CORRECT, AND EACH WAS CHECKED RATHER THAN TRUSTED.
+        `formdialog` DELETES the global to prove a dirty form refuses.
+        `ribbonbuilder` stubs, deletes, and asserts undefined.
+        `diagramengine` records what the engine handed the renderer.
+        The three `spinemap` cases plant factories that throw, to prove
+        the error propagates with its cause attached. In every one the
+        stub is the SUBJECT of the test.
+
+    D2. THAT IS THE LINE AGAINST THE DEFECT THE CENSUS WAS BUILT FOR.
+        The pre-fix GraphToolbar suite asserted on values its own fake
+        Toolbar produced, so nine real assertions measured the suite
+        rather than the component. Here the assertions are about how the
+        component REACTS to an absent, throwing or recording dependency.
+
+    D3. `siblingStandIns` IS A CEILING AT 6, NOT A TARGET OF ZERO.
+        Driving it to zero means deleting refusal tests, and the refusal
+        tests are what caught FALLBACK-1 through FALLBACK-14. The ceiling
+        exists so the population cannot grow unobserved, which is how the
+        GraphToolbar defect survived in the first place.
+
+    D4. THE ENTRY IS SETTLED RATHER THAN CLOSED, because 6 is a standing
+        decision with a condition: any seventh needs the same one-by-one
+        check, asking whether the assertions are about the component or
+        about the stub.
+  consequences: |
+    A new ceiling in `audit-counts.mjs`, mutation-proven: planting one
+    sibling stand-in in an unrelated suite takes the count to 7 and trips
+    it.
+
+    No test changed and no component changed. The work was verification
+    and enforcement.

@@ -55,7 +55,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
-import { census as testCensus } from "./test-assertions.mjs";
+import { census as testCensus, standInsOf } from "./test-assertions.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -643,6 +643,7 @@ const BASELINES = {
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
     testsThatCannotFail: 236,
+    siblingStandIns: 6,
 };
 
 /*
@@ -1218,6 +1219,7 @@ function measure()
         traceCalls: 0,
         testsWithoutAssertion: 0,
         testsThatCannotFail: 0,
+        siblingStandIns: 0,
         testBlocks: 0,
     };
     const consoleLogKinds = {};
@@ -1327,6 +1329,20 @@ function measure()
     counts.testBlocks = blocks.length;
     counts.testsWithoutAssertion = blocks.filter((b) => b.verdict === "none").length;
     counts.testsThatCannotFail = blocks.filter((b) => b.verdict === "vacuous").length;
+
+    // DEBT-TEST-1c. A suite that writes a global another component here
+    // owns, and does not import that component. The population was 11,
+    // is 6, and all 6 are legitimate: each plants a stub that IS the
+    // subject of the test, such as a factory that throws, or deletes the
+    // global to prove the component refuses without it.
+    //
+    // A CEILING RATHER THAN A TARGET OF ZERO. Driving this to zero would
+    // mean deleting the refusal tests, which are the ones that caught
+    // FALLBACK-1 through -14. It exists so the number cannot GROW in
+    // silence, which is how ADR-203's GraphToolbar defect survived: nine
+    // blocks asserting on a fake Toolbar, every assertion real, every one
+    // measuring the suite rather than the component.
+    counts.siblingStandIns = standInsOf().filter((r) => !r.imported).length;
 
     // DEBT-SEC-5. Documentation and demo pages hand consumers third-party
     // URLs. One without an exact version is a floating dependency, and one

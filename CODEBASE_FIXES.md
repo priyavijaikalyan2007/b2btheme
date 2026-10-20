@@ -2817,9 +2817,28 @@ offered as the evidence for it.
   a crash. **A behaviour change rather than a test fix**, so it is
   recorded instead of taken.
 
-- [ ] **DEBT-TEST-1c** **6 suites stand in for a sibling component
-  they could mount, down from 11, and all six that remain are
-  correct.**
+- [=] **SETTLED — DEBT-TEST-1c** **6 stand-ins, down from 11, and all six
+  verified correct one by one on 2026-10-20.** Held by the new
+  `siblingStandIns` ceiling. ADR-213.
+
+  The previous version ASSERTED that the remaining six were correct.
+  This one checked each:
+
+  | Suite | Global | Why the stub IS the test |
+  |---|---|---|
+  | `diagramengine.nofallback` | `createMarkdownRenderer` | records what the engine HANDED it; the real renderer would make the assertion about its own output instead |
+  | `formdialog.nofallback` | `showConfirmDialog` | **deletes** the global, to prove a dirty form refuses rather than closing silently |
+  | `ribbonbuilder.nofallback` | `createSymbolPicker` | stubs, then deletes and asserts `toBeUndefined()` |
+  | `spinemap.nofallback` | `createSprintPicker` | a factory that THROWS, to prove the error propagates with its cause attached |
+  | `spinemap.fallback2` | `createPeriodPicker` | same shape |
+  | `spinemap.fallback2` | `createTagger` | same shape |
+
+  **WHAT SEPARATES THESE FROM THE DEFECT THE CENSUS WAS BUILT TO FIND.**
+  The pre-fix GraphToolbar suite asserted on values ITS OWN fake Toolbar
+  produced, so nine real assertions measured the suite instead of the
+  component. In all six above the stub is the SUBJECT — absent, or
+  throwing, or recording — and every assertion is about how the component
+  under test REACTS to it. The stub is the instrument, not the answer.
 
   Regenerate with `node scripts/test-assertions.mjs --stand-ins`.
 
@@ -2845,6 +2864,21 @@ offered as the evidence for it.
   `scripts/test-assertions.test.ts` feeds the classifier that exact
   shape. An instrument that cannot find the defect it was written for
   is a note.
+
+  > **SETTLED as a category.** A stand-in whose stub is the subject of the
+  > test is the correct shape and must not be converted. Converting one
+  > deletes a refusal test, and the refusal tests are what caught
+  > FALLBACK-1 through FALLBACK-14.
+  >
+  > **Future sessions: do not drive `siblingStandIns` to zero.** It is a
+  > CEILING. Six is the floor of correctness, not a backlog. The ceiling
+  > exists so the number cannot GROW in silence, which is exactly how the
+  > GraphToolbar defect survived.
+  >
+  > **Reopen when** `siblingStandIns` exceeds 6. A new stand-in is a new
+  > claim that needs the same one-by-one check the six above got, and the
+  > question to ask is whether the assertions are about the component or
+  > about the stub.
 
   | Suite | Stood in for | Outcome |
   |---|---|---|
