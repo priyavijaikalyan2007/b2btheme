@@ -1579,6 +1579,30 @@ export class MarkdownEditor
     // ========================================================================
 
     /**
+     * Refuses a public request that needs the editor, when the editor never
+     * loaded.
+     *
+     * FALLBACK-15, second pass. ADR-200's discriminator decides which methods
+     * belong here: a request the CALLER NAMED must refuse, because the caller
+     * is owed either the effect or an error. `focus()`, `enable()`,
+     * `disable()` and `setEditable()` each returned normally having done
+     * nothing, which is the shape FALLBACK-11 removed from CodeEditor nine
+     * methods at a time. The first pass of this fix removed the substitute
+     * SURFACE and left the silent methods behind it.
+     *
+     * @param what - The method name, so the message says what was refused.
+     */
+    private requireVditor(what: string): void
+    {
+        if (!this.vditor)
+        {
+            throw new Error(
+                `${LOG_PREFIX} ${what} needs Vditor, which did not load. `
+                + "Load the vditor bundle before creating the editor.");
+        }
+    }
+
+    /**
      * Returns the current markdown content.
      */
     public getValue(): string
@@ -1763,18 +1787,17 @@ export class MarkdownEditor
      */
     public setEditable(editable: boolean): void
     {
+        this.requireVditor("setEditable()");
+
         this.options.editable = editable;
 
-        if (this.vditor)
+        if (editable)
         {
-            if (editable)
-            {
-                this.vditor.enable();
-            }
-            else
-            {
-                this.vditor.disabled();
-            }
+            this.vditor?.enable();
+        }
+        else
+        {
+            this.vditor?.disabled();
         }
 
         logDebug("Editable:", editable);
@@ -1896,6 +1919,7 @@ ${bodyHTML}
      */
     public focus(): void
     {
+        this.requireVditor("focus()");
         this.vditor?.focus();
     }
 
@@ -1904,6 +1928,7 @@ ${bodyHTML}
      */
     public enable(): void
     {
+        this.requireVditor("enable()");
         this.options.disabled = false;
         this.vditor?.enable();
         this.wrapper?.classList.remove("mde-disabled");
@@ -1914,6 +1939,7 @@ ${bodyHTML}
      */
     public disable(): void
     {
+        this.requireVditor("disable()");
         this.options.disabled = true;
         this.vditor?.disabled();
         this.wrapper?.classList.add("mde-disabled");
@@ -2023,7 +2049,7 @@ ${bodyHTML}
  */
 function showMarkdownEditorModalFn(
     options: MarkdownEditorModalOptions = {}
-): MarkdownEditor | null
+): MarkdownEditor
 {
     logInfo("Opening modal editor");
 

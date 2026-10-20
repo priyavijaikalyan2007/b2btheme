@@ -165,6 +165,24 @@ describe("MarkdownEditor edit mode with no Vditor", () =>
         editor.destroy();
     });
 
+    // ADR-200's discriminator: a request the CALLER NAMED must refuse.
+    // The first pass of FALLBACK-15 removed the substitute surface and left
+    // these four returning normally having done nothing, which is exactly
+    // the shape FALLBACK-11 removed from CodeEditor nine methods at a time.
+    test.each([
+        ["focus", (e: MarkdownEditor) => e.focus()],
+        ["enable", (e: MarkdownEditor) => e.enable()],
+        ["disable", (e: MarkdownEditor) => e.disable()],
+        ["setEditable", (e: MarkdownEditor) => e.setEditable(false)],
+    ])("%sRefusesInsteadOfReturningNormally", (_name, call) =>
+    {
+        const editor = new MarkdownEditor(container, { value: MARKDOWN });
+
+        expect(() => call(editor)).toThrow(/Vditor/);
+
+        editor.destroy();
+    });
+
     test("theRefusalNamesWhatToLoad", () =>
     {
         const editor = new MarkdownEditor(container, { value: MARKDOWN });

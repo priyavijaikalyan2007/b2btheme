@@ -2593,6 +2593,35 @@ reduced version".
   | the editing surface | a textarea holding the caller's markdown |
   | `getValue()` | the textarea's value, or `""` before it existed |
   | `setValue(md)` | wrote into the textarea and returned normally |
+  | `focus()` `enable()` `disable()` | silent no-op (`this.vditor?.x()`) |
+  | `setEditable(bool)` | silent no-op, and set `options.editable` anyway |
+
+  **THE FIRST PASS OF THIS FIX WAS THE THING THIS ENTRY DESCRIBES.** It
+  removed the substitute surface and `getValue`/`setValue`, and left four
+  public methods behind it returning normally having done nothing —
+  found by grepping for `textarea` rather than for the guard shape.
+  FALLBACK-11 removed that exact shape from CodeEditor nine methods at a
+  time, and ADR-200's discriminator decides it: a request the CALLER
+  NAMED is owed either the effect or an error. `focus()` is a request.
+  The four now refuse through one `requireVditor(what)` guard, named so
+  the message says what was refused.
+
+  `exportMarkdown()`, `exportHTML()` and `exportPDF()` needed nothing —
+  they route through `getValue()` and `getHTML()`, which already throw.
+
+  **STILL QUIET, AND DELIBERATELY.** `renderPreview()` falls through to
+  the instance's `getHTML()` when `Vditor.preview` is not a function.
+  That branch runs with Vditor PRESENT, on a build that lacks the static
+  method, and it still renders the markdown as HTML — the caller named a
+  preview and gets one, with less styling. It is a capability
+  difference, not a substitution, so it stays. The comment on it says
+  "Fallback", which is the wrong word for what it does, and the word is
+  why it was re-read.
+
+  **`showMarkdownEditorModal` declared `MarkdownEditor | null` and
+  cannot return null** — a nullable nobody can produce, forcing every
+  caller to check for a case that does not exist. Narrowed to
+  `MarkdownEditor`.
 
   In place of the textarea the host now shows a visible
   missing-dependency notice naming vditor and what to load. **A notice
@@ -2613,10 +2642,11 @@ reduced version".
   *substituting a working-looking surface for the component the caller
   asked for* — was never the predicate any of them ran.
 
-  Six refusal tests, two mutations: restoring the textarea fails two of
-  them, and returning `""` from `getValue()` fails two more. The
-  existing suite installs a `MockVditor` in `beforeEach`, so **nothing
-  was pinning the substitution** — it survived on nobody looking.
+  Ten refusal tests, three mutations: restoring the textarea fails two
+  of them, returning `""` from `getValue()` fails two more, and deleting
+  the `focus()` and `enable()` guards fails two more. The existing suite
+  installs a `MockVditor` in `beforeEach`, so **nothing was pinning the
+  substitution** — it survived on nobody looking.
 
 - [x] **FALLBACK-14** **CLOSED 2026-10-18, ADR-204. Three components
   answered a named capability with a warning and an empty header.**

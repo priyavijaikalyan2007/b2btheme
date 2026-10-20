@@ -609,7 +609,7 @@ declare global
         /**
          * The module names this function `showMarkdownEditorModalFn` and does not export it.
          */
-        showMarkdownEditorModal?: (options?: MarkdownEditorModalOptions) => MarkdownEditor | null;
+        showMarkdownEditorModal?: (options?: MarkdownEditorModalOptions) => MarkdownEditor;
 
         /** Published by the MarkdownRenderer component. */
         createMarkdownRenderer?: typeof createMarkdownRenderer;

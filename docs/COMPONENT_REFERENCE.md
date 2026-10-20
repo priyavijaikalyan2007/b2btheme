@@ -11422,7 +11422,11 @@ The editor does not substitute for itself. With `window.Vditor` absent:
 - Every editing mode mounts and shows a visible missing-dependency notice in
   place of the editor, the same way CodeEditor does without CodeMirror.
 - `getValue()`, `setValue()` and `getHTML()` **throw**, naming vditor and what
-  to load.
+  to load. `exportMarkdown()`, `exportHTML()` and `exportPDF()` throw through
+  them.
+- `focus()`, `enable()`, `disable()` and `setEditable()` **throw**. Each is a
+  request the caller named, so it is owed either the effect or an error; each
+  used to return normally having done nothing.
 
 Until 2026-10-20 the editing modes rendered a plain textarea instead. It
 carried the caller's markdown and read back through `getValue()`, so an editor
