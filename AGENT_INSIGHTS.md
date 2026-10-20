@@ -2413,3 +2413,49 @@ that skips detection.
 guarantee implemented at some call sites is the defect wearing a fix,
 and it is harder to find afterwards, because the obvious test now
 passes.
+
+### 6.129 A Tracker Needs Three States (2026-10-20)
+
+Seven entries in `CODEBASE_FIXES.md` had sat under `- [ ]` for months
+while meaning the opposite of what the marker says. DEBT-WEB-2 records
+a link colour the user chose on purpose. DEBT-VR-6 records a contrast
+ratio that is fine because the two surfaces never touch on screen.
+DEBT-SEC-3 records a dependency deliberately held back.
+
+**A checkbox is a verb.** Unchecked reads as *somebody should do this*,
+and every one of these meant *do not do this, here is why*. The reader
+most likely to act on the wrong reading is the one who found the entry
+by grepping for open work — which is to say, the reader the file is
+for.
+
+They now carry `- [=] **SETTLED**` and a quoted block with three parts:
+how it was settled, what a future session must not do, and what would
+reopen it. The third part is the one that matters, because a settled
+entry without a reopen condition is just an opinion.
+
+**Principle**: done and to-do do not cover a decision. A tracker that
+offers only those two forces every standing decision to impersonate one
+of them, and the impersonation it picks is the dangerous one.
+
+### 6.130 When Extract Method Fights the Compiler (2026-10-20)
+
+TreeGrid's constructor was 60 lines, and 45 of them were
+`this.x = new Set()` or `= null` or `= false` — assignments that depend
+on nothing, sitting in a method whose entire job is to depend on the
+options.
+
+The obvious repair is an `initState()` helper. `strict` forbids it:
+TypeScript does not follow assignment into a called method, so
+`strictPropertyInitialization` would have failed on all 40 fields and
+the fix would have been 40 definite-assignment assertions — the type
+system told to stop checking a class it was checking correctly.
+
+**The right move was not an extraction at all.** An unconditional
+starting value belongs on the field declaration. Moving the 45 there
+left the constructor holding the five lines that read `options`, and
+the class got *more* type safety rather than less.
+
+**Principle**: when Extract Method fights the compiler, the compiler is
+usually describing the code rather than obstructing you. Ask whether
+the lines want to move somewhere else entirely before reaching for an
+escape hatch that silences the check.

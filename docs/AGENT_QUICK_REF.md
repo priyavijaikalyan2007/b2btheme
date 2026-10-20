@@ -1446,7 +1446,7 @@ $control-height-xl=46px
 - CSS: `components/visualtableeditor/visualtableeditor.css`
 - JS: `components/visualtableeditor/visualtableeditor.js`
 - Globals: `createVisualTableEditor()`
-- Exports: `interface VisualTableMeta`, `interface VisualTableColumn`, `interface VisualTableRow`, `interface VisualTableCell`, `interface VisualTableCellContent`, `interface VisualTableCellStyle`, `interface CellRange`, `interface AggregateResult`, `interface VisualTableData`, `interface VisualTableEditorOptions`, `interface VisualTableEditor`, `function createVisualTableEditor`
+- Exports: `interface VisualTableMeta`, `interface VisualTableColumn`, `type AggregateType`, `interface VisualTableRow`, `interface VisualTableCell`, `interface VisualTableCellContent`, `interface VisualTableCellStyle`, `interface CellRange`, `interface AggregateResult`, `interface VisualTableData`, `interface VisualTableEditorOptions`, `interface VisualTableEditor`, `function createVisualTableEditor`
 
 ### workspaceshell
 

@@ -1816,29 +1816,66 @@ export class TreeView
             return;
         }
 
-        // Clean up previous virtual state
+        this.resetVirtualContent();
+
+        const visible = this.getVisibleNodes();
+
+        if (this.options.showStarred)
+        {
+            this.appendStarredGroup();
+        }
+
+        const viewport = this.buildVirtualViewport(visible.length);
+        this.listContainerEl.appendChild(viewport);
+
+        this.listContainerEl.addEventListener(
+            "scroll", () => this.onVirtualScroll()
+        );
+        this.attachVirtualEventDelegation(viewport);
+        this.renderVisibleWindow();
+
+        if (visible.length === 0)
+        {
+            this.appendEmptyState();
+        }
+    }
+
+    /** Clears the previous virtual render and its node lookups. */
+    private resetVirtualContent(): void
+    {
+        if (!this.listContainerEl) { return; }
+
         this.cleanupVirtualState();
         this.nodeRowMap.clear();
         this.nodeItemMap.clear();
         this.listContainerEl.innerHTML = "";
+    }
 
-        const visible = this.getVisibleNodes();
-        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
+    /** Builds the starred group and places it above the viewport. */
+    private appendStarredGroup(): void
+    {
+        this.buildStarredGroup();
 
-        // Build starred group (non-virtual, above viewport)
-        if (this.options.showStarred)
+        if (this.starredGroupEl && this.listContainerEl)
         {
-            this.buildStarredGroup();
-            if (this.starredGroupEl)
-            {
-                this.listContainerEl.appendChild(this.starredGroupEl);
-            }
+            this.listContainerEl.appendChild(this.starredGroupEl);
         }
+    }
 
-        // Viewport container with total height
+    /**
+     * Builds the scrolling viewport, its two spacers and the virtual
+     * state that tracks them.
+     *
+     * @param visibleCount - Rows the viewport has to make room for.
+     * @returns The viewport element, not yet attached.
+     */
+    private buildVirtualViewport(visibleCount: number): HTMLElement
+    {
+        const rowHeight = this.options.rowHeight || DEFAULT_ROW_HEIGHT;
         const viewport = createElement("div", [
             "treeview-virtual-viewport"
         ]);
+
         setAttr(viewport, "role", "tree");
 
         if (this.options.selectionMode === "multi")
@@ -1846,10 +1883,9 @@ export class TreeView
             setAttr(viewport, "aria-multiselectable", "true");
         }
 
-        viewport.style.height = `${visible.length * rowHeight}px`;
+        viewport.style.height = `${visibleCount * rowHeight}px`;
         viewport.style.position = "relative";
 
-        // Spacers
         const topSpacer = createElement("div", [
             "treeview-virtual-spacer"
         ]);
@@ -1859,9 +1895,7 @@ export class TreeView
 
         viewport.appendChild(topSpacer);
         viewport.appendChild(bottomSpacer);
-        this.listContainerEl.appendChild(viewport);
 
-        // Initialise virtual state
         this.virtualState = {
             startIndex: 0,
             endIndex: 0,
@@ -1874,25 +1908,18 @@ export class TreeView
             pinnedIds: new Set()
         };
 
-        // Attach scroll handler
-        this.listContainerEl.addEventListener(
-            "scroll", () => this.onVirtualScroll()
-        );
+        return viewport;
+    }
 
-        // Attach delegated event listeners
-        this.attachVirtualEventDelegation(viewport);
+    /** Appends the empty-state message for a tree with no visible rows. */
+    private appendEmptyState(): void
+    {
+        if (!this.listContainerEl) { return; }
 
-        // Initial render
-        this.renderVisibleWindow();
-
-        // Show empty state if needed
-        if (visible.length === 0)
-        {
-            this.emptyEl = createElement("div", ["treeview-empty"]);
-            this.emptyEl.textContent = this.options.emptyMessage ||
-                "No items to display";
-            this.listContainerEl.appendChild(this.emptyEl);
-        }
+        this.emptyEl = createElement("div", ["treeview-empty"]);
+        this.emptyEl.textContent = this.options.emptyMessage ||
+            "No items to display";
+        this.listContainerEl.appendChild(this.emptyEl);
     }
 
     /**
@@ -2077,35 +2104,62 @@ export class TreeView
     ): void
     {
         const { node, level } = entry;
-        const indentPx = this.options.indentPx || DEFAULT_INDENT;
-        const typeDesc = this.typeMap.get(node.kind);
-        const isParent = this.isNodeParent(node);
-        const isExpanded = this.expandedIds.has(node.id);
-        const isSelected = this.selectedIds.has(node.id);
-        const isLoading = this.loadingIds.has(node.id);
 
-        // ARIA attributes
+        this.applyVirtualRowAria(row, node, level);
+        this.applyVirtualRowClasses(row, node);
+        this.populateVirtualRowChildren(row, node, level, entry);
+    }
+
+    /**
+     * Writes the tree-item ARIA contract onto a recycled row.
+     *
+     * `aria-expanded` is REMOVED rather than set to false for a leaf,
+     * because the rows are pooled: a row that last held a parent would
+     * otherwise keep announcing a collapsed subtree that is not there.
+     *
+     * @param row - The pooled row element being reused.
+     * @param node - The node the row now represents.
+     * @param level - One-based depth, which is what aria-level wants.
+     */
+    private applyVirtualRowAria(
+        row: HTMLElement, node: TreeNode, level: number
+    ): void
+    {
         setAttr(row, "role", "treeitem");
         setAttr(row, "aria-level", String(level));
         setAttr(row, "data-node-id", node.id);
         setAttr(row, "tabindex",
             this.focusedNodeId === node.id ? "0" : "-1");
 
-        if (isParent)
+        if (this.isNodeParent(node))
         {
-            setAttr(row, "aria-expanded", String(isExpanded));
+            setAttr(row, "aria-expanded",
+                String(this.expandedIds.has(node.id)));
         }
         else
         {
             row.removeAttribute("aria-expanded");
         }
 
-        setAttr(row, "aria-selected", String(isSelected));
+        setAttr(row, "aria-selected",
+            String(this.selectedIds.has(node.id)));
+    }
 
-        // State classes
+    /**
+     * Resets a pooled row's classes and reapplies the state ones.
+     *
+     * The assignment to `className` is the reset, and it has to come
+     * first: these rows are recycled, so a class left from the previous
+     * occupant would otherwise accumulate.
+     *
+     * @param row - The pooled row element being reused.
+     * @param node - The node the row now represents.
+     */
+    private applyVirtualRowClasses(row: HTMLElement, node: TreeNode): void
+    {
         row.className = "treeview-virtual-row";
 
-        if (isSelected)
+        if (this.selectedIds.has(node.id))
         {
             row.classList.add("treeview-node-selected");
         }
@@ -2115,7 +2169,7 @@ export class TreeView
             row.classList.add("treeview-node-focused");
         }
 
-        if (isLoading)
+        if (this.loadingIds.has(node.id))
         {
             row.classList.add("treeview-node-loading");
         }
@@ -2125,12 +2179,12 @@ export class TreeView
             row.classList.add("treeview-node-disabled");
         }
 
+        const typeDesc = this.typeMap.get(node.kind);
+
         if (typeDesc?.cssClass)
         {
             row.classList.add(typeDesc.cssClass);
         }
-
-        this.populateVirtualRowChildren(row, node, level, entry);
     }
 
     /**
@@ -2511,7 +2565,43 @@ export class TreeView
      */
     private buildNodeItem(node: TreeNode, level: number): HTMLElement
     {
+        const li = this.buildNodeItemShell(node, level);
+        const isParent = this.isNodeParent(node);
+        const isExpanded = this.expandedIds.has(node.id);
+
+        const custom = this.renderCustomNodeBody(node, level);
+
+        if (custom)
+        {
+            li.appendChild(custom);
+            this.nodeItemMap.set(node.id, li);
+            return li;
+        }
+
+        li.appendChild(this.buildNodeRow(node, level, isParent, isExpanded,
+            this.selectedIds.has(node.id), this.loadingIds.has(node.id)));
+
+        if (isParent && isExpanded && node.children && node.children.length > 0)
+        {
+            li.appendChild(this.buildChildrenList(node.children, level + 1));
+        }
+
+        this.nodeItemMap.set(node.id, li);
+
+        return li;
+    }
+
+    /**
+     * Builds the `<li>` and its ARIA contract, without any body.
+     *
+     * @param node - The node this item represents.
+     * @param level - One-based depth, which is what aria-level wants.
+     * @returns The empty list item.
+     */
+    private buildNodeItemShell(node: TreeNode, level: number): HTMLElement
+    {
         const li = createElement("li", ["treeview-node"]);
+
         setAttr(li, "role", "treeitem");
         setAttr(li, "aria-level", String(level));
         setAttr(li, "data-node-id", node.id);
@@ -2522,50 +2612,39 @@ export class TreeView
             li.classList.add("treeview-node-disabled");
         }
 
-        const isParent = this.isNodeParent(node);
-        const isExpanded = this.expandedIds.has(node.id);
-        const isSelected = this.selectedIds.has(node.id);
-        const isLoading = this.loadingIds.has(node.id);
-
-        if (isParent)
+        if (this.isNodeParent(node))
         {
-            setAttr(li, "aria-expanded", String(isExpanded));
+            setAttr(li, "aria-expanded",
+                String(this.expandedIds.has(node.id)));
         }
 
-        if (isSelected)
+        if (this.selectedIds.has(node.id))
         {
             setAttr(li, "aria-selected", "true");
         }
 
-        // Custom renderer
-        if (this.options.nodeRenderer)
-        {
-            const custom = this.options.nodeRenderer(node, level);
-            if (custom)
-            {
-                li.appendChild(custom);
-                this.nodeItemMap.set(node.id, li);
-                return li;
-            }
-        }
-
-        // Build node row
-        const row = this.buildNodeRow(node, level, isParent, isExpanded,
-            isSelected, isLoading);
-        li.appendChild(row);
-
-        // Children
-        if (isParent && isExpanded && node.children && node.children.length > 0)
-        {
-            const childrenUl = this.buildChildrenList(
-                node.children, level + 1
-            );
-            li.appendChild(childrenUl);
-        }
-
-        this.nodeItemMap.set(node.id, li);
-
         return li;
+    }
+
+    /**
+     * Runs the caller's `nodeRenderer`, if there is one.
+     *
+     * A renderer that returns nothing is a DECLINE rather than a
+     * failure: the caller is saying "not this node", and the default
+     * row is built instead. That is why the null is returned here and
+     * read by the caller rather than being handled in place.
+     *
+     * @param node - The node to render.
+     * @param level - One-based depth, passed through to the renderer.
+     * @returns The caller's element, or null to use the default row.
+     */
+    private renderCustomNodeBody(
+        node: TreeNode, level: number
+    ): HTMLElement | null
+    {
+        if (!this.options.nodeRenderer) { return null; }
+
+        return this.options.nodeRenderer(node, level) || null;
     }
 
     /**

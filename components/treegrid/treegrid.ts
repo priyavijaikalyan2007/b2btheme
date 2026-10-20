@@ -424,71 +424,90 @@ function sortNodes(
  */
 export class TreeGrid
 {
+    /*
+     * FN-3. EVERY FIELD WITH A FIXED STARTING VALUE DECLARES IT HERE.
+     *
+     * The constructor used to be 60 lines, and 45 of them were
+     * `this.x = new Set()` / `= null` / `= false` — assignments that
+     * depend on nothing, in a method whose job is to depend on the
+     * options. Extracting them into an `initState()` helper was the
+     * obvious move and `strict` forbids it: TypeScript does not follow
+     * assignment into a called method, so every field would have needed
+     * a `!` and the type system would have been told to stop checking.
+     *
+     * A declaration initialiser is where an unconditional starting
+     * value belongs anyway. What is left in the constructor is what
+     * actually reads `options`.
+     */
     private options: TreeGridOptions;
     private columns: TreeGridColumn[];
     private roots: TreeGridNode[];
-    private expandedIds: Set<string>;
-    private selectedIds: Set<string>;
-    private loadingIds: Set<string>;
-    private focusCoord: FocusCoord;
-    private sortColumnId: string | null;
-    private sortDirection: TreeGridSortDirection | null;
-    private isEditing: boolean;
-    private destroyed: boolean;
+    private expandedIds = new Set<string>();
+    private selectedIds = new Set<string>();
+    private loadingIds = new Set<string>();
+    private focusCoord: FocusCoord = { row: -1, col: 0 };
+    private sortColumnId: string | null = null;
+    private sortDirection: TreeGridSortDirection | null = null;
+    private isEditing = false;
+    private destroyed = false;
 
     // DOM references
-    private containerEl: HTMLElement | null;
-    private rootEl: HTMLElement | null;
-    private headerEl: HTMLElement | null;
-    private bodyEl: HTMLElement | null;
-    private contextMenuEl: HTMLElement | null;
-    private columnPickerEl: HTMLElement | null;
+    private containerEl: HTMLElement | null = null;
+    private rootEl: HTMLElement | null = null;
+    private headerEl: HTMLElement | null = null;
+    private bodyEl: HTMLElement | null = null;
+    private contextMenuEl: HTMLElement | null = null;
+    private columnPickerEl: HTMLElement | null = null;
 
     // Row tracking
-    private rowMap: Map<string, HTMLElement>;
+    private rowMap = new Map<string, HTMLElement>();
 
-    // Bound handlers
-    private boundOnDocumentClick: (e: MouseEvent) => void;
-    private boundOnDocumentKeydown: (e: KeyboardEvent) => void;
-    private boundOnBodyScroll: (e: Event) => void;
+    // Bound handlers. Arrow initialisers capture `this` the same way the
+    // constructor's wrappers did, and keep the binding beside the field.
+    private boundOnDocumentClick =
+        (e: MouseEvent): void => { this.onDocumentClick(e); };
+    private boundOnDocumentKeydown =
+        (e: KeyboardEvent): void => { this.onDocumentKeydown(e); };
+    private boundOnBodyScroll =
+        (e: Event): void => { this.onBodyScroll(e); };
 
     // Column width tracking
     private treeColWidth: number;
-    private columnWidths: Map<string, number>;
+    private columnWidths = new Map<string, number>();
 
     // Node indexing
-    private nodeMap: Map<string, TreeGridNode>;
-    private parentMap: Map<string, string>;
+    private nodeMap = new Map<string, TreeGridNode>();
+    private parentMap = new Map<string, string>();
 
     // Cached visible nodes
-    private visibleNodes: VisibleEntry[];
-    private visibleIndexMap: Map<string, number>;
-    private visibleDirty: boolean;
+    private visibleNodes: VisibleEntry[] = [];
+    private visibleIndexMap = new Map<string, number>();
+    private visibleDirty = true;
 
     // Virtual scrolling (Phase 5)
-    private virtualState: VirtualScrollState | null;
+    private virtualState: VirtualScrollState | null = null;
 
     // Selection tracking
-    private lastSelectedId: string | null;
+    private lastSelectedId: string | null = null;
 
     // Column resize state
-    private resizeColId: string | null;
-    private resizeStartX: number;
-    private resizeStartWidth: number;
-    private resizeCell: HTMLElement | null;
-    private boundOnResizeMove: ((e: PointerEvent) => void) | null;
-    private boundOnResizeEnd: ((e: PointerEvent) => void) | null;
+    private resizeColId: string | null = null;
+    private resizeStartX = 0;
+    private resizeStartWidth = 0;
+    private resizeCell: HTMLElement | null = null;
+    private boundOnResizeMove: ((e: PointerEvent) => void) | null = null;
+    private boundOnResizeEnd: ((e: PointerEvent) => void) | null = null;
 
     // Column reorder state
-    private reorderSourceId: string | null;
+    private reorderSourceId: string | null = null;
 
     // Cell editing state
-    private editNodeId: string | null;
-    private editColumnId: string | null;
-    private editEditorEl: HTMLElement | null;
+    private editNodeId: string | null = null;
+    private editColumnId: string | null = null;
+    private editEditorEl: HTMLElement | null = null;
 
     // PERF: CSS-based column widths
-    private columnStyleEl: HTMLStyleElement | null;
+    private columnStyleEl: HTMLStyleElement | null = null;
     private instanceId: number;
 
     /**
@@ -498,57 +517,13 @@ export class TreeGrid
     {
         instanceCounter++;
         logInfo(`Creating instance #${instanceCounter}`);
+        this.instanceId = instanceCounter;
 
         this.options = this.deepCopyOptions(options);
         this.columns = this.deepCopyColumns(options.columns);
         this.roots = this.options.nodes;
-
-        this.expandedIds = new Set<string>();
-        this.selectedIds = new Set<string>();
-        this.loadingIds = new Set<string>();
-        this.focusCoord = { row: -1, col: 0 };
-        this.sortColumnId = null;
-        this.sortDirection = null;
-        this.isEditing = false;
-        this.destroyed = false;
-
-        this.containerEl = null;
-        this.rootEl = null;
-        this.headerEl = null;
-        this.bodyEl = null;
-        this.contextMenuEl = null;
-        this.columnPickerEl = null;
-
-        this.rowMap = new Map();
-        this.nodeMap = new Map();
-        this.parentMap = new Map();
-        this.visibleNodes = [];
-        this.visibleIndexMap = new Map();
-        this.visibleDirty = true;
-        this.virtualState = null;
-        this.lastSelectedId = null;
-
-        this.resizeColId = null;
-        this.resizeStartX = 0;
-        this.resizeStartWidth = 0;
-        this.resizeCell = null;
-        this.boundOnResizeMove = null;
-        this.boundOnResizeEnd = null;
-        this.reorderSourceId = null;
-
-        this.editNodeId = null;
-        this.editColumnId = null;
-        this.editEditorEl = null;
-
-        this.columnStyleEl = null;
-        this.instanceId = instanceCounter;
-
-        this.boundOnDocumentClick = (e: MouseEvent) => this.onDocumentClick(e);
-        this.boundOnDocumentKeydown = (e: KeyboardEvent) => this.onDocumentKeydown(e);
-        this.boundOnBodyScroll = (e: Event) => this.onBodyScroll(e);
-
         this.treeColWidth = options.treeColumnWidth ?? DEFAULT_TREE_COL_WIDTH;
-        this.columnWidths = new Map();
+
         this.resolveColumnDefaults();
         this.initExpandedIds();
         this.rebuildNodeIndex();

@@ -9011,3 +9011,66 @@
     pages, 32 of 32 structure checks, testBlocks floor 4963 -> 4970.
     Six mutations caught and two escapes closed by new tests rather than
     by softened comments.
+
+- id: ADR-207
+  title: Settled is a third marker, and the obvious extraction is often the one strict forbids
+  date: 2026-10-20
+  status: accepted
+  context: |
+    Two asks. First, seven tracker entries had sat under `- [ ]` for
+    months while meaning the opposite of what the checkbox says: they
+    record decisions to leave something alone. Second, the volume
+    items — counts rather than questions — had been sequenced last on
+    the grounds of low defect yield, which is a reason to order them
+    and not a reason to skip them.
+  decision: |
+    D1. CODEBASE_FIXES.md HAS THREE MARKERS. `- [ ]` is open work,
+        `- [x]` is done, and `- [=]` is SETTLED: a decision with a
+        reopen condition. Each settled entry carries a quoted block
+        saying how it was settled, what a future session must not do,
+        and what would reopen it. Nothing parses these markers, so the
+        change is for readers.
+
+    D2. ANY-3 CLOSES BY RESTATING THE SHAPE LOCALLY. Of the three
+        routes the entry listed, two are decisions about the whole
+        fleet and the third is what the `any` already stood for. The
+        local interfaces describe only the fields this component sets.
+
+    D3. A PUBLIC SETTER THAT NARROWS A STRING CHECKS AT RUN TIME.
+        `type as any` into a nine-member union let an unrecognised
+        aggregate be stored and then compute nothing.
+
+    D4. AN UNCONDITIONAL STARTING VALUE GOES ON THE FIELD. TreeGrid's
+        constructor was 60 lines and 45 of them depended on nothing.
+  consequences: |
+    THE SETTLED MARKER IS A FIX FOR AN ENCODING ERROR, NOT A FILING
+    ONE. An unchecked box reads as "somebody should do this" and every
+    one of these meant "do not". DEBT-WEB-2 is the clearest: it records
+    a colour choice the user made deliberately and exists so nobody
+    corrects it. Filing a standing decision under an open-work marker
+    invites exactly the edit the entry was written to prevent.
+
+    ALL 14 OVERSIZED FUNCTIONS ARE NOW AT OR UNDER 30 LINES, and the
+    March counts were accurate — every one had grown slightly, which is
+    what a list with no gate behind it does.
+
+    THE OBVIOUS EXTRACTION WAS THE ONE `strict` FORBIDS. Moving
+    TreeGrid's 45 field assignments into an `initState()` helper fails
+    `strictPropertyInitialization`, because TypeScript does not follow
+    assignment into a called method. Taking it would have meant 40
+    definite-assignment assertions: the type system told to stop
+    checking a class it was checking correctly. Declaration
+    initialisers are where those values belong, and the constructor
+    drops to what actually reads `options`.
+
+    NOT ONE TEST WAS EDITED FOR ANY OF THE 14. An extraction that needs
+    a test changed is not an extraction.
+
+    ANY-3 CLOSES AT ZERO on both ratchets, and the two casts were the
+    half worth doing: an unrecognised aggregate kind was stored and
+    silently computed nothing, so the footer rendered and was always
+    empty. Three tests, one mutation-proven.
+
+    5260 tests across 162 files, 32 of 32 structure checks, testBlocks
+    floor 4970 -> 4973. Open tracker items 19 -> 8, of which 7 moved to
+    SETTLED rather than being worked.

@@ -2201,62 +2201,84 @@ export class Toolbar
      */
     private buildRoot(): void
     {
-        this.rootEl = createElement("div", ["toolbar"]);
+        this.rootEl = this.buildRootShell();
 
-        setAttr(this.rootEl, {
-            "id": this.toolbarId,
-            "role": "toolbar",
-            "aria-label": this.opts.label || "Toolbar",
-            "aria-orientation": this.currentOrientation,
-        });
-
-        // CSS custom properties for tool sizing
-        this.rootEl.style.setProperty(
-            "--toolbar-tool-size", `${this.currentToolSize}px`
-        );
-        this.rootEl.style.setProperty(
-            "--toolbar-icon-size", `${this.currentIconSize}px`
-        );
-
-        if (this.opts.cssClass)
-        {
-            this.rootEl.classList.add(...this.opts.cssClass.split(" "));
-        }
-
-        this.applyStyleOverrides(this.rootEl);
-
-        // Grip (drag handle — visible in all modes for undock/reposition)
         this.gripEl = this.buildGrip();
         this.rootEl.appendChild(this.gripEl);
 
-        // Title (non-interactive label, always after grip)
         if (this.opts.title)
         {
             this.titleEl = this.buildTitle(this.opts.title);
             this.rootEl.appendChild(this.titleEl);
         }
 
-        // Regions container
         this.regionsContainerEl = createElement(
             "div", ["toolbar-regions-container"]
         );
         this.rootEl.appendChild(this.regionsContainerEl);
 
-        // Overflow buttons and menus (created before buildAllRegions
-        // so buttons can be inserted inline into the container)
+        this.buildOverflowAffordances();
+        this.buildAllRegions();
+
+        // Popup menus are position: fixed and would be clipped by the
+        // overflow: hidden on regionsContainerEl, so they hang off root.
+        this.appendPortaledPopups();
+
+        this.appendRootTrailingSlots();
+    }
+
+    /**
+     * Builds the toolbar's outer element, its ARIA and its sizing.
+     *
+     * @returns The root element, empty of children.
+     */
+    private buildRootShell(): HTMLElement
+    {
+        const root = createElement("div", ["toolbar"]);
+
+        setAttr(root, {
+            "id": this.toolbarId,
+            "role": "toolbar",
+            "aria-label": this.opts.label || "Toolbar",
+            "aria-orientation": this.currentOrientation,
+        });
+
+        root.style.setProperty(
+            "--toolbar-tool-size", `${this.currentToolSize}px`
+        );
+        root.style.setProperty(
+            "--toolbar-icon-size", `${this.currentIconSize}px`
+        );
+
+        if (this.opts.cssClass)
+        {
+            root.classList.add(...this.opts.cssClass.split(" "));
+        }
+
+        this.applyStyleOverrides(root);
+
+        return root;
+    }
+
+    /**
+     * Builds the overflow buttons and their menus.
+     *
+     * Called BEFORE `buildAllRegions`, which inserts the buttons inline
+     * into the regions container as it goes.
+     */
+    private buildOverflowAffordances(): void
+    {
         this.leftOverflowBtnEl = this.buildOverflowButton("left");
         this.rightOverflowBtnEl = this.buildOverflowButton("right");
         this.leftOverflowMenuEl = this.buildOverflowMenuEl();
         this.rightOverflowMenuEl = this.buildOverflowMenuEl();
+    }
 
-        // Build region elements (inserts overflow buttons into container)
-        this.buildAllRegions();
+    /** Appends the caller's right-hand content and the resize handle. */
+    private appendRootTrailingSlots(): void
+    {
+        if (!this.rootEl) { return; }
 
-        // Portal all popup menus to rootEl (position: fixed, escapes
-        // overflow:hidden on regionsContainerEl)
-        this.appendPortaledPopups();
-
-        // Right content slot (custom HTML, e.g. metadata)
         if (this.opts.rightContent)
         {
             this.rightContentEl = createElement(
@@ -2266,7 +2288,6 @@ export class Toolbar
             this.rootEl.appendChild(this.rightContentEl);
         }
 
-        // Resize handle
         if (this.opts.resizable !== false)
         {
             this.resizeHandleEl = this.buildResizeHandle();
@@ -2509,58 +2530,26 @@ export class Toolbar
         region: ToolbarRegion
     ): HTMLElement | null
     {
-        if ("type" in item && item.type === "separator")
-        {
-            return this.buildSeparator();
-        }
+        // FN-1. This was eleven `if ("type" in item && item.type === x)`
+        // blocks in a row. A switch says the same thing once, and the
+        // default arm is the point: an item with NO `type` is a plain
+        // tool button, which is the fleet's most common item.
+        const type = "type" in item ? item.type : undefined;
 
-        if ("type" in item && item.type === "split-button")
+        switch (type)
         {
-            return this.buildSplitButton(item as SplitButtonItem, region);
+            case "separator":    return this.buildSeparator();
+            case "split-button": return this.buildSplitButton(item as SplitButtonItem, region);
+            case "gallery":      return this.buildGalleryControl(item as GalleryItem, region);
+            case "input":        return this.buildInputItem(item as ToolInputItem);
+            case "dropdown":     return this.buildDropdownItem(item as ToolDropdownItem);
+            case "label":        return this.buildLabelItem(item as ToolLabelItem);
+            case "checkbox":     return this.buildCheckboxItem(item as ToolCheckboxItem);
+            case "switch":       return this.buildSwitchItem(item as ToolToggleSwitchItem);
+            case "number":       return this.buildNumberItem(item as ToolNumberItem);
+            case "color":        return this.buildColorItem(item as ToolColorItem);
+            default:             return this.buildToolButton(item as ToolItem, region);
         }
-
-        if ("type" in item && item.type === "gallery")
-        {
-            return this.buildGalleryControl(item as GalleryItem, region);
-        }
-
-        if ("type" in item && item.type === "input")
-        {
-            return this.buildInputItem(item as ToolInputItem);
-        }
-
-        if ("type" in item && item.type === "dropdown")
-        {
-            return this.buildDropdownItem(item as ToolDropdownItem);
-        }
-
-        if ("type" in item && item.type === "label")
-        {
-            return this.buildLabelItem(item as ToolLabelItem);
-        }
-
-        if ("type" in item && item.type === "checkbox")
-        {
-            return this.buildCheckboxItem(item as ToolCheckboxItem);
-        }
-
-        if ("type" in item && item.type === "switch")
-        {
-            return this.buildSwitchItem(item as ToolToggleSwitchItem);
-        }
-
-        if ("type" in item && item.type === "number")
-        {
-            return this.buildNumberItem(item as ToolNumberItem);
-        }
-
-        if ("type" in item && item.type === "color")
-        {
-            return this.buildColorItem(item as ToolColorItem);
-        }
-
-        // Standard tool button
-        return this.buildToolButton(item as ToolItem, region);
     }
 
     /**
@@ -2636,12 +2625,41 @@ export class Toolbar
 
         const effectiveStyle = split.style || region.style || this.currentStyle;
         const container = createElement("div", ["toolbar-split"]);
-        setAttr(container, { "data-tool-id": split.id });
 
-        // Primary button
+        setAttr(container, { "data-tool-id": split.id });
+        container.appendChild(this.buildSplitPrimary(split, effectiveStyle));
+        container.appendChild(this.buildSplitArrow(split));
+
+        // The menu is portaled to rootEl rather than appended here, so
+        // it is built and registered without a parent.
+        const menu = createElement("div", ["toolbar-split-menu"]);
+
+        setAttr(menu, { "role": "menu", "data-split-id": split.id });
+        this.buildSplitMenuItems(menu, split.menuItems);
+        this.splitMenuEls.set(split.id, menu);
+
+        this.applyToolStateToDOM(container, split);
+        this.toolElements.set(split.id, container);
+
+        return container;
+    }
+
+    /**
+     * Builds the split button's primary half, the one that acts.
+     *
+     * @param split - The split button's configuration.
+     * @param effectiveStyle - Style resolved from item, region, toolbar.
+     * @returns The primary button element.
+     */
+    private buildSplitPrimary(
+        split: SplitButtonItem, effectiveStyle: ToolStyle
+    ): HTMLElement
+    {
         const primary = createElement(
-            "button", ["toolbar-split-primary", "toolbar-tool", `toolbar-${effectiveStyle}`]
+            "button",
+            ["toolbar-split-primary", "toolbar-tool", `toolbar-${effectiveStyle}`]
         );
+
         setAttr(primary, {
             "type": "button",
             "tabindex": "-1",
@@ -2655,30 +2673,42 @@ export class Toolbar
             });
         }
 
-        if (split.icon && (effectiveStyle === "icon" || effectiveStyle === "icon-label"))
+        if (split.icon
+            && (effectiveStyle === "icon" || effectiveStyle === "icon-label"))
         {
-            const icon = createElement("i", ["bi", split.icon, "toolbar-tool-icon"]);
-            primary.appendChild(icon);
+            primary.appendChild(
+                createElement("i", ["bi", split.icon, "toolbar-tool-icon"]));
         }
 
-        if (split.label && (effectiveStyle === "icon-label" || effectiveStyle === "label"))
+        if (split.label
+            && (effectiveStyle === "icon-label" || effectiveStyle === "label"))
         {
-            const label = createElement(
-                "span", ["toolbar-tool-label"], split.label
-            );
-            primary.appendChild(label);
+            primary.appendChild(
+                createElement("span", ["toolbar-tool-label"], split.label));
         }
 
-        // Primary click
         primary.addEventListener("click", () =>
         {
             this.handleSplitPrimaryClick(split);
         });
 
-        container.appendChild(primary);
+        return primary;
+    }
 
-        // Arrow button
+    /**
+     * Builds the split button's arrow half, the one that opens the menu.
+     *
+     * The click is stopped from propagating because the toolbar closes
+     * open menus on a document click, and the opening click would
+     * otherwise reach that handler and shut the menu it just opened.
+     *
+     * @param split - The split button's configuration.
+     * @returns The arrow button element.
+     */
+    private buildSplitArrow(split: SplitButtonItem): HTMLElement
+    {
         const arrow = createElement("button", ["toolbar-split-arrow"]);
+
         setAttr(arrow, {
             "type": "button",
             "tabindex": "-1",
@@ -2687,8 +2717,7 @@ export class Toolbar
             "aria-label": `${split.tooltip} options`,
         });
 
-        const chevron = createElement("i", ["bi", "bi-chevron-down"]);
-        arrow.appendChild(chevron);
+        arrow.appendChild(createElement("i", ["bi", "bi-chevron-down"]));
 
         arrow.addEventListener("click", (e) =>
         {
@@ -2696,19 +2725,7 @@ export class Toolbar
             this.toggleSplitMenu(split.id);
         });
 
-        container.appendChild(arrow);
-
-        // Dropdown menu (portaled to rootEl, not appended to container)
-        const menu = createElement("div", ["toolbar-split-menu"]);
-        setAttr(menu, { "role": "menu", "data-split-id": split.id });
-        this.buildSplitMenuItems(menu, split.menuItems);
-        this.splitMenuEls.set(split.id, menu);
-
-        // Apply state
-        this.applyToolStateToDOM(container, split);
-
-        this.toolElements.set(split.id, container);
-        return container;
+        return arrow;
     }
 
     /**
@@ -2771,6 +2788,7 @@ export class Toolbar
 
         const effectiveStyle = gallery.style || region.style || this.currentStyle;
         const container = createElement("div", ["toolbar-gallery"]);
+
         setAttr(container, { "data-tool-id": gallery.id });
 
         if (gallery.cssClass)
@@ -2778,10 +2796,41 @@ export class Toolbar
             container.classList.add(...gallery.cssClass.split(" "));
         }
 
-        // Trigger button
+        container.appendChild(
+            this.buildGalleryTrigger(gallery, effectiveStyle));
+
+        // The popup is portaled to rootEl rather than appended here.
+        const popup = this.buildGalleryPopup(gallery);
+
+        setAttr(popup, { "data-gallery-id": gallery.id });
+        this.galleryPopupEls.set(gallery.id, popup);
+
+        this.applyToolStateToDOM(container, gallery);
+        this.toolElements.set(gallery.id, container);
+
+        return container;
+    }
+
+    /**
+     * Builds the button that opens a gallery popup.
+     *
+     * The click is stopped from propagating because the toolbar closes
+     * open popups on a document click, and the opening click would
+     * otherwise reach that handler and shut the popup it just opened.
+     *
+     * @param gallery - The gallery's configuration.
+     * @param effectiveStyle - Style resolved from item, region, toolbar.
+     * @returns The trigger button element.
+     */
+    private buildGalleryTrigger(
+        gallery: GalleryItem, effectiveStyle: ToolStyle
+    ): HTMLElement
+    {
         const trigger = createElement(
-            "button", ["toolbar-gallery-trigger", "toolbar-tool", `toolbar-${effectiveStyle}`]
+            "button",
+            ["toolbar-gallery-trigger", "toolbar-tool", `toolbar-${effectiveStyle}`]
         );
+
         setAttr(trigger, {
             "type": "button",
             "tabindex": "-1",
@@ -2794,24 +2843,22 @@ export class Toolbar
             "title": gallery.tooltip,
         });
 
-        if (gallery.icon && (effectiveStyle === "icon" || effectiveStyle === "icon-label"))
+        if (gallery.icon
+            && (effectiveStyle === "icon" || effectiveStyle === "icon-label"))
         {
-            const icon = createElement("i", ["bi", gallery.icon, "toolbar-tool-icon"]);
-            trigger.appendChild(icon);
+            trigger.appendChild(
+                createElement("i", ["bi", gallery.icon, "toolbar-tool-icon"]));
         }
 
-        if (gallery.label && (effectiveStyle === "icon-label" || effectiveStyle === "label"))
+        if (gallery.label
+            && (effectiveStyle === "icon-label" || effectiveStyle === "label"))
         {
-            const label = createElement(
-                "span", ["toolbar-tool-label"], gallery.label
-            );
-            trigger.appendChild(label);
+            trigger.appendChild(
+                createElement("span", ["toolbar-tool-label"], gallery.label));
         }
 
-        const chevron = createElement(
-            "i", ["bi", "bi-chevron-down", "toolbar-gallery-chevron"]
-        );
-        trigger.appendChild(chevron);
+        trigger.appendChild(createElement(
+            "i", ["bi", "bi-chevron-down", "toolbar-gallery-chevron"]));
 
         trigger.addEventListener("click", (e) =>
         {
@@ -2819,18 +2866,7 @@ export class Toolbar
             this.toggleGalleryPopup(gallery.id);
         });
 
-        container.appendChild(trigger);
-
-        // Popup panel (portaled to rootEl, not appended to container)
-        const popup = this.buildGalleryPopup(gallery);
-        setAttr(popup, { "data-gallery-id": gallery.id });
-        this.galleryPopupEls.set(gallery.id, popup);
-
-        // Apply state
-        this.applyToolStateToDOM(container, gallery);
-
-        this.toolElements.set(gallery.id, container);
-        return container;
+        return trigger;
     }
 
     /**
@@ -2875,65 +2911,97 @@ export class Toolbar
     {
         for (const option of gallery.options)
         {
-            const btn = createElement("button", ["toolbar-gallery-option"]);
-            setAttr(btn, {
-                "role": "option",
-                "data-option-id": option.id,
-                "aria-selected": option.id === gallery.selectedId
-                    ? "true" : "false",
-                "title": option.label,
-                "type": "button",
-            });
+            container.appendChild(this.buildGalleryOption(gallery, option));
+        }
+    }
 
-            if (option.id === gallery.selectedId)
+    /**
+     * Builds one option button inside a gallery popup.
+     *
+     * @param gallery - The owning gallery, read for selection and layout.
+     * @param option - The option to render.
+     * @returns The option button element.
+     */
+    private buildGalleryOption(
+        gallery: GalleryItem, option: GalleryOption
+    ): HTMLElement
+    {
+        const btn = createElement("button", ["toolbar-gallery-option"]);
+        const isSelected = option.id === gallery.selectedId;
+
+        setAttr(btn, {
+            "role": "option",
+            "data-option-id": option.id,
+            "aria-selected": isSelected ? "true" : "false",
+            "title": option.label,
+            "type": "button",
+        });
+
+        if (isSelected)
+        {
+            btn.classList.add("toolbar-gallery-option-selected");
+        }
+
+        if (option.disabled)
+        {
+            btn.classList.add("toolbar-tool-disabled");
+            setAttr(btn, { "aria-disabled": "true" });
+        }
+
+        this.appendGalleryOptionBody(btn, gallery, option);
+
+        btn.addEventListener("click", (e) =>
+        {
+            e.stopPropagation();
+
+            if (!option.disabled)
             {
-                btn.classList.add("toolbar-gallery-option-selected");
+                this.handleGalleryOptionClick(gallery, option);
             }
+        });
 
-            if (option.disabled)
-            {
-                btn.classList.add("toolbar-tool-disabled");
-                setAttr(btn, { "aria-disabled": "true" });
-            }
+        return btn;
+    }
 
-            // Render option content
-            if (option.color)
-            {
-                const swatch = createElement("span", ["toolbar-gallery-swatch"]);
-                swatch.style.backgroundColor = option.color;
-                btn.appendChild(swatch);
-            }
-            else if (option.icon)
-            {
-                const icon = createElement("i", ["bi", option.icon]);
-                btn.appendChild(icon);
-            }
-            else if (option.preview)
-            {
-                // @agent:security — Preview content is sanitised
-                const preview = createElement("span", ["toolbar-gallery-preview"]);
-                preview.innerHTML = sanitiseHTML(option.preview);
-                btn.appendChild(preview);
-            }
+    /**
+     * Renders an option's visual, which is one of three exclusive forms.
+     *
+     * Colour, icon and preview are checked in that order and only one
+     * is used, because an option carrying two would otherwise render
+     * both and the button would say two things at once.
+     *
+     * @param btn - The option button to fill.
+     * @param gallery - The owning gallery, read for layout.
+     * @param option - The option being rendered.
+     */
+    private appendGalleryOptionBody(
+        btn: HTMLElement, gallery: GalleryItem, option: GalleryOption
+    ): void
+    {
+        if (option.color)
+        {
+            const swatch = createElement("span", ["toolbar-gallery-swatch"]);
 
-            // Label in list layout
-            if (gallery.layout === "list")
-            {
-                const label = createElement("span", [], option.label);
-                btn.appendChild(label);
-            }
+            swatch.style.backgroundColor = option.color;
+            btn.appendChild(swatch);
+        }
+        else if (option.icon)
+        {
+            btn.appendChild(createElement("i", ["bi", option.icon]));
+        }
+        else if (option.preview)
+        {
+            // @agent:security — Preview content is sanitised
+            const preview = createElement(
+                "span", ["toolbar-gallery-preview"]);
 
-            btn.addEventListener("click", (e) =>
-            {
-                e.stopPropagation();
+            preview.innerHTML = sanitiseHTML(option.preview);
+            btn.appendChild(preview);
+        }
 
-                if (!option.disabled)
-                {
-                    this.handleGalleryOptionClick(gallery, option);
-                }
-            });
-
-            container.appendChild(btn);
+        if (gallery.layout === "list")
+        {
+            btn.appendChild(createElement("span", [], option.label));
         }
     }
 
@@ -3706,64 +3774,90 @@ export class Toolbar
     {
         grip.addEventListener("pointerdown", (e) =>
         {
-            // No drag in contained mode
-            if (this.contained)
-            {
-                return;
-            }
-
-            if (e.button !== 0 || this.opts.draggable === false)
-            {
-                return;
-            }
+            if (!this.gripDragAllowed(e)) { return; }
 
             e.preventDefault();
 
-            // If docked, undock to floating at pointer position first
             if (this.currentMode === "docked")
             {
-                const rect = this.rootEl!.getBoundingClientRect();
-
-                this.floatX = clamp(
-                    e.clientX - 20, 0,
-                    window.innerWidth - rect.width
-                );
-                this.floatY = clamp(
-                    e.clientY - 10, 0,
-                    window.innerHeight - 40
-                );
-                this.currentSize = 0;
-                this.float(this.floatX, this.floatY);
+                this.undockAtPointer(e);
             }
 
-            this.isDragging = true;
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-            this.dragOrigX = this.floatX;
-            this.dragOrigY = this.floatY;
-
-            grip.setPointerCapture(e.pointerId);
-            grip.style.cursor = "grabbing";
-
-            // Show dock zones if drag-to-dock is enabled
-            if (this.opts.dragToDock !== false)
-            {
-                this.showDockZones();
-            }
-
-            this.boundDragMove = (ev: PointerEvent) =>
-            {
-                this.handleDragMove(ev);
-            };
-
-            this.boundDragEnd = (ev: PointerEvent) =>
-            {
-                this.handleDragEnd(ev, grip);
-            };
-
-            grip.addEventListener("pointermove", this.boundDragMove);
-            grip.addEventListener("pointerup", this.boundDragEnd);
+            this.beginGripDrag(grip, e);
         });
+    }
+
+    /**
+     * Whether a pointerdown on the grip should start a drag.
+     *
+     * Contained mode has no drag at all, because the toolbar belongs to
+     * a layout cell and moving it would take it out of the grid.
+     *
+     * @param e - The pointerdown event.
+     * @returns True when the drag may begin.
+     */
+    private gripDragAllowed(e: PointerEvent): boolean
+    {
+        if (this.contained) { return false; }
+
+        return e.button === 0 && this.opts.draggable !== false;
+    }
+
+    /**
+     * Floats a docked toolbar at the pointer before the drag proper.
+     *
+     * The offsets put the grip under the cursor rather than the
+     * toolbar's corner, so the toolbar does not jump out from under
+     * the pointer on the first move.
+     *
+     * @param e - The pointerdown event that started the drag.
+     */
+    private undockAtPointer(e: PointerEvent): void
+    {
+        const rect = this.rootEl!.getBoundingClientRect();
+
+        this.floatX = clamp(
+            e.clientX - 20, 0, window.innerWidth - rect.width);
+        this.floatY = clamp(
+            e.clientY - 10, 0, window.innerHeight - 40);
+        this.currentSize = 0;
+        this.float(this.floatX, this.floatY);
+    }
+
+    /**
+     * Records the drag origin and wires the move and end handlers.
+     *
+     * @param grip - The grip element, which captures the pointer.
+     * @param e - The pointerdown event that started the drag.
+     */
+    private beginGripDrag(grip: HTMLElement, e: PointerEvent): void
+    {
+        this.isDragging = true;
+        this.dragStartX = e.clientX;
+        this.dragStartY = e.clientY;
+        this.dragOrigX = this.floatX;
+        this.dragOrigY = this.floatY;
+
+        grip.setPointerCapture(e.pointerId);
+        grip.style.cursor = "grabbing";
+
+        if (this.opts.dragToDock !== false)
+        {
+            this.showDockZones();
+        }
+
+        this.boundDragMove = (ev: PointerEvent) =>
+        {
+            this.handleDragMove(ev);
+        };
+
+        this.boundDragEnd = (ev: PointerEvent) =>
+        {
+            this.handleDragEnd(ev, grip);
+        };
+
+        grip.addEventListener("pointermove", this.boundDragMove);
+        grip.addEventListener("pointerup", this.boundDragEnd);
     }
 
     /**
@@ -3844,59 +3938,91 @@ export class Toolbar
     {
         handle.addEventListener("pointerdown", (e) =>
         {
-            if (e.button !== 0)
-            {
-                return;
-            }
+            if (e.button !== 0) { return; }
 
             e.preventDefault();
             e.stopPropagation();
             handle.setPointerCapture(e.pointerId);
-
-            const startPos = this.currentOrientation === "horizontal"
-                ? e.clientX : e.clientY;
-            const startSize = this.currentSize || this.getMeasuredSize();
-
-            const onMove = (ev: PointerEvent) =>
-            {
-                logTrace("pointermove handler:", { x: ev.clientX, y: ev.clientY });
-                const currentPos = this.currentOrientation === "horizontal"
-                    ? ev.clientX : ev.clientY;
-                const delta = currentPos - startPos;
-                const minSize = this.opts.minSize || DEFAULT_MIN_SIZE;
-                const maxSize = this.opts.maxSize || this.getViewportSize();
-
-                this.currentSize = clamp(startSize + delta, minSize, maxSize);
-                this.applySizeStyle();
-                this.recalculateOverflow();
-            };
-
-            const onUp = (ev: PointerEvent) =>
-            {
-                handle.releasePointerCapture(ev.pointerId);
-                handle.removeEventListener("pointermove", onMove);
-                handle.removeEventListener("pointerup", onUp);
-
-                if (this.opts.onResize)
-                {
-                    this.opts.onResize(this.currentSize);
-                }
-
-                if (this.opts.persistLayout)
-                {
-                    this.debouncedPersist();
-                }
-            };
-
-            handle.addEventListener("pointermove", onMove);
-            handle.addEventListener("pointerup", onUp);
+            this.beginPointerResize(handle, e);
         });
 
-        // Keyboard resize
         handle.addEventListener("keydown", (e) =>
         {
             this.handleResizeKeyboard(e);
         });
+    }
+
+    /**
+     * Runs one pointer resize gesture from the handle.
+     *
+     * The start position and size are captured here and closed over by
+     * both inner handlers, which is why they are not fields: two
+     * toolbars resizing at once would otherwise share them.
+     *
+     * @param handle - The resize handle, which holds pointer capture.
+     * @param down - The pointerdown event that began the gesture.
+     */
+    private beginPointerResize(
+        handle: HTMLElement, down: PointerEvent
+    ): void
+    {
+        const startPos = this.currentOrientation === "horizontal"
+            ? down.clientX : down.clientY;
+        const startSize = this.currentSize || this.getMeasuredSize();
+
+        const onMove = (ev: PointerEvent): void =>
+        {
+            logTrace("pointermove handler:",
+                { x: ev.clientX, y: ev.clientY });
+            this.resizeTo(startPos, startSize, ev);
+        };
+
+        const onUp = (ev: PointerEvent): void =>
+        {
+            handle.releasePointerCapture(ev.pointerId);
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onUp);
+            this.finishResize();
+        };
+
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onUp);
+    }
+
+    /**
+     * Applies one move of a resize gesture.
+     *
+     * @param startPos - Pointer coordinate the gesture began at.
+     * @param startSize - Toolbar size the gesture began at.
+     * @param ev - The pointermove event.
+     */
+    private resizeTo(
+        startPos: number, startSize: number, ev: PointerEvent
+    ): void
+    {
+        const currentPos = this.currentOrientation === "horizontal"
+            ? ev.clientX : ev.clientY;
+        const minSize = this.opts.minSize || DEFAULT_MIN_SIZE;
+        const maxSize = this.opts.maxSize || this.getViewportSize();
+
+        this.currentSize = clamp(
+            startSize + (currentPos - startPos), minSize, maxSize);
+        this.applySizeStyle();
+        this.recalculateOverflow();
+    }
+
+    /** Notifies the caller and persists after a resize gesture ends. */
+    private finishResize(): void
+    {
+        if (this.opts.onResize)
+        {
+            this.opts.onResize(this.currentSize);
+        }
+
+        if (this.opts.persistLayout)
+        {
+            this.debouncedPersist();
+        }
     }
 
     /**
@@ -4043,56 +4169,68 @@ export class Toolbar
      */
     private applyModeClasses(): void
     {
-        if (!this.rootEl)
-        {
-            return;
-        }
+        if (!this.rootEl) { return; }
 
-        // Clear mode classes
-        this.rootEl.classList.remove(
-            "toolbar-horizontal", "toolbar-vertical",
-            "toolbar-docked", "toolbar-floating",
-            "toolbar-docked-top", "toolbar-docked-bottom",
-            "toolbar-docked-left", "toolbar-docked-right",
-            "toolbar-contained"
-        );
+        this.clearModeClasses(this.rootEl);
 
-        // Add contained class if in contained mode
         if (this.contained)
         {
             this.rootEl.classList.add("toolbar-contained");
         }
 
-        // Orientation
-        this.rootEl.classList.add(
-            `toolbar-${this.currentOrientation}`
-        );
+        this.rootEl.classList.add(`toolbar-${this.currentOrientation}`);
 
-        // Mode
         if (this.currentMode === "docked")
         {
             this.rootEl.classList.add("toolbar-docked");
             this.rootEl.classList.add(
-                `toolbar-docked-${this.currentDockPosition}`
-            );
+                `toolbar-docked-${this.currentDockPosition}`);
         }
         else
         {
             this.rootEl.classList.add("toolbar-floating");
         }
 
-        // ARIA orientation
         this.rootEl.setAttribute(
-            "aria-orientation", this.currentOrientation
-        );
+            "aria-orientation", this.currentOrientation);
+        this.applyGripVisibility();
+    }
 
-        // Grip visibility — hidden when dragging is disabled or contained.
-        if (this.gripEl)
-        {
-            const showGrip = this.opts.draggable !== false
-                && !this.contained;
-            this.gripEl.style.display = showGrip ? "" : "none";
-        }
+    /**
+     * Removes every class this method can add, before adding any.
+     *
+     * Listed in full rather than filtered by prefix, because
+     * `toolbar-contained` and the dock positions do not share one, and
+     * a prefix wide enough to catch them would also strip the base
+     * `toolbar` class.
+     *
+     * @param root - The toolbar's root element.
+     */
+    private clearModeClasses(root: HTMLElement): void
+    {
+        root.classList.remove(
+            "toolbar-horizontal", "toolbar-vertical",
+            "toolbar-docked", "toolbar-floating",
+            "toolbar-docked-top", "toolbar-docked-bottom",
+            "toolbar-docked-left", "toolbar-docked-right",
+            "toolbar-contained"
+        );
+    }
+
+    /**
+     * Hides the grip when there is nothing it could do.
+     *
+     * A contained toolbar belongs to a layout cell, and a toolbar with
+     * `draggable: false` has refused the gesture, so in both cases the
+     * grip would be an affordance for an action that does not happen.
+     */
+    private applyGripVisibility(): void
+    {
+        if (!this.gripEl) { return; }
+
+        const showGrip = this.opts.draggable !== false && !this.contained;
+
+        this.gripEl.style.display = showGrip ? "" : "none";
     }
 
     /**
@@ -4213,86 +4351,109 @@ export class Toolbar
         config: MutableTool
     ): void
     {
+        this.applyToolFlags(el, config);
+        this.applyToolIcon(el, config);
+        this.applyToolLabel(el, config);
+        this.applyToolTooltip(el, config);
+        this.applyCheckedState(el, config);
+        this.applyValueState(el, config);
+    }
+
+    /**
+     * The three states every item has: active, disabled and hidden.
+     *
+     * `aria-pressed` rides along because it is the accessible half of
+     * `active`, and setting one without the other is how a toggle comes
+     * to look pressed and announce itself as not.
+     *
+     * @param el - The item's wrapper element.
+     * @param config - The item's live configuration.
+     */
+    private applyToolFlags(el: HTMLElement, config: MutableTool): void
+    {
         const isActive = !!config.active;
-        const isDisabled = !!config.disabled;
-        const isHidden = !!config.hidden;
 
-        // Active state
-        if (isActive)
-        {
-            el.classList.add("toolbar-tool-active");
-        }
-        else
-        {
-            el.classList.remove("toolbar-tool-active");
-        }
+        el.classList.toggle("toolbar-tool-active", isActive);
+        el.classList.toggle("toolbar-tool-disabled", !!config.disabled);
 
-        // Disabled state
-        if (isDisabled)
+        if (config.disabled)
         {
-            el.classList.add("toolbar-tool-disabled");
             el.setAttribute("aria-disabled", "true");
         }
         else
         {
-            el.classList.remove("toolbar-tool-disabled");
             el.removeAttribute("aria-disabled");
         }
 
-        // Hidden state
-        if (isHidden)
-        {
-            el.style.display = "none";
-        }
-        else
-        {
-            el.style.display = "";
-        }
+        el.style.display = config.hidden ? "none" : "";
 
-        // Toggle aria-pressed
         if (config.toggle)
         {
-            const btn = el.tagName === "BUTTON" ? el :
-                el.querySelector(".toolbar-tool") as HTMLElement;
+            const btn = this.toolButtonOf(el);
 
             if (btn)
             {
                 btn.setAttribute("aria-pressed", isActive ? "true" : "false");
             }
         }
+    }
 
-        // Update icon
-        if (config.icon)
-        {
-            const iconEl = el.querySelector(".toolbar-tool-icon");
+    /**
+     * The element that carries a tool's button semantics.
+     *
+     * An item is either a bare `<button>` or a wrapper around one, and
+     * three of the writers below need to know which. Reading it once
+     * keeps the two spellings from drifting apart.
+     *
+     * @param el - The item's wrapper element.
+     * @returns The button, or null when the item has none.
+     */
+    private toolButtonOf(el: HTMLElement): HTMLElement | null
+    {
+        return el.tagName === "BUTTON"
+            ? el
+            : el.querySelector(".toolbar-tool");
+    }
 
-            if (iconEl)
-            {
-                // Remove old bi-* classes except "bi" and "toolbar-tool-icon"
-                const toRemove: string[] = [];
+    /**
+     * Swaps the Bootstrap icon class, leaving the others alone.
+     *
+     * Every `bi-*` is removed first, because the classes are additive
+     * and an icon set twice would otherwise render both.
+     *
+     * @param el - The item's wrapper element.
+     * @param config - The item's live configuration.
+     */
+    private applyToolIcon(el: HTMLElement, config: MutableTool): void
+    {
+        if (!config.icon) { return; }
 
-                iconEl.classList.forEach((cls) =>
-                {
-                    if (cls.startsWith("bi-"))
-                    {
-                        toRemove.push(cls);
-                    }
-                });
+        const iconEl = el.querySelector(".toolbar-tool-icon");
 
-                toRemove.forEach((cls) => iconEl.classList.remove(cls));
-                iconEl.classList.add(config.icon);
-            }
-        }
+        if (!iconEl) { return; }
 
-        // Update label
-        //
-        // A `type: "label"` item renders its string into
-        // `.toolbar-label-text`, and every other item renders it into
-        // `.toolbar-tool-label`. This branch looked only for the second,
-        // so `setToolState({ label })` silently did nothing to every
-        // label item in the library. GraphToolbar's zoom reading is one
-        // of them, and it stayed at its initial value for the life of
-        // the toolbar. ADR-203.
+        const stale = Array.from(iconEl.classList)
+            .filter((cls) => cls.startsWith("bi-"));
+
+        iconEl.classList.remove(...stale);
+        iconEl.classList.add(config.icon);
+    }
+
+    /**
+     * Writes a new label into whichever element the item renders it in.
+     *
+     * A `type: "label"` item renders its string into
+     * `.toolbar-label-text`, and every other item renders it into
+     * `.toolbar-tool-label`. This looked only for the second, so
+     * `setToolState({ label })` silently did nothing to every label item
+     * in the library. GraphToolbar's zoom reading is one of them, and it
+     * stayed at its initial value for the life of the toolbar. ADR-203.
+     *
+     * @param el - The item's wrapper element.
+     * @param config - The item's live configuration.
+     */
+    private applyToolLabel(el: HTMLElement, config: MutableTool): void
+    {
         const labelEl = config.type === "label"
             ? el.querySelector(".toolbar-label-text")
             : el.querySelector(".toolbar-tool-label");
@@ -4301,25 +4462,24 @@ export class Toolbar
         {
             labelEl.textContent = config.label;
         }
+    }
 
-        // Update tooltip
-        if (config.tooltip)
-        {
-            const btn = el.tagName === "BUTTON" ? el :
-                el.querySelector(".toolbar-tool") as HTMLElement;
+    /**
+     * Keeps the visible tooltip and the accessible name in step.
+     *
+     * @param el - The item's wrapper element.
+     * @param config - The item's live configuration.
+     */
+    private applyToolTooltip(el: HTMLElement, config: MutableTool): void
+    {
+        if (!config.tooltip) { return; }
 
-            if (btn)
-            {
-                btn.setAttribute("title", config.tooltip);
-                btn.setAttribute("aria-label", config.tooltip);
-            }
-        }
+        const btn = this.toolButtonOf(el);
 
-        // Checked state for checkbox / switch
-        this.applyCheckedState(el, config);
+        if (!btn) { return; }
 
-        // Value state for number / color
-        this.applyValueState(el, config);
+        btn.setAttribute("title", config.tooltip);
+        btn.setAttribute("aria-label", config.tooltip);
     }
 
     /** Applies checked state to checkbox/switch DOM inputs. */
@@ -5430,52 +5590,49 @@ export class Toolbar
      */
     private updateDockZones(clientX: number, clientY: number): void
     {
-        const threshold = this.opts.dragToDockThreshold || DEFAULT_DOCK_THRESHOLD;
-
-        // Calculate distance to each edge
-        const distTop = clientY;
-        const distBottom = window.innerHeight - clientY;
-        const distLeft = clientX;
-        const distRight = window.innerWidth - clientX;
-
-        const minDist = Math.min(distTop, distBottom, distLeft, distRight);
+        const threshold =
+            this.opts.dragToDockThreshold || DEFAULT_DOCK_THRESHOLD;
 
         for (const zone of this.dockZones)
         {
             zone.classList.remove("toolbar-dock-zone-active");
         }
 
-        if (minDist > threshold)
-        {
-            return;
-        }
+        const nearest = this.nearestDockEdge(clientX, clientY);
 
-        // Activate nearest edge
-        let activeIdx = -1;
+        if (nearest.distance > threshold) { return; }
 
-        if (minDist === distTop)
+        if (nearest.index < this.dockZones.length)
         {
-            activeIdx = 0;
-        }
-        else if (minDist === distBottom)
-        {
-            activeIdx = 1;
-        }
-        else if (minDist === distLeft)
-        {
-            activeIdx = 2;
-        }
-        else
-        {
-            activeIdx = 3;
-        }
-
-        if (activeIdx >= 0 && activeIdx < this.dockZones.length)
-        {
-            this.dockZones[activeIdx].classList.add("toolbar-dock-zone-active");
+            this.dockZones[nearest.index]
+                .classList.add("toolbar-dock-zone-active");
         }
     }
 
+    /**
+     * The viewport edge the pointer is closest to.
+     *
+     * The index matches the order `showDockZones` builds the zones in:
+     * top, bottom, left, right.
+     *
+     * @param clientX - Pointer X in viewport coordinates.
+     * @param clientY - Pointer Y in viewport coordinates.
+     * @returns The zone index and how far the pointer is from it.
+     */
+    private nearestDockEdge(
+        clientX: number, clientY: number
+    ): { index: number; distance: number }
+    {
+        const distances = [
+            clientY,                            // top
+            window.innerHeight - clientY,       // bottom
+            clientX,                            // left
+            window.innerWidth - clientX,        // right
+        ];
+        const distance = Math.min(...distances);
+
+        return { index: distances.indexOf(distance), distance };
+    }
     /**
      * Returns the dock target position based on pointer proximity to edges.
      */

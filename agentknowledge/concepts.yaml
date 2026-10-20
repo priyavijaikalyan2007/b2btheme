@@ -1627,3 +1627,17 @@
   related:
   - AContractHoldingOnOneBranchIsNotAContract
   - ExistenceIsNotReadiness
+
+- name: AnUncheckedBoxIsAnInstructionToAct
+  definition: "ADR-207. Seven entries in CODEBASE_FIXES.md sat under `- [ ]` for months while meaning the opposite of what the marker says. DEBT-WEB-2 records a link colour the user chose deliberately and exists so that nobody corrects it; DEBT-VR-6 records a contrast ratio that is fine because the two surfaces never touch. A checkbox is a verb: unchecked reads as somebody should do this. Filing a standing decision under an open-work marker invites exactly the edit the entry was written to prevent, and the reader most likely to make that edit is the one who found the entry by grepping for open work. A tracker needs a third state — settled, with a reopen condition — because done and to-do do not cover a decision."
+  anchor_file: CODEBASE_FIXES.md
+  related:
+  - ReMeasureTheCodeNotTheSentence
+  - AClassificationIsAnInstrumentNotANote
+
+- name: TheObviousExtractionMayBeTheOneStrictForbids
+  definition: "ADR-207. TreeGrid's constructor was 60 lines and 45 of them were `this.x = new Set()` or `= null` — assignments depending on nothing, inside a method whose job is to depend on the options. The obvious repair is an `initState()` helper, and `strictPropertyInitialization` rejects it: TypeScript does not follow assignment into a called method, so all 40 fields would have needed a `!` and the type system would have been told to stop checking a class it was checking correctly. The right move was not an extraction at all. An unconditional starting value belongs on the field declaration, and moving it there left the constructor holding only what reads `options`. When Extract Method fights the compiler, ask whether the lines want to move somewhere else entirely."
+  anchor_file: components/treegrid/treegrid.ts
+  related:
+  - FixTheGuaranteeAtTheBoundary
+  - AnUncheckedBoxIsAnInstructionToAct

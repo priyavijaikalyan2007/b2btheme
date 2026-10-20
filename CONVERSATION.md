@@ -4303,3 +4303,33 @@ My own conformance glue then carried the same kind of wrong claim: I
 wrote that the two fixture nodes were needed for the renders-content
 check, and a mutation showed the gate passes with an empty list. Fixed
 the comment to say what was measured.
+
+## 2026-10-20 (cont.) — SETTLED, and the volume items
+
+The user's instinct about the seven records was right, and the problem
+was the encoding rather than the location. A checkbox is a verb.
+Unchecked reads as "somebody should do this", and all seven meant the
+opposite. Worse, the reader most likely to act on the wrong reading is
+the one who found the entry by grepping for open work.
+
+They carry `- [=] SETTLED` now, each with how it was settled, what not
+to do, and what would reopen it. The reopen condition is the part that
+makes it a decision instead of an opinion.
+
+ANY-3 turned out not to be volume work at all — it was blocked on a
+fleet-wide decision, and I had mis-sorted it when I gave the ordering.
+Two of its three routes need that decision and the third does not, so
+it closed at zero without one. The two `as any` casts were worth more
+than the thirteen annotations: an unrecognised aggregate kind was
+stored and then computed nothing, so the footer rendered and was
+always empty.
+
+The 14 oversized functions went without incident, and the interesting
+one was TreeGrid. Forty-five of its sixty constructor lines depended on
+nothing, and the obvious `initState()` helper is exactly what `strict`
+forbids — TypeScript does not follow assignment into a called method,
+so it would have cost 40 definite-assignment assertions. The lines
+wanted to be on the field declarations, not in another method.
+
+Not one test changed across all fourteen, which is the only evidence
+worth having that an extraction was an extraction.

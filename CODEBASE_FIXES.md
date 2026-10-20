@@ -4,6 +4,26 @@
 > **Purpose:** Tracks all issues found during the codebase audit. Organized by severity and category. Check off items as they are resolved.
 > **Convention:** Each fix should reference the commit hash that resolves it.
 
+### Markers
+
+| Marker | Meaning | What a coding session should do |
+|---|---|---|
+| `- [ ]` | **Open.** Work somebody still owes. | Pick it up, or leave it. |
+| `- [x]` | **Closed.** The work was done. | Read it for context. Do not redo it. |
+| `- [=]` | **SETTLED.** A decision was taken to leave this as it is. | **Do not "fix" it.** Each one carries a quoted block saying how it was settled and what would reopen it. Change it only when that condition is met, or when the user says so. |
+
+**WHY THE THIRD MARKER EXISTS.** Seven entries sat under `- [ ]` for
+months while meaning the opposite of what the checkbox says. An
+unchecked box reads as *somebody should do this*, and every one of them
+meant *do not do this, here is why*. DEBT-WEB-2 is the clearest case:
+it records a colour choice the user made deliberately, and it exists so
+that nobody corrects it. Filing a standing decision under an open-work
+marker invites exactly the edit the entry was written to prevent.
+
+A settled entry is not closed and not open. It is a decision with a
+reopen condition, and the condition is the only thing that should move
+it.
+
 ---
 
 ## CRITICAL — Security
@@ -616,7 +636,22 @@ declaration buys real type safety, and it buys it once for the whole library.
 
 Per CODING_STYLE.md, functions must be 25-30 lines maximum. These functions significantly exceed that limit and should be decomposed via Extract Method refactoring.
 
-- [ ] **FN-1** `components/toolbar/toolbar.ts` — 10 oversized functions:
+- [x] **FN-1** **CLOSED 2026-10-20, ADR-207.** All ten are now at or
+  under the 30-line limit, measured by the same walk that produced the
+  list. `applyToolStateToDOM` 113 → 12, `buildSplitButton` 82 → 26,
+  `buildRoot` 74 → 27, `buildGalleryControl` 69 → 30,
+  `buildGalleryOptions` 67 → 9, `attachGripDrag` 63 → 16,
+  `buildItemElement` 61 → 29, `attachResizeHandler` 58 → 17,
+  `applyModeClasses` 53 → 28, `updateDockZones` 47 → 20.
+
+  **The March counts were accurate and every function had grown**, which
+  is what a list with no gate behind it does. `buildItemElement` was
+  eleven `if ("type" in item && item.type === x)` blocks and is now one
+  switch. Nothing else changed behaviour: 57 toolbar and graphtoolbar
+  tests pass unchanged, which is the point — an extraction that needs a
+  test edited is not an extraction.
+
+  The original list:
   - `applyToolStateToDOM` (107 lines)
   - `buildSplitButton` (79 lines)
   - `buildRoot` (73 lines)
@@ -628,13 +663,38 @@ Per CODING_STYLE.md, functions must be 25-30 lines maximum. These functions sign
   - `applyModeClasses` (52 lines)
   - `updateDockZones` (46 lines)
 
-- [ ] **FN-2** `components/treeview/treeview.ts` — 3 oversized functions:
-  - `buildTreeContentVirtual` (84 lines)
-  - `populateVirtualRow` (59 lines)
-  - `buildNodeItem` (57 lines)
+- [x] **FN-2** **CLOSED 2026-10-20, ADR-207.** `buildTreeContentVirtual`
+  85 → 30, `populateVirtualRow` 60 → 10, `buildNodeItem` 58 → 27.
 
-- [ ] **FN-3** `components/treegrid/treegrid.ts` — 1 oversized function:
-  - `constructor` (59 lines)
+  Two of the three extractions are named after the thing that made them
+  hard to read rather than after a line range: `applyVirtualRowAria` and
+  `applyVirtualRowClasses` both operate on POOLED rows, so each has to
+  reset state the previous occupant left, and saying so once in a doc
+  comment is worth more than the split.
+
+  The original list:
+  - `buildTreeContentVirtual` (84 lines, 85 when re-measured)
+  - `populateVirtualRow` (59 lines, 60 when re-measured)
+  - `buildNodeItem` (57 lines, 58 when re-measured)
+
+- [x] **FN-3** **CLOSED 2026-10-20, ADR-207.** The TreeGrid constructor
+  is 60 → 16 lines, and the extraction that worked was not the obvious
+  one.
+
+  **45 of the 60 lines were `this.x = new Set()` / `= null` / `= false`
+  — assignments that depend on nothing, in a method whose job is to
+  depend on the options.** Extracting them into an `initState()` helper
+  is the obvious move and `strict` forbids it: TypeScript does not
+  follow assignment into a called method, so every one of 40 fields
+  would have needed a `!` and the type system would have been told to
+  stop checking a class it was checking correctly.
+
+  A declaration initialiser is where an unconditional starting value
+  belongs. What is left in the constructor is what actually reads
+  `options`.
+
+  The original list:
+  - `constructor` (59 lines, 60 when re-measured)
 
 ---
 
@@ -1116,7 +1176,7 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   - `components/toast/toast.scss` (2 occurrences)
   - `components/ribbon/ribbon.scss` (1 occurrence)
 
-- [ ] **IMP-2** Justified (third-party overrides) — acceptable, document reason in comments.
+- [=] **SETTLED — IMP-2** Justified (third-party overrides) — acceptable, document reason in comments.
   **Re-measured 2026-10-15: markdowneditor has 17, not 18, and 11 of those
   17 carry no comment**, so they are in IMP-1's 29 rather than here.
   `guidedtour` has 1 real declaration and it is already documented, which
@@ -1124,6 +1184,18 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   in comments", was followed in exactly one of the two files it names.
   - `components/markdowneditor/markdowneditor.scss` (17 occurrences — Vditor overrides, 6 documented)
   - `components/guidedtour/guidedtour.scss` (1 occurrence — driver.js override, documented)
+
+  > **SETTLED as a category.** A third-party override carrying a comment
+  > that says why is acceptable and needs no further work.
+  >
+  > **Future sessions: do not strip these, and do not count them against
+  > IMP-1.** An override WITHOUT a comment is not in this category — it
+  > belongs in IMP-1 until somebody writes the reason down. The
+  > 2026-10-15 re-measurement moved 11 of markdowneditor's 17 across on
+  > exactly that test.
+  >
+  > **Reopen when** the third-party library being overridden is dropped,
+  > which removes the justification with it.
 
 - [x] **IMP-3** Justified (accessibility) — acceptable. **Verified
   2026-10-15 and closed:** 11 declarations sit inside a
@@ -1540,7 +1612,26 @@ Using `: any` defeats TypeScript's type safety. Each occurrence should be replac
   That `@ts-expect-error` was the only type suppression in the tracked
   sources, and removing it surfaced a latent crash. See DEBT-ERR-2.
 
-- [ ] **ANY-3** The last 15 uses of `any` are in
+- [x] **ANY-3** **CLOSED 2026-10-20 at zero, ADR-207.** Both ratchets
+  are now 0: `anyAnnotations` 13 → 0 and `anyCasts` 2 → 0.
+
+  **The entry offered three ways out and the third needed no decision.**
+  Publishing the option types as globals or relaxing the import rule are
+  decisions about the whole fleet. Restating the shape locally is what
+  the `any` was standing in for anyway, so `EditorToolbarItem` and
+  `EditorMenuItem` now describe exactly the fields this component sets —
+  narrower than the neighbours' own types, and unable to drift into
+  claiming more than is used.
+
+  **The two `as any` casts were the more interesting half.**
+  `setFooterAggregate` and `setColumnAggregate` took a bare `string` and
+  cast it into a nine-member union, so an unrecognised kind was stored
+  and then quietly computed nothing — the footer renders and is simply
+  always empty, which is a fabricated read. They are public entry points
+  a JavaScript host reaches with no compiler in the way, so the check is
+  at run time too and names every kind the component does compute.
+
+  The original entry:
   `components/visualtableeditor/visualtableeditor.ts`, and they are a
   different problem from the 142 that closed with ANY-1. Thirteen build
   arrays of **Toolbar items and ContextMenu items**: `buildToolbarItems`,
@@ -2658,18 +2749,57 @@ offered as the evidence for it.
 Deliberate trade-offs from the parity workstream. Each is documented in its ADR;
 listed here so future audits do not re-litigate them without the context.
 
-- [ ] **DEBT-PAR-1** `theme-init.js` is served at two URLs (`/js/theme-init.js` canonical + `/components/themeinit/themeinit.js` pipeline twin). Accepted to reuse the component build pipeline (ADR-137). Revisit only if the duplication ever confuses consumers — the fix would be excluding the component path from deploy, not adding a second build path.
+- [=] **SETTLED — DEBT-PAR-1** `theme-init.js` is served at two URLs (`/js/theme-init.js` canonical + `/components/themeinit/themeinit.js` pipeline twin). Accepted to reuse the component build pipeline (ADR-137). Revisit only if the duplication ever confuses consumers — the fix would be excluding the component path from deploy, not adding a second build path.
 
   **Trigger re-measured 2026-10-09 (ADR-159): it has not fired, and the parking stands.** Every consumer reference across `~/Work/knobby/apps` uses the canonical `/js/theme-init.js` — five pages checked, zero on the twin. Nobody is confused because nobody found it.
 
   One thing did change, because *we* were the ones advertising it: both `COMPONENTS.md` and the component README listed the twin in a URL table with no warning, the README calling it merely "Build-pipeline twin of the same file". A table of two URLs with no steer is an invitation to pick either. Both now mark it **internal, do not link**, and say why it exists. Cheaper than deleting the path and it removes the only realistic route to the confusion this entry is waiting for.
-- [ ] **DEBT-PAR-2** AuthCard publishes generic class names (`.divider`, `.brand-logo`, `.auth-card`, …) on the shared CDN — collision risk for consumers that define the same names. Required verbatim by the parity contract (ADR-138); cannot be namespaced without breaking the FreeMarker mirror. Mitigation: authcard.css is opt-in (own `<link>`), never bundled into custom.css.
+
+  > **SETTLED.** Accepted by ADR-137 so the twin reuses the component
+  > build pipeline rather than growing a second one.
+  >
+  > **Future sessions: do not delete the twin path and do not add a
+  > second build path.** The duplication is the cheaper of the two
+  > options, and the trigger for revisiting it is consumer confusion
+  > rather than tidiness.
+  >
+  > **Reopen when** a consumer is found loading
+  > `/components/themeinit/themeinit.js`. Re-measured 2026-10-09 across
+  > `~/Work/knobby/apps`: five pages, all on the canonical
+  > `/js/theme-init.js`, zero on the twin. The fix would then be to
+  > exclude the component path from deploy.
+
+- [=] **SETTLED — DEBT-PAR-2** AuthCard publishes generic class names (`.divider`, `.brand-logo`, `.auth-card`, …) on the shared CDN — collision risk for consumers that define the same names. Required verbatim by the parity contract (ADR-138); cannot be namespaced without breaking the FreeMarker mirror. Mitigation: authcard.css is opt-in (own `<link>`), never bundled into custom.css.
 
   **The collision risk stays open — it is contractual and cannot be fixed here — but the MITIGATION is now enforced (2026-10-09, ADR-159).** Structure check `[17]` derives the ten names AuthCard owns from `authcard.css` itself and fails if any reaches `custom.css`. Derived rather than listed, so the tenth name is covered the day an eleventh is added. It distinguishes names AuthCard *owns* (ones that start a selector) from Bootstrap classes it merely composes with — `.brand-logo.lg`, `.auth-step.active` — because flagging `.active` would have made the check cry wolf on its first run, which it did. Mutation-proven both ways: leaking `.auth-card` into the bundle fails, and an empty `authcard.css` fails rather than passing vacuously on nothing. **A mitigation written only as a sentence is one `@import` away from ending silently, and the symptom would surface in somebody else's application.**
+
+  > **SETTLED.** The collision risk is CONTRACTUAL and cannot be fixed
+  > here. ADR-138's parity contract requires these class names verbatim,
+  > and namespacing them breaks the FreeMarker mirror.
+  >
+  > **Future sessions: do not rename, prefix or namespace any class
+  > AuthCard owns, and do not bundle `authcard.css` into `custom.css`.**
+  > The mitigation is enforced by structure check `[17]`, which derives
+  > the owned names from the stylesheet rather than listing them, so a
+  > new name is covered the day it is added.
+  >
+  > **Reopen when** the FreeMarker mirror is retired. That is the only
+  > thing that frees the names.
+
 - [x] **DEBT-PAR-3** *(the untested half closed 2026-10-09, ADR-159)* — `test-cdn.sh` check `[7]` now asserts the live response carries `Access-Control-Allow-Origin: *` on `/icons/fonts/bootstrap-icons.woff2`. **Measured, and it is correct**: the font returns `*`. It lives in the CDN suite rather than the structure suite deliberately — a `_headers` file is applied by the edge, so nothing in this repository can confirm it and only a real response can. Proven to discriminate by running the same probe against `/css/custom.css`, which correctly reports no header.
 
   Why it matters, since it is easy to read as pedantry: a webfont is subject to CORS where a stylesheet is not, so a cross-origin `@font-face` without this header **fails silently** and the page falls back to a system font — a bug that looks like a design decision. *Still out of scope, behind its original trigger:* exercising it in the actual Keycloak parity flow, which does not fetch self-hosted icons today (spec R4.1).
-- [ ] **DEBT-PAR-4** The apps repo's `setTheme()` early-returns on unchanged mode, so an externally clobbered `knobby-theme` cookie is only rewritten on the next real change or page load. Cosmetic; owned by the apps team (noted in specs/keycloak-theme-parity.md handoff).
+- [=] **SETTLED — DEBT-PAR-4** The apps repo's `setTheme()` early-returns on unchanged mode, so an externally clobbered `knobby-theme` cookie is only rewritten on the next real change or page load. Cosmetic; owned by the apps team (noted in specs/keycloak-theme-parity.md handoff).
+
+  > **SETTLED.** Not ours. The defect is in the apps repository's
+  > `setTheme()`, it is cosmetic, and it was handed over in
+  > `specs/keycloak-theme-parity.md`.
+  >
+  > **Future sessions: do not work around this from the theme side.**
+  > A compensating write here would give one cookie two owners.
+  >
+  > **Reopen when** the apps team asks for help, or if that cookie ever
+  > carries something a stale value would break.
 
 ---
 
@@ -2771,7 +2901,19 @@ limits the design knowingly accepts, not defects in shipped code.
   Its genuine residuals are already tracked elsewhere and are **not** reopened here: the large-text exemption (declined on purpose, DEBT-VR-5c) and the 73 component-level `rgba()` backgrounds no token names (DEBT-VR-10). What no gate does, and what the original "verified by eye" clause really wanted, is render a component and measure the pixels — every check here is arithmetic over tokens.
 
   **The lesson is the entry itself, not the gate.** It sat open for five weeks claiming a thing that was false for four of them, and it said so in six places: this file, both component READMEs, two specs, and the generated `docs/COMPONENT_REFERENCE.md`. A debt entry that states a *condition* rather than a *task* goes stale silently when the condition changes, and generated docs multiply the staleness. Same shape as DEBT-VR-5b-ORIG, closed the same day.
-- [ ] **DEBT-WEB-2** `SiteFooter` links use muted text when unvisited and the accent colour when visited, which **inverts the common convention**. Chosen deliberately by the user (ADR-146, D5) to make the visited state obvious while keeping the footer quiet. Recorded because it will read as a bug to anyone who meets it without the record. Now stated in four places — the stylesheet comment, the component README, the Component Studio help block, and `specs/sitefooter.md` — because one of them will be the only one someone reads.
+- [=] **SETTLED — DEBT-WEB-2** `SiteFooter` links use muted text when unvisited and the accent colour when visited, which **inverts the common convention**. Chosen deliberately by the user (ADR-146, D5) to make the visited state obvious while keeping the footer quiet. Recorded because it will read as a bug to anyone who meets it without the record. Now stated in four places — the stylesheet comment, the component README, the Component Studio help block, and `specs/sitefooter.md` — because one of them will be the only one someone reads.
+
+  > **SETTLED.** A deliberate choice by the user, recorded as ADR-146 D5:
+  > muted when unvisited and accent when visited, so the visited state is
+  > obvious while the footer stays quiet.
+  >
+  > **Future sessions: do not "correct" this to the common convention.**
+  > It is stated in four places — the stylesheet, the component README,
+  > the Component Studio help block and `specs/sitefooter.md` — because
+  > whichever one you read first is probably the only one you will read.
+  >
+  > **Reopen only if the user says so.** No measurement changes this one.
+
 - [x] **DEBT-WEB-3** `tests/website-components.spec.ts` — 11 Playwright tests covering breakpoint collapse, stacking order, overflow at 320px, accessible names and focus visibility — **had never executed**. Playwright's Chromium would not install on Node v26. Resolved by ADR-157: `npx playwright install chromium` now succeeds (Chrome Headless Shell 153, chromium-headless-shell v1243) and the suite runs. **It found a real bug on its first execution**: `.sitefooter-orgdesc` needed 539px of the 249px it had, from a German compound the demo fixture carried *on purpose* for an assertion that had never once run — 10 passed, 1 failed. `overflow-wrap` was set on the contact block and the links but not on the one element whose job is prose; it is now declared once at `.sitefooter` and inherited. The hero had no 320px test while the footer did, so the footer's overflow was findable and the hero's was not — both have it now. **12 tests, up from the 11 recorded here**, all passing.
 
 ---
@@ -2799,7 +2941,7 @@ limits the design knowingly accepts, not defects in shipped code.
 
 - [x] **DEBT-SEC-1** 18 open advisories (11 high, 5 moderate, 2 low) across the build toolchain — postcss, undici, sharp, svgo, ws, nanoid, vite, wrangler, browserslist, immutable, miniflare, esbuild, yaml, vitest. All resolved; `npm audit` reports 0. No `--force` was needed and no semver-major upgrade was taken: `package.json` changed only `vitest` / `@vitest/coverage-v8` (`^4.1.3` → `^4.1.11`, the patch closing GHSA-82fw-gwwq-j7x9), and every other fix resolved transitively in the lockfile. **Exposure was build-time only** — this package declares no runtime dependencies, and the two libraries published to the CDN (`bootstrap.bundle.min.js`, `chart.umd.js`) are the vendors' own artifacts, not these packages. Build verified byte-reproducible afterwards: two consecutive `build:css` runs produce an identical `custom.css` hash.
 - [x] **DEBT-SEC-2** The `undici` override was written `">=7.24.1"` — a floor with **no ceiling**. jsdom@29 requires `undici ^7.24.3`, so once undici 8 shipped the override silently resolved to it, jsdom's dispatcher could not load, and **all 142 test files failed to start while vitest reported "no tests"**. `npm run test:unit` does exit 1 in that state, so CI would catch it, but the console output reads like an empty project rather than a broken one. Pinned to `^7.24.3` with the reasoning written into `package.json` beside the override, because the next person to see a `>=` and a `^` will otherwise "simplify" one into the other.
-- [ ] **DEBT-SEC-3** `sass` is held at **1.95.x** rather than current (1.104). The newer compiler changes the **shipped** stylesheet: colours inside SVG data URIs serialise as percentage `rgb()` instead of hex — `stroke='rgb(4.3921568627%, 19.7647058824%, 33.568627451%)'` where it used to be `stroke='%230b3255'` — and a few Bootstrap-derived values shift by one (`#172033` → `#172032`). The output was decoded and is **valid**, resolving to the same colour, and the change is cosmetically invisible in principle. It was still declined here: there is no security benefit, it adds ~94 bytes, and it introduces a CSS delta while the ADR-147 visual refresh is still under review. **Re-examined 2026-10-09 (ADR-157)**, because the original phrasing rested on "`npm audit` is already 0" and that premise had quietly expired — audit showed 5 advisories, and sass is one of five packages pulling `source-map-js`. It does not force the bump: `source-map-js` 1.2.2 patches the DoS and sass accepts `>=0.6.2 <2.0.0`, so an override clears the advisory with sass untouched at 1.95.1. The deferral stands on the CSS delta alone, which is the ground its own last sentence asked for. **A deferral justified by a measurement needs the measurement re-taken, not the conclusion re-read.** Note that **the caret does not hold it back** — `^1.95.1` admits 1.104, because minor 104 sorts above 95 — so only the committed lockfile pins it, and a fresh `npm install` with a regenerated lock would take 1.104. Upgrade deliberately, with the accordion and form-select icons eyeballed in both themes, rather than as a side-effect of a security pass.
+- [=] **SETTLED — DEBT-SEC-3** `sass` is held at **1.95.x** rather than current (1.104). The newer compiler changes the **shipped** stylesheet: colours inside SVG data URIs serialise as percentage `rgb()` instead of hex — `stroke='rgb(4.3921568627%, 19.7647058824%, 33.568627451%)'` where it used to be `stroke='%230b3255'` — and a few Bootstrap-derived values shift by one (`#172033` → `#172032`). The output was decoded and is **valid**, resolving to the same colour, and the change is cosmetically invisible in principle. It was still declined here: there is no security benefit, it adds ~94 bytes, and it introduces a CSS delta while the ADR-147 visual refresh is still under review. **Re-examined 2026-10-09 (ADR-157)**, because the original phrasing rested on "`npm audit` is already 0" and that premise had quietly expired — audit showed 5 advisories, and sass is one of five packages pulling `source-map-js`. It does not force the bump: `source-map-js` 1.2.2 patches the DoS and sass accepts `>=0.6.2 <2.0.0`, so an override clears the advisory with sass untouched at 1.95.1. The deferral stands on the CSS delta alone, which is the ground its own last sentence asked for. **A deferral justified by a measurement needs the measurement re-taken, not the conclusion re-read.** Note that **the caret does not hold it back** — `^1.95.1` admits 1.104, because minor 104 sorts above 95 — so only the committed lockfile pins it, and a fresh `npm install` with a regenerated lock would take 1.104. Upgrade deliberately, with the accordion and form-select icons eyeballed in both themes, rather than as a side-effect of a security pass.
 
   **Taken and reverted 2026-10-09 (ADR-158), by the user's decision, after measuring it rather than re-reading the entry.** sass 1.105.1 was installed, the CSS rebuilt and the full suite run: 28/28 structure checks and 4848 unit tests pass, and both chevrons render correctly in light and dark. The entry's two predictions held — +94 bytes exactly, and `#172033 → #172032` (plus a second it had not listed, `#a51d1d → #a51c1c`). Two things it got wrong, both found by measuring:
 
@@ -2807,6 +2949,21 @@ limits the design knowingly accepts, not defects in shipped code.
   - **A regression the entry did not predict: the bump breaks `postcss-svgo`.** sass 1.105.1 emits `%3csvg` lowercase where 1.95.1 emitted `%3Csvg`, and svgo cannot parse it: `SvgoParserError: Non-whitespace before first tag`, three times, **zero with 1.95.1**. Those three data URIs therefore ship **unminified**. All three are the dark-mode accordion chevron (`[data-bs-theme=dark] .accordion-button::after` and `--bs-accordion-btn-active-icon`), which is exactly the icon this entry said to eyeball. The form-select chevron is untouched — it comes from Bootstrap precompiled and never passes through sass's colour serialiser.
 
   So the deferral stands, and now for a reason stronger than the original: the bump makes the shipped stylesheet **larger and less optimised**, with no security benefit (audit is 0 through the `source-map-js` override) and no functional gain. Reverted; `dist/css/custom.css` is byte-identical to before at `ede68299`. `package.json` keeps the floor raised to `^1.95.1`, which is where the lockfile already was and what this entry already documented. **Revisit when postcss-svgo handles lowercase percent-encoding**, not on a version number.
+
+  > **SETTLED, on one ground only: the CSS delta.** `sass` 1.104
+  > re-serialises colours inside SVG data URIs as percentage `rgb()` and
+  > shifts a few Bootstrap-derived values by one.
+  >
+  > **Future sessions: do not bump `sass` as a side effect of a security
+  > pass.** There is no security benefit — `source-map-js` 1.2.2 patches
+  > the advisory and an override clears it with sass untouched. And the
+  > caret does NOT hold it back: `^1.95.1` admits 1.104, so only the
+  > committed lockfile pins it and a regenerated lock takes the bump
+  > silently.
+  >
+  > **Reopen when** the ADR-147 visual refresh is settled. Upgrade then,
+  > deliberately, with the accordion and form-select icons eyeballed in
+  > both themes.
 
 ---
 
@@ -2856,7 +3013,17 @@ limits the design knowingly accepts, not defects in shipped code.
   Two deliberate non-changes: the **six scrims and backdrops** are excluded, since the dialog that sits on them is opaque and no text touches them; and `fileexplorer`'s opaque `.fileexplorer-toolbar-btn-active` moved **despite passing at 4.93 in both themes**, purely so one frozen pastel does not sit among four token-driven siblings in the same component.
 
   *No gate.* A permanent check needs per-site knowledge of which background has text above it, and establishing that took reading every rule — the hard part is not the arithmetic. **What a gate could cheaply catch is the shape rather than the ratio: a sass-literal tint at alpha > 0.3.** Recorded here as the design for one, not built.
-- [ ] **DEBT-VR-6** `sunken|ground` measures **1.040** in dark — below the 1.08 the other adjacencies clear. Deliberate (ADR-150 D3): wells sit inside content and never abut the page ground, so the pair does not occur on screen and tightening it would cost contrast on pairs that do. Recorded so it is not "fixed" by someone reading a contrast matrix without checking what touches what. If a layout ever does place a sunken surface directly on the page ground, this becomes real.
+- [=] **SETTLED — DEBT-VR-6** `sunken|ground` measures **1.040** in dark — below the 1.08 the other adjacencies clear. Deliberate (ADR-150 D3): wells sit inside content and never abut the page ground, so the pair does not occur on screen and tightening it would cost contrast on pairs that do. Recorded so it is not "fixed" by someone reading a contrast matrix without checking what touches what. If a layout ever does place a sunken surface directly on the page ground, this becomes real.
+
+  > **SETTLED.** Deliberate, ADR-150 D3. Wells sit inside content and
+  > never abut the page ground, so the pair does not occur on screen, and
+  > tightening it would cost contrast on pairs that do.
+  >
+  > **Future sessions: do not raise this ratio because a contrast matrix
+  > flagged it.** A matrix lists every pair. Only some of them touch.
+  >
+  > **Reopen when** a layout places a sunken surface directly on the page
+  > ground. Then the pair is real and the number has to move.
 
 ## ACCEPTED DEBT — Component-level colour literals (2026-10-07, ADR-152)
 

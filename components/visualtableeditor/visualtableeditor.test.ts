@@ -1695,6 +1695,53 @@ describe("Aggregates", () =>
         editor.destroy();
     });
 
+    test("setFooterAggregate refuses a kind it cannot compute", () =>
+    {
+        // ANY-3. `type as any` let any string through, and the value was
+        // stored and then quietly computed nothing — the footer renders
+        // and is simply always empty. These are public entry points a
+        // JavaScript host reaches with no compiler in the way.
+        const editor = createVisualTableEditor(
+            defaultOptions({ data: numericData() }));
+
+        expect(() => editor.setFooterAggregate("geometric-mean"))
+            .toThrow(/is not an aggregate this component computes/);
+        expect(editor.getData().meta?.footerAggregate).toBeUndefined();
+        editor.destroy();
+    });
+
+    test("setColumnAggregate refuses a kind it cannot compute", () =>
+    {
+        const editor = createVisualTableEditor(
+            defaultOptions({ data: numericData() }));
+
+        expect(() => editor.setColumnAggregate("price", "nonsense"))
+            .toThrow(/nonsense/);
+        const col = editor.getData().columns.find(c => c.id === "price");
+
+        expect(col!.aggregate).toBeUndefined();
+        editor.destroy();
+    });
+
+    test("the refusal names every kind the component does compute", () =>
+    {
+        // LITERATE_ERRORS.md: name the fault, then the remedy. A caller
+        // who guessed wrong needs the list, not a rejection.
+        const editor = createVisualTableEditor(
+            defaultOptions({ data: numericData() }));
+        let message = "";
+
+        try { editor.setFooterAggregate("bogus"); }
+        catch (e) { message = (e as Error).message; }
+
+        for (const kind of ["sum", "average", "count", "min", "max",
+            "median", "mode", "stddev", "range"])
+        {
+            expect(message).toContain(kind);
+        }
+        editor.destroy();
+    });
+
     test("onAggregateChange callback fires when selection changes with summary bar", () =>
     {
         const callback = vi.fn();

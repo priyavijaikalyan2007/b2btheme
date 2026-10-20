@@ -426,8 +426,8 @@ const BASELINES = {
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
-    anyAnnotations: 13,
-    anyCasts: 2,
+    anyAnnotations: 0,
+    anyCasts: 0,
     scssImportant: 113,
     scssImportantComponents: 55,
     componentsMissingMarker: 0,
@@ -635,7 +635,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4970,
+    testBlocks: 4973,
 };
 
 /**

@@ -125,8 +125,7 @@ export interface VisualTableMeta
     borderColor?: string;
 
     /** Footer aggregate type for each column. Default: none. */
-    footerAggregate?: "sum" | "average" | "count" | "min" | "max"
-                    | "median" | "mode" | "stddev" | "range";
+    footerAggregate?: AggregateType;
 
     /** Show the summary bar. Default: false. */
     showSummaryBar?: boolean;
@@ -165,8 +164,72 @@ export interface VisualTableColumn
     resizable?: boolean;
 
     /** Per-column footer aggregate (overrides meta.footerAggregate). */
-    aggregate?: "sum" | "average" | "count" | "min" | "max"
-              | "median" | "mode" | "stddev" | "range" | "none";
+    aggregate?: AggregateType | "none";
+}
+
+/**
+ * ANY-3. THE SHAPES THIS COMPONENT BUILDS FOR ITS TWO NEIGHBOURS.
+ *
+ * InlineToolbar and ContextMenu export their item types, and neither
+ * publishes them on `window`. A component cannot import another
+ * component (AGENTS.md) and `components/globals.d.ts` can only name
+ * what is on `window`, so neither route this repository allows reaches
+ * them. The entry listed three ways out: publish the option types as
+ * globals, relax the import rule for types alone, or restate the shape
+ * here. The first two are decisions about the whole fleet. This is the
+ * third, and it is what the `any` was standing in for anyway.
+ *
+ * RESTATED, NOT COPIED. These describe only the fields this component
+ * actually sets, so they are narrower than the neighbours' own types
+ * and cannot drift into claiming more than is used. A field added to
+ * InlineToolbar does not belong here until this component sets it.
+ */
+/**
+ * ANY-3. The aggregate kinds, named once.
+ *
+ * The union was written out twice and the two public setters took a
+ * bare `string`, so both ended in `type as any` — a cast that makes the
+ * compiler agree to something it has just been told is not true.
+ */
+export type AggregateType =
+    "sum" | "average" | "count" | "min" | "max"
+    | "median" | "mode" | "stddev" | "range";
+
+/** Every value the setters accept, checked at run time as well. */
+const AGGREGATE_TYPES: readonly string[] = [
+    "sum", "average", "count", "min", "max",
+    "median", "mode", "stddev", "range",
+];
+
+interface EditorToolbarItem
+{
+    id: string;
+    icon?: string;
+    tooltip?: string;
+    type?: "button" | "toggle" | "separator";
+    onClick?: () => void;
+}
+
+interface EditorMenuItem
+{
+    id: string;
+    label?: string;
+    icon?: string;
+    type?: "separator";
+    danger?: boolean;
+    disabled?: boolean;
+    onClick?: () => void;
+}
+
+/**
+ * What this component uses of a neighbour's handle, which is `destroy`
+ * and nothing else. Both call sites already check for it before calling,
+ * because the factory is resolved off `window` and its return shape is
+ * the host's business.
+ */
+interface DisposableHandle
+{
+    destroy?: () => void;
 }
 
 /** Row data. */
@@ -522,8 +585,8 @@ interface InternalState
     resizeStartY: number;
     resizeStartHeight: number;
     boundHandlers: Record<string, EventListener>;
-    toolbarHandle: any;
-    contextMenuHandle: any;
+    toolbarHandle: DisposableHandle | null;
+    contextMenuHandle: DisposableHandle | null;
     mergedCells: Map<string, { row: number; col: number }>;
 }
 
@@ -3063,7 +3126,7 @@ function buildToolbarViaComponent(
 }
 
 /** Build toolbar items configuration. */
-function buildToolbarItems(state: InternalState): any[]
+function buildToolbarItems(state: InternalState): EditorToolbarItem[]
 {
     const textGroup = buildTextToolbarItems(state);
     const alignGroup = buildAlignToolbarItems(state);
@@ -3082,7 +3145,7 @@ function buildToolbarItems(state: InternalState): any[]
 }
 
 /** Build text formatting toolbar items. */
-function buildTextToolbarItems(_state: InternalState): any[]
+function buildTextToolbarItems(_state: InternalState): EditorToolbarItem[]
 {
     return [
         { id: "bold", icon: "type-bold", tooltip: "Bold (Ctrl+B)", type: "toggle", onClick: () => toggleStyleOnSelection(_state, "bold") },
@@ -3092,7 +3155,7 @@ function buildTextToolbarItems(_state: InternalState): any[]
 }
 
 /** Build alignment toolbar items. */
-function buildAlignToolbarItems(_state: InternalState): any[]
+function buildAlignToolbarItems(_state: InternalState): EditorToolbarItem[]
 {
     return [
         { id: "align-left", icon: "text-left", tooltip: "Align Left", type: "button", onClick: () => applyAlignToSelection(_state, "left") },
@@ -3102,7 +3165,7 @@ function buildAlignToolbarItems(_state: InternalState): any[]
 }
 
 /** Build structure editing toolbar items. */
-function buildStructureToolbarItems(_state: InternalState): any[]
+function buildStructureToolbarItems(_state: InternalState): EditorToolbarItem[]
 {
     return [
         { id: "insert-row-above", icon: "arrow-bar-up", tooltip: "Insert Row Above", type: "button", onClick: () => insertRowAtAnchor(_state, 0) },
@@ -3115,7 +3178,7 @@ function buildStructureToolbarItems(_state: InternalState): any[]
 }
 
 /** Build merge toolbar items. */
-function buildMergeToolbarItems(_state: InternalState): any[]
+function buildMergeToolbarItems(_state: InternalState): EditorToolbarItem[]
 {
     return [
         { id: "merge", icon: "union", tooltip: "Merge Cells", type: "button", onClick: () => mergeSelectionCells(_state) },
@@ -3306,9 +3369,9 @@ function showContextMenu(state: InternalState, event: MouseEvent): void
 }
 
 /** Build context menu items. */
-function buildContextMenuItems(state: InternalState): any[]
+function buildContextMenuItems(state: InternalState): EditorMenuItem[]
 {
-    const items: any[] = [];
+    const items: EditorMenuItem[] = [];
 
     addStructureMenuItems(state, items);
     items.push({ id: "sep1", type: "separator" });
@@ -3322,7 +3385,7 @@ function buildContextMenuItems(state: InternalState): any[]
 }
 
 /** Add structure editing context menu items. */
-function addStructureMenuItems(state: InternalState, items: any[]): void
+function addStructureMenuItems(state: InternalState, items: EditorMenuItem[]): void
 {
     const canEdit = state.options.allowStructureEdit !== false;
     const canEditCol = state.options.allowColumnEdit !== false;
@@ -3342,7 +3405,7 @@ function addStructureMenuItems(state: InternalState, items: any[]): void
 }
 
 /** Add merge context menu items. */
-function addMergeMenuItems(state: InternalState, items: any[]): void
+function addMergeMenuItems(state: InternalState, items: EditorMenuItem[]): void
 {
     const hasSel = state.selections.length === 1;
     const range = hasSel ? normalizeRange(state.selections[0]) : null;
@@ -3355,7 +3418,7 @@ function addMergeMenuItems(state: InternalState, items: any[]): void
 }
 
 /** Add content insertion context menu items. */
-function addContentMenuItems(state: InternalState, items: any[]): void
+function addContentMenuItems(state: InternalState, items: EditorMenuItem[]): void
 {
     items.push(
         { id: "insert-link", label: "Insert Link", icon: "link-45deg", onClick: () => promptInsertLink(state) },
@@ -3364,7 +3427,7 @@ function addContentMenuItems(state: InternalState, items: any[]): void
 }
 
 /** Add clear context menu items. */
-function addClearMenuItems(state: InternalState, items: any[]): void
+function addClearMenuItems(state: InternalState, items: EditorMenuItem[]): void
 {
     items.push(
         { id: "clear-contents", label: "Clear Contents", icon: "eraser", onClick: () => clearSelectedCells(state) },
@@ -4737,6 +4800,29 @@ function computeAggregatesForRange(
     return computeAggregateResult(cellValues, totalCells);
 }
 
+/**
+ * ANY-3. Narrows a caller's string to an aggregate kind, or refuses.
+ *
+ * `type as any` let any string through, and an unrecognised one was
+ * stored and then quietly computed nothing, which is a fabricated read:
+ * the footer renders, it is simply always empty. These are public
+ * entry points reachable from a JavaScript host, where the parameter
+ * type is advice rather than a guarantee, so the check belongs at run
+ * time too.
+ */
+function requireAggregateType(type: string, method: string): AggregateType
+{
+    if (!AGGREGATE_TYPES.includes(type))
+    {
+        throw new Error(
+            `${LOG_PREFIX} ${method}("${type}") is not an aggregate this `
+            + `component computes. Pass one of: `
+            + `${AGGREGATE_TYPES.join(", ")}.`);
+    }
+
+    return type as AggregateType;
+}
+
 /** Set the table-level footer aggregate type. */
 function setFooterAggregatePublic(state: InternalState, type: string): void
 {
@@ -4745,7 +4831,7 @@ function setFooterAggregatePublic(state: InternalState, type: string): void
         state.data.meta = {};
     }
 
-    state.data.meta.footerAggregate = type as any;
+    state.data.meta.footerAggregate = requireAggregateType(type, "setFooterAggregate");
     renderAll(state);
 }
 
@@ -4763,7 +4849,7 @@ function setColumnAggregatePublic(
         return;
     }
 
-    col.aggregate = type as any;
+    col.aggregate = requireAggregateType(type, "setColumnAggregate");
     renderAll(state);
 }
 
