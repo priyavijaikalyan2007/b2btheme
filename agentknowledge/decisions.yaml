@@ -9438,3 +9438,68 @@
 
     No test changed and no component changed. The work was verification
     and enforcement.
+
+- id: ADR-214
+  title: The exemption list reached zero, and the last three blockers were claims nobody had opened a file to check
+  date: 2026-10-20
+  status: accepted
+  context: |
+    DEBT-DUI-4 held three components out of the fleet conformance gate:
+    diagramengine, dynamicformswitcher and markdowneditor. ADR-160
+    re-measured all sixteen original blockers in October and eleven did
+    not survive. ADR-206 then showed that graphminimap's had survived
+    that pass only because it read plausibly, and both halves of it were
+    false.
+  decision: |
+    D1. NONE OF THE THREE SURVIVED A RE-READ OF THE CODE. diagramengine's
+        blocker required a GraphCanvas handle no option asks for — the
+        sentence is graphminimap's verbatim — and waited on a phase that
+        completed on 2026-08-03 doing the runtime bundle and
+        DynamicCanvas, never the embed registry. The registry is
+        orthogonal: it lets a DIAGRAM embed other components, and it is
+        reached only from the consumer-called loadEmbedPack.
+
+    D2. A "DESIGN QUESTION" IS NOT A BLOCKER WHEN ONE OPTION IS NOT
+        EXPRESSIBLE. dynamicformswitcher's asked whether to declare one
+        affords entry per field type or one for the form. affords.shape
+        is a DataShape, a closed vocabulary of ten, and "text",
+        "password" and "url" are HTML input types that are not in it.
+        What the component renders is one variant's worth of named
+        values, which is a record.
+
+    D3. ONE MISSING KEYWORD HID A PUBLIC FUNCTION FROM TWO SCANS.
+        createMarkdownEditor was on window, in COMPONENT_INDEX.md, and
+        called by seven demo pages, but the function was declared
+        without `export`. The gate resolves mod[manifest.factory], so it
+        saw nothing. "No factory is exported" and "migration adds to the
+        public surface" are two claims and the second does not follow.
+
+    D4. THE EXPORT FOUND A DEFECT ON ITS FIRST RUN. With the keyword
+        added, factory-census could see the factory and ERR-1 failed:
+        createMarkdownEditor logged and returned null on a missing
+        container, against a ceiling of zero. Every sibling throws. It
+        throws now.
+
+    D5. FALLBACK-15. MarkdownEditor's editing modes substituted a plain
+        textarea for the editor when Vditor was absent, styled by the
+        component's own SCSS and read back through getValue(). A notice
+        DECLARES the failure; a textarea SUBSTITUTES for the component.
+        Four sweeps touched this file without seeing it, including
+        ADR-201, which made getHTML() throw on exactly the reasoning
+        that applies to getValue() three methods above it.
+
+    D6. THE EMPTY EXEMPT SET STAYS IN THE FILE. It is where a new
+        exemption would have to be written down, and the comment above
+        it is the rule. AGENTS.md held up graphminimap's falsified
+        blocker as the model of a good one; the passage now says that a
+        testable blocker is still only a claim.
+  consequences: |
+    The gate reads 101 of 101 in-scope components migrated, 0 exempt, 24
+    permanently excluded. Two of the three migrations needed no change to
+    the component's source.
+
+    Three manifests, one conformance fixture, one factory made to throw,
+    one substitution removed, six refusal tests with two mutations each
+    catching two of them.
+
+    The testBlocks floor rises 4999 -> 5005.

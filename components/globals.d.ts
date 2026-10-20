@@ -129,6 +129,7 @@ import type
     MarkdownEditor,
     MarkdownEditorModalOptions,
     MarkdownEditorOptions,
+    createMarkdownEditor,
 } from "./markdowneditor/markdowneditor";
 import type
 {
@@ -604,10 +605,7 @@ declare global
 
         /** Published by the MarkdownEditor component. */
         MarkdownEditor?: typeof MarkdownEditor;
-        /**
-         * The module names this function `createMarkdownEditorFn` and does not export it.
-         */
-        createMarkdownEditor?: (containerId: string, options?: MarkdownEditorOptions) => MarkdownEditor | null;
+        createMarkdownEditor?: typeof createMarkdownEditor;
         /**
          * The module names this function `showMarkdownEditorModalFn` and does not export it.
          */

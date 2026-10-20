@@ -2576,6 +2576,48 @@ reduced version".
   holds an optional icon beside the text. GraphToolbar's `gt-zoom-label`
   sets `live: "polite"`. One mutation, two tests red.
 
+- [x] **FALLBACK-15** **CLOSED 2026-10-20, ADR-214. MarkdownEditor's
+  editing modes substituted a plain textarea for the editor, and five
+  sweeps walked past it because each matched a different shape.**
+
+  With `window.Vditor` absent, `initVditor()` logged an error and called
+  `buildFallbackTextarea()`. The textarea carried the caller's markdown,
+  accepted typing, was styled by `.mde-fallback-textarea` in the
+  component's own SCSS, and **read back through `getValue()`**. An
+  editor with no toolbar, no preview, no shortcuts and no markdown
+  awareness therefore looked like a deliberate minimal mode. The only
+  signal was a console line the user never sees.
+
+  | Refuses now | Was |
+  |---|---|
+  | the editing surface | a textarea holding the caller's markdown |
+  | `getValue()` | the textarea's value, or `""` before it existed |
+  | `setValue(md)` | wrote into the textarea and returned normally |
+
+  In place of the textarea the host now shows a visible
+  missing-dependency notice naming vditor and what to load. **A notice
+  DECLARES the failure; a textarea SUBSTITUTES for the component.** This
+  is CodeEditor's `buildMissingDependencyError` and ChartPanel's
+  Chart.js notice, and the SCSS is styled to match CodeEditor's for the
+  same reason.
+
+  **FOUR SWEEPS TOUCHED THIS FILE AND NONE OF THEM SAW IT.** FALLBACK-5
+  made `mode: "display"` throw rather than inject raw markdown as HTML,
+  and left the editing modes beside it alone. ADR-201 made `getHTML()`
+  throw, on the reasoning that `""` is indistinguishable from an empty
+  document — **the identical argument applies to `getValue()`, which was
+  reading the textarea three methods above it.** FALLBACK-11 removed
+  CodeMirror's equivalent silence from CodeEditor. FALLBACK-13 removed
+  MarkdownRenderer's. Each sweep found the shapes it was written to
+  match, and the discriminator that would have caught this one —
+  *substituting a working-looking surface for the component the caller
+  asked for* — was never the predicate any of them ran.
+
+  Six refusal tests, two mutations: restoring the textarea fails two of
+  them, and returning `""` from `getValue()` fails two more. The
+  existing suite installs a `MockVditor` in `beforeEach`, so **nothing
+  was pinning the substitution** — it survived on nobody looking.
+
 - [x] **FALLBACK-14** **CLOSED 2026-10-18, ADR-204. Three components
   answered a named capability with a warning and an empty header.**
 
@@ -3285,7 +3327,7 @@ listed here so future audits do not re-litigate them without the context.
   - **The scroll path needed the same fix as the mount path, and only a browser could see it.** `refineOverlaysOf` selected overlays by node anchor only, so a content-anchored note did not follow its row on scroll. jsdom reports every rectangle as zero, so the eleven unit tests could not have caught it. Three e2e tests in `tests/dynamic-ui.spec.ts` now measure the geometry, and both the position and the scroll fix are mutation-proven there.
 - [x] **DEBT-DUI-2** *(resolved 2026-10-09, ADR-159)* — `attachDrag` is **36 → 27 body lines**. The entry's prescription, extracting the pointer-capture bookkeeping, got it to 32 and no further, so two more came out: `readDragOrigin` snapshots the start of a gesture and `draggedPosition` does the screen-pixels-to-canvas-units arithmetic. `capturePointerDrag` and `releasePointerDrag` are a deliberate mirror pair kept adjacent — a release that misses one of its three steps leaks a listener per drag, and the symptom (a frame that follows the cursor after the button is up) shows up nowhere near the cause. The drag state also moved from four mutable locals to one nullable `DragOrigin`, so there is no longer a window where two of the four are stale. Verified by **33 dynamic-UI e2e tests**, not just the 12 unit tests — pointer capture is invisible to jsdom, so the unit suite would have passed either way. The `@agent:refactor` tag is gone.
 - [x] **DEBT-DUI-3** *(resolved 2026-10-09, ADR-159)* — `validatePatchShape` **35 → 11** and `reduceOps` **51 → 16** body lines. The entry's diagnosis was right about `reduceOps` and wrong about `validatePatchShape`: the latter is not dispatch-shaped at all, it is three independent field checks, so it split per *field* (`revisionIssues`, `opsIssues`). `reduceOps` became a genuine fold — a named `DocState` replaces five mutable locals, `applyOp` maps one op to the next state, and `(patch.ops ?? []).reduce(applyOp, start)` is the whole body. **Every arm now returns a fresh object where the original mutated the copied `nodes` record in place**, which is what makes it a fold rather than a loop with extra steps. `applyOp` first came out at 33 lines; `CODING_STYLE.md` grants dispatch no exemption, so the blank lines between arms went (seven facts should not span twice their height) along with two one-expression helpers. Behaviour is unchanged including the unknown-op case: the original switch had no `default`, so unknown ops were silently dropped, and `default: return state` preserves exactly that. **478 runtime tests pass.**
-- [ ] **DEBT-DUI-4** **3** components remain `EXEMPT` in the fleet conformance gate, down from 16 and from 4. Clearing an exemption is per-component work; the gate logs the count on every run rather than letting it drift.
+- [x] **DEBT-DUI-4** *(resolved 2026-10-20, ADR-214)* **0** components remain `EXEMPT` in the fleet conformance gate, down from 16, from 4 and from 3. Clearing an exemption is per-component work; the gate logs the count on every run rather than letting it drift.
 
   **Re-measured 2026-10-09 (ADR-159): the count was right and the conformance figures were stale** — "91 of 98 manifested components sit at `display`" was 84 of 91, because seven had been raised and the entry was taking no credit for them.
 
@@ -3320,6 +3362,59 @@ listed here so future audits do not re-litigate them without the context.
   **The AuthCard question was closed on 2026-10-11 (ADR-163), and the answer was that there was nothing to do.** Dynamic UI composes a canvas in reaction to a model response, so a citizen of that canvas is something a model can ask for. AuthCard renders Keycloak's login step, which runs before any session exists, so there is no model and no response to react to — there is no moment at which a canvas could mount it. It moved to `NOT_MOUNTABLE`, which brings the gate to **97 of 101 in-scope migrated, 4 exempt, 24 permanently excluded**. The exclusion is about **sequence**, not shape, and that category did not exist in the gate before: every other entry is a service, an element builder, a boot script, or a viewport-docked or transient overlay. An exclusion the lists have no words for reads as a backlog item until somebody writes the words.
 
   `display`, not `surface`, is the bar: `EXEMPT` means "no manifest", and clearing it needs mount, render and destroy. The entry's original prose said "raising a component to `surface`", which conflated clearing an exemption with extending a component's public API. Promotion to `field` or `surface` belongs with the component's own arc.
+
+  **CLOSED 2026-10-20 (ADR-214). The last three blockers were re-read against
+  the files rather than against themselves, and not one of the three
+  survived.** The gate now reads **101 of 101 in-scope components migrated, 0
+  exempt, 24 permanently excluded**.
+
+  - **`diagramengine` — wrong on both halves, and the first half was a copy.**
+    The blocker read "Requires a live GraphCanvas handle, and the blocker
+    holds. Measured 25k-line engine with its own embed registry; migrate after
+    phase 10 extracts that registry." `createDiagramEngine(container, options
+    = {})` has **no required option at all**, and the GraphCanvas sentence is
+    GraphMinimap's blocker verbatim — which ADR-206 had already shown to be
+    false. **Phase 10 completed on 2026-08-03** doing the runtime bundle and
+    DynamicCanvas (`specs/dynamicui.plan.md`); it never touched the embed
+    registry. The registry is orthogonal in any case: it lets a DIAGRAM embed
+    other components, and `registerEnterpriseThemeEmbeds` is reached only from
+    the consumer-called `loadEmbedPack`, never from the constructor. Its own
+    suites have constructed it under jsdom since August —
+    `diagramengine-core.test.ts:28` is `createDiagramEngine(container.id, {})`.
+    **Size was the real deterrent, and size is not a blocker.** No change to
+    the component's source.
+  - **`dynamicformswitcher` — the design question offered a choice between
+    something and nothing.** It asked whether the manifest should carry "one
+    `affords` entry per field type it switches over, or one for the form".
+    `affords.shape` is a `DataShape`, a closed vocabulary of ten: scalar,
+    record, collection, hierarchy, graph, timeseries, document, media, geo,
+    diff. **"text", "password" and "url" are HTML input types and are not in
+    it**, so one entry per field type was never expressible. What the
+    component renders is one variant's worth of named values, which is a
+    `record` — PropertyInspector's answer for the same reason. ADR-134's
+    exclusion table is about the FIELD contract and ADR-142 supersedes it for
+    canvas purposes; a form HOST at `display` was never excluded by either. No
+    change to the component's source; a two-variant mount fixture in glue.
+  - **`markdowneditor` — the only one that needed a source change, and the
+    blocker still misnamed it.** It read "`MarkdownEditor` is exported but no
+    `create*` factory is. Migration means ADDING one to the public surface."
+    `createMarkdownEditor(containerId, options)` already existed, already sat
+    on `window`, and is already the documented entry point — COMPONENT_INDEX.md
+    and COMPONENTS.md name it, seven demo pages call it, CDN_CONTRACT.md argues
+    from it. It lacked the `export` KEYWORD, which the IIFE bundle strips and
+    no consumer can observe. The gate resolves `mod[manifest.factory]`, so a
+    missing keyword made an existing public function invisible to it.
+    **"No factory is exported" and "migration adds to the public surface" are
+    two claims, and the second does not follow from the first.**
+
+  **THE EXPORT FOUND A DEFECT ON ITS FIRST RUN.** With the keyword added,
+  `scripts/factory-census.mjs` could see the factory for the first time and
+  ERR-1 failed immediately: `createMarkdownEditor` **logged and returned
+  `null`** when its container was missing, against a recorded ceiling of zero.
+  Every sibling throws. It throws now. The factory had been exempt from the
+  census for the same reason it was exempt from the gate — **one missing
+  keyword hid it from two separate scans**, and neither scan could report what
+  it could not see.
 - [x] **DEBT-DUI-5** *(resolved 2026-10-11, ADR-162)* The scrolling-region index (`within`) is **positional** — the Nth scrollable element inside a frame body, in DOM order. If it bites, record a stable descriptor (a data attribute the component owns) instead of an index.
 
   **Re-measured 2026-10-09 (ADR-159), and both halves of the original justification are wrong.** The entry rested on "acceptable while regions are one-per-component in practice" — **21 components style more than one**, up to five in `ribbonbuilder`, with `tabbedpanel`, `ribbon`, `prompttemplatemanager`, `markdowneditor`, `docviewer` and `applauncher` each at three. **Corrected 2026-10-10: 21 is low on both counts.** It matched `overflow` and `overflow-y` declarations only. `isScrollable` returns true when either `overflowX` or `overflowY` is `auto` or `scroll`, so a horizontally scrolling region takes an index too, and the unit has to be the **selector** rather than the declaration because `isScrollable` tests one element. Re-measured per selector across both axes: **25 components** declare more than one scrolling region, `ribbonbuilder` still leads at five, then `applauncher`, `conversation`, `docviewer`, `formdialog`, `markdowneditor`, `ribbon` and `tabbedpanel` at four each, and **68 components declare at least one**. A measurement is only as good as its predicate, and this one matched neither the axes nor the unit of the code it measured.

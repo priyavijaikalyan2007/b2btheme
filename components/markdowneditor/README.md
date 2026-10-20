@@ -245,6 +245,24 @@ The modal dialog is horizontally resizable — drag the right edge to adjust wid
 | `disable()` | `void` | Disable the editor |
 | `destroy()` | `void` | Remove component and clean up |
 
+### When Vditor did not load
+
+The editor does not substitute for itself. With `window.Vditor` absent:
+
+- `mode: "display"` **throws** from the constructor, and `onReady` never fires.
+- Every editing mode mounts and shows a visible missing-dependency notice in
+  place of the editor, the same way CodeEditor does without CodeMirror.
+- `getValue()`, `setValue()` and `getHTML()` **throw**, naming vditor and what
+  to load.
+
+Until 2026-10-20 the editing modes rendered a plain textarea instead. It
+carried the caller's markdown and read back through `getValue()`, so an editor
+with no toolbar, no preview and no markdown awareness looked like a deliberate
+minimal mode, and the only signal was a console line the user never sees.
+
+`createMarkdownEditor(containerId, options)` also **throws** when `containerId`
+names no element. It previously logged and returned `null`.
+
 ## Supported Markdown Features
 
 Via Vditor, the editor supports:

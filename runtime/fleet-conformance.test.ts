@@ -62,20 +62,14 @@ import type { CapabilityManifest } from "./src/types";
  * all, so it moved to NOT_MOUNTABLE and four entries remain here.
  */
 const EXEMPT: ReadonlySet<string> = new Set([
-    // Requires a live GraphCanvas handle, and the blocker holds. Measured
-    // 25k-line engine with its own embed registry; migrate after phase 10
-    // extracts that registry. Unchanged by the 2026-10-10 re-measurement.
-    "diagramengine",
-    // Its signature is NOT the blocker either — `(target, options)` is
-    // container-first and resolves. It is the ADR-134 form host, so what its
-    // manifest declares (one `affords` entry per field type it switches over?
-    // one for the form?) is a design question with consumer-visible answers.
-    "dynamicformswitcher",
-    // Class-only entry point, and the blocker holds: `MarkdownEditor` is
-    // exported but no `create*` factory is. Migration means ADDING one to the
-    // public surface — additive, so permitted, but it is an API change rather
-    // than a manifest, and it should land with the editor's own arc.
-    "markdowneditor",
+    // EMPTY as of 2026-10-20 (ADR-214), and the Set stays so the rule above
+    // keeps its teeth. The last three blockers were re-read against the
+    // files rather than against themselves, and none of the three survived:
+    // DiagramEngine required no GraphCanvas and waited on a phase that had
+    // completed doing something else, DynamicFormSwitcher's "design
+    // question" offered a choice the DataShape vocabulary cannot express,
+    // and MarkdownEditor's factory was missing a keyword rather than an
+    // entry point.
 ]);
 
 // ============================================================================

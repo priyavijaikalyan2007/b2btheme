@@ -1203,7 +1203,7 @@ export class MarkdownEditor
         if (!VditorClass)
         {
             logError("Vditor library not found. Load vditor JS/CSS before this component.");
-            this.buildFallbackTextarea();
+            this.buildMissingDependencyNotice();
             return null;
         }
 
@@ -1386,25 +1386,29 @@ export class MarkdownEditor
     }
 
     /**
-     * Builds a fallback textarea when Vditor is not available.
+     * Builds the visible missing-dependency notice shown when Vditor did not
+     * load.
+     *
+     * This REPLACED a fallback textarea (FALLBACK-15). The textarea carried
+     * the caller's markdown, accepted typing, and read back through
+     * `getValue()`, so an editor with no toolbar, no preview, no shortcuts
+     * and no markdown awareness looked like a deliberate minimal mode. The
+     * only signal was a console line the user never sees.
+     *
+     * Same shape and same remedy as CodeEditor's CodeMirror notice
+     * (`buildMissingDependencyError`) and ChartPanel's Chart.js notice. A
+     * notice DECLARES the failure; a textarea SUBSTITUTES for the component.
      */
-    private buildFallbackTextarea(): void
+    private buildMissingDependencyNotice(): void
     {
         if (!this.editorArea) { return; }
 
-        const textarea = createElement("textarea");
-        textarea.classList.add("form-control", "mde-fallback-textarea");
-        textarea.value = this.options.value ?? "";
-        textarea.placeholder = this.options.placeholder ?? "Enter markdown...";
-        textarea.style.height = "100%";
-        textarea.style.fontFamily = "var(--bs-font-monospace)";
+        const notice = createElement("div", "markdowneditor-error");
+        notice.textContent =
+            "Vditor is required but did not load. Add the vditor bundle "
+            + "to the page before creating the markdown editor.";
 
-        if (!this.options.editable)
-        {
-            textarea.readOnly = true;
-        }
-
-        this.editorArea.appendChild(textarea);
+        this.editorArea.appendChild(notice);
     }
 
     // ========================================================================
@@ -1581,14 +1585,18 @@ export class MarkdownEditor
     {
         if (this.options.mode === "display") { return this.displayValue; }
 
-        if (this.vditor)
+        if (!this.vditor)
         {
-            return this.vditor.getValue();
+            // FALLBACK-15. This used to read the fallback textarea, and
+            // before that textarea existed it returned "". Both are reads a
+            // caller cannot distinguish from an empty document. The editor
+            // never loaded, so there is no content to report.
+            throw new Error(
+                `${LOG_PREFIX} getValue() needs Vditor, which did not load. `
+                + "Load the vditor bundle before creating the editor.");
         }
 
-        // Fallback textarea
-        const ta = this.editorArea?.querySelector("textarea") as HTMLTextAreaElement | null;
-        return ta?.value ?? "";
+        return this.vditor.getValue();
     }
 
     /**
@@ -1603,15 +1611,17 @@ export class MarkdownEditor
             return;
         }
 
-        if (this.vditor)
+        if (!this.vditor)
         {
-            this.vditor.setValue(md, true);
+            // FALLBACK-15. Writing into the fallback textarea returned
+            // normally, so a caller who set content and never read it back
+            // believed the write had landed in an editor.
+            throw new Error(
+                `${LOG_PREFIX} setValue() needs Vditor, which did not load. `
+                + "Load the vditor bundle before creating the editor.");
         }
-        else
-        {
-            const ta = this.editorArea?.querySelector("textarea") as HTMLTextAreaElement | null;
-            if (ta) ta.value = md;
-        }
+
+        this.vditor.setValue(md, true);
 
         logDebug("Content set, length:", md.length);
     }
@@ -2182,17 +2192,31 @@ function showMarkdownEditorModalFn(
 
 /**
  * Creates a MarkdownEditor instance in the given container.
+ *
+ * `export` is not a widening of the public surface. `createMarkdownEditor`
+ * has been the documented entry point since this component shipped — it is
+ * on `window`, in COMPONENT_INDEX.md and COMPONENTS.md, and seven demo pages
+ * call it — and module exports do not survive into the IIFE bundle at all.
+ * The keyword is here because the fleet conformance gate resolves a factory
+ * through the module (`mod[manifest.factory]`), and without it the gate could
+ * not see a function every consumer already uses (ADR-214).
  */
-function createMarkdownEditorFn(
+export function createMarkdownEditor(
     containerId: string,
     options?: MarkdownEditorOptions
-): MarkdownEditor | null
+): MarkdownEditor
 {
     const container = document.getElementById(containerId);
+
     if (!container)
     {
-        logError("Container element not found:", containerId);
-        return null;
+        // ERR-1. This logged and returned null, and the census could not see
+        // it: the function was not a module export, so the factory was
+        // invisible to the scan that holds every sibling to a throw. The
+        // export made it visible on its first run, and the ceiling is zero.
+        throw new Error(
+            `${LOG_PREFIX} Container "${containerId}" was not found. `
+            + "Insert the element before creating the editor.");
     }
 
     return new MarkdownEditor(container, options);
@@ -2203,5 +2227,5 @@ function createMarkdownEditorFn(
 // ============================================================================
 
 window["MarkdownEditor"] = MarkdownEditor;
-window["createMarkdownEditor"] = createMarkdownEditorFn;
+window["createMarkdownEditor"] = createMarkdownEditor;
 window["showMarkdownEditorModal"] = showMarkdownEditorModalFn;

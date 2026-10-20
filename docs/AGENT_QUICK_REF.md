@@ -1047,7 +1047,7 @@ $control-height-xl=46px
 - CSS: `components/markdowneditor/markdowneditor.css`
 - JS: `components/markdowneditor/markdowneditor.js`
 - Globals: `MarkdownEditor()`, `createMarkdownEditor()`, `showMarkdownEditorModal()`
-- Exports: `interface MarkdownEditorOptions`, `interface MarkdownEditorModalOptions`, `class MarkdownEditor`
+- Exports: `interface MarkdownEditorOptions`, `interface MarkdownEditorModalOptions`, `class MarkdownEditor`, `function createMarkdownEditor`
 
 ### markdownrenderer
 

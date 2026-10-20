@@ -666,7 +666,9 @@ A component is one of three things, and nothing else:
 
 1. **Migrated** — carries `<name>.manifest.ts` and passes the conformance suite.
 2. **`EXEMPT`** — migration pending. Each entry carries its specific blocker
-   inline. This list is expected to reach zero.
+   inline. **This list reached zero on 2026-10-20 (ADR-214)** and the empty
+   set stays in the file: it is where a new exemption would have to be
+   written down, under the rule that a blocker states what was TRIED.
 3. **`NOT_MOUNTABLE`** — permanently outside the contract (a service, an element
    builder, a boot script, a modal overlay, or a surface that renders before a
    model response can exist). Every entry MUST carry a written rationale; a test

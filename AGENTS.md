@@ -327,9 +327,23 @@ HAPPENED**, never as what looks hard. Ten of the original sixteen were worded
 as predictions — "Required option shape not yet determined", "non-standard
 factory signature" — and eleven of the sixteen fell on a re-read, because the
 runtime had since grown `factoryStyle`, `containerOption`, `containerAs`, `mountMethod` and the
-`invoke` glue hook — the blockers named mechanisms that now exist. "Throws
-without `options.graphCanvas`, and jsdom has no 2D context" stays true or
-becomes visibly false; a prediction just ages.
+`invoke` glue hook — the blockers named mechanisms that now exist. A testable
+sentence stays true or becomes visibly false; a prediction just ages.
+
+**A TESTABLE BLOCKER IS STILL ONLY A CLAIM.** This passage used to hold up
+"Throws without `options.graphCanvas`, and jsdom has no 2D context" as the
+model of a good blocker. It was testable, it read as measured, and **both
+halves were false**: GraphMinimap renders SVG and contains no `getContext`
+call, and `graphCanvas` is a six-method structural interface a plain object
+satisfies (ADR-206). The last three fell the same way (ADR-214) — a required
+handle no option asks for, a phase that had already completed doing something
+else, and a "design question" whose two options were not both expressible in
+the `DataShape` vocabulary. **The exemption list reached zero on 2026-10-20,
+and it got there by opening files rather than by re-reading sentences.**
+Re-measuring a deferral means re-reading the CODE it describes.
+
+The empty `EXEMPT` set stays in the file. It is where a new exemption would
+have to be written down, and the comment above it is the rule.
 
 ## (CRITICAL) No Fabricated Reads
 

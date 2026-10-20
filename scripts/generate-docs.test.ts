@@ -35,7 +35,7 @@ describe("extractGlobals — the names a CDN consumer can call", () =>
     test("castWithBracketAccess_IsFound", () =>
     {
         const src = '(window as unknown as Record<string, unknown>)'
-            + '["createMarkdownEditor"] = createMarkdownEditorFn;';
+            + '["createMarkdownEditor"] = createMarkdownEditor;';
 
         expect(extractGlobals(src)).toEqual(["createMarkdownEditor"]);
     });

@@ -2547,3 +2547,78 @@ Bootstrap's `.form-control-sm` sets `min-height` and `min-height` beats
 `height` at any specificity and with any keyword. The field renders at
 29.72px and always did. **A keyword that does not work looks exactly
 like a keyword that does, until something reads the number back.**
+
+### 6.133 One Missing Keyword Hid a Public Function From Two Scans (2026-10-20)
+
+`createMarkdownEditor` is the documented entry point for MarkdownEditor.
+It is on `window`, it is in `COMPONENT_INDEX.md` and `COMPONENTS.md`,
+seven demo pages call it, and `CDN_CONTRACT.md` argues from it. The
+function was declared without the `export` keyword.
+
+The fleet conformance gate resolves a factory with
+`mod[manifest.factory]`, so it saw nothing, and the exemption was
+written as *"no `create*` factory is exported ... migration means ADDING
+one to the public surface"*. The first half was true at the module
+level. The second does not follow from it: the surface in question is
+`window`, and the IIFE bundle strips module exports anyway, so no
+consumer could observe the difference either way.
+
+Adding the keyword took one word. **`scripts/factory-census.mjs` then
+failed on its first run**: the newly visible factory logged and returned
+`null` on a missing container, against a recorded ceiling of zero, while
+every sibling throws.
+
+**Principle**: a scan reports on the population it can see, and a
+declaration keyword decides membership. When a check is silent about
+something you know exists, ask whether the thing is absent or merely
+invisible to the predicate — and when you make something visible,
+expect the other scans pointed at the same file to have been blind in
+the same place.
+
+### 6.134 Four Sweeps Walked Past It, Each Matching a Different Shape (2026-10-20)
+
+MarkdownEditor answered an absent Vditor with a plain textarea. It
+carried the caller's markdown, accepted typing, had its own class in the
+component's SCSS, and read back through `getValue()`. An editor with no
+toolbar, no preview and no markdown awareness looked like a deliberate
+minimal mode, and the only signal was a console line.
+
+Four fallback sweeps touched this file or its neighbours:
+
+- **FALLBACK-5** made `mode: "display"` throw, and left the editing
+  modes beside it alone.
+- **ADR-201** made `getHTML()` throw because `""` cannot be told from an
+  empty document — *the identical argument applies to `getValue()`*,
+  which was reading the textarea three methods above it.
+- **FALLBACK-11** removed CodeMirror's equivalent silence from
+  CodeEditor.
+- **FALLBACK-13** removed MarkdownRenderer's.
+
+None of them matched. The discriminator that catches this one —
+*substituting a working-looking surface for the component the caller
+asked for* — was never the predicate any of them ran, and the existing
+suite installs a `MockVditor` in `beforeEach`, so no test was pinning
+the behaviour either way. It survived on nobody looking.
+
+**Principle**: a sweep finds the shape it was written to match, and
+"this file has already been swept" is a statement about a predicate, not
+about a file. Before trusting a prior pass, ask what it matched on.
+
+### 6.135 A Testable Blocker Is Still Only a Claim (2026-10-20)
+
+ADR-160's lesson was to write a blocker as what you TRIED rather than as
+what looks hard, and it held up graphminimap's as the model: *"Throws
+without `options.graphCanvas`, and jsdom has no 2D context."* That
+sentence is testable, reads as measured, and **both halves were false**
+(ADR-206).
+
+The last three exemptions fell the same way: a required handle no option
+asks for, a phase that had already completed doing something else, and a
+design question whose two options were not both expressible in the
+vocabulary they were posed in. **The exemption list reached zero by
+opening files, not by re-reading sentences.**
+
+**Principle**: a deferral is a claim about code and ages like any other.
+Re-measuring one means re-reading the CODE it describes. Testable
+phrasing makes a claim falsifiable; it does not make it true, and it
+makes a false claim harder to doubt.
