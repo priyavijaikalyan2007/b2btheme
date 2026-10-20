@@ -16583,14 +16583,26 @@ Each trigger registered via `engine.register(def)` conforms to `TriggerDefinitio
 
 ### TriggerActivation
 
+Every field is optional, and `register()` fills the defaults below.
+`activation` itself may be omitted.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `requireWhitespaceBefore` | `boolean` | -- | Trigger only fires after whitespace or at start of input |
+| `requireWhitespaceBefore` | `boolean` | `false` | Trigger only fires after whitespace or at start of input |
 | `minQueryLength` | `number` | `0` | Minimum characters typed after trigger before querying |
 | `maxQueryLength` | `number` | `50` | Cancel session if query exceeds this length |
-| `cancelChars` | `string[]` | -- | Characters that cancel the session (e.g. `[" ", "\n"]`) |
+| `cancelChars` | `string[]` | `[]` | Characters that cancel the session (e.g. `[" ", "\n"]`) |
 | `escapeChar` | `string \| null` | `null` | Preceding character that suppresses trigger (e.g. `"\\"`) |
 | `suppressIn` | `SuppressContext[]` | `[]` | Suppress triggers inside: `codeBlock`, `inlineCode`, `url`, `email`, `quotation` |
+
+**An unrecognised field throws, naming it.** `register()` refuses an
+`activation` carrying a key that is not one of the six, because a
+misspelled field would otherwise be dropped and the trigger would run
+as though you never set it. This table used to list defaults that
+nothing applied: every field was required in TypeScript, nothing
+checked for one from JavaScript, and an omitted `suppressIn` raised a
+`TypeError` inside the input listener where no consumer could see it
+(DEBT-STI-2, fixed 2026-10-20).
 
 ## Adapter Types
 

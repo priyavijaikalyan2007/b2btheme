@@ -358,6 +358,87 @@ describe("event system", () =>
 // OPTIONS
 // ============================================================================
 
+describe("trigger activation is filled in and checked (DEBT-STI-2)", () =>
+{
+    // The defect: `isSuppressed` read `activation.suppressIn.length`
+    // with no guard, and the TypeError that produced was raised inside
+    // the input listener — it never reached the consumer and the
+    // trigger simply never fired. TypeScript made it unreachable from
+    // TypeScript and from nowhere else: this library ships to a CDN
+    // and is consumed from plain JavaScript, and RichTextInput
+    // declares `activation?: Record<string, unknown>`.
+
+    function typeTrigger(engine: ReturnType<typeof createSmartTextInput>): HTMLInputElement
+    {
+        const el = document.createElement("input");
+        document.body.appendChild(el);
+        engine.attach(el);
+        el.value = "@";
+        el.selectionStart = 1;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        return el;
+    }
+
+    test("anOmittedActivationStillOpensASession", () =>
+    {
+        const opened: string[] = [];
+        const engine = createSmartTextInput({
+            onTriggerOpen: (e) => { opened.push(e.triggerName); },
+        });
+
+        engine.register({
+            trigger: "@", name: "mention",
+            dataSource: { query: async () => [] },
+        } as never);
+
+        const el = typeTrigger(engine);
+
+        expect(opened).toEqual(["mention"]);
+
+        engine.destroy();
+        el.remove();
+    });
+
+    test("theDefaultsTheReadmeDocumentsAreTheOnesApplied", () =>
+    {
+        const engine = createSmartTextInput({});
+
+        engine.register({
+            trigger: "@", name: "mention", activation: { minQueryLength: 2 },
+            dataSource: { query: async () => [] },
+        } as never);
+
+        expect(engine.getTriggers()[0].activation).toEqual({
+            requireWhitespaceBefore: false,
+            minQueryLength: 2,
+            maxQueryLength: 50,
+            cancelChars: [],
+            escapeChar: null,
+            suppressIn: [],
+        });
+
+        engine.destroy();
+    });
+
+    test("anUnknownActivationFieldIsRefusedByName", () =>
+    {
+        // demo/full-demo.html registered two triggers with the field
+        // names of an older API — `precedingChar`, `minLength`,
+        // `maxLength` — and both were dead. Defaulting around a
+        // misspelled field would have left them working and quietly
+        // not doing what their author asked for.
+        const engine = createSmartTextInput({});
+
+        expect(() => engine.register({
+            trigger: "@", name: "mention",
+            activation: { precedingChar: "whitespace", minLength: 0 },
+            dataSource: { query: async () => [] },
+        } as never)).toThrow(/precedingChar, minLength/);
+
+        engine.destroy();
+    });
+});
+
 describe("setOptions", () =>
 {
     test("updatesEngineOptions", () =>
@@ -382,19 +463,7 @@ describe("setOptions", () =>
         engine.register({
             trigger: "@",
             name: "people",
-            // Every field of TriggerActivation is REQUIRED. A fixture
-            // with `activation: {}` typechecks only as a mistake, and
-            // at run time `isSuppressed` reads `suppressIn.length` and
-            // throws inside the input listener, where nothing sees it.
-            // Recorded as DEBT-STI-2.
-            activation: {
-                requireWhitespaceBefore: false,
-                minQueryLength: 0,
-                maxQueryLength: 50,
-                cancelChars: [],
-                escapeChar: null,
-                suppressIn: [],
-            },
+            activation: {},
             dataSource: { query: async () => [] },
         });
         engine.attach(el);

@@ -2851,11 +2851,11 @@ offered as the evidence for it.
 
   Found by the demo-page smoke gate.
 
-- [ ] **DEBT-STI-2** **A SmartTextInput trigger registered without a
-  complete `activation` throws inside the input listener, where
-  nothing sees it. Found 2026-10-20 while rewriting
-  `updatesEngineOptions` (ADR-215); recorded rather than taken,
-  because it is a contract question and not part of DEBT-TEST-1b.**
+- [x] **DEBT-STI-2** *(resolved 2026-10-20, ADR-215)* **A SmartTextInput
+  trigger registered without a complete `activation` threw inside the
+  input listener, where nothing saw it — and two triggers in
+  `demo/full-demo.html` had been dead on exactly that.** Found while
+  rewriting `updatesEngineOptions`.
 
   `isSuppressed` reads `def.activation.suppressIn.length` with no
   guard. Every field of `TriggerActivation` is REQUIRED in the
@@ -2873,13 +2873,40 @@ offered as the evidence for it.
   on the first keystroke — it never reaches their code, and the
   trigger simply never fires.
 
-  **The question this needs answering is which half is wrong**, and
-  it is a public-contract decision rather than a bug fix: either
-  `register()` fills the documented defaults and the fields become
-  genuinely optional, or the README's Default column is wrong and
-  `register()` should refuse an incomplete activation the way it
-  already refuses a missing name. Both are consumer-visible. The
-  one thing that must not stay is a documented default that throws.
+  **THIS WAS FIRST WRITTEN UP AS A DECISION TO HAND BACK, AND IT WAS
+  NOT ONE.** The repository had already answered it twice.
+  `RichTextInput` declares `triggers?: StieCompatTriggerDefinition[]`
+  with `activation?: Record<string, unknown>` — **optional, and
+  forwarded to `register()` unchecked** — and the README's Default
+  column promises six defaults. Both say the fields are optional. The
+  only thing missing was the code that makes it true.
+
+  **AND THE DEMO PROVED IT RATHER THAN A HYPOTHETICAL CONSUMER.**
+  `demo/full-demo.html:12002` and `:12035` registered `mention` and
+  `issue` triggers with the field names of an older API —
+  `precedingChar`, `minLength`, `maxLength` — and no `suppressIn`.
+  Reproduced with that exact object: `TypeError: Cannot read
+  properties of undefined (reading 'length')` on the first keystroke.
+  **Typing `@` in that demo's rich text input has never shown a
+  mention menu.** `initStie` wraps construction in a `try`, and the
+  throw happens later, at keystroke time, so even that catch never saw
+  it. The demo-page suite passes because it asserts a page loads
+  clean, not that typing into it works.
+
+  **The fix has two halves, and the second is the one the demo
+  needed.** `register()` now fills the documented defaults, so an
+  omitted field — or an omitted `activation` — behaves as the README
+  says. And it **refuses an unknown key, naming it**: defaulting
+  around a misspelled `minLength` would have left those two triggers
+  working and quietly not doing what their author asked for. A
+  documented default is a specified behaviour, not a substitute for a
+  broken dependency — the ADR-201 distinction between a guard on DATA
+  and a guard on INFRASTRUCTURE.
+
+  `TriggerActivation`'s six fields are optional now, and the engine
+  holds a resolved form internally so every reader downstream still
+  sees all six. Three tests, two mutations: defeating the refusal
+  fails one, defeating the defaulting fails another.
 
 - [x] **DEBT-STI-1** **CLOSED 2026-10-20, ADR-206. SmartTextInput threw
   inside its own input handler when the explicit adapter type did not

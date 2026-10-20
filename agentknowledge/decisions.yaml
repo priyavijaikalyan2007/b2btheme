@@ -9577,9 +9577,18 @@
     now claims. Three new cases pin the pairing rule and one pins the
     title-over-pairing order.
 
-    DEBT-STI-2 recorded rather than taken: a SmartTextInput trigger
-    registered without a complete `activation` throws inside the input
-    listener, and the README documents defaults that nothing applies.
+    DEBT-STI-2 was first written up as a decision to hand back and was
+    not one. RichTextInput declares `activation?: Record<string,
+    unknown>` and forwards it to register() unchecked, and the README
+    documents six defaults; both already said the fields were optional
+    and only the code that makes it true was missing. The demo proved
+    it rather than a hypothetical consumer: demo/full-demo.html
+    registered its mention and issue triggers with the field names of
+    an older API, and typing "@" in that rich text input has never
+    shown a menu. register() now fills the documented defaults and
+    REFUSES an unknown key by name, because defaulting around a
+    misspelled `minLength` would leave a trigger working and quietly
+    not doing what its author asked for.
 
     The parser-coverage guard caught the new fixtures: a line beginning
     with `test(` inside a template literal reads as a declaration, so

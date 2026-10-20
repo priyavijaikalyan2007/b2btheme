@@ -497,6 +497,15 @@ describe("dismissal triggers", () =>
         // read directly instead: every add during the card's life is
         // paired with a remove of the same target, type and function
         // (ADR-215).
+        // THE WINDOW IS NARROW BY CONSTRUCTION, AND THAT IS THE ONLY
+        // THING KEEPING THIS SPECIFIC. The patch is on the prototype,
+        // so it records every registration by anyone — jsdom
+        // internals, another component's module-level setup. Nothing
+        // else runs between openCard() and destroy() here, but a
+        // third party adding a permanent listener inside that window
+        // would fail this test with a message naming hovercard. If
+        // that ever happens, narrow the recording to the targets the
+        // card touches rather than loosening the assertion.
         type Reg = { target: EventTarget; type: string; fn: unknown };
 
         const added: Reg[] = [];

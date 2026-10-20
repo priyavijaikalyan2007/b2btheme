@@ -715,7 +715,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5012,
+    testBlocks: 5015,
 };
 
 /**

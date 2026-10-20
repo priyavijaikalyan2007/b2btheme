@@ -66,14 +66,23 @@ export type StieEventName =
 export type Unsubscribe = () => void;
 
 /** Rules governing how a trigger activates. */
+/**
+ * Rules governing how a trigger activates.
+ *
+ * Every field is OPTIONAL as of 2026-10-20 (DEBT-STI-2). `register()`
+ * fills the documented defaults, so a reader downstream still sees all
+ * six. They were required before, which made an incomplete activation
+ * unreachable from TypeScript and perfectly reachable from the plain
+ * JavaScript this library is consumed by.
+ */
 export interface TriggerActivation
 {
-    requireWhitespaceBefore: boolean;
-    minQueryLength: number;
-    maxQueryLength: number;
-    cancelChars: string[];
-    escapeChar: string | null;
-    suppressIn: SuppressContext[];
+    requireWhitespaceBefore?: boolean;
+    minQueryLength?: number;
+    maxQueryLength?: number;
+    cancelChars?: string[];
+    escapeChar?: string | null;
+    suppressIn?: SuppressContext[];
 }
 
 /** A single result from a data source query. */
@@ -198,6 +207,68 @@ export interface InputAdapter
     destroy(): void;
 }
 
+/**
+ * The documented defaults for every `TriggerActivation` field.
+ *
+ * These are the README's own Default column. They lived only in the
+ * documentation until 2026-10-20: the interface declares all six as
+ * required, so nothing applied them and nothing checked for them
+ * (DEBT-STI-2, ADR-215).
+ */
+/**
+ * A trigger whose activation has been filled in by `register()`.
+ *
+ * The PUBLIC `TriggerActivation` is all-optional, which is the
+ * consumer's contract. This is what the engine holds internally, and
+ * every reader downstream can rely on all six fields being present
+ * because `register()` is the only way in (DEBT-STI-2).
+ */
+interface ResolvedTriggerDefinition extends TriggerDefinition
+{
+    activation: Required<TriggerActivation>;
+}
+
+const ACTIVATION_DEFAULTS: Required<TriggerActivation> =
+{
+    requireWhitespaceBefore: false,
+    minQueryLength: 0,
+    maxQueryLength: 50,
+    cancelChars: [],
+    escapeChar: null,
+    suppressIn: [],
+};
+
+/**
+ * Fills a partial activation with the documented defaults, and
+ * refuses a key that is not one of the six.
+ *
+ * @param given - Whatever the caller supplied, possibly nothing.
+ * @param name  - The trigger's name, for the error message.
+ * @returns A complete activation.
+ * @throws Error when a key is not a TriggerActivation field.
+ */
+function normaliseActivation(
+    given: TriggerActivation | undefined,
+    name: string): Required<TriggerActivation>
+{
+    if (!given) { return { ...ACTIVATION_DEFAULTS }; }
+
+    const known = Object.keys(ACTIVATION_DEFAULTS);
+    const unknown = Object.keys(given).filter((k) => !known.includes(k));
+
+    if (unknown.length > 0)
+    {
+        throw new Error(
+            `${LOG_PREFIX} Trigger "${name}" has unknown activation `
+            + `field(s): ${unknown.join(", ")}. Valid fields are `
+            + `${known.join(", ")}. An unrecognised field is dropped `
+            + "silently otherwise, and the trigger behaves as though "
+            + "you never set it.");
+    }
+
+    return { ...ACTIVATION_DEFAULTS, ...given };
+}
+
 /** Payload for the trigger:open event. */
 export interface TriggerOpenEvent
 {
@@ -225,7 +296,11 @@ export interface TriggerCloseEvent
 /** Internal state of an active trigger session. */
 export interface TriggerSession
 {
-    triggerDef: TriggerDefinition;
+    // The activation is complete here because `register()` fills it
+    // before the engine ever sees the definition (DEBT-STI-2). Written
+    // as an intersection rather than a second exported name, because
+    // the resolved shape is an engine detail and not a consumer's.
+    triggerDef: TriggerDefinition & { activation: Required<TriggerActivation> };
     triggerStart: number;
     queryText: string;
     state: TriggerState;
@@ -1241,7 +1316,7 @@ function countOccurrences(text: string, sub: string): number
 export class SmartTextInputEngine
 {
     private opts: SmartTextInputOptions;
-    private triggers: Map<string, TriggerDefinition> = new Map();
+    private triggers: Map<string, ResolvedTriggerDefinition> = new Map();
     private adapter: InputAdapter | null = null;
     private targetElement: HTMLElement | null = null;
     private tokens: Map<string, ResolvedToken> = new Map();
@@ -1380,6 +1455,25 @@ export class SmartTextInputEngine
     /**
      * Registers a trigger definition with the engine.
      *
+     * DEBT-STI-2. `activation` is NORMALISED here, once, so every
+     * reader downstream can rely on all six fields being present.
+     * `isSuppressed` used to read `activation.suppressIn.length` with
+     * no guard, and the TypeError that produced was raised inside the
+     * input listener — it never reached the consumer's code, and the
+     * trigger simply never fired.
+     *
+     * TypeScript made that unreachable from TypeScript and from
+     * nowhere else. This library is published to a CDN and consumed
+     * from plain JavaScript, `RichTextInput.triggers` declares
+     * `activation?: Record<string, unknown>` — optional, and
+     * unchecked — and `demo/full-demo.html` registered two triggers
+     * with the field names of an older API. Both were dead.
+     *
+     * An UNKNOWN key is refused rather than defaulted, because that
+     * is the half the demo got wrong: filling the documented defaults
+     * around a misspelled `minLength` would leave the trigger working
+     * and quietly not doing what its author asked for.
+     *
      * @param trigger - The trigger definition to register
      */
     public register(trigger: TriggerDefinition): void
@@ -1390,7 +1484,10 @@ export class SmartTextInputEngine
             return;
         }
 
-        this.triggers.set(trigger.name, trigger);
+        this.triggers.set(trigger.name, {
+            ...trigger,
+            activation: normaliseActivation(trigger.activation, trigger.name),
+        });
         logDebug("Registered trigger:", trigger.name, `(${trigger.trigger})`);
     }
 
@@ -1799,7 +1896,8 @@ export class SmartTextInputEngine
     }
 
     /** Tests whether a single trigger definition matches the text context. */
-    private triggerMatches(def: TriggerDefinition, textBefore: string): boolean
+    private triggerMatches(
+        def: ResolvedTriggerDefinition, textBefore: string): boolean
     {
         const triggerStr = def.trigger;
 
@@ -1813,7 +1911,7 @@ export class SmartTextInputEngine
 
     /** Verifies whitespace-before requirement for a trigger. */
     private checkWhitespaceBefore(
-        def: TriggerDefinition, textBefore: string
+        def: ResolvedTriggerDefinition, textBefore: string
     ): boolean
     {
         if (!def.activation.requireWhitespaceBefore) { return true; }
@@ -1826,7 +1924,8 @@ export class SmartTextInputEngine
     }
 
     /** Checks if the trigger character was preceded by an escape char. */
-    private isEscaped(def: TriggerDefinition, textBefore: string): boolean
+    private isEscaped(
+        def: ResolvedTriggerDefinition, textBefore: string): boolean
     {
         if (!def.activation.escapeChar) { return false; }
 
@@ -1835,7 +1934,7 @@ export class SmartTextInputEngine
     }
 
     /** Checks if the cursor context suppresses this trigger. */
-    private isSuppressed(def: TriggerDefinition): boolean
+    private isSuppressed(def: ResolvedTriggerDefinition): boolean
     {
         if (def.activation.suppressIn.length === 0) { return false; }
         if (!this.adapter) { return false; }
@@ -1852,7 +1951,7 @@ export class SmartTextInputEngine
     // ========================================================================
 
     /** Starts a new trigger session and emits the trigger:open event. */
-    private startTriggerSession(triggerDef: TriggerDefinition): void
+    private startTriggerSession(triggerDef: ResolvedTriggerDefinition): void
     {
         if (!this.adapter) { return; }
 
