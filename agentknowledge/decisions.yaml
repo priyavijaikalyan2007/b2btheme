@@ -9219,3 +9219,68 @@
 
     5270 unit tests in 162 files, 5 Playwright assertions, 32 of 32
     structure checks, testBlocks floor 4976 to 4983.
+
+- id: ADR-210
+  title: A connection hint is not a subresource, and a module specifier is not a tag
+  date: 2026-10-20
+  status: accepted
+  context: |
+    DEBT-SEC-8 held at 17 third-party tags with no integrity hash, with a
+    stated floor of 10 because ten sit in dated planning documents. The
+    owner asked for the remaining tech debt to be worked through starting
+    here, leaving PAT-1 until last.
+  decision: |
+    D1. `cdnTagsIn` SKIPS `preconnect` AND `dns-prefetch`. Both open a
+        connection and fetch no bytes, so there is no body to hash and the
+        HTML spec defines no `integrity` for either. SEVEN OF DEBT-SEC-8's
+        SEVENTEEN WERE THESE, and the only way to clear one was to delete
+        a performance hint. `preload` and `modulepreload` stay counted,
+        because both fetch and both accept `integrity`.
+
+    D2. DEBT-SEC-8 CLOSES AT ITS OWN FLOOR. 17 to 10, and the entry had
+        already written "do not chase it below 10" because the remaining
+        ten are `specs/*.prd.md` history. The file set is NOT narrowed to
+        reach zero, because `unpinnedCdnRefs` shares it and that ceiling
+        was not measured for this change. It did not move.
+
+    D3. TWO DEAD PRECONNECTS ARE DELETED. `conversation` and
+        `markdowneditor` pointed at `unpkg.com` and loaded nothing from it
+        after ADR-190 and ADR-199 moved dompurify and vditor to `/lib/`. A
+        hint to a host you no longer use costs a connection and tells that
+        host a visitor arrived.
+
+    D4. THE ES-MODULE SPECIFIERS GET THEIR OWN CEILING, DEBT-SEC-9. 67
+        across five files, 14 distinct packages, all CodeMirror from
+        esm.sh. `thirdPartyTagsWithoutSri` matches TAGS and a specifier is
+        not a tag, so this population was invisible to every gate while
+        being described accurately in prose by both DEBT-SEC-8 and the
+        `unhashable` key in `scripts/third-party-sri.json`. The
+        description was right and nothing re-derived it, which is the
+        fourth time a count here has been named for one population and
+        measured another.
+
+    D5. THE CEILING HOLDS RATHER THAN DRIVES TO ZERO, AND THE REASON IS
+        STATED PRECISELY. `import()` takes no integrity argument and a
+        static specifier has no attributes. Import maps DO define an
+        `integrity` key, so this is a support problem rather than an
+        impossibility, and the entry says so instead of saying "cannot".
+
+    D6. VENDORING IS NOT DECIDED HERE. Fourteen CodeMirror packages into
+        `dist/lib` would remove the CDN, the unhashed load and the
+        floating `@6` in one move, at a real bundle cost for a component
+        many consumers will not use. That is a product decision.
+  consequences: |
+    DEBT-SEC-8 closes. DEBT-SEC-9 opens holding 67.
+    `thirdPartyTagsWithoutSri` 17 to 10, `unpinnedCdnRefs` unmoved at 77,
+    `tagsMissingSri` still 0.
+
+    Thirteen new tests across the two counters. A mutation removing the
+    connection-hint filter fails three, and a mutation dropping the
+    import-operator guard fails one.
+
+    The stated figure in DEBT-SEC-8 and in the `unhashable` key said
+    fifteen specifiers. There are fourteen distinct.
+
+    NO SHIPPED COMPONENT LOADS FROM A CDN AT RUNTIME, verified across
+    every `components/*/*.ts`. The exposure is in what this repository
+    demonstrates and documents.

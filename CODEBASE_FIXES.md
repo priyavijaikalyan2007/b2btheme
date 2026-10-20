@@ -250,14 +250,37 @@ These issues involve potential XSS or script injection vectors and must be addre
   answered. `bootstrap` and `bootstrap-icons` are not vendored here, so
   they are a genuine compatibility decision and stay open.
 
-- [ ] **DEBT-SEC-8** **Third-party libraries recommended with no integrity
-  hash**, left over from DEBT-SEC-5 (ADR-189). Held at **17** by the
-  `thirdPartyTagsWithoutSri` ceiling, which only goes down. Was 76 before the
-  first slice, 65 before the second and 35 before ADR-199.
-  **Ten of the remainder are in dated `specs/*.prd.md`
-  planning documents** rather than in anything a consumer copies, so this
-  count cannot reach zero without editing a historical record. Do not chase
-  it below 10.
+- [x] **DEBT-SEC-8** **CLOSED AT ITS FLOOR, 2026-10-20. 17 -> 10, and
+  SEVEN OF THE SEVENTEEN WERE A GATE BUG.** ADR-210.
+
+  Left over from DEBT-SEC-5 (ADR-189), held by the
+  `thirdPartyTagsWithoutSri` ceiling. Was 76 before the first slice, 65
+  before the second, 35 before ADR-199 and 17 after it.
+
+  **The remaining ten are the dated `specs/*.prd.md` planning documents**
+  the entry already named, and they are a historical record rather than
+  anything a consumer copies. The entry said "do not chase it below 10"
+  and it is now AT 10, so there is nothing left to chase.
+
+  **THE OTHER SEVEN WERE `rel="preconnect"` TAGS, AND NO EDIT COULD EVER
+  HAVE CLEARED THEM.** A preconnect opens a socket and warms DNS. It
+  fetches no bytes, so there is no body to hash, and the HTML spec does
+  not define `integrity` for it. `cdnTagsIn` matched any `<script>` or
+  `<link>` carrying a CDN host and demanded a hash, so the only way to
+  "fix" one of these was to delete a performance hint. **Seven of this
+  entry's seventeen findings were unfixable by construction.** The filter
+  now skips `preconnect` and `dns-prefetch` and keeps `preload` and
+  `modulepreload`, which do fetch and do accept `integrity`. Seven tests,
+  and a mutation removing the filter fails three.
+
+  **Two of the seven were also dead hints.** `conversation` and
+  `markdowneditor` preconnected to `unpkg.com` and loaded nothing from it,
+  because ADR-190 and ADR-199 moved dompurify and vditor to `/lib/`.
+  Deleted. A preconnect to a host you no longer use is a wasted
+  connection and tells that host a visitor arrived. `guidedtour` and
+  `codeeditor` still use theirs.
+
+  **What this entry never counted is now DEBT-SEC-9.**
 
   **THE HEADLINE READ 35 UNTIL 2026-10-19 AND THE RATCHET READ 17.**
   ADR-199 halved it on 2026-10-18 and this entry did not follow, so the
@@ -366,9 +389,55 @@ These issues involve potential XSS or script injection vectors and must be addre
   bootstrap-icons. Both describe documented versions drifting from what
   this origin serves. They are left as two entries rather than merged.
 
-  **CodeMirror 6 is NOT on this list and never will be.** Its fifteen ESM
-  specifiers cannot carry an integrity attribute at all. See DEBT-SEC-5 and
-  the `unhashable` key in `scripts/third-party-sri.json`.
+  **CodeMirror 6 is NOT on this list and never will be.** Its ESM
+  specifiers cannot carry an integrity attribute at all. See DEBT-SEC-5,
+  the `unhashable` key in `scripts/third-party-sri.json`, and now
+  DEBT-SEC-9, which puts a ceiling on them. **The figure here said
+  fifteen and there are fourteen distinct**, in 67 occurrences across five
+  files.
+
+- [ ] **DEBT-SEC-9** **67 third-party ES-module specifiers that no gate
+  could see.** Held by the new `cdnModuleSpecifiers` ceiling. ADR-210.
+
+  **THIS IS NOT A NEW DISCOVERY AND THAT IS THE POINT.** The `unhashable`
+  key in `scripts/third-party-sri.json` has described these accurately
+  for some time, including that they float at major `@6` so esm.sh
+  resolves the version at request time. DEBT-SEC-8's prose names them
+  too. **What was missing was a NUMBER.** Both descriptions are prose,
+  nothing re-derived them, and nothing would have noticed the population
+  growing. This is the fourth count in `audit-counts.mjs` found to be
+  named for one population while measuring another.
+
+  | Where | n | Audience |
+  |---|---|---|
+  | `components/codeeditor/README.md` | 14 | **consumers copy this** |
+  | `docs/COMPONENT_REFERENCE.md` | 14 | generated from the README |
+  | `demo/components/codeeditor.html` | 14 | demo |
+  | `demo/full-demo.html` | 14 | demo |
+  | `demo/studio/component-studio.html` | 11 | demo |
+
+  **NO SHIPPED COMPONENT LOADS FROM A CDN AT RUNTIME.** Verified:
+  `git ls-files 'components/*/*.ts'` matched against `import("https://`
+  and `from "https://` returns nothing. `codeeditor.ts:161` states that
+  CodeMirror is not vendored and the HOST PAGE supplies the globals, and
+  the component throws a literate error when they are absent. The
+  exposure is in what this repository DEMONSTRATES and DOCUMENTS, not in
+  what it ships.
+
+  **These cannot be hashed today, and the reason is worth stating
+  precisely rather than as "impossible".** `import()` takes a specifier
+  and no integrity argument. A static specifier has no attributes at all.
+  Import maps DO define an `integrity` key, so the capability exists in
+  the standard, but support is not broad enough to rely on. The ceiling
+  therefore holds the number rather than driving it to zero.
+
+  **THE DECISION THIS NEEDS IS VENDORING, AND IT IS NOT TAKEN HERE.**
+  Fourteen CodeMirror packages into `dist/lib` would remove the CDN, the
+  unhashed load and the floating major in one move, and it is real work
+  with a bundle-size cost on a component most consumers may not use. The
+  alternative is to accept it for demos and documentation and say so
+  plainly in the README, which costs nothing and changes no risk.
+  **Recorded rather than taken, because it is a product decision.**
 
 
 ---

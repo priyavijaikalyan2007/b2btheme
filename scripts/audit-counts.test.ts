@@ -30,6 +30,8 @@ import
     classifyWindowCast,
     LOCAL_HOST_RULE,
     countAnyCasts,
+    cdnTagsIn,
+    countCdnModuleSpecifiers,
     countOccurrences,
     uncommentedImportants,
     countUngatedVerboseShims,
@@ -841,5 +843,91 @@ describe("uncommentedImportants", () =>
     {
         expect(uncommentedImportants(
             `.a {\n  // important-case: 9 - invented\n  color: red ${KW};\n}`)).toBe(1);
+    });
+});
+
+describe("cdnTagsIn excludes connection hints", () =>
+{
+    const HOST = "https://cdn.jsdelivr.net/npm/thing@1/x.js";
+
+    // A preconnect opens a socket and fetches nothing, so there is no body
+    // to hash. Seven of DEBT-SEC-8's seventeen were these, and no edit
+    // could clear one without deleting a performance hint.
+    test("a preconnect is not a subresource tag", () =>
+    {
+        expect(cdnTagsIn('<link rel="preconnect" href="https://cdn.jsdelivr.net">')).toHaveLength(0);
+    });
+
+    test("a dns-prefetch is not a subresource tag", () =>
+    {
+        expect(cdnTagsIn('<link rel="dns-prefetch" href="https://unpkg.com">')).toHaveLength(0);
+    });
+
+    test("a stylesheet from the same host still counts", () =>
+    {
+        expect(cdnTagsIn(`<link rel="stylesheet" href="${HOST}">`)).toHaveLength(1);
+    });
+
+    // preload and modulepreload DO fetch and DO accept integrity, so
+    // excluding them would hide real findings.
+    test("a modulepreload without integrity still counts", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri(
+            `<link rel="modulepreload" href="${HOST}">`)).toBe(1);
+    });
+
+    test("a preload without integrity still counts", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri(
+            `<link rel="preload" as="script" href="${HOST}">`)).toBe(1);
+    });
+
+    test("a script tag is unaffected by the rel filter", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri(`<script src="${HOST}"></script>`)).toBe(1);
+    });
+
+    test("a preconnect contributes no missing-integrity finding", () =>
+    {
+        expect(countThirdPartyTagsWithoutSri(
+            '<link rel="preconnect" href="https://esm.sh">')).toBe(0);
+    });
+});
+
+describe("countCdnModuleSpecifiers", () =>
+{
+    test("a dynamic import from a CDN counts", () =>
+    {
+        expect(countCdnModuleSpecifiers('await import("https://esm.sh/@codemirror/view@6");')).toBe(1);
+    });
+
+    test("a static import from a CDN counts", () =>
+    {
+        expect(countCdnModuleSpecifiers('import { EditorView } from "https://esm.sh/x@6";')).toBe(1);
+    });
+
+    // A relative or same-origin specifier is this repository's own code.
+    test("a relative specifier does not count", () =>
+    {
+        expect(countCdnModuleSpecifiers('import { x } from "./local.js";')).toBe(0);
+    });
+
+    test("a same-origin absolute path does not count", () =>
+    {
+        expect(countCdnModuleSpecifiers('await import("/lib/vditor.js");')).toBe(0);
+    });
+
+    // `foo.import(...)` is a property call, not the import operator. Without
+    // the leading-character guard this would count as a module load.
+    test("a method named import does not count", () =>
+    {
+        expect(countCdnModuleSpecifiers('registry.import("https://esm.sh/x@6");')).toBe(0);
+    });
+
+    // A tag is counted by thirdPartyTagsWithoutSri, not here. Double
+    // counting one load in two ceilings would make both meaningless.
+    test("a script tag is not a module specifier", () =>
+    {
+        expect(countCdnModuleSpecifiers('<script src="https://esm.sh/x@6"></script>')).toBe(0);
     });
 });

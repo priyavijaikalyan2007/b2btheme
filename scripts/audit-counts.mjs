@@ -482,7 +482,11 @@ const BASELINES = {
     // integrity attribute at all: the attribute belongs to a script
     // tag and these are import statements inside a module. ADR-189 D4
     // records the two honest options and neither is a hash.
-    thirdPartyTagsWithoutSri: 17,
+    thirdPartyTagsWithoutSri: 10,
+    // DEBT-SEC-9 / ADR-210. 67 third-party ES-module specifiers that no
+    // tag-based count could see. A CEILING, not a target of zero: neither
+    // `import()` nor a static specifier can carry `integrity` today.
+    cdnModuleSpecifiers: 67,
     // ERR-1. 306 -> 329 -> 330. Replacing 63 quiet container branches with
     // a throw orphaned the logWarn or logError helper in 23 components,
     // and the second census added visualtableeditor, which logged the
@@ -710,7 +714,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4983,
+    testBlocks: 4996,
 };
 
 /**
@@ -794,11 +798,57 @@ export function countUnpinnedCdnRefs(text)
     return unpinned;
 }
 
-/** Every <script src> and <link href> tag, whatever attributes it carries. */
+/**
+ * DEBT-SEC-9. Every ES-module specifier that names a third-party CDN,
+ * whether imported statically (`from "https://..."`) or dynamically
+ * (`import("https://...")`).
+ *
+ * WHY THIS EXISTS, AND WHY `thirdPartyTagsWithoutSri` COULD NOT SEE IT.
+ * That count matches TAGS. A module specifier is not a tag. DEBT-SEC-8
+ * therefore reported 17 findings of which 7 were connection hints that
+ * can never carry a hash, while 67 real third-party code loads sat
+ * uncounted in five files. A count named for one population measuring
+ * another, for the fourth time in this file.
+ *
+ * NONE OF THESE CAN CARRY `integrity` TODAY. `import()` has no integrity
+ * argument, and a static specifier has no attributes at all. Import maps
+ * define an `integrity` key, but support is not broad enough to rely on,
+ * so this is a CEILING and not a ratchet that should reach zero. The way
+ * to zero is to stop loading from a CDN, which is a vendoring decision.
+ *
+ * ADR-210.
+ */
+export const CDN_MODULE_SPECIFIER =
+    /(?:\bfrom\s*|(?:^|[^.\w])import\s*\(\s*)["'](https:\/\/(?:esm\.sh|unpkg\.com|cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com)[^"']*)["']/g;
+
+export function countCdnModuleSpecifiers(text)
+{
+    return [...text.matchAll(CDN_MODULE_SPECIFIER)].length;
+}
+
+/**
+ * Every `<script src>` and `<link href>` tag that FETCHES A SUBRESOURCE,
+ * whatever other attributes it carries.
+ *
+ * CONNECTION HINTS ARE EXCLUDED, BECAUSE `integrity` IS MEANINGLESS ON
+ * THEM. `rel="preconnect"` and `rel="dns-prefetch"` open a socket and warm
+ * DNS. They fetch no bytes, so there is nothing to hash, and the HTML spec
+ * does not define `integrity` for either. Counting them produced SEVEN
+ * phantom findings in DEBT-SEC-8 that no edit could ever clear, because
+ * the only way to "fix" one is to delete a performance hint.
+ *
+ * `preload` and `modulepreload` are NOT excluded. Both fetch, both accept
+ * `integrity`, and both belong in the count.
+ *
+ * ADR-210.
+ */
+export const NON_FETCHING_REL = /\brel\s*=\s*["']?(?:preconnect|dns-prefetch)\b/i;
+
 export function cdnTagsIn(text)
 {
     return (text.match(/<(?:script|link)\b[^>]*>/g) ?? [])
-        .filter((tag) => CDN_HOSTS.test(tag));
+        .filter((tag) => CDN_HOSTS.test(tag))
+        .filter((tag) => !NON_FETCHING_REL.test(tag));
 }
 
 /**
@@ -1151,6 +1201,7 @@ function measure()
         unpinnedCdnRefs: 0,
         tagsMissingSri: 0,
         thirdPartyTagsWithoutSri: 0,
+        cdnModuleSpecifiers: 0,
         unusedLocals: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
@@ -1297,6 +1348,7 @@ function measure()
         counts.unpinnedCdnRefs += countUnpinnedCdnRefs(text);
         counts.tagsMissingSri += countTagsMissingSri(text, hashByUrl);
         counts.thirdPartyTagsWithoutSri += countThirdPartyTagsWithoutSri(text);
+        counts.cdnModuleSpecifiers += countCdnModuleSpecifiers(text);
     }
 
     // STD-1. The file is the single largest in the repository and the entry
