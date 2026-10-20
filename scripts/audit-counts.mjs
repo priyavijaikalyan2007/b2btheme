@@ -189,6 +189,62 @@ export function classifyLoggingPattern(text)
 }
 
 /**
+ * Counts declarations using the keyword that carry no `important-case: N`
+ * comment, per CODING_STYLE.md.
+ *
+ * SCOPE IS THE TOP-LEVEL BLOCK, not the line above. One justification
+ * usually covers a whole rule — markdowneditor's eleven Vditor overrides
+ * are one decision, not eleven — so the comment may sit anywhere from the
+ * start of the enclosing top-level block down to the declaration.
+ *
+ * THE BRACE WALK WAITS FOR THE OPENING BRACE rather than assuming it is on
+ * the selector's line. This repository writes Allman braces in some
+ * stylesheets, and a scan that reads depth on the selector line closes the
+ * block immediately. That exact bug reported 8 reduced-motion overrides
+ * where there are 11, and it is the reason this helper counts characters
+ * instead of matching a line shape.
+ *
+ * A `//` comment line is skipped, so the word inside guidedtour's
+ * explanatory note is not mistaken for a declaration.
+ */
+export function uncommentedImportants(text)
+{
+    const lines = text.split("\n");
+    let depth = 0;
+    let topStart = -1;
+    let violations = 0;
+
+    for (let i = 0; i < lines.length; i++)
+    {
+        const line = lines[i].trim();
+        if (line.startsWith("//")) { continue; }
+
+        if (line.includes("!important") && topStart >= 0)
+        {
+            const scope = lines.slice(topStart, i + 1).join("\n");
+            if (!/important-case:\s*[1-5]/.test(scope)) { violations += 1; }
+        }
+
+        for (const ch of line)
+        {
+            if (ch === "{")
+            {
+                if (depth === 0) { topStart = i; }
+                depth += 1;
+            }
+            else if (ch === "}")
+            {
+                depth -= 1;
+                if (depth === 0) { topStart = -1; }
+            }
+        }
+    }
+
+    return violations;
+}
+
+
+/**
  * Occurrences, not lines. `grep -c` counts lines and silently overrides
  * `-o`, which is how the 203-line figure became an occurrence count.
  */
@@ -441,8 +497,14 @@ const BASELINES = {
     directConsole: 0,
     anyAnnotations: 0,
     anyCasts: 0,
-    scssImportant: 113,
-    scssImportantComponents: 55,
+    scssImportant: 103,
+    scssImportantComponents: 45,
+    // IMP-1 / ADR-209. CODING_STYLE.md permits the keyword in five named
+    // cases and requires a comment naming the case. This counts the
+    // declarations that carry no such comment, and the ceiling is ZERO.
+    // Without it the requirement is a sentence in a document that nothing
+    // reads, which is the shape this repository spent October removing.
+    scssImportantUncommented: 0,
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
@@ -648,7 +710,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4973,
+    testBlocks: 4983,
 };
 
 /**
@@ -1097,6 +1159,7 @@ function measure()
         anyCasts: 0,
         scssImportant: 0,
         scssImportantComponents: 0,
+        scssImportantUncommented: 0,
         componentsMissingMarker: 0,
         diagramengineSrcMissingMarker: 0,
         scssMissingMarker: 0,
@@ -1175,9 +1238,14 @@ function measure()
         .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
     for (const file of scss)
     {
-        const n = countOccurrences(readFileSync(file, "utf8"), "!important");
+        const text = readFileSync(file, "utf8");
+        const n = countOccurrences(text, "!important");
         counts.scssImportant += n;
-        if (file.startsWith("components/")) { counts.scssImportantComponents += n; }
+        if (file.startsWith("components/"))
+        {
+            counts.scssImportantComponents += n;
+            counts.scssImportantUncommented += uncommentedImportants(text);
+        }
     }
 
     // MRK-1/-2/-3 (MARKERS.md). All three entries were recorded in March 2026

@@ -235,6 +235,9 @@
 // tame the default Vditor sizing and spacing so it fits neatly inside the
 // chat bubble layout.
 .conversation-message-assistant .conversation-message-content {
+    // important-case: 3 - Bootstrap emits .bg-light, .bg-white, .bg-body,
+    // .text-muted, .text-dark and .text-body with the keyword already, so
+    // nothing weaker can override them at any specificity.
 
     // -- Paragraphs --
     p {

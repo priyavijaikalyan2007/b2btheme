@@ -9156,3 +9156,66 @@
     missing visual suite. The first three were caught by re-measurement.
     This one was caught by the owner asking a question the count was
     never built to answer.
+
+- id: ADR-209
+  title: A computed value is checkable, so the visual deferral never covered what it claimed
+  date: 2026-10-20
+  status: accepted
+  context: |
+    ADR-208 left IMP-1 at 5 declarations in 2 files and repeated the
+    standing deferral: removing the keyword changes specificity,
+    specificity changes are visual, and this repository has no
+    visual-regression suite. ADR-208 also introduced a requirement in
+    CODING_STYLE.md that every permitted use carry a comment naming its
+    case, with about 40 declarations not carrying one and nothing
+    checking it.
+  decision: |
+    D1. `getComputedStyle` REPLACES THE SCREENSHOT SUITE FOR THIS CLASS
+        OF WORK. "Specificity changes are visual" is true of colour and
+        spacing judgements and false of a computed value. The cascade
+        resolves to a number or a colour, and that is the only thing a
+        specificity change can alter. Five Playwright assertions in
+        `tests/important-removal.spec.ts` pin what each removed keyword
+        used to force. The deferral was never about verifiability. It was
+        about nobody having looked for the cheaper check.
+
+    D2. EVERY ONE OF THE FIVE WAS BEATING NOTHING. graphcanvas's 4 were
+        claimed to be losing to `.gc-node:hover rect` at (0,2,1). That
+        rule sets `stroke-width` to the same 2.5 and sets no `stroke`,
+        and the only other source is a presentation attribute that loses
+        to any CSS rule. ribbon's 1 duplicated an inline `display: flex`
+        set by `ribbon.ts:2647` on content appended to `rootEl`, where
+        the hide rule no longer matches.
+
+    D3. TREEVIEW NEEDED NO SPECIFICITY CHANGE AT ALL, AND A MUTATION IS
+        HOW WE KNOW. An element compound was written first, on the
+        reasoning that (0,1,1) beats `.form-control-sm` at (0,1,0).
+        Reverting it changed no computed value, because this stylesheet
+        loads after Bootstrap and source order already settled the tie.
+        The compound came out. A specificity argument that is never
+        tested is a guess with notation on it.
+
+    D4. A REQUIREMENT WITHOUT A COUNT IS A SENTENCE. The comment rule
+        introduced in ADR-208 is now `scssImportantUncommented` with a
+        ceiling of zero, and all 44 remaining declarations carry an
+        `important-case: N` tag. The helper is exported and pinned by
+        seven tests, including the Allman case, and a mutation that
+        narrows its search from the block to the line fails four of them.
+
+    D5. A DEAD DECLARATION IS DELETED AND ITS INTENT IS RECORDED, NOT
+        GUESSED. `height: 22px` on the rename input never applied,
+        because `.form-control-sm` sets `min-height` and `min-height`
+        beats `height`. Restoring the intent means setting `min-height`
+        too, which changes how renaming looks in every tree. DEBT-TV-1
+        holds the question and the test pins the 29.7188px the field
+        actually renders at.
+  consequences: |
+    IMP-1 closes at zero. 54 declarations became 44, `scssImportant` fell
+    108 to 103 and `scssImportantComponents` 50 to 45, and the two
+    ratchets now sit beside a third that holds the documentation rule.
+
+    One new defect, DEBT-TV-1, found while removing a keyword rather than
+    by looking for it.
+
+    5270 unit tests in 162 files, 5 Playwright assertions, 32 of 32
+    structure checks, testBlocks floor 4976 to 4983.

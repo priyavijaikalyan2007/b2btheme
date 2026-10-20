@@ -275,6 +275,10 @@ $tg-z-context-menu: 1050;
 }
 
 .treegrid-resizing {
+    // important-case: 4 - treegrid.ts:3362 sets cursor pointer inline on every
+    // sortable header cell, and the drag class goes on the root at :2898, so
+    // this reaches them through a descendant selector. Without the keyword a
+    // sortable header keeps showing pointer for the whole resize.
     cursor: col-resize !important;
     user-select: none;
 

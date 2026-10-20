@@ -61,8 +61,12 @@
 
 .gc-node-selected {
     rect {
-        stroke: $blue-600 !important;
-        stroke-width: 2.5 !important;
+        // The keyword is not needed here. The only competing stroke-width is `.gc-node:hover
+        // rect`, which sets the same 2.5, and the only other source of
+        // `stroke` is a presentation attribute from svgCreate, which loses
+        // to any CSS rule. ADR-209.
+        stroke: $blue-600;
+        stroke-width: 2.5;
         filter: drop-shadow(0 0 4px rgba($blue-600, 0.35));
     }
 }
@@ -86,8 +90,9 @@
 
 .gc-edge-selected {
     path {
-        stroke: $blue-600 !important;
-        stroke-width: 2.5 !important;
+        // See .gc-node-selected above. ADR-209.
+        stroke: $blue-600;
+        stroke-width: 2.5;
     }
 }
 

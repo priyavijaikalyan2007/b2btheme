@@ -36,6 +36,11 @@
 }
 
 .stacklayout-panel-collapsed {
+    // important-case: 4 - stacklayout.ts:420-422 sets flexGrow, flexShrink and
+    // flexBasis inline on wrapperEl, and :500 adds this class to that same
+    // element. The inline value matches this rule, so a plain version would be
+    // permanently shadowed and therefore dead. Keep the keyword or delete the
+    // declaration. Do NOT replace it with a more specific selector.
     flex: 0 0 auto !important;
 
     .stacklayout-content {
@@ -142,6 +147,8 @@
 // ============================================================================
 
 .stacklayout--horizontal {
+    // important-case: 4 - see .stacklayout-panel-collapsed above. Same inline
+    // flex longhands from stacklayout.ts:420-422 on the same element.
     flex-direction: row;
 
     .stacklayout-panel {

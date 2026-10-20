@@ -122,6 +122,8 @@
 
 @media (prefers-reduced-motion: reduce)
 {
+    // important-case: 2 - a reduced-motion override must beat every
+    // animation and transition rule in this file, including ones added later.
     .de-canvas,
     .de-canvas *
     {

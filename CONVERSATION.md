@@ -4404,3 +4404,53 @@ largest part of its own target for no reason.
 Fourth deferral this month whose premise did not survive a read. The
 first three were caught by re-measuring. This one was caught because
 someone asked what the components were actually talking to.
+
+---
+
+## IMP-1 closes, and nothing it was waiting for was needed (2026-10-20)
+
+The owner pointed out that handing back a menu of decisions was the
+wrong move, and two of the three items were mine to settle. That is
+right. The comment requirement was a `must` I had written into
+CODING_STYLE.md an hour earlier with forty standing violations and
+nothing checking it, which is the exact shape this repository spent
+October removing. Asking permission to clean up after myself is not a
+question.
+
+So all three went. What they turned up is better than the work itself.
+
+The deferral said a specificity change is visual and unverifiable here.
+Every clause is true and the conclusion does not follow. A specificity
+change can only alter what the cascade resolves to, and
+`getComputedStyle` reports that number directly. Five Playwright
+assertions closed an entry that had survived three re-measurements,
+because each of those re-checked the premise and never the inference.
+
+Then the measurements said something nobody had predicted. **All five
+declarations were beating nothing.** graphcanvas's four were supposedly
+losing to a hover rule at higher specificity. That rule sets the same
+value for one property and never sets the other, and the only other
+source is an SVG presentation attribute, which loses to any CSS rule at
+all. ribbon's one duplicated an inline style set four lines of
+TypeScript away.
+
+treeview is the one I got wrong in an instructive way. I wrote an
+element compound, reasoning that (0,1,1) beats `.form-control-sm` at
+(0,1,0). The arithmetic is correct. Then I mutated the compound away to
+prove it was load-bearing, and nothing moved, because this stylesheet
+loads after Bootstrap and source order had already settled the tie. The
+compound came out. A specificity argument looks like proof and is a
+guess with notation on it until something measures it.
+
+The instrument then found a defect that was not on any list.
+`height: 22px` on the inline rename field has never applied.
+Bootstrap's `.form-control-sm` sets `min-height`, `min-height` beats
+`height` at any specificity and with any keyword, and the field renders
+at 29.72px. Somebody wrote a compact rename box, shipped it, and never
+got one. I deleted the dead line and did NOT restore the intent,
+because a 22px field needs `min-height` set too and that changes how
+renaming looks in every tree. DEBT-TV-1 holds the question and the test
+pins the number so it cannot drift while the question is open.
+
+A keyword that does not work looks exactly like a keyword that does,
+until something reads the value back.

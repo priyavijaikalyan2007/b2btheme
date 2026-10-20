@@ -93,9 +93,13 @@ $tv-z-context-menu: 1050;
     z-index: 1;
 }
 
+// No keyword. This class and Bootstrap's `.form-control-sm` are both
+// (0,1,0), and this stylesheet loads after Bootstrap, so source order
+// settles it. MEASURED, not assumed: an element compound was tried first
+// and a mutation showed it changed nothing. ADR-209.
 .treeview-search-input {
-    padding-left: 28px !important;
-    font-size: $font-size-sm !important;
+    padding-left: 28px;
+    font-size: $font-size-sm;
     height: $control-height-sm;
 }
 
@@ -351,10 +355,16 @@ $tv-z-context-menu: 1050;
 // 14. INLINE RENAME INPUT
 // ============================================================================
 
+// See .treeview-search-input above. Same tie, same source-order win.
+//
+// `height: 22px` USED TO BE HERE AND DID NOTHING. Bootstrap's
+// `.form-control-sm` sets `min-height: calc(1.5em + 0.5rem + 2px)`, which
+// resolves to 29.72px, and `min-height` beats `height` at any specificity
+// and with any keyword. The field renders at 29.7188px and always did.
+// DEBT-TV-1 records the compact field this was reaching for.
 .treeview-rename-input {
-    height: 22px !important;
-    padding: $sp-1 $sp-4 !important;
-    font-size: $font-size-sm !important;
+    padding: $sp-1 $sp-4;
+    font-size: $font-size-sm;
     line-height: $line-height-base;
     min-width: 80px;
 }

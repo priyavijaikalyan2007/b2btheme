@@ -25,6 +25,8 @@
 // ============================================================================
 
 .driver-popover {
+    // important-case: 5 - Driver.js injects its own stylesheet and never sees
+    // _variables.scss.
     border-radius: $border-radius-lg;
     border: 1px solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-lg);

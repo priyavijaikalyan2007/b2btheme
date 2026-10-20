@@ -2512,3 +2512,38 @@ the source.** Check the quote, not the summary of it.
 Fourth deferral this month whose premise did not survive a read. The
 first three were caught by re-measuring. This one was caught because
 someone asked what the components were actually talking to.
+
+### 6.132 The Cheaper Check Was Always There (2026-10-20)
+
+IMP-1 sat deferred for months behind one sentence: removing an
+`!important` changes specificity, specificity changes are visual, and
+this repository has no visual-regression suite. Every part of that is
+true except the inference.
+
+A specificity change can only alter what the cascade resolves to, and
+`getComputedStyle` reports exactly that. Five Playwright assertions
+closed the entry. No screenshots, no baselines, no human eyeballing.
+The deferral was never a statement about verifiability. It was a
+statement about nobody having looked for a cheaper instrument, and it
+survived three re-measurements because each one re-checked the premise
+and not the inference.
+
+What the instrument found is the part worth keeping. **All five
+declarations were beating nothing.** graphcanvas's four were supposedly
+losing to a hover rule at higher specificity, and that rule sets the
+same value for one property and never sets the other. ribbon's one
+duplicated an inline style. treeview's five were already winning on
+source order, which I learned by writing an element compound and then
+mutating it away to watch nothing happen.
+
+That mutation is the method, not a footnote. A specificity argument is
+arithmetic over selectors, it feels like proof, and it is a guess until
+something measures it. I wrote `(0,1,1) beats (0,1,0)` and was right
+about the arithmetic and wrong about what it bought.
+
+And the measurement found a defect nobody was looking for.
+`height: 22px` on the inline rename field has never applied, because
+Bootstrap's `.form-control-sm` sets `min-height` and `min-height` beats
+`height` at any specificity and with any keyword. The field renders at
+29.72px and always did. **A keyword that does not work looks exactly
+like a keyword that does, until something reads the number back.**

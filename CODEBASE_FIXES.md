@@ -1107,13 +1107,13 @@ quiet wrong answer.
   source. Both the option table and the opening paragraph are corrected,
   and the MathLive row now reads **Unused**.
 
-## MEDIUM — `!important` in Component SCSS (54 real declarations, 18 files, reclassified 2026-10-20)
+## RESOLVED — `!important` in Component SCSS (IMP-1 closed at zero, 44 permitted declarations in 16 files, 2026-10-20)
 
 Per CODING_STYLE.md, `!important` is forbidden for beating your own CSS, and is
 permitted in five named cases where specificity cannot win. See the table in
 that document. Every permitted use must carry a comment naming its case.
 
-- [ ] **IMP-1** **5 declarations in 2 files.** Down from a stated 29 in 8 files,
+- [x] **IMP-1** **CLOSED at zero, 2026-10-20.** Down from a stated 29 in 8 files,
   not by fixing anything, but because the classification was measured on the
   wrong axis. No code changed. `scssImportantComponents` stays at 55. ADR-183,
   ADR-208.
@@ -1141,8 +1141,14 @@ that document. Every permitted use must carry a comment naming its case.
   | A — inside `prefers-reduced-motion` | 11 | cardlayout 2, contextmenu 1, diagramengine 1, dynamicformswitcher 2, gauge 2, skeletonloader 1, toast 2 | n/a, case 2 |
   | B — third-party CSS the variable layer cannot reach | 24 | markdowneditor 17, conversation 6, guidedtour 1 | see below |
   | C — an inline style set by JavaScript | 9 | chartpanel 2, stacklayout 2, ribbonbuilder 2, treegrid 2, splitlayout 1 | **Never** |
-  | D — a Bootstrap component class, beatable by scoping | 5 | treeview 5 | Yes |
-  | E — in-house CSS specificity | **5** | graphcanvas 4, ribbon 1 | Yes, **this is IMP-1** |
+  | D — a Bootstrap component class | 5 | treeview 5 | **REMOVED**, source order already won |
+  | E — in-house CSS specificity | 5 | graphcanvas 4, ribbon 1 | **REMOVED**, they beat nothing |
+
+  **D and E are both at zero. 54 declarations became 44**, and the two
+  ratchets fell with them: `scssImportant` 108 to 103 and
+  `scssImportantComponents` 50 to 45. Buckets A, B and C remain and are
+  permitted, each now carrying an `important-case: N` comment that the new
+  `scssImportantUncommented` ceiling holds at zero.
 
   **No selector can win against bucket C, and the old entry's worked
   example got this exactly backwards.** It said stacklayout's pair "would be settled by
@@ -1203,7 +1209,10 @@ that document. Every permitted use must carry a comment naming its case.
   `.treeview` would win on source order alone. Permitted by case 5 and
   removable. Low value, and it is a specificity change like any other.
 
-  **BUCKET E IS THE REAL TARGET. FIVE DECLARATIONS.**
+  **BUCKET E IS GONE. ALL FIVE REMOVED, AND NOT ONE WAS BEATING ANYTHING.**
+  ADR-209. The removals are pinned by `tests/important-removal.spec.ts`,
+  which asserts the computed value each keyword used to force.
+
   - `graphcanvas.scss:64-65, 89-90` — `.gc-node:hover rect` is (0,2,1) and
     `.gc-node-selected rect` is (0,1,1), so hover out-specifies selection
     and `!important` papers over it. The stroke comes from `setAttribute`
@@ -1217,12 +1226,28 @@ that document. Every permitted use must carry a comment naming its case.
     inline `display` on tabs and controls but never on `.ribbon-group-content`.
     This one looks simply redundant.
 
-  **graphcanvas is checkable today, with no screenshots.** The old
-  deferral said a specificity change in these files is unverifiable. That
-  is true for colour and spacing. It is not true for a computed value:
-  `getComputedStyle(rect).stroke` in Playwright asserts the selected-node
-  stroke directly. The unverifiability argument never applied to bucket E's
-  four largest members, and the deferral should not have covered them.
+  **AND THE DEFERRAL WAS WRONG ABOUT VERIFIABILITY, WHICH IS WHY THIS
+  CLOSED.** "Specificity changes are visual" is true of colour and spacing
+  judgements. It is false of a computed value. `getComputedStyle` reports
+  exactly what the cascade resolved to, which is the only thing a
+  specificity change can alter. Five Playwright assertions replaced a
+  screenshot suite that does not exist, and three of them caught something.
+
+  **What the measurements found, none of which was predicted:**
+  - graphcanvas's 4 were beating NOTHING. The entry claimed
+    `.gc-node:hover rect` at (0,2,1) out-specified the selection rule at
+    (0,1,1). It does, and it sets `stroke-width` to the SAME 2.5 and sets
+    no `stroke` at all. The only other source is a presentation attribute
+    from `svgCreate`, which loses to any CSS rule.
+  - ribbon's 1 was beating nothing either. `ribbon.ts:2647` sets
+    `display: flex` inline on the same element when it moves content into
+    the popup, and the content is appended to `rootEl`, so the hide rule
+    at `:1413` no longer matches it.
+  - treeview's 5 needed no specificity change at all. The class and
+    `.form-control-sm` are both (0,1,0) and this stylesheet loads later,
+    so source order already settled it. An element compound was tried
+    first and a mutation proved it changed nothing.
+  - **`height: 22px` on the rename input never worked.** See DEBT-TV-1.
 
   **There is still no visual-regression suite. Measured 2026-10-20 and
   unchanged.** `grep -c "toHaveScreenshot\|toMatchSnapshot" tests/*.spec.ts`
@@ -1289,6 +1314,29 @@ that document. Every permitted use must carry a comment naming its case.
   - `components/graphcanvas/graphcanvas.scss` (4 occurrences)
   - `components/toast/toast.scss` (2 occurrences)
   - `components/ribbon/ribbon.scss` (1 occurrence)
+
+- [ ] **DEBT-TV-1** **The inline rename field asks for 22px and renders at
+  29.72px, and has since it was written.** Found by ADR-209 while removing
+  IMP-1's keyword, not by looking for it.
+
+  `treeview.scss` carried `height: 22px !important` on
+  `.treeview-rename-input`. The input also carries `form-control
+  form-control-sm` (`treeview.ts:3825`), and Bootstrap's
+  `.form-control-sm` sets `min-height: calc(1.5em + 0.5rem + calc(var(--bs-border-width) * 2))`.
+  **`min-height` beats `height` at any specificity and with any keyword**,
+  so the declaration was dead the day it was typed. Measured:
+  `getComputedStyle(input).height` is `29.7188px` and `minHeight` is
+  `29.72px`.
+
+  The dead declaration is deleted, because keeping a line that does
+  nothing is worse than not having it. **The INTENT is not restored**, and
+  that is the open question here: a 22px inline rename field needs
+  `min-height` set as well, and that is a visible change to how renaming
+  looks in every tree. It wants a decision rather than a patch.
+
+  Pinned by `tests/important-removal.spec.ts`, which asserts the 29.7188px
+  the field actually renders at, so the number cannot drift unnoticed
+  while the question is open.
 
 - [ ] **DEBT-LAY-1** **Four layout components accept `setContained()`
   and ignore it.**
@@ -1985,7 +2033,7 @@ the step exits 1 and the workflow fails.
 | MRK-2 | 22 of 24 | 2 of 29 | far smaller |
 | MRK-3 | 10 | 4 | far smaller |
 | LOG-1 | 406 | 2 real call sites | far smaller |
-| IMP-1 | 47 | 113 all-scss, 54 component, **5 real** | larger, then far smaller once classified |
+| IMP-1 | 47 | 113 all-scss, 54 component, **0 real** | larger, then classified, then closed |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
 | UNUSED-1 | 119 | 306 | far larger |

@@ -299,6 +299,8 @@
 // ============================================================================
 
 .mde-editor-area {
+    // important-case: 5 - Vditor ships its own stylesheet and never sees
+    // _variables.scss.
     flex: 1;
     overflow: hidden;
     min-height: 0;
@@ -635,6 +637,9 @@
 // Every override below forces it to match our Bootstrap enterprise theme.
 
 .mde-wrapper {
+    // important-case: 5 - Vditor ships its own stylesheet and never sees
+    // _variables.scss, so the theme's font, size and radius tokens cannot reach
+    // these selectors through the variable layer.
 
     // ------------------------------------------------------------------
     // 1. Custom Properties (all colour / sizing tokens Vditor exposes)

@@ -1454,7 +1454,11 @@ $ribbon-ctrl-border-radius: $border-radius;
 
     .ribbon-group-content
     {
-        display: flex !important;
+        // The keyword is not needed here. Content moved into the popup is appended to rootEl,
+        // so `.ribbon-group-overflow .ribbon-group-content { display: none }`
+        // no longer matches it, and ribbon.ts:2647 sets this same value
+        // inline on the element. ADR-209.
+        display: flex;
         align-items: stretch;
         gap: $ribbon-group-gap;
     }

@@ -38,6 +38,9 @@
 }
 
 .chartpanel-canvas {
+    // important-case: 4 - Chart.js writes width and height inline on the
+    // canvas because chartpanel.ts:382 sets responsive with
+    // maintainAspectRatio false. No selector outranks an inline declaration.
     display: block;
     width: 100% !important;
     height: 100% !important;

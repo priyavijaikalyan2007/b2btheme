@@ -42,6 +42,11 @@
 
 // Collapsed pane — zero dimension, hidden overflow
 .splitlayout-pane-collapsed {
+    // important-case: 4 - splitlayout.ts:575-577 sets flexBasis inline on
+    // pane.element, which is the element this class is added to at :581.
+    // The inline value matches this rule, so a plain version of it would be
+    // permanently shadowed and therefore dead. Keep the keyword or delete
+    // the declaration. Do NOT replace it with a more specific selector.
     overflow: hidden;
     flex-basis: 0 !important;
     min-width: 0;

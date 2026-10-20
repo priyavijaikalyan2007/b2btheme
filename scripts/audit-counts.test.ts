@@ -31,6 +31,7 @@ import
     LOCAL_HOST_RULE,
     countAnyCasts,
     countOccurrences,
+    uncommentedImportants,
     countUngatedVerboseShims,
     countUnpinnedCdnRefs,
     countTagsMissingSri,
@@ -787,5 +788,58 @@ describe("countThirdPartyTagsWithoutSri", () =>
     {
         expect(countThirdPartyTagsWithoutSri("See https://unpkg.com/vditor@3.11.2/dist/index.min.js here."))
             .toBe(0);
+    });
+});
+
+describe("uncommentedImportants", () =>
+{
+    const KW = "!" + "important";
+
+    test("a declaration with no case comment counts", () =>
+    {
+        expect(uncommentedImportants(`.a {\n  color: red ${KW};\n}`)).toBe(1);
+    });
+
+    test("a case comment in the same block clears it", () =>
+    {
+        expect(uncommentedImportants(
+            `.a {\n  // important-case: 3 - reason\n  color: red ${KW};\n}`)).toBe(0);
+    });
+
+    test("one comment covers every declaration in its top-level block", () =>
+    {
+        expect(uncommentedImportants(
+            `.a {\n  // important-case: 4 - reason\n  .b { color: red ${KW}; }\n` +
+            `  .c { color: blue ${KW}; }\n}`)).toBe(0);
+    });
+
+    // THE ALLMAN TRAP. A scanner that reads depth on the selector's line
+    // sees this block close immediately and reports zero. That exact bug
+    // counted 8 reduced-motion overrides where there are 11.
+    test("an Allman brace does not hide the block", () =>
+    {
+        expect(uncommentedImportants(
+            `@media (prefers-reduced-motion: reduce)\n{\n` +
+            `    // important-case: 2 - reason\n    .a { transition: none ${KW}; }\n}`)).toBe(0);
+    });
+
+    test("a comment does not leak into the next top-level block", () =>
+    {
+        expect(uncommentedImportants(
+            `.a {\n  // important-case: 2 - reason\n  color: red ${KW};\n}\n` +
+            `.b {\n  color: blue ${KW};\n}`)).toBe(1);
+    });
+
+    // guidedtour.scss explains the keyword in prose above the declaration.
+    // That line is a comment, not a declaration, and must not be counted.
+    test("the word inside a comment is not a declaration", () =>
+    {
+        expect(uncommentedImportants(`.a {\n  // needs ${KW} here\n  color: red;\n}`)).toBe(0);
+    });
+
+    test("a case number outside 1-5 does not clear it", () =>
+    {
+        expect(uncommentedImportants(
+            `.a {\n  // important-case: 9 - invented\n  color: red ${KW};\n}`)).toBe(1);
     });
 });
