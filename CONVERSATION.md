@@ -4333,3 +4333,70 @@ wanted to be on the field declarations, not in another method.
 
 Not one test changed across all fourteen, which is the only evidence
 worth having that an extraction was an extraction.
+
+---
+
+## IMP-1: the question the count was never built to answer (2026-10-20)
+
+The owner read the IMP-1 writeup and asked one thing before accepting
+it: are markdowneditor and chartpanel carrying `!important` because
+they override external components? Check that before calling it
+unnecessary.
+
+They are, and the answer took the entry apart.
+
+All 17 of markdowneditor's declarations target `.vditor*`. Every one is
+a Vditor override. The entry had 11 of them filed as unjustified
+defects, because the classifier sorted by whether a comment sat near
+the declaration. That is not a justification test. A comment records a
+reason and does not create one, and its absence does not remove one.
+
+The axis that answers the question is what each declaration overrides,
+and it has a floor the old axis could not see. Conversation's six
+override Bootstrap utilities, and Bootstrap emits `.bg-light` and
+`.text-muted` with `!important` already, so only `!important` beats
+them. Seven more override an inline style written from JavaScript, and
+no selector at any specificity outranks an inline declaration. Thirteen
+of the 54 have exactly one legal spelling.
+
+Which is how the entry came to publish advice that would have broken
+something. It suggested settling stacklayout with
+`.stacklayout-panel.stacklayout-panel-collapsed`. One line, obviously
+right, and impossible: `stacklayout.ts:420` sets the flex longhands
+inline on `wrapperEl` and line 500 puts the class on that same element.
+The owner's instinct that there would be more was right — the same
+shape is in splitlayout, in ribbonbuilder against SymbolPicker, and in
+chartpanel against Chart.js. Classifying a stylesheet means reading the
+component's TypeScript, because the cascade's top rank is written from
+there.
+
+Then the rule. The entry opened "Per CODING_STYLE.md, `!important`
+should only be used when overriding third-party styles or for
+accessibility-critical rules". CODING_STYLE.md said "Never use
+`!important` in component SCSS ... The only exception is utility
+classes in the theme itself". Neither exemption existed. IMP-2 was
+settled and IMP-3 was closed against text nobody had written, while the
+actual standard forbade thirteen declarations that have no alternative
+spelling. A paraphrase of a standard drifts, and nothing in a
+repository compares the paraphrase against the source.
+
+The owner's other hypothesis — that the overrides exist because the
+theme carries its own corner radius and Bootstrap does not know about
+it — turned out to be already solved. `custom.scss` imports
+`_variables.scss` before Bootstrap, and the compiled output carries
+`--bs-border-radius:4px`. Not one of the 54 is a Bootstrap token
+restated in a component file. The route works. Its boundary is the
+third-party stylesheet, which is why every radius override in the set
+sits on a `.vditor*` selector: Vditor ships its own CSS and never sees
+those variables.
+
+What is left is seven declarations in three files, and one of those
+three was never blocked on anything. graphcanvas's four exist because
+`.gc-node:hover rect` out-specifies `.gc-node-selected rect`, and
+`getComputedStyle(rect).stroke` asserts that in Playwright today. The
+"unverifiable without screenshots" deferral had been covering the
+largest part of its own target for no reason.
+
+Fourth deferral this month whose premise did not survive a read. The
+first three were caught by re-measuring. This one was caught because
+someone asked what the components were actually talking to.

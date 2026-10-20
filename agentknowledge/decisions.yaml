@@ -9074,3 +9074,78 @@
     5260 tests across 162 files, 32 of 32 structure checks, testBlocks
     floor 4970 -> 4973. Open tracker items 19 -> 8, of which 7 moved to
     SETTLED rather than being worked.
+
+- id: ADR-208
+  title: Classify an override by what it overrides, not by whether a comment sits near it
+  date: 2026-10-20
+  status: accepted
+  context: |
+    IMP-1 deferred 29 `!important` declarations in 8 component
+    stylesheets. The owner asked whether markdowneditor and chartpanel
+    were overriding external components before the entry called the
+    declarations unnecessary. They were. Checking that question pulled
+    the whole classification apart, and then the rule behind it.
+  decision: |
+    D1. CODING_STYLE.md NOW NAMES FIVE EXCEPTIONS, BECAUSE THE RULE IT
+        HAD WAS UNSATISFIABLE. It said "Never use `!important` in
+        component SCSS ... The only exception is utility classes in the
+        theme itself". Thirteen declarations in this repository cannot be
+        written any other way. Six override Bootstrap utilities, which
+        Bootstrap emits with `!important` already, and seven override an
+        inline style, which no selector outranks. A standard that forbids
+        the only possible spelling is a standard that gets ignored.
+
+    D2. THE TRACKER CITED A RULE THAT WAS NEVER WRITTEN. The entry's
+        first line read "Per CODING_STYLE.md, `!important` should only be
+        used when overriding third-party styles or for accessibility
+        critical rules". CODING_STYLE.md granted neither exemption. IMP-2
+        was settled and IMP-3 was closed against invented text, and
+        IMP-1's 29 was the residue. A paraphrase of a standard is not the
+        standard, and this one drifted far enough to invert the rule.
+
+    D3. SORT BY TARGET, NOT BY COMMENT PROXIMITY. The old split asked
+        whether a comment sat near the declaration. A comment documents a
+        justification and is not one. Sorted by what each declaration
+        overrides, the 54 fall into five buckets and only 7 are in-house
+        specificity bugs. markdowneditor read as 11 offenders when all 17
+        of its declarations are the same Vditor override.
+
+    D4. AN INLINE STYLE IS A SEPARATE CATEGORY, AND THE ENTRY'S OWN
+        ADVICE IGNORED IT. The entry suggested fixing stacklayout with
+        `.stacklayout-panel.stacklayout-panel-collapsed`. No selector at
+        any specificity beats an inline declaration, and
+        `stacklayout.ts:420-422` sets the flex longhands inline on the
+        same element that carries the class. The pattern repeats in
+        splitlayout, ribbonbuilder and chartpanel. Checking it needs the
+        component's TypeScript, not its stylesheet.
+
+    D5. THE VARIABLE LAYER IS THE ROUTE FOR BOOTSTRAP, AND ITS BOUNDARY
+        IS THE THIRD-PARTY STYLESHEET. `custom.scss` imports
+        `_variables.scss` before Bootstrap, the compiled output carries
+        `--bs-border-radius:4px`, and not one of the 54 is a Bootstrap
+        component token restated in a component file. Vditor and
+        Driver.js ship their own CSS and never see those variables, which
+        is why every radius override in the set is on a `.vditor*`
+        selector.
+
+    D6. `scssImportantComponents` IS A CEILING AND NOT A DEFECT COUNT.
+        47 of its 54 are permitted. A fall in the number is not progress
+        and no count in `audit-counts.mjs` isolates the 7, because the
+        split depends on inline styles set from TypeScript.
+  consequences: |
+    IMP-1 goes from a stated 29 in 8 files to 7 in 3 files, with no code
+    changed and no ratchet moved. graphcanvas's 4 are checkable today
+    through `getComputedStyle(rect).stroke` in Playwright, so the
+    "unverifiable without screenshots" deferral never applied to the
+    largest part of the real target. The missing visual suite still
+    blocks the rest.
+
+    Two dead lint directives surfaced: `ribbonbuilder.scss:417` and
+    `:429` disable a stylelint rule, and stylelint is in neither
+    `package.json` nor any config file.
+
+    Fourth deferral this month whose premise did not survive being read,
+    after DEBT-SEC-3, graphminimap's 2D context and this entry's own
+    missing visual suite. The first three were caught by re-measurement.
+    This one was caught by the owner asking a question the count was
+    never built to answer.

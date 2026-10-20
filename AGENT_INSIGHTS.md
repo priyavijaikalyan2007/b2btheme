@@ -2459,3 +2459,48 @@ the class got *more* type safety rather than less.
 usually describing the code rather than obstructing you. Ask whether
 the lines want to move somewhere else entirely before reaching for an
 escape hatch that silences the check.
+
+### 6.131 A Count Answers The Question It Was Built To Ask (2026-10-20)
+
+IMP-1 said 29 unjustified `!important` in 8 component stylesheets. The
+owner asked one question — are markdowneditor and chartpanel overriding
+external components? — and the number became 7 in 3 files. Nothing was
+fixed. The count had been built on the wrong axis.
+
+The old split sorted each declaration by whether a comment sat near it.
+That feels like a justification test and is not one. A comment records
+a reason. It does not create one, and its absence does not remove one.
+All 17 of markdowneditor's declarations target `.vditor*` and are the
+same override. Eleven of them read as defects because nobody had typed
+a sentence above them.
+
+The axis that decides the question is **what does this declaration
+override**, and it has a hard floor the old axis could not see. Six
+conversation declarations override Bootstrap utilities, which Bootstrap
+emits with `!important` already, so only `!important` beats them. Seven
+more override an inline style set from JavaScript, and no selector at
+any specificity outranks an inline declaration. Thirteen of the 54 have
+exactly one legal spelling.
+
+Which is how the entry came to publish a fix that would have broken
+things. It suggested settling stacklayout with
+`.stacklayout-panel.stacklayout-panel-collapsed`. `stacklayout.ts:420`
+sets `flexGrow`, `flexShrink` and `flexBasis` inline on `wrapperEl`, and
+line 500 puts the class on that same element. The advice was one line,
+looked obviously right, and could not work. **Classifying a stylesheet
+requires reading the component's TypeScript**, because the cascade's
+top rank is written from there.
+
+Then the rule itself. The entry opened "Per CODING_STYLE.md,
+`!important` should only be used when overriding third-party styles or
+for accessibility-critical rules". CODING_STYLE.md said "Never use
+`!important` in component SCSS ... The only exception is utility classes
+in the theme itself". Neither exemption existed. IMP-2 was settled and
+IMP-3 was closed against text nobody had written, and the real standard
+forbade 13 declarations that have no alternative. **A paraphrase of a
+standard drifts, and nothing in a repository compares the paraphrase to
+the source.** Check the quote, not the summary of it.
+
+Fourth deferral this month whose premise did not survive a read. The
+first three were caught by re-measuring. This one was caught because
+someone asked what the components were actually talking to.

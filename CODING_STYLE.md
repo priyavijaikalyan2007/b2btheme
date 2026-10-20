@@ -268,11 +268,36 @@ Limit SCSS nesting to 3 levels. Deep nesting produces overly specific selectors.
 
 ### Avoid `!important`
 
-Never use `!important` in component SCSS. If a style is not applying, the selector specificity is wrong — 
-fix the selector, not the declaration.
+Do not use `!important` to win against your own CSS. If one of your own styles
+is not applying, the selector specificity is wrong. Fix the selector, not the
+declaration.
 
-The only exception is utility classes in the theme itself (e.g., `.p-compact`), where `!important` follows 
-Bootstrap's utility convention.
+Four exceptions are permitted. Each one names a thing the cascade cannot reach
+by specificity alone.
+
+| # | Case | Why specificity cannot win |
+|---|---|---|
+| 1 | Utility classes in the theme itself, such as `.p-compact` | Follows Bootstrap's own utility convention |
+| 2 | A `prefers-reduced-motion` block | The rule must beat every animation rule in the file, including future ones |
+| 3 | A Bootstrap **utility** class, such as `.text-muted` or `.bg-light` | Bootstrap emits those utilities with `!important` already. Only `!important` beats `!important` |
+| 4 | An **inline** style set by JavaScript, including third-party JavaScript | An inline declaration outranks every selector. Only `!important` outranks it |
+
+A fifth case is permitted but is not automatic. Third-party CSS that the
+variable layer cannot reach, such as Vditor or Driver.js, may need
+`!important`. Those libraries ship their own stylesheets and never see
+`_variables.scss`. Prefer out-specifying the library rule first, and reach for
+`!important` only when that fails.
+
+**Bootstrap's own components are not an exception.** `src/scss/_variables.scss`
+loads before Bootstrap and sets `$border-radius`, `$btn-border-radius`,
+`$input-border-radius` and the rest. Bootstrap therefore compiles with the
+theme's values, and the compiled output carries `--bs-border-radius:4px`. A
+component stylesheet that restates a Bootstrap token is duplicating the
+variable layer. Change the variable instead.
+
+**Every `!important` must carry a comment naming which of the cases above it
+falls under.** The comment is the audit trail. A declaration without one reads
+as a specificity bug to the next person.
 
 ---
 
@@ -495,7 +520,7 @@ const mergedBits = (shift4Bits & shift8Bits) | divideBy4;
 - [ ] Early returns for guard clauses
 - [ ] Assertions for invariants
 - [ ] SCSS nesting max 3 levels
-- [ ] No `!important` in component SCSS
+- [ ] No `!important` in component SCSS outside the five permitted cases, each one commented
 - [ ] Component CSS classes prefixed with component name
 - [ ] Domain-appropriate naming
 - [ ] Explicit code over clever tricks

@@ -1107,102 +1107,164 @@ quiet wrong answer.
   source. Both the option table and the opening paragraph are corrected,
   and the MathLive row now reads **Unused**.
 
-## MEDIUM — `!important` in Component SCSS (55 occurrences, 18 files, re-measured 2026-10-15)
+## MEDIUM — `!important` in Component SCSS (54 real declarations, 16 files, reclassified 2026-10-20)
 
-Per CODING_STYLE.md, `!important` should only be used when overriding third-party styles or for accessibility-critical rules (e.g., `prefers-reduced-motion`). All other uses indicate specificity problems that should be fixed structurally.
+Per CODING_STYLE.md, `!important` is forbidden for beating your own CSS, and is
+permitted in five named cases where specificity cannot win. See the table in
+that document. Every permitted use must carry a comment naming its case.
 
-- [ ] **IMP-1** **55 occurrences across 18 COMPONENT stylesheets.** Held by
-  the new `scssImportantComponents` ceiling. The March entry said 47 across
-  15 and the October re-measurement said 113 across 20. Both were wrong,
-  in opposite directions, and the second was wrong because it counted a
-  different population. ADR-183.
+- [ ] **IMP-1** **7 declarations in 3 files.** Down from a stated 29 in 8 files,
+  not by fixing anything, but because the classification was measured on the
+  wrong axis. No code changed. `scssImportantComponents` stays at 55. ADR-183,
+  ADR-208.
 
-  **113 IS THE ALL-STYLESHEET TOTAL AND THIS SECTION IS ABOUT COMPONENTS.**
-  `scssImportant` spans every tracked `.scss`, so **58 of its 113 are in
-  `src/scss/`** — and **56 of those 58 are in one file**,
-  `src/scss/_dark-mode.scss`, where beating Bootstrap's own specificity is
-  exactly the third-party override CODING_STYLE.md permits. Carrying them
-  in a count headed "Component SCSS" doubled the apparent size of this item
-  and hid where the work actually is. This is the `: any` discovery a third
-  time: a ratchet named for one population and measuring another.
+  **THE RULE THIS ENTRY CITED WAS NEVER WRITTEN.** The old header said
+  "Per CODING_STYLE.md, `!important` should only be used when overriding
+  third-party styles or for accessibility-critical rules". CODING_STYLE.md
+  said neither thing. Its words were "Never use `!important` in component
+  SCSS ... The only exception is utility classes in the theme itself". So
+  IMP-2 was settled and IMP-3 was closed against exemptions that did not
+  exist, and IMP-1's 29 was the residue of an invented split. The document
+  now grants five exceptions, because without them the standard was
+  unsatisfiable: 13 declarations in this repository cannot be written any
+  other way.
 
-  Both counts are kept. `scssImportant` stops the total growing anywhere.
-  `scssImportantComponents` is the one this entry is measured against.
+  **THE OLD SPLIT SORTED BY COMMENT PROXIMITY, WHICH MEASURES NOTHING.** A
+  declaration went to IMP-2 if a comment sat near it and to IMP-1 if none
+  did. A comment documents a justification. It is not one. That is why
+  markdowneditor read as 11 when the file holds 17, all of them the same
+  kind of override. The axis that decides the question is **what does this
+  declaration override**, and on that axis the 54 sort cleanly.
 
-  **One of the 113 is the word inside a comment**, in
-  `guidedtour.scss`, where a note explains why the line below it needs the
-  keyword. 112 are real declarations. Left in deliberately: parsing SCSS
-  block comments for one occurrence buys less than it risks.
+  | Bucket | n | Where | Can specificity win? |
+  |---|---|---|---|
+  | A — inside `prefers-reduced-motion` | 11 | cardlayout 2, contextmenu 1, diagramengine 1, dynamicformswitcher 2, gauge 2, skeletonloader 1, toast 2 | n/a, case 2 |
+  | B — third-party CSS the variable layer cannot reach | 24 | markdowneditor 17, conversation 6, guidedtour 1 | see below |
+  | C — an inline style set by JavaScript | 7 | chartpanel 2, stacklayout 2, ribbonbuilder 2, splitlayout 1 | **Never** |
+  | D — a Bootstrap component class, beatable by scoping | 5 | treeview 5 | Yes |
+  | E — in-house CSS specificity | **7** | graphcanvas 4, treegrid 2, ribbon 1 | Yes, **this is IMP-1** |
 
-  **Classified by justification, the 54 real declarations split three ways:**
+  **Bucket C can never be removed, and the old entry's worked example got
+  this exactly backwards.** It said stacklayout's pair "would be settled by
+  `.stacklayout-panel.stacklayout-panel-collapsed`". But
+  `stacklayout.ts:420-422` sets `flexGrow`, `flexShrink` and `flexBasis`
+  inline on `wrapperEl`, and `stacklayout.ts:500` adds
+  `.stacklayout-panel-collapsed` to that same element. **No selector at any
+  specificity beats an inline declaration.** Only `!important` outranks one.
+  Following that advice would have shipped the regression the entry was
+  written to prevent.
 
-  | Kind | Count | Entry |
-  |---|---|---|
-  | Inside a `prefers-reduced-motion` block | 11 | IMP-3, justified |
-  | Carries a nearby explaining comment | 14 | IMP-2, justified |
-  | Neither | **29** | **IMP-1, the real target** |
+  The same pattern repeats three more times, which is why it is worth a
+  bucket rather than a footnote:
+  - `splitlayout.scss:46` against `splitlayout.ts:575-577`, same `flexBasis`
+    shape on `pane.element`, same class on the same element at line 581.
+  - `ribbonbuilder.scss:418` and `:430` against `symbolpicker.ts:1713`,
+    which sets `gridTemplateColumns` inline. The library here is in-house,
+    and the cascade does not care.
+  - `chartpanel.scss:42-43` against Chart.js, which writes inline `width`
+    and `height` on the canvas because `chartpanel.ts:382` sets
+    `responsive: true` with `maintainAspectRatio: false`.
 
-  The 29 are in **8** files: `markdowneditor` (11), `conversation` (4),
-  `graphcanvas` (4), `treeview` (4), `chartpanel` (2), `treegrid` (2),
-  `ribbon` (1) and `stacklayout` (1).
+  **Six of bucket B are also unremovable, for a different reason.**
+  conversation overrides `.bg-light`, `.bg-white`, `.bg-body`,
+  `.text-muted`, `.text-dark` and `.text-body`. Bootstrap emits every one
+  of its utilities with `!important` already, verified in
+  `node_modules/bootstrap/dist/css/bootstrap.css` at `:8548` and `:8827`
+  and by grep on the other four. Only `!important` beats `!important`.
 
-  **THE FIRST RUN OF THIS CLASSIFICATION WAS WRONG, AND ALLMAN BRACES ARE
-  WHY.** It reported 8 reduced-motion and 32 bare. The scanner recorded the
-  nesting depth on the line matching `prefers-reduced-motion`, but this
-  repository writes `@media (prefers-reduced-motion: reduce)` with the
-  brace on the NEXT line, so depth had not yet increased and the block
-  closed itself immediately. Three whole files of accessibility overrides
-  read as unjustified. The fix is to wait for the opening brace rather than
-  assume it is on the same line, and it is worth writing down because every
-  brace-counting scan over this codebase has the same trap in it.
+  **The other 18 of bucket B are permitted but their removability is not
+  measured.** markdowneditor's 17 all target `.vditor*` and guidedtour's 1
+  targets Driver.js. Both libraries ship their own stylesheets and never
+  see `_variables.scss`, so case 5 permits the override. Whether each one
+  could instead out-specify the library rule was not tested, and the
+  entry does not claim it.
 
-  **These are not refactored here, on purpose.** Removing an `!important`
-  changes specificity, and specificity changes are visual. The target is
-  exact: 29 declarations in 8 files.
+  **Bucket D is a judgment call, not a defect.** treeview's search and
+  rename inputs carry `form-control form-control-sm`
+  (`treeview.ts:1678`, `:3825`). Bootstrap's `.form-control-sm` does not
+  use `!important` and sits at equal specificity, so scoping under
+  `.treeview` would win on source order alone. Permitted by case 5 and
+  removable. Low value, and it is a specificity change like any other.
 
-  **AND THE PREREQUISITE THIS ENTRY NAMED DOES NOT EXIST. Measured
-  2026-10-20.** The sentence above used to end "this repository has a
-  visual-regression suite ... so the work belongs with a visual check".
-  There is no visual-regression check in this repository:
-  **`grep -c "toHaveScreenshot\|toMatchSnapshot" tests/*.spec.ts` returns
-  zero across every spec.** `tests/dynamic-ui-visual.spec.ts` is named for
-  it and does something else — it writes screenshots to
-  `test-results/review` for a HUMAN to look at, and its assertions are
-  `toBeCloseTo`, `toBeLessThan` and `toBeFocused` on layout numbers. It
-  also visits four pages, none of which is one of these eight components.
+  **BUCKET E IS THE REAL TARGET. SEVEN DECLARATIONS.**
+  - `graphcanvas.scss:64-65, 89-90` — `.gc-node:hover rect` is (0,2,1) and
+    `.gc-node-selected rect` is (0,1,1), so hover out-specifies selection
+    and `!important` papers over it. The stroke comes from `setAttribute`
+    in `svgCreate` (`graphcanvas.ts:388`), which makes it an SVG
+    presentation attribute that loses to any CSS rule. There is no inline
+    stroke anywhere in the file. Restructuring the selectors fixes this.
+  - `treegrid.scss:278, 282` — `.treegrid-resizing` plus a descendant `*`,
+    forcing `cursor: col-resize` during a drag. Deliberate, and the `*` is
+    doing the work. Arguably case 1 in spirit. Left here pending a decision.
+  - `ribbon.scss:1457` — `.ribbon-overflow-popup .ribbon-group-content` at
+    (0,2,0) against `.ribbon-group-overflow .ribbon-group-content` at
+    (0,2,0) on line 1413. Equal specificity, and the popup rule is already
+    later in the file, so it wins without the keyword. `ribbon.ts` sets
+    inline `display` on tabs and controls but never on `.ribbon-group-content`.
+    This one looks simply redundant.
 
-  So the deferral stands, on firmer ground than it was written on: **a
-  specificity change in any of these eight files is unverifiable by
-  anything in this repository.** The eight are `markdowneditor`,
-  `conversation`, `graphcanvas`, `treeview`, `chartpanel`, `treegrid`,
-  `ribbon` and `stacklayout`, and the demo-page smoke gate added in
-  ADR-205 covers all of them for ERRORS while saying nothing about
-  appearance.
+  **graphcanvas is checkable today, with no screenshots.** The old
+  deferral said a specificity change in these files is unverifiable. That
+  is true for colour and spacing. It is not true for a computed value:
+  `getComputedStyle(rect).stroke` in Playwright asserts the selected-node
+  stroke directly. The unverifiability argument never applied to bucket E's
+  four largest members, and the deferral should not have covered them.
 
-  **What would unblock it**, in order of cost: screenshot baselines for
-  the eight demo pages, which is the real fix and makes every future CSS
-  change checkable; or the user eyeballing eight pages in both themes
-  once, which is cheaper and does not survive the next change.
+  **There is still no visual-regression suite. Measured 2026-10-20 and
+  unchanged.** `grep -c "toHaveScreenshot\|toMatchSnapshot" tests/*.spec.ts`
+  returns zero across every spec. `tests/dynamic-ui-visual.spec.ts` is named
+  for it and writes screenshots to `test-results/review` for a human,
+  asserting `toBeCloseTo`, `toBeLessThan` and `toBeFocused` on layout
+  numbers. That still blocks buckets B and D. It does not block graphcanvas.
 
-  **Most of the 29 look mechanically fixable**, which is the trap. The
-  treeview pair are `.treeview-search-input` and `.treeview-rename-input`
-  overriding Bootstrap's `.form-control` at equal specificity, so scoping
-  them under `.treeview` would win without the keyword. `stacklayout`'s
-  pair override its own `.stacklayout-panel`, which
-  `.stacklayout-panel.stacklayout-panel-collapsed` would settle. Each of
-  those is one line and none of them is verifiable, which is exactly the
-  combination that ships a regression. **Do not take the easy half
-  without the check.**
+  **THE VARIABLE LAYER ALREADY WORKS, AND IT IS WHY BOOTSTRAP COMPONENTS
+  ARE ABSENT FROM THIS LIST.** `src/scss/custom.scss:15` imports
+  `_variables.scss` before `:18` imports Bootstrap, and `_variables.scss:228`
+  sets `$border-radius: 4px` along with the per-component radius variables.
+  The compiled output carries `--bs-border-radius:4px`, so Bootstrap's own
+  components already render with theme values and no component stylesheet
+  needs to re-state them. Not one of the 54 is a Bootstrap component radius
+  override. The four radius declarations in markdowneditor are all on
+  `.vditor*`, which the variable layer cannot reach by construction. **The
+  "change the variable and recompile" route works, and its boundary is the
+  third-party stylesheet.**
 
-  **This is the third deferral this month whose stated blocker did not
-  survive being read** — after DEBT-SEC-3's expired `npm audit` premise
-  and graphminimap's 2D context that the component does not use. The
-  difference here is that re-reading made the deferral STRONGER. A
-  blocker is a claim about the repository, and claims age in both
-  directions.
+  **Two dead lint directives.** `ribbonbuilder.scss:417` and `:429` carry
+  `stylelint-disable-next-line declaration-no-important`. Stylelint is not
+  in `package.json` and there is no `.stylelintrc`. The directives suppress
+  a linter that does not run. Harmless, and worth knowing before somebody
+  trusts them as evidence of review.
+
+  **This is the fourth deferral this month whose stated premise did not
+  survive being read**, after DEBT-SEC-3's expired `npm audit`, the
+  graphminimap 2D context, and this entry's own missing visual suite. The
+  difference is that the first three were caught by re-measurement and this
+  one was caught by the owner asking whether the components were overriding
+  external libraries. They were. **A count is only as good as the question
+  it was counting the answer to.**
+
+  **How to re-derive the buckets**, because an unreproducible count is how
+  this entry went wrong twice:
+  - Population: `git ls-files 'components/*/*.scss'` then `!important`,
+    which is `scssImportantComponents`. One of the 55 is the word inside a
+    comment in `guidedtour.scss:36-37`, leaving 54.
+  - Bucket A: a brace-depth scan that waits for the opening brace, because
+    this repository writes `@media (prefers-reduced-motion: reduce)` with
+    the brace on the NEXT line. A scanner that reads depth on the matching
+    line closes the block immediately and reports 8 instead of 11. Every
+    brace-counting scan over this codebase has that trap in it.
+  - Buckets B and D: read the SELECTOR. A class that ships in a
+    third-party stylesheet is B. A Bootstrap utility is B and unremovable.
+    A Bootstrap component class is D.
+  - Bucket C: grep the component's own TypeScript for `.style.` and
+    `setProperty` and check whether the element carrying the class is the
+    element carrying the inline declaration. This is the step that cannot
+    be done from the stylesheet alone, and skipping it is what produced
+    the wrong stacklayout advice.
+  - Bucket E: what is left.
 
   Original March list, retained because it is the only record of what was
-  looked at then and it is wrong in both directions:
+  looked at then, and because it is wrong in both directions:
 
   Violations (no third-party justification) — should be refactored:
   - `components/conversation/conversation.scss` (5 occurrences)
@@ -1238,40 +1300,49 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   that does not implement it — which is a different conversation from
   deleting an unused field.
 
-- [=] **SETTLED — IMP-2** Justified (third-party overrides) — acceptable, document reason in comments.
-  **Re-measured 2026-10-15: markdowneditor has 17, not 18, and 11 of those
-  17 carry no comment**, so they are in IMP-1's 29 rather than here.
-  `guidedtour` has 1 real declaration and it is already documented, which
-  is what the other 11 need. The entry's own instruction, "document reason
-  in comments", was followed in exactly one of the two files it names.
-  - `components/markdowneditor/markdowneditor.scss` (17 occurrences — Vditor overrides, 6 documented)
-  - `components/guidedtour/guidedtour.scss` (1 occurrence — driver.js override, documented)
+- [=] **SETTLED — IMP-2** Third-party overrides. **Re-settled 2026-10-20 on a
+  working test.** The old version sorted by whether a comment sat nearby, and
+  moved 11 of markdowneditor's 17 into IMP-1 on that basis. All 17 target
+  `.vditor*` and are the same kind of override. The comment was never the
+  thing that made them acceptable.
+  - `components/markdowneditor/markdowneditor.scss` (17 — Vditor, case 5)
+  - `components/guidedtour/guidedtour.scss` (1 — Driver.js, case 5, documented)
+  - `components/conversation/conversation.scss` (6 — Bootstrap utilities, case 3)
 
-  > **SETTLED as a category.** A third-party override carrying a comment
-  > that says why is acceptable and needs no further work.
+  > **SETTLED as a category.** An override of a stylesheet the variable layer
+  > cannot reach is permitted by CODING_STYLE.md case 5. An override of a
+  > Bootstrap utility is permitted by case 3 and cannot be removed at all,
+  > because Bootstrap emits those utilities with `!important` already.
   >
   > **Future sessions: do not strip these, and do not count them against
-  > IMP-1.** An override WITHOUT a comment is not in this category — it
-  > belongs in IMP-1 until somebody writes the reason down. The
-  > 2026-10-15 re-measurement moved 11 of markdowneditor's 17 across on
-  > exactly that test.
+  > IMP-1.** The test is the TARGET of the selector, not the presence of a
+  > comment. If the selector names a class that ships in a third-party
+  > stylesheet, or a Bootstrap utility, it belongs here. Add the missing
+  > comments when you are next in these files, because CODING_STYLE.md now
+  > requires one naming the case, but a missing comment is a documentation
+  > gap and not a reclassification.
   >
-  > **Reopen when** the third-party library being overridden is dropped,
-  > which removes the justification with it.
+  > **Reopen when** the library being overridden is dropped, which removes
+  > the justification with it.
 
-- [x] **IMP-3** Justified (accessibility) — acceptable. **Verified
-  2026-10-15 and closed:** 11 declarations sit inside a
-  `prefers-reduced-motion` block and need no further documentation, because
-  the media query IS the justification. ADR-183.
+- [x] **IMP-3** Accessibility. **Verified 2026-10-15, re-counted 2026-10-20,
+  closed:** 11 declarations sit inside a `prefers-reduced-motion` block and
+  need no further documentation, because the media query IS the justification.
+  Now CODING_STYLE.md case 2. ADR-183.
+
+  The 11 re-counted clean on 2026-10-20 with a brace-depth scanner that waits
+  for the opening brace: cardlayout 2, contextmenu 1, diagramengine 1,
+  dynamicformswitcher 2, gauge 2, skeletonloader 1, toast 2.
 
   **`components/graphcanvasmx/graphcanvasmx.scss` DOES NOT EXIST.** Not a
-  file with zero occurrences — no such file in the tree. That is another
-  March figure naming something that is not there, and it is the one kind
-  of error a count can never surface, because a count of occurrences in a
-  file that is absent is zero and zero reads as clean.
+  file with zero occurrences — no such file in the tree. That is a March
+  figure naming something that is not there, and it is the one kind of error
+  a count can never surface, because a count of occurrences in an absent file
+  is zero and zero reads as clean.
 
-  **The list was also short by three.** `contextmenu`, `dynamicformswitcher`
-  and `toast` all carry reduced-motion overrides and none was listed:
+  **The March list was also short by three.** `contextmenu`,
+  `dynamicformswitcher` and `toast` all carry reduced-motion overrides and
+  none was listed:
   - `components/cardlayout/cardlayout.scss` ✓
   - `components/contextmenu/contextmenu.scss` ✓ (not listed in March)
   - `components/diagramengine/diagramengine.scss` ✓
@@ -1900,7 +1971,7 @@ the step exits 1 and the workflow fails.
 | MRK-2 | 22 of 24 | 2 of 29 | far smaller |
 | MRK-3 | 10 | 4 | far smaller |
 | LOG-1 | 406 | 2 real call sites | far smaller |
-| IMP-1 | 47 | 113 | far larger |
+| IMP-1 | 47 | 113 all-scss, 54 component, **7 real** | larger, then far smaller once classified |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
 | UNUSED-1 | 119 | 306 | far larger |
