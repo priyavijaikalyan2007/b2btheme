@@ -484,8 +484,22 @@ describe("StackLayout setSizes", () =>
 {
     test("SetSizes_ValidPercentages_DoesNotThrow", () =>
     {
+        // DEBT-TEST-1b. The name leads with SetSizes and the body
+        // never looked at a size. The percentages reach the panels as
+        // `flex-grow` — NOT flex-basis, which stays at 0px so the
+        // grow factors do all the dividing — and a style property is
+        // readable in jsdom without layout (ADR-215).
         const layout = createStackLayout(makeOptions());
-        expect(() => layout.setSizes([60, 40])).not.toThrow();
+
+        layout.setSizes([60, 40]);
+
+        const panels = layout.getElement()
+            .querySelectorAll<HTMLElement>(".stacklayout-panel");
+
+        expect(panels.length).toBeGreaterThanOrEqual(2);
+        expect(panels[0].style.flexGrow).toBe("60");
+        expect(panels[1].style.flexGrow).toBe("40");
+
         layout.destroy();
     });
 

@@ -426,8 +426,17 @@ describe("Cell Access", () =>
 
     test("setCellValue on missing row/col does not throw", () =>
     {
+        // DEBT-TEST-1b. The risk is not a throw, it is a write that
+        // lands somewhere — a bad address must change NO cell, and
+        // `getCellValue` is on the handle to prove it (ADR-215).
         const editor = createSampleEditor();
-        expect(() => editor.setCellValue("badrow", "badcol", "x")).not.toThrow();
+        const before = editor.getData();
+
+        editor.setCellValue("badrow", "badcol", "x");
+
+        expect(editor.getData()).toEqual(before);
+        expect(editor.getCellValue("badrow", "badcol")).toBe("");
+
         editor.destroy();
     });
 

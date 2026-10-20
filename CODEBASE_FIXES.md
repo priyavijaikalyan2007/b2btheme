@@ -3044,20 +3044,20 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **223 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **204 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
   Regenerate with `node scripts/test-assertions.mjs --shapes`.
 
-  | Shape | 2026-10-18 | 2026-10-19 | Now | Expected yield |
+  | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | 110 | near zero |
+  | `.not.toThrow()` on idempotency | 110 | 110 | 110 | predicted near zero, **unverified** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
-  | `.not.toThrow()`, name claims only survival | — | — | 21 | one invariant each |
-  | `.not.toThrow()` as an accept/refuse control | — | — | 1 | none, it is correct |
+  | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
+  | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
-  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | 85 | near zero |
+  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | 85 | **~25 actionable, not near zero** |
 
   **THE BUCKET LABELLED "NAME STATES A CHANGE" WAS THE FALL-THROUGH,
   AND 21 OF ITS 35 MEMBERS HAD NAMES STATING NO CHANGE (2026-10-20,
@@ -3130,6 +3130,100 @@ offered as the evidence for it.
   - **DEBT-STI-2**, below: a `SmartTextInput` trigger registered
     without a complete `activation` throws inside the input listener,
     where nothing sees it.
+
+  **THE `robustnessOnly` BUCKET IS EMPTIED TOO, 21 TO 2, AND IT WAS
+  NOT "one invariant each" SO MUCH AS "one invariant, and it was
+  usually the interesting one".** Each took the question *what would
+  this method have to do to make the assertion false?* — and when the
+  only answer was "crash", the name's real claim went unchecked.
+
+  | Rewritten | Was | Now reads back |
+  |---|---|---|
+  | `ribbon :: setActiveTab_InvalidId` | no throw | the previously active tab is STILL active |
+  | `ribbonbuilder :: importInvalidJSON` | no throw | the prior config survives, and the `errorSpy` already in the body is finally asserted |
+  | `toast :: rapidFire100Toasts` | no throw | 5 visible at the cap, in order, and dismissing one promotes the sixth |
+  | `logconsole :: rapidFireLogs` | no throw | all 100 rows, first and last by name |
+  | `stacklayout :: SetSizes_ValidPercentages` | no throw | `flex-grow` 60 and 40 |
+  | `visualtableeditor :: setCellValue on missing row/col` | no throw | no cell changed |
+  | `breadcrumb :: OnItemClick_NotProvided` | no throw | the trail's markup is byte-identical after the click |
+  | `gradientpicker :: open/close in popup mode` | no throw | `aria-expanded` goes true then false |
+  | `graphcanvas :: Destroy_DoesNotThrow` | no throw | the host container empties |
+  | `helpdrawer :: backWithNoHistory` | no throw | still open, still on topic one |
+  | `propertyinspector :: closeWithoutOpen` | no throw | `isOpen()` false before and after |
+  | `errordialog :: hide_WhenNoModal` | no throw | no `.modal.show` in the document |
+  | `spinemap :: loadData_WithNullConnections` | no throw | the hub still renders |
+  | `treegrid :: deeplyNestedNodes` | no throw | levels 0 and 10 and the leaf are all in the DOM |
+  | `diagramengine :: undo`/`redo` with empty stacks | no throw | `canUndo`/`canRedo` false, document untouched |
+  | `diagramengine :: zoomToFit with no objects` | no throw | the zoom level is unchanged |
+  | `toolcolorpicker :: Destroy_SetValueAfter_NoOp` | no throw | nothing is resurrected |
+  | `wiring :: target not mounted` | no throw | no op requested, no surface written |
+
+  **Two stay, and the reason was measured.** `diagramengine :: resize
+  does not throw` and `zoomToFit does not throw with objects` both
+  read `getBoundingClientRect`, which jsdom answers with zeros. A
+  probe confirmed it: zoom is 1 before and after `zoomToFit`, the SVG
+  carries no `viewBox` at all, and the svg is sized in percentages so
+  `resize()` changes nothing readable. **The zoomToFit claim moved to
+  `tests/diagramengine.spec.ts`**, where objects spanning 4000x3000
+  at 2x zoom have to zoom OUT to be framed — mutation-proven by
+  deleting the `zoomToFit()` call, which leaves it at 2. The unit
+  blocks now say what was measured instead of implying nobody looked.
+
+  **`toolcolorpicker :: Destroy_SetValueAfter_NoOp` RAISES A QUESTION
+  THIS ENTRY DOES NOT SETTLE.** `setValue` after `destroy` returns
+  quietly. Under ADR-200's discriminator a request the caller NAMED is
+  owed either the effect or an error, which argues it should refuse —
+  and that is a fleet-wide convention question about every handle,
+  not a decision to take inside one test. The test now asserts the
+  behaviour that exists, which is that nothing is resurrected.
+
+  **AND THE `existence` BUCKET IS NOT "near zero yield". NOBODY HAD
+  ASKED IT THE QUESTION.** `shapeOf` splits on the MATCHER first —
+  `if (!/\.not\.toThrow/) return "existence"` — so the title is read
+  only inside the `.not.toThrow()` family. A block whose name promises
+  an effect and whose body says `expect(handle).toBeDefined()` lands
+  in `existence` and is never asked whether its title is true. **That
+  is the same defect this entry just fixed, one bucket over.**
+
+  A crude title predicate flags 47 of the 85, and it overcounts —
+  `toolbar_ContainsBoldButton` and `input_HasAriaLabel` are existence
+  claims it calls effects. Reading the list, **about 25 are plainly
+  actionable**, and they are not subtle:
+
+  - `datagrid :: sort_ByColumn_SortsAscending` — **nothing checks the order**
+  - `datagrid :: clearSort_RemovesSortState`
+  - `commandpalette :: registerCommand_AddsCommandToSingleton`, `registerCommand_AddsCommand`, `clearRecent_EmptiesRecentList`
+  - `gauge :: setThresholds_UpdatesColors`
+  - `helptooltip :: setText_UpdatesTooltipText`, `setTopic_UpdatesTopic`, `withText_SetsTooltipText`, `withTopic_SetsTopic`
+  - `markdowneditor :: SetValue_UpdatesContent`
+  - `markdownrenderer :: withClassName_PassesOption`, `highlightDisabled_SkipsHljs`, `withoutKatex_SilentlySkips`, `customServer_PassedToHandle`
+  - `commentoverlay :: withMentionUsers_StoresMentionList`, `withContainerInOptions_UsesProvidedContainer`
+  - `docviewer :: searchToc_FiltersEntries`
+  - `symbolpicker :: Search_TypeQuery_FiltersGridItems`
+  - `spinemap :: onNodeClick_CalledOnNodeClick`
+  - `notificationcenter :: withCategories_SetsCategories`
+  - `cronpicker :: Options_CustomPresets_UsesProvidedPresets`
+  - `fileexplorer :: Constructor_MultiSelectTrue_MapToSelectableMulti`
+  - `facetsearch :: getQuery_ReturnsStructuredQuery`
+  - `latexeditor :: sizeButton_ShowsDropdown_OnClick`, `createLatexEditor_WithStringSelector_ResolvesContainer`
+
+  **THIS IS WHY THE ENTRY STAYS OPEN RATHER THAN SETTLING.** Every
+  bucket with a demonstrated yield is now empty, and settling here
+  would have rested on `existence`'s "near zero" — a prediction
+  carried in this table since 18 October that **the first sample
+  contradicted**. The next pass is the title question applied to
+  `existence`, and the instrument should ask it there rather than
+  leaving it to a reader.
+
+  **A THIRD SHAPE SURFACED AND IS DELIBERATELY NOT QUANTIFIED HERE.**
+  `latexeditor :: symbolCells_HaveAriaLabel` reads
+  `if (cells.length > 0) { expect(...) }`, and `symbolpicker ::
+  getValue_AfterCellClick_ReturnsCode` reads `if (firstCell)
+  { firstCell.click(); }`. **An assertion inside a condition that
+  never holds is a block with no assertion**, and `testsWithoutAssertion`
+  reads 0 because it counts `expect(` textually. Two are confirmed by
+  reading; no instrument measures the shape, so no number is recorded
+  rather than a guessed one.
 
   **`JSON.stringify` not throwing is not serialisability.** It returns
   `undefined` for a function and silently drops one inside an object.

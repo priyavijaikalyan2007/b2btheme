@@ -294,11 +294,15 @@ describe("replace policy", () =>
 
         surfaces.delete("b");
 
-        expect(() =>
-        {
-            surfaces.get("a")!.fire("selection", 1);
-            engine.flush();
-        }).not.toThrow();
+        // DEBT-TEST-1b. Surviving an absent target is half the claim.
+        // The other half is that the delivery is DROPPED rather than
+        // queued or misrouted: no op is requested, and the surface
+        // that IS mounted is not written to in b's place (ADR-215).
+        surfaces.get("a")!.fire("selection", 1);
+        engine.flush();
+
+        expect(requested).toHaveLength(0);
+        expect(surfaces.get("a")!.writes).toHaveLength(0);
     });
 
     test("does not confuse node and channel names that could share a key", () =>

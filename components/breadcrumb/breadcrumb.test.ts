@@ -200,11 +200,23 @@ describe("Breadcrumb click navigation", () =>
 
     test("OnItemClick_NotProvided_NoErrorOnClick", () =>
     {
+        // DEBT-TEST-1b. With no handler supplied, the click has to
+        // leave the trail exactly as it was — a breadcrumb that
+        // quietly re-rendered or moved its active item would also not
+        // throw (ADR-215).
         const handle = createBreadcrumb(makeOptions());
-        const firstLink = handle.getElement().querySelector(
+        const root = handle.getElement();
+        const firstLink = root.querySelector(
             ".breadcrumb-nav-link"
         ) as HTMLElement;
-        expect(() => firstLink?.click()).not.toThrow();
+        const before = root.innerHTML;
+
+        expect(firstLink).not.toBeNull();
+
+        firstLink.click();
+
+        expect(root.innerHTML).toBe(before);
+
         handle.destroy();
     });
 });

@@ -343,8 +343,19 @@ describe("edge cases", () =>
 
     test("setActiveTab_InvalidId_DoesNotCrash", () =>
     {
+        // DEBT-TEST-1b. The dangerous outcome is not a throw, it is a
+        // ribbon that quietly deselects every tab because the id it
+        // was handed matched none. The tab that WAS active has to
+        // still be active (ADR-215).
         const ribbon = createRibbon(makeOptions(), "test-ribbon");
-        expect(() => ribbon.setActiveTab("nonexistent")).not.toThrow();
+        const before = ribbon.getActiveTab();
+
+        expect(before).toBeTruthy();
+
+        ribbon.setActiveTab("nonexistent");
+
+        expect(ribbon.getActiveTab()).toBe(before);
+
         ribbon.destroy();
     });
 });

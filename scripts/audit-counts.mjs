@@ -642,7 +642,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 223,
+    testsThatCannotFail: 204,
     siblingStandIns: 6,
 };
 

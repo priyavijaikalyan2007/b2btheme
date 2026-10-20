@@ -840,12 +840,23 @@ describe("Keyboard", () =>
 
     test("calling open/close in popup mode does not throw", () =>
     {
+        // DEBT-TEST-1b. open() and close() are the whole subject and
+        // the body never asked whether either happened. The state
+        // reaches the DOM as `aria-expanded` on the trigger, which is
+        // also what a screen reader is told (ADR-215).
         const picker = createGradientPicker(CONTAINER_ID, { mode: "popup" });
-        expect(() =>
-        {
-            picker.open();
-            picker.close();
-        }).not.toThrow();
+        const expanded = (): string | null => document
+            .querySelector("[aria-expanded]")?.getAttribute("aria-expanded")
+            ?? null;
+
+        expect(expanded()).toBe("false");
+
+        picker.open();
+        expect(expanded()).toBe("true");
+
+        picker.close();
+        expect(expanded()).toBe("false");
+
         picker.destroy();
     });
 });

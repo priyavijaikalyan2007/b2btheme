@@ -421,12 +421,28 @@ describe("performance", () =>
 {
     test("rapidFire100Toasts_NoExceptions", () =>
     {
-        expect(() =>
+        // DEBT-TEST-1b. The interesting claim is what 100 at once
+        // DOES, not that it survives. MEASURED: five are visible, the
+        // default `maxVisible`, and the other 95 are QUEUED rather
+        // than dropped — the first draft of this test expected
+        // "Toast 99" on screen and found the first five instead.
+        //
+        // So the claim is the cap, the order, and that the queue is
+        // real: dismissing one promotes the sixth. A stack that
+        // silently dropped 95 would satisfy the first two and fail
+        // the third (ADR-215).
+        for (let i = 0; i < 100; i++)
         {
-            for (let i = 0; i < 100; i++)
-            {
-                showToast({ message: `Toast ${i}` });
-            }
-        }).not.toThrow();
+            showToast({ message: `Toast ${i}` });
+        }
+
+        expect(getToasts().map(getToastBody)).toEqual([
+            "Toast 0", "Toast 1", "Toast 2", "Toast 3", "Toast 4",
+        ]);
+
+        getCloseBtn(getToasts()[0])!.click();
+        vi.advanceTimersByTime(1000);
+
+        expect(getToasts().map(getToastBody)).toContain("Toast 5");
     });
 });

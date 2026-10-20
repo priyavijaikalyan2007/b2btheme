@@ -860,6 +860,43 @@ test.describe("§10 Viewport", () =>
         expect(zoom).toBeCloseTo(2.0, 1);
     });
 
+    test("zoomToFit frames the objects that are there", async ({ page }) =>
+    {
+        // DEBT-TEST-1b, ADR-215. The unit suite asserts only that
+        // zoomToFit does not throw, and it cannot do better: jsdom has
+        // no layout, so `getBoundingClientRect` is all zeros and the
+        // zoom stays at 1 whatever the objects are. MEASURED, not
+        // assumed — a probe showed zoom 1 before and after, and no
+        // viewBox at all. The claim belongs here, where there is a
+        // real viewport.
+        await callEngine(page, `
+            engine.setZoomLevel(2.0);
+            engine.addObject({ id: "ztf-a",
+                presentation: { bounds: { x: 0, y: 0, width: 50, height: 50 } } });
+            engine.addObject({ id: "ztf-b",
+                presentation: { bounds: { x: 4000, y: 3000, width: 50, height: 50 } } });
+            engine.zoomToFit();
+        `);
+
+        const zoom = await callEngine(page, "return engine.getZoomLevel();");
+
+        // Objects spanning 4000x3000 cannot be framed at 2x in a
+        // viewport this size, so fitting them has to zoom OUT.
+        expect(zoom).toBeLessThan(1);
+    });
+
+    test("zoomToFit with nothing to fit leaves the viewport alone", async ({ page }) =>
+    {
+        await callEngine(page, `
+            engine.setZoomLevel(1.5);
+            engine.zoomToFit();
+        `);
+
+        const zoom = await callEngine(page, "return engine.getZoomLevel();");
+
+        expect(zoom).toBeCloseTo(1.5, 1);
+    });
+
     test("getViewport returns state", async ({ page }) =>
     {
         const vp = await callEngine(page, "return engine.getViewport();");

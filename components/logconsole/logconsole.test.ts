@@ -380,17 +380,36 @@ describe("options", () =>
 
 describe("edge cases", () =>
 {
-    test("rapidFireLogs_NoExceptions", () =>
+    test("rapidFireLogs_NoExceptions", async () =>
     {
+        // DEBT-TEST-1b. The claim worth making is that all 100
+        // arrived, in order, under the 500-entry default cap — a
+        // console that silently dropped 90 of them would also not
+        // throw (ADR-215).
+        //
+        // Entries are flushed to the DOM on a requestAnimationFrame,
+        // batched, so the assertion has to wait a frame. That is the
+        // precondition the old test never needed because it never
+        // looked at the DOM.
         const lc = new LogConsole();
         container.appendChild(lc.getElement());
-        expect(() =>
+
+        for (let i = 0; i < 100; i++)
         {
-            for (let i = 0; i < 100; i++)
-            {
-                lc.info(`Message ${i}`);
-            }
-        }).not.toThrow();
+            lc.info(`Message ${i}`);
+        }
+
+        await new Promise<void>((resolve) =>
+        {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
+
+        const rows = lc.getElement().querySelectorAll(".logconsole-entry");
+
+        expect(rows).toHaveLength(100);
+        expect(rows[0].textContent).toContain("Message 0");
+        expect(rows[99].textContent).toContain("Message 99");
+
         lc.destroy();
     });
 

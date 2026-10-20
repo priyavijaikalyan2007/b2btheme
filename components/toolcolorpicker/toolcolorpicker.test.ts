@@ -571,9 +571,24 @@ describe("destroy", () =>
 
     test("Destroy_SetValueAfter_NoOp", () =>
     {
+        // DEBT-TEST-1b. "NoOp" is the claim, and the risk a no-op
+        // guards against is RESURRECTION: a setter that rebuilt the
+        // element or re-registered a listener after teardown. So the
+        // assertion is that nothing came back (ADR-215).
+        //
+        // Whether a named setter should refuse rather than return
+        // quietly after destroy is the ADR-200 question, and it is
+        // open across the fleet rather than settled here. Recorded
+        // in DEBT-TEST-1b beside this entry.
         const picker = createToolColorPicker(defaultOpts());
         picker.destroy();
-        expect(() => picker.setValue("#000000")).not.toThrow();
+
+        expect(picker.getElement()).toBeNull();
+
+        picker.setValue("#000000");
+
+        expect(picker.getElement()).toBeNull();
+        expect(document.querySelector(".toolcolorpicker")).toBeNull();
     });
 });
 

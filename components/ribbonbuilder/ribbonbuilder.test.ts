@@ -314,9 +314,21 @@ describe("edge cases", () =>
 
     test("importInvalidJSON_DoesNotCrash", () =>
     {
+        // DEBT-TEST-1b. Two things were missing and one of them was
+        // already sitting in the body: `errorSpy` was created and
+        // never asserted. The other is the invariant — a refused
+        // import must leave the PREVIOUS config intact rather than
+        // half-applying or emptying it (ADR-215).
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-        const builder = createRibbonBuilder(makeOptions(), "test-ribbonbuilder");
-        expect(() => builder.importJSON("{invalid json}")).not.toThrow();
+        const builder = createRibbonBuilder(
+            makeOptions({ config: makeConfig() }), "test-ribbonbuilder");
+        const before = builder.getConfig();
+
+        builder.importJSON("{invalid json}");
+
+        expect(errorSpy).toHaveBeenCalled();
+        expect(builder.getConfig()).toEqual(before);
+
         errorSpy.mockRestore();
         builder.destroy();
     });

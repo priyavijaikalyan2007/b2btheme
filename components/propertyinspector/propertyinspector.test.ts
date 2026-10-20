@@ -321,8 +321,16 @@ describe("edge cases", () =>
 
     test("closeWithoutOpen_DoesNotCrash", () =>
     {
+        // DEBT-TEST-1b. Closing what was never open must leave it
+        // closed, and `isOpen()` is on the handle (ADR-215).
         const handle = createPropertyInspector(makeOptions());
-        expect(() => handle.close()).not.toThrow();
+
+        expect(handle.isOpen()).toBe(false);
+
+        handle.close();
+
+        expect(handle.isOpen()).toBe(false);
+
         handle.destroy();
     });
 });

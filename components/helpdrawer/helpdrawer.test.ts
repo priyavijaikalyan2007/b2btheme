@@ -309,9 +309,21 @@ describe("HelpDrawer edge cases", () =>
 
     test("backWithNoHistory_DoesNotThrow", () =>
     {
+        // DEBT-TEST-1b. With one topic open there is nowhere to go
+        // back TO, so the drawer must stay on that topic rather than
+        // quietly emptying itself. `canGoBack()` says the same thing
+        // before the call, and that is the half the name claims
+        // (ADR-215).
         const handle = createHelpDrawer();
         handle.open(topic1);
-        expect(() => handle.back()).not.toThrow();
+
+        expect(handle.canGoBack()).toBe(false);
+
+        handle.back();
+
+        expect(handle.isOpen()).toBe(true);
+        expect(handle.getElement().textContent).toContain(topic1.title);
+
         handle.destroy();
     });
 

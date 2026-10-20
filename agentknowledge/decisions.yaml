@@ -9569,9 +9569,45 @@
         object. All ten conformance samples must now survive
         JSON.parse(JSON.stringify(x)) unchanged.
   consequences: |
-    namesAChange 35 -> 0. testsThatCannotFail 236 -> 223. The remaining
-    buckets are 110 idempotent, 85 existence, 21 robustnessOnly, 6
-    absentDependency and 1 positiveControl.
+    namesAChange 35 -> 0 and robustnessOnly 21 -> 2.
+    testsThatCannotFail 236 -> 204. The remaining buckets are 110
+    idempotent, 85 existence, 2 robustnessOnly, 6 absentDependency and
+    1 positiveControl.
+
+    D8. THE TWO robustnessOnly SURVIVORS ARE A MEASURED JSDOM FLOOR.
+        diagramengine's resize and zoomToFit both read
+        getBoundingClientRect, which jsdom answers with zeros — a
+        probe showed zoom 1 before and after, no viewBox at all, and
+        an svg sized in percentages. The zoomToFit claim moved to
+        tests/diagramengine.spec.ts, mutation-proven by deleting the
+        call.
+
+    D9. THE existence BUCKET IS NOT "near zero yield", AND THE SAME
+        DEFECT LIVES THERE. shapeOf splits on the MATCHER first, so
+        the title is read only inside the .not.toThrow() family: a
+        block named for an effect whose body says
+        expect(h).toBeDefined() lands in existence and is never asked
+        whether its title is true. A crude predicate flags 47 of 85
+        and overcounts; reading the list, about 25 are plainly
+        actionable, including datagrid's sort_ByColumn_SortsAscending,
+        where nothing checks the order. The entry stays OPEN rather
+        than settling, because settling would have rested on a
+        prediction the first sample contradicted.
+
+    D10. AN ASSERTION INSIDE A CONDITION IS A THIRD SHAPE, AND NO
+        NUMBER IS RECORDED FOR IT. latexeditor's symbolCells_HaveAriaLabel
+        reads `if (cells.length > 0) { expect(...) }`. When the
+        condition does not hold the block asserts nothing, and
+        testsWithoutAssertion reads 0 because it counts `expect(`
+        textually. Two confirmed by reading; quantifying it needs an
+        instrument, so the entry records the two rather than a guess.
+
+    D11. toolcolorpicker's setValue AFTER destroy RETURNS QUIETLY, AND
+        THAT IS A FLEET-WIDE CONVENTION QUESTION rather than one to
+        settle inside a test. ADR-200's discriminator argues a named
+        request should refuse. The test asserts the behaviour that
+        exists — nothing is resurrected — and the question is written
+        down.
 
     Twelve tests rewritten, each mutation-proven against the change it
     now claims. Three new cases pin the pairing rule and one pins the

@@ -311,10 +311,16 @@ describe("edge cases", () =>
                 children: [deepNode],
             });
         }
-        expect(() =>
-        {
-            const grid = createTreeGrid(makeOptions({ nodes: [deepNode] }));
-            grid.destroy();
-        }).not.toThrow();
+        // DEBT-TEST-1b. The claim is that eleven levels RENDER, and
+        // the body constructed them and threw them away. A grid that
+        // stopped at level three would also not throw (ADR-215).
+        const grid = createTreeGrid(makeOptions({ nodes: [deepNode] }));
+        const text = grid.getElement().textContent ?? "";
+
+        expect(text).toContain("Level 0");
+        expect(text).toContain("Level 10");
+        expect(text).toContain("Leaf");
+
+        grid.destroy();
     });
 });

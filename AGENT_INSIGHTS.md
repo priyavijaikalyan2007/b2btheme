@@ -2693,3 +2693,62 @@ property and the absence of a crash.
 ask what the function would have to do to make the assertion false.
 If the answer is only "crash", the property in the name is not the one
 under test.
+
+### 6.139 The Bucket Nobody Asked the Question Of (2026-10-20)
+
+After emptying the two `.not.toThrow()` buckets that had a title rule,
+the obvious move was to settle DEBT-TEST-1b: its table said the
+remaining 195 blocks — `idempotent` 110 and `existence` 85 — had "near
+zero" expected yield.
+
+That figure was a prediction written on 18 October and never checked.
+Sampling ten from `existence` contradicted it immediately:
+
+- `datagrid :: sort_ByColumn_SortsAscending` — **nothing checks the order**
+- `gauge :: setThresholds_UpdatesColors` — asserts the handle is defined
+- `commentoverlay :: withMentionUsers_StoresMentionList` — same
+- `helptooltip :: setText_UpdatesTooltipText` — same
+
+The cause is structural. `shapeOf` reads the matcher first:
+
+```js
+if (!/\.not\s*\.\s*toThrow/.test(row.body)) { return "existence"; }
+```
+
+So the *title* question is only ever asked inside the `.not.toThrow()`
+family. A block whose name promises an effect and whose body says
+`expect(handle).toBeDefined()` lands in `existence` and is never asked
+whether its title is true. **It is the same defect the day's work had
+just fixed, one bucket over, hidden by the order of two lines.**
+
+**Principle**: when a classifier branches on A and then asks question Q
+within one branch, Q has not been asked of the others. A bucket's
+"expected yield" is a hypothesis until somebody opens ten of its
+members — and an entry that settles on an unverified prediction
+launders it into a decision.
+
+### 6.140 Ask What Would Make It False (2026-10-20)
+
+Nineteen tests whose only assertion was `.not.toThrow()` were rewritten
+by asking one question of each: *what would this method have to do to
+make the assertion false?* When the only answer was "crash", the claim
+in the name was untested, and the answer usually pointed straight at
+the assertion that was missing.
+
+- `ribbon :: setActiveTab_InvalidId_DoesNotCrash` — the dangerous
+  outcome is not a throw, it is a ribbon that quietly deselects every
+  tab. The missing line is that the previously active tab is **still**
+  active.
+- `toast :: rapidFire100Toasts_NoExceptions` — five are visible at the
+  default cap. The first rewrite expected "Toast 99" on screen and
+  found the first five, which is how the queue was discovered. The
+  claim that matters is that dismissing one **promotes the sixth**: a
+  stack that dropped 95 would pass the count and the order and fail
+  that.
+- `ribbonbuilder :: importInvalidJSON_DoesNotCrash` — the body already
+  created an `errorSpy` and never asserted it.
+
+**Principle**: a weak assertion is usually a question nobody asked, not
+a shortcut somebody took. The rewrite is rarely a stronger matcher on
+the same subject — it is a different subject, and the component tells
+you which one.

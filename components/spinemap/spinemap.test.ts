@@ -1007,21 +1007,27 @@ describe("edge cases", () =>
 
     test("loadData_WithNullConnections_HandledGracefully", () =>
     {
+        // DEBT-TEST-1b. "Handled gracefully" has to mean the hub
+        // still RENDERED with the connections omitted — a loadData
+        // that bailed on the missing key would also not throw
+        // (ADR-215).
         const map = createSpineMap({ container });
-        expect(() =>
-        {
-            map.loadData({
-                hubs: [
-                    {
-                        id: "h",
-                        label: "Hub",
-                        status: "available",
-                        branches: []
-                    }
-                ]
-                // connections omitted
-            });
-        }).not.toThrow();
+
+        map.loadData({
+            hubs: [
+                {
+                    id: "h",
+                    label: "Hub",
+                    status: "available",
+                    branches: []
+                }
+            ]
+            // connections omitted
+        });
+
+        expect(container.querySelectorAll(".spinemap-hub")).toHaveLength(1);
+        expect(container.textContent).toContain("Hub");
+
         map.destroy();
     });
 

@@ -286,8 +286,20 @@ describe("GraphCanvas destroy", () =>
 {
     test("Destroy_DoesNotThrow", () =>
     {
+        // DEBT-TEST-1b. The sibling below covers idempotency; what
+        // this one owes is that destroy REMOVED something. A canvas
+        // that returned without touching the DOM would also not
+        // throw (ADR-215).
+        // There is no getElement() on this handle, so the host
+        // container is the subject: mounting fills it and destroy has
+        // to empty it.
         const canvas = createGraphCanvas(makeOptions());
-        expect(() => canvas.destroy()).not.toThrow();
+
+        expect(container.children.length).toBeGreaterThan(0);
+
+        canvas.destroy();
+
+        expect(container.children.length).toBe(0);
     });
 
     test("Destroy_CalledTwice_IsIdempotent", () =>

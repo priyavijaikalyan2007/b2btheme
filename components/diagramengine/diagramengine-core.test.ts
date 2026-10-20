@@ -86,6 +86,12 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
     {
         setup();
 
+        // DEBT-TEST-1b, and this one STAYS a survival claim (ADR-215).
+        // resize re-reads the container's rect, which jsdom reports as
+        // zeros, and the svg is sized in percentages rather than
+        // pixels — so a probe found nothing that resize() changes
+        // here. Re-flowing on a real resize is a viewport claim and
+        // belongs in a Playwright spec.
         expect(() => { engine.resize(); }).not.toThrow();
     });
 
@@ -533,11 +539,24 @@ describe("DiagramEngine — Viewport & Zoom", () =>
 
     test("zoomToFit does not throw with no objects", () =>
     {
-        expect(() => { engine.zoomToFit(); }).not.toThrow();
+        // DEBT-TEST-1b. Nothing to fit means the viewport must be
+        // LEFT ALONE, not reset to some arbitrary frame (ADR-215).
+        const before = engine.getZoomLevel();
+
+        engine.zoomToFit();
+
+        expect(engine.getZoomLevel()).toBe(before);
     });
 
     test("zoomToFit does not throw with objects", () =>
     {
+        // DEBT-TEST-1b, and this one STAYS a survival claim (ADR-215).
+        // zoomToFit reads getBoundingClientRect, which jsdom answers
+        // with zeros, so there is nothing here for it to fit to.
+        // MEASURED with a probe: zoom is 1 before and after, and the
+        // svg carries no viewBox at all. The real claim — that the
+        // objects end up framed — is asserted in
+        // tests/diagramengine.spec.ts, where there is a viewport.
         engine.addObject({ id: "ztf-1" });
         engine.addObject({
             id: "ztf-2",
@@ -700,12 +719,28 @@ describe("DiagramEngine — Undo/Redo", () =>
 
     test("undo without any commands does not throw", () =>
     {
-        expect(() => { engine.undo(); }).not.toThrow();
+        // DEBT-TEST-1b. Surviving is the weaker half of the claim:
+        // an empty stack must also STAY empty and leave the document
+        // alone (ADR-215).
+        expect(engine.canUndo()).toBe(false);
+
+        engine.undo();
+
+        expect(engine.canUndo()).toBe(false);
+        expect(engine.canRedo()).toBe(false);
+        expect(engine.getObjects()).toHaveLength(0);
     });
 
     test("redo without any undone commands does not throw", () =>
     {
-        expect(() => { engine.redo(); }).not.toThrow();
+        // DEBT-TEST-1b. See the undo case above.
+        expect(engine.canRedo()).toBe(false);
+
+        engine.redo();
+
+        expect(engine.canRedo()).toBe(false);
+        expect(engine.canUndo()).toBe(false);
+        expect(engine.getObjects()).toHaveLength(0);
     });
 });
 

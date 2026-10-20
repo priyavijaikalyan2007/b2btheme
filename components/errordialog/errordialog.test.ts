@@ -540,7 +540,13 @@ describe("instance methods", () =>
 
     test("hide_WhenNoModal_DoesNotThrow", () =>
     {
+        // DEBT-TEST-1b. Hiding what was never shown must leave the
+        // document with no dialog in it, which is the claim the name
+        // makes once "does not throw" is taken as read (ADR-215).
         const dialog = new ErrorDialog("test-error-container");
-        expect(() => dialog.hide()).not.toThrow();
+
+        dialog.hide();
+
+        expect(document.querySelector(".modal.show")).toBeNull();
     });
 });
