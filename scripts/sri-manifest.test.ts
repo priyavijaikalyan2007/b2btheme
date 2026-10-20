@@ -96,13 +96,35 @@ describe("third-party-sri.json", () =>
         }
     });
 
-    // The entry this manifest closes got its own count wrong twice. The
-    // honest record of what cannot be hashed is therefore part of the
-    // data rather than part of the prose around it.
-    test("CodeMirror 6 is recorded as unhashable, with a reason", () =>
+    // WAS: "CodeMirror 6 is recorded as unhashable, with a reason".
+    //
+    // THAT TEST PINNED A WORKAROUND AS THOUGH IT WERE AN INVARIANT, and it
+    // is the reason this file failed in CI on 2026-10-20 while the change
+    // that made it false was correct. codemirror6 sat in `unhashable`
+    // because it arrived as fourteen esm.sh import specifiers and an
+    // integrity attribute cannot attach to one. ADR-211 bundled the
+    // fourteen packages into one hashed file on this origin, so CodeMirror
+    // is no longer loaded from a third-party CDN at all and has left the
+    // population this manifest describes.
+    //
+    // The lesson is worth keeping next to the assertion: a test that
+    // asserts a limitation still exists will fail on the commit that
+    // removes the limitation, and that failure looks exactly like a
+    // regression. Assert the INVARIANT, which is that nothing sits in
+    // `unhashable` without a recorded reason.
+    test("unhashable holds no asset, and says why", () =>
     {
-        expect(Object.keys(manifest.unhashable)).toContain("codemirror6");
-        expect(manifest.unhashable.codemirror6.reason.join(" ")).toMatch(/import specifier/);
+        const entries = Object.keys(manifest.unhashable)
+            .filter((k) => !k.startsWith("$"));
+
+        expect(entries).toEqual([]);
+        expect(manifest.unhashable.$comment.join(" ")).toMatch(/ADR-211/);
+    });
+
+    test("codemirror6 is not a third-party CDN asset any more", () =>
+    {
+        expect(Object.keys(manifest.assets)).not.toContain("codemirror6");
+        expect(Object.keys(manifest.unhashable)).not.toContain("codemirror6");
     });
 
     test("nothing is both hashed and unhashable", () =>
