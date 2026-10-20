@@ -203,7 +203,19 @@ describe("Pill destroy", () =>
 {
     test("Destroy_CleanUpHandlers", () =>
     {
-        const pill = new Pill(makeOptions({ clickable: true, onClick: vi.fn() }));
-        expect(() => pill.destroy()).not.toThrow();
+        // DEBT-TEST-1b. The name claims the handlers are cleaned up and
+        // the body only claimed destroy() survived. The spy was already
+        // in the options and nothing ever looked at it (ADR-215).
+        const onClick = vi.fn();
+        const pill = new Pill(makeOptions({ clickable: true, onClick }));
+        const el = pill.getElement();
+
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        expect(onClick).toHaveBeenCalledTimes(1);
+
+        pill.destroy();
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(onClick).toHaveBeenCalledTimes(1);
     });
 });

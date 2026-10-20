@@ -200,9 +200,17 @@ describe("export", () =>
 {
     test("exportJSON_ReturnsValidJSON", () =>
     {
-        const builder = createRibbonBuilder(makeOptions(), "test-ribbonbuilder");
-        const json = builder.exportJSON();
-        expect(() => JSON.parse(json)).not.toThrow();
+        // DEBT-TEST-1b. "Valid JSON" was asserted as "JSON.parse did
+        // not throw", which `"null"` and `"0"` both satisfy. What the
+        // caller needs is the CONFIG back, so that is what is read
+        // (ADR-215).
+        const builder = createRibbonBuilder(
+            makeOptions({ config: makeConfig() }), "test-ribbonbuilder");
+        const parsed = JSON.parse(builder.exportJSON());
+
+        expect(parsed.tabs).toHaveLength(1);
+        expect(parsed.tabs[0]).toMatchObject({ id: "home", label: "Home" });
+
         builder.destroy();
     });
 

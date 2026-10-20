@@ -2622,3 +2622,74 @@ opening files, not by re-reading sentences.**
 Re-measuring one means re-reading the CODE it describes. Testable
 phrasing makes a claim falsifiable; it does not make it true, and it
 makes a false claim harder to doubt.
+
+### 6.136 The Comment Described a Rule the Code Never Implemented (2026-10-20)
+
+`shapeOf` in `scripts/test-assertions.mjs` split 236 vacuous test
+blocks four ways. Its doc comment said:
+
+> NAMES-A-CHANGE is the rest of the `.not.toThrow()` family, where the
+> title states an effect the body never looks for.
+
+The code was `return "namesAChange";` — a fall-through. It never read a
+title. **21 of the bucket's 35 members had titles stating no effect at
+all**: `importInvalidJSON_DoesNotCrash`, `rapidFire100Toasts_NoExceptions`,
+`hide_WhenNoModal_DoesNotThrow`. The tracker's table had been steering
+work from that label for two days.
+
+The case that pinned the bucket could not fail either. It asserted that
+`setFilters_UpdatesFilterState` lands in `namesAChange`, which was true
+of any `.not.toThrow()` body whatever its title said.
+
+**Principle**: a doc comment is the author's intent and the code is the
+rule. When they disagree the count is wrong, and a classification test
+that checks only the positive case cannot tell them apart. Pin both
+directions: the thing that belongs, and the thing that must not.
+
+### 6.137 Each New Rule Cost a Correction, and Both Were the Same Mistake (2026-10-20)
+
+Splitting that bucket needed two new rules, and each over-claimed on
+its first draft in the way its predecessor already had.
+
+ADR-203 had settled that withholding is detected per FILE but
+idempotency wins, because "a file that deletes a global in teardown
+would otherwise claim every `destroy_CalledTwice` inside it". The new
+accept/refuse pairing rule scoped to the `describe` instead — one level
+finer — and immediately claimed `diagramengine-core :: resize does not
+throw`, whose describe refuses a bad CONTAINER. A refusal about
+`createDiagramEngine` is not a control for `resize`. The fix was to
+require the CALLEE to match.
+
+Then `treegrid :: deeplyNestedNodes_RendersWithoutCrash` paired
+correctly on `createTreeGrid` and was still not a control: the two
+blocks accept and refuse on different dimensions, one a missing
+container and the other node depth. Its own title claims survival.
+
+**Principle**: scoping a rule more narrowly is not the same as scoping
+it correctly — the container is not the subject. And when a structural
+signal disagrees with the name the author wrote, the name is the fact
+and the structure is the hypothesis. That is the rule the idempotency
+case already encoded; it had to be rediscovered twice to be believed.
+
+### 6.138 Not Throwing Is Not the Property (2026-10-20)
+
+Three of the twelve rewrites turned on the same confusion between a
+property and the absence of a crash.
+
+- `expect(() => JSON.stringify(sample)).not.toThrow()` was asserting
+  serialisability. `JSON.stringify` returns `undefined` for a function
+  and silently drops one inside an object, neither of which throws. The
+  property is that the value survives `JSON.parse(JSON.stringify(x))`.
+- `expect(() => JSON.parse(builder.exportJSON())).not.toThrow()` was
+  asserting "valid JSON", which `"null"` and `"0"` both satisfy. What
+  the caller needs is the config back.
+- `destroy removes all listeners so later events don't throw` dispatched
+  two events and asserted neither threw — true of a component that left
+  every listener attached and tolerated being called. The property is
+  that each `addEventListener` was paired with a remove, and asserting
+  that directly named the two leaked types when it was mutated.
+
+**Principle**: when a test's subject is wrapped in `expect(() => ...)`,
+ask what the function would have to do to make the assertion false.
+If the answer is only "crash", the property in the name is not the one
+under test.

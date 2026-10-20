@@ -760,10 +760,31 @@ describe("DiagramEngine — Stencils", () =>
 
     test("setDrawShape changes draw shape type", () =>
     {
-        // setDrawShape should not throw when given a valid shape type
-        expect(() =>
-        {
-            engine.setDrawShape("ellipse");
-        }).not.toThrow();
+        // DEBT-TEST-1b. This asserted only that the call did not throw,
+        // and the name promises an effect. `setDrawShape` reaches a
+        // private DrawTool with no public getter, so the shape is read
+        // back the way a user would see it: draw something and look at
+        // what was drawn (ADR-215).
+        engine.setDrawShape("ellipse");
+        engine.setActiveTool("draw");
+
+        const svg = container.querySelector("svg")!;
+
+        svg.dispatchEvent(new MouseEvent("mousedown", {
+            bubbles: true, clientX: 20, clientY: 20, button: 0,
+        }));
+        svg.dispatchEvent(new MouseEvent("mousemove", {
+            bubbles: true, clientX: 120, clientY: 90, button: 0,
+        }));
+        svg.dispatchEvent(new MouseEvent("mouseup", {
+            bubbles: true, clientX: 120, clientY: 90, button: 0,
+        }));
+
+        const drawn = engine.getObjects();
+
+        expect(drawn).toHaveLength(1);
+        expect(drawn[0].presentation.shape).toBe("ellipse");
+        expect(drawn[0].presentation.bounds)
+            .toMatchObject({ width: 100, height: 70 });
     });
 });

@@ -9503,3 +9503,84 @@
     catching two of them.
 
     The testBlocks floor rises 4999 -> 5005.
+
+- id: ADR-215
+  title: The bucket named for a title never read one, and emptying it took two corrections to the rules that replaced it
+  date: 2026-10-20
+  status: accepted
+  context: |
+    DEBT-TEST-1b reported 236 test blocks where every assertion passes
+    for any value that is not null, split four ways by shapeOf in
+    scripts/test-assertions.mjs. The largest actionable bucket,
+    namesAChange, held 35 and was described in the tracker as "name
+    states a change — contracts to read".
+  decision: |
+    D1. namesAChange WAS THE FALL-THROUGH AND 21 OF ITS 35 MEMBERS HAD
+        TITLES STATING NO CHANGE. shapeOf returned it for every
+        .not.toThrow() block that was neither idempotent nor
+        dependency-withheld, whatever the title said. The doc comment
+        above the code had described the intended rule for two days —
+        "the title states an effect the body never looks for" — and the
+        code never read a title. A count named for one population while
+        measuring another, inside the instrument built to stop that.
+
+    D2. THE CASE PINNING THE BUCKET COULD NOT FAIL. It asserted that
+        setFilters_UpdatesFilterState lands in namesAChange, which held
+        for any .not.toThrow() body. It now asserts both directions.
+
+    D3. ROBUSTNESS-ONLY IS A SEPARATE QUESTION, NOT A WEAKER VERSION OF
+        THE SAME ONE. importInvalidJSON_DoesNotCrash does what it says;
+        the open question is whether survival is enough, and each such
+        block has one invariant worth a line. That is not the question
+        an unchecked effect asks.
+
+    D4. THE PAIRING RULE OVER-CLAIMED TWICE AND BOTH CORRECTIONS ARE
+        PINNED. Scoped to the describe alone it claimed
+        "resize does not throw", because that block's describe refuses
+        a bad CONTAINER — a refusal about createDiagramEngine, not
+        about resize. That is ADR-203's per-file mistake one level
+        finer, so the callee must match. Then treegrid's
+        deeplyNestedNodes_RendersWithoutCrash paired on createTreeGrid
+        while accepting and refusing on different dimensions, so a
+        survival title now outranks a pairing. The name is the fact and
+        the pairing is the hypothesis, which is the rule idempotency
+        already followed.
+
+    D5. TWO OF THE 14 WERE NEVER DEFECTS, AND THEY ARE DIFFERENT KINDS
+        OF FALSE POSITIVE. wiring's "accepts a binding naming a
+        registered transform" is the accept half of an accept/refuse
+        pair; the instrument now recognises that on its own merits
+        rather than through the withheld-globals proxy that found only
+        the six in nofallback suites. dynamiccanvas-anchors carried a
+        real query behind a one-line helper the predicate cannot see;
+        it was strengthened on its merits instead, by watching
+        Element.prototype.querySelector and asserting no call carried
+        the hostile fragment.
+
+    D6. richtextinput.focus() IS CORRECT AND JSDOM CANNOT SEE IT.
+        Measured: jsdom will not focus a contenteditable div with no
+        tabindex, focuses the same div once one is added, and focuses
+        an input either way. A real browser focuses a contenteditable
+        without one. Adding a tabindex to the COMPONENT to make a test
+        observable would be the test driving the product.
+
+    D7. JSON.stringify NOT THROWING IS NOT SERIALISABILITY. It returns
+        undefined for a function and silently drops one inside an
+        object. All ten conformance samples must now survive
+        JSON.parse(JSON.stringify(x)) unchanged.
+  consequences: |
+    namesAChange 35 -> 0. testsThatCannotFail 236 -> 223. The remaining
+    buckets are 110 idempotent, 85 existence, 21 robustnessOnly, 6
+    absentDependency and 1 positiveControl.
+
+    Twelve tests rewritten, each mutation-proven against the change it
+    now claims. Three new cases pin the pairing rule and one pins the
+    title-over-pairing order.
+
+    DEBT-STI-2 recorded rather than taken: a SmartTextInput trigger
+    registered without a complete `activation` throws inside the input
+    listener, and the README documents defaults that nothing applies.
+
+    The parser-coverage guard caught the new fixtures: a line beginning
+    with `test(` inside a template literal reads as a declaration, so
+    the fixtures are concatenated instead.

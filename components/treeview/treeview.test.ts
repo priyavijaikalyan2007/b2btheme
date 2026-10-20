@@ -524,8 +524,26 @@ describe("public API", () =>
 
     test("refresh_ReRendersTree", () =>
     {
+        // DEBT-TEST-1b. The name claims the tree was RE-RENDERED and
+        // the body claimed only that refresh() survived, which is
+        // true of an empty method. Re-rendering means the rows are
+        // rebuilt: the same labels come back on DIFFERENT elements,
+        // and the old ones leave the document (ADR-215).
         const tree = createTreeView(defaultOpts());
-        expect(() => tree.refresh()).not.toThrow();
+
+        const before = getTreeItems();
+        const labelsBefore = before.map((el) => el.textContent);
+
+        expect(before.length).toBeGreaterThan(0);
+
+        tree.refresh();
+
+        const after = getTreeItems();
+
+        expect(after.map((el) => el.textContent)).toEqual(labelsBefore);
+        expect(after[0]).not.toBe(before[0]);
+        expect(before[0].isConnected).toBe(false);
+
         tree.destroy();
     });
 });

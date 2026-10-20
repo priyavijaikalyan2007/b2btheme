@@ -265,11 +265,32 @@ describe("handle methods", () =>
 
     test("focus_FocusesEditableElement", () =>
     {
+        // DEBT-TEST-1b. The old comment said "in jsdom, focus may not
+        // fully work" and the body then asserted only that the call
+        // did not throw, which is true of a focus() that focuses
+        // nothing at all.
+        //
+        // MEASURED RATHER THAN ASSUMED: jsdom will not focus a
+        // `contenteditable` div with no `tabindex` — it focuses the
+        // same div once a tabindex is added, and focuses an `input`
+        // either way. A real browser focuses a contenteditable
+        // without one, so the component is right and `activeElement`
+        // is simply not readable here. Adding a tabindex to the
+        // COMPONENT to make a test observable would be the test
+        // driving the product.
+        //
+        // So the claim is read where it is observable: focus() must
+        // reach the editable element and no other (ADR-215).
         const editor = createRichTextInput({});
         container.appendChild(editor.getElement());
+
+        const editable = container.querySelector<HTMLElement>(
+            ".richtextinput-editable")!;
+        const focused = vi.spyOn(editable, "focus");
+
         editor.focus();
-        // In jsdom, focus may not fully work, but the method should not throw
-        expect(() => editor.focus()).not.toThrow();
+
+        expect(focused).toHaveBeenCalledTimes(1);
     });
 
     test("setDisabled_TogglesState", () =>

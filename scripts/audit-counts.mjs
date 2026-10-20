@@ -642,7 +642,7 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 236,
+    testsThatCannotFail: 223,
     siblingStandIns: 6,
 };
 
@@ -715,7 +715,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5006,
+    testBlocks: 5012,
 };
 
 /**

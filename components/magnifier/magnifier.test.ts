@@ -35,6 +35,14 @@ function lensEl(): HTMLElement
     return el;
 }
 
+/** Move the pointer across the target, which is what redraws the clone. */
+function movePointer(x: number, y: number): void
+{
+    targetEl.dispatchEvent(new MouseEvent("mousemove", {
+        bubbles: true, clientX: x, clientY: y,
+    }));
+}
+
 /** Move the pointer onto the target, which is what shows the lens. */
 function hoverTarget(): void
 {
@@ -238,8 +246,26 @@ describe("zoom and diameter", () =>
 {
     test("setZoom_UpdatesZoomFactor", () =>
     {
+        // DEBT-TEST-1b. This asserted only that the call did not
+        // throw, and the name promises the factor changed. There is
+        // no getter: the zoom reaches the user as the scale on the
+        // cloned element inside the lens, which is where it is read
+        // back from (ADR-215). The move is the missing precondition —
+        // the clone is only transformed once the pointer moves.
         const mag = createMagnifier("test-magnifier");
-        expect(() => mag.setZoom(4)).not.toThrow();
+
+        hoverTarget();
+        movePointer(40, 40);
+
+        const clone = lensEl().querySelector<HTMLElement>(".magnifier-inner > *")!;
+        const before = clone.style.transform;
+
+        mag.setZoom(4);
+        movePointer(41, 41);
+
+        expect(before).not.toBe("scale(4)");
+        expect(clone.style.transform).toBe("scale(4)");
+
         mag.destroy();
     });
 

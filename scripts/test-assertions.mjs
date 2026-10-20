@@ -278,7 +278,7 @@ export function testBlocks(src)
         const body = balanced(args.text, brace, "{", "}");
         if (body === null) { continue; }
 
-        blocks.push({ name: name[1], body: body.text });
+        blocks.push({ name: name[1], body: body.text, at: m.index });
     }
     return blocks;
 }
@@ -322,6 +322,80 @@ export function verdictFor(block)
 }
 
 /** Every test block in the repository, classified. */
+/**
+ * The `describe` scopes in a file that also assert a REFUSAL.
+ *
+ * WHY THIS EXISTS. `.not.toThrow()` is the correct shape for one
+ * claim: that the accepted case is accepted, stated beside a sibling
+ * proving the rejected case is rejected. `wiring.test.ts` has the
+ * canonical pair — "throws when a binding names an unregistered
+ * transform" sits directly above "accepts a binding naming a
+ * registered transform", and the second is a POSITIVE CONTROL, not a
+ * weak test.
+ *
+ * The census already recognised that category and detected it by
+ * PROXY: a file that withholds a global. The proxy found the six in
+ * `*.nofallback.test.ts` and missed every pair written in an ordinary
+ * suite. This reads the thing itself (ADR-215).
+ *
+ * SCOPED TO THE DESCRIBE AND TO THE SUBJECT, AND THE SECOND HALF WAS
+ * ADDED AFTER THE FIRST DRAFT OVER-CLAIMED. Scoping to the describe
+ * alone pulled in `diagramengine-core :: resize does not throw`,
+ * because the "Factory & Lifecycle" block it sits in also refuses a
+ * bad container — a refusal about `createDiagramEngine`, not about
+ * `resize`. That is the per-file withholding mistake (ADR-203)
+ * repeated one level finer, so the callee has to match too: a pair is
+ * `expect(() => f(...)).toThrow()` beside `expect(() => f(...))
+ * .not.toThrow()`, same `f`.
+ *
+ * @param src - A test file's source.
+ * @returns Ranges of describe bodies, each with the callees it refuses.
+ */
+export function refusalScopes(src)
+{
+    const scopes = [];
+    const code = codeRanges(src);
+    const inCode = (i) => code.some(([a, b]) => i >= a && i < b);
+
+    for (const m of src.matchAll(/(?<!\.)\bdescribe\s*\(/g))
+    {
+        if (!inCode(m.index)) { continue; }
+
+        const args = balanced(src, m.index + m[0].length - 1, "(", ")");
+
+        if (args === null) { continue; }
+
+        const refused = new Set();
+
+        for (const a of assertionsIn(args.text))
+        {
+            if (!/(?<!\.not)\s*\.\s*toThrow/.test(a.matcher)) { continue; }
+
+            for (const name of calleesIn(a.subject)) { refused.add(name); }
+        }
+
+        if (refused.size > 0) { scopes.push({ start: m.index, end: args.end, refused }); }
+    }
+    return scopes;
+}
+
+/**
+ * The function names called inside an `expect(() => ...)` subject.
+ *
+ * Only the CALLEE, so `engineFor(doc)` and `engineFor(other)` pair.
+ * A method call keeps its receiver — `engine.resize` rather than
+ * `resize` — because two components in one suite can both have a
+ * `destroy`, and the receiver is what tells them apart.
+ *
+ * @param subject - The text inside `expect(...)`.
+ * @returns Callee names, possibly empty.
+ */
+export function calleesIn(subject)
+{
+    return [...subject.matchAll(/([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*\(/g)]
+        .map((m) => m[1]);
+}
+
 export function census(files = null)
 {
     const list = files ?? execFileSync("git", ["ls-files", "*.test.ts"], { encoding: "utf8" })
@@ -330,13 +404,21 @@ export function census(files = null)
 
     for (const file of list)
     {
-        for (const block of testBlocks(readFileSync(file, "utf8")))
+        const src = readFileSync(file, "utf8");
+        const scopes = refusalScopes(src);
+
+        for (const block of testBlocks(src))
         {
             rows.push({
                 file,
                 name: block.name,
                 body: block.body,
                 verdict: verdictFor(block),
+                pairedWithRefusal: scopes.some(
+                    (s) => block.at >= s.start && block.at < s.end
+                        && assertionsIn(block.body).some(
+                            (a) => /\.not\s*\.\s*toThrow/.test(a.matcher)
+                                && calleesIn(a.subject).some((c) => s.refused.has(c)))),
             });
         }
     }
@@ -357,12 +439,40 @@ export function census(files = null)
  * return — `destroy_CalledTwice`, `removeNonexistentPin`,
  * `setLayout_UnknownId` — because both answer "nothing should
  * happen" and the right assertion for both is that nothing did.
+ * ROBUSTNESS-ONLY is a title that promises nothing but survival —
+ * `importInvalidJSON_DoesNotCrash` — where the body matches the
+ * title and the question is whether the claim is worth more.
  * NAMES-A-CHANGE is the rest of the `.not.toThrow()` family, where
  * the title states an effect the body never looks for. EXISTENCE is
  * `.toBeDefined()` and `.toBeTruthy()`.
+ *
+ * (CRITICAL) ROBUSTNESS-ONLY WAS SPLIT OUT ON 2026-10-20 (ADR-215),
+ * AND THIS PARAGRAPH IS WHY. It already described NAMES-A-CHANGE as
+ * "the title states an effect the body never looks for" — and the
+ * code below never read a title. The bucket was the fall-through,
+ * so every `.not.toThrow()` block that was neither idempotent nor
+ * dependency-withheld landed in it whatever its name said. **21 of
+ * its 35 members had titles stating no effect at all**, which is
+ * this repository's recurring defect: a count named for one
+ * population while measuring another. The comment documented a rule
+ * nobody had written.
  */
 const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
 const IDEMPOTENT = /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+
+/**
+ * A title that promises only that nothing blew up.
+ *
+ * Deliberately matched against the CLAIM rather than the subject.
+ * `SetSizes_ValidPercentages_DoesNotThrow` names a method and then
+ * states what it expects of it, and what it expects is survival — so
+ * the block is doing exactly what it says, and the open question is
+ * whether survival is enough. That is a different question from the
+ * one NAMES-A-CHANGE asks, which is why the two are no longer one
+ * number.
+ */
+const ROBUSTNESS_ONLY =
+    /does\s*n[o']?t\s*(throw|crash)|doesnotthrow|doesnotcrash|noexception|noerror|without\s*(a\s*)?(crash|throw|error)|handledgracefully|_noop\b|\bno\s*op\b/i;
 
 /** The set of files that withhold a global somewhere in their text. */
 function withheldFiles(rows)
@@ -396,7 +506,27 @@ export function shapeOf(row, withheld)
     // a global in teardown would otherwise claim every destroy_
     // CalledTwice block inside it. ADR-203.
     if (IDEMPOTENT.test(row.name)) { return "idempotent"; }
+
+    // ABSENT stays ahead of ROBUSTNESS-ONLY although both are beaten
+    // by IDEMPOTENT, and the reason is not the name-versus-file rule
+    // above. It is that "this file withholds a dependency" SUBSUMES
+    // "the title claims only survival" and tells the reader more: it
+    // says why the block exists at all. A row that matched both and
+    // was filed under robustness would lose that.
     if (withheld.has(row.file)) { return "absentDependency"; }
+
+    // ROBUSTNESS-ONLY OUTRANKS THE PAIR, and the case that settled it
+    // is `treegrid :: deeplyNestedNodes_RendersWithoutCrash`. It
+    // shares a callee with `missingContainer_Throws`, so the pairing
+    // rule claimed it — but the two refuse and accept on DIFFERENT
+    // dimensions, one a missing container and the other node depth,
+    // and the block's own title claims survival. A real positive
+    // control says it accepts: "accepts a binding naming a registered
+    // transform" sits under "throws when a binding names an
+    // unregistered transform". The name is the fact and the pairing is
+    // the hypothesis, which is the rule idempotency already follows.
+    if (ROBUSTNESS_ONLY.test(row.name)) { return "robustnessOnly"; }
+    if (row.pairedWithRefusal === true) { return "positiveControl"; }
     return "namesAChange";
 }
 
@@ -415,6 +545,8 @@ export function shapesOf(rows)
     const tally = {
         absentDependency: 0,
         idempotent: 0,
+        robustnessOnly: 0,
+        positiveControl: 0,
         namesAChange: 0,
         existence: 0,
     };

@@ -362,12 +362,75 @@ describe("setOptions", () =>
 {
     test("updatesEngineOptions", () =>
     {
-        const engine = createSmartTextInput({ queryDebounceMs: 100 });
-        expect(() =>
+        // DEBT-TEST-1b. The name claims the engine's options were
+        // UPDATED and the body claimed only that setOptions survived
+        // — which would hold for a method whose whole body was a
+        // comment. `queryDebounceMs` reaches the user as the delay
+        // before `onTriggerQuery` fires, so the test drives a trigger
+        // session and reads the clock (ADR-215).
+        vi.useFakeTimers();
+
+        const seen: string[] = [];
+        const el = document.createElement("input");
+        document.body.appendChild(el);
+
+        const engine = createSmartTextInput({
+            queryDebounceMs: 100,
+            onTriggerQuery: (e) => { seen.push(e.queryText); },
+        });
+
+        engine.register({
+            trigger: "@",
+            name: "people",
+            // Every field of TriggerActivation is REQUIRED. A fixture
+            // with `activation: {}` typechecks only as a mistake, and
+            // at run time `isSuppressed` reads `suppressIn.length` and
+            // throws inside the input listener, where nothing sees it.
+            // Recorded as DEBT-STI-2.
+            activation: {
+                requireWhitespaceBefore: false,
+                minQueryLength: 0,
+                maxQueryLength: 50,
+                cancelChars: [],
+                escapeChar: null,
+                suppressIn: [],
+            },
+            dataSource: { query: async () => [] },
+        });
+        engine.attach(el);
+
+        // The trigger is detected from the text immediately BEFORE the
+        // cursor, so the session has to be opened by typing "@" on its
+        // own before the query characters follow it. A test that set
+        // the whole string at once opened no session at all.
+        const type = (value: string): void =>
         {
-            engine.setOptions({ queryDebounceMs: 300 });
-        }).not.toThrow();
+            el.value = value;
+            el.selectionStart = value.length;
+            el.selectionEnd = value.length;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+
+        type("@");
+        type("@ab");
+        vi.advanceTimersByTime(150);
+
+        expect(seen).toEqual(["ab"]);
+
+        engine.setOptions({ queryDebounceMs: 300 });
+
+        type("@abc");
+        vi.advanceTimersByTime(150);
+
+        // The old 100 ms would already have fired by here.
+        expect(seen).toEqual(["ab"]);
+
+        vi.advanceTimersByTime(200);
+        expect(seen).toEqual(["ab", "abc"]);
+
         engine.destroy();
+        el.remove();
+        vi.useRealTimers();
     });
 });
 

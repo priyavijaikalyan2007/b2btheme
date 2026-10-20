@@ -2851,6 +2851,36 @@ offered as the evidence for it.
 
   Found by the demo-page smoke gate.
 
+- [ ] **DEBT-STI-2** **A SmartTextInput trigger registered without a
+  complete `activation` throws inside the input listener, where
+  nothing sees it. Found 2026-10-20 while rewriting
+  `updatesEngineOptions` (ADR-215); recorded rather than taken,
+  because it is a contract question and not part of DEBT-TEST-1b.**
+
+  `isSuppressed` reads `def.activation.suppressIn.length` with no
+  guard. Every field of `TriggerActivation` is REQUIRED in the
+  TypeScript interface, so a TypeScript consumer cannot reach this —
+  **and this library is published to a CDN and consumed from plain
+  JavaScript**, where the type enforces nothing. `register()`
+  validates `trigger` and `name` and says nothing about `activation`.
+
+  **The README reads as a promise that it is optional.** Its
+  TriggerActivation table carries a Default column:
+  `requireWhitespaceBefore` "--", `minQueryLength` `0`,
+  `maxQueryLength` `50`, `suppressIn` `[]`. Those defaults are not
+  applied anywhere. A JS consumer who follows the table and omits
+  `suppressIn` gets a `TypeError` raised inside a DOM event handler
+  on the first keystroke — it never reaches their code, and the
+  trigger simply never fires.
+
+  **The question this needs answering is which half is wrong**, and
+  it is a public-contract decision rather than a bug fix: either
+  `register()` fills the documented defaults and the fields become
+  genuinely optional, or the README's Default column is wrong and
+  `register()` should refuse an incomplete activation the way it
+  already refuses a missing name. Both are consumer-visible. The
+  one thing that must not stay is a documented default that throws.
+
 - [x] **DEBT-STI-1** **CLOSED 2026-10-20, ADR-206. SmartTextInput threw
   inside its own input handler when the explicit adapter type did not
   match the element.**
@@ -2987,22 +3017,98 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **267 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **223 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
   Regenerate with `node scripts/test-assertions.mjs --shapes`.
 
-  Both columns are the committed classifier, run on `9ff3965` and on
-  `HEAD`. The hand-run split it replaces reported 116 / 73 / 9 / 86,
-  which no instrument in the repository can now produce.
+  | Shape | 2026-10-18 | 2026-10-19 | Now | Expected yield |
+  |---|---|---|---|---|
+  | `.not.toThrow()` on idempotency | 110 | 110 | 110 | near zero |
+  | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
+  | `.not.toThrow()`, name claims only survival | — | — | 21 | one invariant each |
+  | `.not.toThrow()` as an accept/refuse control | — | — | 1 | none, it is correct |
+  | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
+  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | 85 | near zero |
 
-  | Shape | 2026-10-18 | Now | Expected yield |
-  |---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | near zero |
-  | `.not.toThrow()`, name states a change | 66 | **35** | contracts to read |
-  | `.not.toThrow()` on an absent dependency | 6 | 6 | each states a change |
-  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | near zero |
+  **THE BUCKET LABELLED "NAME STATES A CHANGE" WAS THE FALL-THROUGH,
+  AND 21 OF ITS 35 MEMBERS HAD NAMES STATING NO CHANGE (2026-10-20,
+  ADR-215).** `shapeOf` returned `"namesAChange"` for every
+  `.not.toThrow()` block that was neither idempotent nor
+  dependency-withheld, whatever its title said — so
+  `importInvalidJSON_DoesNotCrash` and `rapidFire100Toasts_NoExceptions`
+  were filed under a label that promised an unchecked effect. **The
+  doc comment above the code had described the intended rule for two
+  days** — "the title states an effect the body never looks for" — and
+  the code never read a title. A count named for one population while
+  measuring another, in the instrument built to stop exactly that.
+
+  Worse, the case pinning the bucket could not fail. It asserted that
+  `setFilters_UpdatesFilterState` lands in `namesAChange`, which was
+  true of any `.not.toThrow()` body whatever the title said. It now
+  asserts both directions.
+
+  **`robustnessOnly` and `positiveControl` are split out, and the two
+  rules each cost a correction.** The pairing rule first scoped to the
+  `describe` alone and claimed `diagramengine-core :: resize does not
+  throw`, because the block it sits in refuses a bad container — a
+  refusal about `createDiagramEngine`, not about `resize`. That is the
+  per-file withholding mistake (ADR-203) repeated one level finer, so
+  the CALLEE has to match too. Then `treegrid ::
+  deeplyNestedNodes_RendersWithoutCrash` paired on `createTreeGrid`
+  while accepting and refusing on different dimensions, so a survival
+  title now outranks a pairing: **the name is the fact and the pairing
+  is the hypothesis**, which is the rule idempotency already followed.
+
+  **THE 14 REAL MEMBERS ARE ALL REWRITTEN, AND TWO OF THEM WERE NEVER
+  DEFECTS.** `wiring :: accepts a binding naming a registered
+  transform` sits directly under `throws when a binding names an
+  unregistered transform` and is the accept half of that pair —
+  `.not.toThrow()` is the correct shape, and the instrument now says
+  so on its own merits rather than through the withheld-globals proxy.
+  `dynamiccanvas-anchors :: a malformed region name cannot reach an
+  attribute selector` carried `expect(frameOf("grid")).toBeTruthy()`,
+  a real query behind a one-line helper the predicate cannot see; it
+  was strengthened on its merits instead, by watching
+  `Element.prototype.querySelector` and asserting no call carried the
+  hostile fragment.
+
+  | Rewritten | Was | Now reads back |
+  |---|---|---|
+  | `diagramengine :: setDrawShape changes draw shape type` | no throw | draws, then asserts `presentation.shape` |
+  | `diagramengine :: datagrid shape can be set as draw shape` | no throw | same, through a loaded stencil pack |
+  | `magnifier :: setZoom_UpdatesZoomFactor` | no throw | `scale(4)` on the lens clone |
+  | `treeview :: refresh_ReRendersTree` | no throw | same labels on NEW elements, old ones detached |
+  | `pill :: Destroy_CleanUpHandlers` | no throw | the `onClick` spy stops firing |
+  | `hovercard :: destroy removes all listeners` | two non-throws | every `addEventListener` paired with a remove |
+  | `ribbonbuilder :: exportJSON_ReturnsValidJSON` | `JSON.parse` did not throw | the config comes back |
+  | `richtextinput :: focus_FocusesEditableElement` | no throw | `focus()` reaches the editable element |
+  | `smarttextinput :: updatesEngineOptions` | no throw | the debounce fires at 300 ms, not 100 |
+  | `sprintpicker :: stringAnchorDate_Parses` | no throw | the first sprint starts 2026-01-05 |
+  | `conformance :: samples are JSON-serialisable` | one shape, no throw | all ten survive a round trip |
+  | `wiring :: an isolated document delivers nothing` | no throw | no ops requested, no surface written |
+
+  **TWO FINDINGS CAME OUT OF THE REWRITES.**
+
+  - **`richtextinput.focus()` is correct and jsdom cannot see it.** The
+    old comment said "in jsdom, focus may not fully work" and asserted
+    no throw. **Measured:** jsdom will not focus a `contenteditable`
+    div with no `tabindex`, focuses the same div once a tabindex is
+    added, and focuses an `<input>` either way. A real browser focuses
+    a contenteditable without one, so the component is right. Adding a
+    tabindex to the COMPONENT to make a test observable would be the
+    test driving the product, so the claim is read where it is
+    observable instead.
+  - **DEBT-STI-2**, below: a `SmartTextInput` trigger registered
+    without a complete `activation` throws inside the input listener,
+    where nothing sees it.
+
+  **`JSON.stringify` not throwing is not serialisability.** It returns
+  `undefined` for a function and silently drops one inside an object.
+  The conformance sample test checked one shape that way; all ten now
+  have to survive `JSON.parse(JSON.stringify(x))` unchanged, which is
+  what the gate actually does with them.
 
   **267 -> 236 on 2026-10-19, ADR-205, and the whole drop is one
   bucket.** List its remaining members with

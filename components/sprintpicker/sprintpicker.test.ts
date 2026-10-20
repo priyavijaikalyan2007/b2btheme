@@ -376,12 +376,23 @@ describe("edge cases", () =>
 {
     test("stringAnchorDate_Parses", () =>
     {
-        expect(() =>
-        {
-            new SprintPicker("test-sprintpicker", {
-                anchorDate: "2026-01-05",
-            });
-        }).not.toThrow();
+        // DEBT-TEST-1b. The name claims the string was PARSED and the
+        // body claimed only that the constructor survived — which a
+        // picker whose anchor silently fell back to today would also
+        // satisfy. The anchor is the first sprint's start date, and
+        // that is read back and compared with the Date form of the
+        // same day (ADR-215).
+        const fromString = new SprintPicker("test-sprintpicker", {
+            anchorDate: "2026-01-05",
+        });
+
+        const first = fromString.getSprints()[0];
+
+        expect(first.startDate.getFullYear()).toBe(2026);
+        expect(first.startDate.getMonth()).toBe(0);
+        expect(first.startDate.getDate()).toBe(5);
+
+        fromString.destroy();
     });
 
     test("setSprintLength_RecomputesSprints", () =>

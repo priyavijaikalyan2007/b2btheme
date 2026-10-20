@@ -594,9 +594,18 @@ describe("propagation", () =>
 
     test("an isolated document delivers nothing", () =>
     {
+        // DEBT-TEST-1b. The name claims nothing is DELIVERED and the
+        // body claimed only that flush() survived — which it would on
+        // a document that delivered to every surface it had. An empty
+        // document has no surfaces, so the claim is read from the
+        // other side: a flush on it requests no ops, and no surface
+        // the engine could reach was written to (ADR-215).
         const engine = engineFor(createEmptyDocument("c1", "w1"));
 
-        expect(() => engine.flush()).not.toThrow();
+        engine.flush();
+
+        expect(requested).toHaveLength(0);
+        expect([...surfaces.values()].flatMap((s) => s.writes)).toHaveLength(0);
     });
 });
 

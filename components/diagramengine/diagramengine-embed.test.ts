@@ -108,12 +108,31 @@ describe("DiagramEngine — UI Component Stencils", () =>
 
     test("datagrid shape can be set as draw shape", () =>
     {
+        // DEBT-TEST-1b. The claim is that a shape from a LOADED
+        // STENCIL PACK becomes drawable, and only the absence of a
+        // throw was checked — which would also hold for a name the
+        // pack never registered, because setDrawShape forwards the
+        // string without validating it (ADR-215).
         engine.loadStencilPack("ui-components");
+        engine.setDrawShape("datagrid");
+        engine.setActiveTool("draw");
 
-        expect(() =>
-        {
-            engine.setDrawShape("datagrid");
-        }).not.toThrow();
+        const svg = container.querySelector("svg")!;
+
+        svg.dispatchEvent(new MouseEvent("mousedown", {
+            bubbles: true, clientX: 10, clientY: 10, button: 0,
+        }));
+        svg.dispatchEvent(new MouseEvent("mousemove", {
+            bubbles: true, clientX: 210, clientY: 130, button: 0,
+        }));
+        svg.dispatchEvent(new MouseEvent("mouseup", {
+            bubbles: true, clientX: 210, clientY: 130, button: 0,
+        }));
+
+        const drawn = engine.getObjects();
+
+        expect(drawn).toHaveLength(1);
+        expect(drawn[0].presentation.shape).toBe("datagrid");
     });
 
     test("addObject with ui-component shape type works", () =>

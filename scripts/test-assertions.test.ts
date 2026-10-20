@@ -27,6 +27,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
     testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf, standInsOf,
+    refusalScopes,
 } from "./test-assertions.mjs";
 
 type Block = { name: string; body: string };
@@ -218,12 +219,131 @@ describe("the shape split is an instrument, not a note", () =>
 
     test("a name that states a change lands in its own bucket", () =>
     {
-        const rows = [row(
+        // BOTH HALVES, BECAUSE ONE HALF PASSED FOR THE WRONG REASON.
+        // This case used to assert the first row alone, and
+        // `namesAChange` was the fall-through — so it passed for any
+        // `.not.toThrow()` body whatever the title said, which is
+        // precisely the defect the bucket is meant to find. The
+        // second row is what makes it a discrimination (ADR-215).
+        const changes = [row(
             "setFilters_UpdatesFilterState",
             "expect(() => h.setFilters([])).not.toThrow();",
             "scripts/audit-counts.mjs")];
 
-        expect(shapesOf(rows)).toMatchObject({ namesAChange: 1, absentDependency: 0 });
+        const survives = [row(
+            "importInvalidJSON_DoesNotCrash",
+            "expect(() => h.importJSON('{')).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(changes)).toMatchObject({ namesAChange: 1, robustnessOnly: 0 });
+        expect(shapesOf(survives)).toMatchObject({ namesAChange: 0, robustnessOnly: 1 });
+    });
+
+    test("the claim governs when a title names a method AND a survival", () =>
+    {
+        // `SetSizes_ValidPercentages_DoesNotThrow` is the real member
+        // this pins. "SetSizes" is the subject and "DoesNotThrow" is
+        // what the author expected of it, so the block is doing what
+        // it says and the open question is whether survival is
+        // enough. That is a different question from an unchecked
+        // effect, and filing it under the latter would overstate the
+        // bucket a reader works from.
+        const rows = [row(
+            "SetSizes_ValidPercentages_DoesNotThrow",
+            "expect(() => h.setSizes([50, 50])).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows)).toMatchObject({ robustnessOnly: 1, namesAChange: 0 });
+    });
+
+    test("a withheld dependency outranks a survival title", () =>
+    {
+        // Both match, and ABSENT wins because it SUBSUMES the other
+        // and says more: it reports why the block exists, not only
+        // that its claim is weak. The opposite order would lose that
+        // and leave the FALLBACK shape uncounted.
+        // The file is this one, because `withheldFiles` reads the FILE
+        // from disk rather than the row body — the suite states the
+        // absence once in its setup, which is the per-file rule ADR-203
+        // settled. The `delete (window...)` on the line above is what
+        // makes this file qualify, and it is the same device the
+        // idempotency case two tests up relies on.
+        const rows = [row(
+            "render_WithoutMarked_DoesNotThrow",
+            "expect(() => h.render('x')).not.toThrow();",
+            "scripts/test-assertions.test.ts")];
+
+        expect(shapesOf(rows)).toMatchObject({ absentDependency: 1, robustnessOnly: 0 });
+    });
+
+    test("idempotency still outranks a survival title", () =>
+    {
+        const rows = [row(
+            "destroy_CalledTwice_DoesNotThrow",
+            "expect(() => h.destroy()).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows)).toMatchObject({ idempotent: 1, robustnessOnly: 0 });
+    });
+
+    test("an accept/refuse pair on the same callee is a positive control", () =>
+    {
+        // `expect(() => engineFor(doc)).toThrow(/ghost/)` sits directly
+        // above the accepted case in wiring.test.ts, so the second is a
+        // control rather than a weak test. The pairing is read from the
+        // describe and from the CALLEE, never from the file.
+        // Concatenated rather than written as an indented template,
+        // because a line that BEGINS with `test(` is a declaration to
+        // the parser-coverage guard above, and a fixture would read as
+        // four blocks this file never declared.
+        const src = 'describe("attach", () => {'
+            + ' test("throws when a binding names an unregistered transform",'
+            + '   () => { expect(() => engineFor(bad)).toThrow(/ghost/); });'
+            + ' test("accepts a binding naming a registered transform",'
+            + '   () => { expect(() => engineFor(doc)).not.toThrow(); });'
+            + '});';
+
+        const scopes = refusalScopes(src);
+
+        expect(scopes).toHaveLength(1);
+        expect([...scopes[0].refused]).toContain("engineFor");
+    });
+
+    test("a refusal about another callee does not make a control", () =>
+    {
+        // The case that caught the first draft. "Factory & Lifecycle"
+        // refuses a bad container and then calls resize, and scoping to
+        // the describe alone claimed the second — the per-file mistake
+        // repeated one level finer (ADR-215).
+        const src = 'describe("DiagramEngine — Factory & Lifecycle", () => {'
+            + ' test("throws on invalid container string",'
+            + '   () => { expect(() => createDiagramEngine("nope", {})).toThrow(); });'
+            + ' test("resize does not throw",'
+            + '   () => { expect(() => { engine.resize(); }).not.toThrow(); });'
+            + '});';
+
+        const refused = refusalScopes(src)[0].refused;
+
+        expect([...refused]).toEqual(["createDiagramEngine"]);
+        expect(refused.has("engine.resize")).toBe(false);
+    });
+
+    test("a survival title outranks the pair it happens to sit in", () =>
+    {
+        // treegrid :: deeplyNestedNodes_RendersWithoutCrash shares
+        // createTreeGrid with missingContainer_Throws, and the two
+        // accept and refuse on different dimensions. Its own title
+        // claims survival, and the title is the fact.
+        const rows = [{
+            file: "scripts/audit-counts.mjs",
+            name: "deeplyNestedNodes_RendersWithoutCrash",
+            body: "expect(() => createTreeGrid(o)).not.toThrow();",
+            verdict: "vacuous" as const,
+            pairedWithRefusal: true,
+        }];
+
+        expect(shapesOf(rows)).toMatchObject(
+            { robustnessOnly: 1, positiveControl: 0 });
     });
 
     test("a block that asserts is in no bucket at all", () =>

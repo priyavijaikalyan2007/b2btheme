@@ -491,6 +491,21 @@ describe("DynamicCanvas — scrolling regions name themselves", () =>
             destroy: () => undefined,
         });
 
+        // DEBT-TEST-1b. The claim in the name is that the hostile
+        // string never REACHES a selector, and the body asserted that
+        // load() did not throw plus that two elements existed — all
+        // three of which hold for a canvas that built the selector and
+        // got no match. The selector call is watched directly
+        // (ADR-215).
+        const selectors: string[] = [];
+        const realQuery = Element.prototype.querySelector;
+
+        Element.prototype.querySelector = function (sel: string)
+        {
+            selectors.push(sel);
+            return realQuery.call(this, sel) as Element | null;
+        } as typeof Element.prototype.querySelector;
+
         try
         {
             const canvas = createDynamicCanvas("canvas-host", {});
@@ -517,10 +532,19 @@ describe("DynamicCanvas — scrolling regions name themselves", () =>
             expect(canvas.getDocument().nodes.c1).toBeTruthy();
             expect(frameOf("grid")).toBeTruthy();
 
+            // The guard is `REGION_NAME.test(name)` in namedRegion, and
+            // it returns before the template string is built. Nothing
+            // carrying the hostile fragment may have been queried, and
+            // the second assertion guards the first: with no selectors
+            // recorded at all it would pass vacuously.
+            expect(selectors.length).toBeGreaterThan(0);
+            expect(selectors.filter((s) => s.includes('x"]'))).toEqual([]);
+
             canvas.destroy();
         }
         finally
         {
+            Element.prototype.querySelector = realQuery;
             api.createLifecycleManager = realLifecycle;
         }
     });

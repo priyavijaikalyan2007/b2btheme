@@ -490,8 +490,54 @@ describe("dismissal triggers", () =>
 
     test("destroy removes all listeners so later events don't throw", () =>
     {
-        const hc = openCard();
-        hc.destroy();
+        // DEBT-TEST-1b. The name claims every listener is REMOVED and
+        // the body only claimed two events did not throw afterwards —
+        // which also holds for a card that left every listener
+        // attached and simply tolerated being called. The claim is
+        // read directly instead: every add during the card's life is
+        // paired with a remove of the same target, type and function
+        // (ADR-215).
+        type Reg = { target: EventTarget; type: string; fn: unknown };
+
+        const added: Reg[] = [];
+        const removed: Reg[] = [];
+        const realAdd = EventTarget.prototype.addEventListener;
+        const realRemove = EventTarget.prototype.removeEventListener;
+
+        EventTarget.prototype.addEventListener = function (type, fn, opts)
+        {
+            added.push({ target: this, type, fn });
+            return realAdd.call(this, type, fn, opts);
+        };
+        EventTarget.prototype.removeEventListener = function (type, fn, opts)
+        {
+            removed.push({ target: this, type, fn });
+            return realRemove.call(this, type, fn, opts);
+        };
+
+        try
+        {
+            const hc = openCard();
+
+            // Guards the assertion below: with nothing registered it
+            // would pass on an empty set.
+            expect(added.length).toBeGreaterThan(0);
+
+            hc.destroy();
+
+            const leaked = added.filter((a) => !removed.some(
+                (r) => r.target === a.target && r.type === a.type && r.fn === a.fn));
+
+            expect(leaked.map((l) => l.type)).toEqual([]);
+        }
+        finally
+        {
+            EventTarget.prototype.addEventListener = realAdd;
+            EventTarget.prototype.removeEventListener = realRemove;
+        }
+
+        // And the events the card used to handle still reach a dead
+        // document safely, which is what the old assertion checked.
         expect(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))).not.toThrow();
         expect(() => document.dispatchEvent(new MouseEvent("contextmenu"))).not.toThrow();
     });

@@ -529,7 +529,24 @@ describe("sampleFor", () =>
 
     test("samples are JSON-serialisable", () =>
     {
-        expect(() => JSON.stringify(sampleFor("hierarchy"))).not.toThrow();
+        // DEBT-TEST-1b. One shape was checked, and "did not throw" is
+        // not serialisability: JSON.stringify returns `undefined` for
+        // a function and silently drops one inside an object, neither
+        // of which throws. A sample has to SURVIVE the round trip,
+        // because that is what the gate does with it, and every shape
+        // has to — the one that was checked is the one least likely
+        // to break (ADR-215).
+        const shapes = [
+            "scalar", "record", "collection", "hierarchy", "graph",
+            "timeseries", "document", "media", "geo", "diff",
+        ] as const;
+
+        for (const shape of shapes)
+        {
+            const sample = sampleFor(shape);
+
+            expect(JSON.parse(JSON.stringify(sample)), shape).toEqual(sample);
+        }
     });
 });
 
