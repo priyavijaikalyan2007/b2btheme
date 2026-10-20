@@ -1157,11 +1157,49 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   brace-counting scan over this codebase has the same trap in it.
 
   **These are not refactored here, on purpose.** Removing an `!important`
-  changes specificity, and specificity changes are visual. This repository
-  has a visual-regression suite and a set of measured contrast adjacencies
-  for exactly that reason, so the work belongs with a visual check rather
-  than beside a logging change. The target is now exact: 29 declarations in
-  8 files.
+  changes specificity, and specificity changes are visual. The target is
+  exact: 29 declarations in 8 files.
+
+  **AND THE PREREQUISITE THIS ENTRY NAMED DOES NOT EXIST. Measured
+  2026-10-20.** The sentence above used to end "this repository has a
+  visual-regression suite ... so the work belongs with a visual check".
+  There is no visual-regression check in this repository:
+  **`grep -c "toHaveScreenshot\|toMatchSnapshot" tests/*.spec.ts` returns
+  zero across every spec.** `tests/dynamic-ui-visual.spec.ts` is named for
+  it and does something else — it writes screenshots to
+  `test-results/review` for a HUMAN to look at, and its assertions are
+  `toBeCloseTo`, `toBeLessThan` and `toBeFocused` on layout numbers. It
+  also visits four pages, none of which is one of these eight components.
+
+  So the deferral stands, on firmer ground than it was written on: **a
+  specificity change in any of these eight files is unverifiable by
+  anything in this repository.** The eight are `markdowneditor`,
+  `conversation`, `graphcanvas`, `treeview`, `chartpanel`, `treegrid`,
+  `ribbon` and `stacklayout`, and the demo-page smoke gate added in
+  ADR-205 covers all of them for ERRORS while saying nothing about
+  appearance.
+
+  **What would unblock it**, in order of cost: screenshot baselines for
+  the eight demo pages, which is the real fix and makes every future CSS
+  change checkable; or the user eyeballing eight pages in both themes
+  once, which is cheaper and does not survive the next change.
+
+  **Most of the 29 look mechanically fixable**, which is the trap. The
+  treeview pair are `.treeview-search-input` and `.treeview-rename-input`
+  overriding Bootstrap's `.form-control` at equal specificity, so scoping
+  them under `.treeview` would win without the keyword. `stacklayout`'s
+  pair override its own `.stacklayout-panel`, which
+  `.stacklayout-panel.stacklayout-panel-collapsed` would settle. Each of
+  those is one line and none of them is verifiable, which is exactly the
+  combination that ships a regression. **Do not take the easy half
+  without the check.**
+
+  **This is the third deferral this month whose stated blocker did not
+  survive being read** — after DEBT-SEC-3's expired `npm audit` premise
+  and graphminimap's 2D context that the component does not use. The
+  difference here is that re-reading made the deferral STRONGER. A
+  blocker is a claim about the repository, and claims age in both
+  directions.
 
   Original March list, retained because it is the only record of what was
   looked at then and it is wrong in both directions:
