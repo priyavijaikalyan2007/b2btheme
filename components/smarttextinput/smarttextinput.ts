@@ -1306,6 +1306,7 @@ export class SmartTextInputEngine
         if (!this.validateElement(element)) { return; }
 
         const type = adapterType || this.detectAdapterType(element);
+        this.assertAdapterCanReadElement(type, element);
         this.targetElement = element;
         this.adapter = this.createAdapter(element, type);
         this.liveRegionEl = this.buildLiveRegion();
@@ -2085,6 +2086,51 @@ export class SmartTextInputEngine
 
         logError("Unsupported element type:", tag);
         throw new Error(`${LOG_PREFIX} Unsupported element type: ${tag}`);
+    }
+
+    /**
+     * DEBT-STI-1. Refuses an explicit adapter type the element cannot
+     * satisfy, while the caller is still on the stack.
+     *
+     * `attach(element, "plaintext")` on a contenteditable div used to
+     * succeed, and the FIRST KEYSTROKE then threw
+     * `Cannot read properties of undefined (reading 'slice')` from
+     * inside the input listener, because the plain-text adapter reads
+     * `element.value` and a div has none. A browser reports that to the
+     * console and jsdom reports it to a virtual console, so the caller
+     * who passed the wrong type sees no event, no throw and no log.
+     *
+     * `detectAdapterType` already refuses an element it cannot place.
+     * This is the same refusal for the branch that SKIPS detection,
+     * which is the branch an explicit type takes. A check that runs on
+     * one of two routes is not a check (ADR-205).
+     */
+    private assertAdapterCanReadElement(
+        type: InputAdapterType, element: HTMLElement
+    ): void
+    {
+        const tag = element.tagName.toLowerCase();
+        const isField = tag === "input" || tag === "textarea";
+
+        if (type === "plaintext" && !isField)
+        {
+            throw new Error(
+                `${LOG_PREFIX} attach(element, "plaintext") needs an <input> `
+                + `or a <textarea>, because the plain-text adapter reads `
+                + `element.value. This is a <${tag}>. Pass `
+                + `"contenteditable", or omit the type and let attach() `
+                + "detect it.");
+        }
+
+        if (type === "contenteditable" && element.contentEditable !== "true"
+            && !isField)
+        {
+            throw new Error(
+                `${LOG_PREFIX} attach(element, "contenteditable") needs an `
+                + `element with contenteditable="true". This <${tag}> does `
+                + "not have it. Set the attribute, or omit the type and let "
+                + "attach() detect it.");
+        }
     }
 
     // ========================================================================

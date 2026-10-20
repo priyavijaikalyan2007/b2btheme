@@ -63,10 +63,6 @@ import type { CapabilityManifest } from "./src/types";
  */
 const EXEMPT: ReadonlySet<string> = new Set([
     // Requires a live GraphCanvas handle, and the blocker holds. Measured
-    // 2026-10-10: `options.graphCanvas` is required and the minimap paints
-    // through a 2D context, which jsdom does not implement — glue that stands
-    // up a real GraphCanvas is the prerequisite, not the manifest.
-    "graphminimap",
     // 25k-line engine with its own embed registry; migrate after phase 10
     // extracts that registry. Unchanged by the 2026-10-10 re-measurement.
     "diagramengine",

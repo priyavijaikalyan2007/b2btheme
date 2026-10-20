@@ -8946,3 +8946,68 @@
     diagramengineLines 30523 -> 30546 as the eighth recorded raise.
     Twenty mutations caught across the pass, and one escape stated in
     the test that cannot see it.
+
+- id: ADR-206
+  title: Two recorded defects taken, and a blocker that was wrong rather than stale
+  date: 2026-10-20
+  status: accepted
+  context: |
+    Three items, all of them already written down. DEBT-DL-1 and
+    DEBT-STI-1 were found on 2026-10-19 and recorded rather than taken,
+    because each was a behaviour change. `graphminimap` had sat EXEMPT
+    from the fleet conformance gate since 2026-08-03 with a blocker
+    naming a 2D context.
+
+    ADR-160 re-measured all sixteen blockers on 2026-10-10 and eleven
+    did not survive. This one did.
+  decision: |
+    D1. DOCKLAYOUT QUEUES A SLOT MOUNT UNTIL THE GRID IS IN THE
+        DOCUMENT, and does it at `mountComponent`, which is the single
+        place all five slot setters funnel through. The queue is keyed
+        by cell, and `clearCell` drops the entry so a cleared slot does
+        not mount anyway.
+
+    D2. SMARTTEXTINPUT REFUSES AN ADAPTER TYPE THE ELEMENT CANNOT
+        SATISFY, at `attach`, while the caller is still on the stack.
+        `detectAdapterType` already refused an element it could not
+        place; this is the same refusal for the branch that skips
+        detection.
+
+    D3. GRAPHMINIMAP JOINS THE FLEET GATE. The manifest is the
+        ChartPanel form — options-only, `containerOption: "container"`
+        — and the conformance glue supplies a `GraphCanvasHandle`
+        stub. The component's source is unchanged.
+  consequences: |
+    THE OBVIOUS DOCKLAYOUT FIX WAS THE WRONG ONE AND THE ENTRY SAID SO.
+    Moving `mountInitialSlots()` into `show()` repairs the constructor
+    route and leaves `setToolbar()`-before-`show()` exactly as broken.
+    Fixing it at the boundary covers both, and the test for the second
+    route is the one that would have failed under the obvious fix. Same
+    shape as ADR-205 D4, where DynamicFormSwitcher made a guarantee on
+    one resolution path of four.
+
+    A MUTATION SHOWED ONE GUARD UNPROVEN AND A SECOND TEST WAS ADDED
+    RATHER THAN A COMMENT WRITTEN. Removing `clearCell`'s queue delete
+    failed nothing, because a Map key already dedupes a REPLACED slot.
+    The case the delete exists for is a CLEARED slot, where nothing
+    overwrites the entry, and that now has its own test.
+
+    THE GRAPHMINIMAP BLOCKER WAS WRONG ON BOTH HALVES, NOT STALE. The
+    minimap paints no 2D context — it renders SVG and the file contains
+    no getContext call. And `graphCanvas` is typed as a six-method
+    structural interface the file documents as minimal, so a plain
+    object satisfies it. ADR-160 re-read sixteen sentences and this one
+    read plausibly, which is why it survived. RE-MEASURING A DEFERRAL
+    MEANS RE-READING THE CODE IT DESCRIBES, NOT THE SENTENCE.
+
+    THE FIRST DRAFT OF THE CONFORMANCE GLUE CARRIED ITS OWN WRONG
+    CLAIM. It said two fixture nodes were needed for the renders-content
+    check, and a mutation showed the gate passes with an empty node
+    list, because the minimap renders its frame either way. The comment
+    now states what was measured. The same correction PermissionMatrix's
+    glue already carried, arrived at the same way.
+
+    DEBT-DUI-4 goes 4 -> 3. 5257 tests across 162 files, 130 of 130 demo
+    pages, 32 of 32 structure checks, testBlocks floor 4963 -> 4970.
+    Six mutations caught and two escapes closed by new tests rather than
+    by softened comments.

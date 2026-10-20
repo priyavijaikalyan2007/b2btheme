@@ -265,3 +265,124 @@ describe("DockLayout plain HTMLElement mounting", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// DEBT-DL-1 — a slot component is handed a cell that is IN the document
+// ============================================================================
+
+describe("DockLayout slot attachment (DEBT-DL-1)", () =>
+{
+    /**
+     * A slot that resolves its container by id, which is what the
+     * library convention asks of a factory and what Ribbon does.
+     * `getElementById` only finds elements the DOCUMENT contains, so
+     * this records whether the cell was attached when it was handed over.
+     */
+    function idResolvingSlot(seen: { connected: boolean | null })
+    {
+        return {
+            show(cell: HTMLElement)
+            {
+                if (!cell.id) { cell.id = "dl1-probe-cell"; }
+                seen.connected = document.getElementById(cell.id) !== null;
+            },
+            hide() { /* not exercised */ },
+            destroy() { /* not exercised */ },
+        };
+    }
+
+    test("aSlotFromOptions_IsMountedAfterTheGridIsInTheDocument", () =>
+    {
+        // The constructor route. `mountInitialSlots()` runs from the
+        // constructor and `show()` is what appends the grid, so this
+        // slot used to be handed a detached cell and the DockLayout
+        // demo page threw on every load.
+        const seen = { connected: null as boolean | null };
+        const layout = new DockLayout(
+            makeOptions({ toolbar: idResolvingSlot(seen) }));
+
+        expect(seen.connected).toBeNull();
+
+        layout.show();
+
+        expect(seen.connected).toBe(true);
+        layout.destroy();
+    });
+
+    test("aSlotSetBeforeShow_IsAlsoDeferred", () =>
+    {
+        // The route the obvious fix would have missed. Deferring only
+        // the initial slots leaves this one mounting into a detached
+        // cell, so the guarantee would hold on one path of two.
+        const seen = { connected: null as boolean | null };
+        const layout = new DockLayout(makeOptions());
+
+        layout.setToolbar(idResolvingSlot(seen));
+
+        expect(seen.connected).toBeNull();
+
+        layout.show();
+
+        expect(seen.connected).toBe(true);
+        layout.destroy();
+    });
+
+    test("aSlotSetAfterShow_MountsImmediately", () =>
+    {
+        // The control. Once the grid is in the document there is
+        // nothing to wait for, and a deferral that never flushed would
+        // leave this slot unmounted forever.
+        const seen = { connected: null as boolean | null };
+        const layout = new DockLayout(makeOptions());
+        layout.show();
+
+        layout.setToolbar(idResolvingSlot(seen));
+
+        expect(seen.connected).toBe(true);
+        layout.destroy();
+    });
+
+    test("aSlotReplacedBeforeShow_MountsOnlyTheReplacement", () =>
+    {
+        // The queue is keyed by cell. Without that, both the discarded
+        // slot and its replacement would mount into the same cell.
+        const mounted: string[] = [];
+        const slot = (name: string) => ({
+            show() { mounted.push(name); },
+            hide() { /* not exercised */ },
+            destroy() { /* not exercised */ },
+        });
+        const layout = new DockLayout(makeOptions({ toolbar: slot("first") }));
+
+        layout.setToolbar(slot("second"));
+        layout.show();
+
+        // The Map key is what dedupes this one, not the delete in
+        // clearCell — verified by mutation. The case the delete is
+        // actually for is the test below.
+        expect(mounted).toEqual(["second"]);
+        layout.destroy();
+    });
+
+    test("aSlotClearedBeforeShow_NeverMounts", () =>
+    {
+        // `setToolbar(null)` clears the cell and sets no replacement,
+        // so nothing overwrites the queued entry. Without the delete in
+        // clearCell the discarded slot still mounts at show(), which is
+        // a component the host removed appearing anyway.
+        const mounted: string[] = [];
+        const layout = new DockLayout(makeOptions({
+            toolbar: {
+                show() { mounted.push("discarded"); },
+                hide() { /* not exercised */ },
+                destroy() { /* not exercised */ },
+            },
+        }));
+
+        layout.setToolbar(null);
+        layout.show();
+
+        expect(mounted).toEqual([]);
+        layout.destroy();
+    });
+});

@@ -244,6 +244,14 @@ export class DockLayout
     private bottomResizeFn: DockResizeListener | null = null;
     private bottomCollapseFn: DockCollapseListener | null = null;
 
+    /**
+     * Slot mounts waiting for the grid to be in the document. DEBT-DL-1.
+     *
+     * Keyed by cell, so replacing a slot before `show()` replaces the
+     * pending mount rather than queueing a second one.
+     */
+    private pendingMounts = new Map<HTMLElement, DockSlotComponent>();
+
     constructor(options: DockLayoutOptions)
     {
         instanceCounter += 1;
@@ -277,6 +285,14 @@ export class DockLayout
         const target = this.resolveContainer();
         target.appendChild(this.rootEl);
         this.visible = true;
+
+        // DEBT-DL-1. Slots given through options are set from the
+        // CONSTRUCTOR, and this is the line that puts the grid in the
+        // document, so until now every slot's `show(cell)` ran against a
+        // detached cell. A slot that resolves its container by id found
+        // nothing, which is how the DockLayout demo page came to throw
+        // `Container "dock-ribbon-cell-resize" was not found` on load.
+        this.flushPendingMounts();
 
         this.updateGridTemplate();
         this.startToolbarObserver();
@@ -584,6 +600,38 @@ export class DockLayout
         component: DockSlotComponent, cell: HTMLElement
     ): void
     {
+        // DEBT-DL-1. THE GUARANTEE IS MADE HERE AND NOT IN EACH SETTER.
+        // All five slot setters funnel through this method, so deferring
+        // once covers `options.toolbar` from the constructor and a
+        // `setToolbar()` call made before `show()` alike. Fixing only
+        // the constructor route would have left the contract true on one
+        // path of two, which is the shape ADR-205 corrected in
+        // DynamicFormSwitcher on the same day this was recorded.
+        if (!this.visible)
+        {
+            this.pendingMounts.set(cell, component);
+            return;
+        }
+
+        this.mountComponentNow(component, cell);
+    }
+
+    /** Flushes slot mounts queued while the grid was detached. */
+    private flushPendingMounts(): void
+    {
+        const queued = [...this.pendingMounts.entries()];
+        this.pendingMounts.clear();
+
+        for (const [cell, component] of queued)
+        {
+            this.mountComponentNow(component, cell);
+        }
+    }
+
+    private mountComponentNow(
+        component: DockSlotComponent, cell: HTMLElement
+    ): void
+    {
         // Set contained mode if the component supports it
         if (typeof component.setContained === "function")
         {
@@ -623,6 +671,10 @@ export class DockLayout
     private clearCell(cell: HTMLElement | null): void
     {
         if (!cell) { return; }
+
+        // A slot replaced before `show()` must not leave its predecessor
+        // queued, or both would mount into the same cell. DEBT-DL-1.
+        this.pendingMounts.delete(cell);
 
         while (cell.firstChild)
         {

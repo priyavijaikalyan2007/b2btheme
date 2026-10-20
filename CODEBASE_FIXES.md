@@ -2253,8 +2253,28 @@ offered as the evidence for it.
   **What it does not do.** It is smoke. A page can be badly wrong and
   pass every line of it.
 
-- [ ] **DEBT-DL-1** **DockLayout hands a slot component a cell that is
-  not in the document.**
+- [x] **DEBT-DL-1** **CLOSED 2026-10-20, ADR-206. DockLayout handed a
+  slot component a cell that was not in the document.**
+
+  **The guarantee is made at `mountComponent`, which is the one place
+  all five slot setters funnel through.** A slot given while the layout
+  is not visible is queued against its cell and mounted by `show()`
+  once `rootEl` is in the document. Deferring only the CONSTRUCTOR
+  route, which is what the original entry proposed and then rejected,
+  would have left `setToolbar()`-before-`show()` broken and the
+  contract true on one path of two.
+
+  The queue is keyed by cell, so replacing a slot before `show()`
+  replaces the pending mount. `clearCell` drops the entry, which is
+  what `setToolbar(null)` needs: nothing overwrites a cleared slot, so
+  without it a component the host removed would appear anyway. That
+  case is its own test, because a mutation showed the Map key alone
+  covered replacement and left the delete unproven.
+
+  **The demo page's own deferral is reverted.** It carried a workaround
+  for one day and now says what it means.
+
+  The original entry, kept because it was accurate:
 
   `mountInitialSlots()` runs from the CONSTRUCTOR (`docklayout.ts:254`),
   and `show()` is what appends `rootEl` to the container. So every slot
@@ -2276,8 +2296,23 @@ offered as the evidence for it.
 
   Found by the demo-page smoke gate.
 
-- [ ] **DEBT-STI-1** **SmartTextInput throws inside its own input
-  handler when the explicit adapter type does not match the element.**
+- [x] **DEBT-STI-1** **CLOSED 2026-10-20, ADR-206. SmartTextInput threw
+  inside its own input handler when the explicit adapter type did not
+  match the element.**
+
+  `assertAdapterCanReadElement` refuses at `attach`, while the caller
+  is still on the stack, and names both the element it got and the way
+  out. `detectAdapterType` already refused an element it could not
+  place — this is the same refusal for the branch that SKIPS detection,
+  which is the branch an explicit type takes.
+
+  **Both directions are guarded and a textarea satisfies both**, which
+  is not a loophole: a textarea has `value` and `textContent`, so
+  either adapter can read it, and `explicitAdapterType_OverridesAutoDetect`
+  depends on exactly that to show the override working without relying
+  on a crash.
+
+  The original entry, kept because it was accurate:
 
   `attach(element, "plaintext")` on a `contenteditable` div builds the
   PlainText adapter, which reads `element.value`. A div has none, so
@@ -2656,7 +2691,7 @@ listed here so future audits do not re-litigate them without the context.
   - **The scroll path needed the same fix as the mount path, and only a browser could see it.** `refineOverlaysOf` selected overlays by node anchor only, so a content-anchored note did not follow its row on scroll. jsdom reports every rectangle as zero, so the eleven unit tests could not have caught it. Three e2e tests in `tests/dynamic-ui.spec.ts` now measure the geometry, and both the position and the scroll fix are mutation-proven there.
 - [x] **DEBT-DUI-2** *(resolved 2026-10-09, ADR-159)* — `attachDrag` is **36 → 27 body lines**. The entry's prescription, extracting the pointer-capture bookkeeping, got it to 32 and no further, so two more came out: `readDragOrigin` snapshots the start of a gesture and `draggedPosition` does the screen-pixels-to-canvas-units arithmetic. `capturePointerDrag` and `releasePointerDrag` are a deliberate mirror pair kept adjacent — a release that misses one of its three steps leaks a listener per drag, and the symptom (a frame that follows the cursor after the button is up) shows up nowhere near the cause. The drag state also moved from four mutable locals to one nullable `DragOrigin`, so there is no longer a window where two of the four are stale. Verified by **33 dynamic-UI e2e tests**, not just the 12 unit tests — pointer capture is invisible to jsdom, so the unit suite would have passed either way. The `@agent:refactor` tag is gone.
 - [x] **DEBT-DUI-3** *(resolved 2026-10-09, ADR-159)* — `validatePatchShape` **35 → 11** and `reduceOps` **51 → 16** body lines. The entry's diagnosis was right about `reduceOps` and wrong about `validatePatchShape`: the latter is not dispatch-shaped at all, it is three independent field checks, so it split per *field* (`revisionIssues`, `opsIssues`). `reduceOps` became a genuine fold — a named `DocState` replaces five mutable locals, `applyOp` maps one op to the next state, and `(patch.ops ?? []).reduce(applyOp, start)` is the whole body. **Every arm now returns a fresh object where the original mutated the copied `nodes` record in place**, which is what makes it a fold rather than a loop with extra steps. `applyOp` first came out at 33 lines; `CODING_STYLE.md` grants dispatch no exemption, so the blank lines between arms went (seven facts should not span twice their height) along with two one-expression helpers. Behaviour is unchanged including the unknown-op case: the original switch had no `default`, so unknown ops were silently dropped, and `default: return state` preserves exactly that. **478 runtime tests pass.**
-- [ ] **DEBT-DUI-4** **4** components remain `EXEMPT` in the fleet conformance gate, down from 16. Clearing an exemption is per-component work; the gate logs the count on every run rather than letting it drift.
+- [ ] **DEBT-DUI-4** **3** components remain `EXEMPT` in the fleet conformance gate, down from 16 and from 4. Clearing an exemption is per-component work; the gate logs the count on every run rather than letting it drift.
 
   **Re-measured 2026-10-09 (ADR-159): the count was right and the conformance figures were stale** — "91 of 98 manifested components sit at `display`" was 84 of 91, because seven had been raised and the entry was taking no credit for them.
 
@@ -2664,7 +2699,29 @@ listed here so future audits do not re-litigate them without the context.
 
   - **Six migrated at `display`** — `usermenu`, `timeline`, `stacklayout`, `multiselectcombo`, `permissionmatrix`, `fileexplorer`. **Not one needed a change to its own source**: a manifest declaring the argument order the runtime already honours, plus fixture options in conformance glue for five of them. `usermenu` was already canonical `(containerId, options)`; the four "non-standard" unions `(containerOrId: string | HTMLElement, options)` are container-first, because the union accepts the host id string the gate passes.
   - **Five moved to `NOT_MOUNTABLE`**, which is where they belonged — `statusbar` (its factory calls `show()` with no argument, appending to `document.body`: mechanically the same exclusion as `toolbar`), `graphtoolbar` (builds a preconfigured Toolbar through `window.createToolbar` and throws without it, so it wraps an already-excluded component), `commandpalette` (a `getInstance()` singleton appending its backdrop to `document.body`, opened by a shortcut), `guidedtour` (a full-viewport walkthrough stepping a popover across other components' elements — and the seed's "returns null under jsdom" was it refusing to run without third-party Driver.js), `helptooltip` (takes the element it decorates as its first argument and throws without one; `hovercard`'s rationale verbatim).
-  - **Four still exempt, with blockers rewritten to say what was tried** — `graphminimap` (needs a live GraphCanvas and a 2D context jsdom does not implement: the blocker holds), `diagramengine` (phase 10, unchanged), `dynamicformswitcher` (its signature resolves; what its manifest should *declare* is consumer-visible design), `markdowneditor` (exports a class and no factory, so migrating it means adding one to the public surface). **`authcard` was the fifth, and it left the list on 2026-10-11 by being answered rather than migrated (ADR-163)** — see below.
+  **`graphminimap` left the list on 2026-10-20 (ADR-206), and its blocker
+  was wrong on both halves rather than merely stale.** It read:
+  "`options.graphCanvas` is required and the minimap paints through a 2D
+  context, which jsdom does not implement — glue that stands up a real
+  GraphCanvas is the prerequisite, not the manifest." **The minimap paints
+  no 2D context.** It renders SVG, and `graphminimap.ts` contains no
+  `getContext` call at all. **And `graphCanvas` is not a GraphCanvas**: it
+  is `GraphCanvasHandle`, a six-method structural interface the file itself
+  documents as "minimal interface that a graph canvas must implement". A
+  plain object satisfies it, which is what the conformance glue supplies.
+  The manifest is the ChartPanel form exactly —
+  `factoryStyle: "options-only"`, `containerOption: "container"` — and the
+  migration needed no change to the component's source.
+
+  **ADR-160 re-measured these blockers once and eleven of sixteen did not
+  survive. This one survived because nobody opened the file.** Re-measuring
+  a deferral means re-reading the code it describes, not re-reading the
+  sentence. The remaining three are `diagramengine` (phase 10),
+  `dynamicformswitcher` (a consumer-visible design question) and
+  `markdowneditor` (exports a class and no factory, so migrating it adds to
+  the public surface).
+
+  - **Four still exempt as of 2026-10-10, with blockers rewritten to say what was tried** — `graphminimap` (needs a live GraphCanvas and a 2D context jsdom does not implement: the blocker holds), `diagramengine` (phase 10, unchanged), `dynamicformswitcher` (its signature resolves; what its manifest should *declare* is consumer-visible design), `markdowneditor` (exports a class and no factory, so migrating it means adding one to the public surface). **`authcard` was the fifth, and it left the list on 2026-10-11 by being answered rather than migrated (ADR-163)** — see below.
 
   **The AuthCard question was closed on 2026-10-11 (ADR-163), and the answer was that there was nothing to do.** Dynamic UI composes a canvas in reaction to a model response, so a citizen of that canvas is something a model can ask for. AuthCard renders Keycloak's login step, which runs before any session exists, so there is no model and no response to react to — there is no moment at which a canvas could mount it. It moved to `NOT_MOUNTABLE`, which brings the gate to **97 of 101 in-scope migrated, 4 exempt, 24 permanently excluded**. The exclusion is about **sequence**, not shape, and that category did not exist in the gate before: every other entry is a service, an element builder, a boot script, or a viewport-docked or transient overlay. An exclusion the lists have no words for reads as a backlog item until somebody writes the words.
 

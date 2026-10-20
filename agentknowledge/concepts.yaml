@@ -1613,3 +1613,17 @@
   related:
   - ExistenceIsNotReadiness
   - AFileOnDiskIsNotAPageThatWorks
+
+- name: ReMeasureTheCodeNotTheSentence
+  definition: "ADR-206. `graphminimap` sat exempt from the fleet conformance gate for ten weeks behind a blocker reading \"the minimap paints through a 2D context, which jsdom does not implement\". The minimap paints no 2D context: it renders SVG, and the file contains no getContext call. The second half was wrong too — `graphCanvas` is typed as a six-method structural interface the file documents as minimal, not as the GraphCanvas component. ADR-160 had already re-measured all sixteen blockers once and retired eleven, and this one survived because the sentence read plausibly. A deferral is a claim about code, and re-measuring it means opening the file it describes rather than re-reading the note. A plausible blocker is the dangerous kind."
+  anchor_file: components/graphminimap/graphminimap.manifest.ts
+  related:
+  - AClassificationIsAnInstrumentNotANote
+  - AContractHoldingOnOneBranchIsNotAContract
+
+- name: FixTheGuaranteeAtTheBoundary
+  definition: "ADR-206. DockLayout handed slot components a cell that was not yet in the document, and the obvious repair — moving the initial-slot mount into show() — fixes the constructor route and leaves setToolbar()-before-show() exactly as broken. The entry had spotted that and recorded the item rather than taking it. The fix belongs at `mountComponent`, the one method all five slot setters funnel through, so one deferral covers every route. Before fixing a contract violation, count the ways in: a guarantee implemented at some call sites is the defect wearing a fix, and it is harder to find afterwards because the obvious test now passes."
+  anchor_file: components/docklayout/docklayout.ts
+  related:
+  - AContractHoldingOnOneBranchIsNotAContract
+  - ExistenceIsNotReadiness

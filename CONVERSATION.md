@@ -4270,3 +4270,36 @@ argument. Each rewrite turned out to be half assertion and half setup.
 
 Working by cluster is what made 31 fit in one pass. The recording
 canvas context written for Ruler's first block paid for the other four.
+
+## 2026-10-20 — Two recorded defects, and a blocker nobody had checked
+
+Both defects from yesterday turned out to be worth the wait.
+
+DockLayout's fix is not the one the entry first reached for. Moving the
+initial-slot mount into `show()` repairs the constructor route and
+leaves `setToolbar()`-before-`show()` exactly as broken, and the entry
+had already said so, which is the only reason the right fix got
+written. It belongs at `mountComponent`, where all five setters meet.
+That is the third time in three days a guarantee turned out to be
+implemented at call sites rather than at a boundary.
+
+A mutation then caught my own test being weaker than I thought: the
+queue is a Map, so the key already dedupes a REPLACED slot and the
+`delete` in `clearCell` was unproven. The case it exists for is a
+CLEARED slot. That got its own test rather than a softened comment.
+
+graphminimap is the better story. Its exemption had read "the minimap
+paints through a 2D context, which jsdom does not implement" since
+August. The minimap renders SVG. There is no `getContext` call in the
+file. And `graphCanvas` is a six-method structural interface, not the
+GraphCanvas component, so a plain object satisfies it.
+
+ADR-160 re-measured all sixteen blockers in October and retired eleven.
+This one survived because it read plausibly — a 2D context in a
+component called "minimap" is exactly the claim that passes a reading
+and fails a grep.
+
+My own conformance glue then carried the same kind of wrong claim: I
+wrote that the two fixture nodes were needed for the renders-content
+check, and a mutation showed the gate passes with an empty list. Fixed
+the comment to say what was measured.

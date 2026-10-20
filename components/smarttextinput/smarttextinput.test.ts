@@ -486,6 +486,37 @@ describe("edge cases", () =>
         engine.destroy();
     });
 
+    test("explicitPlaintextOnADiv_RefusesAtAttach", () =>
+    {
+        // DEBT-STI-1, closed. This used to succeed, and the first
+        // keystroke then threw `Cannot read properties of undefined
+        // (reading 'slice')` from inside the input listener, where
+        // jsdom's boundary swallows it — no event, no throw, no log.
+        // The refusal now happens while the caller is on the stack.
+        const div = document.createElement("div");
+        div.contentEditable = "true";
+        container.appendChild(div);
+        const engine = createSmartTextInput();
+
+        expect(() => engine.attach(div, "plaintext"))
+            .toThrow(/needs an <input> or a <textarea>/);
+        engine.destroy();
+    });
+
+    test("explicitContenteditableOnAPlainDiv_RefusesAtAttach", () =>
+    {
+        // The other direction. A div WITHOUT the attribute has no
+        // contenteditable behaviour to drive, and `detectAdapterType`
+        // already refuses it — this is the branch that skips detection.
+        const div = document.createElement("div");
+        container.appendChild(div);
+        const engine = createSmartTextInput();
+
+        expect(() => engine.attach(div, "contenteditable"))
+            .toThrow(/needs an element with contenteditable/);
+        engine.destroy();
+    });
+
     test("autoDetectOnATextarea_IsTheControlForTheOverrideAbove", () =>
     {
         // Same element, same keystroke, no override. Without this the

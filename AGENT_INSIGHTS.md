@@ -2368,3 +2368,48 @@ bucket, not one sprintpicker case.
 component, so the recording 2D context written for Ruler's first block
 paid for the other four. Sorting by file size would have started with
 DiagramEngine and bought one block's setup per block.
+
+### 6.127 A Plausible Blocker Is the Dangerous Kind (2026-10-20)
+
+`graphminimap` sat exempt from the fleet conformance gate for ten weeks
+behind this: *"`options.graphCanvas` is required and the minimap paints
+through a 2D context, which jsdom does not implement."*
+
+Both halves are wrong. The minimap renders **SVG** — `graphminimap.ts`
+contains no `getContext` call at all. And `graphCanvas` is not a
+GraphCanvas: it is `GraphCanvasHandle`, a six-method structural
+interface the file itself documents as *"minimal interface that a graph
+canvas must implement"*. A plain object satisfies it.
+
+The migration needed no change to the component's source. A manifest in
+the ChartPanel form and a stub in the conformance glue, and it passed.
+
+**ADR-160 re-measured all sixteen blockers on 2026-10-10 and eleven did
+not survive. This one survived because it read plausibly.** A 2D
+context in a component whose name contains "map" is exactly the kind of
+claim that passes a reading and fails a grep.
+
+**Principle**: a deferral is a claim about code. Re-measuring it means
+opening the file it describes, not re-reading the note. The blockers
+that survive a prose review are selected for plausibility, not truth.
+
+### 6.128 Count the Ways In Before Fixing a Contract (2026-10-20)
+
+DockLayout handed slot components a cell that was not yet in the
+document. The obvious repair is to move `mountInitialSlots()` from the
+constructor into `show()` — and that fixes the constructor route while
+leaving `setToolbar()`-before-`show()` exactly as broken.
+
+Yesterday's entry had already spotted that and recorded the item rather
+than taking it, which is the only reason the right fix got written: at
+`mountComponent`, the one method all five slot setters funnel through.
+
+This is the third instance in three days. DynamicFormSwitcher made its
+attachment guarantee on one resolution path of four. SmartTextInput
+refused an unusable element in `detectAdapterType` and not on the branch
+that skips detection.
+
+**Principle**: before fixing a contract violation, count the ways in. A
+guarantee implemented at some call sites is the defect wearing a fix,
+and it is harder to find afterwards, because the obvious test now
+passes.
