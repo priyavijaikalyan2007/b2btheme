@@ -61,10 +61,12 @@ function sriOf(buffer)
 function checkDocumentedPairings(manifest, problems, thirdParty)
 {
     const byHash = new Map();
+    const byUrl = new Map();
 
     for (const [name, asset] of Object.entries(manifest.assets ?? {}))
     {
         byHash.set(asset.integrity, { name, url: asset.url });
+        byUrl.set(asset.url, { name, integrity: asset.integrity });
     }
 
     // Third-party builds this repository does NOT serve are hashed in
@@ -77,6 +79,7 @@ function checkDocumentedPairings(manifest, problems, thirdParty)
     for (const [name, asset] of Object.entries(thirdParty.assets ?? {}))
     {
         byHash.set(asset.integrity, { name, url: asset.url });
+        byUrl.set(asset.url, { name, integrity: asset.integrity });
     }
 
     const files = execFileSync("git", ["ls-files", "*.md", "*.html"], { encoding: "utf8" })
@@ -91,6 +94,37 @@ function checkDocumentedPairings(manifest, problems, thirdParty)
         for (const tag of text.match(/<(?:script|link)\b[^>]*>/g) ?? [])
         {
             const hash = tag.match(/integrity="([^"]+)"/)?.[1];
+
+            // THE URL-FIRST DIRECTION, AND IT IS THE ONE THAT WAS MISSING.
+            // Everything below is hash-first: find a tag carrying a hash we
+            // published, then check its URL. A tag whose hash is WRONG is
+            // not in `byHash` at all, so it was skipped in silence and the
+            // only visible effect was the inspected count dropping by one.
+            // Mutating a published hash in a README therefore passed this
+            // gate, which makes the hash in the documentation decoration.
+            //
+            // This asks the other question: a tag that POINTS AT a vendored
+            // asset must carry that asset's hash. It catches a stale hash
+            // after a version bump, a typo, and a tag with no integrity at
+            // all. ADR-211.
+            const src = tag.match(/\b(?:href|src)="([^"]*)"/)?.[1];
+            const vendored = src === undefined
+                ? undefined
+                : [...byUrl.entries()].find(([url]) =>
+                    src === url
+                    || (url.startsWith("/")
+                        && new RegExp(`^https://[^/]+${url}$`).test(src)))?.[1];
+
+            if (vendored !== undefined && hash !== vendored.integrity)
+            {
+                inspected += 1;
+                problems.push(
+                    `${file}: a tag points at the vendored ${vendored.name} but `
+                    + `carries ${hash === undefined ? "NO integrity" : `integrity ${hash}`}, `
+                    + `not the published ${vendored.integrity}. A consumer who copies `
+                    + `this gets a script the browser refuses to run.`);
+                continue;
+            }
 
             if (hash === undefined) { continue; }
 

@@ -43,37 +43,9 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js" integrity="sha384-D/8HPEJGB9NkJIaVmIK644a6Z5B2u4UzQYXiEFJifVxAt6vwDyf5ODa1U8XxXCjD" crossorigin="anonymous"></script>
 
-    <!-- CodeMirror 6 (ES modules via esm.sh) -->
-    <script type="module">
-        const [view, state, commands, lang, search, autocomplete, lint, jsLang, jsonLang, htmlLang, cssLang] = await Promise.all([
-            import("https://esm.sh/@codemirror/view@6"),
-            import("https://esm.sh/@codemirror/state@6"),
-            import("https://esm.sh/@codemirror/commands@6"),
-            import("https://esm.sh/@codemirror/language@6"),
-            import("https://esm.sh/@codemirror/search@6"),
-            import("https://esm.sh/@codemirror/autocomplete@6"),
-            import("https://esm.sh/@codemirror/lint@6"),
-            import("https://esm.sh/@codemirror/lang-javascript@6"),
-            import("https://esm.sh/@codemirror/lang-json@6"),
-            import("https://esm.sh/@codemirror/lang-html@6"),
-            import("https://esm.sh/@codemirror/lang-css@6"),
-        ]);
-        window.EditorView = view.EditorView;
-        window.EditorState = state.EditorState;
-        window.keymap = view.keymap;
-        window.defaultKeymap = commands.defaultKeymap;
-        window.indentWithTab = commands.indentWithTab;
-        window.syntaxHighlighting = lang.syntaxHighlighting;
-        window.defaultHighlightStyle = lang.defaultHighlightStyle;
-        window.searchKeymap = search.searchKeymap;
-        window.autocompletion = autocomplete.autocompletion;
-        window.lintKeymap = lint.lintKeymap;
-        window.javascript = jsLang.javascript;
-        window.json = jsonLang.json;
-        window.html = htmlLang.html;
-        window.css = cssLang.css;
-        console.log(new Date().toISOString(), "[INFO]", "[ComponentStudio]", "CodeMirror 6 loaded from CDN");
-    </script>
+    <!-- CodeMirror 6, vendored. Fourteen packages in one hashed file,
+         served from this origin. DEBT-SEC-9 / ADR-211. -->
+    <script src="../../dist/lib/codemirror6-6.43.15.js"></script>
 
     <!-- All embeddable component CSS files (alphabetical) -->
     <link rel="stylesheet" href="../../dist/components/actionitems/actionitems.css">

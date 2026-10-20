@@ -56,6 +56,61 @@ const ASSETS = [
         note: "HTML sanitizer — highest-value asset to remove third-party trust from",
     },
     {
+        name: "codemirror6",
+        kind: "bundle",
+        // The version anchor. Fourteen packages ship on their own release
+        // trains, so one filename cannot name them all. `view` is the
+        // package the others depend on, and `members` records the rest so
+        // a reader can audit exactly what is inside the file.
+        pkg: "@codemirror/view",
+        members: [
+            "@codemirror/view", "@codemirror/state", "@codemirror/commands",
+            "@codemirror/language", "@codemirror/search",
+            "@codemirror/autocomplete", "@codemirror/lint",
+            "@codemirror/lang-javascript", "@codemirror/lang-json",
+            "@codemirror/lang-html", "@codemirror/lang-css",
+            "@codemirror/lang-sql", "@codemirror/lang-python",
+            "@codemirror/lang-markdown",
+        ],
+        // NO `global`. Every other asset publishes one namespace and the
+        // page reads through it. CodeEditor probes about thirty BARE names
+        // on `window`, so a namespace here would leave every consumer
+        // writing the same thirty lines of glue the CDN version needed.
+        // DEBT-SEC-9 counted that glue in the README as part of the
+        // problem, so the vendored file does the publishing itself and the
+        // consumer writes ONE tag.
+        //
+        // `history` and `search` are republished as `cmHistory` and
+        // `cmSearch`. `window.history` is the browser's own, and
+        // overwriting it breaks navigation. The renames are not cosmetic
+        // and CodeEditor probes for exactly these spellings.
+        entry: [
+            'import { EditorView, keymap, lineNumbers, drawSelection, dropCursor, highlightActiveLine } from "@codemirror/view";',
+            'import { EditorState } from "@codemirror/state";',
+            'import { history, historyKeymap, defaultKeymap, undo, redo, indentSelection } from "@codemirror/commands";',
+            'import { syntaxHighlighting, defaultHighlightStyle, indentOnInput, bracketMatching } from "@codemirror/language";',
+            'import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";',
+            'import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";',
+            'import { setDiagnostics } from "@codemirror/lint";',
+            'import { javascript } from "@codemirror/lang-javascript";',
+            'import { json } from "@codemirror/lang-json";',
+            'import { html } from "@codemirror/lang-html";',
+            'import { css } from "@codemirror/lang-css";',
+            'import { sql } from "@codemirror/lang-sql";',
+            'import { python } from "@codemirror/lang-python";',
+            'import { markdown } from "@codemirror/lang-markdown";',
+            'Object.assign(window, {',
+            '  EditorView, EditorState, keymap, lineNumbers, drawSelection, dropCursor,',
+            '  highlightActiveLine, highlightSelectionMatches,',
+            '  cmHistory: history, historyKeymap, defaultKeymap, undo, redo, indentSelection,',
+            '  syntaxHighlighting, defaultHighlightStyle, indentOnInput, bracketMatching,',
+            '  cmSearch: search, searchKeymap, closeBrackets, closeBracketsKeymap,',
+            '  setDiagnostics, javascript, json, html, css, sql, python, markdown',
+            '});',
+        ].join("\n"),
+        note: "CodeMirror 6, fourteen packages in one hashed file; publishes 30 bare globals that CodeEditor probes for. DEBT-SEC-9 / ADR-211",
+    },
+    {
         name: "maxgraph",
         kind: "bundle",
         entry: 'export * from "@maxgraph/core";',
@@ -227,7 +282,10 @@ async function bundleAsset(asset, outFile)
         },
         bundle: true,
         format: "iife",
-        globalName: asset.global,
+        // An asset that publishes its own globals has no single namespace,
+        // so esbuild is given no `globalName` and the entry does the
+        // assigning. See the codemirror6 asset.
+        ...(asset.global ? { globalName: asset.global } : {}),
         minify: true,
         outfile: outFile,
         metafile: true,
@@ -317,7 +375,11 @@ async function main()
             version,
             url: `/lib/${fileName}`,
             integrity: sriOf(bytes),
-            global: asset.global,
+            ...(asset.global ? { global: asset.global } : {}),
+            ...(asset.members
+                ? { members: Object.fromEntries(
+                    asset.members.map((m) => [m, versionOf(m)])) }
+                : {}),
             bytes: bytes.length,
             closure: "complete",
             ...(asset.note ? { note: asset.note } : {}),

@@ -41,9 +41,11 @@
  * the component it is named after. It asserts nothing about behaviour,
  * and a page can be badly wrong while passing every line of this file.
  *
- * NETWORK. `codeeditor.html` imports CodeMirror from esm.sh, so that one
- * page needs the network. This suite is therefore a LOCAL gate and is not
- * wired into CI, which runs no browser today.
+ * NETWORK. This suite is a LOCAL gate and is not wired into CI, which runs
+ * no browser today. It still needs the network, but NOT for CodeMirror any
+ * more: ADR-211 vendored those fourteen packages into one hashed file on
+ * this origin. What remains is `guidedtour.html` loading driver.js from
+ * jsdelivr, and Google Fonts on most pages.
  */
 
 import { test, expect } from "@playwright/test";

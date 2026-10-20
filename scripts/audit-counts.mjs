@@ -462,7 +462,7 @@ const BASELINES = {
     // predicate that matched cdn.jsdelivr.net alone, so it never
     // reached either registry. Pinning them is a separate decision,
     // because the fifteen packages have to interoperate.
-    unpinnedCdnRefs: 77,
+    unpinnedCdnRefs: 10,
     tagsMissingSri: 0,
     // DEBT-SEC-8 and DEBT-SEC-7. 76 -> 65 -> 35 -> 17 across three
     // slices. The first pointed DOMPurify and font-awesome at the
@@ -486,7 +486,7 @@ const BASELINES = {
     // DEBT-SEC-9 / ADR-210. 67 third-party ES-module specifiers that no
     // tag-based count could see. A CEILING, not a target of zero: neither
     // `import()` nor a static specifier can carry `integrity` today.
-    cdnModuleSpecifiers: 67,
+    cdnModuleSpecifiers: 0,
     // ERR-1. 306 -> 329 -> 330. Replacing 63 quiet container branches with
     // a throw orphaned the logWarn or logError helper in 23 components,
     // and the second census added visualtableeditor, which logged the

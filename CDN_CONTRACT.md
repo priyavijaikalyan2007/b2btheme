@@ -207,7 +207,7 @@ versioned **directory**:
 ```html
 <link rel="stylesheet"
       href="https://static.knobby.io/lib/font-awesome-6.5.1/css/all.min.css"
-      integrity="<from the manifest>" crossorigin="anonymous">
+      integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
 ```
 
 The stylesheet carries an SRI hash. The `@font-face` files it pulls **cannot**

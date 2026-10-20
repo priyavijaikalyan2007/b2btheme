@@ -45,66 +45,77 @@ Add language support by exposing factory functions as globals:
 | `python` | `@codemirror/lang-python` |
 | `markdown` | `@codemirror/lang-markdown` |
 
-### Loading via ESM CDN
+### Loading CodeMirror 6
 
-CodeMirror 6 is ESM-native. Use a `<script type="module">` with an ESM CDN to expose globals:
+CodeMirror 6 is vendored. Fourteen packages are bundled into one
+self-contained file served from this origin, and that file carries a
+Subresource Integrity hash. **One tag, and it publishes every global
+CodeEditor needs.**
 
 ```html
-<script type="module">
-    import { EditorView, keymap, lineNumbers, drawSelection, dropCursor,
-             highlightActiveLine, highlightSelectionMatches }
-        from "https://esm.sh/@codemirror/view@6";
-    import { EditorState } from "https://esm.sh/@codemirror/state@6";
-    import { history, historyKeymap, defaultKeymap, undo, redo, indentSelection }
-        from "https://esm.sh/@codemirror/commands@6";
-    import { syntaxHighlighting, defaultHighlightStyle, indentOnInput }
-        from "https://esm.sh/@codemirror/language@6";
-    import { search, searchKeymap } from "https://esm.sh/@codemirror/search@6";
-    import { closeBrackets, closeBracketsKeymap } from "https://esm.sh/@codemirror/autocomplete@6";
-    import { bracketMatching } from "https://esm.sh/@codemirror/language@6";
-    import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6";
-    import { json } from "https://esm.sh/@codemirror/lang-json@6";
-    import { html } from "https://esm.sh/@codemirror/lang-html@6";
-    import { css } from "https://esm.sh/@codemirror/lang-css@6";
-    import { sql } from "https://esm.sh/@codemirror/lang-sql@6";
-    import { python } from "https://esm.sh/@codemirror/lang-python@6";
-    import { markdown } from "https://esm.sh/@codemirror/lang-markdown@6";
-
-    // Expose as globals for CodeEditor
-    Object.assign(window, {
-        EditorView, EditorState, keymap, lineNumbers, drawSelection, dropCursor,
-        highlightActiveLine, highlightSelectionMatches, history, historyKeymap,
-        defaultKeymap, undo, redo, indentSelection, syntaxHighlighting,
-        defaultHighlightStyle, indentOnInput, search, searchKeymap,
-        closeBrackets, closeBracketsKeymap, bracketMatching,
-        javascript, json, html, css, sql, python, markdown
-    });
-    window.dispatchEvent(new Event("codemirror-ready"));
-</script>
+<script src="https://static.knobby.io/lib/codemirror6-6.43.15.js"
+        integrity="sha384-At2UiJ40/DCV2QBhVybjjxrQ2G/7hm/BOBWxdMSnxFNpJgNoscYBGDvvQx1bb1vI"
+        crossorigin="anonymous"></script>
+<script src="components/codeeditor/codeeditor.js"></script>
 ```
 
-Alternatively, provide a pre-bundled UMD build that sets these globals.
+No import block and no `Object.assign(window, ...)` glue. The bundle
+publishes the thirty names CodeEditor probes for, including the two
+renames described below.
 
-### Subresource integrity is not available for this form
+`crossorigin="anonymous"` is not decoration. Without it the browser makes
+an opaque request, cannot read the body to hash it, and SKIPS the
+integrity check rather than failing it.
 
-Every other third-party library this repository recommends carries an
-`integrity` hash, recorded in `scripts/third-party-sri.json` and published at
-`/third-party-sri.json`. CodeMirror 6 carries none, and the reason is
-structural rather than an oversight.
+### What is inside, and at which versions
 
-An `integrity` attribute attaches to a `<script src>` tag. It cannot attach to
-an import specifier inside a module, which is the constraint
-`scripts/vendor-closure.mjs` states in its own header. The fifteen imports
-above therefore arrive unverified, and so does whatever the ESM CDN resolves
-behind them. The specifiers also float at major `@6`, so the version is chosen
-at request time rather than here.
+The filename carries `@codemirror/view`'s version because fourteen
+packages ship on their own release trains and one filename cannot name
+them all. `dist/lib-manifest.json` records every member version, so what
+is in the file is auditable without unpacking it.
 
-A deployment that needs the guarantee has two honest options. Bundle
-CodeMirror into one self-contained file and hash that file, or serve it from
-an origin under your own control. The pre-bundled UMD build named above is the
-first option, and it is the one that restores SRI.
+- `@codemirror/autocomplete` 6.20.4
+- `@codemirror/commands` 6.11.1
+- `@codemirror/lang-css` 6.3.1
+- `@codemirror/lang-html` 6.4.12
+- `@codemirror/lang-javascript` 6.2.5
+- `@codemirror/lang-json` 6.0.2
+- `@codemirror/lang-markdown` 6.5.2
+- `@codemirror/lang-python` 6.2.1
+- `@codemirror/lang-sql` 6.10.0
+- `@codemirror/language` 6.13.1
+- `@codemirror/lint` 6.9.7
+- `@codemirror/search` 6.7.2
+- `@codemirror/state` 6.7.6
+- `@codemirror/view` 6.43.15
 
-This is recorded as DEBT-SEC-5.
+### Two globals are renamed, and the reason is not cosmetic
+
+`history` is published as **`cmHistory`** and `search` as **`cmSearch`**.
+
+`window.history` is the browser's own History object and is a read-only
+accessor on `Window`. Assigning CodeMirror's `history` over it **silently
+fails**, so a page that publishes the bare name ends up with no undo
+history at all and no error to explain it. This README recommended
+exactly that until 2026-10-20. If you wrote your own glue from an older
+copy of this file, check for it.
+
+### Subresource integrity, and why this changed
+
+Every third-party library this repository recommends carries an
+`integrity` hash recorded in `scripts/third-party-sri.json`. CodeMirror 6
+used to be the exception, and the reason was structural: an `integrity`
+attribute attaches to a `<script src>` tag and cannot attach to an import
+specifier inside a module. Fourteen dynamic imports of esm.sh URLs
+therefore arrived unverified, and the specifiers floated at major `@6`,
+so the version was chosen at request time rather than here.
+
+Bundling the closure into one file and hashing that file is what removed
+the exception. The build is `scripts/vendor-closure.mjs`, which asserts
+the closure from esbuild's metafile rather than by grepping the output,
+and refuses to publish an asset that still resolves anything at runtime.
+
+Recorded as DEBT-SEC-5 and DEBT-SEC-9, both closed by ADR-211.
 
 ## Quick Start
 

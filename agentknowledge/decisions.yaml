@@ -9284,3 +9284,71 @@
     NO SHIPPED COMPONENT LOADS FROM A CDN AT RUNTIME, verified across
     every `components/*/*.ts`. The exposure is in what this repository
     demonstrates and documents.
+
+- id: ADR-211
+  title: The fix was never to hash a specifier, it was to stop having specifiers
+  date: 2026-10-20
+  status: accepted
+  context: |
+    ADR-210 opened DEBT-SEC-9 holding 67 third-party ES-module specifiers
+    and recorded vendoring as a product decision for the owner. The owner
+    chose to vendor, in these words: "With AI agents, anything and
+    everything exploitable is going to get exploited. Since we build
+    enterprise and personal management software, it is best to do our
+    best/maximal on security to lock things down versus leave things open
+    just because we believe it is safe."
+  decision: |
+    D1. CODEMIRROR 6 IS VENDORED. Fourteen packages, one esbuild IIFE,
+        640 KB, 28 inputs, 0 external. The closure is asserted from
+        esbuild's metafile, so the build refuses to publish an artifact
+        that still resolves anything at run time.
+
+    D2. THE BUNDLE PUBLISHES BARE GLOBALS, NOT A NAMESPACE. Every other
+        vendored asset publishes one name. CodeEditor probes about thirty
+        bare names, so a namespace would have left every consumer writing
+        the thirty lines of glue the CDN version needed. That glue was 14
+        of the 67, in a README consumers copy. Hashed-and-verbose would
+        have missed the point.
+
+    D3. THE README'S GLUE WAS BROKEN, AND HAD BEEN. It assigned the bare
+        name `history`. `window.history` is a read-only accessor on
+        `Window`, so the assignment silently fails, and the component
+        rejects the browser's History object because it is not a function.
+        Anyone following the README had an editor with no undo and no
+        error. The vendored bundle publishes `cmHistory` and `cmSearch`
+        itself.
+
+    D4. `check-closure.mjs` GAINS THE URL-FIRST DIRECTION. It was
+        hash-first and SKIPPED any tag whose integrity it did not
+        recognise, so mutating a published hash in a README passed the
+        gate and only dropped the inspected count by one. A hash in
+        documentation was decoration. The new check found two real
+        defects at once: two guides handed consumers font-awesome tags
+        with a placeholder where the hash belongs.
+
+    D5. THE `unhashable` KEY IS EMPTIED AND ITS COMMENT RECORDS WHY. It
+        held codemirror6 on the reasoning that integrity cannot attach to
+        an import specifier. True, and the conclusion did not follow. Its
+        old note said a consumer could bundle CodeMirror or self-host and
+        that "neither is something this repository can do on their
+        behalf". Both were.
+  consequences: |
+    `cdnModuleSpecifiers` 67 to 0. `unpinnedCdnRefs` 77 to 10, a fall of
+    67 as a side effect, because the esm.sh URLs floated at major 6 and
+    were most of what that count measured. `thirdPartyTagsWithoutSri`
+    stays 10, `tagsMissingSri` stays 0.
+
+    `dist/lib/codemirror6-6.43.15.js` is 640 KB. The filename carries
+    `@codemirror/view`'s version because fourteen packages ship on their
+    own trains, and the manifest row records all fourteen member versions
+    so the file is auditable without unpacking it.
+
+    Three new Playwright assertions prove the bundle WORKS rather than
+    merely loads: every probed global is present, no code arrives from a
+    third-party CDN, and undo restores typed text, which is the
+    regression test for D3.
+
+    STILL THIRD-PARTY AT RUN TIME: `guidedtour.html` loads driver.js from
+    jsdelivr with a hash, and most demo pages load Google Fonts. Fonts
+    are a population no count here covers and are the obvious next
+    candidate under the same reasoning.

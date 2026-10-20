@@ -142,7 +142,7 @@ than a single script:
 ```html
 <link rel="stylesheet"
       href="https://static.knobby.io/lib/font-awesome-6.5.1/css/all.min.css"
-      integrity="<from lib.assets['font-awesome'].integrity>"
+      integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g"
       crossorigin="anonymous">
 ```
 

@@ -27,7 +27,6 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://esm.sh">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
@@ -87,63 +86,9 @@
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
-    <script type="module">
-        // Load CodeMirror 6 from CDN and expose as window globals for CodeEditor.
-        try {
-            const [view, state, commands, language, srch, autocomplete, lint,
-                   langJs, langJson, langHtml, langCss, langSql, langPy, langMd] = await Promise.all([
-                import("https://esm.sh/@codemirror/view@6"),
-                import("https://esm.sh/@codemirror/state@6"),
-                import("https://esm.sh/@codemirror/commands@6"),
-                import("https://esm.sh/@codemirror/language@6"),
-                import("https://esm.sh/@codemirror/search@6"),
-                import("https://esm.sh/@codemirror/autocomplete@6"),
-                import("https://esm.sh/@codemirror/lint@6"),
-                import("https://esm.sh/@codemirror/lang-javascript@6"),
-                import("https://esm.sh/@codemirror/lang-json@6"),
-                import("https://esm.sh/@codemirror/lang-html@6"),
-                import("https://esm.sh/@codemirror/lang-css@6"),
-                import("https://esm.sh/@codemirror/lang-sql@6"),
-                import("https://esm.sh/@codemirror/lang-python@6"),
-                import("https://esm.sh/@codemirror/lang-markdown@6")
-            ]);
-            var w = window;
-            w.EditorView = view.EditorView;
-            w.EditorState = state.EditorState;
-            w.keymap = view.keymap;
-            w.lineNumbers = view.lineNumbers;
-            w.drawSelection = view.drawSelection;
-            w.dropCursor = view.dropCursor;
-            w.highlightActiveLine = view.highlightActiveLine;
-            w.highlightSelectionMatches = srch.highlightSelectionMatches;
-            w.cmHistory = commands.history;
-            w.historyKeymap = commands.historyKeymap;
-            w.defaultKeymap = commands.defaultKeymap;
-            w.undo = commands.undo;
-            w.redo = commands.redo;
-            w.indentSelection = commands.indentSelection;
-            w.syntaxHighlighting = language.syntaxHighlighting;
-            w.defaultHighlightStyle = language.defaultHighlightStyle;
-            w.indentOnInput = language.indentOnInput;
-            w.bracketMatching = language.bracketMatching;
-            w.cmSearch = srch.search;
-            w.searchKeymap = srch.searchKeymap;
-            w.closeBrackets = autocomplete.closeBrackets;
-            w.closeBracketsKeymap = autocomplete.closeBracketsKeymap;
-            w.setDiagnostics = lint.setDiagnostics;
-            w.javascript = langJs.javascript;
-            w.json = langJson.json;
-            w.html = langHtml.html;
-            w.css = langCss.css;
-            w.sql = langSql.sql;
-            w.python = langPy.python;
-            w.markdown = langMd.markdown;
-            console.log("[Demo] CodeMirror 6 loaded from CDN");
-            w.dispatchEvent(new Event("codemirror-ready"));
-        } catch (e) {
-            console.warn("[Demo] Could not load CodeMirror 6 from CDN:", e);
-        }
-    </script>
+    <!-- CodeMirror 6, vendored. Fourteen packages in one hashed file,
+         served from this origin. DEBT-SEC-9 / ADR-211. -->
+    <script src="../../dist/lib/codemirror6-6.43.15.js"></script>
     <script src="../../dist/components/codeeditor/codeeditor.js"></script>
 
     <script>

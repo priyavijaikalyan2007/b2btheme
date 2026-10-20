@@ -122,24 +122,21 @@
     }
   },
   "unhashable": {
-    "codemirror6": {
-      "reason": [
-        "CodeEditor documents CodeMirror 6 as fifteen bare ESM import",
-        "specifiers from esm.sh. An integrity attribute attaches to a",
-        "<script src> tag and cannot attach to an import specifier inside a",
-        "module, which scripts/vendor-closure.mjs states in its own header.",
-        "Every one of those fifteen therefore arrives unverified, and so does",
-        "whatever esm.sh resolves behind them.",
-        "",
-        "The specifiers also float at major @6, so the version is chosen at",
-        "request time. Pinning them is a separate decision, because the",
-        "fifteen packages have to interoperate at the versions chosen.",
-        "",
-        "A consumer who needs the guarantee has two honest options: bundle",
-        "CodeMirror into one self-contained file and hash that, or serve it",
-        "from an origin they control. Neither is something this repository",
-        "can do on their behalf."
-      ]
-    }
+    "$comment": [
+      "EMPTY, AND THAT IS THE POINT. This key held codemirror6 from",
+      "DEBT-SEC-5 until 2026-10-20, on the reasoning that an integrity",
+      "attribute attaches to a script tag and cannot attach to an import",
+      "specifier inside a module. That reasoning was correct and the",
+      "conclusion did not follow: the fix was never to hash a specifier,",
+      "it was to STOP HAVING specifiers. ADR-211 bundles the fourteen",
+      "packages into one self-contained file and hashes the file.",
+      "",
+      "The old entry said a consumer needing the guarantee could bundle",
+      "CodeMirror themselves or serve it from an origin they control, and",
+      "that 'neither is something this repository can do on their behalf'.",
+      "Both were things this repository could do, and it has now done the",
+      "first. Before adding anything here, check whether the same is true",
+      "of it."
+    ]
   }
 }

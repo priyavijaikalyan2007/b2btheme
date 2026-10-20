@@ -396,8 +396,82 @@ These issues involve potential XSS or script injection vectors and must be addre
   fifteen and there are fourteen distinct**, in 67 occurrences across five
   files.
 
-- [ ] **DEBT-SEC-9** **67 third-party ES-module specifiers that no gate
-  could see.** Held by the new `cdnModuleSpecifiers` ceiling. ADR-210.
+- [x] **DEBT-SEC-9** **CLOSED AT ZERO, 2026-10-20. 67 -> 0.** The fourteen
+  CodeMirror packages are vendored into one hashed file served from this
+  origin. ADR-210 opened it, ADR-211 closed it.
+
+  **THE OWNER'S REASONING, RECORDED BECAUSE IT DECIDED THE SHAPE:** "With
+  AI agents, anything and everything exploitable is going to get
+  exploited. Since we build enterprise and personal management software,
+  it is best to do our best/maximal on security to lock things down versus
+  leave things open just because we believe it is safe." The previous
+  entry had reasoned from likelihood. This one reasons from blast radius.
+
+  **WHAT CHANGED.** `scripts/vendor-closure.mjs` gained a `codemirror6`
+  asset: fourteen packages, one esbuild IIFE, **640 KB, 28 inputs, 0
+  external**. The closure is asserted from esbuild's metafile, so the
+  build REFUSES to publish an artifact that still resolves anything at
+  runtime. Three demos and the README now load one tag.
+
+  | Count | Before | After |
+  |---|---|---|
+  | `cdnModuleSpecifiers` | 67 | **0** |
+  | `unpinnedCdnRefs` | 77 | **10** |
+  | `thirdPartyTagsWithoutSri` | 10 | 10 |
+  | `tagsMissingSri` | 0 | 0 |
+
+  `unpinnedCdnRefs` fell by 67 as a side effect, because the esm.sh URLs
+  floated at major `@6` and were most of what that count was measuring.
+
+  **THE BUNDLE PUBLISHES BARE GLOBALS RATHER THAN A NAMESPACE, ON
+  PURPOSE.** Every other vendored asset publishes one name and the page
+  reads through it. CodeEditor probes about thirty BARE names, so a
+  namespace would have left every consumer writing the same thirty lines
+  of glue the CDN version needed. **That glue was 14 of the 67**, in a
+  README consumers copy. Trading unhashed-and-floating for
+  hashed-and-verbose would have missed the point.
+
+  **AND THE GLUE THE README PUBLISHED WAS BROKEN.** It assigned the bare
+  name `history`. `window.history` is the browser's History object and a
+  read-only accessor on `Window`, so the assignment SILENTLY FAILS, and
+  `codeeditor.ts:828` probes `cmHistory` first and falls back to
+  `history`, which it then rejects because it is an object rather than a
+  function. **Anyone who followed the README got an editor with no undo
+  history and no error saying so.** The vendored bundle publishes
+  `cmHistory` and `cmSearch` itself, and
+  `tests/codemirror-vendored.spec.ts` types, undoes, and asserts the text
+  came back.
+
+  **THE CLOSURE GATE HAD A HOLE AND THE MUTATION FOUND IT.** Changing a
+  published hash in a README did NOT fail `check-closure.mjs`. The gate
+  was hash-first: it looked up each tag's `integrity` in the manifest and
+  SKIPPED any it did not recognise, so a wrong hash simply stopped being
+  counted and the only visible effect was the inspected total dropping by
+  one. **A hash in the documentation was decoration.** The gate now also
+  asks the URL-first question — a tag pointing at a vendored asset must
+  carry that asset's hash — and it found two real defects immediately:
+  `CDN_CONTRACT.md` and `docs/CDN_INTEGRATION_GUIDE.md` handed consumers
+  font-awesome tags with a `<placeholder>` where the hash belongs. Both
+  now carry the published hash, which is what
+  `vendor-closure.mjs`'s own header says the manifest exists for:
+  consumers should not transcribe hashes by hand.
+
+  **The `unhashable` key in `scripts/third-party-sri.json` is now EMPTY**,
+  and its comment records why. It held codemirror6 on the reasoning that
+  integrity cannot attach to an import specifier. That was true. The
+  conclusion did not follow: **the fix was never to hash a specifier, it
+  was to stop having specifiers.** The old note said a consumer could
+  bundle CodeMirror or self-host, and that "neither is something this
+  repository can do on their behalf". Both were, and it has now done the
+  first.
+
+  **What is still third-party at run time, stated plainly:**
+  `guidedtour.html` loads driver.js from jsdelivr with a hash, and most
+  demo pages load Google Fonts. Fonts are a separate population that no
+  count here covers, and they are the obvious next candidate under the
+  same reasoning.
+
+  Original framing kept below.
 
   **THIS IS NOT A NEW DISCOVERY AND THAT IS THE POINT.** The `unhashable`
   key in `scripts/third-party-sri.json` has described these accurately
