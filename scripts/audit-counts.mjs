@@ -495,7 +495,7 @@ const BASELINES = {
     // duplication FALLBACK-1 to 9 removed. The five helpers are the LOG-4a
     // preamble and are present whether or not a component uses them, which
     // is why this count was already 306 rather than 0. Under UNUSED-1.
-    unusedLocals: 305,
+    unusedLocals: 301,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -714,7 +714,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 4997,
+    testBlocks: 4999,
 };
 
 /**

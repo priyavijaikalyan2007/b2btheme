@@ -1498,8 +1498,45 @@ that document. Every permitted use must carry a comment naming its case.
   > use. The owner's words: "If I find it jarring later, we will fix it
   > then." That is a report from use, not a number in a stylesheet.
 
-- [ ] **DEBT-LAY-1** **Four layout components accept `setContained()`
-  and ignore it.**
+- [x] **DEBT-LAY-1** **CLOSED 2026-10-20. The field and the setter are
+  deleted from all four.** ADR-212.
+
+  **THE PROTOCOL QUESTION THIS ENTRY HELD OPEN HAS A MEASURED ANSWER.**
+  The entry asked what "contained" should mean for a layout that already
+  fills the element it was given. `contained` means "fill the parent
+  instead of `document.body`", and the measurement is decisive:
+  **Toolbar has one `document.body.appendChild` and Sidebar has two.
+  AnchorLayout, BorderLayout, BoxLayout and CardLayout have ZERO between
+  them.** They have no body-append path, so the flag has nothing to
+  decide, and the entry's own third option — delete the field AND the
+  setter — is the right one.
+
+  **DELETING IT IS WHAT MAKES THE PROTOCOL HONEST.** Every caller is
+  duck-typed: `if (typeof child.setContained === "function")`, in all
+  nine layouts and in `DockLayout.mountComponent`. The protocol is built
+  to ask whether a component HAS the capability. A component that does
+  not implement the method answers "absent" correctly. **One that
+  implements it as a no-op answers "present" and lies**, which is the
+  silent no-op this repository removes on sight.
+
+  **THIS IS A PUBLIC API REMOVAL AND IT IS BREAKING.** `setContained(value)`
+  appeared in all four READMEs as "Set contained mode". It set nothing, so
+  no BEHAVIOUR changes for anyone, but a direct caller now gets a
+  TypeError instead of silence. That is the intended direction: the owner's
+  rule is that when something is broken it should break. The rows are
+  removed from the four READMEs and `COMPONENT_REFERENCE.md` is
+  regenerated.
+
+  `unusedLocals` **305 to 301**, one per layout, which is the independent
+  confirmation that all four fields really were unread.
+
+  Pinned by `components/docklayout/contained-protocol.test.ts`, which
+  asserts the ABSENCE as a contract and carries a control asserting that
+  Toolbar still claims the capability. Without the control the assertion
+  would also pass against a codebase where nothing implements the protocol
+  at all. Re-adding a no-op setter to any of the four fails it.
+
+  Original framing kept below.
 
   `anchorlayout`, `borderlayout`, `boxlayout` and `cardlayout` each
   declare `private contained = false`, each have a public

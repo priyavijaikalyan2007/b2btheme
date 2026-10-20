@@ -111,7 +111,6 @@ CardLayout creates a container where all card wrappers are stacked. Only the act
 | `getCardCount()` | `number` | Number of cards |
 | `getState()` | `CardLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore active card |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## CardLayoutState
 

@@ -583,7 +583,6 @@ Use `anchorCenterH` and `anchorCenterV` to center a child along one or both axes
 | `destroy()` | `void` | Full cleanup, destroy all children |
 | `getRootElement()` | `HTMLElement \| null` | The root container |
 | `isVisible()` | `boolean` | Whether the layout is displayed |
-| `setContained(value)` | `void` | Set contained mode |
 | `addChild(config)` | `void` | Add a child with anchor constraints |
 | `removeChild(index)` | `void` | Remove child by index |
 | `updateAnchors(index, anchors)` | `void` | Update anchor constraints for a child |
@@ -1587,7 +1586,6 @@ When a component is passed to a region:
 | `getRegionElement(region)` | `HTMLElement \| null` | Grid cell for a region |
 | `getState()` | `BorderLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore collapsed regions |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## BorderLayoutState
 
@@ -1743,7 +1741,6 @@ direction: "vertical"
 | `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
 | `getState()` | `BoxLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## BoxLayoutState
 
@@ -2072,7 +2069,6 @@ CardLayout creates a container where all card wrappers are stacked. Only the act
 | `getCardCount()` | `number` | Number of cards |
 | `getState()` | `CardLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore active card |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## CardLayoutState
 

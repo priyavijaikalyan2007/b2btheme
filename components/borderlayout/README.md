@@ -112,7 +112,6 @@ When a component is passed to a region:
 | `getRegionElement(region)` | `HTMLElement \| null` | Grid cell for a region |
 | `getState()` | `BorderLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore collapsed regions |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## BorderLayoutState
 

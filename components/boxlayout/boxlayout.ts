@@ -171,7 +171,6 @@ export class BoxLayout
     private readonly options: BoxLayoutOptions;
 
     private visible = false;
-    private contained = false;
     private rootEl: HTMLElement | null = null;
 
     private childConfigs: BoxLayoutChildConfig[] = [];
@@ -326,11 +325,17 @@ export class BoxLayout
         }
     }
 
-    /** Sets or clears contained mode (fills parent instead of body). */
-    public setContained(value: boolean): void
-    {
-        this.contained = value;
-    }
+    // NO `contained` FIELD AND NO `setContained`, DELIBERATELY. DEBT-LAY-1
+    // / ADR-212. `contained` means "fill the parent instead of
+    // document.body", and this layout has no body-append path at all: it
+    // always fills the element it was given. The field existed, the setter
+    // assigned it, and nothing ever read it, so the method was a public
+    // API documented as "Set contained mode" that set nothing.
+    //
+    // Every caller is duck-typed — `if (typeof child.setContained ===
+    // "function")` — so NOT implementing it is the honest signal that the
+    // capability is absent. Implementing it as a no-op told the protocol
+    // the opposite.
 
     // ========================================================================
     // 8. PRIVATE — DOM CONSTRUCTION

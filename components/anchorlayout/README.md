@@ -156,7 +156,6 @@ Use `anchorCenterH` and `anchorCenterV` to center a child along one or both axes
 | `destroy()` | `void` | Full cleanup, destroy all children |
 | `getRootElement()` | `HTMLElement \| null` | The root container |
 | `isVisible()` | `boolean` | Whether the layout is displayed |
-| `setContained(value)` | `void` | Set contained mode |
 | `addChild(config)` | `void` | Add a child with anchor constraints |
 | `removeChild(index)` | `void` | Remove child by index |
 | `updateAnchors(index, anchors)` | `void` | Update anchor constraints for a child |

@@ -9352,3 +9352,47 @@
     jsdelivr with a hash, and most demo pages load Google Fonts. Fonts
     are a population no count here covers and are the obvious next
     candidate under the same reasoning.
+
+- id: ADR-212
+  title: A no-op implementation tells a duck-typed protocol the opposite of the truth
+  date: 2026-10-20
+  status: accepted
+  context: |
+    DEBT-LAY-1 recorded that AnchorLayout, BorderLayout, BoxLayout and
+    CardLayout each declare `private contained = false` and a public
+    `setContained(value)` that assigns it, and that none of them ever
+    reads the field. It was recorded rather than taken because the fix
+    needed a protocol question answered first: what should "contained"
+    mean for a layout that already fills the element it was given?
+  decision: |
+    D1. THE ANSWER IS "NOTHING", AND IT IS MEASURED. `contained` means
+        fill the parent instead of `document.body`. Toolbar has one
+        `document.body.appendChild` and Sidebar has two. The four layouts
+        have ZERO between them, so they always fill their parent and the
+        flag has nothing to decide.
+
+    D2. THE FIELD AND THE SETTER ARE DELETED, NOT IMPLEMENTED. Every
+        caller is duck-typed, in all nine layouts and in
+        `DockLayout.mountComponent`. A protocol that asks whether a
+        component HAS a capability is answered correctly by a component
+        that does not implement it, and answered FALSELY by one that
+        implements it as a no-op.
+
+    D3. THE BREAK IS ACCEPTED AND NAMED. `setContained(value)` was in all
+        four public API tables as "Set contained mode". No behaviour
+        changes, because it set nothing. A direct caller now gets a
+        TypeError rather than silence, which is the owner's standing rule
+        that a broken thing should break.
+
+    D4. THE ABSENCE IS PINNED AS A CONTRACT, WITH A CONTROL. A test that
+        only asserts the four do not implement the method would also pass
+        against a codebase where nothing implements the protocol, so a
+        second test asserts Toolbar still does.
+  consequences: |
+    `unusedLocals` 305 to 301, one per layout, independently confirming
+    that all four fields were unread.
+
+    Four READMEs lose a row and `COMPONENT_REFERENCE.md` is regenerated.
+
+    Two new tests, mutation-proven: re-adding a no-op setter to CardLayout
+    fails the absence assertion.

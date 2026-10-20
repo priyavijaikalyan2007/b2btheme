@@ -101,7 +101,6 @@ direction: "vertical"
 | `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
 | `getState()` | `BoxLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## BoxLayoutState
 
