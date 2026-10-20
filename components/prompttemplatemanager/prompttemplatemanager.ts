@@ -57,7 +57,6 @@ function logTrace(...a: unknown[]): void
 const CLS = "promptmanager";
 const SEARCH_DEBOUNCE_MS = 200;
 const VARIABLE_DEBOUNCE_MS = 300;
-const VARIABLE_REGEX = /\{\{(\w+)\}\}/g;
 
 let instanceCounter = 0;
 

@@ -422,7 +422,7 @@ const BASELINES = {
     // duplication FALLBACK-1 to 9 removed. The five helpers are the LOG-4a
     // preamble and are present whether or not a component uses them, which
     // is why this count was already 306 rather than 0. Under UNUSED-1.
-    unusedLocals: 330,
+    unusedLocals: 305,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,

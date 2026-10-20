@@ -415,15 +415,7 @@ function fieldStatesToExpression(states: CronFieldState[]): string
 // PRIVATE HELPERS -- DESCRIPTION GENERATOR
 // ============================================================================
 
-const MONTH_NAMES = [
-    "", "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-];
 
-const DAY_NAMES = [
-    "Sunday", "Monday", "Tuesday", "Wednesday",
-    "Thursday", "Friday", "Saturday",
-];
 
 /**
  * Generates a human-readable English description of a CRON expression.

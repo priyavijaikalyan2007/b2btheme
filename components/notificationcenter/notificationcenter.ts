@@ -58,12 +58,6 @@ function logTrace(...a: unknown[]): void
 const DEFAULT_PANEL_WIDTH = 380;
 const DEFAULT_MAX_VISIBLE_BADGE = 99;
 const PANEL_Z_INDEX = 1070;
-const RELATIVE_TIME_THRESHOLDS: [number, string][] = [
-    [60, "just now"],
-    [3600, "m ago"],
-    [86400, "h ago"],
-    [604800, "d ago"]
-];
 
 let instanceCounter = 0;
 

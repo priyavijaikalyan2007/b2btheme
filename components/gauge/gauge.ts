@@ -184,14 +184,6 @@ function logDebug(...a: unknown[]): void
 
 let instanceCounter = 0;
 
-/** Size preset pixel values. */
-const SIZE_MAP: Record<GaugeSize, number> = {
-    xs: 80,
-    sm: 120,
-    md: 180,
-    lg: 260,
-    xl: 360,
-};
 
 /** Default thresholds for normal mode (higher % = better). */
 const DEFAULT_THRESHOLDS: GaugeThreshold[] = [
@@ -218,7 +210,6 @@ const TICK_INTERVALS: Array<{ threshold: number; interval: number }> = [
 /** SVG ring constants (viewBox 0 0 100 100). */
 const RING_RADIUS = 45;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-const RING_STROKE_WIDTH = 8;
 
 /** SVG namespace. */
 const SVG_NS = "http://www.w3.org/2000/svg";

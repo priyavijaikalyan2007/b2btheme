@@ -102,8 +102,6 @@ const DEFAULT_DEBOUNCE = 300;
 /** Minimum characters before showing suggestions */
 const DEFAULT_MIN_CHARS = 2;
 
-/** Z-index for the suggestions dropdown */
-const DROPDOWN_Z_INDEX = 1050;
 
 /** Delay in ms before closing suggestions on blur */
 const BLUR_CLOSE_DELAY = 150;

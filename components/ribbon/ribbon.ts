@@ -405,16 +405,9 @@ const DEFAULT_PANEL_HEIGHT = 96;
 const DEFAULT_QAT_POSITION: RibbonQATPosition = "above";
 const DEBOUNCE_RESIZE_MS = 150;
 const SUBMENU_DELAY_MS = 300;
-const TRANSITION_MS = 200;
 
 const Z_RIBBON_DROPDOWN = 1060;
-const Z_RIBBON_BACKSTAGE = 1070;
 
-const FOCUSABLE_SELECTOR =
-    "button:not([disabled]):not([tabindex='-1']):not([aria-hidden='true']),"
-    + "input:not([disabled]):not([type='hidden']),"
-    + "select:not([disabled]),"
-    + "[tabindex='0']";
 
 const DEFAULT_COLLAPSE_STAGES: RibbonCollapseStage[] =
     ["full", "medium", "small", "mini", "overflow"];

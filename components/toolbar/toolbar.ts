@@ -864,7 +864,6 @@ function logTrace(...a: unknown[]): void
 // Z-index values matching spec section 8.4
 const Z_DOCKED = 1032;
 const Z_FLOATING = 1033;
-const Z_DROPDOWN = 1060;
 
 // Default option values
 const DEFAULT_TOOL_SIZE = 32;

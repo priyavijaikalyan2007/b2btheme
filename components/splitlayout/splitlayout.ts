@@ -65,8 +65,6 @@ const DEFAULT_MIN_SIZE = 50;
 /** Keyboard resize step in pixels. */
 const KEYBOARD_STEP = 10;
 
-/** Collapse animation duration in ms. */
-const COLLAPSE_DURATION = 200;
 
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;

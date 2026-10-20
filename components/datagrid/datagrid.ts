@@ -174,8 +174,6 @@ const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_PAGE_OPTIONS = [25, 50, 100, 250];
 const ROW_HEIGHT = 32;
 const ROW_HEIGHT_DENSE = 24;
-const HEADER_HEIGHT = 36;
-const HEADER_HEIGHT_DENSE = 28;
 const VIRTUAL_THRESHOLD = 5000;
 const VIRTUAL_BUFFER = 20;
 const FILTER_DEBOUNCE_MS = 250;
@@ -365,6 +363,14 @@ export class DataGrid
         }
 
         c.appendChild(this.rootEl);
+
+        // UNUSED-1. `boundOnDocClick` was built in the constructor and
+        // never registered, so `onDocClick` — which cancels an open
+        // cell editor when the user clicks outside the grid — had never
+        // run. The compiler had been reporting the handler as unused
+        // since the method was written, and the report was the bug.
+        document.addEventListener("click", this.boundOnDocClick);
+
         this.checkVirtual();
         this.renderBody();
         this.renderFooter();
@@ -375,6 +381,7 @@ export class DataGrid
     {
         if (this.guardDestroyed("hide")) { return; }
         this.cancelEdit();
+        document.removeEventListener("click", this.boundOnDocClick);
         this.rootEl.remove();
     }
 

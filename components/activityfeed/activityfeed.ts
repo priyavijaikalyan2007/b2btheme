@@ -94,7 +94,6 @@ function logTrace(...a: unknown[]): void
 }
 
 const CLS = "activityfeed";
-const CONTENT_MAX_LINES = 3;
 const CONTENT_CHAR_LIMIT = 200;
 
 const EVENT_ICONS: Record<string, string> =

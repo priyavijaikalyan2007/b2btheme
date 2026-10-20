@@ -381,8 +381,6 @@ const DEFAULT_SEARCH_DEBOUNCE = 300;
 /** Context menu z-index — above all fixed layout elements, below modals. */
 const Z_INDEX_CONTEXT_MENU = 1050;
 
-/** Click disambiguation threshold for drag in pixels. */
-const DRAG_THRESHOLD_PX = 5;
 
 /** Default row height for virtual scrolling in pixels. */
 const DEFAULT_ROW_HEIGHT = 28;

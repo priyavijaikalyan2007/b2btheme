@@ -63,12 +63,6 @@ const INITIALS_COLORS: string[] = [
     "#c92a2a", "#0b7285", "#50810b", "#d6336c",
 ];
 
-/** Avatar diameter in pixels per size variant. */
-const AVATAR_SIZES: Record<string, number> = {
-    sm: 20,
-    md: 28,
-    lg: 36,
-};
 
 /** Valid size keys. */
 const VALID_SIZES = ["sm", "md", "lg"] as const;

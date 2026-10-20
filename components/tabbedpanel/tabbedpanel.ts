@@ -222,8 +222,6 @@ function logTrace(...a: unknown[]): void
     _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
 }
 
-/** Z-index values — same layer as Sidebar (different edges, no conflict) */
-const Z_INDEX_DOCKED = 1035;
 const Z_INDEX_FLOATING = 1036;
 
 /** Distance in pixels from viewport edge to trigger dock zone */

@@ -108,11 +108,6 @@ const STATUS_DOT_CLASSES: Record<string, string> = {
     away: "usermenu-status-away",
 };
 
-const AVATAR_SIZES: Record<string, number> = {
-    sm: 28,
-    md: 36,
-    lg: 44,
-};
 
 const INITIALS_COLORS: string[] = [
     "#1a77c9", "#2a853c", "#b55e00", "#862e9c",

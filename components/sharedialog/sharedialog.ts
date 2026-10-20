@@ -150,12 +150,6 @@ let instanceCounter = 0;
 
 const DEFAULT_SIZE = "md";
 
-/** Size map: dialog max-width per size variant. */
-const SIZE_MAP: Record<string, string> = {
-    sm: "400px",
-    md: "550px",
-    lg: "750px",
-};
 
 /**
  * Default keyboard bindings for dialog actions.

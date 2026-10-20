@@ -66,7 +66,6 @@ const AUTO_PAGE_THRESHOLD = 500;
 const AUTO_PAGE_SIZE = 100;
 const UNDO_LIMIT = 50;
 const DEBOUNCE_MS = 300;
-const FONT_SIZE_OPTIONS = [10, 11, 12, 13, 14, 16, 18, 20, 24];
 
 let _instanceId = 0;
 

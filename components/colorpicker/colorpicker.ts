@@ -73,8 +73,6 @@ const POPUP_Z_INDEX = 1050;
 /** Copy confirmation duration in ms. */
 const COPY_FEEDBACK_MS = 1500;
 
-/** Crosshair cursor radius on palette. */
-const CURSOR_RADIUS = 6;
 
 /** Instance counter for unique IDs. */
 let instanceCounter = 0;

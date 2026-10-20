@@ -641,3 +641,74 @@ describe("edge cases", () =>
         grid.destroy();
     });
 });
+
+// ============================================================================
+// UNUSED-1 — the document click handler that was never registered
+// ============================================================================
+
+describe("clicking outside the grid cancels an open editor", () =>
+{
+    /*
+     * `boundOnDocClick` was built in the constructor and never passed
+     * to addEventListener, so `onDocClick` had never run and an open
+     * cell editor survived a click anywhere on the page. The compiler
+     * had been reporting the handler as unused since it was written,
+     * and that report WAS the bug — it sat inside UNUSED-1's count of
+     * 329 for months, described there as dead code to delete.
+     */
+    function editableGrid(): DataGrid
+    {
+        const grid = createDataGrid(defaultOpts({
+            columns: [
+                { id: "name", label: "Name", editable: true },
+                { id: "status", label: "Status" },
+            ],
+            rows: [{ id: "1", data: { name: "Acme Corp", status: "active" } }],
+        }));
+        grid.show(container.id);
+        return grid;
+    }
+
+    function openEditor(): HTMLElement | null
+    {
+        const cell = container.querySelector<HTMLElement>(
+            "[data-row-id=\"1\"] [data-col-id=\"name\"]");
+
+        cell?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+        return container.querySelector(".datagrid-cell-editing");
+    }
+
+    test("the editor opens, which is the precondition", () =>
+    {
+        const grid = editableGrid();
+
+        expect(openEditor()).not.toBeNull();
+        grid.destroy();
+    });
+
+    test("a click outside the grid closes it", () =>
+    {
+        const grid = editableGrid();
+        openEditor();
+
+        document.body.dispatchEvent(
+            new MouseEvent("click", { bubbles: true }));
+
+        expect(container.querySelector(".datagrid-cell-editing")).toBeNull();
+        grid.destroy();
+    });
+
+    test("a click inside the grid leaves it open", () =>
+    {
+        // The other half, and the reason the handler checks `contains`
+        // rather than closing on every click: clicking the editor
+        // itself must not dismiss it.
+        const grid = editableGrid();
+        const editing = openEditor();
+
+        editing?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(container.querySelector(".datagrid-cell-editing")).not.toBeNull();
+        grid.destroy();
+    });
+});

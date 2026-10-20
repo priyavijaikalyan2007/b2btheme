@@ -1176,6 +1176,30 @@ Per CODING_STYLE.md, `!important` should only be used when overriding third-part
   - `components/toast/toast.scss` (2 occurrences)
   - `components/ribbon/ribbon.scss` (1 occurrence)
 
+- [ ] **DEBT-LAY-1** **Four layout components accept `setContained()`
+  and ignore it.**
+
+  `anchorlayout`, `borderlayout`, `boxlayout` and `cardlayout` each
+  declare `private contained = false`, each have a public
+  `setContained(value)` that assigns it, and **not one of them ever
+  reads the field**. Measured by the compiler: each is one of
+  UNUSED-1's TS6133 reports.
+
+  `setContained` is part of the Dynamic UI slot protocol.
+  `DockLayout.mountComponent` calls `component.setContained(true)`
+  before handing over a cell, and the canvas does the same, so for
+  these four the call is a no-op and the layout does not switch out of
+  whatever mode it was in.
+
+  **Recorded rather than taken, because the fix is four behaviour
+  changes and a protocol question first:** what should "contained" mean
+  for a layout that already fills the element it was given? For a
+  Toolbar it means "do not append to `document.body`", and these four
+  never did. If the answer is "nothing", then the right fix is to
+  delete the field AND the setter, and let the protocol see a component
+  that does not implement it — which is a different conversation from
+  deleting an unused field.
+
 - [=] **SETTLED — IMP-2** Justified (third-party overrides) — acceptable, document reason in comments.
   **Re-measured 2026-10-15: markdowneditor has 17, not 18, and 11 of those
   17 carry no comment**, so they are in IMP-1's 29 rather than here.
@@ -2693,8 +2717,46 @@ offered as the evidence for it.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **329 as measured by `scripts/audit-counts.mjs` on
-  2026-10-17**, and **330 on 2026-10-19**, not the 414 below.
+- [ ] **UNUSED-1**: **305 on 2026-10-20**, 329 on 2026-10-17 and 330 on
+  2026-10-19, not the 414 below.
+
+  **THE COUNT IS THREE POPULATIONS AND ONLY TWO OF THEM ARE WORK.**
+  Measured 2026-10-20, before this pass:
+
+  | Population | Count | Is it debt? |
+  |---|---|---|
+  | `logDebug` / `logError` / `logWarn` / `logInfo` shims | 120 | **No.** The LOG-4a preamble, present whether a component uses it or not. Three ratchets depend on it existing: `dynamicVerboseShims` is a FLOOR at 225. Deleting these breaks the gates. |
+  | Generated `diagramengine.ts` | 103 | Yes, fixable in `src/` only |
+  | Real dead code elsewhere | 106 | Yes |
+
+  So the headline has never been the backlog: **36% of it is a floor**
+  wearing a ceiling's clothes, and a reader working this entry top-down
+  would have spent a day deleting the preamble and failing CI. The
+  number to drive toward is 120 and not 0.
+
+  **AND THE ENTRY WAS WRONG THAT THIS IS MOSTLY DELETIONS.** Reading the
+  106 turned up two live defects in the first ten lines:
+
+  - **DataGrid built a document-click handler and never registered it.**
+    `boundOnDocClick` wraps `onDocClick`, which cancels an open cell
+    editor when the user clicks outside the grid. Nothing ever called
+    `addEventListener` with it, so the editor survived a click anywhere
+    on the page. **Fixed 2026-10-20** with three tests, one
+    mutation-proven. The compiler had been reporting that handler as
+    unused since it was written, and the report WAS the bug.
+  - **Four layout components store `contained` and never read it.** See
+    DEBT-LAY-1.
+
+  **An unused private field is not dead code by default.** It is a value
+  somebody computed and nobody consumed, and that is the same shape as
+  a fabricated read: the write side looks correct and the read side
+  does not exist. Treat each one as a question before deleting it.
+
+  **2026-10-20 pass: 330 -> 305.** Twenty-three dead module constants
+  deleted, plus the DataGrid fix. The remainder is 120 preamble, 103
+  diagramengine and ~82 elsewhere.
+
+  The original text follows.
   The number is dated and names its instrument on purpose, which is the
   habit DEBT-SEC-8 above was corrected for not having. It was 306 until ERR-1 replaced 63
   quiet container branches with a throw, which orphaned the `logWarn` or
