@@ -335,15 +335,15 @@ export function countOccurrences(text, needle)
  * RECLASSIFIED 2026-10-20 (ADR-208). The 54 real declarations behind
  * scssImportantComponents were previously split by whether a comment sat
  * near them, which measures nothing. Sorted by what each one OVERRIDES,
- * 47 of the 54 are permitted by CODING_STYLE.md and 13 of those cannot be
+ * 49 of the 54 are permitted by CODING_STYLE.md and 12 of those cannot be
  * written any other way: 11 sit in a prefers-reduced-motion block, 24
- * override a third-party stylesheet the variable layer cannot reach, 7
+ * override a third-party stylesheet the variable layer cannot reach, 9
  * override an inline style that no selector can beat, and 5 override a
- * Bootstrap component class. Only 7 are in-house specificity bugs.
+ * Bootstrap component class. Only 5 are in-house specificity bugs.
  *
  * So do not read a drop in this number as progress, and do not read 55 as
  * 55 problems. The number exists to stop the total growing. The live
- * target is the 7 in IMP-1, and no count in this file isolates them,
+ * target is the 5 in IMP-1, and no count in this file isolates them,
  * because the C/D/E split depends on inline styles set from TypeScript.
  *
  * ONE OF THE 113 IS THE WORD INSIDE A COMMENT, in

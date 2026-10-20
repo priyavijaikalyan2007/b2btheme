@@ -4356,8 +4356,10 @@ and it has a floor the old axis could not see. Conversation's six
 override Bootstrap utilities, and Bootstrap emits `.bg-light` and
 `.text-muted` with `!important` already, so only `!important` beats
 them. Seven more override an inline style written from JavaScript, and
-no selector at any specificity outranks an inline declaration. Thirteen
-of the 54 have exactly one legal spelling.
+no selector at any specificity outranks an inline declaration. Twelve
+of the 54 have exactly one legal spelling, and three more are
+`!important` or deleted rather than `!important` or broken, because
+there the inline value equals the rule.
 
 Which is how the entry came to publish advice that would have broken
 something. It suggested settling stacklayout with
@@ -4390,8 +4392,10 @@ third-party stylesheet, which is why every radius override in the set
 sits on a `.vditor*` selector: Vditor ships its own CSS and never sees
 those variables.
 
-What is left is seven declarations in three files, and one of those
-three was never blocked on anything. graphcanvas's four exist because
+What is left is five declarations in two files, and one of those two
+was never blocked on anything. treegrid left bucket E on a second pass:
+`treegrid.ts:3362` sets `cursor: pointer` inline on sortable headers, so
+the drag rule has a real inline to beat. graphcanvas's four exist because
 `.gc-node:hover rect` out-specifies `.gc-node-selected rect`, and
 `getComputedStyle(rect).stroke` asserts that in Playwright today. The
 "unverifiable without screenshots" deferral had been covering the

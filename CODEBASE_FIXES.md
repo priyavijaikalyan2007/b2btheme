@@ -1107,13 +1107,13 @@ quiet wrong answer.
   source. Both the option table and the opening paragraph are corrected,
   and the MathLive row now reads **Unused**.
 
-## MEDIUM — `!important` in Component SCSS (54 real declarations, 16 files, reclassified 2026-10-20)
+## MEDIUM — `!important` in Component SCSS (54 real declarations, 18 files, reclassified 2026-10-20)
 
 Per CODING_STYLE.md, `!important` is forbidden for beating your own CSS, and is
 permitted in five named cases where specificity cannot win. See the table in
 that document. Every permitted use must carry a comment naming its case.
 
-- [ ] **IMP-1** **7 declarations in 3 files.** Down from a stated 29 in 8 files,
+- [ ] **IMP-1** **5 declarations in 2 files.** Down from a stated 29 in 8 files,
   not by fixing anything, but because the classification was measured on the
   wrong axis. No code changed. `scssImportantComponents` stays at 55. ADR-183,
   ADR-208.
@@ -1126,8 +1126,8 @@ that document. Every permitted use must carry a comment naming its case.
   IMP-2 was settled and IMP-3 was closed against exemptions that did not
   exist, and IMP-1's 29 was the residue of an invented split. The document
   now grants five exceptions, because without them the standard was
-  unsatisfiable: 13 declarations in this repository cannot be written any
-  other way.
+  unsatisfiable: 12 declarations in this repository cannot be written any
+  other way, and 3 more can only be `!important` or deleted.
 
   **THE OLD SPLIT SORTED BY COMMENT PROXIMITY, WHICH MEASURES NOTHING.** A
   declaration went to IMP-2 if a comment sat near it and to IMP-1 if none
@@ -1140,12 +1140,12 @@ that document. Every permitted use must carry a comment naming its case.
   |---|---|---|---|
   | A — inside `prefers-reduced-motion` | 11 | cardlayout 2, contextmenu 1, diagramengine 1, dynamicformswitcher 2, gauge 2, skeletonloader 1, toast 2 | n/a, case 2 |
   | B — third-party CSS the variable layer cannot reach | 24 | markdowneditor 17, conversation 6, guidedtour 1 | see below |
-  | C — an inline style set by JavaScript | 7 | chartpanel 2, stacklayout 2, ribbonbuilder 2, splitlayout 1 | **Never** |
+  | C — an inline style set by JavaScript | 9 | chartpanel 2, stacklayout 2, ribbonbuilder 2, treegrid 2, splitlayout 1 | **Never** |
   | D — a Bootstrap component class, beatable by scoping | 5 | treeview 5 | Yes |
-  | E — in-house CSS specificity | **7** | graphcanvas 4, treegrid 2, ribbon 1 | Yes, **this is IMP-1** |
+  | E — in-house CSS specificity | **5** | graphcanvas 4, ribbon 1 | Yes, **this is IMP-1** |
 
-  **Bucket C can never be removed, and the old entry's worked example got
-  this exactly backwards.** It said stacklayout's pair "would be settled by
+  **No selector can win against bucket C, and the old entry's worked
+  example got this exactly backwards.** It said stacklayout's pair "would be settled by
   `.stacklayout-panel.stacklayout-panel-collapsed`". But
   `stacklayout.ts:420-422` sets `flexGrow`, `flexShrink` and `flexBasis`
   inline on `wrapperEl`, and `stacklayout.ts:500` adds
@@ -1164,6 +1164,23 @@ that document. Every permitted use must carry a comment naming its case.
   - `chartpanel.scss:42-43` against Chart.js, which writes inline `width`
     and `height` on the canvas because `chartpanel.ts:382` sets
     `responsive: true` with `maintainAspectRatio: false`.
+  - `treegrid.scss:278, 282` against `treegrid.ts:3362`, which sets
+    `cursor: pointer` inline on every sortable header cell. The drag rule
+    puts `.treegrid-resizing` on the root (`treegrid.ts:2898`) and reaches
+    those cells through a descendant `*`, so without `!important` a
+    sortable header would keep showing `pointer` through the whole resize.
+
+  **Three of the nine are `!important` or nothing, rather than
+  `!important` or broken.** In stacklayout and splitlayout the inline
+  value EQUALS the rule — `flexGrow 0 / flexShrink 0 / flexBasis auto`
+  against `flex: 0 0 auto`, and `flexBasis "0px"` against
+  `flex-basis: 0`. `stacklayout.ts:303` also adds the class at
+  construction before any inline flex exists, so there is a window where
+  the rule has nothing to beat. A plain version of those rules would be
+  permanently shadowed by an identical inline declaration, which makes it
+  dead code. The honest statement is that the rule is either `!important`
+  or deleted, and NOT that a specificity fix exists. The other six of the
+  nine override a value that genuinely differs.
 
   **Six of bucket B are also unremovable, for a different reason.**
   conversation overrides `.bg-light`, `.bg-white`, `.bg-body`,
@@ -1186,16 +1203,13 @@ that document. Every permitted use must carry a comment naming its case.
   `.treeview` would win on source order alone. Permitted by case 5 and
   removable. Low value, and it is a specificity change like any other.
 
-  **BUCKET E IS THE REAL TARGET. SEVEN DECLARATIONS.**
+  **BUCKET E IS THE REAL TARGET. FIVE DECLARATIONS.**
   - `graphcanvas.scss:64-65, 89-90` — `.gc-node:hover rect` is (0,2,1) and
     `.gc-node-selected rect` is (0,1,1), so hover out-specifies selection
     and `!important` papers over it. The stroke comes from `setAttribute`
     in `svgCreate` (`graphcanvas.ts:388`), which makes it an SVG
     presentation attribute that loses to any CSS rule. There is no inline
     stroke anywhere in the file. Restructuring the selectors fixes this.
-  - `treegrid.scss:278, 282` — `.treegrid-resizing` plus a descendant `*`,
-    forcing `cursor: col-resize` during a drag. Deliberate, and the `*` is
-    doing the work. Arguably case 1 in spirit. Left here pending a decision.
   - `ribbon.scss:1457` — `.ribbon-overflow-popup .ribbon-group-content` at
     (0,2,0) against `.ribbon-group-overflow .ribbon-group-content` at
     (0,2,0) on line 1413. Equal specificity, and the popup rule is already
@@ -1971,7 +1985,7 @@ the step exits 1 and the workflow fails.
 | MRK-2 | 22 of 24 | 2 of 29 | far smaller |
 | MRK-3 | 10 | 4 | far smaller |
 | LOG-1 | 406 | 2 real call sites | far smaller |
-| IMP-1 | 47 | 113 all-scss, 54 component, **7 real** | larger, then far smaller once classified |
+| IMP-1 | 47 | 113 all-scss, 54 component, **5 real** | larger, then far smaller once classified |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
 | UNUSED-1 | 119 | 306 | far larger |

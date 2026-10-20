@@ -2464,7 +2464,7 @@ escape hatch that silences the check.
 
 IMP-1 said 29 unjustified `!important` in 8 component stylesheets. The
 owner asked one question — are markdowneditor and chartpanel overriding
-external components? — and the number became 7 in 3 files. Nothing was
+external components? — and the number became 5 in 2 files. Nothing was
 fixed. The count had been built on the wrong axis.
 
 The old split sorted each declaration by whether a comment sat near it.
@@ -2479,8 +2479,16 @@ override**, and it has a hard floor the old axis could not see. Six
 conversation declarations override Bootstrap utilities, which Bootstrap
 emits with `!important` already, so only `!important` beats them. Seven
 more override an inline style set from JavaScript, and no selector at
-any specificity outranks an inline declaration. Thirteen of the 54 have
+any specificity outranks an inline declaration. Twelve of the 54 have
 exactly one legal spelling.
+
+Three more are a subtler case worth separating, because the first pass
+missed it. In stacklayout and splitlayout the inline value EQUALS the
+rule. Nothing is being beaten. A plain version of those rules would be
+permanently shadowed by an identical inline declaration, so the rule is
+`!important` or deleted, and not `!important` or broken. Checking that
+an inline sits on the same element answers whether specificity can win.
+It does not answer whether the rule is doing work.
 
 Which is how the entry came to publish a fix that would have broken
 things. It suggested settling stacklayout with

@@ -9091,9 +9091,12 @@
         component SCSS ... The only exception is utility classes in the
         theme itself". Thirteen declarations in this repository cannot be
         written any other way. Six override Bootstrap utilities, which
-        Bootstrap emits with `!important` already, and seven override an
-        inline style, which no selector outranks. A standard that forbids
-        the only possible spelling is a standard that gets ignored.
+        Bootstrap emits with `!important` already, and six override an
+        inline style that differs, which no selector outranks. Three more
+        can only be `!important` or deleted, because there the inline
+        value equals the rule and a plain version would be permanently
+        shadowed. A standard that forbids the only possible spelling is a
+        standard that gets ignored.
 
     D2. THE TRACKER CITED A RULE THAT WAS NEVER WRITTEN. The entry's
         first line read "Per CODING_STYLE.md, `!important` should only be
@@ -9106,7 +9109,7 @@
     D3. SORT BY TARGET, NOT BY COMMENT PROXIMITY. The old split asked
         whether a comment sat near the declaration. A comment documents a
         justification and is not one. Sorted by what each declaration
-        overrides, the 54 fall into five buckets and only 7 are in-house
+        overrides, the 54 fall into five buckets and only 5 are in-house
         specificity bugs. markdowneditor read as 11 offenders when all 17
         of its declarations are the same Vditor override.
 
@@ -9116,8 +9119,12 @@
         any specificity beats an inline declaration, and
         `stacklayout.ts:420-422` sets the flex longhands inline on the
         same element that carries the class. The pattern repeats in
-        splitlayout, ribbonbuilder and chartpanel. Checking it needs the
-        component's TypeScript, not its stylesheet.
+        splitlayout, ribbonbuilder, chartpanel and treegrid, whose drag
+        rule beats the inline `cursor: pointer` on sortable headers.
+        Checking it needs the component's TypeScript, not its stylesheet.
+        Checking WHETHER THE INLINE DISAGREES is a second step: in
+        stacklayout and splitlayout it does not, so those rules are
+        `!important` or deleted rather than `!important` or broken.
 
     D5. THE VARIABLE LAYER IS THE ROUTE FOR BOOTSTRAP, AND ITS BOUNDARY
         IS THE THIRD-PARTY STYLESHEET. `custom.scss` imports
@@ -9133,7 +9140,7 @@
         and no count in `audit-counts.mjs` isolates the 7, because the
         split depends on inline styles set from TypeScript.
   consequences: |
-    IMP-1 goes from a stated 29 in 8 files to 7 in 3 files, with no code
+    IMP-1 goes from a stated 29 in 8 files to 5 in 2 files, with no code
     changed and no ratchet moved. graphcanvas's 4 are checkable today
     through `getComputedStyle(rect).stroke` in Playwright, so the
     "unverifiable without screenshots" deferral never applied to the
