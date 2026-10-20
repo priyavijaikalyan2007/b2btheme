@@ -1315,9 +1315,9 @@ that document. Every permitted use must carry a comment naming its case.
   - `components/toast/toast.scss` (2 occurrences)
   - `components/ribbon/ribbon.scss` (1 occurrence)
 
-- [ ] **DEBT-TV-1** **The inline rename field asks for 22px and renders at
-  29.72px, and has since it was written.** Found by ADR-209 while removing
-  IMP-1's keyword, not by looking for it.
+- [=] **SETTLED — DEBT-TV-1** **The inline rename field asked for 22px and
+  renders at 29.72px. The 22px was the stale number, not the 29.72px.**
+  Found by ADR-209 while removing IMP-1's keyword, not by looking for it.
 
   `treeview.scss` carried `height: 22px !important` on
   `.treeview-rename-input`. The input also carries `form-control
@@ -1329,14 +1329,31 @@ that document. Every permitted use must carry a comment naming its case.
   `29.72px`.
 
   The dead declaration is deleted, because keeping a line that does
-  nothing is worse than not having it. **The INTENT is not restored**, and
-  that is the open question here: a 22px inline rename field needs
-  `min-height` set as well, and that is a visible change to how renaming
-  looks in every tree. It wants a decision rather than a patch.
+  nothing is worse than not having it.
 
-  Pinned by `tests/important-removal.spec.ts`, which asserts the 29.7188px
-  the field actually renders at, so the number cannot drift unnoticed
-  while the question is open.
+  **MEASURED BEFORE DECIDING, AND THE MEASUREMENT INVERTED THE QUESTION.**
+  The entry first read as a defect with the fix withheld. Then the row was
+  measured. **A tree row is 30px and the input is 29.72px**, so the field
+  FILLS its row, and the row is 120px both before and during a rename —
+  **no layout shift at all**. A 22px input would be SMALLER than the row it
+  sits in, floating with slack above and below. Screenshots of both were
+  put in front of the owner and the difference is barely visible, which is
+  itself the answer: the thing that was never built is the thing that was
+  not needed.
+
+  > **SETTLED by the owner, 2026-10-20.** The 22px target is retired rather
+  > than implemented. The field renders correctly today and the dead line
+  > that claimed otherwise is gone.
+  >
+  > **Future sessions: do not add a `height` or `min-height` to
+  > `.treeview-rename-input`.** A past declaration asking for 22px is not
+  > evidence that 22px is right. It was measured against the row and it is
+  > not. `tests/important-removal.spec.ts` asserts the 29.7188px the field
+  > actually renders at, so the number cannot drift unnoticed.
+  >
+  > **Reopen when** somebody finds the full-row rename field jarring in
+  > use. The owner's words: "If I find it jarring later, we will fix it
+  > then." That is a report from use, not a number in a stylesheet.
 
 - [ ] **DEBT-LAY-1** **Four layout components accept `setContained()`
   and ignore it.**

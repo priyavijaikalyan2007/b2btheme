@@ -126,10 +126,46 @@ test.describe("IMP-1 !important removals", () =>
         // .form-control-sm sets min-height to calc(1.5em + 0.5rem + 2px),
         // and min-height beats height no matter how the height is spelled.
         // The `height: 22px` declaration here was dead on arrival and has
-        // been deleted. DEBT-TV-1 records the compact field it never got.
+        // been deleted, and the 22px target was retired with it: a row is
+        // 30px, so 29.72px fills it and 22px would float inside it.
+        // DEBT-TV-1, settled.
         await expect(input).toHaveCSS("height", "29.7188px");
         await expect(input).toHaveCSS("font-size", "13.6px");
         await expect(input).toHaveCSS("padding-top", "1px");
         await expect(input).toHaveCSS("padding-left", "4px");
+    });
+
+    // ------------------------------------------------------------------
+    // DEBT-TV-1, settled. The decision was that 22px was the stale number,
+    // because the field already fills its row. That is the claim worth
+    // pinning: not the height on its own, but the height AGAINST the row.
+    // A future change that shrinks the input would keep the test above
+    // honest only if the number were edited with it, and would break this
+    // one, which is the point.
+    // ------------------------------------------------------------------
+
+    test("treeviewRenameInput_FillsItsRowAndDoesNotShiftIt", async ({ page }) =>
+    {
+        await page.goto("/demo/components/treeview.html");
+        const tree = page.locator("#demo-tv-context");
+        const rows = tree.locator(".treeview-node");
+        await rows.first().waitFor();
+
+        const rowHeight = await rows.nth(1).evaluate((el) => el.getBoundingClientRect().height);
+        const before = await rows.first().evaluate((el) => el.getBoundingClientRect().height);
+
+        await tree.locator(".treeview-node-label").first().click();
+        await page.keyboard.press("F2");
+        const input = tree.locator(".treeview-rename-input");
+        await input.waitFor();
+
+        const during = await rows.first().evaluate((el) => el.getBoundingClientRect().height);
+        const inputHeight = await input.evaluate((el) => el.getBoundingClientRect().height);
+
+        // Within a pixel of the row it sits in.
+        expect(Math.abs(inputHeight - rowHeight)).toBeLessThan(1);
+
+        // And renaming moves nothing.
+        expect(during).toBe(before);
     });
 });

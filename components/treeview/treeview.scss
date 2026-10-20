@@ -361,7 +361,11 @@ $tv-z-context-menu: 1050;
 // `.form-control-sm` sets `min-height: calc(1.5em + 0.5rem + 2px)`, which
 // resolves to 29.72px, and `min-height` beats `height` at any specificity
 // and with any keyword. The field renders at 29.7188px and always did.
-// DEBT-TV-1 records the compact field this was reaching for.
+// THE 22px TARGET WAS STALE, AND THE FIELD IS RIGHT AS IT IS. A tree row
+// is 30px and this input is 29.72px, so it FILLS its row and renaming
+// causes no layout shift. At 22px it would float inside the row with slack
+// above and below. Measured and settled under DEBT-TV-1. Do not reinstate
+// a height here.
 .treeview-rename-input {
     padding: $sp-1 $sp-4;
     font-size: $font-size-sm;
