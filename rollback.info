@@ -1,0 +1,72 @@
+# Rollback point for the PAT-1 window-registration change
+
+PURPOSE
+    This file records the last commit before a breaking change, and the
+    exact steps to undo that change. Delete this file once the change
+    has held in production for a release.
+
+LAST GOOD COMMIT
+    d159255  docs(debt-ts-1): do not nudge the apps team
+    2026-10-21, CI green, tree clean.
+
+WHAT CHANGES AFTER THIS POINT
+    64 component classes stop being registered on `window`. Before the
+    change a consumer could write `new window.SizesPicker(options)` and
+    receive an object whose 14 private fields are ordinary properties,
+    because TypeScript removes the `private` keyword at compile time.
+    After the change the only way in is the factory, for example
+    `window.createSizesPicker(options)`.
+
+    Every `window.create*` factory is UNCHANGED. Nothing that calls a
+    factory is affected. Only direct construction breaks.
+
+    Measured before the change: the knobby application does not
+    construct these classes, and `component-library.d.ts` declares none
+    of them. Six demo pages in this repository did, and they were
+    changed to use their factories. The remaining risk is a consumer
+    nobody has counted.
+
+HOW TO ROLL BACK
+
+    1. Find the commit that made the change. It is the first commit
+       after d159255 whose subject begins `fix(pat-1)!:`.
+
+           git log --oneline d159255..HEAD
+
+    2. Revert it. This restores the 64 registrations and leaves every
+       later commit in place, which is the safe option on a shared
+       branch.
+
+           git revert --no-edit <that commit>
+           npm run build
+           npm test
+           git push
+
+    3. If several commits are involved, revert the range newest first.
+
+           git revert --no-edit <oldest>^..<newest>
+
+    4. Only if the branch is not shared and you want the tree exactly
+       as it was:
+
+           git reset --hard d159255
+
+       This discards every commit after d159255, including this file.
+       Prefer step 2.
+
+HOW TO TELL WHETHER THE ROLLBACK WORKED
+    Load any component bundle and check for the class global:
+
+        node -e 'global.window={};
+          new Function(require("fs").readFileSync(
+            "dist/components/sizespicker/sizespicker.js","utf8"))();
+          console.log(Object.keys(window));'
+
+    Before the change and after a rollback, the output contains both
+    `SizesPicker` and `createSizesPicker`. After the change it contains
+    only `createSizesPicker`.
+
+WHO TO TELL
+    The apps team consumes this library from static.knobby.io. They are
+    mid-way through a large piece of work (see DEBT-TS-1), so tell them
+    rather than asking them to act.
