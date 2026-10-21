@@ -10,7 +10,7 @@ LAST GOOD COMMIT
     2026-10-21, CI green, tree clean.
 
 WHAT CHANGES AFTER THIS POINT
-    64 component classes stop being registered on `window`. Before the
+    88 component classes stop being registered on `window`. Before the
     change a consumer could write `new window.SizesPicker(options)` and
     receive an object whose 14 private fields are ordinary properties,
     because TypeScript removes the `private` keyword at compile time.
@@ -20,31 +20,41 @@ WHAT CHANGES AFTER THIS POINT
     Every `window.create*` factory is UNCHANGED. Nothing that calls a
     factory is affected. Only direct construction breaks.
 
+    Three static methods moved to plain functions at the same time:
+    `configureCommandPalette`, `getCommandPalette` and
+    `renderSmartTextTokens`. A reverted build restores the classes and
+    leaves those three functions in place, so nothing that already
+    moved to them breaks.
+
     Measured before the change: the knobby application does not
     construct these classes, and `component-library.d.ts` declares none
-    of them. Six demo pages in this repository did, and they were
-    changed to use their factories. The remaining risk is a consumer
-    nobody has counted.
+    of them. Four demo pages in this repository did, across 27 sites,
+    and they were changed to use their factories. The remaining risk is
+    a consumer nobody has counted.
+
+    Consumer-facing instructions live in
+    docs/MIGRATION_WINDOW_CLASSES.md, linked from a banner on the
+    documentation home page.
 
 HOW TO ROLL BACK
 
-    1. Find the commit that made the change. It is the first commit
-       after d159255 whose subject begins `fix(pat-1)!:`.
+    1. The commit that made the change is
 
-           git log --oneline d159255..HEAD
+           14e1298  fix(pat-1)!: 88 component classes come off window
 
-    2. Revert it. This restores the 64 registrations and leaves every
+    2. Revert it. This restores all 88 registrations and leaves every
        later commit in place, which is the safe option on a shared
        branch.
 
-           git revert --no-edit <that commit>
+           git revert --no-edit 14e1298
            npm run build
            npm test
            git push
 
-    3. If several commits are involved, revert the range newest first.
+    3. If later commits have built on it, revert the range newest
+       first.
 
-           git revert --no-edit <oldest>^..<newest>
+           git revert --no-edit 14e1298^..<newest>
 
     4. Only if the branch is not shared and you want the tree exactly
        as it was:
