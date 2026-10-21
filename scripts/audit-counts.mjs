@@ -512,23 +512,20 @@ const BASELINES = {
     // are two spinner mirrors, two status-dot refs only ever
     // assigned null, a drag flag a probe showed unnecessary, and a
     // resize handler a ResizeObserver replaced.
-    // 124 -> 128 -> 124 on 2026-10-21, and the number means something
-    // different at each end. The rise: `setData` stopped warning about
-    // an unknown slot and started throwing (ADR-200), which was the
-    // ONLY `logWarn` call in annotation, chatdock, stickynote and
-    // workspaceshell, so four more LOG-4a preamble shims went unread.
-    // `dynamicVerboseShims` holds that preamble as a FLOOR at 225, so
-    // deleting them would break that gate.
+    // 0 on 2026-10-21, AND THE RATCHET IS NO LONGER THE GUARANTEE.
+    // tsconfig.json sets noUnusedLocals and noUnusedParameters to
+    // true, which is what UNUSED-1 asked for on the day it was
+    // written, and structure check [22] holds them there. This
+    // ceiling stays at 0 as the second lock: a flag can be turned
+    // off and the check names it, and a count cannot drift past 0
+    // without the build failing first.
     //
-    // The fall: the four `contained` fields this entry had been
-    // attributing to DEBT-LAY-1 were in FlexGridLayout, FlowLayout,
-    // GridLayout and LayerLayout, and DEBT-LAY-1 covered AnchorLayout,
-    // BorderLayout, BoxLayout and CardLayout and CLOSED on 2026-10-20.
-    // ADR-212 applied to the other four as well.
-    //
-    // 124 IS NOW EXACTLY THE PREAMBLE AND NOTHING ELSE, which is the
-    // first time this count has been one population.
-    unusedLocals: 124,
+    // THE 124 WERE NEVER DELETED. They are the LOG-4a preamble, and
+    // every component now carries one `void [logInfo, ...]` line
+    // saying the uniformity is deliberate. The minifier drops both
+    // that line and the shims nothing calls, so the shipped artifact
+    // is byte-for-byte what it was.
+    unusedLocals: 0,
 
     // A CEILING AT ZERO (2026-10-21, UNUSED-1).
     // `scripts/bundle-diagramengine.sh` emits its own preamble of

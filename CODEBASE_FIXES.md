@@ -3964,10 +3964,45 @@ offered as the evidence for it.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **124 on 2026-10-21 and that is the FLOOR** — and
-  all 124 are LOG-4a preamble shims, with nothing else in the count.
-  Was 305 on 2026-10-20, 329 on 2026-10-17, 330 on 2026-10-19, not
-  the 414 below.
+- [x] **UNUSED-1** *(CLOSED 2026-10-21)* — **0, and
+  `noUnusedLocals` / `noUnusedParameters` are ON in `tsconfig.json`,
+  which is what the last line of this entry has asked for since March.**
+  414 -> 330 -> 305 -> 124 -> 0 across the week.
+
+  **THE 124 WERE NEVER DELETED, AND DELETING THEM WOULD HAVE BEEN THE
+  WRONG REPAIR.** They are the LOG-4a preamble, which this entry had
+  already recorded as not-debt: every component declares all five
+  shims whether it calls them or not, so a developer adding a log line
+  never has to wire one up, and `dynamicVerboseShims` holds the
+  logDebug and logTrace population as a FLOOR at 225. Driving the
+  count down by deleting them would have broken that floor and
+  re-baselined it to fit, which is the move a floor exists to catch.
+
+  **What the compiler needed was a statement that the uniformity is
+  deliberate.** Every component carries one line after its preamble:
+
+  ```typescript
+  void [logInfo, logWarn, logError, logDebug, logTrace];
+  ```
+
+  122 components, with the list built from the shims each file
+  actually declares — 23 of them carry four rather than five.
+
+  **THE SHIPPED ARTIFACT DOES NOT CHANGE, MEASURED.**
+  `dist/components/pill/pill.js` contains no `void[` and no
+  `logWarn`, `logError` or `logDebug`: the minifier drops the
+  reference as a side-effect-free expression and then drops the shims
+  nothing calls. It was doing that before this change too, which is
+  why the preamble never cost anything at runtime.
+
+  **A FLAG IS A STRONGER GUARANTEE THAN A RATCHET, AND THIS ENTRY IS
+  WHY.** `unusedLocals` sat at 124 with a documented baseline and a
+  composition claim, and four live defects were inside that number
+  under a reference to a closed entry — the ceiling was green the
+  whole time. A baseline is one line away from being raised. A
+  compiler flag can only be turned off, and **structure check `[22]`
+  names it when it is**, mutation-proven by flipping one back. The
+  ceiling stays at 0 as the second lock.
 
   **THE FOUR `contained` FIELDS WERE NEVER DEBT-LAY-1'S, AND THIS
   ENTRY SAID THEY WERE FOR A DAY.** The headline read "120 preamble

@@ -58,6 +58,20 @@ function logInfo(...a: unknown[]): void
 Repeat that helper for `logWarn` and `logError`, mapping each to `_lu.warn`
 and `_lu.error` and to `console.warn` and `console.error`.
 
+**End the preamble with a reference to it.** `noUnusedLocals` is on, and
+a component that does not call every level it declares would otherwise
+fail the build:
+
+```typescript
+void [logInfo, logWarn, logError, logDebug, logTrace];
+```
+
+The uniformity is the point — a developer adding a log line should never
+have to wire a shim up first — so the line says that rather than letting
+the compiler argue for deleting the ones this component has not needed
+yet. The minifier drops both the line and any shim nothing calls, so the
+shipped bundle is unaffected (UNUSED-1).
+
 **`logDebug` and `logTrace` are different, because the fallback has to filter
 and the utility branch already does.** Copy these verbatim:
 

@@ -3189,3 +3189,34 @@ explains, and a floor justified by a closed item is a floor justified
 by nothing. Prefer composition claims a reader can re-derive from the
 tool — "all 124 are preamble shims" survives; "120 of these plus four
 of those" does not.
+
+### 6.157 A Ratchet Can Be Raised, a Compiler Flag Can Only Be Turned Off (2026-10-21)
+
+UNUSED-1 asked for one thing on the day it was written: fix the
+occurrences, then enable `noUnusedLocals` and `noUnusedParameters`.
+The count went 414 to 124 over a week and stopped, because the last
+124 were the LOG-4a preamble — five log shims declared in every
+component whether it calls them or not, deliberately, so that adding a
+log line never means wiring one up first.
+
+The tempting close was to delete them. That would have broken
+`dynamicVerboseShims`, a floor holding the same population, and the
+repair would have been to re-baseline the floor — which is the exact
+move a floor exists to catch.
+
+What the compiler needed was not fewer shims but a statement that the
+uniformity is intended: one `void [logInfo, ...]` line per preamble.
+**The minifier drops it, and drops the unused shims with it**, so the
+shipped bundle is unchanged — it had been dropping them all along.
+
+The flag matters more than the number it replaced. `unusedLocals` sat
+at 124 with a documented baseline and a composition claim naming
+another entry, and **four live defects were inside that number while
+the ceiling read green**. A baseline is one line away from being
+raised by someone who reads the count as noise. A compiler flag can
+only be turned off, and a structure check makes that visible.
+
+**Principle**: when a ceiling's floor is a population you have decided
+to keep, the ceiling has stopped measuring anything and should be
+replaced by an invariant the toolchain enforces. Prefer the guarantee
+that fails the build over the one that fails a report.

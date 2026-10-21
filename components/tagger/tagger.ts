@@ -107,6 +107,15 @@ function logTrace(...a: unknown[]): void
     _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
 }
 
+// LOG-4a DECLARES ALL FIVE SHIMS IN EVERY COMPONENT, used or not, so a
+// developer adding a log line never has to wire one up. `noUnusedLocals`
+// is on (UNUSED-1), and this reference is what says that uniformity is
+// deliberate rather than an oversight. Deleting a shim to silence the
+// compiler is the wrong repair: `dynamicVerboseShims` holds the logDebug
+// and logTrace population as a floor, and the preamble is the contract
+// FRONTEND_LOGGING.md section 1.1 states.
+void [logInfo, logWarn, logError, logDebug, logTrace];
+
 const HASH_PALETTE = [
     "#1a77c9", "#2a853c", "#b55e00", "#c92a2a",
     "#862e9c", "#0b7285", "#50810b", "#cf450e",

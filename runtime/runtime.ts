@@ -5315,7 +5315,24 @@ const SAMPLES: Readonly<Record<DataShape, () => unknown>> =
  */
 function sampleFor(shape: DataShape): unknown
 {
-    return (SAMPLES[shape] ?? SAMPLES.record)();
+    const build = SAMPLES[shape];
+
+    // `?? SAMPLES.record` STOOD HERE AND IT IS A FALLBACK. DataShape
+    // is a closed vocabulary of ten, so a missing entry is a gap in
+    // this table rather than an input a caller can send -- and
+    // substituting a record meant a host exercising a `geo` slot was
+    // handed `{ id, name }` and told nothing. The suite could not see
+    // it either: `produces a value for every data shape` asserted
+    // only that each call returned something, which the substitution
+    // guaranteed.
+    if (!build)
+    {
+        throw new Error(
+            `[Conformance] No sample is defined for the data shape `
+            + `"${shape}". Add one to SAMPLES.`);
+    }
+
+    return build();
 }
 
 // ============================================================================

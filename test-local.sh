@@ -483,6 +483,29 @@ if [ "$DEMO_NAME_ERRORS" -eq 0 ]; then
 fi
 echo ""
 
+# ── 22. The unused-code flags stay on ──
+#
+# UNUSED-1 ran from 414 to 0 and its last line was always "then enable
+# the flags". A ratchet is not the same guarantee: `unusedLocals` had a
+# documented baseline and the next person could raise it in one line,
+# which is how it sat at 124 with four live defects inside it. A
+# compiler flag cannot be raised, only turned off, and this check is
+# what makes turning it off visible.
+echo "[22] noUnusedLocals and noUnusedParameters are on (UNUSED-1)"
+FLAG_ERRORS=0
+for flag in noUnusedLocals noUnusedParameters; do
+    if grep -qE "\"$flag\"[[:space:]]*:[[:space:]]*true" tsconfig.json; then
+        :
+    else
+        fail "tsconfig.json does not set $flag to true"
+        FLAG_ERRORS=$((FLAG_ERRORS + 1))
+    fi
+done
+if [ "$FLAG_ERRORS" -eq 0 ]; then
+    pass "tsconfig.json keeps both unused-code flags on"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

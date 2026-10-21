@@ -79,6 +79,15 @@ function logTrace(...a: unknown[]): void
     }
 }
 
+// LOG-4a DECLARES THE SHIM PREAMBLE IN EVERY COMPONENT, whether it calls
+// every level or not, so a developer adding a log line never has to wire
+// one up. `noUnusedLocals` is on (UNUSED-1), and this reference is what
+// says that uniformity is deliberate rather than an oversight. Deleting a
+// shim to silence the compiler is the wrong repair: `dynamicVerboseShims`
+// holds the logDebug and logTrace population as a floor, and the preamble
+// is the contract FRONTEND_LOGGING.md section 1.1 states.
+void [logWarn, logDebug, logTrace];
+
 /** Default delay before opening (ms). */
 const DEFAULT_OPEN_DELAY = 250;
 
