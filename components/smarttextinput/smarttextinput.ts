@@ -1558,7 +1558,6 @@ export class SmartTextInputEngine
     private buildResolvedToken(item: DataSourceResult): ResolvedToken
     {
         const session = this.session!;
-        const triggerLen = session.triggerDef.trigger.length;
         const cursorPos = this.adapter!.getCursorPosition().offset;
 
         return {

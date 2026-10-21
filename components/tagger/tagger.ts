@@ -866,7 +866,7 @@ export class Tagger
         return !exactMatch;
     }
 
-    private renderCreateRow(filter: string): void
+    private renderCreateRow(_filter: string): void
     {
         const divider = createElement("div", ["tagger-dropdown-divider"]);
         setAttr(divider, "role", "separator");

@@ -394,7 +394,7 @@ function buildTechnicalAccordion(id: string, error: LiterateError): HTMLElement
 /**
  * Builds the copy-to-clipboard button for technical details.
  */
-function buildCopyButton(id: string, error: LiterateError): HTMLElement
+function buildCopyButton(_id: string, error: LiterateError): HTMLElement
 {
     const btn = createElement("button", [
         "btn", "btn-sm", "btn-outline-secondary",
@@ -468,7 +468,7 @@ function showCopyFeedback(btn: HTMLElement): void
 /**
  * Builds the modal footer with Close and optional Retry buttons.
  */
-function buildFooter(id: string, error: LiterateError): HTMLElement
+function buildFooter(_id: string, error: LiterateError): HTMLElement
 {
     const footer = createElement("div", [
         "modal-footer", "border-top-0", "pt-0"

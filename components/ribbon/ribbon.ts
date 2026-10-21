@@ -468,10 +468,8 @@ function addIconClasses(el: HTMLElement, iconStr: string): void
     for (const p of parts) { if (p) { el.classList.add(p); } }
 }
 
-function clamp(value: number, min: number, max: number): number
-{
-    return Math.max(min, Math.min(max, value));
-}
+// `clamp` LEFT ON 2026-10-21 (UNUSED-1): a one-line helper with no
+// caller in this module.
 
 function debounce(fn: () => void, ms: number): () => void
 {
@@ -497,10 +495,10 @@ function genId(prefix: string): string
     return prefix + "-" + (++instanceCounter);
 }
 
-function prefersReducedMotion(): boolean
-{
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+// `prefersReducedMotion` LEFT ON 2026-10-21 (UNUSED-1). The
+// preference IS honoured -- ribbon.scss carries its own
+// `@media (prefers-reduced-motion: reduce)` block, which is the
+// right layer for it -- so the JavaScript probe had nothing to do.
 
 function clearChildren(el: HTMLElement): void
 {

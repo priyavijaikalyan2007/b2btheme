@@ -137,7 +137,9 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 /** Cursor-following magnifying glass overlay component. */
 export class Magnifier
 {
-    private containerId: string;
+    // `containerId` LEFT ON 2026-10-21 (UNUSED-1): the constructor
+    // resolves and keeps the element, so the id it came from had no
+    // second reader.
     private options: MagnifierOptions;
     private targetEl: HTMLElement | null = null;
     private lensEl: HTMLElement | null = null;
@@ -168,7 +170,6 @@ export class Magnifier
                 + "magnifier. The lens itself mounts on document.body.");
         }
 
-        this.containerId = containerId;
         this.options = options;
         this.zoom = options.zoom ?? DEFAULT_ZOOM;
         this.diameter = options.diameter ?? DEFAULT_DIAMETER;

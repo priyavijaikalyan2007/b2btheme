@@ -391,7 +391,10 @@ function interpolateColor(
     const r = Math.round(lc.r + (rc.r - lc.r) * t);
     const g = Math.round(lc.g + (rc.g - lc.g) * t);
     const b = Math.round(lc.b + (rc.b - lc.b) * t);
-    const a = lc.a + (rc.a - lc.a) * t;
+    // `a` LEFT ON 2026-10-21 (UNUSED-1): it interpolated the alpha
+    // parsed out of the two hex STRINGS, while the return below
+    // interpolates `leftStop.alpha` / `rightStop.alpha`, which is
+    // where a stop's alpha actually lives.
     const toHex = (n: number) => n.toString(16).padStart(2, "0");
 
     return {

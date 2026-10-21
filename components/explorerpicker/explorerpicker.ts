@@ -589,6 +589,21 @@ export class ExplorerPickerImpl
         {
             return;
         }
+        // (CRITICAL) A SECOND show() USED TO ORPHAN A KEY HANDLER.
+        // `attachListeners` ends with
+        // `this.boundKeyHandler = this.onKeyDown.bind(this)`, a NEW
+        // function each call, so re-showing attached a second
+        // keydown listener to the root and overwrote the only
+        // reference `detachListeners` could remove the first by.
+        // Every arrow key then ran the handler twice.
+        //
+        // The other listeners are bound class fields, which
+        // addEventListener deduplicates, so this was the one that
+        // leaked. `mounted` is the state that was already here for
+        // it: written by this method, cleared by `hide`, and read
+        // nowhere (UNUSED-1).
+        if (this.mounted) { this.detachListeners(); }
+
         this.containerEl = target;
         target.appendChild(this.rootEl!);
         this.attachListeners();

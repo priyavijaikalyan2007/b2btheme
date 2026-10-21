@@ -512,7 +512,7 @@ const BASELINES = {
     // are two spinner mirrors, two status-dot refs only ever
     // assigned null, a drag flag a probe showed unnecessary, and a
     // resize handler a ResizeObserver replaced.
-    unusedLocals: 270,
+    unusedLocals: 227,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -778,7 +778,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5057,
+    testBlocks: 5059,
 };
 
 /**

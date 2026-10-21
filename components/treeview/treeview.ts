@@ -509,10 +509,8 @@ function removeAttr(el: HTMLElement, name: string): void
 /**
  * Clamps a number between min and max.
  */
-function clamp(value: number, min: number, max: number): number
-{
-    return Math.max(min, Math.min(max, value));
-}
+// `clamp` LEFT ON 2026-10-21 (UNUSED-1): a one-line helper with no
+// caller in this module.
 
 // ============================================================================
 // S3: INTERNAL HELPERS
@@ -2095,7 +2093,7 @@ export class TreeView
      */
     private populateVirtualRowChildren(
         row: HTMLElement, node: TreeNode,
-        level: number, entry: VisibleEntry
+        level: number, _entry: VisibleEntry
     ): void
     {
         const indentPx = this.options.indentPx || DEFAULT_INDENT;
@@ -2411,7 +2409,7 @@ export class TreeView
         this.expandAncestors(nodeId);
         this.invalidateVisibleCache();
 
-        const visible = this.getVisibleNodes();
+        this.getVisibleNodes();
         const idx = this.visibleIndexMap.get(nodeId);
 
         if (idx === undefined)

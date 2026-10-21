@@ -571,7 +571,9 @@ export class SplitLayout
     {
         for (const pane of this.panes)
         {
-            const prop = this.orientation === "horizontal" ? "width" : "height";
+            // `prop` LEFT ON 2026-10-21 (UNUSED-1): `flexBasis` runs
+            // along the main axis in BOTH orientations, so the
+            // width/height choice it computed was never needed.
             pane.element.style.flexBasis = `${pane.size}px`;
             pane.element.style.flexGrow = "0";
             pane.element.style.flexShrink = "0";

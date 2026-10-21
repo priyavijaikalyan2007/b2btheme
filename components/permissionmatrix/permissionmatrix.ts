@@ -385,14 +385,14 @@ export class PermissionMatrix
     expandGroup(groupId: string): void
     {
         this.expandedGroups.add(groupId);
-        this.toggleGroupVisibility(groupId, true);
+        this.toggleGroupVisibility();
         this.announce(`${this.getGroupName(groupId)} expanded`);
     }
 
     collapseGroup(groupId: string): void
     {
         this.expandedGroups.delete(groupId);
-        this.toggleGroupVisibility(groupId, false);
+        this.toggleGroupVisibility();
         this.announce(`${this.getGroupName(groupId)} collapsed`);
     }
 
@@ -1385,7 +1385,10 @@ export class PermissionMatrix
     // GROUP TOGGLE
     // ========================================================================
 
-    private toggleGroupVisibility(groupId: string, expanded: boolean): void
+    // THE PARAMETERS WENT ON 2026-10-21 (UNUSED-1). Both callers
+    // update `expandedGroups` and then call this, so the group and
+    // its new state are already in the model a full re-render reads.
+    private toggleGroupVisibility(): void
     {
         this.renderGrid();
     }

@@ -1352,3 +1352,54 @@ describe("resourceTypeFilter on the staticNodes path", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// RE-SHOW DOES NOT ORPHAN A LISTENER — UNUSED-1
+// ============================================================================
+
+describe("show is safe to call twice", () =>
+{
+    // `attachListeners` ends with `this.boundKeyHandler =
+    // this.onKeyDown.bind(this)`, a NEW function each call, so a
+    // second show() attached a second keydown listener to the root
+    // and overwrote the only reference detachListeners could remove
+    // the first by. Every arrow key then ran the handler twice. The
+    // other listeners are bound class fields, which
+    // addEventListener deduplicates. `mounted` was written by show,
+    // cleared by hide and read nowhere.
+    test("every keydown listener added is removed again", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts());
+        const root = container.querySelector(".explorerpicker")!;
+
+        // The live set, not a pair of counts: the factory mounts
+        // once before the spies go on, so counting additions and
+        // removals separately is off by that first attach. What the
+        // claim needs is that NOTHING is still listening at the end.
+        const live = new Set<EventListenerOrEventListenerObject>();
+        const realAdd = root.addEventListener.bind(root);
+        const realRemove = root.removeEventListener.bind(root);
+        root.addEventListener = (t: string, f: EventListenerOrEventListenerObject,
+            o?: boolean | AddEventListenerOptions): void =>
+        {
+            if (t === "keydown") { live.add(f); }
+            realAdd(t, f, o);
+        };
+        root.removeEventListener = (t: string, f: EventListenerOrEventListenerObject,
+            o?: boolean | EventListenerOptions): void =>
+        {
+            if (t === "keydown") { live.delete(f); }
+            realRemove(t, f, o);
+        };
+
+        picker.show(container);
+        picker.show(container);
+        expect(live.size).toBe(1);
+
+        picker.hide();
+
+        expect(live.size).toBe(0);
+
+        picker.destroy();
+    });
+});

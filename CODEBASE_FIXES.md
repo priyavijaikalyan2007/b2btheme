@@ -3838,12 +3838,62 @@ offered as the evidence for it.
   **`flattenVisible`'s doc comment named two callers it no longer
   had**, which is a claim like any other.
 
-  **Remaining: ~49 real-code reports, 120 preamble (a FLOOR) and
-  103 in the generated `diagramengine.ts` (fix in `src/` and
-  re-bundle).** Across five shapes the score is **nine defects to
-  thirteen deletions**, so the entry's framing holds: an unused
-  symbol is a question, and the answer is a feature about as often
-  as it is dead code. The shapes left are mostly element refs and dead
+  **THE REAL-CODE TAIL IS CLEARED: 270 -> 227, AND 227 IS EXACTLY
+  120 + 103 + 4.** 120 preamble shims (a FLOOR), 103 in the
+  generated `diagramengine.ts`, and the four `contained` fields
+  held open by DEBT-LAY-1's protocol question. **Nothing else in
+  hand-written source is reported.**
+
+  Three more defects came out of the tail:
+
+  - **`ribbonbuilder :: instance` — every preview rebuild leaked a
+    component.** `invokeComponentFactory` created a handle per
+    `type: "component"` control and dropped it, and
+    `destroyPreview` tore down the ribbon and nothing inside it.
+    `rebuildPreview` runs on a 250 ms debounce after every config
+    edit, so a session of editing left one undestroyed component
+    per control per batch, each still holding its document-level
+    listeners.
+  - **`explorerpicker :: mounted` — a second `show()` orphaned a
+    key handler.** `attachListeners` ends with
+    `this.boundKeyHandler = this.onKeyDown.bind(this)`, a NEW
+    function each call, so re-showing attached a second keydown
+    listener and overwrote the only reference `detachListeners`
+    could remove the first by. **Every arrow key then ran the
+    handler twice.** The other listeners are bound class fields,
+    which `addEventListener` deduplicates, so this was the one that
+    leaked.
+  - **`fileexplorer :: id` — two explorers on a page logged
+    indistinguishable lifecycle lines.** Every sibling logs its
+    instance id; this one computed `fileexplorer-<n>` and threw it
+    away. It is in the log lines now.
+
+  **The rest of the tail was mechanical and is recorded in place.**
+  Three `clamp` copies with no caller; `ribbon ::
+  prefersReducedMotion`, whose preference **is** honoured — in
+  `ribbon.scss`'s own `@media (prefers-reduced-motion: reduce)`
+  block, which is the right layer; `actionitems ::
+  addDueDatePart`, a second method whose whole body was an early
+  return and a comment; and twelve unused parameters given the
+  house `_` prefix rather than removed, because their signatures
+  have callers.
+
+  Two worth keeping as traps. `const visible = this.getVisibleNodes();`
+  appears three times in `treegrid` and `treeview` with the result
+  discarded — **the CALL rebuilds the visible cache**, so deleting
+  the line rather than the binding would have broken it. And
+  `permissionmatrix :: toggleGroupVisibility(groupId, expanded)`
+  ignored both parameters because both callers update
+  `expandedGroups` first; the parameters went, not the method.
+
+  **Across six shapes the score is twelve defects to twenty-three
+  deletions.** The entry's framing holds: an unused symbol is a
+  question, and the answer is a feature about a third of the time.
+
+  **Next: the 103 in the generated bundle.** They must be fixed in
+  `components/diagramengine/src/` and re-bundled with
+  `bash scripts/bundle-diagramengine.sh`, or the build discards the
+  edit — a trap this tracker has already been caught by once. The shapes left are mostly element refs and dead
   helpers, which is where the entry predicts the genuine deletions
   are — and that prediction is now the only unverified one in this
   entry, which is the shape of claim this session has falsified

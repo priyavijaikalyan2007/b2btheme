@@ -702,7 +702,7 @@ function rebuildSwatches(
 /** Build the public API object for a live picker instance. */
 function buildApi(
     instanceId: string, state: PickerState,
-    rootEl: HTMLElement, container: HTMLElement
+    rootEl: HTMLElement, _container: HTMLElement
 ): ToolColorPickerAPI
 {
     let destroyed = false;

@@ -318,6 +318,13 @@ function formatDate(d: Date | undefined): string
 export class FileExplorer
 {
     private opts: FileExplorerOptions;
+    // THE ID IS IN THE LOG LINES NOW (2026-10-21, UNUSED-1). It was
+    // assigned `fileexplorer-<n>` in the constructor and read
+    // nowhere, so two explorers on one page produced
+    // indistinguishable lifecycle lines. Every sibling component
+    // logs its instance id -- ExplorerPicker's `logInfo("Mounted",
+    // this.instanceId)` is the pattern -- and this one computed one
+    // and threw it away.
     private id: string;
     private destroyed = false;
 
@@ -488,7 +495,7 @@ export class FileExplorer
         container.appendChild(this.root!);
         this.attachListeners();
         this.renderContent();
-        logInfo("Shown in container");
+        logInfo("Shown in container", this.id);
     }
 
     hide(): void
@@ -511,7 +518,7 @@ export class FileExplorer
         this.nodeMap.clear();
         this.parentMap.clear();
         this.selection.clear();
-        logInfo("Destroyed");
+        logInfo("Destroyed", this.id);
     }
 
     getElement(): HTMLElement | null { return this.root; }
@@ -1074,7 +1081,7 @@ export class FileExplorer
         this.treeContainer.appendChild(tree);
     }
 
-    private toggleTreeExpand(row: HTMLElement, node: FileNode): void
+    private toggleTreeExpand(row: HTMLElement, _node: FileNode): void
     {
         const chevron = row.querySelector(".fileexplorer-tree-chevron");
         const next = row.nextElementSibling;
@@ -2233,7 +2240,7 @@ export class FileExplorer
         input.addEventListener("blur", () => commit());
     }
 
-    private cancelRename(nodeId: string): void
+    private cancelRename(_nodeId: string): void
     {
         this.renameNodeId = null;
         this.renderContent();

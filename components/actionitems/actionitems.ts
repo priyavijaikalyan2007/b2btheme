@@ -618,16 +618,8 @@ function setAttr(el: HTMLElement, name: string, value: string): void
     el.setAttribute(name, value);
 }
 
-/**
- * Removes an attribute from an HTML element.
- *
- * @param el - Target element
- * @param name - Attribute name
- */
-function removeAttr(el: HTMLElement, name: string): void
-{
-    el.removeAttribute(name);
-}
+// `removeAttr` LEFT ON 2026-10-21 (UNUSED-1): a one-line wrapper
+// around removeAttribute with no caller.
 
 // ============================================================================
 // S4: UTILITY FUNCTIONS
@@ -2648,7 +2640,11 @@ export class ActionItems
 
         this.addAttributionPart(parts, item);
         this.addTimePart(parts, item);
-        this.addDueDatePart(meta, parts, item);
+        // `addDueDatePart` LEFT ON 2026-10-21 (UNUSED-1): its whole
+        // body was an early return and a comment saying the due date
+        // is "rendered as a separate coloured span, not in the text
+        // join". `appendDueDateSpan` below does that, under the same
+        // condition.
 
         meta.textContent = "";
 
@@ -2703,18 +2699,6 @@ export class ActionItems
      * @param parts - Array of metadata string parts
      * @param item - Action item data
      */
-    private addDueDatePart(
-        _meta: HTMLElement, parts: string[], item: ActionItem
-    ): void
-    {
-        if (!this.options.showDueDates || !item.dueDate)
-        {
-            return;
-        }
-
-        // Due date is rendered as a separate coloured span, not in the text join
-    }
-
     /**
      * Appends a styled due date span to the metadata element.
      * Applies overdue (red) or due-today (amber) styling.
@@ -4267,7 +4251,6 @@ export class ActionItems
             )
             .sort((a, b) => a.order - b.order);
 
-        const myIndex = siblings.findIndex(i => i.order < item.order);
         const candidates = siblings.filter(i => i.order < item.order);
 
         if (candidates.length === 0)

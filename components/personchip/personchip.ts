@@ -127,16 +127,8 @@ function createElement(tag: string, classes: string[], text?: string): HTMLEleme
     return el;
 }
 
-/**
- * Set an attribute on an element if the value is truthy.
- */
-function setAttr(el: HTMLElement, attr: string, value: string | undefined): void
-{
-    if (value)
-    {
-        el.setAttribute(attr, value);
-    }
-}
+// `setAttr` LEFT ON 2026-10-21 (UNUSED-1): a local attribute
+// helper with no caller in this module.
 
 // ============================================================================
 // INITIALS HELPERS (copied from UserMenu — IIFE constraint)

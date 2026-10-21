@@ -389,7 +389,9 @@ export class FacetSearch
     private clearBtn: HTMLElement | null = null;
     private dropdown: HTMLElement | null = null;
     private liveRegion: HTMLElement | null = null;
-    private containerId: string = "";
+    // `containerId` LEFT ON 2026-10-21 (UNUSED-1): `show()` resolves
+    // the element and keeps THAT; the id it was resolved from had no
+    // second reader.
     private destroyed = false;
 
     private facetMap: Map<string, FacetDefinition>;
@@ -459,7 +461,6 @@ export class FacetSearch
                 `${LOG_PREFIX} Container "${containerId}" was not found. `
                 + "Insert the element before showing it.");
         }
-        this.containerId = containerId;
         container.appendChild(this.root!);
         this.attachListeners();
         logInfo("Shown in", containerId);

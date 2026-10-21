@@ -1964,7 +1964,6 @@ export class CommentOverlay
     setResolvedFilter(show: "all" | "resolved" | "unresolved"): void
     {
         this.resolvedFilter = show;
-        const self = this;
         this.pinMap.forEach(function(state)
         {
             const r = state.data.thread.resolved;

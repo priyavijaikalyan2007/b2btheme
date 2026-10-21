@@ -1135,7 +1135,9 @@ function createValueUndoEntry(
     oldVal: string,
     newVal: string): UndoEntry
 {
-    const colId = state.data.columns[colIdx].id;
+    // `colId` LEFT ON 2026-10-21 (UNUSED-1): the undo and redo
+    // closures address the cell by INDEX, as `createStyleUndoEntry`
+    // below does, and that one never computed an id at all.
 
     return {
         type: "value",

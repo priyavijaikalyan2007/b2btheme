@@ -309,6 +309,9 @@ class RibbonBuilderImpl
     // State
     private selectedNode: TreeNodeRef | null = null;
     private previewTimer: number | null = null;
+    /** Handles for components mounted INSIDE the preview ribbon. */
+    private previewComponents: { destroy: () => void }[] = [];
+
     private previewInstance: { destroy(): void } | null = null;
     private expandedNodes: Set<string> = new Set();
     private controlTypeMenuEl: HTMLElement | null = null;
@@ -586,9 +589,27 @@ class RibbonBuilderImpl
         }
     }
 
-    /** Destroy the current preview ribbon instance. */
+    /** Destroy the current preview ribbon and everything mounted in it. */
     private destroyPreview(): void
     {
+        // (CRITICAL) THE EMBEDDED COMPONENTS USED TO SURVIVE EVERY
+        // REBUILD. `invokeComponentFactory` created a handle per
+        // `type: "component"` control and dropped it on the floor --
+        // the local was called `instance`, assigned in both branches
+        // and never read, which the compiler had been reporting
+        // since it was written (UNUSED-1). This method destroyed the
+        // ribbon and nothing inside it, and `rebuildPreview` runs on
+        // a debounce after every config edit, so a session of
+        // editing left one undestroyed component per control per
+        // keystroke-batch, each still holding its document-level
+        // listeners.
+        for (const inst of this.previewComponents)
+        {
+            try { inst.destroy(); }
+            catch (err) { logWarn("preview component destroy error:", err); }
+        }
+        this.previewComponents = [];
+
         if (this.previewInstance)
         {
             try
@@ -709,6 +730,24 @@ class RibbonBuilderImpl
     }
 
     /**
+     * Keeps a preview component's handle so `destroyPreview` can
+     * tear it down.
+     *
+     * A factory that returns something without a `destroy` is not an
+     * error here -- several return plain objects -- so this records
+     * only what it can tear down, and says nothing about the rest.
+     */
+    private rememberPreviewComponent(instance: unknown): void
+    {
+        const handle = instance as { destroy?: unknown } | null;
+
+        if (handle && typeof handle.destroy === "function")
+        {
+            this.previewComponents.push(handle as { destroy: () => void });
+        }
+    }
+
+    /**
      * Invokes a component factory with the correct calling convention.
      * Uses Function.length: 1 param = options-only, 2+ = (id, opts).
      */
@@ -731,16 +770,11 @@ class RibbonBuilderImpl
 
         try
         {
-            let instance: unknown;
+            const instance = factory.length <= 1
+                ? factory(merged)
+                : factory(container.id, merged);
 
-            if (factory.length <= 1)
-            {
-                instance = factory(merged);
-            }
-            else
-            {
-                instance = factory(container.id, merged);
-            }
+            this.rememberPreviewComponent(instance);
 
             logInfo("[INVOKE OK]",
                 factory.name || "(anon)",

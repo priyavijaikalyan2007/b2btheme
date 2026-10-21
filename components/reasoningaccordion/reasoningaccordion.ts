@@ -905,7 +905,6 @@ export class ReasoningAccordion
         if (!this.headerStatsEl) { return; }
         const n = this.steps.length;
         const countText = n + (n === 1 ? " step" : " steps");
-        let html = "";
         const countEl = createElement("span", CLS + "-header-count");
         countEl.textContent = countText;
         while (this.headerStatsEl.firstChild)

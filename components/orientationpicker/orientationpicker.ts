@@ -621,7 +621,7 @@ function buildApi(
         destroyed: boolean;
         panelEl: HTMLElement | null;
     },
-    options: OrientationPickerOptions
+    _options: OrientationPickerOptions
 ): OrientationPicker
 {
     return {

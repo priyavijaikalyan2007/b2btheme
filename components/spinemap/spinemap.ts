@@ -1882,18 +1882,8 @@ function buildNodeMap(hubs: SpineHub[]): Map<string, NodeEntry>
     return map;
 }
 
-/**
- * Count total branches (including nested) for a hub.
- */
-function countBranches(branches: SpineBranch[]): number
-{
-    let n = branches.length;
-    for (const b of branches)
-    {
-        if (b.children) { n += countBranches(b.children); }
-    }
-    return n;
-}
+// `countBranches` LEFT ON 2026-10-21 (UNUSED-1): a recursive
+// branch count with no caller outside its own recursion.
 
 // ── Vertical Layout ──
 
@@ -2071,8 +2061,8 @@ function layoutBranchesRadial(
     hx: number,
     hy: number,
     hubAngle: number,
-    cx: number,
-    cy: number,
+    _cx: number,
+    _cy: number,
     opts: LayoutOpts,
     pos: Map<string, NodePos>
 ): void
@@ -3677,7 +3667,7 @@ export class SpineMap
     // PRIVATE — VISUAL EDITING (CONNECTIONS)
     // ========================================================================
 
-    private startConnection(nodeId: string, e: PointerEvent): void
+    private startConnection(nodeId: string, _e: PointerEvent): void
     {
         this.isConnecting = true;
         this.connectFromId = nodeId;

@@ -296,10 +296,8 @@ function removeAttr(el: HTMLElement, name: string): void
 /**
  * Clamps a value between min and max.
  */
-function clamp(value: number, min: number, max: number): number
-{
-    return Math.max(min, Math.min(max, value));
-}
+// `clamp` LEFT ON 2026-10-21 (UNUSED-1): a one-line helper with no
+// caller in this module.
 
 // ============================================================================
 // S3: Internal Helpers
@@ -1660,7 +1658,7 @@ export class TreeGrid
         }
 
         // Rebuild visible cache (now without collapsed descendants)
-        const visible = this.getVisibleNodes();
+        this.getVisibleNodes();
         const newParentIdx = this.visibleIndexMap.get(nodeId);
 
         // Update parent toggle visual
@@ -2275,7 +2273,7 @@ export class TreeGrid
      * Attaches key listeners to an editor element.
      * Enter = commit, Escape = cancel, Tab = commit + move next.
      */
-    private attachEditorKeyListeners(editor: HTMLElement, column: TreeGridColumn): void
+    private attachEditorKeyListeners(editor: HTMLElement, _column: TreeGridColumn): void
     {
         editor.addEventListener("keydown", (e: Event) =>
         {
@@ -3128,7 +3126,7 @@ export class TreeGrid
             {
                 this.onHeaderDragOver(e, cell);
             });
-            cell.addEventListener("dragleave", (e) =>
+            cell.addEventListener("dragleave", (_e) =>
             {
                 this.onHeaderDragLeave(cell);
             });
@@ -4707,7 +4705,7 @@ export class TreeGrid
      */
     public scrollToNode(nodeId: string): void
     {
-        const visible = this.getVisibleNodes();
+        this.getVisibleNodes();
         const idx = this.visibleIndexMap.get(nodeId);
         if (idx === undefined || !this.bodyEl)
         {

@@ -992,7 +992,10 @@ export class Conversation
     private canvasHandleEl: HTMLElement | null = null;
     private canvasOpen = false;
     private canvasWidth = DEFAULT_CANVAS_WIDTH;
-    private canvasAppConfig: McpAppConfig | null = null;
+    // `canvasAppConfig` LEFT ON 2026-10-21 (UNUSED-1): `openCanvas`
+    // stored it and passed the same object to `renderCanvasContent`
+    // on the next line. Nothing read the copy, and `closeCanvas`
+    // did not clear it either.
     private canvasFrame: McpAppFrame | null = null;
     private expandedMsgId: string | null = null;
     private themeObserver: MutationObserver | null = null;
@@ -1241,7 +1244,6 @@ export class Conversation
             logWarn("Canvas not enabled — set showCanvas: true");
             return;
         }
-        this.canvasAppConfig = config;
         this.renderCanvasContent(config);
         this.showCanvasPanel();
     }

@@ -14,6 +14,11 @@ import
 {
     createRibbonBuilder,
 } from "./ribbonbuilder";
+// DEBT-TEST-1c. Side-effect import: Ribbon registers
+// `window.createRibbon`, which RibbonBuilder resolves its preview
+// through. Importing the real one keeps this suite out of the
+// stand-in census (ADR-203).
+import "../ribbon/ribbon";
 import type
 {
     RibbonBuilderOptions,
@@ -350,5 +355,94 @@ describe("edge cases", () =>
 
         errorSpy.mockRestore();
         builder.destroy();
+    });
+});
+
+// ============================================================================
+// PREVIEW COMPONENT LIFECYCLE — UNUSED-1
+// ============================================================================
+
+describe("components mounted in the preview are destroyed with it", () =>
+{
+    // `invokeComponentFactory` created a handle per `type:
+    // "component"` control and dropped it -- the local was called
+    // `instance`, assigned in both branches and never read, which
+    // the compiler had been reporting since it was written.
+    // `destroyPreview` tore down the ribbon and nothing inside it,
+    // and `rebuildPreview` runs on a debounce after every config
+    // edit, so editing left one undestroyed component per control
+    // per batch, each still holding its document-level listeners.
+
+    /** Waits for the requestAnimationFrame the element factory defers to. */
+    function frame(): Promise<void>
+    {
+        return new Promise((r) => requestAnimationFrame(() => r()));
+    }
+
+    /** Waits past the preview debounce. */
+    function timers(): Promise<void>
+    {
+        return new Promise((r) => setTimeout(r, 400));
+    }
+
+    function componentConfig(): RibbonOptions
+    {
+        return {
+            tabs: [{
+                id: "home", label: "Home",
+                groups: [{
+                    id: "g", label: "G",
+                    controls: [{
+                        type: "component", id: "c1", label: "Embedded",
+                        componentFactory: "zzTestFactory",
+                    } as unknown as RibbonOptions["tabs"][0]["groups"][0]["controls"][0]],
+                }],
+            }],
+        };
+    }
+
+    afterEach(() =>
+    {
+        delete (window as unknown as Record<string, unknown>)["zzTestFactory"];
+    });
+
+    test("a rebuild destroys the component the previous one mounted", async () =>
+    {
+        // THE REAL RIBBON, imported at the top of this file for its
+        // `window.createRibbon` registration. A stand-in here would
+        // have to call `element()` itself, which is the Ribbon
+        // behaviour this test depends on -- asserting it through a
+        // stub that performs it proves nothing (ADR-203), and it
+        // would be the seventh entry in a stand-in census whose
+        // ceiling is six.
+        const destroys: number[] = [];
+        let made = 0;
+        (window as unknown as Record<string, unknown>)["zzTestFactory"] =
+            (_id: string, _o: unknown) =>
+            {
+                const n = made++;
+                return { destroy: () => { destroys.push(n); } };
+            };
+
+        const builder = createRibbonBuilder(
+            makeOptions({ initialConfig: componentConfig() }),
+            "test-ribbonbuilder");
+
+        // The FIRST preview is debounced too -- the constructor
+        // schedules it rather than building inline.
+        await timers();
+        await frame();
+        expect(made).toBe(1);
+        expect(destroys).toEqual([]);
+
+        builder.setConfig(componentConfig());
+        await timers();
+        await frame();
+
+        expect(made).toBe(2);
+        expect(destroys).toEqual([0]);
+
+        builder.destroy();
+        expect(destroys).toEqual([0, 1]);
     });
 });

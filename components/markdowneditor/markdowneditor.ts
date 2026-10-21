@@ -1359,7 +1359,7 @@ export class MarkdownEditor
                 }
             },
 
-            select: (value: string) =>
+            select: (_value: string) =>
             {
                 if (this.options.showInlineToolbar && this.options.editable)
                 {

@@ -797,7 +797,7 @@ function handleEscape(state: MenuState, e: KeyboardEvent): void
 }
 
 /** Handle ArrowRight: open sub-menu on a sub-menu trigger. */
-function handleArrowRight(state: MenuState, e: KeyboardEvent): void
+function handleArrowRight(_state: MenuState, e: KeyboardEvent): void
 {
     const focused = document.activeElement as HTMLElement;
 

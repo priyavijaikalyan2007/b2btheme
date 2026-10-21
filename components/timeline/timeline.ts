@@ -781,7 +781,9 @@ export class Timeline
 
     // -- DOM references --
     private rootEl: HTMLElement | null = null;
-    private headerEl: HTMLElement | null = null;
+    // `headerEl` and `toolbarHeaderEl` LEFT ON 2026-10-21 (UNUSED-1):
+    // both were assigned at build and nulled at destroy, and nothing
+    // in between read either. The DOM is the state.
     private axisEl: HTMLElement | null = null;
     private bodyEl: HTMLElement | null = null;
     private nowMarkerEl: HTMLElement | null = null;
@@ -842,7 +844,6 @@ export class Timeline
     // ADR-128
     private toolbarHandle: InlineToolbarHandleShape | null = null;
     // ADR-128
-    private toolbarHeaderEl: HTMLElement | null = null;
     // ADR-128
     private onSortModeChange?: (mode: TimelineSortMode) => void;
     // ADR-128
@@ -1003,7 +1004,6 @@ export class Timeline
         }
 
         this.rootEl = null;
-        this.headerEl = null;
         this.axisEl = null;
         this.bodyEl = null;
         this.nowMarkerEl = null;
@@ -1532,7 +1532,6 @@ export class Timeline
         this.renderTicks(axis);
 
         header.appendChild(axis);
-        this.headerEl = header;
         this.rootEl!.appendChild(header);
     }
 
@@ -2729,7 +2728,6 @@ export class Timeline
         const slot = createElement("span", ["timeline-toolbar-slot"]);
         headerStrip.appendChild(slot);
         this.rootEl.appendChild(headerStrip);
-        this.toolbarHeaderEl = headerStrip;
 
         try
         {
@@ -2810,7 +2808,6 @@ export class Timeline
             catch (e) { logWarn("InlineToolbar destroy threw:", e); }
             this.toolbarHandle = null;
         }
-        this.toolbarHeaderEl = null;
     }
 
     /** Compute aggregate collapse state across visible groups. ADR-128. */
