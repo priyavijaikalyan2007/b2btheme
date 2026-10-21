@@ -3008,3 +3008,91 @@ rotted in it, which is the expected yield.
 oracle a build step can satisfy is a gate on the build step. Prefer the
 input the build reads over the output it produces, and check which file
 globs your existing gates iterate before assuming a page is covered.
+
+### 6.151 A Value Return Is a Claim and a Void Return Is Not (2026-10-21)
+
+Five blocks asserted that a method survives being called after
+`destroy()`, and the tracker recorded them as one fleet-wide product
+decision: should a destroyed component refuse, warn, or go quiet? The
+question looked unanswerable without the owner, so it sat.
+
+It is not one question. ADR-200 already answers it per method.
+**A method that returns something claims the thing exists.** A method
+returning `void` claims nothing, so a quiet guard tells the caller the
+truth by omission.
+
+`Conversation.addUserMessage` returns a `ConversationMessage`. After
+`destroy()` it created one, pushed it into `session.messages`,
+returned it, and rendered it into a container `destroy()` had already
+emptied. `getSession()` reported one message and the screen showed
+none. `FileUpload.addFiles` returns `void` and already guarded, and
+its quiet no-op is honest — nothing was claimed, so nothing was
+false.
+
+The same line sorted the other three. Two needed no code change and a
+better assertion; one needed the guard.
+
+**Principle**: before escalating a question to a posture decision, ask
+whether the existing rule already decides each case. A property of the
+SIGNATURE — does this method return a value — can settle a list that
+looks like it needs a policy. The policy question that remains after
+that split is smaller and sharper than the one you started with.
+
+### 6.152 One Bucket, Four Properties, and the Label Named the Smallest (2026-10-21)
+
+`testsThatCannotFail` held 107 blocks under `idempotent`. Driving it
+to zero took four different kinds of work, and nothing in the count
+said so:
+
+- 85 **terminal state** — a second `destroy()`, a close when closed.
+  Uniform: one probe counting teardown primitives. Found 9 components
+  re-running their whole body and 2 firing `onClose` twice.
+- 9 **an operation naming an absent target** — ADR-200 per method. Six
+  `setData` branches made to throw.
+- 5 **a method after `destroy()`** — settled by the return type.
+- 8 **an empty input** — not idempotence at all, and the classifier was
+  wrong to file them here.
+
+The bucket's number was therefore not the size of any piece of work,
+and the label described 85 of 107. `IDEMPOTENT_SITUATION` matched
+`empty`, `nonexistent` and `unknown` alongside `twice`, which is how
+three unrelated properties arrived under one word.
+
+This is ADR-215 one level up. That entry fixed a classifier whose
+comment described a rule the code did not implement. Here the code
+implemented its rule exactly and **the rule's name was wrong**, so the
+number was honest and unreadable.
+
+**Principle**: before working a bucket, split it by what each member's
+title CLAIMS and count the groups. If the split is uneven, the label
+is describing the largest group and hiding the rest. A count you
+cannot convert into a worklist is not yet a measurement.
+
+### 6.153 The Probe Says the Body Re-Ran, the Spy Says the Defect (2026-10-21)
+
+`tests/destroy-probe.ts` counts teardown primitives — `removeChild`,
+`.remove()`, `removeEventListener`, `clearTimeout` — so an idempotence
+block can assert that a second call added none. It replaced
+`.not.toThrow()` in 85 blocks and reported 9 components whose second
+`destroy()` re-ran its whole body.
+
+Then BannerBar, the case that opened the whole sub-shape, was run
+through it with its guard deleted. **The probe did not move.** Its
+second `destroy()` calls no probed primitive, because `clearAutoDismiss`
+checks its timer and `releaseReferences` has already nulled the DOM.
+What it does is fire `onClose` a second time.
+
+So the probe answers "did the body re-run", which is a convention
+question, and the callback spy answers "did an effect repeat", which
+is the defect. Both belong in the block. Sidebar and TabbedPanel were
+found by the spy, not the probe.
+
+A second `removeEventListener` with the same arguments, a `.remove()`
+on a detached node and a `clearTimeout` of a dead handle all change
+nothing a user can see — so the probe alone would have been a gate on
+tidiness.
+
+**Principle**: when an instrument generalises across a fleet, state
+what it can and cannot see before publishing its number, and check it
+against the case that motivated it. An instrument that would have
+missed its own founding example is measuring a proxy.

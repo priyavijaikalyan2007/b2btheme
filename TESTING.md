@@ -241,6 +241,59 @@ A `for (const m of ["a", "b"])` is not a guard: the collection is written
 out in the test, so a reader can see it is not empty. Only a collection the
 COMPONENT produced can come back empty.
 
+### 2.6c Idempotence Is Not Survival, and a Probe Only Sees Half of It
+
+`expect(() => h.destroy()).not.toThrow()` answers "did it survive".
+Almost no test is named for survival. Deleting
+`if (this.destroyed) { return; }` from `BannerBar.destroy()` entirely
+leaves `Destroy_CalledTwice_IsIdempotent` green, because a second call
+fires `onClose` twice and the block cannot see it.
+
+`tests/destroy-probe.ts` counts the teardown primitives a component
+performs — `removeChild`, `.remove()`, `removeEventListener`,
+`clearTimeout`, `clearInterval`, `cancelAnimationFrame`, enumerated
+from every `destroy()` in `components/`. A block calls the terminal
+method, records the count, calls it again, and asserts the count did
+not move:
+
+```ts
+const probe = destroyProbe();
+
+h.destroy();
+const first = probe.total();
+h.destroy();
+
+expect(first).toBeGreaterThan(0);
+expect(probe.total()).toBe(first);
+probe.restore();
+```
+
+**The first count is the positive control.** A component the probe
+cannot observe fails loudly rather than passing silently, which is how
+two suites were caught destroying something they had never shown.
+
+**The probe is half the instrument.** Run against BannerBar with its
+guard deleted, the count does not move — its second `destroy()` calls
+no probed primitive, because `clearAutoDismiss` checks its timer and
+`releaseReferences` has already nulled the DOM. What it does is fire
+the callback again. So:
+
+- the **probe** answers *did the body re-run*, which is a convention
+  question, and a repeated `removeEventListener` changes nothing a
+  user can see;
+- the **callback spy** answers *did an effect repeat*, which is where
+  the defects are.
+
+Put both in the block wherever the options carry a destroy-time
+callback. Sidebar and TabbedPanel were found by the spy.
+
+**A guarded component cannot be made red by deleting its guard, and
+that is not a vacuous test.** Where every teardown step is
+independently conditional — `hide()` checks visibility,
+`parentNode?.removeChild` short-circuits once detached — the property
+is held twice over. Establish the assertion's non-vacuity somewhere it
+can fail rather than demanding a red mutation from every member.
+
 ### 2.7 Test the Classifier Behind a Count
 
 A check that counts something is only as good as the rule it uses to decide
