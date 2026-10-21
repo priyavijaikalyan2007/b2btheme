@@ -4923,42 +4923,39 @@ limits the design knowingly accepts, not defects in shipped code.
 
 ## LOW — The same no-op is silent in some components and audible in others (2026-10-21)
 
-- [ ] **LOG-7**: A method that takes a no-op path the caller cannot
-  distinguish from success either says so or does not, and the
-  repository does both, for the same situation, with no rule written
-  down. Two populations, both measured 2026-10-21 while closing
-  DEBT-TEST-1b.
+- [x] **LOG-7** *(CLOSED 2026-10-21)* — **the rule is written down and
+  the sweep is done: a guarded no-op is silent.**
 
-  **Idempotent `destroy()`: 60 silent, 5 audible.** The 60 read
-  `if (this.destroyed) { return; }`. The five say
-  `logWarn("Already destroyed")` first — `activityfeed`,
-  `auditlogviewer`, `permissionmatrix`, `tenantswitcher`. ADR-081
-  requires `destroy()` to be idempotent and says nothing about
-  whether the second call should be heard.
+  Measured before: **60 components guarded `destroy()` silently and 5
+  warned**, for the same situation, with nothing saying which was
+  intended — so the next component copied whichever it happened to
+  read. One of three absent-target removals warned
+  (`commentoverlay :: removePin`) and two did not.
 
-  **Removing a target that is not there: one warns, two do not.**
-  `commentoverlay :: removePin` logs `"Pin <id> not found"`;
-  `notificationcenter :: removeNotification` and
-  `diagramengine :: removeObject` say nothing. DEBT-TEST-1b settled
-  the *contract* for all three — the state the caller asked for
-  already holds, so there is nothing to refuse (ADR-200) — and left
-  the logging alone.
+  **The rule is in FRONTEND_LOGGING.md section 5, and it defers to the
+  signature rather than adding a third answer.** ADR-200 asks whether
+  a request the caller named is owed the effect or an error, and the
+  return type decides: a method returning a value **throws**, because
+  the value would claim the thing exists; a method returning `void`
+  **returns quietly**, because nothing was claimed so nothing is
+  false. A warning is neither, and it goes to a console the host is
+  not reading.
 
-  **An earlier count in this file said 89 and 8.** That grep read
+  Ten call sites swept — nine `logWarn("Already destroyed")` across
+  five components, plus `removePin`. Structure check **`[23]`** holds
+  it, mutation-proven.
+
+  **Three tests asserted the warning**, in `activityfeed`,
+  `auditlogviewer` and `permissionmatrix`, each named
+  `destroyTwice_LogsWarning`. They pinned the behaviour the rule
+  removes, which is why the rule had to come first. All three now
+  assert what was always worth asserting — that the second `destroy()`
+  repeats nothing — with the warning's absence beside it.
+
+  **The earlier count in this file said 89 and 8.** That grep read
   `if (this.destroyed)` across every method rather than inside
-  `destroy()` only, so it mixed the after-destroy guards in with the
-  idempotency ones. 60 and 5 is the measurement; 89 and 8 was a
-  different population.
-
-  **Not a defect and not urgent.** Nothing is wrong in either
-  direction — the argument for silence is that an idempotent call is
-  not an error, and the argument for the warning is that a double
-  teardown usually means the host lost track of a handle. The cost
-  is that a reader cannot tell which is intended, so the next
-  component copies whichever one it happened to read. **The decision
-  is one line in FRONTEND_LOGGING.md and a sweep afterwards**, and
-  the sweep is mechanical once the line exists.
-
+  `destroy()` alone, so it mixed the after-destroy guards in with the
+  idempotency ones. 60 and 5 is the measurement.
 ## RESOLVED — Three structure checks passed vacuously on macOS (2026-10-09, ADR-158)
 
 - [x] **DEBT-GATE-1** *(resolved 2026-10-09)* — Checks `[4]`, `[5]` and `[6]` of `test-local.sh` **could not fail on the development machine.** Four loops drove their `for` lists from `grep -oP`, and BSD grep on macOS has no `-P`: grep aborted, the list came out empty, the body never ran, the error counter stayed at zero, and each check reported PASS. On CI's GNU grep they worked, so the suite was green in both places for opposite reasons. Two of the four carried `2>/dev/null`, which is why nobody ever saw the `invalid option -- P` that was being printed twice per run. Every pattern was plain enough for POSIX ERE, so the `-P` bought nothing; all four are now `-oE`, the stderr mask is gone, and **each of the three checks was mutation-proven to fail** — a missing demo page, a missing stylesheet reference, a missing component README — and to pass again once restored. Found by writing a *new* sibling-link check in the same block and mutation-testing it: the mutation failed as intended, and the grep error printed beside it. **The same family as the DiagramEngine suite that spent months green while pointed at a page that loaded nothing.**

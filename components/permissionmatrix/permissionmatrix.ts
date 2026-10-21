@@ -296,7 +296,7 @@ export class PermissionMatrix
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
         if (!container)
@@ -318,7 +318,7 @@ export class PermissionMatrix
 
     destroy(): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         this.destroyed = true;
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.rootEl = null;

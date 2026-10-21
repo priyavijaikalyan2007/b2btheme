@@ -258,7 +258,6 @@ export class UserMenu
     {
         if (this.destroyed)
         {
-            logWarn("Already destroyed");
             return;
         }
 

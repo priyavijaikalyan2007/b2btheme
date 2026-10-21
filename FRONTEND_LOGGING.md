@@ -415,6 +415,28 @@ takes an emoji as secret input.
 * **Sensitive data.** Never log tokens, passwords, API keys, or personally identifiable information (PII).
 * **High-frequency events.** Do not log on every keystroke, mouse move, or scroll event with `logInfo` or above. Use `logTrace`, which browsers hide by default, and leave it in place.
 * **Redundant state.** Do not log values that are obvious from context (e.g., logging `true` inside an `if (isValid)` block).
+* **A guarded no-op.** When a method returns early because there is
+  nothing for it to do, that is not an event. A second `destroy()` is
+  the contract being honoured (ADR-081 makes `destroy()` idempotent),
+  and `logWarn("Already destroyed")` tells the caller they erred when
+  they did not.
+
+  **The level is decided by the return type, not by the logging.**
+  ADR-200 asks whether a request the caller named is owed the effect
+  or an error, and the answer follows from what the method hands back:
+
+  | The method | On a request it cannot satisfy |
+  |---|---|
+  | returns a value | **throws** — the value would claim the thing exists |
+  | returns `void` | **returns quietly** — nothing was claimed, so nothing is false |
+
+  `Conversation.addUserMessage` returns a `ConversationMessage`, so
+  after `destroy()` it throws. `FileUpload.addFiles` returns `void`, so
+  it returns. Neither logs, because the log would be the component
+  commenting on a decision its signature has already made. A warning
+  here is a third answer that is neither of the two, and it reaches a
+  console the host is not reading.
+
 
 ---
 

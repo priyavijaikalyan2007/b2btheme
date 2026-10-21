@@ -472,7 +472,11 @@ export class CommentOverlay
         const state = this.pinMap.get(pinId);
         if (!state)
         {
-            logWarn("Pin", pinId, "not found");
+            // LOG-7. Silent, because the state the caller asked for —
+            // no pin with this id — already holds, so the request was
+            // satisfied and there is nothing to report. The two
+            // sibling removals in this repository, removeNotification
+            // and removeObject, were already silent.
             return;
         }
         if (this.activeThreadId === pinId)

@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     ActivityFeed,
@@ -249,13 +250,25 @@ describe("lifecycle", () =>
         expect(feed.getElement()).toBeNull();
     });
 
-    test("destroyTwice_LogsWarning", () =>
+    test("destroyTwice_IsSilentAndIdempotent", () =>
     {
+        // LOG-7. This used to assert the warning. A second `destroy()`
+        // is ADR-081's contract being HONOURED, so warning told the
+        // caller they had erred when they had not, on a console the
+        // host is not reading. The claim that was always worth making
+        // is that the second call repeats nothing.
         const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
         const feed = createActivityFeed(makeOptions(), "test-activityfeed");
+        const probe = destroyProbe();
+
         feed.destroy();
+        const first = probe.total();
         feed.destroy();
-        expect(warnSpy).toHaveBeenCalled();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        expect(warnSpy).not.toHaveBeenCalled();
+        probe.restore();
         warnSpy.mockRestore();
     });
 });

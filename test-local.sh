@@ -506,6 +506,22 @@ if [ "$FLAG_ERRORS" -eq 0 ]; then
 fi
 echo ""
 
+# ── 23. No component warns about a no-op it promised ──
+#
+# LOG-7. A second `destroy()` is ADR-081's contract being HONOURED, and
+# `logWarn("Already destroyed")` told the caller they had erred when
+# they had not. 60 components guarded silently and 5 warned, for the
+# same situation, with no rule written down until FRONTEND_LOGGING.md
+# section 5 got one. This holds the sweep.
+echo "[23] No component warns about a guarded no-op (LOG-7)"
+NOOP_WARNS=$(grep -rEl 'logWarn\("Already destroyed"\)' components/ --include="*.ts" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$NOOP_WARNS" -eq 0 ]; then
+    pass "No component warns on an idempotent destroy"
+else
+    fail "$NOOP_WARNS component(s) still warn on an idempotent destroy"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

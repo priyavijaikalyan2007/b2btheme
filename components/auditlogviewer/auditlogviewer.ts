@@ -270,7 +270,7 @@ export class AuditLogViewer
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
         // ERR-1. This logged and carried on, so the caller got a
@@ -297,7 +297,7 @@ export class AuditLogViewer
 
     destroy(): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         this.destroyed = true;
         this.stopAutoRefresh();
         this.rootEl?.parentElement?.removeChild(this.rootEl);

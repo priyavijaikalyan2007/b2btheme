@@ -232,7 +232,7 @@ export class TenantSwitcher
 
     show(containerId: string | HTMLElement): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         const container = typeof containerId === "string"
             ? document.getElementById(containerId) : containerId;
         // ERR-1. This logged and carried on, so the caller got a
@@ -257,7 +257,7 @@ export class TenantSwitcher
 
     destroy(): void
     {
-        if (this.destroyed) { logWarn("Already destroyed"); return; }
+        if (this.destroyed) { return; }
         this.destroyed = true;
         this.closePortal();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
