@@ -277,9 +277,17 @@ describe("SiteFooter safety and lifecycle", () =>
         footer.destroy();
     });
 
-    test("Constructor_EmptyOptions_RendersEmptyFooterWithoutThrowing", () =>
+    test("Constructor_EmptyOptions_RendersAFooterWithNoGroups", () =>
     {
-        expect(() => new SiteFooter({})).not.toThrow();
+        const footer = new SiteFooter({});
+        const root = footer.getElement();
+
+        // The title said "RendersEmptyFooter" and the assertion read
+        // the constructor's survival, which would hold for a
+        // constructor that rendered no footer at all.
+        expect(root).not.toBeNull();
+        expect(root!.classList.contains("sitefooter")).toBe(true);
+        expect(root!.querySelectorAll(".sitefooter-group")).toHaveLength(0);
     });
 
     test("Destroy_AfterShow_RemovesFromDOM", () =>

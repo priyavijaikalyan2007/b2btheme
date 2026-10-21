@@ -413,11 +413,23 @@ describe("edge cases", () =>
         lc.destroy();
     });
 
-    test("clearOnEmpty_DoesNotThrow", () =>
+    test("clearOnEmpty_LeavesTheConsoleMounted", () =>
     {
         const lc = new LogConsole();
         container.appendChild(lc.getElement());
-        expect(() => lc.clear()).not.toThrow();
+
+        lc.clear();
+
+        // `clear()` empties the body and calls updateEmptyState().
+        // Run against a console with nothing in it, what must hold is
+        // that it is still mounted and still says it is empty —
+        // surviving the call would also hold for a clear() that
+        // removed its own element.
+        expect(lc.getElement().isConnected).toBe(true);
+        expect(lc.getElement().querySelectorAll(".logconsole-entry"))
+            .toHaveLength(0);
+        expect(lc.getElement().querySelector(".logconsole-empty"))
+            .not.toBeNull();
         lc.destroy();
     });
 

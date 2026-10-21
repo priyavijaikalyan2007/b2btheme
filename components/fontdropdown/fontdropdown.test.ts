@@ -346,12 +346,17 @@ describe("edge cases", () =>
         expect(dd.getValue()).toBe("monospace");
     });
 
-    test("emptyFontList_DoesNotThrow", () =>
+    test("emptyFontList_RendersAnEmptyMenu", () =>
     {
-        expect(() =>
-        {
-            new FontDropdown("test-fontdropdown", { fonts: [] });
-        }).not.toThrow();
+        const dd = new FontDropdown("test-fontdropdown", { fonts: [] });
+        const root = dd.getElement();
+
+        // An empty list is a boundary VALUE, not an idempotency
+        // claim. What has to hold is that the control still renders
+        // and offers nothing — surviving the constructor would also
+        // be true of a component that rendered nothing at all.
+        expect(root).not.toBeNull();
+        expect(root!.querySelectorAll(".fontdropdown-item")).toHaveLength(0);
     });
 
     test("disabled_InitialOption_PreventsFocus", () =>

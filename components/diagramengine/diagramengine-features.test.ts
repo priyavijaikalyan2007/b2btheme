@@ -838,11 +838,22 @@ describe("DiagramEngine — Z-Ordering", () =>
         expect(obj3.presentation.zIndex).toBeLessThan(obj1.presentation.zIndex);
     });
 
-    test("bringToFront on single object in an empty canvas does not throw", () =>
+    test("bringToFront on the only object still raises its zIndex", () =>
     {
         addRect("zs", 0, 0, 50, 50);
+        const before = engine.getObjects()
+            .find((o) => o.id === "zs")!.presentation.zIndex;
 
-        expect(() => engine.bringToFront(["zs"])).not.toThrow();
+        engine.bringToFront(["zs"]);
+
+        // The title said "in an empty canvas" and the body adds an
+        // object first, so the canvas is not empty and the situation
+        // the name describes was never under test. What the method
+        // promises is `maxZ + 1`, and with one object that is still
+        // a move — the degenerate case is where an off-by-one in the
+        // Math.max seed would hide.
+        expect(engine.getObjects().find((o) => o.id === "zs")!
+            .presentation.zIndex).toBeGreaterThan(before);
     });
 });
 

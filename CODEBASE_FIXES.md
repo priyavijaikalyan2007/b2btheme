@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **23 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **15 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3052,12 +3052,53 @@ offered as the evidence for it.
 
   | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | **13** | **9 defects, then 9 quiet branches made to throw; two of four sub-shapes empty** |
+  | `.not.toThrow()` on idempotency | 110 | 110 | **5** | **three of four sub-shapes empty; 9 defects and 9 quiet branches made to throw** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **AN EMPTY INPUT IS NOT IDEMPOTENCY, AND THE WORD WAS WRONG RATHER
+  THAN THE RULE (2026-10-21, 23 -> 15).** `IDEMPOTENT_SITUATION`
+  matched `empty`, `nonexistent` and `unknown` alongside `twice` and
+  `afterdestroy`. None of the first three is what the word means. An
+  operation naming an absent target is ADR-200's question, answered
+  per method above. An empty input is a boundary **value**, and a
+  title promising only that the component survived one belongs in
+  ROBUSTNESS-ONLY, where that question is already open.
+
+  Filing all three under one label meant **the bucket's number could
+  not be read as the size of any one piece of work**, and the label
+  named the smallest of the four. This is ADR-215's fault one level
+  up: the vocabulary, not the code.
+
+  **And the two regexes disagreed about one word.** `NO_EFFECT`
+  matched `nothrow` and `ROBUSTNESS_ONLY` did not, so
+  `spinemap :: emptyData_NoThrow` fell through to NAMES-A-CHANGE — a
+  title promising survival, filed with the titles promising an
+  effect. Both corrections are pinned in
+  `scripts/test-assertions.test.ts` and both are mutation-proven.
+
+  All eight empty-input blocks were rewritten to the render they
+  claim. `sitefooter :: Constructor_EmptyOptions` was titled
+  **RendersEmptyFooter** and asserted the constructor's survival,
+  which holds for a constructor that renders no footer at all; it now
+  reads the `.sitefooter` class and zero groups, and goes red when
+  the class is renamed. `helptooltip :: withEmptyText` hovers the
+  icon and proves no popup appears, which is what the two
+  `if (!this.text)` returns are for. `marginspicker :: setPresets([])`
+  carried a comment saying "getValue returns undefined when presets
+  array is empty (no fallback)" above an assertion that held for any
+  return value at all; it asserts `undefined` now. And
+  `diagramengine :: bringToFront on single object in an empty canvas`
+  **adds an object in its first line**, so the situation its name
+  describes was never under test — it asserts the `zIndex` rose.
+
+  **What is left is 15, and 13 of them are known populations:** 6
+  `absentDependency` that each state a change, the 2 jsdom-floor
+  blocks measured on 2026-10-20, 2 accept/refuse controls that are
+  correct by construction, and the 5 below.
 
   **THE ABSENT-TARGET SUB-SHAPE SPLITS ON ONE QUESTION, AND IT IS NOT
   "DID IT THROW" (2026-10-21, 32 -> 23).** ADR-200 says a request the
@@ -3117,8 +3158,8 @@ offered as the evidence for it.
   |---|---|---|
   | Terminal-state idempotence — destroy twice, close when closed, hide when hidden, unsubscribe twice | 85 | **0, this pass** |
   | An operation naming an absent target — `removeNonexistentPin`, `setData` with an unknown slot | 9 | **0, see below** |
-  | A method called after `destroy()` | 5 | open, and it is the fleet-wide question nobody has answered |
-  | Empty input, which is not idempotence at all | 8 | open, and the classifier is wrong about these |
+  | A method called after `destroy()` | 5 | **the only one left**, and it is the fleet-wide question nobody has answered |
+  | Empty input, which is not idempotence at all | 8 | **0, and the classifier no longer calls them idempotent** |
 
   **`.not.toThrow()` CANNOT SEE A SECOND CALL AND THE PROBE CAN.**
   `tests/destroy-probe.ts` counts the teardown primitives a component

@@ -331,15 +331,17 @@ describe("lifecycle", () =>
 
 describe("edge cases", () =>
 {
-    test("emptyTabs_RendersWithoutCrash", () =>
+    test("emptyTabs_RendersARibbonWithNoTabs", () =>
     {
-        expect(() =>
-        {
-            const ribbon = createRibbon(
-                makeOptions({ tabs: [] }), "test-ribbon"
-            );
-            ribbon.destroy();
-        }).not.toThrow();
+        const ribbon = createRibbon(makeOptions({ tabs: [] }), "test-ribbon");
+        const root = ribbon.getElement();
+
+        // An empty tab list is a boundary VALUE. What must hold is
+        // that the ribbon is there and offers nothing, which
+        // surviving the constructor does not say.
+        expect(root).not.toBeNull();
+        expect(root.querySelectorAll(".ribbon-tab")).toHaveLength(0);
+        ribbon.destroy();
     });
 
     test("setActiveTab_InvalidId_DoesNotCrash", () =>

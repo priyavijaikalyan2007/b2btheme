@@ -297,6 +297,45 @@ describe("the shape split is an instrument, not a note", () =>
         expect(shapesOf(rows)).toMatchObject({ idempotent: 1, absentDependency: 0 });
     });
 
+    test("an empty input is robustness, not idempotency", () =>
+    {
+        // IDEMPOTENT_SITUATION carried `empty`, `nonexistent` and
+        // `unknown` until 2026-10-21, and none of the three is what
+        // the word means. Working the bucket split 107 blocks into
+        // four properties wearing one name. An empty input is a
+        // boundary VALUE, and a title promising only that the
+        // component survived one belongs where that question is open.
+        const rows = [row(
+            "emptyFontList_DoesNotThrow",
+            "expect(() => createFontDropdown({ fonts: [] })).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows))
+            .toMatchObject({ robustnessOnly: 1, idempotent: 0 });
+    });
+
+    test("nothrow and doesNotThrow reach the same bucket", () =>
+    {
+        // ROBUSTNESS_ONLY lacked `nothrow` while NO_EFFECT had it, so
+        // `emptyData_NoThrow` fell through to NAMES-A-CHANGE — a title
+        // promising survival, filed with the titles promising an
+        // effect, by two regexes disagreeing about one word.
+        const compact = [row(
+            "emptyData_NoThrow",
+            "expect(() => h.setData([])).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        const spaced = [row(
+            "emptyData_DoesNotThrow",
+            "expect(() => h.setData([])).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(compact))
+            .toMatchObject({ robustnessOnly: 1, namesAChange: 0 });
+        expect(shapesOf(spaced))
+            .toMatchObject({ robustnessOnly: 1, namesAChange: 0 });
+    });
+
     test("a name that states a change lands in its own bucket", () =>
     {
         // BOTH HALVES, BECAUSE ONE HALF PASSED FOR THE WRONG REASON.

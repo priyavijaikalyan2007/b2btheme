@@ -402,12 +402,19 @@ describe("HelpTooltip edge cases", () =>
         h2.destroy();
     });
 
-    test("withEmptyText_DoesNotThrow", () =>
+    test("withEmptyText_ShowsNoPopupOnHover", () =>
     {
-        expect(() =>
-        {
-            const handle = createHelpTooltip(target, defaultOptions({ text: "" }));
-            handle.destroy();
-        }).not.toThrow();
+        const handle = createHelpTooltip(target, defaultOptions({ text: "" }));
+        const icon = document.querySelector(".helptooltip-icon");
+
+        icon?.dispatchEvent(new Event("pointerenter", { bubbles: true }));
+        vi.advanceTimersByTime(1000);
+
+        // `onPointerEnter` and `showTooltip` both return at
+        // `if (!this.text)`. The claim is that an empty text shows no
+        // popup, not that constructing one survives — an empty
+        // bordered box on hover would also have survived.
+        expect(document.querySelector(".helptooltip-popup")).toBeNull();
+        handle.destroy();
     });
 });

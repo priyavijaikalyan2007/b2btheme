@@ -450,12 +450,22 @@ describe("setPresets additional coverage", () =>
         picker.destroy();
     });
 
-    test("setPresets_EmptyArray_DoesNotThrow", () =>
+    test("setPresets_EmptyArray_RendersNothingAndReturnsNothing", () =>
     {
         const picker = createMarginsPicker(makeOpts());
-        expect(() => picker.setPresets([])).not.toThrow();
-        // getValue returns undefined when presets array is empty (no fallback)
-        expect(() => picker.getValue()).not.toThrow();
+
+        picker.setPresets([]);
+
+        // The comment on the old block said "getValue returns
+        // undefined when presets array is empty (no fallback)" and
+        // the assertion underneath it was `.not.toThrow()`, which
+        // holds for any return value at all. `getValue()` ends
+        // `found ?? this.presets[0]`, so with no presets it is
+        // genuinely undefined, and that is the documented behaviour
+        // rather than a defect.
+        expect(picker.getValue()).toBeUndefined();
+        expect(picker.getElement().querySelectorAll(".marginspicker-preset"))
+            .toHaveLength(0);
         picker.destroy();
     });
 });

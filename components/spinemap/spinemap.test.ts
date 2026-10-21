@@ -1012,16 +1012,15 @@ describe("export", () =>
 
 describe("edge cases", () =>
 {
-    test("emptyData_NoThrow", () =>
+    test("emptyData_RendersACanvasWithNoNodes", () =>
     {
-        expect(() =>
-        {
-            const map = createSpineMap({
-                container,
-                data: { hubs: [] }
-            });
-            map.destroy();
-        }).not.toThrow();
+        const map = createSpineMap({ container, data: { hubs: [] } });
+        const root = map.getElement();
+
+        expect(root.querySelector(".spinemap-nodes")).not.toBeNull();
+        expect(root.querySelectorAll(".spinemap-nodes [data-id]"))
+            .toHaveLength(0);
+        map.destroy();
     });
 
     test("loadData_WithNullConnections_HandledGracefully", () =>

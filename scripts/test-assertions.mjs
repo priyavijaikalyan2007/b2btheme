@@ -630,9 +630,29 @@ export function census(files = null)
  * nobody had written.
  */
 const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
-/** A title naming a situation where nothing is supposed to happen. */
+/**
+ * A title naming a REPEATED or TERMINAL call, where the property is
+ * that the second one does nothing the first already did.
+ *
+ * (CRITICAL) THIS USED TO CARRY `nonexistent`, `unknown` AND `empty`,
+ * AND NONE OF THE THREE IS IDEMPOTENCE. Working the bucket on
+ * 2026-10-21 split 107 blocks into four properties wearing one name,
+ * and only the repeated-call half is what the word means. An
+ * operation naming an absent target is ADR-200's question — is the
+ * caller owed the effect or an error — and it is answered per method:
+ * a `remove` is owed nothing, because the state it asked for already
+ * holds, and a `navigateTo` is owed an error. An EMPTY input is
+ * neither; it is a boundary value, and a title promising only that
+ * the component survived one belongs in ROBUSTNESS-ONLY, where the
+ * open question is whether survival is enough.
+ *
+ * Filing all three here meant the bucket's number could not be read
+ * as the size of any one piece of work, and the label named the
+ * smallest of the four. This is ADR-215's fault at the level of the
+ * vocabulary rather than the code: the word was wrong, not the rule.
+ */
 const IDEMPOTENT_SITUATION =
-    /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+    /twice|calledtwice|again|idempotent|whennot|afterdestroy/i;
 
 /**
  * A title that states the outcome IS nothing.
@@ -665,8 +685,14 @@ const NO_EFFECT =
  * one NAMES-A-CHANGE asks, which is why the two are no longer one
  * number.
  */
+// `nothrow`, `nocrash` and `donot(throw|crash)` are here because
+// NO_EFFECT already had them and this one did not, and the two are
+// supposed to recognise the same phrase. `emptyData_NoThrow` fell
+// through to NAMES-A-CHANGE on the strength of that gap — a title
+// promising survival, filed in the bucket for titles promising an
+// effect, by two regexes disagreeing about one word.
 const ROBUSTNESS_ONLY =
-    /does\s*n[o']?t\s*(throw|crash)|doesnotthrow|doesnotcrash|noexception|noerror|without\s*(a\s*)?(crash|throw|error)|handledgracefully|_noop\b|\bno\s*op\b/i;
+    /does\s*n[o']?t\s*(throw|crash)|doesnotthrow|doesnotcrash|donot(throw|crash)|no\s*throw|nothrow|nocrash|noexception|noerror|without\s*(a\s*)?(crash|throw|error)|handledgracefully|_noop\b|\bno\s*op\b/i;
 
 /** The set of files that withhold a global somewhere in their text. */
 function withheldFiles(rows)
