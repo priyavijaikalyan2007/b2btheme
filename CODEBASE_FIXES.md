@@ -4870,6 +4870,39 @@ limits the design knowingly accepts, not defects in shipped code.
 
   When the first returns nothing the aliases come out, and the second is the list of edits that go with them. The second returns nothing today.
 
+  **Re-taken 2026-10-21 (second time today), and the item is down to
+  ONE condition with ONE command.** `apps/shell/shell-tenants.ts`
+  still calls `window.createWorkspaceSwitcher` (197, 203),
+  `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363).
+  Nothing in this repository references the compat path any more:
+  `git grep workspaceswitcher` outside this file's own history
+  returns **only** `copy:compat` in `package.json`, and nothing under
+  `~/Work` fetches it.
+
+  **The path could be retired today and will not be.** Asked and
+  answered 2026-10-21: the path and the aliases come out **in the
+  same release**, when the apps team migrates. The reasons for
+  retiring it early were real — nothing fetches it, it is not in
+  CDN_CONTRACT §2's frozen set, and the deprecated API is
+  independent of it because the consumer gets
+  `createWorkspaceSwitcher` out of `tenantswitcher.js` — and they are
+  outweighed by it being a **live public URL with an unenumerable
+  blast radius**. One build step and about 12 KB is a small price for
+  not breaking a consumer nobody has counted.
+
+  **What is left is one grep and one line.** When
+
+  ```
+  grep -rn "createWorkspaceSwitcher\|setWorkspaces\|setActiveWorkspace" \
+       ~/Work/knobby/apps/typescript/ --include="*.ts"
+  ```
+
+  returns nothing, delete the deprecated block in
+  `components/tenantswitcher/tenantswitcher.ts` and `copy:compat`
+  from `package.json`. There is no third edit: the demos, the
+  extraction script and the theme's own pages were cleared on
+  2026-10-21 and check `[21]` holds them there.
+
   **Structure check `[21]` is the gate that would have caught this in 2026.** Check `[5]` asks whether a demo's asset exists in `dist/`, and `workspaceswitcher.css` does exist there, because `copy:compat` puts it there — so the check passed on a demo pointing at a component the repository does not have. Check `[21]` reads `components/<name>/` instead, which no build step writes, and it opens `demo/*.html` as well as `demo/components/*.html`, because check `[5]` only ever opened the second. **It found `demo/components/diagramengine.html` on its first run**, which I had missed, and it is mutation-proven against both globs.
 
   **Recorded and not repaired: `demo/full-demo.html` is opened by no gate at all.** `tests/demo-pages.spec.ts` enumerates `git ls-files demo/components/*.html`, so the flagship page is in neither that suite nor check `[5]`. Adding it was tried and **it throws on load today**, with one uncaught error: `[DocViewer] MarkdownRenderer is required and window.createMarkdownRenderer was not found.` The page loads `docviewer.js` and never loads `markdownrenderer.js`, `marked` or `highlight.js`, so the DocViewer section of the showcase has never rendered. DocViewer is behaving correctly — it refuses rather than substituting. Fixing it means adding two SRI-pinned CDN dependencies to the page, which touches the dependency-closure and SRI gates, so it is **DEBT-DEMO-2** below and not this item. Two unrelated things rotted on that page, which is what a page nothing opens is for.
