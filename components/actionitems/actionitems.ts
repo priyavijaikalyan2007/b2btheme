@@ -6240,5 +6240,4 @@ function buildHandle(instance: ActionItems): ActionItemsHandle
 // S9: WINDOW GLOBALS
 // ============================================================================
 
-window["ActionItems"] = ActionItems;
 window["createActionItems"] = createActionItems;

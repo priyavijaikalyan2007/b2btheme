@@ -662,5 +662,4 @@ export function createLineWidthPicker(
     return new LineWidthPicker(containerId, options);
 }
 
-window["LineWidthPicker"] = LineWidthPicker;
 window["createLineWidthPicker"] = createLineWidthPicker;

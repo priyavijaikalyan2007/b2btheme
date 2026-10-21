@@ -876,5 +876,4 @@ export function createRuler(
     return new Ruler(containerId, options);
 }
 
-window["Ruler"] = Ruler;
 window["createRuler"] = createRuler;

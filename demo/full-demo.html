@@ -3606,7 +3606,7 @@
                 <pre class="p-2 demo-output" id="demo-stie-ce-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
 
                 <h6 class="mt-4">Static Token Rendering</h6>
-                <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>SmartTextInputEngine.renderTokens()</code>.</p>
+                <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>renderSmartTextTokens()</code>.</p>
                 <div id="demo-stie-static" class="p-2 border mb-2" style="min-height: 32px;"></div>
             </div>
 
@@ -7901,7 +7901,7 @@
 
         // Demo 1: Full Application Shell
         (function() {
-            var toolbar = new Toolbar({
+            var toolbar = createToolbar({
                 label: "My App",
                 mode: "docked",
                 dockPosition: "top",
@@ -7929,7 +7929,7 @@
                 ]
             });
 
-            var leftSidebar = new Sidebar({
+            var leftSidebar = createSidebar({
                 title: "Explorer",
                 icon: "bi-folder",
                 dockPosition: "left",
@@ -7950,7 +7950,7 @@
                 + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-filetype-json' style='color:#6c757d;'></i> package.json</div>"
                 + "</div>";
 
-            var rightSidebar = new Sidebar({
+            var rightSidebar = createSidebar({
                 title: "Properties",
                 icon: "bi-sliders",
                 dockPosition: "right",
@@ -7968,7 +7968,7 @@
                 + "<div class='mb-2'><strong>Line Endings:</strong> LF</div>"
                 + "</div>";
 
-            var bottomPanel = new TabbedPanel({
+            var bottomPanel = createTabbedPanel({
                 dockPosition: "bottom",
                 height: 150,
                 minHeight: 80,
@@ -7990,7 +7990,7 @@
                 termContent.style.whiteSpace = "pre";
             }
 
-            var statusBar = new StatusBar({
+            var statusBar = createStatusBar({
                 size: "sm",
                 regions: [
                     { id: "branch", icon: "bi-git", value: "main" },
@@ -8031,7 +8031,7 @@
 
         // Demo 2: Minimal Layout
         (function() {
-            var toolbar = new Toolbar({
+            var toolbar = createToolbar({
                 label: "Simple App",
                 mode: "docked",
                 dockPosition: "top",
@@ -8070,7 +8070,7 @@
 
         // Demo 3: Dynamic Slot Management
         (function() {
-            var toolbar = new Toolbar({
+            var toolbar = createToolbar({
                 label: "Dynamic Demo",
                 mode: "docked",
                 dockPosition: "top",
@@ -8086,7 +8086,7 @@
                 ]
             });
 
-            var leftSidebar = new Sidebar({
+            var leftSidebar = createSidebar({
                 title: "Navigator",
                 icon: "bi-list",
                 dockPosition: "left",
@@ -8122,7 +8122,7 @@
 
             document.getElementById("docklayout-add-bottom").addEventListener("click", function() {
                 if (dynamicBottom) return;
-                dynamicBottom = new TabbedPanel({
+                dynamicBottom = createTabbedPanel({
                     dockPosition: "bottom",
                     height: 120,
                     tabs: [
@@ -8149,7 +8149,7 @@
 
             document.getElementById("docklayout-add-right").addEventListener("click", function() {
                 if (dynamicRight) return;
-                dynamicRight = new Sidebar({
+                dynamicRight = createSidebar({
                     title: "Details",
                     icon: "bi-info-circle",
                     dockPosition: "right",
@@ -8289,7 +8289,7 @@
             sideEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
             sideEl.textContent = "Sidebar (collapsible)";
 
-            var inner = new SplitLayout({
+            var inner = createSplitLayout({
                 orientation: "vertical",
                 panes: [
                     { id: "editor", initialSize: "70%", minSize: 100 },
@@ -9586,12 +9586,12 @@
                 }
                 streamTimers = [];
                 if (streamAcc) { streamAcc.destroy(); }
-                streamAcc = new ReasoningAccordion({
-                    title: "AI Reasoning",
-                    autoExpandActive: true,
-                    autoCollapseCompleted: true
-                });
-                streamAcc.show("reasoning-demo-stream");
+                streamAcc = createReasoningAccordion(
+                    "reasoning-demo-stream", {
+                        title: "AI Reasoning",
+                        autoExpandActive: true,
+                        autoCollapseCompleted: true
+                    });
             }
 
             resetStream();
@@ -9696,7 +9696,7 @@
         (function() {
             var output = document.getElementById("cp-demo-output");
 
-            CommandPalette.configure({
+            configureCommandPalette({
                 commands: [
                     { id: "save", label: "Save Document", icon: "bi-save", category: "Actions", shortcut: "Ctrl+S", action: function() { output.textContent = "Executed: Save Document"; } },
                     { id: "save-as", label: "Save As...", icon: "bi-save2", category: "Actions", shortcut: "Ctrl+Shift+S", action: function() { output.textContent = "Executed: Save As"; } },
@@ -9739,7 +9739,7 @@
             });
 
             document.getElementById("cp-btn-clear-recent").addEventListener("click", function() {
-                CommandPalette.getInstance().clearRecent();
+                getCommandPalette().clearRecent();
                 output.textContent = "Recent commands cleared.";
             });
         })();
@@ -12537,7 +12537,7 @@
             var renderers = new Map();
             renderers.set("mention", mentionTrigger.tokenRenderer);
             renderers.set("resource", resourceTrigger.tokenRenderer);
-            SmartTextInputEngine.renderTokens(
+            renderSmartTextTokens(
                 document.getElementById("demo-stie-static"),
                 staticContent,
                 serializers,

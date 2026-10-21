@@ -1300,5 +1300,4 @@ export function createRelationshipManager(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.RelationshipManagerImpl = RelationshipManagerImpl;
 window.createRelationshipManager = createRelationshipManager;

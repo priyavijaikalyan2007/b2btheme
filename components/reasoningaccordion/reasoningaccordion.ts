@@ -982,5 +982,4 @@ export function createReasoningAccordion(
     return acc;
 }
 
-window.ReasoningAccordion = ReasoningAccordion;
 window.createReasoningAccordion = createReasoningAccordion;

@@ -728,6 +728,5 @@ export function createLayerLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["LayerLayout"] = LayerLayout;
     w["createLayerLayout"] = createLayerLayout;
 }

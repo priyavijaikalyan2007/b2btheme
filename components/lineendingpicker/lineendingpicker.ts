@@ -1179,5 +1179,4 @@ export function createLineEndingPicker(
     return new LineEndingPicker(containerId, options);
 }
 
-window["LineEndingPicker"] = LineEndingPicker;
 window["createLineEndingPicker"] = createLineEndingPicker;

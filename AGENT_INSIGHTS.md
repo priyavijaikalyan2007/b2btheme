@@ -3287,3 +3287,39 @@ a team records intent without telling the type system. The question
 "has anyone already written this down somewhere the code cannot see?"
 costs one grep and is the difference between an open question and an
 unreachable feature.
+
+### 6.160 The Entry Named the Type and the Leak Was in the Runtime (2026-10-21)
+
+PAT-1 asked for 84 factories to return handle interfaces instead of
+classes, because returning a class "leaks implementation details". The
+instruction was clear, the count was real, and the work would have
+achieved nothing.
+
+Four measurements said so. The 74 classes declare **1189 public
+methods and zero public fields**, so the type leaks no state. The 46
+components that already return an interface hide **no member between
+them** — one declares 37 against a class of 36. And 40 of those 46
+have no class at all, so their encapsulation comes from a closure and
+the interface only names the result.
+
+The leak was one level down. TypeScript removes `private` when it
+compiles, so a class on `window` hands a JavaScript caller every
+instance field as an ordinary property. The shipped
+`sizespicker.js` registered `window.SizesPicker` and assigned all 14
+of its private fields under their own names.
+
+**The entry described the defect in the language of the type system,
+and the defect lived where the type system does not reach.** That is
+why it survived since March. Everyone who read it checked whether
+factories return classes, which is true and is not the problem.
+
+Three of our own components depended on the class global, and each
+dependency was itself a gap in a factory: `createToolbar` could not
+say where to mount, and `createMarkdownEditor` took an id where the
+constructor took an element. **A class global is often a factory
+that is missing an argument.**
+
+**Principle**: when an entry names a defect in one layer, check
+whether the harm it describes actually occurs there. A type-level
+description of a runtime leak reads as precise and points away from
+the thing that bites.

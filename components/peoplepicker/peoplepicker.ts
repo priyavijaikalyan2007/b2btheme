@@ -1472,6 +1472,5 @@ export function createPeoplePicker(
 
 if (typeof window !== "undefined")
 {
-    window["PeoplePicker"] = PeoplePicker;
     window["createPeoplePicker"] = createPeoplePicker;
 }

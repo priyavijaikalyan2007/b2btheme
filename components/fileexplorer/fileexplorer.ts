@@ -2736,7 +2736,5 @@ export function createFileExplorer(
     return fe;
 }
 
-window["FileExplorer"] =
-    FileExplorer;
 window["createFileExplorer"] =
     createFileExplorer;

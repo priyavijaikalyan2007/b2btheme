@@ -170,7 +170,7 @@
             destroy: function() { ribbon.destroy(); }
         };
 
-        var sidebar = new Sidebar({
+        var sidebar = createSidebar({
             title: "Explorer",
             icon: "bi-folder",
             dockPosition: "left",
@@ -186,7 +186,7 @@
             + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-file-earmark-text' style='color:#6c757d;'></i> README.md</div>"
             + "</div>";
 
-        var bottom = new TabbedPanel({
+        var bottom = createTabbedPanel({
             dockPosition: "bottom",
             height: 120,
             minHeight: 60,
@@ -205,7 +205,7 @@
             termEl.style.whiteSpace = "pre";
         }
 
-        var status = new StatusBar({
+        var status = createStatusBar({
             size: "sm",
             regions: [
                 { id: "branch", icon: "bi-git", value: "main" },
@@ -249,7 +249,7 @@
 
     // Demo 1: Full Application Shell
     (function() {
-        var toolbar = new Toolbar({
+        var toolbar = createToolbar({
             label: "My App",
             mode: "docked",
             dockPosition: "top",
@@ -277,7 +277,7 @@
             ]
         });
 
-        var leftSidebar = new Sidebar({
+        var leftSidebar = createSidebar({
             title: "Explorer",
             icon: "bi-folder",
             dockPosition: "left",
@@ -298,7 +298,7 @@
             + "<div style='padding:4px 8px; cursor:pointer;'><i class='bi bi-filetype-json' style='color:#6c757d;'></i> package.json</div>"
             + "</div>";
 
-        var rightSidebar = new Sidebar({
+        var rightSidebar = createSidebar({
             title: "Properties",
             icon: "bi-sliders",
             dockPosition: "right",
@@ -316,7 +316,7 @@
             + "<div class='mb-2'><strong>Line Endings:</strong> LF</div>"
             + "</div>";
 
-        var bottomPanel = new TabbedPanel({
+        var bottomPanel = createTabbedPanel({
             dockPosition: "bottom",
             height: 150,
             minHeight: 80,
@@ -338,7 +338,7 @@
             termContent.style.whiteSpace = "pre";
         }
 
-        var statusBar = new StatusBar({
+        var statusBar = createStatusBar({
             size: "sm",
             regions: [
                 { id: "branch", icon: "bi-git", value: "main" },
@@ -379,7 +379,7 @@
 
     // Demo 2: Minimal Layout
     (function() {
-        var toolbar = new Toolbar({
+        var toolbar = createToolbar({
             label: "Simple App",
             mode: "docked",
             dockPosition: "top",
@@ -418,7 +418,7 @@
 
     // Demo 3: Dynamic Slot Management
     (function() {
-        var toolbar = new Toolbar({
+        var toolbar = createToolbar({
             label: "Dynamic Demo",
             mode: "docked",
             dockPosition: "top",
@@ -434,7 +434,7 @@
             ]
         });
 
-        var leftSidebar = new Sidebar({
+        var leftSidebar = createSidebar({
             title: "Navigator",
             icon: "bi-list",
             dockPosition: "left",
@@ -470,7 +470,7 @@
 
         document.getElementById("docklayout-add-bottom").addEventListener("click", function() {
             if (dynamicBottom) return;
-            dynamicBottom = new TabbedPanel({
+            dynamicBottom = createTabbedPanel({
                 dockPosition: "bottom",
                 height: 120,
                 tabs: [
@@ -497,7 +497,7 @@
 
         document.getElementById("docklayout-add-right").addEventListener("click", function() {
             if (dynamicRight) return;
-            dynamicRight = new Sidebar({
+            dynamicRight = createSidebar({
                 title: "Details",
                 icon: "bi-info-circle",
                 dockPosition: "right",

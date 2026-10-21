@@ -5504,6 +5504,5 @@ export function createTreeView(options: TreeViewOptions): TreeView
 // Global exports for script-tag usage
 if (typeof window !== "undefined")
 {
-    window["TreeView"] = TreeView;
     window["createTreeView"] = createTreeView;
 }

@@ -522,6 +522,34 @@ else
 fi
 echo ""
 
+# ── 24. No component registers a class on window ──
+#
+# PAT-1. TypeScript removes `private` at compile time, so a class on
+# `window` hands a plain-JavaScript consumer every instance field as an
+# ordinary property. Measured on the shipped file before the change:
+# `new window.SizesPicker(o)` returned an object carrying all 14 of its
+# private fields. The factory is the whole public surface.
+#
+# A component may still register its FACTORIES. The pattern below
+# matches only `window.X = X` and `window["X"] = X` where X is declared
+# as a class in the same file, so `window["createX"] = createX` never
+# trips it.
+echo "[24] No component registers a class on window (PAT-1)"
+CLASS_GLOBALS=0
+for f in components/*/*.ts; do
+    case "$f" in *.test.ts) continue ;; esac
+    for cls in $(grep -oE '^(export )?class [A-Z][A-Za-z0-9_]*' "$f" | awk '{print $NF}'); do
+        if grep -qE "^[[:space:]]*window(\[[[:space:]]*[\"']${cls}[\"'][[:space:]]*\]|\.${cls})[[:space:]]*=[[:space:]]*${cls}[[:space:]]*;" "$f"; then
+            fail "$f registers the class $cls on window"
+            CLASS_GLOBALS=$((CLASS_GLOBALS + 1))
+        fi
+    done
+done
+if [ "$CLASS_GLOBALS" -eq 0 ]; then
+    pass "No component puts a class on window; factories only"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

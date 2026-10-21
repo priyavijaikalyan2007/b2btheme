@@ -1046,5 +1046,4 @@ export function createLogConsole(options?: LogConsoleOptions): LogConsole
 // S18: GLOBAL EXPORTS
 // ============================================================================
 
-window.LogConsole = LogConsole;
 window.createLogConsole = createLogConsole;

@@ -880,6 +880,5 @@ export function createAnchorLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["AnchorLayout"] = AnchorLayout;
     w["createAnchorLayout"] = createAnchorLayout;
 }

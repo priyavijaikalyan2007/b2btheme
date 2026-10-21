@@ -831,6 +831,5 @@ export function createStatusBar(
 
 if (typeof window !== "undefined")
 {
-    window["StatusBar"] = StatusBar;
     window["createStatusBar"] = createStatusBar;
 }

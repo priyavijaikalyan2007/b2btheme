@@ -2237,11 +2237,19 @@ function showMarkdownEditorModalFn(
  * not see a function every consumer already uses (ADR-214).
  */
 export function createMarkdownEditor(
-    containerId: string,
+    containerId: string | HTMLElement,
     options?: MarkdownEditorOptions
 ): MarkdownEditor
 {
-    const container = document.getElementById(containerId);
+    // PAT-1. An element is accepted as well as an id, because the
+    // CONSTRUCTOR always took one and only the class exposed that. A
+    // caller holding an element it just created — SpineMap builds a
+    // wrapper per popover field — had to reach for `window.MarkdownEditor`
+    // to use it. The class is no longer on `window`, so the factory
+    // offers what the class offered.
+    const container = typeof containerId === "string"
+        ? document.getElementById(containerId)
+        : containerId;
 
     if (!container)
     {
@@ -2261,6 +2269,5 @@ export function createMarkdownEditor(
 // WINDOW GLOBALS
 // ============================================================================
 
-window["MarkdownEditor"] = MarkdownEditor;
 window["createMarkdownEditor"] = createMarkdownEditor;
 window["showMarkdownEditorModal"] = showMarkdownEditorModalFn;

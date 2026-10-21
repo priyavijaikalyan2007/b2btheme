@@ -820,6 +820,5 @@ export function createGridLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["GridLayout"] = GridLayout;
     w["createGridLayout"] = createGridLayout;
 }

@@ -69,7 +69,7 @@
             <pre class="p-2 demo-output" id="demo-stie-ce-output" style="font-size: 12px; min-height: 32px; white-space: pre-wrap;"></pre>
 
             <h6 class="mt-4">Static Token Rendering</h6>
-            <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>SmartTextInputEngine.renderTokens()</code>.</p>
+            <p class="text-muted" style="font-size: 12px;">Serialized text rendered as visual tokens via <code>renderSmartTextTokens()</code>.</p>
             <div id="demo-stie-static" class="p-2 border mb-2" style="min-height: 32px;"></div>
         </div>
 
@@ -430,7 +430,7 @@
         var renderers = new Map();
         renderers.set("mention", mentionTrigger.tokenRenderer);
         renderers.set("resource", resourceTrigger.tokenRenderer);
-        SmartTextInputEngine.renderTokens(
+        renderSmartTextTokens(
             document.getElementById("demo-stie-static"),
             staticContent,
             serializers,

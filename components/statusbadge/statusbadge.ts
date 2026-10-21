@@ -710,5 +710,4 @@ export function createStatusBadge(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window["StatusBadge"] = StatusBadge;
 window["createStatusBadge"] = createStatusBadge;

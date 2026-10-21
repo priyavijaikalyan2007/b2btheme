@@ -1473,7 +1473,6 @@ export function showSteppedProgressModal(
 
 if (typeof window !== "undefined")
 {
-    window["ProgressModal"] = ProgressModal;
     window["showProgressModal"] = showProgressModal;
     window["showSteppedProgressModal"] =
         showSteppedProgressModal;

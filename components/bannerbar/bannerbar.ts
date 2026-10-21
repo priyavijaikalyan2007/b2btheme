@@ -969,7 +969,6 @@ export function showBanner(options: BannerBarOptions): BannerBar
 
 if (typeof window !== "undefined")
 {
-    window["BannerBar"] = BannerBar;
     window["createBannerBar"] = createBannerBar;
     window["showBanner"] = showBanner;
 }

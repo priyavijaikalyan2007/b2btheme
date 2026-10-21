@@ -4782,6 +4782,5 @@ export function createTreeGrid(options: TreeGridOptions): TreeGrid
 
 if (typeof window !== "undefined")
 {
-    window["TreeGrid"] = TreeGrid;
     window["createTreeGrid"] = createTreeGrid;
 }

@@ -166,7 +166,7 @@
         sideEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
         sideEl.textContent = "Sidebar (collapsible)";
 
-        var inner = new SplitLayout({
+        var inner = createSplitLayout({
             orientation: "vertical",
             panes: [
                 { id: "editor", initialSize: "70%", minSize: 100 },
@@ -177,7 +177,6 @@
         });
 
         outer.setPaneContent("main", inner.getElement());
-        inner.show();
 
         var editorEl = inner.getPaneElement("editor");
         editorEl.style.padding = "1rem";

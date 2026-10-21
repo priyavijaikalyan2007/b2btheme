@@ -3020,8 +3020,6 @@ export function createFloatingTabbedPanel(
 // Global exports for script tag usage
 if (typeof window !== "undefined")
 {
-    window.TabbedPanel = TabbedPanel;
-    window.TabbedPanelManager = TabbedPanelManager;
     window.createTabbedPanel = createTabbedPanel;
     window.createDockedTabbedPanel = createDockedTabbedPanel;
     window.createFloatingTabbedPanel = createFloatingTabbedPanel;

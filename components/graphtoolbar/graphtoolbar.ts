@@ -600,7 +600,8 @@ export function createGraphToolbar(
     // Access the global createToolbar
     const win = window;
     const createToolbarFn = win["createToolbar"] as
-        ((opts: Record<string, unknown>) => unknown) | undefined;
+        ((opts: Record<string, unknown>, containerId?: string) => unknown)
+        | undefined;
 
     if (!createToolbarFn)
     {
@@ -609,40 +610,22 @@ export function createGraphToolbar(
         throw new Error("Toolbar component not loaded");
     }
 
-    // If containerId is specified, use contained mode
+    // PAT-1. This used to read `window.Toolbar` and call `new` on it,
+    // because the factory showed the toolbar into document.body and
+    // `show()` returns early once visible — so there was no way
+    // through the factory to say WHERE. `createToolbar` takes the
+    // container now, and the class is no longer on `window`.
+    //
+    // The old code also had a silent branch: when `window.Toolbar` was
+    // absent it called the factory and the toolbar mounted to the body
+    // instead of the container, with no error. A caller who named a
+    // container got a toolbar somewhere else (ADR-200).
     let toolbarInstance: unknown;
 
     if (containerId)
     {
         toolbarConfig.contained = true;
-        const ToolbarClass = win["Toolbar"] as
-            (new (opts: Record<string, unknown>) => {
-                show(container?: HTMLElement): void;
-                destroy(): void;
-                setToolState(id: string, state: Record<string, unknown>): void;
-                getElement(): HTMLElement | null;
-            }) | undefined;
-
-        if (ToolbarClass)
-        {
-            const container = document.getElementById(containerId);
-            if (!container)
-            {
-                // ERR-1. The refusal was right and the message was not:
-                // it named neither the component nor the remedy.
-                throw new Error(
-                    `${LOG_PREFIX} Container "${containerId}" was not `
-                    + "found. Insert the element before showing the "
-                    + "toolbar.");
-            }
-            const tb = new ToolbarClass(toolbarConfig);
-            tb.show(container);
-            toolbarInstance = tb;
-        }
-        else
-        {
-            toolbarInstance = createToolbarFn(toolbarConfig);
-        }
+        toolbarInstance = createToolbarFn(toolbarConfig, containerId);
     }
     else
     {

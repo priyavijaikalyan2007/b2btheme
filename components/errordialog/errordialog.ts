@@ -726,6 +726,5 @@ export function showErrorDialog(containerId: string, error: LiterateError): void
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    window["ErrorDialog"] = ErrorDialog;
     window["showErrorDialog"] = showErrorDialog;
 }

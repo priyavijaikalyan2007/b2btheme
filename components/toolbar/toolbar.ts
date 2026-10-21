@@ -5701,7 +5701,8 @@ export class Toolbar
  * @param options - Toolbar configuration
  * @returns The created Toolbar instance
  */
-export function createToolbar(options: ToolbarOptions): Toolbar
+export function createToolbar(
+    options: ToolbarOptions, containerId?: string): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5721,7 +5722,29 @@ export function createToolbar(options: ToolbarOptions): Toolbar
     }
 
     const toolbar = new Toolbar(options);
-    toolbar.show();
+
+    // PAT-1. `containerId` is why GraphToolbar used to reach for
+    // `window.Toolbar` and call `new` on it: the factory showed the
+    // toolbar into document.body, `show()` returns early once visible,
+    // and so there was no way through the factory to say WHERE. Every
+    // other factory in this repository takes the container, and the
+    // parameter is optional, so no existing caller changes.
+    if (containerId === undefined)
+    {
+        toolbar.show();
+        return toolbar;
+    }
+
+    const container = document.getElementById(containerId);
+
+    if (!container)
+    {
+        throw new Error(
+            `${LOG_PREFIX} Container "${containerId}" was not found. `
+            + "Insert the element before creating the Toolbar.");
+    }
+
+    toolbar.show(container);
     return toolbar;
 }
 
@@ -5731,7 +5754,8 @@ export function createToolbar(options: ToolbarOptions): Toolbar
  * @param options - Toolbar configuration (mode defaults to "docked")
  * @returns The created Toolbar instance
  */
-export function createDockedToolbar(options: ToolbarOptions): Toolbar
+export function createDockedToolbar(
+    options: ToolbarOptions, containerId?: string): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5750,7 +5774,7 @@ export function createDockedToolbar(options: ToolbarOptions): Toolbar
             + "Pass it when creating the Toolbar.");
     }
 
-    return createToolbar({ mode: "docked", ...options });
+    return createToolbar({ mode: "docked", ...options }, containerId);
 }
 
 /**
@@ -5759,7 +5783,8 @@ export function createDockedToolbar(options: ToolbarOptions): Toolbar
  * @param options - Toolbar configuration (mode defaults to "floating")
  * @returns The created Toolbar instance
  */
-export function createFloatingToolbar(options: ToolbarOptions): Toolbar
+export function createFloatingToolbar(
+    options: ToolbarOptions, containerId?: string): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5778,7 +5803,7 @@ export function createFloatingToolbar(options: ToolbarOptions): Toolbar
             + "Pass it when creating the Toolbar.");
     }
 
-    return createToolbar({ mode: "floating", ...options });
+    return createToolbar({ mode: "floating", ...options }, containerId);
 }
 
 // ============================================================================
@@ -5787,7 +5812,6 @@ export function createFloatingToolbar(options: ToolbarOptions): Toolbar
 
 if (typeof window !== "undefined")
 {
-    window["Toolbar"] = Toolbar;
     window["createToolbar"] = createToolbar;
     window["createDockedToolbar"] = createDockedToolbar;
     window["createFloatingToolbar"] = createFloatingToolbar;

@@ -798,5 +798,4 @@ export function createPersonChip(options: PersonChipOptions): PersonChip
 // WINDOW EXPORTS
 // ============================================================================
 
-window["PersonChip"] = PersonChip;
 window["createPersonChip"] = createPersonChip;

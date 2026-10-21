@@ -1347,5 +1347,4 @@ export function createAuditLogViewer(
     return instance;
 }
 
-window.AuditLogViewer = AuditLogViewer;
 window.createAuditLogViewer = createAuditLogViewer;

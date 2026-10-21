@@ -1022,5 +1022,4 @@ export function createUserMenu(
 // WINDOW EXPORTS
 // ============================================================================
 
-window["UserMenu"] = UserMenu;
 window["createUserMenu"] = createUserMenu;

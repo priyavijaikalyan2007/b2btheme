@@ -2096,58 +2096,90 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ## MINOR — Inconsistent Factory Return Pattern
 
-- [ ] **PAT-1** Some components return Handle interfaces (preferred pattern — encapsulates implementation, exposes only public API), while others return class instances directly (leaks implementation details). Standardize all components on the Handle pattern for consistency and encapsulation. Audit each component's factory function return type and refactor as needed.
+- [ ] **PAT-1** **The return type was the wrong target, and the leak it
+  named is now closed (2026-10-21).** The entry said that returning a
+  class "leaks implementation details". Measured, that is not what the
+  return type does, and the real leak was one level down.
 
-  **Measured for the first time on 2026-10-15 by `scripts/pat-scan.mjs`.
-  The entry says "some" components. It is 83 of 130 factories, across 125
-  components.** This is the majority, not a tail, and the entry has
-  understated itself since March 2026. Re-run the scan rather than
-  re-deriving the number.
+  **The four measurements.** 84 factories across 74 classes return a
+  class, re-run today against the entry's own `scripts/pat-scan.mjs`.
+  Those 74 classes declare **1189 public methods and zero public
+  fields**. 46 components already return an interface, and **not one
+  of those interfaces hides a member** — `GraphCanvas` declares 37
+  against a class of 36. Of the 46, **40 have no class at all**, so
+  the closure does the encapsulation and the interface only names the
+  result.
 
-  The scan separates two failures, because they cost different things:
+  So converting 84 factories would have added about 1300 lines of
+  interface, each mirroring its class method for method, for a caller
+  who gains the name `ToolbarHandle` and no restriction. The entry's
+  own warning applies to the entry: an interface invented without the
+  design decision "only gives the class a second name".
 
-  - **Returns a class the file does not export: 0, was 1.** The severe
-    case. The consumer receives a value and cannot name its type at all.
-    `createDiagramEngine` was the only one, and STD-1 fixed it on
-    2026-10-15 by exporting `DiagramEngineImpl`.
-  - **Returns an exported class rather than a handle: 83.** The ordinary
-    case. The consumer can name the type, the name is an implementation
-    class, and so every method on that class reads as public API.
+  **THE LEAK WAS THE CLASS ON `window`.** TypeScript removes `private`
+  when it compiles. Measured on the shipped file:
+  `dist/components/sizespicker/sizespicker.js` registered
+  `window.SizesPicker` and assigned `this.instanceId`, `this.sizes`,
+  `this.selected` and eleven more under those exact names. A consumer
+  writing `new window.SizesPicker(options)` received every private
+  field as an ordinary property.
 
-  **STD-2 was closed into this entry, and its ten files are the pattern
-  working.** Each keeps its class private and returns an exported handle
-  interface. They are the model the other 83 should follow, which is why
-  exporting their classes, as STD-2 asked, would have moved the repository
-  in the wrong direction.
+  **88 class registrations removed**, in four syntaxes. The scan found
+  64. Structure check `[24]` found 14 more in components whose factory
+  already returned an interface, which is the worse case — the type
+  said handle and the runtime handed over the class. Ten more used a
+  local alias, `const w = window`, the same fourth syntax DEBT-DOC-1
+  found in the layout components.
 
-  DiagramEngine is the hardest of the 83 and shows what the work costs.
-  `DiagramEngineImpl` has **135 public methods**. Writing
-  `DiagramEngineHandle` means deciding which of the 135 are API, and
-  inventing the interface without that decision only gives the class a
-  second name. That is a design question for each component, not a
-  mechanical refactor, which is the real reason this entry has sat open.
+  **Three of our own components depended on the class global**, which
+  is why this needed measuring rather than assuming:
 
-  **The 138 names STD-1 restored are a union, not an API, and the same
-  decision governs them.** The `src/` modules export `svgCreate`,
-  `svgSetAttr`, `rectHitTest`, the `HIGHLIGHT_*` constants and the
-  `EngineFor*Tool` interfaces so that **sibling modules can import them**.
-  Concatenation erases that boundary, because one keyword has to mean both
-  "exported for a neighbor" and "exported for a consumer". So
-  `docs/AGENT_QUICK_REF.md` now lists `function svgCreate` as DiagramEngine
-  API, and check `[19]` cannot tell intended from incidental, because it
-  verifies that a published name exists and not that it was meant.
+  - `GraphToolbar` read `window.Toolbar` and called `new` on it,
+    because `createToolbar` showed the toolbar into `document.body`
+    and `show()` returns early once visible. There was no way through
+    the factory to say WHERE. The three toolbar factories take an
+    optional container now. The old code also had a silent branch:
+    with `window.Toolbar` absent it called the factory and the toolbar
+    mounted to the body instead of the named container, with no error.
+  - `SpineMap` constructed `RichTextInput` and `MarkdownEditor` for
+    its popover fields. `createMarkdownEditor` took a container id and
+    the constructor took an element, so only the class could be handed
+    one. The factory accepts both now.
+  - Four demo pages constructed six classes across 27 sites. DockLayout
+    already supported the factory path — `mountComponentNow` hides a
+    factory-shown component and re-parents it into the cell — so the
+    conversion was mechanical.
 
-  This is not a reason to undo STD-1. Publishing 1 name was strictly worse
-  than publishing 138, and no consumer could type anything at all. It does
-  mean two things. **Deciding which of the 138 are consumer API is the same
-  decision as which of the 135 methods belong on the handle**, so both
-  belong to this entry rather than to a new one. And **the floor at 138
-  pins the plumbing along with the API**, so when the surface is trimmed
-  the floor in `scripts/audit-counts.mjs` comes down with a recorded
-  reason, exactly as raising a ceiling does.
+  **Two classes carried STATIC methods**, which a factory cannot reach.
+  `CommandPalette.configure`, `CommandPalette.getInstance` and
+  `SmartTextInputEngine.renderTokens` are published as
+  `configureCommandPalette`, `getCommandPalette` and
+  `renderSmartTextTokens`. A static method is a function, and a
+  function does not need a class to be callable.
 
----
+  **The consumer is not affected, measured.** The knobby application
+  constructs no class of ours. Its two `new window.X()` calls name its
+  own `DiagramCanvas` and `DiagramsAPI`, and
+  `shared/types/component-library.d.ts` declares no class of ours.
 
+  **What is published for consumers:** `docs/MIGRATION_WINDOW_CLASSES.md`
+  lists all 88 classes with the factory to use for each, and
+  `docs/INDEX.md` carries a banner above the fold with a one-command
+  check. `rollback.info` records the last commit before the change and
+  the revert steps.
+
+  **WHAT REMAINS OPEN IS THE ORIGINAL QUESTION, NARROWED.** Whether a
+  factory should return a handle interface rather than a class is now
+  a question about the TYPE alone, because the runtime leak is closed.
+  The honest case for it is nameability. The honest case against it is
+  that 46 components demonstrate an interface that mirrors its class
+  buys nothing. **DiagramEngine is still the exhibit:**
+  `DiagramEngineImpl` has 133 public methods, and writing
+  `DiagramEngineHandle` means deciding which of the 133 are API. That
+  is a design question per component, which is what the entry said in
+  March and is still the reason it is open.
+
+  **The original text follows, and its framing is superseded above.**
 ## CI — Node version alignment
 
 - [x] **CI-1** `.github/workflows/ci.yml` pinned Node 20 while Cloudflare Workers Builds compiles the deployed bundle on **Node v24.18.0 with npm 11.16.0**, read from the live `/build.json`, and the development machine runs **Node v26.11.1**. Three different majors. **Closed 2026-10-13 (ADR-170): CI now pins 24, matching production.**

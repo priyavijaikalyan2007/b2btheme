@@ -80,7 +80,7 @@
     (function() {
         var output = document.getElementById("cp-demo-output");
 
-        CommandPalette.configure({
+        configureCommandPalette({
             commands: [
                 { id: "save", label: "Save Document", icon: "bi-save", category: "Actions", shortcut: "Ctrl+S", action: function() { output.textContent = "Executed: Save Document"; } },
                 { id: "save-as", label: "Save As...", icon: "bi-save2", category: "Actions", shortcut: "Ctrl+Shift+S", action: function() { output.textContent = "Executed: Save As"; } },
@@ -123,7 +123,7 @@
         });
 
         document.getElementById("cp-btn-clear-recent").addEventListener("click", function() {
-            CommandPalette.getInstance().clearRecent();
+            getCommandPalette().clearRecent();
             output.textContent = "Recent commands cleared.";
         });
     })();

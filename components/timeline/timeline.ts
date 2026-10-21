@@ -3217,6 +3217,5 @@ export function createTimeline(options: TimelineOptions): Timeline
 // Make available on window for non-module consumers.
 if (typeof window !== "undefined")
 {
-    window["Timeline"] = Timeline;
     window["createTimeline"] = createTimeline;
 }

@@ -1359,7 +1359,6 @@ export function createShareDialog(
 
 if (typeof window !== "undefined")
 {
-    window["ShareDialog"] = ShareDialog;
     window["showShareDialog"] = showShareDialog;
     window["createShareDialog"] = createShareDialog;
 }

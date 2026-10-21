@@ -2058,5 +2058,4 @@ export function createCommentOverlay(
     return new CommentOverlay(options);
 }
 
-window.CommentOverlay = CommentOverlay;
 window.createCommentOverlay = createCommentOverlay;

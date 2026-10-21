@@ -753,5 +753,4 @@ export function createSizesPicker(
     return new SizesPicker(options);
 }
 
-window["SizesPicker"] = SizesPicker;
 window["createSizesPicker"] = createSizesPicker;

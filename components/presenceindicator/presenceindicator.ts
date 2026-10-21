@@ -829,5 +829,4 @@ export function createPresenceIndicator(
 // WINDOW EXPORTS
 // ============================================================================
 
-window["PresenceIndicator"] = PresenceIndicator;
 window["createPresenceIndicator"] = createPresenceIndicator;

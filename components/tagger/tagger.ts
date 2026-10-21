@@ -1293,6 +1293,5 @@ export function createTagger(
 
 if (typeof window !== "undefined")
 {
-    window["Tagger"] = Tagger;
     window["createTagger"] = createTagger;
 }

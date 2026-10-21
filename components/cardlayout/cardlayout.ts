@@ -885,6 +885,5 @@ export function createCardLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["CardLayout"] = CardLayout;
     w["createCardLayout"] = createCardLayout;
 }

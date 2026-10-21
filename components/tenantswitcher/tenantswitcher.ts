@@ -1031,7 +1031,6 @@ export function createTenantSwitcher(
     return instance;
 }
 
-window.TenantSwitcher = TenantSwitcher;
 window.createTenantSwitcher = createTenantSwitcher;
 
 // ============================================================================

@@ -1526,6 +1526,5 @@ export function createSplitLayout(
 
 if (typeof window !== "undefined")
 {
-    window["SplitLayout"] = SplitLayout;
     window["createSplitLayout"] = createSplitLayout;
 }

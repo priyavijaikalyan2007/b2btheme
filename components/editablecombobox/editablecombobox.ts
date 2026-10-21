@@ -1544,6 +1544,5 @@ export function createEditableComboBox(
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    window["EditableComboBox"] = EditableComboBox;
     window["createEditableComboBox"] = createEditableComboBox;
 }

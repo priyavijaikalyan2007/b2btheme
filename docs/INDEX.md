@@ -2,6 +2,30 @@
 
 # Documentation Index
 
+## Breaking change on 2026-10-21: component classes are no longer on `window`
+
+If your code calls `new window.SizesPicker(...)`, or `new window.`
+followed by any other component class name, it will stop working.
+Every `window.create...` factory is unchanged, so most integrations
+need no change at all.
+
+Check in one command. No results means you are not affected.
+
+```bash
+grep -rnE "new window\.[A-Z]" .
+```
+
+Three static methods moved to plain functions, so
+`window.CommandPalette.configure(...)` is now
+`window.configureCommandPalette(...)`.
+
+**[Read the migration guide](MIGRATION_WINDOW_CLASSES.md)** for the
+full list of 88 removed classes, the factory to use instead of each
+one, the three renamed statics, and what to do if you read a private
+field.
+
+---
+
 Welcome to the Enterprise Bootstrap Theme documentation. Start here to find the guide you need.
 
 ---

@@ -1057,5 +1057,4 @@ export function createActivityFeed(
     return instance;
 }
 
-window.ActivityFeed = ActivityFeed;
 window.createActivityFeed = createActivityFeed;

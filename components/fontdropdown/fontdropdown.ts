@@ -1241,7 +1241,5 @@ export function createFontDropdown(
     return new FontDropdown(containerId, options);
 }
 
-window["FontDropdown"] =
-    FontDropdown;
 window["createFontDropdown"] =
     createFontDropdown;

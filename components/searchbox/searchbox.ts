@@ -1292,6 +1292,5 @@ export function createSearchBox(
 
 if (typeof window !== "undefined")
 {
-    window["SearchBox"] = SearchBox;
     window["createSearchBox"] = createSearchBox;
 }

@@ -1529,6 +1529,5 @@ export function createSprintPicker(
 
 if (typeof window !== "undefined")
 {
-    window["SprintPicker"] = SprintPicker;
     window["createSprintPicker"] = createSprintPicker;
 }

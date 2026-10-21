@@ -1002,6 +1002,5 @@ export function createMaskedEntry(
 // Expose on window for consumers who load via <script> tag
 if (typeof window !== "undefined")
 {
-    window["MaskedEntry"] = MaskedEntry;
     window["createMaskedEntry"] = createMaskedEntry;
 }

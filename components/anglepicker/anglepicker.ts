@@ -1054,5 +1054,4 @@ export function createAnglePicker(
     return new AnglePicker(containerId, options);
 }
 
-window["AnglePicker"] = AnglePicker;
 window["createAnglePicker"] = createAnglePicker;

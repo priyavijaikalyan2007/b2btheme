@@ -388,5 +388,4 @@ export function createMarketingHero(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.MarketingHero = MarketingHero;
 window.createMarketingHero = createMarketingHero;

@@ -2766,6 +2766,5 @@ export function createDataGrid(
 
 if (typeof window !== "undefined")
 {
-    window["DataGrid"] = DataGrid;
     window["createDataGrid"] = createDataGrid;
 }

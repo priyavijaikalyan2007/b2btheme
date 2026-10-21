@@ -67,6 +67,8 @@ import type { createColumnsPicker } from "./columnspicker/columnspicker";
 import type
 {
     CommandPalette,
+    configureCommandPalette,
+    getCommandPalette,
     openCommandPalette,
     registerCommand,
     registerCommands,
@@ -324,85 +326,71 @@ declare global
         EnterpriseRuntime?: Record<string, unknown>;
 
         /** Published by the ActionItems component. */
-        ActionItems?: typeof ActionItems;
         createActionItems?: typeof createActionItems;
 
         /** Published by the Activityfeed component. */
-        ActivityFeed?: typeof ActivityFeed;
         createActivityFeed?: typeof createActivityFeed;
 
         /** Published by the AnchorLayout component. */
-        AnchorLayout?: typeof AnchorLayout;
         createAnchorLayout?: typeof createAnchorLayout;
 
         /** Published by the Anglepicker component. */
-        AnglePicker?: typeof AnglePicker;
         createAnglePicker?: typeof createAnglePicker;
 
         /** Published by the Annotation component. */
         createAnnotation?: typeof createAnnotation;
 
         /** Published by the Applauncher component. */
-        AppLauncher?: typeof AppLauncher;
         createAppLauncher?: typeof createAppLauncher;
 
         /** Published by the Auditlogviewer component. */
-        AuditLogViewer?: typeof AuditLogViewer;
         createAuditLogViewer?: typeof createAuditLogViewer;
 
         /** Published by the Authcard component. */
         createAuthCard?: typeof createAuthCard;
 
         /** Published by the BannerBar component. */
-        BannerBar?: typeof BannerBar;
         createBannerBar?: typeof createBannerBar;
         showBanner?: typeof showBanner;
 
         /** Published by the BorderLayout component. */
-        BorderLayout?: typeof BorderLayout;
         createBorderLayout?: typeof createBorderLayout;
 
         /** Published by the BoxLayout component. */
-        BoxLayout?: typeof BoxLayout;
         createBoxLayout?: typeof createBoxLayout;
 
         /** Published by the Breadcrumb component. */
         createBreadcrumb?: typeof createBreadcrumb;
 
         /** Published by the CardLayout component. */
-        CardLayout?: typeof CardLayout;
         createCardLayout?: typeof createCardLayout;
 
         /** Published by the ChartPanel component. */
-        ChartPanel?: typeof ChartPanel;
         createChartPanel?: typeof createChartPanel;
 
         /** Published by the ChatDock component. */
         createChatDock?: typeof createChatDock;
 
         /** Published by the CodeEditor component. */
-        CodeEditor?: typeof CodeEditor;
         createCodeEditor?: typeof createCodeEditor;
 
         /** Published by the ColorPicker component. */
-        ColorPicker?: typeof ColorPicker;
         createColorPicker?: typeof createColorPicker;
 
         /** Published by the Columnspicker component. */
         createColumnsPicker?: typeof createColumnsPicker;
 
         /** Published by the Commandpalette component. */
-        CommandPalette?: typeof CommandPalette;
+        configureCommandPalette?: typeof configureCommandPalette;
+        getCommandPalette?: typeof getCommandPalette;
         openCommandPalette?: typeof openCommandPalette;
         registerCommand?: typeof registerCommand;
         registerCommands?: typeof registerCommands;
 
         /** Published by the Commentoverlay component. */
-        CommentOverlay?: typeof CommentOverlay;
         createCommentOverlay?: typeof createCommentOverlay;
 
         /** Published by the Confirmdialog component. */
-        ConfirmDialog?: typeof ConfirmDialog;
         showConfirmDialog?: typeof showConfirmDialog;
         showDangerConfirmDialog?: typeof showDangerConfirmDialog;
 
@@ -411,19 +399,15 @@ declare global
         createContextMenu?: typeof createContextMenu;
 
         /** Published by the Conversation component. */
-        Conversation?: typeof Conversation;
         createConversation?: typeof createConversation;
 
         /** Published by the CronPicker component. */
-        CronPicker?: typeof CronPicker;
         createCronPicker?: typeof createCronPicker;
 
         /** Published by the Datagrid component. */
-        DataGrid?: typeof DataGrid;
         createDataGrid?: typeof createDataGrid;
 
         /** Published by the DatePicker component. */
-        DatePicker?: typeof DatePicker;
         createDatePicker?: typeof createDatePicker;
 
         /** Published by the DiagramEngine component. */
@@ -440,11 +424,9 @@ declare global
         createDocViewer?: typeof createDocViewer;
 
         /** Published by the DockLayout component. */
-        DockLayout?: typeof DockLayout;
         createDockLayout?: typeof createDockLayout;
 
         /** Published by the DurationPicker component. */
-        DurationPicker?: typeof DurationPicker;
         createDurationPicker?: typeof createDurationPicker;
 
         /** Published by the DynamicCanvas component. */
@@ -466,44 +448,34 @@ declare global
         unregisterDynamicFormFieldProvider?: typeof unregisterDynamicFormFieldProvider;
 
         /** Published by the Editablecombobox component. */
-        EditableComboBox?: typeof EditableComboBox;
         createEditableComboBox?: typeof createEditableComboBox;
 
         /** Published by the EmptyState component. */
-        EmptyState?: typeof EmptyState;
         createEmptyState?: typeof createEmptyState;
 
         /** Published by the Errordialog component. */
-        ErrorDialog?: typeof ErrorDialog;
         showErrorDialog?: typeof showErrorDialog;
 
         /** Published by the ExplorerPicker component. */
-        ExplorerPickerImpl?: typeof ExplorerPickerImpl;
         createExplorerPicker?: typeof createExplorerPicker;
 
         /** Published by the FacetSearch component. */
-        FacetSearch?: typeof FacetSearch;
         createFacetSearch?: typeof createFacetSearch;
         parseFacetQuery?: typeof parseFacetQuery;
 
         /** Published by the FileExplorer component. */
-        FileExplorer?: typeof FileExplorer;
         createFileExplorer?: typeof createFileExplorer;
 
         /** Published by the Fileupload component. */
-        FileUpload?: typeof FileUpload;
         createFileUpload?: typeof createFileUpload;
 
         /** Published by the FlexGridLayout component. */
-        FlexGridLayout?: typeof FlexGridLayout;
         createFlexGridLayout?: typeof createFlexGridLayout;
 
         /** Published by the FlowLayout component. */
-        FlowLayout?: typeof FlowLayout;
         createFlowLayout?: typeof createFlowLayout;
 
         /** Published by the FontDropdown component. */
-        FontDropdown?: typeof FontDropdown;
         createFontDropdown?: typeof createFontDropdown;
 
         /** Published by the FormDialog component. */
@@ -514,14 +486,12 @@ declare global
         createFormDialog?: typeof createFormDialog;
 
         /** Published by the Gauge component. */
-        Gauge?: typeof Gauge;
         createBarGauge?: typeof createBarGauge;
         createGauge?: typeof createGauge;
         createRingGauge?: typeof createRingGauge;
         createTileGauge?: typeof createTileGauge;
 
         /** Published by the GradientPicker component. */
-        GradientPicker?: typeof GradientPicker;
         createGradientPicker?: typeof createGradientPicker;
 
         /** Published by the GraphCanvas component. */
@@ -541,7 +511,6 @@ declare global
         createGraphMinimap?: typeof createGraphMinimap;
 
         /** Published by the GridLayout component. */
-        GridLayout?: typeof GridLayout;
         createGridLayout?: typeof createGridLayout;
 
         /** Published by the GuidedTour component. */
@@ -565,7 +534,6 @@ declare global
         createLatexEditor?: typeof createLatexEditor;
 
         /** Published by the LayerLayout component. */
-        LayerLayout?: typeof LayerLayout;
         createLayerLayout?: typeof createLayerLayout;
 
         /** Published by the LayoutPicker component. */
@@ -576,35 +544,27 @@ declare global
         createLayoutPicker?: typeof createLayoutPicker;
 
         /** Published by the Lineendingpicker component. */
-        LineEndingPicker?: typeof LineEndingPicker;
         createLineEndingPicker?: typeof createLineEndingPicker;
 
         /** Published by the Lineshapepicker component. */
-        LineShapePicker?: typeof LineShapePicker;
         createLineShapePicker?: typeof createLineShapePicker;
 
         /** Published by the Linetypepicker component. */
-        LineTypePicker?: typeof LineTypePicker;
         createLineTypePicker?: typeof createLineTypePicker;
 
         /** Published by the Linewidthpicker component. */
-        LineWidthPicker?: typeof LineWidthPicker;
         createLineWidthPicker?: typeof createLineWidthPicker;
 
         /** Published by the LogConsole component. */
-        LogConsole?: typeof LogConsole;
         createLogConsole?: typeof createLogConsole;
 
         /** Published by the Magnifier component. */
-        Magnifier?: typeof Magnifier;
         createMagnifier?: typeof createMagnifier;
 
         /** Published by the Marginspicker component. */
-        MarginsPicker?: typeof MarginsPicker;
         createMarginsPicker?: typeof createMarginsPicker;
 
         /** Published by the MarkdownEditor component. */
-        MarkdownEditor?: typeof MarkdownEditor;
         createMarkdownEditor?: typeof createMarkdownEditor;
         /**
          * The module names this function `showMarkdownEditorModalFn` and does not export it.
@@ -615,24 +575,18 @@ declare global
         createMarkdownRenderer?: typeof createMarkdownRenderer;
 
         /** Published by the MarketingHero component. */
-        MarketingHero?: typeof MarketingHero;
         createMarketingHero?: typeof createMarketingHero;
 
         /** Published by the Maskedentry component. */
-        MaskedEntry?: typeof MaskedEntry;
         createMaskedEntry?: typeof createMaskedEntry;
 
         /** Published by the MetricCard component. */
-        MetricCard?: typeof MetricCard;
         createMetricCard?: typeof createMetricCard;
 
         /** Published by the Multiselectcombo component. */
-        MultiselectCombo?: typeof MultiselectCombo;
         createMultiselectCombo?: typeof createMultiselectCombo;
 
         /** Published by the NavRail component. */
-        NavRail?: typeof NavRail;
-        NavRailManager?: typeof NavRailManager;
         /**
          * The NavRailManager singleton, written here by its own `getInstance()` for
          * debugging and for tests. Internal: it is not part of the published API.
@@ -649,43 +603,34 @@ declare global
         createOrientationPicker?: typeof createOrientationPicker;
 
         /** Published by the PeoplePicker component. */
-        PeoplePicker?: typeof PeoplePicker;
         createPeoplePicker?: typeof createPeoplePicker;
 
         /** Published by the Periodpicker component. */
-        PeriodPicker?: typeof PeriodPicker;
         createPeriodPicker?: typeof createPeriodPicker;
 
         /** Published by the Permissionmatrix component. */
-        PermissionMatrix?: typeof PermissionMatrix;
         createPermissionMatrix?: typeof createPermissionMatrix;
 
         /** Published by the PersonChip component. */
-        PersonChip?: typeof PersonChip;
         createPersonChip?: typeof createPersonChip;
 
         /** Published by the Pill component. */
-        Pill?: typeof Pill;
         createPill?: typeof createPill;
 
         /** Published by the PresenceIndicator component. */
-        PresenceIndicator?: typeof PresenceIndicator;
         createPresenceIndicator?: typeof createPresenceIndicator;
 
         /** Published by the ProgressModal component. */
-        ProgressModal?: typeof ProgressModal;
         showProgressModal?: typeof showProgressModal;
         showSteppedProgressModal?: typeof showSteppedProgressModal;
 
         /** Published by the Prompttemplatemanager component. */
-        PromptTemplateManager?: typeof PromptTemplateManager;
         createPromptTemplateManager?: typeof createPromptTemplateManager;
 
         /** Published by the PropertyInspector component. */
         createPropertyInspector?: typeof createPropertyInspector;
 
         /** Published by the ReasoningAccordion component. */
-        ReasoningAccordion?: typeof ReasoningAccordion;
         createReasoningAccordion?: typeof createReasoningAccordion;
 
         /** Published by the RelationshipManager component. */
@@ -707,25 +652,19 @@ declare global
         createRibbonBuilder?: typeof createRibbonBuilder;
 
         /** Published by the RichTextInput component. */
-        RichTextInput?: typeof RichTextInput;
         createRichTextInput?: typeof createRichTextInput;
 
         /** Published by the Ruler component. */
-        Ruler?: typeof Ruler;
         createRuler?: typeof createRuler;
 
         /** Published by the Searchbox component. */
-        SearchBox?: typeof SearchBox;
         createSearchBox?: typeof createSearchBox;
 
         /** Published by the ShareDialog component. */
-        ShareDialog?: typeof ShareDialog;
         createShareDialog?: typeof createShareDialog;
         showShareDialog?: typeof showShareDialog;
 
         /** Published by the Sidebar component. */
-        Sidebar?: typeof Sidebar;
-        SidebarManager?: typeof SidebarManager;
         createDockedSidebar?: typeof createDockedSidebar;
         createFloatingSidebar?: typeof createFloatingSidebar;
         createSidebar?: typeof createSidebar;
@@ -740,23 +679,20 @@ declare global
         __sidebarManager?: SidebarManager;
 
         /** Published by the SiteFooter component. */
-        SiteFooter?: typeof SiteFooter;
         createSiteFooter?: typeof createSiteFooter;
 
         /** Published by the Sizespicker component. */
-        SizesPicker?: typeof SizesPicker;
         createSizesPicker?: typeof createSizesPicker;
 
         /** Published by the SkeletonLoader component. */
-        SkeletonLoader?: typeof SkeletonLoader;
         createSkeletonLoader?: typeof createSkeletonLoader;
 
         /** Published by the Slider component. */
         createSlider?: typeof createSlider;
 
         /** Published by the Smarttextinput component. */
-        SmartTextInputEngine?: typeof SmartTextInputEngine;
         createSmartTextInput?: typeof createSmartTextInput;
+        renderSmartTextTokens?: typeof renderSmartTextTokens;
 
         /** Published by the Spacingpicker component. */
         createSpacingPicker?: typeof createSpacingPicker;
@@ -765,22 +701,18 @@ declare global
         createSpineMap?: typeof createSpineMap;
 
         /** Published by the Splitlayout component. */
-        SplitLayout?: typeof SplitLayout;
         createSplitLayout?: typeof createSplitLayout;
 
         /** Published by the Sprintpicker component. */
-        SprintPicker?: typeof SprintPicker;
         createSprintPicker?: typeof createSprintPicker;
 
         /** Published by the Stacklayout component. */
         createStackLayout?: typeof createStackLayout;
 
         /** Published by the StatusBar component. */
-        StatusBar?: typeof StatusBar;
         createStatusBar?: typeof createStatusBar;
 
         /** Published by the Statusbadge component. */
-        StatusBadge?: typeof StatusBadge;
         createStatusBadge?: typeof createStatusBadge;
 
         /** Published by the Stepper component. */
@@ -790,12 +722,9 @@ declare global
         createStickyNote?: typeof createStickyNote;
 
         /** Published by the Symbolpicker component. */
-        SymbolPicker?: typeof SymbolPicker;
         createSymbolPicker?: typeof createSymbolPicker;
 
         /** Published by the TabbedPanel component. */
-        TabbedPanel?: typeof TabbedPanel;
-        TabbedPanelManager?: typeof TabbedPanelManager;
         createDockedTabbedPanel?: typeof createDockedTabbedPanel;
         createFloatingTabbedPanel?: typeof createFloatingTabbedPanel;
         createTabbedPanel?: typeof createTabbedPanel;
@@ -810,11 +739,9 @@ declare global
         __tabbedPanelManager?: TabbedPanelManager;
 
         /** Published by the Tagger component. */
-        Tagger?: typeof Tagger;
         createTagger?: typeof createTagger;
 
         /** Published by the TenantSwitcher component. */
-        TenantSwitcher?: typeof TenantSwitcher;
         WorkspaceSwitcher?: typeof TenantSwitcher;
         createTenantSwitcher?: typeof createTenantSwitcher;
         createWorkspaceSwitcher?: typeof createWorkspaceSwitcher;
@@ -823,15 +750,12 @@ declare global
         createThemeToggle?: typeof createThemeToggle;
 
         /** Published by the TimePicker component. */
-        TimePicker?: typeof TimePicker;
         createTimePicker?: typeof createTimePicker;
 
         /** Published by the Timeline component. */
-        Timeline?: typeof Timeline;
         createTimeline?: typeof createTimeline;
 
         /** Published by the TimezonePicker component. */
-        TimezonePicker?: typeof TimezonePicker;
         createTimezonePicker?: typeof createTimezonePicker;
 
         /** Published by the Toast component. */
@@ -844,7 +768,6 @@ declare global
         showWarningToast?: typeof showWarningToast;
 
         /** Published by the Toolbar component. */
-        Toolbar?: typeof Toolbar;
         createDockedToolbar?: typeof createDockedToolbar;
         createFloatingToolbar?: typeof createFloatingToolbar;
         createToolbar?: typeof createToolbar;
@@ -853,18 +776,15 @@ declare global
         createToolColorPicker?: typeof createToolColorPicker;
 
         /** Published by the TreeView component. */
-        TreeView?: typeof TreeView;
         createTreeView?: typeof createTreeView;
 
         /** Published by the Treegrid component. */
-        TreeGrid?: typeof TreeGrid;
         createTreeGrid?: typeof createTreeGrid;
 
         /** Published by the Typebadge component. */
         createTypeBadge?: typeof createTypeBadge;
 
         /** Published by the Usermenu component. */
-        UserMenu?: typeof UserMenu;
         createUserMenu?: typeof createUserMenu;
 
         /** Published by the VisualTableEditor component. */

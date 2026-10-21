@@ -942,6 +942,5 @@ export function createChartPanel(
 // GLOBAL EXPORTS (for IIFE consumers)
 // ============================================================================
 
-window["ChartPanel"] = ChartPanel;
 window["createChartPanel"] =
     createChartPanel;

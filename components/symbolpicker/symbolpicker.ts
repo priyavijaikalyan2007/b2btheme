@@ -2396,5 +2396,4 @@ export function createSymbolPicker(
     return picker;
 }
 
-window["SymbolPicker"] = SymbolPicker;
 window["createSymbolPicker"] = createSymbolPicker;

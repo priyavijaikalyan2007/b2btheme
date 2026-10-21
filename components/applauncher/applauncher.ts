@@ -1664,5 +1664,4 @@ export function createAppLauncher(
     return launcher;
 }
 
-window.AppLauncher = AppLauncher;
 window.createAppLauncher = createAppLauncher;

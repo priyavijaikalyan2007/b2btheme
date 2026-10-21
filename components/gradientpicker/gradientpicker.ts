@@ -2439,5 +2439,4 @@ export function createGradientPicker(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window["GradientPicker"] = GradientPicker;
 window["createGradientPicker"] = createGradientPicker;

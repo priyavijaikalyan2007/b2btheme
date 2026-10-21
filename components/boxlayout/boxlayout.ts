@@ -657,6 +657,5 @@ export function createBoxLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["BoxLayout"] = BoxLayout;
     w["createBoxLayout"] = createBoxLayout;
 }

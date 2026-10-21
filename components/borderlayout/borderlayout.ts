@@ -765,6 +765,5 @@ export function createBorderLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["BorderLayout"] = BorderLayout;
     w["createBorderLayout"] = createBorderLayout;
 }

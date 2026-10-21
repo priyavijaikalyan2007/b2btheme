@@ -1447,6 +1447,5 @@ export function createTimezonePicker(
 
 if (typeof window !== "undefined")
 {
-    window["TimezonePicker"] = TimezonePicker;
     window["createTimezonePicker"] = createTimezonePicker;
 }

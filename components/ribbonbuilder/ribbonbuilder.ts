@@ -3260,5 +3260,4 @@ export function createRibbonBuilder(
     return handle;
 }
 
-window["RibbonBuilderImpl"] = RibbonBuilderImpl;
 window["createRibbonBuilder"] = createRibbonBuilder;

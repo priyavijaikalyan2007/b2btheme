@@ -1660,7 +1660,6 @@ export function createFacetSearch(
     return fs;
 }
 
-window["FacetSearch"] = FacetSearch;
 window["createFacetSearch"] =
     createFacetSearch;
 window["parseFacetQuery"] =

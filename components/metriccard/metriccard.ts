@@ -783,6 +783,5 @@ export function createMetricCard(
 // GLOBAL EXPORTS (for IIFE consumers)
 // ============================================================================
 
-window["MetricCard"] = MetricCard;
 window["createMetricCard"] =
     createMetricCard;

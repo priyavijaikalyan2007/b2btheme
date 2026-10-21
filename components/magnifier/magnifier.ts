@@ -580,5 +580,4 @@ export function createMagnifier(
     return new Magnifier(containerId, options);
 }
 
-window["Magnifier"] = Magnifier;
 window["createMagnifier"] = createMagnifier;

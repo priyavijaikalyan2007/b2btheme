@@ -1612,5 +1612,4 @@ export function createRichTextInput(options: RichTextInputOptions): RichTextInpu
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.RichTextInput = RichTextInput;
 window.createRichTextInput = createRichTextInput;

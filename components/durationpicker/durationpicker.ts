@@ -1979,6 +1979,5 @@ export function createDurationPicker(
 
 if (typeof window !== "undefined")
 {
-    window["DurationPicker"] = DurationPicker;
     window["createDurationPicker"] = createDurationPicker;
 }

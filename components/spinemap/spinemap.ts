@@ -1361,7 +1361,7 @@ class RichTextInputAdapter implements SpineFieldAdapter
     mount(container: HTMLElement, value: unknown): void
     {
         const Ctor = requireLibraryFactory(
-            "RichTextInput", "richtextinput");
+            "createRichTextInput", "richtextinput");
         const wrap = htmlEl("div", {
             class: "spinemap-edit-widget"
         });
@@ -1390,7 +1390,7 @@ class RichTextInputAdapter implements SpineFieldAdapter
         catch (e)
         {
             throw libraryBuildFailed(
-                "RichTextInput", "richtextinput", e);
+                "createRichTextInput", "richtextinput", e);
         }
     }
 
@@ -1433,9 +1433,9 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
 
     mount(container: HTMLElement, value: unknown): void
     {
-        const Ctor = requireLibraryFactory(
-            "MarkdownEditor", "markdowneditor") as unknown as
-                new (el: HTMLElement, o: Record<string, unknown>) =>
+        const make = requireLibraryFactory(
+            "createMarkdownEditor", "markdowneditor") as unknown as
+                (el: HTMLElement, o: Record<string, unknown>) =>
                     Record<string, Function>;
         const wrap = htmlEl("div", {
             class: "spinemap-edit-widget"
@@ -1443,14 +1443,17 @@ class MarkdownEditorAdapter implements SpineFieldAdapter
         container.appendChild(wrap);
         try
         {
-            // new MarkdownEditor(element, opts)
-            this.instance = new Ctor(
+            // PAT-1. `createMarkdownEditor(element, opts)`. This used
+            // to be `new window.MarkdownEditor(...)`, which was the only
+            // way to pass an ELEMENT rather than an id. The factory
+            // accepts both now and the class is no longer global.
+            this.instance = make(
                 wrap, widgetOpts(this.compOpts, value));
         }
         catch (e)
         {
             throw libraryBuildFailed(
-                "MarkdownEditor", "markdowneditor", e);
+                "createMarkdownEditor", "markdowneditor", e);
         }
     }
 

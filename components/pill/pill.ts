@@ -480,5 +480,4 @@ export function createPill(options: PillOptions): Pill
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.Pill = Pill;
 window.createPill = createPill;

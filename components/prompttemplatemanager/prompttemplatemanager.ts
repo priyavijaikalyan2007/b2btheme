@@ -2015,5 +2015,4 @@ export function createPromptTemplateManager(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.PromptTemplateManager = PromptTemplateManager;
 window.createPromptTemplateManager = createPromptTemplateManager;

@@ -2931,5 +2931,4 @@ export function createGraphCanvas(options: GraphCanvasOptions): GraphCanvas
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.GraphCanvasImpl = GraphCanvasImpl;
 window.createGraphCanvas = createGraphCanvas;

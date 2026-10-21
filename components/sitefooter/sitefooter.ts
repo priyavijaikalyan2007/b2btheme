@@ -467,5 +467,4 @@ export function createSiteFooter(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.SiteFooter = SiteFooter;
 window.createSiteFooter = createSiteFooter;

@@ -3029,7 +3029,5 @@ export function createExplorerPicker(
 // WINDOW GLOBALS
 // ============================================================================
 
-window["ExplorerPickerImpl"] =
-    ExplorerPickerImpl;
 window["createExplorerPicker"] =
     createExplorerPicker;

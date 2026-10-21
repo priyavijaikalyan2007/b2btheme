@@ -808,5 +808,4 @@ export function createMarginsPicker(
     return new MarginsPicker(options);
 }
 
-window["MarginsPicker"] = MarginsPicker;
 window["createMarginsPicker"] = createMarginsPicker;

@@ -2481,8 +2481,34 @@ export function createSmartTextInput(
 }
 
 // >> Delegates to: window globals
+/**
+ * Render serialized text as visual tokens inside a container.
+ *
+ * PAT-1. `SmartTextInputEngine.renderTokens` is a STATIC member, and a
+ * factory cannot reach one. The class left `window` because its
+ * constructor exposed every instance field, so the static is published
+ * here as a function. A static method is a function, and a function
+ * does not need a class to be callable.
+ *
+ * @param container   - Element to render into. Its contents are replaced.
+ * @param content     - The serialized text.
+ * @param serializers - Token serializers to deserialize with.
+ * @param renderers   - Renderer per token type.
+ */
+export function renderSmartTextTokens(
+    container: HTMLElement,
+    content: string,
+    serializers: TokenSerializer[],
+    renderers: Map<string, TokenRenderer>
+): void
+{
+    SmartTextInputEngine.renderTokens(
+        container, content, serializers, renderers);
+}
+
+
 if (typeof window !== "undefined")
 {
-    window["SmartTextInputEngine"] = SmartTextInputEngine;
     window["createSmartTextInput"] = createSmartTextInput;
+    window["renderSmartTextTokens"] = renderSmartTextTokens;
 }

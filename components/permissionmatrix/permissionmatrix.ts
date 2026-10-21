@@ -1551,5 +1551,4 @@ export function createPermissionMatrix(
     return instance;
 }
 
-window.PermissionMatrix = PermissionMatrix;
 window.createPermissionMatrix = createPermissionMatrix;

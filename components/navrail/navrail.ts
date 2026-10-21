@@ -1734,7 +1734,5 @@ export function createNavRail(options: NavRailOptions): NavRailHandle
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["NavRail"] = NavRail;
-    w["NavRailManager"] = NavRailManager;
     w["createNavRail"] = createNavRail;
 }

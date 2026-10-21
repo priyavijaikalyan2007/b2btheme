@@ -829,5 +829,4 @@ export function createLineShapePicker(
     return new LineShapePicker(containerId, options);
 }
 
-window["LineShapePicker"] = LineShapePicker;
 window["createLineShapePicker"] = createLineShapePicker;

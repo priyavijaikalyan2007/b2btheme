@@ -158,12 +158,11 @@
             }
             streamTimers = [];
             if (streamAcc) { streamAcc.destroy(); }
-            streamAcc = new ReasoningAccordion({
+            streamAcc = createReasoningAccordion("reasoning-demo-stream", {
                 title: "AI Reasoning",
                 autoExpandActive: true,
                 autoCollapseCompleted: true
             });
-            streamAcc.show("reasoning-demo-stream");
         }
 
         resetStream();

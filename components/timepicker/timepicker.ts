@@ -2654,6 +2654,5 @@ export function createTimePicker(
 
 if (typeof window !== "undefined")
 {
-    window["TimePicker"] = TimePicker;
     window["createTimePicker"] = createTimePicker;
 }

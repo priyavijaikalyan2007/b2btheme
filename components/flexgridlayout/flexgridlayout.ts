@@ -771,6 +771,5 @@ export function createFlexGridLayout(
 if (typeof window !== "undefined")
 {
     const w = window;
-    w["FlexGridLayout"] = FlexGridLayout;
     w["createFlexGridLayout"] = createFlexGridLayout;
 }

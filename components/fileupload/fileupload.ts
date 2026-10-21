@@ -1601,5 +1601,4 @@ export function createFileUpload(
 // GLOBAL EXPORTS
 // ============================================================================
 
-window["FileUpload"] = FileUpload;
 window["createFileUpload"] = createFileUpload;

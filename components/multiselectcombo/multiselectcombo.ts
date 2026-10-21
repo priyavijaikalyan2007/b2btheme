@@ -2044,6 +2044,5 @@ export function createMultiselectCombo(
 
 if (typeof window !== "undefined")
 {
-    window["MultiselectCombo"] = MultiselectCombo;
     window["createMultiselectCombo"] = createMultiselectCombo;
 }

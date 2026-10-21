@@ -2433,8 +2433,6 @@ export function createFloatingSidebar(options: SidebarOptions): Sidebar
 
 if (typeof window !== "undefined")
 {
-    window["Sidebar"] = Sidebar;
-    window["SidebarManager"] = SidebarManager;
     window["createSidebar"] = createSidebar;
     window["createDockedSidebar"] = createDockedSidebar;
     window["createFloatingSidebar"] = createFloatingSidebar;

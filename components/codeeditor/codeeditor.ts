@@ -1385,6 +1385,5 @@ export function createCodeEditor(
 
 if (typeof window !== "undefined")
 {
-    window["CodeEditor"] = CodeEditor;
     window["createCodeEditor"] = createCodeEditor;
 }

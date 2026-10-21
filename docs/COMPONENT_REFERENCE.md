@@ -402,13 +402,25 @@ const feed = createActivityFeed({
 | `show(containerId)` | Mount to container |
 | `hide()` | Remove from DOM |
 | `destroy()` | Full cleanup |
-| `addEvent(ev)` | Prepend real-time event |
-| `addEvents(evs)` | Append events (pagination) |
+| `addEvent(ev)` | Prepend real-time event. Announces who did what to what |
+| `addEvents(evs)` | Append events (pagination). Announces a count |
 | `setEvents(evs)` | Replace all events |
 | `getEvents()` | Get current events |
 | `clear()` | Remove all events |
 | `refresh()` | Re-render |
 | `scrollToTop()` | Scroll to top |
+
+## Accessibility
+
+The feed mounts an `aria-live="polite"` `aria-atomic="true"` region, and
+both methods that add activity write to it. `addEvent` announces the actor,
+the verb and the target. `addEvents` announces a count rather than the
+events, because `aria-atomic` makes the region read as a single utterance
+and a bulk load would otherwise read the whole batch aloud.
+
+Before 2026-10-21 the region was built and appended on every mount and
+nothing ever wrote to it, so a screen-reader user was told nothing when new
+activity arrived (UNUSED-1).
 
 ## Event Types
 
@@ -2531,6 +2543,13 @@ Recorded as DEBT-SEC-5 and DEBT-SEC-9, both closed by ADR-211.
 | `diagnostics` | `CodeEditorDiagnostic[]` | `[]` | Initial diagnostics (CM mode only) |
 | `disabled` | `boolean` | `false` | Disabled state |
 | `cssClass` | `string` | — | Additional CSS class |
+| `keyBindings` | `Partial<Record<string, string>>` | — | Override a named action's shortcut, per KEYBOARD.md. Honoured since 2026-10-21 |
+
+Key combos use the house `+` separator, as in `"Ctrl+Shift+s"`, and are
+translated to CodeMirror's `-` form. The live default for save is `Mod-s`,
+which is Cmd on macOS. Before 2026-10-21 `keyBindings` was accepted,
+type-checked and ignored, so a caller remapping an action got the
+documented type and the original shortcut (UNUSED-1).
 
 ### Callbacks
 
@@ -6249,7 +6268,7 @@ dialog.open();
 | `container` | `HTMLElement \| string` | — | Container element or element ID (required) |
 | `mode` | `"single" \| "multi"` | `"single"` | Selection mode |
 | `selectionTarget` | `"resource" \| "container" \| "any"` | `"resource"` | What types of nodes are selectable |
-| `resourceTypeFilter` | `string[]` | — | Only show matching resource types |
+| `resourceTypeFilter` | `string[]` | — | Only show matching resource types. Applied since 2026-10-21. Before then the option reached a field nothing read |
 | `excludeNodeIds` | `string[]` | — | IDs of nodes that cannot be selected (dimmed) |
 | `initialExpandedNodeId` | `string` | — | Auto-expand tree to this node on load |
 | `preSelectedNodeIds` | `string[]` | — | Pre-selected nodes on render |
@@ -7085,7 +7104,6 @@ Track sizes can be mixed freely:
 | `setRows(rows)` | `void` | Update row track definitions |
 | `getState()` | `FlexGridLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore column/row definitions |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## FlexGridLayoutState
 
@@ -7099,7 +7117,7 @@ interface FlexGridLayoutState {
 
 ## Composability
 
-FlexGridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Components with a `setContained(true)` method are automatically put into contained mode.
+FlexGridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Components with a `setContained(true)` method are automatically put into contained mode; this layout does not implement one, for the reason below.
 
 ```js
 // A dashboard layout with mixed track sizes
@@ -7130,6 +7148,21 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.flexgridlayout` | Root | CSS Grid container |
 | `.flexgridlayout-cell` | Wrapper | Per-cell grid wrapper with placement |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.
 
 
 ---
@@ -7224,7 +7257,6 @@ direction: "horizontal", gap: 8
 | `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
 | `getState()` | `FlowLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## Global Exports
 
@@ -7239,6 +7271,21 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.flowlayout` | Root | Flex-wrap container |
 | `.flowlayout-child` | Wrapper | Per-child wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.
 
 
 ---
@@ -8947,7 +8994,6 @@ columns: "auto", minCellWidth: 200 (container: 350px -> 1 col)
 | `setColumns(n)` | `void` | Update columns dynamically (number or "auto") |
 | `getState()` | `GridLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (columns) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## GridLayoutState
 
@@ -8961,7 +9007,7 @@ interface GridLayoutState {
 
 ## Composability
 
-GridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Duck-typed child mounting checks for `setContained`, `show`, `getRootElement`, and falls back to direct `appendChild`.
+GridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Duck-typed child mounting checks for `setContained`, `show`, `getRootElement`, and falls back to direct `appendChild`. This layout does not implement `setContained`, for the reason below.
 
 ```js
 // Place gauges in a 2x2 grid
@@ -8987,6 +9033,21 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.gridlayout` | Root | CSS Grid container |
 | `.gridlayout-cell` | Wrapper | Per-child grid cell wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.
 
 
 ---
@@ -9945,7 +10006,6 @@ The `align` property maps to CSS absolute positioning:
 | `destroy()` | `void` | Full cleanup, destroy all layers |
 | `getRootElement()` | `HTMLElement \| null` | The root relative container |
 | `isVisible()` | `boolean` | Whether the layout is displayed |
-| `setContained(value)` | `void` | Set contained mode |
 | `addLayer(config)` | `void` | Add a layer on top of the stack |
 | `removeLayer(index)` | `void` | Remove a layer by index |
 | `removeLayerByKey(key)` | `void` | Remove a layer by its string key |
@@ -9995,6 +10055,21 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.layerlayout` | Root | Relative-positioned container |
 | `.layerlayout-layer` | Wrapper | Absolute-positioned layer wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.
 
 
 ---
@@ -11618,8 +11693,36 @@ createMarkdownRenderer({
     graphviz: true,         // Use @viz-js/viz if available (default: true)
     plantuml: true,         // Enable PlantUML server rendering (default: true)
     plantumlServer: "...",  // PlantUML server URL (default: public server)
+    className: "my-md",     // Extra class on the element render() writes into
 });
 ```
+
+### `highlight` and `math` are decided once per page
+
+`marked` is a global singleton and `marked.use()` mutates it, so the
+**first** renderer created in a page configures its extensions. A later
+`createMarkdownRenderer` that names a *different* `highlight` or `math`
+**throws**, because the call cannot be honoured without changing the
+renderer the first caller is holding:
+
+```
+[MarkdownRenderer] marked is already configured with math: true, and
+this call asks for false. marked.use() is global, so the first renderer
+on a page decides. Create one renderer with the options you want, or
+reload marked before changing them.
+```
+
+A later call naming the same values, or naming neither, is fine — which
+is the ordinary case, since most callers pass no options at all. Every
+other option is read per render and can differ freely between handles.
+
+Before 2026-10-21 the second call was silently given the first one's
+extensions.
+
+### `className` applies to `render()` only
+
+`render(md, target)` adds the class to `target`. `toHtml(md)` returns a
+string and has no wrapper to carry it.
 
 ### Disabling specific features
 
@@ -12180,7 +12283,7 @@ Factory: constructs a card and mounts it into `options.container`.
 | Method                              | Description |
 |-------------------------------------|-------------|
 | `setValue(v)`                       | Update the displayed value. |
-| `setTrend(trend \| null)`           | Add / replace / remove the trend annotation. |
+| `setTrend(trend \| null)`           | Add / replace / remove the trend annotation. Recolours the sparkline to match. |
 | `setSecondary(text \| null)`        | Add / replace / remove the secondary line. |
 | `setState(state, errorText?)`       | Switch lifecycle state. `errorText` only respected for `state === "error"`. |
 | `getRootElement()`                  | Returns the root `HTMLElement` (or `null` after `destroy`). |
@@ -13213,7 +13316,7 @@ const matrix = createPermissionMatrix({
 | `getState()` | Get current state map |
 | `getPendingChanges()` | Get array of pending changes |
 | `resetChanges()` | Revert all pending changes |
-| `exportData(format)` | Export matrix data as JSON |
+| `exportData(format)` | Export matrix data. `"json"` returns JSON, `"csv"` returns CSV. Before 2026-10-21 it returned JSON for both |
 | `refresh()` | Re-render the grid |
 
 ## Permission States
@@ -13232,6 +13335,12 @@ const matrix = createPermissionMatrix({
 | `Arrow keys` | Navigate between cells |
 | `Space` / `Enter` | Toggle cell state |
 | `Tab` / `Shift+Tab` | Move focus between controls |
+
+The grid is a roving tabindex: exactly one cell carries `tabindex="0"` and
+the rest carry `-1`, so `Tab` enters the matrix once and the arrow keys move
+within it. Before 2026-10-21 no cell was ever given the 0 at build time, so
+Tab skipped the matrix entirely and it could not be reached by keyboard
+(UNUSED-1).
 
 
 ---
@@ -16608,6 +16717,12 @@ checked for one from JavaScript, and an omitted `suppressIn` raised a
 
 The engine auto-detects the adapter from the attached element. You can also pass an explicit type to `attach()`.
 
+One engine drives one element. A second `attach()` on an engine that already
+holds an element **throws and names `detach()`**, because honouring it would
+mean deciding which element the caller meant. Before 2026-10-21 it overwrote
+the adapter without destroying it, so the first element kept an adapter
+nobody could reach and the engine silently rebound (UNUSED-1, ADR-200).
+
 | Adapter | Element Types | Token Storage |
 |---------|---------------|---------------|
 | `plaintext` | `<input>`, `<textarea>` | Serialized syntax inline in element value |
@@ -16622,7 +16737,7 @@ The `plaintext` and `contenteditable` adapters are built in. The others require 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `attach(element, adapterType?)` | `void` | Attach engine to a DOM element |
+| `attach(element, adapterType?)` | `void` | Attach engine to a DOM element. **Throws if the engine is already attached** — call `detach()` first |
 | `detach()` | `void` | Detach from the current element |
 | `destroy()` | `void` | Permanently destroy the engine |
 | `register(trigger)` | `void` | Register a `TriggerDefinition` |

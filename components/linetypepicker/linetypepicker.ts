@@ -721,5 +721,4 @@ export function createLineTypePicker(
     return new LineTypePicker(containerId, options);
 }
 
-window["LineTypePicker"] = LineTypePicker;
 window["createLineTypePicker"] = createLineTypePicker;

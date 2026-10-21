@@ -1193,11 +1193,40 @@ export function registerCommands(cmds: PaletteCommand[]): void
     CommandPalette.getInstance().registerCommands(cmds);
 }
 
+/**
+ * Configure the single palette, creating it if it does not exist.
+ *
+ * PAT-1. `CommandPalette.configure` is a STATIC member, and a factory
+ * cannot reach one. The class left `window` because it also carried a
+ * constructor that exposed every instance field, so the two statics
+ * are published here as functions instead. A static method is a
+ * function, and a function does not need a class to be callable.
+ *
+ * @param options - Palette options to apply.
+ * @returns The configured palette.
+ */
+export function configureCommandPalette(
+    options: CommandPaletteOptions): CommandPalette
+{
+    return CommandPalette.configure(options);
+}
+
+/**
+ * Return the single palette, creating it with defaults if needed.
+ *
+ * @returns The palette.
+ */
+export function getCommandPalette(): CommandPalette
+{
+    return CommandPalette.getInstance();
+}
+
 // ============================================================================
 // GLOBAL EXPORTS
 // ============================================================================
 
-window.CommandPalette = CommandPalette;
+window.configureCommandPalette = configureCommandPalette;
+window.getCommandPalette = getCommandPalette;
 window.openCommandPalette = openCommandPalette;
 window.registerCommand = registerCommand;
 window.registerCommands = registerCommands;

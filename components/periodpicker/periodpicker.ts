@@ -1215,6 +1215,5 @@ export function createPeriodPicker(
 
 if (typeof window !== "undefined")
 {
-    window["PeriodPicker"] = PeriodPicker;
     window["createPeriodPicker"] = createPeriodPicker;
 }

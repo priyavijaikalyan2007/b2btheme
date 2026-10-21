@@ -3473,6 +3473,5 @@ export function createConversation(
 
 if (typeof window !== "undefined")
 {
-    window["Conversation"] = Conversation;
     window["createConversation"] = createConversation;
 }

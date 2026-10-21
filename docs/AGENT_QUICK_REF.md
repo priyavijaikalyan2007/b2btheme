@@ -584,28 +584,28 @@ $control-height-xl=46px
 
 - CSS: `components/actionitems/actionitems.css`
 - JS: `components/actionitems/actionitems.js`
-- Globals: `ActionItems()`, `createActionItems()`
+- Globals: `createActionItems()`
 - Exports: `interface ActionItemPerson`, `type ActionItemPriority`, `type ActionItemStatus`, `interface ActionItemTag`, `interface ActionItem`, `interface ActionItemHoverCardContent`, `type ActionItemHoverRenderResult`, `type ActionItemHoverCardMode`, `type SortOption`, `type ActionItemsCollapseState`, `interface ActionItemFilter`, `interface ActionItemsOptions`, `interface ActionItemsHandle`, `class ActionItems`, `function createActionItems`
 
 ### activityfeed
 
 - CSS: `components/activityfeed/activityfeed.css`
 - JS: `components/activityfeed/activityfeed.js`
-- Globals: `ActivityFeed()`, `createActivityFeed()`
+- Globals: `createActivityFeed()`
 - Exports: `interface ActivityActor`, `interface ActivityEvent`, `interface ActivityFeedOptions`, `class ActivityFeed`, `function createActivityFeed`
 
 ### anchorlayout
 
 - CSS: `components/anchorlayout/anchorlayout.css`
 - JS: `components/anchorlayout/anchorlayout.js`
-- Globals: `AnchorLayout()`, `createAnchorLayout()`
+- Globals: `createAnchorLayout()`
 - Exports: `interface AnchorChildConfig`, `interface AnchorLayoutOptions`, `interface AnchorLayoutState`, `class AnchorLayout`, `function createAnchorLayout`
 
 ### anglepicker
 
 - CSS: `components/anglepicker/anglepicker.css`
 - JS: `components/anglepicker/anglepicker.js`
-- Globals: `AnglePicker()`, `createAnglePicker()`
+- Globals: `createAnglePicker()`
 - Exports: `interface AnglePickerOptions`, `class AnglePicker`, `function createAnglePicker`
 
 ### annotation
@@ -619,14 +619,14 @@ $control-height-xl=46px
 
 - CSS: `components/applauncher/applauncher.css`
 - JS: `components/applauncher/applauncher.js`
-- Globals: `AppLauncher()`, `createAppLauncher()`
+- Globals: `createAppLauncher()`
 - Exports: `interface AppItem`, `interface AppCategory`, `type AppLauncherMode`, `interface AppLauncherOptions`, `class AppLauncher`, `function createAppLauncher`
 
 ### auditlogviewer
 
 - CSS: `components/auditlogviewer/auditlogviewer.css`
 - JS: `components/auditlogviewer/auditlogviewer.js`
-- Globals: `AuditLogViewer()`, `createAuditLogViewer()`
+- Globals: `createAuditLogViewer()`
 - Exports: `interface AuditLogEntry`, `interface AuditLogFilters`, `interface AuditLogViewerOptions`, `class AuditLogViewer`, `function createAuditLogViewer`
 
 ### authcard
@@ -640,21 +640,21 @@ $control-height-xl=46px
 
 - CSS: `components/bannerbar/bannerbar.css`
 - JS: `components/bannerbar/bannerbar.js`
-- Globals: `BannerBar()`, `createBannerBar()`, `showBanner()`
+- Globals: `createBannerBar()`, `showBanner()`
 - Exports: `type BannerBarVariant`, `interface BannerBarOptions`, `class BannerBar`, `function createBannerBar`, `function showBanner`
 
 ### borderlayout
 
 - CSS: `components/borderlayout/borderlayout.css`
 - JS: `components/borderlayout/borderlayout.js`
-- Globals: `BorderLayout()`, `createBorderLayout()`
+- Globals: `createBorderLayout()`
 - Exports: `type BorderRegion`, `interface BorderLayoutOptions`, `interface BorderLayoutState`, `class BorderLayout`, `function createBorderLayout`
 
 ### boxlayout
 
 - CSS: `components/boxlayout/boxlayout.css`
 - JS: `components/boxlayout/boxlayout.js`
-- Globals: `BoxLayout()`, `createBoxLayout()`
+- Globals: `createBoxLayout()`
 - Exports: `interface BoxLayoutChildConfig`, `interface BoxLayoutOptions`, `interface BoxLayoutState`, `class BoxLayout`, `function createBoxLayout`
 
 ### breadcrumb
@@ -668,14 +668,14 @@ $control-height-xl=46px
 
 - CSS: `components/cardlayout/cardlayout.css`
 - JS: `components/cardlayout/cardlayout.js`
-- Globals: `CardLayout()`, `createCardLayout()`
+- Globals: `createCardLayout()`
 - Exports: `interface CardConfig`, `interface CardLayoutOptions`, `interface CardLayoutState`, `class CardLayout`, `function createCardLayout`
 
 ### chartpanel
 
 - CSS: `components/chartpanel/chartpanel.css`
 - JS: `components/chartpanel/chartpanel.js`
-- Globals: `ChartPanel()`, `createChartPanel()`
+- Globals: `createChartPanel()`
 - Exports: `type ChartPanelKind`, `type ChartPanelState`, `type ChartPanelIntent`, `interface ChartPanelSeries`, `interface ChartPanelYAxis`, `interface ChartPanelXAxis`, `interface ChartPanelOptions`, `interface ChartPanelHandle`, `class ChartPanel`, `function createChartPanel`
 
 ### chatdock
@@ -689,14 +689,14 @@ $control-height-xl=46px
 
 - CSS: `components/codeeditor/codeeditor.css`
 - JS: `components/codeeditor/codeeditor.js`
-- Globals: `CodeEditor()`, `createCodeEditor()`
+- Globals: `createCodeEditor()`
 - Exports: `type CodeEditorSeverity`, `interface CodeEditorDiagnostic`, `type CodeEditorLanguage`, `type CodeEditorToolbarAction`, `interface CodeEditorOptions`, `class CodeEditor`, `function createCodeEditor`
 
 ### colorpicker
 
 - CSS: `components/colorpicker/colorpicker.css`
 - JS: `components/colorpicker/colorpicker.js`
-- Globals: `ColorPicker()`, `createColorPicker()`
+- Globals: `createColorPicker()`
 - Exports: `interface ColorPickerOptions`, `class ColorPicker`, `function createColorPicker`
 
 ### columnspicker
@@ -710,21 +710,21 @@ $control-height-xl=46px
 
 - CSS: `components/commandpalette/commandpalette.css`
 - JS: `components/commandpalette/commandpalette.js`
-- Globals: `CommandPalette()`, `openCommandPalette()`, `registerCommand()`, `registerCommands()`
-- Exports: `interface PaletteCommand`, `interface CommandPaletteOptions`, `class CommandPalette`, `function openCommandPalette`, `function registerCommand`, `function registerCommands`
+- Globals: `configureCommandPalette()`, `getCommandPalette()`, `openCommandPalette()`, `registerCommand()`, `registerCommands()`
+- Exports: `interface PaletteCommand`, `interface CommandPaletteOptions`, `class CommandPalette`, `function openCommandPalette`, `function registerCommand`, `function registerCommands`, `function configureCommandPalette`, `function getCommandPalette`
 
 ### commentoverlay
 
 - CSS: `components/commentoverlay/commentoverlay.css`
 - JS: `components/commentoverlay/commentoverlay.js`
-- Globals: `CommentOverlay()`, `createCommentOverlay()`
+- Globals: `createCommentOverlay()`
 - Exports: `interface MentionUser`, `interface CommentData`, `interface CommentThread`, `interface CommentPinData`, `interface CommentOverlayOptions`, `class CommentOverlay`, `function createCommentOverlay`
 
 ### confirmdialog
 
 - CSS: `components/confirmdialog/confirmdialog.css`
 - JS: `components/confirmdialog/confirmdialog.js`
-- Globals: `ConfirmDialog()`, `showConfirmDialog()`, `showDangerConfirmDialog()`
+- Globals: `showConfirmDialog()`, `showDangerConfirmDialog()`
 - Exports: `interface ConfirmDialogOptions`, `class ConfirmDialog`, `function showConfirmDialog`, `function showDangerConfirmDialog`
 
 ### contextmenu
@@ -738,28 +738,28 @@ $control-height-xl=46px
 
 - CSS: `components/conversation/conversation.css`
 - JS: `components/conversation/conversation.js`
-- Globals: `Conversation()`, `createConversation()`, `mcpBridge()`
+- Globals: `createConversation()`, `mcpBridge()`
 - Exports: `type ConversationRole`, `type CopyFormat`, `type FeedbackSentiment`, `type StreamState`, `type McpAppDisplayMode`, `interface McpAppConfig`, `interface ConversationMessage`, `interface FeedbackData`, `interface ConversationSession`, `interface StreamHandle`, `interface ConversationError`, `interface ConversationOptions`, `class Conversation`, `function createConversation`
 
 ### cronpicker
 
 - CSS: `components/cronpicker/cronpicker.css`
 - JS: `components/cronpicker/cronpicker.js`
-- Globals: `CronPicker()`, `createCronPicker()`
+- Globals: `createCronPicker()`
 - Exports: `interface CronPreset`, `interface CronPickerOptions`, `class CronPicker`, `function createCronPicker`
 
 ### datagrid
 
 - CSS: `components/datagrid/datagrid.css`
 - JS: `components/datagrid/datagrid.js`
-- Globals: `DataGrid()`, `createDataGrid()`
+- Globals: `createDataGrid()`
 - Exports: `interface DataGridColumn`, `interface DataGridRow`, `interface DataGridOptions`, `class DataGrid`, `function createDataGrid`
 
 ### datepicker
 
 - CSS: `components/datepicker/datepicker.css`
 - JS: `components/datepicker/datepicker.js`
-- Globals: `DatePicker()`, `createDatePicker()`
+- Globals: `createDatePicker()`
 - Exports: `interface DatePickerOptions`, `class DatePicker`, `function createDatePicker`
 
 ### diagramengine
@@ -773,7 +773,7 @@ $control-height-xl=46px
 
 - CSS: `components/docklayout/docklayout.css`
 - JS: `components/docklayout/docklayout.js`
-- Globals: `DockLayout()`, `createDockLayout()`
+- Globals: `createDockLayout()`
 - Exports: `interface LayoutState`, `interface DockSlotComponent`, `type DockResizeListener`, `type DockCollapseListener`, `interface DockLayoutOptions`, `class DockLayout`, `function createDockLayout`
 
 ### docviewer
@@ -787,7 +787,7 @@ $control-height-xl=46px
 
 - CSS: `components/durationpicker/durationpicker.css`
 - JS: `components/durationpicker/durationpicker.js`
-- Globals: `DurationPicker()`, `createDurationPicker()`
+- Globals: `createDurationPicker()`
 - Exports: `type DurationUnit`, `type DurationPattern`, `interface DurationValue`, `interface DurationPickerOptions`, `class DurationPicker`, `function createDurationPicker`
 
 ### dynamiccanvas
@@ -808,70 +808,70 @@ $control-height-xl=46px
 
 - CSS: `components/editablecombobox/editablecombobox.css`
 - JS: `components/editablecombobox/editablecombobox.js`
-- Globals: `EditableComboBox()`, `createEditableComboBox()`
+- Globals: `createEditableComboBox()`
 - Exports: `interface ComboBoxItem`, `interface ComboBoxOptions`, `class EditableComboBox`, `function createEditableComboBox`
 
 ### emptystate
 
 - CSS: `components/emptystate/emptystate.css`
 - JS: `components/emptystate/emptystate.js`
-- Globals: `EmptyState()`, `createEmptyState()`
+- Globals: `createEmptyState()`
 - Exports: `interface EmptyStateOptions`, `class EmptyState`, `function createEmptyState`
 
 ### errordialog
 
 - CSS: `components/errordialog/errordialog.css`
 - JS: `components/errordialog/errordialog.js`
-- Globals: `ErrorDialog()`, `showErrorDialog()`
+- Globals: `showErrorDialog()`
 - Exports: `interface LiterateError`, `class ErrorDialog`, `function showErrorDialog`
 
 ### explorerpicker
 
 - CSS: `components/explorerpicker/explorerpicker.css`
 - JS: `components/explorerpicker/explorerpicker.js`
-- Globals: `ExplorerPickerImpl()`, `createExplorerPicker()`
+- Globals: `createExplorerPicker()`
 - Exports: `type ExplorerNodeType`, `interface ExplorerNode`, `interface ExplorerPickerSelection`, `interface OntologyTypeEntry`, `interface ExplorerPickerState`, `interface ExplorerPickerOptions`, `class ExplorerPickerImpl`, `function createExplorerPicker`
 
 ### facetsearch
 
 - CSS: `components/facetsearch/facetsearch.css`
 - JS: `components/facetsearch/facetsearch.js`
-- Globals: `FacetSearch()`, `createFacetSearch()`, `parseFacetQuery()`
+- Globals: `createFacetSearch()`, `parseFacetQuery()`
 - Exports: `type FacetValueType`, `type FacetSearchSize`, `interface FacetDefinition`, `interface ParsedFacet`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `class FacetSearch`, `function createFacetSearch`
 
 ### fileexplorer
 
 - CSS: `components/fileexplorer/fileexplorer.css`
 - JS: `components/fileexplorer/fileexplorer.js`
-- Globals: `FileExplorer()`, `createFileExplorer()`
+- Globals: `createFileExplorer()`
 - Exports: `interface FileNode`, `interface FileContextMenuItem`, `interface BreadcrumbSegment`, `interface FileExplorerColumn`, `interface FileExplorerOptions`, `class FileExplorer`, `function createFileExplorer`
 
 ### fileupload
 
 - CSS: `components/fileupload/fileupload.css`
 - JS: `components/fileupload/fileupload.js`
-- Globals: `FileUpload()`, `createFileUpload()`
+- Globals: `createFileUpload()`
 - Exports: `interface FileDownloadItem`, `interface FileUploadOptions`, `class FileUpload`, `function createFileUpload`
 
 ### flexgridlayout
 
 - CSS: `components/flexgridlayout/flexgridlayout.css`
 - JS: `components/flexgridlayout/flexgridlayout.js`
-- Globals: `FlexGridLayout()`, `createFlexGridLayout()`
+- Globals: `createFlexGridLayout()`
 - Exports: `interface FlexGridCellConfig`, `interface FlexGridLayoutOptions`, `interface FlexGridLayoutState`, `class FlexGridLayout`, `function createFlexGridLayout`
 
 ### flowlayout
 
 - CSS: `components/flowlayout/flowlayout.css`
 - JS: `components/flowlayout/flowlayout.js`
-- Globals: `FlowLayout()`, `createFlowLayout()`
+- Globals: `createFlowLayout()`
 - Exports: `interface FlowLayoutOptions`, `interface FlowLayoutState`, `class FlowLayout`, `function createFlowLayout`
 
 ### fontdropdown
 
 - CSS: `components/fontdropdown/fontdropdown.css`
 - JS: `components/fontdropdown/fontdropdown.js`
-- Globals: `FontDropdown()`, `createFontDropdown()`
+- Globals: `createFontDropdown()`
 - Exports: `interface FontItem`, `interface FontDropdownOptions`, `class FontDropdown`, `function createFontDropdown`
 
 ### formdialog
@@ -885,21 +885,21 @@ $control-height-xl=46px
 
 - CSS: `components/gauge/gauge.css`
 - JS: `components/gauge/gauge.js`
-- Globals: `Gauge()`, `createBarGauge()`, `createGauge()`, `createRingGauge()`, `createTileGauge()`
+- Globals: `createBarGauge()`, `createGauge()`, `createRingGauge()`, `createTileGauge()`
 - Exports: `type GaugeShape`, `type GaugeMode`, `type GaugeSize`, `type BarOrientation`, `interface GaugeThreshold`, `interface GaugeOptions`, `class Gauge`, `function createGauge`, `function createTileGauge`, `function createRingGauge`, `function createBarGauge`
 
 ### gradientpicker
 
 - CSS: `components/gradientpicker/gradientpicker.css`
 - JS: `components/gradientpicker/gradientpicker.js`
-- Globals: `GradientPicker()`, `createGradientPicker()`
+- Globals: `createGradientPicker()`
 - Exports: `interface GradientStop`, `interface GradientValue`, `interface GradientPickerOptions`, `interface GradientPreset`, `interface GradientDefinition`, `class GradientPicker`, `function createGradientPicker`
 
 ### graphcanvas
 
 - CSS: `components/graphcanvas/graphcanvas.css`
 - JS: `components/graphcanvas/graphcanvas.js`
-- Globals: `GraphCanvasImpl()`, `createGraphCanvas()`
+- Globals: `createGraphCanvas()`
 - Exports: `type GraphMode`, `type GraphLayout`, `type LayoutDirection`, `type GraphNodeStatus`, `type EdgeStyle`, `type EdgeProvenance`, `type EdgeLabelDensity`, `interface GraphNode`, `interface GraphEdge`, `interface GraphHoverCardBadge`, `interface GraphHoverCardContent`, `type GraphTooltipRenderResult`, `type GraphTooltipMode`, `interface GraphCanvasOptions`, `interface GraphCanvas`, `function createGraphCanvas`
 
 ### graphlegend
@@ -927,7 +927,7 @@ $control-height-xl=46px
 
 - CSS: `components/gridlayout/gridlayout.css`
 - JS: `components/gridlayout/gridlayout.js`
-- Globals: `GridLayout()`, `createGridLayout()`
+- Globals: `createGridLayout()`
 - Exports: `interface GridLayoutOptions`, `interface GridLayoutState`, `class GridLayout`, `function createGridLayout`
 
 ### guidedtour
@@ -976,7 +976,7 @@ $control-height-xl=46px
 
 - CSS: `components/layerlayout/layerlayout.css`
 - JS: `components/layerlayout/layerlayout.js`
-- Globals: `LayerLayout()`, `createLayerLayout()`
+- Globals: `createLayerLayout()`
 - Exports: `interface LayerConfig`, `interface LayerLayoutOptions`, `interface LayerLayoutState`, `class LayerLayout`, `function createLayerLayout`
 
 ### layoutpicker
@@ -990,35 +990,35 @@ $control-height-xl=46px
 
 - CSS: `components/lineendingpicker/lineendingpicker.css`
 - JS: `components/lineendingpicker/lineendingpicker.js`
-- Globals: `LineEndingPicker()`, `createLineEndingPicker()`
+- Globals: `createLineEndingPicker()`
 - Exports: `interface LineEndingItem`, `interface LineEndingPickerOptions`, `class LineEndingPicker`, `function createLineEndingPicker`
 
 ### lineshapepicker
 
 - CSS: `components/lineshapepicker/lineshapepicker.css`
 - JS: `components/lineshapepicker/lineshapepicker.js`
-- Globals: `LineShapePicker()`, `createLineShapePicker()`
+- Globals: `createLineShapePicker()`
 - Exports: `interface LineShapeItem`, `interface LineShapePickerOptions`, `class LineShapePicker`, `function createLineShapePicker`
 
 ### linetypepicker
 
 - CSS: `components/linetypepicker/linetypepicker.css`
 - JS: `components/linetypepicker/linetypepicker.js`
-- Globals: `LineTypePicker()`, `createLineTypePicker()`
+- Globals: `createLineTypePicker()`
 - Exports: `interface LineTypeItem`, `interface LineTypePickerOptions`, `class LineTypePicker`, `function createLineTypePicker`
 
 ### linewidthpicker
 
 - CSS: `components/linewidthpicker/linewidthpicker.css`
 - JS: `components/linewidthpicker/linewidthpicker.js`
-- Globals: `LineWidthPicker()`, `createLineWidthPicker()`
+- Globals: `createLineWidthPicker()`
 - Exports: `interface LineWidthItem`, `interface LineWidthPickerOptions`, `class LineWidthPicker`, `function createLineWidthPicker`
 
 ### logconsole
 
 - CSS: `components/logconsole/logconsole.css`
 - JS: `components/logconsole/logconsole.js`
-- Globals: `LogConsole()`, `createLogConsole()`
+- Globals: `createLogConsole()`
 - Exports: `type LogLevel`, `interface LogEntry`, `interface LogConsoleLevelColors`, `interface LogConsoleOptions`, `class LogConsole`, `function createLogConsole`
 
 ### logutility
@@ -1032,21 +1032,21 @@ $control-height-xl=46px
 
 - CSS: `components/magnifier/magnifier.css`
 - JS: `components/magnifier/magnifier.js`
-- Globals: `Magnifier()`, `createMagnifier()`
+- Globals: `createMagnifier()`
 - Exports: `interface MagnifierOptions`, `class Magnifier`, `function createMagnifier`
 
 ### marginspicker
 
 - CSS: `components/marginspicker/marginspicker.css`
 - JS: `components/marginspicker/marginspicker.js`
-- Globals: `MarginsPicker()`, `createMarginsPicker()`
+- Globals: `createMarginsPicker()`
 - Exports: `interface MarginPreset`, `interface MarginsPickerOptions`, `interface MarginsPickerAPI`, `class MarginsPicker`, `function createMarginsPicker`
 
 ### markdowneditor
 
 - CSS: `components/markdowneditor/markdowneditor.css`
 - JS: `components/markdowneditor/markdowneditor.js`
-- Globals: `MarkdownEditor()`, `createMarkdownEditor()`, `showMarkdownEditorModal()`
+- Globals: `createMarkdownEditor()`, `showMarkdownEditorModal()`
 - Exports: `interface MarkdownEditorOptions`, `interface MarkdownEditorModalOptions`, `class MarkdownEditor`, `function createMarkdownEditor`
 
 ### markdownrenderer
@@ -1060,35 +1060,35 @@ $control-height-xl=46px
 
 - CSS: `components/marketinghero/marketinghero.css`
 - JS: `components/marketinghero/marketinghero.js`
-- Globals: `MarketingHero()`, `createMarketingHero()`
+- Globals: `createMarketingHero()`
 - Exports: `interface MarketingHeroAction`, `interface MarketingHeroOptions`, `class MarketingHero`, `function createMarketingHero`
 
 ### maskedentry
 
 - CSS: `components/maskedentry/maskedentry.css`
 - JS: `components/maskedentry/maskedentry.js`
-- Globals: `MaskedEntry()`, `createMaskedEntry()`
+- Globals: `createMaskedEntry()`
 - Exports: `interface MaskedEntryOptions`, `class MaskedEntry`, `function createMaskedEntry`
 
 ### metriccard
 
 - CSS: `components/metriccard/metriccard.css`
 - JS: `components/metriccard/metriccard.js`
-- Globals: `MetricCard()`, `createMetricCard()`
+- Globals: `createMetricCard()`
 - Exports: `type MetricCardState`, `type MetricCardTrendDirection`, `type MetricCardTrendIntent`, `type MetricCardSize`, `interface MetricCardTrend`, `interface MetricCardOptions`, `interface MetricCardHandle`, `class MetricCard`, `function createMetricCard`
 
 ### multiselectcombo
 
 - CSS: `components/multiselectcombo/multiselectcombo.css`
 - JS: `components/multiselectcombo/multiselectcombo.js`
-- Globals: `MultiselectCombo()`, `createMultiselectCombo()`
+- Globals: `createMultiselectCombo()`
 - Exports: `interface ComboItem`, `interface MultiselectComboOptions`, `class MultiselectCombo`, `function createMultiselectCombo`
 
 ### navrail
 
 - CSS: `components/navrail/navrail.css`
 - JS: `components/navrail/navrail.js`
-- Globals: `NavRail()`, `NavRailManager()`, `createNavRail()`
+- Globals: `createNavRail()`
 - Exports: `type NavRailPosition`, `type NavRailSize`, `type NavRailBadgeVariant`, `interface NavRailItem`, `interface NavRailCategory`, `interface NavRailHeader`, `interface NavRailSearch`, `interface NavRailFooter`, `interface NavRailOptions`, `interface NavRailHandle`, `class NavRailManager`, `class NavRail`, `function createNavRail`
 
 ### notificationcenter
@@ -1109,56 +1109,56 @@ $control-height-xl=46px
 
 - CSS: `components/peoplepicker/peoplepicker.css`
 - JS: `components/peoplepicker/peoplepicker.js`
-- Globals: `PeoplePicker()`, `createPeoplePicker()`
+- Globals: `createPeoplePicker()`
 - Exports: `interface PersonData`, `interface PeoplePickerOptions`, `class PeoplePicker`, `function createPeoplePicker`
 
 ### periodpicker
 
 - CSS: `components/periodpicker/periodpicker.css`
 - JS: `components/periodpicker/periodpicker.js`
-- Globals: `PeriodPicker()`, `createPeriodPicker()`
+- Globals: `createPeriodPicker()`
 - Exports: `type PeriodGranularity`, `type PeriodMode`, `interface PeriodValue`, `interface PeriodPickerOptions`, `class PeriodPicker`, `function createPeriodPicker`
 
 ### permissionmatrix
 
 - CSS: `components/permissionmatrix/permissionmatrix.css`
 - JS: `components/permissionmatrix/permissionmatrix.js`
-- Globals: `PermissionMatrix()`, `createPermissionMatrix()`
+- Globals: `createPermissionMatrix()`
 - Exports: `type PermissionState`, `type ExportFormat`, `interface Role`, `interface Permission`, `interface PermissionGroup`, `interface MatrixCell`, `interface PermissionChange`, `interface BulkChange`, `interface MatrixExportData`, `interface PermissionMatrixOptions`, `class PermissionMatrix`, `function createPermissionMatrix`
 
 ### personchip
 
 - CSS: `components/personchip/personchip.css`
 - JS: `components/personchip/personchip.js`
-- Globals: `PersonChip()`, `createPersonChip()`
+- Globals: `createPersonChip()`
 - Exports: `type PersonChipSize`, `type PersonChipStatus`, `interface PersonChipOptions`, `class PersonChip`, `function createPersonChip`
 
 ### pill
 
 - CSS: `components/pill/pill.css`
 - JS: `components/pill/pill.js`
-- Globals: `Pill()`, `createPill()`
+- Globals: `createPill()`
 - Exports: `type PillColor`, `interface PillOptions`, `interface PillStyleOverrides`, `class Pill`, `function createPill`
 
 ### presenceindicator
 
 - CSS: `components/presenceindicator/presenceindicator.css`
 - JS: `components/presenceindicator/presenceindicator.js`
-- Globals: `PresenceIndicator()`, `createPresenceIndicator()`
+- Globals: `createPresenceIndicator()`
 - Exports: `type PresenceSize`, `interface PersonData`, `interface PresenceIndicatorOptions`, `class PresenceIndicator`, `function createPresenceIndicator`
 
 ### progressmodal
 
 - CSS: `components/progressmodal/progressmodal.css`
 - JS: `components/progressmodal/progressmodal.js`
-- Globals: `ProgressModal()`, `showProgressModal()`, `showSteppedProgressModal()`
+- Globals: `showProgressModal()`, `showSteppedProgressModal()`
 - Exports: `interface ProgressLogEntry`, `interface ProgressModalOptions`, `class ProgressModal`, `function showProgressModal`, `function showSteppedProgressModal`
 
 ### prompttemplatemanager
 
 - CSS: `components/prompttemplatemanager/prompttemplatemanager.css`
 - JS: `components/prompttemplatemanager/prompttemplatemanager.js`
-- Globals: `PromptTemplateManager()`, `createPromptTemplateManager()`
+- Globals: `createPromptTemplateManager()`
 - Exports: `type PromptVariableType`, `interface PromptVariable`, `interface PromptTemplate`, `interface PromptTemplateManagerOptions`, `class PromptTemplateManager`, `function createPromptTemplateManager`
 
 ### propertyinspector
@@ -1172,14 +1172,14 @@ $control-height-xl=46px
 
 - CSS: `components/reasoningaccordion/reasoningaccordion.css`
 - JS: `components/reasoningaccordion/reasoningaccordion.js`
-- Globals: `ReasoningAccordion()`, `createReasoningAccordion()`
+- Globals: `createReasoningAccordion()`
 - Exports: `type ReasoningStepStatus`, `type ReasoningAccordionSize`, `interface ReasoningStep`, `interface ReasoningAccordionOptions`, `class ReasoningAccordion`, `function createReasoningAccordion`
 
 ### relationshipmanager
 
 - CSS: `components/relationshipmanager/relationshipmanager.css`
 - JS: `components/relationshipmanager/relationshipmanager.js`
-- Globals: `RelationshipManagerImpl()`, `createRelationshipManager()`
+- Globals: `createRelationshipManager()`
 - Exports: `interface RelationshipDefinitionSummary`, `type RelationshipSortMode`, `type RelationshipCollapseState`, `interface RelationshipInstance`, `interface CreateRelationshipRequest`, `interface ResourceSearchResult`, `interface RelationshipManagerOptions`, `interface RelationshipManager`, `function createRelationshipManager`
 
 ### ribbon
@@ -1193,63 +1193,63 @@ $control-height-xl=46px
 
 - CSS: `components/ribbonbuilder/ribbonbuilder.css`
 - JS: `components/ribbonbuilder/ribbonbuilder.js`
-- Globals: `RibbonBuilderImpl()`, `createRibbonBuilder()`
+- Globals: `createRibbonBuilder()`
 - Exports: `type RibbonButtonSize`, `type RibbonControlType`, `interface RibbonControlBase`, `interface RibbonGroup`, `interface RibbonTab`, `interface RibbonOptions`, `interface RibbonBuilderOptions`, `interface RibbonBuilderHandle`, `function createRibbonBuilder`
 
 ### richtextinput
 
 - CSS: `components/richtextinput/richtextinput.css`
 - JS: `components/richtextinput/richtextinput.js`
-- Globals: `RichTextInput()`, `createRichTextInput()`
+- Globals: `createRichTextInput()`
 - Exports: `type FormattingAction`, `interface StieCompatTriggerDefinition`, `interface RichTextInputOptions`, `class RichTextInput`, `function createRichTextInput`
 
 ### ruler
 
 - CSS: `components/ruler/ruler.css`
 - JS: `components/ruler/ruler.js`
-- Globals: `Ruler()`, `createRuler()`
+- Globals: `createRuler()`
 - Exports: `interface RulerOptions`, `class Ruler`, `function createRuler`
 
 ### searchbox
 
 - CSS: `components/searchbox/searchbox.css`
 - JS: `components/searchbox/searchbox.js`
-- Globals: `SearchBox()`, `createSearchBox()`
+- Globals: `createSearchBox()`
 - Exports: `interface SearchBoxOptions`, `class SearchBox`, `function createSearchBox`
 
 ### sharedialog
 
 - CSS: `components/sharedialog/sharedialog.css`
 - JS: `components/sharedialog/sharedialog.js`
-- Globals: `ShareDialog()`, `createShareDialog()`, `showShareDialog()`
+- Globals: `createShareDialog()`, `showShareDialog()`
 - Exports: `interface PersonData`, `interface AccessLevel`, `interface SharedPerson`, `interface ShareDialogResult`, `interface ShareDialogOptions`, `class ShareDialog`, `function showShareDialog`, `function createShareDialog`
 
 ### sidebar
 
 - CSS: `components/sidebar/sidebar.css`
 - JS: `components/sidebar/sidebar.js`
-- Globals: `Sidebar()`, `SidebarManager()`, `createDockedSidebar()`, `createFloatingSidebar()`, `createSidebar()`
+- Globals: `createDockedSidebar()`, `createFloatingSidebar()`, `createSidebar()`
 - Exports: `type SidebarDockPosition`, `type SidebarMode`, `interface SidebarOptions`, `class Sidebar`, `class SidebarManager`, `function createSidebar`, `function createDockedSidebar`, `function createFloatingSidebar`
 
 ### sitefooter
 
 - CSS: `components/sitefooter/sitefooter.css`
 - JS: `components/sitefooter/sitefooter.js`
-- Globals: `SiteFooter()`, `createSiteFooter()`
+- Globals: `createSiteFooter()`
 - Exports: `interface SiteFooterLink`, `interface SiteFooterGroup`, `interface SiteFooterOptions`, `class SiteFooter`, `function createSiteFooter`
 
 ### sizespicker
 
 - CSS: `components/sizespicker/sizespicker.css`
 - JS: `components/sizespicker/sizespicker.js`
-- Globals: `SizesPicker()`, `createSizesPicker()`
+- Globals: `createSizesPicker()`
 - Exports: `interface SizePreset`, `interface SizesPickerOptions`, `interface SizesPickerAPI`, `class SizesPicker`, `function createSizesPicker`
 
 ### skeletonloader
 
 - CSS: `components/skeletonloader/skeletonloader.css`
 - JS: `components/skeletonloader/skeletonloader.js`
-- Globals: `SkeletonLoader()`, `createSkeletonLoader()`
+- Globals: `createSkeletonLoader()`
 - Exports: `interface SkeletonLoaderOptions`, `class SkeletonLoader`, `function createSkeletonLoader`
 
 ### slider
@@ -1263,8 +1263,8 @@ $control-height-xl=46px
 
 - CSS: `components/smarttextinput/smarttextinput.css`
 - JS: `components/smarttextinput/smarttextinput.js`
-- Globals: `SmartTextInputEngine()`, `createSmartTextInput()`
-- Exports: `type InputAdapterType`, `type TriggerState`, `type TokenRenderType`, `type SuppressContext`, `type PopoverCloseReason`, `type StieEventName`, `type Unsubscribe`, `interface TriggerActivation`, `interface DataSourceResult`, `interface TriggerDataSource`, `interface TokenRenderer`, `interface TokenSerializer`, `interface TriggerDefinition`, `interface ResolvedToken`, `interface DeserializedToken`, `interface RenderContext`, `interface CursorPosition`, `interface CursorCoordinates`, `interface CursorContext`, `interface InputAdapter`, `interface TriggerOpenEvent`, `interface TriggerQueryEvent`, `interface TriggerCloseEvent`, `interface TriggerSession`, `interface SmartTextInputOptions`, `class SmartTextInputEngine`, `function createSmartTextInput`
+- Globals: `createSmartTextInput()`, `renderSmartTextTokens()`
+- Exports: `type InputAdapterType`, `type TriggerState`, `type TokenRenderType`, `type SuppressContext`, `type PopoverCloseReason`, `type StieEventName`, `type Unsubscribe`, `interface TriggerActivation`, `interface DataSourceResult`, `interface TriggerDataSource`, `interface TokenRenderer`, `interface TokenSerializer`, `interface TriggerDefinition`, `interface ResolvedToken`, `interface DeserializedToken`, `interface RenderContext`, `interface CursorPosition`, `interface CursorCoordinates`, `interface CursorContext`, `interface InputAdapter`, `interface TriggerOpenEvent`, `interface TriggerQueryEvent`, `interface TriggerCloseEvent`, `interface TriggerSession`, `interface SmartTextInputOptions`, `class SmartTextInputEngine`, `function createSmartTextInput`, `function renderSmartTextTokens`
 
 ### spacingpicker
 
@@ -1284,14 +1284,14 @@ $control-height-xl=46px
 
 - CSS: `components/splitlayout/splitlayout.css`
 - JS: `components/splitlayout/splitlayout.js`
-- Globals: `SplitLayout()`, `createSplitLayout()`
+- Globals: `createSplitLayout()`
 - Exports: `interface SplitPaneConfig`, `interface SplitLayoutOptions`, `interface SplitLayoutState`, `class SplitLayout`, `function createSplitLayout`
 
 ### sprintpicker
 
 - CSS: `components/sprintpicker/sprintpicker.css`
 - JS: `components/sprintpicker/sprintpicker.js`
-- Globals: `SprintPicker()`, `createSprintPicker()`
+- Globals: `createSprintPicker()`
 - Exports: `type SprintNaming`, `type SprintViewMode`, `interface SprintInfo`, `interface SprintValue`, `interface SprintPickerOptions`, `class SprintPicker`, `function createSprintPicker`
 
 ### stacklayout
@@ -1305,14 +1305,14 @@ $control-height-xl=46px
 
 - CSS: `components/statusbadge/statusbadge.css`
 - JS: `components/statusbadge/statusbadge.js`
-- Globals: `StatusBadge()`, `createStatusBadge()`
+- Globals: `createStatusBadge()`
 - Exports: `interface StatusBadgeOptions`, `class StatusBadge`, `function createStatusBadge`
 
 ### statusbar
 
 - CSS: `components/statusbar/statusbar.css`
 - JS: `components/statusbar/statusbar.js`
-- Globals: `StatusBar()`, `createStatusBar()`
+- Globals: `createStatusBar()`
 - Exports: `interface StatusBarRegion`, `interface StatusBarOptions`, `class StatusBar`, `function createStatusBar`
 
 ### stepper
@@ -1333,28 +1333,28 @@ $control-height-xl=46px
 
 - CSS: `components/symbolpicker/symbolpicker.css`
 - JS: `components/symbolpicker/symbolpicker.js`
-- Globals: `SymbolPicker()`, `createSymbolPicker()`
+- Globals: `createSymbolPicker()`
 - Exports: `interface SymbolItem`, `interface SymbolCategory`, `interface SymbolPickerOptions`, `class SymbolPicker`, `function createSymbolPicker`
 
 ### tabbedpanel
 
 - CSS: `components/tabbedpanel/tabbedpanel.css`
 - JS: `components/tabbedpanel/tabbedpanel.js`
-- Globals: `TabbedPanel()`, `TabbedPanelManager()`, `createDockedTabbedPanel()`, `createFloatingTabbedPanel()`, `createTabbedPanel()`
+- Globals: `createDockedTabbedPanel()`, `createFloatingTabbedPanel()`, `createTabbedPanel()`
 - Exports: `type TabbedPanelMode`, `type TabbedPanelDockPosition`, `type TabBarPosition`, `type TabTitleMode`, `interface TabDefinition`, `interface TabbedPanelOptions`, `class TabbedPanel`, `class TabbedPanelManager`, `function createTabbedPanel`, `function createDockedTabbedPanel`, `function createFloatingTabbedPanel`
 
 ### tagger
 
 - CSS: `components/tagger/tagger.css`
 - JS: `components/tagger/tagger.js`
-- Globals: `Tagger()`, `createTagger()`
+- Globals: `createTagger()`
 - Exports: `interface TagCategory`, `interface TagItem`, `interface TaggerOptions`, `class Tagger`, `function createTagger`
 
 ### tenantswitcher
 
 - CSS: `components/tenantswitcher/tenantswitcher.css`
 - JS: `components/tenantswitcher/tenantswitcher.js`
-- Globals: `TenantSwitcher()`, `WorkspaceSwitcher()`, `createTenantSwitcher()`, `createWorkspaceSwitcher()`
+- Globals: `WorkspaceSwitcher()`, `createTenantSwitcher()`, `createWorkspaceSwitcher()`
 - Exports: `interface Tenant`, `interface TenantSwitcherOptions`, `class TenantSwitcher`, `function createTenantSwitcher`, `interface WorkspaceSwitcherOptions`, `function createWorkspaceSwitcher`
 
 ### themeinit
@@ -1375,21 +1375,21 @@ $control-height-xl=46px
 
 - CSS: `components/timeline/timeline.css`
 - JS: `components/timeline/timeline.js`
-- Globals: `Timeline()`, `createTimeline()`
+- Globals: `createTimeline()`
 - Exports: `type TimelineItemType`, `type TimelineSize`, `type TickIntervalPreset`, `type TimelineSortMode`, `type TimelineCollapseState`, `interface TimelineItem`, `interface TimelineGroup`, `interface TimelineOptions`, `class Timeline`, `function createTimeline`
 
 ### timepicker
 
 - CSS: `components/timepicker/timepicker.css`
 - JS: `components/timepicker/timepicker.js`
-- Globals: `TimePicker()`, `createTimePicker()`
+- Globals: `createTimePicker()`
 - Exports: `interface TimeValue`, `interface TimePickerOptions`, `class TimePicker`, `function createTimePicker`
 
 ### timezonepicker
 
 - CSS: `components/timezonepicker/timezonepicker.css`
 - JS: `components/timezonepicker/timezonepicker.js`
-- Globals: `TimezonePicker()`, `createTimezonePicker()`
+- Globals: `createTimezonePicker()`
 - Exports: `interface TimezonePickerOptions`, `class TimezonePicker`, `function createTimezonePicker`
 
 ### toast
@@ -1403,7 +1403,7 @@ $control-height-xl=46px
 
 - CSS: `components/toolbar/toolbar.css`
 - JS: `components/toolbar/toolbar.js`
-- Globals: `Toolbar()`, `createDockedToolbar()`, `createFloatingToolbar()`, `createToolbar()`
+- Globals: `createDockedToolbar()`, `createFloatingToolbar()`, `createToolbar()`
 - Exports: `type ToolbarOrientation`, `type ToolbarMode`, `type ToolbarDockPosition`, `type ToolStyle`, `type ToolOverflowPriority`, `type GalleryLayout`, `type ToolbarRegionAlign`, `interface ToolbarTitle`, `interface ToolItem`, `interface SplitButtonItem`, `interface SplitMenuItem`, `interface GalleryItem`, `interface GalleryOption`, `interface ToolSeparator`, `interface ToolInputItem`, `interface ToolDropdownItem`, `interface ToolLabelItem`, `interface ToolCheckboxItem`, `interface ToolToggleSwitchItem`, `interface ToolNumberItem`, `interface ToolColorItem`, `interface ToolbarLayoutState`, `type ToolbarTool`, `interface ToolbarItemFields`, `type ToolbarItem`, `interface ToolbarRegion`, `interface ToolbarOptions`, `class Toolbar`, `function createToolbar`, `function createDockedToolbar`, `function createFloatingToolbar`
 
 ### toolcolorpicker
@@ -1417,14 +1417,14 @@ $control-height-xl=46px
 
 - CSS: `components/treegrid/treegrid.css`
 - JS: `components/treegrid/treegrid.js`
-- Globals: `TreeGrid()`, `createTreeGrid()`
+- Globals: `createTreeGrid()`
 - Exports: `type TreeGridSelectionMode`, `type TreeGridSortDirection`, `type DropPosition`, `type TreeGridEditorType`, `interface TreeGridColumn`, `interface TreeGridNode`, `interface TreeGridContextMenuItem`, `interface TreeGridOptions`, `class TreeGrid`, `function createTreeGrid`
 
 ### treeview
 
 - CSS: `components/treeview/treeview.css`
 - JS: `components/treeview/treeview.js`
-- Globals: `TreeView()`, `createTreeView()`
+- Globals: `createTreeView()`
 - Exports: `type TreeNodeKind`, `type TreeSortMode`, `type TreeViewCollapseState`, `type TreeSelectionMode`, `type DropPosition`, `interface TreeNodeTypeDescriptor`, `interface TreeBadge`, `interface TreeNode`, `interface TreeToolbarAction`, `interface TreeContextMenuItem`, `interface TreeViewOptions`, `class TreeView`, `function createTreeView`
 
 ### typebadge
@@ -1438,7 +1438,7 @@ $control-height-xl=46px
 
 - CSS: `components/usermenu/usermenu.css`
 - JS: `components/usermenu/usermenu.js`
-- Globals: `UserMenu()`, `createUserMenu()`
+- Globals: `createUserMenu()`
 - Exports: `interface UserMenuItem`, `interface UserMenuOptions`, `class UserMenu`, `function createUserMenu`
 
 ### visualtableeditor
