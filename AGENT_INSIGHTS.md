@@ -3096,3 +3096,63 @@ tidiness.
 what it can and cannot see before publishing its number, and check it
 against the case that motivated it. An instrument that would have
 missed its own founding example is measuring a proxy.
+
+### 6.154 The Fix Was Right and the Field It Keyed On Was Absent (2026-10-21)
+
+`absentDependency` classified by FILE: `WITHHELD.test(readFileSync(file))`.
+A file that installs a mock in `beforeEach` and removes it in
+`afterEach` matched, so every `.not.toThrow()` block in it was excused
+as "the dependency was absent". Twenty-two of the twenty-four matching
+files are that ordinary lifecycle. All six members of the bucket ran
+with the dependency **present**.
+
+The repair was per-block: key the set on `${file}::${at}` and require
+the delete to be in the block's own body or in a `beforeEach` that
+runs for it. The logic was right. **`census()` never put `at` on the
+row.** Every key read `file::undefined`, one match marked the whole
+file, and the rule silently became the one it replaced.
+
+The count did not look wrong. It went from 6 to 4, which is the
+direction a correction moves in, and the two that left were the two
+whose own bodies matched. **A plausible number produced by the broken
+path is the worst possible output**, because the next reader has no
+reason to look.
+
+What caught it was listing the bucket's members rather than reading
+its total. Four blocks were still there that I had read by hand ten
+minutes earlier and knew ran with the mock installed.
+
+**Principle**: when a fix changes what a lookup is keyed on, assert
+the key exists before trusting the new number. A `Map` or `Set` keyed
+on `undefined` degrades to the behaviour you were replacing, silently
+and in the right direction. List the members, not the count.
+
+### 6.155 Correct By Construction Was Wrong Both Times (2026-10-21)
+
+Two blocks sat in `positiveControl`, a bucket whose comment says its
+members are correct by construction: the accept half of an
+accept/refuse pair, whose only claim is that the call was accepted.
+The entry called them a floor and I wrote that down without opening
+them.
+
+Both were weak.
+
+`markdownrenderer :: secondCallNamingTheSameExtensions_IsFine`
+asserted `.not.toThrow()`. That holds for a `configureMarked` that
+re-applies the code renderer and the KaTeX extension on every call —
+which is precisely what the latch beside it exists to prevent, because
+`marked.use()` is global and stacks. Its refusing sibling counts
+`use` calls. The accept half did not.
+
+`wiring :: accepts a binding naming a registered transform` asserted
+`.not.toThrow()`. Attaching without error is also true of an engine
+that looked the transform up, found it, and dropped the binding.
+
+**An accept half has to show the accepted thing WORKS**, or only the
+refusal is under test — and a refusal that is the only half under test
+is satisfied by a component that refuses everything.
+
+**Principle**: "correct by construction" is a claim like any other.
+When an instrument labels something as needing no work, that label is
+the least examined thing in the bucket. Open it before you publish the
+floor.

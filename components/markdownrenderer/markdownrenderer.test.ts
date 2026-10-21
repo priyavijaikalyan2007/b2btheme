@@ -502,8 +502,20 @@ describe("KaTeX math rendering", () =>
         vi.stubGlobal("katex", buildKatexMock());
         vi.stubGlobal("marked", marked);
         createMarkdownRenderer({ math: true });
+        const afterFirst = marked.use.mock.calls.length;
 
-        expect(() => createMarkdownRenderer({})).not.toThrow();
+        const second = createMarkdownRenderer({});
+
+        // THE COUNT IS THE CLAIM HERE TOO. `.not.toThrow()` was the
+        // whole assertion, and it holds for a `configureMarked` that
+        // re-applies the code renderer and the KaTeX extension on
+        // every call — which is the thing the latch exists to stop,
+        // because `marked.use()` is global and stacks. The accept
+        // half has to prove the second caller got the FIRST
+        // configuration rather than a second application of it.
+        expect(afterFirst).toBe(2);
+        expect(marked.use).toHaveBeenCalledTimes(afterFirst);
+        expect(second.toHtml("hi")).toContain("hi");
     });
 
     test("mathEnabled_WiresKatexExtension", () =>

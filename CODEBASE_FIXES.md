@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **4 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **2 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3055,9 +3055,42 @@ offered as the evidence for it.
   | `.not.toThrow()` on idempotency | 110 | 110 | **0** | **emptied. 11 defects, 9 quiet branches made to throw, 4 sub-shapes** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
-  | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
+  | `.not.toThrow()` as an accept/refuse control | — | 1 | **0** | **both were weak; an accept half must show the thing works** |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | **0** | **none of the six was one — the rule read the file** |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **AND "CORRECT BY CONSTRUCTION" WAS WRONG BOTH TIMES (4 -> 2).** The
+  two `positiveControl` blocks were called a floor on the strength of
+  the bucket's own comment, which says its members are the accept half
+  of an accept/refuse pair and claim only that the call was accepted.
+  Both were weak. `markdownrenderer ::
+  secondCallNamingTheSameExtensions_IsFine` asserted `.not.toThrow()`,
+  which holds for a `configureMarked` that re-applies the code
+  renderer and the KaTeX extension on **every** call — the thing the
+  latch beside it exists to prevent, because `marked.use()` is global
+  and stacks. Its refusing sibling counts `use` calls; the accept half
+  did not. `wiring :: accepts a binding naming a registered transform`
+  asserted `.not.toThrow()`, which is also true of an engine that
+  looked the transform up, found it, and dropped the binding. **An
+  accept half has to show the accepted thing WORKS**, or only the
+  refusal is under test — and a refusal that is the only half under
+  test is satisfied by a component that refuses everything. Both now
+  read the observable, both mutation-proven.
+
+  **`GuidedTour.destroy()` threw when the Driver.js global was gone**,
+  found while mutation-proving the block above. `destroy()` called
+  `stopTour()`, which tears the instance down and then **rebuilds
+  one** so the tour stays restartable — and the rebuild reads
+  `getDriverJs()` and throws. Measured with the global removed:
+  `GuidedTour needs Driver.js`, raised from inside `destroy()`, on
+  exactly the path that takes the script away. `teardownDriver()` is
+  split out and `destroy()` calls it.
+
+  **THE FLOOR IS 2, AND BOTH ARE THE SAME MEASURED CAUSE.**
+  `diagramengine :: resize` and `zoomToFit with objects` read
+  `getBoundingClientRect`, which jsdom answers with zeros, and the
+  zoomToFit claim already moved to `tests/diagramengine.spec.ts` where
+  a browser can see it. **DEBT-TEST-1b: 341 -> 2.**
 
   **THE SIXTH AND LAST BUCKET WAS A FILE-LEVEL RULE, AND EVERY ONE OF
   ITS SIX MEMBERS RAN WITH THE DEPENDENCY PRESENT (2026-10-21, 10 ->
@@ -4783,6 +4816,44 @@ limits the design knowingly accepts, not defects in shipped code.
   list for a page with no component of the same name, so the page only has
   to load clean, and the `PAGES.length` assertion that keeps the suite from
   going vacuous stays correct.
+
+## LOW — The same no-op is silent in some components and audible in others (2026-10-21)
+
+- [ ] **LOG-7**: A method that takes a no-op path the caller cannot
+  distinguish from success either says so or does not, and the
+  repository does both, for the same situation, with no rule written
+  down. Two populations, both measured 2026-10-21 while closing
+  DEBT-TEST-1b.
+
+  **Idempotent `destroy()`: 60 silent, 5 audible.** The 60 read
+  `if (this.destroyed) { return; }`. The five say
+  `logWarn("Already destroyed")` first — `activityfeed`,
+  `auditlogviewer`, `permissionmatrix`, `tenantswitcher`. ADR-081
+  requires `destroy()` to be idempotent and says nothing about
+  whether the second call should be heard.
+
+  **Removing a target that is not there: one warns, two do not.**
+  `commentoverlay :: removePin` logs `"Pin <id> not found"`;
+  `notificationcenter :: removeNotification` and
+  `diagramengine :: removeObject` say nothing. DEBT-TEST-1b settled
+  the *contract* for all three — the state the caller asked for
+  already holds, so there is nothing to refuse (ADR-200) — and left
+  the logging alone.
+
+  **An earlier count in this file said 89 and 8.** That grep read
+  `if (this.destroyed)` across every method rather than inside
+  `destroy()` only, so it mixed the after-destroy guards in with the
+  idempotency ones. 60 and 5 is the measurement; 89 and 8 was a
+  different population.
+
+  **Not a defect and not urgent.** Nothing is wrong in either
+  direction — the argument for silence is that an idempotent call is
+  not an error, and the argument for the warning is that a double
+  teardown usually means the host lost track of a handle. The cost
+  is that a reader cannot tell which is intended, so the next
+  component copies whichever one it happened to read. **The decision
+  is one line in FRONTEND_LOGGING.md and a sweep afterwards**, and
+  the sweep is mechanical once the line exists.
 
 ## RESOLVED — Three structure checks passed vacuously on macOS (2026-10-09, ADR-158)
 

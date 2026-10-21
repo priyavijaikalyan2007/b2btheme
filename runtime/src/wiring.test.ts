@@ -215,10 +215,22 @@ describe("attach", () =>
 
     test("accepts a binding naming a registered transform", () =>
     {
-        registerTransform("ok", (v) => v);
+        const seen: unknown[] = [];
+        registerTransform("ok", (v) => { seen.push(v); return v; });
         const doc = docWith(["a", "b"], [binding("x", "a", "b", { transform: "ok" })]);
 
-        expect(() => engineFor(doc)).not.toThrow();
+        const engine = engineFor(doc);
+        surfaces.get("a")!.fire("selection", { id: 1 });
+        engine.flush();
+
+        // ACCEPTED MEANS WIRED. `.not.toThrow()` was the whole
+        // assertion, and attaching without error is also true of an
+        // engine that looked the transform up, found it, and then
+        // dropped the binding. The accept half of a refusal pair has
+        // to show the accepted thing WORKS, or the refusal is the
+        // only half under test.
+        expect(seen).toHaveLength(1);
+        expect(surfaces.get("b")!.writes).toHaveLength(1);
     });
 
     test("detach stops delivery", () =>

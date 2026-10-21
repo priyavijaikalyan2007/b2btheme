@@ -223,6 +223,25 @@ describe("GuidedTour handle methods", () =>
         handle!.destroy();
     });
 
+    test("destroy_WithoutTheDriverGlobal_StillTearsDown", () =>
+    {
+        const handle = createGuidedTour(defaultOptions());
+        handle!.start();
+
+        // The host navigated away and the bundle went with it.
+        removeDriverMock();
+
+        // MEASURED before the fix: `destroy()` called `stopTour()`,
+        // which tears the instance down and then REBUILDS one so the
+        // tour stays restartable — and the rebuild reads
+        // `getDriverJs()` and throws. A teardown must not depend on a
+        // third-party global still being there, because the paths
+        // that need it most are the ones that took the script away.
+        expect(() => handle!.destroy()).not.toThrow();
+        expect(mockDriverInstance.destroy).toHaveBeenCalled();
+        expect(handle!.isActive()).toBe(false);
+    });
+
     test("destroy_CleansUpResources", () =>
     {
         const handle = createGuidedTour(defaultOptions());

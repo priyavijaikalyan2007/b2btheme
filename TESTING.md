@@ -363,6 +363,27 @@ same way you mutation-prove a ceiling**: restoring the strip drops the
 count to 0 and fails the check, which is the evidence that the floor is
 wired to the thing it names.
 
+**Pin the discrimination, not the classification, and check that the
+pinned case can still fail.** `absentDependency` classified by FILE —
+`WITHHELD.test(readFileSync(file))` — and the case pinning it passed a
+body with no `delete` in it and relied on the text appearing elsewhere
+in the test file itself, under a comment calling that "the per-file
+rule ADR-203 settled". **The pinned case asserted the defect.** Every
+one of the bucket's six members ran with the dependency installed,
+because 22 of the 24 matching files install a mock in `beforeEach` and
+remove it in `afterEach`. A case that pins a classification pins
+whatever the code does; a case that pins a DISCRIMINATION — this
+lands here, that one does not — fails when the rule drifts either way.
+
+**And when a fix changes what a lookup is keyed on, assert the key
+exists.** The repair keyed the withheld set on `${file}::${at}` while
+`census()` never put `at` on the row, so every key read
+`file::undefined`, one match marked the whole file, and the rule
+silently became the one it replaced. The count moved 6 to 4, which is
+the direction a correction moves in. **List the bucket's members
+rather than reading its total**: four blocks were still in it that a
+hand reading ten minutes earlier had shown ran with the mock present.
+
 ### 2.7a A Count of Call Sites Cannot Tell You Output Reached a Console
 
 LOG-4 added 268 `logTrace` calls across 96 components, and

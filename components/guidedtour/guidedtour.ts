@@ -333,12 +333,7 @@ class GuidedTour
         if (this.destroyed) { return; }
         this.destroyed = true;
 
-        this.stopTour();
-        if (this.driverInstance)
-        {
-            this.driverInstance.destroy();
-            this.driverInstance = null;
-        }
+        this.teardownDriver();
         logInfo("Destroyed:", this.options.tourId);
     }
 
@@ -561,7 +556,13 @@ class GuidedTour
         logInfo("Tour completed:", this.options.tourId);
     }
 
-    private stopTour(): void
+    /**
+     * Deactivate the tour and release the Driver.js instance.
+     *
+     * The half of `stopTour` that `destroy()` wants. It touches no
+     * global and cannot fail.
+     */
+    private teardownDriver(): void
     {
         this.active = false;
         document.removeEventListener("keydown", this.boundKeyDown, true);
@@ -571,10 +572,32 @@ class GuidedTour
             this.driverInstance.destroy();
             this.driverInstance = null;
         }
+    }
 
-        // FALLBACK-5. getDriverJs probes two export shapes of ONE library,
-        // which is normalisation and stays. Returning null here and
-        // carrying on was the fallback: the tour silently did nothing.
+    /**
+     * Stop the tour and re-arm it so it can be started again.
+     *
+     * (CRITICAL) `destroy()` USED TO COME THROUGH HERE AND COULD
+     * THROW. `stopTour` tears the instance down and then builds a
+     * fresh one, which is right for `dismiss()` and `completeTour()`
+     * — the tour stays restartable. `destroy()` called it too, so
+     * tearing a tour down CONSTRUCTED A DRIVER.JS INSTANCE AND THEN
+     * DESTROYED IT, and worse, the rebuild reads `getDriverJs()` and
+     * throws when the bundle is gone. MEASURED: with the global
+     * removed, `destroy()` raised "GuidedTour needs Driver.js" —
+     * a teardown that fails on exactly the path where it matters,
+     * a page unload or an SPA route change that dropped the script.
+     * `destroy()` calls `teardownDriver()` now.
+     *
+     * The throw itself stays. FALLBACK-5: `getDriverJs` probes two
+     * export shapes of ONE library, which is normalisation, and
+     * returning null here and carrying on was the fallback that made
+     * the tour silently do nothing.
+     */
+    private stopTour(): void
+    {
+        this.teardownDriver();
+
         const DriverClass = getDriverJs();
         if (!DriverClass)
         {
