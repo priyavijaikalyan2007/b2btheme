@@ -674,11 +674,19 @@ describe("destroy", () =>
         const opts = createTestOptions();
         minimap = createGraphMinimap(opts);
 
+        const canvas = opts.graphCanvas as unknown as
+            { getNodes: () => unknown[] };
+        const getNodes = vi.spyOn(canvas, "getNodes");
+
         // Act
         minimap.destroy();
+        minimap.refresh();
 
-        // Assert — refresh after destroy should be a no-op
-        expect(() => minimap!.refresh()).not.toThrow();
+        // Assert — `refresh` returns at `if (state.destroyed)`, before
+        // it reads the canvas. A no-op is the claim, and the comment
+        // said so while the assertion read only survival.
+        expect(getNodes).not.toHaveBeenCalled();
+        getNodes.mockRestore();
         minimap = null;
     });
 });

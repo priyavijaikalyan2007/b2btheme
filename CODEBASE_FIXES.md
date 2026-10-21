@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **15 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **10 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3052,12 +3052,58 @@ offered as the evidence for it.
 
   | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | **5** | **three of four sub-shapes empty; 9 defects and 9 quiet branches made to throw** |
+  | `.not.toThrow()` on idempotency | 110 | 110 | **0** | **emptied. 11 defects, 9 quiet branches made to throw, 4 sub-shapes** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **A VOID RETURN MAY GO QUIET AND A VALUE RETURN MAY NOT, WHICH
+  ANSWERS THE AFTER-DESTROY QUESTION WITHOUT DECIDING A POSTURE
+  (2026-10-21, 15 -> 10, and the idempotency bucket reaches ZERO from
+  110).** The five after-destroy blocks were recorded as a fleet-wide
+  product decision nobody had made. They are not one question. ADR-200
+  settles them individually: **a method that RETURNS something claims
+  the thing exists, and a method returning `void` claims nothing**, so
+  the quiet guard is honest for the second and a fabrication for the
+  first.
+
+  **A DESTROYED CONVERSATION ACCEPTED MESSAGES AND SAID NOTHING.**
+  None of the five `add*Message` methods read `destroyed`, and each
+  returns a `ConversationMessage`. Measured before the fix:
+  `addUserMessage("late")` after `destroy()` **created the message,
+  pushed it into `session.messages`, returned it to the caller, and
+  rendered it into a container `destroy()` had already emptied** —
+  `getSession()` reported one message and the screen showed none. All
+  five refuse now, naming the method. `addMessageAfterDestroy_DoesNotThrow`
+  asserted exactly the wrong thing.
+
+  **A DESTROYED RIBBON CALLED BACK INTO THE HOST.** Ten of the twelve
+  public methods in `methods_AfterDestroy_DoNotThrow` guard on
+  `destroyed`. `collapse()` and `expand()` guard on `collapsible` and
+  `collapsed` instead, so `collapse()` on a torn-down ribbon ran to
+  `safeCallback(this.opts.onCollapse, true)` and told the host a
+  ribbon that no longer exists had collapsed. This is Sidebar and
+  TabbedPanel a third time, reached from the other direction. Both
+  guarded, mutation-proven.
+
+  The other three return `void` and already guarded, so the quiet
+  no-op stands and the TEST was the thing that was wrong.
+  `fileupload :: addFiles_AfterDestroy_Ignored` said "Ignored" in its
+  title and asserted survival, which holds for an `addFiles` that
+  queued the file into a destroyed uploader; it reads `getFiles()`
+  now. `gauge :: setValueAfterDestroy` proves the stored value did
+  not move behind the warning. `graphminimap :: refresh_AfterDestroy`
+  carried the comment "refresh after destroy should be a no-op" above
+  an assertion that could not see one; it spies the canvas and proves
+  `refresh` returned before reading it.
+
+  **WHAT IS LEFT IS 10, AND IT IS THREE DOCUMENTED POPULATIONS.** Six
+  `absentDependency`, four of which state a change and are the next
+  piece of work; the two jsdom-floor blocks measured on 2026-10-20;
+  and two accept/refuse controls that are correct by construction.
+  **The idempotency bucket that opened this entry at 110 is empty.**
 
   **AN EMPTY INPUT IS NOT IDEMPOTENCY, AND THE WORD WAS WRONG RATHER
   THAN THE RULE (2026-10-21, 23 -> 15).** `IDEMPOTENT_SITUATION`
@@ -3158,7 +3204,7 @@ offered as the evidence for it.
   |---|---|---|
   | Terminal-state idempotence — destroy twice, close when closed, hide when hidden, unsubscribe twice | 85 | **0, this pass** |
   | An operation naming an absent target — `removeNonexistentPin`, `setData` with an unknown slot | 9 | **0, see below** |
-  | A method called after `destroy()` | 5 | **the only one left**, and it is the fleet-wide question nobody has answered |
+  | A method called after `destroy()` | 5 | **0.** ADR-200 settles it per method: a value return may not go quiet |
   | Empty input, which is not idempotence at all | 8 | **0, and the classifier no longer calls them idempotent** |
 
   **`.not.toThrow()` CANNOT SEE A SECOND CALL AND THE PROBE CAN.**

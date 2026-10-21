@@ -499,11 +499,20 @@ describe("lifecycle", () =>
         probe.restore();
     });
 
-    test("setValueAfterDestroy_DoesNotThrow", () =>
+    test("setValueAfterDestroy_LeavesTheValueAlone", () =>
     {
         const gauge = createGauge(defaultOpts(), "test-gauge");
+        const before = gauge.getValue();
         gauge.destroy();
-        expect(() => gauge.setValue(99)).not.toThrow();
+
+        gauge.setValue(99);
+
+        // `setValue` returns VOID and warns before returning, so the
+        // caller is told and nothing is claimed (ADR-200). What has
+        // to hold is that the stored value did not move behind the
+        // warning.
+        expect(gauge.getValue()).toBe(before);
+        expect(gauge.getValue()).not.toBe(99);
     });
 });
 

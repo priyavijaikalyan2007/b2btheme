@@ -1157,10 +1157,41 @@ export class Conversation
     // ========================================================================
 
     /**
+     * Refuse a message added to a destroyed conversation (ADR-200).
+     *
+     * (CRITICAL) A DESTROYED CONVERSATION ACCEPTED MESSAGES AND SAID
+     * NOTHING. None of the five `add*Message` methods checked
+     * `destroyed`, and each RETURNS a `ConversationMessage`, so a
+     * caller adding to a torn-down conversation was handed a message
+     * object as though it had worked. Measured: the message lands in
+     * `session.messages`, `getSession()` reports it, and the
+     * container is empty because `destroy()` took the DOM down — so
+     * the host sees a transcript that will never be rendered.
+     * `addMessageAfterDestroy_DoesNotThrow` asserted exactly the
+     * wrong thing (DEBT-TEST-1b).
+     *
+     * There is no honest quiet option for a method with a return
+     * value: a `ConversationMessage` says the message exists.
+     *
+     * @param method - The public method the caller named.
+     */
+    private refuseIfDestroyed(method: string): void
+    {
+        if (this.destroyed)
+        {
+            throw new Error(
+                `${LOG_PREFIX} ${method}: this conversation is destroyed. `
+                + "Create a new one rather than adding to this.");
+        }
+    }
+
+    /**
      * Adds a user message to the conversation.
      */
     addUserMessage(text: string): ConversationMessage
     {
+        this.refuseIfDestroyed("addUserMessage");
+
         const msg = this.createMessage("user", text);
         this.session.messages.push(msg);
         this.renderMessage(msg);
@@ -1175,6 +1206,8 @@ export class Conversation
      */
     addAssistantMessage(text: string): ConversationMessage
     {
+        this.refuseIfDestroyed("addAssistantMessage");
+
         const msg = this.createMessage("assistant", text);
         this.session.messages.push(msg);
         this.hideTypingIndicator();
@@ -1190,6 +1223,8 @@ export class Conversation
      */
     addSystemMessage(text: string): ConversationMessage
     {
+        this.refuseIfDestroyed("addSystemMessage");
+
         const msg = this.createMessage("system", text);
         this.session.messages.push(msg);
         this.renderMessage(msg);
@@ -1202,6 +1237,8 @@ export class Conversation
      */
     addError(error: ConversationError): ConversationMessage
     {
+        this.refuseIfDestroyed("addError");
+
         const content = this.formatErrorContent(error);
         const msg = this.createMessage("error", content);
         msg.metadata = { errorDetail: error };
@@ -1219,6 +1256,8 @@ export class Conversation
         text: string, appConfig: McpAppConfig
     ): ConversationMessage
     {
+        this.refuseIfDestroyed("addAppMessage");
+
         const msg = this.createMessage("assistant", text);
         msg.metadata = { mcpApp: appConfig };
         this.session.messages.push(msg);

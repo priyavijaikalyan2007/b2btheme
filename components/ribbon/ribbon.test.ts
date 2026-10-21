@@ -2879,25 +2879,37 @@ describe("destroy idempotency", () =>
         probe.restore();
     });
 
-    test("methods_AfterDestroy_DoNotThrow", () =>
+    test("methods_AfterDestroy_ReachNoHostCallback", () =>
     {
-        const ribbon = createRibbon(makeOptions(), "test-ribbon");
+        const onCollapse = vi.fn();
+        const onTabChange = vi.fn();
+        const ribbon = createRibbon(
+            makeOptions({ collapsible: true, onCollapse, onTabChange }),
+            "test-ribbon"
+        );
         ribbon.destroy();
-        expect(() =>
-        {
-            ribbon.setActiveTab("home");
-            ribbon.addTab(makeTab({ id: "x" }));
-            ribbon.removeTab("home");
-            ribbon.collapse();
-            ribbon.showContextualTab("x");
-            ribbon.hideContextualTab("x");
-            ribbon.setControlDisabled("x", true);
-            ribbon.setControlHidden("x", true);
-            ribbon.setControlActive("x", true);
-            ribbon.openBackstage();
-            ribbon.setStatusBar(null);
-            ribbon.restoreState({});
-        }).not.toThrow();
+
+        ribbon.setActiveTab("insert");
+        ribbon.addTab(makeTab({ id: "x" }));
+        ribbon.removeTab("home");
+        ribbon.collapse();
+        ribbon.showContextualTab("x");
+        ribbon.hideContextualTab("x");
+        ribbon.setControlDisabled("x", true);
+        ribbon.setControlHidden("x", true);
+        ribbon.setControlActive("x", true);
+        ribbon.openBackstage();
+        ribbon.setStatusBar(null);
+        ribbon.restoreState({});
+
+        // These twelve return VOID, so a quiet guard is honest under
+        // ADR-200 — nothing is claimed. What is NOT honest is a
+        // destroyed ribbon calling back into the host, and
+        // `collapse()` guards on `!collapsible || collapsed` rather
+        // than on `destroyed`, so it reached `safeCallback(onCollapse)`.
+        // Surviving twelve calls was never the claim.
+        expect(onCollapse).not.toHaveBeenCalled();
+        expect(onTabChange).not.toHaveBeenCalled();
     });
 });
 

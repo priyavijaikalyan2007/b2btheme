@@ -213,12 +213,20 @@ describe("addFiles", () =>
         expect(fu.getElement()).not.toBeNull();
     });
 
-    test("addFiles_AfterDestroy_Ignored", () =>
+    test("addFiles_AfterDestroy_AddsNothing", () =>
     {
         const fu = new FileUpload({ autoUpload: false });
         fu.destroy();
         const file = createMockFile("test.txt", 100, "text/plain");
-        expect(() => fu.addFiles([file])).not.toThrow();
+
+        fu.addFiles([file]);
+
+        // The title said "Ignored" and the assertion read survival,
+        // which holds for an addFiles that queued the file into a
+        // destroyed uploader. `addFiles` returns VOID, so the quiet
+        // guard is honest under ADR-200 — nothing was claimed. What
+        // has to hold is that nothing was taken.
+        expect(fu.getFiles()).toHaveLength(0);
     });
 });
 

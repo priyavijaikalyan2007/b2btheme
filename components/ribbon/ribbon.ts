@@ -930,6 +930,14 @@ export class RibbonImpl implements Ribbon
 
     public collapse(): void
     {
+        // (CRITICAL) A DESTROYED RIBBON CALLED BACK INTO THE HOST.
+        // The guard below reads `collapsible` and `collapsed` and
+        // never read `destroyed`, so `collapse()` on a torn-down
+        // ribbon ran to `safeCallback(this.opts.onCollapse, true)`
+        // and told the host a ribbon that no longer exists had
+        // collapsed. Ten of the twelve public methods beside it
+        // guard; these two did not (DEBT-TEST-1b, ADR-081).
+        if (this.destroyed) { return; }
         if (!this.opts.collapsible || this.collapsed) { return; }
         this.collapsed = true;
         this.tempExpanded = false;
@@ -941,6 +949,7 @@ export class RibbonImpl implements Ribbon
 
     public expand(): void
     {
+        if (this.destroyed) { return; }
         if (!this.collapsed) { return; }
         this.collapsed = false;
         this.tempExpanded = false;

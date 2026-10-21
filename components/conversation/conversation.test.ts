@@ -597,12 +597,20 @@ describe("Conversation edge cases", () =>
         conv.destroy();
     });
 
-    test("addMessageAfterDestroy_DoesNotThrow", () =>
+    test("addMessageAfterDestroy_RefusesRatherThanFabricating", () =>
     {
         const conv = createConversation(defaultOptions(), container);
         conv.destroy();
-        // Should not throw even if destroyed
-        expect(() => conv.addUserMessage("late")).not.toThrow();
+
+        // ADR-200. MEASURED before the fix: the message was created,
+        // pushed into session.messages, returned to the caller, and
+        // rendered into a container destroy() had already emptied.
+        // getSession() reported one message and the screen showed
+        // none. A method that RETURNS a ConversationMessage has no
+        // honest quiet option — the object says the message exists.
+        expect(() => conv.addUserMessage("late"))
+            .toThrow(/addUserMessage: this conversation is destroyed/);
+        expect(conv.getSession().messages).toHaveLength(0);
     });
 
     test("withoutVditor_StillRendersMessages", () =>
