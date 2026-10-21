@@ -2752,3 +2752,132 @@ the assertion that was missing.
 a shortcut somebody took. The rewrite is rarely a stronger matcher on
 the same subject — it is a different subject, and the component tells
 you which one.
+
+### 6.141 The Exemption Said "The Subject Decides" and Read Its Spelling (2026-10-21)
+
+`isVacuous` exempts an existence matcher whose subject is a DOM query.
+Its comment is explicit: **THE SUBJECT DECIDES, NOT THE MATCHER.** The
+code then tested the characters inside `expect(...)` against a pattern.
+
+```ts
+expect(root.querySelector(".le-preview")).toBeTruthy();   // exempt
+
+const preview = root.querySelector(".le-preview");
+expect(preview).toBeTruthy();                             // counted
+```
+
+The identical claim, filed two different ways, decided by whether the
+author used a const. Fifteen `latexeditor` blocks and every
+`_HasAriaLabel` block in the repository were in a ceiling named "tests
+that cannot fail" while being tests that can.
+
+**This is ADR-203's rule, broken by the instrument that records it:
+the name is the fact and the structure is the hypothesis.** A bare
+subject now resolves one hop through its `const` binding.
+
+**Principle**: when a predicate's comment describes a VALUE and the
+code reads TEXT, the gap is not a corner case. It is the rule.
+
+### 6.142 A Correction That Only Subtracts Is a Relaxation (2026-10-21)
+
+The second half of the same fix went the other way, and that is what
+made the first half believable. A lookup had been exempt under
+**either** existence matcher — and every member of the family returns
+`null` when the thing is absent, so `expect(null).toBeDefined()`
+passes. The exemption was letting through the one shape the predicate
+exists to catch.
+
+Tightening it ADDED `formdialog :: withDefaultSize_UsesMdSize`, whose
+`expect(el.querySelector(".formdialog-dialog")).toBeDefined()` cannot
+fail and whose title names a size nothing reads.
+
+Thirty-two blocks left the count and one entered. Had the change only
+ever subtracted, there would be no way to tell a correction from a
+convenient narrowing.
+
+**Principle**: when you correct a ceiling, look for the members the
+old rule was HIDING before you publish the new number. If a
+correction moves everything one way, suspect it.
+
+### 6.143 An Assertion That Never Runs Is a Different Fault (2026-10-21)
+
+DEBT-TEST-1b counts assertions that cannot fail. It cannot see an
+assertion that never executes, and `testsWithoutAssertion` cannot
+either, because it counts the text `expect(`.
+
+`applauncher :: OnSelect_FiresCallback` queried
+`.applauncher-app-card`, a class the component has never written. The
+NodeList was empty, the guard never opened, the click never happened
+and its **only** assertion never ran — under a matcher
+(`toHaveBeenCalled`) that both ceilings read as honest. AppLauncher's
+`onSelect` had never been exercised.
+
+**Whether a guard opens cannot be read off the text.** It depends on
+what the component renders, so the instrument is a sweep: a must-fail
+assertion inside every guarded body, then a full run. A block whose
+guards never open stays green. 81 sites, 71 blocks, two dead.
+
+The sweep itself was wrong three times first, and each wrong answer
+looked like a result: probing a loop that DECLARES blocks removed 75
+tests at collection; locating a block by `indexOf(body)` put both
+probes of an identical pair into the first of the pair; and reading
+the next `{` after `for (const f of check({ ok: true }))` found the
+object literal.
+
+**Principle**: before trusting a dynamic instrument, check that the
+population it reported matches the population you meant to measure.
+A sweep that silently skipped a file reads exactly like a sweep that
+found nothing there.
+
+### 6.144 Survival Is Not Idempotence (2026-10-21)
+
+The last unexamined bucket carried "predicted near zero, unverified"
+since 18 October — the same label that had just been wrong about
+`existence`. Reading it produced two findings.
+
+The label itself over-claimed. `IDEMPOTENT` matched a SITUATION word
+anywhere in a title — twice, again, unknown, empty, nonexistent — and
+is tested FIRST, so `unknown stencil pack logs warning` was filed as
+idempotency on the strength of "unknown" and never asked what the rest
+of its title claimed. **ADR-215's defect in the one bucket ADR-215 did
+not reach.**
+
+Then the bucket's own shape:
+
+```ts
+banner.destroy();
+expect(() => banner.destroy()).not.toThrow();
+```
+
+**Deleting `if (this.destroyed) { return; }` from `destroy()` entirely
+leaves this green.** A second call would fire `onClose` twice, remove
+from the DOM again and re-release its references. The block named for
+idempotence could not see any of it.
+
+**Principle**: `.not.toThrow()` answers "did it survive", and almost
+no test is named for survival. Ask what must not happen TWICE — a
+callback, a removal, a teardown — and count that.
+
+### 6.145 A Flag Nothing Sets Is a Feature Nothing Does (2026-10-21)
+
+`ShapeDefinition.isContainer` is declared in DiagramEngine's types and
+read in three places — `isContainerHit`, `isContainerObject` and the
+move-children path. **No stencil in the repository sets it.** So
+`assignContainment` can never find a container, `updateContainment`
+can never assign a `groupId`, and dragging a shape onto a browser
+frame does nothing.
+
+Two tests covered it and neither could see it. `getContainedObjects
+returns empty for non-container` passes because EVERY shape is a
+non-container. Its pair, titled `...creates container`, asserted
+`expect(obj).toBeDefined()`.
+
+The machinery is correct: adding `isContainer: true` to one stencil
+makes the drop work and turns the pinned block red on the first run.
+**The gap is data, not logic**, which is why no type error, no lint
+rule and no ceiling could find it.
+
+**Principle**: an optional flag that is read but never written is the
+write-side half of a fabricated read. Grep for the writes of any
+capability flag before believing the feature exists, and when there
+are none, pin the measured absence so it goes red the day one appears.

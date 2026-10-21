@@ -193,6 +193,54 @@ Apply the same probe to a new test you have just written, one assertion at a
 time. An assertion that shares a test with a stronger one can ride on it and
 look load-bearing when it is not.
 
+### 2.6b An Assertion That Never RUNS Is a Different Fault
+
+2.6 asks whether an assertion could fail. Ask separately whether it ever
+executes. The two faults share a symptom — a green test proving nothing —
+and only the first can be read off the text.
+
+```ts
+const cells = root.querySelectorAll(".palette-cell");
+if (cells.length > 0)
+{
+    expect(cells[0].getAttribute("aria-label")).toBeTruthy();
+}
+```
+
+Whether that guard ever opens depends on what the component renders, so
+there is no static answer. **Put a must-fail assertion inside each guarded
+body and run the suite.** A block whose guards never open stays green.
+
+`guardedAssertions` in `scripts/audit-counts.mjs` counts the population the
+sweep has to cover — 74 sites across 66 blocks on 2026-10-21 — and
+`guardedAssertions()` in `scripts/test-assertions.mjs` returns the OFFSET of
+each guarded body so the sweep and the ceiling read the same forms. It is a
+ceiling, not a backlog: a guard written round a selector is cheap to add and
+costs nothing to leave wrong.
+
+The sweep found two on the day it was written, and **neither existing
+ceiling could see either**. `testsWithoutAssertion` counts the text
+`expect(` and both blocks had one. `testsThatCannotFail` read the matcher —
+`toHaveBeenCalled()`, `not.toContain()` — and called both honest.
+`applauncher :: OnSelect_FiresCallback` queried a class the component has
+never written, so its **only** assertion never ran and `onSelect` had never
+been exercised.
+
+Three traps, all of which cost a wrong result first:
+
+- **Do not probe a loop that DECLARES blocks.** `CASES.forEach(c =>
+  test(...))` is a table; a failing assertion at suite level removed 75
+  tests from the run and looked like a finding.
+- **Locate a block by a cursor, not by `indexOf(body)`.** Two blocks in one
+  file can have byte-identical bodies under different names, and both probes
+  then land in the first of the pair.
+- **The body brace is not the next brace.** `for (const f of check({ ok:
+  true }))` opens an object literal first, which dropped four blocks.
+
+A `for (const m of ["a", "b"])` is not a guard: the collection is written
+out in the test, so a reader can see it is not empty. Only a collection the
+COMPONENT produced can come back empty.
+
 ### 2.7 Test the Classifier Behind a Count
 
 A check that counts something is only as good as the rule it uses to decide

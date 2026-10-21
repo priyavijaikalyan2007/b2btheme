@@ -133,8 +133,36 @@ createMarkdownRenderer({
     graphviz: true,         // Use @viz-js/viz if available (default: true)
     plantuml: true,         // Enable PlantUML server rendering (default: true)
     plantumlServer: "...",  // PlantUML server URL (default: public server)
+    className: "my-md",     // Extra class on the element render() writes into
 });
 ```
+
+### `highlight` and `math` are decided once per page
+
+`marked` is a global singleton and `marked.use()` mutates it, so the
+**first** renderer created in a page configures its extensions. A later
+`createMarkdownRenderer` that names a *different* `highlight` or `math`
+**throws**, because the call cannot be honoured without changing the
+renderer the first caller is holding:
+
+```
+[MarkdownRenderer] marked is already configured with math: true, and
+this call asks for false. marked.use() is global, so the first renderer
+on a page decides. Create one renderer with the options you want, or
+reload marked before changing them.
+```
+
+A later call naming the same values, or naming neither, is fine — which
+is the ordinary case, since most callers pass no options at all. Every
+other option is read per render and can differ freely between handles.
+
+Before 2026-10-21 the second call was silently given the first one's
+extensions.
+
+### `className` applies to `render()` only
+
+`render(md, target)` adds the class to `target`. `toHtml(md)` returns a
+string and has no wrapper to carry it.
 
 ### Disabling specific features
 
