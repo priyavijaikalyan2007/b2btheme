@@ -124,7 +124,7 @@ DISPLAY_NAMES = {
     "typography": "Typography",
     "typebadge": "TypeBadge",
     "usermenu": "UserMenu",
-    "workspaceswitcher": "WorkspaceSwitcher",
+    "tenantswitcher": "TenantSwitcher",
 }
 
 # CSS dependencies: section_id -> list of CSS paths (relative to demo/ in monolith)
@@ -222,7 +222,7 @@ COMPONENT_CSS = {
     "treeview": ["treeview/treeview.css"],
     "typebadge": ["typebadge/typebadge.css"],
     "usermenu": ["usermenu/usermenu.css"],
-    "workspaceswitcher": ["workspaceswitcher/workspaceswitcher.css"],
+    "tenantswitcher": ["tenantswitcher/tenantswitcher.css"],
 }
 
 # JS dependencies: section_id -> list of JS src paths
@@ -333,7 +333,7 @@ COMPONENT_JS = {
     "treeview": ["treeview/treeview.js"],
     "typebadge": ["typebadge/typebadge.js"],
     "usermenu": ["usermenu/usermenu.js"],
-    "workspaceswitcher": ["workspaceswitcher/workspaceswitcher.js"],
+    "tenantswitcher": ["tenantswitcher/tenantswitcher.js"],
 }
 
 # Extra CDN CSS needed
@@ -476,7 +476,7 @@ INIT_SCRIPT_HEADERS = {
     "ReasoningAccordion Demos": "reasoningaccordion",
     "CommandPalette Demos": "commandpalette",
     "PromptTemplateManager Demos": "prompttemplatemanager",
-    "WorkspaceSwitcher Demos": "workspaceswitcher",
+    "TenantSwitcher Demos": "tenantswitcher",
     "AuditLogViewer Demos": "auditlogviewer",
     "PermissionMatrix Demos": "permissionmatrix",
     "ActivityFeed Demos": "activityfeed",
@@ -587,7 +587,7 @@ _EXTRA_HEADER_MAP = {
     "prompttemplatemanager": "prompttemplatemanager",
     "activityfeed": "activityfeed",
     "actionitems": "actionitems",
-    "workspaceswitcher": "workspaceswitcher",
+    "tenantswitcher": "tenantswitcher",
     "permissionmatrix": "permissionmatrix",
     "graphtoolbar": "graphtoolbar",
     "statusbadge": "statusbadge",
@@ -709,7 +709,7 @@ def _identify_script(script_content):
             "reasoningaccordion": "reasoningaccordion",
             "commandpalette": "commandpalette",
             "prompttemplatemanager": "prompttemplatemanager",
-            "workspaceswitcher": "workspaceswitcher",
+            "tenantswitcher": "tenantswitcher",
             "auditlogviewer": "auditlogviewer",
             "permissionmatrix": "permissionmatrix",
             "activityfeed": "activityfeed",

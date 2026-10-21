@@ -2977,3 +2977,34 @@ live constants and broken the build.
 locations, stop translating between them and intersect their verdicts
 instead. Three failed translations is the signal to change the
 question, and the disagreement between the views is itself the finding.
+
+### 6.150 The Build Step Was the Reason the Check Could Not Fail (2026-10-21)
+
+Structure check `[5]` validates that every asset a demo page references
+exists. `demo/full-demo.html` referenced
+`dist/components/workspaceswitcher/workspaceswitcher.js` for six months
+after the component was renamed to `tenantswitcher`, and the check passed
+every single run, because `copy:compat` writes that file into `dist/` on
+every build. **The check's oracle was an artifact of the thing it was
+meant to police.**
+
+A gate on generated output can only see what the generator did not
+produce. Here the generator produced the exact file that would otherwise
+have been missing, so the gate was answering a question nobody had: not
+"does this demo name a component we have" but "did the build copy
+something to this path".
+
+Check `[21]` reads `components/<name>/` instead. No build step writes a
+source directory, so it cannot be satisfied by the build. It found a
+second page on its first run.
+
+The second half was narrower and worse. Check `[5]` iterates
+`demo/components/*.html`, and so does `tests/demo-pages.spec.ts`. The
+855 KB flagship page is in neither, so **the one page a visitor is most
+likely to open is the one page nothing opens.** Two unrelated things had
+rotted in it, which is the expected yield.
+
+**Principle**: when choosing a gate's oracle, ask what writes it. An
+oracle a build step can satisfy is a gate on the build step. Prefer the
+input the build reads over the output it produces, and check which file
+globs your existing gates iterate before assuming a page is covered.

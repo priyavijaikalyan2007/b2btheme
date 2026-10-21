@@ -4430,6 +4430,81 @@ limits the design knowingly accepts, not defects in shipped code.
 
   Closing out this check found collateral from the rename that nothing was looking for: `demo/components/workspaceshell.html` linked to `workspaceswitcher.html`, a page the rename had renamed away. Fixed, and check `[4]` now validates demo-to-demo links, not only the ones the index lists.
 
+  **Re-taken 2026-10-21. The condition is still not met and the API half does not move.** `apps/shell/shell-tenants.ts` calls `window.createWorkspaceSwitcher` (197, 203), `setWorkspaces` (224) and `setActiveWorkspace` (227, 338, 363) — the same six lines the 2026-10-09 and 2026-10-18 checks found — and `shared/types/component-library.d.ts` still declares the surface. Nothing under `~/Work` fetches the duplicate CDN path, which also matches both earlier checks.
+
+  **The entry was wrong about itself three ways, and reading it for the fourth time is what found them.**
+
+  - **The removal recipe named 3 of 6 tables and 2 of 4 sites.** `scripts/extract-demos.py` keys the component on its section-id slug in **six** tables (127, 225, 336, 479, 590, 712) and the recipe listed three. `demo/full-demo.html` carried **four** references and the recipe listed two: it missed the TOC entry at 371 and the whole `#workspaceswitcher-section` block at 2866. A transcribed list of line numbers is a claim like any other and it was stale within a day (ADR-203). It is replaced below by the command that derives the list.
+
+  - **The duplicate demo page is not produced by `copy:compat`, and it is not published.** `copy:compat` copies a `.js` and a `.css` and no HTML. `dist/demo/components/workspaceswitcher.html` is written by `scripts/extract-demos.py`, which **nothing in `package.json`, `scripts/*.sh` or `.github/workflows` invokes** — it is a manual tool, and the file on this machine is a 15 October artifact of the last manual run. Measured against the live site: `static.knobby.io/demo/components/workspaceswitcher.html` returns **404**, and `.../tenantswitcher.html` returns 200 through Cloudflare's extension-stripping redirect. So the claim that it is "the single published demo page no gate opens" is false in both halves. There is no unguarded published page.
+
+  - **And the recipe's first edit would have broken the theme's own demo.** "Delete `copy:compat` from `package.json`" was written as if the compat path served only the consumer. `demo/full-demo.html` **loaded `dist/components/workspaceswitcher/workspaceswitcher.css` and `.js`, labelled the section WorkspaceSwitcher, and called the deprecated `createWorkspaceSwitcher` factory twice** (10295, 10305) — which warns on every call, so the flagship showcase printed its own deprecation warning twice on every load. `demo/components/diagramengine.html` loaded the same two compat assets. Those files exist only because `copy:compat` writes them, so the first step of the removal recipe would have broken the repository's own pages on the day it ran.
+
+  **Fixed 2026-10-21, and this half needed no permission from the apps team.** The rename reached the component and `demo/components/tenantswitcher.html`, which has zero mentions of the old name and calls `createTenantSwitcher`. It missed the flagship page and the extraction script, and both are now on the current name: paths, section id, TOC entry, heading, factory, and the `tenants` / `activeTenantId` option names. **This does not retire the compat path and does not touch the deprecated API**, which stays until the consumer migrates. It removes the repository's own dependency on the alias, so the eventual removal is the one `package.json` edit the recipe always claimed it was.
+
+  **The condition and the reference list are both one command now**, which was always the point of a condition-gated item:
+
+  ```
+  grep -rn "createWorkspaceSwitcher\|setWorkspaces\|setActiveWorkspace" \
+       ~/Work/knobby/apps/typescript/ --include="*.ts"
+
+  git grep -n workspaceswitcher -- ':!CODEBASE_FIXES.md' ':!CHANGELOG.md' \
+       ':!CONVERSATION.md' ':!AGENT_INSIGHTS.md' ':!agentknowledge' ':!specs'
+  ```
+
+  When the first returns nothing the aliases come out, and the second is the list of edits that go with them. The second returns nothing today.
+
+  **Structure check `[21]` is the gate that would have caught this in 2026.** Check `[5]` asks whether a demo's asset exists in `dist/`, and `workspaceswitcher.css` does exist there, because `copy:compat` puts it there — so the check passed on a demo pointing at a component the repository does not have. Check `[21]` reads `components/<name>/` instead, which no build step writes, and it opens `demo/*.html` as well as `demo/components/*.html`, because check `[5]` only ever opened the second. **It found `demo/components/diagramengine.html` on its first run**, which I had missed, and it is mutation-proven against both globs.
+
+  **Recorded and not repaired: `demo/full-demo.html` is opened by no gate at all.** `tests/demo-pages.spec.ts` enumerates `git ls-files demo/components/*.html`, so the flagship page is in neither that suite nor check `[5]`. Adding it was tried and **it throws on load today**, with one uncaught error: `[DocViewer] MarkdownRenderer is required and window.createMarkdownRenderer was not found.` The page loads `docviewer.js` and never loads `markdownrenderer.js`, `marked` or `highlight.js`, so the DocViewer section of the showcase has never rendered. DocViewer is behaving correctly — it refuses rather than substituting. Fixing it means adding two SRI-pinned CDN dependencies to the page, which touches the dependency-closure and SRI gates, so it is **DEBT-DEMO-2** below and not this item. Two unrelated things rotted on that page, which is what a page nothing opens is for.
+
+## MEDIUM — The flagship demo page is opened by no gate (2026-10-21)
+
+- [ ] **DEBT-DEMO-2**: `demo/full-demo.html` is 855 KB, carries a section
+  for every component, and **nothing opens it.**
+  `tests/demo-pages.spec.ts` enumerates
+  `git ls-files demo/components/*.html`, so the flagship page is not in
+  that suite. Structure check `[5]` iterates the same glob. Check `[21]`
+  now reads its asset paths, which is static and catches a path naming a
+  component the repository does not have, and nothing loads it in a
+  browser.
+
+  **Measured 2026-10-21 by adding it to the spec and running it.** One
+  uncaught error:
+
+  ```
+  [DocViewer] MarkdownRenderer is required and
+  window.createMarkdownRenderer was not found. Load
+  components/markdownrenderer/markdownrenderer.js before creating the
+  viewer.
+  ```
+
+  The page loads `docviewer.js` at 4169 and never loads
+  `markdownrenderer.js`, `marked` or `highlight.js`, so **the DocViewer
+  section of the showcase has never rendered.** `demo/components/docviewer.html`
+  loads all four in the right order, which is where the correct list is.
+  DocViewer is behaving as it should — it refuses rather than substituting
+  a plain `<pre>`, which is the no-fallback rule working.
+
+  **Found under DEBT-TS-1**, which turned up a second rot on the same
+  page: it had been loading the deprecated `workspaceswitcher` compat
+  path and calling the deprecated factory since the 2026-10-08 rename,
+  printing a deprecation warning twice on every load. Two unrelated
+  things rotted on one page, which is what a page nothing opens is for.
+
+  **The fix is two edits and one decision.** Adding `marked` and
+  `highlight.js` to the page means two new SRI-pinned CDN dependencies,
+  which touches the dependency-closure check `[10]` and `build:sri`. The
+  decision is whether the flagship page should carry every component's
+  third-party dependency or whether DocViewer's section should be dropped
+  from it. Not made here.
+
+  **Then add the page to `tests/demo-pages.spec.ts`,** which is the gate
+  that would have caught both. The spec's `globalsFor` returns an empty
+  list for a page with no component of the same name, so the page only has
+  to load clean, and the `PAGES.length` assertion that keeps the suite from
+  going vacuous stays correct.
+
 ## RESOLVED — Three structure checks passed vacuously on macOS (2026-10-09, ADR-158)
 
 - [x] **DEBT-GATE-1** *(resolved 2026-10-09)* — Checks `[4]`, `[5]` and `[6]` of `test-local.sh` **could not fail on the development machine.** Four loops drove their `for` lists from `grep -oP`, and BSD grep on macOS has no `-P`: grep aborted, the list came out empty, the body never ran, the error counter stayed at zero, and each check reported PASS. On CI's GNU grep they worked, so the suite was green in both places for opposite reasons. Two of the four carried `2>/dev/null`, which is why nobody ever saw the `invalid option -- P` that was being printed twice per run. Every pattern was plain enough for POSIX ERE, so the `-P` bought nothing; all four are now `-oE`, the stderr mask is gone, and **each of the three checks was mutation-proven to fail** — a missing demo page, a missing stylesheet reference, a missing component README — and to pass again once restored. Found by writing a *new* sibling-link check in the same block and mutation-testing it: the mutation failed as intended, and the grep error printed beside it. **The same family as the DiagramEngine suite that spent months green while pointed at a page that loaded nothing.**

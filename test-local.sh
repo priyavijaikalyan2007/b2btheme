@@ -454,6 +454,35 @@ else
 fi
 echo ""
 
+# ── 21. Demos name a component the repository has ──
+#
+# Check [5] asks whether a demo's asset EXISTS in dist/. It cannot see a
+# demo pointing at a path that exists only because a build step copies it
+# there. `copy:compat` writes dist/components/workspaceswitcher/ from
+# tenantswitcher, so demo/full-demo.html loaded the deprecated path, called
+# the deprecated factory and printed its warning twice, for six months after
+# the rename — and every gate was green (DEBT-TS-1, ADR-154).
+#
+# The oracle here is components/<name>/, which no build step writes.
+# Check [5] also only ever opened demo/components/*.html; this one opens
+# demo/*.html as well, which is where the flagship demo lives.
+echo "[21] Demos name a component the repository has (DEBT-TS-1)"
+DEMO_NAME_ERRORS=0
+for demo in demo/*.html demo/components/*.html; do
+    [ -f "$demo" ] || continue
+    case "$(basename "$demo")" in _*) continue;; esac
+    for name in $(grep -oE 'dist/components/[a-z0-9-]+/' "$demo" | sed 's|dist/components/||;s|/||' | sort -u); do
+        if [ ! -d "components/$name" ]; then
+            fail "$demo loads dist/components/$name/, and components/$name/ does not exist"
+            DEMO_NAME_ERRORS=$((DEMO_NAME_ERRORS + 1))
+        fi
+    done
+done
+if [ "$DEMO_NAME_ERRORS" -eq 0 ]; then
+    pass "Every demo asset path names a component in components/"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

@@ -79,7 +79,7 @@
     <link rel="stylesheet" href="../dist/components/reasoningaccordion/reasoningaccordion.css">
     <link rel="stylesheet" href="../dist/components/commandpalette/commandpalette.css">
     <link rel="stylesheet" href="../dist/components/prompttemplatemanager/prompttemplatemanager.css">
-    <link rel="stylesheet" href="../dist/components/workspaceswitcher/workspaceswitcher.css">
+    <link rel="stylesheet" href="../dist/components/tenantswitcher/tenantswitcher.css">
     <link rel="stylesheet" href="../dist/components/activityfeed/activityfeed.css">
     <link rel="stylesheet" href="../dist/components/anglepicker/anglepicker.css">
     <link rel="stylesheet" href="../dist/components/auditlogviewer/auditlogviewer.css">
@@ -368,7 +368,7 @@
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#typography-section"><span class="toc-check">&#x2713;</span>Typography</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#usermenu-section"><span class="toc-check">&#x2713;</span>UserMenu</a></li>
                 <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#visualtableeditor-section"><span class="toc-check">&#x2713;</span>VisualTableEditor</a></li>
-                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#workspaceswitcher-section"><span class="toc-check">&#x2713;</span>WorkspaceSwitcher</a></li>
+                <li class="nav-item" data-toc-status="done"><a class="nav-link" href="#tenantswitcher-section"><span class="toc-check">&#x2713;</span>TenantSwitcher</a></li>
                 <!-- ── Divider ── -->
                 <li class="toc-divider" data-toc-status="divider"><hr><small>Planned</small></li>
                 <!-- ── Planned (83) ── -->
@@ -2861,22 +2861,22 @@
             </div>
 
             <!-- ============================================================ -->
-            <!-- WORKSPACE SWITCHER                                            -->
+            <!-- TENANT SWITCHER                                               -->
             <!-- ============================================================ -->
-            <div class="demo-section" id="workspaceswitcher-section">
-                <h2><i class="bi bi-building"></i> WorkspaceSwitcher</h2>
-                <p class="text-muted">Dropdown or modal workspace switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
+            <div class="demo-section" id="tenantswitcher-section">
+                <h2><i class="bi bi-building"></i> TenantSwitcher</h2>
+                <p class="text-muted">Dropdown or modal tenant switcher with trigger button, search, keyboard navigation, and initials avatars.</p>
 
                 <div class="row g-4">
                     <div class="col-6">
                         <h3 class="h5">Dropdown Mode (Default)</h3>
-                        <p class="text-muted small">Click the trigger to open the dropdown. Search filters workspaces.</p>
-                        <div id="ws-demo-dropdown" style="height: 50px;"></div>
+                        <p class="text-muted small">Click the trigger to open the dropdown. Search filters tenants.</p>
+                        <div id="ts-demo-dropdown" style="height: 50px;"></div>
                     </div>
                     <div class="col-6">
                         <h3 class="h5">Modal Mode (Large)</h3>
                         <p class="text-muted small">Opens a centred modal overlay with member counts and plan badges.</p>
-                        <div id="ws-demo-modal" style="height: 50px;"></div>
+                        <div id="ts-demo-modal" style="height: 50px;"></div>
                     </div>
                 </div>
             </div>
@@ -4116,7 +4116,7 @@
     <script src="../dist/components/reasoningaccordion/reasoningaccordion.js"></script>
     <script src="../dist/components/commandpalette/commandpalette.js"></script>
     <script src="../dist/components/prompttemplatemanager/prompttemplatemanager.js"></script>
-    <script src="../dist/components/workspaceswitcher/workspaceswitcher.js"></script>
+    <script src="../dist/components/tenantswitcher/tenantswitcher.js"></script>
     <script src="../dist/components/activityfeed/activityfeed.js"></script>
     <script src="../dist/components/anglepicker/anglepicker.js"></script>
     <script src="../dist/components/auditlogviewer/auditlogviewer.js"></script>
@@ -10277,11 +10277,11 @@
         })();
 
         // ====================================================================
-        // WorkspaceSwitcher Demos
+        // TenantSwitcher Demos
         // ====================================================================
 
         (function() {
-            var workspaces = [
+            var tenants = [
                 { id: "1", name: "Acme Corp", icon: "bi-building", role: "Owner", memberCount: 24, plan: "Enterprise" },
                 { id: "2", name: "Beta Industries", role: "Admin", memberCount: 8, plan: "Pro" },
                 { id: "3", name: "Gamma Retail", role: "Member", memberCount: 3, plan: "Free" },
@@ -10292,26 +10292,26 @@
             ];
 
             // 1. Dropdown mode
-            createWorkspaceSwitcher({
-                workspaces: workspaces,
-                activeWorkspaceId: "1",
+            createTenantSwitcher({
+                tenants: tenants,
+                activeTenantId: "1",
                 mode: "dropdown",
                 showMemberCount: false,
-                onSwitch: function(ws) { console.log("[WS Demo] Switched to:", ws.name); },
-                onCreate: function() { console.log("[WS Demo] Create workspace"); }
-            }, "ws-demo-dropdown");
+                onSwitch: function(ts) { console.log("[TS Demo] Switched to:", ts.name); },
+                onCreate: function() { console.log("[TS Demo] Create tenant"); }
+            }, "ts-demo-dropdown");
 
             // 2. Modal mode (large size)
-            createWorkspaceSwitcher({
-                workspaces: workspaces,
-                activeWorkspaceId: "3",
+            createTenantSwitcher({
+                tenants: tenants,
+                activeTenantId: "3",
                 mode: "modal",
                 size: "lg",
                 showMemberCount: true,
                 showPlan: true,
-                onSwitch: function(ws) { console.log("[WS Demo] Modal switched to:", ws.name); },
-                onCreate: function() { console.log("[WS Demo] Modal create workspace"); }
-            }, "ws-demo-modal");
+                onSwitch: function(ts) { console.log("[TS Demo] Modal switched to:", ts.name); },
+                onCreate: function() { console.log("[TS Demo] Modal create tenant"); }
+            }, "ts-demo-modal");
         })();
 
         // ====================================================================
