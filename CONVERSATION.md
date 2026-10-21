@@ -4454,3 +4454,108 @@ pins the number so it cannot drift while the question is open.
 
 A keyword that does not work looks exactly like a keyword that does,
 until something reads the value back.
+
+## DEBT-TEST-1b: 204 to 117, and the instrument was wrong twice (2026-10-21)
+
+**Trigger**: *"Well, lets work our way through the rest starting with
+DEBT-SEC-8. Leave PAT_1 to the very end."*
+
+The entry had been sitting at 204 with a prediction attached: the
+remaining buckets were "near zero yield". I had carried that prediction
+since 18 October and it had already been falsified once. This pass
+falsified it twice more.
+
+**The exemption that said THE SUBJECT DECIDES read the subject's
+spelling.** `isVacuous` lets a `toBeTruthy()` through when the thing
+being asserted on is a DOM lookup, because a lookup can return null and
+the matcher can therefore fail. The comment above it says the subject
+decides and not the matcher. The code tested the characters inside
+`expect(...)` against a pattern. So `expect(root.querySelector(".x"))
+.toBeTruthy()` was exempt and `const x = root.querySelector(".x");
+expect(x).toBeTruthy();` was counted — the identical claim, separated by
+whether the author used a const. Thirty-two blocks. The fix resolves a
+bare subject one hop through its binding.
+
+The second rule moved the other way, which is the part worth keeping. A
+lookup had been exempt under **either** existence matcher, and every
+member of that family returns `null`, so `expect(null).toBeDefined()`
+passes. Tightening it **added** a block. Thirty-two left and one entered.
+Had the correction only ever subtracted there would be no way to tell it
+from a convenient narrowing, which is the charge a falling ceiling always
+has to answer.
+
+**An assertion that never runs is a different fault, and no instrument
+could see it.** `testsWithoutAssertion` counts the text `expect(`.
+`testsThatCannotFail` reads the matcher. Neither can tell whether a
+guard ever opens, because that depends on what the component renders.
+The instrument is a sweep: put a must-fail assertion inside every guarded
+body and run the suite, and a block whose guards never open stays green.
+Eighty-one sites, two dead. `applauncher :: OnSelect_FiresCallback`
+queried a class the component has never written, so its only assertion
+never ran and AppLauncher's `onSelect` had never been exercised once.
+
+**And the last bucket's "near zero yield" was a prediction too.**
+Deleting `if (this.destroyed) { return; }` from `BannerBar.destroy()`
+**entirely** leaves `Destroy_CalledTwice_IsIdempotent` green. A second
+call would then fire `onClose` twice and the block named for idempotence
+could not see it. 107 members are that shape, so the entry stays open
+with a demonstrated yield rather than a guess.
+
+A prediction about a bucket you have not sampled is worth nothing, and
+mine cost three days.
+
+## UNUSED-1: 301 to its floor of 124 (2026-10-21)
+
+Seven shapes, and the tracker's prediction — "mostly deletions" — was
+wrong at every one of them. **Fifteen defects to roughly thirty
+deletions.**
+
+The useful question turned out to be cheap. What would have to be true
+for this symbol to be read, and is the rest of that already here?
+ActivityFeed builds an `aria-live` region, appends it on every mount and
+has an `announce` method that writes to it. Every part was present except
+the call, so a screen-reader user was told nothing when new activity
+arrived. RelationshipManager had a badge builder, a `.rm-provenance`
+class in its SCSS and a README option called "Show provenance badges",
+and the renderer pushed a bare uppercased string into the meta line
+instead. PermissionMatrix builds every cell with `tabindex="-1"` and only
+`moveCellFocus` ever sets a 0, so the whole matrix was unreachable by
+keyboard. Against those, `slider`'s `trackEl` was queried once while the
+pointer maths uses `trackWrap`, which is dead code and nothing more.
+
+**The generated bundle was the harder half, and I got the approach wrong
+three times.** The bundle's errors name lines in `diagramengine.ts` and
+the fix has to land in `src/`. A fixed line offset failed. A widened
+search window failed. A match on content plus ordinal failed. The bundle
+strips declarations, inserts a preamble and reorders, so no positional
+relation holds. What worked was not a better mapping: compile `src/` on
+its own and **intersect** its report with the bundle's. Five symbols the
+src run calls unused are used across module boundaries once concatenated,
+so acting on that run alone would have deleted five live constants.
+
+Three failed translations is the signal to change the question.
+
+**Then `MAX_ZOOM`.** `bundle-diagramengine.sh` emits its own preamble of
+sixteen shared constants and greps every module to strip that module's
+declaration of the same name, because thirty concatenated files cannot
+each declare `const CLS`. The build is correct. The consequence is that a
+constant in a `src` file is deleted before it ships, and nothing compared
+the two. `render-engine.ts` said the engine caps zoom at 4x. The README
+says 32x, the suite measures 32x, the running engine caps at 32x. Four
+records agreed and the fifth was the one a reader opens first.
+`bundlePreambleMismatches` is a ceiling at 0 now, and a ceiling rather
+than a floor because a module that stops declaring a local copy is fine
+and a local copy that lies is not.
+
+**And the entry's own table had the defect the entry exists to name.**
+UNUSED-1 splits its count three ways, and the split is the best thing in
+it, because it stops a reader spending a day deleting a floor and failing
+CI. Fifty-one of the 103 it attributes to DiagramEngine were the preamble
+row — per-namespace loggers like `logUmlWarn`, which the row's own
+`logDebug|logError|logWarn|logInfo|logTrace` filter never matched. A
+count named for one population while measuring another, inside the
+instrument built to prevent exactly that. The same sentence has now been
+written about `isVacuous`, about `shapeOf` and about this table.
+
+A bucket boundary drawn by a regex is a claim about naming, and naming is
+the thing that varies.

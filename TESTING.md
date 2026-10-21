@@ -472,6 +472,35 @@ so the work happens on the frame after the one the test schedules.
 to the test name.** A test that asserts a refusal can pass while the run
 it belongs to fails.
 
+### 2.7f A Generated Preamble Makes the Source a Hypothesis
+
+`scripts/bundle-diagramengine.sh` concatenates thirty files from
+`components/diagramengine/src/` into one IIFE. Thirty files cannot each
+declare `const CLS`, so the script emits its OWN preamble of sixteen shared
+constants and then greps each module to strip that module's declaration of
+the same name. The build works. The cost is that a constant in a `src` file
+is deleted before it ships, and nothing compared the two values.
+
+`MAX_ZOOM` read `4.0` in `render-engine.ts` and ships as `32.0`.
+`ROTATION_HANDLE_OFFSET` read `24` there against `25` in `tool-select.ts`.
+The README, the bundle and the suite all agreed on 32x. **One source
+constant disagreed with every other record of the same fact, and the
+constant is what a reader opens first.**
+
+`bundlePreambleMismatches` in `scripts/audit-counts.mjs` reads the `echo`
+lines of the bundler, reads every `^const NAME = VALUE;$` in `src/`, and
+reports each pair that shares a name and not a value. It is a **ceiling at
+0**, not a floor. A module that stops declaring a local copy is fine, and a
+module that declares one is fine. What must never happen is a local copy
+that lies.
+
+**Mutation-proven** by setting `MAX_ZOOM` back to `4.0`, which fails the
+gate by name, and by renaming the bundler's `echo` so the pair no longer
+matches, which passes and is correct.
+
+A gate that reads a generated artifact belongs with 2.7c: run it on a quiet
+tree, because the artifact is rewritten during `npm run build`.
+
 ### 2.8 Verify a Type-Only Change by Its Compiled Output
 
 Some changes are supposed to leave the program alone. A cast removed, a symbol

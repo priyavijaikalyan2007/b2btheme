@@ -2233,7 +2233,7 @@ the step exits 1 and the workflow fails.
 | IMP-1 | 47 | 113 all-scss, 54 component, **0 real** | larger, then classified, then closed |
 | ANY-1 | 60 | 88 | larger |
 | WIN-1 | 62 | 294, now 0 | far larger, then closed |
-| UNUSED-1 | 119 | 306 | far larger |
+| UNUSED-1 | 119 | 306, now 124 | far larger, then driven to its floor |
 | STD-1 | 19,198 lines | 30,479 lines | larger |
 | ERR-1 | never a count | "10 of 15 sampled" | not comparable |
 
@@ -3663,7 +3663,7 @@ offered as the evidence for it.
   | Population | Count | Is it debt? |
   |---|---|---|
   | `logDebug` / `logError` / `logWarn` / `logInfo` shims | 120 | **No.** The LOG-4a preamble, present whether a component uses it or not. Three ratchets depend on it existing: `dynamicVerboseShims` is a FLOOR at 225. Deleting these breaks the gates. |
-  | Generated `diagramengine.ts` | 103 | Yes, fixable in `src/` only |
+  | Generated `diagramengine.ts` | 103 | Yes, fixable in `src/` only. **This row was itself a population mismatch: 51 of the 103 were the preamble family of the row above, under per-namespace names the filter never matched. See 2026-10-21 below.** |
   | Real dead code elsewhere | 106 | Yes |
 
   So the headline has never been the backlog: **36% of it is a floor**

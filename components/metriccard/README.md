@@ -100,7 +100,7 @@ Factory: constructs a card and mounts it into `options.container`.
 | Method                              | Description |
 |-------------------------------------|-------------|
 | `setValue(v)`                       | Update the displayed value. |
-| `setTrend(trend \| null)`           | Add / replace / remove the trend annotation. |
+| `setTrend(trend \| null)`           | Add / replace / remove the trend annotation. Recolours the sparkline to match. |
 | `setSecondary(text \| null)`        | Add / replace / remove the secondary line. |
 | `setState(state, errorText?)`       | Switch lifecycle state. `errorText` only respected for `state === "error"`. |
 | `getRootElement()`                  | Returns the root `HTMLElement` (or `null` after `destroy`). |

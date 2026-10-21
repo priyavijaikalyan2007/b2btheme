@@ -67,7 +67,7 @@ const matrix = createPermissionMatrix({
 | `getState()` | Get current state map |
 | `getPendingChanges()` | Get array of pending changes |
 | `resetChanges()` | Revert all pending changes |
-| `exportData(format)` | Export matrix data as JSON |
+| `exportData(format)` | Export matrix data. `"json"` returns JSON, `"csv"` returns CSV. Before 2026-10-21 it returned JSON for both |
 | `refresh()` | Re-render the grid |
 
 ## Permission States
@@ -86,3 +86,9 @@ const matrix = createPermissionMatrix({
 | `Arrow keys` | Navigate between cells |
 | `Space` / `Enter` | Toggle cell state |
 | `Tab` / `Shift+Tab` | Move focus between controls |
+
+The grid is a roving tabindex: exactly one cell carries `tabindex="0"` and
+the rest carry `-1`, so `Tab` enters the matrix once and the arrow keys move
+within it. Before 2026-10-21 no cell was ever given the 0 at build time, so
+Tab skipped the matrix entirely and it could not be reached by keyboard
+(UNUSED-1).

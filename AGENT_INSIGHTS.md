@@ -2881,3 +2881,99 @@ rule and no ceiling could find it.
 write-side half of a fabricated read. Grep for the writes of any
 capability flag before believing the feature exists, and when there
 are none, pin the measured absence so it goes red the day one appears.
+
+### 6.146 An Unused Symbol Is a Question, Not a Verdict (2026-10-21)
+
+UNUSED-1 ran 301 to 124 across seven shapes. The tracker predicted
+"mostly deletions" and the score is **fifteen defects to roughly
+thirty deletions**. A compiler reporting a symbol as unread states one
+fact: nothing reads it. Whether that means the symbol is dead or the
+reader is missing is not in the report.
+
+The split held for every shape. State written and never read gave
+PermissionMatrix a roving tabindex with no entry point. Element refs
+held and never updated gave MetricCard a red arrow over a green
+sparkline. Dead helpers — the shape the entry was most confident about
+— gave ActivityFeed a live region nothing announced into and
+RelationshipManager a badge the SCSS styled and the renderer never
+built.
+
+The distinguishing question is cheap. **What would have to be true for
+this symbol to be read, and is the rest of that already here?** A
+live-region element that is built, appended and written to by a method
+nobody calls has every part but the call. A `trackEl` queried once
+while the pointer maths uses `trackWrap` has a sibling doing the job.
+
+**Principle**: read the unused report as a list of questions. Delete
+only after answering one, and record the answer beside the deletion so
+the next reader does not re-derive it.
+
+### 6.147 The Source Said 4.0 and Every Other Record Said 32 (2026-10-21)
+
+`scripts/bundle-diagramengine.sh` concatenates thirty files and cannot
+let each declare `const CLS`, so it emits its own preamble of sixteen
+shared constants and greps every module to **strip that module's
+declaration of the same name**. The build is correct. The consequence
+is that a constant in a `src` file is deleted before it ships.
+
+`MAX_ZOOM` read `4.0` in `render-engine.ts`. The preamble ships
+`32.0`. The README says "10% to 3200% (32x)", the suite measures 32x,
+and the running engine caps at 32x. **Four records of the same fact
+agreed and the fifth was the one a reader opens first.**
+
+Nothing could have caught it. A type checker sees a valid number. A
+test exercises the bundle. A reviewer reading `render-engine.ts` has
+no reason to suspect the line will not survive the build. The only
+instrument that works compares the two texts, which is what
+`bundlePreambleMismatches` does.
+
+**Principle**: wherever a build step rewrites declarations, the source
+text is a hypothesis about what ships. Any fact duplicated across a
+generator and its input needs a gate comparing them, and the gate is a
+ceiling on disagreement rather than a floor on duplication.
+
+### 6.148 The Table Built to Separate Populations Mixed Two of Them (2026-10-21)
+
+UNUSED-1 split its count three ways: 120 preamble shims that are not
+debt, 103 in the generated bundle, 106 real dead code elsewhere. The
+split was the entry's best work, because it stopped a reader from
+deleting a floor.
+
+**Fifty-one of the 103 were the first row.** The preamble row was
+matched with `logDebug|logError|logWarn|logInfo|logTrace`, and the
+DiagramEngine modules destructure per-namespace names —
+`logUmlWarn`, `logBpmnDebug`. Same family, different spelling, so the
+filter that defined the row could not see half its members.
+
+This is 6.141 and 6.136 again at a different scale: a count named for
+one population while measuring another, this time **inside the
+instrument built to prevent exactly that**. The corrective is the same
+one those entries reached. A classifier is only as good as a sample
+read by hand, and the row with the most members is the one to sample.
+
+**Principle**: when a count is split by a pattern, read ten members of
+each bucket before trusting the split. A bucket boundary drawn by a
+regex is a claim about naming, and naming is the thing that varies.
+
+### 6.149 Three Mappings Failed Because the Artifact Is Not a Concatenation (2026-10-21)
+
+The bundle's TS6133 reports name lines in `diagramengine.ts`, and the
+fix has to land in `src/`. Three attempts to map between them failed:
+a fixed line offset, a widened search window, then a match on content
+plus ordinal. The bundle strips declarations, inserts a preamble and
+reorders, so no positional relation holds.
+
+What worked was not a better mapping. **Compile `src/` on its own and
+intersect its report with the bundle's.** The src run gives exact
+locations in editable files. The bundle run says which of those
+actually ship unread. The intersection is the work.
+
+The intersection also earned its keep immediately: **five symbols the
+src run calls unused are used across module boundaries once
+concatenated.** Acting on the src run alone would have deleted five
+live constants and broken the build.
+
+**Principle**: when two views of the same program disagree about
+locations, stop translating between them and intersect their verdicts
+instead. Three failed translations is the signal to change the
+question, and the disagreement between the views is itself the finding.

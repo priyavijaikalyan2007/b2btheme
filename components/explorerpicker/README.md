@@ -67,7 +67,7 @@ dialog.open();
 | `container` | `HTMLElement \| string` | — | Container element or element ID (required) |
 | `mode` | `"single" \| "multi"` | `"single"` | Selection mode |
 | `selectionTarget` | `"resource" \| "container" \| "any"` | `"resource"` | What types of nodes are selectable |
-| `resourceTypeFilter` | `string[]` | — | Only show matching resource types |
+| `resourceTypeFilter` | `string[]` | — | Only show matching resource types. Applied since 2026-10-21. Before then the option reached a field nothing read |
 | `excludeNodeIds` | `string[]` | — | IDs of nodes that cannot be selected (dimmed) |
 | `initialExpandedNodeId` | `string` | — | Auto-expand tree to this node on load |
 | `preSelectedNodeIds` | `string[]` | — | Pre-selected nodes on render |

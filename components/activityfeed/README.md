@@ -51,13 +51,25 @@ const feed = createActivityFeed({
 | `show(containerId)` | Mount to container |
 | `hide()` | Remove from DOM |
 | `destroy()` | Full cleanup |
-| `addEvent(ev)` | Prepend real-time event |
-| `addEvents(evs)` | Append events (pagination) |
+| `addEvent(ev)` | Prepend real-time event. Announces who did what to what |
+| `addEvents(evs)` | Append events (pagination). Announces a count |
 | `setEvents(evs)` | Replace all events |
 | `getEvents()` | Get current events |
 | `clear()` | Remove all events |
 | `refresh()` | Re-render |
 | `scrollToTop()` | Scroll to top |
+
+## Accessibility
+
+The feed mounts an `aria-live="polite"` `aria-atomic="true"` region, and
+both methods that add activity write to it. `addEvent` announces the actor,
+the verb and the target. `addEvents` announces a count rather than the
+events, because `aria-atomic` makes the region read as a single utterance
+and a bulk load would otherwise read the whole batch aloud.
+
+Before 2026-10-21 the region was built and appended on every mount and
+nothing ever wrote to it, so a screen-reader user was told nothing when new
+activity arrived (UNUSED-1).
 
 ## Event Types
 

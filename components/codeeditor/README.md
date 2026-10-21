@@ -153,6 +153,13 @@ Recorded as DEBT-SEC-5 and DEBT-SEC-9, both closed by ADR-211.
 | `diagnostics` | `CodeEditorDiagnostic[]` | `[]` | Initial diagnostics (CM mode only) |
 | `disabled` | `boolean` | `false` | Disabled state |
 | `cssClass` | `string` | — | Additional CSS class |
+| `keyBindings` | `Partial<Record<string, string>>` | — | Override a named action's shortcut, per KEYBOARD.md. Honoured since 2026-10-21 |
+
+Key combos use the house `+` separator, as in `"Ctrl+Shift+s"`, and are
+translated to CodeMirror's `-` form. The live default for save is `Mod-s`,
+which is Cmd on macOS. Before 2026-10-21 `keyBindings` was accepted,
+type-checked and ignored, so a caller remapping an action got the
+documented type and the original shortcut (UNUSED-1).
 
 ### Callbacks
 

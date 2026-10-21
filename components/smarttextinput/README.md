@@ -124,6 +124,12 @@ checked for one from JavaScript, and an omitted `suppressIn` raised a
 
 The engine auto-detects the adapter from the attached element. You can also pass an explicit type to `attach()`.
 
+One engine drives one element. A second `attach()` on an engine that already
+holds an element **throws and names `detach()`**, because honouring it would
+mean deciding which element the caller meant. Before 2026-10-21 it overwrote
+the adapter without destroying it, so the first element kept an adapter
+nobody could reach and the engine silently rebound (UNUSED-1, ADR-200).
+
 | Adapter | Element Types | Token Storage |
 |---------|---------------|---------------|
 | `plaintext` | `<input>`, `<textarea>` | Serialized syntax inline in element value |
@@ -138,7 +144,7 @@ The `plaintext` and `contenteditable` adapters are built in. The others require 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `attach(element, adapterType?)` | `void` | Attach engine to a DOM element |
+| `attach(element, adapterType?)` | `void` | Attach engine to a DOM element. **Throws if the engine is already attached** — call `detach()` first |
 | `detach()` | `void` | Detach from the current element |
 | `destroy()` | `void` | Permanently destroy the engine |
 | `register(trigger)` | `void` | Register a `TriggerDefinition` |

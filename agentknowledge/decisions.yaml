@@ -9740,3 +9740,88 @@
     in a ceiling whose only value is that nobody argues with it. It
     gets rewritten instead of exempted, and over-counting by one is
     the safe direction for a ceiling.
+
+- id: ADR-217
+  title: A build step that rewrites declarations makes the source text a hypothesis, so the two texts need a gate
+  date: 2026-10-21
+  status: accepted
+  context: |
+    UNUSED-1's last population was 103 TS6133 reports in the
+    generated components/diagramengine/diagramengine.ts. The fix has
+    to land in components/diagramengine/src/ or the next
+    `npm run build` discards it, a trap this tracker had already been
+    caught by once. Working through them turned up a second thing
+    nobody had looked for: whether the constants in src/ agree with
+    the ones that ship.
+  decision: |
+    D1. THE BUNDLER OWNS SIXTEEN CONSTANTS AND STRIPS EVERY LOCAL
+        COPY. scripts/bundle-diagramengine.sh concatenates thirty
+        files into one IIFE. Thirty files cannot each declare
+        `const CLS`, so the script emits its own preamble and then
+        greps each module to remove that module's declaration of the
+        same name. The build is correct. The cost is that a constant
+        a reader finds in a src file is deleted before it ships.
+
+    D2. MAX_ZOOM READ 4.0 IN render-engine.ts AND SHIPS AS 32.0. The
+        README says "10% to 3200% (32x)", the suite measures 32x and
+        the running engine caps at 32x. Four records of the same fact
+        agreed and the fifth was the file a reader opens first.
+        ROTATION_HANDLE_OFFSET read 24 there against 25 in
+        tool-select.ts. Both aligned to the shipped values. No
+        shipped behaviour changes, because both source values were
+        already dead.
+
+    D3. NOTHING EXISTING COULD HAVE CAUGHT IT. A type checker sees a
+        valid number. Every test exercises the bundle. A reviewer
+        reading render-engine.ts has no reason to suspect the line
+        will not survive the build. Only a comparison of the two
+        texts can see it.
+
+    D4. bundlePreambleMismatches IS A CEILING AT 0, NOT A FLOOR. It
+        reads the `echo` lines of the bundler, reads every
+        ^const NAME = VALUE;$ in src/, and reports each pair sharing
+        a name and not a value. A module that stops declaring a local
+        copy is fine and a module that declares one is fine. What
+        must never happen is a local copy that lies. Mutation-proven
+        by restoring MAX_ZOOM to 4.0, which fails the gate by name.
+
+    D5. MAP NOTHING, INTERSECT INSTEAD. Three attempts to relate the
+        bundle's error locations to source failed — a fixed line
+        offset, a widened search window, a match on content plus
+        ordinal — because the bundle strips, prepends and reorders.
+        What works is compiling src/ on its own and intersecting its
+        report with the bundle's: the src run gives exact editable
+        locations, the bundle run says which of those actually ship
+        unread. Five symbols the src run calls unused are used across
+        module boundaries once concatenated, so acting on the src run
+        alone would have deleted five live constants.
+
+    D6. HALF THE 103 WERE THE OTHER ROW OF THE SAME TABLE. UNUSED-1
+        splits its count into 120 preamble shims that are not debt,
+        103 in the bundle and the rest elsewhere. The preamble row is
+        matched with logDebug|logError|logWarn|logInfo|logTrace, and
+        these modules destructure per-namespace names such as
+        logUmlWarn and logBpmnDebug, so the filter defining the row
+        could not see 51 of its own members. They remain debt under
+        FRONTEND_LOGGING.md 1.1, which says each module destructures
+        "the levels it uses", and eighteen destructured four and used
+        one.
+  consequences: |
+    Any fact duplicated across a generator and its input needs a gate
+    comparing them. The general form is wider than this bundler: a
+    value asserted in two places that a build step reconciles silently
+    will diverge, and the divergence is invisible to every instrument
+    that reads only one side.
+
+    The gate direction follows from what the duplication is for.
+    Duplication is permitted here, so the gate cannot be a floor on
+    how many copies exist. Disagreement is never permitted, so the
+    gate is a ceiling at zero on how many disagree. TESTING.md 2.7f
+    records this, and 2.7c already records the other hazard of a gate
+    that reads a generated artifact: run it on a quiet tree, because
+    the artifact is rewritten during `npm run build`.
+
+    Open: the preamble is sixteen constants and the comparison is
+    exact-text. A src module writing `32` where the bundle writes
+    `32.0` would be reported, which is the safe direction for a
+    ceiling and is worth revisiting only if it ever fires falsely.
