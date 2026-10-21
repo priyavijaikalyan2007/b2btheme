@@ -64,10 +64,17 @@ function getHeaderCells(): HTMLElement[]
     ) as HTMLElement[];
 }
 
+// THIS HELPER RETURNED FOUR OF FIVE ROWS AND HAD NO CALLER. The
+// selector `[role='row']:not(:first-child)` was written to drop the
+// header, and the header is not a sibling of the body rows -- it
+// lives in `.datagrid-scroll-container` while the rows live in
+// `.datagrid-body`. So it dropped the header AND the first row.
+// Nothing noticed, because until the sort blocks below were given a
+// real assertion nothing called it.
 function getBodyRows(): HTMLElement[]
 {
     return Array.from(
-        container.querySelectorAll("[role='row']:not(:first-child)")
+        container.querySelectorAll(".datagrid-body [role='row']")
     ) as HTMLElement[];
 }
 
@@ -184,12 +191,26 @@ describe("table rendering", () =>
 
 describe("sorting", () =>
 {
+    /** The first column of every rendered body row, in render order. */
+    function renderedNames(): string[]
+    {
+        return getBodyRows().map(
+            (r) => r.querySelector("[role='gridcell']")?.textContent ?? "");
+    }
+
+    // NOTHING IN THIS BLOCK CHECKED THE ORDER. It sorted, then read
+    // `getRow("1")` -- a lookup BY ID, which returns the same row
+    // whatever the sort did -- and asserted it was defined. The title
+    // named the one fact the body could not see.
     test("sort_ByColumn_SortsAscending", () =>
     {
         const grid = createDataGrid(defaultOpts(), "test-grid");
+
         grid.sort("name", "asc");
-        const firstRow = grid.getRow("1");
-        expect(firstRow).toBeDefined();
+
+        expect(renderedNames()).toEqual([
+            "Acme Corp", "Beta Inc", "Delta Co", "Epsilon Ltd", "Gamma LLC",
+        ]);
         grid.destroy();
     });
 
@@ -204,14 +225,20 @@ describe("sorting", () =>
         grid.destroy();
     });
 
+    // The comment said "data should be in original order" and the
+    // body asked `getRow("1")` whether it existed. Gamma before
+    // Delta is what original order MEANS for this fixture, and it is
+    // the only thing that separates a cleared sort from a kept one.
     test("clearSort_RemovesSortState", () =>
     {
         const grid = createDataGrid(defaultOpts(), "test-grid");
         grid.sort("name", "asc");
+
         grid.clearSort();
-        // After clearing sort, data should be in original order
-        const row = grid.getRow("1");
-        expect(row).toBeDefined();
+
+        expect(renderedNames()).toEqual([
+            "Acme Corp", "Beta Inc", "Gamma LLC", "Delta Co", "Epsilon Ltd",
+        ]);
         grid.destroy();
     });
 

@@ -3167,6 +3167,47 @@ offered as the evidence for it.
   second reader of the same forms would be a second thing to keep
   correct (DEBT-DOC-1).
 
+  **THE `existence` BUCKET: 85 -> 42, AND THE TITLE QUESTION HAS
+  FOUND A PRODUCT DEFECT IN EVERY FILE SO FAR.** There is no regex
+  split for this family, and inventing one would repeat ADR-215.
+  `ReturnsPicker` and `ReturnsCurrentValue` differ in what they
+  claim and not in how they are spelled, so a pattern that sorted
+  them would be a rule asserted rather than read. The blocks are
+  being emptied by asking the question of each one.
+
+  | Block | Title named | Body asked | Found |
+  |---|---|---|---|
+  | `datagrid :: sort_ByColumn_SortsAscending` | ascending order | `getRow("1")` is defined — a lookup BY ID, unchanged by any sort | `getBodyRows()` returned **4 of 5 rows** and had no caller: `[role='row']:not(:first-child)` drops the header, and the header is not a sibling of the body rows |
+  | `datagrid :: clearSort_RemovesSortState` | "original order", in a comment | the same `getRow("1")` | — |
+  | `helptooltip` ×4 | a text, a topic, and two setters | the handle is defined | the topic is **not** in the popup at all — it is what `openDrawer` hands HelpDrawer on click, and the suite leaked both the popup and the drawer SINGLETON between tests |
+  | `markdownrenderer :: withClassName_PassesOption` | the option is passed | the handle is defined | **`opts.className` was declared and never read.** Its doc comment has promised "Additional CSS class for the rendered wrapper" the whole time |
+  | `markdownrenderer :: highlightDisabled_SkipsHljs` | hljs is skipped, in a comment | the handle is defined | the mock's `parse` never runs an extension, so the first rewrite could not fail either |
+  | `markdownrenderer :: mathDisabled_HandleStillCreated` | only that a handle exists | the handle is defined | see below |
+  | `markdownrenderer :: customServer_PassedToHandle` | the server is passed | the handle is defined | jsdom's `Blob` has no `.stream()`, so the URL is unreachable without stubbing the ENVIRONMENT up to what a browser gives |
+
+  **`configureMarked` RAN ONCE PER PAGE AND THE LATCH WAS KEYED ON
+  NOTHING.** `let configured = false` meant the FIRST
+  `createMarkdownRenderer` in a page chose `highlight` and `math` for
+  every later one. A second caller naming `math: false` was handed a
+  renderer with KaTeX still wired in and told nothing — ADR-200's
+  discriminator exactly: a request the caller NAMED got neither the
+  effect nor an error. `marked.use()` is global, so the call cannot
+  be honoured; it is now **refused by name**. The latch is keyed on
+  the `marked` instance, which is also correct in production, since a
+  reloaded marked needs reconfiguring.
+
+  **The test file carried a comment asserting a reset it did not
+  perform:** "Reset the module-level `configured` flag by clearing
+  all window globals". Clearing globals never touched a module-level
+  `let`, so `configureMarked` ran once for the whole file and every
+  block after the first had inert options. This is how the product
+  defect stayed invisible — and it is the same shape as everything
+  else in this entry: a claim whose mechanism does not exist.
+
+  A stale `/** Fallback when marked is not available — plain text
+  only. */` was still sitting above the window registration, left
+  behind when ADR-202 deleted the function it documented.
+
   **ALSO FOUND, ON NO LIST: `spinemap :: onNodeClick_CalledOnNodeClick`
   had three independent mismatches in one block.** It queried
   `[data-node-id]` where the groups carry `data-id`, so the guard

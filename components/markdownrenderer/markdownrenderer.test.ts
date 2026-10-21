@@ -44,6 +44,28 @@ function buildHljsMock()
     };
 }
 
+/**
+ * Runs the code renderer that `createMarkdownRenderer` handed marked.
+ *
+ * `buildMarkedMock().parse` wraps its input in a <p> and never calls
+ * an extension, so rendering markdown through the mock cannot reach
+ * the renderer. Taking it back off the `use` spy is how a claim
+ * about the renderer becomes observable at all.
+ */
+function renderCodeWith(
+    marked: ReturnType<typeof buildMarkedMock>,
+    code: string,
+    lang: string
+): void
+{
+    const call = marked.use.mock.calls.find(
+        (c: unknown[]) => (c[0] as Record<string, unknown>)["renderer"]);
+    const renderer = (call![0] as Record<string, Record<string, unknown>>)["renderer"];
+
+    (renderer["code"] as (t: { text: string; lang: string }) => string)(
+        { text: code, lang });
+}
+
 /** Build a minimal katex mock. */
 function buildKatexMock()
 {
@@ -65,8 +87,15 @@ beforeEach(() =>
     container = document.createElement("div");
     document.body.appendChild(container);
 
-    // Reset the module-level `configured` flag by clearing all window globals
-    // so that configureMarked runs fresh on each test.
+    // THIS COMMENT USED TO SAY these lines "reset the module-level
+    // `configured` flag", and they did not: `configured` was a
+    // boolean in the module that nothing here touched, so
+    // configureMarked ran ONCE for the whole file and every block
+    // after the first had inert `highlight` and `math` options. The
+    // latch is keyed on the `marked` instance now, so stubbing a
+    // fresh mock per test is what resets it -- which is also the
+    // production behaviour, since a reloaded marked needs
+    // reconfiguring.
     (window as unknown as Record<string, unknown>)["marked"] = undefined;
     (window as unknown as Record<string, unknown>)["hljs"] = undefined;
     (window as unknown as Record<string, unknown>)["katex"] = undefined;
@@ -139,11 +168,21 @@ describe("createMarkdownRenderer", () =>
         expect(target.textContent).toContain("Hello");
     });
 
+    // THE OPTION WENT NOWHERE AND THE TITLE SAID IT WAS PASSED.
+    // `opts.className` was declared with the doc comment "Additional
+    // CSS class for the rendered wrapper" and never read, so a caller
+    // got the documented type and no class. The block asked the
+    // handle whether it existed. render() now applies it, and this
+    // reads the wrapper.
     test("withClassName_PassesOption", () =>
     {
         vi.stubGlobal("marked", buildMarkedMock());
         const handle = createMarkdownRenderer({ className: "custom-md" });
-        expect(handle).toBeDefined();
+        const target = document.createElement("div");
+
+        handle.render("hello", target);
+
+        expect(target.classList.contains("custom-md")).toBe(true);
     });
 });
 
@@ -362,14 +401,42 @@ describe("code block rendering", () =>
         expect(html).toContain("<code>");
     });
 
+    // The comment stated the claim -- "hljs.highlight should not have
+    // been called" -- and the body asked the handle whether it
+    // existed. The spy was built, stubbed in, and never looked at.
+    //
+    // RENDERING THE MARKDOWN DOES NOT REACH IT EITHER, and the first
+    // rewrite made that mistake: `buildMarkedMock().parse` wraps the
+    // input in a <p> and never runs an extension, so the assertion
+    // held whatever `highlight` was set to. The renderer marked was
+    // HANDED is the observable, so take it back out of the mock and
+    // run it.
     test("highlightDisabled_SkipsHljs", () =>
     {
         const hljs = buildHljsMock();
+        const marked = buildMarkedMock();
         vi.stubGlobal("hljs", hljs);
-        vi.stubGlobal("marked", buildMarkedMock());
-        const handle = createMarkdownRenderer({ highlight: false });
-        // hljs.highlight should not have been called during code rendering
-        expect(handle).toBeDefined();
+        vi.stubGlobal("marked", marked);
+
+        createMarkdownRenderer({ highlight: false });
+
+        renderCodeWith(marked, "const a = 1;", "javascript");
+        expect(hljs.highlight).not.toHaveBeenCalled();
+    });
+
+    test("highlightEnabled_UsesHljs", () =>
+    {
+        // The other half of the pair, so the case above cannot pass
+        // by the renderer never being reached at all.
+        const hljs = buildHljsMock();
+        const marked = buildMarkedMock();
+        vi.stubGlobal("hljs", hljs);
+        vi.stubGlobal("marked", marked);
+
+        createMarkdownRenderer({ highlight: true });
+
+        renderCodeWith(marked, "const a = 1;", "javascript");
+        expect(hljs.highlight).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -392,21 +459,81 @@ describe("KaTeX math rendering", () =>
         expect(typeof handle.toHtml).toBe("function");
     });
 
-    test("mathDisabled_HandleStillCreated", () =>
+    // Renamed as well as rewritten. "HandleStillCreated" is a title
+    // that `toBeDefined()` satisfies exactly, so the block did what
+    // it said -- and what the option is FOR is that KaTeX is never
+    // wired in. `configureMarked` calls `marked.use` once for the
+    // code renderer and a second time, from `applyKatexExtension`,
+    // only when katex is live. The count is the claim.
+    test("mathDisabled_SkipsKatex", () =>
     {
         const katex = buildKatexMock();
+        const marked = buildMarkedMock();
         vi.stubGlobal("katex", katex);
-        vi.stubGlobal("marked", buildMarkedMock());
-        const handle = createMarkdownRenderer({ math: false });
-        expect(handle).toBeDefined();
+        vi.stubGlobal("marked", marked);
+
+        createMarkdownRenderer({ math: false });
+
+        expect(marked.use).toHaveBeenCalledTimes(1);
     });
 
+    test("secondCallNamingADifferentExtension_Throws", () =>
+    {
+        // ADR-200. `marked.use()` is global and already applied, so
+        // this call cannot be honoured without changing the renderer
+        // the first caller is holding. Before 2026-10-21 it was
+        // neither honoured nor refused: the second caller got a
+        // handle with KaTeX still wired in and no indication.
+        const marked = buildMarkedMock();
+        vi.stubGlobal("katex", buildKatexMock());
+        vi.stubGlobal("marked", marked);
+        createMarkdownRenderer({ math: true });
+
+        expect(() => createMarkdownRenderer({ math: false }))
+            .toThrow(/already configured with math: true/);
+    });
+
+    test("secondCallNamingTheSameExtensions_IsFine", () =>
+    {
+        // The accept half. Two components asking for the defaults is
+        // the ordinary case -- HelpDrawer and DocViewer both call
+        // `factory()` with no options at all.
+        const marked = buildMarkedMock();
+        vi.stubGlobal("katex", buildKatexMock());
+        vi.stubGlobal("marked", marked);
+        createMarkdownRenderer({ math: true });
+
+        expect(() => createMarkdownRenderer({})).not.toThrow();
+    });
+
+    test("mathEnabled_WiresKatexExtension", () =>
+    {
+        const katex = buildKatexMock();
+        const marked = buildMarkedMock();
+        vi.stubGlobal("katex", katex);
+        vi.stubGlobal("marked", marked);
+
+        createMarkdownRenderer({ math: true });
+
+        expect(marked.use).toHaveBeenCalledTimes(2);
+    });
+
+    // "SilentlySkips" is not a fallback in the sense AGENTS.md
+    // forbids: nothing is fabricated, the math stays the literal
+    // text the author typed, and `logCapabilities` leaves katex out
+    // of the line it logs. That is the absence stated rather than
+    // papered over. The claim worth making is that the text survives
+    // unrendered.
     test("withoutKatex_SilentlySkips", () =>
     {
         vi.stubGlobal("marked", buildMarkedMock());
         // katex not on window
         const handle = createMarkdownRenderer({ math: true });
-        expect(handle).toBeDefined();
+
+        const html = handle.toHtml("$x^2$");
+
+        expect(html).toContain("$x^2$");
+        expect(html).not.toContain("katex");
     });
 });
 
@@ -598,16 +725,36 @@ describe("escapeHtml, through the code-block renderer", () =>
 
 describe("PlantUML server option", () =>
 {
-    test("customServer_PassedToHandle", () =>
+    // "without needing async fetch" was the reason given for asking
+    // the handle whether it existed, and the fetch URL is the ONLY
+    // place this option becomes visible. Stubbing fetch costs one
+    // line and turns the title into a claim.
+    test("customServer_PassedToHandle", async () =>
     {
-        vi.stubGlobal("marked", buildMarkedMock());
-        // Verify the handle is created with a custom server option
-        // without needing async fetch. The option is passed through
-        // to the internal render pipeline.
+        const fetchSpy = vi.fn(() => Promise.resolve(
+            new Response("<svg></svg>", { status: 200 })));
+        vi.stubGlobal("fetch", fetchSpy);
+
+        // MEASURED: jsdom's Blob has no `.stream()`, so `deflateRaw`
+        // throws before any URL is built and the block's own
+        // `.catch` turns it into a warning. Node's Blob does have
+        // one, and CompressionStream is global in Node 18+. This
+        // stubs the ENVIRONMENT up to what a browser provides, not
+        // the component.
+        vi.stubGlobal("Blob", (await import("node:buffer")).Blob);
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => '<pre class="md-diagram-plantuml" data-source="A -> B"></pre>'
+        ));
         const handle = createMarkdownRenderer({
             plantumlServer: "http://localhost:8080/svg/"
         });
-        expect(handle).toBeDefined();
+        const target = document.createElement("div");
+
+        handle.render("```plantuml\nA -> B\n```", target);
+        await vi.waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+
+        expect(String(fetchSpy.mock.calls[0][0]))
+            .toMatch(/^http:\/\/localhost:8080\/svg\//);
     });
 
     test("plantumlDisabled_DoesNotCreatePlaceholders", () =>

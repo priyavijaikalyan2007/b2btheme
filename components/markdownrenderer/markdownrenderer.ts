@@ -208,6 +208,42 @@ const DIAGRAM_LANGS = new Set([
     "mermaid", "dot", "graphviz", "plantuml",
 ]);
 
+/** The options that mutate the shared `marked` instance. */
+function extensionOptions(
+    opts: MarkdownRendererOptions
+): { highlight: boolean; math: boolean }
+{
+    return { highlight: opts.highlight !== false, math: opts.math !== false };
+}
+
+/**
+ * Refuses a later call that names an extension the live `marked` was
+ * not configured with.
+ *
+ * NOT A GUARD THAT MAKES THE CALL WORK -- it cannot. `marked.use()`
+ * is global and already applied, so honouring this caller would
+ * change the renderer the first one is holding. The honest answer is
+ * to say so. Only `highlight` and `math` reach `marked.use`; every
+ * other option is read per render and needs no agreement.
+ */
+function requireSameExtensions(opts: MarkdownRendererOptions): void
+{
+    const want = extensionOptions(opts);
+    const have = configuredWith!;
+
+    for (const key of ["highlight", "math"] as const)
+    {
+        if (want[key] === have[key]) { continue; }
+
+        throw new Error(
+            `${LOG_PREFIX} marked is already configured with ${key}: `
+            + `${have[key]}, and this call asks for ${want[key]}. `
+            + "marked.use() is global, so the first renderer on a page "
+            + "decides. Create one renderer with the options you want, "
+            + "or reload marked before changing them.");
+    }
+}
+
 /** Configure marked with available extensions. */
 function configureMarked(
     marked: MarkedStatic,
@@ -689,7 +725,27 @@ function encode6bit(b: number): string
 /** Counter for unique long-description ids, one per rendered diagram. */
 let diagramSeq = 0;
 
-let configured = false;
+/**
+ * The `marked` instance `configureMarked` has already run against.
+ *
+ * A BOOLEAN HERE MEANT THE FIRST CALLER IN A PAGE CHOSE FOR EVERY
+ * LATER ONE. `marked` is a global singleton and `use()` mutates it,
+ * so configuring once is right -- but the latch was keyed on nothing,
+ * so a second `createMarkdownRenderer({ math: false })` was handed a
+ * renderer with KaTeX still wired in and told nothing. ADR-200: a
+ * request the caller NAMED is owed either the effect or an error.
+ *
+ * Keying on the instance also gives a test suite its reset for free.
+ * markdownrenderer.test.ts carried a comment reading "Reset the
+ * module-level `configured` flag by clearing all window globals" and
+ * clearing globals did not touch it, so `configureMarked` ran once
+ * for the whole file and every later block's `highlight` and `math`
+ * options were inert.
+ */
+let configuredFor: MarkedStatic | null = null;
+
+/** The extension options the live `marked` was configured with. */
+let configuredWith: { highlight: boolean; math: boolean } | null = null;
 
 /**
  * Create a markdown renderer handle.
@@ -730,10 +786,15 @@ export function createMarkdownRenderer(
             + "before creating a renderer.");
     }
 
-    if (!configured)
+    if (configuredFor !== marked)
     {
         configureMarked(marked, opts);
-        configured = true;
+        configuredFor = marked;
+        configuredWith = extensionOptions(opts);
+    }
+    else
+    {
+        requireSameExtensions(opts);
     }
 
     logCapabilities(opts);
@@ -752,6 +813,17 @@ function buildHandle(
         render: (md: string, target: HTMLElement): void =>
         {
             target.innerHTML = sanitize(marked.parse(md));
+
+            // `className` WAS DECLARED AND NEVER READ. The option has
+            // carried the doc comment "Additional CSS class for the
+            // rendered wrapper" since it was added, and nothing in
+            // this file touched `opts.className`. A caller passing it
+            // got the documented type and no class, which is the same
+            // silent no-op shape as the fallbacks ADR-202 removed.
+            // `toHtml` returns a string and has no wrapper to carry
+            // it, so the option applies to `render` alone.
+            if (opts.className) { target.classList.add(opts.className); }
+
             runPostRenderSteps(target, opts, pumlServer);
         },
     };
@@ -781,7 +853,6 @@ function logCapabilities(opts: MarkdownRendererOptions): void
     logInfo("Created renderer —", caps.join(", "));
 }
 
-/** Fallback when marked is not available — plain text only. */
 // ============================================================================
 // WINDOW REGISTRATION
 // ============================================================================
