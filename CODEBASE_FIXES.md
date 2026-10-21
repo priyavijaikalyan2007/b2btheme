@@ -3044,9 +3044,42 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **2 test blocks where every assertion passes
-  for any value that is not null, down from 341, and now classified by
-  a committed instrument rather than by a note.**
+- [x] **DEBT-TEST-1b** *(CLOSED 2026-10-21)* — **0 test blocks where
+  every assertion passes for any value that is not null, from 341.**
+  Regenerate with `node scripts/test-assertions.mjs --shapes`; the
+  ceiling is 0 and the classifier is pinned by
+  `scripts/test-assertions.test.ts`.
+
+  **THE LAST TWO WERE NOT A jsdom FLOOR EITHER.** Both carried a
+  comment saying so, written by me, and both had a real claim
+  underneath.
+
+  - **`engine.resize()` is EMPTY.** Its whole body is the comment
+    "SVG auto-sizes via width/height 100%", and it is published and
+    documented as "Recalculate SVG dimensions". Nothing in this
+    repository or in the consuming app calls it. It is correct to be
+    empty **only while that sizing holds**, so the test pins the
+    reason rather than the emptiness: `width` and `height` are
+    `"100%"`. Give the SVG pixel dimensions and `resize()` becomes a
+    method that lies, and the block goes red — mutation-proven.
+  - **`zoomToFit` has a guard and the guard was the claim.**
+    `applyFitTransform` computes `availW = rect.width - padding * 2`
+    and returns at `if (availW <= 0 || availH <= 0)`. jsdom's zero
+    rect reaches that guard, so what is testable here is **that the
+    viewport is left alone when there is no area to fit to**.
+    Removing the guard yields a zoom of 0.1 from a division on zero —
+    mutation-proven, and `.not.toThrow()` could not see it. The
+    framing claim stays in `tests/diagramengine.spec.ts`, which has a
+    viewport.
+
+  **"It cannot be tested here" was wrong five times in this entry.**
+  Three buckets were labelled near-zero yield and each turned up
+  defects; `absentDependency` was six blocks that ran with the
+  dependency present; `positiveControl` was two accept halves that
+  proved nothing; and these two were a floor I wrote the justification
+  for myself. The pattern is the same every time — **a note explaining
+  why a measurement is impossible, written by whoever last found it
+  inconvenient.**
 
   Regenerate with `node scripts/test-assertions.mjs --shapes`.
 

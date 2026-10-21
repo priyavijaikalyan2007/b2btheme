@@ -3220,3 +3220,38 @@ only be turned off, and a structure check makes that visible.
 to keep, the ceiling has stopped measuring anything and should be
 replaced by an invariant the toolchain enforces. Prefer the guarantee
 that fails the build over the one that fails a report.
+
+### 6.158 The Note Explaining Why It Cannot Be Measured (2026-10-21)
+
+DEBT-TEST-1b ran 341 to 0. Five times along the way the remaining
+blocks were described as unreachable, and five times the description
+was wrong:
+
+- Three buckets were labelled "near zero yield". Each turned up
+  defects — one of them eleven.
+- `absentDependency` was six blocks a file-level rule excused. All six
+  ran with the dependency present.
+- `positiveControl` was two accept halves the bucket's own comment
+  called correct by construction. Both asserted nothing.
+- The last two were "a jsdom floor". One pinned an **empty method**
+  whose emptiness is conditional on how the SVG is sized; the other
+  pinned a **guard** that returns when there is no area to fit to, and
+  deleting the guard yields a zoom of 0.1 from a division on zero.
+
+Every one of those was documented. Each had a comment above it
+explaining why the real claim could not be asserted here, and several
+of those comments I wrote myself a few days earlier.
+
+**A note explaining why something cannot be measured is written by
+whoever last found measuring it inconvenient**, and it then reads as
+settled to everyone after. It is more durable than the absence it
+describes, because the next reader stops at the explanation.
+
+The thing that worked every time was the same: **list the members,
+open one, and ask what the title claims.** Never the total, and never
+the comment.
+
+**Principle**: treat "this cannot be tested here" as an unverified
+claim with a date on it, not as documentation. When a count stalls
+against a floor, the floor's justification is the first thing to
+re-measure — especially when you wrote it.

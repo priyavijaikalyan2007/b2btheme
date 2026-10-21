@@ -95,17 +95,23 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
         expect(el).not.toBe(container);
     });
 
-    test("resize does not throw", () =>
+    test("resize_IsEmptyBecauseTheSvgSizesItself", () =>
     {
         setup();
 
-        // DEBT-TEST-1b, and this one STAYS a survival claim (ADR-215).
-        // resize re-reads the container's rect, which jsdom reports as
-        // zeros, and the svg is sized in percentages rather than
-        // pixels — so a probe found nothing that resize() changes
-        // here. Re-flowing on a real resize is a viewport claim and
-        // belongs in a Playwright spec.
-        expect(() => { engine.resize(); }).not.toThrow();
+        // `resize()` IS EMPTY, AND THAT IS THE CLAIM. Its whole body
+        // is a comment reading "SVG auto-sizes via width/height 100%",
+        // and it is published and documented as "Recalculate SVG
+        // dimensions". It is correct to be empty ONLY while that
+        // sizing holds, so the reason is what gets pinned: the moment
+        // the SVG is given pixel dimensions, `resize()` becomes a
+        // method that lies and this block goes red (DEBT-TEST-1b).
+        const svg = engine.getElement();
+
+        engine.resize();
+
+        expect(svg.getAttribute("width")).toBe("100%");
+        expect(svg.getAttribute("height")).toBe("100%");
     });
 
     test("destroy cleans up DOM", () =>
@@ -570,22 +576,29 @@ describe("DiagramEngine — Viewport & Zoom", () =>
         expect(engine.getZoomLevel()).toBe(before);
     });
 
-    test("zoomToFit does not throw with objects", () =>
+    test("zoomToFit_WithNoViewportArea_LeavesTheViewportAlone", () =>
     {
-        // DEBT-TEST-1b, and this one STAYS a survival claim (ADR-215).
-        // zoomToFit reads getBoundingClientRect, which jsdom answers
-        // with zeros, so there is nothing here for it to fit to.
-        // MEASURED with a probe: zoom is 1 before and after, and the
-        // svg carries no viewBox at all. The real claim — that the
-        // objects end up framed — is asserted in
-        // tests/diagramengine.spec.ts, where there is a viewport.
+        // jsdom answers `getBoundingClientRect` with zeros, so
+        // `applyFitTransform` computes `availW = 0 - padding * 2` and
+        // returns at `if (availW <= 0 || availH <= 0)`. THAT GUARD IS
+        // THE CLAIM HERE: with no area to fit to, the viewport must be
+        // left as it was rather than scaled by a division on zero.
+        // Removing the guard yields Infinity for the zoom and NaN for
+        // the offsets, which `.not.toThrow()` could not see.
+        //
+        // The other claim — that the objects end up FRAMED — needs a
+        // viewport and is asserted in `tests/diagramengine.spec.ts`.
         engine.addObject({ id: "ztf-1" });
         engine.addObject({
             id: "ztf-2",
             presentation: { bounds: { x: 500, y: 500, width: 100, height: 100 } },
         });
+        const before = engine.getZoomLevel();
 
-        expect(() => { engine.zoomToFit(); }).not.toThrow();
+        engine.zoomToFit();
+
+        expect(engine.getZoomLevel()).toBe(before);
+        expect(Number.isFinite(engine.getZoomLevel())).toBe(true);
     });
 });
 
