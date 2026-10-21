@@ -8,6 +8,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 import { createWorkspaceShell, type WorkspaceShellHandle } from "./workspaceshell";
 
@@ -78,9 +79,15 @@ describe("WorkspaceShell — lifecycle", () =>
     test("destroy is idempotent", () =>
     {
         const handle = make();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
         handle.destroy();
 
-        expect(() => handle.destroy()).not.toThrow();
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     // "a content region for the canvas to MOUNT INTO" is two claims

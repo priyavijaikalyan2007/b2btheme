@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     UserMenu,
@@ -217,7 +218,14 @@ describe("UserMenu destroy", () =>
     {
         const menu = new UserMenu(makeOptions());
         menu.show("usermenu-test-container");
+        const probe = destroyProbe();
+
         menu.destroy();
-        expect(() => menu.destroy()).not.toThrow();
+        const first = probe.total();
+        menu.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

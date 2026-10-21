@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     FontDropdown,
     createFontDropdown,
@@ -318,8 +319,15 @@ describe("destroy", () =>
     test("calledTwice_DoesNotThrow", () =>
     {
         const dd = new FontDropdown("test-fontdropdown", { fonts: MOCK_FONTS });
+        const probe = destroyProbe();
+
         dd.destroy();
-        expect(() => dd.destroy()).not.toThrow();
+        const first = probe.total();
+        dd.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

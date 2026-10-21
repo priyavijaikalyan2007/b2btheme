@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createStackLayout } from "./stacklayout";
 import type { StackLayoutOptions, StackedPanelConfig, StackLayout } from "./stacklayout";
 
@@ -536,8 +537,15 @@ describe("StackLayout destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const layout = createStackLayout(makeOptions());
+        const probe = destroyProbe();
+
         layout.destroy();
-        expect(() => layout.destroy()).not.toThrow();
+        const first = probe.total();
+        layout.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     AppLauncher,
@@ -233,7 +234,14 @@ describe("AppLauncher destroy", () =>
     {
         const launcher = new AppLauncher(makeOptions());
         launcher.show("launcher-test-container");
+        const probe = destroyProbe();
+
         launcher.destroy();
-        expect(() => launcher.destroy()).not.toThrow();
+        const first = probe.total();
+        launcher.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     SmartTextInputEngine,
     createSmartTextInput,
@@ -556,11 +557,21 @@ describe("destroy", () =>
         expect(engine.getTokens()).toHaveLength(0);
     });
 
-    test("calledTwice_DoesNotThrow", () =>
+    test("destroyCalledTwice_IsIdempotent", () =>
     {
         const engine = createSmartTextInput();
+        const input = document.createElement("input");
+        document.body.appendChild(input);
+        engine.attach(input);
+        const probe = destroyProbe();
+
         engine.destroy();
-        expect(() => engine.destroy()).not.toThrow();
+        const first = probe.total();
+        engine.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

@@ -12,6 +12,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { ErrorDialog, showErrorDialog, LiterateError } from "./errordialog";
 
 // ============================================================================
@@ -534,8 +535,15 @@ describe("instance methods", () =>
     {
         const dialog = new ErrorDialog("test-error-container");
         dialog.show({ title: "Error", message: "Msg" });
+        const probe = destroyProbe();
+
         dialog.destroy();
-        expect(() => dialog.destroy()).not.toThrow();
+        const first = probe.total();
+        dialog.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("hide_WhenNoModal_DoesNotThrow", () =>

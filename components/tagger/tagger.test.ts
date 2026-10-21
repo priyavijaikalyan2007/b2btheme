@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { Tagger, createTagger } from "./tagger";
 
 import type { TagItem, TagCategory, TaggerOptions } from "./tagger";
@@ -268,8 +269,15 @@ describe("lifecycle", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const tagger = new Tagger({});
+        const probe = destroyProbe();
+
         tagger.destroy();
-        expect(() => tagger.destroy()).not.toThrow();
+        const first = probe.total();
+        tagger.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

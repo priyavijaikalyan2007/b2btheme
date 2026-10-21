@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     createGraphMinimap,
     GraphCanvasHandle,
@@ -655,8 +656,15 @@ describe("destroy", () =>
         minimap = createGraphMinimap(opts);
 
         // Act & Assert — double destroy should be safe
-        minimap.destroy();
-        expect(() => minimap!.destroy()).not.toThrow();
+        const probe = destroyProbe();
+
+        minimap!.destroy();
+        const first = probe.total();
+        minimap!.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
         minimap = null;
     });
 

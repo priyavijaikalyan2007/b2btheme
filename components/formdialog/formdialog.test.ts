@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createFormDialog } from "./formdialog";
 import type { FormDialogOptions, FormFieldDef, FormDialog } from "./formdialog";
 
@@ -690,11 +691,15 @@ describe("FormDialog edge cases", () =>
         const handle = createFormDialog(defaultOptions());
         handle.show();
         vi.advanceTimersByTime(300);
-        expect(() =>
-        {
-            handle.destroy();
-            handle.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("getValueForMissingField_ReturnsEmptyString", () =>

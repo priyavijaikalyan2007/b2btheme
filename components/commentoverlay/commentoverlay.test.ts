@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createCommentOverlay } from "./commentoverlay";
 import type {
     CommentOverlayOptions,
@@ -412,10 +413,14 @@ describe("CommentOverlay edge cases", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const overlay = createCommentOverlay("comment-container", defaultOptions());
-        expect(() =>
-        {
-            overlay.destroy();
-            overlay.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        overlay.destroy();
+        const first = probe.total();
+        overlay.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

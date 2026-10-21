@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createStepper } from "./stepper";
 import type { StepConfig, StepperOptions, StepperHandle } from "./stepper";
 
@@ -536,8 +537,15 @@ describe("destroy", () =>
     test("destroy_CalledTwice_IsIdempotent", () =>
     {
         const stepper = createStepper(defaultOpts());
+        const probe = destroyProbe();
+
         stepper.destroy();
-        expect(() => stepper.destroy()).not.toThrow();
+        const first = probe.total();
+        stepper.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

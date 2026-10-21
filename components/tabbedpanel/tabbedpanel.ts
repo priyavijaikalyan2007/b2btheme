@@ -321,6 +321,19 @@ export class TabbedPanel
     >> & TabbedPanelOptions;
 
     // State
+    /**
+     * Whether `destroy()` has run (ADR-081 — `destroy()` is idempotent).
+     *
+     * (CRITICAL) THE SECOND `destroy()` FIRED `onClose` A SECOND TIME.
+     * There was no guard at all, so a host tearing a panel down twice
+     * got two close notifications for one panel, and `onBeforeClose`
+     * was asked for permission to destroy something already
+     * destroyed. `Destroy_CalledTwice_IsIdempotent` asserted
+     * `.not.toThrow()` and could not see either (DEBT-TEST-1b,
+     * ADR-216).
+     */
+    private destroyed: boolean = false;
+
     private currentMode: TabbedPanelMode = "docked";
     private dockPosition: TabbedPanelDockPosition = "bottom";
     private tabBarPosition: TabBarPosition = "top";
@@ -499,6 +512,11 @@ export class TabbedPanel
      */
     public destroy(): void
     {
+        if (this.destroyed)
+        {
+            return;
+        }
+
         if (this.options.onBeforeClose)
         {
             const allowed = this.options.onBeforeClose(this);
@@ -509,6 +527,9 @@ export class TabbedPanel
                 return;
             }
         }
+
+        // After the veto, so a cancelled destroy stays destroyable.
+        this.destroyed = true;
 
         this.hide();
 

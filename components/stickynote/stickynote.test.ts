@@ -9,6 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 import { createStickyNote, type StickyNoteHandle } from "./stickynote";
 
@@ -73,9 +74,15 @@ describe("StickyNote — lifecycle", () =>
     test("destroy is idempotent", () =>
     {
         const handle = make();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
         handle.destroy();
 
-        expect(() => handle.destroy()).not.toThrow();
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("seeds initial text from options", () =>
@@ -172,11 +179,21 @@ describe("StickyNote — Surface contract", () =>
     test("unsubscribing twice is harmless", () =>
     {
         const handle = make();
-        const off = handle.on("change", () => undefined);
+        const first = vi.fn();
+        const second = vi.fn();
+        const off = handle.on("change", first);
+        handle.on("change", second);
 
         off();
+        off();
 
-        expect(() => off()).not.toThrow();
+        handle.setData("text", "changed");
+
+        // A second `off()` must not remove somebody ELSE'S handler,
+        // which is what an index-based unsubscribe does after the list
+        // has shifted. Surviving the call was never the claim.
+        expect(first).not.toHaveBeenCalled();
+        expect(second).toHaveBeenCalledTimes(1);
     });
 
     test("one throwing handler does not starve the others", () =>

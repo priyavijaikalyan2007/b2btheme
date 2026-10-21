@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createGuidedTour } from "./guidedtour";
 import type { GuidedTourOptions, TourStep, GuidedTourHandle } from "./guidedtour";
 
@@ -346,11 +347,15 @@ describe("GuidedTour edge cases", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const handle = createGuidedTour(defaultOptions());
-        expect(() =>
-        {
-            handle!.destroy();
-            handle!.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        handle!.destroy();
+        const first = probe.total();
+        handle!.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("startWithVisibleFilteredSteps_OnlyShowsVisibleOnes", () =>
@@ -366,17 +371,28 @@ describe("GuidedTour edge cases", () =>
         handle!.destroy();
     });
 
-    test("nextWhenNotActive_DoesNotThrow", () =>
+    test("nextWhenNotActive_DoesNotStartTheTour", () =>
     {
         const handle = createGuidedTour(defaultOptions());
-        expect(() => handle!.next()).not.toThrow();
+
+        handle!.next();
+
+        // `next()` returns at `if (!this.active)`. The claim is that
+        // advancing an inactive tour does not start one, which is what
+        // a stray key handler would otherwise do.
+        expect(handle!.isActive()).toBe(false);
+        expect(document.querySelector(".guidedtour-popover")).toBeNull();
         handle!.destroy();
     });
 
-    test("previousWhenNotActive_DoesNotThrow", () =>
+    test("previousWhenNotActive_DoesNotStartTheTour", () =>
     {
         const handle = createGuidedTour(defaultOptions());
-        expect(() => handle!.previous()).not.toThrow();
+
+        handle!.previous();
+
+        expect(handle!.isActive()).toBe(false);
+        expect(document.querySelector(".guidedtour-popover")).toBeNull();
         handle!.destroy();
     });
 });

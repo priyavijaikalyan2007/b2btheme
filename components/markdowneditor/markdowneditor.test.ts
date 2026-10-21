@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { MarkdownEditor } from "./markdowneditor";
 import type { MarkdownEditorOptions } from "./markdowneditor";
 
@@ -166,8 +167,15 @@ describe("MarkdownEditor destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const editor = new MarkdownEditor(container, makeOptions());
+        const probe = destroyProbe();
+
         editor.destroy();
-        expect(() => editor.destroy()).not.toThrow();
+        const first = probe.total();
+        editor.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

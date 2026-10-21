@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createShareDialog, showShareDialog } from "./sharedialog";
 import type { ShareDialogOptions, AccessLevel, PersonData } from "./sharedialog";
 
@@ -344,11 +345,15 @@ describe("ShareDialog edge cases", () =>
         const dialog = createShareDialog(defaultOptions());
         dialog.show();
         vi.advanceTimersByTime(300);
-        expect(() =>
-        {
-            dialog.close();
-            dialog.close();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        dialog.close();
+        const first = probe.total();
+        dialog.close();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("emptyAccessLevels_StillRendersDialog", () =>

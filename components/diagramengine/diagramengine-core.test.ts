@@ -9,6 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createDiagramEngine } from "./diagramengine";
 
 // ============================================================================
@@ -126,12 +127,15 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
     test("destroy is idempotent — calling twice does not throw", () =>
     {
         setup();
+        const probe = destroyProbe();
 
-        expect(() =>
-        {
-            engine.destroy();
-            engine.destroy();
-        }).not.toThrow();
+        engine.destroy();
+        const first = probe.total();
+        engine.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

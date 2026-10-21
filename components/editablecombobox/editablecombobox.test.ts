@@ -13,6 +13,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     EditableComboBox,
     createEditableComboBox,
@@ -637,8 +638,15 @@ describe("handle methods", () =>
         const combo = new EditableComboBox(
             "test-combo-container", defaultOpts()
         );
+        const probe = destroyProbe();
+
         combo.destroy();
-        expect(() => combo.destroy()).not.toThrow();
+        const first = probe.total();
+        combo.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

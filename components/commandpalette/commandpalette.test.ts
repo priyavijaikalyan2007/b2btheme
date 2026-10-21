@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     CommandPalette,
     openCommandPalette,
@@ -434,20 +435,31 @@ describe("CommandPalette edge cases", () =>
         expect(palettes.length).toBe(1);
     });
 
-    test("closeWhenNotOpen_DoesNotThrow", () =>
+    test("closeWhenNotOpen_LeavesItClosed", () =>
     {
         const inst = CommandPalette.getInstance();
-        expect(() => inst.close()).not.toThrow();
+
+        inst.close();
+
+        // `close()` returns at `if (!this.open_)`. What that guard is
+        // worth is that the palette stays closed and nothing is torn
+        // down a second time — not that the call survives.
+        expect(inst.isOpen()).toBe(false);
+        expect(document.querySelector(".commandpalette")).toBeNull();
     });
 
     test("destroyTwice_DoesNotThrow", () =>
     {
         const inst = CommandPalette.getInstance();
-        expect(() =>
-        {
-            inst.destroy();
-            inst.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        inst.destroy();
+        const first = probe.total();
+        inst.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("disabledCommand_NotExecutable", () =>

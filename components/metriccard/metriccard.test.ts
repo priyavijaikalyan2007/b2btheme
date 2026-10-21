@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     MetricCard,
@@ -692,8 +693,15 @@ describe("MetricCard destroy", () =>
     test("Destroy_Twice_DoesNotThrow", () =>
     {
         const card = new MetricCard(makeOptions());
+        const probe = destroyProbe();
+
         card.destroy();
-        expect(() => card.destroy()).not.toThrow();
+        const first = probe.total();
+        card.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

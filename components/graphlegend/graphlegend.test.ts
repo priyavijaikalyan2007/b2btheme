@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     createGraphLegend
 } from "./graphlegend";
@@ -924,10 +925,15 @@ describe("destroy", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const handle = createGraphLegend(defaultOptions());
+        const probe = destroyProbe();
 
         handle.destroy();
+        const first = probe.total();
+        handle.destroy();
 
-        expect(() => handle.destroy()).not.toThrow();
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

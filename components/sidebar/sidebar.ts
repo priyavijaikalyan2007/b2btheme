@@ -281,6 +281,19 @@ export class Sidebar
     >> & SidebarOptions;
 
     // State
+    /**
+     * Whether `destroy()` has run (ADR-081 — `destroy()` is idempotent).
+     *
+     * (CRITICAL) THE SECOND `destroy()` FIRED `onClose` A SECOND TIME.
+     * There was no guard at all, so a host that tore a sidebar down
+     * twice — a panel manager and a page unload, say — got two close
+     * notifications for one sidebar, and `onBeforeClose` was asked
+     * for permission to destroy something already destroyed.
+     * `Destroy_CalledTwice_IsIdempotent` asserted `.not.toThrow()`
+     * and could not see either (DEBT-TEST-1b, ADR-216).
+     */
+    private destroyed: boolean = false;
+
     private currentMode: SidebarMode = "docked";
     private dockPosition: SidebarDockPosition = "left";
     private currentWidth: number;
@@ -438,6 +451,11 @@ export class Sidebar
      */
     public destroy(): void
     {
+        if (this.destroyed)
+        {
+            return;
+        }
+
         if (this.options.onBeforeClose)
         {
             const allowed = this.options.onBeforeClose(this);
@@ -448,6 +466,9 @@ export class Sidebar
                 return;
             }
         }
+
+        // After the veto, so a cancelled destroy stays destroyable.
+        this.destroyed = true;
 
         this.hide();
 

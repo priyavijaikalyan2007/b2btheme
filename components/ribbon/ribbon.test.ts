@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     createRibbon,
@@ -2865,8 +2866,15 @@ describe("destroy idempotency", () =>
     test("destroy_CalledTwice_DoesNotThrow", () =>
     {
         const ribbon = createRibbon(makeOptions(), "test-ribbon");
+        const probe = destroyProbe();
+
         ribbon.destroy();
-        expect(() => ribbon.destroy()).not.toThrow();
+        const first = probe.total();
+        ribbon.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("methods_AfterDestroy_DoNotThrow", () =>
@@ -4058,14 +4066,32 @@ describe("backstage idempotency", () =>
             ],
         }), "test-ribbon");
         ribbon.openBackstage();
-        expect(() => ribbon.openBackstage()).not.toThrow();
+        const after1 = document.querySelectorAll(".ribbon-backstage").length;
+        ribbon.openBackstage();
+
+        // `openBackstage()` returns at `if (this.backstageOpen)`, and
+        // without that guard `buildBackstage()` would append a SECOND
+        // panel over the first. Surviving the call was never the claim.
+        expect(after1).toBe(1);
+        expect(document.querySelectorAll(".ribbon-backstage")).toHaveLength(1);
         ribbon.destroy();
     });
 
-    test("closeBackstage_WhenNotOpen_DoesNotCrash", () =>
+    test("closeBackstage_WhenNotOpen_LeavesFocusAlone", () =>
     {
         const ribbon = createRibbon(makeOptions(), "test-ribbon");
-        expect(() => ribbon.closeBackstage()).not.toThrow();
+        const outside = document.createElement("button");
+        document.body.appendChild(outside);
+        outside.focus();
+
+        ribbon.closeBackstage();
+
+        // `closeBackstage()` returns at `if (!this.backstageOpen)`, and
+        // the branch below it calls `previousFocusEl.focus()`. Running
+        // it unopened would move the caret somewhere the user did not
+        // put it.
+        expect(document.activeElement).toBe(outside);
+        outside.remove();
         ribbon.destroy();
     });
 });
@@ -4114,10 +4140,17 @@ describe("close all menus when none open", () =>
 
 describe("hide when not visible", () =>
 {
-    test("hide_WhenNotShown_DoesNothing", () =>
+    test("hide_WhenNotShown_LeavesDisplayUnset", () =>
     {
         const ribbon = createRibbon(makeOptions());
-        expect(() => ribbon.hide()).not.toThrow();
+        const root = ribbon.getElement();
+
+        ribbon.hide();
+
+        // `hide()` returns at `if (!this.visible)`. Without the guard
+        // it would write `display: none` onto a ribbon that was never
+        // shown, so a later `show()` would reveal nothing.
+        expect(root?.style.display ?? "").not.toBe("none");
         ribbon.destroy();
     });
 });

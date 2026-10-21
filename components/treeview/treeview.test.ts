@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createTreeView, TreeView } from "./treeview";
 import type { TreeNode, TreeViewOptions } from "./treeview";
 
@@ -608,8 +609,15 @@ describe("destroy", () =>
     test("destroy_CalledTwice_IsIdempotent", () =>
     {
         const tree = createTreeView(defaultOpts());
+        const probe = destroyProbe();
+
         tree.destroy();
-        expect(() => tree.destroy()).not.toThrow();
+        const first = probe.total();
+        tree.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

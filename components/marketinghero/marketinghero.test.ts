@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { MarketingHero, createMarketingHero } from "./marketinghero";
 import type { MarketingHeroOptions } from "./marketinghero";
 
@@ -278,7 +279,14 @@ describe("MarketingHero safety and lifecycle", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const hero = createMarketingHero("marketinghero-test-container", makeOptions());
+        const probe = destroyProbe();
+
         hero.destroy();
-        expect(() => hero.destroy()).not.toThrow();
+        const first = probe.total();
+        hero.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

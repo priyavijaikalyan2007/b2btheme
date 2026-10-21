@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { FileUpload, createFileUpload } from "./fileupload";
 
 import type { FileUploadOptions } from "./fileupload";
@@ -134,8 +135,15 @@ describe("lifecycle", () =>
     {
         const fu = new FileUpload({});
         fu.show("test-fileupload");
+        const probe = destroyProbe();
+
         fu.destroy();
-        expect(() => fu.destroy()).not.toThrow();
+        const first = probe.total();
+        fu.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("showAfterDestroy_LogsWarning", () =>

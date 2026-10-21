@@ -18,6 +18,7 @@ import { createHelpTooltip } from "./helptooltip";
 // (ADR-203). `getHelpDrawer` reaches the singleton for teardown.
 import { getHelpDrawer } from "../helpdrawer/helpdrawer";
 import type { HelpTooltipOptions, HelpTooltipHandle, HelpTooltipTopic } from "./helptooltip";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 // ============================================================================
 // HELPERS
@@ -371,14 +372,18 @@ describe("HelpTooltip hover", () =>
 
 describe("HelpTooltip edge cases", () =>
 {
-    test("destroyTwice_DoesNotThrow", () =>
+    test("destroyTwice_IsIdempotent", () =>
     {
         const handle = createHelpTooltip(target, defaultOptions());
-        expect(() =>
-        {
-            handle.destroy();
-            handle.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("multipleTooltipsOnSamePage_AllWork", () =>

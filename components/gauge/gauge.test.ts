@@ -18,6 +18,7 @@ import {
     createBarGauge,
 } from "./gauge";
 import type { GaugeOptions, GaugeThreshold } from "./gauge";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 // ============================================================================
 // HELPERS
@@ -487,8 +488,15 @@ describe("lifecycle", () =>
     test("destroy_CalledTwice_IsIdempotent", () =>
     {
         const gauge = createGauge(defaultOpts(), "test-gauge");
+        const probe = destroyProbe();
+
         gauge.destroy();
-        expect(() => gauge.destroy()).not.toThrow();
+        const first = probe.total();
+        gauge.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("setValueAfterDestroy_DoesNotThrow", () =>

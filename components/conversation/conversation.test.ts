@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createConversation, Conversation } from "./conversation";
 import type {
     ConversationOptions,
@@ -575,11 +576,15 @@ describe("Conversation edge cases", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const conv = createConversation(defaultOptions(), container);
-        expect(() =>
-        {
-            conv.destroy();
-            conv.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        conv.destroy();
+        const first = probe.total();
+        conv.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("showTwice_DoesNotDuplicate", () =>

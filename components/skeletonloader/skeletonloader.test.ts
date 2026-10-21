@@ -9,6 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     SkeletonLoader,
@@ -183,7 +184,15 @@ describe("SkeletonLoader lifecycle", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const loader = new SkeletonLoader();
+        loader.show("skeleton-test-container");
+        const probe = destroyProbe();
+
         loader.destroy();
-        expect(() => loader.destroy()).not.toThrow();
+        const first = probe.total();
+        loader.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

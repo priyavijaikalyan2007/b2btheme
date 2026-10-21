@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     StatusBar,
@@ -323,7 +324,14 @@ describe("StatusBar destroy", () =>
     {
         const bar = new StatusBar(makeOptions());
         bar.show(container);
+        const probe = destroyProbe();
+
         bar.destroy();
-        expect(() => bar.destroy()).not.toThrow();
+        const first = probe.total();
+        bar.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

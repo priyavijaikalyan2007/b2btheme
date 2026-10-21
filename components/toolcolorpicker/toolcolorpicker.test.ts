@@ -14,6 +14,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import {
     createToolColorPicker,
     PEN_COLORS,
@@ -581,8 +582,15 @@ describe("destroy", () =>
     test("Destroy_CalledTwice_DoesNotThrow", () =>
     {
         const picker = createToolColorPicker(defaultOpts());
+        const probe = destroyProbe();
+
         picker.destroy();
-        expect(() => picker.destroy()).not.toThrow();
+        const first = probe.total();
+        picker.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("Destroy_SetValueAfter_NoOp", () =>

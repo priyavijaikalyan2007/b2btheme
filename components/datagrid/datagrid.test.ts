@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { DataGrid, createDataGrid } from "./datagrid";
 import type { DataGridColumn, DataGridRow, DataGridOptions } from "./datagrid";
 
@@ -610,8 +611,15 @@ describe("destroy", () =>
     test("destroy_CalledTwice_IsIdempotent", () =>
     {
         const grid = createDataGrid(defaultOpts(), "test-grid");
+        const probe = destroyProbe();
+
         grid.destroy();
-        expect(() => grid.destroy()).not.toThrow();
+        const first = probe.total();
+        grid.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

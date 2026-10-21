@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     Sidebar,
@@ -407,10 +408,21 @@ describe("Sidebar destroy", () =>
 
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
-        const sb = new Sidebar(makeOptions());
+        const onBeforeClose = vi.fn(() => true);
+        const onClose = vi.fn();
+        const sb = new Sidebar(makeOptions({ onBeforeClose, onClose }));
         sb.show(container);
+        const probe = destroyProbe();
+
         sb.destroy();
-        expect(() => sb.destroy()).not.toThrow();
+        const first = probe.total();
+        sb.destroy();
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(onBeforeClose).toHaveBeenCalledTimes(1);
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("Destroy_WithOnClose_FiresCallback", () =>

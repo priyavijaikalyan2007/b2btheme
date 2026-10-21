@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { SiteFooter, createSiteFooter } from "./sitefooter";
 import type { SiteFooterOptions } from "./sitefooter";
 
@@ -299,7 +300,14 @@ describe("SiteFooter safety and lifecycle", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const footer = createSiteFooter("sitefooter-test-container", makeOptions());
+        const probe = destroyProbe();
+
         footer.destroy();
-        expect(() => footer.destroy()).not.toThrow();
+        const first = probe.total();
+        footer.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

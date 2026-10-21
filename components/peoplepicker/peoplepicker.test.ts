@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { PeoplePicker, createPeoplePicker } from "./peoplepicker";
 
 import type { PersonData, PeoplePickerOptions } from "./peoplepicker";
@@ -274,8 +275,15 @@ describe("edge cases", () =>
     {
         const pp = new PeoplePicker({});
         pp.show("test-peoplepicker");
+        const probe = destroyProbe();
+
         pp.destroy();
-        expect(() => pp.destroy()).not.toThrow();
+        const first = probe.total();
+        pp.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("showInMissingContainer_Throws", () =>

@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createRichTextInput, RichTextInput } from "./richtextinput";
 
 // ============================================================================
@@ -332,8 +333,15 @@ describe("handle methods", () =>
     {
         const editor = createRichTextInput({});
         container.appendChild(editor.getElement());
+        const probe = destroyProbe();
+
         editor.destroy();
-        expect(() => editor.destroy()).not.toThrow();
+        const first = probe.total();
+        editor.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("show_AppendsToContainerById", () =>

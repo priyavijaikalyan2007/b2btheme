@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createActionItems } from "./actionitems";
 // DEBT-TEST-1c. Side-effect import: the ADR-128 block below mounts the
 // real InlineToolbar rather than a stub of it.
@@ -362,8 +363,15 @@ describe("ActionItems destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const handle = createHandle();
+        const probe = destroyProbe();
+
         handle.destroy();
-        expect(() => handle.destroy()).not.toThrow();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

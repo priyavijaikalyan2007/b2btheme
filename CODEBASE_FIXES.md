@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **117 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **32 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3052,12 +3052,95 @@ offered as the evidence for it.
 
   | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | **107** | **yield DEMONSTRATED, see below** |
+  | `.not.toThrow()` on idempotency | 110 | 110 | **22** | **9 defects found; the terminal-state half is empty** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **THE IDEMPOTENCY BUCKET WAS FOUR PROPERTIES WEARING ONE NAME, AND
+  THE LARGEST OF THEM IS NOW EMPTY (2026-10-21, 117 -> 32).** The 107
+  split by what each title CLAIMS rather than by the situation word
+  that put it here:
+
+  | Sub-shape | Count | Status |
+  |---|---|---|
+  | Terminal-state idempotence — destroy twice, close when closed, hide when hidden, unsubscribe twice | 85 | **0, this pass** |
+  | An operation naming an absent target — `removeNonexistentPin`, `setData` with an unknown slot | 9 | open, and ADR-200 says the answer is a throw |
+  | A method called after `destroy()` | 5 | open, and it is the fleet-wide question nobody has answered |
+  | Empty input, which is not idempotence at all | 8 | open, and the classifier is wrong about these |
+
+  **`.not.toThrow()` CANNOT SEE A SECOND CALL AND THE PROBE CAN.**
+  `tests/destroy-probe.ts` counts the teardown primitives a component
+  performs — `removeChild` 54, `.remove()` 36, `removeEventListener`
+  30, `clearTimeout` 11, `cancelAnimationFrame` 2, `clearInterval` 1,
+  measured across every `destroy()` in `components/`. Each block calls
+  the terminal method, records the count, calls it again, and asserts
+  the count did not move. **The first count is the positive control**
+  and is asserted above zero, so a component the probe cannot observe
+  fails loudly rather than passing silently — which is how
+  `emptystate` and `skeletonloader` were caught destroying something
+  they had never shown.
+
+  **SIDEBAR AND TABBEDPANEL FIRED `onClose` TWICE.** Both have
+  `destroy()` bodies that consult `onBeforeClose`, tear down, and call
+  `onClose` — with **no guard of any kind**, so a host tearing a panel
+  down twice got two close notifications for one panel, and
+  `onBeforeClose` was asked for permission to destroy something
+  already destroyed. Both carried a block named
+  `Destroy_CalledTwice_IsIdempotent` asserting `.not.toThrow()`. This
+  is the BannerBar defect that opened the sub-shape, found twice more
+  by asking the same question of the fleet. Both fixed with the guard
+  ADR-081 requires, both mutation-proven.
+
+  **SEVEN MORE COMPONENTS RE-RAN THEIR WHOLE `destroy()` BODY**, and
+  the probe reported each as a count that moved: `datepicker`,
+  `durationpicker`, `editablecombobox`, `progressmodal`, `timepicker`,
+  `timezonepicker` (one extra primitive each — an unconditional
+  `document.removeEventListener` at the top) and `spinemap` (**four**
+  — `unbindEvents()` and `rootEl.remove()` both repeat). All seven
+  now carry the guard.
+
+  **BE PRECISE ABOUT WHAT THE PROBE PROVES.** A second
+  `removeEventListener` with the same arguments, a `.remove()` on a
+  detached node and a `clearTimeout` of a dead handle all change
+  nothing a user can see. What the probe pins is that **the body
+  re-ran**, which 57 of the 85 prevent and these 9 did not, and the
+  honest observable in the seven is the second `logDebug("Destroyed:")`
+  reporting a teardown that did not happen. The defects are in the
+  callback count, which is why Sidebar and TabbedPanel assert
+  `onClose` and `onBeforeClose` as well.
+
+  **A GUARDED COMPONENT CANNOT BE MADE RED BY DELETING ITS GUARD, AND
+  THAT IS NOT A VACUOUS TEST.** `gauge` and `helptooltip` were both
+  mutation-tested by removing `if (this.destroyed) { return; }` and
+  both stayed green, because each teardown step is independently
+  conditional — `hide()` checks visibility, `parentNode?.removeChild`
+  short-circuits once detached. The property is held twice over. The
+  assertion's non-vacuity was established elsewhere, by `datepicker`,
+  which **failed on the first run with no mutation at all**.
+
+  The eleven blocks that were not destroy-twice were rewritten one at
+  a time, because each names a different property. `ribbon ::
+  openBackstage_CalledTwice` now proves **one** backstage panel
+  exists, not that the call survived — without the guard
+  `buildBackstage()` appends a second over the first.
+  `closeBackstage_WhenNotOpen` proves the caret did not move, because
+  the branch under the guard calls `previousFocusEl.focus()`.
+  `hide_WhenNotShown` proves `display: none` was not written onto a
+  ribbon that was never shown, which a later `show()` would not undo.
+  `helpdrawer :: closeWhenNotOpen` proves no `onClose` reached the
+  host. `guidedtour :: next/previousWhenNotActive` prove an inactive
+  tour did not start. And `stickynote :: unsubscribing twice` now
+  registers two handlers and proves the second `off()` did not remove
+  **somebody else's**, which is what an index-based unsubscribe does
+  once the list has shifted.
+
+  **An inconsistency recorded and not resolved:** 89 components guard
+  `destroy()` with a silent `if (this.destroyed) { return; }` and 8
+  with `logWarn("Already destroyed")`. ADR-081 requires idempotence
+  and says nothing about whether the second call should be audible.
 
   **THIRTY-TWO OF THE EIGHTY-FIVE WERE NEVER MEMBERS, AND ONE MEMBER
   WAS BEING HIDDEN (2026-10-21).** Before asking the title question of

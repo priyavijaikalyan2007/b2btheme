@@ -8,6 +8,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 import { createChatDock, type ChatDockHandle } from "./chatdock";
 
@@ -77,9 +78,15 @@ describe("ChatDock — lifecycle", () =>
     test("destroy is idempotent", () =>
     {
         const handle = make();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
         handle.destroy();
 
-        expect(() => handle.destroy()).not.toThrow();
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("uses the supplied placeholder", () =>

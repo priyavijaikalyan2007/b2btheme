@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     TabbedPanel,
@@ -394,9 +395,20 @@ describe("TabbedPanel destroy", () =>
 
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
-        const panel = new TabbedPanel(makeOptions());
+        const onBeforeClose = vi.fn(() => true);
+        const onClose = vi.fn();
+        const panel = new TabbedPanel(makeOptions({ onBeforeClose, onClose }));
         panel.show(container);
+        const probe = destroyProbe();
+
         panel.destroy();
-        expect(() => panel.destroy()).not.toThrow();
+        const first = probe.total();
+        panel.destroy();
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(onBeforeClose).toHaveBeenCalledTimes(1);
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

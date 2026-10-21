@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createSpineMap } from "./spinemap";
 import type { SpineMapData, SpineHub, SpineBranch } from "./spinemap";
 
@@ -961,8 +962,15 @@ describe("destroy", () =>
     test("destroy_CalledTwice_NoThrow", () =>
     {
         const map = createSpineMap({ container });
+        const probe = destroyProbe();
+
         map.destroy();
-        expect(() => map.destroy()).not.toThrow();
+        const first = probe.total();
+        map.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

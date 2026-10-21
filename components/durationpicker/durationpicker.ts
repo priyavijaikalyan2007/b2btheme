@@ -593,6 +593,18 @@ function toISO8601(value: DurationValue): string
 export class DurationPicker
 {
     private readonly containerId: string;
+    /**
+     * Whether `destroy()` has run (ADR-081 — `destroy()` is idempotent).
+     *
+     * There was no guard, so a second `destroy()` re-ran the whole body:
+     * another `document.removeEventListener` and another
+     * `logDebug("Destroyed:")` for one component. The listener removal is
+     * a no-op the second time and the log line is not — it reports a
+     * teardown that did not happen. The block named for idempotency
+     * asserted `.not.toThrow()` and could see neither (DEBT-TEST-1b).
+     */
+    private destroyed: boolean = false;
+
     private readonly instanceId: string;
     private options: Required<
         Pick<DurationPickerOptions,
@@ -794,6 +806,13 @@ export class DurationPicker
 
     public destroy(): void
     {
+        if (this.destroyed)
+        {
+            return;
+        }
+
+        this.destroyed = true;
+
         document.removeEventListener("click", this.boundOnDocumentClick);
         if (this.wrapperEl)
         {

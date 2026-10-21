@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     LineEndingPicker,
@@ -227,7 +228,14 @@ describe("LineEndingPicker destroy", () =>
         const picker = new LineEndingPicker(
             "lep-test-container", makeOptions()
         );
+        const probe = destroyProbe();
+
         picker.destroy();
-        expect(() => picker.destroy()).not.toThrow();
+        const first = probe.total();
+        picker.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

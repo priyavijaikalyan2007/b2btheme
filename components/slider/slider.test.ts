@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createSlider } from "./slider";
 import type { SliderOptions, SliderHandle } from "./slider";
 
@@ -548,8 +549,15 @@ describe("destroy", () =>
     test("destroy_CalledTwice_IsIdempotent", () =>
     {
         const slider = createDefaultSlider();
+        const probe = destroyProbe();
+
         slider.destroy();
-        expect(() => slider.destroy()).not.toThrow();
+        const first = probe.total();
+        slider.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

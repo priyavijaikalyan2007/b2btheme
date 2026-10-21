@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createDocViewer } from "./docviewer";
 import type { DocViewerOptions, DocViewerHandle, DocPage } from "./docviewer";
 // DEBT-TEST-1c. Side-effect import: DocViewer reads
@@ -403,11 +404,15 @@ describe("DocViewer edge cases", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const handle = createDocViewer(defaultOptions());
-        expect(() =>
-        {
-            handle.destroy();
-            handle.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("searchWithEmptyString_ShowsAllEntries", () =>

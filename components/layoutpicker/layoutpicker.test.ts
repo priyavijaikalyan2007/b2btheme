@@ -14,6 +14,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createLayoutPicker } from "./layoutpicker";
 
 describe("LayoutPicker", () =>
@@ -103,10 +104,15 @@ describe("LayoutPicker", () =>
         test("Destroy_IsIdempotent", () =>
         {
             const picker = createLayoutPicker({ container });
+            const probe = destroyProbe();
 
             picker.destroy();
+            const first = probe.total();
+            picker.destroy();
 
-            expect(() => picker.destroy()).not.toThrow();
+            expect(first).toBeGreaterThan(0);
+            expect(probe.total()).toBe(first);
+            probe.restore();
         });
     });
 });

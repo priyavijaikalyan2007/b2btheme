@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     Toolbar,
@@ -559,8 +560,15 @@ describe("Toolbar destroy", () =>
     {
         const tb = new Toolbar(makeOptions());
         tb.show(container);
+        const probe = destroyProbe();
+
         tb.destroy();
-        expect(() => tb.destroy()).not.toThrow();
+        const first = probe.total();
+        tb.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

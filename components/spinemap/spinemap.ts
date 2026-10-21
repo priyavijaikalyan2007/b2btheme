@@ -2234,6 +2234,17 @@ export class SpineMap
 {
     // ── Fields ──
 
+    /**
+     * Whether `destroy()` has run (ADR-081 — `destroy()` is idempotent).
+     *
+     * There was no guard, and nothing in the body is conditional on
+     * having run before: `unbindEvents()` and `rootEl.remove()` both
+     * repeat. A second `destroy()` performed four more teardown
+     * primitives. `destroy_CalledTwice_NoThrow` asserted
+     * `.not.toThrow()` and could not see them (DEBT-TEST-1b).
+     */
+    private destroyed: boolean = false;
+
     private opts: ResolvedOptions;
 
     private rootEl!: HTMLElement;
@@ -2646,6 +2657,13 @@ export class SpineMap
 
     public destroy(): void
     {
+        if (this.destroyed)
+        {
+            return;
+        }
+
+        this.destroyed = true;
+
         if (this.themeObserver)
         {
             this.themeObserver.disconnect();

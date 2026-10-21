@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     ProgressModal,
@@ -451,8 +452,15 @@ describe("ProgressModal destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const modal = showProgressModal(makeOptions());
+        const probe = destroyProbe();
+
         modal.destroy();
-        expect(() => modal.destroy()).not.toThrow();
+        const first = probe.total();
+        modal.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("Destroy_IsNotVisible", () =>

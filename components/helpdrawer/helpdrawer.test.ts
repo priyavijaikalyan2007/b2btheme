@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createHelpDrawer, getHelpDrawer } from "./helpdrawer";
 import type { HelpTopic, HelpDrawerHandle } from "./helpdrawer";
 
@@ -300,10 +301,17 @@ describe("HelpDrawer keyboard", () =>
 
 describe("HelpDrawer edge cases", () =>
 {
-    test("closeWhenNotOpen_DoesNotThrow", () =>
+    test("closeWhenNotOpen_FiresNoOnClose", () =>
     {
-        const handle = createHelpDrawer();
-        expect(() => handle.close()).not.toThrow();
+        const onClose = vi.fn();
+        const handle = createHelpDrawer({ onClose });
+
+        handle.close();
+
+        // `close()` returns at `if (!this.isOpen_)`. The claim is that
+        // a host is not told the drawer closed when it was never open.
+        expect(onClose).not.toHaveBeenCalled();
+        expect(handle.isOpen()).toBe(false);
         handle.destroy();
     });
 
@@ -330,11 +338,15 @@ describe("HelpDrawer edge cases", () =>
     test("destroyTwice_DoesNotThrow", () =>
     {
         const handle = createHelpDrawer();
-        expect(() =>
-        {
-            handle.destroy();
-            handle.destroy();
-        }).not.toThrow();
+        const probe = destroyProbe();
+
+        handle.destroy();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("openWithoutMarkdownOrUrl_DoesNotOpen", () =>

@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     EmptyState,
@@ -374,7 +375,15 @@ describe("EmptyState destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const es = new EmptyState(makeOptions());
+        es.show("emptystate-test-container");
+        const probe = destroyProbe();
+
         es.destroy();
-        expect(() => es.destroy()).not.toThrow();
+        const first = probe.total();
+        es.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

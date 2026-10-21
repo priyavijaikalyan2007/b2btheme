@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
     FileExplorer,
@@ -233,8 +234,15 @@ describe("FileExplorer destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const fe = mountExplorer();
+        const probe = destroyProbe();
+
         fe.destroy();
-        expect(() => fe.destroy()).not.toThrow();
+        const first = probe.total();
+        fe.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

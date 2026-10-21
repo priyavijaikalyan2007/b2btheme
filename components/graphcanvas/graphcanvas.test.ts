@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createGraphCanvas } from "./graphcanvas";
 import type
 {
@@ -308,7 +309,14 @@ describe("GraphCanvas destroy", () =>
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
         const canvas = createGraphCanvas(makeOptions());
+        const probe = destroyProbe();
+
         canvas.destroy();
-        expect(() => canvas.destroy()).not.toThrow();
+        const first = probe.total();
+        canvas.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });

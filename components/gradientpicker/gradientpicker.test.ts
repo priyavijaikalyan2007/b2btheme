@@ -11,6 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 import { createGradientPicker } from "./gradientpicker";
 import type { GradientPicker, GradientStop, GradientValue, GradientPreset, GradientDefinition } from "./gradientpicker";
 
@@ -114,9 +115,15 @@ describe("Factory & Lifecycle", () =>
     test("destroy is idempotent", () =>
     {
         const picker = createGradientPicker(CONTAINER_ID);
-        picker.destroy();
-        // Second destroy should not throw
-        expect(() => picker.destroy()).not.toThrow();
+        const probe = destroyProbe();
+
+        picker!.destroy();
+        const first = probe.total();
+        picker!.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 });
 

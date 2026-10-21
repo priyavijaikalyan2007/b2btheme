@@ -9,6 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import { destroyProbe } from "../../tests/destroy-probe";
 
 // ============================================================================
 // CHART.JS MOCK
@@ -521,8 +522,15 @@ describe("ChartPanel handle methods", () =>
             categories: ["A"],
             series: [{ id: "v", label: "V", data: [1] }],
         });
+        const probe = destroyProbe();
+
         handle.destroy();
-        expect(() => handle.destroy()).not.toThrow();
+        const first = probe.total();
+        handle.destroy();
+
+        expect(first).toBeGreaterThan(0);
+        expect(probe.total()).toBe(first);
+        probe.restore();
     });
 
     test("DestroyMany_NoMemoryLeak_OneInstancePerCall", async () =>
