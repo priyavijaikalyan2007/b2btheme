@@ -3255,3 +3255,35 @@ the comment.
 claim with a date on it, not as documentation. When a count stalls
 against a floor, the floor's justification is the first thing to
 re-measure — especially when you wrote it.
+
+### 6.159 The Deferred Decision Had Already Been Made, in the Other File (2026-10-21)
+
+DEBT-DE-1 recorded that DiagramEngine's spatial containment was
+unreachable: `isContainer` is read in three places and no stencil sets
+it. It was careful about the boundary — the machinery is correct, the
+gap is data, and **which shapes are containers is a product decision
+this entry does not make**. That deferral was right in form and wrong
+in fact.
+
+`stencils-devices.ts` opens with a helper called `devMarkContainer`
+that writes `data-is-container="true"` onto the rendered SVG group,
+and every one of the pack's twelve renderers calls it. The pack had
+been declaring exactly which shapes are containers since it was
+written. It declared it in the DOM; the engine reads the shape
+definition. **Two places, one fact, and nothing compared them.**
+
+The deferral looked principled, which is what made it durable. A note
+saying "this is a product decision" is harder to challenge than a
+note saying "I don't know", because it names someone else as the
+owner. Nobody re-read the file it was about.
+
+The cost was a whole feature: a user dragging a shape onto a browser
+frame got nothing, for as long as the pack has existed.
+
+**Principle**: before deferring a decision to a product owner, grep
+the subject for the decision already being made. Capability flags,
+CSS classes, `data-` attributes and render-time markers are all places
+a team records intent without telling the type system. The question
+"has anyone already written this down somewhere the code cannot see?"
+costs one grep and is the difference between an open question and an
+unreachable feature.

@@ -670,22 +670,19 @@ describe("DiagramEngine — Spatial Containment", () =>
         expect(contained).toEqual([]);
     });
 
-    // (CRITICAL) THE TITLE SAYS "creates container" AND NOTHING IN
-    // THIS ENGINE IS A CONTAINER. `isContainer` is declared on the
-    // shape definition and read in three places -- `isContainerHit`,
-    // `isContainerObject` and the move-children path -- and NO
-    // STENCIL IN THE REPOSITORY SETS IT. So `assignContainment` can
-    // never find a container, `getContainedObjects` only ever
-    // returns objects whose `groupId` something else wrote, and the
-    // sibling above passes because EVERY shape is a non-container.
+    // DEBT-DE-1, CLOSED 2026-10-21. This block used to pin the
+    // ABSENCE of the feature, under a comment explaining that no
+    // stencil in the repository set `isContainer` so containment was
+    // unreachable. It said it would go red the day a stencil declared
+    // itself a container, and it did, on the first run after the
+    // devices pack was marked.
     //
-    // The whole spatial-containment feature is unreachable, and
-    // `toBeDefined()` is what let a block named for it pass. This
-    // pins the measured truth so the feature's absence is visible,
-    // and it goes red the day a stencil declares itself a
-    // container -- which is when the claim should be rewritten
-    // into the one the title promises. DEBT-DE-1.
-    test("loadStencilPack('devices') + addObject creates no container yet", () =>
+    // The decision the entry had deferred was already made: every
+    // renderer in `stencils-devices.ts` calls `devMarkContainer`,
+    // which writes `data-is-container="true"` onto its SVG group. The
+    // pack had been declaring containment in the DOM the whole time
+    // and the engine reads the shape definition, so the two never met.
+    test("devicesPack_BrowserFrame_ContainsAShapeDroppedInIt", () =>
     {
         engine.loadStencilPack("devices");
 
@@ -706,7 +703,38 @@ describe("DiagramEngine — Spatial Containment", () =>
 
         engine.updateContainment(["inner"]);
 
-        expect(engine.getContainedObjects("browser1")).toEqual([]);
+        expect(engine.getContainedObjects("browser1").map((o) => o.id))
+            .toEqual(["inner"]);
+    });
+
+    test("devicesPack_BrowserFrame_DoesNotContainItsOwnChrome", () =>
+    {
+        // The content area is what makes containment mean something.
+        // `browser-chrome` reserves the top 68px of its 600 for the tab
+        // and address bars, so a shape dropped on the URL bar is ON the
+        // frame and not IN it. Without a `contentArea`,
+        // `resolveContentArea` falls back to the full bounds and this
+        // shape would read as contained.
+        engine.loadStencilPack("devices");
+
+        engine.addObject({
+            id: "browser2",
+            presentation: {
+                shape: "browser-chrome",
+                bounds: { x: 0, y: 0, width: 800, height: 600 },
+            }
+        });
+        engine.addObject({
+            id: "onTheAddressBar",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 300, y: 40, width: 50, height: 10 },
+            }
+        });
+
+        engine.updateContainment(["onTheAddressBar"]);
+
+        expect(engine.getContainedObjects("browser2")).toEqual([]);
     });
 });
 

@@ -169,6 +169,26 @@ function devApplySketchStroke(el: SVGElement): void
  *
  * @param g - The SVG group element to mark.
  */
+/*
+ * EVERY SHAPE IN THIS PACK IS A CONTAINER, AND THIS HELPER SAID SO
+ * FIRST. `devMarkContainer` writes `data-is-container="true"` onto the
+ * rendered group, and every renderer below calls it — so the product
+ * decision DEBT-DE-1 was holding open had already been made when the
+ * pack was written, in the DOM, where the engine never looked.
+ *
+ * The engine reads `ShapeDefinition.isContainer`, which no stencil set,
+ * so `assignContainment` could never find a container and the whole
+ * spatial-containment feature was unreachable. Each definition below
+ * now carries `isContainer: true` to match what its renderer declares.
+ *
+ * `contentArea` is normalised to the bounds and is what makes
+ * containment mean something: a browser frame reserves its tab and
+ * address bars, a phone its status bar and home indicator, so a shape
+ * dropped on the chrome is ON the frame rather than IN it. Each one is
+ * derived from the same constants the renderer draws with, divided by
+ * that shape's `defaultSize`. Where a shape is a plain rect — `navbar`,
+ * `footer` — there is no area to reserve and the full bounds are right.
+ */
 function devMarkContainer(g: SVGElement): void
 {
     g.setAttribute("data-is-container", "true");
@@ -423,6 +443,11 @@ function buildBrowserChromeShape(): ShapeDefinition
 {
     return {
         type: "browser-chrome",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: (DEV_CHROME_TAB_H + DEV_CHROME_ADDR_H) / 600,
+            w: 1, h: 1 - ((DEV_CHROME_TAB_H + DEV_CHROME_ADDR_H) / 600)
+        },
         category: DEV_CATEGORY,
         label: "Browser (Chrome)",
         icon: "bi-window",
@@ -564,6 +589,11 @@ function buildBrowserMinimalShape(): ShapeDefinition
 {
     return {
         type: "browser-minimal",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_MINIMAL_ADDR_H / 600,
+            w: 1, h: 1 - (DEV_MINIMAL_ADDR_H / 600)
+        },
         category: DEV_CATEGORY,
         label: "Browser (Minimal)",
         icon: "bi-browser-chrome",
@@ -770,6 +800,11 @@ function buildMobileIphoneShape(): ShapeDefinition
 {
     return {
         type: "mobile-iphone",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_IPHONE_STATUS_H / 812,
+            w: 1, h: 1 - ((DEV_IPHONE_STATUS_H + DEV_IPHONE_HOME_H) / 812)
+        },
         category: DEV_CATEGORY,
         label: "iPhone",
         icon: "bi-phone",
@@ -1008,6 +1043,11 @@ function buildMobileAndroidShape(): ShapeDefinition
 {
     return {
         type: "mobile-android",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_ANDROID_STATUS_H / 800,
+            w: 1, h: 1 - ((DEV_ANDROID_STATUS_H + DEV_ANDROID_NAV_H) / 800)
+        },
         category: DEV_CATEGORY,
         label: "Android Phone",
         icon: "bi-phone",
@@ -1169,6 +1209,11 @@ function buildTabletIpadShape(): ShapeDefinition
 {
     return {
         type: "tablet-ipad",
+        isContainer: true,
+        contentArea: {
+            x: DEV_IPAD_BEZEL / 768, y: DEV_IPAD_BEZEL / 1024,
+            w: 1 - ((DEV_IPAD_BEZEL * 2) / 768), h: 1 - ((DEV_IPAD_BEZEL * 2) / 1024)
+        },
         category: DEV_CATEGORY,
         label: "iPad",
         icon: "bi-tablet",
@@ -1357,6 +1402,11 @@ function buildDesktopWindowShape(): ShapeDefinition
 {
     return {
         type: "desktop-window",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_DESKTOP_TITLEBAR_H / 400,
+            w: 1, h: 1 - (DEV_DESKTOP_TITLEBAR_H / 400)
+        },
         category: DEV_CATEGORY,
         label: "Desktop Window",
         icon: "bi-window-stack",
@@ -1543,6 +1593,11 @@ function buildDesktopMacosShape(): ShapeDefinition
 {
     return {
         type: "desktop-macos",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_MACOS_TITLEBAR_H / 400,
+            w: 1, h: 1 - (DEV_MACOS_TITLEBAR_H / 400)
+        },
         category: DEV_CATEGORY,
         label: "macOS Window",
         icon: "bi-window-desktop",
@@ -1820,6 +1875,11 @@ function buildDialogModalShape(): ShapeDefinition
 {
     return {
         type: "dialog-modal",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_DIALOG_TITLEBAR_H / 300,
+            w: 1, h: 1 - ((DEV_DIALOG_TITLEBAR_H + DEV_DIALOG_BUTTON_H) / 300)
+        },
         category: DEV_CATEGORY,
         label: "Modal Dialog",
         icon: "bi-window-plus",
@@ -1981,6 +2041,11 @@ function buildCardContainerShape(): ShapeDefinition
 {
     return {
         type: "card-container",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_CARD_HEADER_H / 250,
+            w: 1, h: 1 - (DEV_CARD_HEADER_H / 250)
+        },
         category: DEV_CATEGORY,
         label: "Card",
         icon: "bi-card-heading",
@@ -2139,6 +2204,11 @@ function buildSidebarPanelShape(): ShapeDefinition
 {
     return {
         type: "sidebar-panel",
+        isContainer: true,
+        contentArea: {
+            x: 0, y: DEV_SIDEBAR_TITLE_H / 500,
+            w: 1, h: 1 - (DEV_SIDEBAR_TITLE_H / 500)
+        },
         category: DEV_CATEGORY,
         label: "Sidebar Panel",
         icon: "bi-layout-sidebar",
@@ -2299,6 +2369,7 @@ function buildNavbarShape(): ShapeDefinition
 {
     return {
         type: "navbar",
+        isContainer: true,
         category: DEV_CATEGORY,
         label: "Navigation Bar",
         icon: "bi-menu-button-wide",
@@ -2466,6 +2537,7 @@ function buildFooterShape(): ShapeDefinition
 {
     return {
         type: "footer",
+        isContainer: true,
         category: DEV_CATEGORY,
         label: "Page Footer",
         icon: "bi-layout-text-window-reverse",

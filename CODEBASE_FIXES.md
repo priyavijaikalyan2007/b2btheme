@@ -4768,44 +4768,53 @@ limits the design knowingly accepts, not defects in shipped code.
 
 ## ACCEPTED DEBT — TenantSwitcher rename (2026-10-08, ADR-154)
 
-- [ ] **DEBT-DE-1** **DiagramEngine's spatial containment feature is
-  unreachable: no stencil in the repository sets `isContainer`
-  (found 2026-10-21, ADR-216).**
+- [x] **DEBT-DE-1** *(CLOSED 2026-10-21)* — **DiagramEngine's spatial
+  containment works, and the product decision this entry deferred had
+  already been made in the renderers.**
 
-  `ShapeDefinition.isContainer` is declared in `src/types.ts` and read
-  in three places in `src/engine.ts` — `isContainerHit`,
-  `isContainerObject` and the move-children path — and **nothing
-  anywhere sets it to `true`.** A repository-wide grep returns the
-  declaration and those three reads.
+  The entry said: `ShapeDefinition.isContainer` is declared and read in
+  three places, **no stencil in the repository sets it**, so
+  `assignContainment` can never find a container and dragging a shape
+  onto a browser frame does nothing. It called the gap data rather than
+  logic, and left "which shapes are containers" as a product decision
+  it would not make.
 
-  So `assignContainment` can never find a container,
-  `updateContainment` can never assign a `groupId`, and
-  `getContainedObjects` only ever returns objects whose `groupId`
-  something else wrote. Dragging a shape onto a browser frame,
-  a phone frame or a page frame does nothing.
+  **`stencils-devices.ts` HAD BEEN ANSWERING THAT QUESTION SINCE IT WAS
+  WRITTEN.** The file carries a helper:
 
-  **Two tests cover it and neither could see it.**
-  `getContainedObjects returns empty for non-container` passes
-  because EVERY shape is a non-container, and
-  `loadStencilPack('devices') + addObject creates container`
-  asserted `expect(obj).toBeDefined()` under a title naming the one
-  thing that does not happen.
+  ```typescript
+  function devMarkContainer(g: SVGElement): void
+  {
+      g.setAttribute("data-is-container", "true");
+  }
+  ```
 
-  **The machinery is correct.** Adding `isContainer: true` to the
-  `browser-chrome` stencil makes the drop work and turns the pinned
-  block red on the first run. The gap is data, not logic.
+  Every one of the pack's twelve renderers calls it. The pack declared
+  its containment **in the DOM**, and the engine reads the shape
+  definition, so the two never met. There was no decision to make — only
+  a second place the same fact was written.
 
-  The second block is renamed `...creates no container yet` and
-  asserts the measured truth, so the absence is visible and the test
-  goes red the day a stencil declares itself — which is when the
-  claim should be rewritten into the one the old title promised.
+  All twelve now carry `isContainer: true`, and ten carry a normalised
+  `contentArea` derived from the constants their own renderer draws
+  with: a browser frame reserves `DEV_CHROME_TAB_H + DEV_CHROME_ADDR_H`,
+  an iPhone its status bar and home indicator, an iPad its bezel.
+  `navbar` and `footer` are plain rects with nothing to reserve, so the
+  full bounds are right.
 
-  **The fix is a product decision this entry does not make:** which
-  device and page-frame shapes are containers, and what their
-  content areas are. `resolveContentArea` already falls back to the
-  full bounds when a shape defines no `contentArea`, so the minimum
-  change is one flag per shape.
+  **The content area is what makes containment mean something**, and it
+  has its own test: a shape dropped on the browser's address bar is ON
+  the frame, not IN it. Without the `contentArea`,
+  `resolveContentArea` falls back to the full bounds and that shape
+  reads as contained — mutation-proven, as is the flag.
 
+  **The block that pinned the absence went red on the first run**,
+  exactly as the entry predicted it would. It is now
+  `devicesPack_BrowserFrame_ContainsAShapeDroppedInIt`.
+
+  `diagramengineLines` 30507 -> 30579, and the ceiling earned its keep:
+  the first attempt repeated the same four-line explanation in all
+  twelve definitions and came to 30619. The reason sits once, beside
+  the helper that always knew it.
 - [ ] **DEBT-TS-1** Two CDN paths serve the same component. `/components/workspaceswitcher/` is a byte-identical copy of `/components/tenantswitcher/`, produced by the `copy:compat` build step, and the deprecated API surface (`createWorkspaceSwitcher`, `WorkspaceSwitcherOptions`, `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace`) forwards to the current one. The original note said **all of it comes out one release after 2026-10-08**, and `createWorkspaceSwitcher` warns on every call so the consuming app's console would show whether anyone was still on it.
 
   **The deadline is withdrawn and replaced by a condition (2026-10-09).** The user reports the apps team is heads-down on unrelated work and will not get to this soon. So: **the aliases come out one release after the consuming app stops calling them, and not before.** No date. A date here was always the wrong instrument — it measured our patience rather than their readiness, and this one expired with nobody watching. The trigger is checkable in one command, which is the point:

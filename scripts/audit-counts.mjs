@@ -570,7 +570,15 @@ const BASELINES = {
     // children before the factory runs and returns when they grew.
     // Found by the demo-page smoke gate, which is the only thing in
     // this repository that had ever opened that page.
-    diagramengineLines: 30507,
+    // 30507 -> 30579 on 2026-10-21, and the 72 lines are the feature
+    // DEBT-DE-1 was holding open. Twelve device stencils gained
+    // `isContainer: true` and a normalised `contentArea`, which is
+    // what makes a browser frame contain a shape dropped in its
+    // viewport and not one dropped on its address bar. The ceiling
+    // did its job here: the first attempt added the same four-line
+    // comment to all twelve definitions and came in at 30619, and
+    // the reason now sits once beside `devMarkContainer`.
+    diagramengineLines: 30579,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
