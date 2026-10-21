@@ -83,12 +83,20 @@ describe("WorkspaceShell — lifecycle", () =>
         expect(() => handle.destroy()).not.toThrow();
     });
 
+    // "a content region for the canvas to MOUNT INTO" is two claims
+    // the old body could not make: that the element is in the
+    // document, and that the id is the one a canvas anchors to. A
+    // truthy id is true of any string.
     test("exposes a content region for the canvas to mount into", () =>
     {
         const handle = make();
 
-        expect(handle.getContentElement()).toBeTruthy();
-        expect(handle.getContentElement()!.id).toBeTruthy();
+        const content = handle.getContentElement()!;
+
+        expect(content.className).toContain("workspaceshell-content");
+        expect(content.id).toMatch(/^workspaceshell-content-\d+$/);
+        expect(document.body.contains(content)).toBe(true);
+        expect(document.getElementById(content.id)).toBe(content);
     });
 });
 

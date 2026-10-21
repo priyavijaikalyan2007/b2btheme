@@ -455,8 +455,17 @@ describe("packDocument — anchored overlays", () =>
                 { kind: "node", nodeId: "gone" }),
         ]);
 
-        // Must still be placed somewhere sane rather than dropped.
-        expect(packDocument(doc, { width: 1200 }).get("orphan")).toBeDefined();
+        // "Must still be placed somewhere sane" was the comment and
+        // `toBeDefined()` was the check, which says placed and not
+        // sane -- and nothing at all about the shelf the title
+        // names. A shelf-packed node starts at the region origin
+        // with a real size, which is what separates shelf packing
+        // from a zero-sized placeholder.
+        const rect = packDocument(doc, { width: 1200 }).get("orphan")!;
+
+        expect(rect).toMatchObject({ x: 0, y: 0 });
+        expect(rect.w).toBeGreaterThan(0);
+        expect(rect.h).toBeGreaterThan(0);
     });
 
     test("entity and canvas anchors are packed normally", () =>

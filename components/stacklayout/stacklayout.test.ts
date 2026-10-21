@@ -67,12 +67,18 @@ afterEach(() =>
 
 describe("createStackLayout", () =>
 {
+    // `expect(layout.getElement).toBeDefined()` was true of a
+    // property holding a string, and the block below already checks
+    // what getElement returns. The surface is what is left.
     test("CreateStackLayout_ValidOptions_ReturnsStackLayout", () =>
     {
         const layout = createStackLayout(makeOptions());
-        expect(layout).toBeDefined();
-        expect(layout.getElement).toBeDefined();
-        expect(layout.destroy).toBeDefined();
+
+        expect(Object.keys(layout).sort()).toEqual([
+            "collapsePanel", "destroy", "expandPanel", "getElement",
+            "getPanel", "setSizes",
+        ]);
+
         layout.destroy();
     });
 

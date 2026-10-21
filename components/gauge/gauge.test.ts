@@ -303,18 +303,25 @@ describe("thresholds", () =>
         gauge.destroy();
     });
 
+    // The comment named the answer -- "At 50%, should use the
+    // threshold for >=0" -- and the body asked only whether a
+    // background colour had been set at all. Naming the colour is
+    // what separates picking the right threshold from picking any.
     test("setThresholds_UpdatesColors", () =>
     {
         const gauge = createTileGauge(
             { value: 50 }, "test-gauge"
         );
+
         gauge.setThresholds([
             { value: 60, color: "#00ff00" },
             { value: 0,  color: "#ff0000" },
         ]);
-        // At 50%, should use the threshold for >=0
-        const root = gauge.getElement()!;
-        expect(root.style.backgroundColor).toBeTruthy();
+
+        // 50 is below 60 and at or above 0, so the descending scan
+        // in evaluateThreshold lands on the red one.
+        expect(gauge.getElement()!.style.backgroundColor)
+            .toBe("rgb(255, 0, 0)");
         gauge.destroy();
     });
 });

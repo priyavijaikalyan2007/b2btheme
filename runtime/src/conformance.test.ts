@@ -516,10 +516,16 @@ describe("sampleFor", () =>
             "timeseries", "document", "media", "geo", "diff",
         ] as const;
 
-        for (const shape of shapes)
-        {
-            expect(sampleFor(shape)).toBeDefined();
-        }
+        // `toBeDefined()` PER SHAPE WAS GUARANTEED BY A FALLBACK.
+        // `sampleFor` ended `?? SAMPLES.record`, so nine of the ten
+        // could have been missing and every assertion would still
+        // have held -- while a host exercising a `geo` slot got
+        // `{ id, name }`. Distinctness is the claim the title makes:
+        // a value FOR EVERY SHAPE, not ten copies of one.
+        const samples = shapes.map((s) => JSON.stringify(sampleFor(s)));
+
+        expect(new Set(samples).size).toBe(shapes.length);
+        expect(sampleFor("geo")).toEqual({ type: "Point", coordinates: [0, 0] });
     });
 
     test("collection samples are arrays", () =>

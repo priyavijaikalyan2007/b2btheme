@@ -105,10 +105,25 @@ describe("ActionItems factory", () =>
         handle.destroy();
     });
 
+    // "Works" is what `toBeDefined()` already says, and the block
+    // below already proves the root renders. What is left is the
+    // SURFACE: ActionItemsHandle declares twenty-two methods and a
+    // caller gets whatever the factory built. Listing them catches
+    // one that went missing and one that was added without reaching
+    // the published interface.
     test("createActionItems_StringContainerId_Works", () =>
     {
         const handle = createActionItems("ai-test-container", makeOptions());
-        expect(handle).toBeDefined();
+
+        expect(Object.keys(handle).sort()).toEqual([
+            "addItem", "clearFilters", "clearSelection", "collapseAll",
+            "destroy", "expandAll", "export", "getElement", "getItem",
+            "getItems", "getItemsByStatus", "getSelectedIds",
+            "importMarkdown", "removeItem", "scrollToItem", "setAssignee",
+            "setCommentCount", "setFilter", "setSelection", "setSort",
+            "toggleSection", "updateItem",
+        ]);
+
         handle.destroy();
     });
 

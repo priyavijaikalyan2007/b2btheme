@@ -68,12 +68,15 @@ describe("LatexEditor — Factory", () =>
         editor.destroy();
     });
 
+    // "ResolvesContainer" names WHICH container. A truthy element
+    // says one was built, not that the selector found the right
+    // host -- the editor could have been appended to the body.
     test("createLatexEditor_WithStringSelector_ResolvesContainer", () =>
     {
         const editor = createLatexEditor(defaultOptions({ container: "#le-test-container" }));
 
-        expect(editor).toBeDefined();
-        expect(editor.getElement()).toBeTruthy();
+        expect(editor.getElement().parentElement)
+            .toBe(document.getElementById("le-test-container"));
 
         editor.destroy();
     });
@@ -968,18 +971,26 @@ describe("LatexEditor — Symbol Palette Search", () =>
         editor.destroy();
     });
 
+    // THE ONE KNOWN FALSE POSITIVE THE CEILING KEEPS ON PURPOSE,
+    // now removed by rewriting rather than by widening the rule.
+    // `.placeholder` is "" rather than null when unset, so
+    // `.toBeTruthy()` did catch a missing one -- but a property
+    // that reads empty is a third family beside the nullable
+    // lookups, and adding it for one member would put an arguable
+    // entry in a ceiling whose only value is that nobody argues
+    // with it. Naming the text costs nothing and is a stronger
+    // claim. The guard is gone too: the search box is there
+    // whenever the palette is, and a probe confirmed this one
+    // fired.
     test("searchInput_HasPlaceholder", () =>
     {
         const editor = createLatexEditor(defaultOptions());
-        const root = editor.getElement();
 
-        const searchInput = root.querySelector(
+        const searchInput = editor.getElement().querySelector(
             ".le-palette-search input"
         ) as HTMLInputElement;
-        if (searchInput)
-        {
-            expect(searchInput.placeholder).toBeTruthy();
-        }
+
+        expect(searchInput.placeholder).toBe("Search symbols\u2026");
 
         editor.destroy();
     });

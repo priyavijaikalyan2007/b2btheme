@@ -123,11 +123,25 @@ describe("createCommentOverlay", () =>
         overlay.destroy();
     });
 
-    test("withContainerInOptions_UsesProvidedContainer", () =>
+    // THE TITLE HAS THE CONTRACT BACKWARDS, and that is the fact
+    // worth pinning. `createCommentOverlay` resolves `containerId`
+    // and then OVERWRITES `options.container` with what it found, so
+    // a container passed in the options is ignored whenever the
+    // factory is used. Handing the two different elements is the
+    // only way to say which one wins.
+    test("withContainerInOptions_UsesTheNamedContainerInstead", () =>
     {
-        const overlay = createCommentOverlay("comment-container", defaultOptions());
-        expect(overlay).toBeDefined();
+        const ignored = document.createElement("div");
+        document.body.appendChild(ignored);
+
+        const overlay = createCommentOverlay("comment-container",
+            defaultOptions({ container: ignored }));
+
+        expect(overlay.getElement().parentElement).toBe(container);
+        expect(ignored.children).toHaveLength(0);
+
         overlay.destroy();
+        ignored.remove();
     });
 });
 
@@ -137,16 +151,35 @@ describe("createCommentOverlay", () =>
 
 describe("CommentOverlay options", () =>
 {
+    // "Stores" is only a claim because the list is read back when
+    // somebody types `@`. There is no getter, so the dropdown is
+    // the observable: open a thread, type into its reply box, and
+    // read the names that come up. Typing "@A" also shows the list
+    // is FILTERED rather than merely held, which is the difference
+    // between storing it and using it.
     test("withMentionUsers_StoresMentionList", () =>
     {
         const users: MentionUser[] = [
             { id: "u1", name: "Alice" },
             { id: "u2", name: "Bob" },
         ];
+        const anchor = document.createElement("div");
+        container.appendChild(anchor);
         const overlay = createCommentOverlay("comment-container", defaultOptions({
             mentionUsers: users,
+            pins: [makePin("mention-pin", anchor)],
         }));
-        expect(overlay).toBeDefined();
+
+        overlay.openThread("mention-pin");
+        const ta = document.querySelector("textarea")!;
+        ta.value = "@A";
+        ta.selectionStart = 2;
+        ta.dispatchEvent(new Event("input", { bubbles: true }));
+
+        expect([...document.querySelectorAll(
+            ".commentoverlay-mention-dropdown .commentoverlay-mention-name")]
+            .map((n) => n.textContent)).toEqual(["Alice"]);
+
         overlay.destroy();
     });
 

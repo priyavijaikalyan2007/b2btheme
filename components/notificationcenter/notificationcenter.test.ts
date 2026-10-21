@@ -138,6 +138,9 @@ describe("NotificationCenter options", () =>
         handle.destroy();
     });
 
+    // The categories become a tab strip, and the component prepends
+    // an "All" tab of its own -- which is the part a reader would
+    // not guess and the part `toBeDefined()` could never show.
     test("withCategories_SetsCategories", () =>
     {
         const categories: NotificationCategory[] = [
@@ -145,7 +148,11 @@ describe("NotificationCenter options", () =>
             { id: "alerts", label: "Alerts" },
         ];
         const handle = createNotificationCenter(defaultOptions({ categories }));
-        expect(handle).toBeDefined();
+
+        handle.open();
+
+        expect([...document.querySelectorAll(".notificationcenter-tab")]
+            .map((t) => t.textContent)).toEqual(["All", "General", "Alerts"]);
         handle.destroy();
     });
 

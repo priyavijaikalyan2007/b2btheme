@@ -57,10 +57,19 @@ afterEach(() =>
 
 describe("BannerBar factory", () =>
 {
+    // `new BannerBar(...)` cannot return undefined, so the old
+    // assertion held for every options object this class accepts.
+    // What a constructor is actually being asked here is whether it
+    // KEPT what it was given, and `message` is the one required
+    // option.
     test("Constructor_ValidOptions_CreatesInstance", () =>
     {
         const banner = new BannerBar(makeOptions());
-        expect(banner).toBeDefined();
+
+        banner.show(container);
+
+        expect(container.textContent).toContain("Test banner message");
+        expect(banner.isVisible()).toBe(true);
         banner.destroy();
     });
 
