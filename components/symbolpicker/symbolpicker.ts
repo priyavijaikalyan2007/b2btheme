@@ -1248,7 +1248,9 @@ export class SymbolPicker
     private categorySelect: HTMLSelectElement | null = null;
     private gridWrap: HTMLElement | null = null;
     private gridEl: HTMLElement | null = null;
-    private previewEl: HTMLElement | null = null;
+    // `previewEl` LEFT ON 2026-10-21 (UNUSED-1): the WRAPPER. Its
+    // three children below carry every update, and `showPreview`
+    // gates construction, so the wrapper never needed holding.
     private previewChar: HTMLElement | null = null;
     private previewName: HTMLElement | null = null;
     private previewCode: HTMLElement | null = null;
@@ -1726,7 +1728,6 @@ export class SymbolPicker
         wrap.appendChild(this.previewChar);
         wrap.appendChild(this.previewName);
         wrap.appendChild(this.previewCode);
-        this.previewEl = wrap;
         return wrap;
     }
 

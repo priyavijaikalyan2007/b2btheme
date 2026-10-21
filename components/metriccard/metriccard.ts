@@ -341,6 +341,36 @@ export class MetricCard implements MetricCardHandle
         {
             this.appendTrend();
         }
+        this.recolourSparkline();
+    }
+
+    /**
+     * Puts the sparkline on the same intent as the trend.
+     *
+     * (CRITICAL) IT TOOK ITS COLOUR AT BUILD TIME AND NOTHING EVER
+     * CHANGED IT. `appendSparkline` derives the intent class from
+     * `opts.trend` once, and `setTrend` rebuilt only the arrow — so
+     * a metric that flipped from positive to negative showed a red
+     * arrow over a green line, which reads as two different claims
+     * about the same number.
+     *
+     * `sparklineEl` is the reference that was needed, written by
+     * `appendSparkline` and read nowhere; the compiler had been
+     * reporting it unused since it was declared (UNUSED-1).
+     */
+    private recolourSparkline(): void
+    {
+        if (!this.sparklineEl) { return; }
+
+        const intent = this.opts.trend
+            ? deriveIntent(this.opts.trend)
+            : "neutral";
+
+        for (const cls of Object.values(SPARKLINE_INTENT_CLASS))
+        {
+            this.sparklineEl.classList.remove(cls);
+        }
+        this.sparklineEl.classList.add(SPARKLINE_INTENT_CLASS[intent]);
     }
 
     public setSecondary(text: string | null): void

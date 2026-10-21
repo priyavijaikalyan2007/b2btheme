@@ -1324,7 +1324,10 @@ export class SmartTextInputEngine
 
     // Trigger session state
     private session: TriggerSession | null = null;
-    private multiCharBuffer: string = "";
+    // `multiCharBuffer` LEFT ON 2026-10-21 (UNUSED-1): cleared in
+    // one place and never appended to or read. Multi-character
+    // triggers are detected by reading back from the cursor in
+    // `detectTrigger`, which needs no buffer of its own.
     private multiCharTimer: number = 0;
 
     // Timers
@@ -1379,6 +1382,26 @@ export class SmartTextInputEngine
         }
 
         if (!this.validateElement(element)) { return; }
+
+        // A SECOND attach() USED TO LEAK THE FIRST ADAPTER. Nothing
+        // checked whether the engine was already attached, so
+        // `this.adapter` was overwritten without `destroy()` and the
+        // engine silently rebound to the new element. ADR-200: a
+        // request the caller NAMED is owed either the effect or an
+        // error, and honouring this one would mean deciding which
+        // element the caller meant.
+        //
+        // `targetElement` is the state that was already here for it,
+        // written by this method, cleared by `detach` and read
+        // nowhere -- which the compiler had been reporting since it
+        // was declared (UNUSED-1).
+        if (this.targetElement)
+        {
+            throw new Error(
+                `${LOG_PREFIX} Already attached to a ${
+                    this.targetElement.tagName.toLowerCase()} element. `
+                + "Call detach() before attaching to another one.");
+        }
 
         const type = adapterType || this.detectAdapterType(element);
         this.assertAdapterCanReadElement(type, element);
@@ -2293,7 +2316,6 @@ export class SmartTextInputEngine
     private clearSession(): void
     {
         this.session = null;
-        this.multiCharBuffer = "";
     }
 
     /** Clears pending timers. */

@@ -3776,7 +3776,35 @@ offered as the evidence for it.
   above. `ribbon :: boundResize` was superseded by a
   `ResizeObserver`.
 
-  **Remaining: ~66 real-code reports, 120 preamble (a FLOOR) and
+  **Same pass, fourth shape — element refs held and never updated:
+  287 -> 279. Two more defects, six deletions.**
+
+  - **`metriccard :: sparklineEl` — the sparkline took its colour
+    at build time and nothing ever changed it.** `appendSparkline`
+    derives the intent class from `opts.trend` once, and `setTrend`
+    rebuilt only the arrow, so **a metric that flipped from
+    positive to negative showed a red arrow over a green line** —
+    two different claims about the same number. `recolourSparkline`
+    uses the reference that was already being held for it.
+  - **`smarttextinput :: targetElement` — a second `attach()`
+    leaked the first adapter.** Nothing checked whether the engine
+    was already attached, so `this.adapter` was overwritten without
+    `destroy()` and the engine silently rebound. Honouring the
+    second call would mean deciding which element the caller meant,
+    so it refuses and names `detach()` (ADR-200).
+
+  **Six deletions, all one shape: a field mirroring live DOM
+  state.** `symbolpicker :: previewEl` is the wrapper whose three
+  children carry every update; `slider :: trackEl` was queried once
+  and the pointer maths uses `trackWrap`; `fontdropdown ::
+  filteredFonts` was assigned the whole list twice and never
+  narrowed; `relationshipmanager :: addPanelOpen` mirrored
+  `addPanelEl.style.display`; `docklayout :: contentElement` held
+  the occupant of a cell that `clearCell` empties by DOM; and
+  `smarttextinput :: multiCharBuffer` was cleared once and never
+  appended to.
+
+  **Remaining: ~58 real-code reports, 120 preamble (a FLOOR) and
   103 in the generated `diagramengine.ts` (fix in `src/` and
   re-bundle).** The shapes left are mostly element refs and dead
   helpers, which is where the entry predicts the genuine deletions

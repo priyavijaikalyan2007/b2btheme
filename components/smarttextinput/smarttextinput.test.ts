@@ -706,3 +706,76 @@ describe("edge cases", () =>
         engine.destroy();
     });
 });
+
+// ============================================================================
+// ATTACH IS NOT REPEATABLE — UNUSED-1
+// ============================================================================
+
+describe("attach refuses a second element", () =>
+{
+    // Nothing checked whether the engine was already attached, so a
+    // second `attach()` overwrote `this.adapter` without destroying
+    // the first and silently rebound to the new element.
+    // `targetElement` is the state that was already there for it,
+    // written by attach, cleared by detach and read nowhere.
+    test("attaching twice throws and names detach", () =>
+    {
+        const a = document.createElement("input");
+        const b = document.createElement("input");
+        document.body.append(a, b);
+        const engine = createSmartTextInput();
+        engine.attach(a);
+
+        expect(() => engine.attach(b)).toThrow(/Already attached.*detach\(\)/s);
+
+        engine.destroy();
+        a.remove();
+        b.remove();
+    });
+
+    test("detach first, then attach again, wires the NEW element", () =>
+    {
+        // `.not.toThrow()` would be the accept half of the pair
+        // above and a correct positive control -- and it would also
+        // hold for a detach that unwired everything and an attach
+        // that wired nothing back. Typing into the second element
+        // is what separates those.
+        vi.useFakeTimers();
+
+        const seen: string[] = [];
+        const a = document.createElement("input");
+        const b = document.createElement("input");
+        document.body.append(a, b);
+        const engine = createSmartTextInput({
+            onTriggerQuery: (e) => { seen.push(e.queryText); },
+        });
+        engine.register({
+            trigger: "@",
+            name: "people",
+            dataSource: { query: async () => [] },
+        });
+        engine.attach(a);
+
+        engine.detach();
+        engine.attach(b);
+
+        const type = (value: string): void =>
+        {
+            b.value = value;
+            b.selectionStart = value.length;
+            b.selectionEnd = value.length;
+            b.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+
+        type("@");
+        type("@zz");
+        vi.advanceTimersByTime(200);
+
+        expect(seen).toEqual(["zz"]);
+
+        engine.destroy();
+        a.remove();
+        b.remove();
+        vi.useRealTimers();
+    });
+});

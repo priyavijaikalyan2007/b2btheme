@@ -696,3 +696,60 @@ describe("MetricCard destroy", () =>
         expect(() => card.destroy()).not.toThrow();
     });
 });
+
+// ============================================================================
+// SPARKLINE INTENT — UNUSED-1
+// ============================================================================
+
+describe("the sparkline follows the trend", () =>
+{
+    function sparklineClasses(): string
+    {
+        return container.querySelector(
+            ".metriccard-sparkline")?.getAttribute("class") ?? "";
+    }
+
+    // THE SPARKLINE TOOK ITS COLOUR FROM THE TREND AT BUILD TIME AND
+    // `setTrend` REBUILT ONLY THE ARROW, so a metric that flipped
+    // from positive to negative showed a red arrow over a green
+    // line. `sparklineEl` is the reference that was needed and
+    // nothing read it -- the compiler had been reporting it unused
+    // since it was declared (UNUSED-1).
+    test("a positive trend builds a positive sparkline", () =>
+    {
+        const card = createMetricCard(makeOptions({
+            sparkline: [1, 2, 3],
+            trend: { direction: "up", text: "+5%" },
+        }));
+
+        expect(sparklineClasses()).toContain("metriccard-sparkline-positive");
+        card.destroy();
+    });
+
+    test("setTrend recolours it", () =>
+    {
+        const card = createMetricCard(makeOptions({
+            sparkline: [1, 2, 3],
+            trend: { direction: "up", text: "+5%" },
+        }));
+
+        card.setTrend({ direction: "down", text: "-5%" });
+
+        expect(sparklineClasses()).toContain("metriccard-sparkline-negative");
+        expect(sparklineClasses()).not.toContain("metriccard-sparkline-positive");
+        card.destroy();
+    });
+
+    test("clearing the trend returns it to neutral", () =>
+    {
+        const card = createMetricCard(makeOptions({
+            sparkline: [1, 2, 3],
+            trend: { direction: "up", text: "+5%" },
+        }));
+
+        card.setTrend(null);
+
+        expect(sparklineClasses()).toContain("metriccard-sparkline-neutral");
+        card.destroy();
+    });
+});

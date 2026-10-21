@@ -229,7 +229,9 @@ class SliderImpl
     // DOM
     private rootEl: HTMLElement;
     private trackWrap: HTMLElement;
-    private trackEl: HTMLElement;
+    // `trackEl` LEFT ON 2026-10-21 (UNUSED-1): queried once in the
+    // constructor and never read. The pointer maths uses
+    // `trackWrap`, which is the element that carries the width.
     private fillEl: HTMLElement;
     private thumbEl: HTMLElement;
     private thumbLowEl: HTMLElement | null = null;
@@ -258,7 +260,6 @@ class SliderImpl
 
         this.rootEl = this.buildRoot();
         this.trackWrap = this.rootEl.querySelector(`.${CLS}-track-wrap`) as HTMLElement;
-        this.trackEl = this.rootEl.querySelector(`.${CLS}-track`) as HTMLElement;
         this.fillEl = this.rootEl.querySelector(`.${CLS}-fill`) as HTMLElement;
         this.thumbEl = this.rootEl.querySelector(`.${CLS}-thumb`) as HTMLElement;
 

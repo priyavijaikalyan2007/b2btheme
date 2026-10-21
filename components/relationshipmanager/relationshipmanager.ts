@@ -224,7 +224,11 @@ class RelationshipManagerImpl implements RelationshipManager
     private listEl: HTMLElement | null = null;
     private addBtnEl: HTMLElement | null = null;
     private addPanelEl: HTMLElement | null = null;
-    private addPanelOpen = false;
+    // `addPanelOpen` LEFT ON 2026-10-21 (UNUSED-1): it mirrored
+    // `addPanelEl.style.display` and nothing read it.
+    // The same answer SearchBox's `isLoading` got -- a field
+    // that mirrors live DOM state has no reader because the
+    // DOM is the state.
 
     // Add flow state
     private addStep = 0;
@@ -881,7 +885,6 @@ class RelationshipManagerImpl implements RelationshipManager
             logWarn("openAddPanel called but add capability is disabled.");
             return;
         }
-        this.addPanelOpen = true;
         this.addStep = 1;
         this.selectedRelDef = null;
         this.selectedTarget = null;
@@ -890,7 +893,6 @@ class RelationshipManagerImpl implements RelationshipManager
 
     private closeAddPanel(): void
     {
-        this.addPanelOpen = false;
         this.addStep = 0;
         if (this.addPanelEl) { this.addPanelEl.style.display = "none"; }
     }

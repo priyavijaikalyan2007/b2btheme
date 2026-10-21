@@ -222,7 +222,10 @@ export class DockLayout
     private rightSidebar: DockSlotComponent | null = null;
     private bottomPanel: DockSlotComponent | null = null;
     private statusBarComp: DockSlotComponent | null = null;
-    private contentElement: HTMLElement | null = null;
+    // `contentElement` LEFT ON 2026-10-21 (UNUSED-1): the component
+    // mounted into the centre cell. `clearCell` empties the cell by
+    // DOM, and `getContentElement()` returns the CELL -- as its doc
+    // comment says -- so nothing ever needed the occupant back.
 
     // DOM references
     private rootEl: HTMLElement | null = null;
@@ -335,7 +338,6 @@ export class DockLayout
         this.rightSidebar = null;
         this.bottomPanel = null;
         this.statusBarComp = null;
-        this.contentElement = null;
 
         this.rootEl?.remove();
         this.rootEl = null;
@@ -441,7 +443,6 @@ export class DockLayout
         {
             this.clearCell(this.centerCell);
             this.centerCell.appendChild(element);
-            this.contentElement = element;
         }
 
         this.fireOnLayoutChange();
@@ -589,7 +590,6 @@ export class DockLayout
         if (el)
         {
             this.centerCell.appendChild(el);
-            this.contentElement = el;
         }
     }
 

@@ -400,7 +400,10 @@ export class FontDropdown
 
     /** Set when a recents load failed; suppresses write-back (ADR-148). */
     private recentLoadFailed = false;
-    private filteredFonts: FontItem[] = [];
+    // `filteredFonts` LEFT ON 2026-10-21 (UNUSED-1): assigned the
+    // WHOLE list twice and never narrowed or read.
+    // `renderListItems` takes the search text and filters as it
+    // renders, so there was no second copy to keep.
     private selectedFont: FontItem | null = null;
     private highlightedIndex = -1;
     private isOpen = false;
@@ -425,7 +428,6 @@ export class FontDropdown
         this.opts = { ...options };
         this.fonts = options.fonts
             ? [...options.fonts] : [...DEFAULT_FONTS];
-        this.filteredFonts = [...this.fonts];
         this.boundDocClick = (e: MouseEvent) => this.onDocumentClick(e);
         this.boundDocKey = (e: KeyboardEvent) => this.onDocumentKey(e);
         if (options.showRecent) { this.recentValues = this.loadRecent(); }
@@ -459,7 +461,6 @@ export class FontDropdown
     public setFonts(fonts: FontItem[]): void
     {
         this.fonts = [...fonts];
-        this.filteredFonts = [...this.fonts];
         this.previewsLoaded = false;
         if (this.isOpen) { this.renderListItems(""); }
     }
