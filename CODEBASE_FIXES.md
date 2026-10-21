@@ -3687,6 +3687,63 @@ offered as the evidence for it.
   a fabricated read: the write side looks correct and the read side
   does not exist. Treat each one as a question before deleting it.
 
+  **2026-10-21 pass: 301 -> 298, and ALL THREE WERE FEATURES.** Not
+  one of them was a deletion. The 78 real-code reports were ordered
+  by what each SHAPE means, and the first shape read produced three
+  documented options that do nothing.
+
+  - **`explorerpicker :: matchesTypeFilter` — `resourceTypeFilter`
+    was never applied to `staticNodes`.** `buildFilterParams` puts
+    the option on the request as `?assetTypes=`, so the **server**
+    does the filtering — and `staticNodes` never makes a request.
+    A caller supplying its own nodes got the documented type and no
+    filtering. The README says "Only show matching resource types"
+    with no caveat. `matchesTypeFilter` is the client-side check,
+    complete with the type hierarchy, and nothing called it: **the
+    compiler had been reporting it as unused since it was written,
+    and the report WAS the bug** — the second time that sentence
+    applies in this entry. Applied on the static path only, because
+    the API path is already filtered and re-filtering it would drop
+    any node whose `resourceType` the server left off.
+  - **`codeeditor :: matchesKeyCombo` — `keyBindings` was accepted,
+    type-checked and ignored.** KEYBOARD.md says "**every**
+    interactive component accepts an optional `keyBindings`
+    property ... to override the defaults", and `getCMKeyBindings`
+    hard-coded `Mod-s`. `matchesKeyCombo` was a complete combo
+    matcher with no caller, and it could never have had one:
+    **CodeMirror owns the keymap, so an event matcher was never the
+    way in.** Replaced by `cmKeyFor`, which translates the house
+    `+` separator to CodeMirror's `-`. **The dead table was also
+    wrong** — `DEFAULT_KEY_BINDINGS` recorded `save: "Ctrl+s"` while
+    the live default is `Mod-s`, which is Cmd on macOS, so the live
+    one is kept.
+  - **`permissionmatrix :: exportData(format)` — `ExportFormat`
+    publishes `"json" | "csv"` and no CSV serialiser exists.**
+    `onExportClick` hard-codes "json" and the method returned the
+    same structured object whatever it was handed, so a caller
+    asking for CSV got JSON and no indication. ADR-200: a request
+    the caller NAMED is owed either the effect or an error. It
+    throws now and names what to do instead.
+
+  **Three shapes are measured and NOT defects, which is worth as
+  much.** `gradientpicker :: boundKeyDown` is a leftover
+  declaration — keydown is wired through `trackEl` and
+  `boundEscapeKey`. `ribbon :: boundResize` was superseded by a
+  `ResizeObserver`. And `gradientpicker`'s `isDragging` /
+  `dragPointerId` look like SpineMap's drag guard, but a probe
+  showed a drag ending on a handle does not add a stop:
+  `handleTrackClick` already refuses a click whose target carries
+  the handle class, and the handle has no children for the target
+  to be. `dragPointerId` was the value `releasePointerCapture`
+  would need, and the browser releases implicitly on `pointerup`.
+
+  **The order that produced this.** Handlers built and never
+  registered first (the DataGrid shape), then predicates never
+  applied, then state written and never read, then element refs
+  held and never updated, then dead helpers. The first two shapes
+  carry the product defects; the last is where the genuine
+  deletions are.
+
   **2026-10-20 pass: 330 -> 305.** Twenty-three dead module constants
   deleted, plus the DataGrid fix. The remainder is 120 preamble, 103
   diagramengine and ~82 elsewhere.

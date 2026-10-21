@@ -415,8 +415,26 @@ export class PermissionMatrix
 
     clearFilter(): void { this.setFilter(""); }
 
-    exportData(format: ExportFormat): MatrixExportData
+    exportData(format: ExportFormat = "json"): MatrixExportData
     {
+        // `format` WAS ACCEPTED AND IGNORED. `ExportFormat` publishes
+        // `"json" | "csv"` and there is no CSV serialiser anywhere in
+        // this component: `onExportClick` hard-codes "json" and this
+        // method returned the same structured object whatever it was
+        // handed. The compiler had been reporting the parameter as
+        // unread since it was written (UNUSED-1), and a caller asking
+        // for CSV got JSON and no indication.
+        //
+        // ADR-200: a request the caller NAMED is owed either the
+        // effect or an error. CSV is an honest gap, so this says so.
+        if (format !== "json")
+        {
+            throw new Error(
+                `${LOG_PREFIX} exportData("${format}") is not implemented. `
+                + "This component serialises JSON only. Build the CSV from "
+                + "the returned MatrixExportData, or export JSON.");
+        }
+
         const cells = this.getAllCells();
         const data: MatrixExportData = {
             exportedAt: new Date().toISOString(),

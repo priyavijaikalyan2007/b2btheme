@@ -129,10 +129,6 @@ const TOOLBAR_ICONS: Record<string, string> =
     format: "bi-indent",
     save: "bi-floppy"
 };
-const DEFAULT_KEY_BINDINGS: Record<string, string> = {
-    save: "Ctrl+s",
-};
-
 const COPY_FEEDBACK_MS = 1500;
 const CHANGE_DEBOUNCE_MS = 100;
 let instanceCounter = 0;
@@ -500,32 +496,31 @@ export class CodeEditor
     // ========================================================================
 
     /**
-     * Resolves the combo string for a named action.
+     * The CodeMirror key for a named action, honouring `keyBindings`.
+     *
+     * (CRITICAL) `keyBindings` WAS ACCEPTED, TYPE-CHECKED AND IGNORED.
+     * KEYBOARD.md says "every interactive component accepts an
+     * optional `keyBindings` property ... to override the defaults",
+     * and `getCMKeyBindings` hard-coded `Mod-s`. A caller remapping
+     * save got the documented type and the original shortcut.
+     *
+     * This replaces `resolveKeyCombo` and `matchesKeyCombo`, which
+     * were a complete combo matcher with no caller — CodeMirror owns
+     * the keymap, so an event matcher was never the way in. The
+     * compiler had reported `matchesKeyCombo` as unused since it was
+     * written (UNUSED-1).
+     *
+     * THE DEAD TABLE WAS ALSO WRONG. `DEFAULT_KEY_BINDINGS` recorded
+     * `save: "Ctrl+s"` and the live default is `Mod-s`, which is Cmd
+     * on macOS. The live one is kept, because a mac user pressing
+     * Cmd-s today would lose it otherwise, and the house `+`
+     * separator is translated to CodeMirror's `-`.
      */
-    private resolveKeyCombo(action: string): string
+    private cmKeyFor(action: string, fallback: string): string
     {
-        return this.options.keyBindings?.[action]
-            ?? DEFAULT_KEY_BINDINGS[action] ?? "";
-    }
+        const combo = this.options.keyBindings?.[action];
 
-    /**
-     * Returns true if the keyboard event matches the named action combo.
-     */
-    private matchesKeyCombo(
-        e: KeyboardEvent, action: string
-    ): boolean
-    {
-        const combo = this.resolveKeyCombo(action);
-        if (!combo) { return false; }
-        const parts = combo.split("+");
-        const key = parts[parts.length - 1];
-        const needCtrl = parts.includes("Ctrl");
-        const needShift = parts.includes("Shift");
-        const needAlt = parts.includes("Alt");
-        return e.key === key
-            && e.ctrlKey === needCtrl
-            && e.shiftKey === needShift
-            && e.altKey === needAlt;
+        return combo ? combo.replace(/\+/g, "-") : fallback;
     }
 
     // ========================================================================
@@ -870,7 +865,7 @@ export class CodeEditor
         tryPush("closeBracketsKeymap");
 
         maps.push({
-            key: "Mod-s",
+            key: this.cmKeyFor("save", "Mod-s"),
             run: () =>
             {
                 this.options.onSave?.(this.getValue());

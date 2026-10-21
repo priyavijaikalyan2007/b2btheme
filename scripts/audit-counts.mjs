@@ -495,7 +495,15 @@ const BASELINES = {
     // duplication FALLBACK-1 to 9 removed. The five helpers are the LOG-4a
     // preamble and are present whether or not a component uses them, which
     // is why this count was already 306 rather than 0. Under UNUSED-1.
-    unusedLocals: 301,
+    // 301 -> 298 on 2026-10-21. Three of them were FEATURES, not
+    // dead code, which is what UNUSED-1 means by "treat each one as
+    // a question before deleting it": ExplorerPicker's
+    // `matchesTypeFilter` was the client-side half of a documented
+    // option that only ever reached the API, CodeEditor's
+    // `matchesKeyCombo` stood in for a `keyBindings` override the
+    // keymap hard-coded past, and PermissionMatrix's `format`
+    // parameter named a CSV serialiser that does not exist.
+    unusedLocals: 298,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -761,7 +769,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5035,
+    testBlocks: 5042,
 };
 
 /**

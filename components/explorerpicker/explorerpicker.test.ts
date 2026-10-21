@@ -1281,3 +1281,74 @@ describe("appearance options", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// RESOURCE TYPE FILTER — UNUSED-1
+// ============================================================================
+
+describe("resourceTypeFilter on the staticNodes path", () =>
+{
+    // `resourceTypeFilter` reached the API as `?assetTypes=` and the
+    // server did the filtering, so `staticNodes` -- which never makes
+    // a request -- ignored the option entirely. `matchesTypeFilter`
+    // was written for exactly this, complete with the type hierarchy,
+    // and nothing called it: the compiler reported it as unused and
+    // THE REPORT WAS THE BUG.
+    test("an asset whose resourceType is not in the filter is not rendered", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({
+            // Flat, so both assets render without an expand -- the
+            // idiom the icon test above settled on.
+            staticNodes: [
+                makeAsset("keep", "Kept Diagram", null, "diagrams.diagram"),
+                makeAsset("drop", "Dropped Sheet", null, "sheets.sheet"),
+            ],
+            resourceTypeFilter: ["diagrams.diagram"],
+        }));
+
+        const labels = [...container.querySelectorAll(
+            ".explorerpicker-label")].map((n) => n.textContent);
+
+        expect(labels).toContain("Kept Diagram");
+        expect(labels).not.toContain("Dropped Sheet");
+
+        picker.destroy();
+    });
+
+    test("a folder survives the filter whatever its type", () =>
+    {
+        // `matchesTypeFilter` lets ORG_UNIT and FOLDER through on
+        // purpose: filtering out the container would hide the assets
+        // the caller asked to see.
+        const picker = createExplorerPicker(defaultOpts({
+            staticNodes: [
+                makeOrgUnit("eng", "Engineering"),
+                makeFolder("arch", "Architecture Diagrams", "eng"),
+            ],
+            resourceTypeFilter: ["diagrams.diagram"],
+        }));
+
+        const labels = [...container.querySelectorAll(
+            ".explorerpicker-label")].map((n) => n.textContent);
+
+        expect(labels).toContain("Engineering");
+
+        picker.destroy();
+    });
+
+    test("no filter leaves every node in place", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({
+            staticNodes: [
+                makeAsset("a", "Any Type", null, "sheets.sheet"),
+            ],
+        }));
+
+        const labels = [...container.querySelectorAll(
+            ".explorerpicker-label")].map((n) => n.textContent);
+
+        expect(labels).toContain("Any Type");
+
+        picker.destroy();
+    });
+});

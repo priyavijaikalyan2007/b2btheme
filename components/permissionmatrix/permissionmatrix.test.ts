@@ -336,3 +336,38 @@ describe("edge cases", () =>
         warnSpy.mockRestore();
     });
 });
+
+// ============================================================================
+// EXPORT FORMAT — UNUSED-1
+// ============================================================================
+
+describe("exportData names the format it cannot produce", () =>
+{
+    // `ExportFormat` publishes `"json" | "csv"` and there is no CSV
+    // serialiser in this component. `exportData` took the parameter
+    // and returned the same object whatever it was handed, so a
+    // caller asking for CSV got JSON and no indication — the
+    // compiler had been reporting the parameter as unread since it
+    // was written. ADR-200: a request the caller NAMED is owed
+    // either the effect or an error.
+    test("json returns the structured export", () =>
+    {
+        const matrix = createPermissionMatrix(makeOptions(), "test-permmatrix");
+
+        const data = matrix.exportData("json");
+
+        expect(data.roles).toEqual(makeOptions().roles);
+        expect(typeof data.exportedAt).toBe("string");
+        matrix.destroy();
+    });
+
+    test("csv throws and says what to do instead", () =>
+    {
+        const matrix = createPermissionMatrix(makeOptions(), "test-permmatrix");
+
+        expect(() => matrix.exportData("csv"))
+            .toThrow(/not implemented.*MatrixExportData/s);
+
+        matrix.destroy();
+    });
+});

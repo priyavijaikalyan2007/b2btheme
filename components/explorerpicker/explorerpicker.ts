@@ -1098,7 +1098,27 @@ export class ExplorerPickerImpl
         if (this.opts.staticNodes)
         {
             this.loadPresetOntology();
-            this.populateFromNodes(this.opts.staticNodes);
+
+            // `resourceTypeFilter` REACHED THE API AND NOT THIS PATH.
+            // `buildFilterParams` puts it on the request as
+            // `?assetTypes=`, so the server does the filtering -- and
+            // `staticNodes` never makes a request, so the option was
+            // silently ignored for every caller supplying its own
+            // nodes. The README documents it as "Only show matching
+            // resource types" with no caveat.
+            //
+            // `matchesTypeFilter` is the client-side check, complete
+            // with the type hierarchy, and nothing called it. The
+            // compiler had been reporting it as unused since it was
+            // written and the report WAS the bug (UNUSED-1), which
+            // is the second time that sentence applies in this entry.
+            //
+            // Applied HERE and not in `populateFromNodes`, because
+            // the API path is already filtered by the server and
+            // re-filtering it would drop any node whose
+            // `resourceType` the server left off.
+            this.populateFromNodes(
+                this.opts.staticNodes.filter((n) => this.matchesTypeFilter(n)));
             this.renderTree();
             this.updateConfirmState();
             return;

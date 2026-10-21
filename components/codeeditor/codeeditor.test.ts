@@ -599,3 +599,62 @@ describe("edge cases", () =>
         expect(root?.classList.contains("my-editor")).toBe(true);
     });
 });
+
+// ============================================================================
+// KEY BINDINGS — UNUSED-1
+// ============================================================================
+
+describe("keyBindings reaches the CodeMirror keymap", () =>
+{
+    /** The keymap entries CodeEditor handed `keymap.of`. */
+    function capturedMaps(): { key: string }[]
+    {
+        const captured: unknown[][] = [];
+        installCodeMirrorMock({
+            keymap: {
+                of: (maps: unknown[]) =>
+                {
+                    captured.push(maps);
+                    return { keymap: maps };
+                },
+            },
+        });
+        createCodeEditor("test-codeeditor", { onSave: vi.fn() });
+
+        return captured.flat() as { key: string }[];
+    }
+
+    afterEach(() => { removeCodeMirrorMock(); });
+
+    // KEYBOARD.md: "every interactive component accepts an optional
+    // `keyBindings` property ... to override the defaults".
+    // `getCMKeyBindings` hard-coded `Mod-s`, so a caller remapping
+    // save got the documented type and the original shortcut.
+    // `matchesKeyCombo` was a complete combo matcher with no caller
+    // -- CodeMirror owns the keymap, so an event matcher was never
+    // the way in -- and the compiler had been reporting it unused
+    // since it was written.
+    test("the default save binding is Mod-s", () =>
+    {
+        expect(capturedMaps().map((m) => m.key)).toContain("Mod-s");
+    });
+
+    test("an override replaces it, translated to CodeMirror's separator", () =>
+    {
+        const captured: unknown[][] = [];
+        installCodeMirrorMock({
+            keymap: {
+                of: (maps: unknown[]) => { captured.push(maps); return { keymap: maps }; },
+            },
+        });
+
+        createCodeEditor("test-codeeditor", {
+            onSave: vi.fn(),
+            keyBindings: { save: "Ctrl+Shift+s" },
+        });
+
+        const keys = (captured.flat() as { key: string }[]).map((m) => m.key);
+        expect(keys).toContain("Ctrl-Shift-s");
+        expect(keys).not.toContain("Mod-s");
+    });
+});
