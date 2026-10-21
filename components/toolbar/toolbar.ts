@@ -5699,10 +5699,12 @@ export class Toolbar
  * Creates, shows, and returns a Toolbar instance.
  *
  * @param options - Toolbar configuration
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Toolbar instance
  */
 export function createToolbar(
-    options: ToolbarOptions, containerId?: string): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5723,28 +5725,30 @@ export function createToolbar(
 
     const toolbar = new Toolbar(options);
 
-    // PAT-1. `containerId` is why GraphToolbar used to reach for
+    // PAT-1. `container` is why GraphToolbar used to reach for
     // `window.Toolbar` and call `new` on it: the factory showed the
     // toolbar into document.body, `show()` returns early once visible,
     // and so there was no way through the factory to say WHERE. Every
     // other factory in this repository takes the container, and the
     // parameter is optional, so no existing caller changes.
-    if (containerId === undefined)
+    if (container === undefined)
     {
         toolbar.show();
         return toolbar;
     }
 
-    const container = document.getElementById(containerId);
+    const target = typeof container === "string"
+        ? document.getElementById(container)
+        : container;
 
-    if (!container)
+    if (!target)
     {
         throw new Error(
-            `${LOG_PREFIX} Container "${containerId}" was not found. `
-            + "Insert the element before creating the Toolbar.");
+            `${LOG_PREFIX} Container "${String(container)}" was not `
+            + "found. Insert the element before creating the Toolbar.");
     }
 
-    toolbar.show(container);
+    toolbar.show(target);
     return toolbar;
 }
 
@@ -5752,10 +5756,12 @@ export function createToolbar(
  * Creates a docked toolbar. Defaults mode to "docked".
  *
  * @param options - Toolbar configuration (mode defaults to "docked")
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Toolbar instance
  */
 export function createDockedToolbar(
-    options: ToolbarOptions, containerId?: string): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5774,17 +5780,19 @@ export function createDockedToolbar(
             + "Pass it when creating the Toolbar.");
     }
 
-    return createToolbar({ mode: "docked", ...options }, containerId);
+    return createToolbar({ mode: "docked", ...options }, container);
 }
 
 /**
  * Creates a floating toolbar. Defaults mode to "floating".
  *
  * @param options - Toolbar configuration (mode defaults to "floating")
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Toolbar instance
  */
 export function createFloatingToolbar(
-    options: ToolbarOptions, containerId?: string): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5803,7 +5811,7 @@ export function createFloatingToolbar(
             + "Pass it when creating the Toolbar.");
     }
 
-    return createToolbar({ mode: "floating", ...options }, containerId);
+    return createToolbar({ mode: "floating", ...options }, container);
 }
 
 // ============================================================================

@@ -466,7 +466,7 @@
          */
         function buildToolbar()
         {
-            var tb = new Toolbar({
+            var tb = createToolbar({
                 label: "Layout Studio Toolbar",
                 mode: "docked",
                 contained: true,
@@ -488,9 +488,7 @@
                         items: buildFileToolbarItems()
                     }
                 ]
-            });
-
-            tb.show(toolbarContainer);
+            }, toolbarContainer);
             logDebug("Toolbar created via Toolbar component");
             return tb;
         }
@@ -617,7 +615,7 @@
          */
         function buildLeftSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Components",
                 icon: "bi-puzzle",
                 mode: "docked",
@@ -626,9 +624,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
 
             // Move the sidebar before the center panel
             var rootEl = sb.getRootElement();
@@ -693,7 +689,7 @@
          */
         function buildRightSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Properties",
                 icon: "bi-sliders",
                 mode: "docked",
@@ -702,9 +698,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
 
             // Build property panel content
             var content = sb.getContentElement();

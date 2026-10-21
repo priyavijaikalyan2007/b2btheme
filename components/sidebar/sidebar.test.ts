@@ -15,6 +15,7 @@ import
 {
     Sidebar,
     createSidebar,
+    createDockedSidebar,
 } from "./sidebar";
 import type { SidebarOptions } from "./sidebar";
 
@@ -68,6 +69,63 @@ describe("createSidebar", () =>
         const sb = createSidebar(makeOptions());
         expect(sb.isVisible()).toBe(true);
         sb.destroy();
+    });
+
+    // PAT-1b. Three studio demos built their chrome with
+    // `new Sidebar(...)` followed by `show(studioBody)`, and this factory
+    // could not replace that call because it showed into document.body
+    // and `show()` returns early once visible. The later `show(el)` then
+    // logged "Already visible" and left the sidebar in the wrong parent.
+    // `isVisible()` is true in both the right and the wrong case, so each
+    // test below reads the PARENT instead.
+    test("createSidebar_WithElement_MountsIntoThatElement", () =>
+    {
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+
+        const sb = createSidebar(makeOptions(), host);
+        expect(sb.getRootElement()?.parentElement).toBe(host);
+
+        sb.destroy();
+        host.remove();
+    });
+
+    test("createSidebar_WithElementId_MountsIntoThatElement", () =>
+    {
+        const host = document.createElement("div");
+        host.id = "sidebar-host";
+        document.body.appendChild(host);
+
+        const sb = createSidebar(makeOptions(), "sidebar-host");
+        expect(sb.getRootElement()?.parentElement).toBe(host);
+
+        sb.destroy();
+        host.remove();
+    });
+
+    test("createSidebar_NoContainer_MountsIntoBody", () =>
+    {
+        const sb = createSidebar(makeOptions());
+        expect(sb.getRootElement()?.parentElement).toBe(document.body);
+        sb.destroy();
+    });
+
+    test("createSidebar_UnknownElementId_Throws", () =>
+    {
+        expect(() => createSidebar(makeOptions(), "no-such-host"))
+            .toThrow(/was not\s+found/);
+    });
+
+    test("createDockedSidebar_WithElement_ForwardsTheContainer", () =>
+    {
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+
+        const sb = createDockedSidebar(makeOptions(), host);
+        expect(sb.getRootElement()?.parentElement).toBe(host);
+
+        sb.destroy();
+        host.remove();
     });
 });
 

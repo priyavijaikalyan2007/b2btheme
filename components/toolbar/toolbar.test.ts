@@ -159,6 +159,51 @@ describe("createToolbar", () =>
         expect(tb.getElement()).toBeInstanceOf(HTMLElement);
         tb.destroy();
     });
+
+    // PAT-1b. The studio demos called `new Toolbar(...)` and then
+    // `show(el)`, and the reason they could not use this factory is the
+    // reason these four tests exist: without a container the factory
+    // shows into document.body, `show()` returns early once visible, and
+    // the later `show(el)` moved nothing. The discrimination is WHERE the
+    // toolbar landed, so each test reads the parent rather than
+    // `isVisible()`, which is true in both the right and the wrong case.
+    test("createToolbar_WithElement_MountsIntoThatElement", () =>
+    {
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+
+        const tb = createToolbar(makeOptions(), host);
+        expect(tb.getElement()?.parentElement).toBe(host);
+
+        tb.destroy();
+        host.remove();
+    });
+
+    test("createToolbar_WithElementId_MountsIntoThatElement", () =>
+    {
+        const host = document.createElement("div");
+        host.id = "toolbar-host";
+        document.body.appendChild(host);
+
+        const tb = createToolbar(makeOptions(), "toolbar-host");
+        expect(tb.getElement()?.parentElement).toBe(host);
+
+        tb.destroy();
+        host.remove();
+    });
+
+    test("createToolbar_NoContainer_MountsIntoBody", () =>
+    {
+        const tb = createToolbar(makeOptions());
+        expect(tb.getElement()?.parentElement).toBe(document.body);
+        tb.destroy();
+    });
+
+    test("createToolbar_UnknownElementId_Throws", () =>
+    {
+        expect(() => createToolbar(makeOptions(), "no-such-host"))
+            .toThrow(/was not\s+found/);
+    });
 });
 
 // ============================================================================

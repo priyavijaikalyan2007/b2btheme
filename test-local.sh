@@ -468,7 +468,7 @@ echo ""
 # demo/*.html as well, which is where the flagship demo lives.
 echo "[21] Demos name a component the repository has (DEBT-TS-1)"
 DEMO_NAME_ERRORS=0
-for demo in demo/*.html demo/components/*.html; do
+for demo in demo/*.html demo/components/*.html demo/studio/*.html; do
     [ -f "$demo" ] || continue
     case "$(basename "$demo")" in _*) continue;; esac
     for name in $(grep -oE 'dist/components/[a-z0-9-]+/' "$demo" | sed 's|dist/components/||;s|/||' | sort -u); do
@@ -547,6 +547,37 @@ for f in components/*/*.ts; do
 done
 if [ "$CLASS_GLOBALS" -eq 0 ]; then
     pass "No component puts a class on window; factories only"
+fi
+echo ""
+
+# ── 25. No demo page constructs a component class ──
+#
+# PAT-1b. Check [24] holds the LIBRARY side: no component registers a
+# class on `window`. Nothing held the CONSUMER side, and three studio
+# pages went on calling `new Sidebar(...)` and `new Toolbar(...)` after
+# the classes were gone. They broke on the CDN and every gate passed,
+# because [21] and tests/demo-pages.spec.ts both read
+# demo/components/*.html and the studio pages live one directory over.
+#
+# The class list is read from the component sources, not from a table in
+# a migration document, so a class added tomorrow is covered without
+# anyone remembering to add it.
+echo "[25] No demo page constructs a component class (PAT-1)"
+DEMO_CLASS_USES=0
+COMPONENT_CLASSES=$(grep -hoE '^export class [A-Z][A-Za-z0-9_]*' components/*/*.ts \
+    | awk '{print $NF}' | sort -u)
+for demo in demo/*.html demo/components/*.html demo/studio/*.html; do
+    [ -f "$demo" ] || continue
+    case "$(basename "$demo")" in _*) continue;; esac
+    for cls in $COMPONENT_CLASSES; do
+        if grep -qE "new[[:space:]]+${cls}[[:space:]]*\(" "$demo"; then
+            fail "$demo calls new ${cls}(); use the ${cls} factory instead"
+            DEMO_CLASS_USES=$((DEMO_CLASS_USES + 1))
+        fi
+    done
+done
+if [ "$DEMO_CLASS_USES" -eq 0 ]; then
+    pass "Every demo page builds components through a factory"
 fi
 echo ""
 

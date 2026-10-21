@@ -2366,9 +2366,12 @@ export class SidebarManager
  * Creates and shows a sidebar in a single call.
  *
  * @param options - Sidebar configuration
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Sidebar instance
  */
-export function createSidebar(options: SidebarOptions): Sidebar
+export function createSidebar(
+    options: SidebarOptions, container?: string | HTMLElement): Sidebar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -2381,7 +2384,33 @@ export function createSidebar(options: SidebarOptions): Sidebar
     }
 
     const sidebar = new Sidebar(options);
-    sidebar.show();
+
+    // PAT-1. `container` is why the studio demos reached for
+    // `window.Sidebar` and called `new` on it: this factory showed the
+    // sidebar into document.body, and `show()` returns early once
+    // visible, so a later `show(el)` only logged "Already visible" and
+    // left the sidebar in the wrong parent. The parameter is optional,
+    // so no existing caller changes. It takes an element as well as an
+    // id because a caller that already holds the element should not
+    // have to look it up again.
+    if (container === undefined)
+    {
+        sidebar.show();
+        return sidebar;
+    }
+
+    const target = typeof container === "string"
+        ? document.getElementById(container)
+        : container;
+
+    if (!target)
+    {
+        throw new Error(
+            `${LOG_PREFIX} Container "${String(container)}" was not `
+            + "found. Insert the element before creating the Sidebar.");
+    }
+
+    sidebar.show(target);
     return sidebar;
 }
 
@@ -2389,9 +2418,12 @@ export function createSidebar(options: SidebarOptions): Sidebar
  * Creates a docked sidebar. Defaults mode to "docked".
  *
  * @param options - Sidebar configuration (mode defaults to "docked")
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Sidebar instance
  */
-export function createDockedSidebar(options: SidebarOptions): Sidebar
+export function createDockedSidebar(
+    options: SidebarOptions, container?: string | HTMLElement): Sidebar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -2403,16 +2435,19 @@ export function createDockedSidebar(options: SidebarOptions): Sidebar
             + "Pass it when creating the Sidebar.");
     }
 
-    return createSidebar({ mode: "docked", ...options });
+    return createSidebar({ mode: "docked", ...options }, container);
 }
 
 /**
  * Creates a floating sidebar. Defaults mode to "floating".
  *
  * @param options - Sidebar configuration (mode defaults to "floating")
+ * @param container - Element or element id to mount into. Omit to
+ *   mount into document.body.
  * @returns The created Sidebar instance
  */
-export function createFloatingSidebar(options: SidebarOptions): Sidebar
+export function createFloatingSidebar(
+    options: SidebarOptions, container?: string | HTMLElement): Sidebar
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -2424,7 +2459,7 @@ export function createFloatingSidebar(options: SidebarOptions): Sidebar
             + "Pass it when creating the Sidebar.");
     }
 
-    return createSidebar({ mode: "floating", ...options });
+    return createSidebar({ mode: "floating", ...options }, container);
 }
 
 // ============================================================================

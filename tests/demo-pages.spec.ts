@@ -8,7 +8,7 @@
  *
  * WHY THIS EXISTS
  * ---------------
- * 129 demo pages shipped. Eight of them were ever opened in a browser by
+ * 137 demo pages shipped. Eight of them were ever opened in a browser by
  * anything in this repository, and those eight were the subject of a
  * hand-written spec. Structure checks [4] and [5] look like coverage and
  * are not: they ask whether a file exists on disk, never whether the page
@@ -35,6 +35,15 @@
  *                         embed threw on every render.
  *   docklayout            slots mount from the constructor, before the
  *                         grid is in the document (DEBT-DL-1).
+ *
+ * WHAT THE GLOB ITSELF HID. The list above read `demo/components/*.html`
+ * for the life of this suite, so the four studio pages were never opened
+ * by it. Three of them built their chrome with `new Sidebar(...)` and
+ * `new Toolbar(...)`, and PAT-1 took those classes off `window` on
+ * 2026-10-21. The pages broke on the CDN and every gate stayed green,
+ * because a page that is not in the population cannot fail. The glob now
+ * reads every tracked page under `demo/`, and the seven that were outside
+ * the old one are asserted by name rather than by a count.
  *
  * WHAT IT DOES NOT DO. It is a smoke gate. It asserts that a page loads,
  * says nothing on the console, requests nothing that 404s, and registers
@@ -69,18 +78,11 @@ const { extractGlobals } = createRequire(__filename)(
  * are templates, and structure check [4] skips them the same way.
  */
 const PAGES: string[] = execFileSync(
-    "git", ["ls-files", "demo/components/*.html"], { encoding: "utf8" })
+    "git", ["ls-files", "demo/*.html", "demo/**/*.html"],
+    { encoding: "utf8" })
     .split("\n")
     .filter(Boolean)
-    .filter((p) => !basename(p).startsWith("_"))
-    // DEBT-DEMO-2. The flagship page is 855 KB, carries a section for
-    // every component, and was in NEITHER this glob nor structure
-    // check [5] — both iterate demo/components/*.html. Two unrelated
-    // things had rotted in it: the deprecated workspaceswitcher path
-    // (DEBT-TS-1) and a DocViewer section that threw on every load
-    // because the page never loaded MarkdownRenderer. It is the page
-    // a visitor is most likely to open.
-    .concat(["demo/full-demo.html"]);
+    .filter((p) => !basename(p).startsWith("_"));
 
 /** The globals the component of the same name registers, if there is one. */
 function globalsFor(page: string): string[]
@@ -108,6 +110,26 @@ test.describe("every demo page loads clean", () =>
         // untested for the life of this suite, so its presence is
         // asserted by name rather than left to a count.
         expect(PAGES).toContain("demo/full-demo.html");
+
+        // PAT-1b. The glob above read `demo/components/*.html` and so
+        // this suite never opened the four studio pages. Three of them
+        // called `new Sidebar(...)` and `new Toolbar(...)`, which stopped
+        // working the day the classes came off `window`, and the suite
+        // stayed green because the pages were not in the list. A count
+        // cannot catch that, because the count was never wrong — the
+        // population was. Every page outside demo/components is named.
+        for (const page of [
+            "demo/index.html",
+            "demo/dynamic-ui.html",
+            "demo/visual-refresh.html",
+            "demo/studio/component-studio.html",
+            "demo/studio/layout-studio.html",
+            "demo/studio/ribbon-studio.html",
+            "demo/studio/shape-studio.html",
+        ])
+        {
+            expect(PAGES).toContain(page);
+        }
     });
 
     for (const page of PAGES)

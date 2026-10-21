@@ -5467,7 +5467,7 @@
          */
         function buildLeftSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Components",
                 icon: "bi-puzzle",
                 mode: "docked",
@@ -5476,9 +5476,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
             positionLeftSidebar(sb);
             populateLeftSidebarContent(sb);
 
@@ -5790,7 +5788,7 @@
          */
         function buildRightSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Inspector",
                 icon: "bi-sliders",
                 mode: "docked",
@@ -5799,9 +5797,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
 
             var content = sb.getContentElement();
 

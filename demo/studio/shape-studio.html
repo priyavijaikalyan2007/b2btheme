@@ -592,7 +592,7 @@
          */
         function buildToolbar()
         {
-            var tb = new Toolbar({
+            var tb = createToolbar({
                 label: "Shape Studio Toolbar",
                 mode: "docked",
                 contained: true,
@@ -613,9 +613,7 @@
                         items: buildViewToolbarItems()
                     }
                 ]
-            });
-
-            tb.show(toolbarContainer);
+            }, toolbarContainer);
             logDebug("Toolbar created via Toolbar component");
             return tb;
         }
@@ -633,7 +631,7 @@
          */
         function buildLeftSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Tools",
                 icon: "bi-tools",
                 mode: "docked",
@@ -642,9 +640,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
 
             // Move the sidebar before the center panel
             var rootEl = sb.getRootElement();
@@ -729,7 +725,7 @@
          */
         function buildRightSidebar()
         {
-            var sb = new Sidebar({
+            var sb = createSidebar({
                 title: "Saved Shapes",
                 icon: "bi-collection",
                 mode: "docked",
@@ -738,9 +734,7 @@
                 collapsible: true,
                 resizable: true,
                 contained: true
-            });
-
-            sb.show(studioBody);
+            }, studioBody);
 
             // Build shape library content inside sidebar
             var content = sb.getContentElement();
