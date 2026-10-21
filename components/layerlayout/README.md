@@ -111,7 +111,6 @@ The `align` property maps to CSS absolute positioning:
 | `destroy()` | `void` | Full cleanup, destroy all layers |
 | `getRootElement()` | `HTMLElement \| null` | The root relative container |
 | `isVisible()` | `boolean` | Whether the layout is displayed |
-| `setContained(value)` | `void` | Set contained mode |
 | `addLayer(config)` | `void` | Add a layer on top of the stack |
 | `removeLayer(index)` | `void` | Remove a layer by index |
 | `removeLayerByKey(key)` | `void` | Remove a layer by its string key |
@@ -161,3 +160,18 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.layerlayout` | Root | Relative-positioned container |
 | `.layerlayout-layer` | Wrapper | Absolute-positioned layer wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.

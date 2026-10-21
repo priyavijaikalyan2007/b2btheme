@@ -3964,10 +3964,37 @@ offered as the evidence for it.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **124 on 2026-10-21 and that is the FLOOR** — 120
-  preamble shims plus the four `contained` fields DEBT-LAY-1 holds
-  open. Was 305 on 2026-10-20, 329 on 2026-10-17, 330 on 2026-10-19,
-  not the 414 below.
+- [ ] **UNUSED-1**: **124 on 2026-10-21 and that is the FLOOR** — and
+  all 124 are LOG-4a preamble shims, with nothing else in the count.
+  Was 305 on 2026-10-20, 329 on 2026-10-17, 330 on 2026-10-19, not
+  the 414 below.
+
+  **THE FOUR `contained` FIELDS WERE NEVER DEBT-LAY-1'S, AND THIS
+  ENTRY SAID THEY WERE FOR A DAY.** The headline read "120 preamble
+  shims plus the four `contained` fields DEBT-LAY-1 holds open", and
+  DEBT-LAY-1 **closed on 2026-10-20** having deleted the field and
+  setter from AnchorLayout, BorderLayout, BoxLayout and CardLayout.
+  The four still reporting are **FlexGridLayout, FlowLayout,
+  GridLayout and LayerLayout** — the identical defect in four
+  components the closed entry never named, parked here under a
+  reference to an item holding nothing open. A stale attribution is
+  the quietest place for a live defect to sit, because the number is
+  right and the reader has somewhere to send it.
+
+  Same measurement, same answer: zero `document.body.appendChild`
+  between them, so `contained` has nothing to decide, and the slot
+  protocol is duck-typed — not implementing `setContained` is how a
+  component correctly answers "absent", while implementing it as a
+  no-op answers "present" and lies (ADR-212). All four deleted, the
+  four READMEs corrected, and
+  `components/docklayout/contained-protocol.test.ts` extended from
+  four layouts to eight, mutation-proven against each.
+
+  **The count went 124 -> 128 -> 124 in one day and means something
+  different at each end.** The rise was four more preamble shims
+  going unread when `setData` stopped warning (ADR-200). The fall was
+  these four. `unusedLocals` is one population now, for the first
+  time since it was taken.
 
   **THE COUNT IS THREE POPULATIONS AND ONLY TWO OF THEM ARE WORK.**
   Measured 2026-10-20, before this pass:

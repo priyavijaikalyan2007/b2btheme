@@ -10,10 +10,19 @@
  * -----------------------------------------------------------
  * `contained` means "fill the parent instead of `document.body`". Toolbar and
  * Sidebar have a body-append path, so the flag decides where they render and
- * they both read it. AnchorLayout, BorderLayout, BoxLayout and CardLayout
- * have NO body-append path at all — measured, zero `document.body.appendChild`
- * between them — so they always fill the element they were given and the flag
- * has nothing to decide.
+ * they both read it. AnchorLayout, BorderLayout, BoxLayout, CardLayout,
+ * FlexGridLayout, FlowLayout, GridLayout and LayerLayout have NO body-append
+ * path at all — measured, zero `document.body.appendChild` between them — so
+ * they always fill the element they were given and the flag has nothing to
+ * decide.
+ *
+ * EIGHT, NOT FOUR. ADR-212 named and fixed four and closed. The other four
+ * carried the identical field and setter and were never looked at, and
+ * UNUSED-1 had been attributing their four TS6133 reports to the CLOSED
+ * entry — so the headline read "120 preamble shims plus the four `contained`
+ * fields DEBT-LAY-1 holds open" while DEBT-LAY-1 held nothing open and the
+ * four were somewhere else entirely. Fixed 2026-10-21; the floor is the
+ * preamble alone now.
  *
  * Each of those four nevertheless declared `private contained = false` and a
  * public `setContained(value)` that assigned it, and NOT ONE of them read the
@@ -35,6 +44,10 @@
 import { describe, test, expect } from "vitest";
 
 import { createAnchorLayout } from "../anchorlayout/anchorlayout";
+import { createFlexGridLayout } from "../flexgridlayout/flexgridlayout";
+import { createFlowLayout } from "../flowlayout/flowlayout";
+import { createGridLayout } from "../gridlayout/gridlayout";
+import { createLayerLayout } from "../layerlayout/layerlayout";
 import { createBorderLayout } from "../borderlayout/borderlayout";
 import { createBoxLayout } from "../boxlayout/boxlayout";
 import { createCardLayout } from "../cardlayout/cardlayout";
@@ -55,12 +68,21 @@ describe("the contained protocol", () =>
     test("layoutsWithNoBodyPath_DoNotClaimTheCapability", () =>
     {
         host("cp-anchor"); host("cp-border"); host("cp-box"); host("cp-card");
+        host("cp-flexgrid"); host("cp-flow"); host("cp-grid"); host("cp-layer");
 
         const made: Array<[string, Maybe]> = [
             ["anchorlayout", createAnchorLayout({ containerId: "cp-anchor" }) as Maybe],
             ["borderlayout", createBorderLayout({ containerId: "cp-border" }) as Maybe],
             ["boxlayout", createBoxLayout({ containerId: "cp-box", direction: "row" }) as Maybe],
             ["cardlayout", createCardLayout({ containerId: "cp-card" }) as Maybe],
+            ["flexgridlayout", createFlexGridLayout(
+                { id: "cp-flexgrid-l", columns: ["1fr"] }, "cp-flexgrid") as Maybe],
+            ["flowlayout", createFlowLayout(
+                { id: "cp-flow-l" }, "cp-flow") as Maybe],
+            ["gridlayout", createGridLayout(
+                { id: "cp-grid-l", columns: 2 }, "cp-grid") as Maybe],
+            ["layerlayout", createLayerLayout(
+                { id: "cp-layer-l" }, "cp-layer") as Maybe],
         ];
 
         const claiming = made

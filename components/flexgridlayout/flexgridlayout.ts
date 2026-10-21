@@ -186,7 +186,6 @@ export class FlexGridLayout
     private readonly options: FlexGridLayoutOptions;
 
     private visible = false;
-    private contained = false;
     private rootEl: HTMLElement | null = null;
 
     private cells: CellEntry[] = [];
@@ -366,11 +365,23 @@ export class FlexGridLayout
         this.applyGridTemplate();
     }
 
-    /** Sets or clears contained mode (fills parent instead of body). */
-    public setContained(value: boolean): void
-    {
-        this.contained = value;
-    }
+    // NO `contained` FIELD AND NO `setContained`, DELIBERATELY. DEBT-LAY-1
+    // / ADR-212, applied here on 2026-10-21. `contained` means "fill the
+    // parent instead of document.body", and this layout has no
+    // body-append path at all: it always fills the element it was given.
+    // The field existed, the setter assigned it, and nothing ever read
+    // it, so the method was a public API documented as "Set contained
+    // mode" that set nothing.
+    //
+    // Every caller is duck-typed — `if (typeof child.setContained ===
+    // "function")` — so NOT implementing it is the honest signal that
+    // the capability is absent. Implementing it as a no-op told the
+    // protocol the opposite.
+    //
+    // ADR-212 covered AnchorLayout, BorderLayout, BoxLayout and
+    // CardLayout and closed. These four carry the identical field and
+    // were never named, and UNUSED-1 had been attributing them to the
+    // closed entry.
 
     // ========================================================================
     // 10. PRIVATE -- DOM CONSTRUCTION

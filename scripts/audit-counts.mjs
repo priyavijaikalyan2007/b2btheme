@@ -512,16 +512,23 @@ const BASELINES = {
     // are two spinner mirrors, two status-dot refs only ever
     // assigned null, a drag flag a probe showed unnecessary, and a
     // resize handler a ResizeObserver replaced.
-    // 124 -> 128 on 2026-10-21. NOT a regression and not new dead
-    // code: `setData` stopped warning about an unknown slot and
-    // started throwing (DEBT-TEST-1b, ADR-200), which was the ONLY
-    // `logWarn` call in annotation, chatdock, stickynote and
-    // workspaceshell. Their `logWarn` shim is LOG-4a preamble, which
-    // `dynamicVerboseShims` holds as a FLOOR at 225 — deleting the
-    // four would break that gate. So the floor this ceiling is
-    // sitting on moved from 120 preamble shims to 124, and the
-    // headline is 124 + the four `contained` fields of DEBT-LAY-1.
-    unusedLocals: 128,
+    // 124 -> 128 -> 124 on 2026-10-21, and the number means something
+    // different at each end. The rise: `setData` stopped warning about
+    // an unknown slot and started throwing (ADR-200), which was the
+    // ONLY `logWarn` call in annotation, chatdock, stickynote and
+    // workspaceshell, so four more LOG-4a preamble shims went unread.
+    // `dynamicVerboseShims` holds that preamble as a FLOOR at 225, so
+    // deleting them would break that gate.
+    //
+    // The fall: the four `contained` fields this entry had been
+    // attributing to DEBT-LAY-1 were in FlexGridLayout, FlowLayout,
+    // GridLayout and LayerLayout, and DEBT-LAY-1 covered AnchorLayout,
+    // BorderLayout, BoxLayout and CardLayout and CLOSED on 2026-10-20.
+    // ADR-212 applied to the other four as well.
+    //
+    // 124 IS NOW EXACTLY THE PREAMBLE AND NOTHING ELSE, which is the
+    // first time this count has been one population.
+    unusedLocals: 124,
 
     // A CEILING AT ZERO (2026-10-21, UNUSED-1).
     // `scripts/bundle-diagramengine.sh` emits its own preamble of

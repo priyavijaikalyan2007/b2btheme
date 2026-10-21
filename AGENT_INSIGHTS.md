@@ -3156,3 +3156,36 @@ is satisfied by a component that refuses everything.
 When an instrument labels something as needing no work, that label is
 the least examined thing in the bucket. Open it before you publish the
 floor.
+
+### 6.156 A Stale Attribution Is the Quietest Place for a Defect (2026-10-21)
+
+UNUSED-1's headline read "124, and that is the FLOOR — 120 preamble
+shims plus the four `contained` fields DEBT-LAY-1 holds open". Every
+part of that sentence was checkable and the total was right.
+
+DEBT-LAY-1 **closed the day before**, having deleted the field and
+setter from AnchorLayout, BorderLayout, BoxLayout and CardLayout. The
+four still reporting were FlexGridLayout, FlowLayout, GridLayout and
+LayerLayout — the identical defect, in four components the closed
+entry never named.
+
+Each of the four had a public `setContained(value)` documented in its
+README as "Set contained mode" that assigned a field nothing read, in
+a protocol that asks by duck-typing whether a component has the
+capability. They were answering "present" and doing nothing, which is
+exactly the defect ADR-212 analysed, measured and closed.
+
+**The attribution is what hid them.** An unexplained 4 in a floor
+invites a reader to look. A 4 with a tracker ID beside it does not —
+the ID says somebody already owns this. Nobody did.
+
+The gate could not help either. `unusedLocals` was AT its baseline, so
+the ceiling was green while four live defects sat inside the number it
+was holding.
+
+**Principle**: when a count's composition names another entry, re-read
+that entry. A cross-reference ages independently of the count it
+explains, and a floor justified by a closed item is a floor justified
+by nothing. Prefer composition claims a reader can re-derive from the
+tool — "all 124 are preamble shims" survives; "120 of these plus four
+of those" does not.

@@ -104,7 +104,6 @@ columns: "auto", minCellWidth: 200 (container: 350px -> 1 col)
 | `setColumns(n)` | `void` | Update columns dynamically (number or "auto") |
 | `getState()` | `GridLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (columns) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## GridLayoutState
 
@@ -118,7 +117,7 @@ interface GridLayoutState {
 
 ## Composability
 
-GridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Duck-typed child mounting checks for `setContained`, `show`, `getRootElement`, and falls back to direct `appendChild`.
+GridLayout implements the standard layout container contract. Any component with `show(container)` / `hide()` / `destroy()` can be used as a child. Plain HTMLElements are also supported. Duck-typed child mounting checks for `setContained`, `show`, `getRootElement`, and falls back to direct `appendChild`. This layout does not implement `setContained`, for the reason below.
 
 ```js
 // Place gauges in a 2x2 grid
@@ -144,3 +143,18 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.gridlayout` | Root | CSS Grid container |
 | `.gridlayout-cell` | Wrapper | Per-child grid cell wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.

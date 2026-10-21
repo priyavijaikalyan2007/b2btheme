@@ -88,7 +88,6 @@ direction: "horizontal", gap: 8
 | `getChildElement(index)` | `HTMLElement \| null` | Wrapper element at index |
 | `getState()` | `FlowLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
-| `setContained(value)` | `void` | Set contained mode |
 
 ## Global Exports
 
@@ -103,3 +102,18 @@ When loaded via `<script>` tag:
 |-------|---------|-------------|
 | `.flowlayout` | Root | Flex-wrap container |
 | `.flowlayout-child` | Wrapper | Per-child wrapper |
+
+### `contained` is not implemented, deliberately
+
+`setContained(value)` was removed on 2026-10-21 (DEBT-LAY-1, ADR-212).
+`contained` means "fill the parent instead of `document.body`", and this
+layout has no body-append path — it always fills the element it was
+given — so the field existed, the setter assigned it, and nothing ever
+read it. The method was documented here as "Set contained mode" and set
+nothing.
+
+The slot protocol is duck-typed (`if (typeof child.setContained ===
+"function")`), so not implementing the method is how a component
+correctly answers "I do not have that capability". Implementing it as a
+no-op answered the opposite. Pinned by
+`components/docklayout/contained-protocol.test.ts`.
