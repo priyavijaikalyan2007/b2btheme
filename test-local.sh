@@ -562,7 +562,7 @@ echo ""
 # The class list is read from the component sources, not from a table in
 # a migration document, so a class added tomorrow is covered without
 # anyone remembering to add it.
-echo "[25] No demo page constructs a component class (PAT-1)"
+echo "[25] No demo page uses a component class (PAT-1)"
 DEMO_CLASS_USES=0
 COMPONENT_CLASSES=$(grep -hoE '^export class [A-Z][A-Za-z0-9_]*' components/*/*.ts \
     | awk '{print $NF}' | sort -u)
@@ -572,6 +572,16 @@ for demo in demo/*.html demo/components/*.html demo/studio/*.html; do
     for cls in $COMPONENT_CLASSES; do
         if grep -qE "new[[:space:]]+${cls}[[:space:]]*\(" "$demo"; then
             fail "$demo calls new ${cls}(); use the ${cls} factory instead"
+            DEMO_CLASS_USES=$((DEMO_CLASS_USES + 1))
+        fi
+        # `new X(` was the only syntax this check read at first, and the
+        # studio pages ALSO guarded on `typeof Sidebar !== "function"`
+        # and returned early. Rewriting the constructors left the page
+        # dead, because the guard above them never let the code run.
+        # The second miss of the same kind in one change: a dependency
+        # named in two syntaxes, and a search that knew one.
+        if grep -qE "(typeof|instanceof)[[:space:]]+${cls}\b" "$demo"; then
+            fail "$demo tests for the class ${cls}; test for its factory"
             DEMO_CLASS_USES=$((DEMO_CLASS_USES + 1))
         fi
     done

@@ -424,15 +424,15 @@
             return;
         }
 
-        if (typeof Sidebar !== "function")
+        if (typeof createSidebar !== "function")
         {
-            logError("Sidebar component not available");
+            logError("createSidebar not available");
             return;
         }
 
-        if (typeof Toolbar !== "function")
+        if (typeof createToolbar !== "function")
         {
-            logError("Toolbar component not available");
+            logError("createToolbar not available");
             return;
         }
 
