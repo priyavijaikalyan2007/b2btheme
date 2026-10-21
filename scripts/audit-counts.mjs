@@ -55,7 +55,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
-import { census as testCensus, standInsOf } from "./test-assertions.mjs";
+import { census as testCensus, standInsOf, guardedAssertions } from "./test-assertions.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -660,8 +660,32 @@ const BASELINES = {
     // too LOW by `formdialog :: withDefaultSize_UsesMdSize`, which
     // the exemption had been hiding. A correction that only ever
     // subtracts is a relaxation wearing a correction's name.
-    testsThatCannotFail: 173,
+    testsThatCannotFail: 172,
     siblingStandIns: 6,
+
+    // ADR-216. ASSERTION SITES THAT RUN ONLY WHEN A CONDITION HOLDS,
+    // AND A CEILING BECAUSE WHETHER ONE EVER RUNS CANNOT BE READ OFF
+    // THE TEXT. It depends on what the component renders, so the only
+    // way to know is to put a must-fail assertion inside each body
+    // and run the suite. A block whose guards never open stays green.
+    //
+    // THAT SWEEP FOUND TWO ON 2026-10-21, AND NEITHER OTHER CEILING
+    // COULD SEE EITHER. `applauncher :: OnSelect_FiresCallback`
+    // queried `.applauncher-app-card`, a class the component has
+    // never written, so its ONLY assertion never ran;
+    // `testsWithoutAssertion` counts the text `expect(` and found
+    // one, and `testsThatCannotFail` read `toHaveBeenCalled()` and
+    // called the block honest. `spinemap ::
+    // multipleXssVectors_SafeRendering` looped over `[href]`
+    // elements that do not exist, so a third injection vector read
+    // as checked and was skipped. Both are fixed and the sweep now
+    // reports 0 of 71.
+    //
+    // THE NUMBER IS THE POPULATION THE SWEEP HAS TO COVER, not a
+    // backlog. A guard written round a selector is cheap to add and
+    // costs nothing to leave wrong, which is how the AppLauncher
+    // block survived. Re-run the sweep when this grows.
+    guardedAssertions: 81,
 };
 
 /*
@@ -733,7 +757,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5020,
+    testBlocks: 5026,
 };
 
 /**
@@ -1238,6 +1262,7 @@ function measure()
         testsWithoutAssertion: 0,
         testsThatCannotFail: 0,
         siblingStandIns: 0,
+        guardedAssertions: 0,
         testBlocks: 0,
     };
     const consoleLogKinds = {};
@@ -1347,6 +1372,11 @@ function measure()
     counts.testBlocks = blocks.length;
     counts.testsWithoutAssertion = blocks.filter((b) => b.verdict === "none").length;
     counts.testsThatCannotFail = blocks.filter((b) => b.verdict === "vacuous").length;
+
+    // ADR-216. An assertion that never RUNS, which is a different
+    // fault from one that cannot fail and had no number until now.
+    counts.guardedAssertions = guardedAssertions(blocks)
+        .reduce((n, r) => n + r.at.length, 0);
 
     // DEBT-TEST-1c. A suite that writes a global another component here
     // owns, and does not import that component. The population was 11,

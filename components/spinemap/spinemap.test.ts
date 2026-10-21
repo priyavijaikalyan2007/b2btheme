@@ -221,15 +221,20 @@ describe("node labels — markup is shown as text", () =>
         const injectedIframes = root.querySelectorAll("iframe");
         expect(injectedIframes.length).toBe(0);
 
-        // No elements should have javascript: in href attributes
-        // (aria-label and data-* attributes contain raw label text
-        // which is safe since browsers don't parse those as HTML)
-        const allLinks = root.querySelectorAll("[href]");
-        for (const link of allLinks)
-        {
-            const href = link.getAttribute("href") || "";
-            expect(href.toLowerCase()).not.toContain("javascript:");
-        }
+        // THE LOOP THAT STOOD HERE RAN ZERO TIMES. SpineMap emits no
+        // href at all for this data, so the `javascript:` claim was
+        // never made against anything -- it read as a third vector
+        // checked and was a third vector skipped. The two assertions
+        // above are live, so the block passed on their strength and
+        // neither ceiling could see the gap.
+        //
+        // Naming the list makes the emptiness a stated fact. The day
+        // SpineMap grows a `<use href>` this asks for the claim to be
+        // rewritten rather than passing in silence.
+        const hrefs = [...root.querySelectorAll("[href]")]
+            .map((el) => el.getAttribute("href") ?? "");
+
+        expect(hrefs).toEqual([]);
         map.destroy();
     });
 
@@ -877,6 +882,16 @@ describe("connections", () =>
 
 describe("callbacks", () =>
 {
+    // THIS BLOCK QUERIED `[data-node-id]`, AND SPINEMAP HAS NEVER
+    // WRITTEN THAT ATTRIBUTE. The groups carry `data-id`, so the
+    // query returned nothing, the guard never opened, and the two
+    // PointerEvents were never dispatched — which hid a second
+    // mismatch, because `attachNodeEvents` listens for `click` and
+    // not for pointerdown/pointerup. The block then asserted
+    // `expect(map).toBeDefined()` and a comment said the callback
+    // "may or may not be called". It was never called once. A guard
+    // probe found it: a must-fail assertion placed inside the `if`
+    // was the only one of seventeen in this sweep that stayed green.
     test("onNodeClick_CalledOnNodeClick", () =>
     {
         const onNodeClick = vi.fn();
@@ -886,22 +901,18 @@ describe("callbacks", () =>
             onNodeClick
         });
 
-        // Find a rendered node group and click it
-        const nodeGroups = map.getElement().querySelectorAll(
-            "[data-node-id]"
-        );
-        if (nodeGroups.length > 0)
-        {
-            (nodeGroups[0] as SVGElement).dispatchEvent(
-                new PointerEvent("pointerdown", { bubbles: true })
-            );
-            (nodeGroups[0] as SVGElement).dispatchEvent(
-                new PointerEvent("pointerup", { bubbles: true })
-            );
-        }
-        // Callback may or may not be called depending on internal
-        // event handling; the key is no exception thrown
-        expect(map).toBeDefined();
+        const group = map.getElement().querySelector("[data-id='branch-1']");
+
+        group!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        // The handle gets the NODE, not its id, so asserting the
+        // argument is what tells a reader which branch was hit.
+        expect(onNodeClick).toHaveBeenCalledTimes(1);
+        expect(onNodeClick.mock.calls[0][0]).toMatchObject({
+            id: "branch-1",
+            label: "Branch A",
+        });
+
         map.destroy();
     });
 });

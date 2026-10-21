@@ -469,6 +469,95 @@ export function calleesIn(subject)
         .map((m) => m[1]);
 }
 
+/**
+ * An opening that runs its body only when something is true.
+ *
+ * `else` is here because `} else` reopens a body on the same line,
+ * and a dead `else` is as invisible as a dead `if`.
+ */
+const GUARD = /\b(?:if|for|while)\s*\(|\}\s*else\b|\.(?:forEach|map|filter|some|every|find)\s*\(/g;
+
+/**
+ * Assertion sites inside a test block that run only when a condition
+ * holds, as `{ file, name, at }` per block that has any, where `at`
+ * holds the offset of each guarded body within the block.
+ *
+ * WHY THIS IS A CEILING AND NOT A VERDICT. Whether a guard ever opens
+ * cannot be read off the text — it depends on what the component
+ * renders. The only way to know is to put a must-fail assertion
+ * inside each body and run the suite, and a block whose guards never
+ * open stays green. That sweep found two on 2026-10-21, out of
+ * 72 sites in 70 blocks: `applauncher :: OnSelect_FiresCallback`
+ * queried a class the component has never written, so its ONLY
+ * assertion never ran, and `spinemap :: multipleXssVectors_
+ * SafeRendering` looped over `[href]` elements that do not exist.
+ *
+ * NEITHER CEILING COULD SEE EITHER OF THEM, WHICH IS WHY THIS ONE
+ * EXISTS. `testsWithoutAssertion` counts the text `expect(` and both
+ * blocks had one. `testsThatCannotFail` read the matcher —
+ * `toHaveBeenCalled()`, `not.toContain()` — and called both honest.
+ * An assertion that cannot fail and an assertion that never runs are
+ * different faults with the same symptom, and only the first had a
+ * number.
+ *
+ * So this counts the POPULATION the sweep has to cover. It cannot
+ * grow in silence, which is exactly how the AppLauncher block
+ * survived: a guard written round a selector is cheap to add and
+ * costs nothing to leave wrong. ADR-216.
+ *
+ * `test(` inside the body excludes a loop that GENERATES blocks.
+ * `EXTRACTION_CASES.forEach(... test(...))` is a table, and probing
+ * it took a whole suite down at collection.
+ */
+export function guardedAssertions(rows)
+{
+    const out = [];
+
+    for (const row of rows)
+    {
+        const code = codeRanges(row.body);
+
+        // OFFSETS, NOT A TALLY. The sweep that decides whether a
+        // guard ever opens has to insert a probe at each of these,
+        // and a second reader of the same forms would be a second
+        // thing to keep correct (DEBT-DOC-1). The ceiling takes the
+        // length.
+        const at = [];
+
+        for (const m of row.body.matchAll(GUARD))
+        {
+            if (!code.some(([a, b]) => m.index >= a && m.index < b)) { continue; }
+
+            // THE BODY BRACE IS NOT THE NEXT BRACE. `for (const f of
+            // check({ destroyLeavesDom: true }))` opens an object
+            // literal first, and taking that one read the argument
+            // instead of the loop. A callback is the other way round:
+            // `buttons.forEach(btn => { ... })` keeps its body INSIDE
+            // the parentheses, after the arrow.
+            const paren = m[0].endsWith("(")
+                ? balanced(row.body, m.index + m[0].length - 1, "(", ")")
+                : null;
+            const from = paren === null
+                ? m.index + m[0].length
+                : (/=>/.test(paren.text)
+                    ? m.index + m[0].length - 1 + paren.text.indexOf("=>")
+                    : paren.end);
+
+            const open = row.body.indexOf("{", from);
+            if (open < 0) { continue; }
+
+            const body = balanced(row.body, open, "{", "}");
+            if (body === null) { continue; }
+            if (!/\bexpect\s*\(/.test(body.text)) { continue; }
+            if (/(?<!\.)\btest\s*\(/.test(body.text)) { continue; }
+
+            at.push(open);
+        }
+        if (at.length > 0) { out.push({ file: row.file, name: row.name, at }); }
+    }
+    return out;
+}
+
 export function census(files = null)
 {
     const list = files ?? execFileSync("git", ["ls-files", "*.test.ts"], { encoding: "utf8" })

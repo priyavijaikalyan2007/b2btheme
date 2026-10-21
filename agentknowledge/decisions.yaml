@@ -9629,3 +9629,114 @@
     The parser-coverage guard caught the new fixtures: a line beginning
     with `test(` inside a template literal reads as a declaration, so
     the fixtures are concatenated instead.
+
+- id: ADR-216
+  title: An assertion that cannot fail and an assertion that never runs are different faults, and only the first had a number
+  date: 2026-10-21
+  status: accepted
+  context: |
+    DEBT-TEST-1b's next pass was to ask the title question of the
+    .toBeDefined() / .toBeTruthy() bucket, 85 blocks the tracker had
+    labelled "near zero yield" since 18 October. The predicate was
+    read before the bucket. Separately, the tracker carried a third
+    shape with two instances and no number: an assertion inside a
+    condition that never holds.
+  decision: |
+    D1. THIRTY-TWO OF THE EIGHTY-FIVE WERE NEVER MEMBERS. isVacuous
+        exempts an existence matcher whose subject is a DOM query,
+        under a comment reading THE SUBJECT DECIDES, NOT THE MATCHER
+        — and the code tested the characters inside expect(). So
+        expect(root.querySelector(".x")).toBeTruthy() was exempt and
+        `const x = root.querySelector(".x"); expect(x).toBeTruthy();`
+        was counted. The identical claim, decided by whether the
+        author used a const. A bare subject now resolves one hop
+        through its const binding. ADR-203 states the rule this
+        broke: the name is the fact and the structure is the
+        hypothesis.
+
+    D2. THE SAME EXEMPTION WAS HIDING A MEMBER. A lookup was exempt
+        under either existence matcher, and every member of the
+        family returns null when the thing is absent, so
+        expect(null).toBeDefined() passes. The exemption was letting
+        through the one shape the predicate exists to catch. Exemption
+        now requires .toBeTruthy(), which ADDED formdialog ::
+        withDefaultSize_UsesMdSize. A correction that only ever
+        subtracts is a relaxation wearing a correction's name.
+
+    D3. querySelectorAll AND getElementsBy* LEFT THE EXEMPT FAMILY.
+        They return an empty collection rather than null, so neither
+        existence matcher can fail against them however wrong the
+        selector is. Nothing relied on the wider form, and two blocks
+        claiming a filter ran would have escaped the ceiling the
+        moment D1 resolved their bindings.
+
+    D4. THE PARSER WAS TRUNCATING FORTY TEST NAMES AND THE CLASSIFIER
+        READS NAMES. The name pattern stopped at the first quote of
+        any kind rather than the one that opened the string, so
+        test("loadStencilPack('devices') + addObject creates
+        container") was named `loadStencilPack(`. No block changed
+        bucket once fixed, which is luck rather than a defence.
+
+    D5. THE THIRD SHAPE IS NOW MEASURED, AND THE ANSWER IS TWO IN
+        EIGHTY-ONE. Whether a guard ever opens cannot be read off the
+        text: it depends on what the component renders. The sweep is
+        a must-fail assertion placed inside each guarded body,
+        followed by a full run — a block whose guards never open
+        stays green. 81 sites in 71 blocks; two never opened.
+
+    D6. NEITHER EXISTING CEILING COULD SEE EITHER OF THE TWO, WHICH IS
+        WHY guardedAssertions EXISTS. applauncher ::
+        OnSelect_FiresCallback queried .applauncher-app-card, a class
+        the component has never written, so its ONLY assertion never
+        ran. testsWithoutAssertion counts the text `expect(` and found
+        one; testsThatCannotFail read toHaveBeenCalled() and called
+        the block honest. spinemap :: multipleXssVectors_SafeRendering
+        looped over [href] elements that do not exist, so a third
+        injection vector read as checked and was skipped.
+
+    D7. THE NEW CEILING COUNTS THE POPULATION, NOT A BACKLOG. A guard
+        written round a selector is cheap to add and costs nothing to
+        leave wrong, which is how the AppLauncher block survived. The
+        number exists so it cannot grow in silence. Re-run the sweep
+        when it does.
+
+    D8. THE SWEEP ITSELF REPORTED TWO FALSE POSITIVES AND ONE RUINED
+        RUN BEFORE IT WAS RIGHT. Probing a loop that DECLARES blocks
+        put a failing assertion at suite level and removed 75 tests
+        from the run, which looked like a result. Locating a block by
+        indexOf(body) put both probes of an identical pair into the
+        first of the pair, and reported the second as never probed.
+        toolcolorpicker holds two such pairs: MarkerColors_HaveAlpha
+        and MARKER_COLORS_AllHaveAlpha06 are byte-identical bodies
+        under different names.
+
+    D9. THE SWEEP AND THE CEILING READ THE SAME FORMS, SO THEY SHARE A
+        READER. guardedAssertions returns the offset of each guarded
+        body rather than a tally, and the sweep inserts its probe at
+        those offsets. A second reader would be a second thing to
+        keep correct (DEBT-DOC-1), and the first version of the sweep
+        missed four blocks the ceiling counts.
+  consequences: |
+    testsThatCannotFail 204 -> 172. Thirty-three of the thirty-four
+    that moved did so without one test changing, and one moved the
+    other way.
+
+    guardedAssertions enters at 81 and the sweep now reports 0 of 71.
+
+    Two product-adjacent findings, both in tests rather than in
+    components: AppLauncher's onSelect has never been exercised, and
+    SpineMap's onNodeClick had not either — that block queried
+    [data-node-id] where the groups carry data-id, and dispatched
+    pointerdown/pointerup where attachNodeEvents listens for click.
+    Three independent mismatches in one block. Both callbacks work;
+    only the tests were broken, and both are now mutation-proven
+    against the safeCallback line they depend on.
+
+    One known false positive stays in the ceiling on purpose.
+    latexeditor :: searchInput_HasPlaceholder reads .placeholder,
+    which is "" rather than null when unset, so .toBeTruthy() does
+    catch it. A property returning an empty string is a third family,
+    and widening the rule for one member would put an arguable entry
+    in a ceiling whose only value is that nobody argues with it. It
+    gets rewritten instead of exempted, and over-counting by one is
+    the safe direction for a ceiling.

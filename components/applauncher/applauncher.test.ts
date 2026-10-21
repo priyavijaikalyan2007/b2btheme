@@ -157,18 +157,40 @@ describe("AppLauncher apps", () =>
         launcher.destroy();
     });
 
+    // THE ONLY ASSERTION IN THIS BLOCK WAS BEHIND A GUARD THAT NEVER
+    // OPENED, AND THE BLOCK WAS INVISIBLE TO BOTH CEILINGS. It
+    // queried `.applauncher-app-card`, a class this component has
+    // never written -- the tiles carry `applauncher-tile` -- so the
+    // NodeList was empty, nothing was clicked and nothing was
+    // asserted. `testsWithoutAssertion` counts the text `expect(`
+    // and found one; `testsThatCannotFail` read
+    // `toHaveBeenCalled()` and called the block honest. A repo-wide
+    // guard probe found it: a must-fail assertion placed inside each
+    // of 72 guarded bodies, and this was one of two that stayed
+    // green. ADR-216.
     test("OnSelect_FiresCallback", () =>
     {
         const onSelect = vi.fn();
         const launcher = new AppLauncher(makeOptions({ onSelect }));
         launcher.show("launcher-test-container");
         launcher.open();
-        const items = document.querySelectorAll(".applauncher-app-card");
-        if (items.length > 0)
-        {
-            (items[0] as HTMLElement).click();
-            expect(onSelect).toHaveBeenCalled();
-        }
+
+        const tiles = document.querySelectorAll(".applauncher-tile");
+
+        // Unguarded on purpose. An empty NodeList is the defect this
+        // block was hiding, so it has to be the thing that fails.
+        expect(tiles).toHaveLength(4);
+        (tiles[1] as HTMLElement).click();
+
+        // The handler is handed the APP, and naming which one is what
+        // separates "a click fired something" from "a click fired the
+        // tile the reader is looking at".
+        expect(onSelect).toHaveBeenCalledTimes(1);
+        expect(onSelect.mock.calls[0][0]).toMatchObject({
+            id: "app-2",
+            name: "Projects",
+        });
+
         launcher.destroy();
     });
 });

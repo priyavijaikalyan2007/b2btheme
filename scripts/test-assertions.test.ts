@@ -27,6 +27,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
     testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf, standInsOf,
+    guardedAssertions,
     refusalScopes,
 } from "./test-assertions.mjs";
 
@@ -436,6 +437,97 @@ describe("the shape split is an instrument, not a note", () =>
         const shapes = shapesOf(rows);
 
         expect(Object.values(shapes).reduce((a, b) => a + b, 0)).toBe(0);
+    });
+});
+
+describe("a guarded assertion is a site the sweep has to cover", () =>
+{
+    // Fixtures are built by concatenation rather than written as
+    // template literals, because the parser-coverage guard in this
+    // file counts a line beginning with `test(` as a declaration.
+
+    test("a guard holding an assertion is one site", () =>
+    {
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    if (cells.length > 0)\n    {\n"
+                + "        expect(cells[0]).toBeTruthy();\n    }\n",
+        }];
+
+        expect(guardedAssertions(rows)[0].at).toHaveLength(1);
+    });
+
+    test("a guard holding no assertion is not a site", () =>
+    {
+        // The probe says nothing about a body that never claimed one.
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    if (ready)\n    {\n        grid.sort();\n    }\n"
+                + "    expect(grid.getRow(\"1\")).toBe(first);\n",
+        }];
+
+        expect(guardedAssertions(rows)).toHaveLength(0);
+    });
+
+    test("the body brace is not the next brace", () =>
+    {
+        // `for (const f of check({ ok: true }))` opens an OBJECT
+        // LITERAL first. Reading that one found no assertion inside
+        // it and dropped the site, and four blocks went unprobed in
+        // the first sweep for exactly this reason.
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    for (const f of check({ destroyLeavesDom: true }))\n"
+                + "    {\n        expect(f.detail.length).toBeGreaterThan(0);\n    }\n",
+        }];
+
+        expect(guardedAssertions(rows)[0].at).toHaveLength(1);
+    });
+
+    test("a callback body sits INSIDE the parentheses", () =>
+    {
+        // The other direction from the case above: `forEach(btn =>
+        // { ... })` closes its paren after the body, so skipping to
+        // the end of the parentheses skips the body with it.
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    buttons.forEach(btn =>\n    {\n"
+                + "        expect(btn.getAttribute(\"aria-label\")).toBeTruthy();\n"
+                + "    });\n",
+        }];
+
+        expect(guardedAssertions(rows)[0].at).toHaveLength(1);
+    });
+
+    test("a loop that DECLARES blocks is not a guard", () =>
+    {
+        // `CASES.forEach(c => { test(...) })` is a table. Probing one
+        // put a failing assertion at suite level and took a whole
+        // file down at collection, which removed 75 tests from the
+        // run and looked like a result.
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    for (const c of CASES)\n    {\n"
+                + "        " + "te" + "st(c.name, () =>\n        {\n"
+                + "            expect(f(c.in)).toBe(c.out);\n        });\n    }\n",
+        }];
+
+        expect(guardedAssertions(rows)).toHaveLength(0);
+    });
+
+    test("the offsets point at the open brace of each body", () =>
+    {
+        // The sweep inserts its probe at these, so an offset that
+        // lands anywhere else is a sweep that proves nothing.
+        const body = "\n    if (a)\n    {\n        expect(a).toBe(1);\n    }\n";
+        const rows = [{ file: "x.test.ts", name: "t", body }];
+
+        expect(body[guardedAssertions(rows)[0].at[0]]).toBe("{");
     });
 });
 

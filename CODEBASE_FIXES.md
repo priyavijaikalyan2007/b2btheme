@@ -3118,6 +3118,65 @@ offered as the evidence for it.
   instead of exempted.** A ceiling that over-counts by one is the
   safe direction.
 
+  **THE THIRD SHAPE IS MEASURED, AND THE ANSWER WAS TWO IN
+  EIGHTY-ONE (2026-10-21, ADR-216).** This entry carried "an
+  assertion inside a condition that never holds" with two instances
+  found by reading and no number, because quantifying it needs an
+  instrument. It has one now, and it is not a static check: whether
+  a guard ever opens depends on what the component renders, so the
+  sweep puts a must-fail assertion inside each guarded body and runs
+  the suite. **A block whose guards never open stays green.**
+
+  81 sites in 71 blocks. Two never opened, and **neither ceiling
+  could see either**:
+
+  - `applauncher :: OnSelect_FiresCallback` queried
+    `.applauncher-app-card`, a class this component **has never
+    written** — the tiles carry `applauncher-tile`. The NodeList was
+    empty, nothing was clicked, and the block's **only** assertion
+    never ran. `testsWithoutAssertion` counts the text `expect(` and
+    found one. `testsThatCannotFail` read `toHaveBeenCalled()` and
+    called the block honest. **AppLauncher's `onSelect` has never
+    been exercised.**
+  - `spinemap :: multipleXssVectors_SafeRendering` looped over
+    `[href]` elements that do not exist, so a third injection vector
+    read as checked and was skipped. The two assertions above it are
+    live, which is why the block passed.
+
+  Both are rewritten and mutation-proven, and the sweep now reports
+  **0 of 71**. `guardedAssertions` enters the ratchet at 81 as a
+  **ceiling on the population the sweep has to cover**, not a
+  backlog. A guard written round a selector is cheap to add and
+  costs nothing to leave wrong, which is how the AppLauncher block
+  survived.
+
+  **The sweep reported two false positives and one ruined run before
+  it was right**, and all three are pinned now. Probing a loop that
+  DECLARES blocks put a failing assertion at suite level and removed
+  75 tests from the run, which looked like a result. Locating a
+  block by `indexOf(body)` put both probes of an identical pair into
+  the first of the pair: `toolcolorpicker` holds
+  `MarkerColors_HaveAlpha` and `MARKER_COLORS_AllHaveAlpha06`,
+  byte-identical bodies under two names. And reading the next `{`
+  after `for (const f of check({ ok: true }))` finds the **object
+  literal**, which dropped four blocks from the first sweep.
+
+  **The sweep and the ceiling share one reader.**
+  `guardedAssertions` returns the offset of each guarded body rather
+  than a tally, and the sweep inserts its probe at those offsets. A
+  second reader of the same forms would be a second thing to keep
+  correct (DEBT-DOC-1).
+
+  **ALSO FOUND, ON NO LIST: `spinemap :: onNodeClick_CalledOnNodeClick`
+  had three independent mismatches in one block.** It queried
+  `[data-node-id]` where the groups carry `data-id`, so the guard
+  never opened; that hid the second, which is that it dispatched
+  `pointerdown` and `pointerup` where `attachNodeEvents` listens for
+  `click`; and it then asserted `expect(map).toBeDefined()` under a
+  comment saying the callback "may or may not be called". It was
+  never called once. Both callbacks work — only the tests were
+  broken.
+
   **THE BUCKET LABELLED "NAME STATES A CHANGE" WAS THE FALL-THROUGH,
   AND 21 OF ITS 35 MEMBERS HAD NAMES STATING NO CHANGE (2026-10-20,
   ADR-215).** `shapeOf` returned `"namesAChange"` for every
