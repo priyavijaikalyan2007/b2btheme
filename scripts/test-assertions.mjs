@@ -630,7 +630,29 @@ export function census(files = null)
  * nobody had written.
  */
 const WITHHELD = /delete\s*\(?\s*\(?\s*(window|globalThis|global)\b|(window|globalThis|global)[^\n;]{0,40}=\s*(undefined|null)\b/;
-const IDEMPOTENT = /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+/** A title naming a situation where nothing is supposed to happen. */
+const IDEMPOTENT_SITUATION =
+    /twice|calledtwice|again|idempotent|whennot|nonexistent|unknown|empty|afterdestroy/i;
+
+/**
+ * A title that states the outcome IS nothing.
+ *
+ * (CRITICAL) IDEMPOTENT NEEDS BOTH HALVES, AND IT USED TO NEED ONLY
+ * THE FIRST. The situation words above are matched anywhere in a
+ * title, so `unknown stencil pack logs warning` was filed as
+ * idempotent on the strength of "unknown" while its title named an
+ * EFFECT the body never looked for, and
+ * `emptyOptions_CreatesValidEditor` on the strength of "empty".
+ * IDEMPOTENT is tested first in `shapeOf`, so neither was ever
+ * asked the title question.
+ *
+ * That is ADR-215's defect in the one bucket ADR-215 did not
+ * reach, and the rule it settled applies unchanged: the name is
+ * the fact. A title that names a situation AND an effect is
+ * claiming the effect.
+ */
+const NO_EFFECT =
+    /does\s*n[o']?t\s*(throw|crash)|doesnotthrow|doesnotcrash|donotthrow|no\s*throw|nothrow|noexception|noerror|without\s*(a\s*)?(crash|throw|error)|handledgracefully|_noop\b|\bno\s*op\b|idempotent|\bharmless\b|\bignore[sd]?\b|does\s*nothing|\bunchanged\b|\bsafely\b|\bsilently\b/i;
 
 /**
  * A title that promises only that nothing blew up.
@@ -672,12 +694,27 @@ export function shapeOf(row, withheld)
     if (row.verdict !== "vacuous") { return null; }
     if (!/\.not\s*\.\s*toThrow/.test(row.body)) { return "existence"; }
 
+    // `_` IS A WORD CHARACTER, SO `\b` DOES NOT FIRE AFTER ONE.
+    // `addFiles_AfterDestroy_Ignored` failed `\bignored\b` for that
+    // reason alone and fell through to namesAChange, which is the
+    // kind of accident a rule that reads names has to be proof
+    // against. Underscores read as separators here, the way a human
+    // reads them, and every name test below uses this form.
+    const title = row.name.replace(/_/g, " ");
+
     // IDEMPOTENCY IS TESTED FIRST, AND THE ORDER IS THE WHOLE
     // CLASSIFIER. Withholding is detected per FILE, because a suite
     // states the absence once in its setup, and a file that deletes
     // a global in teardown would otherwise claim every destroy_
     // CalledTwice block inside it. ADR-203.
-    if (IDEMPOTENT.test(row.name)) { return "idempotent"; }
+    //
+    // IT NEEDS BOTH HALVES OF THE TITLE. See NO_EFFECT above: the
+    // situation alone claimed `unknown stencil pack logs warning`
+    // on the strength of "unknown".
+    if (IDEMPOTENT_SITUATION.test(title) && NO_EFFECT.test(title))
+    {
+        return "idempotent";
+    }
 
     // ABSENT stays ahead of ROBUSTNESS-ONLY although both are beaten
     // by IDEMPOTENT, and the reason is not the name-versus-file rule
@@ -697,7 +734,7 @@ export function shapeOf(row, withheld)
     // transform" sits under "throws when a binding names an
     // unregistered transform". The name is the fact and the pairing is
     // the hypothesis, which is the rule idempotency already follows.
-    if (ROBUSTNESS_ONLY.test(row.name)) { return "robustnessOnly"; }
+    if (ROBUSTNESS_ONLY.test(title)) { return "robustnessOnly"; }
     if (row.pairedWithRefusal === true) { return "positiveControl"; }
     return "namesAChange";
 }

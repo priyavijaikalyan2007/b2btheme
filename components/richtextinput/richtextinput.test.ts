@@ -728,9 +728,27 @@ describe("cssClass and resizable", () =>
 
 describe("edge cases", () =>
 {
+    // "CreatesValidEditor" IS A CLAIM ABOUT THE EDITOR and the body
+    // asserted only that the call returned. The block was filed as
+    // idempotent on the strength of the word "empty" in its title,
+    // which IDEMPOTENT matched before anything asked what the rest
+    // of the title promised (ADR-216). Valid means usable: the
+    // contenteditable surface is there and it takes a value.
     test("emptyOptions_CreatesValidEditor", () =>
     {
-        expect(() => createRichTextInput({})).not.toThrow();
+        const editor = createRichTextInput({});
+
+        // MEASURED: the component sets the `contentEditable` IDL
+        // property and jsdom does not reflect it to an attribute, so
+        // `getAttribute("contenteditable")` reads null here while
+        // the property reads "true".
+        const editable = getEditable(editor.getElement())!;
+        expect(editable.contentEditable).toBe("true");
+
+        editor.setValue("<p>typed</p>");
+        expect(editor.getHtml()).toContain("typed");
+
+        editor.destroy();
     });
 
     test("getHtml_ReturnsEmptyForBrOnly", () =>

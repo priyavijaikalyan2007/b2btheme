@@ -743,11 +743,26 @@ describe("DiagramEngine — Stencil + Embed Integration", () =>
         expect(embeds.size).toBe(107);
     });
 
+    // "logs warning" IS AN EFFECT AND NOTHING LOOKED FOR IT. The
+    // block sat in the idempotent bucket because its title holds
+    // the word "unknown", and IDEMPOTENT was tested before any
+    // question about what the rest of the title claimed (ADR-216).
+    // The registry count is here too: an unknown pack must not
+    // half-register anything on its way to the warning.
     test("unknown stencil pack logs warning", () =>
     {
-        expect(() =>
-        {
-            engine.loadStencilPack("nonexistent-pack");
-        }).not.toThrow();
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const before = engine.getAvailableShapes().length;
+
+        engine.loadStencilPack("nonexistent-pack");
+
+        // The logger puts a timestamp and a level in front of the
+        // prefix, so the first two arguments are matched loosely and
+        // the three that carry the message are matched exactly.
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.any(String), "[WARN]",
+            "[DiagramEngine]", "Unknown stencil pack:", "nonexistent-pack");
+        expect(engine.getAvailableShapes()).toHaveLength(before);
+        warnSpy.mockRestore();
     });
 });

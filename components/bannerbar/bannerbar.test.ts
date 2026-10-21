@@ -236,12 +236,29 @@ describe("BannerBar lifecycle", () =>
         expect(document.querySelector(".bannerbar")).toBeNull();
     });
 
+    // (CRITICAL) THE PROOF CASE FOR THE `idempotent` BUCKET, AND
+    // `.not.toThrow()` IS THE WRONG ASSERTION FOR AN IDEMPOTENCE
+    // CLAIM. Deleting the `if (this.destroyed) { return; }` guard
+    // from `destroy()` entirely left this block GREEN: a second
+    // call would then fire `onClose` a second time, remove from the
+    // DOM again and re-release its references, and nothing here
+    // could see any of it. Survival is not idempotence.
+    //
+    // What must not happen twice is the callback, so that is what
+    // the block counts. 108 members of the bucket are this shape
+    // and the yield is demonstrated rather than predicted
+    // (ADR-216).
     test("Destroy_CalledTwice_IsIdempotent", () =>
     {
-        const banner = new BannerBar(makeOptions());
+        const onClose = vi.fn();
+        const banner = new BannerBar(makeOptions({ onClose }));
         banner.show();
+
         banner.destroy();
-        expect(() => banner.destroy()).not.toThrow();
+        banner.destroy();
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(banner.isVisible()).toBe(false);
     });
 });
 

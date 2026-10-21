@@ -27,7 +27,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
     testBlocks, assertionsIn, isVacuous, verdictFor, shapesOf, standInsOf,
-    guardedAssertions,
+    guardedAssertions, shapeOf,
     refusalScopes,
 } from "./test-assertions.mjs";
 
@@ -437,6 +437,47 @@ describe("the shape split is an instrument, not a note", () =>
         const shapes = shapesOf(rows);
 
         expect(Object.values(shapes).reduce((a, b) => a + b, 0)).toBe(0);
+    });
+});
+
+describe("the idempotent label needs both halves of the title", () =>
+{
+    const vac = (name: string) => ({
+        file: "x.test.ts",
+        name,
+        body: "expect(() => h.m()).not.toThrow();\n",
+        verdict: "vacuous" as const,
+    });
+
+    test("a situation plus a no-effect verdict is idempotent", () =>
+    {
+        expect(shapeOf(vac("destroy_CalledTwice_DoesNotThrow"), new Set()))
+            .toBe("idempotent");
+        expect(shapeOf(vac("removeNonexistentPin_IsIdempotent"), new Set()))
+            .toBe("idempotent");
+    });
+
+    test("a situation plus an EFFECT is not", () =>
+    {
+        // IDEMPOTENT_SITUATION matched anywhere in the title and was
+        // tested first, so `unknown stencil pack logs warning` was
+        // filed as idempotent on the strength of "unknown" and never
+        // asked what the rest of its title claimed. Two real members
+        // of the 110 were hiding behind it (ADR-216).
+        expect(shapeOf(vac("unknown stencil pack logs warning"), new Set()))
+            .toBe("namesAChange");
+        expect(shapeOf(vac("emptyOptions_CreatesValidEditor"), new Set()))
+            .toBe("namesAChange");
+    });
+
+    test("an underscore does not hide a word from \\b", () =>
+    {
+        // `_` is a word character, so `\bignored\b` never fired on
+        // `addFiles_AfterDestroy_Ignored` and it fell through to
+        // namesAChange by accident. Names are read with underscores
+        // as separators.
+        expect(shapeOf(vac("addFiles_AfterDestroy_Ignored"), new Set()))
+            .toBe("idempotent");
     });
 });
 

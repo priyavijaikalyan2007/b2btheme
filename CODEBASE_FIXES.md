@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **120 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **117 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3052,7 +3052,7 @@ offered as the evidence for it.
 
   | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | 110 | predicted near zero, **unverified** |
+  | `.not.toThrow()` on idempotency | 110 | 110 | **107** | **yield DEMONSTRATED, see below** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
@@ -3234,6 +3234,54 @@ offered as the evidence for it.
   **The two runtime blocks and the AppLauncher one are described
   above.** Every rewrite is mutation-proven against the line it
   depends on.
+
+  **THE LAST BUCKET'S LABEL WAS WRONG TOO, AND IN A DIFFERENT WAY
+  (2026-10-21, ADR-216).** `idempotent` carried "predicted near
+  zero, **unverified**" from 18 October — the only prediction left
+  in this table after `existence`'s was contradicted. Two things
+  came out of reading it.
+
+  **First, the label over-claimed by two.** `IDEMPOTENT` matched a
+  SITUATION word anywhere in a title — twice, again, unknown, empty,
+  nonexistent, afterdestroy — and it is tested FIRST in `shapeOf`,
+  so a title holding one of those words was never asked what the
+  rest of it claimed. `diagramengine-embed :: unknown stencil pack
+  logs warning` names an EFFECT and was filed under idempotency on
+  the strength of "unknown"; `richtextinput ::
+  emptyOptions_CreatesValidEditor` on the strength of "empty". That
+  is ADR-215's defect in the one bucket ADR-215 did not reach, and
+  the rule it settled applies unchanged: **the name is the fact.**
+  The label now needs a no-effect verdict in the title as well as a
+  situation. Both blocks are rewritten.
+
+  While fixing it: **`_` is a word character, so `\b` does not fire
+  after one.** `addFiles_AfterDestroy_Ignored` failed
+  `\bignored\b` for that reason alone and moved bucket by
+  accident. Names are read with underscores as separators now,
+  everywhere in `shapeOf`.
+
+  **Second, and this is why the entry stays OPEN: `.not.toThrow()`
+  is the wrong assertion for an idempotence claim, and the yield is
+  demonstrated rather than predicted.** Taken as the proof case,
+  `bannerbar :: Destroy_CalledTwice_IsIdempotent` reads
+
+  ```ts
+  banner.destroy();
+  expect(() => banner.destroy()).not.toThrow();
+  ```
+
+  **Deleting `if (this.destroyed) { return; }` from `destroy()`
+  entirely leaves it GREEN.** A second call would then fire
+  `onClose` a second time, remove from the DOM again and re-release
+  its references, and the block named for idempotence could not see
+  any of it. **Survival is not idempotence.** The rewrite counts the
+  callback, and the same mutation now turns it red.
+
+  **107 members are that shape.** The next pass is to ask each one
+  what must not happen twice — a callback, a DOM removal, a
+  listener teardown — and count it. This is a backlog with a
+  measured yield, not a prediction, and the table no longer carries
+  an unverified cell.
 
   **ALSO FOUND, ON NO LIST: `spinemap :: onNodeClick_CalledOnNodeClick`
   had three independent mismatches in one block.** It queried
