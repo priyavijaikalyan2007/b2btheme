@@ -4881,7 +4881,17 @@ limits the design knowingly accepts, not defects in shipped code.
 
   **The path could be retired today and will not be.** Asked and
   answered 2026-10-21: the path and the aliases come out **in the
-  same release**, when the apps team migrates. The reasons for
+  same release**, when the apps team migrates.
+
+  **AND THE APPS TEAM IS MID-WAY THROUGH SOMETHING LARGE**, confirmed
+  2026-10-21. This is the second time this item has been deferred for
+  that reason — the original deadline was withdrawn on 2026-10-09 for
+  the same one — which is the signal to stop treating the condition as
+  a thing to chase. **Do not nudge them.** Re-take the grep when a
+  reader happens to be here, record the answer either way, and leave
+  it. The compat path and the aliases cost one build step and about
+  12 KB, and that is cheaper than a migration done in the middle of
+  someone else's. The reasons for
   retiring it early were real — nothing fetches it, it is not in
   CDN_CONTRACT §2's frozen set, and the deprecated API is
   independent of it because the consumer gets
