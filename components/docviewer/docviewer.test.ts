@@ -336,14 +336,29 @@ describe("DocViewer handle methods", () =>
     test("expandTocNode_ExpandsCollapsedNode", () =>
     {
         const handle = createDocViewer(defaultOptions());
-        expect(() => handle.expandTocNode("guide")).not.toThrow();
+        handle.collapseTocNode("guide");
+        const before = getToc()!.textContent ?? "";
+
+        handle.expandTocNode("guide");
+
+        // "guide" is the only page with a child. Expanding it makes
+        // `renderTocNodes` descend, so the child's title appears in
+        // the tree — which is what the title has always claimed and
+        // what `.not.toThrow()` could not see.
+        expect(before).not.toContain("Getting Started");
+        expect(getToc()!.textContent).toContain("Getting Started");
         handle.destroy();
     });
 
     test("collapseTocNode_CollapsesExpandedNode", () =>
     {
         const handle = createDocViewer(defaultOptions());
-        expect(() => handle.collapseTocNode("guide")).not.toThrow();
+        handle.expandTocNode("guide");
+        expect(getToc()!.textContent).toContain("Getting Started");
+
+        handle.collapseTocNode("guide");
+
+        expect(getToc()!.textContent).not.toContain("Getting Started");
         handle.destroy();
     });
 

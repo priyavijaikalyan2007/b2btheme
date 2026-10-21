@@ -158,10 +158,24 @@ describe("MarkdownEditor value", () =>
 
 describe("MarkdownEditor destroy", () =>
 {
-    test("Destroy_DoesNotThrow", () =>
+    test("Destroy_TearsDownVditorAndTheThemeObserver", () =>
     {
         const editor = new MarkdownEditor(container, makeOptions());
-        expect(() => editor.destroy()).not.toThrow();
+        const observer = vi.spyOn(MutationObserver.prototype, "disconnect");
+        const vditor = (editor as unknown as
+            { vditor: { destroy: () => void } | null }).vditor;
+        const inner = vi.spyOn(vditor!, "destroy");
+
+        editor.destroy();
+
+        // `destroy()` disconnects the theme observer and tears down
+        // the Vditor instance before nulling it. Both are held by the
+        // editor and neither was ever looked at, so a `destroy()`
+        // that leaked the observer and the editor underneath it would
+        // have passed.
+        expect(inner).toHaveBeenCalled();
+        expect(observer).toHaveBeenCalled();
+        observer.mockRestore();
     });
 
     test("Destroy_CalledTwice_IsIdempotent", () =>

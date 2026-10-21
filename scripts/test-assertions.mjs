@@ -585,6 +585,12 @@ export function census(files = null)
                 file,
                 name: block.name,
                 body: block.body,
+                // `at` is the block's offset in the file, and it is on
+                // the row because `absentDependency` is a PER-BLOCK
+                // question. Leaving it off made every key read
+                // `file::undefined`, which silently restored the
+                // file-level rule it was added to replace.
+                at: block.at,
                 verdict: verdictFor(block),
                 pairedWithRefusal: scopes.some(
                     (s) => block.at >= s.start && block.at < s.end
@@ -691,17 +697,88 @@ const NO_EFFECT =
 // through to NAMES-A-CHANGE on the strength of that gap — a title
 // promising survival, filed in the bucket for titles promising an
 // effect, by two regexes disagreeing about one word.
+/**
+ * A title whose whole claim is that the call was ACCEPTED.
+ *
+ * The accept half of an accept/refuse pair says the input is valid and
+ * promises nothing about the result, which is exactly what makes it a
+ * control. A title promising a result is making a second claim, and
+ * the pairing says nothing about whether the body checks it.
+ */
+const ACCEPTS =
+    /\baccepts?\b|\ballow(s|ed)?\b|\bis\s*fine\b|\bisfine\b|\bsucceeds?\b|\bvalid\b|\bworks\b/i;
+
 const ROBUSTNESS_ONLY =
     /does\s*n[o']?t\s*(throw|crash)|doesnotthrow|doesnotcrash|donot(throw|crash)|no\s*throw|nothrow|nocrash|noexception|noerror|without\s*(a\s*)?(crash|throw|error)|handledgracefully|_noop\b|\bno\s*op\b/i;
 
 /** The set of files that withhold a global somewhere in their text. */
-function withheldFiles(rows)
+/**
+ * Every `beforeEach` / `beforeAll` body in `src` that withholds a
+ * global, as `[start, end]` spans of the SUITE each one runs for.
+ *
+ * (CRITICAL) THE DELETE HAS TO RUN BEFORE THE BLOCK, AND THIS USED TO
+ * READ THE WHOLE FILE. `WITHHELD.test(readFileSync(...))` matched the
+ * text anywhere, so a file that installs a mock in `beforeEach` and
+ * removes it in `afterEach` — the ordinary lifecycle, and 22 of the 24
+ * matching files do it — had every `.not.toThrow()` block in it filed
+ * as "the dependency was absent". All six members of the bucket on
+ * 2026-10-21 ran with the dependency INSTALLED, and four of them had
+ * titles stating a change that nothing checked.
+ *
+ * ADR-203 names this exactly, and ADR-215 already fixed one instance
+ * of it in this same classifier: the file is the hypothesis and the
+ * block is the fact. A delete in an `afterEach` is cleanup and
+ * withholds nothing.
+ *
+ * @param src - The test file's source.
+ * @returns Spans of the file in which a global is withheld.
+ */
+function withholdingSpans(src)
+{
+    const spans = [];
+
+    for (const m of src.matchAll(/\b(beforeEach|beforeAll)\s*\(/g))
+    {
+        const args = balanced(src, m.index + m[0].length - 1, "(", ")");
+        if (args === null || !WITHHELD.test(args.text)) { continue; }
+
+        // The hook runs for its enclosing `describe`, or for the file
+        // when it is top level. Walk out to the nearest describe whose
+        // body contains the hook.
+        let span = [0, src.length];
+
+        for (const d of src.matchAll(/\bdescribe\s*\(/g))
+        {
+            const body = balanced(src, d.index + d[0].length - 1, "(", ")");
+            if (body === null) { continue; }
+            if (d.index < m.index && m.index < body.end
+                && d.index > span[0]) { span = [d.index, body.end]; }
+        }
+        spans.push(span);
+    }
+    return spans;
+}
+
+/** The blocks a withheld dependency can excuse, keyed `file::offset`. */
+function withheldBlocks(rows)
 {
     const withheld = new Set();
+    const spansByFile = new Map();
 
     for (const r of rows)
     {
-        if (WITHHELD.test(readFileSync(r.file, "utf8"))) { withheld.add(r.file); }
+        if (!spansByFile.has(r.file))
+        {
+            spansByFile.set(
+                r.file, withholdingSpans(readFileSync(r.file, "utf8")));
+        }
+
+        // A delete inside the block's OWN body counts too.
+        const own = WITHHELD.test(r.body);
+        const inHook = spansByFile.get(r.file)
+            .some(([a, b]) => r.at >= a && r.at < b);
+
+        if (own || inHook) { withheld.add(`${r.file}::${r.at}`); }
     }
     return withheld;
 }
@@ -748,7 +825,7 @@ export function shapeOf(row, withheld)
     // "the title claims only survival" and tells the reader more: it
     // says why the block exists at all. A row that matched both and
     // was filed under robustness would lose that.
-    if (withheld.has(row.file)) { return "absentDependency"; }
+    if (withheld.has(`${row.file}::${row.at}`)) { return "absentDependency"; }
 
     // ROBUSTNESS-ONLY OUTRANKS THE PAIR, and the case that settled it
     // is `treegrid :: deeplyNestedNodes_RendersWithoutCrash`. It
@@ -761,14 +838,28 @@ export function shapeOf(row, withheld)
     // unregistered transform". The name is the fact and the pairing is
     // the hypothesis, which is the rule idempotency already follows.
     if (ROBUSTNESS_ONLY.test(title)) { return "robustnessOnly"; }
-    if (row.pairedWithRefusal === true) { return "positiveControl"; }
+
+    // THE PAIRING IS NOT ENOUGH ON ITS OWN, AND THIS IS THE SECOND
+    // TIME. ADR-215 made a SURVIVAL title outrank the pairing because
+    // `treegrid :: deeplyNestedNodes_RendersWithoutCrash` paired
+    // correctly on `createTreeGrid` and still was not a control. A
+    // title stating an EFFECT has the same claim on the same grounds:
+    // `timeline :: spanWithoutEnd_TreatedAsPoint` sits beside a
+    // refusal of `createTimeline`, and nothing in it checks that the
+    // span rendered as a point. A control's title says the call is
+    // ACCEPTED; it does not promise a particular result.
+    if (row.pairedWithRefusal === true && ACCEPTS.test(title))
+    {
+        return "positiveControl";
+    }
+
     return "namesAChange";
 }
 
 /** Every vacuous block, tagged with the shape it falls into. */
 export function shapeRows(rows)
 {
-    const withheld = withheldFiles(rows);
+    const withheld = withheldBlocks(rows);
 
     return rows
         .map((r) => ({ ...r, shape: shapeOf(r, withheld) }))

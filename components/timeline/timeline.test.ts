@@ -290,16 +290,39 @@ describe("edge cases", () =>
         tl.destroy();
     });
 
-    test("spanWithoutEnd_TreatedAsPoint", () =>
+    test("spanWithoutEnd_RefusesRatherThanRenderingAHairline", () =>
     {
-        // A span item with no end date should not crash
-        expect(() =>
-        {
-            const tl = createTimeline(makeOptions({
-                items: [makeItem({ id: "bad-span", type: "span" })],
-            }));
-            tl.destroy();
-        }).not.toThrow();
+        // The block here was named `spanWithoutEnd_TreatedAsPoint`
+        // and asserted `.not.toThrow()`. MEASURED: the component does
+        // NOT treat it as a point. `renderItem` branches on `type`
+        // alone, so the item went down `renderSpanItem` and rendered
+        // as `class="timeline-item timeline-item-span"` with
+        // `width: 0.1%` — a bar too narrow to see, holding a label
+        // nothing can read, with no error. `TimelineItem.end` is
+        // documented "required for spans" and TypeScript cannot
+        // enforce it, because points share the interface (ADR-200).
+        expect(() => createTimeline(makeOptions({
+            items: [makeItem({ id: "bad-span", type: "span" })],
+        }))).toThrow(/"bad-span" is a span with no end/);
+    });
+
+    test("spanWithAnEnd_RendersASpan", () =>
+    {
+        // The accept half. Without it the refusal above would also
+        // hold for a Timeline that rejected every span.
+        const tl = createTimeline(makeOptions({
+            items: [makeItem({
+                id: "good-span",
+                type: "span",
+                end: new Date("2026-06-01"),
+            })],
+        }));
+
+        const el = container.querySelector("[data-item-id='good-span']");
+
+        expect(el).not.toBeNull();
+        expect(el!.classList.contains("timeline-item-span")).toBe(true);
+        tl.destroy();
     });
 });
 

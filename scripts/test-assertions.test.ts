@@ -270,8 +270,8 @@ describe("the shape split is an instrument, not a note", () =>
     // taken on trust. These cases pin the one decision that table rests
     // on: which bucket a block falls into when two rules both match.
 
-    const row = (name: string, body: string, file: string) =>
-        ({ file, name, body, verdict: "vacuous" as const });
+    const row = (name: string, body: string, file: string, at = 0) =>
+        ({ file, name, body, at, verdict: "vacuous" as const });
 
     test("an existence matcher never reaches the not.toThrow buckets", () =>
     {
@@ -379,20 +379,67 @@ describe("the shape split is an instrument, not a note", () =>
     {
         // Both match, and ABSENT wins because it SUBSUMES the other
         // and says more: it reports why the block exists, not only
-        // that its claim is weak. The opposite order would lose that
-        // and leave the FALLBACK shape uncounted.
-        // The file is this one, because `withheldFiles` reads the FILE
-        // from disk rather than the row body — the suite states the
-        // absence once in its setup, which is the per-file rule ADR-203
-        // settled. The `delete (window...)` on the line above is what
-        // makes this file qualify, and it is the same device the
-        // idempotency case two tests up relies on.
+        // that its claim is weak.
+        //
+        // THE WITHHOLDING IS READ PER BLOCK, NOT PER FILE. This case
+        // used to pass a body with no delete in it and rely on the
+        // `delete (window...)` text elsewhere in THIS file, under a
+        // comment calling that "the per-file rule ADR-203 settled" —
+        // which is the opposite of what ADR-203 says. All six members
+        // of the bucket on 2026-10-21 were files that install a mock
+        // in `beforeEach` and remove it in `afterEach`, so every one
+        // of them ran with the dependency PRESENT. The delete now has
+        // to be in the block's own body or in a `beforeEach` that
+        // runs for it.
+        const rows = [row(
+            "render_WithoutMarked_DoesNotThrow",
+            "delete (window as Record<string, unknown>)['marked'];\n"
+            + "expect(() => h.render('x')).not.toThrow();",
+            "scripts/audit-counts.mjs")];
+
+        expect(shapesOf(rows)).toMatchObject({ absentDependency: 1, robustnessOnly: 0 });
+    });
+
+    test("a mock removed in teardown withholds nothing", () =>
+    {
+        // The discrimination the case above was missing. `audit-counts.mjs`
+        // carries no delete at all, so a body without one cannot be
+        // excused by its neighbours.
         const rows = [row(
             "render_WithoutMarked_DoesNotThrow",
             "expect(() => h.render('x')).not.toThrow();",
-            "scripts/test-assertions.test.ts")];
+            "scripts/audit-counts.mjs")];
 
-        expect(shapesOf(rows)).toMatchObject({ absentDependency: 1, robustnessOnly: 0 });
+        expect(shapesOf(rows))
+            .toMatchObject({ absentDependency: 0, robustnessOnly: 1 });
+    });
+
+    test("a pairing does not make a title that promises a result a control", () =>
+    {
+        // ADR-215 made a SURVIVAL title outrank the pairing. A title
+        // stating an EFFECT has the same claim on the same grounds:
+        // timeline :: spanWithoutEnd_TreatedAsPoint sits beside a
+        // refusal of createTimeline and nothing in it checks that the
+        // span rendered as a point. A control's title says the call is
+        // ACCEPTED and promises no particular result.
+        const promises = [{
+            file: "scripts/audit-counts.mjs", at: 0,
+            name: "spanWithoutEnd_TreatedAsPoint",
+            body: "expect(() => createTimeline(o)).not.toThrow();",
+            verdict: "vacuous" as const, pairedWithRefusal: true,
+        }];
+
+        const accepts = [{
+            file: "scripts/audit-counts.mjs", at: 0,
+            name: "accepts a binding naming a registered transform",
+            body: "expect(() => wire(b)).not.toThrow();",
+            verdict: "vacuous" as const, pairedWithRefusal: true,
+        }];
+
+        expect(shapesOf(promises))
+            .toMatchObject({ namesAChange: 1, positiveControl: 0 });
+        expect(shapesOf(accepts))
+            .toMatchObject({ namesAChange: 0, positiveControl: 1 });
     });
 
     test("idempotency still outranks a survival title", () =>

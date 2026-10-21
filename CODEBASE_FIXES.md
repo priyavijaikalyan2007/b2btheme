@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **10 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **4 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3056,8 +3056,68 @@ offered as the evidence for it.
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
-  | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
+  | `.not.toThrow()` on an absent dependency | 6 | 6 | **0** | **none of the six was one — the rule read the file** |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **THE SIXTH AND LAST BUCKET WAS A FILE-LEVEL RULE, AND EVERY ONE OF
+  ITS SIX MEMBERS RAN WITH THE DEPENDENCY PRESENT (2026-10-21, 10 ->
+  4, and the entry is at its floor).** `withheldFiles` read
+  `WITHHELD.test(readFileSync(file))`, so a file that installs a mock
+  in `beforeEach` and removes it in `afterEach` — the ordinary
+  lifecycle, and **22 of the 24 matching files do exactly that** — had
+  every `.not.toThrow()` block in it excused as "the dependency was
+  absent". Measured: all six ran with the mock installed, and four of
+  them had titles stating a change that nothing checked.
+
+  **This is ADR-203 in the classifier for the third time.** ADR-215
+  already fixed one instance of it here — idempotency over the file
+  that withholds a global — and wrote down the rule it was fixing:
+  the file is the hypothesis and the block is the fact. The
+  `absentDependency` arm kept the file-level form, and the case
+  pinning it **asserted the defect**, under a comment calling it "the
+  per-file rule ADR-203 settled". `withheldBlocks` requires the delete
+  to be in the block's own body or in a `beforeEach` that runs for it,
+  and a delete in an `afterEach` withholds nothing.
+
+  **And `at` had to go on the row.** The first version keyed on
+  `${file}::${at}` while `census` never put `at` on the row, so every
+  key read `file::undefined` and one match marked the whole file —
+  silently restoring the rule it replaced. The number looked right
+  and was produced the old way.
+
+  **A pairing does not make a title that promises a result a
+  control.** ADR-215 made a SURVIVAL title outrank the pairing. A
+  title stating an EFFECT has the same claim: `timeline ::
+  spanWithoutEnd_TreatedAsPoint` sits beside a refusal of
+  `createTimeline`, so the pairing claimed it. `positiveControl` now
+  also needs a title that says the call is **accepted**.
+
+  **A SPAN WITH NO END RENDERED AS A 0.1% HAIRLINE.** Measured:
+  `class="timeline-item timeline-item-span"`, `width: 0.1%` — a bar
+  too narrow to see, holding a label nothing can read, with no marker
+  and no error. `TimelineItem.end` is documented **"required for
+  spans, ignored for points"** and `renderItem` branches on `type`
+  alone. The component does not treat it as a point, and the block
+  was named `spanWithoutEnd_TreatedAsPoint`. It throws now, naming
+  the item, with an accept half beside it.
+
+  The other five were rewritten to what their titles claim.
+  `docviewer :: expandTocNode` proves the child title appears in the
+  tree and `collapseTocNode` proves it goes; `guidedtour ::
+  destroy_CleansUpResources` watches the Driver.js instance the suite
+  had been mocking all along and never looked at; `chartpanel ::
+  Resize_DoesNotThrow` reads `MockChart.resizes`, a counter the mock
+  has kept since it was written with no reader;
+  `markdowneditor :: Destroy_DoesNotThrow` proves the Vditor instance
+  and the theme observer both came down. All six mutation-proven.
+
+  **4 LEFT, AND BOTH PAIRS ARE RECORDED FLOORS.** The two
+  `diagramengine` blocks are the jsdom measurement from 2026-10-20 —
+  `getBoundingClientRect` answers zeros, so there is nothing to read
+  — and the zoomToFit claim already moved to `tests/diagramengine.spec.ts`
+  where a browser can see it. The two `positiveControl` blocks are
+  accept halves whose whole claim is that the call was accepted.
+  **DEBT-TEST-1b is at its floor: 341 -> 4.**
 
   **A VOID RETURN MAY GO QUIET AND A VALUE RETURN MAY NOT, WHICH
   ANSWERS THE AFTER-DESTROY QUESTION WITHOUT DECIDING A POSTURE

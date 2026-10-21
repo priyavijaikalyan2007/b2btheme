@@ -471,7 +471,16 @@ describe("ChartPanel handle methods", () =>
             categories: ["A"],
             series: [{ id: "v", label: "V", data: [1] }],
         });
-        expect(() => handle.resize()).not.toThrow();
+        const chart = MockChart.instances[MockChart.instances.length - 1];
+        const before = chart.resizes;
+
+        handle.resize();
+
+        // `MockChart` has counted resizes since it was written and
+        // nothing had read the counter. The claim is that the panel
+        // forwards to Chart.js — surviving the call would also hold
+        // for a `resize()` that did nothing at all.
+        expect(chart.resizes).toBe(before + 1);
         handle.destroy();
     });
 

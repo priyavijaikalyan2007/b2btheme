@@ -1020,10 +1020,42 @@ export class Timeline
     // -- Item API --
 
     /**
+     * Refuse a span declared without an end (ADR-200, ERR-1).
+     *
+     * (CRITICAL) A SPAN WITH NO END RENDERED AS A 0.1% HAIRLINE.
+     * `TimelineItem.end` is documented "required for spans, ignored
+     * for points", and `renderItem` branches on `type` alone, so a
+     * span missing its end went down `renderSpanItem` and got a
+     * `widthPercent` of 0.1 — a bar too narrow to see, holding a
+     * label nothing can read, with no marker and no error. MEASURED:
+     * `class="timeline-item timeline-item-span"`, `width: 0.1%`.
+     *
+     * The block that covered it was named
+     * `spanWithoutEnd_TreatedAsPoint`, and the component does not
+     * treat it as a point. `end` is optional on the shared interface
+     * because points do not have one, so TypeScript cannot enforce
+     * the rule the comment states, and this library is consumed from
+     * plain JavaScript over a CDN (DEBT-TEST-1b).
+     *
+     * @param item - The item being taken in.
+     */
+    private refuseMalformedSpan(item: TimelineItem): void
+    {
+        if (item.type === "span" && item.end === undefined)
+        {
+            throw new Error(
+                `${LOG_PREFIX} item "${item.id}" is a span with no end. `
+                + "A span needs start and end; use type \"point\" for a "
+                + "single instant.");
+        }
+    }
+
+    /**
      * Adds a single item to the timeline.
      */
     public addItem(item: TimelineItem): void
     {
+        this.refuseMalformedSpan(item);
         this.items.set(item.id, { ...item });
 
         logInfo("Item added:", item.id);
@@ -1038,6 +1070,7 @@ export class Timeline
     {
         for (const item of items)
         {
+            this.refuseMalformedSpan(item);
             this.items.set(item.id, { ...item });
         }
 
@@ -2666,6 +2699,7 @@ export class Timeline
     {
         for (const item of items)
         {
+            this.refuseMalformedSpan(item);
             this.items.set(item.id, { ...item });
         }
     }

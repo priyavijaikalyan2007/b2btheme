@@ -227,7 +227,17 @@ describe("GuidedTour handle methods", () =>
     {
         const handle = createGuidedTour(defaultOptions());
         handle!.start();
-        expect(() => handle!.destroy()).not.toThrow();
+        expect(handle!.isActive()).toBe(true);
+
+        handle!.destroy();
+
+        // The title names the resources, and the resource is the
+        // Driver.js instance the tour holds. `destroy()` stops the
+        // tour and calls `driverInstance.destroy()` before nulling
+        // it, and the mock is in the suite already — nothing had
+        // ever looked at it.
+        expect(mockDriverInstance.destroy).toHaveBeenCalled();
+        expect(handle!.isActive()).toBe(false);
     });
 });
 
