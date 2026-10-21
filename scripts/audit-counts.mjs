@@ -642,7 +642,25 @@ const BASELINES = {
     //
     // A toBeDefined() on a factory's return value cannot see a factory
     // that built nothing, and ERR-1 was 65 of those.
-    testsThatCannotFail: 204,
+    //
+    // 204 -> 173 ON 2026-10-21 IS A CORRECTION OF THE SAME KIND AS
+    // THE typeof REMOVAL ABOVE, AND ALL 33 BLOCKS MOVED WITHOUT ONE
+    // TEST CHANGING. Two rules read the text where the value was
+    // meant.
+    //
+    // The exemption for a DOM query read the subject's SPELLING, so
+    // `expect(root.querySelector(".x")).toBeTruthy()` was exempt and
+    // `const x = root.querySelector(".x"); expect(x).toBeTruthy();`
+    // was counted -- the identical claim, decided by the author's use
+    // of a const. And a lookup was exempt under EITHER existence
+    // matcher, though every member of the family returns null and
+    // `expect(null).toBeDefined()` passes.
+    //
+    // THE SECOND HALF MOVED ONE BLOCK THE OTHER WAY. The count was
+    // too LOW by `formdialog :: withDefaultSize_UsesMdSize`, which
+    // the exemption had been hiding. A correction that only ever
+    // subtracts is a relaxation wearing a correction's name.
+    testsThatCannotFail: 173,
     siblingStandIns: 6,
 };
 
@@ -715,7 +733,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5015,
+    testBlocks: 5020,
 };
 
 /**

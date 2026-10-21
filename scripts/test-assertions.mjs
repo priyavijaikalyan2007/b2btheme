@@ -89,25 +89,88 @@ const MATCHERS = [
     /^\s*\.toBeTruthy\s*\(\s*\)/,
 ];
 
-/** Existence matchers, whose claim depends on what they are given. */
-const EXISTENCE = /\.toBeDefined\s*\(\s*\)|\.toBeTruthy\s*\(\s*\)/;
+/** The one matcher that can see the null a lookup returns. */
+const TRUTHY = /^\s*\.toBeTruthy\s*\(\s*\)/;
 
-/** A subject that carries its own claim, because it names what to find. */
-const QUERY = /querySelector(All)?\s*\(|getElementById\s*\(|getElementsBy\w+\s*\(|\.closest\s*\(/;
+/**
+ * A subject that carries its own claim, because it names what to find.
+ *
+ * EVERY MEMBER RETURNS NULL WHEN THE THING IS NOT THERE, AND THAT IS
+ * THE WHOLE QUALIFICATION. The selector or the attribute name is the
+ * assertion, so `expect(root.querySelector(".le-preview"))
+ * .toBeTruthy()` is a real check and `.not.toBeNull()` on the same
+ * subject is the same claim written differently.
+ *
+ * `querySelectorAll` AND `getElementsBy*` ARE DELIBERATELY ABSENT,
+ * AND `querySelectorAll` WAS IN THIS PATTERN UNTIL 2026-10-21. They
+ * return an empty NodeList or HTMLCollection rather than null, so
+ * neither existence matcher can fail against them however wrong the
+ * selector is. Exempting them would have hidden exactly the blocks
+ * that claim a filter ran and then ask only whether the collection
+ * exists — `symbolpicker :: Search_TypeQuery_FiltersGridItems` and
+ * `cronpicker :: Options_CustomPresets_UsesProvidedPresets` are both
+ * that shape. No block relied on the wider form the day it narrowed.
+ */
+const LOOKUP = /\bquerySelector\s*\(|\bgetElementById\s*\(|\.closest\s*\(|\.getAttribute\s*\(/;
+
+/** A subject that is one name and nothing else. */
+const BARE = /^[A-Za-z_$][\w$]*$/;
+
+/**
+ * The right-hand side of `const <name> = ...` in this body, or null.
+ *
+ * ONE HOP, NOT A RESOLVER. The point is to read the subject the
+ * author wrote rather than the one they bound, and a second hop
+ * would need scope rules this parser does not have. A name declared
+ * twice in one block returns the first, which is the reading a
+ * human gives it too.
+ */
+function boundTo(name, body)
+{
+    const at = new RegExp("\\bconst\\s+" + name + "\\s*(?::[^=\\n]+)?=").exec(body ?? "");
+    if (at === null) { return null; }
+
+    return body.slice(at.index + at[0].length).split(/;\s*\n|\n\s*\n/)[0];
+}
 
 /**
  * True when this one assertion could not fail for a live component.
  *
  * Takes either the split form from `assertionsIn` or the whole text,
  * and splits the text itself when given one, so a caller can ask about
- * a single line without parsing it first.
+ * a single line without parsing it first. `body` is optional and is
+ * used only to resolve a bare subject to what it was bound to.
+ *
+ * (CRITICAL) TWO RULES HERE WERE WRONG UNTIL 2026-10-21 AND BOTH WERE
+ * THE SAME MISTAKE: THE TEXT WAS READ WHERE THE VALUE WAS MEANT.
+ *
+ * The comment above the old pattern said THE SUBJECT DECIDES, and
+ * then the code decided on the subject's SPELLING. `expect(root
+ * .querySelector(".le-preview")).toBeTruthy()` was exempt while
+ * `const preview = root.querySelector(".le-preview");
+ * expect(preview).toBeTruthy();` was counted, though the two make
+ * the identical claim. Fifteen blocks in `latexeditor` alone were
+ * in the ceiling because their author used a local variable. ADR-203
+ * states the rule this broke: the name is the fact and the structure
+ * is the hypothesis.
+ *
+ * The second: a lookup was exempt under EITHER existence matcher.
+ * `querySelector` returns null, and `expect(null).toBeDefined()`
+ * PASSES — so the exemption let through an assertion that cannot
+ * fail, which is the one thing this function exists to catch. The
+ * count was too LOW, by `formdialog :: withDefaultSize_UsesMdSize`,
+ * and the suite had pinned the wrong answer since the rule was
+ * written.
  */
-export function isVacuous(assertion)
+export function isVacuous(assertion, body = null)
 {
     const a = typeof assertion === "string" ? (assertionsIn(assertion)[0] ?? null) : assertion;
     if (a === null) { return false; }
 
-    if (EXISTENCE.test(a.matcher) && QUERY.test(a.subject)) { return false; }
+    const subject = a.subject.trim();
+    const resolved = BARE.test(subject) ? (boundTo(subject, body) ?? subject) : subject;
+
+    if (TRUTHY.test(a.matcher) && LOOKUP.test(resolved)) { return false; }
     return MATCHERS.some((v) => v.test(a.matcher));
 }
 
@@ -270,7 +333,14 @@ export function testBlocks(src)
             if (args === null) { continue; }
         }
 
-        const name = /^\s*["'`]([^"'`]*)/.exec(args.text);
+        // READ TO THE MATCHING QUOTE, NOT TO THE NEXT ONE. The first
+        // form was /^\s*["'`]([^"'`]*)/, which stopped at whichever
+        // quote came first — so `test("loadStencilPack('ui-components')
+        // registers shapes")` was named `loadStencilPack(`. Forty
+        // names were truncated this way, and the classifier reads
+        // names: IDEMPOTENT and ROBUSTNESS_ONLY were matching against
+        // partial titles.
+        const name = /^\s*("[^"]*"|'[^']*'|`[^`]*`)/.exec(args.text);
         const arrow = args.text.indexOf("=>");
         const brace = arrow < 0 ? -1 : args.text.indexOf("{", arrow);
         if (name === null || brace < 0) { continue; }
@@ -278,7 +348,7 @@ export function testBlocks(src)
         const body = balanced(args.text, brace, "{", "}");
         if (body === null) { continue; }
 
-        blocks.push({ name: name[1], body: body.text, at: m.index });
+        blocks.push({ name: name[1].slice(1, -1), body: body.text, at: m.index });
     }
     return blocks;
 }
@@ -318,7 +388,10 @@ export function verdictFor(block)
 {
     const found = assertionsIn(block.body);
     if (found.length === 0) { return "none"; }
-    return found.every(isVacuous) ? "vacuous" : "asserts";
+
+    // NOT `found.every(isVacuous)`. `every` passes the index as the
+    // second argument, and the second argument is now the body.
+    return found.every((a) => isVacuous(a, block.body)) ? "vacuous" : "asserts";
 }
 
 /** Every test block in the repository, classified. */

@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **204 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **173 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3057,7 +3057,66 @@ offered as the evidence for it.
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
-  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | 85 | **~25 actionable, not near zero** |
+  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **54** | 32 were never members, see below |
+
+  **THIRTY-TWO OF THE EIGHTY-FIVE WERE NEVER MEMBERS, AND ONE MEMBER
+  WAS BEING HIDDEN (2026-10-21).** Before asking the title question of
+  this bucket the predicate itself was read, and two of its rules read
+  the TEXT where the VALUE was meant — the same fault in both.
+
+  1. The exemption for a DOM query read the subject's SPELLING. Its
+     comment says **THE SUBJECT DECIDES, NOT THE MATCHER**, and the
+     code tested the characters inside `expect(...)` against a
+     pattern. So `expect(root.querySelector(".le-preview"))
+     .toBeTruthy()` was exempt while `const preview = root
+     .querySelector(".le-preview"); expect(preview).toBeTruthy();`
+     was counted. **The identical claim, decided by whether the
+     author used a const.** Fifteen `latexeditor` blocks and every
+     `_HasAriaLabel` block in the repository were in the ceiling for
+     that reason and no other. `isVacuous` now resolves a bare
+     subject one hop through its `const` binding.
+  2. A lookup was exempt under EITHER existence matcher. Every
+     member of the family returns **null** when the thing is absent,
+     and `expect(null).toBeDefined()` **passes** — so the exemption
+     was letting through the one shape the predicate exists to
+     catch. Exemption now requires `.toBeTruthy()`.
+
+  **THE CORRECTION RUNS BOTH WAYS, WHICH IS THE TEST OF WHETHER IT IS
+  ONE.** Rule 2 ADDED `formdialog :: withDefaultSize_UsesMdSize`,
+  whose `expect(el.querySelector(".formdialog-dialog")).toBeDefined()`
+  cannot fail and whose title names a size nothing reads. A correction
+  that only ever subtracts is a relaxation wearing a correction's
+  name.
+
+  `querySelectorAll` and `getElementsBy*` LEFT the exempt pattern at
+  the same time. They return an empty collection rather than null, so
+  **neither** existence matcher can fail against them however wrong
+  the selector is. No block relied on the wider form, and two blocks
+  that claim a filter ran — `symbolpicker ::
+  Search_TypeQuery_FiltersGridItems` and `cronpicker ::
+  Options_CustomPresets_UsesProvidedPresets` — would have walked out
+  of the ceiling the moment rule 1 resolved their bindings.
+
+  **Measured, not reasoned:** deleting
+  `setAttr(this.inputEl, "aria-label", "Time")` from `timepicker.ts`
+  turns `input_HasAriaLabel` red. The blocks that left can fail.
+
+  **THE PARSER WAS TRUNCATING FORTY TEST NAMES, AND THE CLASSIFIER
+  READS NAMES.** The name pattern was ``/^\s*["'`]([^"'`]*)/``, which
+  stops at the first quote of any kind rather than at the one that
+  opened the string, so `test("loadStencilPack('devices') + addObject
+  creates container")` was named `loadStencilPack(`. Both `IDEMPOTENT`
+  and `ROBUSTNESS_ONLY` match against the name. No block changed
+  bucket once it was fixed, which is luck rather than a defence.
+
+  **One known false positive is left in on purpose.** `latexeditor ::
+  searchInput_HasPlaceholder` reads `.placeholder`, which is `""`
+  rather than null when unset, so `.toBeTruthy()` does catch it. A
+  property returning an empty string is a third family, and widening
+  the rule for one member would put an arguable entry in a ceiling
+  whose only value is that nobody argues with it. **It gets rewritten
+  instead of exempted.** A ceiling that over-counts by one is the
+  safe direction.
 
   **THE BUCKET LABELLED "NAME STATES A CHANGE" WAS THE FALL-THROUGH,
   AND 21 OF ITS 35 MEMBERS HAD NAMES STATING NO CHANGE (2026-10-20,

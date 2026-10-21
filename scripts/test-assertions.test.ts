@@ -44,6 +44,21 @@ describe("the parser reaches a block whatever is inside it", () =>
         expect(assertionsIn(blocks[0].body)).toHaveLength(1);
     });
 
+    test("a quote inside a name does not end the name", () =>
+    {
+        // FORTY NAMES WERE TRUNCATED BY THIS UNTIL 2026-10-21. The
+        // pattern was /^\s*["\'`]([^"\'`]*)/, which stops at the
+        // first quote of ANY kind rather than at the one that opened
+        // the string, so this block was called `loadStencilPack(`.
+        // The classifier reads names: both IDEMPOTENT and
+        // ROBUSTNESS_ONLY were being matched against half a title.
+        const src = "test(\"loadStencilPack('devices') registers shapes\", () =>\n"
+            + "{\n    expect(1).toBe(1);\n});\n";
+        const blocks = testBlocks(src) as Block[];
+
+        expect(blocks[0].name).toBe("loadStencilPack('devices') registers shapes");
+    });
+
     test("an unbalanced parenthesis inside a string does not end the block", () =>
     {
         // The audit-counts case: classifyWindowCast("any).createLogUtility").
@@ -149,12 +164,76 @@ describe("the predicate fires for the reason it was written", () =>
         expect(isVacuous('expect(isVacuous("expect(h).toBeDefined()")).toBe(true)')).toBe(false);
     });
 
-    test("an existence matcher on a DOM query is a real check", () =>
+    test("toBeTruthy on a nullable lookup is a real check", () =>
     {
         // THE SUBJECT DECIDES, NOT THE MATCHER. This makes exactly the
         // claim `.not.toBeNull()` makes, and that is not counted either.
         expect(isVacuous('expect(root.querySelector(".le-preview")).toBeTruthy()')).toBe(false);
-        expect(isVacuous('expect(document.getElementById("x")).toBeDefined()')).toBe(false);
+        expect(isVacuous('expect(el.getAttribute("aria-label")).toBeTruthy()')).toBe(false);
+    });
+
+    test("toBeDefined on the SAME lookup cannot fail", () =>
+    {
+        // THE SECOND HALF OF THE PAIR ABOVE WAS PINNED THE WRONG WAY
+        // ROUND UNTIL 2026-10-21, as
+        // `expect(isVacuous('expect(document.getElementById("x"))
+        // .toBeDefined()')).toBe(false)`. Every member of the lookup
+        // family returns NULL when the thing is absent, and
+        // `expect(null).toBeDefined()` passes. The exemption was
+        // letting through the one thing the predicate exists to
+        // catch, and `formdialog :: withDefaultSize_UsesMdSize` is
+        // the block it was letting through.
+        expect(isVacuous('expect(document.getElementById("x")).toBeDefined()')).toBe(true);
+        expect(isVacuous('expect(root.querySelector(".le-preview")).toBeDefined()')).toBe(true);
+    });
+
+    test("a collection lookup is exempt under neither matcher", () =>
+    {
+        // `querySelectorAll` returns an EMPTY NodeList, never null, so
+        // both existence matchers pass however wrong the selector is.
+        // It sat in the exempt pattern until 2026-10-21 beside
+        // `querySelector`, which does return null. Nothing relied on
+        // it, and two blocks that claim a filter ran -- symbolpicker
+        // and cronpicker -- would have walked out of the ceiling the
+        // moment their subject was resolved through its binding.
+        expect(isVacuous('expect(root.querySelectorAll(".cell")).toBeTruthy()')).toBe(true);
+        expect(isVacuous('expect(root.querySelectorAll(".cell")).toBeDefined()')).toBe(true);
+    });
+
+    test("the subject is what it was bound to, not what it is called", () =>
+    {
+        // A LOCAL VARIABLE IS NOT A WEAKER CLAIM. These two blocks
+        // make the identical assertion and the predicate called one
+        // of them vacuous, because the exemption read the text inside
+        // `expect(...)` and that text was a name. Fifteen latexeditor
+        // blocks were in the ceiling for no reason but their author's
+        // use of a const.
+        const bound = {
+            name: "t",
+            body: 'const preview = root.querySelector(".le-preview");\n'
+                + "expect(preview).toBeTruthy();\n",
+        };
+        const inline = {
+            name: "t",
+            body: 'expect(root.querySelector(".le-preview")).toBeTruthy();\n',
+        };
+
+        expect(verdictFor(bound)).toBe(verdictFor(inline));
+        expect(verdictFor(bound)).toBe("asserts");
+    });
+
+    test("resolving a binding does not rescue a collection", () =>
+    {
+        // The hop is a correction, not an amnesty. Resolved, this
+        // subject is a querySelectorAll, which is exempt under
+        // neither matcher.
+        const block = {
+            name: "t",
+            body: 'const cells = el.querySelectorAll(".cell");\n'
+                + "expect(cells).toBeDefined();\n",
+        };
+
+        expect(verdictFor(block)).toBe("vacuous");
     });
 
     test("toBe and toEqual are never vacuous", () =>
