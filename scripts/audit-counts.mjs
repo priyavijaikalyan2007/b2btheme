@@ -660,7 +660,7 @@ const BASELINES = {
     // too LOW by `formdialog :: withDefaultSize_UsesMdSize`, which
     // the exemption had been hiding. A correction that only ever
     // subtracts is a relaxation wearing a correction's name.
-    testsThatCannotFail: 136,
+    testsThatCannotFail: 120,
     siblingStandIns: 6,
 
     // ADR-216. ASSERTION SITES THAT RUN ONLY WHEN A CONDITION HOLDS,
@@ -761,7 +761,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5031,
+    testBlocks: 5032,
 };
 
 /**

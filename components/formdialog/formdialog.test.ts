@@ -123,13 +123,23 @@ describe("createFormDialog", () =>
 
 describe("FormDialog options and defaults", () =>
 {
+    // THE BLOCK THE CEILING GAINED WHEN THE EXEMPTION NARROWED
+    // (ADR-216). `querySelector` returns null when the selector
+    // misses and `expect(null).toBeDefined()` passes, so the old
+    // assertion could not fail -- and `md` was named in the title
+    // and read nowhere. The size shows up twice, as a class and as
+    // a max-width, and both come from DEFAULT_SIZE.
     test("withDefaultSize_UsesMdSize", () =>
     {
         const handle = createFormDialog(defaultOptions());
         handle.show();
         vi.advanceTimersByTime(300);
-        const el = handle.getElement();
-        expect(el.querySelector(".formdialog-dialog")).toBeDefined();
+
+        const dialog = handle.getElement()
+            .querySelector<HTMLElement>(".formdialog-dialog")!;
+
+        expect(dialog.classList.contains("formdialog-dialog-md")).toBe(true);
+        expect(dialog.style.maxWidth).toBe("550px");
         handle.destroy();
     });
 
@@ -653,17 +663,25 @@ describe("FormDialog wizard state persistence", () =>
 
 describe("FormDialog edge cases", () =>
 {
+    // "WorksNormally" after a reopen means the dialog is back in
+    // the document with its fields rebuilt -- `show()` returns
+    // early when `mounted` is still set, so a close that failed to
+    // unmount would leave the second show doing nothing at all.
+    // `getElement()` returning something was true throughout.
     test("close_ThenShow_WorksNormally", () =>
     {
         const handle = createFormDialog(defaultOptions());
         handle.show();
         vi.advanceTimersByTime(300);
+
         handle.close();
         vi.advanceTimersByTime(300);
+        expect(document.querySelector(".formdialog-dialog")).toBeNull();
+
         handle.show();
         vi.advanceTimersByTime(300);
-        const el = handle.getElement();
-        expect(el).toBeDefined();
+
+        expect(document.querySelectorAll(".formdialog-dialog")).toHaveLength(1);
         handle.destroy();
     });
 

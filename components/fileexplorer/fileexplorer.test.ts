@@ -143,15 +143,30 @@ describe("FileExplorer factory", () =>
         fe.destroy();
     });
 
+    // THE TITLE IS THE MAPPING: `multiSelect: true` becomes
+    // `selectable: "multi"`. The constructor writes it back onto the
+    // options object it was handed, so reading that object is the
+    // whole claim -- and `expect(el).toBeDefined()` said nothing
+    // about selection at all.
     test("Constructor_MultiSelectTrue_MapToSelectableMulti", () =>
     {
-        const fe = new FileExplorer(makeOptions({
-            multiSelect: true
-        }));
-        fe.show("fe-test-container");
-        // Multi-select should enable ctrl-click
-        const el = fe.getElement();
-        expect(el).toBeDefined();
+        const options = makeOptions({ multiSelect: true });
+
+        const fe = new FileExplorer(options);
+
+        expect(options.selectable).toBe("multi");
+        fe.destroy();
+    });
+
+    test("MultiSelectTrue_DoesNotOverrideAnExplicitSelectable", () =>
+    {
+        // The other half of the `&& !options.selectable` guard,
+        // without which the mapping above could be unconditional.
+        const options = makeOptions({ multiSelect: true, selectable: "single" });
+
+        const fe = new FileExplorer(options);
+
+        expect(options.selectable).toBe("single");
         fe.destroy();
     });
 

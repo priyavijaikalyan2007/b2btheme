@@ -363,16 +363,21 @@ describe("search filtering", () =>
             showSearch: true,
         });
         picker.show("test-symbolpicker-container");
-        const el = picker.getElement();
-        const searchInput = el?.querySelector("input") as HTMLInputElement;
-        if (searchInput)
-        {
-            searchInput.value = "Letter A";
-            searchInput.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-        // After filtering, grid items should be reduced
-        const cells = el?.querySelectorAll(".symbolpicker-cell");
-        expect(cells).toBeDefined();
+        const el = picker.getElement()!;
+        expect(el.querySelectorAll(".symbolpicker-cell")).toHaveLength(3);
+
+        const searchInput = el.querySelector("input") as HTMLInputElement;
+        searchInput.value = "Letter A";
+        searchInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+        // "grid items should be reduced" was the comment, and the
+        // body asked whether a NodeList existed. querySelectorAll
+        // returns an empty one rather than null, so the assertion
+        // held for a filter that deleted every cell as readily as
+        // for one that never ran. The count before and the surviving
+        // character are what "filters" means.
+        expect([...el.querySelectorAll(".symbolpicker-cell")]
+            .map((c) => c.getAttribute("data-code"))).toEqual(["U+0041"]);
         picker.destroy();
     });
 });
@@ -459,15 +464,16 @@ describe("getValue and getSelectedSymbol", () =>
             categories: [cat],
         });
         picker.show("test-symbolpicker-container");
-        const el = picker.getElement();
-        const firstCell = el?.querySelector(".symbolpicker-cell") as HTMLElement;
-        if (firstCell)
-        {
-            firstCell.click();
-        }
-        // After clicking, getValue should return the code
-        const val = picker.getValue();
-        expect(val).toBeTruthy();
+        const el = picker.getElement()!;
+
+        (el.querySelectorAll<HTMLElement>(".symbolpicker-cell")[1]).click();
+
+        // The comment named the answer -- "getValue should return
+        // the code" -- and truthy was true of every code this
+        // fixture has. The SECOND cell is clicked so the assertion
+        // cannot hold for a picker that simply reports its first
+        // item.
+        expect(picker.getValue()).toBe("U+0042");
         picker.destroy();
     });
 });

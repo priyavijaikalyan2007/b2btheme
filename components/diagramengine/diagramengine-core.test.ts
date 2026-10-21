@@ -41,10 +41,18 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
 {
     afterEach(() => { teardown(); });
 
+    // THE PAIR BELOW EXISTS TO SHOW THAT BOTH ARGUMENT FORMS REACH
+    // THE SAME CONTAINER, and `toBeDefined()` on the handle said
+    // only that a call returned. `createDiagramEngine` throws for a
+    // string that resolves to nothing (the block under them pins
+    // that), so what is left unproven is which element it mounted
+    // into -- and an engine built against the document body would
+    // have satisfied the old assertion exactly.
     test("creates engine from string ID", () =>
     {
         setup();
-        expect(engine).toBeDefined();
+
+        expect(container.contains(engine.getElement())).toBe(true);
     });
 
     test("creates engine from HTMLElement", () =>
@@ -57,7 +65,7 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
 
         engine = createDiagramEngine(container, {});
 
-        expect(engine).toBeDefined();
+        expect(container.contains(engine.getElement())).toBe(true);
     });
 
     test("throws on invalid container string", () =>
@@ -72,14 +80,18 @@ describe("DiagramEngine — Factory & Lifecycle", () =>
         }).toThrow();
     });
 
+    // `el.tagName` is defined on every element there is, so the
+    // second assertion added nothing to the first. WHICH element it
+    // returns is the claim a host depends on: the engine's own root
+    // inside the container, not the container and not the body.
     test("getElement returns an element", () =>
     {
         setup();
 
         const el = engine.getElement();
 
-        expect(el).toBeDefined();
-        expect(el.tagName).toBeDefined();
+        expect(el.parentElement).toBe(container);
+        expect(el).not.toBe(container);
     });
 
     test("resize does not throw", () =>

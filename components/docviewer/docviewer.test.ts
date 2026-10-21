@@ -99,6 +99,13 @@ function getContent(): HTMLElement | null
     return container.querySelector(".docviewer-content") as HTMLElement | null;
 }
 
+/** The title of every entry currently rendered in the table of contents. */
+function tocTitles(): string[]
+{
+    return [...container.querySelectorAll(".docviewer-toc-item")]
+        .map((n) => n.textContent ?? "");
+}
+
 function getOutline(): HTMLElement | null
 {
     return container.querySelector(".docviewer-outline") as HTMLElement | null;
@@ -239,11 +246,25 @@ describe("DocViewer DOM structure", () =>
         handle.destroy();
     });
 
+    // "RendersMarkdown" is a claim about what the markdown became.
+    // Non-empty text was true of the page title alone, and would
+    // have held for the raw "# Introduction\n\nWelcome." that
+    // ADR-202 deleted the substitute renderer for.
     test("contentRendersMarkdown", () =>
     {
         const handle = createDocViewer(defaultOptions());
-        const content = getContent();
-        expect(content?.textContent).toBeTruthy();
+
+        const content = getContent()!;
+
+        // The `marked` stub above wraps its input in a <p> and runs
+        // no extensions, so a heading is not available to assert --
+        // what IS available is that the renderer's HTML went in as
+        // MARKUP. FALLBACK-13 is the reason that matters: an absent
+        // `marked` used to produce a handle whose render set the raw
+        // source as text, and the reader saw `## Heading` verbatim.
+        expect(content.querySelector("p")?.textContent)
+            .toContain("Welcome.");
+        expect(content.innerHTML).not.toContain("&lt;p&gt;");
         handle.destroy();
     });
 });
@@ -296,12 +317,18 @@ describe("DocViewer handle methods", () =>
         handle.destroy();
     });
 
+    // The comment said "Search should filter TOC items" and the
+    // body asked the handle whether it existed. Which entries
+    // survive is the claim, and listing them also catches a filter
+    // that drops everything.
     test("searchToc_FiltersEntries", () =>
     {
         const handle = createDocViewer(defaultOptions());
+        expect(tocTitles().length).toBeGreaterThan(1);
+
         handle.searchToc("api");
-        // Search should filter TOC items
-        expect(handle).toBeDefined();
+
+        expect(tocTitles()).toEqual(["API Reference"]);
         handle.destroy();
     });
 

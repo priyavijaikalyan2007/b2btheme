@@ -91,10 +91,18 @@ afterEach(() =>
 
 describe("MarkdownEditor factory", () =>
 {
+    // `new MarkdownEditor(...)` cannot return undefined, so this
+    // held for every options object the class accepts. The block
+    // below already covers the render, so the claim left is that
+    // the editor was handed its STARTING VALUE -- the one option
+    // that has to survive construction to be of any use.
     test("Constructor_ValidOptions_CreatesInstance", () =>
     {
-        const editor = new MarkdownEditor(container, makeOptions());
-        expect(editor).toBeDefined();
+        const editor = new MarkdownEditor(container, makeOptions({
+            value: "# Starting content",
+        }));
+
+        expect(editor.getValue()).toBe("# Starting content");
         editor.destroy();
     });
 
@@ -125,12 +133,20 @@ describe("MarkdownEditor value", () =>
         editor.destroy();
     });
 
+    // "Value roundtrip depends on Vditor mock" was offered as the
+    // reason not to assert the roundtrip, and MockVditor above does
+    // exactly the roundtrip -- `setValue` stores and `getValue`
+    // returns. The dependency is the test's own, so there is
+    // nothing to be cautious about.
     test("SetValue_UpdatesContent", () =>
     {
-        const editor = new MarkdownEditor(container, makeOptions());
+        const editor = new MarkdownEditor(container, makeOptions({
+            value: "# Before",
+        }));
+
         editor.setValue("## Updated");
-        // Value roundtrip depends on Vditor mock
-        expect(editor.getValue()).toBeDefined();
+
+        expect(editor.getValue()).toBe("## Updated");
         editor.destroy();
     });
 });

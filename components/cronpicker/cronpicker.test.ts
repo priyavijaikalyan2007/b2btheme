@@ -170,10 +170,16 @@ describe("CronPicker options", () =>
         const picker = new CronPicker("test-cronpicker-container", {
             presets: customPresets,
         });
-        const presetSelect = container.querySelector("select");
-        // Should have the custom preset option
-        const options = presetSelect?.querySelectorAll("option");
-        expect(options).toBeDefined();
+        // "Should have the custom preset option" was the comment,
+        // and the body asked whether a NodeList existed.
+        // `querySelectorAll` returns an empty one rather than null,
+        // so the assertion held for a picker that rendered the
+        // BUILT-IN presets and ignored these, which is the one
+        // thing the title rules out.
+        const presetSelect = container.querySelector("select")!;
+
+        expect([...presetSelect.querySelectorAll("option")]
+            .map((o) => o.textContent)).toContain("Every 5 min");
         picker.destroy();
     });
 });

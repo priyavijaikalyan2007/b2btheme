@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **173 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **120 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3057,7 +3057,7 @@ offered as the evidence for it.
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
-  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **54** | 32 were never members, see below |
+  | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
 
   **THIRTY-TWO OF THE EIGHTY-FIVE WERE NEVER MEMBERS, AND ONE MEMBER
   WAS BEING HIDDEN (2026-10-21).** Before asking the title question of
@@ -3167,8 +3167,7 @@ offered as the evidence for it.
   second reader of the same forms would be a second thing to keep
   correct (DEBT-DOC-1).
 
-  **THE `existence` BUCKET: 85 -> 42, AND THE TITLE QUESTION HAS
-  FOUND A PRODUCT DEFECT IN EVERY FILE SO FAR.** There is no regex
+  **THE `existence` BUCKET IS EMPTY: 85 -> 0.** There is no regex
   split for this family, and inventing one would repeat ADR-215.
   `ReturnsPicker` and `ReturnsCurrentValue` differ in what they
   claim and not in how they are spelled, so a pattern that sorted
@@ -3217,6 +3216,24 @@ offered as the evidence for it.
   A stale `/** Fallback when marked is not available — plain text
   only. */` was still sitting above the window registration, left
   behind when ADR-202 deleted the function it documented.
+
+  | `docviewer :: contentRendersMarkdown` | the markdown was rendered | `textContent` is truthy — true of the page title alone | reinstating FALLBACK-13's exact shape (`article.textContent = md`) turns it red, which the old one would not have |
+  | `docviewer :: searchToc_FiltersEntries` | the entries are filtered, in a comment | the handle is defined | — |
+  | `formdialog :: withDefaultSize_UsesMdSize` | the `md` size | `querySelector(...).toBeDefined()` — **the block this ceiling GAINED** when the exemption narrowed | — |
+  | `formdialog :: close_ThenShow_WorksNormally` | a reopen works | `getElement()` is defined, true throughout | `show()` returns early while `mounted` is set, so a close that failed to unmount made the second show a no-op |
+  | `symbolpicker :: Search_TypeQuery_FiltersGridItems` | the grid is filtered, in a comment | a NodeList is defined — **empty, never null** | — |
+  | `symbolpicker :: getValue_AfterCellClick_ReturnsCode` | the code | truthy — true of every code in the fixture | the SECOND cell is clicked now, so it cannot hold for a picker that reports its first item |
+  | `markdowneditor` ×2 | a value kept, a value set | defined, under the comment "Value roundtrip depends on Vditor mock" | MockVditor in the same file does exactly the roundtrip; the dependency was the test's own |
+  | `cronpicker :: Options_CustomPresets_UsesProvidedPresets` | the custom presets | a NodeList is defined | held for a picker that rendered the BUILT-IN presets |
+  | `fileexplorer :: Constructor_MultiSelectTrue_MapToSelectableMulti` | the mapping to `selectable: "multi"` | the element is defined | the constructor writes it back onto the caller's options object, so the mapping is readable; a second block now pins the `&& !options.selectable` half |
+  | `smarttextinput :: withoutOptions_CreatesWithDefaults` | the defaults | `toBeDefined()` on a `new` expression | `DEFAULT_DEBOUNCE_MS` is 150, so the query fires at 150ms and not at 100 |
+  | `diagramengine-core` ×3 | two argument forms, an element | the handle, and `el.tagName` — defined on every element there is | an engine mounted on the document body satisfied all three |
+  | `diagramengine-embed :: addObject with device shape type works` | a device shape works | the object is defined | **the round trip alone proves nothing** — the engine stores whatever shape string it is handed, so asserting it comes back passed with the stencil deleted |
+  | `diagramengine-embed :: loadStencilPack(...) creates container` | a CONTAINER | the object is defined | **see DEBT-DE-1** |
+
+  **The two runtime blocks and the AppLauncher one are described
+  above.** Every rewrite is mutation-proven against the line it
+  depends on.
 
   **ALSO FOUND, ON NO LIST: `spinemap :: onNodeClick_CalledOnNodeClick`
   had three independent mismatches in one block.** It queried
@@ -4017,6 +4034,44 @@ limits the design knowingly accepts, not defects in shipped code.
 - [x] **DEBT-VR-9** *(resolved 2026-10-08, ADR-155)* — `scripts/check-series-palettes.py`, structure check `[15]`. Simulates protanopia, deuteranopia and tritanopia (Viénot-Brettel-Mollon) and compares every pair as a CIE76 ΔE in Lab. **Measured, nothing was broken**: all five palettes clear ΔE 10 under every deficiency, tightest `activityfeed` at 11.2 — the gate keeps that true rather than fixing something, which is the cheapest moment to add one. Proven by mutation with `#8a843c`, ΔE 72.3 from `#dc3545` normally and **0.3** under deuteranopia, i.e. invisible to anyone with typical vision. Does not discharge WCAG 1.4.1: colour must still not be the only channel.
 
 ## ACCEPTED DEBT — TenantSwitcher rename (2026-10-08, ADR-154)
+
+- [ ] **DEBT-DE-1** **DiagramEngine's spatial containment feature is
+  unreachable: no stencil in the repository sets `isContainer`
+  (found 2026-10-21, ADR-216).**
+
+  `ShapeDefinition.isContainer` is declared in `src/types.ts` and read
+  in three places in `src/engine.ts` — `isContainerHit`,
+  `isContainerObject` and the move-children path — and **nothing
+  anywhere sets it to `true`.** A repository-wide grep returns the
+  declaration and those three reads.
+
+  So `assignContainment` can never find a container,
+  `updateContainment` can never assign a `groupId`, and
+  `getContainedObjects` only ever returns objects whose `groupId`
+  something else wrote. Dragging a shape onto a browser frame,
+  a phone frame or a page frame does nothing.
+
+  **Two tests cover it and neither could see it.**
+  `getContainedObjects returns empty for non-container` passes
+  because EVERY shape is a non-container, and
+  `loadStencilPack('devices') + addObject creates container`
+  asserted `expect(obj).toBeDefined()` under a title naming the one
+  thing that does not happen.
+
+  **The machinery is correct.** Adding `isContainer: true` to the
+  `browser-chrome` stencil makes the drop work and turns the pinned
+  block red on the first run. The gap is data, not logic.
+
+  The second block is renamed `...creates no container yet` and
+  asserts the measured truth, so the absence is visible and the test
+  goes red the day a stencil declares itself — which is when the
+  claim should be rewritten into the one the old title promised.
+
+  **The fix is a product decision this entry does not make:** which
+  device and page-frame shapes are containers, and what their
+  content areas are. `resolveContentArea` already falls back to the
+  full bounds when a shape defines no `contentArea`, so the minimum
+  change is one flag per shape.
 
 - [ ] **DEBT-TS-1** Two CDN paths serve the same component. `/components/workspaceswitcher/` is a byte-identical copy of `/components/tenantswitcher/`, produced by the `copy:compat` build step, and the deprecated API surface (`createWorkspaceSwitcher`, `WorkspaceSwitcherOptions`, `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace`) forwards to the current one. The original note said **all of it comes out one release after 2026-10-08**, and `createWorkspaceSwitcher` warns on every call so the consuming app's console would show whether anyone was still on it.
 

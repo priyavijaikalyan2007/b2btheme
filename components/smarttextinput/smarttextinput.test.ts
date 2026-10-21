@@ -98,11 +98,49 @@ describe("createSmartTextInput", () =>
         engine.destroy();
     });
 
+    // "CreatesWithDefaults" names the defaults, and
+    // `toBeDefined()` on a `new` expression holds for every one of
+    // them. `queryDebounceMs` is the default a user can feel:
+    // DEFAULT_DEBOUNCE_MS is 150, so a query fires at 150ms and not
+    // at 100. The same instrument `setOptions :: updatesEngineOptions`
+    // uses below, pointed at the value nobody passed.
     test("withoutOptions_CreatesWithDefaults", () =>
     {
+        vi.useFakeTimers();
+
+        const seen: string[] = [];
+        const el = document.createElement("input");
+        document.body.appendChild(el);
+
         const engine = createSmartTextInput();
-        expect(engine).toBeDefined();
+        engine.setOptions({ onTriggerQuery: (e) => { seen.push(e.queryText); } });
+        engine.register({
+            trigger: "@",
+            name: "people",
+            dataSource: { query: async () => [] },
+        });
+        engine.attach(el);
+
+        const type = (value: string): void =>
+        {
+            el.value = value;
+            el.selectionStart = value.length;
+            el.selectionEnd = value.length;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+        };
+
+        type("@");
+        type("@ab");
+
+        vi.advanceTimersByTime(100);
+        expect(seen).toEqual([]);
+
+        vi.advanceTimersByTime(60);
+        expect(seen).toEqual(["ab"]);
+
         engine.destroy();
+        el.remove();
+        vi.useRealTimers();
     });
 });
 

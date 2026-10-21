@@ -336,6 +336,10 @@ describe("DiagramEngine — Device Stencils", () =>
         }
     });
 
+    // "works" is what `toBeDefined()` already says. The claim worth
+    // making is that the device shape SURVIVED -- that the engine
+    // kept `browser-chrome` rather than substituting a rectangle
+    // for a shape its stencil pack had not registered.
     test("addObject with device shape type works", () =>
     {
         engine.loadStencilPack("devices");
@@ -348,7 +352,17 @@ describe("DiagramEngine — Device Stencils", () =>
             }
         });
 
-        expect(obj).toBeDefined();
+        // THE ROUND TRIP ALONE PROVES NOTHING: the engine stores
+        // whatever shape string it is handed, so asserting it comes
+        // back passed with the stencil deleted. What the title
+        // claims is that the DEVICE shape works, which means the
+        // pack registered it and the object resolves to that
+        // definition rather than to an unknown name.
+        expect(obj.presentation.shape).toBe("browser-chrome");
+        expect(engine.getShapeDef("browser-chrome")).toMatchObject({
+            type: "browser-chrome",
+            label: "Browser (Chrome)",
+        });
     });
 });
 
@@ -656,19 +670,43 @@ describe("DiagramEngine — Spatial Containment", () =>
         expect(contained).toEqual([]);
     });
 
-    test("loadStencilPack('devices') + addObject creates container", () =>
+    // (CRITICAL) THE TITLE SAYS "creates container" AND NOTHING IN
+    // THIS ENGINE IS A CONTAINER. `isContainer` is declared on the
+    // shape definition and read in three places -- `isContainerHit`,
+    // `isContainerObject` and the move-children path -- and NO
+    // STENCIL IN THE REPOSITORY SETS IT. So `assignContainment` can
+    // never find a container, `getContainedObjects` only ever
+    // returns objects whose `groupId` something else wrote, and the
+    // sibling above passes because EVERY shape is a non-container.
+    //
+    // The whole spatial-containment feature is unreachable, and
+    // `toBeDefined()` is what let a block named for it pass. This
+    // pins the measured truth so the feature's absence is visible,
+    // and it goes red the day a stencil declares itself a
+    // container -- which is when the claim should be rewritten
+    // into the one the title promises. DEBT-DE-1.
+    test("loadStencilPack('devices') + addObject creates no container yet", () =>
     {
         engine.loadStencilPack("devices");
 
-        const obj = engine.addObject({
+        engine.addObject({
             id: "browser1",
             presentation: {
                 shape: "browser-chrome",
                 bounds: { x: 0, y: 0, width: 800, height: 600 },
             }
         });
+        engine.addObject({
+            id: "inner",
+            presentation: {
+                shape: "rectangle",
+                bounds: { x: 300, y: 300, width: 50, height: 50 },
+            }
+        });
 
-        expect(obj).toBeDefined();
+        engine.updateContainment(["inner"]);
+
+        expect(engine.getContainedObjects("browser1")).toEqual([]);
     });
 });
 
