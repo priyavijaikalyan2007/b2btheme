@@ -121,7 +121,7 @@ GridLayout implements the standard layout container contract. Any component with
 
 ```js
 // Place gauges in a 2x2 grid
-var grid = new GridLayout({
+var grid = createGridLayout({
     columns: 2,
     gap: 16,
     aspectRatio: 1,
@@ -134,7 +134,6 @@ grid.show(document.getElementById("dashboard"));
 
 When loaded via `<script>` tag:
 
-- `window.GridLayout` -- GridLayout class
 - `window.createGridLayout` -- Factory function (creates and shows)
 
 ## CSS Classes

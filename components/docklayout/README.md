@@ -36,20 +36,20 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 </div>
 
 <script>
-    var toolbar = new Toolbar({
+    var toolbar = createToolbar({
         label: "My App",
         mode: "docked",
         dockPosition: "top",
         regions: [{ id: "main", tools: [{ id: "save", label: "Save", icon: "bi-floppy" }] }]
     });
 
-    var sidebar = new Sidebar({
+    var sidebar = createSidebar({
         title: "Explorer",
         dockPosition: "left",
         width: 260
     });
 
-    var statusBar = new StatusBar({
+    var statusBar = createStatusBar({
         size: "sm",
         regions: [{ id: "status", label: "Ready" }]
     });
@@ -150,7 +150,7 @@ Components that support contained mode:
 
 ```js
 // Add a bottom panel later
-var chatPanel = new TabbedPanel({
+var chatPanel = createTabbedPanel({
     dockPosition: "bottom",
     height: 250,
     tabs: [{ id: "chat", title: "Chat", icon: "bi-chat" }]
@@ -178,7 +178,6 @@ Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in
 
 When loaded via `<script>` tag:
 
-- `window.DockLayout` — DockLayout class
 - `window.createDockLayout` — Factory function (creates and shows)
 
 ## CSS Classes

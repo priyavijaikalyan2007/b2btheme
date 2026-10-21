@@ -767,9 +767,9 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 <script src="dist/components/docklayout/docklayout.js"></script>
 <script>
     var layout = createDockLayout({
-        toolbar: new Toolbar({ label: "My App", mode: "docked", dockPosition: "top", regions: [] }),
-        leftSidebar: new Sidebar({ title: "Explorer", dockPosition: "left", width: 260 }),
-        statusBar: new StatusBar({ size: "sm", regions: [{ id: "status", label: "Ready" }] }),
+        toolbar: createToolbar({ label: "My App", mode: "docked", dockPosition: "top", regions: [] }),
+        leftSidebar: createSidebar({ title: "Explorer", dockPosition: "left", width: 260 }),
+        statusBar: createStatusBar({ size: "sm", regions: [{ id: "status", label: "Ready" }] }),
         content: document.getElementById("my-content")
     });
 </script>

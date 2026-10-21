@@ -166,7 +166,6 @@ Creates the FileUpload DOM but does not attach to the page. Call `show()` to att
 ### Global Exports
 
 ```
-window.FileUpload
 window.createFileUpload
 ```
 

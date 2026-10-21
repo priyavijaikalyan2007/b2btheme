@@ -234,7 +234,6 @@ createConversation(options?, container?)    // Create, show, and return
 ### Global Exports
 
 ```
-window.Conversation
 window.createConversation
 ```
 

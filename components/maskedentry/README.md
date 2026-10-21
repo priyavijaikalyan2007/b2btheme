@@ -80,7 +80,6 @@ createMaskedEntry(containerId, options)  // Create, show, and return
 ### Global Exports
 
 ```
-window.MaskedEntry
 window.createMaskedEntry
 ```
 

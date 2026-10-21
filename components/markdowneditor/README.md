@@ -305,6 +305,5 @@ Via Vditor, the editor supports:
 
 | Global | Type |
 |--------|------|
-| `window.MarkdownEditor` | `class` |
 | `window.createMarkdownEditor` | `function(containerId, options): MarkdownEditor` |
 | `window.showMarkdownEditorModal` | `function(options): MarkdownEditor` |

@@ -98,7 +98,6 @@ createGradientPicker(containerId, options?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.GradientPicker
 window.createGradientPicker
 ```
 

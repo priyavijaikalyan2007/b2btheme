@@ -144,7 +144,6 @@ createFloatingToolbar(options) // Shorthand for floating mode
 ### Global Exports
 
 ```
-window.Toolbar
 window.createToolbar
 window.createDockedToolbar
 window.createFloatingToolbar

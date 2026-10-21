@@ -93,7 +93,6 @@ direction: "horizontal", gap: 8
 
 When loaded via `<script>` tag:
 
-- `window.FlowLayout` — FlowLayout class
 - `window.createFlowLayout` — Factory function (creates and shows)
 
 ## CSS Classes

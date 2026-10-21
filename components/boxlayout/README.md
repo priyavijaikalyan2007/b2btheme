@@ -117,7 +117,7 @@ BoxLayout implements the standard layout container contract. Any component with 
 
 ```js
 // Nest a BoxLayout inside a BorderLayout
-var innerBox = new BoxLayout({
+var innerBox = createBoxLayout({
     direction: "horizontal",
     gap: 8,
     children: [
@@ -134,7 +134,6 @@ borderLayout.setNorth(innerBox);
 
 When loaded via `<script>` tag:
 
-- `window.BoxLayout` — BoxLayout class
 - `window.createBoxLayout` — Factory function (creates and shows)
 
 ## CSS Classes

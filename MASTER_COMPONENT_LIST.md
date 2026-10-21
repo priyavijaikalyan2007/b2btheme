@@ -1137,7 +1137,7 @@ Each view is a rendering strategy over the same underlying tree.
 
 ## 20.5✅RichTextInput (Lightweight Rich Text)
 
-**Description**: A lightweight `contenteditable`-based rich text input for per-row editing contexts — todo items, checklist entries, inline detail fields. Uses `document.execCommand` for bold/italic/strikethrough (deprecated but universally supported), manual DOM manipulation only for code wrapping and task list toggling. HTML-primary serialization with optional markdown output via DOM walker. Optional STIE composition via `window.SmartTextInputEngine`. Inline toolbar as lightweight custom div (not the full Toolbar component). Shared singleton `document.selectionchange` listener across instances. Paste sanitization via DOMParser with tag allowlist.
+**Description**: A lightweight `contenteditable`-based rich text input for per-row editing contexts — todo items, checklist entries, inline detail fields. Uses `document.execCommand` for bold/italic/strikethrough (deprecated but universally supported), manual DOM manipulation only for code wrapping and task list toggling. HTML-primary serialization with optional markdown output via DOM walker. Optional STIE composition via `window.createSmartTextInput`, which is what the code reads (PAT-1). Inline toolbar as lightweight custom div (not the full Toolbar component). Shared singleton `document.selectionchange` listener across instances. Paste sanitization via DOMParser with tag allowlist.
 
 **References**: Notion inline blocks, Linear comment editor, Slack message composer, GitHub issue body editor.
 

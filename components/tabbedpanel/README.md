@@ -160,8 +160,6 @@ createFloatingTabbedPanel(options, container?) // Shorthand for floating mode
 ### Global Exports
 
 ```
-window.TabbedPanel
-window.TabbedPanelManager
 window.createTabbedPanel
 window.createDockedTabbedPanel
 window.createFloatingTabbedPanel

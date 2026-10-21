@@ -581,6 +581,32 @@ if [ "$DEMO_CLASS_USES" -eq 0 ]; then
 fi
 echo ""
 
+# ── 26. No document claims a class is on window ──
+#
+# PAT-1b. 28 README lines said `window.TreeView — TreeView class` and
+# similar, and the published API reference is collated from those
+# READMEs, so static.knobby.io/docs told consumers to use a global that
+# had been removed. ADR (decisions.yaml) names the published README as
+# the source of truth for an API name, which is exactly why a wrong one
+# is worse than none. Check [19] grades names the docs publish against
+# the source; it passed, because `window.TreeView` is not a name it
+# reads. This check reads the claim instead.
+echo "[26] No document claims a component class on window (PAT-1)"
+DOC_CLASS_CLAIMS=0
+for cls in $COMPONENT_CLASSES; do
+    HITS=$(grep -rlE "window\.${cls}\b|window\[[\"']${cls}[\"']\]" \
+        components/*/README.md COMPONENTS.md KEYBOARD.md \
+        MASTER_COMPONENT_LIST.md 2>/dev/null | tr '\n' ' ')
+    if [ -n "$HITS" ]; then
+        fail "documentation claims window.${cls}: $HITS"
+        DOC_CLASS_CLAIMS=$((DOC_CLASS_CLAIMS + 1))
+    fi
+done
+if [ "$DOC_CLASS_CLAIMS" -eq 0 ]; then
+    pass "No document names a class global the library does not register"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

@@ -217,7 +217,6 @@ createTimeline(options)    // Create, show, and return
 ### Global Exports
 
 ```
-window.Timeline
 window.createTimeline
 ```
 

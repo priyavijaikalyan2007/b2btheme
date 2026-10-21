@@ -70,7 +70,6 @@ A centered placeholder component shown when a view, list, table, or container ha
 ### Global Exports
 
 ```
-window.EmptyState
 window.createEmptyState
 ```
 

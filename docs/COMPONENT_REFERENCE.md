@@ -617,7 +617,7 @@ AnchorLayout implements the standard layout container contract. Any component wi
 ```js
 // Pin a toolbar at the top, a status bar at the bottom,
 // and fill the center with a content panel
-var layout = new AnchorLayout({
+var layout = createAnchorLayout({
     height: "100vh",
     width: "100%",
     children: [
@@ -632,7 +632,6 @@ var layout = new AnchorLayout({
 
 When loaded via `<script>` tag:
 
-- `window.AnchorLayout` — AnchorLayout class
 - `window.createAnchorLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -1614,7 +1613,7 @@ interface BorderLayoutState {
 // BorderLayout as an application shell
 var appShell = createBorderLayout({
     north: toolbar,
-    west: new BorderLayout({
+    west: createBorderLayout({
         north: searchBox,
         center: treeView,
         south: userProfile,
@@ -1632,7 +1631,6 @@ var appShell = createBorderLayout({
 
 When loaded via `<script>` tag:
 
-- `window.BorderLayout` — BorderLayout class
 - `window.createBorderLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -1769,7 +1767,7 @@ BoxLayout implements the standard layout container contract. Any component with 
 
 ```js
 // Nest a BoxLayout inside a BorderLayout
-var innerBox = new BoxLayout({
+var innerBox = createBoxLayout({
     direction: "horizontal",
     gap: 8,
     children: [
@@ -1786,7 +1784,6 @@ borderLayout.setNorth(innerBox);
 
 When loaded via `<script>` tag:
 
-- `window.BoxLayout` — BoxLayout class
 - `window.createBoxLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -2106,7 +2103,6 @@ All transitions respect `prefers-reduced-motion: reduce` — when enabled, trans
 
 When loaded via `<script>` tag:
 
-- `window.CardLayout` — CardLayout class
 - `window.createCardLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -2724,7 +2720,6 @@ createColorPicker(containerId, options?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.ColorPicker
 window.createColorPicker
 ```
 
@@ -3788,7 +3783,6 @@ createConversation(options?, container?)    // Create, show, and return
 ### Global Exports
 
 ```
-window.Conversation
 window.createConversation
 ```
 
@@ -5065,20 +5059,20 @@ A CSS Grid-based layout coordinator that arranges Toolbar, Sidebar, TabbedPanel,
 </div>
 
 <script>
-    var toolbar = new Toolbar({
+    var toolbar = createToolbar({
         label: "My App",
         mode: "docked",
         dockPosition: "top",
         regions: [{ id: "main", tools: [{ id: "save", label: "Save", icon: "bi-floppy" }] }]
     });
 
-    var sidebar = new Sidebar({
+    var sidebar = createSidebar({
         title: "Explorer",
         dockPosition: "left",
         width: 260
     });
 
-    var statusBar = new StatusBar({
+    var statusBar = createStatusBar({
         size: "sm",
         regions: [{ id: "status", label: "Ready" }]
     });
@@ -5179,7 +5173,7 @@ Components that support contained mode:
 
 ```js
 // Add a bottom panel later
-var chatPanel = new TabbedPanel({
+var chatPanel = createTabbedPanel({
     dockPosition: "bottom",
     height: 250,
     tabs: [{ id: "chat", title: "Chat", icon: "bi-chat" }]
@@ -5207,7 +5201,6 @@ Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in
 
 When loaded via `<script>` tag:
 
-- `window.DockLayout` — DockLayout class
 - `window.createDockLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -6089,7 +6082,6 @@ A centered placeholder component shown when a view, list, table, or container ha
 ### Global Exports
 
 ```
-window.EmptyState
 window.createEmptyState
 ```
 
@@ -6933,7 +6925,6 @@ Creates the FileUpload DOM but does not attach to the page. Call `show()` to att
 ### Global Exports
 
 ```
-window.FileUpload
 window.createFileUpload
 ```
 
@@ -7121,7 +7112,7 @@ FlexGridLayout implements the standard layout container contract. Any component 
 
 ```js
 // A dashboard layout with mixed track sizes
-var dashboard = new FlexGridLayout({
+var dashboard = createFlexGridLayout({
     columns: ["240px", "1fr", "1fr"],
     rows: ["48px", "1fr", "32px"],
     gap: 4,
@@ -7139,7 +7130,6 @@ var dashboard = new FlexGridLayout({
 
 When loaded via `<script>` tag:
 
-- `window.FlexGridLayout` -- FlexGridLayout class
 - `window.createFlexGridLayout` -- Factory function (creates and shows)
 
 ## CSS Classes
@@ -7262,7 +7252,6 @@ direction: "horizontal", gap: 8
 
 When loaded via `<script>` tag:
 
-- `window.FlowLayout` — FlowLayout class
 - `window.createFlowLayout` — Factory function (creates and shows)
 
 ## CSS Classes
@@ -7983,7 +7972,6 @@ createBarGauge(options, container?)     // Shorthand for bar shape
 ### Global Exports
 
 ```
-window.Gauge
 window.createGauge
 window.createTileGauge
 window.createRingGauge
@@ -8149,7 +8137,6 @@ createGradientPicker(containerId, options?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.GradientPicker
 window.createGradientPicker
 ```
 
@@ -9011,7 +8998,7 @@ GridLayout implements the standard layout container contract. Any component with
 
 ```js
 // Place gauges in a 2x2 grid
-var grid = new GridLayout({
+var grid = createGridLayout({
     columns: 2,
     gap: 16,
     aspectRatio: 1,
@@ -9024,7 +9011,6 @@ grid.show(document.getElementById("dashboard"));
 
 When loaded via `<script>` tag:
 
-- `window.GridLayout` -- GridLayout class
 - `window.createGridLayout` -- Factory function (creates and shows)
 
 ## CSS Classes
@@ -10029,7 +10015,7 @@ LayerLayout implements the standard layout container contract. Any component wit
 
 ```js
 // Overlay a loading spinner on top of a content area
-var overlay = new LayerLayout({
+var overlay = createLayerLayout({
     sizing: "fixed",
     width: "100%",
     height: "100%",
@@ -10046,7 +10032,6 @@ overlay.show(document.getElementById("main"));
 
 When loaded via `<script>` tag:
 
-- `window.LayerLayout` -- LayerLayout class
 - `window.createLayerLayout` -- Factory function (creates and shows)
 
 ## CSS Classes
@@ -10741,7 +10726,6 @@ createLogConsole(options?)  // Create and return
 ### Global Exports
 
 ```
-window.LogConsole
 window.createLogConsole
 ```
 
@@ -11096,7 +11080,6 @@ The `containerId` parameter serves as the logical owner identifier. The lens ele
 ## Global Exports
 
 ```javascript
-window.Magnifier;          // Class constructor
 window.createMagnifier;    // Factory function
 ```
 
@@ -11549,7 +11532,6 @@ Via Vditor, the editor supports:
 
 | Global | Type |
 |--------|------|
-| `window.MarkdownEditor` | `class` |
 | `window.createMarkdownEditor` | `function(containerId, options): MarkdownEditor` |
 | `window.showMarkdownEditorModal` | `function(options): MarkdownEditor` |
 
@@ -12123,7 +12105,6 @@ createMaskedEntry(containerId, options)  // Create, show, and return
 ### Global Exports
 
 ```
-window.MaskedEntry
 window.createMaskedEntry
 ```
 
@@ -14900,7 +14881,7 @@ The `custom` control type embeds existing components inside ribbon groups:
     size: "large",
     element: function() {
         var div = document.createElement("div");
-        var ws = new TenantSwitcher({ workspaces: [...], size: "sm" });
+        var ws = createTenantSwitcher({ workspaces: [...], size: "sm" });
         ws.show(div);
         return div;
     }
@@ -15381,10 +15362,12 @@ A canvas-based calibrated ruler with cursor tracking, multiple unit systems, and
 |----------|---------|-------------|
 | `createRuler(containerId, options?)` | `Ruler` | Create a ruler inside the container |
 
-The `Ruler` class is also available globally for direct instantiation:
+The factory is the only entry point a `<script>` tag gets. The `Ruler`
+class is exported from the module for callers that import it, and it is
+no longer registered on `window` (PAT-1):
 
 ```javascript
-var ruler = new Ruler("container-id", { unit: "cm" });
+var ruler = createRuler("container-id", { unit: "cm" });
 ```
 
 ### RulerOptions
@@ -16444,7 +16427,6 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 ### Global Exports
 
 ```
-window.SkeletonLoader
 window.createSkeletonLoader
 ```
 
@@ -16850,7 +16832,6 @@ The host popover should implement the WAI-ARIA combobox pattern (`role="combobox
 
 | Global | Type |
 |--------|------|
-| `window.SmartTextInputEngine` | `class` |
 | `window.createSmartTextInput` | `function(options?): SmartTextInputEngine` |
 
 
@@ -17412,7 +17393,6 @@ createSplitLayout(options, containerId?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.SplitLayout
 window.createSplitLayout
 ```
 
@@ -17468,7 +17448,7 @@ var outer = createSplitLayout({
     ]
 }, "ide-container");
 
-var inner = new SplitLayout({
+var inner = createSplitLayout({
     orientation: "vertical",
     panes: [
         { id: "editor", initialSize: "70%", minSize: 200 },
@@ -17476,8 +17456,10 @@ var inner = new SplitLayout({
     ]
 });
 
+// `createSplitLayout` with no container id mounts into document.body,
+// and `setPaneContent` then moves that element into the pane. There is
+// no second `show()`: the node is already in the document.
 outer.setPaneContent("main", inner.getElement());
-inner.show();
 ```
 
 See `specs/splitlayout.prd.md` for the complete specification.
@@ -18673,8 +18655,6 @@ createFloatingTabbedPanel(options, container?) // Shorthand for floating mode
 ### Global Exports
 
 ```
-window.TabbedPanel
-window.TabbedPanelManager
 window.createTabbedPanel
 window.createDockedTabbedPanel
 window.createFloatingTabbedPanel
@@ -19471,7 +19451,6 @@ createTimeline(options)    // Create, show, and return
 ### Global Exports
 
 ```
-window.Timeline
 window.createTimeline
 ```
 
@@ -20035,7 +20014,6 @@ createFloatingToolbar(options) // Shorthand for floating mode
 ### Global Exports
 
 ```
-window.Toolbar
 window.createToolbar
 window.createDockedToolbar
 window.createFloatingToolbar
@@ -20686,7 +20664,6 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 
 When loaded via `<script>` tag:
 
-- `window.TreeGrid` — TreeGrid class
 - `window.createTreeGrid` — Factory function
 
 ## Performance
@@ -21145,7 +21122,6 @@ Setting `showDefaultGroupActions: true` opts the TreeView into the [CategorizedD
 
 When loaded via `<script>` tag:
 
-- `window.TreeView` — TreeView class
 - `window.createTreeView` — Factory function
 
 ## Keyboard Navigation

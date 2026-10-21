@@ -178,7 +178,7 @@ AnchorLayout implements the standard layout container contract. Any component wi
 ```js
 // Pin a toolbar at the top, a status bar at the bottom,
 // and fill the center with a content panel
-var layout = new AnchorLayout({
+var layout = createAnchorLayout({
     height: "100vh",
     width: "100%",
     children: [
@@ -193,7 +193,6 @@ var layout = new AnchorLayout({
 
 When loaded via `<script>` tag:
 
-- `window.AnchorLayout` — AnchorLayout class
 - `window.createAnchorLayout` — Factory function (creates and shows)
 
 ## CSS Classes

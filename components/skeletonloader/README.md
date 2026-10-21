@@ -60,7 +60,6 @@ Animated placeholder component that mimics content layout during loading. CSS sh
 ### Global Exports
 
 ```
-window.SkeletonLoader
 window.createSkeletonLoader
 ```
 

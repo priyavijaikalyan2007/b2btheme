@@ -118,7 +118,6 @@ createBarGauge(options, container?)     // Shorthand for bar shape
 ### Global Exports
 
 ```
-window.Gauge
 window.createGauge
 window.createTileGauge
 window.createRingGauge

@@ -132,7 +132,7 @@ FlexGridLayout implements the standard layout container contract. Any component 
 
 ```js
 // A dashboard layout with mixed track sizes
-var dashboard = new FlexGridLayout({
+var dashboard = createFlexGridLayout({
     columns: ["240px", "1fr", "1fr"],
     rows: ["48px", "1fr", "32px"],
     gap: 4,
@@ -150,7 +150,6 @@ var dashboard = new FlexGridLayout({
 
 When loaded via `<script>` tag:
 
-- `window.FlexGridLayout` -- FlexGridLayout class
 - `window.createFlexGridLayout` -- Factory function (creates and shows)
 
 ## CSS Classes

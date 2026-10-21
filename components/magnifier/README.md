@@ -85,7 +85,6 @@ The `containerId` parameter serves as the logical owner identifier. The lens ele
 ## Global Exports
 
 ```javascript
-window.Magnifier;          // Class constructor
 window.createMagnifier;    // Factory function
 ```
 

@@ -216,7 +216,6 @@ A highly configurable tree-grid hybrid component for displaying hierarchical dat
 
 When loaded via `<script>` tag:
 
-- `window.TreeGrid` — TreeGrid class
 - `window.createTreeGrid` — Factory function
 
 ## Performance

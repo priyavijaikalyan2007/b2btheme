@@ -86,7 +86,6 @@ createColorPicker(containerId, options?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.ColorPicker
 window.createColorPicker
 ```
 

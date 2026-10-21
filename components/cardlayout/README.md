@@ -136,7 +136,6 @@ All transitions respect `prefers-reduced-motion: reduce` — when enabled, trans
 
 When loaded via `<script>` tag:
 
-- `window.CardLayout` — CardLayout class
 - `window.createCardLayout` — Factory function (creates and shows)
 
 ## CSS Classes

@@ -96,7 +96,6 @@ createSplitLayout(options, containerId?)  // Create, show, and return
 ### Global Exports
 
 ```
-window.SplitLayout
 window.createSplitLayout
 ```
 
@@ -152,7 +151,7 @@ var outer = createSplitLayout({
     ]
 }, "ide-container");
 
-var inner = new SplitLayout({
+var inner = createSplitLayout({
     orientation: "vertical",
     panes: [
         { id: "editor", initialSize: "70%", minSize: 200 },
@@ -160,8 +159,10 @@ var inner = new SplitLayout({
     ]
 });
 
+// `createSplitLayout` with no container id mounts into document.body,
+// and `setPaneContent` then moves that element into the pane. There is
+// no second `show()`: the node is already in the document.
 outer.setPaneContent("main", inner.getElement());
-inner.show();
 ```
 
 See `specs/splitlayout.prd.md` for the complete specification.

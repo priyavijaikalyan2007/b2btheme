@@ -134,7 +134,7 @@ LayerLayout implements the standard layout container contract. Any component wit
 
 ```js
 // Overlay a loading spinner on top of a content area
-var overlay = new LayerLayout({
+var overlay = createLayerLayout({
     sizing: "fixed",
     width: "100%",
     height: "100%",
@@ -151,7 +151,6 @@ overlay.show(document.getElementById("main"));
 
 When loaded via `<script>` tag:
 
-- `window.LayerLayout` -- LayerLayout class
 - `window.createLayerLayout` -- Factory function (creates and shows)
 
 ## CSS Classes

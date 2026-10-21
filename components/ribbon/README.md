@@ -421,7 +421,7 @@ The `custom` control type embeds existing components inside ribbon groups:
     size: "large",
     element: function() {
         var div = document.createElement("div");
-        var ws = new TenantSwitcher({ workspaces: [...], size: "sm" });
+        var ws = createTenantSwitcher({ workspaces: [...], size: "sm" });
         ws.show(div);
         return div;
     }

@@ -85,10 +85,12 @@ A canvas-based calibrated ruler with cursor tracking, multiple unit systems, and
 |----------|---------|-------------|
 | `createRuler(containerId, options?)` | `Ruler` | Create a ruler inside the container |
 
-The `Ruler` class is also available globally for direct instantiation:
+The factory is the only entry point a `<script>` tag gets. The `Ruler`
+class is exported from the module for callers that import it, and it is
+no longer registered on `window` (PAT-1):
 
 ```javascript
-var ruler = new Ruler("container-id", { unit: "cm" });
+var ruler = createRuler("container-id", { unit: "cm" });
 ```
 
 ### RulerOptions

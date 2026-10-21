@@ -155,7 +155,6 @@ Setting `showDefaultGroupActions: true` opts the TreeView into the [CategorizedD
 
 When loaded via `<script>` tag:
 
-- `window.TreeView` — TreeView class
 - `window.createTreeView` — Factory function
 
 ## Keyboard Navigation

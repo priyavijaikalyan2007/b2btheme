@@ -128,7 +128,7 @@ interface BorderLayoutState {
 // BorderLayout as an application shell
 var appShell = createBorderLayout({
     north: toolbar,
-    west: new BorderLayout({
+    west: createBorderLayout({
         north: searchBox,
         center: treeView,
         south: userProfile,
@@ -146,7 +146,6 @@ var appShell = createBorderLayout({
 
 When loaded via `<script>` tag:
 
-- `window.BorderLayout` — BorderLayout class
 - `window.createBorderLayout` — Factory function (creates and shows)
 
 ## CSS Classes

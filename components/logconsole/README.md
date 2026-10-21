@@ -134,7 +134,6 @@ createLogConsole(options?)  // Create and return
 ### Global Exports
 
 ```
-window.LogConsole
 window.createLogConsole
 ```
 

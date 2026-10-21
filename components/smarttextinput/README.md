@@ -257,5 +257,4 @@ The host popover should implement the WAI-ARIA combobox pattern (`role="combobox
 
 | Global | Type |
 |--------|------|
-| `window.SmartTextInputEngine` | `class` |
 | `window.createSmartTextInput` | `function(options?): SmartTextInputEngine` |
