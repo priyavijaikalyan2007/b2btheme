@@ -18,12 +18,7 @@
 const BASIC_LOG_PREFIX = "[BasicShapes]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logBasicDebug,
-    info: logBasicInfo,
-    warn: logBasicWarn,
-    error: logBasicError,
-} = makeLogger(BASIC_LOG_PREFIX);
+const { info: logBasicInfo } = makeLogger(BASIC_LOG_PREFIX);
 
 /** Category identifier for all basic shapes in the stencil palette. */
 const BASIC_CATEGORY = "basic";

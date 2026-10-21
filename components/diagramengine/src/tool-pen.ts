@@ -59,7 +59,7 @@ export interface EngineForPenTool extends EngineForTools
 const PEN_LOG_PREFIX = "[PenTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logPenDebug, info: logPenInfo, warn: logPenWarn, error: logPenError } = makeLogger(PEN_LOG_PREFIX);
+const { debug: logPenDebug, info: logPenInfo } = makeLogger(PEN_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";

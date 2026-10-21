@@ -19,12 +19,7 @@
 const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logExtendedDebug,
-    info: logExtendedInfo,
-    warn: logExtendedWarn,
-    error: logExtendedError,
-} = makeLogger(EXTENDED_LOG_PREFIX);
+const { info: logExtendedInfo } = makeLogger(EXTENDED_LOG_PREFIX);
 
 /** Category identifier for extended shapes in the stencil palette. */
 const EXTENDED_CATEGORY = "extended";

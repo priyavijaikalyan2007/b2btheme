@@ -9,7 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-import { createDiagramEngine } from "./diagramengine";
+import { createDiagramEngine, SelectTool } from "./diagramengine";
 
 // ============================================================================
 // HELPERS
@@ -1170,5 +1170,65 @@ describe("DiagramEngine — Page Frames", () =>
         engine.scrollToPageFrame("no-such-frame");
 
         expect(engine.getViewport()).toEqual(before);
+    });
+});
+
+// ============================================================================
+// ROTATION IS RELATIVE TO THE GRAB — UNUSED-1
+// ============================================================================
+
+describe("SelectTool rotation", () =>
+{
+    // `handleRotateDrag` set the ABSOLUTE angle from the object
+    // centre to the cursor, and `hitTestRotationHandle` places the
+    // handle due north of the UNROTATED bounds -- so grabbing the
+    // handle of an object already at 45 degrees set its rotation to
+    // roughly 0 on the first pointer move and the shape snapped
+    // upright the moment you touched it. `targetStartRotation` was
+    // recorded by `beginRotateDrag` and read nowhere, which the
+    // compiler had been reporting since it was written (UNUSED-1).
+    //
+    // The engine facade is a CONSTRUCTOR-INJECTED seam, not a global
+    // this suite plants, so a fake here is the intended shape and
+    // not a stand-in (ADR-203).
+    function rotateFrom(startDegrees: number, to: { x: number; y: number }): number
+    {
+        const obj = {
+            id: "o1",
+            presentation: {
+                shape: "rectangle",
+                rotation: startDegrees,
+                bounds: { x: 100, y: 100, width: 100, height: 100 },
+            },
+        };
+        let applied = startDegrees;
+        const tool = new SelectTool({
+            getSelectedObjects: () => [obj],
+            hitTestObject: () => null,
+            hitTestConnector: () => null,
+            rotateObjectTo: (_id: string, deg: number) => { applied = deg; },
+        } as unknown as ConstructorParameters<typeof SelectTool>[0]);
+
+        // The handle sits 25px above the top edge, centred: (150, 75).
+        tool.onMouseDown(new MouseEvent("mousedown"), { x: 150, y: 75 });
+        tool.onMouseMove(new MouseEvent("mousemove"), to);
+
+        return applied;
+    }
+
+    test("grabbing the handle without moving leaves the rotation alone", () =>
+    {
+        expect(rotateFrom(45, { x: 150, y: 75 })).toBeCloseTo(45, 5);
+    });
+
+    test("a quarter turn of the pointer turns the object a quarter turn", () =>
+    {
+        // From due north of the centre (150,150) to due east.
+        expect(rotateFrom(45, { x: 225, y: 150 })).toBeCloseTo(135, 5);
+    });
+
+    test("an unrotated object still follows the pointer absolutely", () =>
+    {
+        expect(rotateFrom(0, { x: 225, y: 150 })).toBeCloseTo(90, 5);
     });
 });

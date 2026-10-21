@@ -18,7 +18,7 @@
 const UML_LOG_PREFIX = "[UmlStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logUmlDebug, info: logUmlInfo, warn: logUmlWarn, error: logUmlError } = makeLogger(UML_LOG_PREFIX);
+const { info: logUmlInfo } = makeLogger(UML_LOG_PREFIX);
 
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";
@@ -30,24 +30,8 @@ const UML_TEXT_INSET = 6;
 // SHARED HELPERS
 // ============================================================================
 
-/**
- * Creates an inset copy of a rectangle, shrinking each edge.
- *
- * @param bounds - Original bounding rectangle.
- * @param inset - Number of pixels to inset on each side.
- * @returns A new Rect inset from the original.
- */
-function umlInsetRect(bounds: Rect, inset: number): Rect
-{
-    const doubleInset = inset * 2;
-
-    return {
-        x: bounds.x + inset,
-        y: bounds.y + inset,
-        width: Math.max(0, bounds.width - doubleInset),
-        height: Math.max(0, bounds.height - doubleInset)
-    };
-}
+// `umlInsetRect` LEFT ON 2026-10-21 (UNUSED-1): a rect inset
+// helper with no caller in this module.
 
 /**
  * Returns the SVG path data for a rectangle outline.

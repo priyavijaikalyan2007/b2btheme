@@ -24,12 +24,7 @@
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logTextDebug,
-    info: logTextInfo,
-    warn: logTextWarn,
-    error: logTextError,
-} = makeLogger(TEXT_TOOL_LOG_PREFIX);
+const { debug: logTextDebug } = makeLogger(TEXT_TOOL_LOG_PREFIX);
 
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
@@ -91,7 +86,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         this.placeTextObject(canvasPos);
     }
@@ -102,7 +97,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, _canvasPos: Point): void
     {
         // Text tool does not track mouse movement.
     }
@@ -113,7 +108,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
     {
         // Text tool completes placement on mouse-down.
     }

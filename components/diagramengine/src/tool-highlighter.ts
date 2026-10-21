@@ -59,12 +59,7 @@ export interface EngineForHighlighterTool extends EngineForTools
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logHighlighterDebug,
-    info: logHighlighterInfo,
-    warn: logHighlighterWarn,
-    error: logHighlighterError,
-} = makeLogger(HIGHLIGHTER_LOG_PREFIX);
+const { debug: logHighlighterDebug, info: logHighlighterInfo } = makeLogger(HIGHLIGHTER_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";

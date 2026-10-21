@@ -477,7 +477,7 @@ function buildEdgeGradientElement(
  * @param bounds - Bounding rectangle of the shape.
  * @returns Array of four ConnectionPort definitions.
  */
-export function createDefaultPorts(bounds: Rect): ConnectionPort[]
+export function createDefaultPorts(_bounds: Rect): ConnectionPort[]
 {
     return [
         { id: "port-n",  position: { x: 0.5, y: 0 },   direction: "north", maxConnections: 0 },

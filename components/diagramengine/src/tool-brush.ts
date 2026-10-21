@@ -58,12 +58,7 @@ export interface EngineForBrushTool extends EngineForTools
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logBrushDebug,
-    info: logBrushInfo,
-    warn: logBrushWarn,
-    error: logBrushError,
-} = makeLogger(BRUSH_LOG_PREFIX);
+const { debug: logBrushDebug, info: logBrushInfo } = makeLogger(BRUSH_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";

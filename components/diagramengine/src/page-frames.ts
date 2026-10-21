@@ -23,7 +23,7 @@
 const PF_LOG = "[DiagramEngine:PageFrames]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logPfDebug, info: logPfInfo, warn: logPfWarn, error: logPfError } = makeLogger(PF_LOG);
+const { debug: logPfDebug } = makeLogger(PF_LOG);
 
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";
@@ -169,7 +169,7 @@ export function findPageFrameSize(name: string): PageFrameSize | null
  */
 export function renderPageFrame(
     frame: PageFrame,
-    defsEl: SVGElement
+    _defsEl: SVGElement
 ): SVGElement
 {
     const g = svgCreate("g", {

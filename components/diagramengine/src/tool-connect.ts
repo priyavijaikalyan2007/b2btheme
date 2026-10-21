@@ -100,12 +100,7 @@ export interface EngineForConnectTool extends EngineForTools
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logConnectDebug,
-    info: logConnectInfo,
-    warn: logConnectWarn,
-    error: logConnectError,
-} = makeLogger(CONNECT_LOG_PREFIX);
+const { debug: logConnectDebug, info: logConnectInfo } = makeLogger(CONNECT_LOG_PREFIX);
 
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";
@@ -169,8 +164,9 @@ export class ConnectorTool implements Tool
     /** The resolved source port ID on the source object. */
     private sourcePortId: string | undefined = undefined;
 
-    /** Canvas position where the drag started. */
-    private dragStart: Point = { x: 0, y: 0 };
+    // `dragStart` LEFT ON 2026-10-21 (UNUSED-1): the preview line
+    // runs "from source centre to cursor", as this file's own
+    // header says, so the grab point was never part of it.
 
     /**
      * Creates a ConnectorTool bound to an engine instance.
@@ -211,7 +207,7 @@ export class ConnectorTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         const hitObj = this.engine.hitTestObject(canvasPos);
 
@@ -222,7 +218,6 @@ export class ConnectorTool implements Tool
 
         this.dragging = true;
         this.sourceObj = hitObj;
-        this.dragStart = canvasPos;
         this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
 
         logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
@@ -661,6 +656,5 @@ export class ConnectorTool implements Tool
         this.dragging = false;
         this.sourceObj = null;
         this.sourcePortId = undefined;
-        this.dragStart = { x: 0, y: 0 };
     }
 }

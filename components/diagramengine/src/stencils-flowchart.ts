@@ -19,7 +19,7 @@
 const FC_LOG_PREFIX = "[FlowchartStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logFcDebug, info: logFcInfo, warn: logFcWarn, error: logFcError } = makeLogger(FC_LOG_PREFIX);
+const { info: logFcInfo } = makeLogger(FC_LOG_PREFIX);
 
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";

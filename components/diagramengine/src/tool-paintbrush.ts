@@ -58,15 +58,10 @@ export interface EngineForPaintbrushTool extends EngineForTools
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logPaintbrushDebug,
-    info: logPaintbrushInfo,
-    warn: logPaintbrushWarn,
-    error: logPaintbrushError,
-} = makeLogger(PAINTBRUSH_LOG_PREFIX);
+const { debug: logPaintbrushDebug, warn: logPaintbrushWarn } = makeLogger(PAINTBRUSH_LOG_PREFIX);
 
-/** Minimum distance in pixels between interpolated stroke points. */
-const PAINTBRUSH_MIN_STEP = 1;
+// `PAINTBRUSH_MIN_STEP` LEFT ON 2026-10-21 (UNUSED-1): the stroke
+// interpolation never consulted a minimum step.
 
 // ============================================================================
 // PUBLIC API

@@ -3652,8 +3652,10 @@ offered as the evidence for it.
 
 ## MEDIUM — Unused Variables (tsconfig strict flags)
 
-- [ ] **UNUSED-1**: **305 on 2026-10-20**, 329 on 2026-10-17 and 330 on
-  2026-10-19, not the 414 below.
+- [ ] **UNUSED-1**: **124 on 2026-10-21 and that is the FLOOR** — 120
+  preamble shims plus the four `contained` fields DEBT-LAY-1 holds
+  open. Was 305 on 2026-10-20, 329 on 2026-10-17, 330 on 2026-10-19,
+  not the 414 below.
 
   **THE COUNT IS THREE POPULATIONS AND ONLY TWO OF THEM ARE WORK.**
   Measured 2026-10-20, before this pass:
@@ -3890,10 +3892,74 @@ offered as the evidence for it.
   deletions.** The entry's framing holds: an unused symbol is a
   question, and the answer is a feature about a third of the time.
 
-  **Next: the 103 in the generated bundle.** They must be fixed in
-  `components/diagramengine/src/` and re-bundled with
-  `bash scripts/bundle-diagramengine.sh`, or the build discards the
-  edit — a trap this tracker has already been caught by once. The shapes left are mostly element refs and dead
+  **THE GENERATED BUNDLE: 103 -> 0, AND HALF OF IT WAS NEVER
+  DIAGRAMENGINE'S BACKLOG.** The table above splits the count three
+  ways and calls the 103 "fixable in `src/` only". **Fifty-one of
+  them were the preamble family it had already classified as not
+  debt** — per-namespace loggers like `logUmlWarn`, which the
+  `logDebug|logError|logWarn|logInfo|logTrace` filter never
+  matched. A count named for one population while measuring
+  another, in the table built to separate them.
+
+  They are still debt, for a reason the first reading missed.
+  FRONTEND_LOGGING.md 1.1 says each module "destructures **the
+  levels it uses**", and eighteen modules destructured four and
+  used one. Narrowing them to the documented form dropped 51.
+
+  **`MAX_ZOOM` SAID 4.0 IN THE SOURCE AND SHIPPED AS 32.0.**
+  `bundle-diagramengine.sh` emits its own preamble of sixteen
+  shared constants and then greps each module to STRIP that
+  module's declaration of the same name — thirty concatenated files
+  cannot each declare `const CLS`. The cost is that the number a
+  reader finds in a src file is not necessarily the number that
+  ships, **and nothing compared them.** `render-engine.ts` told a
+  reader the engine caps zoom at 4x; it caps at 32x.
+  `ROTATION_HANDLE_OFFSET` read 24 there and 25 in
+  `tool-select.ts`. Both aligned, and **`bundlePreambleMismatches`
+  is a new ceiling at 0** so they cannot drift again. Not a floor:
+  a module that stops declaring a local copy is fine; what must
+  never happen is a local copy that lies.
+
+  **Two more defects in the bundle's own code:**
+
+  - **Rotating a shape SNAPPED it upright.** `handleRotateDrag`
+    set the absolute angle from the object centre to the cursor,
+    and `hitTestRotationHandle` places the handle due north of the
+    **unrotated** bounds — so grabbing the handle of an object at
+    45 degrees set its rotation to roughly 0 on the first pointer
+    move. `targetStartRotation` was recorded by `beginRotateDrag`
+    and read nowhere; it is half of what a relative rotation
+    needs, and `rotateGrabAngle` is the other half.
+  - **`UI_SHAPE_COUNT` said 95 where the suite measures 146.** It
+    was documented as "Total number of ui-component stencil shapes
+    registered" and nothing read it, so nothing could notice.
+    Deleted: the test is the live fact, and a constant that
+    disagrees with it and is never consulted is worse than none.
+
+  **`renderEnhancedCard` and `renderEnhancedButton` are gone and
+  the reason is recorded.** Two of a four-strong family of
+  "enhanced variant" renderers; the other two are dispatched to and
+  these never were. The pack registers no shape named card or
+  button, so there is no mapping to restore — choosing which of the
+  146 shapes should render as one is a design decision, not a
+  repair. Same posture as DEBT-DE-1.
+
+  The remaining 20 were tool-interface parameters given the `_`
+  prefix, five dead constants (one of them in the bundler's own
+  preamble), and `tool-connect :: dragStart`, which the preview
+  line never needed because it runs "from source centre to cursor"
+  as that file's header says.
+
+  **A process note worth keeping.** Three attempts to map the
+  bundle's error locations back to source failed — a fixed line
+  offset, a widened search window, then a content-and-ordinal
+  match — because the bundle is not a plain concatenation. What
+  worked was compiling the `src` directory on its own and
+  intersecting ITS report with the bundle's: the src run gives
+  exact locations, the bundle run says which of them actually ship
+  unused, and five symbols reported by the src run are used across
+  module boundaries once concatenated. **Acting on the src run
+  alone would have deleted five live constants.** The shapes left are mostly element refs and dead
   helpers, which is where the entry predicts the genuine deletions
   are — and that prediction is now the only unverified one in this
   entry, which is the shape of claim this session has falsified

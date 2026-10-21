@@ -23,7 +23,7 @@
 const TPL_LOG = "[DiagramEngine:Templates]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logTplDebug, info: logTplInfo, warn: logTplWarn, error: logTplError } = makeLogger(TPL_LOG);
+const { info: logTplInfo, warn: logTplWarn } = makeLogger(TPL_LOG);
 
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;

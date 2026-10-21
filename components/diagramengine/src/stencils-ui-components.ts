@@ -23,12 +23,16 @@
 const UI_LOG_PREFIX = "[UiComponentStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logUiDebug, info: logUiInfo, warn: logUiWarn, error: logUiError } = makeLogger(UI_LOG_PREFIX);
+const { info: logUiInfo } = makeLogger(UI_LOG_PREFIX);
 
 const UI_CATEGORY = "ui-components";
 
-/** Total number of ui-component stencil shapes registered. */
-const UI_SHAPE_COUNT = 95;
+// `UI_SHAPE_COUNT` LEFT ON 2026-10-21 (UNUSED-1). It was documented
+// as "Total number of ui-component stencil shapes registered" and
+// said 95, while `diagramengine-embed.test.ts` MEASURES the pack
+// registering 146. Nothing read it, so nothing could notice. The
+// test is the live fact; a constant that disagrees with it and is
+// never consulted is worse than no constant.
 
 // --- Colour palette ---
 const C_BG        = "#ffffff";
@@ -613,7 +617,7 @@ function renderColorPicker(ctx: ShapeRenderContext): SVGElement
 
 // --- CodeEditor -------------------------------------------------------------
 
-function renderCodeLines(g: SVGElement, x: number, y: number, w: number): void
+function renderCodeLines(g: SVGElement, x: number, y: number, _w: number): void
 {
     const lines = [
         { num: "1", text: "function greet(name) {", color: "#569cd6" },
@@ -671,7 +675,7 @@ function renderMdToolbar(g: SVGElement, x: number, y: number, w: number): void
     uiDivider(g, x, y + 24, w);
 }
 
-function renderMdContent(g: SVGElement, x: number, y: number, w: number): void
+function renderMdContent(g: SVGElement, x: number, y: number, _w: number): void
 {
     uiText(g, x + 8, y + 18, "# Heading", { size: 12, weight: 700 });
     uiText(g, x + 8, y + 36, "Paragraph text here with", { size: 10 });
@@ -729,7 +733,7 @@ function renderDocViewer(ctx: ShapeRenderContext): SVGElement
 // --- LatexEditor ------------------------------------------------------------
 
 function renderLatexEquation(
-    g: SVGElement, x: number, y: number, w: number): void
+    g: SVGElement, x: number, y: number, _w: number): void
 {
     uiText(g, x + 12, y + 22, "E = mc\u00B2", { size: 16, weight: 700 });
     uiText(g, x + 12, y + 44, "\u222B\u2080\u00B9 f(x) dx", { size: 12 });
@@ -1112,7 +1116,7 @@ function renderNavRail(ctx: ShapeRenderContext): SVGElement
 // --- TabbedPanel ------------------------------------------------------------
 
 function renderTabbedTabs(
-    g: SVGElement, x: number, y: number, w: number,
+    g: SVGElement, x: number, y: number, _w: number,
     tabs: string[]): void
 {
     let tx = x + 4;
@@ -1740,14 +1744,14 @@ function renderEnhancedList(
 
 // --- Enhanced variant: card --------------------------------------------------
 
-function renderEnhancedCard(
-    g: SVGElement, x: number, y: number, w: number, h: number,
-    iconChar: string, label: string): void
-{
-    uiRect(g, x, y, w, h, C_BG, C_BORDER, 3);
-    uiIcon(g, x + 6, y + h / 2 + 4, iconChar, { size: 11 });
-    uiText(g, x + 22, y + h / 2 + 3, label, { size: 9 });
-}
+// `renderEnhancedCard` and `renderEnhancedButton` LEFT ON
+// 2026-10-21 (UNUSED-1). Two of a four-strong family of
+// 'enhanced variant' renderers; `renderEnhancedDefault` and
+// `renderEnhancedChat` beside them ARE dispatched to, and these
+// two never were. The pack registers no shape named card or
+// button, so there is no mapping to restore -- choosing which
+// of the 146 shapes should render as one is a design decision
+// and not a repair.
 
 // --- Enhanced variant: default with centered icon + text --------------------
 
@@ -1765,18 +1769,6 @@ function renderEnhancedDefault(
 
 // --- Enhanced variant: button -----------------------------------------------
 
-function renderEnhancedButton(
-    g: SVGElement, x: number, y: number, w: number, h: number,
-    label: string, primary?: boolean): void
-{
-    const btnW = Math.min(80, w * 0.6);
-    const btnH = Math.min(24, h);
-    const bx = x + (w - btnW) / 2;
-    const by = y + (h - btnH) / 2;
-    uiButton(g, bx, by, btnW, btnH, label, primary ? {
-        fill: C_PRIMARY, textFill: C_BG
-    } : undefined);
-}
 
 // --- Enhanced variant: chat -------------------------------------------------
 
@@ -1831,7 +1823,7 @@ function getTierBContent(name: string):
 
         case "cronpicker":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "CRON Expression", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, w, h, "CRON Expression", (g2, cx, cy, _cw) =>
                 {
                     uiText(g2, cx + 8, cy + 20, "0 */5 * * *", {
                         size: 12, fill: C_TEXT, weight: 600
@@ -1882,7 +1874,7 @@ function getTierBContent(name: string):
 
         case "symbolpicker":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "Symbols", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, w, h, "Symbols", (g2, cx, cy, _cw) =>
                 {
                     const syms = ["\u2605", "\u2665", "\u266A", "\u2708",
                         "\u2622", "\u263C", "\u2603", "\u2602", "\u2764"];
@@ -1922,7 +1914,7 @@ function getTierBContent(name: string):
             };
 
         case "richtextinput":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const tbH = 20;
                 uiRect(g, x, y, w, tbH, C_HEADER_BG, "none", 0);
@@ -2021,7 +2013,7 @@ function getTierBContent(name: string):
                 });
 
         case "reasoningaccordion":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const sections = [
                     { label: "Step 1: Analysis", open: true },
@@ -2047,7 +2039,7 @@ function getTierBContent(name: string):
                 renderEnhancedTable(g, x, y, w, h, ["Timestamp", "User", "Action"]);
 
         case "permissionmatrix":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const cols = ["Permission", "Admin", "Editor", "Viewer"];
                 const colW = w / cols.length;
@@ -2115,7 +2107,7 @@ function getTierBContent(name: string):
                 });
 
         case "usermenu":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 uiCircle(g, x + w / 2, y + 24, 14, C_HEADER_BG, C_BORDER);
                 uiText(g, x + w / 2, y + 28, "JD", {
@@ -2134,7 +2126,7 @@ function getTierBContent(name: string):
             return (g, x, y, w, h) =>
             {
                 const splitX = w * 0.35;
-                renderEnhancedPanel(g, x, y, splitX, h, "Folders", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, splitX, h, "Folders", (g2, cx, cy, _cw) =>
                 {
                     const folders = ["\u25BE \uD83D\uDCC1 src", "  \uD83D\uDCC1 lib", "  \uD83D\uDCC1 test", "\u25B8 \uD83D\uDCC1 docs"];
                     for (let i = 0; i < folders.length; i++)
@@ -2143,7 +2135,7 @@ function getTierBContent(name: string):
                     }
                 });
                 uiLine(g, x + splitX, y, x + splitX, y + h, C_BORDER);
-                renderEnhancedPanel(g, x + splitX, y, w - splitX, h, "Files", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x + splitX, y, w - splitX, h, "Files", (g2, cx, cy, _cw) =>
                 {
                     const files = ["\uD83D\uDCC4 index.ts", "\uD83D\uDCC4 app.ts", "\uD83D\uDCC4 style.scss"];
                     for (let i = 0; i < files.length; i++)
@@ -2372,7 +2364,7 @@ function getTierCContent(name: string):
             };
 
         case "flowlayout":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const items = 7;
                 const iw = 40;
@@ -2452,7 +2444,7 @@ function getTierCContent(name: string):
             };
 
         case "presenceindicator":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, h) =>
             {
                 uiCircle(g, x + 8, y + h / 2, 5, C_SUCCESS, C_SUCCESS);
                 uiText(g, x + 18, y + h / 2 + 4, "Online", {
@@ -2479,7 +2471,7 @@ function getTierCContent(name: string):
             };
 
         case "statusbadge":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, h) =>
             {
                 uiCircle(g, x + 8, y + h / 2, 4, C_SUCCESS, C_SUCCESS);
                 uiText(g, x + 16, y + h / 2 + 3, "Active", {
@@ -2499,7 +2491,7 @@ function getTierCContent(name: string):
 
         case "helpdrawer":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "? Help", (g2, cx, cy, cw, ch) =>
+                renderEnhancedPanel(g, x, y, w, h, "? Help", (g2, cx, cy, cw, _ch) =>
                 {
                     uiText(g2, cx + 8, cy + 18, "Getting Started", { size: 11, weight: 600 });
                     for (let i = 0; i < 4; i++)
@@ -2536,7 +2528,7 @@ function getTierCContent(name: string):
             };
 
         case "skeletonloader":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 uiRect(g, x + 4, y + 4, w * 0.3, 14, C_TABLE_LINE, "none", 4);
                 uiRect(g, x + 4, y + 24, w - 8, 12, C_TABLE_LINE, "none", 4);
@@ -2593,7 +2585,7 @@ function getTierCContent(name: string):
             };
 
         case "actionitems":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, _h) =>
             {
                 const items = [
                     { checked: true, text: "Review pull request" },
@@ -2687,7 +2679,7 @@ function getTierCContent(name: string):
             return (g, x, y, w, h) =>
             {
                 const splitX = w * 0.3;
-                renderEnhancedPanel(g, x, y, splitX, h, "Structure", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, splitX, h, "Structure", (g2, cx, cy, _cw) =>
                 {
                     const nodes = ["\u25BE Tab: Home", "  \u25BE Clipboard", "    Cut", "    Copy"];
                     for (let i = 0; i < nodes.length; i++)

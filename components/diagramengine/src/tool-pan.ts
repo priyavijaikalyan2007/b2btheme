@@ -47,8 +47,8 @@ export interface EngineForPanTool
 // CONSTANTS
 // ============================================================================
 
-/** Log prefix for all console messages from this module. */
-const LOG_PREFIX_PAN = "[DiagramEngine]";
+// `LOG_PREFIX_PAN` LEFT ON 2026-10-21 (UNUSED-1): a second copy of
+// the engine prefix for a logger this module does not declare.
 
 // ============================================================================
 // PUBLIC API
@@ -120,7 +120,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(e: MouseEvent, _canvasPos: Point): void
     {
         this.dragging = true;
         this.lastScreenPos = this.extractScreenPos(e);
@@ -132,7 +132,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(e: MouseEvent, _canvasPos: Point): void
     {
         if (!this.dragging)
         {
@@ -153,7 +153,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
     {
         this.dragging = false;
 
@@ -165,7 +165,7 @@ export class PanTool implements Tool
      *
      * @param e - The originating keyboard event.
      */
-    public onKeyDown(e: KeyboardEvent): void
+    public onKeyDown(_e: KeyboardEvent): void
     {
         // Pan tool does not handle keyboard input.
     }

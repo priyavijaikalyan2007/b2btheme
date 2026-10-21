@@ -68,7 +68,7 @@ export interface EngineForDrawTool extends EngineForTools
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logDrawDebug, info: logDrawInfo, warn: logDrawWarn, error: logDrawError } = makeLogger(DRAW_LOG_PREFIX);
+const { debug: logDrawDebug, warn: logDrawWarn } = makeLogger(DRAW_LOG_PREFIX);
 
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;
@@ -165,7 +165,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         this.dragging = true;
         this.dragStart = canvasPos;
@@ -179,7 +179,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging)
         {
@@ -203,7 +203,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging)
         {

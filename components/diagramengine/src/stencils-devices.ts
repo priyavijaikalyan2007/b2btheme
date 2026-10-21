@@ -20,7 +20,7 @@
 const DEV_LOG_PREFIX = "[DeviceStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logDevDebug, info: logDevInfo, warn: logDevWarn, error: logDevError } = makeLogger(DEV_LOG_PREFIX);
+const { info: logDevInfo } = makeLogger(DEV_LOG_PREFIX);
 
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";

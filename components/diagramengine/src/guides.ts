@@ -20,8 +20,8 @@
 // CONSTANTS
 // ============================================================================
 
-/** Log prefix for guide system messages. */
-const GUIDES_LOG_PREFIX = "[Guides]";
+// `GUIDES_LOG_PREFIX` LEFT ON 2026-10-21 (UNUSED-1): this module
+// declares no logger, so the prefix had nothing to prefix.
 
 /** Default snap threshold in canvas pixels. */
 const DEFAULT_SNAP_THRESHOLD = 5;

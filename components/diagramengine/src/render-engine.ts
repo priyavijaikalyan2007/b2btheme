@@ -39,7 +39,15 @@ const DEFAULT_ZOOM = 1;
 const MIN_ZOOM = 0.1;
 
 /** Maximum allowed zoom level. */
-const MAX_ZOOM = 4.0;
+// 32.0, NOT 4.0 (2026-10-21, UNUSED-1).
+// `scripts/bundle-diagramengine.sh` STRIPS every one of these
+// shared constants from each module and emits its own copy in
+// the preamble, so the value a reader finds here is not the
+// value that ships. This file said the engine caps zoom at 4x
+// and the bundle caps it at 32x. `bundlePreambleMismatches` in
+// scripts/audit-counts.mjs is a ceiling at 0 so the two cannot
+// drift again.
+const MAX_ZOOM = 32.0;
 
 /** Zoom increment per step (e.g. wheel tick). */
 const ZOOM_STEP = 0.15;
@@ -47,8 +55,9 @@ const ZOOM_STEP = 0.15;
 /** Pixel size of selection resize handles. */
 const HANDLE_SIZE = 8;
 
-/** Extra hit-test margin around resize handles for easier clicking. */
-const HANDLE_HIT_MARGIN = 4;
+// `HANDLE_HIT_MARGIN` LEFT ON 2026-10-21 (UNUSED-1): the hit test
+// lives in tool-select.ts and uses its own HANDLE_HIT_RADIUS, so
+// this margin was never consulted by anything.
 
 /** Default grid spacing in pixels. */
 const DEFAULT_GRID_SIZE = 20;
@@ -72,13 +81,18 @@ const DOT_GRID_RADIUS = 1.2;
 const GRID_OPACITY = 0.4;
 
 /** Rotation handle vertical offset above the top-centre of the object. */
-const ROTATION_HANDLE_OFFSET = 24;
+// 25, NOT 24: the preamble ships 25 and tool-select.ts already
+// said 25, so this file was the odd one out.
+const ROTATION_HANDLE_OFFSET = 25;
 
 /** Rotation handle circle radius. */
 const ROTATION_HANDLE_RADIUS = 5;
 
-/** Length of the rotation handle stem line. */
-const ROTATION_STEM_LENGTH = 16;
+// `ROTATION_STEM_LENGTH` LEFT ON 2026-10-21 (UNUSED-1): a third
+// constant for a stem the renderer already derives from
+// ROTATION_HANDLE_OFFSET and ROTATION_HANDLE_RADIUS -- and it said
+// 16 where that derivation gives 19, so it was stale as well as
+// unread.
 
 /** Default padding used when zooming to fit. */
 const DEFAULT_FIT_PADDING = 40;
@@ -2682,7 +2696,7 @@ export class RenderEngine
      *
      * @param size - Grid cell size, used to size the coverage rect.
      */
-    private applyGridPatternToLayer(size: number): void
+    private applyGridPatternToLayer(_size: number): void
     {
         const gridRect = svgCreate("rect", {
             x: "-10000",
@@ -2882,7 +2896,7 @@ export class RenderEngine
      */
     private attachEditHandlers(
         overlay: HTMLDivElement,
-        objectId: string): { blur: () => void; keydown: (e: KeyboardEvent) => void }
+        _objectId: string): { blur: () => void; keydown: (e: KeyboardEvent) => void }
     {
         const blur = (): void =>
         {

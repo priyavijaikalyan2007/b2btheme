@@ -24,7 +24,6 @@ const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 32.0;
 const ZOOM_STEP = 0.15;
 const HANDLE_SIZE = 8;
-const HANDLE_HIT_MARGIN = 4;
 const DEFAULT_GRID_SIZE = 20;
 const DEFAULT_LAYER_ID = "default";
 const DEFAULT_LAYER_NAME = "Default";
@@ -2134,7 +2133,7 @@ function buildEdgeGradientElement(
  * @param bounds - Bounding rectangle of the shape.
  * @returns Array of four ConnectionPort definitions.
  */
-export function createDefaultPorts(bounds: Rect): ConnectionPort[]
+export function createDefaultPorts(_bounds: Rect): ConnectionPort[]
 {
     return [
         { id: "port-n",  position: { x: 0.5, y: 0 },   direction: "north", maxConnections: 0 },
@@ -2330,12 +2329,7 @@ export class ShapeRegistry
 const BASIC_LOG_PREFIX = "[BasicShapes]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logBasicDebug,
-    info: logBasicInfo,
-    warn: logBasicWarn,
-    error: logBasicError,
-} = makeLogger(BASIC_LOG_PREFIX);
+const { info: logBasicInfo } = makeLogger(BASIC_LOG_PREFIX);
 
 /** Category identifier for all basic shapes in the stencil palette. */
 const BASIC_CATEGORY = "basic";
@@ -2961,12 +2955,7 @@ export function registerBasicShapes(registry: ShapeRegistry): void
 const EXTENDED_LOG_PREFIX = "[ExtendedShapes]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logExtendedDebug,
-    info: logExtendedInfo,
-    warn: logExtendedWarn,
-    error: logExtendedError,
-} = makeLogger(EXTENDED_LOG_PREFIX);
+const { info: logExtendedInfo } = makeLogger(EXTENDED_LOG_PREFIX);
 
 /** Category identifier for extended shapes in the stencil palette. */
 const EXTENDED_CATEGORY = "extended";
@@ -4569,7 +4558,7 @@ export function registerExtendedShapes(registry: ShapeRegistry): void
 const FC_LOG_PREFIX = "[FlowchartStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logFcDebug, info: logFcInfo, warn: logFcWarn, error: logFcError } = makeLogger(FC_LOG_PREFIX);
+const { info: logFcInfo } = makeLogger(FC_LOG_PREFIX);
 
 /** Category identifier for flowchart shapes in the stencil palette. */
 const FC_CATEGORY = "flowchart";
@@ -5501,7 +5490,7 @@ export function registerFlowchartPack(registry: ShapeRegistry): void
 const UML_LOG_PREFIX = "[UmlStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logUmlDebug, info: logUmlInfo, warn: logUmlWarn, error: logUmlError } = makeLogger(UML_LOG_PREFIX);
+const { info: logUmlInfo } = makeLogger(UML_LOG_PREFIX);
 
 /** Category identifier for UML shapes in the stencil palette. */
 const UML_CATEGORY = "uml";
@@ -5513,24 +5502,8 @@ const UML_TEXT_INSET = 6;
 // SHARED HELPERS
 // ============================================================================
 
-/**
- * Creates an inset copy of a rectangle, shrinking each edge.
- *
- * @param bounds - Original bounding rectangle.
- * @param inset - Number of pixels to inset on each side.
- * @returns A new Rect inset from the original.
- */
-function umlInsetRect(bounds: Rect, inset: number): Rect
-{
-    const doubleInset = inset * 2;
-
-    return {
-        x: bounds.x + inset,
-        y: bounds.y + inset,
-        width: Math.max(0, bounds.width - doubleInset),
-        height: Math.max(0, bounds.height - doubleInset)
-    };
-}
+// `umlInsetRect` LEFT ON 2026-10-21 (UNUSED-1): a rect inset
+// helper with no caller in this module.
 
 /**
  * Returns the SVG path data for a rectangle outline.
@@ -6251,17 +6224,17 @@ export function registerUmlPack(registry: ShapeRegistry): void
 const NET_LOG_PREFIX = "[NetworkStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logNetDebug, info: logNetInfo, warn: logNetWarn, error: logNetError } = makeLogger(NET_LOG_PREFIX);
+const { info: logNetInfo } = makeLogger(NET_LOG_PREFIX);
 
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logBpmnDebug, info: logBpmnInfo, warn: logBpmnWarn, error: logBpmnError } = makeLogger(BPMN_LOG_PREFIX);
+const { info: logBpmnInfo } = makeLogger(BPMN_LOG_PREFIX);
 
 const ER_LOG_PREFIX = "[ErStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logErDebug, info: logErInfo, warn: logErWarn, error: logErError } = makeLogger(ER_LOG_PREFIX);
+const { info: logErInfo } = makeLogger(ER_LOG_PREFIX);
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";
@@ -7297,7 +7270,7 @@ export function registerErPack(registry: ShapeRegistry): void
 const DEV_LOG_PREFIX = "[DeviceStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logDevDebug, info: logDevInfo, warn: logDevWarn, error: logDevError } = makeLogger(DEV_LOG_PREFIX);
+const { info: logDevInfo } = makeLogger(DEV_LOG_PREFIX);
 
 /** Category identifier for device frame shapes in the stencil palette. */
 const DEV_CATEGORY = "devices";
@@ -9816,12 +9789,16 @@ export function registerDeviceStencils(registry: ShapeRegistry): void
 const UI_LOG_PREFIX = "[UiComponentStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logUiDebug, info: logUiInfo, warn: logUiWarn, error: logUiError } = makeLogger(UI_LOG_PREFIX);
+const { info: logUiInfo } = makeLogger(UI_LOG_PREFIX);
 
 const UI_CATEGORY = "ui-components";
 
-/** Total number of ui-component stencil shapes registered. */
-const UI_SHAPE_COUNT = 95;
+// `UI_SHAPE_COUNT` LEFT ON 2026-10-21 (UNUSED-1). It was documented
+// as "Total number of ui-component stencil shapes registered" and
+// said 95, while `diagramengine-embed.test.ts` MEASURES the pack
+// registering 146. Nothing read it, so nothing could notice. The
+// test is the live fact; a constant that disagrees with it and is
+// never consulted is worse than no constant.
 
 // --- Colour palette ---
 const C_BG        = "#ffffff";
@@ -10406,7 +10383,7 @@ function renderColorPicker(ctx: ShapeRenderContext): SVGElement
 
 // --- CodeEditor -------------------------------------------------------------
 
-function renderCodeLines(g: SVGElement, x: number, y: number, w: number): void
+function renderCodeLines(g: SVGElement, x: number, y: number, _w: number): void
 {
     const lines = [
         { num: "1", text: "function greet(name) {", color: "#569cd6" },
@@ -10464,7 +10441,7 @@ function renderMdToolbar(g: SVGElement, x: number, y: number, w: number): void
     uiDivider(g, x, y + 24, w);
 }
 
-function renderMdContent(g: SVGElement, x: number, y: number, w: number): void
+function renderMdContent(g: SVGElement, x: number, y: number, _w: number): void
 {
     uiText(g, x + 8, y + 18, "# Heading", { size: 12, weight: 700 });
     uiText(g, x + 8, y + 36, "Paragraph text here with", { size: 10 });
@@ -10522,7 +10499,7 @@ function renderDocViewer(ctx: ShapeRenderContext): SVGElement
 // --- LatexEditor ------------------------------------------------------------
 
 function renderLatexEquation(
-    g: SVGElement, x: number, y: number, w: number): void
+    g: SVGElement, x: number, y: number, _w: number): void
 {
     uiText(g, x + 12, y + 22, "E = mc\u00B2", { size: 16, weight: 700 });
     uiText(g, x + 12, y + 44, "\u222B\u2080\u00B9 f(x) dx", { size: 12 });
@@ -10905,7 +10882,7 @@ function renderNavRail(ctx: ShapeRenderContext): SVGElement
 // --- TabbedPanel ------------------------------------------------------------
 
 function renderTabbedTabs(
-    g: SVGElement, x: number, y: number, w: number,
+    g: SVGElement, x: number, y: number, _w: number,
     tabs: string[]): void
 {
     let tx = x + 4;
@@ -11533,14 +11510,14 @@ function renderEnhancedList(
 
 // --- Enhanced variant: card --------------------------------------------------
 
-function renderEnhancedCard(
-    g: SVGElement, x: number, y: number, w: number, h: number,
-    iconChar: string, label: string): void
-{
-    uiRect(g, x, y, w, h, C_BG, C_BORDER, 3);
-    uiIcon(g, x + 6, y + h / 2 + 4, iconChar, { size: 11 });
-    uiText(g, x + 22, y + h / 2 + 3, label, { size: 9 });
-}
+// `renderEnhancedCard` and `renderEnhancedButton` LEFT ON
+// 2026-10-21 (UNUSED-1). Two of a four-strong family of
+// 'enhanced variant' renderers; `renderEnhancedDefault` and
+// `renderEnhancedChat` beside them ARE dispatched to, and these
+// two never were. The pack registers no shape named card or
+// button, so there is no mapping to restore -- choosing which
+// of the 146 shapes should render as one is a design decision
+// and not a repair.
 
 // --- Enhanced variant: default with centered icon + text --------------------
 
@@ -11558,18 +11535,6 @@ function renderEnhancedDefault(
 
 // --- Enhanced variant: button -----------------------------------------------
 
-function renderEnhancedButton(
-    g: SVGElement, x: number, y: number, w: number, h: number,
-    label: string, primary?: boolean): void
-{
-    const btnW = Math.min(80, w * 0.6);
-    const btnH = Math.min(24, h);
-    const bx = x + (w - btnW) / 2;
-    const by = y + (h - btnH) / 2;
-    uiButton(g, bx, by, btnW, btnH, label, primary ? {
-        fill: C_PRIMARY, textFill: C_BG
-    } : undefined);
-}
 
 // --- Enhanced variant: chat -------------------------------------------------
 
@@ -11624,7 +11589,7 @@ function getTierBContent(name: string):
 
         case "cronpicker":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "CRON Expression", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, w, h, "CRON Expression", (g2, cx, cy, _cw) =>
                 {
                     uiText(g2, cx + 8, cy + 20, "0 */5 * * *", {
                         size: 12, fill: C_TEXT, weight: 600
@@ -11675,7 +11640,7 @@ function getTierBContent(name: string):
 
         case "symbolpicker":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "Symbols", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, w, h, "Symbols", (g2, cx, cy, _cw) =>
                 {
                     const syms = ["\u2605", "\u2665", "\u266A", "\u2708",
                         "\u2622", "\u263C", "\u2603", "\u2602", "\u2764"];
@@ -11715,7 +11680,7 @@ function getTierBContent(name: string):
             };
 
         case "richtextinput":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const tbH = 20;
                 uiRect(g, x, y, w, tbH, C_HEADER_BG, "none", 0);
@@ -11814,7 +11779,7 @@ function getTierBContent(name: string):
                 });
 
         case "reasoningaccordion":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const sections = [
                     { label: "Step 1: Analysis", open: true },
@@ -11840,7 +11805,7 @@ function getTierBContent(name: string):
                 renderEnhancedTable(g, x, y, w, h, ["Timestamp", "User", "Action"]);
 
         case "permissionmatrix":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const cols = ["Permission", "Admin", "Editor", "Viewer"];
                 const colW = w / cols.length;
@@ -11908,7 +11873,7 @@ function getTierBContent(name: string):
                 });
 
         case "usermenu":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 uiCircle(g, x + w / 2, y + 24, 14, C_HEADER_BG, C_BORDER);
                 uiText(g, x + w / 2, y + 28, "JD", {
@@ -11927,7 +11892,7 @@ function getTierBContent(name: string):
             return (g, x, y, w, h) =>
             {
                 const splitX = w * 0.35;
-                renderEnhancedPanel(g, x, y, splitX, h, "Folders", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, splitX, h, "Folders", (g2, cx, cy, _cw) =>
                 {
                     const folders = ["\u25BE \uD83D\uDCC1 src", "  \uD83D\uDCC1 lib", "  \uD83D\uDCC1 test", "\u25B8 \uD83D\uDCC1 docs"];
                     for (let i = 0; i < folders.length; i++)
@@ -11936,7 +11901,7 @@ function getTierBContent(name: string):
                     }
                 });
                 uiLine(g, x + splitX, y, x + splitX, y + h, C_BORDER);
-                renderEnhancedPanel(g, x + splitX, y, w - splitX, h, "Files", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x + splitX, y, w - splitX, h, "Files", (g2, cx, cy, _cw) =>
                 {
                     const files = ["\uD83D\uDCC4 index.ts", "\uD83D\uDCC4 app.ts", "\uD83D\uDCC4 style.scss"];
                     for (let i = 0; i < files.length; i++)
@@ -12165,7 +12130,7 @@ function getTierCContent(name: string):
             };
 
         case "flowlayout":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 const items = 7;
                 const iw = 40;
@@ -12245,7 +12210,7 @@ function getTierCContent(name: string):
             };
 
         case "presenceindicator":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, h) =>
             {
                 uiCircle(g, x + 8, y + h / 2, 5, C_SUCCESS, C_SUCCESS);
                 uiText(g, x + 18, y + h / 2 + 4, "Online", {
@@ -12272,7 +12237,7 @@ function getTierCContent(name: string):
             };
 
         case "statusbadge":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, h) =>
             {
                 uiCircle(g, x + 8, y + h / 2, 4, C_SUCCESS, C_SUCCESS);
                 uiText(g, x + 16, y + h / 2 + 3, "Active", {
@@ -12292,7 +12257,7 @@ function getTierCContent(name: string):
 
         case "helpdrawer":
             return (g, x, y, w, h) =>
-                renderEnhancedPanel(g, x, y, w, h, "? Help", (g2, cx, cy, cw, ch) =>
+                renderEnhancedPanel(g, x, y, w, h, "? Help", (g2, cx, cy, cw, _ch) =>
                 {
                     uiText(g2, cx + 8, cy + 18, "Getting Started", { size: 11, weight: 600 });
                     for (let i = 0; i < 4; i++)
@@ -12329,7 +12294,7 @@ function getTierCContent(name: string):
             };
 
         case "skeletonloader":
-            return (g, x, y, w, h) =>
+            return (g, x, y, w, _h) =>
             {
                 uiRect(g, x + 4, y + 4, w * 0.3, 14, C_TABLE_LINE, "none", 4);
                 uiRect(g, x + 4, y + 24, w - 8, 12, C_TABLE_LINE, "none", 4);
@@ -12386,7 +12351,7 @@ function getTierCContent(name: string):
             };
 
         case "actionitems":
-            return (g, x, y, w, h) =>
+            return (g, x, y, _w, _h) =>
             {
                 const items = [
                     { checked: true, text: "Review pull request" },
@@ -12480,7 +12445,7 @@ function getTierCContent(name: string):
             return (g, x, y, w, h) =>
             {
                 const splitX = w * 0.3;
-                renderEnhancedPanel(g, x, y, splitX, h, "Structure", (g2, cx, cy, cw) =>
+                renderEnhancedPanel(g, x, y, splitX, h, "Structure", (g2, cx, cy, _cw) =>
                 {
                     const nodes = ["\u25BE Tab: Home", "  \u25BE Clipboard", "    Cut", "    Copy"];
                     for (let i = 0; i < nodes.length; i++)
@@ -13412,12 +13377,7 @@ export function registerUiComponentStencils(registry: ShapeRegistry): void
 const CONNECTOR_LOG_PREFIX = "[Connectors]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logConnectorDebug,
-    info: logConnectorInfo,
-    warn: logConnectorWarn,
-    error: logConnectorError,
-} = makeLogger(CONNECTOR_LOG_PREFIX);
+const { debug: logConnectorDebug, warn: logConnectorWarn } = makeLogger(CONNECTOR_LOG_PREFIX);
 
 /** SVG namespace URI for element creation. */
 const CONNECTOR_SVG_NS = "http://www.w3.org/2000/svg";
@@ -14545,8 +14505,8 @@ function extractLabelText(label: ConnectorLabel): string
 // CONSTANTS
 // ============================================================================
 
-/** Log prefix for guide system messages. */
-const GUIDES_LOG_PREFIX = "[Guides]";
+// `GUIDES_LOG_PREFIX` LEFT ON 2026-10-21 (UNUSED-1): this module
+// declares no logger, so the prefix had nothing to prefix.
 
 /** Default snap threshold in canvas pixels. */
 const DEFAULT_SNAP_THRESHOLD = 5;
@@ -15468,12 +15428,22 @@ function renderGuideLabel(
 /** Minimum allowed zoom level. */
 
 /** Maximum allowed zoom level. */
+// 32.0, NOT 4.0 (2026-10-21, UNUSED-1).
+// `scripts/bundle-diagramengine.sh` STRIPS every one of these
+// shared constants from each module and emits its own copy in
+// the preamble, so the value a reader finds here is not the
+// value that ships. This file said the engine caps zoom at 4x
+// and the bundle caps it at 32x. `bundlePreambleMismatches` in
+// scripts/audit-counts.mjs is a ceiling at 0 so the two cannot
+// drift again.
 
 /** Zoom increment per step (e.g. wheel tick). */
 
 /** Pixel size of selection resize handles. */
 
-/** Extra hit-test margin around resize handles for easier clicking. */
+// `HANDLE_HIT_MARGIN` LEFT ON 2026-10-21 (UNUSED-1): the hit test
+// lives in tool-select.ts and uses its own HANDLE_HIT_RADIUS, so
+// this margin was never consulted by anything.
 
 /** Default grid spacing in pixels. */
 
@@ -15493,12 +15463,17 @@ const DOT_GRID_RADIUS = 1.2;
 const GRID_OPACITY = 0.4;
 
 /** Rotation handle vertical offset above the top-centre of the object. */
+// 25, NOT 24: the preamble ships 25 and tool-select.ts already
+// said 25, so this file was the odd one out.
 
 /** Rotation handle circle radius. */
 const ROTATION_HANDLE_RADIUS = 5;
 
-/** Length of the rotation handle stem line. */
-const ROTATION_STEM_LENGTH = 16;
+// `ROTATION_STEM_LENGTH` LEFT ON 2026-10-21 (UNUSED-1): a third
+// constant for a stem the renderer already derives from
+// ROTATION_HANDLE_OFFSET and ROTATION_HANDLE_RADIUS -- and it said
+// 16 where that derivation gives 19, so it was stale as well as
+// unread.
 
 /** Default padding used when zooming to fit. */
 const DEFAULT_FIT_PADDING = 40;
@@ -18102,7 +18077,7 @@ export class RenderEngine
      *
      * @param size - Grid cell size, used to size the coverage rect.
      */
-    private applyGridPatternToLayer(size: number): void
+    private applyGridPatternToLayer(_size: number): void
     {
         const gridRect = svgCreate("rect", {
             x: "-10000",
@@ -18302,7 +18277,7 @@ export class RenderEngine
      */
     private attachEditHandlers(
         overlay: HTMLDivElement,
-        objectId: string): { blur: () => void; keydown: (e: KeyboardEvent) => void }
+        _objectId: string): { blur: () => void; keydown: (e: KeyboardEvent) => void }
     {
         const blur = (): void =>
         {
@@ -18895,6 +18870,12 @@ export interface EngineForTools
 /** Pixel radius for detecting a resize handle hit. */
 const HANDLE_HIT_RADIUS = 6;
 
+/** Wraps any degree value into [0, 360). */
+function normaliseDegrees(degrees: number): number
+{
+    return ((degrees % 360) + 360) % 360;
+}
+
 /** Vertical offset of the rotation handle above the object. */
 
 /** Log prefix for all console messages from this module. */
@@ -18955,6 +18936,9 @@ export class SelectTool implements Tool
 
     /** Starting rotation angle of the target object (degrees). */
     private targetStartRotation: number = 0;
+
+    /** Angle from the object centre to the point the drag grabbed. */
+    private rotateGrabAngle: number = 0;
 
     /**
      * Create a SelectTool bound to an engine instance.
@@ -19025,7 +19009,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
     {
         if (this.dragMode === "move")
         {
@@ -19051,7 +19035,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
     {
         if (this.dragMode === "move")
         {
@@ -19164,7 +19148,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    private startRubberBand(e: MouseEvent, canvasPos: Point): void
+    private startRubberBand(e: MouseEvent, _canvasPos: Point): void
     {
         const hasModifier = e.shiftKey || e.ctrlKey || e.metaKey;
 
@@ -19520,7 +19504,7 @@ export class SelectTool implements Tool
         {
             if (this.hitTestRotationHandle(canvasPos, obj))
             {
-                this.beginRotateDrag(obj);
+                this.beginRotateDrag(obj, canvasPos);
                 return true;
             }
         }
@@ -19553,8 +19537,9 @@ export class SelectTool implements Tool
      * Enter rotation drag mode for the given object.
      *
      * @param obj - The object being rotated.
+     * @param canvasPos - Where the drag grabbed, in canvas space.
      */
-    private beginRotateDrag(obj: DiagramObject): void
+    private beginRotateDrag(obj: DiagramObject, canvasPos: Point): void
     {
         this.dragMode = "rotate";
         this.targetObjectId = obj.id;
@@ -19568,6 +19553,8 @@ export class SelectTool implements Tool
             width: b.width,
             height: b.height
         };
+
+        this.rotateGrabAngle = this.computeRotationAngle(canvasPos);
     }
 
     /**
@@ -19577,7 +19564,20 @@ export class SelectTool implements Tool
      */
     private handleRotateDrag(canvasPos: Point): void
     {
-        const angle = this.computeRotationAngle(canvasPos);
+        // (CRITICAL) THIS USED TO SET THE ABSOLUTE ANGLE TO THE
+        // CURSOR, AND `hitTestRotationHandle` PLACES THE HANDLE DUE
+        // NORTH OF THE UNROTATED BOUNDS. So grabbing the handle of
+        // an object already at 45 degrees set its rotation to
+        // roughly 0 on the first pointer move -- the shape SNAPPED
+        // upright the moment you touched it.
+        //
+        // `targetStartRotation` was recorded by `beginRotateDrag`
+        // and read nowhere, which the compiler had been reporting
+        // since it was written (UNUSED-1). It is half of what a
+        // relative rotation needs; `rotateGrabAngle` is the other
+        // half, so the object turns by the angle the POINTER turned.
+        const delta = this.computeRotationAngle(canvasPos) - this.rotateGrabAngle;
+        const angle = normaliseDegrees(this.targetStartRotation + delta);
 
         this.engine.rotateObjectTo(this.targetObjectId, angle);
     }
@@ -19599,15 +19599,7 @@ export class SelectTool implements Tool
         const dy = canvasPos.y - cy;
 
         // atan2 gives angle from positive-X axis; offset to measure from north
-        let degrees = (Math.atan2(dy, dx) * 180) / Math.PI;
-        degrees = degrees + 90;
-
-        if (degrees < 0)
-        {
-            degrees = degrees + 360;
-        }
-
-        return degrees % 360;
+        return normaliseDegrees(((Math.atan2(dy, dx) * 180) / Math.PI) + 90);
     }
 
     /**
@@ -19855,8 +19847,8 @@ export interface EngineForPanTool
 // CONSTANTS
 // ============================================================================
 
-/** Log prefix for all console messages from this module. */
-const LOG_PREFIX_PAN = "[DiagramEngine]";
+// `LOG_PREFIX_PAN` LEFT ON 2026-10-21 (UNUSED-1): a second copy of
+// the engine prefix for a logger this module does not declare.
 
 // ============================================================================
 // PUBLIC API
@@ -19928,7 +19920,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(e: MouseEvent, _canvasPos: Point): void
     {
         this.dragging = true;
         this.lastScreenPos = this.extractScreenPos(e);
@@ -19940,7 +19932,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(e: MouseEvent, _canvasPos: Point): void
     {
         if (!this.dragging)
         {
@@ -19961,7 +19953,7 @@ export class PanTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space (unused).
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
     {
         this.dragging = false;
 
@@ -19973,7 +19965,7 @@ export class PanTool implements Tool
      *
      * @param e - The originating keyboard event.
      */
-    public onKeyDown(e: KeyboardEvent): void
+    public onKeyDown(_e: KeyboardEvent): void
     {
         // Pan tool does not handle keyboard input.
     }
@@ -20107,7 +20099,7 @@ export interface EngineForDrawTool extends EngineForTools
 const DRAW_LOG_PREFIX = "[DrawTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logDrawDebug, info: logDrawInfo, warn: logDrawWarn, error: logDrawError } = makeLogger(DRAW_LOG_PREFIX);
+const { debug: logDrawDebug, warn: logDrawWarn } = makeLogger(DRAW_LOG_PREFIX);
 
 /** Minimum dimension in pixels for a placed shape. */
 const MIN_SHAPE_SIZE = 20;
@@ -20204,7 +20196,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         this.dragging = true;
         this.dragStart = canvasPos;
@@ -20218,7 +20210,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging)
         {
@@ -20242,7 +20234,7 @@ export class DrawTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging)
         {
@@ -20491,12 +20483,7 @@ export class DrawTool implements Tool
 const TEXT_TOOL_LOG_PREFIX = "[TextTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logTextDebug,
-    info: logTextInfo,
-    warn: logTextWarn,
-    error: logTextError,
-} = makeLogger(TEXT_TOOL_LOG_PREFIX);
+const { debug: logTextDebug } = makeLogger(TEXT_TOOL_LOG_PREFIX);
 
 /** Default width in pixels for new text objects. */
 const TEXT_DEFAULT_WIDTH = 200;
@@ -20558,7 +20545,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         this.placeTextObject(canvasPos);
     }
@@ -20569,7 +20556,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, _canvasPos: Point): void
     {
         // Text tool does not track mouse movement.
     }
@@ -20580,7 +20567,7 @@ export class TextTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
     {
         // Text tool completes placement on mouse-down.
     }
@@ -20815,12 +20802,7 @@ export interface EngineForConnectTool extends EngineForTools
 const CONNECT_LOG_PREFIX = "[ConnectorTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logConnectDebug,
-    info: logConnectInfo,
-    warn: logConnectWarn,
-    error: logConnectError,
-} = makeLogger(CONNECT_LOG_PREFIX);
+const { debug: logConnectDebug, info: logConnectInfo } = makeLogger(CONNECT_LOG_PREFIX);
 
 /** CSS colour for the preview line. */
 const PREVIEW_LINE_COLOR = "var(--bs-primary, #0d6efd)";
@@ -20884,8 +20866,9 @@ export class ConnectorTool implements Tool
     /** The resolved source port ID on the source object. */
     private sourcePortId: string | undefined = undefined;
 
-    /** Canvas position where the drag started. */
-    private dragStart: Point = { x: 0, y: 0 };
+    // `dragStart` LEFT ON 2026-10-21 (UNUSED-1): the preview line
+    // runs "from source centre to cursor", as this file's own
+    // header says, so the grab point was never part of it.
 
     /**
      * Creates a ConnectorTool bound to an engine instance.
@@ -20926,7 +20909,7 @@ export class ConnectorTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
     {
         const hitObj = this.engine.hitTestObject(canvasPos);
 
@@ -20937,7 +20920,6 @@ export class ConnectorTool implements Tool
 
         this.dragging = true;
         this.sourceObj = hitObj;
-        this.dragStart = canvasPos;
         this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
 
         logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
@@ -21376,7 +21358,6 @@ export class ConnectorTool implements Tool
         this.dragging = false;
         this.sourceObj = null;
         this.sourcePortId = undefined;
-        this.dragStart = { x: 0, y: 0 };
     }
 }
 
@@ -21445,7 +21426,7 @@ export interface EngineForPenTool extends EngineForTools
 const PEN_LOG_PREFIX = "[PenTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logPenDebug, info: logPenInfo, warn: logPenWarn, error: logPenError } = makeLogger(PEN_LOG_PREFIX);
+const { debug: logPenDebug, info: logPenInfo } = makeLogger(PEN_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const PEN_SVG_NS = "http://www.w3.org/2000/svg";
@@ -22036,12 +22017,7 @@ export interface EngineForBrushTool extends EngineForTools
 const BRUSH_LOG_PREFIX = "[BrushTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logBrushDebug,
-    info: logBrushInfo,
-    warn: logBrushWarn,
-    error: logBrushError,
-} = makeLogger(BRUSH_LOG_PREFIX);
+const { debug: logBrushDebug, info: logBrushInfo } = makeLogger(BRUSH_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const BRUSH_SVG_NS = "http://www.w3.org/2000/svg";
@@ -22541,15 +22517,10 @@ export interface EngineForPaintbrushTool extends EngineForTools
 const PAINTBRUSH_LOG_PREFIX = "[PaintbrushTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logPaintbrushDebug,
-    info: logPaintbrushInfo,
-    warn: logPaintbrushWarn,
-    error: logPaintbrushError,
-} = makeLogger(PAINTBRUSH_LOG_PREFIX);
+const { debug: logPaintbrushDebug, warn: logPaintbrushWarn } = makeLogger(PAINTBRUSH_LOG_PREFIX);
 
-/** Minimum distance in pixels between interpolated stroke points. */
-const PAINTBRUSH_MIN_STEP = 1;
+// `PAINTBRUSH_MIN_STEP` LEFT ON 2026-10-21 (UNUSED-1): the stroke
+// interpolation never consulted a minimum step.
 
 // ============================================================================
 // PUBLIC API
@@ -23130,12 +23101,7 @@ export interface EngineForHighlighterTool extends EngineForTools
 const HIGHLIGHTER_LOG_PREFIX = "[HighlighterTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logHighlighterDebug,
-    info: logHighlighterInfo,
-    warn: logHighlighterWarn,
-    error: logHighlighterError,
-} = makeLogger(HIGHLIGHTER_LOG_PREFIX);
+const { debug: logHighlighterDebug, info: logHighlighterInfo } = makeLogger(HIGHLIGHTER_LOG_PREFIX);
 
 /** SVG namespace for creating preview elements. */
 const HIGHLIGHTER_SVG_NS = "http://www.w3.org/2000/svg";
@@ -23625,12 +23591,7 @@ function toHighlighterLocalPathData(pts: Point[], bbox: Rect): string
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logMeasureDebug,
-    info: logMeasureInfo,
-    warn: logMeasureWarn,
-    error: logMeasureError,
-} = makeLogger(MEASURE_LOG_PREFIX);
+const { debug: logMeasureDebug, info: logMeasureInfo } = makeLogger(MEASURE_LOG_PREFIX);
 
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
@@ -24227,7 +24188,7 @@ export class ToolManager
 const TPL_LOG = "[DiagramEngine:Templates]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logTplDebug, info: logTplInfo, warn: logTplWarn, error: logTplError } = makeLogger(TPL_LOG);
+const { info: logTplInfo, warn: logTplWarn } = makeLogger(TPL_LOG);
 
 /** Pattern matching {{expression}} placeholders in text. */
 const TEMPLATE_PATTERN = /\{\{([^}]+)\}\}/g;
@@ -24538,7 +24499,7 @@ function resolveBlockTemplates(
 const PF_LOG = "[DiagramEngine:PageFrames]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logPfDebug, info: logPfInfo, warn: logPfWarn, error: logPfError } = makeLogger(PF_LOG);
+const { debug: logPfDebug } = makeLogger(PF_LOG);
 
 /** Default border colour for page frames. */
 const PF_DEFAULT_BORDER_COLOR = "rgba(100, 100, 200, 0.6)";
@@ -24684,7 +24645,7 @@ export function findPageFrameSize(name: string): PageFrameSize | null
  */
 export function renderPageFrame(
     frame: PageFrame,
-    defsEl: SVGElement
+    _defsEl: SVGElement
 ): SVGElement
 {
     const g = svgCreate("g", {

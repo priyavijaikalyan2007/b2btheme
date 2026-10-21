@@ -19,17 +19,17 @@
 const NET_LOG_PREFIX = "[NetworkStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logNetDebug, info: logNetInfo, warn: logNetWarn, error: logNetError } = makeLogger(NET_LOG_PREFIX);
+const { info: logNetInfo } = makeLogger(NET_LOG_PREFIX);
 
 const BPMN_LOG_PREFIX = "[BpmnStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logBpmnDebug, info: logBpmnInfo, warn: logBpmnWarn, error: logBpmnError } = makeLogger(BPMN_LOG_PREFIX);
+const { info: logBpmnInfo } = makeLogger(BPMN_LOG_PREFIX);
 
 const ER_LOG_PREFIX = "[ErStencils]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const { debug: logErDebug, info: logErInfo, warn: logErWarn, error: logErError } = makeLogger(ER_LOG_PREFIX);
+const { info: logErInfo } = makeLogger(ER_LOG_PREFIX);
 
 /** Category identifiers for stencil palette grouping. */
 const NET_CATEGORY = "network";

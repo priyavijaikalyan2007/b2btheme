@@ -126,6 +126,12 @@ const NUDGE_SHIFT_PX = 10;
 /** Pixel radius for detecting a resize handle hit. */
 const HANDLE_HIT_RADIUS = 6;
 
+/** Wraps any degree value into [0, 360). */
+function normaliseDegrees(degrees: number): number
+{
+    return ((degrees % 360) + 360) % 360;
+}
+
 /** Vertical offset of the rotation handle above the object. */
 const ROTATION_HANDLE_OFFSET = 25;
 
@@ -188,6 +194,9 @@ export class SelectTool implements Tool
 
     /** Starting rotation angle of the target object (degrees). */
     private targetStartRotation: number = 0;
+
+    /** Angle from the object centre to the point the drag grabbed. */
+    private rotateGrabAngle: number = 0;
 
     /**
      * Create a SelectTool bound to an engine instance.
@@ -258,7 +267,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
     {
         if (this.dragMode === "move")
         {
@@ -284,7 +293,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseUp(e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
     {
         if (this.dragMode === "move")
         {
@@ -397,7 +406,7 @@ export class SelectTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    private startRubberBand(e: MouseEvent, canvasPos: Point): void
+    private startRubberBand(e: MouseEvent, _canvasPos: Point): void
     {
         const hasModifier = e.shiftKey || e.ctrlKey || e.metaKey;
 
@@ -753,7 +762,7 @@ export class SelectTool implements Tool
         {
             if (this.hitTestRotationHandle(canvasPos, obj))
             {
-                this.beginRotateDrag(obj);
+                this.beginRotateDrag(obj, canvasPos);
                 return true;
             }
         }
@@ -786,8 +795,9 @@ export class SelectTool implements Tool
      * Enter rotation drag mode for the given object.
      *
      * @param obj - The object being rotated.
+     * @param canvasPos - Where the drag grabbed, in canvas space.
      */
-    private beginRotateDrag(obj: DiagramObject): void
+    private beginRotateDrag(obj: DiagramObject, canvasPos: Point): void
     {
         this.dragMode = "rotate";
         this.targetObjectId = obj.id;
@@ -801,6 +811,8 @@ export class SelectTool implements Tool
             width: b.width,
             height: b.height
         };
+
+        this.rotateGrabAngle = this.computeRotationAngle(canvasPos);
     }
 
     /**
@@ -810,7 +822,20 @@ export class SelectTool implements Tool
      */
     private handleRotateDrag(canvasPos: Point): void
     {
-        const angle = this.computeRotationAngle(canvasPos);
+        // (CRITICAL) THIS USED TO SET THE ABSOLUTE ANGLE TO THE
+        // CURSOR, AND `hitTestRotationHandle` PLACES THE HANDLE DUE
+        // NORTH OF THE UNROTATED BOUNDS. So grabbing the handle of
+        // an object already at 45 degrees set its rotation to
+        // roughly 0 on the first pointer move -- the shape SNAPPED
+        // upright the moment you touched it.
+        //
+        // `targetStartRotation` was recorded by `beginRotateDrag`
+        // and read nowhere, which the compiler had been reporting
+        // since it was written (UNUSED-1). It is half of what a
+        // relative rotation needs; `rotateGrabAngle` is the other
+        // half, so the object turns by the angle the POINTER turned.
+        const delta = this.computeRotationAngle(canvasPos) - this.rotateGrabAngle;
+        const angle = normaliseDegrees(this.targetStartRotation + delta);
 
         this.engine.rotateObjectTo(this.targetObjectId, angle);
     }
@@ -832,15 +857,7 @@ export class SelectTool implements Tool
         const dy = canvasPos.y - cy;
 
         // atan2 gives angle from positive-X axis; offset to measure from north
-        let degrees = (Math.atan2(dy, dx) * 180) / Math.PI;
-        degrees = degrees + 90;
-
-        if (degrees < 0)
-        {
-            degrees = degrees + 360;
-        }
-
-        return degrees % 360;
+        return normaliseDegrees(((Math.atan2(dy, dx) * 180) / Math.PI) + 90);
     }
 
     /**

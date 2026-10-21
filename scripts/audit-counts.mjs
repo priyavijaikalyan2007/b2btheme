@@ -53,7 +53,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
 import { census as testCensus, standInsOf, guardedAssertions } from "./test-assertions.mjs";
 
@@ -512,7 +512,24 @@ const BASELINES = {
     // are two spinner mirrors, two status-dot refs only ever
     // assigned null, a drag flag a probe showed unnecessary, and a
     // resize handler a ResizeObserver replaced.
-    unusedLocals: 227,
+    unusedLocals: 124,
+
+    // A CEILING AT ZERO (2026-10-21, UNUSED-1).
+    // `scripts/bundle-diagramengine.sh` emits its own preamble of
+    // sixteen shared constants and then greps each source module to
+    // STRIP that module's declaration of the same name, because
+    // thirty concatenated files share one scope. The cost is that
+    // the number a reader finds in a src file is not necessarily
+    // the number that ships, and nothing compared them.
+    //
+    // Two had drifted. `MAX_ZOOM` read 4.0 in render-engine.ts and
+    // 32.0 in the bundle, so that file said the engine caps zoom at
+    // 4x when it caps at 32x. `ROTATION_HANDLE_OFFSET` read 24
+    // there and 25 in tool-select.ts.
+    //
+    // Not a floor: a module that stops declaring a local copy is
+    // fine. What must never happen is a local copy that lies.
+    bundlePreambleMismatches: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -540,7 +557,7 @@ const BASELINES = {
     // children before the factory runs and returns when they grew.
     // Found by the demo-page smoke gate, which is the only thing in
     // this repository that had ever opened that page.
-    diagramengineLines: 30546,
+    diagramengineLines: 30507,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -778,7 +795,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5059,
+    testBlocks: 5062,
 };
 
 /**
@@ -1008,6 +1025,61 @@ export function countUnusedLocals()
  * produces and what tsc reads when it writes the .d.ts. An export inside
  * a string or a comment is not a declaration and must not be counted.
  */
+/**
+ * Shared constants whose SOURCE copy disagrees with the value the
+ * bundle actually ships.
+ *
+ * (CRITICAL) THE BUNDLER WINS SILENTLY AND NOTHING CHECKED.
+ * `scripts/bundle-diagramengine.sh` emits its own preamble of
+ * sixteen shared constants and then greps each source module to
+ * STRIP that module's own declaration of the same name. The point
+ * is that thirty concatenated files share one scope and cannot each
+ * declare `const CLS`. The cost is that the number a reader finds
+ * in `src/render-engine.ts` is not necessarily the number that
+ * ships, and nothing ever compared them.
+ *
+ * Two had drifted when this was written (2026-10-21, UNUSED-1).
+ * `MAX_ZOOM` read 4.0 in the source and 32.0 in the bundle -- a
+ * reader of that file believed the engine capped zoom at 4x and it
+ * caps at 32x. `ROTATION_HANDLE_OFFSET` read 24 in
+ * `render-engine.ts` and 25 in `tool-select.ts`, which is the same
+ * fault with the two copies disagreeing with each other as well.
+ *
+ * A CEILING AT ZERO, not a floor: the local copies exist so each
+ * module reads correctly on its own, and a module that stops
+ * declaring one is fine. What must never happen is a local copy
+ * that LIES.
+ *
+ * @returns One entry per disagreement, as `file: NAME src -> bundle`.
+ */
+export function bundlePreambleMismatches()
+{
+    const script = readFileSync("scripts/bundle-diagramengine.sh", "utf8");
+    const shipped = new Map();
+
+    for (const m of script.matchAll(/echo "const (\w+) = (.*?);"\n/g))
+    {
+        shipped.set(m[1], m[2].replace(/\\"/g, '"'));
+    }
+
+    const out = [];
+    const dir = "components/diagramengine/src";
+
+    for (const file of readdirSync(dir).filter((n) => n.endsWith(".ts")))
+    {
+        const text = readFileSync(`${dir}/${file}`, "utf8");
+
+        for (const m of text.matchAll(/^const (\w+) = (.*?);$/gm))
+        {
+            if (!shipped.has(m[1])) { continue; }
+            if (shipped.get(m[1]) === m[2]) { continue; }
+
+            out.push(`${file}: ${m[1]} is ${m[2]}, bundle ships ${shipped.get(m[1])}`);
+        }
+    }
+    return out;
+}
+
 export function countBundleExports(text)
 {
     return (text.match(/^export /gm) ?? []).length;
@@ -1267,6 +1339,7 @@ function measure()
         thirdPartyTagsWithoutSri: 0,
         cdnModuleSpecifiers: 0,
         unusedLocals: 0,
+        bundlePreambleMismatches: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -1385,6 +1458,10 @@ function measure()
 
     // UNUSED-1. The compiler, not a scan: an unused binding is an absence.
     counts.unusedLocals = countUnusedLocals();
+
+    // UNUSED-1. A source copy of a bundled constant that LIES: the
+    // bundler strips each module's declaration and emits its own.
+    counts.bundlePreambleMismatches = bundlePreambleMismatches().length;
 
     // DEBT-TEST-1. A test that cannot fail is worse than no test. No
     // test is an absence somebody can count, and a passing test is a

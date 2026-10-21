@@ -76,7 +76,9 @@ FILES=(
     echo "const MAX_ZOOM = 32.0;"
     echo "const ZOOM_STEP = 0.15;"
     echo "const HANDLE_SIZE = 8;"
-    echo "const HANDLE_HIT_MARGIN = 4;"
+    # HANDLE_HIT_MARGIN left the preamble on 2026-10-21 (UNUSED-1):
+    # nothing in the thirty modules read it. tool-select.ts does
+    # its own hit testing with HANDLE_HIT_RADIUS.
     echo "const DEFAULT_GRID_SIZE = 20;"
     echo "const DEFAULT_LAYER_ID = \"default\";"
     echo "const DEFAULT_LAYER_NAME = \"Default\";"
@@ -116,7 +118,6 @@ FILES=(
             | grep -v '^const MAX_ZOOM\b' \
             | grep -v '^const ZOOM_STEP\b' \
             | grep -v '^const HANDLE_SIZE\b' \
-            | grep -v '^const HANDLE_HIT_MARGIN\b' \
             | grep -v '^const DEFAULT_GRID_SIZE\b' \
             | grep -v '^const DEFAULT_LAYER_ID\b' \
             | grep -v '^const DEFAULT_LAYER_NAME\b' \

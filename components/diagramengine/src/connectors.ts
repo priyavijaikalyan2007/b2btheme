@@ -23,12 +23,7 @@
 const CONNECTOR_LOG_PREFIX = "[Connectors]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logConnectorDebug,
-    info: logConnectorInfo,
-    warn: logConnectorWarn,
-    error: logConnectorError,
-} = makeLogger(CONNECTOR_LOG_PREFIX);
+const { debug: logConnectorDebug, warn: logConnectorWarn } = makeLogger(CONNECTOR_LOG_PREFIX);
 
 /** SVG namespace URI for element creation. */
 const CONNECTOR_SVG_NS = "http://www.w3.org/2000/svg";

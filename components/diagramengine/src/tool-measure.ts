@@ -23,12 +23,7 @@
 const MEASURE_LOG_PREFIX = "[MeasureTool]";
 
 /** Namespaced logging helpers. See FRONTEND_LOGGING.md section 1.1. */
-const {
-    debug: logMeasureDebug,
-    info: logMeasureInfo,
-    warn: logMeasureWarn,
-    error: logMeasureError,
-} = makeLogger(MEASURE_LOG_PREFIX);
+const { debug: logMeasureDebug, info: logMeasureInfo } = makeLogger(MEASURE_LOG_PREFIX);
 
 /** SVG namespace for creating overlay elements. */
 const MEASURE_SVG_NS = "http://www.w3.org/2000/svg";
