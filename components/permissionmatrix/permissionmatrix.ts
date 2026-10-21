@@ -634,6 +634,42 @@ export class PermissionMatrix
             empty.textContent = this.opts.emptyMessage ?? "No matching permissions";
             grid.appendChild(empty);
         }
+
+        this.applyRovingTabindex(grid);
+    }
+
+    /**
+     * Gives exactly one cell `tabindex="0"` so the grid can be TABBED
+     * INTO.
+     *
+     * (CRITICAL) EVERY CELL WAS BUILT WITH -1 AND NOTHING EVER SET A
+     * ZERO. A user tabbing through the page skipped the whole matrix,
+     * and because `onGridKeydown` only fires on a focused cell the
+     * arrow navigation underneath it was unreachable too — a grid
+     * with a complete roving-tabindex implementation and no way in.
+     *
+     * `focusedRow` and `focusedCol` are the state that was meant to
+     * drive it. Both were initialised to 0, written nowhere and read
+     * nowhere, and the compiler had been reporting them as unused
+     * since they were declared (UNUSED-1). `moveCellFocus` keeps them
+     * in step now, so a re-render puts the entry point back where the
+     * user left it rather than at the top-left.
+     *
+     * One owner for the invariant, rather than a rule spread across
+     * `buildPermCell`: "exactly one" is not a property any single
+     * cell can know.
+     */
+    private applyRovingTabindex(grid: HTMLElement): void
+    {
+        const rows = grid.querySelectorAll(`.${CLS}-row`);
+        const row = rows[Math.min(this.focusedRow, rows.length - 1)];
+        if (!row) { return; }
+
+        const cells = row.querySelectorAll(`.${CLS}-cell`);
+        const cell = cells[Math.min(this.focusedCol, cells.length - 1)];
+        if (!cell) { return; }
+
+        cell.setAttribute("tabindex", "0");
     }
 
     // ========================================================================
@@ -1057,6 +1093,11 @@ export class PermissionMatrix
         const target = newCells[newCi] as HTMLElement;
         target.setAttribute("tabindex", "0");
         target.focus();
+
+        // So a re-render restores the entry point where the user
+        // left it. See applyRovingTabindex.
+        this.focusedRow = newRi;
+        this.focusedCol = newCi;
     }
 
     // ========================================================================

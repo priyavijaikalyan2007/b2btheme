@@ -371,3 +371,74 @@ describe("exportData names the format it cannot produce", () =>
         matrix.destroy();
     });
 });
+
+// ============================================================================
+// ROVING TABINDEX — UNUSED-1
+// ============================================================================
+
+describe("the grid is reachable by keyboard", () =>
+{
+    function cells(): HTMLElement[]
+    {
+        return [...container.querySelectorAll<HTMLElement>(
+            ".permissionmatrix-cell")];
+    }
+
+    // EVERY CELL WAS BUILT WITH tabindex="-1" AND NOTHING EVER SET A
+    // ZERO, so a user tabbing through the page skipped the whole
+    // matrix -- and `onGridKeydown` only fires on a focused cell, so
+    // the arrow navigation below it was unreachable too. The private
+    // `focusedRow` / `focusedCol`, initialised to 0,0, are exactly
+    // the state a roving tabindex needs and nothing read them: the
+    // compiler had been reporting both as unused (UNUSED-1).
+    test("exactly one cell carries tabindex 0", () =>
+    {
+        const matrix = createPermissionMatrix(makeOptions(), "test-permmatrix");
+
+        const reachable = cells().filter(
+            (c) => c.getAttribute("tabindex") === "0");
+
+        expect(reachable).toHaveLength(1);
+        expect(reachable[0]).toBe(cells()[0]);
+        matrix.destroy();
+    });
+
+    test("arrowing right moves the zero with the focus", () =>
+    {
+        const matrix = createPermissionMatrix(makeOptions(), "test-permmatrix");
+        const first = cells()[0];
+
+        first.dispatchEvent(new KeyboardEvent("keydown",
+            { key: "ArrowRight", bubbles: true }));
+
+        expect(first.getAttribute("tabindex")).toBe("-1");
+        expect(cells().filter((c) => c.getAttribute("tabindex") === "0"))
+            .toHaveLength(1);
+        matrix.destroy();
+    });
+});
+
+describe("the roving entry point survives a re-render", () =>
+{
+    test("a re-render restores the zero where the user left it", () =>
+    {
+        // `focusedRow` / `focusedCol` exist so the grid does not
+        // send the user back to the top-left every time a filter
+        // or a group toggle rebuilds it.
+        const matrix = createPermissionMatrix(makeOptions(), "test-permmatrix");
+        const cellsNow = (): HTMLElement[] => [
+            ...container.querySelectorAll<HTMLElement>(".permissionmatrix-cell")];
+
+        cellsNow()[0].dispatchEvent(new KeyboardEvent("keydown",
+            { key: "ArrowRight", bubbles: true }));
+
+        matrix.setFilter("");
+
+        const zeros = cellsNow().filter(
+            (c) => c.getAttribute("tabindex") === "0");
+        expect(zeros).toHaveLength(1);
+        expect(zeros[0]).toBe(cellsNow()[1]);
+
+        matrix.destroy();
+    });
+});

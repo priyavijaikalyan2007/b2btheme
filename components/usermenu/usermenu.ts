@@ -170,8 +170,11 @@ export class UserMenu
     private triggerNameEl: HTMLElement | null = null;
     private triggerAvatarEl: HTMLElement | null = null;
     private headerAvatarEl: HTMLElement | null = null;
-    private statusDotTriggerEl: HTMLElement | null = null;
-    private statusDotHeaderEl: HTMLElement | null = null;
+    // `statusDotTriggerEl` and `statusDotHeaderEl` LEFT ON 2026-10-21
+    // (UNUSED-1). Both were only ever assigned null, in destroy.
+    // `replaceStatusDot` finds the dot with a querySelector on the
+    // avatar container, so there was nothing for a stored reference
+    // to do.
 
     // -- State ---------------------------------------------------------------
     private opened = false;
@@ -964,8 +967,6 @@ export class UserMenu
         this.triggerNameEl = null;
         this.triggerAvatarEl = null;
         this.headerAvatarEl = null;
-        this.statusDotTriggerEl = null;
-        this.statusDotHeaderEl = null;
     }
 }
 

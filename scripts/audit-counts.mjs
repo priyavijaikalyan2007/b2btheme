@@ -503,7 +503,16 @@ const BASELINES = {
     // `matchesKeyCombo` stood in for a `keyBindings` override the
     // keymap hard-coded past, and PermissionMatrix's `format`
     // parameter named a CSV serialiser that does not exist.
-    unusedLocals: 298,
+    //
+    // 298 -> 287: two more were defects and six were genuinely dead.
+    // PermissionMatrix's focusedRow/focusedCol were the roving
+    // tabindex a grid needs to be TABBED INTO at all, and SpineMap's
+    // popoverNodeId was what `applyTransform` needed to keep an open
+    // popover attached to its node through a pan. The six deletions
+    // are two spinner mirrors, two status-dot refs only ever
+    // assigned null, a drag flag a probe showed unnecessary, and a
+    // resize handler a ResizeObserver replaced.
+    unusedLocals: 287,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -769,7 +778,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5042,
+    testBlocks: 5046,
 };
 
 /**

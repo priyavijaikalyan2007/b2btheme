@@ -471,12 +471,23 @@ export class GradientPicker
     // Bound event handlers for cleanup
     private boundOutsideClick: ((e: MouseEvent) => void) | null = null;
     private boundEscapeKey: ((e: KeyboardEvent) => void) | null = null;
-    private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
     // Drag state
-    private isDragging = false;
+    //
+    // `isDragging` and `dragPointerId` LEFT ON 2026-10-21 (UNUSED-1).
+    // Both were written on drag start and cleared on drag end and
+    // read nowhere. They look like SpineMap's drag guard, which
+    // stops a click firing at the end of a drag -- and a probe
+    // showed this component does not need one: `handleTrackClick`
+    // refuses a click whose target carries the handle class, and a
+    // handle has no children for the target to be. `boundKeyDown`
+    // went with them; keydown is wired through `trackEl` and
+    // `boundEscapeKey`.
+    //
+    // `dragPointerId` was also the value `releasePointerCapture`
+    // would need, and nothing releases: the browser does it
+    // implicitly on pointerup.
     private dragMoved = false;
-    private dragPointerId: number | null = null;
 
     constructor(containerId: string, options?: GradientPickerOptions)
     {
@@ -1088,8 +1099,6 @@ export class GradientPicker
         e.preventDefault();
 
         this.selectedStopIndex = index;
-        this.isDragging = true;
-        this.dragPointerId = e.pointerId;
         this.dragMoved = false;
 
         const handle = e.currentTarget as HTMLElement;
@@ -1139,8 +1148,6 @@ export class GradientPicker
         handle.removeEventListener("pointermove", onMove);
         handle.removeEventListener("pointerup", onUp);
         const wasClick = !this.dragMoved;
-        this.isDragging = false;
-        this.dragPointerId = null;
         this.dragMoved = false;
         this.sortStopsAndUpdateIndex();
         this.updateAllUI();

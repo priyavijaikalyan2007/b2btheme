@@ -3744,6 +3744,46 @@ offered as the evidence for it.
   carry the product defects; the last is where the genuine
   deletions are.
 
+  **Same pass, third shape — state written and never read: 298 ->
+  287. Two more defects, six genuine deletions.**
+
+  - **`permissionmatrix :: focusedRow` / `focusedCol` — THE GRID
+    COULD NOT BE REACHED BY KEYBOARD AT ALL.** Every cell is built
+    with `tabindex="-1"` and only `moveCellFocus` ever set a `0`,
+    so a user tabbing through the page skipped the whole matrix —
+    and because `onGridKeydown` only fires on a focused cell, the
+    complete arrow-navigation implementation underneath it was
+    unreachable too. **A roving tabindex with no entry point.** The
+    two fields, both initialised to 0, are exactly the state it
+    needs. `applyRovingTabindex` owns the "exactly one" invariant
+    in one place, and `moveCellFocus` keeps the pair in step so a
+    re-render puts the entry point back where the user left it
+    rather than at the top-left.
+  - **`spinemap :: popoverNodeId` — an open popover did not follow
+    a pan or a zoom.** `positionPopover` places it `position:
+    fixed` against the node's viewport rect, and `applyTransform`
+    moved the nodes without moving it, so the popover ended up
+    pointing at empty canvas. The field is written by
+    `showPopover`, cleared by `hidePopover` and was read nowhere.
+
+  **And six that are genuinely dead, each for a stated reason.**
+  `searchbox :: isLoading` and `peoplepicker :: isSearching` both
+  mirrored a spinner's `display` — the element IS the state.
+  `usermenu :: statusDotTriggerEl` / `statusDotHeaderEl` were only
+  ever assigned `null`, in destroy, because `replaceStatusDot`
+  finds the dot with a `querySelector`. `gradientpicker ::
+  isDragging` / `dragPointerId` went after a probe, described
+  above. `ribbon :: boundResize` was superseded by a
+  `ResizeObserver`.
+
+  **Remaining: ~66 real-code reports, 120 preamble (a FLOOR) and
+  103 in the generated `diagramengine.ts` (fix in `src/` and
+  re-bundle).** The shapes left are mostly element refs and dead
+  helpers, which is where the entry predicts the genuine deletions
+  are — and that prediction is now the only unverified one in this
+  entry, which is the shape of claim this session has falsified
+  three times.
+
   **2026-10-20 pass: 330 -> 305.** Twenty-three dead module constants
   deleted, plus the DataGrid fix. The remainder is 120 preamble, 103
   diagramengine and ~82 elsewhere.

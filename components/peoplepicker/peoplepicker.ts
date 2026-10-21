@@ -283,7 +283,9 @@ export class PeoplePicker
     private dropdownOpen = false;
     private highlightIndex = -1;
     private searchGeneration = 0;
-    private isSearching = false;
+    // `isSearching` LEFT ON 2026-10-21 (UNUSED-1): it mirrored the
+    // spinner's `display` and nothing read it. The element IS the
+    // state, which is the same answer SearchBox's `isLoading` got.
 
     // -- Flat rows for keyboard nav
     private flatRows: PersonData[] = [];
@@ -1148,13 +1150,11 @@ export class PeoplePicker
 
     private showSpinner(): void
     {
-        this.isSearching = true;
         this.spinnerEl.style.display = "";
     }
 
     private hideSpinner(): void
     {
-        this.isSearching = false;
         this.spinnerEl.style.display = "none";
     }
 

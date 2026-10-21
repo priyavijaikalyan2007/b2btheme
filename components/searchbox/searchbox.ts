@@ -225,7 +225,9 @@ export class SearchBox
     private highlightedIndex = -1;
     private currentSuggestions: string[] = [];
     private suggestionsVisible = false;
-    private isLoading = false;
+    // `isLoading` LEFT ON 2026-10-21 (UNUSED-1): it mirrored the
+    // spinner's `display` and nothing read it. The element IS the
+    // state.
 
     // Bound event handlers for cleanup
     private boundOnInput: ((e: Event) => void) | null = null;
@@ -1198,7 +1200,6 @@ export class SearchBox
         if (this.spinnerEl)
         {
             this.spinnerEl.style.display = "";
-            this.isLoading = true;
         }
     }
 
@@ -1210,7 +1211,6 @@ export class SearchBox
         if (this.spinnerEl)
         {
             this.spinnerEl.style.display = "none";
-            this.isLoading = false;
         }
     }
 

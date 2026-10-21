@@ -585,7 +585,9 @@ export class RibbonImpl implements Ribbon
     // Bound handlers
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
     private boundClickOutside: ((e: PointerEvent) => void) | null = null;
-    private boundResize: (() => void) | null = null;
+    // `boundResize` LEFT ON 2026-10-21 (UNUSED-1): a window-resize
+    // handler superseded by the ResizeObserver below it, declared
+    // and never assigned.
 
     // ResizeObserver
     private resizeObserver: ResizeObserver | null = null;

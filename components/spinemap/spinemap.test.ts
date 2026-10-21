@@ -1062,3 +1062,47 @@ describe("edge cases", () =>
         map.destroy();
     });
 });
+
+// ============================================================================
+// POPOVER FOLLOWS THE CANVAS — UNUSED-1
+// ============================================================================
+
+describe("an open popover follows a zoom", () =>
+{
+    // `positionPopover` places the popover `position: fixed` against
+    // the node's viewport rect, and `applyTransform` moved the nodes
+    // without moving it, so panning or zooming left the popover
+    // pointing at empty canvas. `popoverNodeId` was written by
+    // showPopover, cleared by hidePopover and read nowhere -- the
+    // compiler had been reporting it unused since it was declared.
+    test("zooming repositions the popover against its node", () =>
+    {
+        const map = createSpineMap({ container, data: buildTestData() });
+        const group = map.getElement().querySelector(
+            "[data-id='branch-1']") as SVGElement;
+
+        // jsdom does no layout, so the node's rect is supplied. The
+        // claim is that the popover is placed from a FRESH read of
+        // it, which is exactly what the missing call does.
+        let left = 100;
+        group.getBoundingClientRect = () =>
+            ({ left, top: 50, width: 40, height: 20, bottom: 70,
+                right: left + 40, x: left, y: 50, toJSON: () => ({}) } as DOMRect);
+
+        group.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        const before = (document.querySelector(
+            ".spinemap-popover") as HTMLElement).style.left;
+
+        left = 400;
+        map.zoomTo(2);
+
+        const after = (document.querySelector(
+            ".spinemap-popover") as HTMLElement).style.left;
+        expect(after).not.toBe(before);
+        // 400 (fresh left) + 20 (half width) - 150 (half the 300px
+        // default popover width).
+        expect(after).toBe("270px");
+
+        map.destroy();
+    });
+});

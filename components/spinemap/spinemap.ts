@@ -3528,6 +3528,20 @@ export class SpineMap
         const { tx, ty, scale } = this.zoom;
         setAttr(this.transformG,
             "transform", `translate(${tx},${ty}) scale(${scale})`);
+
+        // AN OPEN POPOVER USED TO STAY WHERE IT WAS. `positionPopover`
+        // places it `position: fixed` against the node's viewport
+        // rect, and panning or zooming moves the node without moving
+        // the popover, so it ended up pointing at empty canvas.
+        //
+        // `popoverNodeId` is the state that was missing its reader:
+        // written by `showPopover`, cleared by `hidePopover` and read
+        // nowhere, which the compiler had been reporting since it was
+        // declared (UNUSED-1).
+        if (this.popoverNodeId)
+        {
+            this.positionPopover(this.popoverNodeId);
+        }
     }
 
     private onWheel(e: WheelEvent): void
