@@ -9,6 +9,14 @@ LAST GOOD COMMIT
     d159255  docs(debt-ts-1): do not nudge the apps team
     2026-10-21, CI green, tree clean.
 
+    A branch points at it, so the commit cannot be lost to a garbage
+    collection and nobody has to remember the hash:
+
+        rollback/before-pat-1-fix-20261021-194530-d159255
+
+    The branch is pushed. `git checkout` it to read the old tree, or
+    use it as the target in step 4 below.
+
 WHAT CHANGES AFTER THIS POINT
     88 component classes stop being registered on `window`. Before the
     change a consumer could write `new window.SizesPicker(options)` and
@@ -31,6 +39,18 @@ WHAT CHANGES AFTER THIS POINT
     of them. Four demo pages in this repository did, across 27 sites,
     and they were changed to use their factories. The remaining risk is
     a consumer nobody has counted.
+
+    One such consumer was found after the deploy. Three studio demo
+    pages under demo/studio/ built their chrome with `new Sidebar(...)`
+    and `new Toolbar(...)`, and the sweep above missed them because it
+    read demo/*.html and demo/components/*.html only. They are fixed in
+
+        ee406cb  fix(pat-1): three studio demos still called
+                 new Sidebar and new Toolbar
+
+    which also gave the sidebar factories an optional container and
+    widened the demo gates. The knobby application itself was tested
+    against the deployed CDN and works.
 
     Consumer-facing instructions live in
     docs/MIGRATION_WINDOW_CLASSES.md, linked from a banner on the
@@ -59,10 +79,21 @@ HOW TO ROLL BACK
     4. Only if the branch is not shared and you want the tree exactly
        as it was:
 
-           git reset --hard d159255
+           git reset --hard rollback/before-pat-1-fix-20261021-194530-d159255
 
        This discards every commit after d159255, including this file.
        Prefer step 2.
+
+HOW LONG A ROLLBACK TAKES TO REACH A BROWSER
+    Cloudflare Workers Builds deploys every push to main, so a revert
+    reaches the origin as soon as that build finishes. `cdn/_headers`
+    serves /components/* with `max-age=300, stale-while-revalidate=86400`,
+    so a browser picks the reverted file up within about five minutes,
+    and at most one request per client is served the stale copy first.
+    A Cloudflare cache purge makes it immediate and is not required.
+
+    `https://static.knobby.io/build.json` is `no-cache` and reports the
+    commit that is live. Read it to confirm a deploy landed.
 
 HOW TO TELL WHETHER THE ROLLBACK WORKED
     Load any component bundle and check for the class global:
