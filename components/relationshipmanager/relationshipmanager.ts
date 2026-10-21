@@ -722,21 +722,34 @@ class RelationshipManagerImpl implements RelationshipManager
     private buildRelItemMeta(rel: RelationshipInstance): HTMLElement
     {
         const meta = htmlEl("div", { class: "rm-item-meta" });
-        const parts: string[] = [rel.otherResourceType];
-
-        if (this.opts.showProvenance !== false)
-        {
-            parts.push(rel.provenance.toUpperCase());
-        }
-        parts.push(rel.createdAt.substring(0, 10));
+        const tail: string[] = [rel.createdAt.substring(0, 10)];
 
         // Inline edge properties
         for (const [k, v] of Object.entries(rel.properties))
         {
-            parts.push(`${k}: ${String(v)}`);
+            tail.push(`${k}: ${String(v)}`);
         }
 
-        meta.textContent = parts.join(" \u00b7 ");
+        meta.appendChild(
+            document.createTextNode(`${rel.otherResourceType} \u00b7 `));
+
+        // THE PROVENANCE WAS PUSHED INTO THE TEXT LINE AS A BARE
+        // UPPERCASED STRING, and `buildProvenanceBadge` -- which
+        // wraps it in the `.rm-provenance` span the SCSS styles --
+        // had no caller. The README calls the option "Show
+        // provenance BADGES". The compiler had been reporting the
+        // builder as unused since it was written (UNUSED-1).
+        //
+        // The rendered TEXT is unchanged, so anything reading
+        // `textContent` reads what it did before; only the span and
+        // its styling are new.
+        if (this.opts.showProvenance !== false)
+        {
+            meta.appendChild(this.buildProvenanceBadge(rel.provenance));
+            meta.appendChild(document.createTextNode(" \u00b7 "));
+        }
+
+        meta.appendChild(document.createTextNode(tail.join(" \u00b7 ")));
         return meta;
     }
 

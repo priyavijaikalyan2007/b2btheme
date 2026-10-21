@@ -2399,11 +2399,10 @@ export class Toolbar
     }
 
     /** Returns regions ordered left-first then right for iteration. */
-    private getOrderedRegions(): ToolbarRegion[]
-    {
-        const { left, right } = this.partitionRegionsByAlign();
-        return [...left, ...right];
-    }
+    // `getOrderedRegions` LEFT ON 2026-10-21 (UNUSED-1): it
+    // concatenated the two halves of `partitionRegionsByAlign`, and
+    // all three callers of that take the halves apart themselves.
+    // A convenience with nothing to be convenient for.
 
     /**
      * Builds all region elements into the regions container.

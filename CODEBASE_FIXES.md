@@ -3804,9 +3804,46 @@ offered as the evidence for it.
   `smarttextinput :: multiCharBuffer` was cleared once and never
   appended to.
 
-  **Remaining: ~58 real-code reports, 120 preamble (a FLOOR) and
+  **Same pass, fifth shape — dead helpers, which this entry
+  predicted was "where the genuine deletions are": 279 -> 270. The
+  prediction was wrong twice before it was right.**
+
+  - **`activityfeed :: announce` — THE LIVE REGION WAS NEVER
+    WRITTEN TO.** `buildLive` creates an `aria-live="polite"`,
+    `aria-atomic="true"` element and appends it to the root on
+    every mount, `announce` writes to it, and **nothing called
+    either**. A screen-reader user was told nothing when new
+    activity arrived, which is the entire point of a feed having a
+    live region. `addEvent` announces who did what to what;
+    `addEvents` announces a count, because `aria-atomic` makes the
+    region read as one utterance.
+  - **`relationshipmanager :: buildProvenanceBadge` — the badge
+    never rendered.** The provenance was pushed into the
+    dot-separated meta line as a bare uppercased string, while the
+    builder wraps it in the `.rm-provenance` span **the SCSS
+    styles** and the README calls the option "Show provenance
+    **badges**". The rendered text is unchanged, so a reader of
+    `textContent` sees exactly what it did before; only the span
+    and its styling are new.
+
+  **Seven genuine deletions, each with its reason in place.**
+  `symbolpicker :: appendCategoryTabContent` was an **explicit
+  no-op stub** left behind when category tabs became a dropdown —
+  its own comment said so. `toolbar :: getOrderedRegions`
+  concatenated two halves that all three real callers take apart
+  themselves. `timepicker :: timeToMinutes` was superseded by
+  `timeToSeconds` beside it. And `treeview`'s `flattenVisible`,
+  `findNodeById`, `findParent` and `isDescendant` were superseded
+  by the class's own `getVisibleNodes()` and `visibleIndexMap` —
+  **`flattenVisible`'s doc comment named two callers it no longer
+  had**, which is a claim like any other.
+
+  **Remaining: ~49 real-code reports, 120 preamble (a FLOOR) and
   103 in the generated `diagramengine.ts` (fix in `src/` and
-  re-bundle).** The shapes left are mostly element refs and dead
+  re-bundle).** Across five shapes the score is **nine defects to
+  thirteen deletions**, so the entry's framing holds: an unused
+  symbol is a question, and the answer is a feature about as often
+  as it is dead code. The shapes left are mostly element refs and dead
   helpers, which is where the entry predicts the genuine deletions
   are — and that prediction is now the only unverified one in this
   entry, which is the shape of claim this session has falsified

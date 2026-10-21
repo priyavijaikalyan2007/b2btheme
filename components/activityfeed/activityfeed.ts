@@ -343,6 +343,7 @@ export class ActivityFeed
         this.events.unshift(event);
         this.prependEventEl(event);
         this.hideEmpty();
+        this.announce(describeEvent(event));
     }
 
     addEvents(events: ActivityEvent[]): void
@@ -351,6 +352,15 @@ export class ActivityFeed
         this.events.push(...events);
         this.appendEventsEl(events);
         this.hideEmpty();
+
+        // A count rather than every line, because `aria-atomic`
+        // makes the region read as one utterance and a bulk load
+        // would otherwise read the whole batch aloud.
+        if (events.length === 1) { this.announce(describeEvent(events[0])); }
+        else if (events.length > 1)
+        {
+            this.announce(`${events.length} new activity items`);
+        }
     }
 
     setEvents(events: ActivityEvent[]): void
@@ -997,6 +1007,18 @@ export class ActivityFeed
     // UTILITY
     // ========================================================================
 
+    /**
+     * Writes one line into the `aria-live` region.
+     *
+     * (CRITICAL) NOTHING CALLED THIS AND NOTHING WROTE TO THE
+     * REGION. `buildLive` creates an `aria-live="polite"`,
+     * `aria-atomic="true"` element and appends it to the root on
+     * every mount, and a screen-reader user was told nothing when
+     * new activity arrived — which is the entire point of a feed
+     * having a live region. `addEvent` and `addEvents` are the
+     * callers it was written for. The compiler had been reporting
+     * it unused since it was written (UNUSED-1).
+     */
     private announce(msg: string): void
     {
         if (!this.liveEl) { return; }
@@ -1007,6 +1029,14 @@ export class ActivityFeed
 // ============================================================================
 // FACTORY & GLOBALS
 // ============================================================================
+
+/** One line of live-region text for an event: who did what to what. */
+function describeEvent(event: ActivityEvent): string
+{
+    const target = event.target ? ` ${event.target}` : "";
+
+    return `${event.actor.name} ${event.action}${target}`;
+}
 
 export function createActivityFeed(
     options: ActivityFeedOptions,

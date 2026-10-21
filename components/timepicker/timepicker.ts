@@ -256,10 +256,9 @@ function cloneTime(t: TimeValue): TimeValue
     };
 }
 
-function timeToMinutes(t: TimeValue): number
-{
-    return (t.hours * 60) + t.minutes;
-}
+// `timeToMinutes` LEFT ON 2026-10-21 (UNUSED-1): superseded by
+// `timeToSeconds` beside it, which the min/max comparisons use
+// through `isTimeBefore`.
 
 function timeToSeconds(t: TimeValue): number
 {

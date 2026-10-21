@@ -663,3 +663,52 @@ describe("InlineToolbar adoption (ADR-128)", () =>
         rm.destroy();
     });
 });
+
+// ============================================================================
+// PROVENANCE BADGE — UNUSED-1
+// ============================================================================
+
+describe("provenance renders as the badge the README documents", () =>
+{
+    // The provenance was pushed into the dot-separated meta line as
+    // a bare uppercased string, and `buildProvenanceBadge` -- which
+    // wraps it in the `.rm-provenance` span the SCSS styles -- had
+    // no caller. The README calls the option "Show provenance
+    // BADGES". The compiler had been reporting the builder as
+    // unused since it was written.
+    test("the badge span carries the provenance", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: [makeRelationship({ provenance: "ai" })],
+        }));
+
+        const badge = container.querySelector(".rm-provenance");
+
+        expect(badge?.textContent).toBe("AI");
+        rm.destroy();
+    });
+
+    test("showProvenance false renders no badge", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({
+            relationships: [makeRelationship({ provenance: "ai" })],
+            showProvenance: false,
+        }));
+
+        expect(container.querySelector(".rm-provenance")).toBeNull();
+        rm.destroy();
+    });
+
+    test("the meta line still reads the same", () =>
+    {
+        // The badge replaces a text segment in place, so a reader
+        // of `textContent` sees exactly what it did before.
+        const rm = createRelationshipManager(makeOptions({
+            relationships: [makeRelationship({ provenance: "manual" })],
+        }));
+
+        expect(container.querySelector(".rm-item-meta")?.textContent)
+            .toBe("service · MANUAL · 2026-03-19");
+        rm.destroy();
+    });
+});

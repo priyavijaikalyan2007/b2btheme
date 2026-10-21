@@ -1683,11 +1683,9 @@ export class SymbolPicker
     }
 
     /** Stub: no-op, category tabs replaced by dropdown. */
-    private appendCategoryTabContent(
-        _btn: HTMLElement, _cat: SymbolCategory): void
-    {
-        // No-op: category selection is now via dropdown
-    }
+    // `appendCategoryTabContent` LEFT ON 2026-10-21 (UNUSED-1): it
+    // was an explicit no-op stub, left behind when category tabs
+    // became a dropdown. Its own comment said so.
 
     /** Build the scrollable grid wrapper. */
     private buildGridArea(): HTMLElement

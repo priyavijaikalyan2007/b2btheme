@@ -683,113 +683,17 @@ function findMatchesAndAncestors(
     return { matchIds, ancestorIds };
 }
 
-/**
- * Flattens a tree into a visible node list (only expanded parents' children).
- * Used for keyboard navigation ordering and Shift+Click range selection.
+/*
+ * `flattenVisible`, `findNodeById`, `findParent` and `isDescendant`
+ * LEFT ON 2026-10-21 (UNUSED-1). Four module-level tree helpers with
+ * no caller outside their own recursion, superseded by the class's
+ * own machinery: `getVisibleNodes()` and `visibleIndexMap` are what
+ * `rangeSelect` and the keyboard navigation use.
+ *
+ * `flattenVisible` carried the doc comment "Used for keyboard
+ * navigation ordering and Shift+Click range selection", and both
+ * had moved. A comment naming a caller is a claim like any other.
  */
-function flattenVisible(
-    roots: TreeNode[],
-    expandedIds: Set<string>
-): TreeNode[]
-{
-    const result: TreeNode[] = [];
-
-    function walk(node: TreeNode): void
-    {
-        result.push(node);
-
-        if (expandedIds.has(node.id) && node.children)
-        {
-            for (const child of node.children)
-            {
-                walk(child);
-            }
-        }
-    }
-
-    for (const root of roots)
-    {
-        walk(root);
-    }
-
-    return result;
-}
-
-/**
- * Finds a node by ID recursively.
- */
-function findNodeById(roots: TreeNode[], id: string): TreeNode | undefined
-{
-    for (const root of roots)
-    {
-        if (root.id === id)
-        {
-            return root;
-        }
-
-        if (root.children)
-        {
-            const found = findNodeById(root.children, id);
-            if (found)
-            {
-                return found;
-            }
-        }
-    }
-
-    return undefined;
-}
-
-/**
- * Finds the parent of a node by child ID.
- */
-function findParent(
-    roots: TreeNode[], childId: string
-): TreeNode | undefined
-{
-    for (const root of roots)
-    {
-        if (root.children)
-        {
-            for (const child of root.children)
-            {
-                if (child.id === childId)
-                {
-                    return root;
-                }
-
-                const found = findParent(root.children, childId);
-                if (found)
-                {
-                    return found;
-                }
-            }
-        }
-    }
-
-    return undefined;
-}
-
-/**
- * Checks whether ancestor contains descendant.
- */
-function isDescendant(ancestor: TreeNode, descendantId: string): boolean
-{
-    if (!ancestor.children)
-    {
-        return false;
-    }
-
-    for (const child of ancestor.children)
-    {
-        if (child.id === descendantId || isDescendant(child, descendantId))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
 
 /**
  * Collects all starred nodes from the tree.

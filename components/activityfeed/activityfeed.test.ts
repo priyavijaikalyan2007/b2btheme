@@ -305,3 +305,59 @@ describe("edge cases", () =>
         feed.destroy();
     });
 });
+
+// ============================================================================
+// LIVE REGION — UNUSED-1
+// ============================================================================
+
+describe("new activity reaches the live region", () =>
+{
+    function liveText(): string
+    {
+        return container.querySelector(
+            "[aria-live='polite']")?.textContent ?? "";
+    }
+
+    // `buildLive` creates an aria-live region and appends it on
+    // every mount, `announce` writes to it, and NOTHING CALLED
+    // EITHER -- so a screen-reader user was told nothing when new
+    // activity arrived, which is the entire point of a feed having
+    // one. The compiler had been reporting `announce` as unused
+    // since it was written (UNUSED-1).
+    test("the region is empty until something happens", () =>
+    {
+        const feed = createActivityFeed(makeOptions());
+        feed.show("test-activityfeed");
+
+        expect(liveText()).toBe("");
+        feed.destroy();
+    });
+
+    test("addEvent announces who did what to what", () =>
+    {
+        const feed = createActivityFeed(makeOptions());
+        feed.show("test-activityfeed");
+
+        feed.addEvent(makeEvent({
+            actor: makeActor({ name: "Bruno" }),
+            action: "commented on",
+            target: "the Q3 plan",
+        }));
+
+        expect(liveText()).toBe("Bruno commented on the Q3 plan");
+        feed.destroy();
+    });
+
+    test("a bulk add announces a count, not every line", () =>
+    {
+        // The region is `aria-atomic`, so it reads as one utterance
+        // and a batch would otherwise be read out in full.
+        const feed = createActivityFeed(makeOptions());
+        feed.show("test-activityfeed");
+
+        feed.addEvents([makeEvent(), makeEvent(), makeEvent()]);
+
+        expect(liveText()).toBe("3 new activity items");
+        feed.destroy();
+    });
+});
