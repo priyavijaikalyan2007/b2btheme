@@ -123,6 +123,12 @@
     <link rel="stylesheet" href="../dist/components/helpdrawer/helpdrawer.css">
     <link rel="stylesheet" href="../dist/components/helptooltip/helptooltip.css">
     <link rel="stylesheet" href="../dist/components/docviewer/docviewer.css">
+    <!-- DocViewer requires MarkdownRenderer, which requires marked and
+         highlight.js. DEBT-DEMO-2: this page loaded docviewer.js and
+         none of the three, so the DocViewer section threw on every
+         load and had never rendered. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css" integrity="sha384-eFTL69TLRZTkNfYZOLM+G04821K1qZao/4QLJbet1pP4tcF+fdXq/9CdqAbWRl/L" crossorigin="anonymous">
+    <link rel="stylesheet" href="../dist/components/markdownrenderer/markdownrenderer.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css" integrity="sha384-eyrYgcjChmzD338JTHFZssgJHOqqOZbajet8yZpCw8ESroLDi28BarMEKCImNGHC" crossorigin="anonymous"/>
     <link rel="stylesheet" href="../dist/components/guidedtour/guidedtour.css">
     <link rel="stylesheet" href="../dist/components/ribbonbuilder/ribbonbuilder.css">
@@ -4166,6 +4172,11 @@
     <script src="../dist/components/relationshipmanager/relationshipmanager.js"></script>
     <script src="../dist/components/helpdrawer/helpdrawer.js"></script>
     <script src="../dist/components/helptooltip/helptooltip.js"></script>
+    <!-- Order matters: marked and highlight.js before markdownrenderer,
+         markdownrenderer before docviewer. DEBT-DEMO-2. -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js" integrity="sha384-RH2xi4eIQ/gjtbs9fUXM68sLSi99C7ZWBRX1vDrVv6GQXRibxXLbwO2NGZB74MbU" crossorigin="anonymous"></script>
+    <script src="../dist/components/markdownrenderer/markdownrenderer.js"></script>
     <script src="../dist/components/docviewer/docviewer.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js" integrity="sha384-D/8HPEJGB9NkJIaVmIK644a6Z5B2u4UzQYXiEFJifVxAt6vwDyf5ODa1U8XxXCjD" crossorigin="anonymous"></script>
     <script defer src="../dist/components/guidedtour/guidedtour.js"></script>

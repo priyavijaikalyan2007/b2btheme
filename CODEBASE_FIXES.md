@@ -4876,51 +4876,40 @@ limits the design knowingly accepts, not defects in shipped code.
 
 ## MEDIUM — The flagship demo page is opened by no gate (2026-10-21)
 
-- [ ] **DEBT-DEMO-2**: `demo/full-demo.html` is 855 KB, carries a section
-  for every component, and **nothing opens it.**
-  `tests/demo-pages.spec.ts` enumerates
-  `git ls-files demo/components/*.html`, so the flagship page is not in
-  that suite. Structure check `[5]` iterates the same glob. Check `[21]`
-  now reads its asset paths, which is static and catches a path naming a
-  component the repository does not have, and nothing loads it in a
-  browser.
+- [x] **DEBT-DEMO-2** *(CLOSED 2026-10-21)* — **the flagship demo page
+  is in the smoke suite and loads clean.**
 
-  **Measured 2026-10-21 by adding it to the spec and running it.** One
-  uncaught error:
+  `demo/full-demo.html` is 855 KB, carries a section for every
+  component, and **nothing opened it.**
+  `tests/demo-pages.spec.ts` enumerated
+  `git ls-files demo/components/*.html` and structure check `[5]`
+  iterated the same glob, so the one page a visitor is most likely to
+  open was in neither.
 
-  ```
-  [DocViewer] MarkdownRenderer is required and
-  window.createMarkdownRenderer was not found. Load
-  components/markdownrenderer/markdownrenderer.js before creating the
-  viewer.
-  ```
+  **Two unrelated things had rotted in it**, which is the expected
+  yield for a page nothing opens:
 
-  The page loads `docviewer.js` at 4169 and never loads
-  `markdownrenderer.js`, `marked` or `highlight.js`, so **the DocViewer
-  section of the showcase has never rendered.** `demo/components/docviewer.html`
-  loads all four in the right order, which is where the correct list is.
-  DocViewer is behaving as it should — it refuses rather than substituting
-  a plain `<pre>`, which is the no-fallback rule working.
+  - It loaded the deprecated `workspaceswitcher` compat path and
+    called `createWorkspaceSwitcher`, printing a deprecation warning
+    twice on every load, for six months after the rename (DEBT-TS-1,
+    fixed separately).
+  - It loaded `docviewer.js` and **never loaded `markdownrenderer.js`,
+    `marked` or `highlight.js`**, so DocViewer refused — correctly,
+    the no-fallback rule working — and **the DocViewer section of the
+    showcase had never rendered.**
 
-  **Found under DEBT-TS-1**, which turned up a second rot on the same
-  page: it had been loading the deprecated `workspaceswitcher` compat
-  path and calling the deprecated factory since the 2026-10-08 rename,
-  printing a deprecation warning twice on every load. Two unrelated
-  things rotted on one page, which is what a page nothing opens is for.
+  Both CDN dependencies are added in dependency order with the same
+  SRI hashes `demo/components/docviewer.html` already carries, so
+  check `[10]` passed unchanged — the artifacts were already
+  documented.
 
-  **The fix is two edits and one decision.** Adding `marked` and
-  `highlight.js` to the page means two new SRI-pinned CDN dependencies,
-  which touches the dependency-closure check `[10]` and `build:sri`. The
-  decision is whether the flagship page should carry every component's
-  third-party dependency or whether DocViewer's section should be dropped
-  from it. Not made here.
+  **The page is in the spec now**, and its presence is asserted **by
+  name** rather than left to a count, because the glob is exactly what
+  hid it: `expect(PAGES).toContain("demo/full-demo.html")`.
+  Mutation-proven by removing the `markdownrenderer.js` tag, which
+  reproduces the original failure.
 
-  **Then add the page to `tests/demo-pages.spec.ts`,** which is the gate
-  that would have caught both. The spec's `globalsFor` returns an empty
-  list for a page with no component of the same name, so the page only has
-  to load clean, and the `PAGES.length` assertion that keeps the suite from
-  going vacuous stays correct.
-
+  131 demo pages pass.
 ## LOW — The same no-op is silent in some components and audible in others (2026-10-21)
 
 - [x] **LOG-7** *(CLOSED 2026-10-21)* — **the rule is written down and

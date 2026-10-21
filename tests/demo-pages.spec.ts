@@ -72,7 +72,15 @@ const PAGES: string[] = execFileSync(
     "git", ["ls-files", "demo/components/*.html"], { encoding: "utf8" })
     .split("\n")
     .filter(Boolean)
-    .filter((p) => !basename(p).startsWith("_"));
+    .filter((p) => !basename(p).startsWith("_"))
+    // DEBT-DEMO-2. The flagship page is 855 KB, carries a section for
+    // every component, and was in NEITHER this glob nor structure
+    // check [5] — both iterate demo/components/*.html. Two unrelated
+    // things had rotted in it: the deprecated workspaceswitcher path
+    // (DEBT-TS-1) and a DocViewer section that threw on every load
+    // because the page never loaded MarkdownRenderer. It is the page
+    // a visitor is most likely to open.
+    .concat(["demo/full-demo.html"]);
 
 /** The globals the component of the same name registers, if there is one. */
 function globalsFor(page: string): string[]
@@ -95,6 +103,11 @@ test.describe("every demo page loads clean", () =>
         // below vacuous by simply not existing. ADR-196's lesson: a gate
         // that can pass by having no inputs has not been written yet.
         expect(PAGES.length).toBeGreaterThan(100);
+
+        // DEBT-DEMO-2. The glob is what left the flagship page
+        // untested for the life of this suite, so its presence is
+        // asserted by name rather than left to a count.
+        expect(PAGES).toContain("demo/full-demo.html");
     });
 
     for (const page of PAGES)
