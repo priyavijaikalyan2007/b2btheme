@@ -403,10 +403,20 @@ describe("CommentOverlay edge cases", () =>
         overlay.destroy();
     });
 
-    test("removeNonexistentPin_DoesNotThrow", () =>
+    test("removeNonexistentPin_LeavesTheRealOneAlone", () =>
     {
         const overlay = createCommentOverlay("comment-container", defaultOptions());
-        expect(() => overlay.removePin("doesnotexist")).not.toThrow();
+        const anchor = document.createElement("div");
+        container.appendChild(anchor);
+        overlay.addPin(makePin("real", anchor));
+
+        overlay.removePin("doesnotexist");
+
+        // The post-condition the caller asked for — no pin with this
+        // id — already holds, so removal has nothing to refuse
+        // (ADR-200). What must hold is that the real pin survived.
+        expect(overlay.getPin("real")).toBeDefined();
+        expect(overlay.getPin("doesnotexist")).toBeUndefined();
         overlay.destroy();
     });
 

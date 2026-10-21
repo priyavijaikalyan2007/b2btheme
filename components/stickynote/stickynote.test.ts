@@ -114,11 +114,13 @@ describe("StickyNote — Surface contract", () =>
         expect(textarea().value).toBe("From a binding");
     });
 
-    test("setData ignores an unknown slot without throwing", () =>
+    test("setData refuses an unknown slot, naming it", () =>
     {
         const handle = make();
 
-        expect(() => handle.setData("nope", 1)).not.toThrow();
+        expect(() => handle.setData("nope", 1))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => handle.setData("nope", 1)).toThrow(/"text"/);
     });
 
     test("setData coerces a non-string payload to text", () =>

@@ -400,17 +400,42 @@ describe("NotificationCenter callbacks", () =>
 
 describe("NotificationCenter edge cases", () =>
 {
-    test("removeNonexistent_DoesNotThrow", () =>
+    test("removeNonexistent_LeavesTheOthersAlone", () =>
     {
         const handle = createNotificationCenter(defaultOptions());
-        expect(() => handle.removeNotification("nope")).not.toThrow();
+        handle.addNotification(makeNotification("keep1"));
+        handle.addNotification(makeNotification("keep2"));
+        const before = handle.getNotifications().map((n) => n.id);
+
+        // The positive control. Reading `before` off an EMPTY centre
+        // would make the assertion below hold for a removeNotification
+        // that cleared the list, which is the shape this whole pass
+        // exists to catch.
+        expect(before).toHaveLength(2);
+
+        handle.removeNotification("nope");
+
+        // Removal is the one operation with an honest "already done"
+        // reading: the post-condition the caller asked for — no
+        // notification with this id — already holds, so there is
+        // nothing to refuse (ADR-200). What must hold is that no
+        // OTHER notification went with it.
+        expect(handle.getNotifications().map((n) => n.id)).toEqual(before);
         handle.destroy();
     });
 
-    test("markReadNonexistent_DoesNotThrow", () =>
+    test("markReadNonexistent_RefusesAndNamesIt", () =>
     {
         const handle = createNotificationCenter(defaultOptions());
-        expect(() => handle.markRead("nope")).not.toThrow();
+        const before = handle.getUnreadCount();
+
+        // ADR-200. Marking an id that is already read IS idempotent.
+        // Marking one that was never here is a state this centre
+        // cannot reach, and the silent return left the badge wrong
+        // with no way to find out.
+        expect(() => handle.markRead("nope"))
+            .toThrow(/no notification with id "nope"/);
+        expect(handle.getUnreadCount()).toBe(before);
         handle.destroy();
     });
 

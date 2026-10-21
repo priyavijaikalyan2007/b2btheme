@@ -439,8 +439,9 @@ function build(
         {
             if (slot !== "canvases")
             {
-                logWarn(`setData: unknown slot "${slot}" — expected "canvases".`);
-                return;
+                throw new Error(
+                    `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                    + 'This component declares one slot, "canvases".');
             }
 
             canvases = toCanvases(value);

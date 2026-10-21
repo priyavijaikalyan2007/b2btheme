@@ -615,8 +615,14 @@ class DocViewer
         const page = this.flatPages.find(p => p.id === pageId);
         if (!page)
         {
-            logWarn("Page not found:", pageId);
-            return;
+            // ADR-200. `navigateTo` has no "already there" reading: a
+            // caller naming a page that does not exist asked for a
+            // view it will not get, and a warning to a console the
+            // host never reads left the viewer on the previous page
+            // looking as though the call had worked (ERR-1).
+            throw new Error(
+                `${LOG_PREFIX} navigateTo: no page with id "${pageId}". `
+                + "Pass an id from the pages this viewer was given.");
         }
 
         this.activePageId = pageId;

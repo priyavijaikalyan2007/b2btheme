@@ -746,4 +746,19 @@ describe("clicking outside the grid cancels an open editor", () =>
         expect(container.querySelector(".datagrid-cell-editing")).not.toBeNull();
         grid.destroy();
     });
+
+    test("setData refuses an unknown slot, naming it", () =>
+    {
+        // ADR-200, ERR-1. The branch existed and warned, and NO TEST
+        // HAD EVER NAMED IT — the three sibling components that carry
+        // the same branch each had one. The slot is a string, so
+        // TypeScript cannot catch a typo and this library is consumed
+        // from plain JavaScript over a CDN.
+        const grid = createDataGrid(defaultOpts(), "test-grid");
+
+        expect(() => grid.setData("nope", []))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => grid.setData("nope", [])).toThrow(/"rows"/);
+    });
+
 });

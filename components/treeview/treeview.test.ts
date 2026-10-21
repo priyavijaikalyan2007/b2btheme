@@ -871,4 +871,19 @@ describe("ADR-128 default group actions", () =>
         expect(hostClick).toHaveBeenCalledTimes(1);
         tree.destroy();
     });
+
+    test("setData refuses an unknown slot, naming it", () =>
+    {
+        // ADR-200, ERR-1. The branch existed and warned, and NO TEST
+        // HAD EVER NAMED IT — the three sibling components that carry
+        // the same branch each had one. The slot is a string, so
+        // TypeScript cannot catch a typo and this library is consumed
+        // from plain JavaScript over a CDN.
+        const tree = createTreeView(defaultOpts());
+
+        expect(() => tree.setData("nope", []))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => tree.setData("nope", [])).toThrow(/"roots"/);
+    });
+
 });

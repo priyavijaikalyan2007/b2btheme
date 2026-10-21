@@ -243,7 +243,20 @@ class NotificationCenter
     markRead(id: string): void
     {
         const n = this.notifications.find(item => item.id === id);
-        if (n && !n.read)
+
+        // ADR-200. Marking an id that is already read IS idempotent,
+        // and marking one that was never here is not the same thing:
+        // the caller asked for a state this centre cannot reach, and
+        // the silent return left the badge wrong with no way to find
+        // out (ERR-1).
+        if (n === undefined)
+        {
+            throw new Error(
+                `${LOG_PREFIX} markRead: no notification with id "${id}". `
+                + "Pass an id from getNotifications().");
+        }
+
+        if (!n.read)
         {
             n.read = true;
             this.updateBadge();

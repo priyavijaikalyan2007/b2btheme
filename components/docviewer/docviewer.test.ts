@@ -394,10 +394,17 @@ describe("DocViewer callbacks", () =>
 
 describe("DocViewer edge cases", () =>
 {
-    test("navigateToNonexistentPage_DoesNotThrow", () =>
+    test("navigateToNonexistentPage_RefusesAndNamesIt", () =>
     {
         const handle = createDocViewer(defaultOptions());
-        expect(() => handle.navigateTo("nonexistent")).not.toThrow();
+        const before = handle.getActivePage();
+
+        // ADR-200. There is no "already there" reading for a page that
+        // does not exist, and the quiet return left the viewer on the
+        // previous page looking as though the call had worked.
+        expect(() => handle.navigateTo("nonexistent"))
+            .toThrow(/no page with id "nonexistent"/);
+        expect(handle.getActivePage()).toBe(before);
         handle.destroy();
     });
 

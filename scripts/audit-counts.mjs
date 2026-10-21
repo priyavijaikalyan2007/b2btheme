@@ -512,7 +512,16 @@ const BASELINES = {
     // are two spinner mirrors, two status-dot refs only ever
     // assigned null, a drag flag a probe showed unnecessary, and a
     // resize handler a ResizeObserver replaced.
-    unusedLocals: 124,
+    // 124 -> 128 on 2026-10-21. NOT a regression and not new dead
+    // code: `setData` stopped warning about an unknown slot and
+    // started throwing (DEBT-TEST-1b, ADR-200), which was the ONLY
+    // `logWarn` call in annotation, chatdock, stickynote and
+    // workspaceshell. Their `logWarn` shim is LOG-4a preamble, which
+    // `dynamicVerboseShims` holds as a FLOOR at 225 — deleting the
+    // four would break that gate. So the floor this ceiling is
+    // sitting on moved from 120 preamble shims to 124, and the
+    // headline is 124 + the four `contained` fields of DEBT-LAY-1.
+    unusedLocals: 128,
 
     // A CEILING AT ZERO (2026-10-21, UNUSED-1).
     // `scripts/bundle-diagramengine.sh` emits its own preamble of
@@ -694,7 +703,7 @@ const BASELINES = {
     // too LOW by `formdialog :: withDefaultSize_UsesMdSize`, which
     // the exemption had been hiding. A correction that only ever
     // subtracts is a relaxation wearing a correction's name.
-    testsThatCannotFail: 32,
+    testsThatCannotFail: 23,
     siblingStandIns: 6,
 
     // ADR-216. ASSERTION SITES THAT RUN ONLY WHEN A CONDITION HOLDS,
@@ -795,7 +804,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5062,
+    testBlocks: 5065,
 };
 
 /**

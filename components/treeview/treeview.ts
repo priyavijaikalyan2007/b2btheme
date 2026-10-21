@@ -1158,8 +1158,9 @@ export class TreeView
     {
         if (slot !== "roots")
         {
-            logWarn(`setData: unknown slot "${slot}" — expected "roots".`);
-            return;
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "roots".');
         }
 
         this.setRoots(Array.isArray(value) ? value as TreeNode[] : []);

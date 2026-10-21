@@ -1853,8 +1853,13 @@ export class PromptTemplateManager
         const tpl = this.templates.find(function(t) { return t.id === id; });
         if (!tpl)
         {
-            logWarn("Template not found:", id);
-            return;
+            // ADR-200. Selecting has no "already selected" reading for
+            // an id that does not exist. The previous selection stayed
+            // highlighted and `onSelect` never fired, so the caller saw
+            // a manager that had ignored it (ERR-1).
+            throw new Error(
+                `${LOG_PREFIX} selectTemplate: no template with id "${id}". `
+                + "Pass an id from getTemplates().");
         }
 
         this.selectedId = id;

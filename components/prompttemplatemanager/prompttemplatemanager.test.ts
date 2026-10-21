@@ -273,10 +273,15 @@ describe("edge cases", () =>
         mgr.destroy();
     });
 
-    test("selectNonexistentTemplate_NoError", () =>
+    test("selectNonexistentTemplate_RefusesAndNamesIt", () =>
     {
         const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
-        expect(() => mgr.selectTemplate("nonexistent")).not.toThrow();
+
+        // ADR-200. The previous selection stayed highlighted and
+        // `onSelect` never fired, so the caller saw a manager that had
+        // ignored it.
+        expect(() => mgr.selectTemplate("nonexistent"))
+            .toThrow(/no template with id "nonexistent"/);
         mgr.destroy();
     });
 });

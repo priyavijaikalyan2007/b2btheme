@@ -453,8 +453,9 @@ export class DataGrid
     {
         if (slot !== "rows")
         {
-            logWarn(`setData: unknown slot "${slot}" — expected "rows".`);
-            return;
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "rows".');
         }
 
         this.setRows(

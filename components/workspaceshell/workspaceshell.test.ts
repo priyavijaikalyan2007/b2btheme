@@ -321,4 +321,19 @@ describe("WorkspaceShell — Surface contract", () =>
 
         expect(seen).toHaveLength(1);
     });
+
+    test("setData refuses an unknown slot, naming it", () =>
+    {
+        // ADR-200, ERR-1. The branch existed and warned, and NO TEST
+        // HAD EVER NAMED IT — the three sibling components that carry
+        // the same branch each had one. The slot is a string, so
+        // TypeScript cannot catch a typo and this library is consumed
+        // from plain JavaScript over a CDN.
+        const handle = make();
+
+        expect(() => handle.setData("nope", []))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => handle.setData("nope", [])).toThrow(/"canvases"/);
+    });
+
 });

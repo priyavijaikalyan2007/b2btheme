@@ -222,11 +222,13 @@ describe("ChatDock — turns", () =>
         expect(host.querySelectorAll(".chatdock-turn-assistant")).toHaveLength(1);
     });
 
-    test("setData ignores an unknown slot", () =>
+    test("setData refuses an unknown slot, naming it", () =>
     {
         const handle = make();
 
-        expect(() => handle.setData("nope", 1)).not.toThrow();
+        expect(() => handle.setData("nope", 1))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => handle.setData("nope", 1)).toThrow(/"turns"/);
     });
 
     test("selecting a turn emits it, so the host can scrub the canvas", () =>

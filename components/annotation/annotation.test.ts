@@ -207,11 +207,17 @@ describe("Annotation — Surface contract", () =>
         expect(host.textContent).toContain("Updated");
     });
 
-    test("setData ignores an unknown slot", () =>
+    test("setData refuses an unknown slot, naming it", () =>
     {
         const handle = make();
 
-        expect(() => handle.setData("nope", 1)).not.toThrow();
+        // ADR-200. The slot is a STRING, so TypeScript cannot catch a
+        // typo and this library is consumed from plain JavaScript over
+        // a CDN. Warning and returning handed a caller who named a
+        // slot neither the effect nor an error (ERR-1).
+        expect(() => handle.setData("nope", 1))
+            .toThrow(/unknown slot "nope"/);
+        expect(() => handle.setData("nope", 1)).toThrow(/"label"/);
     });
 
     test("getState returns only the declared keys", () =>

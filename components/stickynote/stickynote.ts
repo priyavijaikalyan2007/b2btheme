@@ -376,8 +376,9 @@ function build(
         {
             if (slot !== "text")
             {
-                logWarn(`setData: unknown slot "${slot}" — expected "text".`);
-                return;
+                throw new Error(
+                    `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                    + 'This component declares one slot, "text".');
             }
 
             setText(value === null || value === undefined ? "" : String(value));

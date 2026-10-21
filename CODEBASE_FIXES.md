@@ -3044,7 +3044,7 @@ offered as the evidence for it.
 
   **And the conversions found FALLBACK-14**, below.
 
-- [ ] **DEBT-TEST-1b** **32 test blocks where every assertion passes
+- [ ] **DEBT-TEST-1b** **23 test blocks where every assertion passes
   for any value that is not null, down from 341, and now classified by
   a committed instrument rather than by a note.**
 
@@ -3052,12 +3052,61 @@ offered as the evidence for it.
 
   | Shape | 2026-10-18 | 2026-10-19 | Now | Yield |
   |---|---|---|---|---|
-  | `.not.toThrow()` on idempotency | 110 | 110 | **22** | **9 defects found; the terminal-state half is empty** |
+  | `.not.toThrow()` on idempotency | 110 | 110 | **13** | **9 defects, then 9 quiet branches made to throw; two of four sub-shapes empty** |
   | `.not.toThrow()`, name states a change | 66 | 35 | **0** | **emptied** |
   | `.not.toThrow()`, name claims only survival | — | 21 | **2** | **emptied bar the jsdom floor** |
   | `.not.toThrow()` as an accept/refuse control | — | 1 | 1 | none, it is correct |
   | `.not.toThrow()` on an absent dependency | 6 | 6 | 6 | each states a change |
   | `.toBeDefined()` / `.toBeTruthy()` | 85 | 85 | **0** | 32 were never members; the other 53 are below |
+
+  **THE ABSENT-TARGET SUB-SHAPE SPLITS ON ONE QUESTION, AND IT IS NOT
+  "DID IT THROW" (2026-10-21, 32 -> 23).** ADR-200 says a request the
+  caller named is owed either the effect or an error. For a `remove`
+  the effect the caller asked for — **no object with this id** —
+  already holds when the id was never there, so there is nothing to
+  refuse. For a `navigateTo`, a `select` or a `markRead` the asked-for
+  state is unreachable, and the quiet return left the component
+  looking as though the call had worked.
+
+  | Operation | Was | Now |
+  |---|---|---|
+  | `setData` with an unknown slot, 6 components | `logWarn` + `return` | **throws, naming the slot and the one it expects** |
+  | `docviewer :: navigateTo` | `logWarn("Page not found")` + `return` | **throws** |
+  | `prompttemplatemanager :: selectTemplate` | `logWarn("Template not found")` + `return` | **throws** |
+  | `notificationcenter :: markRead` | silent `if (n && !n.read)` | **throws for an absent id**, unchanged for one already read |
+  | `notificationcenter :: removeNotification` | silent no-op | unchanged; the test proves the OTHERS survived |
+  | `commentoverlay :: removePin` | `logWarn("not found")` + `return` | unchanged; the test proves the real pin survived |
+  | `diagramengine :: removeObject` | silent no-op | unchanged; the test proves it tore down nothing |
+
+  **`setData` IS SIX COMPONENTS AND THE BUCKET ONLY HELD THREE.**
+  `annotation`, `chatdock` and `stickynote` had a test naming the
+  quiet branch and so were counted. `datagrid`, `treeview` and
+  `workspaceshell` carry the identical branch and **had no test for
+  it at all**, which is why a ceiling on vacuous tests cannot be read
+  as a map of the defect. All six throw now and all six have the
+  test. The slot is a `string`, so TypeScript cannot catch a typo,
+  and this library is consumed from plain JavaScript over a CDN —
+  the DEBT-STI-2 argument exactly.
+
+  **Each refusal is mutation-proven** by restoring the warn-and-return
+  and watching the block go red. Each surviving no-op is mutation-
+  proven the other way, by making the method tear down EVERYTHING and
+  watching the post-condition catch it — which is how
+  `removeNonexistent_LeavesTheOthersAlone` was caught being vacuous
+  on its first write: it read `before` off an empty centre, so it
+  held for a `removeNotification` that cleared the list. It adds two
+  notifications and asserts `before` has two now.
+
+  **`unusedLocals` 124 -> 128 and it is not a regression.** `setData`
+  was the ONLY `logWarn` call in `annotation`, `chatdock`,
+  `stickynote` and `workspaceshell`, and their shim is LOG-4a
+  preamble that `dynamicVerboseShims` holds as a floor at 225, so
+  deleting the four would break that gate. The floor this ceiling
+  sits on moved from 120 preamble shims to 124.
+
+  **An inconsistency recorded and not resolved:** `removePin` warns
+  when the pin is absent and `removeNotification` and `removeObject`
+  say nothing, for the same situation. One of the three is right.
 
   **THE IDEMPOTENCY BUCKET WAS FOUR PROPERTIES WEARING ONE NAME, AND
   THE LARGEST OF THEM IS NOW EMPTY (2026-10-21, 117 -> 32).** The 107
@@ -3067,7 +3116,7 @@ offered as the evidence for it.
   | Sub-shape | Count | Status |
   |---|---|---|
   | Terminal-state idempotence — destroy twice, close when closed, hide when hidden, unsubscribe twice | 85 | **0, this pass** |
-  | An operation naming an absent target — `removeNonexistentPin`, `setData` with an unknown slot | 9 | open, and ADR-200 says the answer is a throw |
+  | An operation naming an absent target — `removeNonexistentPin`, `setData` with an unknown slot | 9 | **0, see below** |
   | A method called after `destroy()` | 5 | open, and it is the fleet-wide question nobody has answered |
   | Empty input, which is not idempotence at all | 8 | open, and the classifier is wrong about these |
 

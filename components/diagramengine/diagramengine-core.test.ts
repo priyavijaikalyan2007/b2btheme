@@ -264,12 +264,18 @@ describe("DiagramEngine — Object CRUD", () =>
         expect(engine.getObject("removable")).toBeNull();
     });
 
-    test("removeObject on unknown ID does not throw", () =>
+    test("removeObject on unknown ID leaves the others alone", () =>
     {
-        expect(() =>
-        {
-            engine.removeObject("nonexistent-id");
-        }).not.toThrow();
+        engine.addObject({ id: "keep-me" });
+        const before = engine.getObjects().map((o) => o.id);
+
+        engine.removeObject("nonexistent-id");
+
+        // The post-condition the caller asked for already holds, so
+        // removal has nothing to refuse (ADR-200). `removeObject`
+        // also tears down attached connectors and the selection, so
+        // what must hold is that it tore down nothing.
+        expect(engine.getObjects().map((o) => o.id)).toEqual(before);
     });
 
     test("updateObject changes presentation bounds", () =>

@@ -481,8 +481,9 @@ function build(
         {
             if (slot !== "turns")
             {
-                logWarn(`setData: unknown slot "${slot}" — expected "turns".`);
-                return;
+                throw new Error(
+                    `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                    + 'This component declares one slot, "turns".');
             }
 
             turns = toTurns(value);
