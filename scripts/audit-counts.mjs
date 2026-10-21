@@ -660,7 +660,7 @@ const BASELINES = {
     // too LOW by `formdialog :: withDefaultSize_UsesMdSize`, which
     // the exemption had been hiding. A correction that only ever
     // subtracts is a relaxation wearing a correction's name.
-    testsThatCannotFail: 162,
+    testsThatCannotFail: 148,
     siblingStandIns: 6,
 
     // ADR-216. ASSERTION SITES THAT RUN ONLY WHEN A CONDITION HOLDS,
@@ -685,7 +685,11 @@ const BASELINES = {
     // backlog. A guard written round a selector is cheap to add and
     // costs nothing to leave wrong, which is how the AppLauncher
     // block survived. Re-run the sweep when this grows.
-    guardedAssertions: 81,
+    // 81 -> 76 on 2026-10-21: a `for (const m of ["a", "b"])` is not
+    // a guard. The collection is written out in the test, so a
+    // reader can see it is not empty and a probe has nothing to
+    // find. All five that left had fired in the sweep.
+    guardedAssertions: 76,
 };
 
 /*
@@ -757,7 +761,7 @@ const FLOORS = {
     //
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
-    testBlocks: 5030,
+    testBlocks: 5031,
 };
 
 /**

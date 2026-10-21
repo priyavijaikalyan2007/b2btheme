@@ -293,9 +293,16 @@ describe("refresh", () =>
         minimap.refresh();
 
         // Assert
+        //
+        // "SetsDefaultViewBox" NAMES A VALUE and `toBeDefined()` was
+        // the wrong matcher for the subject twice over: getAttribute
+        // returns null when the attribute is missing, and
+        // `expect(null).toBeDefined()` passes. `computeBounds`
+        // returns 0,0,100,100 for an empty graph, which is what
+        // "default" means here.
         const svg = opts.container.querySelector("svg");
-        const viewBox = svg?.getAttribute("viewBox");
-        expect(viewBox).toBeDefined();
+
+        expect(svg?.getAttribute("viewBox")).toBe("0 0 100 100");
     });
 
     test("refresh_SetsViewBoxBasedOnNodeBounds", () =>

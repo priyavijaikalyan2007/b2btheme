@@ -477,6 +477,9 @@ export function calleesIn(subject)
  */
 const GUARD = /\b(?:if|for|while)\s*\(|\}\s*else\b|\.(?:forEach|map|filter|some|every|find)\s*\(/g;
 
+/** A `for ... of` whose collection is written out in the test. */
+const LITERAL_LOOP = /\bof\s*\[/;
+
 /**
  * Assertion sites inside a test block that run only when a condition
  * holds, as `{ file, name, at }` per block that has any, where `at`
@@ -508,6 +511,12 @@ const GUARD = /\b(?:if|for|while)\s*\(|\}\s*else\b|\.(?:forEach|map|filter|some|
  * `test(` inside the body excludes a loop that GENERATES blocks.
  * `EXTRACTION_CASES.forEach(... test(...))` is a table, and probing
  * it took a whole suite down at collection.
+ *
+ * A LOOP OVER AN ARRAY LITERAL IS NOT A GUARD. `for (const m of
+ * ["destroy", "getValue"])` runs twice and the reader can see that
+ * it does, so there is nothing for a probe to discover. Only a
+ * collection the COMPONENT produced can come back empty, and that
+ * is the whole risk this counts.
  */
 export function guardedAssertions(rows)
 {
@@ -550,6 +559,7 @@ export function guardedAssertions(rows)
             if (body === null) { continue; }
             if (!/\bexpect\s*\(/.test(body.text)) { continue; }
             if (/(?<!\.)\btest\s*\(/.test(body.text)) { continue; }
+            if (paren !== null && LITERAL_LOOP.test(paren.text)) { continue; }
 
             at.push(open);
         }

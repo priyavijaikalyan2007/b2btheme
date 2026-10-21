@@ -69,11 +69,28 @@ afterEach(() =>
 
 describe("createColumnsPicker", () =>
 {
+    // THE BLOCK NEXT DOOR ALREADY MAKES THE MOUNT CLAIM, so what is
+    // left for this one is the SURFACE -- and `expect(picker.getValue)
+    // .toBeDefined()` was true of any property, including one holding
+    // a string. Listing the keys catches a method that went missing
+    // and a method that was added without reaching ColumnsPicker, which
+    // is what a published handle is for.
     test("Factory_WithContainerId_ReturnsPicker", () =>
     {
         const picker = createColumnsPicker(defaultOpts());
-        expect(picker).toBeDefined();
-        expect(picker.getValue).toBeDefined();
+
+        expect(Object.keys(picker).sort()).toEqual([
+            "destroy",
+            "getElement",
+            "getValue",
+            "hide",
+            "setPresets",
+            "setValue",
+            "show",
+        ]);
+        expect(Object.values(picker).every((v) => typeof v === "function"))
+            .toBe(true);
+
         picker.destroy();
     });
 

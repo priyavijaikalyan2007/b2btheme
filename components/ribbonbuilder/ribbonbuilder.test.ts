@@ -214,12 +214,25 @@ describe("export", () =>
         builder.destroy();
     });
 
+    // "ContainsTabData" is a claim about the DATA. An empty array
+    // is defined, and so is the `tabs` key of a default config that
+    // never saw the one passed in.
+    //
+    // THE FIXTURE IS DELIBERATELY NOT `makeConfig()`. Its tab is
+    // `home` / "Home", which is also the first tab of
+    // DEFAULT_STARTER_CONFIG -- so an export that had silently
+    // fallen back to the starter would match it exactly. A tab the
+    // default does not have is what makes this read the config that
+    // was passed in.
     test("exportJSON_ContainsTabData", () =>
     {
-        const builder = createRibbonBuilder(makeOptions(), "test-ribbonbuilder");
-        const json = builder.exportJSON();
-        const parsed = JSON.parse(json);
-        expect(parsed.tabs).toBeDefined();
+        const builder = createRibbonBuilder(makeOptions({
+            initialConfig: { tabs: [{ id: "review", label: "Review", groups: [] }] },
+        }), "test-ribbonbuilder");
+
+        const parsed = JSON.parse(builder.exportJSON());
+
+        expect(parsed.tabs).toMatchObject([{ id: "review", label: "Review" }]);
         builder.destroy();
     });
 
@@ -302,13 +315,19 @@ describe("callbacks", () =>
 
 describe("edge cases", () =>
 {
+    // "UsesDefaults" names the defaults, and `config.tabs` being
+    // defined would have held for the empty object passed IN.
+    // `buildDefaultConfig` falls through to DEFAULT_STARTER_CONFIG
+    // when no tab is supplied, and the Home tab is what that means.
     test("emptyInitialConfig_UsesDefaults", () =>
     {
         const builder = createRibbonBuilder(
             makeOptions({ initialConfig: {} }), "test-ribbonbuilder"
         );
-        const config = builder.getConfig();
-        expect(config.tabs).toBeDefined();
+
+        expect(builder.getConfig().tabs).toMatchObject([
+            { id: "home", label: "Home", keyTip: "H" },
+        ]);
         builder.destroy();
     });
 

@@ -3185,6 +3185,16 @@ offered as the evidence for it.
   | `markdownrenderer :: mathDisabled_HandleStillCreated` | only that a handle exists | the handle is defined | see below |
   | `markdownrenderer :: customServer_PassedToHandle` | the server is passed | the handle is defined | jsdom's `Blob` has no `.stream()`, so the URL is unreachable without stubbing the ENVIRONMENT up to what a browser gives |
 
+  | `columnspicker` / `spacingpicker` / `toolcolorpicker` / `sizespicker :: Factory_WithContainerId_Returns*` | a handle is returned | `picker.getValue` is defined — true of a property holding a string | the block NEXT DOOR already makes the mount claim, so the surface is what was left; `createSizesPicker` returns **the class instance** and leaks sixteen keys past its seven-method interface (**PAT-1**, so a subset check rather than exact keys) |
+  | `commandpalette :: clearRecent_EmptiesRecentList` | the list is emptied | "No error means success" | nothing public pushes a recent, so the command has to be run the way a user runs it |
+  | `commandpalette :: registerCommand_Adds*` ×2 | WHICH command | the lookup is defined | — |
+  | `facetsearch :: getValue` / `getQuery` | the current value, a structured query | defined | `raw` is the one field of a "structured" query that is **not** structure |
+  | `graphcanvas :: GetMode_ReturnsDefaultMode` | the DEFAULT mode | truthy — true of every mode | — |
+  | `timezonepicker :: getOffset_UTC_ReturnsGMTString` | a GMT string | defined — and `getTimezoneOffset` returns `""` from its catch | measured: `GMT+0` |
+  | `graphminimap :: refresh_WithNoNodes_SetsDefaultViewBox` | the default viewBox | `getAttribute(...)` **`.toBeDefined()`**, which passes for the null a missing attribute returns | — |
+  | `ribbonbuilder :: exportJSON_ContainsTabData` | the tab data | `parsed.tabs` is defined | the obvious fixture `makeConfig()` has tab `home`/"Home" — **so does `DEFAULT_STARTER_CONFIG`**, and an export that had silently fallen back would have matched it |
+  | `ribbonbuilder :: emptyInitialConfig_UsesDefaults` | the defaults | `config.tabs` is defined, true of the `{}` passed IN | — |
+
   **`configureMarked` RAN ONCE PER PAGE AND THE LATCH WAS KEYED ON
   NOTHING.** `let configured = false` meant the FIRST
   `createMarkdownRenderer` in a page chose `highlight` and `math` for

@@ -81,11 +81,32 @@ afterEach(() =>
 
 describe("createSizesPicker", () =>
 {
+    // THE BLOCK NEXT DOOR ALREADY MAKES THE MOUNT CLAIM, so what is
+    // left for this one is the SURFACE -- and `expect(picker.getValue)
+    // .toBeDefined()` was true of any property, including one holding
+    // a string.
+    //
+    // A SUBSET RATHER THAN THE EXACT KEYS, AND PAT-1 IS WHY.
+    // `createSizesPicker` returns the class instance, so the object a
+    // caller gets carries sixteen keys -- `boundDocClick`,
+    // `boundDocKey`, `listEl`, `panelEl`, `destroyed`, `instanceId`
+    // and the rest -- beside the seven SizesPickerAPI declares. Its
+    // three sibling pickers all return a built handle and pass the
+    // exact-keys form. Pinning the leak here would cement the thing
+    // PAT-1 exists to remove, so this asserts what the published
+    // interface promises, which will still hold after PAT-1 lands.
     test("Factory_WithContainerId_ReturnsPicker", () =>
     {
         const picker = createSizesPicker(makeOptions());
-        expect(picker).toBeDefined();
-        expect(picker.getValue).toBeDefined();
+
+        for (const method of [
+            "destroy", "getElement", "getValue", "hide",
+            "setSizes", "setValue", "show",
+        ] as const)
+        {
+            expect(typeof picker[method], method).toBe("function");
+        }
+
         picker.destroy();
     });
 

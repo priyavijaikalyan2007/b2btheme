@@ -226,14 +226,17 @@ describe("getValue and setValue", () =>
 
 describe("getOffset", () =>
 {
+    // The comment said "UTC should have a GMT-related string" and the
+    // body asked whether a string had been returned at all --
+    // `getTimezoneOffset` returns "" from its catch, and "" is
+    // defined.
     test("getOffset_UTC_ReturnsGMTString", () =>
     {
         const picker = new TimezonePicker("test-timezonepicker-container", {
             timezone: "UTC",
         });
-        const offset = picker.getOffset();
-        // UTC should have a GMT-related string
-        expect(offset).toBeDefined();
+
+        expect(picker.getOffset()).toBe("GMT+0");
         picker.destroy();
     });
 

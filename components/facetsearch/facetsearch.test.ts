@@ -182,13 +182,16 @@ describe("accessibility", () =>
 
 describe("public API", () =>
 {
+    // "ReturnsCurrentValue" names the value. `getValue` rebuilds the
+    // raw string from the chips and the input, so a round trip is
+    // the claim: what went in comes back out.
     test("getValue_ReturnsCurrentValue", () =>
     {
         const fs = createFacetSearch("test-facetsearch", makeOptions({
             value: "status:open",
         }));
-        const val = fs.getValue();
-        expect(val).toBeDefined();
+
+        expect(fs.getValue()).toBe("status:open");
         fs.destroy();
     });
 
@@ -202,13 +205,20 @@ describe("public API", () =>
         fs.destroy();
     });
 
+    // STRUCTURED is the word the title uses and `raw` is the one
+    // field that is NOT structure -- it is the string the parse ran
+    // against. The free text and the parsed facet are the claim.
     test("getQuery_ReturnsStructuredQuery", () =>
     {
         const fs = createFacetSearch("test-facetsearch", makeOptions({
             value: "status:open hello",
         }));
+
         const query: FacetSearchQuery = fs.getQuery();
-        expect(query.raw).toBeDefined();
+
+        expect(query.raw).toBe("status:open hello");
+        expect(query.text).toBe("hello");
+        expect(query.facets).toMatchObject([{ key: "status", value: "open" }]);
         fs.destroy();
     });
 });

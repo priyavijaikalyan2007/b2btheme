@@ -124,11 +124,18 @@ describe("CommandPalette singleton", () =>
 
 describe("convenience functions", () =>
 {
+    // "Adds command" is a claim about WHICH command. `toBeDefined()`
+    // on the lookup was true of any object the singleton happened to
+    // hold under that id, including one a previous block registered.
     test("registerCommand_AddsCommandToSingleton", () =>
     {
         registerCommand(makeCommand("rc1", "Registered Cmd"));
         const inst = CommandPalette.getInstance();
-        expect(inst.getCommand("rc1")).toBeDefined();
+
+        expect(inst.getCommand("rc1")).toMatchObject({
+            id: "rc1",
+            label: "Registered Cmd",
+        });
     });
 
     test("registerCommands_AddsMultipleCommands", () =>
@@ -248,8 +255,13 @@ describe("CommandPalette handle methods", () =>
     test("registerCommand_AddsCommand", () =>
     {
         const inst = CommandPalette.getInstance();
+
         inst.registerCommand(makeCommand("add1", "Add Test"));
-        expect(inst.getCommand("add1")).toBeDefined();
+
+        expect(inst.getCommand("add1")).toMatchObject({
+            id: "add1",
+            label: "Add Test",
+        });
     });
 
     test("unregisterCommand_RemovesCommand", () =>
@@ -279,12 +291,32 @@ describe("CommandPalette handle methods", () =>
         expect(inst.getCommands().length).toBe(2);
     });
 
+    // "No error means success" was the whole assertion, on a method
+    // named for emptying a list. The list is private, and
+    // `clearRecent` writes it through to localStorage under
+    // `commandpalette-recent`, so the stored value is where the
+    // claim becomes readable. The run() first is what makes the
+    // clear mean anything: without it the list was already empty
+    // and the assertion would hold for a clearRecent that did
+    // nothing at all.
     test("clearRecent_EmptiesRecentList", () =>
     {
         const inst = CommandPalette.getInstance();
+        inst.registerCommand(makeCommand("recent1", "Recent One"));
+
+        // Nothing public pushes a recent: `pushRecent` runs from
+        // `executeHighlighted`, which the item's own click handler
+        // calls. Running the command the way a user does is the only
+        // way to get a non-empty list to clear.
+        inst.open();
+        document.querySelector<HTMLElement>(
+            "[data-command-id='recent1']")!.click();
+        expect(localStorage.getItem("commandpalette-recent"))
+            .toContain("recent1");
+
         inst.clearRecent();
-        // No error means success
-        expect(inst).toBeDefined();
+
+        expect(localStorage.getItem("commandpalette-recent")).toBe("[]");
     });
 
     test("destroy_CleansUpSingleton", () =>

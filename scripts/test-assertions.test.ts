@@ -520,6 +520,22 @@ describe("a guarded assertion is a site the sweep has to cover", () =>
         expect(guardedAssertions(rows)).toHaveLength(0);
     });
 
+    test("a loop over an array literal is not a guard", () =>
+    {
+        // Five blocks matched this shape the day it was excluded and
+        // all five fire, which is readable from the literal without
+        // running anything. Only a collection the COMPONENT produced
+        // can come back empty.
+        const rows = [{
+            file: "x.test.ts",
+            name: "t",
+            body: "\n    for (const m of [\"destroy\", \"getValue\"])\n    {\n"
+                + "        expect(typeof picker[m]).toBe(\"function\");\n    }\n",
+        }];
+
+        expect(guardedAssertions(rows)).toHaveLength(0);
+    });
+
     test("the offsets point at the open brace of each body", () =>
     {
         // The sweep inserts its probe at these, so an offset that

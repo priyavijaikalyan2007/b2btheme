@@ -80,11 +80,27 @@ afterEach(() =>
 
 describe("createToolColorPicker", () =>
 {
+    // THE BLOCK NEXT DOOR ALREADY MAKES THE MOUNT CLAIM, so what is
+    // left for this one is the SURFACE -- and `expect(picker.getValue)
+    // .toBeDefined()` was true of any property, including one holding
+    // a string. Listing the keys catches a method that went missing
+    // and a method that was added without reaching ToolColorPickerAPI, which
+    // is what a published handle is for.
     test("Factory_WithContainerId_ReturnsApi", () =>
     {
         const picker = createToolColorPicker(defaultOpts());
-        expect(picker).toBeDefined();
-        expect(picker.getValue).toBeDefined();
+
+        expect(Object.keys(picker).sort()).toEqual([
+            "destroy",
+            "getElement",
+            "getValue",
+            "setColors",
+            "setTool",
+            "setValue",
+        ]);
+        expect(Object.values(picker).every((v) => typeof v === "function"))
+            .toBe(true);
+
         picker.destroy();
     });
 

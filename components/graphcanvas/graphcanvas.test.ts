@@ -254,10 +254,13 @@ describe("GraphCanvas setData", () =>
 
 describe("GraphCanvas mode", () =>
 {
+    // The DEFAULT mode is the fact in the title, and "truthy" was
+    // true of every mode this component has.
     test("GetMode_ReturnsDefaultMode", () =>
     {
         const canvas = createGraphCanvas(makeOptions());
-        expect(canvas.getMode()).toBeTruthy();
+
+        expect(canvas.getMode()).toBe("schema");
         canvas.destroy();
     });
 });
