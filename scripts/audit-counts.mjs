@@ -543,6 +543,7 @@ const BASELINES = {
     // Not a floor: a module that stops declaring a local copy is
     // fine. What must never happen is a local copy that lies.
     bundlePreambleMismatches: 0,
+    trackerOpen: 2,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -800,6 +801,11 @@ const BASELINES = {
  * logTrace shims that way. The 117 logDebug shims sat under nothing.
  */
 const FLOORS = {
+    // A closed or settled entry is a decision somebody recorded. It can
+    // be reworded, but it does not stop existing, so both are floors
+    // while `trackerOpen` is an exact baseline.
+    trackerClosed: 95,
+    trackerSettled: 9,
     diagramengineBundleExports: 138,
     tracedComponents: 109,
     traceCalls: 301,
@@ -1073,6 +1079,32 @@ export function countUnusedLocals()
  *
  * @returns One entry per disagreement, as `file: NAME src -> bundle`.
  */
+/**
+ * The three tracker tallies, read from CODEBASE_FIXES.md's own markers.
+ *
+ * The file's Summary table used to be written by hand. On 2026-10-21 it
+ * read "36 items, 24 resolved" and called eight categories open, while
+ * the entries under seven of them all carried `- [x]`. A table that
+ * names a population it has stopped measuring is the defect most of
+ * that file documents in other people's code, so the table is derived
+ * from the markers now and check [20] holds the derivation.
+ *
+ * @returns {{trackerOpen: number, trackerClosed: number,
+ *   trackerSettled: number}} One count per marker.
+ */
+export function trackerMarkers()
+{
+    const src = readFileSync("CODEBASE_FIXES.md", "utf8");
+    const rows = src.split("\n").filter(
+        (l) => /^- \[( |x|=)\] \*\*(?:SETTLED — )?[A-Z][A-Za-z0-9-]*\*\*/.test(l));
+
+    return {
+        trackerOpen: rows.filter((l) => l.startsWith("- [ ]")).length,
+        trackerClosed: rows.filter((l) => l.startsWith("- [x]")).length,
+        trackerSettled: rows.filter((l) => l.startsWith("- [=]")).length,
+    };
+}
+
 export function bundlePreambleMismatches()
 {
     const script = readFileSync("scripts/bundle-diagramengine.sh", "utf8");
@@ -1361,6 +1393,9 @@ function measure()
         cdnModuleSpecifiers: 0,
         unusedLocals: 0,
         bundlePreambleMismatches: 0,
+        trackerOpen: 0,
+        trackerClosed: 0,
+        trackerSettled: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,
@@ -1483,6 +1518,9 @@ function measure()
     // UNUSED-1. A source copy of a bundled constant that LIES: the
     // bundler strips each module's declaration and emits its own.
     counts.bundlePreambleMismatches = bundlePreambleMismatches().length;
+
+    // The tracker's own Summary table, derived rather than typed.
+    Object.assign(counts, trackerMarkers());
 
     // DEBT-TEST-1. A test that cannot fail is worse than no test. No
     // test is an absence somebody can count, and a passing test is a

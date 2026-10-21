@@ -2235,24 +2235,27 @@ CI now runs the full `npm run build`, the runtime typecheck, the unit tests and
 `npm run test:structure`. Proven by lowering a baseline below its real value:
 the step exits 1 and the workflow fails.
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| CRITICAL — Security | 6 (DEBT-SEC-6 and -7 opened 2026-10-15) | **3 open, 3 closed.** DEBT-SEC-6 closed at 0 unpinned CDN URLs |
-| CRITICAL — Standards | 2 | **0 open, 2 closed 2026-10-15.** Both entries were wrong. STD-1 hid a real defect, STD-2 contradicted PAT-1 |
-| HIGH — Window Cast | 2 (WIN-1 at 0, WIN-2 at 6, 2026-10-14) | **0 open, 2 closed.** WIN-2 closed at 6: the rest cannot be declared |
-| HIGH — Function Length | 3 (14 functions total) | Open |
-| HIGH — Error Handling | 1 (DEBT-ERR-2 closed 2026-10-16) | Open |
-| CRITICAL — Fallback Code | 2 (FALLBACK-1 closed, FALLBACK-2 open, 2026-10-16) | Open |
-| MEDIUM — !important | 3 (**54** real in 18 component files, re-measured 2026-10-15; 113 was all stylesheets) | **1 closed, 2 open.** Real target is 29 |
-| MEDIUM — Logging | 7 (LOG-4a and LOG-6 opened 2026-10-15) | **0 open, 7 closed.** Trace reaches 109 components and 301 calls |
-| DOCS — Generated reference | 1 (DOC-1, opened and closed 2026-10-15) | **Closed.** 20 names published that were never API |
-| MEDIUM — : any | 3 (ANY-1 at 15, measured 2026-10-14) | **2 closed, ANY-3 open:** the count watched 88 of 157 |
-| MINOR — Markers | 3 (7 distinct files: 3 TypeScript, 4 SCSS, 2026-10-13) | **0 open, 3 closed 2026-10-15.** All three counts at 0 |
-| MINOR — Factory Pattern | 1 (**83 of 130 factories**, measured 2026-10-15; the entry said "some") | Open. Arguably not MINOR |
-| MEDIUM — Unused Variables | 1 (**306** errors, ratcheted 2026-10-15 at 308, lowered 2026-10-16; the 414 was stale) | Open, and now held |
-| MEASUREMENT — Re-derivable counts | 1 | **Closed** |
-| CI — Node version gap | 1 | **Closed** |
-| **Total** | **36 items** | **24 resolved** |
+| Marker | Count | Meaning |
+|---|---|---|
+| `- [ ]` | **2** | Open. **PAT-1** and **DEBT-TS-1**, both described below. |
+| `- [x]` | **95** | Closed. |
+| `- [=]` | **9** | Settled, each with a reopen condition. |
+| **Total** | **106 entries** | |
+
+**THIS TABLE IS DERIVED, NOT MAINTAINED.** It used to be a hand-written
+row per severity, and on 2026-10-21 it read "36 items, 24 resolved" and
+listed eight categories as open — Security, Function Length, Error
+Handling, Fallback Code, `!important`, `: any`, Unused Variables and
+Factory Pattern. Every entry in seven of those eight carried `- [x]`.
+The table was a count that had stopped measuring its population, which
+is the defect this file spends most of its length documenting in other
+people's code. `scripts/audit-counts.mjs` recomputes the three numbers
+from the markers and check `[20]` fails when they drift, so the table
+can no longer disagree with the entries it summarises.
+
+The per-section tallies are not reproduced here, because a second place
+to write a number is a second place for one to go stale. Run
+`node scripts/audit-counts.mjs` for the current figures.
 
 ### The March 2026 counts re-measured so far
 
