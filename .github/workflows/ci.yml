@@ -15,15 +15,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
+      # Pinned to the major tag, bumped v4 -> v7 on 2026-10-22. Every run
+      # was printing "Node.js 20 is deprecated … being forced to run on
+      # Node.js 24" for all three: they still worked, on a grace GitHub
+      # had already announced the end of. A warning that names its own
+      # expiry is not a warning you get to keep ignoring.
+      #
       # Node 24 matches what Cloudflare Workers Builds compiles the deployed
       # bundle with (v24.18.0, read from the live /build.json). Node 20 could
       # not run the suite at all: check [16] imports `globSync` from `node:fs`,
       # added in Node 22, so it threw a SyntaxError on every run (CI-1,
       # ADR-170). GitHub is also deprecating Node 20 on its runners.
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: "npm"
@@ -53,7 +59,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
