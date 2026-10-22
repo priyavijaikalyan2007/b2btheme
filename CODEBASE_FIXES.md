@@ -2096,8 +2096,8 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ## MINOR — Inconsistent Factory Return Pattern
 
-- [ ] **PAT-1** **The return type was the wrong target, and the leak it
-  named is now closed (2026-10-21).** The entry said that returning a
+- [x] **PAT-1** **CLOSED 2026-10-22. The leak closed on 2026-10-21 and
+  the pattern was established the day after.** The entry said that returning a
   class "leaks implementation details". Measured, that is not what the
   return type does, and the real leak was one level down.
 
@@ -2168,16 +2168,60 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   check. `rollback.info` records the last commit before the change and
   the revert steps.
 
-  **WHAT REMAINS OPEN IS THE ORIGINAL QUESTION, NARROWED.** Whether a
-  factory should return a handle interface rather than a class is now
-  a question about the TYPE alone, because the runtime leak is closed.
-  The honest case for it is nameability. The honest case against it is
-  that 46 components demonstrate an interface that mirrors its class
-  buys nothing. **DiagramEngine is still the exhibit:**
-  `DiagramEngineImpl` has 133 public methods, and writing
-  `DiagramEngineHandle` means deciding which of the 133 are API. That
-  is a design question per component, which is what the entry said in
-  March and is still the reason it is open.
+  **THE TYPE QUESTION, SETTLED BY DOING IT (2026-10-22).** The owner's
+  call: *"I would much rather the library be clean and establish and
+  follow a pattern than leave things for later. That's just more tech
+  debt."* The measurement above argued that an interface mirroring its
+  class buys nameability and no encapsulation, and that argument was
+  answered rather than overruled — **what was missing was `implements`.**
+
+  Of the 43 factories already returning a handle, 14 had a class of the
+  same name and **only 8 declared `implements`**. Six pairs agreed by
+  luck. That is the version of the pattern the measurement was right
+  about: a copy, with nothing holding the two together. With the clause,
+  the handle is a contract. Remove a member from the class and the
+  typecheck fails. ADD one and it is invisible to factory callers until
+  somebody writes it into the handle — **the API decision happens per
+  method, at the moment somebody knows the answer**, which is what this
+  entry had been asking for since March and could not get from a return
+  type alone.
+
+  **The handle may be narrower than the class, and two already are.**
+  `ActionItems` publishes `exportItems` and `importMarkdownText` and
+  `ActionItemsHandle` declares neither; `NavRail` keeps `getPosition`
+  and `getEffectiveWidth` off `NavRailHandle`. `implements` permits
+  this: it requires the class to carry at LEAST the handle's members.
+
+  **Done:** 76 handles across 74 components, 1227 members, `implements`
+  on 90 classes. `AGENTS.md` "Factory return type" states the rule.
+  `scripts/gen-handles.mjs` writes a handle from a class through the
+  TypeScript compiler, and is a tool rather than a build step because
+  regenerating `ActionItemsHandle` would put `exportItems` back.
+
+  **Two counts hold it, neither of which the typecheck catches:**
+  `factoriesReturningClass` at 0 — annotating a factory with the class
+  is legal TypeScript — and `handlesWithoutImplements` at 0 — a class
+  that happens to match its handle compiles without the clause. Both
+  mutation-proven.
+
+  **`DiagramEngineHandle` mirrors all 136 members rather than curating
+  them**, and `diagramengineLines` was raised 30579 -> 30727 to say so.
+  "Which of the 133 are API" is answered **not today**: this library is
+  consumed from a CDN by an application this repository cannot grep, so
+  "unused here" is not "not API", and narrowing it would be a second
+  breaking change one day after the first. With `implements` in place
+  that narrowing is a one-line deletion whenever somebody who knows the
+  consumer wants to make it.
+
+  **Two generator bugs, both the shape this file documents elsewhere.**
+  The `implements` anchor consumed the newline of the Allman brace
+  style and produced `class Toolbar\n implements ToolbarHandle{`. Then
+  it SKIPPED any class that already implemented something:
+  `DiagramEngineImpl implements EngineForTools` got its interface and
+  its return type and no contract, the typecheck passed, and the run
+  reported "wrote 76 files". It reads the heritage clause from the AST
+  now and throws rather than skipping, because a half-applied class is
+  the one outcome that looks like success.
 
   **The original text follows, and its framing is superseded above.**
 ## CI — Node version alignment
@@ -2237,8 +2281,8 @@ the step exits 1 and the workflow fails.
 
 | Marker | Count | Meaning |
 |---|---|---|
-| `- [ ]` | **2** | Open. **PAT-1** and **DEBT-TS-1**, both described below. |
-| `- [x]` | **95** | Closed. |
+| `- [ ]` | **1** | Open. **DEBT-TS-1**, which waits on the apps team. |
+| `- [x]` | **96** | Closed. |
 | `- [=]` | **9** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |
 

@@ -41,6 +41,32 @@ export function sourceFiles()
             && f !== "components/diagramengine/diagramengine.ts");
 }
 
+let cachedProgram = null;
+
+/**
+ * The TypeScript program, built once.
+ *
+ * Each gate used to call `ts.createProgram` for itself, and two gates
+ * over ~250 files took `test-local.sh` past its two-minute budget. The
+ * file set does not change inside a run, so neither does the program.
+ *
+ * @returns {ts.Program} The shared program over `sourceFiles()`.
+ */
+export function program()
+{
+    if (!cachedProgram)
+    {
+        cachedProgram = ts.createProgram(sourceFiles(), {
+            target: ts.ScriptTarget.ES2020,
+            module: ts.ModuleKind.ESNext,
+            strict: true,
+            skipLibCheck: true,
+        });
+    }
+
+    return cachedProgram;
+}
+
 /** `DiagramEngineImpl` -> `DiagramEngineHandle`. */
 export function handleNameFor(className)
 {
@@ -162,18 +188,13 @@ function printMember(member, sf, name)
 export function factoriesReturningClass()
 {
     const files = sourceFiles();
-    const program = ts.createProgram(files, {
-        target: ts.ScriptTarget.ES2020,
-        module: ts.ModuleKind.ESNext,
-        strict: true,
-        skipLibCheck: true,
-    });
+    const prog = program();
 
     const rows = [];
 
     for (const file of files)
     {
-        const sf = program.getSourceFile(file);
+        const sf = prog.getSourceFile(file);
         if (!sf) { continue; }
 
         const classes = new Set();
@@ -217,18 +238,13 @@ export function factoriesReturningClass()
 export function handlesWithoutImplements()
 {
     const files = sourceFiles();
-    const program = ts.createProgram(files, {
-        target: ts.ScriptTarget.ES2020,
-        module: ts.ModuleKind.ESNext,
-        strict: true,
-        skipLibCheck: true,
-    });
+    const prog = program();
 
     const rows = [];
 
     for (const file of files)
     {
-        const sf = program.getSourceFile(file);
+        const sf = prog.getSourceFile(file);
         if (!sf) { continue; }
 
         const classes = new Map();
@@ -267,12 +283,7 @@ export function handlesWithoutImplements()
 function run()
 {
     const files = sourceFiles();
-    const program = ts.createProgram(files, {
-        target: ts.ScriptTarget.ES2020,
-        module: ts.ModuleKind.ESNext,
-        strict: true,
-        skipLibCheck: true,
-    });
+    const prog = program();
 
     const plans = [];
 
@@ -281,7 +292,7 @@ function run()
         const component = file.split("/")[1];
         if (ONLY.size && !ONLY.has(component)) { continue; }
 
-        const sf = program.getSourceFile(file);
+        const sf = prog.getSourceFile(file);
         if (!sf) { continue; }
 
         const classes = new Map();

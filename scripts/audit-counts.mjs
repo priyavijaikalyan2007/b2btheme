@@ -552,7 +552,7 @@ const BASELINES = {
     // The clause is the contract. Without it a handle and its class
     // agree by luck, which is how 6 of 14 pairs stood before PAT-1.
     handlesWithoutImplements: 0,
-    trackerOpen: 2,
+    trackerOpen: 1,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -824,7 +824,7 @@ const FLOORS = {
     // A closed or settled entry is a decision somebody recorded. It can
     // be reworded, but it does not stop existing, so both are floors
     // while `trackerOpen` is an exact baseline.
-    trackerClosed: 95,
+    trackerClosed: 96,
     trackerSettled: 9,
     diagramengineBundleExports: 138,
     tracedComponents: 109,

@@ -9825,3 +9825,85 @@
     exact-text. A src module writing `32` where the bundle writes
     `32.0` would be reported, which is the safe direction for a
     ceiling and is worth revisiting only if it ever fires falsely.
+
+- id: ADR-218
+  title: A handle interface is a copy until the class declares `implements`, which is what turns it into a contract
+  date: 2026-10-22
+  status: accepted
+  context: |
+    PAT-1 had been open since March asking whether a factory should
+    return a handle interface rather than its class. Measurement on
+    2026-10-21 argued against it: 84 factories returned a class, those
+    74 classes declared 1189 public methods and zero public fields,
+    and of the 46 factories already returning an interface, not one of
+    those interfaces hid a member. Converting the rest looked like
+    1300 lines that would give a caller a second name for the same
+    thing. The owner's instruction was the opposite: establish a
+    pattern and follow it, because leaving the question open is itself
+    debt.
+  decision: |
+    D1. THE MEASUREMENT WAS RIGHT ABOUT THE WRONG ARTEFACT. Of the 43
+        factories already returning a handle, 14 had a class of the
+        same name, and only 8 declared `implements`. Six pairs agreed
+        by luck. An interface that mirrors a class and is not declared
+        to BE that class is exactly the copy the measurement
+        described, and the fleet contained six demonstrations.
+
+    D2. `implements` IS THE WHOLE DIFFERENCE. With the clause, a
+        member removed from the class fails the typecheck (TS2420,
+        proven by renaming Toolbar.removeTool). A member ADDED to the
+        class stays invisible to factory callers until somebody writes
+        it into the handle. That is the API decision happening per
+        method at the moment somebody knows the answer, which is the
+        thing PAT-1 had been asking for and could not get from a
+        return type on its own.
+
+    D3. THE HANDLE MAY BE NARROWER, AND TWO ALREADY ARE.
+        `implements` requires the class to carry at least the handle's
+        members, not at most. ActionItems publishes exportItems and
+        importMarkdownText and ActionItemsHandle declares neither;
+        NavRail keeps getPosition and getEffectiveWidth off
+        NavRailHandle.
+
+    D4. MIRROR NOW, CURATE LATER, AND SAY SO. Every generated handle
+        carries its class's full public surface, DiagramEngineHandle's
+        136 members included. This library is consumed from a CDN by
+        an application this repository cannot grep, so "unused here"
+        is not "not API", and narrowing a handle would have been a
+        second breaking change one day after 88 classes came off
+        `window`. With the clause in place that narrowing is a
+        one-line deletion the typecheck polices.
+
+    D5. THE GENERATOR IS A TOOL, NOT A BUILD STEP. Regenerating
+        ActionItemsHandle would put exportItems back. The first write
+        can be mechanical because `private` has already made most of
+        the decision; every write after it is a judgement.
+
+    D6. TWO GATES, BECAUSE THE TYPECHECK CATCHES NEITHER.
+        `factoriesReturningClass` at 0 — annotating createUserMenu
+        with UserMenu rather than UserMenuHandle is legal TypeScript.
+        `handlesWithoutImplements` at 0 — a class that happens to
+        match its handle compiles without the clause. Both were
+        mutation-proven, and both run off one memoised ts.Program
+        because two programs over 250 files took test-local.sh past
+        its budget.
+  consequences: |
+    A structural pairing with no declared relationship is not a
+    pattern, it is two files that currently agree. The general form:
+    when a repository holds the same fact in two places, ask what
+    FAILS when they disagree. If the answer is nothing, the second
+    place is decoration and the gate is the point, not the artefact.
+
+    The generator carried two bugs of the kind this repository keeps
+    finding in other people's code. Its `implements` anchor consumed
+    the newline of the Allman brace style. Then it SKIPPED any class
+    that already implemented something, so DiagramEngineImpl received
+    its interface and its factory return type and no contract — while
+    the typecheck passed and the run reported "wrote 76 files". A
+    half-applied change that typechecks is the one outcome that looks
+    like success, so the generator throws now rather than skipping,
+    and reads the heritage clause from the AST rather than the text.
+
+    Open: 1227 handle members mirror their classes. Nobody has yet
+    asked which of them a consumer actually calls, and the answer
+    needs the consuming application, not this repository.
