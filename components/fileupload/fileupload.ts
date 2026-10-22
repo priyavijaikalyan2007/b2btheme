@@ -214,7 +214,35 @@ function setAttr(el: HTMLElement, name: string, value: string): void
  * FileUpload provides a drag-and-drop upload zone with progress tracking,
  * file validation, batch upload, and an optional download section.
  */
-export class FileUpload
+/**
+ * The FileUpload surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface FileUploadHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    addFiles(files: FileList | File[]): void;
+    removeFile(fileId: string): void;
+    retryFile(fileId: string): void;
+    clearAll(): void;
+    getFiles(): Array<{
+        name: string;
+        status: string;
+        progress: number;
+    }>;
+    setDisabled(disabled: boolean): void;
+    setDownloads(downloads: FileDownloadItem[]): void;
+    uploadAll(): void;
+}
+
+export class FileUpload implements FileUploadHandle
 {
     private readonly instanceId: string;
     private readonly options: FileUploadOptions;
@@ -1590,7 +1618,7 @@ export class FileUpload
 export function createFileUpload(
     containerId: string,
     options: FileUploadOptions
-): FileUpload
+): FileUploadHandle
 {
     const uploader = new FileUpload(options);
     uploader.show(containerId);

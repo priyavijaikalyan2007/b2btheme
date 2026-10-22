@@ -301,7 +301,28 @@ function extractGroups(items: ComboBoxItem[]): string[]
  *     onSelect: (item) => console.log("Selected:", item.label)
  * });
  */
-export class EditableComboBox
+/**
+ * The EditableComboBox surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface EditableComboBoxHandle
+{
+    getValue(): string;
+    getSelectedItem(): ComboBoxItem | null;
+    setValue(value: string): void;
+    setItems(items: ComboBoxItem[]): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    destroy(): void;
+}
+
+export class EditableComboBox implements EditableComboBoxHandle
 {
     // -- Configuration
     private readonly containerId: string;
@@ -1520,7 +1541,7 @@ export class EditableComboBox
  */
 export function createEditableComboBox(
     containerId: string,
-    options: ComboBoxOptions): EditableComboBox
+    options: ComboBoxOptions): EditableComboBoxHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

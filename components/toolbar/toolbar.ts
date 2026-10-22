@@ -1068,7 +1068,69 @@ function genId(prefix: string): string
  * });
  * tb.show();
  */
-export class Toolbar
+/**
+ * The Toolbar surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ToolbarHandle
+{
+    show(container?: HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    addRegion(region: ToolbarRegion, index?: number): void;
+    removeRegion(regionId: string): void;
+    getRegion(regionId: string): ToolbarRegion | undefined;
+    addTool(regionId: string, tool: ToolbarTool, index?: number): void;
+    removeTool(toolId: string): void;
+    getTool(toolId: string): ToolbarTool | undefined;
+    setToolState(toolId: string, state: Partial<{
+            active: boolean;
+            disabled: boolean;
+            hidden: boolean;
+            icon: string;
+            label: string;
+            tooltip: string;
+            checked: boolean;
+            value: string | number;
+        }>): void;
+    getToolState(toolId: string): {
+        active: boolean;
+        disabled: boolean;
+        hidden: boolean;
+    } | undefined;
+    setStyle(style: ToolStyle): void;
+    setToolSize(size: number): void;
+    setGallerySelection(galleryId: string, optionId: string): void;
+    getGallerySelection(galleryId: string): string | undefined;
+    setSplitMenuItems(splitId: string, items: SplitMenuItem[]): void;
+    showKeyTips(): void;
+    hideKeyTips(): void;
+    saveLayout(): ToolbarLayoutState;
+    restoreLayout(): boolean;
+    getLayoutState(): ToolbarLayoutState;
+    applyLayoutState(state: ToolbarLayoutState): void;
+    dock(position: ToolbarDockPosition): void;
+    float(x?: number, y?: number): void;
+    setOrientation(o: ToolbarOrientation): void;
+    recalculateOverflow(): void;
+    getMode(): ToolbarMode;
+    getOrientation(): ToolbarOrientation;
+    getDockPosition(): ToolbarDockPosition;
+    isVisible(): boolean;
+    getElement(): HTMLElement | null;
+    isContained(): boolean;
+    setContained(value: boolean): void;
+    setTitle(cfg: string | ToolbarTitle | null): void;
+    getTitle(): string | ToolbarTitle | null;
+    setRightContent(el: HTMLElement | null): void;
+    getRightContent(): HTMLElement | null;
+}
+
+export class Toolbar implements ToolbarHandle
 {
     private readonly toolbarId: string;
     private regions: ToolbarRegion[];
@@ -5704,7 +5766,7 @@ export class Toolbar
  * @returns The created Toolbar instance
  */
 export function createToolbar(
-    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): ToolbarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5761,7 +5823,7 @@ export function createToolbar(
  * @returns The created Toolbar instance
  */
 export function createDockedToolbar(
-    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): ToolbarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -5792,7 +5854,7 @@ export function createDockedToolbar(
  * @returns The created Toolbar instance
  */
 export function createFloatingToolbar(
-    options: ToolbarOptions, container?: string | HTMLElement): Toolbar
+    options: ToolbarOptions, container?: string | HTMLElement): ToolbarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

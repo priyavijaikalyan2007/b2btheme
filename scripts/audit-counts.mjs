@@ -56,6 +56,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
 import { census as testCensus, standInsOf, guardedAssertions } from "./test-assertions.mjs";
+import { factoriesReturningClass, handlesWithoutImplements }
+    from "./gen-handles.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -543,6 +545,13 @@ const BASELINES = {
     // Not a floor: a module that stops declaring a local copy is
     // fine. What must never happen is a local copy that lies.
     bundlePreambleMismatches: 0,
+    // PAT-1. A factory hands back a handle interface, never the
+    // class. AGENTS.md "Factory return type" states the rule and
+    // `implements` holds the two in step; this holds the fleet.
+    factoriesReturningClass: 0,
+    // The clause is the contract. Without it a handle and its class
+    // agree by luck, which is how 6 of 14 pairs stood before PAT-1.
+    handlesWithoutImplements: 0,
     trackerOpen: 2,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
@@ -579,7 +588,18 @@ const BASELINES = {
     // did its job here: the first attempt added the same four-line
     // comment to all twelve definitions and came in at 30619, and
     // the reason now sits once beside `devMarkContainer`.
-    diagramengineLines: 30579,
+    //
+    // 30579 -> 30727 on 2026-10-22: `DiagramEngineHandle`, the 136
+    // members `createDiagramEngine` hands a caller, plus the doc
+    // comment above it (PAT-1). This is the entry's own exhibit —
+    // "writing DiagramEngineHandle means deciding which of the 133
+    // are API" — and the decision taken is NOT TODAY: the handle
+    // mirrors the public surface, and `implements` makes narrowing
+    // it later a one-line deletion that the typecheck will police.
+    // Curating it now would be a second breaking change for CDN
+    // consumers within a day of the first, decided by a repository
+    // that cannot grep its own consumer.
+    diagramengineLines: 30727,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -1393,6 +1413,8 @@ function measure()
         cdnModuleSpecifiers: 0,
         unusedLocals: 0,
         bundlePreambleMismatches: 0,
+        factoriesReturningClass: 0,
+        handlesWithoutImplements: 0,
         trackerOpen: 0,
         trackerClosed: 0,
         trackerSettled: 0,
@@ -1518,6 +1540,11 @@ function measure()
     // UNUSED-1. A source copy of a bundled constant that LIES: the
     // bundler strips each module's declaration and emits its own.
     counts.bundlePreambleMismatches = bundlePreambleMismatches().length;
+
+    // PAT-1. The compiler, not a regex: `Toolbar` and `ToolbarHandle`
+    // differ by a resolved symbol.
+    counts.factoriesReturningClass = factoriesReturningClass().length;
+    counts.handlesWithoutImplements = handlesWithoutImplements().length;
 
     // The tracker's own Summary table, derived rather than typed.
     Object.assign(counts, trackerMarkers());

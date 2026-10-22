@@ -217,7 +217,26 @@ function buildAvatarOnlyTooltip(name: string, email?: string, role?: string): st
 // CLASS: PersonChip
 // ============================================================================
 
-export class PersonChip
+/**
+ * The PersonChip surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PersonChipHandle
+{
+    getElement(): HTMLElement;
+    setName(name: string): void;
+    setEmail(email: string | undefined): void;
+    setAvatarUrl(url: string | undefined): void;
+    setStatus(status: PersonChipStatus | undefined): void;
+    setRole(role: string | undefined): void;
+    destroy(): void;
+}
+
+export class PersonChip implements PersonChipHandle
 {
     // --- State ---
     private opts: PersonChipOptions;
@@ -777,7 +796,7 @@ export class PersonChip
  * @param options - PersonChip configuration
  * @returns The created PersonChip instance
  */
-export function createPersonChip(options: PersonChipOptions): PersonChip
+export function createPersonChip(options: PersonChipOptions): PersonChipHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

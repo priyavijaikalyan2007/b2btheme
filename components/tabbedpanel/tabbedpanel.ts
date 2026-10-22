@@ -320,7 +320,55 @@ function clamp(value: number, min: number, max: number): number
  * });
  * panel.show();
  */
-export class TabbedPanel
+/**
+ * The TabbedPanel surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TabbedPanelHandle
+{
+    show(container?: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    dock(position: TabbedPanelDockPosition): void;
+    float(x?: number, y?: number): void;
+    collapse(): void;
+    expand(): void;
+    toggleCollapse(): void;
+    addTab(tab: TabDefinition): void;
+    removeTab(tabId: string): void;
+    selectTab(tabId: string): void;
+    getActiveTabId(): string | null;
+    getTabCount(): number;
+    getTabDefinition(tabId: string): TabDefinition | undefined;
+    getTabContentElement(tabId: string): HTMLElement | undefined;
+    setTabTitle(tabId: string, title: string): void;
+    setTabIcon(tabId: string, icon: string): void;
+    setTabDisabled(tabId: string, disabled: boolean): void;
+    getId(): string;
+    getMode(): TabbedPanelMode;
+    getDockPosition(): TabbedPanelDockPosition;
+    getHeight(): number;
+    getWidth(): number;
+    isVisible(): boolean;
+    isCollapsed(): boolean;
+    getRootElement(): HTMLElement | null;
+    getTitle(): string;
+    setTitle(title: string): void;
+    setHeight(h: number): void;
+    setWidth(w: number): void;
+    isContained(): boolean;
+    setContained(value: boolean): void;
+    addResizeListener(fn: (w: number, h: number, p: TabbedPanel) => void): void;
+    removeResizeListener(fn: Function): void;
+    addCollapseListener(fn: (collapsed: boolean, p: TabbedPanel) => void): void;
+    removeCollapseListener(fn: Function): void;
+}
+
+export class TabbedPanel implements TabbedPanelHandle
 {
     private readonly instanceId: string;
     private readonly options: Required<Pick<TabbedPanelOptions,
@@ -2980,7 +3028,7 @@ export class TabbedPanelManager
 export function createTabbedPanel(
     options: TabbedPanelOptions,
     container?: string | HTMLElement
-): TabbedPanel
+): TabbedPanelHandle
 {
     const panel = new TabbedPanel(options);
     panel.show(container);
@@ -2994,7 +3042,7 @@ export function createTabbedPanel(
 export function createDockedTabbedPanel(
     options: TabbedPanelOptions,
     container?: string | HTMLElement
-): TabbedPanel
+): TabbedPanelHandle
 {
     const merged = { ...options, mode: "docked" as const };
     return createTabbedPanel(merged, container);
@@ -3007,7 +3055,7 @@ export function createDockedTabbedPanel(
 export function createFloatingTabbedPanel(
     options: TabbedPanelOptions,
     container?: string | HTMLElement
-): TabbedPanel
+): TabbedPanelHandle
 {
     const merged = {
         ...options,

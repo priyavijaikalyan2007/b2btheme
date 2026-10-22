@@ -151,7 +151,24 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // ============================================================================
 
 /** Inline pill element for entity references. */
-export class Pill
+/**
+ * The Pill surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PillHandle
+{
+    getElement(): HTMLElement;
+    setLabel(text: string): void;
+    setColor(color: PillColor): void;
+    setStyle(overrides: PillStyleOverrides): void;
+    destroy(): void;
+}
+
+export class Pill implements PillHandle
 {
     private rootEl: HTMLElement | null = null;
     private labelEl: HTMLElement | null = null;
@@ -461,7 +478,7 @@ export class Pill
 
 /** Create a Pill instance and return it. */
 // @entrypoint
-export function createPill(options: PillOptions): Pill
+export function createPill(options: PillOptions): PillHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

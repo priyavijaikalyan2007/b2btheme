@@ -143,7 +143,23 @@ function createElement(tag: string, className?: string): HTMLElement
  *     primaryAction: { text: "Get started", href: "/signup" }
  * });
  */
-export class MarketingHero
+/**
+ * The MarketingHero surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface MarketingHeroHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+}
+
+export class MarketingHero implements MarketingHeroHandle
 {
     private readonly instanceId!: string;
     private readonly options!: MarketingHeroOptions;
@@ -367,7 +383,7 @@ export class MarketingHero
  */
 export function createMarketingHero(
     containerId: string, options: MarketingHeroOptions
-): MarketingHero
+): MarketingHeroHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

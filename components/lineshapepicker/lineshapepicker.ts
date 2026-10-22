@@ -297,7 +297,29 @@ function createShapePreview(
 // S4: CLASS
 // ============================================================================
 
-export class LineShapePicker
+/**
+ * The LineShapePicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface LineShapePickerHandle
+{
+    getValue(): string;
+    getSelectedShape(): LineShapeItem | null;
+    setValue(value: string): void;
+    setShapes(shapes: LineShapeItem[]): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement | null;
+    destroy(): void;
+}
+
+export class LineShapePicker implements LineShapePickerHandle
 {
     private readonly instanceId: string;
     private opts: LineShapePickerOptions;
@@ -824,7 +846,7 @@ export class LineShapePicker
 /** Create a LineShapePicker and mount it in the given container. */
 export function createLineShapePicker(
     containerId: string, options: LineShapePickerOptions
-): LineShapePicker
+): LineShapePickerHandle
 {
     return new LineShapePicker(containerId, options);
 }

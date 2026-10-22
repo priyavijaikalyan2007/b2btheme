@@ -187,7 +187,7 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // PROPERTY INSPECTOR CLASS
 // ============================================================================
 
-class PropertyInspector
+class PropertyInspector implements PropertyInspectorHandle
 {
     private readonly id: string;
     private readonly container: HTMLElement;

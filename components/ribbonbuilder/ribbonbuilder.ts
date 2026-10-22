@@ -299,7 +299,7 @@ function lookupFactoryGlobal(name: string): unknown
 {
     return (window as unknown as Record<string, unknown>)[name];
 }
-class RibbonBuilderImpl
+class RibbonBuilderImpl implements RibbonBuilderHandle
 {
     private readonly instanceId: number;
     private readonly opts: Required<

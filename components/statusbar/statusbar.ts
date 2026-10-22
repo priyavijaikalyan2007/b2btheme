@@ -199,7 +199,32 @@ function setAttr(el: HTMLElement, name: string, value: string): void
  * bar.show();
  * bar.setValue("user", "adoe");
  */
-export class StatusBar
+/**
+ * The StatusBar surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface StatusBarHandle
+{
+    show(container?: HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    setValue(regionId: string, value: string): void;
+    getValue(regionId: string): string;
+    setIcon(regionId: string, iconClass: string): void;
+    getAllText(): string;
+    addRegion(region: StatusBarRegion, index?: number): void;
+    removeRegion(regionId: string): void;
+    isVisible(): boolean;
+    getElement(): HTMLElement | null;
+    setContained(value: boolean): void;
+    isContained(): boolean;
+}
+
+export class StatusBar implements StatusBarHandle
 {
     private readonly instanceId: string;
     private readonly options: StatusBarOptions;
@@ -806,7 +831,7 @@ export class StatusBar
  */
 export function createStatusBar(
     options: StatusBarOptions
-): StatusBar
+): StatusBarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

@@ -176,7 +176,7 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // NOTIFICATION CENTER CLASS
 // ============================================================================
 
-class NotificationCenter
+class NotificationCenter implements NotificationCenterHandle
 {
     private readonly id: string;
     private readonly container: HTMLElement;

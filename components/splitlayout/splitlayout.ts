@@ -244,7 +244,35 @@ function clamp(value: number, min: number, max: number): number
  *     onResize: (sizes) => console.log("Sizes:", sizes)
  * });
  */
-export class SplitLayout
+/**
+ * The SplitLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SplitLayoutHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    getPaneElement(paneId: string): HTMLElement | null;
+    setPaneContent(paneId: string, element: HTMLElement): void;
+    collapsePane(paneId: string): void;
+    expandPane(paneId: string): void;
+    togglePane(paneId: string): void;
+    getSizes(): Record<string, number>;
+    setSizes(sizes: Record<string, number>): void;
+    setOrientation(dir: "horizontal" | "vertical"): void;
+    getState(): SplitLayoutState;
+    setState(state: SplitLayoutState): void;
+    addPane(config: SplitPaneConfig, index?: number): void;
+    removePane(paneId: string): void;
+}
+
+export class SplitLayout implements SplitLayoutHandle
 {
     private readonly instanceId!: string;
     private readonly options!: SplitLayoutOptions;
@@ -1496,7 +1524,7 @@ export class SplitLayout
  */
 export function createSplitLayout(
     options: SplitLayoutOptions,
-    containerId?: string): SplitLayout
+    containerId?: string): SplitLayoutHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

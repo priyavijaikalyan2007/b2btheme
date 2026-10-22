@@ -174,7 +174,7 @@ function getMdRenderer(): MdRendererHandle | null
  * Singleton right-side drawer for displaying documentation content.
  * Manages topic history, markdown rendering via marked, and drag-to-resize.
  */
-class HelpDrawer
+class HelpDrawer implements HelpDrawerHandle
 {
     private readonly options: HelpDrawerOptions;
 

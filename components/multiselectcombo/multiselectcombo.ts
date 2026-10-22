@@ -312,7 +312,38 @@ function orderByGroup(items: ComboItem[]): ComboItem[]
  * });
  * combo.show("my-container");
  */
-export class MultiselectCombo
+/**
+ * The MultiselectCombo surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface MultiselectComboHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+    getSelectedValues(): string[];
+    getValue(): string[];
+    getSelectedItems(): ComboItem[];
+    setValue(values: string[]): void;
+    setSelected(values: string[]): void;
+    selectAll(): void;
+    deselectAll(): void;
+    addItem(item: ComboItem): void;
+    removeItem(value: string): void;
+    setItems(items: ComboItem[]): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    focus(): void;
+}
+
+export class MultiselectCombo implements MultiselectComboHandle
 {
     // -- Configuration
     private readonly instanceId: string;
@@ -2016,7 +2047,7 @@ export class MultiselectCombo
  */
 export function createMultiselectCombo(
     options: MultiselectComboOptions,
-    containerId?: string): MultiselectCombo
+    containerId?: string): MultiselectComboHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not get a
     // silent default. Absent means undefined, so an empty list is

@@ -146,7 +146,7 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
  * Attaches a ? help icon to a target element.
  * Hover shows plain-text tooltip; click opens HelpDrawer via window bridge.
  */
-class HelpTooltip
+class HelpTooltip implements HelpTooltipHandle
 {
     private readonly id: string;
     private readonly target: HTMLElement;

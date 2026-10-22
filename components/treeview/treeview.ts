@@ -753,7 +753,45 @@ function collectStarred(roots: TreeNode[]): TreeNode[]
  *     onSelect: (node, selected) => console.log(node.label, selected)
  * });
  */
-export class TreeView
+/**
+ * The TreeView surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TreeViewHandle
+{
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    setData(slot: string, value: unknown): void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
+    destroy(): void;
+    refresh(): void;
+    setSort(mode: TreeSortMode): void;
+    addNode(parentId: string | null, node: TreeNode, index?: number): void;
+    removeNode(nodeId: string): void;
+    updateNode(nodeId: string, updates: Partial<Pick<TreeNode,
+            "label" | "icon" | "badges" | "tooltip" | "disabled" |
+            "starred" | "kind" | "data">>): void;
+    getNodeById(nodeId: string): TreeNode | undefined;
+    expandNode(nodeId: string): void;
+    collapseNode(nodeId: string): void;
+    expandAll(): void;
+    collapseAll(): void;
+    selectNode(nodeId: string): void;
+    deselectAll(): void;
+    getSelectedNodes(): TreeNode[];
+    scrollToNode(nodeId: string): void;
+    setRoots(roots: TreeNode[]): void;
+    clearSearch(): void;
+    getElement(): HTMLElement | null;
+    getId(): string;
+    getRoots(): TreeNode[];
+}
+
+export class TreeView implements TreeViewHandle
 {
     // -- Configuration
     private readonly instanceId: string;
@@ -5484,7 +5522,7 @@ export class TreeView
  * @param options - TreeView configuration
  * @returns The created TreeView instance
  */
-export function createTreeView(options: TreeViewOptions): TreeView
+export function createTreeView(options: TreeViewOptions): TreeViewHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

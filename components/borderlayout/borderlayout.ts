@@ -168,7 +168,34 @@ function setAttr(
 // 4. BORDERLAYOUT CLASS
 // ============================================================================
 
-export class BorderLayout
+/**
+ * The BorderLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface BorderLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    setNorth(child: HTMLElement | any | null): void;
+    setSouth(child: HTMLElement | any | null): void;
+    setEast(child: HTMLElement | any | null): void;
+    setWest(child: HTMLElement | any | null): void;
+    setCenter(child: HTMLElement | any | null): void;
+    collapseRegion(region: BorderRegion): void;
+    expandRegion(region: BorderRegion): void;
+    getRegionElement(region: BorderRegion): HTMLElement | null;
+    getState(): BorderLayoutState;
+    setState(state: BorderLayoutState): void;
+}
+
+export class BorderLayout implements BorderLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: BorderLayoutOptions;
@@ -729,7 +756,7 @@ export class BorderLayout
 export function createBorderLayout(
     options: BorderLayoutOptions,
     containerId?: string
-): BorderLayout
+): BorderLayoutHandle
 {
     const layout = new BorderLayout(options);
 

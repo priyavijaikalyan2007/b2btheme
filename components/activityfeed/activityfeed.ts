@@ -238,7 +238,30 @@ function formatFullDate(date: Date): string
 // CLASS
 // ============================================================================
 
-export class ActivityFeed
+/**
+ * The ActivityFeed surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ActivityFeedHandle
+{
+    show(containerId: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    addEvent(event: ActivityEvent): void;
+    addEvents(events: ActivityEvent[]): void;
+    setEvents(events: ActivityEvent[]): void;
+    getEvents(): ActivityEvent[];
+    clear(): void;
+    refresh(): void;
+    scrollToTop(): void;
+}
+
+export class ActivityFeed implements ActivityFeedHandle
 {
     // -- Options -------------------------------------------------------------
     private groupByDate: boolean;
@@ -1050,7 +1073,7 @@ function describeEvent(event: ActivityEvent): string
 export function createActivityFeed(
     options: ActivityFeedOptions,
     containerId?: string
-): ActivityFeed
+): ActivityFeedHandle
 {
     const instance = new ActivityFeed(options);
     if (containerId) { instance.show(containerId); }

@@ -599,7 +599,31 @@ function toISO8601(value: DurationValue): string
  * picker.getValue(); // Returns DurationValue
  * picker.toISO();    // Returns "PT0S"
  */
-export class DurationPicker
+/**
+ * The DurationPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface DurationPickerHandle
+{
+    getValue(): DurationValue;
+    getFormattedValue(): string;
+    toISO(): string;
+    toTotalSeconds(): number;
+    setValue(value: DurationValue): void;
+    setFromISO(iso: string): void;
+    open(): void;
+    close(): void;
+    clear(): void;
+    enable(): void;
+    disable(): void;
+    destroy(): void;
+}
+
+export class DurationPicker implements DurationPickerHandle
 {
     private readonly containerId: string;
     /**
@@ -1968,7 +1992,7 @@ export class DurationPicker
 export function createDurationPicker(
     containerId: string,
     options?: DurationPickerOptions
-): DurationPicker
+): DurationPickerHandle
 {
     return new DurationPicker(containerId, options);
 }

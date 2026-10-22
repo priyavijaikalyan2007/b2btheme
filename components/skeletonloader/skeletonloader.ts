@@ -140,7 +140,23 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
  * );
  * // Later: skeleton.destroy();
  */
-export class SkeletonLoader
+/**
+ * The SkeletonLoader surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SkeletonLoaderHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+}
+
+export class SkeletonLoader implements SkeletonLoaderHandle
 {
     private readonly instanceId!: string;
     private readonly options!: SkeletonLoaderOptions;
@@ -396,7 +412,7 @@ export class SkeletonLoader
  */
 export function createSkeletonLoader(
     options?: SkeletonLoaderOptions, containerId?: string
-): SkeletonLoader
+): SkeletonLoaderHandle
 {
     const loader = new SkeletonLoader(options);
     loader.show(containerId);

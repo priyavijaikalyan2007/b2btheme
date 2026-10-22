@@ -305,7 +305,40 @@ function parseMentionSegments(text: string, users: MentionUser[]): MentionSegmen
 // COMMENTOVERLAY CLASS
 // ============================================================================
 
-export class CommentOverlay
+/**
+ * The CommentOverlay surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface CommentOverlayHandle
+{
+    addPin(pin: CommentPinData): void;
+    removePin(pinId: string): void;
+    updatePin(pinId: string, updates: Partial<CommentPinData>): void;
+    getPin(pinId: string): CommentPinData | undefined;
+    getAllPins(): CommentPinData[];
+    reposition(): void;
+    enterPlacementMode(): void;
+    exitPlacementMode(): void;
+    openThread(pinId: string): void;
+    closeAllThreads(): void;
+    addComment(threadId: string, comment: CommentData): void;
+    updateComment(threadId: string, commentId: string, newText: string): void;
+    removeComment(threadId: string, commentId: string): void;
+    resolveThread(threadId: string, resolvedBy: MentionUser): void;
+    unresolveThread(threadId: string): void;
+    setMentionUsers(users: MentionUser[]): void;
+    setVisible(visible: boolean): void;
+    setResolvedFilter(show: "all" | "resolved" | "unresolved"): void;
+    getElement(): HTMLElement;
+    exportComments(): string;
+    destroy(): void;
+}
+
+export class CommentOverlay implements CommentOverlayHandle
 {
     private opts: CommentOverlayOptions;
     private containerEl: HTMLElement;
@@ -2040,7 +2073,7 @@ export class CommentOverlay
 export function createCommentOverlay(
     containerId: string,
     options: CommentOverlayOptions
-): CommentOverlay
+): CommentOverlayHandle
 {
     const el = document.getElementById(containerId);
 

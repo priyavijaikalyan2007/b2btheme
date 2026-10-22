@@ -767,7 +767,45 @@ function resolveContainer(containerId: string): HTMLElement | null
  * time axis with row packing, grouping, collapsing, selection, and
  * viewport visibility callbacks.
  */
-export class Timeline
+/**
+ * The Timeline surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TimelineHandle
+{
+    show(container?: HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    addItem(item: TimelineItem): void;
+    addItems(items: TimelineItem[]): void;
+    removeItem(id: string): void;
+    updateItem(id: string, updates: Partial<TimelineItem>): void;
+    getItems(): TimelineItem[];
+    selectItem(id: string | null): void;
+    getSelectedItem(): TimelineItem | null;
+    addGroup(group: TimelineGroup): void;
+    removeGroup(id: string): void;
+    updateGroup(id: string, updates: Partial<TimelineGroup>): void;
+    toggleGroup(id: string): void;
+    collapseAll(): void;
+    expandAll(): void;
+    setSortMode(mode: TimelineSortMode): void;
+    getSortMode(): TimelineSortMode;
+    setViewport(start: Date, end: Date): void;
+    getViewport(): { start: Date; end: Date };
+    scrollToDate(date: Date): void;
+    setDisabled(disabled: boolean): void;
+    setTimezone(tz: string): void;
+    getTimezone(): string;
+    setTickInterval(interval: number | TickIntervalPreset | "auto"): void;
+    getTickInterval(): number | TickIntervalPreset | "auto";
+}
+
+export class Timeline implements TimelineHandle
 {
     // -- Configuration --
     private opts: Required<
@@ -3189,7 +3227,7 @@ export class Timeline
  * @param options - Configuration options for the timeline.
  * @returns The Timeline instance.
  */
-export function createTimeline(options: TimelineOptions): Timeline
+export function createTimeline(options: TimelineOptions): TimelineHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

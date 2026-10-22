@@ -180,7 +180,30 @@ interface ChildRecord
 // 5. ANCHORLAYOUT CLASS
 // ============================================================================
 
-export class AnchorLayout
+/**
+ * The AnchorLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface AnchorLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addChild(config: AnchorChildConfig): void;
+    removeChild(index: number): void;
+    updateAnchors(index: number, anchors: Partial<AnchorChildConfig>): void;
+    getChildCount(): number;
+    getState(): AnchorLayoutState;
+    setState(_state: AnchorLayoutState): void;
+}
+
+export class AnchorLayout implements AnchorLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: AnchorLayoutOptions;
@@ -844,7 +867,7 @@ export class AnchorLayout
 export function createAnchorLayout(
     options: AnchorLayoutOptions,
     containerId?: string
-): AnchorLayout
+): AnchorLayoutHandle
 {
     const layout = new AnchorLayout(options);
 

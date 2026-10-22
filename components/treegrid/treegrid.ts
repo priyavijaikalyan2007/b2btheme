@@ -429,7 +429,43 @@ function sortNodes(
 /**
  * TreeGrid component with multi-column data display and ARIA support.
  */
-export class TreeGrid
+/**
+ * The TreeGrid surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TreeGridHandle
+{
+    refresh(): void;
+    destroy(): void;
+    addNode(node: TreeGridNode, parentId: string | null): void;
+    removeNode(nodeId: string): void;
+    updateNode(nodeId: string, updates: Partial<TreeGridNode>): void;
+    setNodes(nodes: TreeGridNode[]): void;
+    getNode(nodeId: string): TreeGridNode | undefined;
+    setColumns(columns: TreeGridColumn[]): void;
+    showColumn(columnId: string): void;
+    hideColumn(columnId: string): void;
+    updateColumn(columnId: string, updates: Partial<TreeGridColumn>): void;
+    getColumns(): TreeGridColumn[];
+    getSelectedNodes(): TreeGridNode[];
+    selectNode(nodeId: string): void;
+    deselectNode(nodeId: string): void;
+    clearSelection(): void;
+    expandNode(nodeId: string): void;
+    collapseNode(nodeId: string): void;
+    expandAll(): void;
+    collapseAll(): void;
+    focusCell(row: number, col: number): void;
+    scrollToNode(nodeId: string): void;
+    getElement(): HTMLElement | null;
+    getId(): string;
+}
+
+export class TreeGrid implements TreeGridHandle
 {
     /*
      * FN-3. EVERY FIELD WITH A FIXED STARTING VALUE DECLARES IT HERE.
@@ -4750,7 +4786,7 @@ export class TreeGrid
 /**
  * Factory function to create a TreeGrid instance.
  */
-export function createTreeGrid(options: TreeGridOptions): TreeGrid
+export function createTreeGrid(options: TreeGridOptions): TreeGridHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

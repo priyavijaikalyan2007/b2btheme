@@ -222,7 +222,31 @@ function resolveOptions(options: MaskedEntryOptions): Required<
  * const entry = new MaskedEntry({ value: "sk-abc123...", label: "API Key" });
  * entry.show("my-container");
  */
-export class MaskedEntry
+/**
+ * The MaskedEntry surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface MaskedEntryHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getValue(): string;
+    setValue(value: string): void;
+    isRevealed(): boolean;
+    reveal(): void;
+    conceal(): void;
+    toggleReveal(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement | null;
+}
+
+export class MaskedEntry implements MaskedEntryHandle
 {
     private readonly instanceId: string;
     private options: ReturnType<typeof resolveOptions>;
@@ -988,7 +1012,7 @@ export class MaskedEntry
  */
 export function createMaskedEntry(
     containerId: string,
-    options: MaskedEntryOptions): MaskedEntry
+    options: MaskedEntryOptions): MaskedEntryHandle
 {
     const entry = new MaskedEntry(options);
     entry.show(containerId);

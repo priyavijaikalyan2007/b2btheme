@@ -2242,7 +2242,49 @@ function normalizeOptions(
     };
 }
 
-export class SpineMap
+/**
+ * The SpineMap surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SpineMapHandle
+{
+    loadData(data: SpineMapData): void;
+    getData(): SpineMapData;
+    addHub(hub: SpineHub, index?: number): void;
+    addBranch(branch: SpineBranch, parentId: string): void;
+    updateNode(nodeId: string, changes: Partial<SpineHub | SpineBranch>): void;
+    removeNode(nodeId: string): void;
+    reparentNode(nodeId: string, newParentId: string | null): void;
+    getNode(nodeId: string): SpineHub | SpineBranch | null;
+    addConnection(conn: SpineConnection): void;
+    removeConnection(fromId: string, toId: string): void;
+    getConnections(): SpineConnection[];
+    setLayout(layout: LayoutMode): void;
+    getLayout(): LayoutMode;
+    relayout(): void;
+    zoomIn(): void;
+    zoomOut(): void;
+    zoomTo(level: number): void;
+    fitToView(): void;
+    panTo(nodeId: string): void;
+    getZoom(): number;
+    selectNode(nodeId: string): void;
+    clearSelection(): void;
+    getSelectedNode(): string | null;
+    exportSVG(): string;
+    exportPNG(): Promise<Blob>;
+    exportJSON(): string;
+    importJSON(json: string): void;
+    refresh(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+}
+
+export class SpineMap implements SpineMapHandle
 {
     // ── Fields ──
 
@@ -4786,7 +4828,7 @@ export class SpineMap
 // FACTORY
 // ============================================================================
 
-export function createSpineMap(options: SpineMapOptions): SpineMap
+export function createSpineMap(options: SpineMapOptions): SpineMapHandle
 {
     // ERR-1. A caller that named a container asked for that container.
     // `options.container.appendChild` on a null container used to throw

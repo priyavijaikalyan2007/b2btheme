@@ -89,7 +89,155 @@ function safeCallback<T extends unknown[]>(
  * still the implementation type rather than a handle interface, which is
  * the one case PAT-1 has to resolve for this component.
  */
-export class DiagramEngineImpl implements EngineForTools
+/**
+ * The DiagramEngineImpl surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface DiagramEngineHandle
+{
+    hitTestObject(canvasPos: Point): DiagramObject | null;
+    isSelected(id: string): boolean;
+    addToSelection(id: string): void;
+    toggleSelection(id: string): void;
+    clearSelectionInternal(): void;
+    getSelectedIds(): string[];
+    getSelectedObjects(): DiagramObject[];
+    getObjectById(id: string): DiagramObject | null;
+    moveObjectTo(id: string, pos: { x: number; y: number }): void;
+    resizeObject(id: string, bounds: Rect): void;
+    rotateObjectTo(id: string, degrees: number): void;
+    nudgeSelected(dx: number, dy: number): void;
+    deleteSelected(): void;
+    selectAll(): void;
+    selectObjectsInRect(rect: Rect): void;
+    pushMoveUndo(startBounds: Map<string, Rect>): void;
+    pushResizeUndo(id: string, before: Rect, after: Rect): void;
+    renderRubberBand(rect: Rect): void;
+    clearToolOverlay(): void;
+    getPaintableCanvas(objectId: string): HTMLCanvasElement | null;
+    setActiveTool(name: string): void;
+    showAlignmentGuides(movingBounds: Rect): void;
+    startInlineTextEdit(objectId: string): void;
+    endInlineTextEdit(): void;
+    getShapeDef(type: string): ShapeDefinition | null;
+    getVisibleObjects(): DiagramObject[];
+    hitTestConnector(canvasPos: Point): DiagramConnector | null;
+    isConnectorSelected(id: string): boolean;
+    addConnectorToSelection(id: string): void;
+    toggleConnectorSelection(id: string): void;
+    pushUndoCommand(cmd: UndoCommand): void;
+    panCanvas(dx: number, dy: number): void;
+    getDocument(): DiagramDocument;
+    setDocument(doc: DiagramDocument): void;
+    clear(): void;
+    addObject(partial: DiagramObjectInput): DiagramObject;
+    removeObject(id: string): void;
+    updateObject(id: string, changes: Partial<DiagramObject>): void;
+    getObject(id: string): DiagramObject | null;
+    getObjects(): DiagramObject[];
+    getObjectsBySemanticType(type: string): DiagramObject[];
+    select(ids: string[]): void;
+    clearSelection(): void;
+    getSelectedObjectsPublic(): DiagramObject[];
+    zoomIn(): void;
+    zoomOut(): void;
+    zoomToFit(): void;
+    setRenderStyle(style: "clean" | "sketch"): void;
+    getZoomLevel(): number;
+    setZoomLevel(level: number): void;
+    getViewport(): ViewportState;
+    undo(): void;
+    redo(): void;
+    canUndo(): boolean;
+    canRedo(): boolean;
+    getActiveTool(): string;
+    getToolInstance(name: string): unknown;
+    loadStencilPack(name: string): void;
+    registerStencilPack(name: string, shapes: ShapeDefinition[]): void;
+    getAvailableShapes(): ShapeDefinition[];
+    toJSON(indent?: number): string;
+    fromJSON(json: string): void;
+    isDirty(): boolean;
+    markClean(): void;
+    addPageFrame(sizeName: string, position?: Point): PageFrame;
+    removePageFrame(id: string): void;
+    lockPageFrame(id: string): void;
+    unlockPageFrame(id: string): void;
+    getPageFrames(): PageFrame[];
+    scrollToPageFrame(id: string): void;
+    setPageFrameMargins(id: string, margins: PageFrameMargins): void;
+    setPageFrameBorder(id: string, color: string, width: number): void;
+    setPageFrameBackground(id: string, color: string): void;
+    getPageFrameSizes(): PageFrameSize[];
+    exportSVG(): string;
+    exportJSON(): string;
+    on(event: string, handler: EventHandler): void;
+    off(event: string, handler: EventHandler): void;
+    resize(): void;
+    getElement(): HTMLElement;
+    group(ids: string[]): DiagramObject;
+    ungroup(groupId: string): DiagramObject[];
+    flipHorizontal(ids: string[]): void;
+    flipVertical(ids: string[]): void;
+    rotateObjects(ids: string[], degrees: number): void;
+    copy(): void;
+    cut(): void;
+    paste(): void;
+    duplicate(): void;
+    bringToFront(ids: string[]): void;
+    sendToBack(ids: string[]): void;
+    alignObjects(ids: string[], alignment: AlignmentType): void;
+    distributeObjects(ids: string[], axis: "horizontal" | "vertical"): void;
+    addLayer(partial: Partial<Layer>): Layer;
+    removeLayer(id: string): void;
+    getLayers(): Layer[];
+    setDrawShape(type: string): void;
+    addConnector(partial: Partial<DiagramConnector>): DiagramConnector;
+    removeConnector(id: string): void;
+    updateConnector(id: string, changes: Partial<DiagramConnector>): void;
+    getConnector(id: string): DiagramConnector | null;
+    getConnectors(): DiagramConnector[];
+    getConnectorsBetween(objIdA: string, objIdB: string): DiagramConnector[];
+    registerLayout(name: string, fn: LayoutFunction): void;
+    applyLayout(name: string, options?: Record<string, unknown>): Promise<void>;
+    exportPNG(options?: { scale?: number; background?: string }): Promise<Blob>;
+    exportPDF(): Promise<Blob>;
+    findText(query: string, options?: { caseSensitive?: boolean }): { objectId: string; text: string }[];
+    replaceText(query: string, replacement: string, options?: { caseSensitive?: boolean }): number;
+    pickFormat(objectId: string): void;
+    applyFormat(targetIds: string[]): void;
+    clearFormat(): void;
+    hasFormat(): boolean;
+    findObjectsInRect(rect: Rect): DiagramObject[];
+    findObjectsAtPoint(point: Point): DiagramObject[];
+    getShortestPath(fromId: string, toId: string): string[];
+    getConnectedComponents(): string[][];
+    getIncomingConnectors(objectId: string): DiagramConnector[];
+    getOutgoingConnectors(objectId: string): DiagramConnector[];
+    collapseGroup(groupId: string): void;
+    expandGroup(groupId: string): void;
+    addComment(anchor: DiagramComment["anchor"], content: string, userId: string, userName: string): DiagramComment;
+    getComments(): DiagramComment[];
+    getCommentsForObject(objectId: string): DiagramComment[];
+    resolveComment(commentId: string): void;
+    navigateToURI(uri: string): boolean;
+    registerEmbeddableComponent(name: string, entry: EmbeddableComponentEntry): void;
+    getEmbeddableComponents(): Map<string, EmbeddableComponentEntry>;
+    loadEmbedPack(name: string): void;
+    toggleEmbedInteractive(objectId: string): void;
+    exitEmbedInteractive(): void;
+    destroy(): void;
+    rerenderConnector(conn: DiagramConnector): void;
+    rerenderAttachedConnectors(objectId: string): void;
+    getContainedObjects(containerId: string): DiagramObject[];
+    updateContainment(objectIds: string[]): void;
+}
+
+export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 {
     private readonly instanceId: string;
     private readonly opts: DiagramEngineOptions;
@@ -5089,7 +5237,7 @@ function stringDescription(data: Record<string, unknown>): string | undefined
 export function createDiagramEngine(
     container: string | HTMLElement,
     options: DiagramEngineOptions = {}
-): DiagramEngineImpl
+): DiagramEngineHandle
 {
     let el: HTMLElement;
 

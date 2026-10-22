@@ -566,7 +566,31 @@ function createEndingPreview(
 // S4: CLASS
 // ============================================================================
 
-export class LineEndingPicker
+/**
+ * The LineEndingPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface LineEndingPickerHandle
+{
+    getValue(): string;
+    getSelectedEnding(): LineEndingItem | null;
+    setValue(value: string): void;
+    setEndings(endings: LineEndingItem[]): void;
+    getMode(): "start" | "end";
+    setMode(mode: "start" | "end"): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement | null;
+    destroy(): void;
+}
+
+export class LineEndingPicker implements LineEndingPickerHandle
 {
     private readonly instanceId: string;
     private opts: LineEndingPickerOptions;
@@ -1174,7 +1198,7 @@ export class LineEndingPicker
 /** Create a LineEndingPicker and mount it in the given container. */
 export function createLineEndingPicker(
     containerId: string, options: LineEndingPickerOptions
-): LineEndingPicker
+): LineEndingPickerHandle
 {
     return new LineEndingPicker(containerId, options);
 }

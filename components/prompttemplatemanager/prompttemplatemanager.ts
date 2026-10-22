@@ -239,7 +239,34 @@ function substituteVariables(
 // CLASS: PromptTemplateManager
 // ============================================================================
 
-export class PromptTemplateManager
+/**
+ * The PromptTemplateManager surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PromptTemplateManagerHandle
+{
+    exportTemplates(): string;
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    getTemplates(): PromptTemplate[];
+    setTemplates(templates: PromptTemplate[]): void;
+    getSelectedTemplate(): PromptTemplate | null;
+    selectTemplate(id: string): void;
+    createTemplate(): void;
+    deleteTemplate(id: string): void;
+    duplicateTemplate(id: string): void;
+    importTemplates(json: string): void;
+    refresh(): Promise<void>;
+    getPreviewContent(variables?: Record<string, string>): string;
+}
+
+export class PromptTemplateManager implements PromptTemplateManagerHandle
 {
     private readonly instanceId: string;
     private readonly opts: PromptTemplateManagerOptions;
@@ -2004,7 +2031,7 @@ export class PromptTemplateManager
 export function createPromptTemplateManager(
     options: PromptTemplateManagerOptions,
     containerId: string
-): PromptTemplateManager
+): PromptTemplateManagerHandle
 {
     const manager = new PromptTemplateManager(options);
     manager.show(containerId);

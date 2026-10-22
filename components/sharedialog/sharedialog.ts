@@ -306,7 +306,24 @@ function resolvePersonChip(): ((opts: unknown) => { getElement(): HTMLElement; d
  * });
  * if (result) { applyChanges(result); }
  */
-export class ShareDialog
+/**
+ * The ShareDialog surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ShareDialogHandle
+{
+    show(): Promise<ShareDialogResult | null>;
+    close(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    setLoading(loading: boolean): void;
+}
+
+export class ShareDialog implements ShareDialogHandle
 {
     private opts: ShareDialogOptions;
     private readonly instanceId: string;
@@ -1331,7 +1348,7 @@ export function showShareDialog(
  * const result = await dialog.show();
  */
 export function createShareDialog(
-    options: ShareDialogOptions): ShareDialog
+    options: ShareDialogOptions): ShareDialogHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

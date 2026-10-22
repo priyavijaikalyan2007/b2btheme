@@ -237,7 +237,33 @@ function highlightMatch(
 // PUBLIC API
 // ============================================================================
 
-export class Tagger
+/**
+ * The Tagger surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TaggerHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+    getTags(): TagItem[];
+    setTags(tags: TagItem[]): void;
+    addTag(tag: TagItem): boolean;
+    removeTag(value: string, category?: string): boolean;
+    clearTags(): void;
+    hasTag(value: string, category?: string): boolean;
+    getTagsByCategory(categoryId: string): TagItem[];
+    focus(): void;
+    enable(): void;
+    disable(): void;
+}
+
+export class Tagger implements TaggerHandle
 {
     // -- Configuration
     private readonly instanceId: string;
@@ -1280,7 +1306,7 @@ export class Tagger
 
 export function createTagger(
     containerId: string,
-    options?: TaggerOptions): Tagger
+    options?: TaggerOptions): TaggerHandle
 {
     const instance = new Tagger(options || {});
     instance.show(containerId);

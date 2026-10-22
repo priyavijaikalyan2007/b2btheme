@@ -144,7 +144,25 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // ============================================================================
 
 /** Cursor-following magnifying glass overlay component. */
-export class Magnifier
+/**
+ * The Magnifier surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface MagnifierHandle
+{
+    getElement(): HTMLElement | null;
+    enable(): void;
+    disable(): void;
+    setZoom(zoom: number): void;
+    setDiameter(diameter: number): void;
+    destroy(): void;
+}
+
+export class Magnifier implements MagnifierHandle
 {
     // `containerId` LEFT ON 2026-10-21 (UNUSED-1): the constructor
     // resolves and keeps the element, so the id it came from had no
@@ -575,7 +593,7 @@ export class Magnifier
  */
 export function createMagnifier(
     containerId: string,
-    options: MagnifierOptions = {}): Magnifier
+    options: MagnifierOptions = {}): MagnifierHandle
 {
     return new Magnifier(containerId, options);
 }

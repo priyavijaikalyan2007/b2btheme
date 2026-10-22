@@ -157,7 +157,7 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // STEPPER CLASS
 // ============================================================================
 
-class Stepper
+class Stepper implements StepperHandle
 {
     private readonly id: string;
     private readonly container: HTMLElement;

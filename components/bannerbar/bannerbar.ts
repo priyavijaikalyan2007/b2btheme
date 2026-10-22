@@ -224,7 +224,28 @@ function setAttr(el: HTMLElement, name: string, value: string): void
  * });
  * banner.show();
  */
-export class BannerBar
+/**
+ * The BannerBar surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface BannerBarHandle
+{
+    show(container?: HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    setMessage(msg: string): void;
+    setTitle(title: string): void;
+    setVariant(variant: BannerBarVariant): void;
+    isVisible(): boolean;
+    setContained(value: boolean): void;
+    isContained(): boolean;
+}
+
+export class BannerBar implements BannerBarHandle
 {
     private readonly instanceId: string;
     private readonly options: Required<Pick<BannerBarOptions, "message">> & BannerBarOptions;
@@ -935,7 +956,7 @@ export class BannerBar
  * @param options - BannerBar configuration
  * @returns The created BannerBar instance
  */
-export function createBannerBar(options: BannerBarOptions): BannerBar
+export function createBannerBar(options: BannerBarOptions): BannerBarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -958,7 +979,7 @@ export function createBannerBar(options: BannerBarOptions): BannerBar
  * @param options - BannerBar configuration
  * @returns The created BannerBar instance
  */
-export function showBanner(options: BannerBarOptions): BannerBar
+export function showBanner(options: BannerBarOptions): BannerBarHandle
 {
     return createBannerBar(options);
 }

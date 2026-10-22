@@ -426,7 +426,33 @@ function downloadFile(
 /**
  * Bootstrap 5-themed Markdown editor wrapping Vditor.
  */
-export class MarkdownEditor
+/**
+ * The MarkdownEditor surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface MarkdownEditorHandle
+{
+    getValue(): string;
+    setValue(md: string): void;
+    getHTML(): string;
+    setMode(mode: "tabs" | "sidebyside" | "display" | "naked"): void;
+    setEditable(editable: boolean): void;
+    setTitle(title: string): void;
+    exportMarkdown(): void;
+    exportHTML(): void;
+    exportPDF(): void;
+    toggleFullscreen(): void;
+    focus(): void;
+    enable(): void;
+    disable(): void;
+    destroy(): void;
+}
+
+export class MarkdownEditor implements MarkdownEditorHandle
 {
     private container: HTMLElement;
     private options: Required<
@@ -2239,7 +2265,7 @@ function showMarkdownEditorModalFn(
 export function createMarkdownEditor(
     containerId: string | HTMLElement,
     options?: MarkdownEditorOptions
-): MarkdownEditor
+): MarkdownEditorHandle
 {
     // PAT-1. An element is accepted as well as an id, because the
     // CONSTRUCTOR always took one and only the class exposed that. A

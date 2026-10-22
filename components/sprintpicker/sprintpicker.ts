@@ -371,7 +371,33 @@ function getGridStartDate(year: number, month: number, weekStartDay: number): Da
  *     sprintLength: 2
  * });
  */
-export class SprintPicker
+/**
+ * The SprintPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SprintPickerHandle
+{
+    getValue(): SprintValue | null;
+    setValue(value: SprintValue | null): void;
+    getFormattedValue(): string;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    setReadonly(flag: boolean): void;
+    setMode(mode: "start" | "end"): void;
+    setSprintLength(weeks: number): void;
+    setAnchorDate(date: Date | string): void;
+    getSprintAtDate(date: Date): SprintInfo | null;
+    getSprints(): SprintInfo[];
+    destroy(): void;
+}
+
+export class SprintPicker implements SprintPickerHandle
 {
     private readonly containerId: string;
     private readonly instanceId: string;
@@ -1508,7 +1534,7 @@ export class SprintPicker
 export function createSprintPicker(
     containerId: string,
     options: SprintPickerOptions
-): SprintPicker
+): SprintPickerHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

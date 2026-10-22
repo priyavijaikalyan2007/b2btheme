@@ -235,7 +235,37 @@ function getFocusableElements(container: HTMLElement): HTMLElement[]
  * modal.setProgress(0.5);
  * modal.complete("Import finished.");
  */
-export class ProgressModal
+/**
+ * The ProgressModal surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ProgressModalHandle
+{
+    show(initialEntries?: ProgressLogEntry[]): void;
+    setStatus(text: string): void;
+    setProgress(fraction: number): void;
+    setStep(currentStep: number): void;
+    setIndeterminate(): void;
+    log(entry: ProgressLogEntry | ProgressLogEntry[]): void;
+    logInfo(message: string): void;
+    logSuccess(message: string): void;
+    logError(message: string): void;
+    logWarning(message: string): void;
+    complete(statusText?: string): void;
+    fail(statusText?: string): void;
+    close(): void;
+    getLog(): ProgressLogEntry[];
+    getLogText(): string;
+    isVisible(): boolean;
+    getState(): "running" | "completed" | "failed" | "closed";
+    destroy(): void;
+}
+
+export class ProgressModal implements ProgressModalHandle
 {
     /**
      * Whether `destroy()` has run (ADR-081 — `destroy()` is idempotent).
@@ -1440,7 +1470,7 @@ export class ProgressModal
  */
 export function showProgressModal(
     options: ProgressModalOptions
-): ProgressModal
+): ProgressModalHandle
 {
     const modal = new ProgressModal(options);
     modal.show();
@@ -1455,7 +1485,7 @@ export function showSteppedProgressModal(
     title: string,
     totalSteps: number,
     options?: Partial<ProgressModalOptions>
-): ProgressModal
+): ProgressModalHandle
 {
     const modal = new ProgressModal({
         ...options,

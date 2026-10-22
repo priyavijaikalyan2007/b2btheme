@@ -262,7 +262,34 @@ function handleGlobalSelectionChange(): void
 // ============================================================================
 
 /** Lightweight contenteditable rich text input with STIE composition. */
-export class RichTextInput
+/**
+ * The RichTextInput surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface RichTextInputHandle
+{
+    show(container: string | HTMLElement): void;
+    getElement(): HTMLElement;
+    getValue(): string;
+    getHtml(): string;
+    getMarkdown(): string;
+    getPlainText(): string;
+    setValue(html: string): void;
+    setDisabled(flag: boolean): void;
+    setReadonly(flag: boolean): void;
+    focus(): void;
+    isEmpty(): boolean;
+    getStieEngine(): unknown;
+    execFormat(action: FormattingAction): void;
+    destroy(): void;
+    handleSelectionChange(): void;
+}
+
+export class RichTextInput implements RichTextInputHandle
 {
     private options: RichTextInputOptions;
     private rootEl: HTMLElement | null = null;
@@ -1603,7 +1630,7 @@ export class RichTextInput
 // ============================================================================
 
 /** Create a RichTextInput instance. */
-export function createRichTextInput(options: RichTextInputOptions): RichTextInput
+export function createRichTextInput(options: RichTextInputOptions): RichTextInputHandle
 {
     return new RichTextInput(options);
 }

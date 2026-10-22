@@ -211,7 +211,31 @@ const ALIGN_STYLES: Record<string, Record<string, string>> = {
  * });
  * stack.show();
  */
-export class LayerLayout
+/**
+ * The LayerLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface LayerLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addLayer(config: LayerConfig): void;
+    removeLayer(index: number): void;
+    removeLayerByKey(key: string): void;
+    setLayerZIndex(index: number, zIndex: number): void;
+    getLayerCount(): number;
+    getState(): LayerLayoutState;
+    setState(state: LayerLayoutState): void;
+}
+
+export class LayerLayout implements LayerLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: LayerLayoutOptions;
@@ -692,7 +716,7 @@ export class LayerLayout
 export function createLayerLayout(
     options: LayerLayoutOptions,
     containerId?: string
-): LayerLayout
+): LayerLayoutHandle
 {
     const layout = new LayerLayout(options);
 

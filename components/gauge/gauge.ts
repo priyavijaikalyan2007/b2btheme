@@ -439,7 +439,31 @@ function formatSubtitle(
  * shapes with value and time modes, configurable thresholds, and optional
  * auto-tick countdown.
  */
-export class Gauge
+/**
+ * The Gauge surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface GaugeHandle
+{
+    show(container?: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    setValue(value: number): void;
+    setTargetDate(date: Date | string): void;
+    setThresholds(thresholds: GaugeThreshold[]): void;
+    getValue(): number;
+    getPercentage(): number;
+    isOverLimit(): boolean;
+    isOverdue(): boolean;
+    isVisible(): boolean;
+    getElement(): HTMLElement | null;
+}
+
+export class Gauge implements GaugeHandle
 {
     private readonly instanceId: string;
     private readonly opts: GaugeOptions;
@@ -1379,7 +1403,7 @@ export class Gauge
 export function createGauge(
     options: GaugeOptions,
     container?: string | HTMLElement
-): Gauge
+): GaugeHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -1402,7 +1426,7 @@ export function createGauge(
 export function createTileGauge(
     options: Omit<GaugeOptions, "shape">,
     container?: string | HTMLElement
-): Gauge
+): GaugeHandle
 {
     return createGauge({ ...options, shape: "tile" }, container);
 }
@@ -1413,7 +1437,7 @@ export function createTileGauge(
 export function createRingGauge(
     options: Omit<GaugeOptions, "shape">,
     container?: string | HTMLElement
-): Gauge
+): GaugeHandle
 {
     return createGauge({ ...options, shape: "ring" }, container);
 }
@@ -1424,7 +1448,7 @@ export function createRingGauge(
 export function createBarGauge(
     options: Omit<GaugeOptions, "shape">,
     container?: string | HTMLElement
-): Gauge
+): GaugeHandle
 {
     return createGauge({ ...options, shape: "bar" }, container);
 }

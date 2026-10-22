@@ -229,7 +229,38 @@ function downloadBlob(blob: Blob, filename: string): void
 // CLASS
 // ============================================================================
 
-export class PermissionMatrix
+/**
+ * The PermissionMatrix surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PermissionMatrixHandle
+{
+    show(containerId: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    setCellState(roleId: string, permissionId: string, state: PermissionState): void;
+    getCellState(roleId: string, permissionId: string): PermissionState;
+    getEffectiveState(roleId: string, permissionId: string): PermissionState;
+    setData(roles: Role[], groups: PermissionGroup[], cells: MatrixCell[]): void;
+    getChanges(): PermissionChange[];
+    clearChanges(): void;
+    expandGroup(groupId: string): void;
+    collapseGroup(groupId: string): void;
+    expandAllGroups(): void;
+    collapseAllGroups(): void;
+    setFilter(text: string): void;
+    clearFilter(): void;
+    exportData(format?: ExportFormat): MatrixExportData;
+    setReadOnly(readOnly: boolean): void;
+    refresh(): void;
+}
+
+export class PermissionMatrix implements PermissionMatrixHandle
 {
     // -- Options -------------------------------------------------------------
     private opts: PermissionMatrixOptions;
@@ -1518,7 +1549,7 @@ export class PermissionMatrix
 export function createPermissionMatrix(
     options: PermissionMatrixOptions,
     containerId?: string
-): PermissionMatrix
+): PermissionMatrixHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

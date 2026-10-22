@@ -276,7 +276,35 @@ function buildFallbackAvatar(person: PersonData): HTMLElement
 // CLASS: PeoplePicker
 // ============================================================================
 
-export class PeoplePicker
+/**
+ * The PeoplePicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PeoplePickerHandle
+{
+    show(containerId: string): void;
+    getElement(): HTMLElement;
+    destroy(): void;
+    getSelected(): PersonData[];
+    getValue(): PersonData[];
+    setSelected(people: PersonData[]): void;
+    setValue(people: PersonData[]): void;
+    addPerson(person: PersonData): void;
+    removePerson(id: string): void;
+    clearSelection(): void;
+    hasSelection(id: string): boolean;
+    enable(): void;
+    disable(): void;
+    setReadonly(flag: boolean): void;
+    setFrequentContacts(contacts: PersonData[]): void;
+    focus(): void;
+}
+
+export class PeoplePicker implements PeoplePickerHandle
 {
     private readonly instanceId: string;
     private options: PeoplePickerOptions;
@@ -1459,7 +1487,7 @@ export class PeoplePicker
 
 export function createPeoplePicker(
     containerId: string,
-    options?: PeoplePickerOptions): PeoplePicker
+    options?: PeoplePickerOptions): PeoplePickerHandle
 {
     const instance = new PeoplePicker(options || {});
     instance.show(containerId);

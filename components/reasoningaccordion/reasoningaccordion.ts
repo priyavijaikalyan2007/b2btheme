@@ -207,7 +207,35 @@ function safeCallback(fn: () => void): void
 // REASONING ACCORDION CLASS
 // ============================================================================
 
-export class ReasoningAccordion
+/**
+ * The ReasoningAccordion surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ReasoningAccordionHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    addStep(step: ReasoningStep): void;
+    updateStep(stepId: string, changes: Partial<ReasoningStep>): void;
+    removeStep(stepId: string): void;
+    getSteps(): ReasoningStep[];
+    clear(): void;
+    expandStep(stepId: string): void;
+    collapseStep(stepId: string): void;
+    expandAll(): void;
+    collapseAll(): void;
+    setStepStatus(stepId: string, status: ReasoningStepStatus): void;
+    setStepContent(stepId: string, markdown: string): void;
+    getTotalDuration(): number;
+}
+
+export class ReasoningAccordion implements ReasoningAccordionHandle
 {
     private opts: ReasoningAccordionOptions;
     private compId: string;
@@ -975,7 +1003,7 @@ export class ReasoningAccordion
 export function createReasoningAccordion(
     containerId: string,
     options: ReasoningAccordionOptions
-): ReasoningAccordion
+): ReasoningAccordionHandle
 {
     const acc = new ReasoningAccordion(options);
     acc.show(containerId);

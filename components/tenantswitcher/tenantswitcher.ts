@@ -163,7 +163,36 @@ function safeCallback<T extends unknown[]>(
 // CLASS
 // ============================================================================
 
-export class TenantSwitcher
+/**
+ * The TenantSwitcher surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TenantSwitcherHandle
+{
+    show(containerId: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    open(): void;
+    close(): void;
+    isOpen(): boolean;
+    getActiveTenant(): Tenant | undefined;
+    setActiveTenant(id: string): void;
+    setTenants(tenants: Tenant[]): void;
+    setWorkspaces(tenants: Tenant[]): void;
+    setActiveWorkspace(id: string): void;
+    getActiveWorkspace(): Tenant | undefined;
+    addWorkspace(tenant: Tenant): void;
+    removeWorkspace(id: string): void;
+    addTenant(tenant: Tenant): void;
+    removeTenant(id: string): void;
+}
+
+export class TenantSwitcher implements TenantSwitcherHandle
 {
     // -- Options -------------------------------------------------------------
     private opts: Required<
@@ -1006,7 +1035,7 @@ export class TenantSwitcher
 export function createTenantSwitcher(
     options: TenantSwitcherOptions,
     containerId?: string
-): TenantSwitcher
+): TenantSwitcherHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and
@@ -1076,7 +1105,7 @@ export interface WorkspaceSwitcherOptions
 export function createWorkspaceSwitcher(
     options: WorkspaceSwitcherOptions | TenantSwitcherOptions,
     containerId?: string
-): TenantSwitcher
+): TenantSwitcherHandle
 {
     const legacy = options as WorkspaceSwitcherOptions;
     const current = options as TenantSwitcherOptions;

@@ -1625,7 +1625,7 @@ function renderTagFallback(tag: ActionItemTag): HTMLElement
  * Main ActionItems component class.
  * Manages state, rendering, and user interactions for the action item list.
  */
-export class ActionItems
+export class ActionItems implements ActionItemsHandle
 {
     /** Component configuration. */
     private readonly options: Required<

@@ -440,7 +440,37 @@ function buildDefaultValue(partial?: Partial<GradientValue>): GradientValue
  *     onChange: (value) => console.log("Gradient:", value)
  * });
  */
-export class GradientPicker
+/**
+ * The GradientPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface GradientPickerHandle
+{
+    getValue(): GradientValue;
+    setValue(value: Partial<GradientValue>): void;
+    getStops(): GradientStop[];
+    setStops(stops: GradientStop[]): void;
+    getAngle(): number;
+    setAngle(angle: number): void;
+    getType(): "linear" | "radial";
+    setType(type: "linear" | "radial"): void;
+    reverse(): void;
+    clear(): void;
+    toGradientDefinition(): GradientDefinition;
+    fromGradientDefinition(def: GradientDefinition): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement | null;
+    destroy(): void;
+}
+
+export class GradientPicker implements GradientPickerHandle
 {
     private readonly instanceId: string;
     private readonly options: GradientPickerOptions;
@@ -2430,7 +2460,7 @@ function parseRgbaStop(offset: number, match: RegExpMatchArray): GradientStop
  */
 export function createGradientPicker(
     containerId: string, options?: GradientPickerOptions
-): GradientPicker
+): GradientPickerHandle
 {
     return new GradientPicker(containerId, options);
 }

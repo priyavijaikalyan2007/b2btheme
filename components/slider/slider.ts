@@ -223,7 +223,7 @@ function valueToPct(val: number, min: number, max: number): number
 // S4: SLIDER CLASS
 // ============================================================================
 
-class SliderImpl
+class SliderImpl implements SliderHandle
 {
     private readonly instanceId: number;
     private opts: Required<Pick<SliderOptions, "min" | "max" | "step">> & SliderOptions;

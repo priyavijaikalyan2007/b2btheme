@@ -182,7 +182,33 @@ interface CardEntry
 // 5. CARDLAYOUT CLASS
 // ============================================================================
 
-export class CardLayout
+/**
+ * The CardLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface CardLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addCard(config: CardConfig): void;
+    removeCard(key: string): void;
+    setActiveCard(key: string): void;
+    getActiveCard(): string | null;
+    next(): void;
+    previous(): void;
+    getCardCount(): number;
+    getState(): CardLayoutState;
+    setState(state: CardLayoutState): void;
+}
+
+export class CardLayout implements CardLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: CardLayoutOptions;
@@ -849,7 +875,7 @@ export class CardLayout
 export function createCardLayout(
     options: CardLayoutOptions,
     containerId?: string
-): CardLayout
+): CardLayoutHandle
 {
     const layout = new CardLayout(options);
 

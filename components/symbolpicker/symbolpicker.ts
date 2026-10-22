@@ -1231,7 +1231,32 @@ function createIconElement(item: SymbolItem): HTMLElement
 // S6: CLASS SymbolPicker
 // ============================================================================
 
-export class SymbolPicker
+/**
+ * The SymbolPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SymbolPickerHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getSelectedSymbol(): SymbolItem | null;
+    getValue(): string;
+    setValue(code: string): void;
+    getElement(): HTMLElement | null;
+    isOpen(): boolean;
+    enable(): void;
+    disable(): void;
+    setMode(mode: "unicode" | "icons"): void;
+    open(): void;
+    close(): void;
+}
+
+export class SymbolPicker implements SymbolPickerHandle
 {
     private readonly instanceId: string;
     private opts: SymbolPickerOptions;
@@ -2389,7 +2414,7 @@ export class SymbolPicker
 /** Create a SymbolPicker and optionally mount it in a container. */
 export function createSymbolPicker(
     containerId: string, options?: SymbolPickerOptions
-): SymbolPicker
+): SymbolPickerHandle
 {
     const picker = new SymbolPicker(options);
     picker.show(containerId);

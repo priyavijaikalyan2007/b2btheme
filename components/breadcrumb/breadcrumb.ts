@@ -176,7 +176,7 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // BREADCRUMB CLASS
 // ============================================================================
 
-class Breadcrumb
+class Breadcrumb implements BreadcrumbHandle
 {
     private readonly id: string;
     private readonly container: HTMLElement;

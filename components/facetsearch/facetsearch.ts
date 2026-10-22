@@ -387,7 +387,33 @@ interface Suggestion
 // CLASS: FacetSearch
 // ============================================================================
 
-export class FacetSearch
+/**
+ * The FacetSearch surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface FacetSearchHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    getValue(): string;
+    setValue(value: string): void;
+    getQuery(): FacetSearchQuery;
+    clear(): void;
+    focus(): void;
+    addFacet(key: string, value: string): void;
+    removeFacet(key: string): void;
+    getFacets(): ParsedFacet[];
+    enable(): void;
+    disable(): void;
+}
+
+export class FacetSearch implements FacetSearchHandle
 {
     private opts: FacetSearchOptions;
     private id: string;
@@ -1641,7 +1667,7 @@ export class FacetSearch
 
 /** Create, show, and return a FacetSearch instance. */
 export function createFacetSearch(
-    containerId: string, options: FacetSearchOptions): FacetSearch
+    containerId: string, options: FacetSearchOptions): FacetSearchHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

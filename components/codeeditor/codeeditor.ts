@@ -236,7 +236,41 @@ function requireCMGlobal(name: string, operation: string): unknown
 // PUBLIC API
 // ============================================================================
 
-export class CodeEditor
+/**
+ * The CodeEditor surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface CodeEditorHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+    getValue(): string;
+    setValue(value: string): void;
+    getLanguage(): CodeEditorLanguage;
+    setLanguage(lang: CodeEditorLanguage): void;
+    setReadOnly(readOnly: boolean): void;
+    setTheme(theme: "light" | "dark"): void;
+    setDiagnostics(diagnostics: CodeEditorDiagnostic[]): void;
+    clearDiagnostics(): void;
+    focus(): void;
+    blur(): void;
+    getSelection(): string;
+    replaceSelection(text: string): void;
+    undo(): void;
+    redo(): void;
+    format(): void;
+    toggleWordWrap(): void;
+    toggleLineNumbers(): void;
+    getEditorInstance(): unknown;
+}
+
+export class CodeEditor implements CodeEditorHandle
 {
     // -- Configuration
     private readonly instanceId: string;
@@ -1372,7 +1406,7 @@ export class CodeEditor
 
 export function createCodeEditor(
     containerId: string,
-    options?: CodeEditorOptions): CodeEditor
+    options?: CodeEditorOptions): CodeEditorHandle
 {
     const instance = new CodeEditor(options || {});
     instance.show(containerId);

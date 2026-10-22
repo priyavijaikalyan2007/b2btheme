@@ -209,7 +209,7 @@ function resolveHost(containerOrId: string | HTMLElement): HTMLElement
 // COMPONENT
 // ============================================================================
 
-class AuthCard
+class AuthCard implements AuthCardHandle
 {
     private readonly root: HTMLElement;
     private readonly errorAlert: HTMLElement;

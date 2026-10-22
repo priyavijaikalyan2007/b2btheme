@@ -688,7 +688,26 @@ function describeDayOfWeek(state: CronFieldState): string
  * const picker = new CronPicker("cron-container");
  * picker.getValue(); // "0 * * * * *"
  */
-export class CronPicker
+/**
+ * The CronPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface CronPickerHandle
+{
+    getValue(): string;
+    getDescription(): string;
+    setValue(cron: string): void;
+    clear(): void;
+    enable(): void;
+    disable(): void;
+    destroy(): void;
+}
+
+export class CronPicker implements CronPickerHandle
 {
     private readonly containerId: string;
     private readonly instanceId: string;
@@ -1910,7 +1929,7 @@ export class CronPicker
 export function createCronPicker(
     containerId: string,
     options?: CronPickerOptions
-): CronPicker
+): CronPickerHandle
 {
     return new CronPicker(containerId, options);
 }

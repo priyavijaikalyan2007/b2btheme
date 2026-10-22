@@ -297,7 +297,30 @@ function formatPeriodLabel(value: PeriodValue): string
  * const picker = new PeriodPicker("period-container", { mode: "start" });
  * picker.getValue(); // Returns selected PeriodValue or null
  */
-export class PeriodPicker
+/**
+ * The PeriodPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PeriodPickerHandle
+{
+    getValue(): PeriodValue | null;
+    setValue(value: PeriodValue | null): void;
+    getFormattedValue(): string;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    setReadonly(flag: boolean): void;
+    setMode(mode: PeriodMode): void;
+    setYear(year: number): void;
+    destroy(): void;
+}
+
+export class PeriodPicker implements PeriodPickerHandle
 {
     private readonly containerId: string;
     private readonly instanceId: string;
@@ -1204,7 +1227,7 @@ export class PeriodPicker
 export function createPeriodPicker(
     containerId: string,
     options?: PeriodPickerOptions
-): PeriodPicker
+): PeriodPickerHandle
 {
     return new PeriodPicker(containerId, options);
 }

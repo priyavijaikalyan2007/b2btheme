@@ -168,7 +168,29 @@ function safeCallback<T extends unknown[]>(
 // S4: CLASS
 // ============================================================================
 
-export class LineWidthPicker
+/**
+ * The LineWidthPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface LineWidthPickerHandle
+{
+    getValue(): number;
+    getSelectedWidth(): LineWidthItem | null;
+    setValue(value: number): void;
+    setWidths(widths: LineWidthItem[]): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement | null;
+    destroy(): void;
+}
+
+export class LineWidthPicker implements LineWidthPickerHandle
 {
     private readonly instanceId: string;
     private opts: LineWidthPickerOptions;
@@ -657,7 +679,7 @@ export class LineWidthPicker
 /** Create a LineWidthPicker and mount it in the given container. */
 export function createLineWidthPicker(
     containerId: string, options: LineWidthPickerOptions
-): LineWidthPicker
+): LineWidthPickerHandle
 {
     return new LineWidthPicker(containerId, options);
 }

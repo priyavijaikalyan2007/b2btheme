@@ -283,7 +283,33 @@ function hslToHex(h: number, s: number, l: number): string
 // EXPLORER PICKER IMPLEMENTATION
 // ============================================================================
 
-export class ExplorerPickerImpl
+/**
+ * The ExplorerPickerImpl surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ExplorerPickerHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    expandNode(nodeId: string): Promise<void>;
+    collapseNode(nodeId: string): void;
+    setSearchQuery(query: string): void;
+    clearSelection(): void;
+    getSelection(): ExplorerPickerSelection[];
+    scrollToNode(nodeId: string): void;
+    refresh(): Promise<void>;
+    isLoading(): boolean;
+    getElement(): HTMLElement | null;
+    exportState(): ExplorerPickerState;
+    restoreState(state: ExplorerPickerState): Promise<void>;
+}
+
+export class ExplorerPickerImpl implements ExplorerPickerHandle
 {
     // ── Options & Identity ──────────────────────────────────────────────
     private opts: Required<Pick<ExplorerPickerOptions,
@@ -3019,7 +3045,7 @@ export class ExplorerPickerImpl
 
 /** Create and render an ExplorerPicker. */
 export function createExplorerPicker(
-    options: ExplorerPickerOptions): ExplorerPickerImpl
+    options: ExplorerPickerOptions): ExplorerPickerHandle
 {
     logInfo("Creating ExplorerPicker");
     return new ExplorerPickerImpl(options);

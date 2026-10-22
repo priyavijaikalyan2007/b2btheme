@@ -280,7 +280,48 @@ function clamp(value: number, min: number, max: number): number
  * sb.show();
  * sb.getContentElement().appendChild(myTree);
  */
-export class Sidebar
+/**
+ * The Sidebar surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SidebarHandle
+{
+    show(container?: HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    dock(position: SidebarDockPosition): void;
+    float(x?: number, y?: number): void;
+    collapse(): void;
+    expand(): void;
+    toggleCollapse(): void;
+    setTitle(title: string): void;
+    setIcon(iconClass: string): void;
+    setWidth(w: number): void;
+    setHeight(h: number): void;
+    getContentElement(): HTMLElement | null;
+    getId(): string;
+    getMode(): SidebarMode;
+    getDockPosition(): SidebarDockPosition;
+    getWidth(): number;
+    getHeight(): number;
+    isVisible(): boolean;
+    isCollapsed(): boolean;
+    isContained(): boolean;
+    setContained(value: boolean): void;
+    addResizeListener(fn: (w: number, h: number, s: Sidebar) => void): void;
+    removeResizeListener(fn: Function): void;
+    addCollapseListener(fn: (collapsed: boolean, s: Sidebar) => void): void;
+    removeCollapseListener(fn: Function): void;
+    getRootElement(): HTMLElement | null;
+    getTitle(): string;
+    getIcon(): string | undefined;
+}
+
+export class Sidebar implements SidebarHandle
 {
     private readonly instanceId: string;
     private readonly options: Required<Pick<SidebarOptions,
@@ -2371,7 +2412,7 @@ export class SidebarManager
  * @returns The created Sidebar instance
  */
 export function createSidebar(
-    options: SidebarOptions, container?: string | HTMLElement): Sidebar
+    options: SidebarOptions, container?: string | HTMLElement): SidebarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -2423,7 +2464,7 @@ export function createSidebar(
  * @returns The created Sidebar instance
  */
 export function createDockedSidebar(
-    options: SidebarOptions, container?: string | HTMLElement): Sidebar
+    options: SidebarOptions, container?: string | HTMLElement): SidebarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty
@@ -2447,7 +2488,7 @@ export function createDockedSidebar(
  * @returns The created Sidebar instance
  */
 export function createFloatingSidebar(
-    options: SidebarOptions, container?: string | HTMLElement): Sidebar
+    options: SidebarOptions, container?: string | HTMLElement): SidebarHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

@@ -210,7 +210,37 @@ function downloadBlob(blob: Blob, filename: string): void
 // CLASS
 // ============================================================================
 
-export class AuditLogViewer
+/**
+ * The AuditLogViewer surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface AuditLogViewerHandle
+{
+    show(containerId: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    setEntries(entries: AuditLogEntry[]): void;
+    addEntry(entry: AuditLogEntry): void;
+    getEntries(): AuditLogEntry[];
+    setFilters(filters: AuditLogFilters): void;
+    clearFilters(): void;
+    getFilters(): AuditLogFilters;
+    setPage(page: number): void;
+    getPage(): number;
+    getPageCount(): number;
+    exportCSV(): void;
+    exportJSON(): void;
+    refresh(): void;
+    getSelectedEntry(): AuditLogEntry | null;
+    scrollToEntry(entryId: string): void;
+}
+
+export class AuditLogViewer implements AuditLogViewerHandle
 {
     // -- Options -------------------------------------------------------------
     private opts: AuditLogViewerOptions;
@@ -1340,7 +1370,7 @@ export class AuditLogViewer
 export function createAuditLogViewer(
     options: AuditLogViewerOptions,
     containerId?: string
-): AuditLogViewer
+): AuditLogViewerHandle
 {
     const instance = new AuditLogViewer(options);
     if (containerId) { instance.show(containerId); }

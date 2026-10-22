@@ -962,7 +962,48 @@ class McpAppFrame
  * });
  * chat.show("chat-container");
  */
-export class Conversation
+/**
+ * The Conversation surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ConversationHandle
+{
+    show(container?: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    addUserMessage(text: string): ConversationMessage;
+    addAssistantMessage(text: string): ConversationMessage;
+    addSystemMessage(text: string): ConversationMessage;
+    addError(error: ConversationError): ConversationMessage;
+    addAppMessage(text: string, appConfig: McpAppConfig): ConversationMessage;
+    openCanvas(config: McpAppConfig): void;
+    closeCanvas(): void;
+    isCanvasOpen(): boolean;
+    startAssistantMessage(): StreamHandle;
+    showTypingIndicator(): void;
+    hideTypingIndicator(): void;
+    loadSession(session: ConversationSession): void;
+    newSession(): Promise<void>;
+    clearSession(): Promise<void>;
+    getSession(): ConversationSession;
+    getMessages(): ConversationMessage[];
+    copyMessage(messageId: string, format: CopyFormat, btn?: HTMLElement): void;
+    copyConversation(format: CopyFormat, btn?: HTMLElement): void;
+    setDisabled(disabled: boolean): void;
+    setTitle(title: string): void;
+    scrollToBottom(): void;
+    focus(): void;
+    getMessageCount(): number;
+    isStreaming(): boolean;
+    isVisible(): boolean;
+    getElement(): HTMLElement | null;
+}
+
+export class Conversation implements ConversationHandle
 {
     private readonly instanceId: string;
     private opts: ConversationOptions;
@@ -3462,7 +3503,7 @@ export class Conversation
 export function createConversation(
     options?: ConversationOptions,
     container?: string | HTMLElement
-): Conversation
+): ConversationHandle
 {
     const conv = new Conversation(options);
     conv.show(container);

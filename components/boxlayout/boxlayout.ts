@@ -174,7 +174,30 @@ function setAttr(
 // 4. BOXLAYOUT CLASS
 // ============================================================================
 
-export class BoxLayout
+/**
+ * The BoxLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface BoxLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addChild(config: BoxLayoutChildConfig, index?: number): void;
+    removeChild(index: number): void;
+    getChildCount(): number;
+    getChildElement(index: number): HTMLElement | null;
+    getState(): BoxLayoutState;
+    setState(state: BoxLayoutState): void;
+}
+
+export class BoxLayout implements BoxLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: BoxLayoutOptions;
@@ -611,7 +634,7 @@ export class BoxLayout
 export function createBoxLayout(
     options: BoxLayoutOptions,
     containerId?: string
-): BoxLayout
+): BoxLayoutHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

@@ -570,7 +570,31 @@ function resolveTimezone(tz: string): string
  * const picker = new TimePicker("time-container");
  * picker.getValue(); // Returns selected TimeValue or null
  */
-export class TimePicker
+/**
+ * The TimePicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TimePickerHandle
+{
+    getValue(): TimeValue | null;
+    getFormattedValue(): string;
+    getTimezone(): string;
+    setValue(time: TimeValue | null): void;
+    setTimezone(tz: string): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    setMinTime(time: TimeValue | null): void;
+    setMaxTime(time: TimeValue | null): void;
+    destroy(): void;
+}
+
+export class TimePicker implements TimePickerHandle
 {
     private readonly containerId: string;
     /**
@@ -2643,7 +2667,7 @@ export class TimePicker
 export function createTimePicker(
     containerId: string,
     options?: TimePickerOptions
-): TimePicker
+): TimePickerHandle
 {
     return new TimePicker(containerId, options);
 }

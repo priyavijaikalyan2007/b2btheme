@@ -308,7 +308,32 @@ function nowTimestamp(): string
  * log.info("Application started");
  * log.warn("Retry attempt 2/3");
  */
-export class LogConsole
+/**
+ * The LogConsole surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface LogConsoleHandle
+{
+    debug(message: string): void;
+    info(message: string): void;
+    warn(message: string): void;
+    error(message: string): void;
+    success(message: string): void;
+    log(entry: LogEntry): void;
+    clear(): void;
+    exportAsText(): string;
+    downloadAsText(): void;
+    setFilter(levels: LogLevel[]): void;
+    getFilter(): LogLevel[];
+    getElement(): HTMLElement;
+    destroy(): void;
+}
+
+export class LogConsole implements LogConsoleHandle
 {
     // --- Configuration ---
     private readonly opts: LogConsoleOptions;
@@ -1036,7 +1061,7 @@ export class LogConsole
  * Creates a LogConsole component and returns it.
  * The caller is responsible for attaching `getElement()` to the DOM.
  */
-export function createLogConsole(options?: LogConsoleOptions): LogConsole
+export function createLogConsole(options?: LogConsoleOptions): LogConsoleHandle
 {
     const console = new LogConsole(options);
     return console;

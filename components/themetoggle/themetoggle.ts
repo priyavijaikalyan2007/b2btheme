@@ -124,7 +124,7 @@ function setAttr(el: HTMLElement, key: string, value: string): void
 // THEME TOGGLE CLASS
 // ============================================================================
 
-export class ThemeToggle
+export class ThemeToggle implements ThemeToggleHandle
 {
     private id: string;
     private root: HTMLElement;

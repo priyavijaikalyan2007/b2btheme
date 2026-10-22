@@ -329,7 +329,30 @@ function appendLabelSegment(
 // COMMAND PALETTE CLASS
 // ============================================================================
 
-export class CommandPalette
+/**
+ * The CommandPalette surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface CommandPaletteHandle
+{
+    registerCommand(cmd: PaletteCommand): void;
+    registerCommands(cmds: PaletteCommand[]): void;
+    unregisterCommand(id: string): void;
+    setCommands(cmds: PaletteCommand[]): void;
+    getCommand(id: string): PaletteCommand | undefined;
+    getCommands(): PaletteCommand[];
+    open(): void;
+    close(): void;
+    isOpen(): boolean;
+    clearRecent(): void;
+    destroy(): void;
+}
+
+export class CommandPalette implements CommandPaletteHandle
 {
     private static inst: CommandPalette | null = null;
     private opts: Required<Pick<CommandPaletteOptions,
@@ -1206,7 +1229,7 @@ export function registerCommands(cmds: PaletteCommand[]): void
  * @returns The configured palette.
  */
 export function configureCommandPalette(
-    options: CommandPaletteOptions): CommandPalette
+    options: CommandPaletteOptions): CommandPaletteHandle
 {
     return CommandPalette.configure(options);
 }
@@ -1216,7 +1239,7 @@ export function configureCommandPalette(
  *
  * @returns The palette.
  */
-export function getCommandPalette(): CommandPalette
+export function getCommandPalette(): CommandPaletteHandle
 {
     return CommandPalette.getInstance();
 }

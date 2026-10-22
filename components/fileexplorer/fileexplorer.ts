@@ -324,7 +324,45 @@ function formatDate(d: Date | undefined): string
 // CLASS: FileExplorer
 // ============================================================================
 
-export class FileExplorer
+/**
+ * The FileExplorer surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface FileExplorerHandle
+{
+    show(containerOrId: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    navigate(folderId: string): void;
+    getSelectedFiles(): FileNode[];
+    refresh(): void;
+    setViewMode(mode: ViewMode): void;
+    getViewMode(): string;
+    getCurrentFolder(): FileNode;
+    getPath(): FileNode[];
+    addFile(file: FileNode, parentId: string): void;
+    removeFile(fileId: string): void;
+    updateFile(fileId: string, changes: Partial<FileNode>): void;
+    setSort(field: SortField, direction: "asc" | "desc"): void;
+    setItems(items: FileNode[]): void;
+    getItems(): FileNode[];
+    setBreadcrumb(segments: BreadcrumbSegment[]): void;
+    showLoading(): void;
+    showEmpty(config?: { icon?: string; title?: string; description?: string }): void;
+    selectItem(id: string): void;
+    selectItems(ids: string[]): void;
+    deselectAll(): void;
+    getSelectedIds(): string[];
+    startRenamePublic(nodeId?: string): void;
+    focus(): void;
+}
+
+export class FileExplorer implements FileExplorerHandle
 {
     private opts: FileExplorerOptions;
     // THE ID IS IN THE LOG LINES NOW (2026-10-21, UNUSED-1). It was
@@ -2729,7 +2767,7 @@ export class FileExplorer
 /** Create and return a FileExplorer instance. */
 export function createFileExplorer(
     containerOrId: HTMLElement | string,
-    options: FileExplorerOptions): FileExplorer
+    options: FileExplorerOptions): FileExplorerHandle
 {
     const fe = new FileExplorer(options);
     fe.show(containerOrId);

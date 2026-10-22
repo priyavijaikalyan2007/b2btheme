@@ -171,7 +171,31 @@ function setAttr(
 // 4. FLOWLAYOUT CLASS
 // ============================================================================
 
-export class FlowLayout
+/**
+ * The FlowLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface FlowLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addChild(child: HTMLElement | any, index?: number): void;
+    removeChild(index: number): void;
+    clear(): void;
+    getChildCount(): number;
+    getChildElement(index: number): HTMLElement | null;
+    getState(): FlowLayoutState;
+    setState(state: FlowLayoutState): void;
+}
+
+export class FlowLayout implements FlowLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: FlowLayoutOptions;
@@ -641,7 +665,7 @@ export class FlowLayout
 export function createFlowLayout(
     options: FlowLayoutOptions,
     containerId?: string
-): FlowLayout
+): FlowLayoutHandle
 {
     const layout = new FlowLayout(options);
 

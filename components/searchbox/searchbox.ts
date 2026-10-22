@@ -212,7 +212,28 @@ function debounce(fn: (q: string) => void, ms: number): (q: string) => void
  * });
  * sb.show("search-container");
  */
-export class SearchBox
+/**
+ * The SearchBox surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SearchBoxHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    getValue(): string;
+    setValue(value: string): void;
+    focus(): void;
+    clearValue(): void;
+    setDisabled(disabled: boolean): void;
+}
+
+export class SearchBox implements SearchBoxHandle
 {
     private readonly instanceId: string;
     private readonly options: Required<Pick<SearchBoxOptions,
@@ -1279,7 +1300,7 @@ export class SearchBox
  */
 export function createSearchBox(
     containerId: string, options: SearchBoxOptions
-): SearchBox
+): SearchBoxHandle
 {
     const searchBox = new SearchBox(options);
     searchBox.show(containerId);

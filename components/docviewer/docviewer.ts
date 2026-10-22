@@ -193,7 +193,7 @@ function getMdRenderer(): MdRendererHandle | null
  * content enhancements (code copy, image shadows, video wrappers), and
  * responsive column collapse.
  */
-class DocViewer
+class DocViewer implements DocViewerHandle
 {
     private readonly id: string;
     private readonly container: HTMLElement;

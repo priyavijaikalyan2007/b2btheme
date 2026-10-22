@@ -201,7 +201,26 @@ function setAttr(el: HTMLElement, name: string, value: string): void
  * });
  * badge.show("my-container");
  */
-export class StatusBadge
+/**
+ * The StatusBadge surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface StatusBadgeHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    setStatus(status: StatusBadgeOptions["status"]): void;
+    setLabel(label: string): void;
+    setPulse(enabled: boolean): void;
+}
+
+export class StatusBadge implements StatusBadgeHandle
 {
     private readonly instanceId: string;
     private readonly options: StatusBadgeOptions;
@@ -699,7 +718,7 @@ export class StatusBadge
 export function createStatusBadge(
     containerId: string,
     options: StatusBadgeOptions
-): StatusBadge
+): StatusBadgeHandle
 {
     const badge = new StatusBadge(options);
     badge.show(containerId);

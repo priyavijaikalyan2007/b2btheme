@@ -322,7 +322,27 @@ function formatCurrentTime(tz: string): string
  * const picker = new TimezonePicker("tz-container");
  * picker.getValue(); // "UTC"
  */
-export class TimezonePicker
+/**
+ * The TimezonePicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface TimezonePickerHandle
+{
+    getValue(): string;
+    setValue(tz: string): void;
+    getOffset(): string;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    destroy(): void;
+}
+
+export class TimezonePicker implements TimezonePickerHandle
 {
     private readonly containerId: string;
     /**
@@ -1436,7 +1456,7 @@ export class TimezonePicker
 export function createTimezonePicker(
     containerId: string,
     options?: TimezonePickerOptions
-): TimezonePicker
+): TimezonePickerHandle
 {
     return new TimezonePicker(containerId, options);
 }

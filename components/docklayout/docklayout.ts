@@ -216,7 +216,32 @@ function setAttr(
 // 4. DOCKLAYOUT CLASS
 // ============================================================================
 
-export class DockLayout
+/**
+ * The DockLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface DockLayoutHandle
+{
+    show(): void;
+    hide(): void;
+    destroy(): void;
+    setToolbar(toolbar: DockSlotComponent | null): void;
+    setLeftSidebar(sidebar: DockSlotComponent | null): void;
+    setRightSidebar(sidebar: DockSlotComponent | null): void;
+    setBottomPanel(panel: DockSlotComponent | null): void;
+    setStatusBar(statusBar: DockSlotComponent | null): void;
+    setContent(element: HTMLElement): void;
+    getLayoutState(): LayoutState;
+    getContentElement(): HTMLElement | null;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+}
+
+export class DockLayout implements DockLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: DockLayoutOptions;
@@ -1069,7 +1094,7 @@ export class DockLayout
  */
 export function createDockLayout(
     options: DockLayoutOptions
-): DockLayout
+): DockLayoutHandle
 {
     const layout = new DockLayout(options);
     layout.show();

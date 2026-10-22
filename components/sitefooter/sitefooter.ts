@@ -191,7 +191,23 @@ function createLinkList(links: SiteFooterLink[], className: string): HTMLElement
  *     legal: { copyright: "© 2026 Outcrop Inc" }
  * });
  */
-export class SiteFooter
+/**
+ * The SiteFooter surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SiteFooterHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+}
+
+export class SiteFooter implements SiteFooterHandle
 {
     private readonly instanceId: string;
     private readonly options: SiteFooterOptions;
@@ -456,7 +472,7 @@ export class SiteFooter
  */
 export function createSiteFooter(
     containerId: string, options: SiteFooterOptions
-): SiteFooter
+): SiteFooterHandle
 {
     const footer = new SiteFooter(options);
     footer.show(containerId);

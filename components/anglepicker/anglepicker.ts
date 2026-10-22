@@ -265,7 +265,27 @@ function tickClass(angleDeg: number): string
 // S5: CLASS
 // ============================================================================
 
-export class AnglePicker
+/**
+ * The AnglePicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface AnglePickerHandle
+{
+    getValue(): number;
+    setValue(angle: number): void;
+    open(): void;
+    close(): void;
+    enable(): void;
+    disable(): void;
+    getElement(): HTMLElement;
+    destroy(): void;
+}
+
+export class AnglePicker implements AnglePickerHandle
 {
     private readonly instanceId: string;
     private opts: Required<Omit<AnglePickerOptions, "onChange" | "onOpen" | "onClose">>
@@ -1049,7 +1069,7 @@ export class AnglePicker
 /** Create an AnglePicker and mount it in the given container. */
 export function createAnglePicker(
     containerId: string, options?: AnglePickerOptions
-): AnglePicker
+): AnglePickerHandle
 {
     return new AnglePicker(containerId, options);
 }

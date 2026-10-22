@@ -187,7 +187,27 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 // ============================================================================
 
 /** Canvas-based calibrated ruler with cursor tracking. */
-export class Ruler
+/**
+ * The Ruler surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface RulerHandle
+{
+    getElement(): HTMLElement | null;
+    setUnit(unit: "px" | "unit" | "cm" | "mm" | "in"): void;
+    setOrientation(orientation: "horizontal" | "vertical"): void;
+    setOrigin(origin: number): void;
+    setCursorPosition(px: number): void;
+    calibrate(): void;
+    resize(): void;
+    destroy(): void;
+}
+
+export class Ruler implements RulerHandle
 {
     private containerId: string;
     private options: Required<RulerOptions>;
@@ -871,7 +891,7 @@ export class Ruler
 /** Create a Ruler instance attached to the given container. */
 export function createRuler(
     containerId: string, options: RulerOptions = {}
-): Ruler
+): RulerHandle
 {
     return new Ruler(containerId, options);
 }

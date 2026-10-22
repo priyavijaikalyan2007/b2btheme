@@ -189,7 +189,31 @@ interface CellEntry
 // ============================================================================
 
 /** Advanced CSS Grid layout with variable tracks and cell spanning. */
-export class FlexGridLayout
+/**
+ * The FlexGridLayout surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface FlexGridLayoutHandle
+{
+    show(container?: HTMLElement | string): void;
+    hide(): void;
+    destroy(): void;
+    getRootElement(): HTMLElement | null;
+    isVisible(): boolean;
+    addCell(config: FlexGridCellConfig): void;
+    removeCell(column: number, row: number): void;
+    getCellElement(column: number, row: number): HTMLElement | null;
+    setColumns(columns: string[]): void;
+    setRows(rows: string[]): void;
+    getState(): FlexGridLayoutState;
+    setState(state: FlexGridLayoutState): void;
+}
+
+export class FlexGridLayout implements FlexGridLayoutHandle
 {
     private readonly instanceId: string;
     private readonly options: FlexGridLayoutOptions;
@@ -723,7 +747,7 @@ export class FlexGridLayout
 export function createFlexGridLayout(
     options: FlexGridLayoutOptions,
     containerId?: string
-): FlexGridLayout
+): FlexGridLayoutHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

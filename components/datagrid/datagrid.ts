@@ -260,7 +260,53 @@ function formatNumber(n: number): string
 
 // @entrypoint
 
-export class DataGrid
+/**
+ * The DataGrid surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface DataGridHandle
+{
+    show(containerId: string): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    setData(slot: string, value: unknown): void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
+    setRows(rows: DataGridRow[]): void;
+    addRow(row: DataGridRow, index?: number): void;
+    removeRow(rowId: string): void;
+    updateRow(rowId: string, data: Partial<Record<string, unknown>>): void;
+    getRow(rowId: string): DataGridRow | null;
+    setTotalRowCount(count: number): void;
+    getSelectedRows(): DataGridRow[];
+    selectRow(rowId: string): void;
+    deselectRow(rowId: string): void;
+    selectAll(): void;
+    deselectAll(): void;
+    setPage(page: number): void;
+    getPage(): number;
+    getPageCount(): number;
+    setPageSize(size: number): void;
+    sort(columnId: string, direction?: "asc" | "desc"): void;
+    clearSort(): void;
+    setFilter(columnId: string, value: unknown): void;
+    clearFilters(): void;
+    refresh(): void;
+    exportCSV(filename?: string): void;
+    getColumns(): DataGridColumn[];
+    showColumn(columnId: string): void;
+    hideColumn(columnId: string): void;
+    setColumnWidth(columnId: string, width: number): void;
+    scrollToRow(rowId: string): void;
+}
+
+export class DataGrid implements DataGridHandle
 {
     // -- Configuration
     private readonly instanceId: string;
@@ -2741,7 +2787,7 @@ export class DataGrid
 
 export function createDataGrid(
     options: DataGridOptions,
-    containerId?: string): DataGrid
+    containerId?: string): DataGridHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. This used to reach the field and

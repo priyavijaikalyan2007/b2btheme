@@ -214,7 +214,7 @@ function getDriverJs(): DriverFactory | null
  * Injects custom enterprise-themed popovers, handles step progression,
  * persistence via localStorage, and analytics lifecycle hooks.
  */
-class GuidedTour
+class GuidedTour implements GuidedTourHandle
 {
     private readonly options: GuidedTourOptions;
     private readonly filteredSteps: TourStep[];

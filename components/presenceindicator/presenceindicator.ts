@@ -230,7 +230,30 @@ function buildFallbackAvatar(person: PersonData, diameter: number): HTMLElement
 // CLASS: PresenceIndicator
 // ============================================================================
 
-export class PresenceIndicator
+/**
+ * The PresenceIndicator surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface PresenceIndicatorHandle
+{
+    show(containerId: string): void;
+    getElement(): HTMLElement;
+    destroy(): void;
+    setPeople(people: PersonData[]): void;
+    addPerson(person: PersonData): void;
+    removePerson(id: string): void;
+    getPeople(): PersonData[];
+    expand(): void;
+    collapse(): void;
+    toggle(): void;
+    isExpanded(): boolean;
+}
+
+export class PresenceIndicator implements PresenceIndicatorHandle
 {
     // --- State ---
     private opts: PresenceIndicatorOptions;
@@ -813,7 +836,7 @@ export class PresenceIndicator
  */
 export function createPresenceIndicator(
     containerId: string | null,
-    options: PresenceIndicatorOptions): PresenceIndicator
+    options: PresenceIndicatorOptions): PresenceIndicatorHandle
 {
     const indicator = new PresenceIndicator(options);
 

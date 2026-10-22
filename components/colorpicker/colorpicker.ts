@@ -385,7 +385,34 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
  *     onChange: (color) => console.log("Selected:", color)
  * });
  */
-export class ColorPicker
+/**
+ * The ColorPicker surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface ColorPickerHandle
+{
+    show(containerId?: string): void;
+    hide(): void;
+    destroy(): void;
+    getValue(): string;
+    getValueWithAlpha(): string;
+    setValue(color: string): void;
+    getAlpha(): number;
+    setAlpha(a: number): void;
+    open(): void;
+    close(): void;
+    getElement(): HTMLElement | null;
+    getPopupElement(): HTMLElement | null;
+    setLabel(label: string): void;
+    enable(): void;
+    disable(): void;
+}
+
+export class ColorPicker implements ColorPickerHandle
 {
     private readonly instanceId!: string;
     private readonly options!: ColorPickerOptions;
@@ -1816,7 +1843,7 @@ function hslToHsv(
  */
 export function createColorPicker(
     containerId: string, options?: ColorPickerOptions
-): ColorPicker
+): ColorPickerHandle
 {
     const picker = new ColorPicker(options);
     picker.show(containerId);

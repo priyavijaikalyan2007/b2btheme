@@ -243,7 +243,43 @@ function saveToStorage(key: string, value: unknown): void
 // CLASS: AppLauncher
 // ============================================================================
 
-export class AppLauncher
+/**
+ * The AppLauncher surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface AppLauncherHandle
+{
+    show(containerId: string | HTMLElement): void;
+    hide(): void;
+    destroy(): void;
+    getElement(): HTMLElement | null;
+    open(): void;
+    close(): void;
+    isOpen(): boolean;
+    renderContent(): void;
+    toggleFavorite(appId: string): void;
+    getFavorites(): string[];
+    setFavorites(ids: string[]): void;
+    clearFavorites(): void;
+    getRecent(): string[];
+    clearRecent(): void;
+    getApps(): AppItem[];
+    setApps(apps: AppItem[]): void;
+    addApp(app: AppItem): void;
+    removeApp(id: string): void;
+    updateApp(id: string, updates: Partial<AppItem>): void;
+    getActiveAppId(): string;
+    setActiveAppId(id: string): void;
+    setCategories(categories: AppCategory[]): void;
+    setSearchQuery(query: string): void;
+    getMode(): AppLauncherMode;
+}
+
+export class AppLauncher implements AppLauncherHandle
 {
     private readonly opts: AppLauncherOptions;
     private rootEl: HTMLElement | null = null;
@@ -1644,7 +1680,7 @@ export class AppLauncher
 export function createAppLauncher(
     options: AppLauncherOptions,
     containerId?: string
-): AppLauncher
+): AppLauncherHandle
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not
     // get a silent default. Absent means undefined, so an empty

@@ -482,7 +482,7 @@ function buildIconEl(iconClass: string): HTMLElement
 /**
  * @internal Instance class. Consumers use {@link createNavRail} instead.
  */
-export class NavRail
+export class NavRail implements NavRailHandle
 {
     private readonly options: NavRailOptions;
     private readonly instanceId: string;

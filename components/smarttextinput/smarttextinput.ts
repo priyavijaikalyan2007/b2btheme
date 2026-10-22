@@ -1322,7 +1322,36 @@ function countOccurrences(text: string, sub: string): number
  * Main engine class that orchestrates trigger detection, token management,
  * and adapter coordination. This is the public API surface.
  */
-export class SmartTextInputEngine
+/**
+ * The SmartTextInputEngine surface a factory caller receives.
+ *
+ * PAT-1. `implements` below is what keeps this in step with the
+ * class: remove a member there and the typecheck fails here. Adding
+ * one to the class does NOT add it here, which is the point — a new
+ * method is API when somebody writes it into this interface.
+ */
+export interface SmartTextInputEngineHandle
+{
+    attach(element: HTMLElement, adapterType?: InputAdapterType): void;
+    detach(): void;
+    destroy(): void;
+    register(trigger: TriggerDefinition): void;
+    unregister(triggerName: string): void;
+    getTriggers(): TriggerDefinition[];
+    resolve(item: DataSourceResult): void;
+    cancel(): void;
+    getTokens(): ResolvedToken[];
+    getTokensByType(triggerName: string): ResolvedToken[];
+    removeToken(instanceId: string): void;
+    replaceToken(instanceId: string, newToken: Partial<ResolvedToken>): void;
+    getSerializedContent(): string;
+    setSerializedContent(content: string): void;
+    getPlainTextContent(): string;
+    on(event: StieEventName, handler: Function): Unsubscribe;
+    setOptions(options: Partial<SmartTextInputOptions>): void;
+}
+
+export class SmartTextInputEngine implements SmartTextInputEngineHandle
 {
     private opts: SmartTextInputOptions;
     private triggers: Map<string, ResolvedTriggerDefinition> = new Map();
@@ -2475,7 +2504,7 @@ function buildStaticTokenElement(
 // @entrypoint
 export function createSmartTextInput(
     options?: SmartTextInputOptions
-): SmartTextInputEngine
+): SmartTextInputEngineHandle
 {
     return new SmartTextInputEngine(options);
 }
