@@ -191,13 +191,26 @@ else
     fail "agentknowledge/history.jsonl missing"
 fi
 
-for f in agentknowledge/concepts.yaml agentknowledge/entities.yaml agentknowledge/decisions.yaml; do
-    if python3 -c "import yaml,sys; yaml.safe_load(open('$f'))" 2>/dev/null; then
-        pass "$(basename "$f") is valid YAML"
-    else
-        fail "$(basename "$f") is not valid YAML"
-    fi
-done
+# AUDIT-2. This loop used to be `python3 -c "import yaml..." 2>/dev/null`
+# and reported "is not valid YAML" for every outcome, including the one
+# where the interpreter has no PyYAML and the file was never opened. On
+# 2026-10-22 a `python3` without PyYAML came first on PATH here and the
+# check called three valid files malformed. The parser and the reader
+# are separate questions, so they get separate answers: a missing
+# parser fails the check — it is not skipped, per the fail-fast rule —
+# but it fails by its own name.
+if ! python3 -c "import yaml" 2>/dev/null; then
+    fail "cannot verify the knowledge base: $(command -v python3) has no PyYAML (pip install pyyaml)"
+else
+    for f in agentknowledge/concepts.yaml agentknowledge/entities.yaml agentknowledge/decisions.yaml; do
+        YAML_ERR=$(python3 -c "import yaml; yaml.safe_load(open('$f'))" 2>&1)
+        if [ -z "$YAML_ERR" ]; then
+            pass "$(basename "$f") is valid YAML"
+        else
+            fail "$(basename "$f") is not valid YAML: $(printf '%s' "$YAML_ERR" | tail -1)"
+        fi
+    done
+fi
 echo ""
 
 # ── 9. No stand-in component answers a read ──
