@@ -822,10 +822,10 @@ const BASELINES = {
  */
 const FLOORS = {
     // A closed or settled entry is a decision somebody recorded. It can
-    // be reworded, but it does not stop existing, so both are floors
-    // while `trackerOpen` is an exact baseline.
-    trackerClosed: 96,
-    trackerSettled: 9,
+    // be reworded and it can move between the two markers, but it does
+    // not stop existing — so their SUM is the floor, while
+    // `trackerOpen` is an exact baseline.
+    trackerResolved: 105,
     diagramengineBundleExports: 138,
     tracedComponents: 109,
     traceCalls: 301,
@@ -1109,8 +1109,8 @@ export function countUnusedLocals()
  * that file documents in other people's code, so the table is derived
  * from the markers now and check [20] holds the derivation.
  *
- * @returns {{trackerOpen: number, trackerClosed: number,
- *   trackerSettled: number}} One count per marker.
+ * @returns {{trackerOpen: number, trackerResolved: number}} The open
+ *   count, and closed plus settled together.
  */
 export function trackerMarkers()
 {
@@ -1118,10 +1118,20 @@ export function trackerMarkers()
     const rows = src.split("\n").filter(
         (l) => /^- \[( |x|=)\] \*\*(?:SETTLED — )?[A-Z][A-Za-z0-9-]*\*\*/.test(l));
 
+    // Closed and settled are counted TOGETHER. They were two floors
+    // until 2026-10-22, when DEBT-SEC-3 moved from settled to closed
+    // and the settled floor had to be lowered by hand — a floor
+    // being edited to permit the thing it exists to catch. The move
+    // is legitimate: a settled entry is a decision with a reopen
+    // condition, and meeting that condition closes it. What is never
+    // legitimate is an entry leaving the file, and their SUM catches
+    // that while staying blind to traffic between them.
+    const resolved = rows.filter(
+        (l) => l.startsWith("- [x]") || l.startsWith("- [=]")).length;
+
     return {
         trackerOpen: rows.filter((l) => l.startsWith("- [ ]")).length,
-        trackerClosed: rows.filter((l) => l.startsWith("- [x]")).length,
-        trackerSettled: rows.filter((l) => l.startsWith("- [=]")).length,
+        trackerResolved: resolved,
     };
 }
 
@@ -1416,8 +1426,7 @@ function measure()
         factoriesReturningClass: 0,
         handlesWithoutImplements: 0,
         trackerOpen: 0,
-        trackerClosed: 0,
-        trackerSettled: 0,
+        trackerResolved: 0,
         consoleLogCalls: 0,
         shimWithoutUtility: 0,
         directConsole: 0,

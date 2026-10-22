@@ -2301,8 +2301,8 @@ the step exits 1 and the workflow fails.
 | Marker | Count | Meaning |
 |---|---|---|
 | `- [ ]` | **1** | Open. **DEBT-TS-1**, which waits on the apps team. |
-| `- [x]` | **96** | Closed. |
-| `- [=]` | **9** | Settled, each with a reopen condition. |
+| `- [x]` | **97** | Closed. |
+| `- [=]` | **8** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |
 
 **THIS TABLE IS DERIVED, NOT MAINTAINED.** It used to be a hand-written
@@ -2312,9 +2312,14 @@ Handling, Fallback Code, `!important`, `: any`, Unused Variables and
 Factory Pattern. Every entry in seven of those eight carried `- [x]`.
 The table was a count that had stopped measuring its population, which
 is the defect this file spends most of its length documenting in other
-people's code. `scripts/audit-counts.mjs` recomputes the three numbers
-from the markers and check `[20]` fails when they drift, so the table
-can no longer disagree with the entries it summarises.
+people's code. `scripts/audit-counts.mjs` recomputes these from the markers
+and check `[20]` fails when they drift, so the table can no longer
+disagree with the entries it summarises. It holds `trackerOpen` as an
+exact baseline and closed-plus-settled as a single floor: those two
+were separate floors until DEBT-SEC-3 moved from settled to closed on
+2026-10-22 and the settled floor had to be lowered by hand, which is a
+floor being edited to permit exactly what it exists to catch. An entry
+may move between the two markers; it may not leave the file.
 
 The per-section tallies are not reproduced here, because a second place
 to write a number is a second place for one to go stale. Run
@@ -4774,7 +4779,8 @@ limits the design knowingly accepts, not defects in shipped code.
 
 - [x] **DEBT-SEC-1** 18 open advisories (11 high, 5 moderate, 2 low) across the build toolchain — postcss, undici, sharp, svgo, ws, nanoid, vite, wrangler, browserslist, immutable, miniflare, esbuild, yaml, vitest. All resolved; `npm audit` reports 0. No `--force` was needed and no semver-major upgrade was taken: `package.json` changed only `vitest` / `@vitest/coverage-v8` (`^4.1.3` → `^4.1.11`, the patch closing GHSA-82fw-gwwq-j7x9), and every other fix resolved transitively in the lockfile. **Exposure was build-time only** — this package declares no runtime dependencies, and the two libraries published to the CDN (`bootstrap.bundle.min.js`, `chart.umd.js`) are the vendors' own artifacts, not these packages. Build verified byte-reproducible afterwards: two consecutive `build:css` runs produce an identical `custom.css` hash.
 - [x] **DEBT-SEC-2** The `undici` override was written `">=7.24.1"` — a floor with **no ceiling**. jsdom@29 requires `undici ^7.24.3`, so once undici 8 shipped the override silently resolved to it, jsdom's dispatcher could not load, and **all 142 test files failed to start while vitest reported "no tests"**. `npm run test:unit` does exit 1 in that state, so CI would catch it, but the console output reads like an empty project rather than a broken one. Pinned to `^7.24.3` with the reasoning written into `package.json` beside the override, because the next person to see a `>=` and a `^` will otherwise "simplify" one into the other.
-- [=] **SETTLED — DEBT-SEC-3** `sass` is held at **1.95.x** rather than current (1.104). The newer compiler changes the **shipped** stylesheet: colours inside SVG data URIs serialise as percentage `rgb()` instead of hex — `stroke='rgb(4.3921568627%, 19.7647058824%, 33.568627451%)'` where it used to be `stroke='%230b3255'` — and a few Bootstrap-derived values shift by one (`#172033` → `#172032`). The output was decoded and is **valid**, resolving to the same colour, and the change is cosmetically invisible in principle. It was still declined here: there is no security benefit, it adds ~94 bytes, and it introduces a CSS delta while the ADR-147 visual refresh is still under review. **Re-examined 2026-10-09 (ADR-157)**, because the original phrasing rested on "`npm audit` is already 0" and that premise had quietly expired — audit showed 5 advisories, and sass is one of five packages pulling `source-map-js`. It does not force the bump: `source-map-js` 1.2.2 patches the DoS and sass accepts `>=0.6.2 <2.0.0`, so an override clears the advisory with sass untouched at 1.95.1. The deferral stands on the CSS delta alone, which is the ground its own last sentence asked for. **A deferral justified by a measurement needs the measurement re-taken, not the conclusion re-read.** Note that **the caret does not hold it back** — `^1.95.1` admits 1.104, because minor 104 sorts above 95 — so only the committed lockfile pins it, and a fresh `npm install` with a regenerated lock would take 1.104. Upgrade deliberately, with the accordion and form-select icons eyeballed in both themes, rather than as a side-effect of a security pass.
+- [x] **DEBT-SEC-3** **CLOSED 2026-10-22: taken, and the shipped CSS got
+  SMALLER.** `sass` was held at **1.95.x** rather than current (1.104). The newer compiler changes the **shipped** stylesheet: colours inside SVG data URIs serialise as percentage `rgb()` instead of hex — `stroke='rgb(4.3921568627%, 19.7647058824%, 33.568627451%)'` where it used to be `stroke='%230b3255'` — and a few Bootstrap-derived values shift by one (`#172033` → `#172032`). The output was decoded and is **valid**, resolving to the same colour, and the change is cosmetically invisible in principle. It was still declined here: there is no security benefit, it adds ~94 bytes, and it introduces a CSS delta while the ADR-147 visual refresh is still under review. **Re-examined 2026-10-09 (ADR-157)**, because the original phrasing rested on "`npm audit` is already 0" and that premise had quietly expired — audit showed 5 advisories, and sass is one of five packages pulling `source-map-js`. It does not force the bump: `source-map-js` 1.2.2 patches the DoS and sass accepts `>=0.6.2 <2.0.0`, so an override clears the advisory with sass untouched at 1.95.1. The deferral stands on the CSS delta alone, which is the ground its own last sentence asked for. **A deferral justified by a measurement needs the measurement re-taken, not the conclusion re-read.** Note that **the caret does not hold it back** — `^1.95.1` admits 1.104, because minor 104 sorts above 95 — so only the committed lockfile pins it, and a fresh `npm install` with a regenerated lock would take 1.104. Upgrade deliberately, with the accordion and form-select icons eyeballed in both themes, rather than as a side-effect of a security pass.
 
   **Taken and reverted 2026-10-09 (ADR-158), by the user's decision, after measuring it rather than re-reading the entry.** sass 1.105.1 was installed, the CSS rebuilt and the full suite run: 28/28 structure checks and 4848 unit tests pass, and both chevrons render correctly in light and dark. The entry's two predictions held — +94 bytes exactly, and `#172033 → #172032` (plus a second it had not listed, `#a51d1d → #a51c1c`). Two things it got wrong, both found by measuring:
 
@@ -4783,20 +4789,54 @@ limits the design knowingly accepts, not defects in shipped code.
 
   So the deferral stands, and now for a reason stronger than the original: the bump makes the shipped stylesheet **larger and less optimised**, with no security benefit (audit is 0 through the `source-map-js` override) and no functional gain. Reverted; `dist/css/custom.css` is byte-identical to before at `ede68299`. `package.json` keeps the floor raised to `^1.95.1`, which is where the lockfile already was and what this entry already documented. **Revisit when postcss-svgo handles lowercase percent-encoding**, not on a version number.
 
-  > **SETTLED, on one ground only: the CSS delta.** `sass` 1.104
-  > re-serialises colours inside SVG data URIs as percentage `rgb()` and
-  > shifts a few Bootstrap-derived values by one.
-  >
-  > **Future sessions: do not bump `sass` as a side effect of a security
-  > pass.** There is no security benefit — `source-map-js` 1.2.2 patches
-  > the advisory and an override clears it with sass untouched. And the
-  > caret does NOT hold it back: `^1.95.1` admits 1.104, so only the
-  > committed lockfile pins it and a regenerated lock takes the bump
-  > silently.
-  >
-  > **Reopen when** the ADR-147 visual refresh is settled. Upgrade then,
-  > deliberately, with the accordion and form-select icons eyeballed in
-  > both themes.
+  **TAKEN 2026-10-22, and the blocking reason had dissolved.** The entry
+  said to revisit when `postcss-svgo` handles lowercase percent-encoding.
+  It never will, and it does not have to: **`postcss-svgo` is not in the
+  pipeline any more.** It arrives through `cssnano-preset-default`, and
+  `cssnano` 9 dropped the dependency entirely. Nothing parses those data
+  URIs, so the parse error that justified the deferral cannot occur.
+
+  The bump had to be `cssnano` first, because `cssnano-preset-default@7`
+  pins `postcss-svgo@^7` and a direct bump would not have taken. That
+  made `cssnano` a second variable, so it was measured on its own:
+
+  | Build | sass | cssnano | `dist/css/custom.css` | svgo errors |
+  |---|---|---|---|---|
+  | A — what shipped | 1.95.1 | 7.1.4 | 276,394 | 0 |
+  | B — cssnano only | 1.95.1 | 9.9.0 | 272,039 | 0 |
+  | C — both | 1.106.1 | 9.9.0 | **272,226** | 0 |
+
+  **cssnano 9 saves 4,355 bytes; sass costs 187; net 4,168 SMALLER than
+  what ships today.** The entry's central objection was that the bump
+  made the stylesheet "larger and less optimised". Measured with the
+  current toolchain, it makes it smaller. ADR-157's rule applied to
+  ADR-158: a deferral justified by a measurement needs the measurement
+  re-taken, and this one had gone stale in the direction nobody checks.
+
+  **Both of the entry's predictions still hold.** sass 1.106.1 continues
+  to serialise colours inside data URIs as percentage `rgb()` —
+  `stroke='rgb%284.3921568627%, 19.7647058824%, 33.568627451%%29'` where
+  1.95 wrote `stroke='%230b3255'` — and it still decodes to (11, 50, 86)
+  against the hex's (11, 50, 85). Off by one on one channel, on an icon
+  stroke. **Note the parentheses are percent-encoded**, so a grep for
+  `rgb(` finds nothing and reports the problem solved; it is not.
+
+  **Eyeballed, as this entry asked.** The form-select chevron, the
+  collapsed accordion chevron and the **dark-mode expanded** accordion
+  chevron — the exact three that used to ship unminified — all render in
+  light and dark. Declaration-level diff of A against C: no declaration
+  lost, the differences are shorthand restructuring (`border: 0 solid`
+  to `border-width`/`border-style`) and whitespace inside custom property
+  values, which cssnano 9 preserves and 7 stripped.
+
+  `npm audit` is 0. 5377 tests and 38/38 structure checks pass.
+
+  > **The caret never held this back and still does not.** `^1.106.1`
+  > admits anything below 2.0, so only the committed lockfile pins the
+  > version. That was the trap this entry warned about, and it nearly
+  > sprang on 2026-10-22: `npm audit fix` plus two installs ran that
+  > morning. Checked afterwards — no `sass` or `postcss-svgo` line moved.
+  > Verify the lockfile after any dependency work, not the caret.
 
 ---
 
