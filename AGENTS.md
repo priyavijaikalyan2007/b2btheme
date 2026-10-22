@@ -250,6 +250,63 @@ factoryStyle: "container-first" | "options-first" | "options-only",
 containerOption: "container",   // options-only: the key holding the ELEMENT
 ```
 
+### Factory return type (PAT-1)
+
+A factory returns a **handle interface**, never the class.
+
+```typescript
+export interface ToolbarHandle
+{
+    show(container?: HTMLElement): void;
+    destroy(): void;
+    // … every member the factory's caller may use
+}
+
+export class Toolbar implements ToolbarHandle
+{
+    // …
+}
+
+export function createToolbar(
+    options: ToolbarOptions, container?: string | HTMLElement): ToolbarHandle
+```
+
+Three lines, and the middle one is the one that matters. **`implements` is
+what makes the handle a contract rather than a copy.** Without it the two
+drift and nothing says so: on 2026-10-22, 14 components had both a handle
+and a class and only 8 declared the relationship, so six pairs agreed by
+luck. With it, a method deleted from the class fails the typecheck, and a
+method ADDED to the class is invisible to factory callers until somebody
+puts it in the handle. That is the API decision happening per method, at
+the moment of writing, which is the only time anybody knows the answer.
+
+**The handle is allowed to be narrower than the class, and that is the
+point.** `ActionItems` publishes `exportItems` and `importMarkdownText`
+and `ActionItemsHandle` declares neither; `NavRail` keeps `getPosition`
+and `getEffectiveWidth` off `NavRailHandle`. `implements` permits this —
+it requires the class to have AT LEAST the handle's members, not at most.
+
+**Naming:** `<ClassName>Handle`, with a trailing `Impl` dropped, so
+`DiagramEngineImpl` is `DiagramEngineHandle`.
+
+**Keep the class exported.** Importing it still works and the READMEs
+document it. What a handle changes is what the FACTORY hands back, which
+is what a CDN consumer gets, and that consumer has no other way in since
+the classes came off `window`.
+
+Two counts in `scripts/audit-counts.mjs` hold this, both at zero and
+both held by structure check `[20]`. `factoriesReturningClass` catches a
+factory annotated with the class; `handlesWithoutImplements` catches a
+handle whose class never declares the clause. **Neither is caught by the
+typecheck** — returning `Toolbar` where `ToolbarHandle` is expected is
+perfectly legal, and a class that happens to match its handle compiles
+without the clause. Both were mutation-proven when they were written.
+
+`scripts/gen-handles.mjs` generates a handle from a class when you need
+a starting point. It is a tool, not a build step, because after the
+first write the handle is a decision and the class is not its source of
+truth: regenerating `ActionItemsHandle` would put `exportItems` back.
+
 ### Additive guarantee (CRITICAL)
 
 Adding the Surface contract to an existing component MUST NOT change any
