@@ -294,6 +294,18 @@ document it. What a handle changes is what the FACTORY hands back, which
 is what a CDN consumer gets, and that consumer has no other way in since
 the classes came off `window`.
 
+**Never narrow a handle because a scan found no callers.** A public
+member that nothing references is a member nobody has needed yet, and
+that includes callers who do not exist yet and callers this repository
+cannot see. An in-repo reference count says nothing about whether a
+published member is API. Narrowing a handle is a design judgement a
+person makes — `ActionItemsHandle` leaves `exportItems` off because
+somebody decided it is not API, not because an instrument reported
+zero. This applies hardest where it is most tempting: DiagramEngine is
+the largest component here, is deliberately a superset of engines such
+as maxGraph, and has no consumers at all today. None of that is an
+argument for shrinking `DiagramEngineHandle`.
+
 Two counts in `scripts/audit-counts.mjs` hold this, both at zero and
 both held by structure check `[20]`. `factoriesReturningClass` catches a
 factory annotated with the class; `handlesWithoutImplements` catches a

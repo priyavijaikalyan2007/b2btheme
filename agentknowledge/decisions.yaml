@@ -9879,6 +9879,12 @@
         can be mechanical because `private` has already made most of
         the decision; every write after it is a judgement.
 
+    D7. AN UNREFERENCED PUBLIC MEMBER IS NOT EVIDENCE OF ANYTHING.
+        A handle mirrors its class's public surface, and narrowing one
+        is a design judgement rather than the output of a usage scan.
+        See the consequences below: this is a rule about libraries,
+        not a note about DiagramEngine.
+
     D6. TWO GATES, BECAUSE THE TYPECHECK CATCHES NEITHER.
         `factoriesReturningClass` at 0 — annotating createUserMenu
         with UserMenu rather than UserMenuHandle is legal TypeScript.
@@ -9904,6 +9910,28 @@
     like success, so the generator throws now rather than skipping,
     and reads the heritage clause from the AST rather than the text.
 
-    Open: 1227 handle members mirror their classes. Nobody has yet
-    asked which of them a consumer actually calls, and the answer
-    needs the consuming application, not this repository.
+    NOT open, and the earlier wording of this paragraph was wrong. It
+    said nobody had yet asked which of the 1227 members a consumer
+    actually calls, "and the answer needs the consuming application".
+    That framed an absent reference as evidence. The owner's
+    correction, 2026-10-22: *"you cannot assume that just because a
+    public method is not referenced anywhere, it will be unused
+    forever. That's not how libraries work."*
+
+    So a usage scan is not an input to this decision at any scale. A
+    library's public surface is a promise about what callers MAY do,
+    and a method nobody calls today is a method nobody has needed
+    yet — including callers who do not exist yet, and callers this
+    repository cannot see. The in-repo reference count for a public
+    member is exactly as informative as the count for a method
+    shipped last week: not at all.
+
+    A handle therefore narrows only when somebody decides a member
+    should not be API — a judgement about the design, made by a
+    person — and never because an instrument found no callers.
+    `ActionItemsHandle` leaving `exportItems` off is that judgement;
+    it was not derived from a scan. DiagramEngine makes the point at
+    scale: it is the largest component here, it is deliberately a
+    superset of engines such as maxGraph, it has no consumers at all
+    today, and none of that is an argument for shrinking its
+    surface.

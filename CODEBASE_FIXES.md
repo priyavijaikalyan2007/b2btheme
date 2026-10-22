@@ -2206,12 +2206,15 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
   **`DiagramEngineHandle` mirrors all 136 members rather than curating
   them**, and `diagramengineLines` was raised 30579 -> 30727 to say so.
-  "Which of the 133 are API" is answered **not today**: this library is
-  consumed from a CDN by an application this repository cannot grep, so
-  "unused here" is not "not API", and narrowing it would be a second
-  breaking change one day after the first. With `implements` in place
-  that narrowing is a one-line deletion whenever somebody who knows the
-  consumer wants to make it.
+  "Which of the 133 are API" is not a question a scan can answer at
+  all. The owner, 2026-10-22: *"you cannot assume that just because a
+  public method is not referenced anywhere, it will be unused forever.
+  That's not how libraries work."* DiagramEngine is the largest
+  component here and is deliberately a superset of engines such as
+  maxGraph; it has **no consumers today**, and that is an argument for
+  nothing. A handle narrows when a person decides a member is not API,
+  which is why `ActionItemsHandle` leaves `exportItems` off. ADR-218 D7
+  and AGENTS.md carry the rule.
 
   **Two generator bugs, both the shape this file documents elsewhere.**
   The `implements` anchor consumed the newline of the Allman brace

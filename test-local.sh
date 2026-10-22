@@ -191,26 +191,36 @@ else
     fail "agentknowledge/history.jsonl missing"
 fi
 
-# AUDIT-2. This loop used to be `python3 -c "import yaml..." 2>/dev/null`
-# and reported "is not valid YAML" for every outcome, including the one
-# where the interpreter has no PyYAML and the file was never opened. On
-# 2026-10-22 a `python3` without PyYAML came first on PATH here and the
-# check called three valid files malformed. The parser and the reader
-# are separate questions, so they get separate answers: a missing
-# parser fails the check — it is not skipped, per the fail-fast rule —
-# but it fails by its own name.
-if ! python3 -c "import yaml" 2>/dev/null; then
-    fail "cannot verify the knowledge base: $(command -v python3) has no PyYAML (pip install pyyaml)"
-else
-    for f in agentknowledge/concepts.yaml agentknowledge/entities.yaml agentknowledge/decisions.yaml; do
-        YAML_ERR=$(python3 -c "import yaml; yaml.safe_load(open('$f'))" 2>&1)
-        if [ -z "$YAML_ERR" ]; then
-            pass "$(basename "$f") is valid YAML"
-        else
-            fail "$(basename "$f") is not valid YAML: $(printf '%s' "$YAML_ERR" | tail -1)"
-        fi
-    done
-fi
+# AUDIT-2. This was inline python calling PyYAML with stderr sent to
+# /dev/null, so it reported "is not valid YAML" for every non-zero
+# exit — including the one where the interpreter has no PyYAML and the
+# file was never opened. On 2026-10-22 a Homebrew `python3` came first
+# on PATH here and the check called three valid files malformed.
+#
+# The module could not simply be installed: Homebrew's python is
+# externally managed (PEP 668) and there is no `pyyaml` formula.
+# PyYAML was also the only non-stdlib Python import in this repository
+# and a dependency nothing could declare — CI passed because the
+# GitHub Ubuntu image happens to ship it. `package.json` can state
+# `js-yaml`, so the requirement now lives where the others do.
+# A here-string, not a pipe: a piped `while` runs in a subshell and
+# every `pass` it called would be lost, which is how this first went in
+# with a hardcoded `PASS=$((PASS + 3))` beside it — a count that stops
+# being true the moment the file list changes.
+YAML_OK=0
+YAML_OUT=$(node scripts/check-knowledge-yaml.mjs 2>&1) && YAML_OK=1
+
+while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    if [ "$YAML_OK" -eq 1 ]; then
+        pass "$line"
+    else
+        case "$line" in
+            *"is not valid YAML"*) fail "$line" ;;
+            *) pass "$line" ;;
+        esac
+    fi
+done <<< "$YAML_OUT"
 echo ""
 
 # ── 9. No stand-in component answers a read ──
