@@ -34,11 +34,21 @@ WHAT CHANGES AFTER THIS POINT
     leaves those three functions in place, so nothing that already
     moved to them breaks.
 
-    Measured before the change: the knobby application does not
-    construct these classes, and `component-library.d.ts` declares none
-    of them. Four demo pages in this repository did, across 27 sites,
-    and they were changed to use their factories. The remaining risk is
-    a consumer nobody has counted.
+    Checked before the change by reading
+    `component-library.d.ts`, which declares no class of ours. That is
+    weaker evidence than a scan and was written down as though it were
+    the same thing. **Scanned properly on 2026-10-22**, once the apps
+    checkout was to hand: all 88 names, across `.ts`, `.js`, `.tsx` and
+    `.html`, for `new X(`, `window.X`, `window["X"]` and `typeof X` —
+    ZERO matches. The one name that looked like a hit, `ErrorDialog`,
+    is their own component, and no page of theirs loads our
+    `errordialog` bundle. Report filed at
+    `~/Work/knobby/apps/specs/bugreports/2026-10-22-component-classes-off-window.md`.
+
+    Four demo pages in this repository did construct classes, across 27
+    sites, and they were changed to use their factories. Three studio
+    demos were missed by that sweep and broke on the CDN; see the
+    PAT-1 entry in CODEBASE_FIXES.md.
 
     One such consumer was found after the deploy. Three studio demo
     pages under demo/studio/ built their chrome with `new Sidebar(...)`

@@ -2157,10 +2157,26 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   `renderSmartTextTokens`. A static method is a function, and a
   function does not need a class to be callable.
 
-  **The consumer is not affected, measured.** The knobby application
-  constructs no class of ours. Its two `new window.X()` calls name its
-  own `DiagramCanvas` and `DiagramsAPI`, and
-  `shared/types/component-library.d.ts` declares no class of ours.
+  **The consumer is not affected — scanned, 2026-10-22.** All 88 names
+  over the apps checkout, across `.ts`, `.js`, `.tsx` and `.html`, for
+  `new X(`, `window.X`, `window["X"]` and `typeof X`: **zero matches**.
+  The one name that looked like a hit is `ErrorDialog`, which is THEIR
+  component — `frontend/js/components/errorDialog.js` assigns it — and
+  no page of theirs loads our `errordialog` bundle.
+
+  **Before shipping, this entry claimed the same thing on weaker
+  evidence** and did not say so: it rested on
+  `shared/types/component-library.d.ts` declaring no class of ours,
+  which is a different statement from "nothing constructs one". The
+  scan agrees with the conclusion and the order was wrong. Recorded
+  because a claim's GROUNDS are part of the claim.
+
+  **The change removed a collision nobody had noticed.** Their
+  `window.ErrorDialog` has static `show` and `showWarning`; our class
+  has no statics at all. Had anyone added our `errordialog` script tag,
+  our bundle would have overwritten theirs and their 30 call sites
+  would have thrown. Our bundle now registers only
+  `window.showErrorDialog`.
 
   **What is published for consumers:** `docs/MIGRATION_WINDOW_CLASSES.md`
   lists all 88 classes with the factory to use for each, and
