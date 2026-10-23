@@ -39,7 +39,7 @@
     color: var(--theme-text-secondary);
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 
@@ -115,7 +115,7 @@
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         background-color: var(--theme-hover-bg);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -189,7 +189,7 @@
 }
 
 .timepicker-now-btn {
-    color: $primary;
+    color: var(--theme-primary-text);
     font-size: $font-size-sm;
 }
 
@@ -220,7 +220,7 @@
     line-height: 1;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 
@@ -259,7 +259,7 @@
     color: var(--theme-text-secondary);
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 

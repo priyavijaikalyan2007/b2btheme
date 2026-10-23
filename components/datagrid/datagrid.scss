@@ -83,7 +83,7 @@
 }
 
 .datagrid-header-cell-sorted {
-    color: $primary;
+    color: var(--theme-primary-text);
 }
 
 .datagrid-header-label {
@@ -105,7 +105,7 @@
     font-size: $font-size-sm;
 
     .datagrid-header-cell-sorted & {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 

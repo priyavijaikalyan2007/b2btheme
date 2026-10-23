@@ -194,7 +194,7 @@
     }
 
     &.active {
-        color: $primary;
+        color: var(--theme-primary-text);
         border-bottom-color: $primary;
         font-weight: $font-weight-semibold;
     }

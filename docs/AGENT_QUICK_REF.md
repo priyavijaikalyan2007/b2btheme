@@ -271,6 +271,7 @@ docs/                        — Consumer documentation (HTML)
 $blue-900=#0a2540
 $blue-800=#0d3b66
 $blue-700=#1864ab
+$blue-650=#1971c2
 $blue-600=#1c7ed6
 $blue-500=#2196f3
 $blue-400=#4dabf7

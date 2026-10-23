@@ -132,7 +132,7 @@
     padding: 0;
     font: inherit;
     font-size: $font-size-sm;
-    color: $primary;
+    color: var(--theme-primary-text);
     cursor: pointer;
 
     &:hover {
@@ -198,7 +198,7 @@
     }
 
     &.active {
-        color: $primary;
+        color: var(--theme-primary-text);
         border-bottom-color: $primary;
         font-weight: $font-weight-semibold;
     }

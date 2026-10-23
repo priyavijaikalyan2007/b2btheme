@@ -61,11 +61,11 @@
 
 .themetoggle-btn-active {
     background: var(--theme-selected-bg);
-    color: $primary;
+    color: var(--theme-primary-text);
 
     &:hover {
         background: var(--theme-selected-bg);
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 

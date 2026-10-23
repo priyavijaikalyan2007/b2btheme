@@ -36,7 +36,7 @@
     color: var(--theme-text-secondary);
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 
@@ -109,7 +109,7 @@
     line-height: 1;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 
@@ -170,7 +170,7 @@
 }
 
 .durationpicker-clear-btn {
-    color: $primary;
+    color: var(--theme-primary-text);
     font-size: $font-size-sm;
 }
 
@@ -201,7 +201,7 @@
     line-height: 1;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 

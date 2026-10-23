@@ -40,7 +40,7 @@
     transition: box-shadow 150ms ease;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
@@ -169,7 +169,7 @@
     transition: box-shadow 150ms ease;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }

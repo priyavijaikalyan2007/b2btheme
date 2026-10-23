@@ -46,7 +46,7 @@
     display: inline-flex;
     align-items: center;
     gap: $sp-4;
-    color: $primary;
+    color: var(--theme-primary-text);
     text-decoration: none;
     background: none;
     border: none;

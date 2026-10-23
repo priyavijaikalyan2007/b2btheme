@@ -85,7 +85,10 @@
     --theme-focus-border:       #{$blue-500};
 
     // -- Primary action --
-    --theme-primary:            #{$primary};
+    // DEBT-VR-11. $blue-650 rather than $primary: white text on the
+    // brand $blue-600 measures 4.01, below the 4.5 floor, on every
+    // primary button and badge. 4.80 here.
+    --theme-primary:            #{$blue-650};
     --theme-primary-hover:      #{$blue-700};
     // Must match $primary ($blue-600, #1c7ed6). Held 37, 99, 235 (#2563eb, a
     // Tailwind blue) until ADR-147 — every focus ring and hover glow in the
@@ -199,7 +202,11 @@
     // state layer is white, so it lightens the surface beneath the text, and
     // $gray-400 measured 3.69 on a hovered toolbar button over chrome.
     --theme-text-muted:         #{$gray-350};
-    --theme-text-on-primary:    #{$gray-50};
+    // DEBT-VR-11. The dark-mode primary FILL is $blue-400, a LIGHT
+    // colour, so near-white text on it measured 2.37 against a 4.5
+    // floor. This token carried one value for both themes while the
+    // fill it sits on carried two. $gray-900 on $blue-400 is 7.21.
+    --theme-text-on-primary:    #{$gray-900};
 
     // -- Borders --
     --theme-border-color:       #{$gray-600};

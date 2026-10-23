@@ -278,7 +278,7 @@
 }
 
 .progressmodal-log-progress .progressmodal-log-icon {
-    color: $primary;
+    color: var(--theme-primary-text);
 }
 
 // ============================================================================
@@ -313,7 +313,7 @@
     line-height: 1;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         border-color: $primary;
     }
 

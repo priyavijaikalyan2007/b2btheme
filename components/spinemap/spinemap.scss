@@ -293,7 +293,7 @@
 }
 
 .spinemap-popover-link {
-    color: $primary;
+    color: var(--theme-primary-text);
     text-decoration: none;
     word-break: break-all;
 

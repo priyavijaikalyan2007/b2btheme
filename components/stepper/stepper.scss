@@ -150,7 +150,7 @@
 }
 
 .stepper-step-active .stepper-label-text {
-    color: $primary;
+    color: var(--theme-primary-text);
 }
 
 .stepper-step-completed .stepper-label-text {

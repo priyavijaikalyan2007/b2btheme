@@ -12,6 +12,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$blue-900` | `#0a2540` | Primary Blues (Professional, trustworthy) |
 | `$blue-800` | `#0d3b66` |  |
 | `$blue-700` | `#1864ab` |  |
+| `$blue-650` | `#1971c2` | so the brand swatch $blue-600 is unchanged. |
 | `$blue-600` | `#1c7ed6` |  |
 | `$blue-500` | `#2196f3` |  |
 | `$blue-400` | `#4dabf7` |  |

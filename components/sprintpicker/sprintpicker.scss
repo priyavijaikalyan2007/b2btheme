@@ -37,7 +37,7 @@
     color: var(--theme-text-secondary);
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
     }
 }
 
@@ -85,7 +85,7 @@
     transition: box-shadow 150ms ease, border-color 150ms ease;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         border-color: $primary;
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
@@ -190,7 +190,7 @@
     transition: box-shadow 150ms ease;
 
     &:hover {
-        color: $primary;
+        color: var(--theme-primary-text);
         background-color: var(--theme-hover-bg);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
