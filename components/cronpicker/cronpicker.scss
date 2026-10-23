@@ -121,12 +121,12 @@
 }
 
 .cronpicker-mode-btn-active {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
-    border-color: $primary;
+    border-color: var(--theme-primary);
 
     &:hover {
-        background-color: $primary;
+        background-color: var(--theme-primary);
         color: var(--theme-text-on-primary);
     }
 }
@@ -179,14 +179,14 @@
 }
 
 .cronpicker-value-chip-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
-    border-color: $primary;
+    border-color: var(--theme-primary);
     font-weight: $font-weight-semibold;
 
     &:hover {
-        background-color: $primary;
-        border-color: $primary;
+        background-color: var(--theme-primary);
+        border-color: var(--theme-primary);
     }
 }
 

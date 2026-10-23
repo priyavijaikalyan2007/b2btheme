@@ -44,7 +44,7 @@
 }
 
 .fileupload-dropzone:hover {
-    border-color: $blue-600;
+    border-color: var(--theme-primary);
     background-color: var(--theme-hover-bg);
 }
 
@@ -54,7 +54,7 @@
 }
 
 .fileupload-dropzone-active {
-    border-color: $blue-600;
+    border-color: var(--theme-primary);
     background-color: rgba($blue-600, 0.05);
     border-style: solid;
 }
@@ -66,7 +66,7 @@
 
 .fileupload-dropzone-icon {
     font-size: 2rem;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     margin-bottom: $sp-8;
 }
 
@@ -86,7 +86,7 @@
 .fileupload-dropzone-limits {
     margin: $sp-8 0 0;
     font-size: $font-size-xs;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -132,7 +132,7 @@
 
 .fileupload-file-size {
     font-size: $font-size-xs;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -150,7 +150,7 @@
 
 .fileupload-file-progress-bar {
     height: 100%;
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
     transition: width 0.2s ease;
 }
 
@@ -197,7 +197,7 @@
     justify-content: center;
     border: none;
     background: none;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: pointer;
     padding: $sp-4;
     flex-shrink: 0;
@@ -246,7 +246,7 @@
 
 .fileupload-download-size {
     font-size: $font-size-xs;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 .fileupload-download-link {

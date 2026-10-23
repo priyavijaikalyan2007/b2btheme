@@ -145,7 +145,7 @@
 }
 
 .timepicker-spinner-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
@@ -316,12 +316,12 @@
 }
 
 .timepicker-tz-option-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 
     &:hover {
-        background-color: $primary;
+        background-color: var(--theme-primary);
     }
 }
 

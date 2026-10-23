@@ -136,7 +136,7 @@
 
     &:hover::after,
     &:active::after {
-        background-color: $primary;
+        background-color: var(--theme-primary);
     }
 }
 
@@ -375,10 +375,10 @@
 
 .datagrid-editor {
     width: 100%;
-    border-color: $primary;
+    border-color: var(--theme-primary);
 
     &:focus {
-        border-color: $primary;
+        border-color: var(--theme-primary);
         box-shadow: $shadow-focus;
     }
 }
@@ -509,7 +509,7 @@
         left: -1px;
         width: 2px;
         height: 100%;
-        background-color: $primary;
+        background-color: var(--theme-primary);
         z-index: 5;
     }
 }

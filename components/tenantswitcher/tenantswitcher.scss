@@ -199,7 +199,7 @@
 
 .tenantswitcher-search-icon
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     margin-right: $sp-8;
 }
@@ -216,7 +216,7 @@
 
     &::placeholder
     {
-        color: $gray-400;
+        color: var(--theme-text-muted);
     }
 }
 
@@ -320,7 +320,7 @@
 .tenantswitcher-item-members
 {
     font-size: $font-size-sm;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 .tenantswitcher-item-plan
@@ -385,7 +385,7 @@
 {
     padding: $sp-16 $sp-12;
     text-align: center;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 
@@ -397,7 +397,7 @@
 {
     padding: $sp-12;
     text-align: center;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 

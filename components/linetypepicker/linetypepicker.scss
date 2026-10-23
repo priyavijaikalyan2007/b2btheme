@@ -64,7 +64,7 @@ $ltp-transition:         150ms ease;
     &:focus-visible
     {
         outline: none;
-        border-color: $primary;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($primary, 0.25);
     }
 }

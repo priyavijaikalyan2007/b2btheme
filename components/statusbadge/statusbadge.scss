@@ -84,7 +84,7 @@
 // Status text label displayed beside the dot
 .statusbadge-label {
     font-weight: $font-weight-normal;
-    color: $gray-700;
+    color: var(--theme-text-secondary);
 }
 
 // ============================================================================
@@ -120,7 +120,7 @@
 
 // In Progress — blue dot
 .statusbadge-in-progress .statusbadge-dot {
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
 }
 
 // Failed — dark red dot
@@ -159,7 +159,7 @@
 
 // In Progress pill
 .statusbadge-in-progress.statusbadge-pill .statusbadge-label {
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
 }
 
 // Failed pill

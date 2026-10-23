@@ -245,8 +245,12 @@
             color: var(--theme-text-muted);
             font-size: 0.7rem;
         }
-        .toc-check          { color: #40c057; font-size: 0.65rem; margin-right: 0.25rem; }
-        .toc-cross          { color: #fa5252; font-size: 0.65rem; margin-right: 0.25rem; }
+        /* DEBT-VR-11. These were #40c057 and #fa5252, measuring 2.13 and
+           2.96 on the sidebar surface against a 4.5 floor — this page's
+           own markup making the mistake the library was audited for. The
+           semantic TEXT tokens carry a value per theme. */
+        .toc-check          { color: var(--theme-success-text); font-size: 0.65rem; margin-right: 0.25rem; }
+        .toc-cross          { color: var(--theme-danger-text); font-size: 0.65rem; margin-right: 0.25rem; }
         [data-toc-status="new"] .nav-link { color: var(--theme-text-muted); cursor: default; }
         [data-toc-status="new"] .nav-link:hover { color: var(--theme-text-muted); background: none; }
         .toc-divider        { padding: 0.25rem 0.5rem; list-style: none; }

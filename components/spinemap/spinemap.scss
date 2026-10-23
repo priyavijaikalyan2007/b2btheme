@@ -347,8 +347,8 @@
 }
 
 .spinemap-popover-btn-primary {
-    background-color: $primary;
-    border-color: $primary;
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
 
     &:hover {
@@ -401,7 +401,7 @@
 
     &:focus {
         outline: none;
-        border-color: $blue-600;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($blue-600, 0.15);
     }
 }
@@ -490,12 +490,12 @@
 
     &:hover,
     &:active {
-        background-color: $blue-600;
+        background-color: var(--theme-primary);
     }
 
     &:focus-visible {
         outline: none;
-        background-color: $blue-600;
+        background-color: var(--theme-primary);
     }
 }
 

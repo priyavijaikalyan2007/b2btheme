@@ -227,7 +227,7 @@
 .activityfeed-timestamp
 {
     font-size: $font-size-sm;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     white-space: nowrap;
     margin-left: $sp-6;
 }
@@ -283,7 +283,7 @@
     justify-content: center;
     padding: $sp-48 $sp-24;
     text-align: center;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 
     > i
     {
@@ -303,7 +303,7 @@
 .activityfeed-empty-desc
 {
     font-size: $font-size-sm;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================
@@ -320,7 +320,7 @@
 {
     text-align: center;
     padding: $sp-12;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 

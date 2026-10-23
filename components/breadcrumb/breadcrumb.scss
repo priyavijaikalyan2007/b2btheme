@@ -191,7 +191,7 @@
 
     &.disabled,
     &[disabled] {
-        color: $gray-400;
+        color: var(--theme-text-muted);
         cursor: not-allowed;
 
         &:hover {

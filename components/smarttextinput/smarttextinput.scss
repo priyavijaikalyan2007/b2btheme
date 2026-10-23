@@ -107,7 +107,7 @@
 // ============================================================================
 
 .stie-token-inline-text {
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-style: italic;
 
     &:hover {

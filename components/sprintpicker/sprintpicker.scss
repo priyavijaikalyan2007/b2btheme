@@ -86,7 +86,7 @@
 
     &:hover {
         color: var(--theme-primary-text);
-        border-color: $primary;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 }
@@ -127,7 +127,7 @@
 }
 
 .sprintpicker-list-item-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
@@ -282,7 +282,7 @@
 // Selected sprint day
 .sprintpicker-calendar-day-selected {
     .sprintpicker-calendar-day-num {
-        background-color: $primary;
+        background-color: var(--theme-primary);
         color: var(--theme-text-on-primary);
         font-weight: $font-weight-semibold;
     }

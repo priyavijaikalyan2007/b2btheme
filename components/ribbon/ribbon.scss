@@ -1542,7 +1542,7 @@ $ribbon-ctrl-border-radius: $border-radius;
 
     &:hover
     {
-        background-color: $blue-600;
+        background-color: var(--theme-primary);
     }
 
     i { font-size: $font-size-lg; }

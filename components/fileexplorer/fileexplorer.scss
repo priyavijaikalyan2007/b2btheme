@@ -280,7 +280,7 @@
 
 .fileexplorer-breadcrumb-separator {
     font-size: $font-size-2xs;
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 .fileexplorer-breadcrumb-home {
@@ -637,7 +637,7 @@
     }
 
     &:disabled {
-        color: $gray-400;
+        color: var(--theme-text-muted);
         cursor: not-allowed;
     }
 

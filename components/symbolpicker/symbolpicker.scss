@@ -75,7 +75,7 @@ $sp-transition:         150ms ease;
     &:focus-visible
     {
         outline: none;
-        border-color: $primary;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($primary, 0.25);
     }
 }
@@ -146,10 +146,10 @@ $sp-transition:         150ms ease;
 
     &.active
     {
-        background: $primary;
+        background: var(--theme-primary);
         border-radius: $border-radius-sm;
         color: var(--theme-text-on-primary);
-        border-color: $primary;
+        border-color: var(--theme-primary);
     }
 }
 
@@ -175,7 +175,7 @@ $sp-transition:         150ms ease;
     &:focus
     {
         outline: none;
-        border-color: $primary;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($primary, 0.2);
     }
 }
@@ -226,7 +226,7 @@ $sp-transition:         150ms ease;
     &:focus-visible
     {
         outline: 2px solid $primary;
-        border-color: $primary;
+        border-color: var(--theme-primary);
     }
 }
 
@@ -394,7 +394,7 @@ $sp-transition:         150ms ease;
 .symbolpicker-cell-highlighted
 {
     background: rgba($primary, 0.1);
-    border-color: $primary;
+    border-color: var(--theme-primary);
 }
 
 .symbolpicker-cell-recent
@@ -466,7 +466,7 @@ $sp-transition:         150ms ease;
 {
     padding: $sp-6 $sp-16;
     border: $border-width solid $primary;
-    background: $primary;
+    background: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;

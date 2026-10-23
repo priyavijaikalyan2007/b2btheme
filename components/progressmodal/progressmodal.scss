@@ -160,7 +160,7 @@
 }
 
 .progressmodal-bar {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     border-radius: $border-radius-sm;
     transition: width 0.3s ease, background-color 0.5s ease;
 }
@@ -314,7 +314,7 @@
 
     &:hover {
         color: var(--theme-primary-text);
-        border-color: $primary;
+        border-color: var(--theme-primary);
     }
 
     &:focus {

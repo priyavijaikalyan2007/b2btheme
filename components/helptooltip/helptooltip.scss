@@ -20,7 +20,7 @@
     align-items: center;
     justify-content: center;
     position: absolute;
-    background: $primary;
+    background: var(--theme-primary);
     color: $gray-50;
     border: none;
     border-radius: 50%;

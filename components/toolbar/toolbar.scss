@@ -550,7 +550,7 @@ $toolbar-transition-fade:   200ms;
 
 // Disabled — muted, no interaction
 .toolbar-tool-disabled {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     opacity: 0.5;
     cursor: default;
     pointer-events: none;

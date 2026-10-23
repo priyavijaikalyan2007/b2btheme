@@ -286,7 +286,7 @@
 }
 
 .reasoning-status-pending {
-    color: $gray-400;
+    color: var(--theme-text-muted);
 }
 
 // ============================================================================

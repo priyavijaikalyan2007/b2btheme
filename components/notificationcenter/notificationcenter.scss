@@ -331,7 +331,7 @@
     background: none;
     border: none;
     padding: $sp-2;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     cursor: pointer;
     opacity: 0;
     transition: opacity 150ms ease, color 150ms ease;

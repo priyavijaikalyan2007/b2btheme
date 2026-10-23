@@ -206,7 +206,7 @@
 
     .formdialog-step-number
     {
-        background-color: $blue-600;
+        background-color: var(--theme-primary);
         color: $gray-50;
     }
 }
@@ -404,7 +404,7 @@
     &:focus
     {
         outline: none;
-        border-color: $blue-600;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 1px $blue-600;
     }
 
@@ -547,7 +547,7 @@
 
 .formdialog-divider-active
 {
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
 }
 
 // ============================================================================

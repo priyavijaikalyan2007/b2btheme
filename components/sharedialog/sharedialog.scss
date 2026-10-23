@@ -226,7 +226,7 @@
 
 .sharedialog-access-empty
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
     padding: $sp-12 0;
     text-align: center;
@@ -268,7 +268,7 @@
 {
     background: none;
     border: none;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-xl;
     cursor: pointer;
     padding: 0 $sp-4;

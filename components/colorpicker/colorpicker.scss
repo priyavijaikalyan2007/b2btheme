@@ -297,12 +297,12 @@
 }
 
 .colorpicker-tab-active {
-    background: $primary;
+    background: var(--theme-primary);
     color: var(--theme-text-on-primary);
-    border-color: $primary;
+    border-color: var(--theme-primary);
 
     &:hover {
-        background: $primary;
+        background: var(--theme-primary);
     }
 }
 
@@ -338,7 +338,7 @@
     &:focus {
         outline: 2px solid $primary;
         outline-offset: -1px;
-        border-color: $primary;
+        border-color: var(--theme-primary);
     }
 }
 

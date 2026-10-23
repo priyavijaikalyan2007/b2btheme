@@ -42,7 +42,7 @@
 
 // Focus-within state — highlights the entire input wrapper
 .searchbox-input-wrap:focus-within {
-    border-color: $blue-600;
+    border-color: var(--theme-primary);
     box-shadow: $shadow-focus;
 }
 
@@ -52,7 +52,7 @@
 
 // Static search icon preceding the input
 .searchbox-icon {
-    color: $gray-400; // keep $gray-400 for disabled-style muted icon
+    color: var(--theme-text-muted); // keep $gray-400 for disabled-style muted icon
     font-size: $font-size-base;
     flex-shrink: 0;
     margin-right: $sp-6;
@@ -75,7 +75,7 @@
 }
 
 .searchbox-input::placeholder {
-    color: $gray-400; // keep $gray-400 for disabled-style muted placeholder
+    color: var(--theme-text-muted); // keep $gray-400 for disabled-style muted placeholder
 }
 
 // ============================================================================
@@ -105,7 +105,7 @@
     justify-content: center;
     border: none;
     background: none;
-    color: $gray-400; // keep $gray-400 for disabled-style muted icon
+    color: var(--theme-text-muted); // keep $gray-400 for disabled-style muted icon
     cursor: pointer;
     padding: $sp-2;
     flex-shrink: 0;

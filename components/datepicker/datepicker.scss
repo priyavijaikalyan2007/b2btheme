@@ -171,7 +171,7 @@
 }
 
 .datepicker-day-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
@@ -217,7 +217,7 @@
 }
 
 .datepicker-month-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }
@@ -254,7 +254,7 @@
 }
 
 .datepicker-year-selected {
-    background-color: $primary;
+    background-color: var(--theme-primary);
     color: var(--theme-text-on-primary);
     font-weight: $font-weight-semibold;
 }

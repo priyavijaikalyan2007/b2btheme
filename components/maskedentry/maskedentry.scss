@@ -23,7 +23,7 @@
 
 // Optional label above the input group
 .maskedentry-label {
-    color: $gray-700;
+    color: var(--theme-text-secondary);
     font-size: $font-size-sm;
     margin-bottom: 0.25rem;
 }

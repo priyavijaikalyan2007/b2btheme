@@ -129,7 +129,7 @@
     transition: background-color 150ms ease;
 
     &:hover {
-        background: $primary;
+        background: var(--theme-primary);
     }
 
     &:focus-visible {
@@ -139,7 +139,7 @@
 }
 
 .stacklayout-divider-active {
-    background: $primary;
+    background: var(--theme-primary);
 }
 
 // ============================================================================

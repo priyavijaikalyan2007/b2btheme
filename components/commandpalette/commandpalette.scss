@@ -69,7 +69,7 @@
 }
 
 .commandpalette-search-icon {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-xl;
     flex-shrink: 0;
     margin-right: $sp-12;
@@ -139,7 +139,7 @@
     cursor: default;
 
     .commandpalette-item-label {
-        color: $gray-400;
+        color: var(--theme-text-muted);
     }
 }
 
@@ -152,7 +152,7 @@
 }
 
 .commandpalette-recent-icon {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     flex-shrink: 0;
 }

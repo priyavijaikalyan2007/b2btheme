@@ -323,7 +323,7 @@
 
 .applauncher-search-icon
 {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-base;
     flex-shrink: 0;
 }
@@ -575,7 +575,7 @@
     font-weight: $font-weight-semibold;
     padding: $sp-1 $sp-4;
     color: $gray-50;
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
     border-radius: $border-radius-sm;
     line-height: $line-height-base;
 }
@@ -608,7 +608,7 @@
     background: none;
     border: none;
     padding: $sp-2;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-xs;
     cursor: pointer;
     opacity: 0;

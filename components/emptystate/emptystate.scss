@@ -76,7 +76,7 @@
 
 // Icon
 .emptystate-icon {
-    color: $gray-400;
+    color: var(--theme-text-muted);
     margin-bottom: 1rem;
     line-height: 1;
 }

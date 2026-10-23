@@ -264,8 +264,8 @@
 
 .rm-create-btn {
     color: var(--theme-text-on-primary);
-    background-color: $blue-600;
-    border-color: $blue-600;
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
 
     &:hover {
         background-color: $blue-700;
@@ -364,7 +364,7 @@
     outline: none;
 
     &:focus {
-        border-color: $blue-600;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($blue-600, 0.15);
     }
 }
@@ -430,7 +430,7 @@
     color: var(--theme-text-primary);
 
     &:focus {
-        border-color: $blue-600;
+        border-color: var(--theme-primary);
         box-shadow: 0 0 0 2px rgba($blue-600, 0.15);
         outline: none;
     }

@@ -87,8 +87,8 @@
 }
 
 .stepper-step-active .stepper-marker {
-    border-color: $primary;
-    background: $primary;
+    border-color: var(--theme-primary);
+    background: var(--theme-primary);
     color: $gray-50;
 }
 
@@ -204,7 +204,7 @@
     top: 0;
     left: 0;
     height: 4px;
-    background: $primary;
+    background: var(--theme-primary);
     transition: width 200ms ease;
 }
 
@@ -221,7 +221,7 @@
     top: 0;
     left: 0;
     height: 100%;
-    background: $primary;
+    background: var(--theme-primary);
     transition: width 200ms ease;
 }
 

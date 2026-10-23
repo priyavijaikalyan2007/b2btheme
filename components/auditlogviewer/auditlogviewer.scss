@@ -111,7 +111,7 @@
 
     &:focus
     {
-        border-color: $blue-600;
+        border-color: var(--theme-primary);
         box-shadow: $shadow-focus;
     }
 }
@@ -456,9 +456,9 @@
 
 .auditlog-pagination-btn-active
 {
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
     color: $gray-50;
-    border-color: $blue-600;
+    border-color: var(--theme-primary);
 
     &:hover
     {
@@ -470,7 +470,7 @@
 .auditlog-pagination-dots
 {
     padding: 0 $sp-4;
-    color: $gray-400;
+    color: var(--theme-text-muted);
     font-size: $font-size-sm;
 }
 

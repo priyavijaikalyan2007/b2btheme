@@ -52,7 +52,7 @@
     justify-content: center;
     border-radius: 50%;
     border: none;
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
     color: $gray-50;
     font-size: $font-size-xs;
     cursor: pointer;
@@ -390,7 +390,7 @@
 .commentoverlay-reply-send {
     padding: $sp-6 $sp-12;
     border: none;
-    background-color: $blue-600;
+    background-color: var(--theme-primary);
     color: $gray-50;
     font-size: $font-size-sm;
     border-radius: $border-radius;
@@ -551,8 +551,8 @@
 }
 
 .commentoverlay-edit-save {
-    background-color: $blue-600;
-    border-color: $blue-600;
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
     color: $gray-50;
 
     &:hover {
