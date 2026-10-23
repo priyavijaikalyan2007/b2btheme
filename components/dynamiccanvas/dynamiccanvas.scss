@@ -185,7 +185,7 @@
     right: -0.5rem;
     font-size: 0.75rem;
     line-height: 1;
-    color: var(--theme-warning, #{$yellow-500});
+    color: var(--theme-warning-text);
     // The glyph marks the state; it never takes the click away from the note.
     pointer-events: none;
 }
@@ -219,7 +219,7 @@
 {
     display: block;
     margin-bottom: $spacer * 0.25;
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
 }
 
 .dyncanvas-error-detail

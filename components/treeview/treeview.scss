@@ -321,7 +321,7 @@ $tv-z-context-menu: 1050;
     transition: opacity 150ms ease;
 
     &:hover {
-        color: var(--theme-warning);
+        color: var(--theme-warning-text);
     }
 
     .treeview-node-row:hover & {
@@ -330,7 +330,7 @@ $tv-z-context-menu: 1050;
 }
 
 .treeview-node-starred {
-    color: var(--theme-warning);
+    color: var(--theme-warning-text);
     opacity: 1;
 }
 
@@ -487,7 +487,7 @@ $tv-z-context-menu: 1050;
     padding: $sp-4 $sp-8;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: var(--theme-warning);
+    color: var(--theme-warning-text);
 }
 
 .treeview-starred-list {

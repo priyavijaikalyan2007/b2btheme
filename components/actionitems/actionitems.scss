@@ -226,7 +226,7 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-status-done {
-    color: var(--theme-success);
+    color: var(--theme-success-text);
 }
 
 .actionitems-status-archived {
@@ -346,7 +346,7 @@ $ai-tag-font-size: $font-size-2xs;
 
 // Priority colour variants
 .actionitems-priority-high {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
 
     .actionitems-priority-dot {
         background-color: var(--theme-danger);
@@ -354,7 +354,7 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-priority-medium {
-    color: var(--theme-warning);
+    color: var(--theme-warning-text);
 
     .actionitems-priority-dot {
         background-color: var(--theme-warning);
@@ -362,7 +362,7 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-priority-low {
-    color: var(--theme-success);
+    color: var(--theme-success-text);
 
     .actionitems-priority-dot {
         background-color: var(--theme-success);
@@ -387,11 +387,11 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-overdue {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
 }
 
 .actionitems-due-today {
-    color: var(--theme-warning);
+    color: var(--theme-warning-text);
 }
 
 // ============================================================================
@@ -729,7 +729,7 @@ $ai-tag-font-size: $font-size-2xs;
 }
 
 .actionitems-bulk-btn-danger {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
     border-color: var(--theme-danger);
 
     &:hover {
@@ -856,7 +856,7 @@ $ai-tag-font-size: $font-size-2xs;
     line-height: 1;
 
     &:hover {
-        color: var(--theme-danger);
+        color: var(--theme-danger-text);
     }
 
     &:focus-visible {

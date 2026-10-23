@@ -66,10 +66,10 @@
 }
 
 .contextmenu-item-danger {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
 
     .contextmenu-icon {
-        color: var(--theme-danger);
+        color: var(--theme-danger-text);
     }
 
     &:hover,

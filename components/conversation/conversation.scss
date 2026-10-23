@@ -524,7 +524,7 @@
 
 // Fill state for negatively-selected feedback (e.g. thumbs-down active).
 .conversation-feedback-active.conversation-feedback-negative {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
 }
 
 // ============================================================================
@@ -716,7 +716,7 @@
     align-items: center;
     gap: 0.375rem;
     font-weight: $font-weight-semibold;
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
 }
 
 // Human-readable error message.

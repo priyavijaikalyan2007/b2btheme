@@ -241,12 +241,26 @@ function resolveDefaultLevelColors(): Record<LogLevel, string>
 /** Resolve theme tokens from design token CSS custom properties. */
 function resolveThemeTokens(): ThemeTokens
 {
+    // DEBT-VR-11. These used to be RESOLVED to concrete hex values here,
+    // once, at construction. Every one of them is then written into an
+    // inline style, so a console built in light mode kept light-mode
+    // text after the page flipped to dark: measured, the message colour
+    // and the surface beneath it were the SAME value, a contrast ratio
+    // of 1.00 — text rendered in the colour of its own background.
+    //
+    // A `var()` in an inline style is re-resolved by the browser on
+    // every repaint, so the console follows the theme with no listener
+    // and no re-render. The fallbacks are the ones the resolver used, so
+    // a host that has not loaded custom.css sees what it saw before.
+    //
+    // `resolveThemeColor` is still used for the LEVEL colours, which are
+    // fed to `readableOn` and therefore have to be real numbers.
     return {
-        bg:          resolveThemeColor("--theme-surface-bg",        "#f8fafc"),
-        text:        resolveThemeColor("--theme-text-primary",      "#1e293b"),
-        entryBorder: resolveThemeColor("--theme-border-subtle",     "#e2e8f0"),
-        headerBg:    resolveThemeColor("--theme-surface-raised-bg", "#f1f5f9"),
-        muted:       resolveThemeColor("--theme-text-muted",        "#64748b"),
+        bg:          "var(--theme-surface-bg, #f8fafc)",
+        text:        "var(--theme-text-primary, #1e293b)",
+        entryBorder: "var(--theme-border-subtle, #e2e8f0)",
+        headerBg:    "var(--theme-surface-raised-bg, #f1f5f9)",
+        muted:       "var(--theme-text-muted, #64748b)",
     };
 }
 

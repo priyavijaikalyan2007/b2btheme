@@ -34,7 +34,8 @@
 
 .breadcrumb-nav .breadcrumb-item + .breadcrumb-item::before {
     content: var(--breadcrumb-nav-divider);
-    color: $breadcrumb-divider-color;
+    // DEBT-VR-11. $breadcrumb-divider-color is $gray-500, static.
+    color: var(--theme-text-muted);
     padding-right: $breadcrumb-item-padding-x;
 }
 

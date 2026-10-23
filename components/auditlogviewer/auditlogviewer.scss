@@ -337,13 +337,13 @@
 
 .auditlog-severity-warning
 {
-    color: var(--theme-warning);
+    color: var(--theme-warning-text);
     background-color: rgba($yellow-500, 0.12);
 }
 
 .auditlog-severity-critical
 {
-    color: var(--theme-danger);
+    color: var(--theme-danger-text);
     background-color: rgba($red-600, 0.12);
 }
 

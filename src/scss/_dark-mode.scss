@@ -394,7 +394,10 @@
     --theme-navrail-item-active-bg:   #{rgba($blue-400, 0.15)};
     --theme-navrail-item-active-fg:   #{$blue-300};
     --theme-navrail-item-active-stripe: #{$blue-400};
-    --theme-navrail-category-fg:      #{$gray-500};
+    // DEBT-VR-11. Was $gray-500 in BOTH blocks — the third token this
+    // sweep found defined twice with the same value, which reads as a
+    // pair and behaves as one. #64748b measured 2.80 on the dark rail.
+    --theme-navrail-category-fg:      #{$gray-400};
     --theme-navrail-header-title-fg:  #{$gray-100};
     --theme-navrail-header-subtitle-fg: #{$gray-400};
     --theme-navrail-header-mark-bg:   #{$blue-500};

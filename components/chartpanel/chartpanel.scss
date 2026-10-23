@@ -107,7 +107,7 @@
     text-align: center;
     padding: $sp-12;
     gap: $sp-4;
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
     font-size: $font-size-sm;
 }
 
@@ -118,7 +118,7 @@
     width: 24px;
     height: 24px;
     border: 2px solid currentColor;
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
     font-weight: $font-weight-bold;
     line-height: 1;
 }

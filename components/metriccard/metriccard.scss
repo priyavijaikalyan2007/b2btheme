@@ -253,7 +253,7 @@ a.metriccard {
 
 .metriccard-error {
     font-size: $font-size-xs;
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
     line-height: 1.3;
     margin-top: $sp-2;
 }

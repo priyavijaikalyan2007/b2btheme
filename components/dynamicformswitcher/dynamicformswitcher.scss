@@ -207,7 +207,7 @@
 
 .dynamicformswitcher-required
 {
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
 }
 
 .dynamicformswitcher-help
@@ -219,7 +219,7 @@
 .dynamicformswitcher-error
 {
     font-size: $font-size-sm;
-    color: var(--theme-danger, #{$red-600});
+    color: var(--theme-danger-text);
 }
 
 .dynamicformswitcher-group-invalid

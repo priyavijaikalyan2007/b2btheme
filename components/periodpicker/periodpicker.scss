@@ -184,7 +184,7 @@
 }
 
 .periodpicker-cell-disabled {
-    color: var(--theme-border-color);
+    color: var(--theme-text-muted);   // DEBT-VR-11: a border token is not a text colour
     cursor: not-allowed;
 
     &:hover {

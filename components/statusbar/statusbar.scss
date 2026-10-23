@@ -93,7 +93,13 @@
 
 // Pipe character divider — muted colour, no shrink
 .statusbar-divider {
-    color: var(--theme-border-color);
+    // DEBT-VR-11. A `|` glyph is TEXT, however decorative it looks:
+    // it is rendered from the font and read by the eye. The border
+    // token measured 1.34 light / 1.76 dark against a 4.5 floor.
+    // `--theme-text-muted` is the lightest token that carries, and
+    // the separator reads heavier than it did — which is the cost
+    // of it being legible.
+    color: var(--theme-text-muted);
     flex-shrink: 0;
     padding: 0 0.125rem;
 }
