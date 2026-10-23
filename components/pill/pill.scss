@@ -83,6 +83,40 @@
     --pill-border-color: transparent;
 }
 
+
+// ============================================================================
+// COLOR PRESETS — DARK
+// ============================================================================
+//
+// DEBT-VR-11. Each preset pairs a 10% tint with a DARK foreground, which
+// is right on a light surface and inverts badly on a dark one: the tint
+// composites to roughly #132336 and `$blue-700` on that measured 2.68
+// against a 4.5 floor. The tint is fine in both themes — it is the
+// FOREGROUND that has to move, which is the same shape as every other
+// single-value token this sweep found. Measured on the ground and the
+// raised surface, worst 6.25.
+
+@media (prefers-color-scheme: dark)
+{
+    :root:not([data-theme="light"])
+    {
+        .pill-blue   { --pill-fg: #93c5fd; }   // 6.25
+        .pill-green  { --pill-fg: #86efac; }   // 7.97
+        .pill-red    { --pill-fg: #fca5a5; }   // 6.77
+        .pill-purple { --pill-fg: #d8b4fe; }   // 6.84
+        .pill-orange { --pill-fg: #fdba74; }   // 6.97
+    }
+}
+
+:root[data-theme="dark"]
+{
+    .pill-blue   { --pill-fg: #93c5fd; }
+    .pill-green  { --pill-fg: #86efac; }
+    .pill-red    { --pill-fg: #fca5a5; }
+    .pill-purple { --pill-fg: #d8b4fe; }
+    .pill-orange { --pill-fg: #fdba74; }
+}
+
 // ============================================================================
 // SIZE VARIANTS
 // ============================================================================

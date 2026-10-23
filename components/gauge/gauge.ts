@@ -16,6 +16,58 @@
 
 // @entrypoint
 
+/**
+ * A foreground that is readable on an arbitrary caller-supplied fill.
+ *
+ * DEBT-VR-11. A tile's background is the gauge's own value colour,
+ * which the caller supplies or the thresholds pick, so it is DATA.
+ * `.gauge-tile` set `color: $gray-50` under the comment "White text on
+ * coloured background" — measured on the amber a warning threshold
+ * produces, that is 2.87 against a 4.5 floor. The comment assumed what
+ * this function computes.
+ *
+ * Duplicated per component on purpose: each is bundled as a standalone
+ * IIFE and cannot import a shared module.
+ *
+ * @param background - The fill the text will sit on, as a hex string.
+ * @returns `#000000` or `#ffffff`, whichever carries on that fill.
+ */
+function readableOn(background: string): string
+{
+    const hex = background.trim().replace("#", "");
+
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(hex))
+    {
+        return "#ffffff";   // not a hex we can read; keep the previous default
+    }
+
+    const full = hex.length === 3
+        ? hex.split("").map(function (c) { return c + c; }).join("")
+        : hex;
+
+    const channel = function (v: number): number
+    {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const r = channel(parseInt(full.slice(0, 2), 16));
+    const g = channel(parseInt(full.slice(2, 4), 16));
+    const b = channel(parseInt(full.slice(4, 6), 16));
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Contrast against white is (1.05)/(L+0.05); against black
+    // (L+0.05)/0.05. They cross at L ~= 0.179.
+    //
+    // MUST be an extreme. `#0f172a` has L = 0.0088, not 0, and the
+    // best of white and #0f172a bottoms out at 4.23 on #7b7b7b —
+    // so the guarantee above is only true with true black, where
+    // the worst case over the whole range is 4.61. Two copies of
+    // this helper were added from a stale snapshot and carried the
+    // old constant; the gauge tile measured 3.94 because of it.
+    return luminance > 0.179 ? "#000000" : "#ffffff";
+}
+
 // ============================================================================
 // S1: TYPES AND INTERFACES
 // ============================================================================
@@ -997,8 +1049,9 @@ export class Gauge implements GaugeHandle
         }
 
         // Set background colour
-        this.rootEl.style.backgroundColor =
-            this.opts.backgroundColor || color;
+        const fill = this.opts.backgroundColor || color;
+        this.rootEl.style.backgroundColor = fill;
+        this.rootEl.style.color = readableOn(fill);
 
         // Value text
         this.valueDisplayEl.textContent = this.getFormattedValue(isOver);
@@ -1032,8 +1085,18 @@ export class Gauge implements GaugeHandle
         const isOver = this.isOverLimit() || this.isOverdue();
         this.valueDisplayEl.textContent = this.getFormattedValue(isOver);
 
-        // Update value colour for ring (text inherits from parent)
-        this.valueDisplayEl.style.color = color;
+        // DEBT-VR-11. This set the value TEXT to the ring's STROKE colour.
+        // A stroke is a graphic and clears WCAG at 3:1; text needs 4.5,
+        // and the same amber measured 2.49 on the page surface. The
+        // inline style also beat the `--theme-text-primary` rule in the
+        // stylesheet, so the earlier fix to `.gauge-ring-value` never
+        // applied to a gauge that had rendered.
+        //
+        // The number is not the only carrier of status — the arc keeps
+        // the colour, and an over-limit gauge also takes
+        // `.gauge-overlimit`. Colour alone was never allowed to be the
+        // signal (WCAG 1.4.1), so losing it here costs nothing the
+        // component was entitled to rely on.
     }
 
     /**

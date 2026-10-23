@@ -199,9 +199,16 @@ function readableOn(background: string): string
     const b = channel(parseInt(full.slice(4, 6), 16));
     const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-    // Contrast against white is (1.05)/(L+0.05); against near-black
-    // (L+0.05)/0.0947. They cross at L ~= 0.179.
-    return luminance > 0.179 ? "#0f172a" : "#ffffff";
+    // Contrast against white is (1.05)/(L+0.05); against black
+    // (L+0.05)/0.05. They cross at L ~= 0.179.
+    //
+    // MUST be an extreme. `#0f172a` has L = 0.0088, not 0, and the
+    // best of white and #0f172a bottoms out at 4.23 on #7b7b7b —
+    // so the guarantee above is only true with true black, where
+    // the worst case over the whole range is 4.61. Two copies of
+    // this helper were added from a stale snapshot and carried the
+    // old constant; the gauge tile measured 3.94 because of it.
+    return luminance > 0.179 ? "#000000" : "#ffffff";
 }
 
 function getInitialsColor(name: string): string

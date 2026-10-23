@@ -39,6 +39,25 @@
  * Getting this wrong reports every element inside a hover tint as a
  * failure, which is why a naive version of this check is worse than none.
  *
+ * THE SKIP LIST, AUDITED 2026-10-23. A skip is where an audit hides its
+ * own blind spots, so each one is counted by reason and the totals were
+ * read rather than assumed. Across 274 page/theme runs, 15,446 skips:
+ *
+ *   14,056  no rendered box   — almost entirely `<option>`. A native
+ *                               select popup is drawn by the operating
+ *                               system, not from this stylesheet, so
+ *                               there is nothing here to measure OR fix.
+ *    1,310  display:none      — `<script>` and `<title>`.
+ *       64  opacity:0         — hover-revealed controls, e.g. a drag
+ *                               handle. Covered by the hover limitation
+ *                               below rather than by this skip.
+ *       14  visibility:hidden
+ *        2  transparent text
+ *
+ * The one skip that was NOT legitimate is already gone: `aria-hidden`
+ * subtrees were skipped until 2026-10-23, which removed 1,092 visible
+ * elements and three real defects from the population.
+ *
  * WHAT IT STILL CANNOT SEE. Text over an image or a gradient — it reads
  * `background-color` only, so a gradient reads as the colour beneath it.
  * Text over an SVG `fill` painted by an ancestor. Anything that needs a
@@ -80,7 +99,9 @@ type Finding = {
  * examines nothing passes, and ADR-196 is the entry about that.
  */
 function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
-    considered: number; skipped: number; }
+    considered: number; skipped: number;
+    skipReasons: Record<string, number>;
+    skipSamples: Record<string, string>; }
 {
     const parse = (c: string): [number, number, number, number] =>
     {
@@ -135,8 +156,23 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
     };
 
     const findings: Omit<Finding, "page" | "theme">[] = [];
+    const skipReasons: Record<string, number> = {};
+    const skipSamples: Record<string, string> = {};
     let considered = 0;
     let skipped = 0;
+
+    const skip = (why: string, el: Element): void =>
+    {
+        skipped += 1;
+        skipReasons[why] = (skipReasons[why] ?? 0) + 1;
+        if (!skipSamples[why])
+        {
+            skipSamples[why] = `${el.tagName.toLowerCase()}`
+                + `${typeof el.className === "string" && el.className
+                    ? "." + el.className.trim().split(/\s+/)[0] : ""}`
+                + ` :: ${(el.textContent ?? "").trim().slice(0, 30)}`;
+        }
+    };
 
     for (const el of Array.from(document.querySelectorAll<HTMLElement>("*")))
     {
@@ -155,19 +191,20 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         // 3.07 against a 4.5 floor, invisible to this audit for as long
         // as the skip stood.
         const cs = getComputedStyle(el);
-        if (cs.visibility === "hidden" || cs.display === "none"
-            || Number(cs.opacity) === 0)
-        { skipped += 1; continue; }
+        if (cs.display === "none") { skip("display:none", el); continue; }
+        if (cs.visibility === "hidden") { skip("visibility:hidden", el); continue; }
+        if (Number(cs.opacity) === 0) { skip("opacity:0", el); continue; }
 
         // Rendered boxes rather than one bounding rect: an inline element
         // whose own box collapses can still paint text through its line
         // boxes, and a width/height test drops it.
-        if (el.getClientRects().length === 0) { skipped += 1; continue; }
+        if (el.getClientRects().length === 0)
+        { skip("no rendered box", el); continue; }
 
         considered += 1;
 
         const fg = parse(cs.color);
-        if (fg[3] === 0) { continue; }
+        if (fg[3] === 0) { skip("transparent text", el); continue; }
 
         // Walk up compositing until opaque. `document.body` is the floor;
         // if everything above it is transparent the page background is
@@ -209,7 +246,7 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         }
     }
 
-    return { findings, considered, skipped };
+    return { findings, considered, skipped, skipReasons, skipSamples };
 }
 
 /**
@@ -264,6 +301,8 @@ test.describe("rendered text contrast", () =>
                     page, theme,
                     considered: result.considered,
                     skipped: result.skipped,
+                    skipReasons: result.skipReasons,
+                    skipSamples: result.skipSamples,
                     findings: result.findings.map(
                         (f) => ({ page, theme, ...f })),
                 }));
