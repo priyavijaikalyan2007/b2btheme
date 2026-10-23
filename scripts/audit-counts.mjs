@@ -552,7 +552,7 @@ const BASELINES = {
     // The clause is the contract. Without it a handle and its class
     // agree by luck, which is how 6 of 14 pairs stood before PAT-1.
     handlesWithoutImplements: 0,
-    trackerOpen: 1,
+    trackerOpen: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -825,7 +825,7 @@ const FLOORS = {
     // be reworded and it can move between the two markers, but it does
     // not stop existing — so their SUM is the floor, while
     // `trackerOpen` is an exact baseline.
-    trackerResolved: 105,
+    trackerResolved: 106,
     diagramengineBundleExports: 138,
     tracedComponents: 109,
     traceCalls: 301,

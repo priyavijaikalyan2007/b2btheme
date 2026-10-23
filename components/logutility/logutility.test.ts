@@ -573,11 +573,18 @@ describe("window globals", () =>
         expect(typeof win.resetLogUtility).toBe("function");
     });
 
-    test("LogUtility class should be on window", () =>
+    // PAT-1. This test asserted the OPPOSITE — that the class IS on
+    // `window` — and it passed right through the sweep that took 88
+    // classes off, because `window.LogUtility = LogUtilityImpl` files
+    // the class under a name that is not its own and the sweep matched
+    // only where the two agreed. A test pinning the defect is why the
+    // defect was still live on the CDN fifteen days later.
+    test("LogUtility_TheClassIsNotOnWindow", () =>
     {
         const win = window as unknown as Record<string, unknown>;
 
-        expect(typeof win.LogUtility).toBe("function");
+        expect(win.LogUtility).toBeUndefined();
+        expect(typeof win.createLogUtility).toBe("function");
     });
 });
 

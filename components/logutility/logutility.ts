@@ -429,4 +429,3 @@ export function resetLogUtility(): void
 
 window.createLogUtility = createLogUtility;
 window.resetLogUtility = resetLogUtility;
-window.LogUtility = LogUtilityImpl;

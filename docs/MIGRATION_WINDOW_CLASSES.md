@@ -79,6 +79,27 @@ class.
 
 The arguments and the return values are unchanged.
 
+
+## Three that this guide got wrong, corrected 2026-10-23
+
+The original sweep matched a registration only where the GLOBAL NAME and
+the CLASS NAME were the same. Three were filed under a different name and
+survived:
+
+- `window.WorkspaceSwitcher = TenantSwitcher` — the deprecated alias.
+- `window["Ribbon"] = RibbonImpl` — the class under its own handle
+  interface's name, which is the case this change exists to prevent.
+- `window.LogUtility = LogUtilityImpl`.
+
+`TenantSwitcher` was listed below as removed and was still reachable as
+`window.WorkspaceSwitcher`. `Ribbon` and `LogUtility` were never listed
+at all, because the sweep never saw them. All three are gone now, and
+structure check `[24]` matches any global name rather than requiring it
+to equal the class name.
+
+`createWorkspaceSwitcher` and the `/components/workspaceswitcher/` CDN
+path are also removed, the consumer having migrated (DEBT-TS-1).
+
 ## The full list
 
 Every class below was removed from `window`. Use the factory in the
@@ -166,7 +187,9 @@ third column.
 | `TabbedPanel` | `tabbedpanel` | `window.createDockedTabbedPanel(...)` or `window.createFloatingTabbedPanel(...)` or `window.createTabbedPanel(...)` |
 | `TabbedPanelManager` | `tabbedpanel` | `window.createDockedTabbedPanel(...)` or `window.createFloatingTabbedPanel(...)` or `window.createTabbedPanel(...)` |
 | `Tagger` | `tagger` | `window.createTagger(...)` |
-| `TenantSwitcher` | `tenantswitcher` | `window.createTenantSwitcher(...)` or `window.createWorkspaceSwitcher(...)` |
+| `TenantSwitcher` | `tenantswitcher` | `window.createTenantSwitcher(...)` |
+| `Ribbon` | `ribbon` | `window.createRibbon(...)` |
+| `LogUtility` | `logutility` | `window.createLogUtility(...)` |
 | `TimePicker` | `timepicker` | `window.createTimePicker(...)` |
 | `Timeline` | `timeline` | `window.createTimeline(...)` |
 | `TimezonePicker` | `timezonepicker` | `window.createTimezonePicker(...)` |

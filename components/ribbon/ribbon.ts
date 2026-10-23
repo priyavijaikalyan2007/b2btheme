@@ -3399,5 +3399,4 @@ export function createRibbon(
     return ribbon;
 }
 
-window["Ribbon"] = RibbonImpl;
 window["createRibbon"] = createRibbon;

@@ -203,7 +203,7 @@ import type
     createTabbedPanel,
 } from "./tabbedpanel/tabbedpanel";
 import type { Tagger, createTagger } from "./tagger/tagger";
-import type { TenantSwitcher, createTenantSwitcher, createWorkspaceSwitcher } from "./tenantswitcher/tenantswitcher";
+import type { TenantSwitcher, createTenantSwitcher } from "./tenantswitcher/tenantswitcher";
 import type { createThemeToggle } from "./themetoggle/themetoggle";
 import type { Timeline, createTimeline } from "./timeline/timeline";
 import type { TimePicker, createTimePicker } from "./timepicker/timepicker";
@@ -744,7 +744,6 @@ declare global
         /** Published by the TenantSwitcher component. */
         WorkspaceSwitcher?: typeof TenantSwitcher;
         createTenantSwitcher?: typeof createTenantSwitcher;
-        createWorkspaceSwitcher?: typeof createWorkspaceSwitcher;
 
         /** Published by the Themetoggle component. */
         createThemeToggle?: typeof createThemeToggle;

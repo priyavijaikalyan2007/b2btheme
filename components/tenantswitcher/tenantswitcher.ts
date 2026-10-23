@@ -183,11 +183,6 @@ export interface TenantSwitcherHandle
     getActiveTenant(): Tenant | undefined;
     setActiveTenant(id: string): void;
     setTenants(tenants: Tenant[]): void;
-    setWorkspaces(tenants: Tenant[]): void;
-    setActiveWorkspace(id: string): void;
-    getActiveWorkspace(): Tenant | undefined;
-    addWorkspace(tenant: Tenant): void;
-    removeWorkspace(id: string): void;
     addTenant(tenant: Tenant): void;
     removeTenant(id: string): void;
 }
@@ -350,41 +345,6 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.filteredWs = this.orderedTenants();
         this.updateTriggerContent();
         if (this.opened && this.listEl) { this.renderList(); }
-    }
-
-    // ── Deprecated method aliases (ADR-154) ────────────────────────────
-    // The apps team drives this instance through setWorkspaces() today. These
-    // forward so a caller can move the method names in a separate change from
-    // the script tag, which is the whole point of overlapping one release.
-
-    /** @deprecated Use `setTenants`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-    setWorkspaces(tenants: Tenant[]): void
-    {
-        this.setTenants(tenants);
-    }
-
-    /** @deprecated Use `setActiveTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-    setActiveWorkspace(id: string): void
-    {
-        this.setActiveTenant(id);
-    }
-
-    /** @deprecated Use `getActiveTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-    getActiveWorkspace(): Tenant | undefined
-    {
-        return this.getActiveTenant();
-    }
-
-    /** @deprecated Use `addTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-    addWorkspace(tenant: Tenant): void
-    {
-        this.addTenant(tenant);
-    }
-
-    /** @deprecated Use `removeTenant`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-    removeWorkspace(id: string): void
-    {
-        this.removeTenant(id);
     }
 
     addTenant(tenant: Tenant): void
@@ -1062,91 +1022,3 @@ export function createTenantSwitcher(
 
 window.createTenantSwitcher = createTenantSwitcher;
 
-// ============================================================================
-// DEPRECATED ALIASES — remove one release after the consumer stops calling
-// them. NOT on a date. See DEBT-TS-1.
-// ============================================================================
-//
-// This component was WorkspaceSwitcher until ADR-154. The platform used
-// "workspace" and "tenant" for one concept, which produced real bugs in the
-// consuming app — a schema comment saying the two were equal was true but
-// was not a constraint, so fixtures created rows where they disagreed.
-//
-// The old names stay because the alternative is the failure mode this library
-// spent the month removing: a global that silently becomes undefined renders
-// nothing and reports nothing. The apps team asked for the overlap
-// explicitly, and when they moved first anyway their shell logged "CDN
-// WorkspaceSwitcher not loaded" against a 404.
-//
-// THIS CARRIED A DATE — "the release after 2026-10-08" — AND THE DATE WAS THE
-// WRONG INSTRUMENT. It came due on 2026-10-09 with the consumer still calling
-// every one of these functions in live source, so the only thing it measured
-// was how long we were willing to wait. Removing on schedule would have
-// reproduced the exact 404 the aliases exist to prevent. The condition
-// replaces it, and unlike a date it is checkable:
-//
-//   grep -rn "createWorkspaceSwitcher\|setWorkspaces\|setActiveWorkspace" \
-//        ~/Work/knobby/apps/typescript/ --include="*.ts"
-//
-// Empty means safe to remove. Until then these stay, however long that is.
-//
-// `createWorkspaceSwitcher` accepts the OLD option names and forwards them,
-// so a caller passing `workspaces` / `activeWorkspaceId` keeps working.
-
-/** @deprecated Use `TenantSwitcherOptions`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-export interface WorkspaceSwitcherOptions
-    extends Omit<TenantSwitcherOptions, "tenants" | "activeTenantId">
-{
-    workspaces: Tenant[];
-    activeWorkspaceId: string;
-}
-
-/** @deprecated Use `createTenantSwitcher`. Removed one release after the consumer stops calling it (DEBT-TS-1). */
-export function createWorkspaceSwitcher(
-    options: WorkspaceSwitcherOptions | TenantSwitcherOptions,
-    containerId?: string
-): TenantSwitcherHandle
-{
-    const legacy = options as WorkspaceSwitcherOptions;
-    const current = options as TenantSwitcherOptions;
-
-    // ERR-2, and the pair rather than one field, because this
-    // deprecated entry point accepts either shape and the body below
-    // reads `current.tenants ?? legacy.workspaces`. Guarding only
-    // `workspaces` would reject a caller who correctly passed the new
-    // name, and leaving it to createTenantSwitcher would answer a
-    // WorkspaceSwitcher caller with a message about `tenants`.
-    if (legacy.workspaces === undefined && current.tenants === undefined)
-    {
-        throw new Error(
-            `${LOG_PREFIX} options.workspaces is required. `
-            + "Pass it when creating the WorkspaceSwitcher, or move to "
-            + "createTenantSwitcher and pass options.tenants.");
-    }
-
-    if (legacy.activeWorkspaceId === undefined && current.activeTenantId === undefined)
-    {
-        throw new Error(
-            `${LOG_PREFIX} options.activeWorkspaceId is required. `
-            + "Pass it when creating the WorkspaceSwitcher, or move to "
-            + "createTenantSwitcher and pass options.activeTenantId.");
-    }
-
-    logWarn(
-        "createWorkspaceSwitcher is deprecated — use createTenantSwitcher. The "
-        + "component and its CDN path are now 'tenantswitcher' (ADR-154). "
-        + "It keeps working until this call site is gone, so migrate when "
-        + "you can rather than in a hurry; nothing is removed on a date.");
-
-    return createTenantSwitcher(
-        {
-            ...current,
-            tenants: current.tenants ?? legacy.workspaces,
-            activeTenantId: current.activeTenantId ?? legacy.activeWorkspaceId,
-        },
-        containerId);
-}
-
-window.WorkspaceSwitcher = TenantSwitcher;
-window.createWorkspaceSwitcher =
-    createWorkspaceSwitcher;

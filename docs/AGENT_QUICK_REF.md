@@ -1035,7 +1035,7 @@ $control-height-xl=46px
 
 - CSS: `components/logutility/logutility.css`
 - JS: `components/logutility/logutility.js`
-- Globals: `LogUtility()`, `createLogUtility()`, `resetLogUtility()`
+- Globals: `createLogUtility()`, `resetLogUtility()`
 - Exports: `interface LogConsoleHandle`, `interface LogUtilityOptions`, `interface Logger`, `interface LogUtility`, `function createLogUtility`, `function resetLogUtility`
 
 ### magnifier
@@ -1196,7 +1196,7 @@ $control-height-xl=46px
 
 - CSS: `components/ribbon/ribbon.css`
 - JS: `components/ribbon/ribbon.js`
-- Globals: `Ribbon()`, `createRibbon()`
+- Globals: `createRibbon()`
 - Exports: `type RibbonButtonSize`, `type RibbonControlType`, `type RibbonCollapseStage`, `type RibbonGalleryLayout`, `type RibbonQATPosition`, `interface RibbonControlBase`, `interface RibbonButton`, `interface RibbonSplitMenuItem`, `interface RibbonSplitButton`, `interface RibbonGalleryOption`, `interface RibbonGallery`, `interface RibbonDropdown`, `interface RibbonInput`, `interface RibbonColorPicker`, `interface RibbonNumberSpinner`, `interface RibbonCheckbox`, `interface RibbonToggleSwitch`, `interface RibbonSeparator`, `interface RibbonRowBreak`, `interface RibbonLabel`, `interface RibbonCustom`, `type RibbonControl`, `interface RibbonGroup`, `interface RibbonBackstageItem`, `interface RibbonTab`, `interface RibbonMenuItem`, `interface RibbonMenuBarItem`, `interface RibbonQATItem`, `interface RibbonColorOptions`, `interface RibbonOptions`, `interface Ribbon`, `interface RibbonState`, `class RibbonImpl`, `function createRibbon`
 
 ### ribbonbuilder
@@ -1364,8 +1364,8 @@ $control-height-xl=46px
 
 - CSS: `components/tenantswitcher/tenantswitcher.css`
 - JS: `components/tenantswitcher/tenantswitcher.js`
-- Globals: `WorkspaceSwitcher()`, `createTenantSwitcher()`, `createWorkspaceSwitcher()`
-- Exports: `interface Tenant`, `interface TenantSwitcherOptions`, `interface TenantSwitcherHandle`, `class TenantSwitcher`, `function createTenantSwitcher`, `interface WorkspaceSwitcherOptions`, `function createWorkspaceSwitcher`
+- Globals: `createTenantSwitcher()`
+- Exports: `interface Tenant`, `interface TenantSwitcherOptions`, `interface TenantSwitcherHandle`, `class TenantSwitcher`, `function createTenantSwitcher`
 
 ### themeinit
 

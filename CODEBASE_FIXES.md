@@ -2300,8 +2300,8 @@ the step exits 1 and the workflow fails.
 
 | Marker | Count | Meaning |
 |---|---|---|
-| `- [ ]` | **1** | Open. **DEBT-TS-1**, which waits on the apps team. |
-| `- [x]` | **97** | Closed. |
+| `- [ ]` | **0** | Open. |
+| `- [x]` | **98** | Closed. |
 | `- [=]` | **8** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |
 
@@ -4953,7 +4953,34 @@ limits the design knowingly accepts, not defects in shipped code.
   the first attempt repeated the same four-line explanation in all
   twelve definitions and came to 30619. The reason sits once, beside
   the helper that always knew it.
-- [ ] **DEBT-TS-1** Two CDN paths serve the same component. `/components/workspaceswitcher/` is a byte-identical copy of `/components/tenantswitcher/`, produced by the `copy:compat` build step, and the deprecated API surface (`createWorkspaceSwitcher`, `WorkspaceSwitcherOptions`, `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace`) forwards to the current one. The original note said **all of it comes out one release after 2026-10-08**, and `createWorkspaceSwitcher` warns on every call so the consuming app's console would show whether anyone was still on it.
+- [x] **DEBT-TS-1** **CLOSED 2026-10-23. The condition was met and
+  checked, not taken on report.** The apps team closed their issue; the
+  grep this entry named returns one line, a COMMENT in their
+  `component-library.d.ts`, and no live call site in either consumer.
+  The idp repo never used it.
+
+  Removed: the five deprecated methods, `WorkspaceSwitcherOptions`,
+  `createWorkspaceSwitcher`, `copy:compat` and the
+  `/components/workspaceswitcher/` CDN path.
+
+  **AND A CLASS GLOBAL PAT-1 HAD MISSED.** The deprecated block ended
+  `window.WorkspaceSwitcher = TenantSwitcher`, which structure check
+  `[24]` could not see: it required the GLOBAL NAME to equal the CLASS
+  NAME, and here they differ. Widening it to match any name found two
+  more immediately — `window["Ribbon"] = RibbonImpl`, the class under
+  its own HANDLE INTERFACE's name, and
+  `window.LogUtility = LogUtilityImpl`.
+
+  So PAT-1 removed 88 and three survived, live on the CDN for fifteen
+  days, while `docs/MIGRATION_WINDOW_CLASSES.md` listed `TenantSwitcher`
+  as removed and never listed the other two at all. A
+  `logutility.test.ts` case asserted *"LogUtility class should be on
+  window"* and passed throughout — the defect had a test holding it in
+  place. All three registrations are gone, the guide is corrected, the
+  test asserts the opposite, and the check is mutation-proven against an
+  aliased registration.
+
+  Original entry: two CDN paths serve the same component. `/components/workspaceswitcher/` is a byte-identical copy of `/components/tenantswitcher/`, produced by the `copy:compat` build step, and the deprecated API surface (`createWorkspaceSwitcher`, `WorkspaceSwitcherOptions`, `setWorkspaces` / `setActiveWorkspace` / `getActiveWorkspace` / `addWorkspace` / `removeWorkspace`) forwards to the current one. The original note said **all of it comes out one release after 2026-10-08**, and `createWorkspaceSwitcher` warns on every call so the consuming app's console would show whether anyone was still on it.
 
   **The deadline is withdrawn and replaced by a condition (2026-10-09).** The user reports the apps team is heads-down on unrelated work and will not get to this soon. So: **the aliases come out one release after the consuming app stops calling them, and not before.** No date. A date here was always the wrong instrument — it measured our patience rather than their readiness, and this one expired with nobody watching. The trigger is checkable in one command, which is the point:
 

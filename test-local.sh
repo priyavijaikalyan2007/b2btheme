@@ -562,7 +562,14 @@ CLASS_GLOBALS=0
 for f in components/*/*.ts; do
     case "$f" in *.test.ts) continue ;; esac
     for cls in $(grep -oE '^(export )?class [A-Z][A-Za-z0-9_]*' "$f" | awk '{print $NF}'); do
-        if grep -qE "^[[:space:]]*window(\[[[:space:]]*[\"']${cls}[\"'][[:space:]]*\]|\.${cls})[[:space:]]*=[[:space:]]*${cls}[[:space:]]*;" "$f"; then
+        # The GLOBAL NAME is a wildcard, not the class name. This used to
+        # require the two to match, and `window.WorkspaceSwitcher =
+        # TenantSwitcher` therefore sailed past it — a class on `window`
+        # that survived PAT-1's sweep, shipped on the CDN for fifteen
+        # days, and was named in the migration guide as removed. What
+        # makes a registration a defect is the VALUE being a class; the
+        # name it is filed under is the thing nobody can predict.
+        if grep -qE "^[[:space:]]*window(\[[[:space:]]*[\"'][A-Za-z_$][A-Za-z0-9_$]*[\"'][[:space:]]*\]|\.[A-Za-z_$][A-Za-z0-9_$]*)[[:space:]]*=[[:space:]]*${cls}[[:space:]]*;" "$f"; then
             fail "$f registers the class $cls on window"
             CLASS_GLOBALS=$((CLASS_GLOBALS + 1))
         fi
