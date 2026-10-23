@@ -270,8 +270,8 @@ at 3.4.16 with a published hash, strongly recommended).
 <script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
         integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
         crossorigin="anonymous"></script>
-<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
-        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
         crossorigin="anonymous"></script>
 <script src="dist/components/markdowneditor/markdowneditor.js"></script>
 <script>
@@ -529,8 +529,8 @@ at 3.4.16 with a published hash, recommended). Does **not** require Bootstrap JS
 <script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
         integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
         crossorigin="anonymous"></script>
-<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
-        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
         crossorigin="anonymous"></script>
 <script src="dist/components/conversation/conversation.js"></script>
 <script>

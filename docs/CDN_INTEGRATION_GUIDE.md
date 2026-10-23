@@ -244,8 +244,8 @@ Generate them at build time from the manifest and commit the result. Never
 hand-maintain the hash.
 
 ```html
-<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
-        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
         crossorigin="anonymous"></script>
 ```
 

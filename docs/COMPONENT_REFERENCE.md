@@ -3595,8 +3595,8 @@ A programmable turn-by-turn conversation UI component for AI agent interactions 
 <script src="https://static.knobby.io/lib/vditor-3.11.2/dist/index.min.js"
         integrity="sha384-tXVIgdtmAFOvXla1JO9GrFxWNKAiPeHwfsSmAeVtGHn7XgpNRYTRuYgAvu3Mon5z"
         crossorigin="anonymous"></script>
-<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
-        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
         crossorigin="anonymous"></script>
 <script src="components/conversation/conversation.js"></script>
 
@@ -11245,8 +11245,8 @@ This component requires external libraries loaded before the component script:
 <!-- DOMPurify, strongly recommended for XSS protection. This origin serves
      it at 3.4.16 with a published hash. Do NOT load 3.2.4, which carries 19
      open advisories including cross-site-scripting bypasses. -->
-<script src="https://static.knobby.io/lib/dompurify-3.4.16.js"
-        integrity="sha384-a7SzOxErzJ3ZpQz0zJ32d67dSitNzPcbfybc/ykU9KJhMgZkwqfSxlhhdJRS+XGL"
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
         crossorigin="anonymous"></script>
 
 <!-- Component CSS + JS -->

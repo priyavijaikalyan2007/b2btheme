@@ -1548,7 +1548,7 @@ blind to the failure one step along: a tag that carries an integrity
 attribute belonging to a different file.
 
 The mutation was small. Take a fixed DOMPurify tag, swap
-`static.knobby.io/lib/dompurify-3.4.16.js` back to
+`static.knobby.io/lib/dompurify-3.4.17.js` back to
 `unpkg.com/dompurify@3.2.4/dist/purify.min.js`, leave the hash where it
 is. The count stayed at 65. Nothing in the audit moved, because the tag
 still has an `integrity` attribute. The browser would have refused the
