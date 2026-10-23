@@ -171,6 +171,29 @@
     // are OPAQUE now, in both themes, so a slot is self-contained: the
     // pair is a promise this file can keep without knowing the surface.
     // Worst measured pair is 7.79 against a 4.5 floor.
+
+    // SYNTAX COLOURS. CodeMirror's `defaultHighlightStyle` is a LIGHT
+    // style and was applied unconditionally, so a dark editor got pure
+    // blue (#0000ff) keywords at 1.05 against its own background.
+    //
+    // These are CSS variables rather than a second HighlightStyle on
+    // purpose: CodeMirror injects the colour into its own stylesheet,
+    // so a `var()` flips with the theme and the editor needs no
+    // reconfiguration — which matters because `Compartment` is not in
+    // the vendored bundle. Measured against the editor background and
+    // the active-line tint AND the sunken surface, where a rendered
+    // code block sits. Measuring only against the EDITOR background
+    // left keyword, string and type failing on #d8e2ee — a code block
+    // and a live editor do not share a surface. Worst now 4.96.
+    --theme-code-keyword:       #6d28d9;
+    --theme-code-string:        #115e59;
+    --theme-code-comment:       #525f70;
+    --theme-code-number:        #92400e;
+    --theme-code-function:      #1d4ed8;
+    --theme-code-variable:      #334155;
+    --theme-code-type:          #7e22ce;
+    --theme-code-operator:      #be185d;
+    --theme-code-active-line:   #{rgba($gray-900, 0.04)};
     --theme-group-bg-1:         #dbeafe;   --theme-group-fg-1: #1e3a8a;   // 8.49
     --theme-group-bg-2:         #dcfce7;   --theme-group-fg-2: #14532d;   // 8.30
     --theme-group-bg-3:         #fef3c7;   --theme-group-fg-3: #713f12;   // 7.79
@@ -335,6 +358,17 @@
 
     // -- Graph namespace group backgrounds (muted for dark mode) --
     // Opaque, for the reason recorded beside the light values.
+
+    // Syntax colours, dark. See the light block for why these are vars.
+    --theme-code-keyword:       #c4b5fd;
+    --theme-code-string:        #5eead4;
+    --theme-code-comment:       #9fb0c4;
+    --theme-code-number:        #fcd34d;
+    --theme-code-function:      #93c5fd;
+    --theme-code-variable:      #e2e8f0;
+    --theme-code-type:          #e9d5ff;
+    --theme-code-operator:      #f9a8d4;
+    --theme-code-active-line:   rgba(255, 255, 255, 0.05);
     --theme-group-bg-1:         #17314d;   --theme-group-fg-1: #bfdbfe;   //  9.34
     --theme-group-bg-2:         #14301f;   --theme-group-fg-2: #bbf7d0;   // 11.77
     --theme-group-bg-3:         #33280d;   --theme-group-fg-3: #fde68a;   // 11.63

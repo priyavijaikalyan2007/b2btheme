@@ -88,7 +88,14 @@ const ASSETS = [
             'import { EditorView, keymap, lineNumbers, drawSelection, dropCursor, highlightActiveLine } from "@codemirror/view";',
             'import { EditorState } from "@codemirror/state";',
             'import { history, historyKeymap, defaultKeymap, undo, redo, indentSelection } from "@codemirror/commands";',
-            'import { syntaxHighlighting, defaultHighlightStyle, indentOnInput, bracketMatching } from "@codemirror/language";',
+            'import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle, indentOnInput, bracketMatching } from "@codemirror/language";',
+            // DEBT-VR-11. `HighlightStyle` and `tags` are what let a
+            // consumer define its OWN token colours. Without them the
+            // only style on offer is `defaultHighlightStyle`, which is
+            // light-only, so a dark editor was painted with #0000ff
+            // keywords. `tags` lives in @lezer/highlight, a transitive
+            // dependency of @codemirror/language rather than a new one.
+            'import { tags } from "@lezer/highlight";',
             'import { highlightSelectionMatches, search, searchKeymap } from "@codemirror/search";',
             'import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";',
             'import { setDiagnostics } from "@codemirror/lint";',
@@ -103,12 +110,13 @@ const ASSETS = [
             '  EditorView, EditorState, keymap, lineNumbers, drawSelection, dropCursor,',
             '  highlightActiveLine, highlightSelectionMatches,',
             '  cmHistory: history, historyKeymap, defaultKeymap, undo, redo, indentSelection,',
-            '  syntaxHighlighting, defaultHighlightStyle, indentOnInput, bracketMatching,',
+            '  syntaxHighlighting, defaultHighlightStyle, HighlightStyle, tags,',
+            '  indentOnInput, bracketMatching,',
             '  cmSearch: search, searchKeymap, closeBrackets, closeBracketsKeymap,',
             '  setDiagnostics, javascript, json, html, css, sql, python, markdown',
             '});',
         ].join("\n"),
-        note: "CodeMirror 6, fourteen packages in one hashed file; publishes 30 bare globals that CodeEditor probes for. DEBT-SEC-9 / ADR-211",
+        note: "CodeMirror 6, fourteen packages in one hashed file; publishes 32 bare globals that CodeEditor probes for. DEBT-SEC-9 / ADR-211 / DEBT-VR-11",
     },
     {
         name: "maxgraph",

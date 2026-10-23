@@ -62,6 +62,55 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// HIGHLIGHT.JS TOKENS, FROM THE THEME
+// ============================================================================
+//
+// DEBT-VR-11. Pages load `highlight.js/styles/github.min.css`, which is
+// the LIGHT GitHub theme, and nothing swapped it in dark mode — so a
+// dark code block got #d73a49 keywords at 4.20 and #032f62 strings at
+// 1.45 on its own background.
+//
+// Rather than ask every consumer to load a second stylesheet and switch
+// between them, the token colours are published here. They are the same
+// `--theme-code-*` values the CodeMirror editor uses, so a highlighted
+// block and a live editor agree in both themes.
+//
+// Each selector is doubled (`.hljs .hljs-keyword`) so it outranks
+// github.min.css at equal or later load order rather than depending on
+// which `<link>` comes first.
+
+.hljs
+{
+    .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section
+    { color: var(--theme-code-keyword); }
+
+    .hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute
+    { color: var(--theme-code-string); }
+
+    .hljs-comment, .hljs-quote, .hljs-deletion
+    { color: var(--theme-code-comment); }
+
+    .hljs-number, .hljs-bullet, .hljs-symbol
+    { color: var(--theme-code-number); }
+
+    // `.function_` is doubled because github.min.css writes
+    // `.hljs-title.function_`, which ties a single-class selector here
+    // and is then decided by load order.
+    .hljs-title, .hljs-title.function_, .hljs-title.class_,
+    .hljs-name, .hljs-built_in, .hljs-subst
+    { color: var(--theme-code-function); }
+
+    .hljs-variable, .hljs-template-variable, .hljs-attr
+    { color: var(--theme-code-variable); }
+
+    .hljs-type, .hljs-class, .hljs-tag, .hljs-meta
+    { color: var(--theme-code-type); }
+
+    .hljs-operator, .hljs-punctuation, .hljs-params
+    { color: var(--theme-code-operator); }
+}
+
+// ============================================================================
 // CATEGORICAL PALETTE: EIGHT SLOTS, EACH A PAIR
 // ============================================================================
 //

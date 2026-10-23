@@ -873,8 +873,32 @@ export class CodeEditor implements CodeEditorHandle
         tryPush("highlightSelectionMatches");
         tryPush("cmSearch", "search");
 
-        if (hasCMGlobal("syntaxHighlighting") && hasCMGlobal("defaultHighlightStyle"))
+        // DEBT-VR-11. This used to push `defaultHighlightStyle`
+        // unconditionally. That style is CodeMirror's LIGHT one, so a
+        // dark editor was painted with pure blue (#0000ff) keywords and
+        // #770088 types, measuring 1.05 and 1.20 against its own
+        // background. Nothing was wrong upstream — we simply never told
+        // CodeMirror which theme it was in.
+        //
+        // The colours are CSS VARIABLES. CodeMirror writes them into its
+        // own stylesheet verbatim, so they flip with the theme and the
+        // view never has to be reconfigured — which matters, because
+        // `Compartment`, the normal way to reconfigure, is not in the
+        // vendored bundle.
+        const themedStyle = this.buildHighlightStyle();
+
+        if (themedStyle)
         {
+            exts.push(themedStyle);
+        }
+        else if (hasCMGlobal("syntaxHighlighting")
+            && hasCMGlobal("defaultHighlightStyle"))
+        {
+            // HighlightStyle or tags is missing from the bundle. The
+            // light style is still better than no colours at all, and
+            // the warning names what is absent rather than guessing.
+            logWarn("HighlightStyle or tags absent; falling back to "
+                + "defaultHighlightStyle, which is light-only");
             const sh = getCMGlobal("syntaxHighlighting") as (style: unknown, opts?: unknown) => unknown;
             const dhs = getCMGlobal("defaultHighlightStyle");
             exts.push(sh(dhs, { fallback: true }));
@@ -885,6 +909,53 @@ export class CodeEditor implements CodeEditorHandle
         }
 
         return exts;
+    }
+
+    /**
+     * A HighlightStyle whose colours are theme tokens.
+     *
+     * @returns The extension, or `null` when the bundle lacks the API.
+     */
+    private buildHighlightStyle(): unknown | null
+    {
+        if (!hasCMGlobal("syntaxHighlighting") || !hasCMGlobal("HighlightStyle")
+            || !hasCMGlobal("tags"))
+        {
+            return null;
+        }
+
+        const sh = getCMGlobal("syntaxHighlighting") as
+            (style: unknown, opts?: unknown) => unknown;
+        const HS = getCMGlobal("HighlightStyle") as
+            { define: (specs: unknown[]) => unknown };
+        const t = getCMGlobal("tags") as Record<string, unknown>;
+
+        // Each entry is a lezer tag and the token that paints it. A tag
+        // the bundle does not expose is skipped rather than passed as
+        // `undefined`, which CodeMirror would throw on.
+        const pairs: [string, string][] = [
+            ["keyword", "keyword"], ["controlKeyword", "keyword"],
+            ["string", "string"], ["special", "string"],
+            ["comment", "comment"], ["lineComment", "comment"],
+            ["number", "number"], ["bool", "number"],
+            ["function", "function"], ["definition", "function"],
+            ["variableName", "variable"], ["propertyName", "variable"],
+            ["typeName", "type"], ["className", "type"],
+            ["operator", "operator"], ["punctuation", "operator"],
+        ];
+
+        const specs: unknown[] = [];
+
+        for (const [tagName, token] of pairs)
+        {
+            const tag = t[tagName];
+            if (!tag) { continue; }
+            specs.push({ tag, color: `var(--theme-code-${token})` });
+        }
+
+        if (specs.length === 0) { return null; }
+
+        return sh(HS.define(specs), { fallback: true });
     }
 
     private getCMKeyBindings(): unknown[]

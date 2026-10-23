@@ -287,3 +287,28 @@
         transition: none;
     }
 }
+
+// ============================================================================
+// CODEMIRROR DEFAULTS WE OVERRIDE
+// ============================================================================
+//
+// DEBT-VR-11. CodeMirror decides between its `&light` and `&dark` rules
+// from a flag set when the view is built, and this component never set
+// it — so a dark editor got the LIGHT defaults. The active line is the
+// visible one: `#cceeff44` over `#0f172a` composites to rgb(65,80,99),
+// a slab bright enough to put five syntax colours below the contrast
+// floor on their own background.
+//
+// Overriding in CSS rather than passing the flag is deliberate: the flag
+// is read once at construction, so following the page theme would mean
+// rebuilding the view on every switch. A token flips for free.
+
+.cm-editor .cm-activeLine
+{
+    background-color: var(--theme-code-active-line);
+}
+
+.cm-editor .cm-activeLineGutter
+{
+    background-color: var(--theme-code-active-line);
+}

@@ -2440,7 +2440,7 @@ CodeEditor needs.**
 
 ```html
 <script src="https://static.knobby.io/lib/codemirror6-6.43.15.js"
-        integrity="sha384-At2UiJ40/DCV2QBhVybjjxrQ2G/7hm/BOBWxdMSnxFNpJgNoscYBGDvvQx1bb1vI"
+        integrity="sha384-r5Mb6AdObkFoD4Wb4CM24ZGs/rXJA9qWDYZAZVGVIS7dQrwplVwX7bxvbcTs4hq8"
         crossorigin="anonymous"></script>
 <script src="components/codeeditor/codeeditor.js"></script>
 ```
