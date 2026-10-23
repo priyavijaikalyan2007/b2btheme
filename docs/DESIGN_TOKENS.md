@@ -81,7 +81,9 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$dark` | `$gray-900 (#0f172a)` |  |
 | `$body-bg` | `$surface-ground (#e3ebf5)` | invisible on any Bootstrap-driven page. |
 | `$body-color` | `$gray-900 (#0f172a)` |  |
-| `$link-color` | `$blue-700 (#1864ab)` | Links - Higher contrast for accessibility |
+| `$pink-700` | `#c2255c` | alone — only one of the two was wrong. |
+| `$code-color` | `$pink-700 (#c2255c)` |  |
+| `$link-color` | `$blue-700 (#1864ab)` |  |
 | `$link-decoration` | `underline` |  |
 | `$link-hover-color` | `$blue-800 (#0d3b66)` |  |
 | `$link-hover-decoration` | `underline` |  |

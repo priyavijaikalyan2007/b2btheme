@@ -143,6 +143,15 @@ $body-bg:                   $surface-ground !default;
 $body-color:                $gray-900 !default;
 
 // Links - Higher contrast for accessibility
+// DEBT-VR-11. Bootstrap's $code-color default is $pink (#d63384), which
+// measures 3.74 on the sunken surface where code blocks sit, against a
+// 4.5 floor. This is the nearest darker pink that carries on all three
+// light surfaces (4.70 sunken / 5.66 card / 5.10 ground). The DARK value
+// is Bootstrap's own $code-color-dark and already passes, so it is left
+// alone — only one of the two was wrong.
+$pink-700:                  #c2255c !default;
+$code-color:                $pink-700 !default;
+
 $link-color:                $blue-700 !default;
 $link-decoration:           underline !default;
 $link-hover-color:          $blue-800 !default;

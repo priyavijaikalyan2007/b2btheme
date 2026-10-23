@@ -332,6 +332,8 @@ $light=$gray-100 (#f1f5f9)
 $dark=$gray-900 (#0f172a)
 $body-bg=$surface-ground (#e3ebf5)
 $body-color=$gray-900 (#0f172a)
+$pink-700=#c2255c
+$code-color=$pink-700 (#c2255c)
 $link-color=$blue-700 (#1864ab)
 $link-decoration=underline
 $link-hover-color=$blue-800 (#0d3b66)
@@ -563,6 +565,11 @@ $control-height-xl=46px
 .container-lg
 .container-xl
 .container-xxl
+.btn-outline-primary
+.btn-outline-danger
+.btn-outline-success
+.btn-outline-warning
+.btn-link
 .text-compact
 .p-compact
 .m-compact

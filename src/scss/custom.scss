@@ -62,6 +62,51 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// OUTLINE AND LINK BUTTONS: FOREGROUND FROM THE THEME, NOT THE SWATCH
+// ============================================================================
+//
+// DEBT-VR-11. Bootstrap bakes `--bs-btn-color: #1c7ed6` into
+// `.btn-outline-primary` from `$primary`, and the same for each variant.
+// A swatch chosen to be a FILL is not a foreground: measured, $primary as
+// button text is 3.49 light / 4.40 dark, $danger 4.02 / 3.82 and $success
+// 2.87 / 5.36, against a 4.5 floor. 420 failing elements, the largest
+// single group in the rendered audit after the form label.
+//
+// The `*-text` tokens already carry a value per theme for exactly this.
+// Only the foreground moves: the BORDER keeps the swatch, so an outline
+// button still reads as its colour, and the hover fill keeps the themed
+// fill with the foreground that pairs with it.
+
+.btn-outline-primary
+{
+    --bs-btn-color: var(--theme-primary-text);
+    --bs-btn-hover-bg: var(--theme-primary);
+    --bs-btn-hover-border-color: var(--theme-primary);
+    --bs-btn-hover-color: var(--theme-text-on-primary);
+}
+
+.btn-outline-danger
+{
+    --bs-btn-color: var(--theme-danger-text);
+}
+
+.btn-outline-success
+{
+    --bs-btn-color: var(--theme-success-text);
+}
+
+.btn-outline-warning
+{
+    --bs-btn-color: var(--theme-warning-text);
+}
+
+.btn-link
+{
+    --bs-btn-color: var(--theme-primary-text);
+    --bs-btn-hover-color: var(--theme-primary-text);
+}
+
+// ============================================================================
 // CHROME: HOVER GLOW ON BUTTONS AND FORM CONTROLS
 // ============================================================================
 
