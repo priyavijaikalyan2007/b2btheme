@@ -570,6 +570,8 @@ $control-height-xl=46px
 .btn-outline-danger
 .btn-outline-success
 .btn-outline-warning
+.btn-outline-info
+.btn-outline-secondary
 .btn-link
 .text-compact
 .p-compact

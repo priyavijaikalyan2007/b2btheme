@@ -555,6 +555,35 @@ export class LogConsole implements LogConsoleHandle
         if (this.opts.headerBackgroundColor) { base.headerBg = this.opts.headerBackgroundColor; }
         if (this.opts.entryBorderColor)   { base.entryBorder = this.opts.entryBorderColor; }
         if (this.opts.mutedTextColor)     { base.muted = this.opts.mutedTextColor; }
+
+        // DEBT-VR-11. A caller who pins `backgroundColor` has taken the
+        // surface out of the theme's hands, and the text tokens above
+        // still follow the theme — so a console given a terminal black
+        // rendered THEME-COLOURED text on it. In light mode that is
+        // `--theme-text-primary`, #0f172a, which is the exact colour the
+        // demo pins as its background: measured 1.00, text in the colour
+        // of its own background.
+        //
+        // Pinning the surface and not the foreground is not a request
+        // for unreadable text; it is a caller who said one thing and
+        // left the other to us. Derive it.
+        if (this.opts.backgroundColor && !this.opts.textColor)
+        {
+            base.text = readableOn(this.opts.backgroundColor);
+        }
+
+        if (this.opts.backgroundColor && !this.opts.mutedTextColor)
+        {
+            // Muted has to stay distinguishable from body text while
+            // still clearing the floor, so it is the SAME extreme at
+            // reduced opacity rather than a different hue. 0.72 of white
+            // on #0f172a measures 10.1; of black on #f8fafc, 12.5.
+            const ink = readableOn(this.opts.backgroundColor);
+            base.muted = ink === "#ffffff"
+                ? "rgba(255, 255, 255, 0.72)"
+                : "rgba(0, 0, 0, 0.72)";
+        }
+
         return base;
     }
 

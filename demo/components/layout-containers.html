@@ -149,6 +149,12 @@
             var el = document.createElement("div");
             el.textContent = text;
             el.style.background = bg;
+            // DEBT-VR-11. These demo panels paint a FIXED pastel to make
+            // the layout cells visible, and the text inherited the page
+            // colour — which in dark mode is near-white on a pale pink,
+            // measuring 1.00. A fixed background needs a fixed
+            // foreground; the pastels are all light, so this is black.
+            el.style.color = "#0f172a";
             el.style.padding = "12px";
             el.style.display = "flex";
             el.style.alignItems = "center";

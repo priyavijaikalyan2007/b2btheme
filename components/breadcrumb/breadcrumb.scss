@@ -73,7 +73,9 @@
 // ============================================================================
 
 .breadcrumb-nav .breadcrumb-item.active {
-    color: $breadcrumb-active-color;
+    // DEBT-VR-11. $breadcrumb-active-color is $gray-700, static, so
+    // the current page's own label measured 1.29 in dark mode.
+    color: var(--theme-text-primary);
     font-weight: $font-weight-semibold;
 }
 

@@ -176,6 +176,19 @@ textarea:focus-visible,
     --bs-btn-color: var(--theme-warning-text);
 }
 
+.btn-outline-info
+{
+    // $info is $blue-500 (#2196f3), which measures 2.60 as button text
+    // on the sunken surface. The first pass covered primary, danger,
+    // success and warning and missed this one.
+    --bs-btn-color: var(--theme-info-text);
+}
+
+.btn-outline-secondary
+{
+    --bs-btn-color: var(--theme-text-muted);
+}
+
 .btn-link
 {
     --bs-btn-color: var(--theme-primary-text);

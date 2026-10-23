@@ -651,7 +651,13 @@ export class MarkdownEditor implements MarkdownEditorHandle
                 mode: isDark ? "dark" : "light",
                 hljs: {
                     enable: true,
-                    style: isDark ? "native" : "github",
+                    // DEBT-VR-11. Was "native", whose body text is #cccccc
+                    // on #585858 — 4.43 against a 4.5 floor, a near-miss
+                    // that fails on every code block in a dark preview.
+                    // "github-dark" is the counterpart of the light value
+                    // beside it, so the pair is one theme rather than two
+                    // choices: #c9d1d9 on #0d1117 measures 12.63.
+                    style: isDark ? "github-dark" : "github",
                     lineNumber: true,
                 },
                 markdown: {
