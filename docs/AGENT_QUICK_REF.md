@@ -568,6 +568,11 @@ $control-height-xl=46px
 .mermaid
 .language-mermaid
 .hljs
+.bg-primary
+.bg-success
+.bg-warning
+.bg-danger
+.bg-info
 .btn-outline-primary
 .btn-outline-danger
 .btn-outline-success

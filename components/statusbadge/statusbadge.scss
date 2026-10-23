@@ -94,7 +94,10 @@
 // Pill variant — label has coloured background, no dot visible
 .statusbadge-pill .statusbadge-label {
     padding: $sp-2 $sp-8;
-    color: $gray-50;
+    // DEBT-VR-11. Each variant below sets the ink that carries on
+    // its own fill. This default is what a variant nobody has
+    // written yet inherits, so it has to be the safe one.
+    color: var(--theme-text-on-warning);
     font-weight: $font-weight-semibold;
     font-size: inherit;
 }
@@ -106,36 +109,43 @@
 // Operational — green dot
 .statusbadge-operational .statusbadge-dot {
     background-color: $green-600;
+    color: var(--theme-text-on-success);
 }
 
 // Degraded — yellow dot
 .statusbadge-degraded .statusbadge-dot {
     background-color: $yellow-500;
+    color: var(--theme-text-on-warning);
 }
 
 // Down — red dot
 .statusbadge-down .statusbadge-dot {
     background-color: $red-600;
+    color: var(--theme-text-on-danger);
 }
 
 // In Progress — blue dot
 .statusbadge-in-progress .statusbadge-dot {
     background-color: var(--theme-primary);
+    color: var(--theme-text-on-primary);
 }
 
 // Failed — dark red dot
 .statusbadge-failed .statusbadge-dot {
     background-color: $red-800;
+    color: var(--theme-text-on-danger);
 }
 
 // Maintenance — orange dot
 .statusbadge-maintenance .statusbadge-dot {
     background-color: $orange-500;
+    color: var(--theme-text-on-warning);
 }
 
 // Unknown — grey dot
 .statusbadge-unknown .statusbadge-dot {
     background-color: $gray-400;
+    color: var(--theme-text-on-warning);
 }
 
 // ============================================================================
@@ -145,36 +155,43 @@
 // Operational pill
 .statusbadge-operational.statusbadge-pill .statusbadge-label {
     background-color: $green-600;
+    color: var(--theme-text-on-success);
 }
 
 // Degraded pill
 .statusbadge-degraded.statusbadge-pill .statusbadge-label {
     background-color: $yellow-500;
+    color: var(--theme-text-on-warning);
 }
 
 // Down pill
 .statusbadge-down.statusbadge-pill .statusbadge-label {
     background-color: $red-600;
+    color: var(--theme-text-on-danger);
 }
 
 // In Progress pill
 .statusbadge-in-progress.statusbadge-pill .statusbadge-label {
     background-color: var(--theme-primary);
+    color: var(--theme-text-on-primary);
 }
 
 // Failed pill
 .statusbadge-failed.statusbadge-pill .statusbadge-label {
     background-color: $red-800;
+    color: var(--theme-text-on-danger);
 }
 
 // Maintenance pill
 .statusbadge-maintenance.statusbadge-pill .statusbadge-label {
     background-color: $orange-500;
+    color: var(--theme-text-on-warning);
 }
 
 // Unknown pill
 .statusbadge-unknown.statusbadge-pill .statusbadge-label {
     background-color: $gray-400;
+    color: var(--theme-text-on-warning);
 }
 
 // ============================================================================

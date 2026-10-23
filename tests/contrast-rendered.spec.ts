@@ -69,7 +69,7 @@
 
 import { test, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
 
 /** Every tracked demo page, the same population as demo-pages.spec.ts. */
@@ -296,6 +296,14 @@ test.describe("rendered text contrast", () =>
                     `${page} (${theme}) examined no text`).toBeGreaterThan(0);
 
                 mkdirSync(OUT_DIR, { recursive: true });
+
+                // Delete the AGGREGATE the moment a fresh run starts
+                // writing. It is produced by scripts/contrast-report.mjs
+                // and I read it twice without regenerating it, reporting
+                // a fix as having no effect when it had already worked.
+                // A stale summary beside fresh data is the defect this
+                // whole audit exists to find; it cannot sit there now.
+                rmSync("coverage/contrast-rendered.json", { force: true });
                 const slug = `${theme}__${page.replace(/[\\/.]/g, "_")}.json`;
                 writeFileSync(`${OUT_DIR}/${slug}`, JSON.stringify({
                     page, theme,

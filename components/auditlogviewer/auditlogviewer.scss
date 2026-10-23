@@ -457,7 +457,7 @@
 .auditlog-pagination-btn-active
 {
     background-color: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     border-color: var(--theme-primary);
 
     &:hover

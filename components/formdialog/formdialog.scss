@@ -195,7 +195,7 @@
     .formdialog-step-number
     {
         background-color: $green-600;
-        color: $gray-50;
+        color: var(--theme-text-on-success);
     }
 }
 
@@ -207,7 +207,7 @@
     .formdialog-step-number
     {
         background-color: var(--theme-primary);
-        color: $gray-50;
+        color: var(--theme-text-on-primary);
     }
 }
 

@@ -21,7 +21,7 @@
     justify-content: center;
     position: absolute;
     background: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     border: none;
     border-radius: 50%;
     font-weight: $font-weight-bold;

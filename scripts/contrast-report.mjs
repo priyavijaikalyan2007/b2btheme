@@ -48,6 +48,13 @@ function main()
         process.exit(1);
     }
 
+    if (result.runs < 2)
+    {
+        console.error(`only ${result.runs} page/theme run(s) in ${DIR} — `
+            + "this is a PARTIAL run, not the fleet. Clear the directory "
+            + "and run the whole spec before quoting a total.");
+    }
+
     writeFileSync("coverage/contrast-rendered.json",
         JSON.stringify(result, null, 2));
 

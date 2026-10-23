@@ -141,6 +141,25 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// BACKGROUND UTILITIES CARRY THEIR OWN INK
+// ============================================================================
+//
+// DEBT-VR-11. Bootstrap's `.bg-warning` sets a fill and no foreground —
+// `.text-bg-warning` is the paired utility, and a caller who reaches for
+// the bare one gets whatever colour the text had inherited. On the
+// warning amber that inherited colour measured 1.96 in dark mode.
+//
+// A fill utility that does not say what reads on it is a half-answer, so
+// these supply the other half. A caller who wants different text still
+// wins on specificity with their own rule.
+
+.bg-primary { color: var(--theme-text-on-primary); }
+.bg-success { color: var(--theme-text-on-success); }
+.bg-warning { color: var(--theme-text-on-warning); }
+.bg-danger  { color: var(--theme-text-on-danger); }
+.bg-info    { color: var(--theme-text-on-info); }
+
+// ============================================================================
 // CATEGORICAL PALETTE: EIGHT SLOTS, EACH A PAIR
 // ============================================================================
 //

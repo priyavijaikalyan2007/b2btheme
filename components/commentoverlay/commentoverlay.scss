@@ -53,7 +53,7 @@
     border-radius: 50%;
     border: none;
     background-color: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     font-size: $font-size-xs;
     cursor: pointer;
     pointer-events: auto;
@@ -391,7 +391,7 @@
     padding: $sp-6 $sp-12;
     border: none;
     background-color: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     font-size: $font-size-sm;
     border-radius: $border-radius;
     cursor: pointer;
@@ -553,7 +553,7 @@
 .commentoverlay-edit-save {
     background-color: var(--theme-primary);
     border-color: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
 
     &:hover {
         background-color: $blue-700;

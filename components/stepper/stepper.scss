@@ -89,19 +89,19 @@
 .stepper-step-active .stepper-marker {
     border-color: var(--theme-primary);
     background: var(--theme-primary);
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
 }
 
 .stepper-step-completed .stepper-marker {
     border-color: $success;
     background: $success;
-    color: $gray-50;
+    color: var(--theme-text-on-success);
 }
 
 .stepper-step-error .stepper-marker {
     border-color: $danger;
     background: $danger;
-    color: $gray-50;
+    color: var(--theme-text-on-danger);
 }
 
 .stepper-step-skipped .stepper-marker {

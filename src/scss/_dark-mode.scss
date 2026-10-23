@@ -61,6 +61,22 @@
     --theme-warning-text:       #{$yellow-800};  // 5.90
     --theme-info-text:          #1565c0;   // 4.78
 
+    // ON-COLOUR TOKENS. `--theme-text-on-primary` has existed since the
+    // start and had no siblings, so every other semantic FILL was paired
+    // with $gray-50 by hand and none of them carried: white measures
+    // 2.15 on the warning amber, 2.47 on the success green, 2.48 on the
+    // info blue. Black carries on all three, comfortably.
+    //
+    // DANGER is the exception and the reason these are four tokens and
+    // not one rule: white on #dc2626 is 4.83 and black is 4.35, so the
+    // answer flips with the hue. A "dark text on coloured fills" rule
+    // would have been wrong exactly once, which is the kind of rule
+    // that gets written and then quietly violated.
+    --theme-text-on-success:    #000000;   //  8.49 light /  10.31 dark
+    --theme-text-on-warning:    #000000;   //  9.78 both
+    --theme-text-on-info:       #000000;   //  8.48 both
+    --theme-text-on-danger:     #ffffff;   //  4.83 light
+
     // -- Borders --
     --theme-border-color:       #{$gray-300};
     --theme-border-subtle:      #{$gray-200};
@@ -266,6 +282,13 @@
     --theme-danger-text:        #{$red-400};     // 4.82
     --theme-warning-text:       #{$yellow-500};  // 6.21
     --theme-info-text:          #64b5f6;   // 6.02
+
+    // See the light block. Only danger moves: the dark fill is $red-500,
+    // where white falls to 3.76 and black reaches 5.58.
+    --theme-text-on-success:    #000000;
+    --theme-text-on-warning:    #000000;
+    --theme-text-on-info:       #000000;
+    --theme-text-on-danger:     #000000;   //  5.58 on $red-500
 
     // -- Borders --
     --theme-border-color:       #{$gray-600};

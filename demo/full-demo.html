@@ -8280,6 +8280,7 @@
             var topEl = vert.getPaneElement("top");
             topEl.style.padding = "1rem";
             topEl.style.background = "#e3f2fd";
+            topEl.style.color = "#0f172a";
             topEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
             topEl.textContent = "Top pane (collapsible)";
 
@@ -8290,6 +8291,7 @@
             var botEl = vert.getPaneElement("bottom");
             botEl.style.padding = "1rem";
             botEl.style.background = "#fff3e0";
+            botEl.style.color = "#0f172a";
             botEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
             botEl.textContent = "Bottom pane (100px, collapsible)";
 
@@ -8307,6 +8309,7 @@
             var sideEl = outer.getPaneElement("sidebar");
             sideEl.style.padding = "1rem";
             sideEl.style.background = "#f1f3f5";
+            sideEl.style.color = "#0f172a";
             sideEl.style.color = "#0f172a";  // pair the fg with the bg, or the theme inverts it
             sideEl.textContent = "Sidebar (collapsible)";
 
@@ -8377,6 +8380,9 @@
                 var el = document.createElement("div");
                 el.textContent = text;
                 el.style.background = bg;
+            // DEBT-VR-11. Fixed pastels, so a fixed ink — the inherited
+            // page colour is near-white in dark mode and measured 1.00.
+            el.style.color = "#0f172a";
                 el.style.padding = "12px";
                 el.style.display = "flex";
                 el.style.alignItems = "center";

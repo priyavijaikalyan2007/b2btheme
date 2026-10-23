@@ -139,7 +139,7 @@
     border: 1px solid var(--theme-primary, #{$blue-600});
     border-radius: $radius-affordance;
     background-color: var(--theme-primary, #{$blue-600});
-    color: $gray-50;
+    color: var(--theme-text-on-primary);
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     cursor: pointer;
