@@ -647,6 +647,35 @@ if [ "$DOC_CLASS_CLAIMS" -eq 0 ]; then
 fi
 echo ""
 
+# ── 27. A custom property may not carry a raw Sass variable ──
+#
+# DEBT-VR-12. Sass interpolates `$x` almost everywhere, and NOT inside a
+# custom property value — `--pill-padding: $sp-2 $sp-8;` compiles to the
+# literal text `$sp-2 $sp-8`, the browser rejects it, and
+# `padding: var(--pill-padding)` falls back to nothing. The pill shipped
+# with NO padding, text touching its rounded ends, for as long as that
+# line existed. Six declarations across two components had it.
+#
+# It is invisible to every other gate here: the SCSS is valid, the build
+# succeeds, the CSS parses, and the only symptom is a property that
+# silently does nothing. The line above the pill's own bug had the
+# `#{...}` wrapper, so the rule was known and applied inconsistently
+# within one rule block.
+echo "[27] No custom property carries a raw Sass variable (DEBT-VR-12)"
+# SINGLE quotes: in a double-quoted pattern bash eats the backslash and
+# grep then reads `$[a-z...]` as an end-of-line anchor, which matches
+# nothing and passes. The first version of this check did exactly that
+# and reported PASS against a file I had just broken on purpose.
+RAW_VAR_HITS=$(grep -rnE '^[[:space:]]*--[a-z0-9-]+:[[:space:]]*[^;]*\$[a-z0-9-]+[^;]*;' \
+    components/*/*.scss src/scss/*.scss 2>/dev/null | grep -v '#{' || true)
+if [ -z "$RAW_VAR_HITS" ]; then
+    pass "Every custom property interpolates its Sass variables"
+else
+    printf '%s\n' "$RAW_VAR_HITS" | head -5 | sed 's/^/      /'
+    fail "$(printf '%s\n' "$RAW_VAR_HITS" | wc -l | tr -d ' ') custom propert(ies) compile to a literal name the browser drops"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

@@ -672,8 +672,8 @@
         --panel-shadow: var(--theme-shadow-xs);
 
         // Toolbar sizing (compact)
-        --toolbar-height: $control-height-md;
-        --toolbar-divider-margin-top: $sp-8;
+        --toolbar-height: #{$control-height-md};
+        --toolbar-divider-margin-top: #{$sp-8};
 
         // Resize handle
         --resize-icon-color: var(--toolbar-icon-color);

@@ -22,7 +22,7 @@
     --pill-fg: #{$blue-700};
     --pill-border-color: transparent;
     --pill-border-radius: 9999px;
-    --pill-padding: $sp-2 $sp-8;
+    --pill-padding: #{$sp-2} #{$sp-8};
     --pill-font-size: #{$font-size-sm};
     --pill-max-width: 200px;
 
@@ -122,17 +122,17 @@
 // ============================================================================
 
 .pill-sm {
-    --pill-padding: $sp-1 $sp-6;
+    --pill-padding: #{$sp-1} #{$sp-6};
     --pill-font-size: #{$font-size-xs};
 }
 
 .pill-md {
-    --pill-padding: $sp-2 $sp-8;
+    --pill-padding: #{$sp-2} #{$sp-8};
     --pill-font-size: #{$font-size-sm};
 }
 
 .pill-lg {
-    --pill-padding: $sp-4 $sp-10;
+    --pill-padding: #{$sp-4} #{$sp-10};
     --pill-font-size: #{$font-size-base};
 }
 
