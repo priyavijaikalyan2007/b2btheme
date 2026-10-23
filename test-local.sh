@@ -676,6 +676,44 @@ else
 fi
 echo ""
 
+# ── 28. A vendored package is pinned exactly ──
+#
+# DEBT-SEC-10. A vendored asset's VERSION IS PART OF ITS PUBLISHED
+# FILENAME and of the SRI hash consumers pin against, so a caret lets an
+# ordinary `npm install` change both silently — the new file appears,
+# the documented integrity stops matching, and a consumer's browser
+# refuses to run the script.
+#
+# This is the trap DEBT-SEC-3 recorded for sass ("the caret does NOT
+# hold it back"), and it was sprung on 2026-10-23 by `npm install -D
+# dompurify@3.4.17`, which rewrote an exact `3.4.16` to `^3.4.17`
+# while fixing a critical advisory. The fix was right and the pin was
+# collateral.
+echo "[28] Every vendored package is pinned exactly (DEBT-SEC-10)"
+VENDOR_RANGES=$(node -e '
+const fs = require("fs");
+const spec = fs.readFileSync("scripts/vendor-closure.mjs", "utf8");
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const deps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
+const names = new Set();
+for (const m of spec.matchAll(/pkg:\s*"([^"]+)"|from:\s*"node_modules\/((?:@[^\/"]+\/)?[^\/"]+)/g))
+{ names.add((m[1] || m[2])); }
+const bad = [];
+for (const n of names)
+{
+    const v = deps[n];
+    if (v && !/^[0-9]/.test(v)) { bad.push(n + " = " + v); }
+}
+process.stdout.write(bad.join("\n"));
+')
+if [ -z "$VENDOR_RANGES" ]; then
+    pass "Every vendored package is pinned to an exact version"
+else
+    printf '%s\n' "$VENDOR_RANGES" | sed 's/^/      /'
+    fail "a vendored package carries a RANGE; its filename and SRI hash can move under consumers"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"
