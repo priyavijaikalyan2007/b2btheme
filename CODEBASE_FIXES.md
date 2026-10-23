@@ -2273,6 +2273,84 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ---
 
+## MEDIUM — Rendered text contrast (DEBT-VR-11, opened 2026-10-22)
+
+- [ ] **DEBT-VR-11** **287 AA failures across 92 distinct defects, from
+  2,879 and 310 when the instrument was first run.** Reported from
+  production: text unreadable in dark mode.
+
+  **The gate that existed could not see any of it.**
+  `scripts/check-contrast.py` is arithmetic over NAMED TOKEN PAIRS and
+  is honest about three blind spots in its own docstring. It has a
+  fourth nobody had written down: a colour that is not a token at all.
+  A Sass variable resolves once at build time, so `color: $gray-900` in
+  a file with no dark-mode block is invisible to a token-pair check.
+
+  `tests/contrast-rendered.spec.ts` renders all 137 demo pages in both
+  themes and asks the browser what each piece of text is painted in and
+  what is behind it, compositing translucent ancestors to find the real
+  background. 28,055 text elements.
+
+  **What it found, by root cause rather than by count:**
+
+  - A compile-time Sass variable used as text in a file with no dark
+    block (`$form-label-color`, every form label in every consuming app,
+    1.78).
+  - **Eleven theme tokens referenced and never defined** — `--theme-text`
+    does not exist, so 53 rules rendered their fallback in both themes.
+  - **Five tokens defined TWICE with the same value**, which reads as a
+    pair and behaves as one: `--theme-text-on-primary`,
+    `--theme-input-placeholder`, `--theme-navrail-category-fg` among
+    them.
+  - A fill token used as a foreground, and a foreground token used on a
+    fill. The `*-text` and `text-on-*` families both exist now.
+  - **Components that read the theme ONCE.** LogConsole resolved five
+    custom properties to hex at construction and wrote them into inline
+    styles, so a console built in light mode kept light text after a
+    flip — message colour and background came out the same value, 1.00.
+  - **Third-party renderers we had wired incompletely.** CodeMirror
+    never being told it was dark; vditor's content theme unset beside
+    its editor theme; highlight.js loading only a light stylesheet.
+    Three of the four turned out to be ours; mermaid's edge label at
+    4.43 is the genuine upstream near-miss, and only measurement told
+    them apart.
+
+  **WHAT REMAINS, measured 2026-10-23:**
+
+  | Severity | Count |
+  |---|---:|
+  | under 2.0 | 7 |
+  | 2.0 – 3.0 | 72 |
+  | 3.0 – 4.0 | 134 |
+  | 4.0 – 4.5 | 74 |
+
+  79 below 3.0 across 28 distinct defects. The largest single group is
+  10 elements. There are no systemic causes left that this sweep can
+  see; each remaining item is an individual judgement, and several are
+  brand colours where the fix is a visible design change rather than a
+  defect repair.
+
+  **The instrument had the defect it was built to find, twice.** It
+  skipped `aria-hidden` subtrees — which means "not exposed to assistive
+  technology", not "not visible" — hiding 1,092 elements and three real
+  defects, so every total before 2026-10-23 was an undercount. And its
+  aggregate JSON was read stale twice, once reporting a working fix as
+  having no effect. The spec deletes the aggregate when a run starts
+  writing, and the skip list is now audited by reason in its docstring.
+
+- [x] **DEBT-VR-12** **CLOSED 2026-10-23. The pill had no padding at
+  all.** Reported as "always cut off, looks jagged". The values were
+  right and never reached the browser: Sass does not interpolate `$x`
+  inside a custom property value, so `--pill-padding: $sp-2 $sp-8;`
+  compiled to that literal text and `padding: var(--pill-padding)`
+  computed to nothing. Six declarations across pill and markdowneditor,
+  where `--toolbar-height` meant the editor toolbar had no height rule.
+  Invisible to every other gate: the SCSS is valid, the build succeeds,
+  the CSS parses, and the only symptom is a property that silently does
+  nothing. Structure check `[27]` reads the compiled-away form.
+
+---
+
 ## Summary
 
 | Severity | Count | Status |
@@ -2300,8 +2378,8 @@ the step exits 1 and the workflow fails.
 
 | Marker | Count | Meaning |
 |---|---|---|
-| `- [ ]` | **0** | Open. |
-| `- [x]` | **98** | Closed. |
+| `- [ ]` | **1** | Open. **DEBT-VR-11** — 287 rendered-contrast failures, 79 of them below 3.0. |
+| `- [x]` | **99** | Closed. |
 | `- [=]` | **8** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |
 
