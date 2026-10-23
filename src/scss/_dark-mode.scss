@@ -158,11 +158,27 @@
     --theme-edge-shadow-color:     rgba(15, 23, 42, 0.12);
 
     // -- Graph namespace group backgrounds (pastel) --
-    --theme-group-bg-1:         #dbeafe;
-    --theme-group-bg-2:         #dcfce7;
-    --theme-group-bg-3:         #fef3c7;
-    --theme-group-bg-4:         #fce7f3;
-    --theme-group-bg-5:         #e0e7ff;
+    // CATEGORICAL PALETTE. Eight slots, each a BACKGROUND and the
+    // FOREGROUND that belongs on it, contrast-checked in both themes.
+    //
+    // Raised by the apps team on 2026-10-23: five slots cannot carry
+    // seven categories, there was no `--theme-group-fg-*` at all, and
+    // nothing in this stylesheet rendered the five — so a consumer had
+    // no way to see the intended pairing. All three were correct.
+    //
+    // The dark values were alphas of 14 to 18 percent, which made the
+    // readable foreground depend on whatever sat behind the tint. They
+    // are OPAQUE now, in both themes, so a slot is self-contained: the
+    // pair is a promise this file can keep without knowing the surface.
+    // Worst measured pair is 7.79 against a 4.5 floor.
+    --theme-group-bg-1:         #dbeafe;   --theme-group-fg-1: #1e3a8a;   // 8.49
+    --theme-group-bg-2:         #dcfce7;   --theme-group-fg-2: #14532d;   // 8.30
+    --theme-group-bg-3:         #fef3c7;   --theme-group-fg-3: #713f12;   // 7.79
+    --theme-group-bg-4:         #fce7f3;   --theme-group-fg-4: #831843;   // 8.21
+    --theme-group-bg-5:         #e0e7ff;   --theme-group-fg-5: #312e81;   // 9.27
+    --theme-group-bg-6:         #ccfbf1;   --theme-group-fg-6: #134e4a;   // 8.41
+    --theme-group-bg-7:         #f3e8ff;   --theme-group-fg-7: #581c87;   // 9.22
+    --theme-group-bg-8:         #ffedd5;   --theme-group-fg-8: #7c2d12;   // 8.18
 
     // -- NavRail (light) — tracks the tonal ladder above (ADR-147) --
     --theme-navrail-bg:               #{$surface-raised};
@@ -318,11 +334,15 @@
     --theme-metric-negative:    #{$red-400};
 
     // -- Graph namespace group backgrounds (muted for dark mode) --
-    --theme-group-bg-1:         #{rgba($blue-600, 0.18)};
-    --theme-group-bg-2:         #{rgba($green-600, 0.18)};
-    --theme-group-bg-3:         #{rgba($yellow-500, 0.18)};
-    --theme-group-bg-4:         #{rgba($red-400, 0.14)};
-    --theme-group-bg-5:         #{rgba($blue-300, 0.18)};
+    // Opaque, for the reason recorded beside the light values.
+    --theme-group-bg-1:         #17314d;   --theme-group-fg-1: #bfdbfe;   //  9.34
+    --theme-group-bg-2:         #14301f;   --theme-group-fg-2: #bbf7d0;   // 11.77
+    --theme-group-bg-3:         #33280d;   --theme-group-fg-3: #fde68a;   // 11.63
+    --theme-group-bg-4:         #3b1227;   --theme-group-fg-4: #fbcfe8;   // 11.67
+    --theme-group-bg-5:         #23224d;   --theme-group-fg-5: #c7d2fe;   // 10.00
+    --theme-group-bg-6:         #10312f;   --theme-group-fg-6: #99f6e4;   // 11.09
+    --theme-group-bg-7:         #2e1844;   --theme-group-fg-7: #e9d5ff;   // 11.60
+    --theme-group-bg-8:         #3a1b0d;   --theme-group-fg-8: #fed7aa;   // 11.56
 
     // -- NavRail (dark) — tracks the tonal ladder above (ADR-147) --
     --theme-navrail-bg:               #{$surface-raised-dark};

@@ -77,7 +77,18 @@ export interface RelationshipDefinitionSummary
 {
     key: string;
     displayName: string;
-    inverseName: string;
+    /**
+     * The reverse-direction label, when the definition has one.
+     *
+     * OPTIONAL, corrected 2026-10-23. It was declared required and is
+     * read NOWHERE in this component — the only other mentions are two
+     * test fixtures. Declaring it required never made it arrive: the
+     * apps team's API drops a null rather than sending one, so a
+     * renderer called `.replace` on `undefined` the first time a tenant
+     * created a definition with no inverse. A required field nothing
+     * reads is a promise extracted from the caller for no benefit.
+     */
+    inverseName?: string;
     targetTypeKeys: string[] | null;
     sourceTypeKeys: string[] | null;
     cardinality: string;
