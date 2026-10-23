@@ -71,7 +71,7 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `$primary` | `$blue-600 (#1c7ed6)` |  |
+| `$primary` | `$blue-650 (#1971c2)` | Text uses of primary read `--theme-primary-text` and are unaffected. |
 | `$secondary` | `$gray-600 (#475569)` |  |
 | `$success` | `$green-600 (#52b788)` |  |
 | `$info` | `$blue-500 (#2196f3)` |  |
@@ -176,7 +176,7 @@ _No variables in this section._
 | `$input-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$input-border-width` | `$border-width (1px)` |  |
 | `$input-border-radius` | `$border-radius (4px)` |  |
-| `$input-focus-border-color` | `$primary ($blue-600)` |  |
+| `$input-focus-border-color` | `$primary ($blue-650)` |  |
 | `$input-focus-box-shadow` | `0 0 0 0.15rem rgba($primary, 0.25)` |  |
 | `$input-placeholder-color` | `$gray-500 (#64748b)` |  |
 | `$form-label-margin-bottom` | `0.375rem` | 6px (was 5px) |
@@ -208,7 +208,7 @@ _No variables in this section._
 | `$dropdown-link-hover-color` | `$gray-900 (#0f172a)` |  |
 | `$dropdown-link-hover-bg` | `$gray-100 (#f1f5f9)` |  |
 | `$dropdown-link-active-color` | `white` |  |
-| `$dropdown-link-active-bg` | `$primary ($blue-600)` |  |
+| `$dropdown-link-active-bg` | `$primary ($blue-650)` |  |
 | `$dropdown-item-padding-y` | `0.4375rem` | 7px (ADR-147: menu reading density) |
 | `$dropdown-item-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$modal-inner-padding` | `1rem` | 16px (was 14px) |
@@ -220,7 +220,7 @@ _No variables in this section._
 | `$nav-link-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$nav-link-font-size` | `$font-size-base (0.9375rem)` |  |
 | `$nav-link-color` | `$gray-700 (#334155)` |  |
-| `$nav-link-hover-color` | `$primary ($blue-600)` |  |
+| `$nav-link-hover-color` | `$primary ($blue-650)` |  |
 | `$navbar-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$navbar-padding-x` | `1rem` | 16px (was 14px) |
 | `$navbar-brand-font-size` | `$font-size-lg (1.0625rem)` |  |
@@ -246,12 +246,12 @@ _No variables in this section._
 | `$pagination-color` | `$gray-700 (#334155)` |  |
 | `$pagination-bg` | `white` |  |
 | `$pagination-border-color` | `$gray-300 (#cbd5e1)` |  |
-| `$pagination-hover-color` | `$primary ($blue-600)` |  |
+| `$pagination-hover-color` | `$primary ($blue-650)` |  |
 | `$pagination-hover-bg` | `$gray-100 (#f1f5f9)` |  |
 | `$pagination-hover-border-color` | `$gray-300 (#cbd5e1)` |  |
 | `$pagination-active-color` | `white` |  |
-| `$pagination-active-bg` | `$primary ($blue-600)` |  |
-| `$pagination-active-border-color` | `$primary ($blue-600)` |  |
+| `$pagination-active-bg` | `$primary ($blue-650)` |  |
+| `$pagination-active-border-color` | `$primary ($blue-650)` |  |
 | `$toast-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$toast-padding-y` | `0.5rem` | 8px (was 7px) |
 | `$toast-font-size` | `$font-size-sm (0.85rem)` |  |
@@ -267,8 +267,8 @@ _No variables in this section._
 | `$list-group-border-radius` | `$border-radius (4px)` |  |
 | `$list-group-hover-bg` | `$gray-100 (#f1f5f9)` |  |
 | `$list-group-active-color` | `white` |  |
-| `$list-group-active-bg` | `$primary ($blue-600)` |  |
-| `$list-group-active-border-color` | `$primary ($blue-600)` |  |
+| `$list-group-active-bg` | `$primary ($blue-650)` |  |
+| `$list-group-active-border-color` | `$primary ($blue-650)` |  |
 
 ## ACCESSIBILITY
 

@@ -126,7 +126,13 @@ $surface-raised-dark:  #223044 !default;
 // THEME COLORS
 // =============================================================================
 
-$primary:       $blue-600 !default;
+// DEBT-VR-11. Was $blue-600. Bootstrap emits `--bs-primary` from this and
+// paints `.bg-primary`, `.badge.bg-primary` and `.btn-primary` with it, and
+// white text on $blue-600 measures 4.20 against a 4.5 floor. $blue-650 is
+// the same value `--theme-primary` already uses in light mode, so the two
+// names for the primary FILL now agree instead of differing by one step.
+// Text uses of primary read `--theme-primary-text` and are unaffected.
+$primary:       $blue-650 !default;
 $secondary:     $gray-600 !default;
 $success:       $green-600 !default;
 $info:          $blue-500 !default;
