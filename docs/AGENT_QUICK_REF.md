@@ -565,6 +565,8 @@ $control-height-xl=46px
 .container-lg
 .container-xl
 .container-xxl
+.mermaid
+.language-mermaid
 .hljs
 .btn-outline-primary
 .btn-outline-danger

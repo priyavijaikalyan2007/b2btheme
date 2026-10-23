@@ -1329,6 +1329,14 @@ export class MarkdownEditor implements MarkdownEditorHandle
                     footnotes: true,
                     autoSpace: true,
                 },
+                // DEBT-VR-11. `theme` above selects the EDITOR chrome;
+                // this selects the rendered CONTENT theme, which is what
+                // paints a Mermaid diagram's labels. It was unset, so a
+                // dark editor rendered light-theme diagrams: an edge
+                // label measured 4.43. Two knobs, and we had set one.
+                theme: {
+                    current: isDark ? "dark" : "light",
+                },
                 hljs: {
                     enable: true,
                     lineNumber: true,

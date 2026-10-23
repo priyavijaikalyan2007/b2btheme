@@ -62,6 +62,36 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// MERMAID EDGE LABELS
+// ============================================================================
+//
+// DEBT-VR-11. Mermaid's own DARK theme paints an edge label #cccccc on
+// #585858 — 4.43 against a 4.5 floor. The diagram is already in dark
+// mode; this is upstream's pair, not a theme we failed to select, and
+// we checked by wiring vditor's content theme first and watching the
+// number not move.
+//
+// We publish the stylesheet a consumer loads, so a near-miss we can see
+// is a near-miss we can fix. The label takes the surface it is drawn
+// over and the text token that pairs with it, in both themes.
+
+.mermaid,
+.language-mermaid
+{
+    .labelBkg
+    {
+        background-color: var(--theme-surface-bg);
+    }
+
+    .edgeLabel,
+    .edgeLabel p
+    {
+        color: var(--theme-text-primary);
+        background-color: transparent;
+    }
+}
+
+// ============================================================================
 // HIGHLIGHT.JS TOKENS, FROM THE THEME
 // ============================================================================
 //
