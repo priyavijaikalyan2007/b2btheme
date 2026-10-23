@@ -558,7 +558,13 @@ const BASELINES = {
     directConsole: 0,
     anyAnnotations: 0,
     anyCasts: 0,
-    scssImportant: 103,
+    // 103 -> 104 on 2026-10-23, deliberately. `.text-secondary` resolves
+    // `--bs-secondary-rgb`, one value for both themes, measuring 2.44 on
+    // the dark ground. Bootstrap's own rule carries `!important`, so no
+    // amount of specificity beats it without one — this is the case the
+    // IMP-1 exemption exists for, and the ratchet made it a decision
+    // rather than a habit.
+    scssImportant: 104,
     scssImportantComponents: 45,
     // IMP-1 / ADR-209. CODING_STYLE.md permits the keyword in five named
     // cases and requires a comment naming the case. This counts the

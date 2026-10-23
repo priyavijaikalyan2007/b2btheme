@@ -141,6 +141,20 @@ textarea:focus-visible,
 }
 
 // ============================================================================
+// TEXT UTILITIES THAT DO NOT FOLLOW THE THEME
+// ============================================================================
+//
+// DEBT-VR-11. `.text-secondary` resolves `--bs-secondary-rgb`, which is
+// `$secondary` — `$gray-600`, one value for both themes. On the dark
+// ground that is 2.44 against a 4.5 floor. `--theme-text-muted` is the
+// same family with a value per theme.
+
+.text-secondary
+{
+    color: var(--theme-text-muted) !important;
+}
+
+// ============================================================================
 // BACKGROUND UTILITIES CARRY THEIR OWN INK
 // ============================================================================
 //
@@ -383,24 +397,31 @@ select:hover:not(:focus):not(:disabled):not([readonly])
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
+  // DEBT-VR-11. Every one of these paired its fill with
+  // `--theme-text-on-primary`, which is the ink for the PRIMARY blue
+  // and nothing else: white on the success green measured 2.36 and on
+  // the warning amber 1.96. The on-colour family exists now, so each
+  // fill takes its own sibling.
   &.status-active {
     background-color: var(--theme-success);
-    color: var(--theme-text-on-primary);
+    color: var(--theme-text-on-success);
   }
 
   &.status-pending {
     background-color: var(--theme-warning);
-    color: var(--theme-text-primary);
+    color: var(--theme-text-on-warning);
   }
 
   &.status-inactive {
     background-color: var(--theme-text-muted);
-    color: var(--theme-text-on-primary);
+    // The muted token is a mid grey in both themes; black carries on it
+    // at 8.19 and white only at 2.56.
+    color: #000000;
   }
 
   &.status-error {
     background-color: var(--theme-danger);
-    color: var(--theme-text-on-primary);
+    color: var(--theme-text-on-danger);
   }
 }
 
