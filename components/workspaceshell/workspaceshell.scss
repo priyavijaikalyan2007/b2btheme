@@ -25,8 +25,8 @@
     padding: 3px 4px 0;
     flex-shrink: 0;
     overflow-x: auto;
-    background-color: var(--theme-surface-alt, #{$gray-100});
-    border-bottom: 1px solid var(--theme-border, #{$gray-300});
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
+    border-bottom: 1px solid var(--theme-border-color, #{$gray-300});
 }
 
 .workspaceshell-tab
@@ -39,7 +39,7 @@
     border-radius: $radius-affordance $radius-affordance 0 0;
     padding: $spacer * 0.375 $spacer * 0.625;
     min-height: 30px;
-    background-color: var(--theme-surface-alt, #{$gray-100});
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
     color: var(--theme-text-muted, #{$gray-600});
     font-size: $font-size-sm;
     white-space: nowrap;
@@ -49,21 +49,21 @@
     &:hover,
     &:focus-visible
     {
-        background-color: var(--theme-hover, #{$gray-200});
+        background-color: var(--theme-hover-bg, #{$gray-200});
     }
 }
 
 .workspaceshell-tab-active
 {
-    background-color: var(--theme-surface, #{$gray-50});
-    color: var(--theme-text, #{$gray-900});
-    border-top-color: var(--theme-accent, #{$blue-600});
+    background-color: var(--theme-surface-bg, #{$gray-50});
+    color: var(--theme-text-primary, #{$gray-900});
+    border-top-color: var(--theme-primary, #{$blue-600});
     font-weight: $font-weight-medium;
 }
 
 .workspaceshell-tab-pinned .workspaceshell-pin
 {
-    color: var(--theme-accent, #{$blue-600});
+    color: var(--theme-primary, #{$blue-600});
 }
 
 .workspaceshell-tab-title
@@ -89,7 +89,7 @@
     &:hover,
     &:focus-visible
     {
-        color: var(--theme-text, #{$gray-900});
+        color: var(--theme-text-primary, #{$gray-900});
     }
 }
 
@@ -115,13 +115,13 @@
 .workspaceshell-scrubber
 {
     padding: $spacer * 0.25 $spacer * 0.5;
-    border-top: 1px solid var(--theme-border, #{$gray-300});
-    background-color: var(--theme-surface-alt, #{$gray-100});
+    border-top: 1px solid var(--theme-border-color, #{$gray-300});
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
 
     input
     {
         width: 100%;
-        accent-color: var(--theme-accent, #{$blue-600});
+        accent-color: var(--theme-primary, #{$blue-600});
     }
 }
 

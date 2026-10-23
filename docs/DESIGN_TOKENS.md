@@ -178,7 +178,7 @@ _No variables in this section._
 | `$form-label-margin-bottom` | `0.375rem` | 6px (was 5px) |
 | `$form-label-font-size` | `$font-size-sm (0.85rem)` |  |
 | `$form-label-font-weight` | `$font-weight-semibold (600)` |  |
-| `$form-label-color` | `$gray-700 (#334155)` |  |
+| `$form-label-color` | `var(--theme-text-secondary)` | light, so this changes nothing there and fixes dark. |
 | `$table-cell-padding-y` | `0.4375rem` | 7px (ADR-147: row reading density) |
 | `$table-cell-padding-x` | `0.75rem` | 12px (was 10px) |
 | `$table-cell-padding-y-sm` | `0.25rem` | 4px (was 3px) |

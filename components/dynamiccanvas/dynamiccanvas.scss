@@ -48,14 +48,14 @@
 
     &:focus-within
     {
-        border-color: var(--theme-accent, #{$blue-600});
+        border-color: var(--theme-primary, #{$blue-600});
     }
 }
 
 .dyncanvas-frame-pinned
 {
     border-left-width: 3px;
-    border-left-color: var(--theme-accent, #{$blue-600});
+    border-left-color: var(--theme-primary, #{$blue-600});
 }
 
 .dyncanvas-titlebar
@@ -65,8 +65,8 @@
     justify-content: space-between;
     gap: $spacer * 0.5;
     padding: $spacer * 0.25 $spacer * 0.5;
-    border-bottom: 1px solid var(--theme-border, #{$gray-300});
-    background-color: var(--theme-surface-alt, #{$gray-100});
+    border-bottom: 1px solid var(--theme-border-color, #{$gray-300});
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
     cursor: grab;
     user-select: none;
 
@@ -80,7 +80,7 @@
 {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: var(--theme-text, #{$gray-900});
+    color: var(--theme-text-primary, #{$gray-900});
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -114,8 +114,8 @@
     &:hover,
     &:focus-visible
     {
-        background-color: var(--theme-hover, #{$gray-200});
-        color: var(--theme-text, #{$gray-900});
+        background-color: var(--theme-hover-bg, #{$gray-200});
+        color: var(--theme-text-primary, #{$gray-900});
     }
 }
 
@@ -211,7 +211,7 @@
 .dyncanvas-error
 {
     padding: $spacer * 0.75;
-    color: var(--theme-text, #{$gray-900});
+    color: var(--theme-text-primary, #{$gray-900});
     font-size: $font-size-sm;
 }
 
@@ -250,8 +250,8 @@
     flex-wrap: wrap;
     gap: $spacer * 0.25;
     padding: $spacer * 0.25 $spacer * 0.5;
-    background-color: var(--theme-surface-alt, #{$gray-100});
-    border-top: 1px solid var(--theme-border, #{$gray-300});
+    background-color: var(--theme-surface-raised-bg, #{$gray-100});
+    border-top: 1px solid var(--theme-border-color, #{$gray-300});
 
     &:empty
     {
@@ -262,9 +262,9 @@
 .dyncanvas-chip
 {
     padding: 2px $spacer * 0.5;
-    border: 1px solid var(--theme-border, #{$gray-300});
+    border: 1px solid var(--theme-border-color, #{$gray-300});
     border-radius: $border-radius-sm;
-    background-color: var(--theme-surface, #{$gray-50});
+    background-color: var(--theme-surface-bg, #{$gray-50});
     color: var(--theme-text-muted, #{$gray-600});
     font-size: $font-size-xs;
     cursor: pointer;
@@ -272,8 +272,8 @@
     &:hover,
     &:focus-visible
     {
-        color: var(--theme-text, #{$gray-900});
-        border-color: var(--theme-accent, #{$blue-600});
+        color: var(--theme-text-primary, #{$gray-900});
+        border-color: var(--theme-primary, #{$blue-600});
     }
 }
 

@@ -168,17 +168,23 @@ $gauge-bar-height:          8px;
     padding: 15%;              // Inset from ring stroke
 }
 
+// DEBT-VR-11. These four were `$gray-900` and `$gray-600`, and this file
+// has no dark-mode block at all — a Sass variable resolves once at build
+// time, so the ring and bar text was near-black on a dark surface and
+// measured 1.03 against a 4.5 floor. The token light values are the same
+// bytes ($gray-900 is #0f172a is --theme-text-primary light; $gray-600 is
+// #475569 is --theme-text-muted light), so light mode does not move.
 .gauge-ring-value {
     font-size: clamp(1rem, 6cqi, 2.5rem);
     font-weight: $font-weight-bold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
 }
 
 .gauge-ring-label {
     font-size: clamp(0.5rem, 2.5cqi, $font-size-sm);
-    color: $gray-600;
+    color: var(--theme-text-muted);
     margin-top: 0.125rem;
     white-space: nowrap;
     overflow: hidden;
@@ -216,7 +222,7 @@ $gauge-bar-height:          8px;
 .gauge-bar-value {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $gray-900;
+    color: var(--theme-text-primary);
     white-space: nowrap;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
@@ -224,7 +230,7 @@ $gauge-bar-height:          8px;
 
 .gauge-bar-label {
     font-size: $font-size-sm;
-    color: $gray-600;
+    color: var(--theme-text-muted);
     white-space: nowrap;
     flex-shrink: 0;
 }

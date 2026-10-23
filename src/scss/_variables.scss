@@ -302,7 +302,13 @@ $input-placeholder-color:     $gray-500 !default;
 $form-label-margin-bottom:    0.375rem !default;   // 6px (was 5px)
 $form-label-font-size:        $font-size-sm !default;
 $form-label-font-weight:      $font-weight-semibold !default;
-$form-label-color:            $gray-700 !default;
+// DEBT-VR-11. Was `$gray-700`, which compiles to `color:#334155` with
+// no dark-mode rule anywhere, because a Sass variable is resolved once
+// at build time and cannot flip. Measured in dark mode: 1.78 against a
+// 4.5 floor, on 118 elements across 11 demo pages — and on every form
+// in every consuming app. `--theme-text-secondary` IS `#334155` in
+// light, so this changes nothing there and fixes dark.
+$form-label-color:            var(--theme-text-secondary) !default;
 
 // Tables - adjusted
 $table-cell-padding-y:        0.4375rem !default;  // 7px (ADR-147: row reading density)

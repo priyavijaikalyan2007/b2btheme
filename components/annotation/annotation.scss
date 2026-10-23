@@ -52,7 +52,7 @@
     transition: transform 150ms ease, box-shadow 150ms ease;
 
     // The glyph sits on the filled disc, so it takes the surface colour.
-    color: var(--theme-surface, #{$gray-50});
+    color: var(--theme-surface-bg, #{$gray-50});
 
     &:hover
     {
@@ -106,8 +106,8 @@
     min-width: 160px;
     max-width: 260px;
     padding: $spacer * 0.5 $spacer * 0.625;
-    background-color: var(--theme-surface, #{$gray-50});
-    border: 1px solid var(--theme-border, #{$gray-300});
+    background-color: var(--theme-surface-bg, #{$gray-50});
+    border: 1px solid var(--theme-border-color, #{$gray-300});
     border-left: 3px solid currentColor;
     border-radius: $radius-affordance;
     box-shadow: var(--theme-shadow-md, 0 4px 12px rgba($gray-900, 0.18));
@@ -115,7 +115,7 @@
 
 .annotation-card-text
 {
-    color: var(--theme-text, #{$gray-900});
+    color: var(--theme-text-primary, #{$gray-900});
     font-size: $font-size-sm;
     line-height: $line-height-base;
     word-break: break-word;
@@ -133,14 +133,14 @@
     outline: none;
     resize: vertical;
     background: transparent;
-    color: var(--theme-text, #{$gray-900});
+    color: var(--theme-text-primary, #{$gray-900});
     font-family: inherit;
     font-size: $font-size-sm;
     line-height: $line-height-base;
 
     &:focus-visible
     {
-        box-shadow: 0 2px 0 -1px var(--theme-accent, #{$blue-600});
+        box-shadow: 0 2px 0 -1px var(--theme-primary, #{$blue-600});
     }
 }
 
@@ -198,7 +198,7 @@
     position: absolute;
     left: 0;
     bottom: -18px;
-    color: var(--theme-text, #{$gray-900});
+    color: var(--theme-text-primary, #{$gray-900});
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -212,7 +212,7 @@
 // rule per colour is enough. Theme tokens first, palette values as fallback.
 
 .annotation-amber { color: var(--theme-warning, #{$yellow-500}); }
-.annotation-blue  { color: var(--theme-accent, #{$blue-600}); }
+.annotation-blue  { color: var(--theme-primary, #{$blue-600}); }
 .annotation-green { color: var(--theme-success, #{$green-600}); }
 .annotation-red   { color: var(--theme-danger, #{$red-600}); }
 .annotation-grey  { color: var(--theme-text-muted, #{$gray-600}); }
