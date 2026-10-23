@@ -130,7 +130,12 @@
     --theme-input-bg:           #{$surface-content};
     --theme-input-border:       #{$gray-300};
     --theme-input-color:        #{$gray-900};
-    --theme-input-placeholder:  #{$gray-400};
+    // DEBT-VR-11. Was $gray-400 in BOTH blocks — defined twice with
+    // the same value, which reads as a pair and behaves as one. It
+    // measured 2.56 on a white input against a 4.5 floor. Placeholder
+    // text is text. $gray-500 is 4.76 on white, 4.55 on the sunken
+    // input; the dark block keeps $gray-400, which is 6.96 there.
+    --theme-input-placeholder:  #{$gray-500};
     --theme-input-disabled-bg:  #{$gray-100};
 
     // -- Shadows (RGB channel vars for alpha control) --

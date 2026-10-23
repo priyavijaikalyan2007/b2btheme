@@ -312,3 +312,23 @@
 {
     background-color: var(--theme-code-active-line);
 }
+
+// DEBT-VR-11. CodeMirror's own `&light .cm-lineNumbers` colour applied in
+// both themes, for the same reason the active line did. Measured 3.07 in
+// dark and 2.34 in light against the gutter.
+//
+// This was invisible to the rendered audit until 2026-10-23: the gutter
+// carries `aria-hidden="true"`, and the audit skipped those subtrees.
+// `aria-hidden` means "not exposed to assistive technology", not "not
+// visible" — the numbers are redundant to a screen reader and perfectly
+// legible to everyone else.
+
+.cm-editor .cm-gutters
+{
+    color: var(--theme-text-muted);
+}
+
+.cm-editor .cm-lineNumbers .cm-gutterElement
+{
+    color: var(--theme-text-muted);
+}

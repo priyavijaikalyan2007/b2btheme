@@ -161,6 +161,49 @@ function getInitialsFromName(name: string): string
 /**
  * Deterministic background colour from a name via simple hash.
  */
+/**
+ * A foreground that is readable on an arbitrary caller-supplied fill.
+ *
+ * DEBT-VR-11. `getInitialsColor` hashes the person's NAME into a
+ * background, so the avatar colour is data and no fixed foreground can
+ * be right for every input. White measured 4.43 on the blue a hash
+ * produced and 4.47 on the olive.
+ *
+ * Duplicated per component on purpose: each is bundled as a standalone
+ * IIFE and cannot import a shared module.
+ *
+ * @param background - The fill the text will sit on, as a hex string.
+ * @returns `#000000` or `#ffffff`, whichever carries on that fill.
+ */
+function readableOn(background: string): string
+{
+    const hex = background.trim().replace("#", "");
+
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(hex))
+    {
+        return "#ffffff";   // not a hex we can read; keep the previous default
+    }
+
+    const full = hex.length === 3
+        ? hex.split("").map(function (c) { return c + c; }).join("")
+        : hex;
+
+    const channel = function (v: number): number
+    {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const r = channel(parseInt(full.slice(0, 2), 16));
+    const g = channel(parseInt(full.slice(2, 4), 16));
+    const b = channel(parseInt(full.slice(4, 6), 16));
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Contrast against white is (1.05)/(L+0.05); against near-black
+    // (L+0.05)/0.0947. They cross at L ~= 0.179.
+    return luminance > 0.179 ? "#0f172a" : "#ffffff";
+}
+
 function getInitialsColor(name: string): string
 {
     let hash = 0;
@@ -501,6 +544,7 @@ export class PersonChip implements PersonChipHandle
         const el = createElement("span", [`${CLS}-avatar-initials`], initials);
 
         el.style.backgroundColor = color;
+        el.style.color = readableOn(color);
         el.setAttribute("aria-hidden", "true");
 
         return el;

@@ -146,15 +146,23 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
             (n) => n.nodeType === 3 && (n.textContent ?? "").trim().length > 0);
         if (!own) { continue; }
 
-        if (el.closest("[aria-hidden='true']")) { skipped += 1; continue; }
-
+        // `aria-hidden="true"` is NOT skipped, and the first version of
+        // this walker skipped it. It means "not exposed to assistive
+        // technology", which is a different claim from "not visible" —
+        // CodeMirror marks its line-number gutter aria-hidden because
+        // the numbers are redundant to a screen reader, and a sighted
+        // reader still reads them. Measured there: #64748b on #1e293b,
+        // 3.07 against a 4.5 floor, invisible to this audit for as long
+        // as the skip stood.
         const cs = getComputedStyle(el);
         if (cs.visibility === "hidden" || cs.display === "none"
             || Number(cs.opacity) === 0)
         { skipped += 1; continue; }
 
-        const box = el.getBoundingClientRect();
-        if (box.width < 1 || box.height < 1) { skipped += 1; continue; }
+        // Rendered boxes rather than one bounding rect: an inline element
+        // whose own box collapses can still paint text through its line
+        // boxes, and a width/height test drops it.
+        if (el.getClientRects().length === 0) { skipped += 1; continue; }
 
         considered += 1;
 
