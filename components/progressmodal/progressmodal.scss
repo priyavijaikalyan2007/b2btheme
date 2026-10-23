@@ -193,12 +193,12 @@
 }
 
 .progressmodal-status-success {
-    color: $success;
+    color: var(--theme-success-text);
     font-weight: $font-weight-semibold;
 }
 
 .progressmodal-status-error {
-    color: $danger;
+    color: var(--theme-danger-text);
     font-weight: $font-weight-semibold;
 }
 
@@ -266,15 +266,15 @@
 }
 
 .progressmodal-log-success .progressmodal-log-icon {
-    color: $success;
+    color: var(--theme-success-text);
 }
 
 .progressmodal-log-error .progressmodal-log-icon {
-    color: $danger;
+    color: var(--theme-danger-text);
 }
 
 .progressmodal-log-warning .progressmodal-log-icon {
-    color: $warning;
+    color: var(--theme-warning-text);
 }
 
 .progressmodal-log-progress .progressmodal-log-icon {

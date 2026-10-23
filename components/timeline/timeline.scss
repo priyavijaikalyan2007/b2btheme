@@ -238,7 +238,11 @@
 // and a coloured background bar.
 .timeline-item-span {
     height: var(--timeline-span-height, 24px);
-    background-color: var(--timeline-item-color, $blue-600);
+    // DEBT-VR-11. The default is the THEMED primary, not the raw swatch:
+    // white text on $blue-600 measures 4.01 against a 4.5 floor, and
+    // --theme-primary is the value that carries it (4.80 light, and a
+    // light fill with dark text in dark mode).
+    background-color: var(--timeline-item-color, var(--theme-primary));
     border-left: 3px solid var(--timeline-item-border-color, $blue-800);
     overflow: hidden;
     padding: 0 $sp-6;
@@ -249,7 +253,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: $gray-50;
+    // A caller supplies the span colour, so no fixed foreground can be
+    // right for every input. `--timeline-item-text-color` is written by
+    // the component from `readableOn(item.color)`; the fallback pairs
+    // with the themed default fill above.
+    color: var(--timeline-item-text-color, var(--theme-text-on-primary));
     font-size: $font-size-xs;
     line-height: var(--timeline-span-height, 24px);
     user-select: none;

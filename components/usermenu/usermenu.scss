@@ -288,7 +288,7 @@
 
 .usermenu-item-danger
 {
-    color: $red-600;
+    color: var(--theme-danger-text);
 
     &:hover
     {

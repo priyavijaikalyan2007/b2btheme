@@ -632,7 +632,7 @@
     min-height: 100px;
     padding: $sp-16;
     background-color: rgba($danger, 0.06);
-    color: $danger;
+    color: var(--theme-danger-text);
     font-size: $font-size-sm;
 }
 

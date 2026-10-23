@@ -48,7 +48,8 @@ These are the SCSS variables that control every aspect of the enterprise theme.
 | `$red-300` | `#fca5a5` |  |
 | `$red-200` | `#fecaca` |  |
 | `$red-100` | `#fee2e2` |  |
-| `$yellow-500` | `#f59e0b` | Additional accent colors |
+| `$yellow-800` | `#92400e` | Fills keep $yellow-500 — it is only unusable as a foreground. |
+| `$yellow-500` | `#f59e0b` |  |
 | `$yellow-100` | `#fef3c7` |  |
 | `$orange-500` | `#f97316` |  |
 | `$orange-100` | `#ffedd5` |  |

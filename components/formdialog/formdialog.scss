@@ -185,11 +185,11 @@
 .formdialog-step-complete
 {
     cursor: pointer;
-    color: $green-600;
+    color: var(--theme-success-text);
 
     &:hover
     {
-        color: $green-700;
+        color: var(--theme-success-text);
     }
 
     .formdialog-step-number
@@ -201,7 +201,7 @@
 
 .formdialog-step-active
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     font-weight: $font-weight-semibold;
 
     .formdialog-step-number
@@ -385,7 +385,7 @@
 
 .formdialog-required
 {
-    color: $red-600;
+    color: var(--theme-danger-text);
 }
 
 .formdialog-input,
@@ -484,7 +484,7 @@
 {
     display: block;
     font-size: $font-size-xs;
-    color: $red-600;
+    color: var(--theme-danger-text);
     margin-top: $sp-2;
 }
 

@@ -262,7 +262,7 @@
 .multiselectcombo-max-hint {
     padding: $sp-4 $dropdown-item-padding-x;
     font-size: $font-size-sm;
-    color: $warning;
+    color: var(--theme-warning-text);
     font-style: italic;
 }
 

@@ -234,7 +234,7 @@
 
 .reasoning-step-thinking {
     .reasoning-step-status {
-        color: $blue-600;
+        color: var(--theme-primary-text);
     }
 
     .reasoning-step-header {
@@ -251,13 +251,13 @@
 
 .reasoning-step-complete {
     .reasoning-step-status {
-        color: $green-600;
+        color: var(--theme-success-text);
     }
 }
 
 .reasoning-step-error {
     .reasoning-step-status {
-        color: $red-600;
+        color: var(--theme-danger-text);
     }
 
     .reasoning-step-header {
@@ -270,19 +270,19 @@
 // ============================================================================
 
 .reasoning-status-thinking {
-    color: $blue-600;
+    color: var(--theme-primary-text);
 }
 
 .reasoning-status-complete {
-    color: $green-600;
+    color: var(--theme-success-text);
 }
 
 .reasoning-status-error {
-    color: $red-600;
+    color: var(--theme-danger-text);
 }
 
 .reasoning-status-mixed {
-    color: $yellow-500;
+    color: var(--theme-warning-text);
 }
 
 .reasoning-status-pending {

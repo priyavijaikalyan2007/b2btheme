@@ -45,7 +45,7 @@
 
 .md-diagram-error {
     text-align: left;
-    color: $danger;
+    color: var(--theme-danger-text);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
     padding: $sp-8;
@@ -58,7 +58,7 @@
 // ============================================================================
 
 .math-error {
-    color: $danger;
+    color: var(--theme-danger-text);
     font-family: $font-family-monospace;
     font-size: $font-size-sm;
 }

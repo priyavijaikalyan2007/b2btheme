@@ -208,13 +208,13 @@
 
     .activityfeed-event:hover &
     {
-        color: $blue-600;
+        color: var(--theme-primary-text);
     }
 }
 
 .activityfeed-target
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     text-decoration: underline;
 
     &:hover
@@ -258,7 +258,7 @@
     display: inline;
     border: none;
     background: transparent;
-    color: $blue-600;
+    color: var(--theme-primary-text);
     font-size: $font-size-sm;
     cursor: pointer;
     padding: 0;
@@ -341,7 +341,7 @@
     {
         border: none;
         background: transparent;
-        color: $blue-600;
+        color: var(--theme-primary-text);
         cursor: pointer;
         font-size: $font-size-sm;
 

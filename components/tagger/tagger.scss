@@ -279,7 +279,7 @@
     padding: $sp-6 $sp-10;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $blue-600;
+    color: var(--theme-primary-text);
     cursor: pointer;
     user-select: none;
 
@@ -328,7 +328,7 @@
 .tagger-error {
     margin-top: $sp-4;
     font-size: $font-size-sm;
-    color: $red-600;
+    color: var(--theme-danger-text);
     animation: tagger-error-in 200ms ease;
 }
 

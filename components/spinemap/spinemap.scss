@@ -357,7 +357,7 @@
 }
 
 .spinemap-popover-btn-danger {
-    color: $red-600;
+    color: var(--theme-danger-text);
     border-color: $red-600;
 
     &:hover {

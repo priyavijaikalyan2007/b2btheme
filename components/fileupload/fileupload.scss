@@ -171,7 +171,7 @@
 
 // Completed state
 .fileupload-file-completed .fileupload-file-status {
-    color: $green-600;
+    color: var(--theme-success-text);
 }
 
 .fileupload-file-completed .fileupload-file-progress-bar {
@@ -180,7 +180,7 @@
 
 // Failed state
 .fileupload-file-failed .fileupload-file-status {
-    color: $red-600;
+    color: var(--theme-danger-text);
 }
 
 .fileupload-file-failed .fileupload-file-progress-bar {
@@ -250,7 +250,7 @@
 }
 
 .fileupload-download-link {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     text-decoration: none;
     font-size: $font-size-base;
 }

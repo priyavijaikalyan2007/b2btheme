@@ -50,6 +50,15 @@
     // $gray-600, so the custom half-shade this token used is retired.
     --theme-text-muted:         #{$gray-600};
     --theme-text-on-primary:    #{$gray-50};
+    // DEBT-VR-11. A semantic colour used as TEXT needs its own value per
+    // theme, exactly as --theme-primary-text has had one all along. The
+    // FILL tokens (--theme-success, --theme-danger, --theme-warning) are
+    // unchanged: a fill is read against the text on it, a foreground
+    // against the surface behind it, and one value cannot serve both.
+    // Measured on the worst of sunken / card / ground.
+    --theme-success-text:       #{$green-800};   // 5.32
+    --theme-danger-text:        #{$red-700};     // 5.38
+    --theme-warning-text:       #{$yellow-800};  // 5.90
 
     // -- Borders --
     --theme-border-color:       #{$gray-300};
@@ -207,6 +216,10 @@
     // floor. This token carried one value for both themes while the
     // fill it sits on carried two. $gray-900 on $blue-400 is 7.21.
     --theme-text-on-primary:    #{$gray-900};
+    // DEBT-VR-11. Measured on the worst of ground / raised / surface.
+    --theme-success-text:       #{$green-400};   // 6.55
+    --theme-danger-text:        #{$red-400};     // 4.82
+    --theme-warning-text:       #{$yellow-500};  // 6.21
 
     // -- Borders --
     --theme-border-color:       #{$gray-600};

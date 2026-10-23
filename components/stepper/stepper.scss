@@ -154,11 +154,11 @@
 }
 
 .stepper-step-completed .stepper-label-text {
-    color: $success;
+    color: var(--theme-success-text);
 }
 
 .stepper-step-error .stepper-label-text {
-    color: $danger;
+    color: var(--theme-danger-text);
 }
 
 .stepper-optional {

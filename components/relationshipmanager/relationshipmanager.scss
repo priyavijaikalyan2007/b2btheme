@@ -61,7 +61,7 @@
     padding: $sp-4 $sp-10;
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $blue-600;
+    color: var(--theme-primary-text);
     background: none;
     border: 1px solid $blue-600;
     border-radius: $border-radius;
@@ -245,7 +245,7 @@
 }
 
 .rm-confirm-btn {
-    color: $green-600;
+    color: var(--theme-success-text);
     border-color: $green-600;
 
     &:hover {
@@ -254,7 +254,7 @@
 }
 
 .rm-dismiss-btn {
-    color: $red-600;
+    color: var(--theme-danger-text);
     border-color: $red-600;
 
     &:hover {
@@ -297,7 +297,7 @@
 .rm-add-step {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: $blue-600;
+    color: var(--theme-primary-text);
 }
 
 .rm-step-content {

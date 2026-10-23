@@ -333,7 +333,7 @@
 
 .tenantswitcher-item-check
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     flex-shrink: 0;
     margin-left: auto;
 }
@@ -356,7 +356,7 @@
     padding: $sp-8 $sp-12;
     border: none;
     background: transparent;
-    color: $blue-600;
+    color: var(--theme-primary-text);
     font-size: $font-size-sm;
     cursor: pointer;
     transition: color 100ms, box-shadow 150ms ease;

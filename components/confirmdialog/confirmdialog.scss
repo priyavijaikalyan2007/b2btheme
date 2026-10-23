@@ -58,15 +58,15 @@
 }
 
 .confirmdialog-icon-default {
-    color: $blue-600;
+    color: var(--theme-primary-text);
 }
 
 .confirmdialog-icon-danger {
-    color: $red-600;
+    color: var(--theme-danger-text);
 }
 
 .confirmdialog-icon-warning {
-    color: $yellow-500;
+    color: var(--theme-warning-text);
 }
 
 .confirmdialog-icon-info {

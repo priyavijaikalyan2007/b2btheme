@@ -396,7 +396,7 @@
 
 .applauncher-tab-active
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     border-bottom-color: $blue-600;
     font-weight: $font-weight-semibold;
 }
@@ -617,7 +617,7 @@
 
     &:hover
     {
-        color: $yellow-500;
+        color: var(--theme-warning-text);
     }
 
     &:focus-visible
@@ -629,7 +629,7 @@
 
     &[aria-pressed="true"]
     {
-        color: $yellow-500;
+        color: var(--theme-warning-text);
         opacity: 1;
     }
 }
@@ -666,7 +666,7 @@
 
 .applauncher-footer-link
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     font-size: $font-size-sm;
     background: none;
     border: none;

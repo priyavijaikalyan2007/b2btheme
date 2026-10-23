@@ -278,7 +278,7 @@
 
     &:hover
     {
-        color: $red-600;
+        color: var(--theme-danger-text);
         box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
     }
 

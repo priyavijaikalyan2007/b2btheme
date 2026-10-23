@@ -226,7 +226,7 @@
     font-size: $font-size-sm;
 
     > i {
-        color: $warning;
+        color: var(--theme-warning-text);
         font-size: $font-size-lg;
     }
 }

@@ -414,7 +414,7 @@
     padding: $sp-4 $sp-12;
     border: 1px solid $green-600;
     background: transparent;
-    color: $green-600;
+    color: var(--theme-success-text);
     font-size: $font-size-sm;
     border-radius: $border-radius;
     cursor: pointer;

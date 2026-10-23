@@ -261,6 +261,58 @@ interface MergedRange
     color: string;
 }
 
+/**
+ * A foreground that is readable on an arbitrary caller-supplied fill.
+ *
+ * DEBT-VR-11. A timeline span's colour is DATA — the caller sets it per
+ * item — so no fixed label colour can be right for every input. White
+ * on $success measured 3.29 against a 4.5 floor. Choosing by relative
+ * luminance guarantees at least 4.5 against one of the two extremes for
+ * any input.
+ *
+ * Duplicated per component on purpose: each is bundled as a standalone
+ * IIFE and cannot import a shared module. Same body as `tagger`,
+ * `actionitems`, `facetsearch` and `logconsole`.
+ *
+ * @param background - The fill the text will sit on, as a hex string.
+ * @returns `#0f172a` or `#ffffff`, whichever carries on that fill.
+ */
+function readableOn(background: string): string
+{
+    const hex = background.trim().replace("#", "");
+
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(hex))
+    {
+        return "#ffffff";   // not a hex we can read; keep the previous default
+    }
+
+    const full = hex.length === 3
+        ? hex.split("").map(function (c) { return c + c; }).join("")
+        : hex;
+
+    const channel = function (v: number): number
+    {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const r = channel(parseInt(full.slice(0, 2), 16));
+    const g = channel(parseInt(full.slice(2, 4), 16));
+    const b = channel(parseInt(full.slice(4, 6), 16));
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Contrast against white is (1.05)/(L+0.05); against black
+    // (L+0.05)/0.05. They cross at L ~= 0.179.
+    //
+    // DEBT-VR-11: this returned `#0f172a`, which is NOT an extreme —
+    // L = 0.0088, not 0. Swept over the greyscale, the best of white
+    // and #0f172a bottoms out at 4.23 on #7b7b7b, so the guarantee
+    // above was false for every mid-tone fill. Measured on the live
+    // timeline: #1c7ed6 gave 4.25, #845ef7 gave 4.26. With true black
+    // the worst case over the whole range is 4.61.
+    return luminance > 0.179 ? "#000000" : "#ffffff";
+}
+
 // ============================================================================
 // S2: CONSTANTS
 // ============================================================================
@@ -1995,6 +2047,8 @@ export class Timeline implements TimelineHandle
         if (item.color)
         {
             el.style.setProperty("--timeline-item-color", item.color);
+            el.style.setProperty(
+                "--timeline-item-text-color", readableOn(item.color));
         }
 
         if (item.tooltip)

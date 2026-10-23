@@ -180,9 +180,16 @@ function readableOn(background: string): string
     const b = channel(parseInt(full.slice(4, 6), 16));
     const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-    // Contrast against white is (1.05)/(L+0.05); against near-black
-    // (L+0.05)/0.0947. They cross at L ~= 0.179.
-    return luminance > 0.179 ? "#0f172a" : "#ffffff";
+    // Contrast against white is (1.05)/(L+0.05); against black
+    // (L+0.05)/0.05. They cross at L ~= 0.179.
+    //
+    // DEBT-VR-11: this returned `#0f172a`, which is NOT an extreme —
+    // L = 0.0088, not 0. Swept over the greyscale, the best of white
+    // and #0f172a bottoms out at 4.23 on #7b7b7b, so the guarantee
+    // above was false for every mid-tone fill. Measured on the live
+    // timeline: #1c7ed6 gave 4.25, #845ef7 gave 4.26. With true black
+    // the worst case over the whole range is 4.61.
+    return luminance > 0.179 ? "#000000" : "#ffffff";
 }
 
 // ============================================================================

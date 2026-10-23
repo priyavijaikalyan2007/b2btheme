@@ -307,6 +307,7 @@ $red-400=#f87171
 $red-300=#fca5a5
 $red-200=#fecaca
 $red-100=#fee2e2
+$yellow-800=#92400e
 $yellow-500=#f59e0b
 $yellow-100=#fef3c7
 $orange-500=#f97316

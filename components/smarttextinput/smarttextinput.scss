@@ -61,7 +61,7 @@
 // ============================================================================
 
 .stie-token-link {
-    color: $blue-600;
+    color: var(--theme-primary-text);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
@@ -89,7 +89,7 @@
     border: $border-width solid rgba($green-500, 0.20);
     border-radius: $border-radius;
     font-size: $font-size-sm;
-    color: $green-700;
+    color: var(--theme-success-text);
     font-family: $font-family-monospace;
 
     &:hover {

@@ -99,7 +99,7 @@
 
 .promptmanager-btn-preview-active
 {
-    color: $blue-600;
+    color: var(--theme-primary-text);
 }
 
 // ============================================================================
@@ -444,7 +444,7 @@
 
     &:hover
     {
-        color: $red-600;
+        color: var(--theme-danger-text);
     }
 }
 
