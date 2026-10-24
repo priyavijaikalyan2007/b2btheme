@@ -48,6 +48,7 @@ Full rationale is in the #16 issue body.
 | D10 | Root-level `A2UI.md` (#18) and `MCPUI.md` (#19), referenced from AGENTS.md. |
 | D11 | Additive only. No existing contract changes. |
 | D12 | Catalog naming and independent catalog versioning, guarded by a breaking-change diff. |
+| D13 | `https://static.outcrop.us` is the public origin for **every** protocol artefact: the catalog, and the assets the MCP renderer view loads. No emitted file names `static.knobby.io`. |
 
 ### 1.4 Measured starting point (2026-10-24)
 
@@ -64,7 +65,7 @@ Full rationale is in the #16 issue body.
 1. The `protocol` manifest field and the four-class option classifier (§3).
 2. Per-component option schema generation (§4).
 3. A2UI catalog generation (§5).
-4. MCP descriptor generation (§6).
+4. MCP renderer descriptor generation (§6).
 5. The required-level rule and its ratchet (§7).
 6. Structure check `[29]`, new audit counts, an ADR, and the documentation listed in §12.
 
@@ -90,13 +91,13 @@ Every member of every `<Name>Options` interface belongs to exactly one class.
 | Class | Recognised by | Over the protocol |
 |---|---|---|
 | **Data prop** | type is JSON-serialisable | a catalog property; bindable to a data-model path |
-| **Event callback** | function-typed, and named by some `emits[].legacyOption` | an A2UI `Action`-typed catalog property (§5.4) |
+| **Event callback** | function-typed, and named by some `emits[].legacyOption`; **or** the ADR-134 `onChange` of a component whose options carry `value` | an A2UI `Action`-typed catalog property (§5.4); for `onChange`, the write-back of the two-way `value` binding |
 | **Provider callback** | function-typed, declared in `protocol.providers` | an `Action` property for the request plus a data prop for the response (§5.5) |
 | **Host-only** | declared in `protocol.hostOnly` with a reason | absent from the catalog; the reason is published in the build report |
 
 The classifier assigns data props and event callbacks automatically. Provider and host-only members are always declared by a person, because a classifier cannot tell "asks the host for data" from "decorates a DOM node".
 
-**Serialisable**, for this rule, means the schema generator can express the type without `{}` or an empty schema. Functions, `HTMLElement`, `Element`, `Node`, `Date`, `Map`, `Set`, class instances and `unknown` are not serialisable. `unknown` must be declared host-only or narrowed in the interface. It is never emitted as an unconstrained schema, because an agent cannot use a property it cannot see the shape of.
+**Serialisable**, for this rule, means the schema generator can express the type without `{}` or an empty schema. Functions, `HTMLElement`, `Element`, `Node`, `Date`, `Map`, `Set` and class instances are not serialisable. A member typed too broadly to describe (`unknown`, `Record<string, unknown>`) is never emitted as an unconstrained schema, because an agent cannot use a property it cannot see the shape of. It gets an explicit schema in `protocol.schemas` (§3.2) instead. Narrowing the public TypeScript type is not the fix, because that would break consumers (D11). Measured 2026-10-24: one component declares `value?: unknown`.
 
 The container key named by `containerOption` (and `containerId` for `containerAs: "id"`) is host-only implicitly. It needs no declaration, since the adapter supplies it.
 
@@ -122,6 +123,13 @@ export interface ProtocolSpec
      * the reason, written as what the member needs that JSON cannot carry.
      */
     readonly hostOnly?: Readonly<Record<string, string>>;
+
+    /**
+     * Explicit JSON Schemas for data props whose TypeScript type is too broad
+     * to generate from (`unknown`, `Record<string, unknown>`), keyed by option
+     * name. Replaces the generated schema for that member only.
+     */
+    readonly schemas?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 }
 
 export interface ProviderSpec
@@ -145,8 +153,9 @@ Each of these is a build error (§8) for any component not on the migration list
 
 - A function-, element- or `unknown`-typed member that is in no class.
 - A member declared in two classes, for example both `hostOnly` and an `emits` `legacyOption`.
-- A `providers` or `hostOnly` key that names no member of the interface. That is stale data, and it would hide a rename.
+- A `providers`, `hostOnly` or `schemas` key that names no member of the interface. That is stale data, and it would hide a rename.
 - A `hostOnly` reason shorter than 20 characters. "n/a" is not a reason.
+- A data prop whose generated schema is unconstrained (`{}` or `true`) and has no `protocol.schemas` entry.
 - A data prop with no JSDoc description. The description is what the agent reads (§5.6).
 
 ### 3.4 Migration of the existing fleet
@@ -211,7 +220,7 @@ Each component entry is a JSON Schema object with:
 - for `field`-level components, `value` is two-way: a bound path receives user changes, which matches how A2UI's own `TextField` binds.
 - `description` (§5.6).
 
-The exact v0.9.1 type names for the binding and `Action` definitions are taken from the vendored v0.9.1 common-types schema, never retyped by hand (§13, item 3).
+The binding and `Action` definitions are referenced from the vendored v0.9.1 `json/common_types.json` (`DataBinding`, `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `Action`), never retyped by hand. The catalog as a whole must validate against `$defs/Catalog` in the vendored v0.9.1 `json/client_capabilities.json`. Both were confirmed present at a2ui-project/a2ui commit `409ded2` (2026-10-24).
 
 ### 5.5 Providers
 
@@ -236,11 +245,12 @@ None of this is hand-written per component. A component with a poor description 
 
 | File | Contents | Consumed by |
 |---|---|---|
-| `dist/mcp/renderer.meta.json` | `_meta.ui` for the renderer resource: `csp.resourceDomains` naming the **versioned** CDN path, `https://fonts.googleapis.com` and `https://fonts.gstatic.com`; `prefersBorder` | #19's view and server helper |
-| `dist/mcp/tools.json` | per component, an `inputSchema` fragment (the option schema from §4) a server author can embed in their own tool definitions | third-party MCP server authors |
+| `dist/mcp/renderer.meta.json` | `_meta.ui` for the renderer resource: `csp.resourceDomains` = `https://static.outcrop.us`, `https://fonts.googleapis.com`, `https://fonts.gstatic.com`; `prefersBorder` | #19's view and server helper |
 
-- **The CDN path must be versioned.** A push deploys, so a `ui://` page that loads an unversioned path changes code running inside Claude and ChatGPT on every push. The generator reads the versioned path from the same source the CDN build uses, and it refuses to emit an unversioned one.
-- No `connectDomains`. Components that fetch on their own route those calls through `tools/call` in #19. Allowing the fetch would hand the view network access the host's user never saw declared.
+- **CSP names origins, not paths.** The versioned path (for example `/theme/<version>/…`) belongs in the view's own `<script>` and `<link>` tags, which #19 generates. That path must be versioned: a push deploys, so a `ui://` page loading an unversioned path would change code running inside Claude and ChatGPT on every push. The generator reads the version from the same source the CDN build uses, and refuses to emit an unversioned one (§13, item 4).
+- **The origin is `static.outcrop.us`, not `static.knobby.io` (D13).** That keeps every emitted file host-neutral, and lets `[29]`'s `knobby` check (§11) hold.
+- **No `connectDomains`.** Components that fetch on their own route those calls through `tools/call` in #19. Allowing the fetch would hand the view network access the host's user never saw declared.
+- **No tool definitions.** Under D5 an MCP tool's *output* is an A2UI message, and its *input* is whatever the server author's domain needs. A component's option schema is not a tool `inputSchema`. Helpers for writing tools belong to #19's server helper.
 
 ---
 
@@ -253,12 +263,14 @@ The conformance suite computes a **required level** from what it observes on a r
 | Evidence | Required level |
 |---|---|
 | The handle exposes `getValue` and `setValue`, or the generated schema has a `value` data prop | `field` |
-| The manifest declares any `emits`, `accepts` or `protocol.providers` | `surface` |
+| The manifest declares any `emits`, `accepts` or `protocol.providers`. The ADR-134 `onChange` alone does not count: it is the `field` contract. | `surface` |
 | Otherwise | `display` |
 
 `declared < required` fails, alongside the existing `declared > verified` failure.
 
 This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "a smaller problem". Under D3 it is a defect, because an agent cannot read a value from a component declared `display`. The amendment is recorded as **ADR-219**, and the document is updated in the same change.
+
+**Sizing (measured 2026-10-24):** 113 component folders declare at least one `on*` callback option. Apart from a field's own `onChange`, each such callback needs an `emits` entry to be classified, and any `emits` makes the component `surface`. So most of the fleet ends at `surface`, not `field`. That is consistent with SURFACE_CONTRACT.md, which defines `display` as "no value and no events", but it is the largest cost in the epic, and the ratchet below exists to spread it out.
 
 ### 7.2 The ratchet
 
@@ -314,7 +326,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 | Unit | schema validates `defaultOptions`; a mismatch names both sides | same |
 | Unit | atomic output: an injected failure leaves `dist/` byte-identical | same |
 | Fleet | the generators run over all 101 components | `npm test` and CI |
-| Structure | **check `[29]`** reads the **emitted** `dist/` files (not the generator's in-memory data), validates the catalog against the vendored v0.9.1 catalog meta-schema, and checks that every mountable component has an entry or a report line | `test-local.sh` |
+| Structure | **check `[29]`** reads the **emitted** `dist/` files (not the generator's in-memory data), validates the catalog against `$defs/Catalog` from the vendored v0.9.1 `client_capabilities.json`, and checks that every mountable component has an entry or a report line | `test-local.sh` |
 
 - Unit tests use **synthetic fixture components**, not the real fleet, so a fleet change never silently changes what a unit test proves.
 - **Every gate check is mutation-proven.** For each one, the plan names the mutation that must turn it red: for example, deleting a `hostOnly` entry, renaming a prop without a bump, or declaring `display` on a component with `getValue`. A check that has never been seen failing has not been shown to work.
@@ -324,7 +336,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 
 ## 11. Security
 
-- Everything emitted is public. The existing `defaultOptions` fixture-vocabulary guard is extended to the schemas, the catalog text and `tools.json`.
+- Everything emitted is public. The existing `defaultOptions` fixture-vocabulary guard is extended to the schemas, the catalog text and `renderer.meta.json`.
 - No secrets, internal hostnames or knobby.io references in any emitted file (D2). `[29]` checks for `knobby`.
 - The emitted text enters agents' context. It is authored by us, which makes it trusted. Inbound agent payloads are the real attack surface; AIML_SECURITY.md governs them in #18 and #19.
 - `ts-json-schema-generator` and the vendored A2UI meta-schemas follow the pinning rule. The meta-schemas are data, vendored with their source commit recorded. They are not fetched at build time.
@@ -342,7 +354,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 | `dist/capability-manifest.json` | gains `protocol` where declared |
 | Manifest `conformance` values | some rise, to what the suite verifies |
 | Existing CDN bundles | unchanged; #17 adds data files only |
-| New public artefacts | `dist/schemas/*`, `dist/a2ui/catalog/v1.json`, `dist/mcp/*` (documented in `CDN_CONTRACT.md` and `docs/CDN_INTEGRATION_GUIDE.md` in the same change) |
+| New public artefacts | `dist/schemas/*`, `dist/a2ui/catalog/v1.json`, `dist/mcp/renderer.meta.json` (documented in `CDN_CONTRACT.md` and `docs/CDN_INTEGRATION_GUIDE.md` in the same change) |
 
 ### 12.2 Documentation, landing in the same commit as the gate
 
@@ -367,7 +379,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 | Modify | `runtime/src/types.ts`: `ProtocolSpec`, `ProviderSpec`, `CapabilityManifest.protocol` |
 | Modify | `runtime/fleet-conformance.test.ts`: required level, `BELOW_REQUIRED`, `PENDING_CLASSIFICATION` |
 | Create | `scripts/agentui/classify.ts`, `schema.ts`, `catalog.ts`, `catalog-diff.ts`, `mcp-descriptors.ts`, `generate.ts`, plus tests |
-| Create | `scripts/agentui/vendor/a2ui-v0_9_1/` (meta-schemas, with a recorded source commit) |
+| Create | `scripts/agentui/vendor/a2ui-v0_9_1/`: `common_types.json` and `client_capabilities.json`, with the source commit recorded |
 | Create | `specs/agentui/published/catalog-v1.json` (baseline, first written at first publish) |
 | Modify | `build.sh`: run the generator after the manifest aggregation |
 | Modify | `scripts/audit-counts.mjs`: three counts |
@@ -382,7 +394,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 
 1. **Mixed catalogs in v0.9.1.** Can one v0.9.1 surface mix components from the basic catalog with ours? Per-component `catalogId` resolution is confirmed only in the v1.0 text. If v0.9.1 cannot mix them, agents need layout and text primitives from our own catalog, and that becomes a scope item for #18. It does not change this spec's catalog shape.
 2. **Generator coverage spike.** Run `ts-json-schema-generator` against the five most type-complex `Options` interfaces, chosen by member count and generic use, and record what it cannot express. The result is a finding, not a fallback. An inexpressible member is narrowed in the interface or declared host-only.
-3. **v0.9.1 catalog ID inconsistency.** The v0.9.1 spec text, the shipped `catalog.json` and the MCP guide disagree on the basic catalog's ID (`v0_9_1/…` vs `v0_9/…`). Before the collision list and the vendored meta-schemas are pinned, confirm which one `@a2ui/web_core` 0.14.0 matches against.
-4. **Versioned CDN path source.** Confirm where the CDN build defines the versioned path, so §6 reads it from there rather than restating it.
+3. **v0.9.1 basic catalog ID.** The shipped v0.9.1 basic `catalog.json` declares `https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json` (checked at `409ded2`), while the v0.9.1 spec text says `v0_9_1/…`. This matters only to the collision list's provenance note and to #18. Confirm what `@a2ui/web_core` 0.14.0 matches against before #18 registers anything.
+4. **Versioned CDN path source.** Confirm where the CDN build defines the versioned path, and that `static.outcrop.us` serves the same paths as the primary CDN once CNAMEd. §6 reads the path from there rather than restating it.
 
 **Owner action, not blocking the spec:** the CNAME for `static.outcrop.us` must resolve before the first catalog publish.
