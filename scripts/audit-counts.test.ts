@@ -33,6 +33,7 @@ import
     cdnTagsIn,
     countCdnModuleSpecifiers,
     countOccurrences,
+    stripScssComments,
     uncommentedImportants,
     countUngatedVerboseShims,
     countUnpinnedCdnRefs,
@@ -135,6 +136,45 @@ describe("insideStringLiteral", () =>
     {
         const line = 'const t = `say "hi" and console.log(x)';
         expect(insideStringLiteral(line, line.indexOf("console.log"))).toBe(true);
+    });
+});
+
+describe("stripScssComments", () =>
+{
+    // IMP-1. The !important ratchet matched raw substrings over the
+    // whole file, so a comment reading "specificity, not `!important`"
+    // raised a count of DECLARATIONS. Two of the 105 it reported were
+    // prose.
+    test("a keyword in a line comment does not count", () =>
+    {
+        const scss = "// prefer specificity over !important\na { color: red; }";
+        expect(countOccurrences(stripScssComments(scss), "!important")).toBe(0);
+    });
+
+    test("a keyword in a block comment does not count", () =>
+    {
+        const scss = "/* see IMP-1 about !important */\na { color: red; }";
+        expect(countOccurrences(stripScssComments(scss), "!important")).toBe(0);
+    });
+
+    test("a real declaration still counts", () =>
+    {
+        const scss = "// about !important\na { color: red !important; }";
+        expect(countOccurrences(stripScssComments(scss), "!important")).toBe(1);
+    });
+
+    test("a // inside a string survives", () =>
+    {
+        const scss = "a { background: url(\"https://x/y.png\") !important; }";
+        const out = stripScssComments(scss);
+        expect(out).toContain("https://x/y.png");
+        expect(countOccurrences(out, "!important")).toBe(1);
+    });
+
+    test("a // inside a block comment does not end it early", () =>
+    {
+        const scss = "/* http://example.com\n   !important */\na { b: c; }";
+        expect(countOccurrences(stripScssComments(scss), "!important")).toBe(0);
     });
 });
 

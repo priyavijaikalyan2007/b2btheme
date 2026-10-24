@@ -238,6 +238,30 @@ function resolveDefaultLevelColors(): Record<LogLevel, string>
     };
 }
 
+/**
+ * The TEXT counterpart of each level colour.
+ *
+ * DEBT-VR-11. A `--theme-<role>` token is the colour a control is
+ * PAINTED with, and the level badge was using it as a foreground: WARN
+ * rendered $yellow-500 on the console's white surface at 2.15, SUCCESS
+ * $green-600 at 2.47, against a 4.5 floor. The fill is still right for
+ * the active chip's background and border, so the two roles are two
+ * maps rather than one value used twice.
+ *
+ * These stay as `var()` rather than being resolved, because an inline
+ * `var()` is re-read on every repaint and so follows the theme.
+ */
+function defaultLevelTextColors(): Record<LogLevel, string>
+{
+    return {
+        DEBUG:   "var(--theme-text-muted)",
+        INFO:    "var(--theme-primary-text)",
+        WARN:    "var(--theme-warning-text)",
+        ERROR:   "var(--theme-danger-text)",
+        SUCCESS: "var(--theme-success-text)",
+    };
+}
+
 /** Resolve theme tokens from design token CSS custom properties. */
 function resolveThemeTokens(): ThemeTokens
 {
@@ -364,6 +388,9 @@ export class LogConsole implements LogConsoleHandle
     private readonly theme: ThemeTokens;
     private readonly levelColors: Record<LogLevel, string>;
 
+    /** Foreground counterpart of `levelColors`. See DEBT-VR-11. */
+    private readonly levelTextColors: Record<LogLevel, string>;
+
     // --- State ---
     private entries: LogEntry[] = [];
     private activeFilters: Set<LogLevel>;
@@ -390,6 +417,7 @@ export class LogConsole implements LogConsoleHandle
         this.autoScroll = this.opts.autoScroll ?? true;
         this.theme = this.resolveTheme();
         this.levelColors = this.resolveLevelColors();
+        this.levelTextColors = this.resolveLevelTextColors();
         this.activeFilters = new Set(ALL_LEVELS);
 
         this.buildRoot();
@@ -601,6 +629,26 @@ export class LogConsole implements LogConsoleHandle
         return base;
     }
 
+    /**
+     * Merges the default level TEXT colours with any overrides.
+     *
+     * A caller who overrides a level colour has chosen one value for
+     * both roles, and that is their call to make. The split only
+     * governs what this component picks for itself.
+     */
+    private resolveLevelTextColors(): Record<LogLevel, string>
+    {
+        const base = defaultLevelTextColors();
+        const overrides = this.opts.levelColors;
+        if (!overrides) { return base; }
+
+        for (const lvl of ALL_LEVELS)
+        {
+            if (overrides[lvl]) { base[lvl] = overrides[lvl]!; }
+        }
+        return base;
+    }
+
     // ====================================================================
     // S11: PRIVATE — DOM BUILDING
     // ====================================================================
@@ -780,7 +828,7 @@ export class LogConsole implements LogConsoleHandle
         else
         {
             chip.style.backgroundColor = "transparent";
-            chip.style.color = color;
+            chip.style.color = this.levelTextColors[level];
         }
     }
 
@@ -934,7 +982,7 @@ export class LogConsole implements LogConsoleHandle
     private buildLevelBadge(level: LogLevel): HTMLElement
     {
         const el = createElement("span", ["logconsole-level"], level);
-        el.style.color = this.levelColors[level];
+        el.style.color = this.levelTextColors[level];
         el.style.fontWeight = "600";
         el.style.flexShrink = "0";
         el.style.width = "56px";

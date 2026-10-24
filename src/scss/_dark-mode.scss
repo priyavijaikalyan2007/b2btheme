@@ -77,6 +77,13 @@
     --theme-text-on-info:       #000000;   //  8.48 both
     --theme-text-on-danger:     #ffffff;   //  4.83 light
 
+    // The NEUTRAL filled role: a chip or badge with no semantic colour.
+    // Its fill has to be the opposite end of the scale from the page, so
+    // both halves flip. A component that wanted this used to reach for a
+    // fixed hex and keep it in both themes.
+    --theme-surface-inverse-bg: #{$gray-800};
+    --theme-text-on-inverse:    #{$gray-50};   // 13.98
+
     // -- Borders --
     --theme-border-color:       #{$gray-300};
     --theme-border-subtle:      #{$gray-200};
@@ -290,6 +297,9 @@
     --theme-text-on-info:       #000000;
     --theme-text-on-danger:     #000000;   //  5.58 on $red-500
 
+    --theme-surface-inverse-bg: #{$gray-200};
+    --theme-text-on-inverse:    #{$gray-900};  // 14.48
+
     // -- Borders --
     --theme-border-color:       #{$gray-600};
     --theme-border-subtle:      #{$gray-700};
@@ -426,7 +436,9 @@
     --theme-navrail-header-title-fg:  #{$gray-100};
     --theme-navrail-header-subtitle-fg: #{$gray-400};
     --theme-navrail-header-mark-bg:   #{$blue-500};
-    --theme-navrail-header-mark-fg:   #{$gray-50};
+    // $gray-50 on $blue-500 is 2.99. The brand square keeps the lighter
+    // blue in dark mode, so the glyph is what flips. DEBT-VR-11.
+    --theme-navrail-header-mark-fg:   #{$gray-900};   // 5.71
     --theme-navrail-badge-bg:         #{$red-500};
     --theme-navrail-badge-fg:         #ffffff;
     --theme-navrail-search-bg:        #{$surface-content-dark};

@@ -250,6 +250,57 @@ export function uncommentedImportants(text)
  * Occurrences, not lines. `grep -c` counts lines and silently overrides
  * `-o`, which is how the 203-line figure became an occurrence count.
  */
+/**
+ * SCSS with its comments removed.
+ *
+ * A keyword counter that reads comments counts prose. Block comments go
+ * first so a `//` inside one is not treated as a line comment, and a
+ * `//` inside a string is left alone because SCSS url()s and content
+ * strings legitimately contain one.
+ */
+export function stripScssComments(text)
+{
+    let out = "";
+    let i = 0;
+    let quote = "";
+
+    while (i < text.length)
+    {
+        const c = text[i];
+        const d = text[i + 1];
+
+        if (quote)
+        {
+            if (c === "\\") { out += c + (d ?? ""); i += 2; continue; }
+            if (c === quote) { quote = ""; }
+            out += c;
+            i += 1;
+            continue;
+        }
+
+        if (c === "\"" || c === "'") { quote = c; out += c; i += 1; continue; }
+
+        if (c === "/" && d === "*")
+        {
+            const end = text.indexOf("*/", i + 2);
+            i = end === -1 ? text.length : end + 2;
+            continue;
+        }
+
+        if (c === "/" && d === "/")
+        {
+            const end = text.indexOf("\n", i);
+            i = end === -1 ? text.length : end;
+            continue;
+        }
+
+        out += c;
+        i += 1;
+    }
+
+    return out;
+}
+
 export function countOccurrences(text, needle)
 {
     let n = 0;
@@ -564,8 +615,10 @@ const BASELINES = {
     // amount of specificity beats it without one — this is the case the
     // IMP-1 exemption exists for, and the ratchet made it a decision
     // rather than a habit.
-    scssImportant: 104,
-    scssImportantComponents: 45,
+    // 104 -> 103 and 45 -> 44 on 2026-10-24. Not a fix: the counter was
+    // matching the keyword inside COMMENTS, so one of each was prose.
+    scssImportant: 103,
+    scssImportantComponents: 44,
     // IMP-1 / ADR-209. CODING_STYLE.md permits the keyword in five named
     // cases and requires a comment naming the case. This counts the
     // declarations that carry no such comment, and the ceiling is ZERO.
@@ -1521,13 +1574,23 @@ function measure()
         .split("\n").filter(Boolean).filter((f) => !f.startsWith("dist/"));
     for (const file of scss)
     {
-        const text = readFileSync(file, "utf8");
-        const n = countOccurrences(text, "!important");
+        // Comments stripped FIRST. This counted raw substrings over the
+        // whole file, so a comment that said "specificity, not
+        // `!important`" raised a count of DECLARATIONS by one — the
+        // ratchet this file's own docstring warns about, "named for one
+        // population and measuring another", committed by the ratchet.
+        const raw = readFileSync(file, "utf8");
+        const n = countOccurrences(stripScssComments(raw), "!important");
         counts.scssImportant += n;
         if (file.startsWith("components/"))
         {
             counts.scssImportantComponents += n;
-            counts.scssImportantUncommented += uncommentedImportants(text);
+
+            // The ORIGINAL text here, not the stripped one: this check
+            // looks for the `important-case: N` COMMENT beside each
+            // declaration, so stripping comments first would report
+            // every one of them as unjustified.
+            counts.scssImportantUncommented += uncommentedImportants(raw);
         }
     }
 

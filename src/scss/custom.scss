@@ -414,9 +414,13 @@ select:hover:not(:focus):not(:disabled):not([readonly])
 
   &.status-inactive {
     background-color: var(--theme-text-muted);
-    // The muted token is a mid grey in both themes; black carries on it
-    // at 8.19 and white only at 2.56.
-    color: #000000;
+    // The muted token is NOT "a mid grey in both themes", which is what
+    // the comment here used to claim: it is #475569 in light and
+    // #a9b6c6 in dark, one on each side of the crossover. Black carries
+    // on the dark value at 10.19 and fails the light one at 2.77, so
+    // the ink has to flip with the fill. The inverse pair does exactly
+    // that: 7.24 light, 8.67 dark. DEBT-VR-11.
+    color: var(--theme-text-on-inverse);
   }
 
   &.status-error {

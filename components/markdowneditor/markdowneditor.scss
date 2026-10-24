@@ -770,3 +770,31 @@
     .vditor-reset h5 { font-size: 0.938em; }
     .vditor-reset h6 { font-size: 0.875em; }
 }
+
+// ============================================================================
+// READ-ONLY IS NOT DISABLED
+// ============================================================================
+//
+// Vditor dims ANY non-editable surface to 30 percent opacity:
+//
+//   .vditor-ir pre.vditor-reset[contenteditable="false"] { opacity: 0.3 }
+//
+// It has one mechanism for two states. For a DISABLED editor the dim is
+// right, and WCAG 1.4.3 exempts an inactive control. For a READ-ONLY
+// editor it is wrong: the content is there to be read. DEBT-VR-11
+// measured it at 1.96 in light and 2.57 in dark, 46 elements, on the
+// demo whose purpose is to show read-only mode.
+//
+// Specificity, not `!important`: this is (0,5,1) against vditor's
+// (0,3,1).
+
+.mde-wrapper.mde-readonly:not(.mde-disabled)
+{
+    .vditor-ir pre.vditor-reset[contenteditable="false"],
+    .vditor-wysiwyg pre.vditor-reset[contenteditable="false"],
+    .vditor-sv[contenteditable="false"]
+    {
+        opacity: 1;
+        cursor: default;
+    }
+}

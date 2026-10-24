@@ -1368,6 +1368,7 @@ export class MarkdownEditor implements MarkdownEditorHandle
                 if (!this.options.editable)
                 {
                     this.vditor?.disabled();
+                    this.wrapper?.classList.add("mde-readonly");
                 }
 
                 // A theme change that arrived mid-load is applied now
@@ -1840,13 +1841,25 @@ export class MarkdownEditor implements MarkdownEditorHandle
 
         this.options.editable = editable;
 
+        // READ-ONLY IS NOT DISABLED. Vditor has one mechanism for both
+        // — `disabled()` sets contenteditable=false, and its stylesheet
+        // dims any non-editable surface to 30 percent. A disabled
+        // control may be dimmed, because WCAG 1.4.3 exempts an inactive
+        // component. Read-only CONTENT may not: it is text a person is
+        // meant to read. Measured at 1.96 in light and 2.57 in dark,
+        // across 46 elements, on a page whose whole purpose was to show
+        // the read-only mode. DEBT-VR-11.
         if (editable)
         {
             this.vditor?.enable();
+            this.wrapper?.classList.remove("mde-readonly");
+            this.wrapper?.removeAttribute("aria-readonly");
         }
         else
         {
             this.vditor?.disabled();
+            this.wrapper?.classList.add("mde-readonly");
+            this.wrapper?.setAttribute("aria-readonly", "true");
         }
 
         logDebug("Editable:", editable);
@@ -1981,6 +1994,7 @@ ${bodyHTML}
         this.options.disabled = false;
         this.vditor?.enable();
         this.wrapper?.classList.remove("mde-disabled");
+        this.wrapper?.removeAttribute("aria-disabled");
     }
 
     /**
@@ -1992,6 +2006,14 @@ ${bodyHTML}
         this.options.disabled = true;
         this.vditor?.disabled();
         this.wrapper?.classList.add("mde-disabled");
+
+        // Vditor dims the editor to 30 percent opacity when disabled,
+        // and nothing told assistive technology why. A class is a
+        // styling hook, not a state: a screen reader reads the content
+        // as ordinary editable text. DEBT-VR-11 found this by measuring
+        // the dimmed text at 1.96 and having no way to tell whether the
+        // exemption for an inactive control applied.
+        this.wrapper?.setAttribute("aria-disabled", "true");
     }
 
     /**

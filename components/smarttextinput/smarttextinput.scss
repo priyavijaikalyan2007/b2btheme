@@ -42,7 +42,10 @@
     border: $border-width solid rgba($blue-500, 0.25);
     border-radius: 9999px;                // Rounded ends for pill appearance (ADR-034)
     font-size: $font-size-sm;
-    color: $blue-700;
+    // $blue-700 is one value, and the tint it sits on is over the page
+    // ground, which flips. In dark mode that was dark blue on dark:
+    // 2.60 against a 4.5 floor. DEBT-VR-11.
+    color: var(--theme-primary-text);
     line-height: $line-height-base;
     animation: stie-token-in 150ms ease-out;
 

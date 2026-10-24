@@ -17,6 +17,17 @@
 // ---------------------------------------------------------------------------
 
 .typebadge {
+    // THEME-AWARE DEFAULTS. These used to be a fixed hex, #475569, set
+    // inline from TypeScript whether the caller asked for a colour or
+    // not. An inline property wins over every rule, so the badge kept
+    // slate-600 in dark mode and the subtle variant rendered that text
+    // on its own 10 percent tint of itself: 2.05 against a 4.5 floor.
+    // A colour the CALLER supplies still arrives inline and still wins.
+    // This is only what happens when none does.
+    --tb-color: var(--theme-text-secondary);
+    --tb-bg: var(--theme-surface-sunken-bg);
+    --tb-fg: var(--theme-text-on-inverse);
+
     display: inline-flex;
     align-items: center;
     gap: $sp-4;
@@ -86,8 +97,12 @@
 // ---------------------------------------------------------------------------
 
 .typebadge-filled {
+    // The neutral fill is the inverse surface, so both halves flip. A
+    // caller colour overrides --tb-bg and --tb-fg together, never one.
+    --tb-bg: var(--theme-surface-inverse-bg);
+
     background-color: var(--tb-bg);
-    color: $gray-50;
+    color: var(--tb-fg);
 }
 
 .typebadge-outlined {

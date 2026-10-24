@@ -178,8 +178,12 @@
 
 // Failed pill
 .statusbadge-failed.statusbadge-pill .statusbadge-label {
+    // NOT --theme-text-on-danger. That token is the ink for the DANGER
+    // fill, which is $red-600 in light and $red-500 in dark, and in
+    // dark it is black: black on this much darker red measured 2.53.
+    // A fixed fill takes a fixed ink, and white carries at 8.31.
     background-color: $red-800;
-    color: var(--theme-text-on-danger);
+    color: #ffffff;
 }
 
 // Maintenance pill

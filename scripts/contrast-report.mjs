@@ -24,6 +24,7 @@ export function aggregate()
     const files = readdirSync(DIR).filter((f) => f.endsWith(".json"));
     const findings = [];
     const unmeasurable = [];
+    const exempt = [];
     let considered = 0;
     let skipped = 0;
     let svgComposited = 0;
@@ -36,10 +37,11 @@ export function aggregate()
         svgComposited += row.svgComposited ?? 0;
         findings.push(...row.findings);
         unmeasurable.push(...(row.unmeasurable ?? []));
+        exempt.push(...(row.exempt ?? []));
     }
 
     return { runs: files.length, considered, skipped, svgComposited,
-        findings, unmeasurable };
+        findings, unmeasurable, exempt };
 }
 
 function main()
@@ -71,6 +73,8 @@ function main()
     // Not a skip and not a pass. Text on a gradient or pattern fill has
     // no single background, so no ratio describes it. It is printed on
     // its own line so the number cannot be mistaken for either column.
+    console.log(`exempt          : ${result.exempt.length}`
+        + "  (WCAG 1.4.3: inactive controls)");
     console.log(`unmeasurable    : ${result.unmeasurable.length}`
         + "  (no single background to measure against)");
 

@@ -367,7 +367,7 @@
                             name: { value: "Alice Chen" },
                             role: { value: "Senior Engineer" },
                             department: { value: "Engineering" },
-                            status: { value: "Active", style: { color: "#198754" } }
+                            status: { value: "Active", style: { color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -376,7 +376,7 @@
                             name: { value: "Bob Martinez" },
                             role: { value: "Product Designer" },
                             department: { value: "Design" },
-                            status: { value: "Active", style: { color: "#198754" } }
+                            status: { value: "Active", style: { color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -385,7 +385,7 @@
                             name: { value: "Carol Wang" },
                             role: { value: "Engineering Manager" },
                             department: { value: "Engineering" },
-                            status: { value: "Away", style: { color: "#fd7e14" } }
+                            status: { value: "Away", style: { color: "var(--theme-warning-text)" } }
                         }
                     },
                     {
@@ -394,7 +394,7 @@
                             name: { value: "David Kim" },
                             role: { value: "UX Researcher" },
                             department: { value: "Design" },
-                            status: { value: "Active", style: { color: "#198754" } }
+                            status: { value: "Active", style: { color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -403,7 +403,7 @@
                             name: { value: "Eve Patel" },
                             role: { value: "Data Analyst" },
                             department: { value: "Analytics" },
-                            status: { value: "Inactive", style: { color: "#dc3545" } }
+                            status: { value: "Inactive", style: { color: "var(--theme-danger-text)" } }
                         }
                     }
                 ]
@@ -608,7 +608,7 @@
                                     { type: "link", text: "View Docs", url: "https://example.com/docs" }
                                 ]
                             },
-                            price: { value: "$2,499", style: { bold: true, color: "#198754" } }
+                            price: { value: "$2,499", style: { bold: true, color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -626,7 +626,7 @@
                                     { type: "link", text: "GitHub Repo", url: "https://github.com" }
                                 ]
                             },
-                            price: { value: "$899", style: { bold: true, color: "#198754" } }
+                            price: { value: "$899", style: { bold: true, color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -649,7 +649,7 @@
                                     { type: "link", text: "Component Index", url: "https://example.com/components" }
                                 ]
                             },
-                            price: { value: "$1,299", style: { bold: true, color: "#198754" } }
+                            price: { value: "$1,299", style: { bold: true, color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -667,7 +667,7 @@
                                     { type: "link", text: "Quick Start", url: "https://example.com/quickstart" }
                                 ]
                             },
-                            price: { value: "$1,799", style: { bold: true, color: "#198754" } }
+                            price: { value: "$1,799", style: { bold: true, color: "var(--theme-success-text)" } }
                         }
                     }
                 ]
@@ -711,7 +711,7 @@
                             metric: { value: "Monthly Revenue" },
                             current: { value: "$1.2M", style: { bold: true } },
                             previous: { value: "$1.05M" },
-                            change: { value: "+14.3%", style: { color: "#198754", bold: true } },
+                            change: { value: "+14.3%", style: { color: "var(--theme-success-text)", bold: true } },
                             target: { value: "$1.1M" }
                         }
                     },
@@ -721,7 +721,7 @@
                             metric: { value: "Active Users" },
                             current: { value: "45,230", style: { bold: true } },
                             previous: { value: "42,100" },
-                            change: { value: "+7.4%", style: { color: "#198754", bold: true } },
+                            change: { value: "+7.4%", style: { color: "var(--theme-success-text)", bold: true } },
                             target: { value: "44,000" }
                         }
                     },
@@ -731,7 +731,7 @@
                             metric: { value: "Churn Rate" },
                             current: { value: "2.1%", style: { bold: true } },
                             previous: { value: "2.8%" },
-                            change: { value: "-0.7%", style: { color: "#198754", bold: true } },
+                            change: { value: "-0.7%", style: { color: "var(--theme-success-text)", bold: true } },
                             target: { value: "2.5%" }
                         }
                     },
@@ -741,7 +741,7 @@
                             metric: { value: "NPS Score" },
                             current: { value: "72", style: { bold: true } },
                             previous: { value: "68" },
-                            change: { value: "+4", style: { color: "#198754", bold: true } },
+                            change: { value: "+4", style: { color: "var(--theme-success-text)", bold: true } },
                             target: { value: "70" }
                         }
                     },
@@ -751,7 +751,7 @@
                             metric: { value: "Support Tickets" },
                             current: { value: "342", style: { bold: true } },
                             previous: { value: "298" },
-                            change: { value: "+14.8%", style: { color: "#dc3545", bold: true } },
+                            change: { value: "+14.8%", style: { color: "var(--theme-danger-text)", bold: true } },
                             target: { value: "300" }
                         }
                     }
@@ -797,9 +797,9 @@
                         cells: {
                             task: { value: "Update login flow" },
                             assignee: { value: "Alice" },
-                            priority: { value: "High", style: { color: "#dc3545" } },
+                            priority: { value: "High", style: { color: "var(--theme-danger-text)" } },
                             due: { value: "2026-04-05" },
-                            status: { value: "In Progress", style: { color: "#fd7e14" } }
+                            status: { value: "In Progress", style: { color: "var(--theme-warning-text)" } }
                         }
                     },
                     {
@@ -807,7 +807,7 @@
                         cells: {
                             task: { value: "Fix pagination bug" },
                             assignee: { value: "Bob" },
-                            priority: { value: "Medium", style: { color: "#fd7e14" } },
+                            priority: { value: "Medium", style: { color: "var(--theme-warning-text)" } },
                             due: { value: "2026-04-08" },
                             status: { value: "Open", style: { color: "#0d6efd" } }
                         }
@@ -817,7 +817,7 @@
                         cells: {
                             task: { value: "Add dark mode tests" },
                             assignee: { value: "Carol" },
-                            priority: { value: "Low", style: { color: "#198754" } },
+                            priority: { value: "Low", style: { color: "var(--theme-success-text)" } },
                             due: { value: "2026-04-12" },
                             status: { value: "Open", style: { color: "#0d6efd" } }
                         }
@@ -827,9 +827,9 @@
                         cells: {
                             task: { value: "Deploy v2.1 release" },
                             assignee: { value: "David" },
-                            priority: { value: "High", style: { color: "#dc3545" } },
+                            priority: { value: "High", style: { color: "var(--theme-danger-text)" } },
                             due: { value: "2026-04-03" },
-                            status: { value: "Done", style: { color: "#198754" } }
+                            status: { value: "Done", style: { color: "var(--theme-success-text)" } }
                         }
                     },
                     {
@@ -837,9 +837,9 @@
                         cells: {
                             task: { value: "Write API docs" },
                             assignee: { value: "Eve" },
-                            priority: { value: "Medium", style: { color: "#fd7e14" } },
+                            priority: { value: "Medium", style: { color: "var(--theme-warning-text)" } },
                             due: { value: "2026-04-15" },
-                            status: { value: "In Progress", style: { color: "#fd7e14" } }
+                            status: { value: "In Progress", style: { color: "var(--theme-warning-text)" } }
                         }
                     },
                     {
@@ -847,7 +847,7 @@
                         cells: {
                             task: { value: "Refactor state manager" },
                             assignee: { value: "Alice" },
-                            priority: { value: "High", style: { color: "#dc3545" } },
+                            priority: { value: "High", style: { color: "var(--theme-danger-text)" } },
                             due: { value: "2026-04-10" },
                             status: { value: "Open", style: { color: "#0d6efd" } }
                         }
@@ -857,7 +857,7 @@
                         cells: {
                             task: { value: "Performance audit" },
                             assignee: { value: "Bob" },
-                            priority: { value: "Low", style: { color: "#198754" } },
+                            priority: { value: "Low", style: { color: "var(--theme-success-text)" } },
                             due: { value: "2026-04-20" },
                             status: { value: "Backlog", style: { color: "#6c757d" } }
                         }

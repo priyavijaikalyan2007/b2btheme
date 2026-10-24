@@ -574,7 +574,11 @@
     font-size: $font-size-2xs;
     font-weight: $font-weight-semibold;
     padding: $sp-1 $sp-4;
-    color: $gray-50;
+    // The fill flips with the theme and the ink has to flip with it.
+    // $gray-50 on the dark primary ($blue-400) measured 2.37. The other
+    // three variants below already take their own on-colour; this one
+    // was the default and was missed. DEBT-VR-11.
+    color: var(--theme-text-on-primary);
     background-color: var(--theme-primary);
     border-radius: $border-radius-sm;
     line-height: $line-height-base;

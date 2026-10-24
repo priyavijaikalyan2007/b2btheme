@@ -138,6 +138,53 @@ describe("TypeBadge variants", () =>
 });
 
 // ============================================================================
+// COLOUR
+// ============================================================================
+
+describe("TypeBadge colour", () =>
+{
+    // DEBT-VR-11. The default used to be the fixed hex #475569, written
+    // inline. Nothing in a stylesheet overrides an inline property, so
+    // the badge kept slate-600 in dark mode and the subtle variant put
+    // that text on a 10 percent tint of itself: 2.05 against a 4.5
+    // floor. The default has to be ABSENT here, not merely different.
+    test("NoColour_SetsNoInlineColour", () =>
+    {
+        const el = createTypeBadge(makeOptions({ variant: "subtle" }));
+        expect(el.style.getPropertyValue("--tb-color")).toBe("");
+        expect(el.style.getPropertyValue("--tb-bg")).toBe("");
+        expect(el.style.getPropertyValue("--tb-fg")).toBe("");
+    });
+
+    test("CallerColour_StillGoesInline", () =>
+    {
+        const el = createTypeBadge(
+            makeOptions({ variant: "subtle", color: "#C0392B" }));
+        expect(el.style.getPropertyValue("--tb-color")).toBe("#C0392B");
+        expect(el.style.getPropertyValue("--tb-bg"))
+            .toBe("rgba(192, 57, 43, 0.1)");
+    });
+
+    test("FilledCallerColour_PairsAReadableForeground", () =>
+    {
+        const pale = createTypeBadge(
+            makeOptions({ variant: "filled", color: "#ffe066" }));
+        expect(pale.style.getPropertyValue("--tb-fg")).toBe("#000000");
+
+        const deep = createTypeBadge(
+            makeOptions({ variant: "filled", color: "#1e293b" }));
+        expect(deep.style.getPropertyValue("--tb-fg")).toBe("#ffffff");
+    });
+
+    test("NonHexColour_Throws", () =>
+    {
+        expect(() => createTypeBadge(
+            makeOptions({ variant: "filled", color: "rebeccapurple" })))
+            .toThrow(/must be a hex colour/);
+    });
+});
+
+// ============================================================================
 // CLICKABLE
 // ============================================================================
 

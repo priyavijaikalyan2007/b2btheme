@@ -120,6 +120,7 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
     skipReasons: Record<string, number>;
     skipSamples: Record<string, string>;
     unmeasurable: { path: string; text: string; reason: string }[];
+    exempt: { path: string; text: string; reason: string }[];
     svgComposited: number; }
 {
     const parse = (c: string): [number, number, number, number] =>
@@ -336,6 +337,7 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
 
     const findings: Omit<Finding, "page" | "theme">[] = [];
     const unmeasurable: { path: string; text: string; reason: string }[] = [];
+    const exempt: { path: string; text: string; reason: string }[] = [];
     const skipReasons: Record<string, number> = {};
     const skipSamples: Record<string, string> = {};
     let considered = 0;
@@ -394,26 +396,61 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         // it can present: one for a solid, several for a gradient's stops.
         const stack: number[][][] = [];
         const box = el.getBoundingClientRect();
-        let node: Element | null = el;
         let broken = false;
         let floor = false;
-        while (node)
+
+        const chain: Element[] = [];
+        for (let n: Element | null = el; n; n = n.parentElement)
+        { chain.push(n); }
+
+        // `opacity` on an ancestor fades its WHOLE subtree onto whatever
+        // is behind the group — the text as well as the fill the text
+        // sits on. Faded text on a faded fill reads worse than either
+        // alone suggests, and reading `opacity` on the element only
+        // misses it entirely: the annotation caption lived inside a
+        // wash at `opacity: 0.18` and was measured at full strength.
+        //
+        // A layer is faded by its OWN opacity and by every ancestor's,
+        // which is the suffix product, not the prefix.
+        const fade: number[] = new Array(chain.length);
+        let acc = 1;
+        for (let i = chain.length - 1; i >= 0; i -= 1)
         {
-            const layer = parse(getComputedStyle(node).backgroundColor);
-            if (layer[3] > 0) { stack.push([layer]); }
-            if (layer[3] >= 1) { break; }
+            const o = getComputedStyle(chain[i]).opacity;
+            acc *= o === "" ? 1 : Number(o);
+            fade[i] = acc;
+        }
+
+        for (let i = 0; i < chain.length; i += 1)
+        {
+            const node = chain[i];
+
+            // An absolutely positioned child can sit OUTSIDE the box of
+            // the ancestor it descends from, and then that ancestor's
+            // background is not behind it. The annotation caption hangs
+            // 18px below its wash and was being measured against the
+            // wash's amber.
+            const r = node.getBoundingClientRect();
+            const overlaps = r.left < box.right && r.right > box.left
+                && r.top < box.bottom && r.bottom > box.top;
+
+            if (overlaps)
+            {
+                const raw = parse(getComputedStyle(node).backgroundColor);
+                const layer: number[] = [raw[0], raw[1], raw[2], raw[3] * fade[i]];
+                if (layer[3] > 0) { stack.push([layer]); }
+                if (layer[3] >= 1) { break; }
+            }
 
             const fills = fillsUnder(node, box);
             if (fills === "broken") { broken = true; break; }
             for (const f of fills)
             {
-                stack.push(f);
+                stack.push(f.map((c) => [c[0], c[1], c[2], c[3] * fade[i]]));
                 svgComposited += 1;
-                if (f.every((c) => c[3] >= 1)) { floor = true; }
+                if (f.every((c) => c[3] * fade[i] >= 1)) { floor = true; }
             }
             if (floor) { break; }
-
-            node = node.parentElement;
         }
 
         // A `fill="url(#id)"` whose target is not in the document is a
@@ -457,13 +494,32 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         const large = size >= 24 || (size >= 18.66 && weight >= 700);
         const threshold = large ? 3 : 4.5;
 
+        // The text is inside every opacity group above it, so it is
+        // faded by all of them.
+        const textFg: number[] = [fg[0], fg[1], fg[2], fg[3] * fade[0]];
+
         let bg = variants[0] as [number, number, number, number];
         let r = Infinity;
         for (const v of variants)
         {
-            const solid = fg[3] < 1 ? over(fg, v) : fg;
+            const solid = textFg[3] < 1 ? over(textFg, v) : textFg;
             const candidate = ratio(solid, v);
             if (candidate < r) { r = candidate; bg = v as [number, number, number, number]; }
+        }
+
+        // WCAG 1.4.3 exempts an INACTIVE control, and a disabled button
+        // that is dimmed to 60 percent is exactly that. This is not a
+        // skip: a skip hides an element from the population, and these
+        // are listed with their reason so the exemption can be argued
+        // with. The DISABLED state is the claim, not the dimness —
+        // faded text that nothing marks disabled is still a failure.
+        if (r < threshold && el.closest(
+            ":disabled, [disabled], [aria-disabled=\"true\"], .disabled"))
+        {
+            exempt.push({ path: pathOf(el),
+                text: (el.textContent ?? "").trim().slice(0, 40),
+                reason: `inactive control, ${Math.round(r * 100) / 100}` });
+            continue;
         }
 
         if (r < threshold)
@@ -471,7 +527,12 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
             findings.push({
                 path: pathOf(el),
                 text: (el.textContent ?? "").trim().slice(0, 40),
-                fg: cs.color,
+                // The AUTHORED colour, so the row names something
+                // greppable, plus the group fade when one applies —
+                // the number will not reconcile without it.
+                fg: fade[0] < 1
+                    ? `${cs.color} @ ${Math.round(fade[0] * 100)}% group opacity`
+                    : cs.color,
                 bg: `rgb(${bg.slice(0, 3).map(Math.round).join(", ")})`,
                 ratio: Math.round(r * 100) / 100,
                 threshold,
@@ -480,7 +541,7 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
     }
 
     return { findings, considered, skipped, skipReasons, skipSamples,
-        unmeasurable, svgComposited };
+        unmeasurable, exempt, svgComposited };
 }
 
 /**
@@ -546,6 +607,7 @@ test.describe("rendered text contrast", () =>
                     skipReasons: result.skipReasons,
                     skipSamples: result.skipSamples,
                     svgComposited: result.svgComposited,
+                    exempt: result.exempt.map((e) => ({ page, theme, ...e })),
                     unmeasurable: result.unmeasurable.map(
                         (u) => ({ page, theme, ...u })),
                     findings: result.findings.map(

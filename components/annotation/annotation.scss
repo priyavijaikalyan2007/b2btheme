@@ -51,13 +51,17 @@
     box-shadow: 0 1px 3px rgba($gray-900, 0.3);
     transition: transform 150ms ease, box-shadow 150ms ease;
 
-    // The glyph sits on the filled disc, so it takes the surface colour.
-    color: var(--theme-surface-bg, #{$gray-50});
+    // The glyph sits on the filled disc, so it takes the disc's PAIRED
+    // on-colour, set by the palette class below. Taking the surface
+    // colour instead is what DEBT-VR-11 found: white on the amber disc
+    // measured 2.15, and on green 2.47, against a 4.5 floor. A surface
+    // is not a foreground for anything but that surface.
+    color: var(--annot-marker-fg);
 
     &:hover
     {
         transform: scale(1.15);
-        box-shadow: 0 0 8px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.28));
+        box-shadow: 0 0 8px var(--theme-glow-color-hover);
     }
 
     &:focus-visible
@@ -67,13 +71,39 @@
     }
 }
 
-// The disc itself is the annotation's colour; the palette classes set
-// `color`, so the marker paints its background from a sibling custom property.
-.annotation-amber .annotation-marker { background-color: $yellow-500; }
-.annotation-blue  .annotation-marker { background-color: $blue-600; }
-.annotation-green .annotation-marker { background-color: $green-600; }
-.annotation-red   .annotation-marker { background-color: $red-600; }
-.annotation-grey  .annotation-marker { background-color: $gray-600; }
+// The disc is the annotation's colour and the glyph is that colour's
+// paired on-colour. Both halves come from the theme, so both flip
+// together — the disc used to be a fixed Sass value while the glyph
+// followed the surface, which is two colours moving independently.
+.annotation-amber .annotation-marker
+{
+    background-color: var(--theme-warning);
+    --annot-marker-fg: var(--theme-text-on-warning);
+}
+
+.annotation-blue .annotation-marker
+{
+    background-color: var(--theme-primary);
+    --annot-marker-fg: var(--theme-text-on-primary);
+}
+
+.annotation-green .annotation-marker
+{
+    background-color: var(--theme-success);
+    --annot-marker-fg: var(--theme-text-on-success);
+}
+
+.annotation-red .annotation-marker
+{
+    background-color: var(--theme-danger);
+    --annot-marker-fg: var(--theme-text-on-danger);
+}
+
+.annotation-grey .annotation-marker
+{
+    background-color: var(--theme-text-muted);
+    --annot-marker-fg: var(--theme-text-on-inverse);
+}
 
 // ============================================================================
 // EXPANDED — A POPOVER CARD
@@ -106,16 +136,16 @@
     min-width: 160px;
     max-width: 260px;
     padding: $spacer * 0.5 $spacer * 0.625;
-    background-color: var(--theme-surface-bg, #{$gray-50});
-    border: 1px solid var(--theme-border-color, #{$gray-300});
+    background-color: var(--theme-surface-bg);
+    border: 1px solid var(--theme-border-color);
     border-left: 3px solid currentColor;
     border-radius: $radius-affordance;
-    box-shadow: var(--theme-shadow-md, 0 4px 12px rgba($gray-900, 0.18));
+    box-shadow: var(--theme-shadow-md);
 }
 
 .annotation-card-text
 {
-    color: var(--theme-text-primary, #{$gray-900});
+    color: var(--theme-text-primary);
     font-size: $font-size-sm;
     line-height: $line-height-base;
     word-break: break-word;
@@ -133,14 +163,14 @@
     outline: none;
     resize: vertical;
     background: transparent;
-    color: var(--theme-text-primary, #{$gray-900});
+    color: var(--theme-text-primary);
     font-family: inherit;
     font-size: $font-size-sm;
     line-height: $line-height-base;
 
     &:focus-visible
     {
-        box-shadow: 0 2px 0 -1px var(--theme-primary, #{$blue-600});
+        box-shadow: 0 2px 0 -1px var(--theme-primary);
     }
 }
 
@@ -154,10 +184,23 @@
     position: relative;
     width: 200px;
     height: 90px;
-    background-color: currentColor;
-    opacity: 0.18;
     border: 1px solid currentColor;
     border-radius: $radius-affordance;
+
+    // The tint is painted by a pseudo-element, not by `opacity` on the
+    // wash itself. `opacity` fades the WHOLE subtree, and the caption is
+    // in that subtree: the label was being rendered at 18 percent along
+    // with the fill it is meant to be legible against. DEBT-VR-11.
+    &::before
+    {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background-color: currentColor;
+        opacity: 0.18;
+        pointer-events: none;
+    }
 }
 
 .annotation-arrow
@@ -198,7 +241,7 @@
     position: absolute;
     left: 0;
     bottom: -18px;
-    color: var(--theme-text-primary, #{$gray-900});
+    color: var(--theme-text-primary);
     font-size: $font-size-xs;
     font-weight: $font-weight-medium;
     white-space: nowrap;
@@ -211,11 +254,11 @@
 // currentColor drives strokes, the card's accent edge and the wash, so one
 // rule per colour is enough. Theme tokens first, palette values as fallback.
 
-.annotation-amber { color: var(--theme-warning, #{$yellow-500}); }
-.annotation-blue  { color: var(--theme-primary, #{$blue-600}); }
-.annotation-green { color: var(--theme-success, #{$green-600}); }
-.annotation-red   { color: var(--theme-danger, #{$red-600}); }
-.annotation-grey  { color: var(--theme-text-muted, #{$gray-600}); }
+.annotation-amber { color: var(--theme-warning); }
+.annotation-blue  { color: var(--theme-primary); }
+.annotation-green { color: var(--theme-success); }
+.annotation-red   { color: var(--theme-danger); }
+.annotation-grey  { color: var(--theme-text-muted); }
 
 @media (prefers-reduced-motion: reduce)
 {

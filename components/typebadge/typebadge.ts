@@ -64,8 +64,6 @@ function logTrace(...a: unknown[]): void
 // FRONTEND_LOGGING.md section 1.1 states.
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
-/** Default color when none provided. Matches $gray-600. */
-const DEFAULT_COLOR = "#475569";
 
 // ============================================================================
 // TYPES
@@ -141,10 +139,61 @@ function extractDisplayName(
     return dotIdx >= 0 ? typeKey.substring(dotIdx + 1) : typeKey;
 }
 
-/** Resolve color, defaulting to gray-600 hex. */
-function resolveColor(color?: string): string
+/**
+ * The caller's colour, or `null` when they did not pick one.
+ *
+ * `null` matters: it is the difference between "paint it this hex" and
+ * "use the theme's own neutral". This used to return a fixed #475569 so
+ * that every badge carried an inline colour, which no dark-mode rule
+ * can override. The stylesheet owns the default now.
+ */
+function resolveColor(color?: string): string | null
 {
-    return color && color.length > 0 ? color : DEFAULT_COLOR;
+    return color && color.length > 0 ? color : null;
+}
+
+/**
+ * Pick a foreground that stays readable on an arbitrary background.
+ *
+ * ADR-153. A caller-supplied colour cannot be vetted at build time, and
+ * a fixed #fff fails on anything pale. Choosing by relative luminance
+ * guarantees at least 4.61 against one of the two extremes.
+ *
+ * Duplicated per component on purpose: each is bundled as a standalone
+ * IIFE and cannot import a shared module.
+ */
+function readableOn(background: string): string
+{
+    const hex = background.trim().replace("#", "");
+
+    if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(hex))
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.color must be a hex colour, got `
+            + `"${background}". A badge cannot pick a readable `
+            + "foreground for a colour it cannot read.");
+    }
+
+    const full = hex.length === 3
+        ? hex.split("").map(function (c) { return c + c; }).join("")
+        : hex;
+
+    const channel = function (v: number): number
+    {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    const r = channel(parseInt(full.slice(0, 2), 16));
+    const g = channel(parseInt(full.slice(2, 4), 16));
+    const b = channel(parseInt(full.slice(4, 6), 16));
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Contrast against white is (1.05)/(L+0.05); against black
+    // (L+0.05)/0.05. They cross at L ~= 0.179. Both extremes are TRUE
+    // extremes: #0f172a is L = 0.0088 and bottoms the guarantee out at
+    // 4.23 on a mid grey, which DEBT-VR-11 found in five components.
+    return luminance > 0.179 ? "#000000" : "#ffffff";
 }
 
 /** Convert hex (#RRGGBB or #RGB) to rgba string. */
@@ -257,15 +306,21 @@ export function createTypeBadge(options: TypeBadgeOptions): HTMLElement
         "aria-label": `Type: ${label}`
     });
 
-    // Apply color via CSS custom properties
-    root.style.setProperty("--tb-color", color);
-    if (variant === "subtle")
+    // Only a colour the caller actually chose goes inline. Without
+    // one the stylesheet's theme-aware defaults stay in force and the
+    // badge flips with the theme.
+    if (color !== null)
     {
-        root.style.setProperty("--tb-bg", hexToRgba(color, 0.1));
-    }
-    else if (variant === "filled")
-    {
-        root.style.setProperty("--tb-bg", color);
+        root.style.setProperty("--tb-color", color);
+        if (variant === "subtle")
+        {
+            root.style.setProperty("--tb-bg", hexToRgba(color, 0.1));
+        }
+        else if (variant === "filled")
+        {
+            root.style.setProperty("--tb-bg", color);
+            root.style.setProperty("--tb-fg", readableOn(color));
+        }
     }
 
     if (options.icon)
