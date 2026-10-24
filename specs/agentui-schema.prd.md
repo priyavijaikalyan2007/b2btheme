@@ -166,7 +166,7 @@ export interface ProviderSpec
 readonly protocol?: ProtocolSpec;
 ```
 
-The schema of `response` is derived from the provider callback's return type, with `Promise<T>` unwrapped to `T`. The schema of `params` is derived from the callback's parameters: the single parameter's type, or an object keyed by parameter name when there are several.
+The schema of `response` is derived from the provider callback's return type, with `Promise<T>` unwrapped to `T`. The schema of `params` is the callback's single parameter type (`Parameters<…>[0]`). A provider callback with more than one parameter is a build error: declare it host-only, or give the component an additive single-object variant.
 
 ### 3.3 Classification failures
 
@@ -184,7 +184,7 @@ Each of these is a build error (§8) for any component not on the migration list
 
 Most of today's 101 components have `on*` callbacks that no `emits` entry names, and data props with no JSDoc, so the strict rule would fail the whole fleet on its first run. That is handled the same way as levels (§7.2):
 
-- The first run is in report mode. Every component with at least one §3.3 failure is written, dated, into `PENDING_CLASSIFICATION` in the gate file. The list may shrink and never grow.
+- The first run is in report mode. Every component with at least one §3.3 failure is written, dated, into `PENDING_CLASSIFICATION` in `scripts/agentui/migration.mjs`. The list may shrink and never grow.
 - A component on that list is **excluded from the catalog, loudly**: it is named in the build summary and in `dist/agentui-report.json` with its unresolved members. It is never emitted with a partial schema. An agent that cannot see a component is told nothing false. An agent that saw half a component would be.
 - A component not on the list, which includes every new component, gets the strict rule from day one.
 
@@ -197,7 +197,9 @@ A component whose core behaviour depends on a host-only member (for example, cel
 ## 4. Option schema generation
 
 - **Pipeline.** The classifier (§3) runs first and decides what is data. For each component the build generates an alias that `Pick`s only the members the classifier calls data. **typia 12.2.1** then emits a schema for that alias. A data member with declared nested hazards is passed in as it is. typia drops the declared function parts, which is now the intended result because each one is written down in `protocol.hostOnly`. Nothing undeclared reaches typia, so typia's quiet behaviours can only touch inputs that are already approved.
-- **Post-check.** After emission, every member the classifier called data must appear in the schema's top-level `properties`. A missing one fails the build with its name. That catches a tool silently emptying a schema, the ExplorerPicker failure the trial found in another tool.
+- **Post-checks.** After emission:
+  - every member the classifier called data must appear in the schema's top-level `properties`. A missing one fails the build with its name. That catches a tool silently emptying a schema, the ExplorerPicker failure the trial found in another tool.
+  - every top-level data member the classifier found JSDoc for must carry a `description`. typia 12.2.1 **ignores JSDoc written on the same line as the member** (`/** Rows. */ pageSize?: number;`), including inline tags such as `@minimum`, but reads JSDoc on the line above (verified 2026-10-25). A missing description fails the build and tells the author to move the comment onto its own line. Nested types' descriptions are not parity-checked: a missing nested description weakens guidance but cannot misdescribe a value.
 - **Why typia** (trial of 2026-10-25, against `ts-json-schema-generator`, `typescript-json-schema`, `ts-to-zod` → Zod 4, and others):
   - it never invents an empty or "never" schema
   - its failures on nested DOM types are loud, and they matched the classifier's findings exactly
@@ -224,7 +226,7 @@ A component whose core behaviour depends on a host-only member (for example, cel
 
 ### 5.2 Identity
 
-- `catalogId` and `$id` are `https://static.outcrop.us/theme/a2ui/catalog/v<N>.json`.
+- `catalogId` and `$id` are `https://static.outcrop.us/a2ui/catalog/v<N>.json`. The CDN serves `dist/` at the domain root (`wrangler.jsonc` `assets.directory`), so the file at `dist/a2ui/catalog/v<N>.json` answers at exactly its ID.
 - `N` is the **catalog's** major version, independent of both the library version and the A2UI protocol version.
 - The base URL is one constant in the generator. The file is served from the CDN at the same path, so the ID is fetchable for people and tools, even though A2UI renderers never fetch it.
 
@@ -257,7 +259,7 @@ Each component entry is a JSON Schema object with:
 - for `field`-level components, `value` is two-way: a bound path receives user changes, which matches how A2UI's own `TextField` binds.
 - `description` (§5.6).
 
-The binding and `Action` definitions are referenced from the vendored v0.9.1 `json/common_types.json` (`DataBinding`, `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `Action`), never retyped by hand. The catalog as a whole must validate against `$defs/Catalog` in the vendored v0.9.1 `json/client_capabilities.json`. Both were confirmed present at a2ui-project/a2ui commit `409ded2` (2026-10-24).
+The binding and `Action` definitions are referenced from the vendored v0.9.1 `json/common_types.json` (`DataBinding`, `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `Action`), never retyped by hand. The catalog **file** mirrors the vendored v0.9.1 basic catalog's layout exactly: the same top-level keys, `functions` as an object, and `$defs.anyComponent` / `$defs.anyFunction` as `oneOf` lists of local refs. (`$defs/Catalog` in `client_capabilities.json` describes the different, inline form used in capability messages, where `functions` is an array, so it is not the validator for a catalog file.) Confirmed at a2ui-project/a2ui commit `409ded2`.
 
 ### 5.5 Providers
 
@@ -271,7 +273,7 @@ That is three catalog properties per provider, and it needs nothing beyond v0.9.
 
 ### 5.6 Agent guidance, generated
 
-- **Catalog `instructions`:** a fixed preamble (what the library is, how binding works, how a channel's bound prop pairs with its `on<Channel>` action), followed by one line per component.
+- **Catalog `description`:** v0.9.1 catalog files have no `instructions` field (the vendored basic catalog's top level is `$schema`, `$id`, `title`, `description`, `catalogId`, `components`, `functions`, `$defs`). The v1.0 codec will move this text to `instructions`. The text is a fixed preamble (what the library is, how binding works, how a channel's bound prop pairs with its `on<Channel>` action), followed by one line per component.
 - **Component `description`:** the `label`, then each affordance rendered as text ("browse, compare or edit a collection of 2 to 100,000 records"), then a summary of the component's actions.
 - **Property `description`:** the JSDoc text.
 
@@ -312,7 +314,7 @@ This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "
 
 ### 7.2 The ratchet
 
-1. **Measure first.** Run the suite in report mode. Write the list of components where `declared < required`, dated, into the gate file as `BELOW_REQUIRED`.
+1. **Measure first.** Run the suite in report mode. Write the list of components where `declared < required`, dated, into `scripts/agentui/migration.mjs` as `BELOW_REQUIRED`. It lives beside `PENDING_CLASSIFICATION` because the gate test, the generator and `audit-counts.mjs` all read it, and one copy cannot drift.
 2. `BELOW_REQUIRED` follows the `EXEMPT` rules: it may shrink and never grow, and a comment above it says so. A component not on the list gets the strict rule from day one, so every new component does.
 3. `componentsBelowRequiredLevel` is added to `scripts/audit-counts.mjs`. It equals the list length, is held as a floor by check `[20]`, and must reach 0.
 
@@ -365,7 +367,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 | Unit | schema validates `defaultOptions`; a mismatch names both sides | same |
 | Unit | atomic output: an injected failure leaves `dist/` byte-identical | same |
 | Fleet | the generators run over all 101 components | `npm test` and CI |
-| Structure | **check `[29]`** reads the **emitted** `dist/` files (not the generator's in-memory data), validates the catalog against `$defs/Catalog` from the vendored v0.9.1 `client_capabilities.json`, and checks that every mountable component has an entry or a report line | `test-local.sh` |
+| Structure | **check `[29]`** reads the **emitted** `dist/` files (not the generator's in-memory data), checks the catalog has exactly the vendored basic catalog's top-level layout, compiles every component entry under Ajv's 2020-12 mode with the vendored `common_types.json` and basic `catalog.json` registered, checks that every `$ref` resolves, and checks that every mountable component has an entry or a report line | `test-local.sh` |
 
 - Unit tests use **synthetic fixture components**, not the real fleet, so a fleet change never silently changes what a unit test proves.
 - **Every gate check is mutation-proven.** For each one, the plan names the mutation that must turn it red: for example, deleting a `hostOnly` entry, renaming a prop without a bump, or declaring `display` on a component with `getValue`. A check that has never been seen failing has not been shown to work.
@@ -418,9 +420,10 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 | Modify | `runtime/src/types.ts`: `ProtocolSpec`, `ProviderSpec`, `CapabilityManifest.protocol` |
 | Modify | `runtime/fleet-conformance.test.ts`: required level, `BELOW_REQUIRED`, `PENDING_CLASSIFICATION` |
 | Create | `scripts/agentui/classify.mjs`, `schema.mjs`, `normalise.mjs`, `catalog.mjs`, `catalog-diff.mjs`, `mcp-descriptors.mjs`, `generate.mjs`, plus colocated `*.test.ts` (the repo's script convention: `.mjs` using the TypeScript compiler API, tests importing the `.mjs`) |
-| Create | `scripts/agentui/vendor/a2ui-v0_9_1/`: `common_types.json` and `client_capabilities.json`, with the source commit recorded |
+| Create | `scripts/agentui/vendor/a2ui-v0_9_1/`: `common_types.json` and `catalogs/basic/catalog.json`, with the source commit recorded |
+| Create | `scripts/agentui/migration.mjs`: `PENDING_CLASSIFICATION` and `BELOW_REQUIRED`, read by the generator, the gate test and `audit-counts.mjs` alike |
 | Create | `specs/agentui/published/catalog-v1.json` (baseline, first written at first publish) |
-| Modify | `package.json`: `typia` 12.2.1 as an exactly pinned dev dependency; a `build:agentui` script run after `build:manifest` in `build` |
+| Modify | `package.json`: `typia` 12.2.1 and `ajv` 8.20.0 as exactly pinned dev dependencies; a `build:agentui` script run after `build:manifest` in `build` |
 | Modify | `scripts/audit-counts.mjs`: three counts |
 | Modify | `test-local.sh`: check `[29]` |
 | Modify | `components/*/*.manifest.ts`: `protocol` where needed; promoted levels |
@@ -451,3 +454,4 @@ All four items open at approval were resolved by planning research on 2026-10-25
 | 2026-10-25 | Catalog re-exports the basic primitives (§5.1) | one catalog per surface in v0.9.1 |
 | 2026-10-25 | Channel → bindable prop + Action, and provider `params`; no reserved `payload` key (§5.4–5.5) | a reserved key would collide with agent-authored context keys |
 | 2026-10-25 | Versioned path moved to #19 (§6) | none exists; CSP needs only the origin |
+| 2026-10-25 | Catalog ID drops `/theme/`; layout mirrors the basic catalog file; `description` not `instructions`; JSDoc parity post-check; single-parameter providers; migration lists in `migration.mjs` | found while writing the plan: dist is served at the root; v0.9.1 files have no `instructions`; typia ignores same-line JSDoc |
