@@ -36,6 +36,7 @@
     "test:e2e:headed": "npx playwright test --headed",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
+    "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",

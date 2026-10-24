@@ -10,10 +10,23 @@
  * array in the spec looks like it aggregates and silently holds one
  * worker's share. This reads them all back.
  *
- * Usage: node scripts/contrast-report.mjs [--json]
+ * Usage: node scripts/contrast-report.mjs [--verify]
+ *
+ * `--verify` is the GATE. DEBT-VR-11 brought the rendered fleet to zero
+ * elements below 3.0 — everything legible — and the 3.0 floor is what
+ * this holds. It is not 4.5: 182 elements sit between 3.0 and 4.5 and
+ * are recorded in the tracker with their ratios, because closing that
+ * band is a design argument and this is a regression stop.
+ *
+ * IT FAILS ON A MISSING OR PARTIAL RUN (ADR-196). A gate that passes
+ * because nothing was measured has not been written. The expected page
+ * count comes from git, doubled for the two themes, and anything short
+ * of it is a failure rather than a smaller number.
  */
 
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { basename } from "node:path";
 
 const DIR = "coverage/contrast";
 
@@ -42,6 +55,52 @@ export function aggregate()
 
     return { runs: files.length, considered, skipped, svgComposited,
         findings, unmeasurable, exempt };
+}
+
+/** The 3.0 regression floor. See the header. */
+const FLOOR = 3.0;
+
+function expectedRuns()
+{
+    const pages = execFileSync(
+        "git", ["ls-files", "demo/*.html", "demo/**/*.html"],
+        { encoding: "utf8" })
+        .split("\n")
+        .filter(Boolean)
+        .filter((p) => !basename(p).startsWith("_"));
+    return pages.length * 2;
+}
+
+function verify(result)
+{
+    const want = expectedRuns();
+    let ok = true;
+
+    if (result.runs !== want)
+    {
+        console.error(`PARTIAL RUN: ${result.runs} page/theme results in `
+            + `${DIR}, expected ${want}. A floor measured over part of `
+            + "the fleet is not a floor. Clear the directory and run the "
+            + "whole spec.");
+        ok = false;
+    }
+
+    const below = result.findings.filter((f) => f.ratio < FLOOR);
+    if (below.length > 0)
+    {
+        console.error(`\n${below.length} element(s) below ${FLOOR}:`);
+        for (const f of below.slice(0, 20))
+        {
+            console.error(`  ${f.ratio.toFixed(2)}  ${f.theme}  ${f.page}`
+                + `  ${f.fg} on ${f.bg}\n      ${f.path}`);
+        }
+        if (below.length > 20) { console.error(`  … ${below.length - 20} more`); }
+        ok = false;
+    }
+
+    if (!ok) { process.exit(1); }
+    console.log(`\nPASS: ${result.considered} text elements, none below `
+        + `${FLOOR}, across ${result.runs} page/theme runs.`);
 }
 
 function main()
@@ -121,6 +180,8 @@ function main()
     }
 
     if (rows.length > 40) { console.log(`… ${rows.length - 40} more`); }
+
+    if (process.argv.includes("--verify")) { verify(result); }
 }
 
 if (process.argv[1] && process.argv[1].endsWith("contrast-report.mjs"))

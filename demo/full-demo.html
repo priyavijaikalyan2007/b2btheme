@@ -3458,7 +3458,7 @@
                                 <div class="col-6">
                                     <span class="badge bg-primary">Badge 1</span>
                                     <span class="badge bg-success">Badge 2</span>
-                                    <span class="badge bg-warning text-dark">Badge 3</span>
+                                    <span class="badge text-bg-warning">Badge 3</span>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Small text for testing magnification of fine detail.</small>
@@ -14414,7 +14414,7 @@
                         stroke: { color: "#52b788", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "Start", bold: true, color: "#2d6a4f" }],
+                        runs: [{ text: "Start", bold: true, color: "var(--theme-success-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
@@ -14468,7 +14468,7 @@
                         stroke: { color: "#d6336c", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "End", bold: true, color: "#862e46" }],
+                        runs: [{ text: "End", bold: true, color: "var(--theme-danger-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
@@ -14500,7 +14500,7 @@
                         {
                             position: "middle",
                             textContent: {
-                                runs: [{ text: "Check", bold: true, fontSize: 10, color: "#1c7ed6" }],
+                                runs: [{ text: "Check", bold: true, fontSize: 10, color: "var(--theme-primary-text)" }],
                                 overflow: "visible", verticalAlign: "middle",
                                 horizontalAlign: "center", padding: 3,
                             },
@@ -14523,7 +14523,7 @@
                         {
                             position: "middle",
                             textContent: {
-                                runs: [{ text: "Yes", bold: true, fontSize: 11, color: "#2d6a4f" }],
+                                runs: [{ text: "Yes", bold: true, fontSize: 11, color: "var(--theme-success-text)" }],
                                 overflow: "visible", verticalAlign: "middle",
                                 horizontalAlign: "center", padding: 3,
                             },
@@ -14590,7 +14590,7 @@
                         stroke: { color: "#6f42c1", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "User", fontSize: 11, color: "#6f42c1" }],
+                        runs: [{ text: "User", fontSize: 11, color: "var(--theme-group-fg-7)" }],
                         overflow: "visible", verticalAlign: "bottom",
                         horizontalAlign: "center", padding: 2,
                     },
@@ -14609,7 +14609,7 @@
                         {
                             position: "middle",
                             textContent: {
-                                runs: [{ text: "uses", italic: true, fontSize: 10, color: "#6f42c1" }],
+                                runs: [{ text: "uses", italic: true, fontSize: 10, color: "var(--theme-group-fg-7)" }],
                                 overflow: "visible", verticalAlign: "middle",
                                 horizontalAlign: "center", padding: 2,
                             },
@@ -14756,7 +14756,7 @@
                         stroke: { color: "#e8790c", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "?", bold: true, fontSize: 14, color: "#e8790c" }],
+                        runs: [{ text: "?", bold: true, fontSize: 14, color: "var(--theme-warning-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 2,
                     },
@@ -14854,7 +14854,7 @@
                         stroke: { color: "#ffc107", width: 2 },
                     },
                     textContent: {
-                        runs: [{ text: "has", italic: true, fontSize: 12, color: "#7c6600" }],
+                        runs: [{ text: "has", italic: true, fontSize: 12, color: "var(--theme-warning-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 4,
                     },
@@ -14920,7 +14920,7 @@
                         stroke: { color: "#6f42c1", width: 1.5 },
                     },
                     textContent: {
-                        runs: [{ text: "75%", bold: true, fontSize: 12, color: "#6f42c1" }],
+                        runs: [{ text: "75%", bold: true, fontSize: 12, color: "var(--theme-group-fg-7)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 4,
                     },
@@ -14974,7 +14974,7 @@
                         stroke: { color: "#20c997", width: 1.5 },
                     },
                     textContent: {
-                        runs: [{ text: "Next Step", fontSize: 12, color: "#0f6848" }],
+                        runs: [{ text: "Next Step", fontSize: 12, color: "var(--theme-success-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
@@ -15051,9 +15051,9 @@
                     },
                     textContent: {
                         runs: [
-                            { text: "Bold Title", bold: true, fontSize: 14, color: "#212529" },
+                            { text: "Bold Title", bold: true, fontSize: 14, color: "var(--theme-text-primary)" },
                             { text: "\nThis is regular body text with ", fontSize: 11 },
-                            { text: "italic emphasis", italic: true, fontSize: 11, color: "#6f42c1" },
+                            { text: "italic emphasis", italic: true, fontSize: 11, color: "var(--theme-group-fg-7)" },
                             { text: " mixed in.", fontSize: 11 },
                         ],
                         overflow: "clip", verticalAlign: "top",
@@ -15112,7 +15112,7 @@
                         stroke: { color: "#52b788", width: 1.5 },
                     },
                     textContent: {
-                        runs: [{ text: "Phase 1", fontSize: 12, bold: true, color: "#2d6a4f" }],
+                        runs: [{ text: "Phase 1", fontSize: 12, bold: true, color: "var(--theme-success-text)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
@@ -15134,7 +15134,7 @@
                         stroke: { color: "#6f42c1", width: 1.5 },
                     },
                     textContent: {
-                        runs: [{ text: "com.app.core", fontSize: 11, color: "#6f42c1" }],
+                        runs: [{ text: "com.app.core", fontSize: 11, color: "var(--theme-group-fg-7)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
@@ -15152,7 +15152,7 @@
                         stroke: { color: "#6f42c1", width: 1.5 },
                     },
                     textContent: {
-                        runs: [{ text: "Auth Module", fontSize: 11, bold: true, color: "#6f42c1" }],
+                        runs: [{ text: "Auth Module", fontSize: 11, bold: true, color: "var(--theme-group-fg-7)" }],
                         overflow: "visible", verticalAlign: "middle",
                         horizontalAlign: "center", padding: 8,
                     },
