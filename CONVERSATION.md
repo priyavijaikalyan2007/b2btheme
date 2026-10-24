@@ -4559,3 +4559,9 @@ written about `isVacuous`, about `shapeOf` and about this table.
 
 A bucket boundary drawn by a regex is a claim about naming, and naming is
 the thing that varies.
+
+## Agent UI: components over A2UI and MCP Apps, brainstorm and spec 0 (2026-10-24)
+
+**Request.** "Make all components in this library, available today and added in the future, fully usable over Google's A2UI and Anthropic's MCP UI protocols. Educate me, brainstorm with me, plan with me, spec with me before you do any implementation." Later in the session: "My own app is really knobby.io … eventually I want to use these components for other web apps too which I may not own." "Use GitHub issues to track your work in detail." "Use the domain static.outcrop.us." "Add a critical instruction into AGENTS.md so that future updates … continue to adhere to this." "We will probably need an A2UI.md and MCPUI.md file referenced from AGENTS.md." The user also asked whether `createDataGrid` survives (it does; everything is additive).
+
+**Outcome.** Researched both protocols from primary sources: A2UI v0.9.1 stable and v1.0 RC; MCP Apps stable 2026-01-26 with `ext-apps` 2.0.3. The finding: the capability manifests plus allowlist resolution (ADR-142/143) are already most of an A2UI catalog. The missing piece is a machine-readable option schema. Decisions D1–D12 are recorded in GitHub epic #16. Work is split into #17 (schema, generators, gate), #18 (A2UI adapter) and #19 (MCP Apps renderer), and A2UI is the shared payload language for all three host classes. The spec for #17 is written at `specs/agentui-schema.prd.md`. No implementation yet.
