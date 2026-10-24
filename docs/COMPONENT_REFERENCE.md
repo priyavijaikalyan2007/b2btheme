@@ -2457,8 +2457,15 @@ integrity check rather than failing it.
 
 The filename carries `@codemirror/view`'s version because fourteen
 packages ship on their own release trains and one filename cannot name
-them all. `dist/lib-manifest.json` records every member version, so what
-is in the file is auditable without unpacking it.
+them all. The file holds 28 packages, not fourteen: the fourteen we
+import, and the grammars and helpers they depend on.
+
+`dist/lib-manifest.json` records all 28 under `packages`, read from
+esbuild's metafile rather than declared by hand, so a reader asking
+"does this origin serve the package in that advisory" can answer it
+without unpacking the file. `npm run audit:vendor` asks exactly that.
+
+Imported directly (these are pinned exactly in `package.json`):
 
 - `@codemirror/autocomplete` 6.20.4
 - `@codemirror/commands` 6.11.1
@@ -2474,6 +2481,29 @@ is in the file is auditable without unpacking it.
 - `@codemirror/search` 6.7.2
 - `@codemirror/state` 6.7.6
 - `@codemirror/view` 6.43.15
+
+Arriving as dependencies of those (pinned by the lockfile):
+
+- `@codemirror/streamparser` 6.0.0
+- `@lezer/common` 1.5.3
+- `@lezer/css` 1.3.9
+- `@lezer/highlight` 1.2.5
+- `@lezer/html` 1.3.13
+- `@lezer/javascript` 1.5.6
+- `@lezer/json` 1.0.3
+- `@lezer/lr` 1.4.11
+- `@lezer/markdown` 1.8.1
+- `@lezer/python` 1.1.19
+- `@marijn/find-cluster-break` 1.0.4
+- `crelt` 1.0.7
+- `style-mod` 4.1.4
+- `w3c-keyname` 2.2.8
+
+`@lezer/highlight` is the exception in that second list. The bundle
+entry imports `tags` from it DIRECTLY, so a consumer-visible feature
+depends on a package no `package.json` declares. It resolves today
+because npm hoists it. Declaring it would pin it exactly, like the
+fourteen above.
 
 ### Two globals are renamed, and the reason is not cosmetic
 

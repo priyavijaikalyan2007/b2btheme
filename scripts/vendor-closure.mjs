@@ -219,6 +219,31 @@ function versionOf(pkg)
     return JSON.parse(readFileSync(path, "utf8")).version;
 }
 
+/**
+ * The package a bundled input belongs to, with the version that was
+ * ACTUALLY resolved for it.
+ *
+ * The last `node_modules/` segment wins, because npm nests a second copy
+ * under the dependent when two versions are needed. Reading the top-level
+ * `node_modules/<name>/package.json` would then report a version this
+ * artifact does not contain.
+ *
+ * Returns null for the synthetic `<stdin>` entry, which is our own code.
+ */
+function packageOfInput(inputPath)
+{
+    const at = inputPath.lastIndexOf("node_modules/");
+    if (at === -1) { return null; }
+
+    const rest = inputPath.slice(at + "node_modules/".length);
+    const parts = rest.split("/");
+    const name = parts[0].startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0];
+    const root = inputPath.slice(0, at) + "node_modules/" + name;
+
+    return { name, version: JSON.parse(
+        readFileSync(`${root}/package.json`, "utf8")).version };
+}
+
 function copyDirRecursive(from, to, exclude)
 {
     mkdirSync(to, { recursive: true });
@@ -322,8 +347,55 @@ async function bundleAsset(asset, outFile)
             `integrity cannot attach to a runtime import.`);
     }
 
-    return Object.keys(
-        Object.values(result.metafile.outputs)[0].inputs).length;
+    // WHAT IS ACTUALLY IN THE FILE, read from the metafile rather than
+    // declared by hand. codemirror6 names fourteen packages in `members`
+    // and bundles twenty-eight: the @lezer grammars, style-mod, crelt and
+    // w3c-keyname arrive as dependencies of those fourteen. A reader
+    // asking "do we serve the package in this advisory" needs all of
+    // them, and a list maintained by hand answers for the half somebody
+    // remembered. scripts/vendor-audit.mjs reads this set.
+    const packages = new Map();
+
+    for (const inputPath of Object.keys(result.metafile.inputs))
+    {
+        const found = packageOfInput(inputPath);
+        if (!found) { continue; }
+
+        const seen = packages.get(found.name);
+
+        // Two versions of one name inside a single hashed file is a real
+        // change in what this origin serves. Let it break.
+        if (seen !== undefined && seen !== found.version)
+        {
+            throw new Error(
+                `[vendor-closure] ${asset.name} bundles ${found.name} at ` +
+                `two versions, ${seen} and ${found.version}. One file ` +
+                `cannot publish one version of a package it holds twice.`);
+        }
+
+        packages.set(found.name, found.version);
+    }
+
+    // A declared member that was not bundled means the pin list check
+    // [28] holds is a list of packages this artifact does not contain.
+    for (const member of asset.members ?? [])
+    {
+        if (!packages.has(member))
+        {
+            throw new Error(
+                `[vendor-closure] ${asset.name} declares member ${member} ` +
+                "and does not bundle it. The declared list is what " +
+                "test-local.sh [28] pins, so it must not name a package " +
+                "that is absent from the file.");
+        }
+    }
+
+    return {
+        inputs: Object.keys(
+            Object.values(result.metafile.outputs)[0].inputs).length,
+        packages: Object.fromEntries([...packages].sort(
+            (a, b) => a[0].localeCompare(b[0]))),
+    };
 }
 
 async function main()
@@ -341,6 +413,12 @@ async function main()
 
         let inputs = 1;
 
+        // Every asset publishes the packages it contains, so the union
+        // across the manifest is the set this origin serves. A `copy` or
+        // a `tree` asset ships one prebuilt package; a `bundle` reports
+        // what esbuild actually pulled in.
+        let packages = { [pkg]: version };
+
         if (asset.kind === "tree")
         {
             const baseDir = join(OUT_DIR, `${asset.name}-${version}`);
@@ -353,6 +431,7 @@ async function main()
                 integrity: sriOf(bytes),
                 type: asset.assetType ?? "stylesheet",
                 ...(asset.global ? { global: asset.global } : {}),
+                packages: { [pkg]: version },
                 bytes: bytes.length,
                 // Honest: the stylesheet is hashed, the fonts it pulls are not.
                 closure: asset.assetType === "script"
@@ -374,7 +453,9 @@ async function main()
         }
         else
         {
-            inputs = await bundleAsset(asset, outFile);
+            const built = await bundleAsset(asset, outFile);
+            inputs = built.inputs;
+            packages = built.packages;
         }
 
         const bytes = readFileSync(outFile);
@@ -384,17 +465,17 @@ async function main()
             url: `/lib/${fileName}`,
             integrity: sriOf(bytes),
             ...(asset.global ? { global: asset.global } : {}),
-            ...(asset.members
-                ? { members: Object.fromEntries(
-                    asset.members.map((m) => [m, versionOf(m)])) }
-                : {}),
+            packages,
             bytes: bytes.length,
             closure: "complete",
             ...(asset.note ? { note: asset.note } : {}),
         };
 
         const kb = String(Math.round(bytes.length / 1024)).padStart(4);
-        const detail = asset.kind === "bundle" ? ` (${inputs} inputs, 0 external)` : "";
+        const detail = asset.kind === "bundle"
+            ? ` (${inputs} inputs, ${Object.keys(packages).length} `
+                + `package${Object.keys(packages).length === 1 ? "" : "s"}, 0 external)`
+            : "";
         console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB${detail}`);
     }
 

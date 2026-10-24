@@ -40,7 +40,8 @@
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",
-    "sri:verify": "node scripts/sri-manifest.mjs --verify"
+    "sri:verify": "node scripts/sri-manifest.mjs --verify",
+    "audit:vendor": "node scripts/vendor-audit.mjs"
   },
   "keywords": [
     "bootstrap",
