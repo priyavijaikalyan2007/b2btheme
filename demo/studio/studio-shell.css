@@ -340,12 +340,16 @@ html, body
     padding: 4px 8px;
     font-size: 14px;
     cursor: pointer;
-    opacity: 0.4;
+
+    /* A colour, not `opacity: 0.4`. This is an ACTIVE control, so the
+       exemption for an inactive one does not reach it, and dimming the
+       glyph to 40 percent measured 2.47 against a 4.5 floor. */
+    color: var(--theme-text-muted);
 }
 
 .studio-tab-add:hover
 {
-    opacity: 1;
+    color: var(--theme-text-primary);
 }
 
 /* ========================================================================

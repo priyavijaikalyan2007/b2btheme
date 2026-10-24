@@ -265,19 +265,31 @@ export function uncommentedImportants(text)
  * class, not somewhere else in the file: a file-wide search passes for
  * a component that sets the attribute on ONE of its four call sites,
  * which is how twelve of these looked compliant from a distance.
+ *
+ * AND ON THE SAME ELEMENT. The first version of this check asked only
+ * that the words appear near each other, and colorpicker passed it
+ * while putting the class on its root and the attribute on its
+ * trigger: the root is what carries `opacity: 0.5`, so every control
+ * inside it was dimmed and none of them was marked. A gate that cannot
+ * tell those two apart is checking for a word, not for a pairing.
  */
 export function disabledWithoutAria(text)
 {
     const lines = text.split("\n");
+    const call = /([A-Za-z_$][\w$.?!\[\]]*)\.classList\.(?:add|toggle)\(\s*"[a-z0-9-]*disabled[a-z0-9-]*"/;
     let violations = 0;
 
     for (let i = 0; i < lines.length; i += 1)
     {
-        if (!/classList\.(add|toggle)\(\s*"[a-z0-9-]*disabled[a-z0-9-]*"/.test(lines[i]))
-        { continue; }
+        const m = call.exec(lines[i]);
+        if (!m) { continue; }
 
-        const window = lines.slice(i, i + 4).join("\n");
-        if (!window.includes("aria-disabled")) { violations += 1; }
+        // The receiver without its optional-chaining or non-null
+        // marks, so `x?.classList` pairs with `x.setAttribute`.
+        const recv = m[1].replace(/[?!]/g, "");
+        const window = lines.slice(i, i + 4).join("\n").replace(/[?!]/g, "");
+        if (!window.includes(`${recv}.setAttribute("aria-disabled"`))
+        { violations += 1; }
     }
 
     return violations;

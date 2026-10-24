@@ -818,6 +818,7 @@ export class EditableComboBox implements EditableComboBoxHandle
             if (item.disabled)
             {
                 li.classList.add("combobox-item-disabled");
+                li.setAttribute("aria-disabled", "true");
                 setAttr(li, "aria-disabled", "true");
             }
 

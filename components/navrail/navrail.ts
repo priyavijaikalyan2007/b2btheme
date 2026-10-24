@@ -712,6 +712,8 @@ export class NavRail implements NavRailHandle
 
         item.disabled = disabled;
         el.classList.toggle("navrail-item-disabled", disabled);
+        if (disabled) { el.setAttribute("aria-disabled", "true"); }
+        else { el.removeAttribute("aria-disabled"); }
         setAttr(el, "aria-disabled", disabled ? "true" : "false");
 
         if (disabled)
@@ -1179,6 +1181,7 @@ export class NavRail implements NavRailHandle
         if (item.disabled)
         {
             btn.classList.add("navrail-item-disabled");
+            btn.setAttribute("aria-disabled", "true");
             setAttr(btn, "aria-disabled", "true");
         }
 

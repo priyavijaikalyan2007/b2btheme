@@ -610,6 +610,7 @@ export class CodeEditor implements CodeEditorHandle
     private applyDisabledAttrs(root: HTMLElement): void
     {
         root.classList.add("codeeditor-disabled");
+        root.setAttribute("aria-disabled", "true");
         setAttr(root, "aria-disabled", "true");
     }
 

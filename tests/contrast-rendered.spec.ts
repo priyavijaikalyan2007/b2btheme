@@ -384,6 +384,31 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         if (el.getClientRects().length === 0)
         { skip("no rendered box", el); continue; }
 
+        // VISUALLY HIDDEN, the sr-only pattern. A clip to a zero
+        // rectangle paints nothing, and the element still has a client
+        // rect, so none of the tests above see it: chartpanel's
+        // accessible data table — 58 cells — was reported as light text
+        // on white in dark mode, where in fact nothing is painted.
+        //
+        // The CLIP is the claim, not the box size. The first version of
+        // this test also demanded a 1px box, and a <table> ignores
+        // `width: 1px` when its content is wider: measured 224 by 48
+        // with clip: rect(0px, 0px, 0px, 0px), and the test matched
+        // nothing. `clip` only applies to an absolutely positioned
+        // element, so the position is part of the signature; a
+        // `clip-path` inset carries on its own.
+        let hidden: Element | null = null;
+        for (let n: Element | null = el; n; n = n.parentElement)
+        {
+            const ncs = getComputedStyle(n);
+            const positioned = ncs.position === "absolute"
+                || ncs.position === "fixed";
+            if ((positioned && ncs.clip === "rect(0px, 0px, 0px, 0px)")
+                || ncs.clipPath === "inset(50%)")
+            { hidden = n; break; }
+        }
+        if (hidden) { skip("visually hidden (sr-only)", el); continue; }
+
         considered += 1;
 
         const fg = parse(cs.color);

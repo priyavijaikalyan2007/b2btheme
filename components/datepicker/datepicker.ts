@@ -1095,6 +1095,7 @@ export class DatePicker implements DatePickerHandle
                 if (isDisabled)
                 {
                     btn.classList.add("datepicker-day-disabled");
+                    btn.setAttribute("aria-disabled", "true");
                     setAttr(btn, "aria-disabled", "true");
                     btn.disabled = true;
                 }

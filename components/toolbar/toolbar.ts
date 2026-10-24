@@ -2818,6 +2818,7 @@ export class Toolbar implements ToolbarHandle
             if (item.disabled)
             {
                 btn.classList.add("toolbar-tool-disabled");
+                btn.setAttribute("aria-disabled", "true");
                 setAttr(btn, { "aria-disabled": "true" });
             }
 
@@ -3014,6 +3015,7 @@ export class Toolbar implements ToolbarHandle
         if (option.disabled)
         {
             btn.classList.add("toolbar-tool-disabled");
+            btn.setAttribute("aria-disabled", "true");
             setAttr(btn, { "aria-disabled": "true" });
         }
 
@@ -5030,6 +5032,7 @@ export class Toolbar implements ToolbarHandle
         if (config.disabled)
         {
             btn.classList.add("toolbar-tool-disabled");
+            btn.setAttribute("aria-disabled", "true");
             setAttr(btn, { "aria-disabled": "true" });
         }
 
@@ -5079,6 +5082,7 @@ export class Toolbar implements ToolbarHandle
         if (config.disabled)
         {
             btn.classList.add("toolbar-tool-disabled");
+            btn.setAttribute("aria-disabled", "true");
             setAttr(btn, { "aria-disabled": "true" });
         }
 

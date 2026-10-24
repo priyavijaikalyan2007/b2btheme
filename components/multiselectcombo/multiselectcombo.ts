@@ -731,6 +731,7 @@ export class MultiselectCombo implements MultiselectComboHandle
         }
 
         this.rootEl.classList.add("multiselectcombo-disabled");
+        this.rootEl.setAttribute("aria-disabled", "true");
         setAttr(this.inputAreaEl, "aria-disabled", "true");
         logDebug("Disabled");
     }
@@ -1190,6 +1191,7 @@ export class MultiselectCombo implements MultiselectComboHandle
         if (item.disabled)
         {
             row.classList.add("multiselectcombo-item-disabled");
+            row.setAttribute("aria-disabled", "true");
             setAttr(row, "aria-disabled", "true");
         }
 

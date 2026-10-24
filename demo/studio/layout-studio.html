@@ -1420,7 +1420,7 @@
             var displayName = CATEGORY_LABELS[catName] || catName;
             header.innerHTML = '<i class="bi bi-chevron-down"></i> '
                 + '<i class="bi ' + icon + '"></i> '
-                + displayName + ' <span style="opacity: 0.5; font-size: 10px;">(' + count + ')</span>';
+                + displayName + ' <span style="color: var(--theme-text-muted); font-size: 10px;">(' + count + ')</span>';
 
             header.addEventListener("click", function()
             {

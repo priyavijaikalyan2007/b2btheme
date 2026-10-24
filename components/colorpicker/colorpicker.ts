@@ -667,6 +667,7 @@ export class ColorPicker implements ColorPickerHandle
         this.isDisabled = true;
         this.close();
         this.rootEl?.classList.add("colorpicker-disabled");
+        this.rootEl?.setAttribute("aria-disabled", "true");
         this.triggerEl?.setAttribute("aria-disabled", "true");
     }
 
@@ -735,6 +736,7 @@ export class ColorPicker implements ColorPickerHandle
         if (this.isDisabled)
         {
             root.classList.add("colorpicker-disabled");
+            root.setAttribute("aria-disabled", "true");
             this.triggerEl?.setAttribute("aria-disabled", "true");
         }
         return root;
