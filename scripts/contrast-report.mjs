@@ -23,18 +23,23 @@ export function aggregate()
 
     const files = readdirSync(DIR).filter((f) => f.endsWith(".json"));
     const findings = [];
+    const unmeasurable = [];
     let considered = 0;
     let skipped = 0;
+    let svgComposited = 0;
 
     for (const file of files)
     {
         const row = JSON.parse(readFileSync(`${DIR}/${file}`, "utf8"));
         considered += row.considered;
         skipped += row.skipped;
+        svgComposited += row.svgComposited ?? 0;
         findings.push(...row.findings);
+        unmeasurable.push(...(row.unmeasurable ?? []));
     }
 
-    return { runs: files.length, considered, skipped, findings };
+    return { runs: files.length, considered, skipped, svgComposited,
+        findings, unmeasurable };
 }
 
 function main()
@@ -62,6 +67,24 @@ function main()
     console.log(`text elements   : ${result.considered}`);
     console.log(`skipped         : ${result.skipped}`);
     console.log(`AA failures     : ${result.findings.length}`);
+
+    // Not a skip and not a pass. Text on a gradient or pattern fill has
+    // no single background, so no ratio describes it. It is printed on
+    // its own line so the number cannot be mistaken for either column.
+    console.log(`unmeasurable    : ${result.unmeasurable.length}`
+        + "  (no single background to measure against)");
+
+    // An SVG `fill` is not a `background-color`, so the climb reads it
+    // separately. If that helper ever stops matching, every diagram
+    // label quietly gets measured against the canvas again and the run
+    // still looks clean. A zero here is the alarm.
+    console.log(`svg fills read  : ${result.svgComposited}`);
+    if (result.svgComposited === 0)
+    {
+        console.error("no SVG fill was composited in the whole fleet — "
+            + "the shape walk is not matching. Diagram labels are being "
+            + "measured against the canvas, not against their shape.");
+    }
 
     // Group by the thing a fix would touch: the element's own class and
     // the colour it is painted in. 400 rows of the same defect is one

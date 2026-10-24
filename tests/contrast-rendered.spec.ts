@@ -58,13 +58,30 @@
  * subtrees were skipped until 2026-10-23, which removed 1,092 visible
  * elements and three real defects from the population.
  *
- * WHAT IT STILL CANNOT SEE. Text over an image or a gradient — it reads
- * `background-color` only, so a gradient reads as the colour beneath it.
- * Text over an SVG `fill` painted by an ancestor. Anything that needs a
- * pointer, since no state is exercised: `:hover`, `:focus-visible` and
- * `:active` are invisible here. The first of those is real coverage the
- * token check DOES have, so the two instruments are complements and
- * neither replaces the other.
+ * SVG FILLS, ADDED 2026-10-24. The climb above reads `background-color`,
+ * and an SVG shape paints with `fill`. A diagram label lives in a
+ * `<foreignObject>` that is a SIBLING of the shape it sits on, not a
+ * descendant of it, so no amount of climbing reaches the shape: every
+ * label on the canvas was measured against the canvas. That made 25 of
+ * the 79 worst findings wrong in their background, and it hid real ones
+ * — near-white text on a white shape fill, at 1.10, in dark mode.
+ *
+ * Shapes are now composited like any other layer, and a paint server is
+ * resolved rather than guessed: a gradient is measured against EVERY
+ * stop and judged on the worst, and a pattern contributes only when its
+ * marks cover at least half the tile. The diagram grid is one 1.2px dot
+ * per 20x20 tile, about one percent ink; calling that dot "the
+ * background" would have manufactured a failure on every label.
+ *
+ * `svgComposited` counts how often a fill actually contributed. A
+ * helper that stops matching leaves a clean-looking run behind it, so
+ * the report fails loudly on zero. ADR-196.
+ *
+ * WHAT IT STILL CANNOT SEE. Text over a raster image. Anything that
+ * needs a pointer, since no state is exercised: `:hover`,
+ * `:focus-visible` and `:active` are invisible here. The last of those
+ * is real coverage the token check DOES have, so the two instruments
+ * are complements and neither replaces the other.
  */
 
 import { test, expect } from "@playwright/test";
@@ -101,7 +118,9 @@ type Finding = {
 function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
     considered: number; skipped: number;
     skipReasons: Record<string, number>;
-    skipSamples: Record<string, string>; }
+    skipSamples: Record<string, string>;
+    unmeasurable: { path: string; text: string; reason: string }[];
+    svgComposited: number; }
 {
     const parse = (c: string): [number, number, number, number] =>
     {
@@ -155,11 +174,173 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         return parts.join(" > ");
     };
 
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const SHAPES = "rect,circle,ellipse,polygon,path";
+    const GROUPS = new Set(["g", "a", "switch", "svg"]);
+
+    /**
+     * The colours a paint server can present, worst case included.
+     *
+     * A `fill` of `url(#id)` is a gradient or a pattern, so the text over
+     * it has no single background. Guessing one is how an audit invents a
+     * pass; refusing to look is how it invents a blind spot. Neither is
+     * acceptable, so each is resolved to the SET of colours it can show
+     * and every one of them is measured.
+     *
+     *   gradient — every stop, at its own `stop-opacity`. If the text
+     *              fails against any stop it fails somewhere on the run.
+     *   pattern  — a tile is mostly its backdrop unless its marks cover
+     *              it. The diagram grid is one 1.2px dot per 20x20 tile,
+     *              about 1 percent ink, and treating that dot as "the
+     *              background" would manufacture a failure on every
+     *              label on the canvas. Below half coverage the layer is
+     *              texture and contributes nothing; at or above it, the
+     *              marks are measured like gradient stops.
+     *
+     * `null` means the reference does not resolve. That is a broken
+     * document, not a colour, and it is reported rather than skipped.
+     */
+    const paintServer = (ref: string): number[][] | null =>
+    {
+        const id = ref.replace(/^url\(["']?#?/, "").replace(/["']?\)$/, "");
+        const def = document.getElementById(id);
+        if (!def) { return null; }
+
+        const tag = def.tagName.toLowerCase();
+
+        if (tag === "lineargradient" || tag === "radialgradient")
+        {
+            const stops = Array.from(def.querySelectorAll("stop"));
+            if (stops.length === 0) { return null; }
+            return stops.map((st) =>
+            {
+                const cs = getComputedStyle(st);
+                const c = parse(cs.stopColor);
+                const o = cs.stopOpacity === "" ? 1 : Number(cs.stopOpacity);
+                return [c[0], c[1], c[2], c[3] * o];
+            });
+        }
+
+        if (tag === "pattern")
+        {
+            const tw = Number(def.getAttribute("width") ?? 0);
+            const th = Number(def.getAttribute("height") ?? 0);
+            if (tw <= 0 || th <= 0) { return null; }
+
+            let ink = 0;
+            const marks: number[][] = [];
+            for (const kid of Array.from(def.children))
+            {
+                const kt = kid.tagName.toLowerCase();
+                if (kt === "circle")
+                {
+                    const r = Number(kid.getAttribute("r") ?? 0);
+                    ink += Math.PI * r * r;
+                }
+                else if (kt === "rect")
+                {
+                    ink += Number(kid.getAttribute("width") ?? 0)
+                        * Number(kid.getAttribute("height") ?? 0);
+                }
+                else { ink += tw * th; }
+
+                const kcs = getComputedStyle(kid);
+                const c = parse(kcs.fill === "none" ? kcs.stroke : kcs.fill);
+                const o = kcs.opacity === "" ? 1 : Number(kcs.opacity);
+                marks.push([c[0], c[1], c[2], c[3] * o]);
+            }
+
+            if (ink / (tw * th) < 0.5) { return []; }
+            return marks;
+        }
+
+        return null;
+    };
+
+    /**
+     * The fills painted beneath `node` by its own preceding siblings.
+     *
+     * An SVG shape paints with `fill`, not `background-color`, so a climb
+     * that reads `background-color` alone walks straight past the
+     * rectangle a diagram label sits on and reports the canvas behind it.
+     * A `<foreignObject>` label and the shape it sits on are SIBLINGS
+     * under one `<g>`, not ancestor and descendant, so no amount of
+     * climbing finds the shape. A sibling is also often a `<g>` wrapping
+     * the shape rather than the shape itself, which is why this descends.
+     *
+     * Each returned LAYER is a list of the colours that layer can show:
+     * one for a solid fill, several for a gradient. Topmost first, to
+     * match the compositing stack.
+     */
+    const fillsUnder = (node: Element, box: DOMRect): number[][][] | "broken" =>
+    {
+        const parent = node.parentElement;
+        if (!parent || parent.namespaceURI !== SVG_NS) { return []; }
+
+        const kids = Array.from(parent.children);
+        const self = kids.indexOf(node);
+
+        // Reverse document order: the last shape painted is the topmost,
+        // and the stack this feeds is ordered top to bottom.
+        const candidates: Element[] = [];
+        for (let i = self - 1; i >= 0; i -= 1)
+        {
+            const sib = kids[i];
+            if (sib.namespaceURI !== SVG_NS) { continue; }
+            if (GROUPS.has(sib.tagName.toLowerCase()))
+            {
+                const inner = Array.from(sib.querySelectorAll(SHAPES));
+                for (let k = inner.length - 1; k >= 0; k -= 1)
+                { candidates.push(inner[k]); }
+            }
+            else { candidates.push(sib); }
+        }
+
+        const out: number[][][] = [];
+        for (const sh of candidates)
+        {
+            if (!sh.matches(SHAPES)) { continue; }
+
+            const r = sh.getBoundingClientRect();
+            const overlaps = r.left < box.right && r.right > box.left
+                && r.top < box.bottom && r.bottom > box.top;
+            if (!overlaps) { continue; }
+
+            const scs = getComputedStyle(sh);
+            const fill = scs.fill;
+            if (!fill || fill === "none") { continue; }
+
+            const fo = scs.fillOpacity === "" ? 1 : Number(scs.fillOpacity);
+            const op = scs.opacity === "" ? 1 : Number(scs.opacity);
+
+            let colours: number[][];
+            if (fill.indexOf("url(") === 0)
+            {
+                const served = paintServer(fill);
+                if (served === null) { return "broken"; }
+                if (served.length === 0) { continue; }
+                colours = served;
+            }
+            else { colours = [parse(fill)]; }
+
+            const layer = colours
+                .map((c) => [c[0], c[1], c[2], c[3] * fo * op])
+                .filter((c) => c[3] > 0);
+            if (layer.length === 0) { continue; }
+
+            out.push(layer);
+            if (layer.every((c) => c[3] >= 1)) { break; }
+        }
+        return out;
+    };
+
     const findings: Omit<Finding, "page" | "theme">[] = [];
+    const unmeasurable: { path: string; text: string; reason: string }[] = [];
     const skipReasons: Record<string, number> = {};
     const skipSamples: Record<string, string> = {};
     let considered = 0;
     let skipped = 0;
+    let svgComposited = 0;
 
     const skip = (why: string, el: Element): void =>
     {
@@ -209,29 +390,81 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         // Walk up compositing until opaque. `document.body` is the floor;
         // if everything above it is transparent the page background is
         // what shows, so seed with white and let the walk overwrite it.
-        let bg: [number, number, number, number] = [255, 255, 255, 1];
-        const stack: number[][] = [];
-        let node: HTMLElement | null = el;
+        // Each stack entry is a LAYER, and a layer is the list of colours
+        // it can present: one for a solid, several for a gradient's stops.
+        const stack: number[][][] = [];
+        const box = el.getBoundingClientRect();
+        let node: Element | null = el;
+        let broken = false;
+        let floor = false;
         while (node)
         {
             const layer = parse(getComputedStyle(node).backgroundColor);
-            if (layer[3] > 0) { stack.push(layer); }
+            if (layer[3] > 0) { stack.push([layer]); }
             if (layer[3] >= 1) { break; }
+
+            const fills = fillsUnder(node, box);
+            if (fills === "broken") { broken = true; break; }
+            for (const f of fills)
+            {
+                stack.push(f);
+                svgComposited += 1;
+                if (f.every((c) => c[3] >= 1)) { floor = true; }
+            }
+            if (floor) { break; }
+
             node = node.parentElement;
         }
+
+        // A `fill="url(#id)"` whose target is not in the document is a
+        // broken reference, not a colour. The browser paints nothing and
+        // this instrument says so rather than measuring the void.
+        if (broken) { unmeasurable.push({ path: pathOf(el),
+            text: (el.textContent ?? "").trim().slice(0, 40),
+            reason: "unresolved paint server" }); continue; }
+
+        // Enumerate what the background can actually be. One variant for
+        // ordinary text; a handful where a gradient is involved. The
+        // element is judged on its WORST variant, because text that fails
+        // at one end of a gradient fails on the page.
+        let variants: number[][] = [[255, 255, 255, 1]];
         if (stack.length > 0)
         {
-            bg = stack[stack.length - 1] as [number, number, number, number];
+            variants = stack[stack.length - 1];
             for (let i = stack.length - 2; i >= 0; i -= 1)
-            { bg = over(stack[i], bg); }
+            {
+                const next: number[][] = [];
+                for (const top of stack[i])
+                {
+                    for (const under of variants)
+                    { next.push(over(top, under)); }
+                }
+                variants = next;
+                if (variants.length > 64)
+                {
+                    unmeasurable.push({ path: pathOf(el),
+                        text: (el.textContent ?? "").trim().slice(0, 40),
+                        reason: "more than 64 background variants" });
+                    variants = [];
+                    break;
+                }
+            }
         }
+        if (variants.length === 0) { continue; }
 
-        const solidFg = fg[3] < 1 ? over(fg, bg) : fg;
         const size = parseFloat(cs.fontSize);
         const weight = Number(cs.fontWeight) || 400;
         const large = size >= 24 || (size >= 18.66 && weight >= 700);
         const threshold = large ? 3 : 4.5;
-        const r = ratio(solidFg, bg);
+
+        let bg = variants[0] as [number, number, number, number];
+        let r = Infinity;
+        for (const v of variants)
+        {
+            const solid = fg[3] < 1 ? over(fg, v) : fg;
+            const candidate = ratio(solid, v);
+            if (candidate < r) { r = candidate; bg = v as [number, number, number, number]; }
+        }
 
         if (r < threshold)
         {
@@ -246,7 +479,8 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         }
     }
 
-    return { findings, considered, skipped, skipReasons, skipSamples };
+    return { findings, considered, skipped, skipReasons, skipSamples,
+        unmeasurable, svgComposited };
 }
 
 /**
@@ -311,6 +545,9 @@ test.describe("rendered text contrast", () =>
                     skipped: result.skipped,
                     skipReasons: result.skipReasons,
                     skipSamples: result.skipSamples,
+                    svgComposited: result.svgComposited,
+                    unmeasurable: result.unmeasurable.map(
+                        (u) => ({ page, theme, ...u })),
                     findings: result.findings.map(
                         (f) => ({ page, theme, ...f })),
                 }));
