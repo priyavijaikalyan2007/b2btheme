@@ -652,7 +652,12 @@ const BASELINES = {
     // The clause is the contract. Without it a handle and its class
     // agree by luck, which is how 6 of 14 pairs stood before PAT-1.
     handlesWithoutImplements: 0,
-    trackerOpen: 2,
+    // 2 -> 0 on 2026-10-24. DEBT-VR-11 and DEBT-VR-13 were SETTLED at
+    // the owner's direction, not fixed. Both are minor and neither is
+    // to be reopened without need; each entry carries its own reopen
+    // condition. An exact baseline, so a new open entry raises it and
+    // check [20] fails until the number is moved deliberately.
+    trackerOpen: 0,
     consoleLogCalls: 0,
     shimWithoutUtility: 0,
     directConsole: 0,
@@ -938,7 +943,7 @@ const FLOORS = {
     // be reworded and it can move between the two markers, but it does
     // not stop existing — so their SUM is the floor, while
     // `trackerOpen` is an exact baseline.
-    trackerResolved: 108,
+    trackerResolved: 110,
     diagramengineBundleExports: 138,
     tracedComponents: 109,
     traceCalls: 301,

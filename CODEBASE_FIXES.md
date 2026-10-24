@@ -2275,7 +2275,15 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ## MEDIUM — Rendered text contrast (DEBT-VR-11, opened 2026-10-22)
 
-- [ ] **DEBT-VR-11** **182 AA failures, NONE below 3.0, from 2,879 and
+- [=] **SETTLED — DEBT-VR-11** **SETTLED 2026-10-24 at the owner's
+  direction. Minor. Do not reopen unless absolutely needed.** Every
+  piece of text on every demo page is legible in both themes, and
+  `npm run test:contrast` holds that. The 182 that remain are a
+  shortfall against 4.5, not a defect: closing them is a decision
+  about brand colour, and nobody has asked for it. **Reopen only on a
+  production report that text is unreadable — not on a ratio.**
+
+  **182 AA failures, NONE below 3.0, from 2,879 and
   310 when the instrument was first run.** Reported from production:
   text unreadable in dark mode. Everything on these pages is legible
   now; what remains is a shortfall against the 4.5 floor for
@@ -2402,7 +2410,15 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
   `disabledWithoutAria`, ceiling 0, mutation-proven by removing one.
 
-- [ ] **DEBT-VR-13** **281 `var(--theme-x, fallback)` across 56
+- [=] **SETTLED — DEBT-VR-13** **SETTLED 2026-10-24 at the owner's
+  direction. Minor. Do not reopen unless absolutely needed.** 278 of
+  the 281 reference a token that exists, so they are dead weight and
+  nothing more. The three below are the entire defect and are a
+  three-line fix if one is ever wanted. **Reopen only if a token
+  actually goes missing from a shipped page** — a sweep of the other
+  278 is not worth the churn it costs.
+
+  **281 `var(--theme-x, fallback)` across 56
   stylesheets, and three of them name a token that does not exist.**
   The owner's rule for this repository is that there is no fallback
   code: when something is broken, let it break. A CSS fallback is

@@ -689,6 +689,15 @@ echo ""
 # dompurify@3.4.17`, which rewrote an exact `3.4.16` to `^3.4.17`
 # while fixing a critical advisory. The fix was right and the pin was
 # collateral.
+#
+# THE CHECK DID NOT COVER WHAT ITS NAME CLAIMS (fixed 2026-10-24). It
+# read `pkg:` and `from:` — the ANCHORS — and an asset bundled from
+# many packages names the rest under `members:`. codemirror6 is one
+# file built from fourteen packages, and thirteen of them carried a
+# caret under a check that said "every vendored package is pinned".
+# The anchor alone decides the filename, so a member could move the
+# CONTENT of a file whose URL and name never changed, and the SRI
+# hash consumers pin would stop matching a file they still request.
 echo "[28] Every vendored package is pinned exactly (DEBT-SEC-10)"
 VENDOR_RANGES=$(node -e '
 const fs = require("fs");
@@ -698,6 +707,10 @@ const deps = Object.assign({}, pkg.dependencies, pkg.devDependencies);
 const names = new Set();
 for (const m of spec.matchAll(/pkg:\s*"([^"]+)"|from:\s*"node_modules\/((?:@[^\/"]+\/)?[^\/"]+)/g))
 { names.add((m[1] || m[2])); }
+// A bundled asset names its anchor in `pkg:` and the REST in
+// `members:`. Both end up in one file behind one SRI hash.
+for (const block of spec.matchAll(/members:\s*\[([^\]]+)\]/g))
+{ for (const n of block[1].matchAll(/"([^"]+)"/g)) { names.add(n[1]); } }
 const bad = [];
 for (const n of names)
 {
