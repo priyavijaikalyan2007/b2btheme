@@ -171,6 +171,7 @@ function applyButtonState(btn: HTMLElement, item: InlineToolbarItem): void
     if (item.disabled)
     {
         btn.classList.add("inlinetoolbar-btn-disabled");
+        btn.setAttribute("aria-disabled", "true");
         (btn as HTMLButtonElement).disabled = true;
     }
 
@@ -314,6 +315,8 @@ function buildHandle(
             item.disabled = disabled;
             btn.disabled = disabled;
             btn.classList.toggle("inlinetoolbar-btn-disabled", disabled);
+            if (disabled) { btn.setAttribute("aria-disabled", "true"); }
+            else { btn.removeAttribute("aria-disabled"); }
         },
 
         setItemActive(id: string, active: boolean): void

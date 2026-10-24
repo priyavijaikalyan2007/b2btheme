@@ -798,6 +798,7 @@ export class MultiselectCombo implements MultiselectComboHandle
         if (this.options.disabled)
         {
             root.classList.add("multiselectcombo-disabled");
+            root.setAttribute("aria-disabled", "true");
         }
 
         if (this.options.readonly)
@@ -1195,6 +1196,7 @@ export class MultiselectCombo implements MultiselectComboHandle
         if (this.isMaxReached() && !checked && !item.disabled)
         {
             row.classList.add("multiselectcombo-item-disabled");
+            row.setAttribute("aria-disabled", "true");
         }
     }
 

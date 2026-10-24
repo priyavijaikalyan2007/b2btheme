@@ -653,6 +653,7 @@ export class DatePicker implements DatePickerHandle
             this.inputEl.disabled = true;
         }
         this.wrapperEl?.classList.add("datepicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         if (this.isOpen)
         {
             this.hideCalendar();
@@ -733,6 +734,7 @@ export class DatePicker implements DatePickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("datepicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
         // Input group

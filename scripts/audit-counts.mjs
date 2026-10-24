@@ -247,6 +247,43 @@ export function uncommentedImportants(text)
 
 
 /**
+ * Disabled-class applications that never say so to assistive technology.
+ *
+ * DEBT-VR-11 found this by measuring colour. A component dims itself
+ * when disabled — `.facetsearch-disabled { opacity: 0.5 }` and fifteen
+ * more like it — and the rendered-contrast walker reported the dimmed
+ * text as failing. WCAG 1.4.3 exempts an INACTIVE control, so the right
+ * answer was to exempt them. There was nothing to exempt them BY: the
+ * class is a styling hook, and a screen reader was still reading the
+ * control as ordinary and operable.
+ *
+ * So the gate is not about contrast. A control that looks disabled and
+ * does not say it is disabled is wrong on its own terms, and the colour
+ * audit only happened to be the instrument that walked into it.
+ *
+ * WINDOW IS THE SAME LINE PLUS THREE. The attribute belongs beside the
+ * class, not somewhere else in the file: a file-wide search passes for
+ * a component that sets the attribute on ONE of its four call sites,
+ * which is how twelve of these looked compliant from a distance.
+ */
+export function disabledWithoutAria(text)
+{
+    const lines = text.split("\n");
+    let violations = 0;
+
+    for (let i = 0; i < lines.length; i += 1)
+    {
+        if (!/classList\.(add|toggle)\(\s*"[a-z0-9-]*disabled[a-z0-9-]*"/.test(lines[i]))
+        { continue; }
+
+        const window = lines.slice(i, i + 4).join("\n");
+        if (!window.includes("aria-disabled")) { violations += 1; }
+    }
+
+    return violations;
+}
+
+/**
  * Occurrences, not lines. `grep -c` counts lines and silently overrides
  * `-o`, which is how the 203-line figure became an occurrence count.
  */
@@ -625,6 +662,11 @@ const BASELINES = {
     // Without it the requirement is a sentence in a document that nothing
     // reads, which is the shape this repository spent October removing.
     scssImportantUncommented: 0,
+    // DEBT-VR-11 / A11Y-1. A `*-disabled` class dims a control, and
+    // sixteen components dimmed one without ever setting
+    // `aria-disabled`. The ceiling is ZERO: a styling hook is not a
+    // state, and the audit that found this was measuring colour.
+    disabledWithoutAria: 0,
     componentsMissingMarker: 0,
     diagramengineSrcMissingMarker: 0,
     scssMissingMarker: 0,
@@ -1494,6 +1536,7 @@ function measure()
         scssImportant: 0,
         scssImportantComponents: 0,
         scssImportantUncommented: 0,
+        disabledWithoutAria: 0,
         componentsMissingMarker: 0,
         diagramengineSrcMissingMarker: 0,
         scssMissingMarker: 0,
@@ -1542,6 +1585,7 @@ function measure()
 
         counts.anyAnnotations += (text.match(/:\s*any\b/g) ?? []).length;
         counts.anyCasts += countAnyCasts(text);
+        counts.disabledWithoutAria += disabledWithoutAria(text);
 
         for (const [n, line] of text.split("\n").entries())
         {

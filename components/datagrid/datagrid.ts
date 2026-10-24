@@ -1215,7 +1215,7 @@ export class DataGrid implements DataGridHandle
         setAttr(el, "data-row-id", row.id);
         setAttr(el, "aria-rowindex", String(displayIndex + 2));
 
-        if (row.disabled) { el.classList.add("datagrid-row-disabled"); }
+        if (row.disabled) { el.classList.add("datagrid-row-disabled"); el.setAttribute("aria-disabled", "true"); }
         if (row.cssClass) { el.classList.add(...row.cssClass.split(" ")); }
         if (this.selectedIds.has(row.id)) { el.classList.add("datagrid-row-selected"); }
 

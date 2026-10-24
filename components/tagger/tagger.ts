@@ -474,6 +474,7 @@ export class Tagger implements TaggerHandle
     {
         this.options.disabled = false;
         this.rootEl.classList.remove("tagger-disabled");
+        this.rootEl.removeAttribute("aria-disabled");
         this.inputEl.disabled = false;
     }
 
@@ -481,6 +482,7 @@ export class Tagger implements TaggerHandle
     {
         this.options.disabled = true;
         this.rootEl.classList.add("tagger-disabled");
+        this.rootEl.setAttribute("aria-disabled", "true");
         this.inputEl.disabled = true;
         this.closeDropdown();
     }
@@ -577,7 +579,11 @@ export class Tagger implements TaggerHandle
 
         if (this.options.size === "sm") { root.classList.add("tagger-sm"); }
         if (this.options.size === "lg") { root.classList.add("tagger-lg"); }
-        if (this.options.disabled) { root.classList.add("tagger-disabled"); }
+        if (this.options.disabled)
+        {
+            root.classList.add("tagger-disabled");
+            root.setAttribute("aria-disabled", "true");
+        }
         if (this.options.readonly) { root.classList.add("tagger-readonly"); }
         if (this.options.cssClass) { root.classList.add(...this.options.cssClass.split(" ")); }
 

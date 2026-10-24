@@ -4444,6 +4444,8 @@ export class Toolbar implements ToolbarHandle
 
         el.classList.toggle("toolbar-tool-active", isActive);
         el.classList.toggle("toolbar-tool-disabled", !!config.disabled);
+        if (!!config.disabled) { el.setAttribute("aria-disabled", "true"); }
+        else { el.removeAttribute("aria-disabled"); }
 
         if (config.disabled)
         {

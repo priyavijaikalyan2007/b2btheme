@@ -687,6 +687,7 @@ export class GradientPicker implements GradientPickerHandle
     {
         this.isDisabled = false;
         this.rootEl?.classList.remove("gradientpicker-disabled");
+        this.rootEl?.removeAttribute("aria-disabled");
     }
 
     /** Disable the component. Closes popup if open. */
@@ -695,6 +696,7 @@ export class GradientPicker implements GradientPickerHandle
         this.isDisabled = true;
         this.close();
         this.rootEl?.classList.add("gradientpicker-disabled");
+        this.rootEl?.setAttribute("aria-disabled", "true");
     }
 
     /** Get root DOM element. */
@@ -779,6 +781,7 @@ export class GradientPicker implements GradientPickerHandle
         if (this.isDisabled)
         {
             root.classList.add("gradientpicker-disabled");
+            root.setAttribute("aria-disabled", "true");
         }
 
         return root;

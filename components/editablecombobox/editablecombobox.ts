@@ -503,6 +503,7 @@ export class EditableComboBox implements EditableComboBoxHandle
         this.inputEl?.setAttribute("disabled", "");
         this.toggleEl?.setAttribute("disabled", "");
         this.wrapperEl?.classList.add("combobox-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
 
         logDebug("Disabled");
     }
@@ -609,6 +610,7 @@ export class EditableComboBox implements EditableComboBoxHandle
             this.inputEl.setAttribute("disabled", "");
             this.toggleEl.setAttribute("disabled", "");
             wrapper.classList.add("combobox-disabled");
+            wrapper.setAttribute("aria-disabled", "true");
         }
 
         // Apply readonly state

@@ -510,6 +510,7 @@ export class SprintPicker implements SprintPickerHandle
     {
         this.options.disabled = false;
         this.wrapperEl?.classList.remove("sprintpicker-disabled");
+        this.wrapperEl?.removeAttribute("aria-disabled");
         if (this.inputEl)
         {
             this.inputEl.disabled = false;
@@ -522,6 +523,7 @@ export class SprintPicker implements SprintPickerHandle
         this.options.disabled = true;
         this.hideDropdown();
         this.wrapperEl?.classList.add("sprintpicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         if (this.inputEl)
         {
             this.inputEl.disabled = true;
@@ -671,6 +673,7 @@ export class SprintPicker implements SprintPickerHandle
         if (this.options.disabled && this.wrapperEl)
         {
             this.wrapperEl.classList.add("sprintpicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
     }
 

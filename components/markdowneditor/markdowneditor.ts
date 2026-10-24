@@ -2005,14 +2005,13 @@ ${bodyHTML}
         this.requireVditor("disable()");
         this.options.disabled = true;
         this.vditor?.disabled();
-        this.wrapper?.classList.add("mde-disabled");
-
         // Vditor dims the editor to 30 percent opacity when disabled,
         // and nothing told assistive technology why. A class is a
         // styling hook, not a state: a screen reader reads the content
         // as ordinary editable text. DEBT-VR-11 found this by measuring
         // the dimmed text at 1.96 and having no way to tell whether the
         // exemption for an inactive control applied.
+        this.wrapper?.classList.add("mde-disabled");
         this.wrapper?.setAttribute("aria-disabled", "true");
     }
 

@@ -613,7 +613,11 @@ export class FacetSearch implements FacetSearchHandle
     {
         if (this.destroyed) { return; }
         this.opts.disabled = false;
-        if (this.root) { this.root.classList.remove("facetsearch-disabled"); }
+        if (this.root)
+        {
+            this.root.classList.remove("facetsearch-disabled");
+            this.root.removeAttribute("aria-disabled");
+        }
         if (this.input) { this.input.disabled = false; }
     }
 
@@ -621,7 +625,11 @@ export class FacetSearch implements FacetSearchHandle
     {
         if (this.destroyed) { return; }
         this.opts.disabled = true;
-        if (this.root) { this.root.classList.add("facetsearch-disabled"); }
+        if (this.root)
+        {
+            this.root.classList.add("facetsearch-disabled");
+            this.root.setAttribute("aria-disabled", "true");
+        }
         if (this.input) { this.input.disabled = true; }
         this.closeDropdown();
     }
@@ -647,6 +655,7 @@ export class FacetSearch implements FacetSearchHandle
         if (this.opts.disabled)
         {
             this.root.classList.add("facetsearch-disabled");
+            this.root.setAttribute("aria-disabled", "true");
         }
         if (this.opts.cssClass)
         {

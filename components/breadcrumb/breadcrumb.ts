@@ -594,6 +594,7 @@ class Breadcrumb implements BreadcrumbHandle
         {
             btn.setAttribute("disabled", "true");
             btn.classList.add("disabled");
+            btn.setAttribute("aria-disabled", "true");
         }
 
         this.appendIcon(btn, action.icon);

@@ -953,6 +953,7 @@ export class TabbedPanel implements TabbedPanelHandle
             {
                 setAttr(btn, "aria-disabled", "true");
                 btn.classList.add("tabbedpanel-tab-disabled");
+                btn.setAttribute("aria-disabled", "true");
             }
             else
             {

@@ -477,6 +477,8 @@ export class FileUpload implements FileUploadHandle
         }
 
         this.rootEl.classList.toggle("fileupload-disabled", disabled);
+        if (disabled) { this.rootEl.setAttribute("aria-disabled", "true"); }
+        else { this.rootEl.removeAttribute("aria-disabled"); }
         this.updateDropzoneDisabledAttr();
     }
 

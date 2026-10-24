@@ -830,6 +830,7 @@ export class CronPicker implements CronPickerHandle
     {
         this.options.disabled = false;
         this.wrapperEl?.classList.remove("cronpicker-disabled");
+        this.wrapperEl?.removeAttribute("aria-disabled");
         this.setAllInputsDisabled(false);
     }
 
@@ -840,6 +841,7 @@ export class CronPicker implements CronPickerHandle
     {
         this.options.disabled = true;
         this.wrapperEl?.classList.add("cronpicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         this.setAllInputsDisabled(true);
     }
 
@@ -914,6 +916,7 @@ export class CronPicker implements CronPickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("cronpicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
         this.appendEditorSections();
@@ -1726,6 +1729,7 @@ export class CronPicker implements CronPickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("cronpicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
         this.appendEditorSections();

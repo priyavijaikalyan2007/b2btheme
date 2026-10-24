@@ -804,6 +804,7 @@ export class TimePicker implements TimePickerHandle
             this.inputEl.disabled = false;
         }
         this.wrapperEl?.classList.remove("timepicker-disabled");
+        this.wrapperEl?.removeAttribute("aria-disabled");
     }
 
     public disable(): void
@@ -814,6 +815,7 @@ export class TimePicker implements TimePickerHandle
             this.inputEl.disabled = true;
         }
         this.wrapperEl?.classList.add("timepicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         if (this.isOpen)
         {
             this.hideDropdown();
@@ -962,6 +964,7 @@ export class TimePicker implements TimePickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("timepicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
         // Input group

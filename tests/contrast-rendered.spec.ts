@@ -425,18 +425,31 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
         {
             const node = chain[i];
 
-            // An absolutely positioned child can sit OUTSIDE the box of
-            // the ancestor it descends from, and then that ancestor's
-            // background is not behind it. The annotation caption hangs
-            // 18px below its wash and was being measured against the
-            // wash's amber.
+            // An out-of-flow child can sit OUTSIDE the box of the
+            // ancestor it descends from, and then that ancestor's
+            // background is not behind it: the annotation caption hangs
+            // 18px below its wash and was measured against the wash's
+            // amber.
+            //
+            // ONLY when the ancestor's overflow is `visible`. A child
+            // that leaves a clipping or scrolling box is clipped or
+            // scrolled, so wherever it IS visible it is over that box's
+            // background — and the box's own rect is the VIEWPORT of
+            // the scroller, not its content. Testing overlap there
+            // dropped the backdrop of everything scrolled out of view:
+            // 801 rows of light text reported on the seed white, in
+            // dark mode, in one run.
+            const nodeCs = getComputedStyle(node);
+            const clips = nodeCs.overflowX !== "visible"
+                || nodeCs.overflowY !== "visible";
             const r = node.getBoundingClientRect();
-            const overlaps = r.left < box.right && r.right > box.left
-                && r.top < box.bottom && r.bottom > box.top;
+            const overlaps = clips
+                || (r.left < box.right && r.right > box.left
+                    && r.top < box.bottom && r.bottom > box.top);
 
             if (overlaps)
             {
-                const raw = parse(getComputedStyle(node).backgroundColor);
+                const raw = parse(nodeCs.backgroundColor);
                 const layer: number[] = [raw[0], raw[1], raw[2], raw[3] * fade[i]];
                 if (layer[3] > 0) { stack.push([layer]); }
                 if (layer[3] >= 1) { break; }

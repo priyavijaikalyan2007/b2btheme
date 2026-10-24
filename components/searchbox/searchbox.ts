@@ -1213,11 +1213,13 @@ export class SearchBox implements SearchBoxHandle
         if (disabled)
         {
             this.rootEl.classList.add("searchbox-disabled");
+            this.rootEl.setAttribute("aria-disabled", "true");
             this.inputEl.disabled = true;
         }
         else
         {
             this.rootEl.classList.remove("searchbox-disabled");
+            this.rootEl.removeAttribute("aria-disabled");
             this.inputEl.disabled = false;
         }
     }

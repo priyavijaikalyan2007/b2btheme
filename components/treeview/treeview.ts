@@ -2125,6 +2125,7 @@ export class TreeView implements TreeViewHandle
         if (node.disabled)
         {
             row.classList.add("treeview-node-disabled");
+            row.setAttribute("aria-disabled", "true");
         }
 
         const typeDesc = this.typeMap.get(node.kind);
@@ -2558,6 +2559,7 @@ export class TreeView implements TreeViewHandle
         {
             setAttr(li, "aria-disabled", "true");
             li.classList.add("treeview-node-disabled");
+            li.setAttribute("aria-disabled", "true");
         }
 
         if (this.isNodeParent(node))

@@ -515,6 +515,7 @@ export class PeoplePicker implements PeoplePickerHandle
     {
         this.options.disabled = false;
         this.rootEl.classList.remove("peoplepicker-disabled");
+        this.rootEl.removeAttribute("aria-disabled");
         this.inputEl.disabled = false;
     }
 
@@ -522,6 +523,7 @@ export class PeoplePicker implements PeoplePickerHandle
     {
         this.options.disabled = true;
         this.rootEl.classList.add("peoplepicker-disabled");
+        this.rootEl.setAttribute("aria-disabled", "true");
         this.inputEl.disabled = true;
         this.closeDropdown();
     }
@@ -627,7 +629,11 @@ export class PeoplePicker implements PeoplePickerHandle
 
     private applyStateClasses(root: HTMLElement): void
     {
-        if (this.options.disabled) { root.classList.add("peoplepicker-disabled"); }
+        if (this.options.disabled)
+        {
+            root.classList.add("peoplepicker-disabled");
+            root.setAttribute("aria-disabled", "true");
+        }
         if (this.options.readonly) { root.classList.add("peoplepicker-readonly"); }
     }
 

@@ -1547,6 +1547,8 @@ export class Conversation implements ConversationHandle
         if (this.rootEl)
         {
             this.rootEl.classList.toggle("conversation-disabled", disabled);
+            if (disabled) { this.rootEl.setAttribute("aria-disabled", "true"); }
+            else { this.rootEl.removeAttribute("aria-disabled"); }
         }
         this.updateSendButtonState();
     }

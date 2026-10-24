@@ -1471,6 +1471,8 @@ export class Timeline implements TimelineHandle
         if (this.rootEl)
         {
             this.rootEl.classList.toggle("timeline--disabled", disabled);
+            if (disabled) { this.rootEl.setAttribute("aria-disabled", "true"); }
+            else { this.rootEl.removeAttribute("aria-disabled"); }
         }
 
         logInfo(disabled ? "Disabled" : "Enabled");
@@ -1555,6 +1557,7 @@ export class Timeline implements TimelineHandle
         if (this.opts.disabled)
         {
             root.classList.add("timeline--disabled");
+            root.setAttribute("aria-disabled", "true");
         }
 
         if (this.pannable)

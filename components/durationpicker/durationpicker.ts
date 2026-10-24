@@ -821,6 +821,7 @@ export class DurationPicker implements DurationPickerHandle
             this.inputEl.disabled = false;
         }
         this.wrapperEl?.classList.remove("durationpicker-disabled");
+        this.wrapperEl?.removeAttribute("aria-disabled");
     }
 
     public disable(): void
@@ -831,6 +832,7 @@ export class DurationPicker implements DurationPickerHandle
             this.inputEl.disabled = true;
         }
         this.wrapperEl?.classList.add("durationpicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         if (this.isOpen)
         {
             this.hideDropdown();
@@ -938,6 +940,7 @@ export class DurationPicker implements DurationPickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl!.classList.add("durationpicker-disabled");
+            this.wrapperEl!.setAttribute("aria-disabled", "true");
         }
     }
 

@@ -488,6 +488,7 @@ export class TimezonePicker implements TimezonePickerHandle
             this.inputEl.disabled = false;
         }
         this.wrapperEl?.classList.remove("timezonepicker-disabled");
+        this.wrapperEl?.removeAttribute("aria-disabled");
     }
 
     /**
@@ -501,6 +502,7 @@ export class TimezonePicker implements TimezonePickerHandle
             this.inputEl.disabled = true;
         }
         this.wrapperEl?.classList.add("timezonepicker-disabled");
+        this.wrapperEl?.setAttribute("aria-disabled", "true");
         if (this.isOpen)
         {
             this.hideDropdown();
@@ -582,6 +584,7 @@ export class TimezonePicker implements TimezonePickerHandle
         if (this.options.disabled)
         {
             this.wrapperEl.classList.add("timezonepicker-disabled");
+            this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
         // Input group

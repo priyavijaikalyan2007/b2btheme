@@ -1388,6 +1388,8 @@ export class CodeEditor implements CodeEditorHandle
 
         btn.disabled = disabled;
         btn.classList.toggle("codeeditor-toolbar-btn-disabled", disabled);
+        if (disabled) { btn.setAttribute("aria-disabled", "true"); }
+        else { btn.removeAttribute("aria-disabled"); }
     }
 
     private updateWrapBtnState(): void

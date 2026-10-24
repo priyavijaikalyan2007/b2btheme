@@ -670,6 +670,8 @@ export class RichTextInput implements RichTextInputHandle
     {
         if (!this.rootEl) { return; }
         this.rootEl.classList.toggle("richtextinput-disabled", !!this.options.disabled);
+        if (!!this.options.disabled) { this.rootEl.setAttribute("aria-disabled", "true"); }
+        else { this.rootEl.removeAttribute("aria-disabled"); }
         this.rootEl.classList.toggle("richtextinput-readonly", !!this.options.readonly);
     }
 
