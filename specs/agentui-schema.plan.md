@@ -2747,8 +2747,7 @@ function partition(classified, input, errors)
 
     for (const c of classified)
     {
-        const violations = c.surface.violations.filter((v) =>
-            !(v.code === VIOLATION.VALUE_BELOW_FIELD && input.belowRequired.has(c.manifest.name)));
+        const violations = blockingViolations(c, input);
         const pending = input.pending.has(c.manifest.name);
 
         if (pending && violations.length === 0)
@@ -2765,6 +2764,13 @@ function partition(classified, input, errors)
     }
 
     return { included, excluded };
+}
+
+/** A component's violations, minus value-below-field while it is on BELOW_REQUIRED. */
+function blockingViolations(c, input)
+{
+    return c.surface.violations.filter((v) =>
+        !(v.code === VIOLATION.VALUE_BELOW_FIELD && input.belowRequired.has(c.manifest.name)));
 }
 
 /** typia entries for the included components; normalised, overridden, post-checked. */
@@ -2838,6 +2844,13 @@ function checkBaseline(catalog, input, errors)
     const problem = versionProblem(diff, previousMajor, input.major);
 
     if (problem) { errors.push(problem); return; }
+
+    if (input.major > previousMajor && !input.writeBaseline)
+    {
+        errors.push(`CATALOG_MAJOR is now ${input.major}. Commit its baseline with `
+            + "`npm run build:agentui -- --write-baseline` in the same change; v" + previousMajor + " stays published.");
+        return;
+    }
 
     if (input.major === previousMajor && !input.writeBaseline
         && JSON.stringify(input.baselines.get(previousMajor)) !== JSON.stringify(catalog))
@@ -2996,12 +3009,16 @@ function main(argv)
         + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members`);
 }
 
-/** --measure: print the components that have violations, for PENDING_CLASSIFICATION. */
+/**
+ * --measure: print the components that have violations, for PENDING_CLASSIFICATION.
+ * Applies exactly the filter partition() applies, so a component whose only
+ * violation is value-below-field while it sits on BELOW_REQUIRED is not listed.
+ */
 function measure(input)
 {
     const errors = [];
     const classified = classifyFleet(input, errors);
-    const failing = classified.filter((c) => c.surface.violations.length > 0).map((c) => c.manifest.name).sort();
+    const failing = classified.filter((c) => blockingViolations(c, input).length > 0).map((c) => c.manifest.name).sort();
 
     console.log(JSON.stringify({ date: new Date().toISOString().slice(0, 10), errors, counts: countsFor(classified, [], []), failing }, null, 4));
 }
@@ -3050,7 +3067,8 @@ git commit -m "feat(agentui): orchestrate the generator and measure the fleet" -
 **Files:**
 - Modify: `runtime/src/conformance.ts` (`CONFORMANCE_CHECKS`; `runMounted`; new `requiredLevel`, `LEVEL_ORDER`, `checkRequiredLevel`)
 - Modify: `runtime/fleet-conformance.test.ts` (import `BELOW_REQUIRED`; filter; hygiene tests)
-- Modify: `scripts/agentui/migration.mjs` (`BELOW_REQUIRED`, measured)
+- Modify: `scripts/agentui/migration.mjs` (`BELOW_REQUIRED`, measured; `PENDING_CLASSIFICATION`, reconciled)
+- Modify: `docs/SURFACE_CONTRACT.md` §1, `AGENTS.md` (Surface Contract section), `agentknowledge/decisions.yaml` (ADR-219). The gate goes live in this commit, so the rule lands with it (D9).
 - Test: `runtime/src/conformance.test.ts`
 
 **Interfaces:**
@@ -3254,10 +3272,21 @@ Expected: a JSON array of names. Paste it into `BELOW_REQUIRED` under `// Measur
 
 Then confirm the gate is green: `npx vitest run runtime/fleet-conformance.test.ts`. Expected: PASS, with any failures other than `level-meets-required` unchanged from before this task. If an unrelated test was failing before, it is still failing; say so in the commit message, don't hide it.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Reconcile `PENDING_CLASSIFICATION` with the new `BELOW_REQUIRED`**
+
+Run: `node scripts/agentui/generate.mjs --measure > node_modules/.cache/agentui/measure.json; node -e 'console.log(require("./node_modules/.cache/agentui/measure.json").failing.length)'`
+
+Remove from `PENDING_CLASSIFICATION` every name that is no longer in `failing`. A component whose only violation was `value-below-field` is now covered by `BELOW_REQUIRED` instead. Never add a name here.
+
+- [ ] **Step 8: Land the rule with the gate (D9).** This commit makes `npm test` enforce the required level, so the documents that state the rule go in the same commit:
+  - **`docs/SURFACE_CONTRACT.md` §1:** replace the sentence beginning "Pick the lowest level that is honest." through "easily corrected later." with: `Pick the level the evidence requires. Since ADR-219 the suite computes a required level — emits, accepts or providers require surface; a value-shaped handle requires field — and declaring less fails the gate, because an agent cannot read a value from a display component. Over-declaring still fails too. Components measured below their required level on the gate's landing date are listed in BELOW_REQUIRED (scripts/agentui/migration.mjs); the list may only shrink.`
+  - **`AGENTS.md`**, in "(CRITICAL) Canvas-Capable Components — Surface Contract", directly under "The level is **verified by the conformance suite, never self-declared**.": `**And the minimum level is computed (ADR-219).** emits, accepts or a protocol provider require surface; a handle with getValue/setValue requires field. Declaring less fails the gate. BELOW_REQUIRED in scripts/agentui/migration.mjs holds the measured backlog and may only shrink — never add a new component to it.`
+  - **`agentknowledge/decisions.yaml`:** append ADR-219 now, with the entry text given in Task 12 Step 7. Task 12 updates its context if anything changes. Never delete it.
+
+- [ ] **Step 9: Commit**
 
 ```bash
-git add runtime/src/conformance.ts runtime/src/conformance.test.ts runtime/fleet-conformance.test.ts scripts/agentui/migration.mjs
+git add runtime/src/conformance.ts runtime/src/conformance.test.ts runtime/fleet-conformance.test.ts scripts/agentui/migration.mjs docs/SURFACE_CONTRACT.md AGENTS.md agentknowledge/decisions.yaml
 git commit -m "feat(agentui): compute the required conformance level" -m "Wiring declarations require surface, a value-shaped handle requires field. Under-declaring is now a defect (ADR-219). The measured BELOW_REQUIRED list may only shrink, and a listed component that no longer needs listing fails the gate. #17."
 ```
 
@@ -3274,11 +3303,15 @@ git commit -m "feat(agentui): compute the required conformance level" -m "Wiring
 ```bash
 SCRATCH=$(mktemp -d) && cd "$SCRATCH" && npm init -y >/dev/null && npm install --silent @a2ui/web_core@0.14.0
 cp "$OLDPWD/dist/a2ui/catalog/v1.json" catalog.json
+cp "$OLDPWD/scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json" basic.json
 cat > check.mjs <<'EOF'
 import fs from "node:fs";
-import { Catalog } from "@a2ui/web_core/v0_9";
-const doc = JSON.parse(fs.readFileSync("catalog.json", "utf8"));
-const catalog = Catalog.fromJson(doc);
+import { Catalog, linkCatalogs } from "@a2ui/web_core/v0_9";
+// Cross-catalog $refs resolve only once catalogs are linked (MessageProcessor
+// does this in its constructor). An unlinked Catalog.fromJson fails on our
+// basic re-exports by design, which would be a false alarm.
+const read = (f) => JSON.parse(fs.readFileSync(f, "utf8"));
+const [catalog] = linkCatalogs([Catalog.fromJson(read("catalog.json")), Catalog.fromJson(read("basic.json"))]);
 const names = [...catalog.components.keys()];
 console.log("components:", names.length, "has Text:", names.includes("Text"));
 for (const n of names.filter((x) => !["Text","Row","Column"].includes(x)).slice(0, 5))
@@ -3290,7 +3323,7 @@ EOF
 node check.mjs; cd "$OLDPWD"
 ```
 
-Expected: the component count equals the catalog's `components` count, `has Text: true`, and `schema ok: true` for each sampled component. If `fromJson` rejects the root `$defs` (relocated `<Name>__*` keys) or cross-catalog refs, **stop**: that is a spec-level problem (§5.4). Report the exact error to the user before Task 12.
+Expected: the component count equals the catalog's `components` count, `has Text: true`, and `schema ok: true` for each sampled component. Also call `api.schema.safeParse({ component: "<Name>", id: "x" })` on one sampled component of ours, to force the lazy Zod derivation. A failure **with linking in place**, such as rejected root `$defs` (relocated `<Name>__*` keys) or an unresolved cross-catalog ref, is the real signal. **Stop**: that is a spec-level problem (§5.4). Report the exact error to the user before Task 12.
 
 - [ ] **Step 3: Record the result on #17**
 
@@ -3357,6 +3390,11 @@ describe("checkDist ([29])", () =>
     test("a catalog differing from the committed baseline fails", () =>
     {
         expect(checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; })).join()).toMatch(/baseline/);
+    });
+    test("a built major with no committed baseline fails", () =>
+    {
+        expect(checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; })).join())
+            .toMatch(/v2/);
     });
     test("a missing component entry fails", () =>
     {
@@ -3425,7 +3463,7 @@ export function checkDist(root)
     const catalogRel = `dist/a2ui/catalog/v${major}.json`;
 
     return [
-        ...baselineProblems(root, catalogRel, major),
+        ...baselineProblems(root, major),
         ...layoutProblems(read(catalogRel), read("scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json")),
         ...refProblems(root, read(catalogRel)),
         ...coverageProblems(read("dist/capability-manifest.json"), read(catalogRel), read("dist/agentui-report.json")),
@@ -3437,6 +3475,9 @@ export function checkDist(root)
 function highestBaseline(root)
 {
     const dir = path.join(root, "specs", "agentui", "published");
+
+    if (!fs.existsSync(dir)) { throw new Error(`[29] ${dir} does not exist; the catalog has never been published.`); }
+
     const majors = fs.readdirSync(dir).flatMap((f) => { const m = /^catalog-v(\d+)\.json$/.exec(f); return m ? [Number(m[1])] : []; });
 
     if (majors.length === 0) { throw new Error(`[29] No baseline in ${dir}; the catalog has never been published.`); }
@@ -3444,14 +3485,26 @@ function highestBaseline(root)
     return Math.max(...majors);
 }
 
-/** The built catalog must be byte-identical to the committed baseline. */
-function baselineProblems(root, catalogRel, major)
+/**
+ * Every built catalog must have a byte-identical committed twin, and the
+ * highest built major must be the highest committed one. Otherwise a new
+ * major could ship with no baseline and the check would compare the old one.
+ */
+function baselineProblems(root, major)
 {
-    const built = fs.readFileSync(path.join(root, catalogRel), "utf8");
-    const committed = fs.readFileSync(path.join(root, "specs", "agentui", "published", `catalog-v${major}.json`), "utf8");
+    const dir = path.join(root, "dist", "a2ui", "catalog");
+    const built = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^v\d+\.json$/.test(f)) : [];
+    const problems = built.flatMap((f) =>
+    {
+        const twin = path.join(root, "specs", "agentui", "published", `catalog-${f}`);
+        const same = fs.existsSync(twin) && fs.readFileSync(path.join(dir, f), "utf8") === fs.readFileSync(twin, "utf8");
 
-    return built === committed ? [] : [`${catalogRel} differs from the committed baseline specs/agentui/published/catalog-v${major}.json. `
-        + "Run `npm run build:agentui -- --write-baseline` and commit it."];
+        return same ? [] : [`dist/a2ui/catalog/${f} has no byte-identical committed baseline at specs/agentui/published/catalog-${f}. `
+            + "Run `npm run build:agentui -- --write-baseline` and commit it."];
+    });
+    const highestBuilt = Math.max(0, ...built.map((f) => Number(f.slice(1, -5))));
+
+    return highestBuilt === major ? problems : [...problems, `dist/ ships catalog v${highestBuilt} but the highest committed baseline is v${major}.`];
 }
 
 /** Top-level keys must equal the vendored basic catalog file's. */
@@ -3693,11 +3746,11 @@ its first commit.
 ```
 
 - [ ] **Step 7: Amend the other documents.**
-  - **`docs/SURFACE_CONTRACT.md` §1:** replace the sentence beginning "Pick the lowest level that is honest." through "easily corrected later." with: `Pick the level the evidence requires. Since ADR-219 the suite computes a required level — emits, accepts or providers require surface; a value-shaped handle requires field — and declaring less fails the gate, because an agent cannot read a value from a display component. Over-declaring still fails too.`
+  - **`docs/SURFACE_CONTRACT.md` §1:** already amended in Task 9 (D9). Check it still reads correctly.
   - **`docs/CAPABILITY_MANIFEST.md`:** add a section **"9. `protocol` — agent-protocol declarations (ADR-219)"** documenting `name`, `providers` (`request`/`params`/`response`, one parameter), `hostOnly` (key syntax, prefix coverage, mixed-member meaning, the 20-character reason), `schemas` and `bindAs`, with the DataGrid-style example from the spec. Add `- [ ] Every non-data option is classified (see §9).` to §8's checklist and renumber "Related".
   - **`CDN_CONTRACT.md`:** add a section **"2c. Agent-protocol artefacts"** listing `/a2ui/catalog/v<N>.json` (a permanent ID; additive within N; older majors stay served), `/schemas/<name>.options.json`, `/mcp/renderer.meta.json` and `/agentui-report.json`, with their cache rules. State that `static.outcrop.us` is the host-neutral name for the same origin (D13).
   - **`docs/CDN_INTEGRATION_GUIDE.md`:** add a short section **"Using the components from an AI agent"** that points to the catalog ID and the MCP metadata and says #18 and #19 deliver the runtime.
-  - **`agentknowledge/decisions.yaml`:** append:
+  - **`agentknowledge/decisions.yaml`:** ADR-219 was appended in Task 9. Update its `context` if anything changed since; this is the entry text:
 
 ```yaml
 - id: ADR-219
