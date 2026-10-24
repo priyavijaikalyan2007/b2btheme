@@ -58,11 +58,23 @@ const ASSETS = [
     {
         name: "codemirror6",
         kind: "bundle",
-        // The version anchor. Fourteen packages ship on their own release
+        // The version anchor. Fifteen packages ship on their own release
         // trains, so one filename cannot name them all. `view` is the
-        // package the others depend on, and `members` records the rest so
-        // a reader can audit exactly what is inside the file.
+        // package the others depend on.
         pkg: "@codemirror/view",
+        // WHAT THIS LIST IS FOR, since 2026-10-24: the packages the entry
+        // below IMPORTS BY NAME, and therefore the packages that must be
+        // pinned exactly in package.json. test-local.sh [28] reads it.
+        //
+        // It is no longer the record of what is in the file. The file
+        // holds 28 packages and the manifest's `packages` field reports
+        // all of them, read from esbuild's metafile. A list of this kind
+        // maintained by hand answers for the half somebody remembered,
+        // which is how @lezer/highlight went undeclared.
+        //
+        // The build asserts this list is a SUBSET of what was bundled, so
+        // a member that stops being reachable fails rather than standing
+        // as a pin on a package the artifact does not contain.
         members: [
             "@codemirror/view", "@codemirror/state", "@codemirror/commands",
             "@codemirror/language", "@codemirror/search",
@@ -71,6 +83,11 @@ const ASSETS = [
             "@codemirror/lang-html", "@codemirror/lang-css",
             "@codemirror/lang-sql", "@codemirror/lang-python",
             "@codemirror/lang-markdown",
+            // Imported directly by the entry for `tags`, and undeclared
+            // until 2026-10-24 — it resolved on npm hoisting alone, so a
+            // consumer-visible feature rested on another package's
+            // dependency tree. See the DEBT-VR-11 note below.
+            "@lezer/highlight",
         ],
         // NO `global`. Every other asset publishes one namespace and the
         // page reads through it. CodeEditor probes about thirty BARE names
@@ -116,7 +133,7 @@ const ASSETS = [
             '  setDiagnostics, javascript, json, html, css, sql, python, markdown',
             '});',
         ].join("\n"),
-        note: "CodeMirror 6, fourteen packages in one hashed file; publishes 32 bare globals that CodeEditor probes for. DEBT-SEC-9 / ADR-211 / DEBT-VR-11",
+        note: "CodeMirror 6, 15 imported packages and 28 in all, one hashed file; publishes 32 bare globals that CodeEditor probes for. DEBT-SEC-9 / ADR-211 / DEBT-VR-11",
     },
     {
         name: "maxgraph",
