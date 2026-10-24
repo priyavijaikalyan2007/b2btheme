@@ -2275,9 +2275,11 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
 
 ## MEDIUM — Rendered text contrast (DEBT-VR-11, opened 2026-10-22)
 
-- [ ] **DEBT-VR-11** **287 AA failures across 92 distinct defects, from
-  2,879 and 310 when the instrument was first run.** Reported from
-  production: text unreadable in dark mode.
+- [ ] **DEBT-VR-11** **182 AA failures, NONE below 3.0, from 2,879 and
+  310 when the instrument was first run.** Reported from production:
+  text unreadable in dark mode. Everything on these pages is legible
+  now; what remains is a shortfall against the 4.5 floor for
+  normal-size text, held at 3.0 by `npm run test:contrast`.
 
   **The gate that existed could not see any of it.**
   `scripts/check-contrast.py` is arithmetic over NAMED TOKEN PAIRS and
@@ -2315,28 +2317,66 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
     4.43 is the genuine upstream near-miss, and only measurement told
     them apart.
 
-  **WHAT REMAINS, measured 2026-10-23:**
+  **WHAT THE SECOND PASS FOUND, 2026-10-24.** The instrument could not
+  see three whole classes of defect, and fixing it raised the count
+  before it lowered it — 287 to 366 — because it had been undercounting:
+
+  - **An SVG `fill` is not a `background-color`.** A diagram label
+    lives in a `<foreignObject>` that is a SIBLING of the shape it sits
+    on, so no amount of climbing ancestors reaches the shape. Every
+    label on every canvas was measured against the canvas. Gradients
+    now resolve to their stops and are judged on the worst; a pattern
+    counts only when its marks cover half the tile, because the
+    diagram grid is one 1.2px dot per 20x20 and calling that dot "the
+    background" manufactures a failure on every label.
+  - **`opacity` on an ancestor fades the whole subtree**, text and
+    fill together, and only the element's own value was read. This
+    found the worst defect of the arc: the READ-ONLY markdown editor
+    rendered its entire document at 30 percent opacity. Vditor has one
+    mechanism for disabled and read-only, and dims both. A disabled
+    control may be dimmed. Content a person is there to read may not.
+  - **The sr-only pattern.** A clip to a zero rectangle paints nothing
+    and still has a client rect, so chartpanel's accessible data table
+    — 58 cells — was reported as light text on white.
+
+  That last one led out of contrast entirely: **sixteen components dim
+  a disabled control and never set `aria-disabled`**, so a screen
+  reader read every one of them as operable. Tracked as A11Y-1 with a
+  ceiling of 0, and the first version of that gate passed colorpicker,
+  which put the class on its root and the attribute on its trigger.
+
+  **WHAT REMAINS, measured 2026-10-24:**
 
   | Severity | Count |
   |---|---:|
-  | under 2.0 | 7 |
-  | 2.0 – 3.0 | 72 |
-  | 3.0 – 4.0 | 134 |
-  | 4.0 – 4.5 | 74 |
+  | under 3.0 | 0 |
+  | 3.0 – 4.0 | 124 |
+  | 4.0 – 4.5 | 58 |
 
-  79 below 3.0 across 28 distinct defects. The largest single group is
-  10 elements. There are no systemic causes left that this sweep can
-  see; each remaining item is an individual judgement, and several are
-  brand colours where the fix is a visible design change rather than a
-  defect repair.
+  Plus 110 elements exempt under WCAG 1.4.3 as inactive controls,
+  listed with a reason each rather than skipped.
 
-  **The instrument had the defect it was built to find, twice.** It
-  skipped `aria-hidden` subtrees — which means "not exposed to assistive
-  technology", not "not visible" — hiding 1,092 elements and three real
-  defects, so every total before 2026-10-23 was an undercount. And its
-  aggregate JSON was read stale twice, once reporting a working fix as
-  having no effect. The spec deletes the aggregate when a run starts
-  writing, and the skip list is now audited by reason in its docstring.
+  Closing the 3.0–4.5 band is a design argument, not a defect repair:
+  most of it is brand colour at a visible cost. The 3.0 floor is a
+  regression stop and is enforced.
+
+  **`npm run test:contrast` is the gate.** It clears the run directory,
+  renders the fleet and verifies. It fails on any element below 3.0 AND
+  on a partial run — 274 page/theme results expected, derived from git,
+  where 273 is a failure rather than a smaller number. Both halves
+  mutation-proven by exit code. ADR-196.
+
+  **The instrument had the defect it was built to find, repeatedly.**
+  It skipped `aria-hidden` subtrees — which means "not exposed to
+  assistive technology", not "not visible" — hiding 1,092 elements and
+  three real defects. Its aggregate JSON was read stale twice, once
+  reporting a working fix as having no effect. Fixing the SVG blind
+  spot took three attempts, the first finding nothing and the second
+  marking all 45 labels unmeasurable. And the containment test added to
+  fix the annotation caption reported 801 elements against a seed
+  white, because a scroll container's rect is its viewport and
+  everything scrolled out of view fell through. Each was caught by
+  reading the number that moved and asking whether it should have.
 
 - [x] **DEBT-VR-12** **CLOSED 2026-10-23. The pill had no padding at
   all.** Reported as "always cut off, looks jagged". The values were
@@ -2378,7 +2418,7 @@ the step exits 1 and the workflow fails.
 
 | Marker | Count | Meaning |
 |---|---|---|
-| `- [ ]` | **1** | Open. **DEBT-VR-11** — 287 rendered-contrast failures, 79 of them below 3.0. |
+| `- [ ]` | **1** | Open. **DEBT-VR-11** — 182 rendered-contrast failures, none below 3.0. |
 | `- [x]` | **99** | Closed. |
 | `- [=]` | **8** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |
