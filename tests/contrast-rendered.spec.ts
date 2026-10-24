@@ -482,11 +482,15 @@ function auditScript(): { findings: Omit<Finding, "page" | "theme">[];
 
             const fills = fillsUnder(node, box);
             if (fills === "broken") { broken = true; break; }
+            // A SIBLING of chain[i] is not inside chain[i]'s opacity
+            // group, so it is faded by what is ABOVE node i, not by
+            // node i's own value.
+            const sibFade = i + 1 < fade.length ? fade[i + 1] : 1;
             for (const f of fills)
             {
-                stack.push(f.map((c) => [c[0], c[1], c[2], c[3] * fade[i]]));
+                stack.push(f.map((c) => [c[0], c[1], c[2], c[3] * sibFade]));
                 svgComposited += 1;
-                if (f.every((c) => c[3] * fade[i] >= 1)) { floor = true; }
+                if (f.every((c) => c[3] * sibFade >= 1)) { floor = true; }
             }
             if (floor) { break; }
         }

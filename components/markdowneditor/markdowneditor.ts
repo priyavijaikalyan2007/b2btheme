@@ -1853,13 +1853,15 @@ export class MarkdownEditor implements MarkdownEditorHandle
         {
             this.vditor?.enable();
             this.wrapper?.classList.remove("mde-readonly");
-            this.wrapper?.removeAttribute("aria-readonly");
         }
         else
         {
             this.vditor?.disabled();
+            // NOT `aria-readonly`: it is not a global attribute and
+            // this wrapper is a plain div with no role, so it would be
+            // invalid here. Vditor's own surface carries
+            // contenteditable="false", which is the state.
             this.wrapper?.classList.add("mde-readonly");
-            this.wrapper?.setAttribute("aria-readonly", "true");
         }
 
         logDebug("Editable:", editable);

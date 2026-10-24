@@ -2378,6 +2378,69 @@ Per MARKERS.md, all source files must contain semantic navigation markers (e.g.,
   everything scrolled out of view fell through. Each was caught by
   reading the number that moved and asking whether it should have.
 
+- [x] **A11Y-1** **CLOSED 2026-10-24. Twenty-eight components dimmed a
+  disabled control and never told assistive technology.** 56 call
+  sites. Found by measuring colour, which is the whole point of it:
+  the rendered-contrast walker learned to read `opacity` on an
+  ancestor and began reporting the text inside
+  `.facetsearch-disabled { opacity: 0.5 }` and rules like it. WCAG
+  1.4.3 exempts an INACTIVE control, so the right answer was to exempt
+  them — and there was nothing to exempt them by. A class is a styling
+  hook. A screen reader read every one of these as ordinary and
+  operable while a sighted reader saw it greyed out.
+
+  Sixteen components had no `aria-disabled` anywhere. The other twelve
+  looked compliant to a file-wide search and were not: they set it on
+  ONE of their call sites. The gate's window is the line plus three.
+
+  Then the gate itself was wrong once. Its first version asked only
+  that the words appear near each other, and colorpicker passed it
+  while putting the class on its root and the attribute on its
+  trigger — the root is what carries `opacity: 0.5`, so every control
+  inside it was dimmed and none was marked. It pairs the RECEIVER now,
+  which found 13 more sites.
+
+  `disabledWithoutAria`, ceiling 0, mutation-proven by removing one.
+
+- [ ] **DEBT-VR-13** **281 `var(--theme-x, fallback)` across 56
+  stylesheets, and three of them name a token that does not exist.**
+  The owner's rule for this repository is that there is no fallback
+  code: when something is broken, let it break. A CSS fallback is
+  exactly that, and it is the MECHANISM behind the largest finding in
+  DEBT-VR-11 — eleven theme tokens referenced and never defined, with
+  53 rules quietly rendering the fallback in both themes for weeks. A
+  missing token with no fallback is a visibly unstyled element in the
+  first second of the first demo page. With one, it is a colour that
+  looks deliberate.
+
+  Live today, found 2026-10-24 and not yet fixed:
+
+  | Token referenced | Defined | Reached from |
+  |---|---|---|
+  | `--theme-btn-close-filter` | no | `conversation.scss` |
+  | `--theme-canvas-bg` | no | `dynamiccanvas.scss` |
+  | `--theme-canvas-grid` | no | `dynamiccanvas.scss` |
+
+  The other 278 reference tokens that DO exist, so each one is dead
+  weight that can only hide a future deletion. `annotation.scss` was
+  cleared of its 12 while DEBT-VR-11 was being worked; the rest stand.
+
+  Two related shapes, same rule:
+
+  - **`readableOn` is duplicated in 7 components** (deliberately — each
+    bundles as a standalone IIFE and cannot import). Six return
+    `#ffffff` for an input they cannot parse. typebadge's copy throws,
+    added 2026-10-24, so the seven now disagree about what a bad colour
+    means.
+  - **`logconsole.resolveThemeTokens`** carries five `var(..., hex)`
+    fallbacks with a written justification — "a host that has not
+    loaded custom.css sees what it saw before" — immediately beside a
+    new map added the same week with none.
+
+  **No gate yet.** A structure check that counts `var(--theme-*,` in
+  tracked SCSS is the obvious one, and it should land with the fix
+  rather than before it, because a ceiling of 281 is not a ratchet.
+
 - [x] **DEBT-VR-12** **CLOSED 2026-10-23. The pill had no padding at
   all.** Reported as "always cut off, looks jagged". The values were
   right and never reached the browser: Sass does not interpolate `$x`
@@ -2418,7 +2481,7 @@ the step exits 1 and the workflow fails.
 
 | Marker | Count | Meaning |
 |---|---|---|
-| `- [ ]` | **1** | Open. **DEBT-VR-11** — 182 rendered-contrast failures, none below 3.0. |
+| `- [ ]` | **2** | Open. **DEBT-VR-11** — 182 rendered-contrast failures, none below 3.0. **DEBT-VR-13** — 281 CSS fallbacks, 3 masking a token that does not exist. |
 | `- [x]` | **99** | Closed. |
 | `- [=]` | **8** | Settled, each with a reopen condition. |
 | **Total** | **106 entries** | |

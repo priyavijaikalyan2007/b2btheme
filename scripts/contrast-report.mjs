@@ -85,6 +85,20 @@ function verify(result)
         ok = false;
     }
 
+    // The claim in the spec's docstring was "the report fails loudly on
+    // zero". It logged loudly and exited 0, which is the shape of gate
+    // this whole item exists to find. An SVG `fill` is read by a helper
+    // that can stop matching silently, and when it does every diagram
+    // label goes back to being measured against the canvas.
+    if (result.svgComposited === 0)
+    {
+        console.error("no SVG fill was composited across the whole fleet "
+            + "— the shape walk is not matching, and every diagram label "
+            + "is being measured against the canvas instead of its "
+            + "shape. This is a broken instrument, not a clean run.");
+        ok = false;
+    }
+
     const below = result.findings.filter((f) => f.ratio < FLOOR);
     if (below.length > 0)
     {
@@ -142,12 +156,6 @@ function main()
     // label quietly gets measured against the canvas again and the run
     // still looks clean. A zero here is the alarm.
     console.log(`svg fills read  : ${result.svgComposited}`);
-    if (result.svgComposited === 0)
-    {
-        console.error("no SVG fill was composited in the whole fleet — "
-            + "the shape walk is not matching. Diagram labels are being "
-            + "measured against the canvas, not against their shape.");
-    }
 
     // Group by the thing a fix would touch: the element's own class and
     // the colour it is painted in. 400 rows of the same defect is one
