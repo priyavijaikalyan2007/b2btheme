@@ -19,10 +19,11 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `field` conformance: the handle exposes getValue and setValue
+ * (ADR-134), so the canvas can read and set its value, and the conformance
+ * suite verifies that contract. `field` is also the level the suite computes
+ * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
+ * when the suite showed it already met that level.
  */
 export const SPRINTPICKER_MANIFEST: CapabilityManifest =
 {
