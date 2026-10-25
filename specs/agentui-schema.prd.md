@@ -377,7 +377,7 @@ TDD per TESTING.md: tests are written and seen to fail before the implementation
 
 ## 11. Security
 
-- Everything emitted is public. The existing `defaultOptions` fixture-vocabulary guard is extended to the schemas, the catalog text and `renderer.meta.json`.
+- Everything emitted is public. The existing `defaultOptions` fixture-vocabulary guard is extended to check data-carrying values (`default`, `const`, `enum`, `example(s)`) in the schemas, the catalog and `renderer.meta.json` for unambiguous fixture literals. Keys, descriptions and diagnostics are excluded.
 - No secrets, internal hostnames or knobby.io references in any emitted file (D2). `[29]` checks for `knobby`.
 - The emitted text enters agents' context. It is authored by us, which makes it trusted. Inbound agent payloads are the real attack surface; AIML_SECURITY.md governs them in #18 and #19.
 - `typia` and the vendored A2UI meta-schemas follow the pinning rule. The meta-schemas are data, vendored with their source commit recorded. They are not fetched at build time.
@@ -456,3 +456,4 @@ All four items open at approval were resolved by planning research on 2026-10-25
 | 2026-10-25 | Versioned path moved to #19 (§6) | none exists; CSP needs only the origin |
 | 2026-10-25 | Catalog ID drops `/theme/`; layout mirrors the basic catalog file; `description` not `instructions`; JSDoc parity post-check; single-parameter providers; migration lists in `migration.mjs` | found while writing the plan: dist is served at the root; v0.9.1 files have no `instructions`; typia ignores same-line JSDoc |
 | 2026-10-25 | `prefersBorder` left to #19 (§6) | it describes the view's presentation, which #17 does not build |
+| 2026-10-25 | Fixture guard in [29] scoped to shipped data values | a full-text scan rejected the legitimate ChatDock `placeholder` prop and its description; user decision |

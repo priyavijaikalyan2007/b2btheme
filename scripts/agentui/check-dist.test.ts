@@ -88,9 +88,52 @@ describe("checkDist ([29])", () =>
         };
         expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
     });
-    test("fixture vocabulary in an emitted file fails", () =>
+    test("a prop named placeholder, described as one, passes", () =>
     {
-        expect(checkDist(fakeRepo((f) => { (f["dist/agentui-report.json"] as any).note = "lorem ipsum"; })).join()).toMatch(/fixture/);
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            (f["dist/schemas/widget.options.json"] as any) = { type: "object", properties: { placeholder: { type: "string", description: "Input placeholder." } } };
+            (f["dist/agentui-report.json"] as any).excluded[0].violations = ["placeholder is a sample"];
+        };
+        expect(checkDist(fakeRepo(mutate))).toEqual([]);
+    });
+    test("a fixture literal in a default fails", () =>
+    {
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            f["dist/schemas/widget.options.json"] = { properties: { owner: { type: "string", default: "John Doe" } } };
+        };
+        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/john doe/);
+    });
+    test("a fixture literal in an examples item fails", () =>
+    {
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            f["dist/schemas/widget.options.json"] = { properties: { url: { type: "string", examples: ["https://example.com/x"] } } };
+        };
+        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/example\.com/);
+    });
+    test("a dangling $ref inside functions fails", () =>
+    {
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"])
+            {
+                (f[k] as any).functions.Bogus = { allOf: [{ $ref: "#/$defs/Nope" }] };
+            }
+        };
+        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
+    });
+    test("a dangling $ref inside an unreferenced $defs entry fails", () =>
+    {
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"])
+            {
+                (f[k] as any).$defs.Orphan = { allOf: [{ $ref: "#/$defs/Nope" }] };
+            }
+        };
+        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
     });
     test("a stranded generator staging directory fails", () =>
     {

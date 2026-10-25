@@ -26,7 +26,11 @@ const ORIGIN = "https://static.outcrop.us";
 // The id common_types.json's relative `catalog.json` resolves to.
 const ACTIVE_CATALOG_SLOT = "https://a2ui.org/specification/v0_9/catalog.json";
 const EMITTED = ["dist/a2ui", "dist/schemas", "dist/mcp", "dist/agentui-report.json"];
-const FIXTURE_WORDS = ["sample", "fixture", "lorem ipsum", "placeholder", "test user", "john doe", "jane doe", "example.com", "about:blank"];
+// Unambiguous fixture literals only. Ordinary words such as "placeholder" are legitimate prop names and prose.
+const FIXTURE_WORDS = ["lorem ipsum", "test user", "john doe", "jane doe", "example.com", "about:blank"];
+// The only keys whose values are shipped data rather than schema vocabulary.
+const DATA_KEYS = new Set(["default", "const", "example", "examples", "enum"]);
+const REPORT_FILE = "agentui-report.json";
 
 /**
  * Every [29] problem in a built repository.
@@ -127,13 +131,20 @@ function refProblems(root, catalog)
     try
     {
         ajv.addSchema(catalog);
-        for (const name of Object.keys(catalog.components)) { ajv.getSchema(`${catalog.$id}#/components/${name}`); }
+        for (const pointer of catalogPointers(catalog)) { ajv.getSchema(`${catalog.$id}${pointer}`); }
         return [];
     }
     catch (err)
     {
         return [`catalog does not compile: ${err.message}. Every $ref must resolve against the vendored A2UI files.`];
     }
+}
+
+/** A pointer to every component, function and $defs entry, since Ajv resolves lazily. */
+function catalogPointers(catalog)
+{
+    return ["components", "functions", "$defs"].flatMap((section) =>
+        Object.keys(catalog[section]).map((name) => `#/${section}/${name}`));
 }
 
 /** Every built manifest is in the catalog or listed as excluded. */
@@ -148,16 +159,45 @@ function coverageProblems(manifests, catalog, report)
         .map(({ m, name }) => `${m.name}: neither in the catalog (as ${name}) nor in dist/agentui-report.json's excluded list.`);
 }
 
-/** No host-specific or fixture text in anything emitted (D2, D13). */
+/**
+ * No host-specific text anywhere in anything emitted (D2), and no fixture
+ * literal in a shipped data value (D13). Keys, descriptions, titles and the
+ * report's diagnostics are prose or vocabulary, so only the former is scanned.
+ */
 function textProblems(root)
 {
     return EMITTED.flatMap((rel) => filesUnder(path.join(root, rel))).flatMap((file) =>
     {
-        const text = fs.readFileSync(file, "utf8").toLowerCase();
-        const bad = [...(text.includes("knobby") ? ["knobby"] : []), ...FIXTURE_WORDS.filter((w) => text.includes(w))];
+        const raw = fs.readFileSync(file, "utf8");
+        const name = path.relative(root, file);
+        const knobby = raw.toLowerCase().includes("knobby") ? [`${name} contains "knobby".`] : [];
 
-        return bad.map((w) => `${path.relative(root, file)} contains "${w}"${w === "knobby" ? "" : " (fixture vocabulary)"}.`);
+        return [...knobby, ...(path.basename(file) === REPORT_FILE ? [] : fixtureProblems(name, raw))];
     });
+}
+
+function fixtureProblems(name, raw)
+{
+    let json;
+
+    try { json = JSON.parse(raw); }
+    catch (err) { throw new Error(`[29] Cannot parse ${name}: ${err.message}. Every emitted file under dist/ is JSON; rebuild with \`npm run build:agentui\`.`); }
+
+    return dataStrings(json, false).flatMap((value) => FIXTURE_WORDS
+        .filter((w) => value.toLowerCase().includes(w))
+        .map((w) => `${name} has the fixture literal "${w}" in a data value: ${JSON.stringify(value)}.`));
+}
+
+/** Strings found under a default, const, enum or example(s) key, at any depth. */
+function dataStrings(node, inData)
+{
+    if (typeof node === "string") { return inData ? [node] : []; }
+
+    if (Array.isArray(node)) { return node.flatMap((n) => dataStrings(n, inData)); }
+
+    if (node === null || typeof node !== "object") { return []; }
+
+    return Object.entries(node).flatMap(([k, v]) => dataStrings(v, inData || DATA_KEYS.has(k)));
 }
 
 function filesUnder(p)
