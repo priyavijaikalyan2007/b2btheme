@@ -181,7 +181,7 @@ Most of today's 101 components have `on*` callbacks that no `emits` entry names,
 - A component on that list is **excluded from the catalog, loudly**: it is named in the build summary and in `dist/agentui-report.json` with its unresolved members. It is never emitted with a partial schema. An agent that cannot see a component is told nothing false. An agent that saw half a component would be.
 - A component not on the list, which includes every new component, gets the strict rule from day one.
 - **The list excuses the backlog kinds only.** For a listed component, only the codes check `[20]` already ratchets are excused: `unclassified`, `undeclared-mixed`, `undeclared-hazard` and `too-broad` (counted as `unclassifiedOptions`) and `missing-jsdoc` (`protocolPropsMissingJsdoc`). Every other code fails the build for a listed component too: `stale-declaration`, `short-reason`, `provider-arity`, `double-classified`, and `value-below-field` unless `BELOW_REQUIRED` excuses it. One table in `generate.mjs` (`BACKLOG_COUNTS`) defines both what is excused and what is counted, so the two cannot drift. A listed component with none of the excused codes left is a stale entry and fails the build until it is removed.
-- **The list length is pinned.** `componentsPendingClassification` in `scripts/audit-counts.mjs` equals the list length and is a `[20]` ceiling, so adding a name fails `npm test`.
+- **The list length is pinned exactly.** `componentsPendingClassification` in `scripts/audit-counts.mjs` equals the list length and is both a `[20]` ceiling and a `[20]` floor at the same value. Adding a name fails `npm test`. Removing one fails too until the pin is lowered in the same change, so a freed slot cannot be reused for another component.
 
 ### 3.5 Consequence, stated up front
 
@@ -235,6 +235,9 @@ A component whose core behaviour depends on a host-only member (for example, cel
   - a property becoming required
   - an `Action` property removed
   - a provider request or response removed
+  - any other change to a component entry outside its properties and `required` (its `type`, `unevaluatedProperties`, any `allOf` member, or a new key beside `properties`), reported as `<Name> changed`
+  - any change to a top-level catalog key other than `components`, `functions`, `$defs` and `description` (`$id`, `catalogId`, `title`, `$schema`), reported as `catalog <key> changed`
+- Description text is never a contract: a change to a `description` anywhere is not breaking.
 - A breaking change fails the gate unless `N` was incremented in the same change.
 - When `N` increments, `v<N-1>.json` **stays published**, because hosts we cannot see have hard-coded its ID. Retiring an old catalog is a separate, deliberate decision, outside this spec.
 - Additive changes keep `N` and update the baseline in the same commit.
@@ -324,7 +327,7 @@ This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "
 
 1. **Measure first.** Run the suite in report mode. Write the list of components where `declared < required`, dated, into `scripts/agentui/migration.mjs` as `BELOW_REQUIRED`. It lives beside `PENDING_CLASSIFICATION` because the gate test, the generator and `audit-counts.mjs` all read it, and one copy cannot drift.
 2. `BELOW_REQUIRED` follows the `EXEMPT` rules: it may shrink and never grow, and a comment above it says so. A component not on the list gets the strict rule from day one, so every new component does.
-3. `componentsBelowRequiredLevel` is added to `scripts/audit-counts.mjs`. It equals the list length, is held as a ceiling by check `[20]`, and must reach 0.
+3. `componentsBelowRequiredLevel` is added to `scripts/audit-counts.mjs`. It equals the list length, is pinned exactly by check `[20]` (a ceiling and a floor at the same value, so removing a name means lowering the pin in the same change), and must reach 0.
 
 ### 7.3 Promotion
 
@@ -352,10 +355,12 @@ This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "
 
   | Count | Starts at | Rule |
   |---|---|---|
-  | `unclassifiedOptions` | measured on the first run, dated | may only fall; target 0 |
-  | `protocolPropsMissingJsdoc` | measured on the first run, dated | may only fall; target 0 |
-  | `componentsBelowRequiredLevel` | length of `BELOW_REQUIRED` | may only fall; target 0 |
-  | `componentsPendingClassification` | length of `PENDING_CLASSIFICATION` (93 on 2026-10-25) | may only fall; target 0; adding a name fails |
+  | `unclassifiedOptions` | measured on the first run, dated | pinned exactly; may only fall, lowering the pin in the same change; target 0 |
+  | `protocolPropsMissingJsdoc` | measured on the first run, dated | pinned exactly; may only fall, lowering the pin in the same change; target 0 |
+  | `componentsBelowRequiredLevel` | length of `BELOW_REQUIRED` | pinned exactly; may only fall, lowering the pin in the same change; target 0 |
+  | `componentsPendingClassification` | length of `PENDING_CLASSIFICATION` (93 on 2026-10-25) | pinned exactly; may only fall, lowering the pin in the same change; target 0 |
+
+  "Pinned exactly" means each count is both a ceiling (`BASELINES`) and a floor (`FLOORS`) of the same value. Growing fails the ceiling. Falling fails the floor until both numbers are lowered in the same change, so slack never builds up and a fixed component's slot cannot be reused.
 
   A new component that adds an unclassified member raises the count, and `[20]` fails, so the counts enforce the strict rule for new work even while the migration lists are non-empty.
 

@@ -474,8 +474,12 @@ failing the build, **for the backlog kinds only**: an unclassified option, an
 undeclared mixed member, an undeclared nested hazard, a too-broad type, missing
 JSDoc. Every other violation (a stale declaration, a short reason, a provider's
 arity, a double claim) fails the build for every component, listed or not. Both
-lists are pinned by check `[20]` ceilings (`componentsPendingClassification`,
-`componentsBelowRequiredLevel`), so they may only shrink and adding a name fails.
+lists, and the `unclassifiedOptions` and `protocolPropsMissingJsdoc` counts, are
+pinned EXACTLY by check `[20]`: each is a ceiling in `BASELINES` and a floor in
+`FLOORS` of `scripts/audit-counts.mjs` at the same value
+(`componentsPendingClassification`, `componentsBelowRequiredLevel`). Growing
+fails. Shrinking also fails until the pin is lowered in both places in the same
+change, so a freed slot can never be reused.
 **Never add a new component to either**; a component written after the gate
 landed conforms from its first commit.
 

@@ -44,6 +44,8 @@ import
     countWindowAliases,
     floorStatus,
     insideStringLiteral,
+    BASELINES,
+    FLOORS,
 } from "./audit-counts.mjs";
 
 describe("classifyConsoleLog", () =>
@@ -969,5 +971,23 @@ describe("countCdnModuleSpecifiers", () =>
     test("a script tag is not a module specifier", () =>
     {
         expect(countCdnModuleSpecifiers('<script src="https://esm.sh/x@6"></script>')).toBe(0);
+    });
+});
+
+// ADR-219. A ceiling alone lets a count fall without the committed number
+// following it, and the slack is then a free slot: a fixed component leaves
+// BELOW_REQUIRED and a new under-declared one takes its place with every
+// gate green. A floor at the same value makes each count exact, so a fall
+// forces the pin down in the same change.
+describe("ADR-219 migration counts are pinned exactly", () =>
+{
+    test.each(["unclassifiedOptions", "protocolPropsMissingJsdoc", "componentsBelowRequiredLevel",
+        "componentsPendingClassification"])("%s is a ceiling and a floor at the same value", (key) =>
+    {
+        const ceilings = BASELINES as Record<string, number>;
+        const floors = FLOORS as Record<string, number>;
+
+        expect(typeof ceilings[key], `${key} has no BASELINES entry`).toBe("number");
+        expect(floors[key], `${key} must also be a FLOORS entry equal to its baseline`).toBe(ceilings[key]);
     });
 });

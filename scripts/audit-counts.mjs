@@ -551,7 +551,7 @@ export function countOccurrences(text, needle)
  * untyped alias is named `globalNamespace` rather than `win` for exactly
  * this reason.
  */
-const BASELINES = {
+export const BASELINES = {
     windowCasts: 6,
     windowAnyCasts: 0,
     windowAnyFiles: 0,
@@ -888,16 +888,22 @@ const BASELINES = {
     guardedAssertions: 74,
     // ADR-219 (2026-10-25): options the agent-protocol gate cannot classify,
     // measured by scripts/agentui/generate.mjs over every built manifest.
-    // May only fall; target 0. A new component that adds one fails [20].
+    // Target 0. A new component that adds one fails [20]. Pinned exactly:
+    // the same value is a FLOOR (2026-10-25, final review I-3), so a fix
+    // lowers this number and the floor in the same change.
     unclassifiedOptions: 546,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
+    // Pinned exactly by the floor of the same value (2026-10-25).
     protocolPropsMissingJsdoc: 373,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
+    // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
+    // both numbers in the same change, and adding one fails.
     componentsBelowRequiredLevel: 6,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
-    // as a double claim. Target 0. Adding a name, a new component included, fails [20].
+    // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
+    // removing a name means lowering both numbers in the same change, and adding one fails [20].
     componentsPendingClassification: 93,
 };
 
@@ -953,7 +959,7 @@ const BASELINES = {
  * zero and looks like success. tracedComponents already covers the 96
  * logTrace shims that way. The 117 logDebug shims sat under nothing.
  */
-const FLOORS = {
+export const FLOORS = {
     // A closed or settled entry is a decision somebody recorded. It can
     // be reworded and it can move between the two markers, but it does
     // not stop existing — so their SUM is the floor, while
@@ -976,6 +982,19 @@ const FLOORS = {
     // A floor is cheap and it is the only thing that can see this.
     // Raise it when the count rises, the same as any other floor.
     testBlocks: 5071,
+    // ADR-219 (2026-10-25). The four agent-protocol migration counts are
+    // ALSO ceilings in BASELINES, at the same values, so each is pinned
+    // EXACTLY. As ceilings alone they let a count fall without the
+    // committed number following it, and that slack is a free slot: a
+    // fixed component leaves BELOW_REQUIRED and a new under-declared one
+    // takes its place with every gate green (final review I-3). With the
+    // floor, a fall fails here until BOTH numbers are lowered in the same
+    // change, and a rise fails the ceiling. Measured 2026-10-25, unchanged
+    // by the final-review fixes: 546, 373, 6, 93.
+    unclassifiedOptions: 546,
+    protocolPropsMissingJsdoc: 373,
+    componentsBelowRequiredLevel: 6,
+    componentsPendingClassification: 93,
 };
 
 /**

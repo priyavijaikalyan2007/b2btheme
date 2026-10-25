@@ -31,7 +31,7 @@ import {
 
 import { validateManifest } from "./src/registry";
 import { formatIssues } from "./src/errors";
-import { BELOW_REQUIRED } from "../scripts/agentui/migration.mjs";
+import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "../scripts/agentui/migration.mjs";
 
 import type { CapabilityManifest } from "./src/types";
 
@@ -469,6 +469,19 @@ describe("fleet gate — BELOW_REQUIRED hygiene (ADR-219)", () =>
                 `${name} now meets its required level. Remove it from BELOW_REQUIRED in `
                 + "scripts/agentui/migration.mjs; the list may only shrink.").toBe(true);
         });
+});
+
+describe("fleet gate — PENDING_CLASSIFICATION hygiene (ADR-219)", () =>
+{
+    // A name with no component would hold a slot in the pinned
+    // componentsPendingClassification count that nothing can ever clear.
+    test("every listed component exists", () =>
+    {
+        const unknown = [...PENDING_CLASSIFICATION].filter((n) => !COMPONENT_DIRS.includes(n));
+        expect(unknown, `PENDING_CLASSIFICATION names no such component: ${unknown.join(", ")}. Remove it from `
+            + "scripts/agentui/migration.mjs and lower componentsPendingClassification in scripts/audit-counts.mjs "
+            + "(BASELINES and FLOORS) in the same change.").toEqual([]);
+    });
 });
 
 describe("fleet gate — conformance", () =>
