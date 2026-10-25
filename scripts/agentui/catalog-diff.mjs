@@ -14,6 +14,9 @@
 /** Derived unions, rebuilt from components every time. */
 const DERIVED_DEFS = new Set(["anyComponent", "anyFunction"]);
 
+/** Top-level keys compared section by section; every other top-level key is compared whole. */
+const SECTIONS = new Set(["components", "functions", "$defs", "description"]);
+
 /**
  * Compares two catalog files.
  *
@@ -31,8 +34,20 @@ export function diffCatalogs(previous, next)
     diffMap(previous.functions ?? {}, next.functions ?? {}, (n) => `function ${n}`, out, (n) =>
         sameish(previous.functions[n], next.functions[n]) || out.breaking.push(`function ${n} changed`));
     diffDefs(previous.$defs ?? {}, next.$defs ?? {}, out);
+    diffTopLevel(previous, next, out);
 
     return out;
+}
+
+/** Every top-level key outside SECTIONS ($id, catalogId, title, $schema, ...): any change is breaking. */
+function diffTopLevel(previous, next, out)
+{
+    const keys = [...new Set([...Object.keys(previous), ...Object.keys(next)])].filter((k) => !SECTIONS.has(k));
+
+    for (const k of keys.sort())
+    {
+        if (!sameish(previous[k], next[k])) { out.breaking.push(`catalog ${k} changed`); }
+    }
 }
 
 /** Removed keys are breaking, added keys additive, shared keys compared by `onShared`. */
@@ -43,7 +58,11 @@ function diffMap(prev, next, format, out, onShared)
     for (const n of Object.keys(prev).filter((k) => k in next)) { onShared(n); }
 }
 
-/** Compares one component: props, then required. Re-exports compare whole. */
+/**
+ * Compares one component: the entry outside its properties and required
+ * (type, unevaluatedProperties, every allOf member), then props, then
+ * required. Re-exports compare whole.
+ */
 function diffComponent(name, prev, next, out)
 {
     const p = ownBlock(prev);
@@ -54,6 +73,8 @@ function diffComponent(name, prev, next, out)
         if (!sameish(prev, next)) { out.breaking.push(`${name} changed`); }
         return;
     }
+
+    if (!sameish(entryShape(prev), entryShape(next))) { out.breaking.push(`${name} changed`); }
 
     diffMap(p.properties ?? {}, n.properties ?? {}, (prop) => `${name}.${prop}`, out, (prop) =>
         sameish(p.properties[prop], n.properties[prop]) || out.breaking.push(`${name}.${prop} changed`));
@@ -70,6 +91,23 @@ function ownBlock(entry)
     return entry?.allOf?.[2]?.properties ? entry.allOf[2] : null;
 }
 
+/** An own entry with allOf[2].properties and allOf[2].required removed; diffComponent compares those itself. */
+function entryShape(entry)
+{
+    const allOf = entry.allOf.map((part, i) =>
+    {
+        if (i !== 2) { return part; }
+
+        const { properties, required, ...rest } = part;
+        void properties;
+        void required;
+
+        return rest;
+    });
+
+    return { ...entry, allOf };
+}
+
 /** Component defs: removed or changed is breaking, added additive. */
 function diffDefs(prev, next, out)
 {
@@ -77,6 +115,30 @@ function diffDefs(prev, next, out)
 
     diffMap(keep(prev), keep(next), (k) => `$defs.${k}`, out, (k) =>
         sameish(prev[k], next[k]) || out.breaking.push(`$defs.${k} changed`));
+}
+
+/**
+ * Whether description text differs anywhere both catalogs have the same node:
+ * a description edited, added or removed on a node that exists in both. A
+ * description that arrives with a new node is part of that addition, not a
+ * description change. A property NAMED "description" is a schema, not text.
+ *
+ * @param a - The committed baseline (or any node of it).
+ * @param b - The freshly generated catalog (or the matching node).
+ * @returns True when some shared node's description differs.
+ */
+export function descriptionsDiffer(a, b, parentKey = "")
+{
+    if (!isNode(a) || !isNode(b)) { return false; }
+
+    return Object.keys({ ...a, ...b }).some((k) => ((k === "description" && parentKey !== "properties")
+        ? a[k] !== b[k]
+        : (k in a && k in b && descriptionsDiffer(a[k], b[k], k))));
+}
+
+function isNode(value)
+{
+    return value !== null && typeof value === "object";
 }
 
 /** Equal once descriptions are ignored (a description is not a contract). */

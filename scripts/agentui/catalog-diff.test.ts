@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { diffCatalogs, versionProblem } from "./catalog-diff.mjs";
+import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
 
 function cat(props: Record<string, unknown>, required: string[] = ["component"], extra: Record<string, unknown> = {})
 {
@@ -62,11 +62,83 @@ describe("diffCatalogs", () =>
         const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] }, height: { oneOf: [] } });
         expect(diffCatalogs(BASE, next).additive).toEqual(["Widget.height added"]);
     });
+    test("a flipped unevaluatedProperties is breaking", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } });
+        (next.components.Widget as Record<string, unknown>).unevaluatedProperties = true;
+        expect(diffCatalogs(BASE, next).breaking).toEqual(["Widget changed"]);
+    });
+    test("a swapped allOf[0] ref is breaking", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } });
+        next.components.Widget.allOf[0] = { $ref: "common#/$defs/Other" };
+        expect(diffCatalogs(BASE, next).breaking).toEqual(["Widget changed"]);
+    });
+    test("a changed allOf[1] is breaking", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } });
+        next.components.Widget.allOf[1] = { type: "object" };
+        expect(diffCatalogs(BASE, next).breaking).toEqual(["Widget changed"]);
+    });
+    test("a new key beside allOf[2].properties is breaking", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } });
+        (next.components.Widget.allOf[2] as Record<string, unknown>).additionalProperties = false;
+        expect(diffCatalogs(BASE, next).breaking).toEqual(["Widget changed"]);
+    });
+    test("a changed component description is not breaking", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } });
+        (next.components.Widget as Record<string, unknown>).description = "A widget.";
+        expect(diffCatalogs(BASE, next)).toEqual({ breaking: [], additive: [] });
+    });
+    test("a changed top-level key is breaking", () =>
+    {
+        expect(diffCatalogs({ ...BASE, $id: "v1" }, { ...BASE, $id: "v2" }).breaking).toEqual(["catalog $id changed"]);
+    });
+    test("an added top-level key is breaking", () =>
+    {
+        expect(diffCatalogs(BASE, { ...BASE, title: "T" }).breaking).toEqual(["catalog title changed"]);
+    });
+    test("a changed top-level description is not breaking", () =>
+    {
+        expect(diffCatalogs({ ...BASE, description: "Old." }, { ...BASE, description: "New." }))
+            .toEqual({ breaking: [], additive: [] });
+    });
     test("a changed component def is breaking", () =>
     {
         const prev = { ...BASE, $defs: { ...BASE.$defs, Widget__Col: { type: "object" } } };
         const next = { ...BASE, $defs: { ...BASE.$defs, Widget__Col: { type: "array" } } };
         expect(diffCatalogs(prev, next).breaking).toEqual(["$defs.Widget__Col changed"]);
+    });
+});
+
+describe("descriptionsDiffer", () =>
+{
+    test("an identical catalog has no description change", () => { expect(descriptionsDiffer(BASE, BASE)).toBe(false); });
+    test("an edited prop description is a description change", () =>
+    {
+        expect(descriptionsDiffer(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })))
+            .toBe(true);
+    });
+    test("an edited top-level description is a description change", () =>
+    {
+        expect(descriptionsDiffer({ ...BASE, description: "Old." }, { ...BASE, description: "New." })).toBe(true);
+    });
+    test("a description arriving with an added prop is not a description change", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] }, height: { description: "H.", oneOf: [] } });
+        expect(descriptionsDiffer(BASE, next)).toBe(false);
+    });
+    test("a description added to an existing node is a description change", () =>
+    {
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number", description: "Count." }] } });
+        expect(descriptionsDiffer(BASE, next)).toBe(true);
+    });
+    test("a property named description is compared as a schema, not as text", () =>
+    {
+        const prev = cat({ description: { oneOf: [{ type: "string" }] } });
+        expect(descriptionsDiffer(prev, cat({ description: { oneOf: [{ type: "number" }] } }))).toBe(false);
     });
 });
 

@@ -6,8 +6,9 @@
  *
  * ⚓ COMPONENT: AgentUiGenerator
  * 📜 PURPOSE: Classify -> resolve -> emit -> check -> catalog -> diff, then
- *    write atomically. Every problem is collected first and the run fails
- *    once, writing nothing to dist/ (spec §8).
+ *    write, rolled back on failure (not atomic under SIGKILL). Every problem
+ *    is collected first and the run fails once, writing nothing to dist/
+ *    (spec §8).
  * 🔗 RELATES: [[AgentUiClassifier]], [[AgentUiResolver]], [[AgentUiCatalog]],
  *    [[AgentUiMigration]], [[AgentProtocolSchema]]
  * ⚡ FLOW: [dist/capability-manifest.json] -> [runPipeline]
@@ -19,7 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
-import { diffCatalogs, versionProblem } from "./catalog-diff.mjs";
+import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
 import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from "./checks.mjs";
 import { classifyMembers, createClassifier, factoryOptionsType, optionsParameterIndex } from "./classify.mjs";
 import { rendererMeta } from "./mcp-descriptors.mjs";
@@ -69,7 +70,7 @@ export function runPipeline(input)
     checkBaseline(catalog, input, errors);
 
     return { errors, excluded, catalog, outputs: outputsFor(ready, schemas, catalog, excluded, input),
-        counts: countsFor(classified, ready, excluded) };
+        counts: { ...countsFor(classified, ready, excluded), belowRequired: input.belowRequired.size } };
 }
 
 /** Classifies and resolves every manifest; a thrown literate error is collected. */
@@ -221,14 +222,29 @@ function unwrittenBaselineProblem(catalog, input, previousMajor, diff)
             + "`npm run build:agentui -- --write-baseline` in the same change; v" + previousMajor + " stays published.";
     }
 
-    if (input.major === previousMajor && JSON.stringify(input.baselines.get(previousMajor)) !== JSON.stringify(catalog))
+    const baseline = input.baselines.get(previousMajor);
+
+    if (input.major === previousMajor && JSON.stringify(baseline) !== JSON.stringify(catalog))
     {
-        return `The catalog changed (${[...diff.additive, "descriptions"].join(", ")}). Run `
+        return `The catalog changed (${changeSummary(baseline, catalog, diff)}). Run `
             + "`npm run build:agentui -- --write-baseline` and commit specs/agentui/published/catalog-v"
             + `${input.major}.json in the same change.`;
     }
 
     return null;
+}
+
+/**
+ * What a same-major, non-breaking change consists of: the additive changes,
+ * then "description text" only if some description really changed. Anything
+ * else the diff does not itemise is named as such rather than guessed at.
+ */
+function changeSummary(baseline, catalog, diff)
+{
+    const parts = [...diff.additive, ...(descriptionsDiffer(baseline, catalog) ? ["description text"] : [])];
+
+    return parts.length > 0 ? parts.join(", ")
+        : "nothing the diff itemises, such as key order or a dropped required entry; compare the files";
 }
 
 /** Every file to write, keyed by path relative to dist/. */
@@ -443,7 +459,8 @@ function main(argv)
     writeOutputs(result.outputs, path.join(REPO, "dist"));
     const c = result.counts;
     console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification), `
-        + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members`);
+        + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members, `
+        + `${c.belowRequired} below their required level (BELOW_REQUIRED)`);
 }
 
 /**

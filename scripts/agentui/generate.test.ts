@@ -6,14 +6,15 @@
 /**
  * ⚓ TESTS: AgentUiGenerator. The orchestrator classifies, resolves, emits,
  *    checks and builds the catalog for a fixture component, collects every
- *    problem before failing, polices PENDING_CLASSIFICATION, and writes dist
- *    atomically. Spec §8, #17.
+ *    problem before failing, polices PENDING_CLASSIFICATION, checks the
+ *    committed baseline, and writes dist, rolled back on failure (not atomic
+ *    under SIGKILL). Spec §5.3, §8, #17.
  */
 
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
 import { PENDING_EXCUSABLE_CODES, runPipeline, writeOutputs } from "./generate.mjs";
@@ -40,12 +41,15 @@ function widget(protocolOver: Record<string, unknown> = {})
     };
 }
 
-function run(manifests: unknown[], pending: string[] = [])
+type Version = { baselines?: Map<number, unknown>; major?: number; writeBaseline?: boolean; belowRequired?: string[] };
+
+function run(manifests: unknown[], pending: string[] = [], version: Version = {})
 {
     return runPipeline({
         manifests, componentFile: (n: string) => path.join(FIXTURES, `${n}.ts`),
         tsconfigPath: path.join(FIXTURES, "tsconfig.json"), cacheDir: CACHE,
-        pending: new Set(pending), belowRequired: new Set(), basic, baselines: new Map(), major: 1, writeBaseline: true,
+        pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic,
+        baselines: version.baselines ?? new Map(), major: version.major ?? 1, writeBaseline: version.writeBaseline ?? true,
     });
 }
 
@@ -117,6 +121,87 @@ describe("runPipeline — what PENDING_CLASSIFICATION excuses", () =>
         expect([...PENDING_EXCUSABLE_CODES].sort()).toEqual(
             ["missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
     });
+});
+
+describe("runPipeline — the committed baseline (spec §5.3)", () =>
+{
+    // One typia run builds the v1 catalog; each case edits a copy of it into the baseline it needs.
+    let base: any;
+
+    beforeAll(() => { base = run([widget()]).catalog; }, 60_000);
+
+    const edited = (edit: (b: any) => void) =>
+    {
+        const copy = structuredClone(base);
+        edit(copy);
+        return new Map([[1, copy]]);
+    };
+    const widgetProps = (b: any) => b.components.Widget.allOf[2].properties;
+
+    test("an unchanged catalog against its baseline is clean without --write-baseline", () =>
+    {
+        expect(run([widget()], [], { baselines: edited(() => {}), writeBaseline: false }).errors).toEqual([]);
+    }, 60_000);
+    test("a breaking change under the same major is an error naming the change", () =>
+    {
+        const baselines = edited((b) => { widgetProps(b).gone = { type: "string" }; });
+        const errors = run([widget()], [], { baselines, writeBaseline: true }).errors;
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toMatch(/Widget\.gone removed[\s\S]*Increment CATALOG_MAJOR/);
+    }, 60_000);
+    test("a flipped unevaluatedProperties under the same major is breaking, --write-baseline or not", () =>
+    {
+        const baselines = edited((b) => { b.components.Widget.unevaluatedProperties = true; });
+        const errors = run([widget()], [], { baselines, writeBaseline: true }).errors;
+
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toMatch(/Widget changed[\s\S]*Increment CATALOG_MAJOR/);
+    }, 60_000);
+    test("an additive change without --write-baseline asks for the baseline to be rewritten, listing only what changed", () =>
+    {
+        const baselines = edited((b) => { delete widgetProps(b).onSelection; });
+
+        expect(run([widget()], [], { baselines, writeBaseline: false }).errors).toEqual([
+            "The catalog changed (Widget.onSelection added). Run `npm run build:agentui -- --write-baseline` and commit "
+            + "specs/agentui/published/catalog-v1.json in the same change."]);
+    }, 60_000);
+    test("a description-only change without --write-baseline says description text", () =>
+    {
+        const baselines = edited((b) => { widgetProps(b).pageSize.description = "Old wording."; });
+
+        expect(run([widget()], [], { baselines, writeBaseline: false }).errors[0])
+            .toMatch(/^The catalog changed \(description text\)\. Run/);
+    }, 60_000);
+    test("an additive change with --write-baseline is accepted", () =>
+    {
+        const baselines = edited((b) => { delete widgetProps(b).onSelection; });
+
+        expect(run([widget()], [], { baselines, writeBaseline: true }).errors).toEqual([]);
+    }, 60_000);
+    test("a major bump without its baseline committed is an error", () =>
+    {
+        const errors = run([widget()], [], { baselines: edited(() => {}), major: 2, writeBaseline: false }).errors;
+
+        expect(errors).toEqual([expect.stringMatching(/^CATALOG_MAJOR is now 2\. Commit its baseline/)]);
+    }, 60_000);
+    test("a major bump keeps serving the older baseline byte for byte", () =>
+    {
+        const baselines = edited(() => {});
+        const result = run([widget()], [], { baselines, major: 2, writeBaseline: true });
+
+        expect(result.errors).toEqual([]);
+        expect(result.outputs.get("a2ui/catalog/v1.json")).toBe(baselines.get(1));
+        expect((result.outputs.get("a2ui/catalog/v2.json") as any).$id).toBe("https://static.outcrop.us/a2ui/catalog/v2.json");
+    }, 60_000);
+});
+
+describe("runPipeline — build summary counts", () =>
+{
+    test("the counts carry the BELOW_REQUIRED size spec §9 lists", () =>
+    {
+        expect(run([widget()], [], { belowRequired: ["a", "b"] }).counts.belowRequired).toBe(2);
+    }, 60_000);
 });
 
 describe("writeOutputs", () =>
