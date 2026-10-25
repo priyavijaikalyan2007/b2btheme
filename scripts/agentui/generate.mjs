@@ -245,34 +245,101 @@ function countsFor(classified, ready, excluded)
 }
 
 /**
- * Writes outputs atomically. Everything is serialised in memory first, so a
- * failure leaves dist/ untouched (spec §8).
+ * Writes outputs into dist/, replacing each generated root wholesale.
+ *
+ * Guarantees (spec §8): everything is serialised in memory first, so a value
+ * that cannot be serialised throws before dist/ is touched; the new files are
+ * staged inside dist/ and swapped in per root, with the old roots parked in
+ * the staging directory so that a failed swap is rolled back and dist/ is
+ * left as it was (if the rollback itself fails, the staging directory is kept
+ * and the error names where the old roots are). Content outside the generated roots is never touched.
  *
  * @param outputs - Map of dist-relative path to JSON value.
  * @param distDir - The dist directory.
+ * @param fsImpl - The file-system module; injectable so a test can fail a rename.
  */
-export function writeOutputs(outputs, distDir)
+export function writeOutputs(outputs, distDir, fsImpl = fs)
 {
     const serialised = [...outputs].map(([rel, value]) => [rel, `${JSON.stringify(value, null, 2)}\n`]);
-    const staging = fs.mkdtempSync(path.join(distDir, ".agentui-staging-"));
+    const staging = fsImpl.mkdtempSync(path.join(distDir, ".agentui-staging-"));
+    let stranded = false;
 
     try
     {
         for (const [rel, text] of serialised)
         {
-            fs.mkdirSync(path.dirname(path.join(staging, rel)), { recursive: true });
-            fs.writeFileSync(path.join(staging, rel), text);
+            fsImpl.mkdirSync(path.dirname(path.join(staging, rel)), { recursive: true });
+            fsImpl.writeFileSync(path.join(staging, rel), text);
         }
 
-        for (const top of OUTPUT_ROOTS.filter((t) => fs.existsSync(path.join(staging, t))))
-        {
-            fs.rmSync(path.join(distDir, top), { recursive: true, force: true });
-            fs.renameSync(path.join(staging, top), path.join(distDir, top));
-        }
+        swapRoots(staging, distDir, fsImpl);
+    }
+    catch (err)
+    {
+        stranded = err.stranded === true;
+        throw err;
     }
     finally
     {
-        fs.rmSync(staging, { recursive: true, force: true });
+        // A failed rollback leaves the previous roots in staging; deleting it would destroy them.
+        if (!stranded) { fsImpl.rmSync(staging, { recursive: true, force: true }); }
+    }
+}
+
+/** Parks the old roots, moves the new ones in, and rolls back if any move fails. */
+function swapRoots(staging, distDir, fsImpl)
+{
+    const roots = OUTPUT_ROOTS.filter((t) => fsImpl.existsSync(path.join(staging, t)));
+    const state = { staging, distDir, fsImpl, parked: [], placed: [], current: null };
+
+    try
+    {
+        fsImpl.mkdirSync(path.join(staging, ".old"));
+        roots.filter((r) => fsImpl.existsSync(path.join(distDir, r))).forEach((t) => move(state, t, "park"));
+        roots.forEach((t) => move(state, t, "place"));
+    }
+    catch (err)
+    {
+        rollback(state);
+        throw new Error(`Could not replace dist/${state.current}: ${err.message}. dist/ was restored to its previous `
+            + "state and nothing was written. Check the permissions on dist/ and that no process holds it open, then rerun.",
+        { cause: err });
+    }
+}
+
+/** One rename of the swap: park an old root in staging/.old, or place a new root in dist. */
+function move(state, root, step)
+{
+    const { staging, distDir, fsImpl } = state;
+
+    state.current = root;
+
+    if (step === "park")
+    {
+        fsImpl.renameSync(path.join(distDir, root), path.join(staging, ".old", root));
+        state.parked.push(root);
+        return;
+    }
+
+    fsImpl.renameSync(path.join(staging, root), path.join(distDir, root));
+    state.placed.push(root);
+}
+
+/** Moves placed roots back out and parked roots back in; a failure here names what is stranded. */
+function rollback({ staging, distDir, parked, placed, fsImpl })
+{
+    try
+    {
+        for (const t of placed) { fsImpl.renameSync(path.join(distDir, t), path.join(staging, t)); }
+        for (const t of parked) { fsImpl.renameSync(path.join(staging, ".old", t), path.join(distDir, t)); }
+    }
+    catch (err)
+    {
+        const stranded = new Error(`Rollback of dist/ failed: ${err.message}. The previous generated roots (${parked.join(", ")}) `
+            + `are in ${path.join(staging, ".old")}; move them back into ${distDir} by hand.`, { cause: err });
+
+        stranded.stranded = true;
+        throw stranded;
     }
 }
 

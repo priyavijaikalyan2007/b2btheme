@@ -90,4 +90,72 @@ describe("writeOutputs", () =>
         expect(() => writeOutputs(new Map<string, unknown>([["mcp/renderer.meta.json", { n: 1n }]]), dist)).toThrow();
         expect(fs.readFileSync(path.join(dist, "mcp", "renderer.meta.json"), "utf8")).toBe("OLD");
     });
+
+    test("success replaces generated roots wholesale and touches nothing else", () =>
+    {
+        const dist = populatedDist();
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+
+        writeOutputs(outputs, dist);
+
+        expect(JSON.parse(fs.readFileSync(path.join(dist, "schemas", "new.options.json"), "utf8"))).toEqual({ n: 2 });
+        expect(JSON.parse(fs.readFileSync(path.join(dist, "mcp", "renderer.meta.json"), "utf8"))).toEqual({ n: 3 });
+        expect(fs.existsSync(path.join(dist, "schemas", "stale.options.json"))).toBe(false);
+        expect(fs.readFileSync(path.join(dist, "css", "x.css"), "utf8")).toBe("KEEP");
+        expect(fs.readdirSync(dist).filter((f) => f.startsWith(".agentui-staging-"))).toEqual([]);
+    });
+
+    test("a failed swap rolls back and leaves dist byte-identical", () =>
+    {
+        const dist = populatedDist();
+        const before = snapshot(dist);
+        const failing = renameFailing(path.join(dist, "mcp"), 1);
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+
+        expect(() => writeOutputs(outputs, dist, failing)).toThrow(/Could not replace dist\/mcp.*EPERM injected/);
+        expect(snapshot(dist)).toEqual(before);
+    });
+
+    test("a rollback that also fails keeps the parked roots and says where they are", () =>
+    {
+        const dist = populatedDist();
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+
+        expect(() => writeOutputs(outputs, dist, renameFailing(path.join(dist, "mcp"), Infinity))).toThrow(/Rollback of dist\/ failed.*\.old/);
+
+        const staging = fs.readdirSync(dist).find((f) => f.startsWith(".agentui-staging-")) as string;
+        expect(fs.readFileSync(path.join(dist, staging, ".old", "mcp", "renderer.meta.json"), "utf8")).toBe("OLD");
+    });
 });
+
+function populatedDist(): string
+{
+    const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
+
+    for (const [rel, text] of [["schemas/stale.options.json", "STALE"], ["mcp/renderer.meta.json", "OLD"], ["css/x.css", "KEEP"]])
+    {
+        fs.mkdirSync(path.dirname(path.join(dist, rel)), { recursive: true });
+        fs.writeFileSync(path.join(dist, rel), text);
+    }
+
+    return dist;
+}
+
+function snapshot(dir: string, prefix = ""): Record<string, string>
+{
+    return Object.assign({}, ...fs.readdirSync(dir, { withFileTypes: true }).map((e) => e.isDirectory()
+        ? snapshot(path.join(dir, e.name), `${prefix}${e.name}/`)
+        : { [`${prefix}${e.name}`]: fs.readFileSync(path.join(dir, e.name), "utf8") }));
+}
+
+/** A file system whose rename into `target` throws the first `times` times. */
+function renameFailing(target: string, times: number): typeof fs
+{
+    let left = times;
+
+    return { ...fs, renameSync: (from: string, to: string) =>
+    {
+        if (to === target && left-- > 0) { throw new Error("EPERM injected"); }
+        fs.renameSync(from, to);
+    } } as unknown as typeof fs;
+}
