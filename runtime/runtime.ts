@@ -215,6 +215,54 @@ interface WeightSpec
 }
 
 /**
+ * A function-typed option that asks the host for data (ADR-219, spec §3.2).
+ * Over A2UI it becomes three catalog properties: `<params>` (the component
+ * writes the request there), `on<Request>` (fired after the write) and
+ * `<response>` (the agent answers there with updateDataModel).
+ */
+interface ProviderSpec
+{
+    /** Catalog name of the request, e.g. "search". UAX #31. */
+    readonly request: string;
+
+    /** Data-prop name the component writes the request parameters to. */
+    readonly params: string;
+
+    /** Data-prop name the agent binds the answer to. */
+    readonly response: string;
+}
+
+/** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
+interface ProtocolSpec
+{
+    /** Catalog name when the derived one collides. UAX #31. */
+    readonly name?: string;
+
+    /** Function-typed options that ask the host for data, keyed by option. */
+    readonly providers?: Readonly<Record<string, ProviderSpec>>;
+
+    /**
+     * Options, or parts of options, with no protocol equivalent. The value is
+     * the reason: what the member needs that JSON cannot carry. A key is an
+     * option name, or a path into a data option using `.prop` and `[]` for
+     * array items and index signatures (`columns[].renderer`). A key covers
+     * every hazard at or below its path. A bare option name on a MIXED member
+     * (data | function) means "its non-data arms"; on any other member it
+     * means "the whole member".
+     */
+    readonly hostOnly?: Readonly<Record<string, string>>;
+
+    /**
+     * Explicit JSON Schemas for data props whose TypeScript type is too broad
+     * to generate from (`unknown`, `Record<string, unknown>`), keyed by option.
+     */
+    readonly schemas?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+
+    /** Catalog prop name for a channel's bindable value, keyed by channel. */
+    readonly bindAs?: Readonly<Record<string, string>>;
+}
+
+/**
  * The semantic layer above a raw component. Colocated in the component's own
  * folder as `<name>.manifest.ts` and aggregated at build time.
  */
@@ -339,6 +387,9 @@ interface CapabilityManifest
 
     /** Deterministic tie-break for equal resolver scores. Higher wins. */
     readonly priority: number;
+
+    /** Agent-protocol declarations (ADR-219). Optional; absent means none. */
+    readonly protocol?: ProtocolSpec;
 }
 
 // ============================================================================
@@ -2395,6 +2446,7 @@ function validateManifest(m: unknown): ValidationResult
     validatePorts(m, issues);
     validateWeightAndSize(m, issues);
     validateConformance(m, issues);
+    validateProtocol(m, issues);
 
     return result(issues);
 }
@@ -2742,6 +2794,125 @@ function validateConformance(
             + "canvas cannot restore it after virtualizing it.",
             "Declare the keys getState() returns, or lower conformance to "
             + "\"display\"."));
+    }
+}
+
+/** UAX #31 identifier, the A2UI v1.0 rule for names (spec §5.1). */
+const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
+
+/**
+ * Validates the optional agent-protocol declarations (ADR-219).
+ *
+ * @param m      - The candidate manifest.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateProtocol(
+    m: Record<string, unknown>,
+    issues: ValidationIssue[]): void
+{
+    if (m.protocol === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(m.protocol))
+    {
+        issues.push(typeIssue("protocol", "an object of protocol declarations", m.protocol));
+        return;
+    }
+
+    const p = m.protocol;
+
+    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
+    {
+        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
+    }
+
+    validateProviderMap(p.providers, issues);
+    validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
+    validateStringMap("protocol.bindAs", p.bindAs, "a UAX #31 prop name", issues, UAX31);
+    validateSchemaMap(p.schemas, issues);
+}
+
+/**
+ * Validates `protocol.providers`: every entry names its request, params and
+ * response props.
+ */
+function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.providers", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [option, spec] of Object.entries(v))
+    {
+        for (const key of ["request", "params", "response"])
+        {
+            const field = isObject(spec) ? spec[key] : undefined;
+
+            if (!(isNonEmptyString(field) && UAX31.test(field)))
+            {
+                issues.push(typeIssue(`protocol.providers.${option}.${key}`, "a UAX #31 identifier", field));
+            }
+        }
+    }
+}
+
+/** Validates a map whose values must be strings (optionally matching a pattern). */
+function validateStringMap(
+    path: string,
+    v: unknown,
+    expected: string,
+    issues: ValidationIssue[],
+    pattern?: RegExp): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue(path, "an object", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isNonEmptyString(value) || (pattern !== undefined && !pattern.test(value)))
+        {
+            issues.push(typeIssue(`${path}.${key}`, expected, value));
+        }
+    }
+}
+
+/** Validates `protocol.schemas`: every value is a JSON Schema object. */
+function validateSchemaMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.schemas", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isObject(value))
+        {
+            issues.push(typeIssue(`protocol.schemas.${key}`, "a JSON Schema object", value));
+        }
     }
 }
 
