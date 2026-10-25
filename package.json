@@ -89,6 +89,7 @@
     "@microsoft/signalr": "8.0.0",
     "@playwright/test": "^1.63.0",
     "@vitest/coverage-v8": "^4.1.12",
+    "ajv": "8.20.0",
     "autoprefixer": "^10.4.27",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
@@ -106,6 +107,7 @@
     "sass": "^1.106.1",
     "terser": "^5.46.1",
     "typescript": "^5.9.3",
+    "typia": "12.2.1",
     "vditor": "3.11.2",
     "vitest": "^4.1.12",
     "wrangler": "^4.149.0"
