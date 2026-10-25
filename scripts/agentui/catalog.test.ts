@@ -97,15 +97,28 @@ describe("catalog — component entry", () =>
     {
         expect(build().catalog.components.Widget.allOf[0]).toEqual({ $ref: `${COMMON_TYPES_ID}#/$defs/ComponentCommon` });
     });
-    test("a data prop accepts a literal or a binding", () =>
+    test("a data prop accepts a literal, a binding or a function call, with its description outside", () =>
     {
-        expect(ownProps(build().catalog, "Widget").pageSize.oneOf[1]).toEqual({ $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` });
+        expect(ownProps(build().catalog, "Widget").pageSize).toEqual({
+            description: "Rows per page.",
+            anyOf: [{ type: "number" }, { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` },
+                { $ref: `${COMMON_TYPES_ID}#/$defs/FunctionCall` }],
+        });
+    });
+    test("a data prop whose schema is an open object still accepts a binding (anyOf, not oneOf)", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, pageSize: { type: "object" } } };
+        const { pageSize } = ownProps(build([{ manifest: MANIFEST, surface: SURFACE, schema }]).catalog, "Widget");
+
+        expect("oneOf" in pageSize).toBe(false);
+        expect(pageSize.anyOf).toHaveLength(3);
     });
     test("one binding-only eventData prop carries every payload", () =>
     {
         const { eventData } = ownProps(build().catalog, "Widget");
 
         expect(eventData.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/DataBinding`);
+        expect("anyOf" in eventData || "oneOf" in eventData).toBe(false);
         expect(eventData.description).toContain("<path>/<channel>");
         expect(eventData.description).toContain("<path>/<request>");
     });
@@ -154,7 +167,8 @@ describe("catalog — component entry", () =>
 
         expect(props.onSearch.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
         expect(props.onSearch.description).toContain("<eventData path>/search");
-        expect(props.searchResult.oneOf[0]).toEqual({ type: "array", items: { type: "string" } });
+        expect(props.searchResult.anyOf).toEqual([{ type: "array", items: { type: "string" } },
+            { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` }, { $ref: `${COMMON_TYPES_ID}#/$defs/FunctionCall` }]);
     });
     test("eventData is absent when no event or provider carries a payload", () =>
     {
@@ -206,6 +220,14 @@ describe("catalog — guidance", () =>
     test("the preamble describes the single eventData pattern", () =>
     {
         expect(build().catalog.description).toContain("eventData");
+    });
+    test("the preamble says a data property takes a literal, a binding or a function call", () =>
+    {
+        expect(build().catalog.description).toContain("a literal, a {\"path\": …} binding or a {\"call\": …} function call");
+    });
+    test("the preamble never promises an onChange action, which some two-way components lack", () =>
+    {
+        expect(build().catalog.description).not.toMatch(/onChange/);
     });
     test("the catalog description lists the component", () => { expect(build().catalog.description).toContain("- Widget: Widget."); });
 });

@@ -65,7 +65,7 @@ describe("runPipeline — fixture widget", () =>
             || k.startsWith("on") || k.endsWith("Result") || k.endsWith("Results"));
 
         expect(derived.sort()).toEqual(["eventData", "onSearch", "onSelection", "searchResult"]);
-        expect(props.searchResult.oneOf[0]).toMatchObject({ type: "array", items: { type: "string" } });
+        expect(props.searchResult.anyOf[0]).toMatchObject({ type: "array", items: { type: "string" } });
     }, 60_000);
     test("the override replaces the too-broad schema", () =>
     {

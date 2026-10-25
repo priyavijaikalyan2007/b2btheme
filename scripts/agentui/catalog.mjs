@@ -25,6 +25,7 @@ export const COMMON_TYPES_ID = "https://a2ui.org/specification/v0_9/common_types
 const TITLE = "Enterprise Bootstrap Theme";
 const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
 const BINDING = { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` };
+const FUNCTION_CALL = { $ref: `${COMMON_TYPES_ID}#/$defs/FunctionCall` };
 const ACTION_REF = `${COMMON_TYPES_ID}#/$defs/Action`;
 
 /** English plural of every DataShape (runtime/src/constants.ts DATA_SHAPES, a closed set). */
@@ -33,14 +34,16 @@ const SHAPE_PLURALS = Object.freeze({
     timeseries: "timeseries", document: "documents", media: "media", geo: "geos", diff: "diffs",
 });
 const PREAMBLE = "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and "
-    + "functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} "
-    + "binding. Each event a component emits has an on<Event> action property. A component whose events or "
+    + "functions, which this catalog re-exports. Every data property, <request>Result included, accepts a "
+    + "literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions. "
+    + "Each event a component emits has an on<Event> action property. A component whose events or "
     + "requests carry a payload has one binding-only eventData property: bind it to a path, and the component "
     + "writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending "
     + "the matching action, so read that path in the action's context; the context is resolved after the "
     + "write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound "
     + "to its <request>Result property. A two-way value property receives the user's changes at its bound "
-    + "path, and its onChange action carries no other payload.";
+    + "path. Some two-way components also send an action when the value changes; that action carries no "
+    + "payload of its own, so read the new value through the path bound to value.";
 
 /** The permanent catalog ID for a catalog major version. */
 export function catalogId(major)
@@ -181,7 +184,17 @@ function requireProperty(root, component, kind, prop)
     return found;
 }
 
-/** Data props: literal-or-binding, description outside the oneOf. */
+/**
+ * A data prop's value: a literal of its generated schema, a binding, or a
+ * function call (user decision, 2026-10-25). anyOf, not oneOf: an open object
+ * schema also matches a binding, and oneOf would then reject every binding.
+ */
+function literalBindingOrCall(schema)
+{
+    return { anyOf: [schema, BINDING, FUNCTION_CALL] };
+}
+
+/** Data props: literal, binding or function call, description outside the anyOf. */
 function dataProps(surface, root, component)
 {
     return surface.dataProps.map((d) =>
@@ -190,7 +203,7 @@ function dataProps(surface, root, component)
         const twoWay = d.name === "value" && surface.twoWayValue
             ? " Two-way: when bound to a path, the component writes the user's changes there." : "";
 
-        return [d.name, { description: `${description ?? d.jsdoc}${twoWay}`, oneOf: [schema, BINDING] }];
+        return [d.name, { description: `${description ?? d.jsdoc}${twoWay}`, ...literalBindingOrCall(schema) }];
     });
 }
 
@@ -245,7 +258,7 @@ function providerProps(surface, root, component)
                 + `at <eventData path>/${p.request}. Answer with updateDataModel at the path bound to ${p.response}.`,
             $ref: ACTION_REF }],
             [p.response, { description: `Bind to the path you will answer ${p.actionProp} at with updateDataModel.`,
-                oneOf: [response, BINDING] }],
+                ...literalBindingOrCall(response) }],
         ];
     });
 }
