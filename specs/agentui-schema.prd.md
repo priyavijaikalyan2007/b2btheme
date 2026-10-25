@@ -92,7 +92,7 @@ Every member of every `<Name>Options` interface belongs to exactly one class.
 | Class | Recognised by | Over the protocol |
 |---|---|---|
 | **Data prop** | type is JSON-serialisable | a catalog property; bindable to a data-model path |
-| **Event callback** | function-typed, and named by some `emits[].legacyOption`; **or** the ADR-134 `onChange` of a component whose options carry `value` | an A2UI `Action`-typed catalog property (§5.4); for `onChange`, the write-back of the two-way `value` binding |
+| **Event callback** | function-typed, and named by some `emits[].legacyOption`; **or** the ADR-134 `onChange` of a component whose options carry `value`. One `onChange` may be both: a single callback in two roles, not a double claim | an A2UI `Action`-typed catalog property (§5.4); for `onChange`, the write-back of the two-way `value` binding |
 | **Provider callback** | function-typed, declared in `protocol.providers` | an `Action` property for the request plus a data prop for the response (§5.5) |
 | **Host-only** | declared in `protocol.hostOnly` with a reason | absent from the catalog; the reason is published in the build report |
 
@@ -173,7 +173,7 @@ The schema of `response` is derived from the provider callback's return type, wi
 Each of these is a build error (§8) for any component not on the migration list (§3.4):
 
 - A function-, element- or `unknown`-typed member that is in no class.
-- A member declared in two classes, for example both `hostOnly` and an `emits` `legacyOption`.
+- A member declared in two classes, for example both `hostOnly` and an `emits` `legacyOption`. An `onChange` that is both an `emits` `legacyOption` and the ADR-134 write-back is one callback in two roles (§3.1), not a double claim.
 - A data member with a nested hazard path that no `hostOnly` key declares.
 - A `providers`, `hostOnly`, `schemas` or `bindAs` key that names no member, path or channel of the interface. That is stale data, and it would hide a rename.
 - A `hostOnly` reason shorter than 20 characters. "n/a" is not a reason.
@@ -187,6 +187,8 @@ Most of today's 101 components have `on*` callbacks that no `emits` entry names,
 - The first run is in report mode. Every component with at least one §3.3 failure is written, dated, into `PENDING_CLASSIFICATION` in `scripts/agentui/migration.mjs`. The list may shrink and never grow.
 - A component on that list is **excluded from the catalog, loudly**: it is named in the build summary and in `dist/agentui-report.json` with its unresolved members. It is never emitted with a partial schema. An agent that cannot see a component is told nothing false. An agent that saw half a component would be.
 - A component not on the list, which includes every new component, gets the strict rule from day one.
+- **The list excuses the backlog kinds only.** For a listed component, only the codes check `[20]` already ratchets are excused: `unclassified`, `undeclared-mixed`, `undeclared-hazard` and `too-broad` (counted as `unclassifiedOptions`) and `missing-jsdoc` (`protocolPropsMissingJsdoc`). Every other code fails the build for a listed component too: `stale-declaration`, `short-reason`, `provider-arity`, `double-classified`, and `value-below-field` unless `BELOW_REQUIRED` excuses it. One table in `generate.mjs` (`BACKLOG_COUNTS`) defines both what is excused and what is counted, so the two cannot drift. A listed component with none of the excused codes left is a stale entry and fails the build until it is removed.
+- **The list length is pinned.** `componentsPendingClassification` in `scripts/audit-counts.mjs` equals the list length and is a `[20]` ceiling, so adding a name fails `npm test`.
 
 ### 3.5 Consequence, stated up front
 
@@ -302,7 +304,7 @@ The conformance suite computes a **required level** from what it observes on a r
 
 | Evidence | Required level |
 |---|---|
-| The handle exposes `getValue` and `setValue`, or the generated schema has a `value` data prop | `field` |
+| The handle exposes `getValue` and `setValue`, or the generated schema has a `value` data prop paired with the ADR-134 `onChange` write-back (a two-way `value`). A read-only `value`, such as a displayed metric, is ordinary data and does not count | `field` |
 | The manifest declares any `emits`, `accepts` or `protocol.providers`. The ADR-134 `onChange` alone does not count: it is the `field` contract. | `surface` |
 | Otherwise | `display` |
 
@@ -316,7 +318,7 @@ This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "
 
 1. **Measure first.** Run the suite in report mode. Write the list of components where `declared < required`, dated, into `scripts/agentui/migration.mjs` as `BELOW_REQUIRED`. It lives beside `PENDING_CLASSIFICATION` because the gate test, the generator and `audit-counts.mjs` all read it, and one copy cannot drift.
 2. `BELOW_REQUIRED` follows the `EXEMPT` rules: it may shrink and never grow, and a comment above it says so. A component not on the list gets the strict rule from day one, so every new component does.
-3. `componentsBelowRequiredLevel` is added to `scripts/audit-counts.mjs`. It equals the list length, is held as a floor by check `[20]`, and must reach 0.
+3. `componentsBelowRequiredLevel` is added to `scripts/audit-counts.mjs`. It equals the list length, is held as a ceiling by check `[20]`, and must reach 0.
 
 ### 7.3 Promotion
 
@@ -347,6 +349,7 @@ This **amends SURFACE_CONTRACT.md §1**, which currently calls under-declaring "
   | `unclassifiedOptions` | measured on the first run, dated | may only fall; target 0 |
   | `protocolPropsMissingJsdoc` | measured on the first run, dated | may only fall; target 0 |
   | `componentsBelowRequiredLevel` | length of `BELOW_REQUIRED` | may only fall; target 0 |
+  | `componentsPendingClassification` | length of `PENDING_CLASSIFICATION` (93 on 2026-10-25) | may only fall; target 0; adding a name fails |
 
   A new component that adds an unclassified member raises the count, and `[20]` fails, so the counts enforce the strict rule for new work even while the migration lists are non-empty.
 
@@ -457,3 +460,7 @@ All four items open at approval were resolved by planning research on 2026-10-25
 | 2026-10-25 | Catalog ID drops `/theme/`; layout mirrors the basic catalog file; `description` not `instructions`; JSDoc parity post-check; single-parameter providers; migration lists in `migration.mjs` | found while writing the plan: dist is served at the root; v0.9.1 files have no `instructions`; typia ignores same-line JSDoc |
 | 2026-10-25 | `prefersBorder` left to #19 (§6) | it describes the view's presentation, which #17 does not build |
 | 2026-10-25 | Fixture guard in [29] scoped to shipped data values | a full-text scan rejected the legitimate ChatDock `placeholder` prop and its description; user decision |
+| 2026-10-25 | `PENDING_CLASSIFICATION` excuses only the backlog codes `[20]` counts; every other code fails for a listed component; `componentsPendingClassification` pins the list length (§3.4, §9) | a stale `hostOnly` key on a pending component passed every gate (Task 12 mutation proof #1); controller decision on the review |
+| 2026-10-25 | One `onChange` may be both an `emits` `legacyOption` and the two-way write-back (§3.1, §3.3) | one callback in two roles is not a double claim; StickyNote leaves `PENDING_CLASSIFICATION` (94 → 93); user decision |
+| 2026-10-25 | `value` requires `field` only when two-way, paired with the ADR-134 `onChange` (§7.1) | a read-only `value` such as MetricCard's displayed metric is ordinary data at `display`; user decision |
+| 2026-10-25 | `bindAs` convention: a channel whose name collides with a data prop binds as `<channel>Change` (StickyNote and Annotation: `anchor` → `anchorChange`) | StickyNote's `anchor` channel and `anchor` option would share one catalog prop name; user decision |

@@ -179,7 +179,7 @@ Roughly: `70` for a primary data surface, `50` default, `25–40` for a speciali
 
 ## 9. `protocol` — agent-protocol declarations (ADR-219)
 
-Optional. It says how the component appears over **A2UI** and **MCP Apps**, and only for what the generator cannot decide alone. `scripts/agentui/generate.mjs` sorts every member of `<Name>Options` with the TypeScript checker: a JSON-serialisable member is a **data** prop, and a function named by an `emits[].legacyOption` (or the ADR-134 `onChange` beside `value`) is an **event**. Everything else must be written down here, or the build fails. The full rule is in `specs/agentui-schema.prd.md` §3.
+Optional. It says how the component appears over **A2UI** and **MCP Apps**, and only for what the generator cannot decide alone. `scripts/agentui/generate.mjs` sorts every member of `<Name>Options` with the TypeScript checker: a JSON-serialisable member is a **data** prop, and a function named by an `emits[].legacyOption` (or the ADR-134 `onChange` beside `value`; one `onChange` may be both) is an **event**. Everything else must be written down here, or the build fails. The one exception is the measured backlog: a component on `PENDING_CLASSIFICATION` (`scripts/agentui/migration.mjs`) is left out of the catalog and reported in `dist/agentui-report.json` instead, for the backlog kinds only (unclassified, undeclared mixed, undeclared nested hazard, too broad, missing JSDoc). Every other violation fails the build for it too. The full rule is in `specs/agentui-schema.prd.md` §3.
 
 ```typescript
 protocol: {
@@ -199,9 +199,9 @@ protocol: {
   - **Mixed members:** a bare option name on a member like `string | (() => string)` means **its non-data arms**. The member stays a data prop whose schema has only the data arms, and the entry records that the narrowing is deliberate.
   - **Nested hazards:** a data option with a function, element or too-broad type at any depth must declare that path. Every schema tool tried drops such parts silently, so an undeclared one fails the build.
 - `schemas` — an explicit JSON Schema for a data prop typed too broadly to describe (`unknown`, `object`, `Record<string, unknown>`), keyed by option name. It replaces the generated schema for that member only. Narrowing the public TypeScript type instead would break consumers.
-- `bindAs` — the catalog prop name for an `emits` channel's bindable value, keyed by channel name, when the channel name collides with a data prop.
+- `bindAs` — the catalog prop name for an `emits` channel's bindable value, keyed by channel name, when the channel name collides with a data prop. The convention: when a channel's name collides with a data prop, bind it as `<channel>Change` (StickyNote/Annotation: `anchor` → `anchorChange`, so `protocol: { bindAs: { anchor: "anchorChange" } }`). The collision otherwise fails the build (`prop-collision`).
 
-**A key that names no member, path or channel fails the build** (`stale-declaration`). A stale key would hide a rename.
+**A key that names no member, path or channel fails the build** (`stale-declaration`), for every component, `PENDING_CLASSIFICATION` included. A stale key would hide a rename.
 
 The shape, in DataGrid's terms. This is **not** DataGrid's manifest today: DataGrid is on `PENDING_CLASSIFICATION`, and it has no search provider. The `columns[]` paths are the three the build reports for it.
 

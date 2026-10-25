@@ -115,7 +115,7 @@ parity surface, and they carry data only: no CDN bundle changed to add them.
 **`static.outcrop.us` is the host-neutral name for this same origin (D13).**
 Every identifier and origin inside these files uses it, and none names
 `static.knobby.io`, so the artefacts carry no consumer's brand. The owner
-CNAMEs it to the primary CDN base. Check `[29]` fails the build if any emitted
+CNAMEs it to the primary CDN base. Check `[29]` fails `npm test` if any emitted
 file contains `knobby`.
 
 ## 3. Caching policy (R4.3)

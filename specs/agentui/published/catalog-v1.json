@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "title": "Enterprise Bootstrap Theme",
-  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} binding. For each event a component emits, it has a binding property it writes each emission to, and an on<Event> action property. Bind the first to a path and read that path in the action's context; the context is resolved after the write.\n\n- ChatDock: ChatDock.\n- GraphLegend: Graph Legend.\n- OrientationPicker: Orientation Picker.\n- Ruler: Ruler.\n- SkeletonLoader: Skeleton Loader.\n- ToolColorPicker: Tool Color Picker.\n- WorkspaceShell: WorkspaceShell.",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} binding. For each event a component emits, it has a binding property it writes each emission to, and an on<Event> action property. Bind the first to a path and read that path in the action's context; the context is resolved after the write.\n\n- ChatDock: ChatDock.\n- GraphLegend: Graph Legend.\n- OrientationPicker: Orientation Picker.\n- Ruler: Ruler.\n- SkeletonLoader: Skeleton Loader.\n- StickyNote: Sticky Note. Use it to author, summarize a document of 1 to 1 items.\n- ToolColorPicker: Tool Color Picker.\n- WorkspaceShell: WorkspaceShell.",
   "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "components": {
     "AudioPlayer": {
@@ -742,6 +742,179 @@
         }
       ]
     },
+    "StickyNote": {
+      "type": "object",
+      "description": "Sticky Note. Use it to author, summarize a document of 1 to 1 items.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "StickyNote"
+            },
+            "text": {
+              "description": "Initial note text.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "value": {
+              "description": "Alias for `text`, for DynamicFormSwitcher convention (ADR-134). Two-way: when bound to a path, the component writes the user's changes there.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "color": {
+              "description": "Palette colour. Unknown values fall back to yellow.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "collapsed": {
+              "description": "Start collapsed to its title bar.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "readOnly": {
+              "description": "Render the note but disallow editing.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "resizable": {
+              "description": "Allow the user to resize the note from its corner. Default true.\n\nA note is the one canvas citizen whose right size is unknowable in\nadvance — it depends entirely on what gets written in it — so it is\nresizable unless a host says otherwise.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "anchor": {
+              "description": "What the note is attached to. Defaults to the canvas.",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "canvas"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "node"
+                        },
+                        "nodeId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "nodeId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "const": "entity"
+                        },
+                        "entityId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "entityId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "ariaLabel": {
+              "description": "Accessible label for the editing surface.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "change": {
+              "description": "Bind to a path. The component writes each \"change\" emission (a scalar) there before sending onChange.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onChange": {
+              "description": "Sent when \"change\" emits. Read the emission through the path bound to change.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "anchorChange": {
+              "description": "Bind to a path. The component writes each \"anchor\" emission (a record) there before sending onAnchor.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onAnchor": {
+              "description": "Sent when \"anchor\" emits. Read the emission through the path bound to anchorChange.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "Tabs": {
       "type": "object",
       "allOf": [
@@ -1155,6 +1328,9 @@
         },
         {
           "$ref": "#/components/Slider"
+        },
+        {
+          "$ref": "#/components/StickyNote"
         },
         {
           "$ref": "#/components/Tabs"

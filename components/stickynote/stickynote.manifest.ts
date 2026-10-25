@@ -64,6 +64,8 @@ export const STICKYNOTE_MANIFEST: CapabilityManifest =
     defaultSize: { w: 220, h: 180 },
     defaultOptions: {},
 
+    protocol: { bindAs: { anchor: "anchorChange" } },
+
     conformance: "surface",
     priority: 30,
 };

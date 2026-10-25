@@ -431,7 +431,7 @@ member must be exactly one of:
 | Class | How it is recognised | You do |
 |---|---|---|
 | data | JSON-serialisable (a `Date` counts; it is sent as an ISO string) | write a JSDoc comment **on its own line above the member** — it is what the agent reads, and typia ignores a comment on the member's line |
-| event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` | nothing more |
+| event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` (one `onChange` may be both: a single callback in two roles) | nothing more |
 | provider | asks the host for data | declare it in `protocol.providers`; exactly one parameter |
 | host-only | needs something JSON cannot carry | declare it in `protocol.hostOnly` with a reason of at least 20 characters |
 
@@ -442,8 +442,9 @@ tool tried drops such parts silently, so an undeclared one fails the build.
 
 **The conformance level is computed, not declared** (amends SURFACE_CONTRACT.md
 §1). `emits`, `accepts` or a provider require `surface`; a handle with
-`getValue`/`setValue` or a `value` option requires `field`. Declaring less fails
-the gate. Under-declaring used to be "the smaller problem"; an agent cannot read
+`getValue`/`setValue`, or a two-way `value` (a `value` data prop paired with the
+ADR-134 `onChange` write-back), requires `field`. A read-only `value`, such as a
+displayed metric, is ordinary data. Declaring less fails the gate. Under-declaring used to be "the smaller problem"; an agent cannot read
 a value from a `display`, so it is now a defect.
 
 **The A2UI catalog is a permanent public identifier.** Removing, renaming,
@@ -455,9 +456,16 @@ change, additive included, needs `npm run build:agentui -- --write-baseline`
 and the baseline committed in the same change.
 
 **`PENDING_CLASSIFICATION` and `BELOW_REQUIRED`** in `scripts/agentui/migration.mjs`
-are the measured backlog of 2026-10-25. They may only shrink. **Never add a new
-component to either**; a component written after the gate landed conforms from
-its first commit.
+are the measured backlog of 2026-10-25. A component on `PENDING_CLASSIFICATION`
+is left out of the catalog and reported in `dist/agentui-report.json` instead of
+failing the build, **for the backlog kinds only**: an unclassified option, an
+undeclared mixed member, an undeclared nested hazard, a too-broad type, missing
+JSDoc. Every other violation (a stale declaration, a short reason, a provider's
+arity, a double claim) fails the build for every component, listed or not. Both
+lists are pinned by check `[20]` ceilings (`componentsPendingClassification`,
+`componentsBelowRequiredLevel`), so they may only shrink and adding a name fails.
+**Never add a new component to either**; a component written after the gate
+landed conforms from its first commit.
 
 ### Checklist for a new component (in addition to the Surface checklist)
 

@@ -21,7 +21,9 @@
 export const PENDING_CLASSIFICATION = new Set([
     // Measured 2026-10-25 by `node scripts/agentui/generate.mjs --measure`: 96 of 101;
     // reconciled 2026-10-25 after BELOW_REQUIRED landed: 94 of 101 (orientationpicker and
-    // toolcolorpicker failed only value-below-field, now covered by BELOW_REQUIRED).
+    // toolcolorpicker failed only value-below-field, now covered by BELOW_REQUIRED);
+    // 93 of 101 on 2026-10-25: stickynote's only violation was onChange counted as both its
+    // "change" channel and the value write-back, which is one callback in two roles (ADR-219).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -103,7 +105,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "stacklayout",
     "statusbadge",
     "stepper",
-    "stickynote",
     "symbolpicker",
     "tabbedpanel",
     "tagger",

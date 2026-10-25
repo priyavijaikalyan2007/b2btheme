@@ -16,7 +16,7 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
-import { runPipeline, writeOutputs } from "./generate.mjs";
+import { PENDING_EXCUSABLE_CODES, runPipeline, writeOutputs } from "./generate.mjs";
 
 const FIXTURES = path.join(__dirname, "fixtures");
 const CACHE = path.join(__dirname, "..", "..", "node_modules", ".cache", "agentui-test-pipeline");
@@ -77,6 +77,37 @@ describe("runPipeline — fixture widget", () =>
     {
         expect(run([widget()], ["widget"]).errors[0]).toMatch(/PENDING_CLASSIFICATION/);
     }, 60_000);
+});
+
+describe("runPipeline — what PENDING_CLASSIFICATION excuses", () =>
+{
+    // Everything declared except onLookup, so the only backlog violation is one unclassified callback.
+    const PARTIAL = { "columns[].renderer": REASON, title: REASON, container: REASON, slot: REASON };
+
+    test("a pending component with only an unclassified callback is still excluded, not an error", () =>
+    {
+        const result = run([widget({ hostOnly: PARTIAL })], ["widget"]);
+
+        expect(result.errors).toEqual([]);
+        expect(result.excluded.map((e: { name: string }) => e.name)).toEqual(["widget"]);
+    }, 60_000);
+    test("a pending component with a stale hostOnly key fails the pipeline", () =>
+    {
+        const errors = run([widget({ hostOnly: { ...PARTIAL, nothing: REASON } })], ["widget"]).errors;
+
+        expect(errors.some((e: string) => e.includes("widget.nothing") && /Stale/.test(e))).toBe(true);
+    }, 60_000);
+    test("a pending component with a short hostOnly reason fails the pipeline", () =>
+    {
+        const errors = run([widget({ hostOnly: { ...PARTIAL, title: "n/a" } })], ["widget"]).errors;
+
+        expect(errors.some((e: string) => e.includes("widget.title"))).toBe(true);
+    }, 60_000);
+    test("the excusable set is exactly the backlog codes [20] ratchets", () =>
+    {
+        expect([...PENDING_EXCUSABLE_CODES].sort()).toEqual(
+            ["missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
+    });
 });
 
 describe("writeOutputs", () =>

@@ -59,7 +59,7 @@ import { census as testCensus, standInsOf, guardedAssertions } from "./test-asse
 import { factoriesReturningClass, handlesWithoutImplements }
     from "./gen-handles.mjs";
 import { measureClassification } from "./agentui/generate.mjs";
-import { BELOW_REQUIRED } from "./agentui/migration.mjs";
+import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./agentui/migration.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -894,6 +894,10 @@ const BASELINES = {
     protocolPropsMissingJsdoc: 373,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     componentsBelowRequiredLevel: 40,
+    // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
+    // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
+    // as a double claim. Target 0. Adding a name, a new component included, fails [20].
+    componentsPendingClassification: 93,
 };
 
 /*
@@ -1577,6 +1581,7 @@ function measure()
         unclassifiedOptions: 0,
         protocolPropsMissingJsdoc: 0,
         componentsBelowRequiredLevel: 0,
+        componentsPendingClassification: 0,
     };
     const consoleLogKinds = {};
     const windowCastKinds = {};
@@ -1699,6 +1704,7 @@ function measure()
     counts.unclassifiedOptions = protocol.unclassifiedOptions;
     counts.protocolPropsMissingJsdoc = protocol.protocolPropsMissingJsdoc;
     counts.componentsBelowRequiredLevel = BELOW_REQUIRED.size;
+    counts.componentsPendingClassification = PENDING_CLASSIFICATION.size;
 
     // PAT-1. The compiler, not a regex: `Toolbar` and `ToolbarHandle`
     // differ by a resolved symbol.

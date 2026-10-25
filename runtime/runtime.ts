@@ -5469,7 +5469,7 @@ const LEVEL_ORDER: Readonly<Record<ConformanceLevel, number>> = { display: 0, fi
 /**
  * The level the evidence requires (spec §7.1). Declarations the canvas wires
  * (emits, accepts, providers) require surface; a value-shaped handle requires
- * field. The generator separately requires field for a `value` data prop.
+ * field. The generator separately requires field for a two-way `value`.
  *
  * @param manifest - The capability manifest.
  * @param handle   - The mounted handle.

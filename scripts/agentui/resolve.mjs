@@ -63,7 +63,7 @@ export function resolveSurface(manifest, members)
 
     checkDoubleClaims(ctx, claimed);
     checkStaleDeclarations(ctx, members);
-    checkValueLevel(ctx, dataProps);
+    checkValueLevel(ctx, dataProps, twoWayValue);
 
     return { name: manifest.name, dataProps, twoWayValue, events, providers,
         actions: resolveActions(manifest), hostOnly: protocol.hostOnly ?? {}, violations: ctx.violations };
@@ -174,9 +174,12 @@ function checkMultipleClaims(ctx, events, providers, twoWayValue)
         claims.set(key, (claims.get(key) ?? 0) + 1);
     }
 
-    if (twoWayValue)
+    // One callback in two roles (user decision, 2026-10-25): an onChange that
+    // an emits channel already names IS the write-back, so its event claim
+    // subsumes the two-way claim instead of doubling it.
+    if (twoWayValue && !claims.has("onChange"))
     {
-        claims.set("onChange", (claims.get("onChange") ?? 0) + 1);
+        claims.set("onChange", 1);
     }
 
     if (manifest.factoryStyle === "options-only")
@@ -292,13 +295,18 @@ function staleKeys(ctx, map, isLive, where)
     }
 }
 
-/** A `value` data prop requires at least field level (spec §7.1). */
-function checkValueLevel(ctx, dataProps)
+/**
+ * A two-way `value` (a `value` data prop beside the ADR-134 `onChange`
+ * write-back) requires at least field level (spec §7.1). A read-only `value`,
+ * such as a displayed metric, is ordinary data at display.
+ */
+function checkValueLevel(ctx, dataProps, twoWayValue)
 {
-    if (ctx.manifest.conformance === "display" && dataProps.some((d) => d.name === "value"))
+    if (ctx.manifest.conformance === "display" && twoWayValue && dataProps.some((d) => d.name === "value"))
     {
-        violate(ctx, "value", VIOLATION.VALUE_BELOW_FIELD, "is a data prop, so an agent will read it back, but the "
-            + "manifest declares conformance \"display\". Raise it to \"field\" and pass the field checks.");
+        violate(ctx, "value", VIOLATION.VALUE_BELOW_FIELD, "is two-way (it has the onChange write-back), so an "
+            + "agent will read the user's changes back, but the manifest declares conformance \"display\". "
+            + "Raise it to \"field\" and pass the field checks.");
     }
 }
 

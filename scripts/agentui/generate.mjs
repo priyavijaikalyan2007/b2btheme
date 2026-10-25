@@ -31,8 +31,22 @@ import { emitSchemas } from "./schema.mjs";
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PUBLISHED = path.join(REPO, "specs", "agentui", "published");
 const OUTPUT_ROOTS = ["schemas", "a2ui", "mcp", "agentui-report.json"];
-const UNCLASSIFIED_CODES = new Set([VIOLATION.UNCLASSIFIED, VIOLATION.UNDECLARED_MIXED,
-    VIOLATION.UNDECLARED_HAZARD, VIOLATION.TOO_BROAD]);
+
+/**
+ * The measured backlog, by the check [20] count that ratchets it. These are
+ * the ONLY codes PENDING_CLASSIFICATION excuses; countsFor() counts from the
+ * same table, so what is excused and what is counted cannot drift. Any other
+ * code (a stale declaration, a short reason, a provider's arity, a double
+ * classification) fails the build for a pending component too.
+ */
+export const BACKLOG_COUNTS = Object.freeze({
+    unclassifiedOptions: new Set([VIOLATION.UNCLASSIFIED, VIOLATION.UNDECLARED_MIXED,
+        VIOLATION.UNDECLARED_HAZARD, VIOLATION.TOO_BROAD]),
+    protocolPropsMissingJsdoc: new Set([VIOLATION.MISSING_JSDOC]),
+});
+
+/** Every code a PENDING_CLASSIFICATION entry excuses: the union of BACKLOG_COUNTS. */
+export const PENDING_EXCUSABLE_CODES = new Set(Object.values(BACKLOG_COUNTS).flatMap((codes) => [...codes]));
 
 /**
  * The whole generator, without touching dist (spec §§3–6, §8).
@@ -81,7 +95,11 @@ function classifyFleet(input, errors)
     });
 }
 
-/** Splits into included / excluded per PENDING_CLASSIFICATION, and polices the list. */
+/**
+ * Splits into included / excluded per PENDING_CLASSIFICATION, and polices the
+ * list. A pending component is excused only its backlog codes
+ * (PENDING_EXCUSABLE_CODES); every other violation is an error for it too.
+ */
 function partition(classified, input, errors)
 {
     const included = [];
@@ -91,21 +109,25 @@ function partition(classified, input, errors)
     {
         const violations = blockingViolations(c, input);
         const pending = input.pending.has(c.manifest.name);
+        const excused = pending ? violations.filter((v) => PENDING_EXCUSABLE_CODES.has(v.code)) : [];
 
-        if (pending && violations.length === 0)
-        {
-            errors.push(`${c.manifest.name} is in PENDING_CLASSIFICATION but has no violations. Remove it from `
-                + "scripts/agentui/migration.mjs; it now ships in the catalog.");
-        }
+        errors.push(...violations.filter((v) => !excused.includes(v)).map((v) => v.message));
+        if (pending && excused.length === 0) { errors.push(staleEntry(c.manifest.name)); }
 
         if (violations.length === 0) { included.push(c); continue; }
 
-        if (pending) { excluded.push({ name: c.manifest.name, violations: violations.map((v) => v.message) }); continue; }
-
-        errors.push(...violations.map((v) => v.message));
+        if (pending) { excluded.push({ name: c.manifest.name, violations: violations.map((v) => v.message) }); }
     }
 
     return { included, excluded };
+}
+
+/** A PENDING_CLASSIFICATION entry with nothing left for the list to excuse. */
+function staleEntry(name)
+{
+    return `${name} is in PENDING_CLASSIFICATION but has none of the backlog violations the list excuses `
+        + `(${[...PENDING_EXCUSABLE_CODES].join(", ")}). Remove it from scripts/agentui/migration.mjs; `
+        + "the list may only shrink.";
 }
 
 /** A component's violations, minus value-below-field while it is on BELOW_REQUIRED. */
@@ -239,8 +261,8 @@ function countsFor(classified, ready, excluded)
         events: ready.reduce((n, c) => n + c.surface.events.length, 0),
         providers: ready.reduce((n, c) => n + c.surface.providers.length, 0),
         hostOnly: ready.reduce((n, c) => n + Object.keys(c.surface.hostOnly).length, 0),
-        unclassifiedOptions: all.filter((v) => UNCLASSIFIED_CODES.has(v.code)).length,
-        protocolPropsMissingJsdoc: all.filter((v) => v.code === VIOLATION.MISSING_JSDOC).length,
+        ...Object.fromEntries(Object.entries(BACKLOG_COUNTS)
+            .map(([count, codes]) => [count, all.filter((v) => codes.has(v.code)).length])),
     };
 }
 
@@ -425,17 +447,24 @@ function main(argv)
 }
 
 /**
- * --measure: print the components that have violations, for PENDING_CLASSIFICATION.
- * Applies exactly the filter partition() applies, so a component whose only
- * violation is value-below-field while it sits on BELOW_REQUIRED is not listed.
+ * --measure: print `failing`, the components with a backlog violation the
+ * PENDING_CLASSIFICATION list can excuse, and `notExcusable`, every violation
+ * it cannot (each fails the build whatever the list says). Applies exactly
+ * the filters partition() applies, so value-below-field on a BELOW_REQUIRED
+ * component appears in neither.
  */
 function measure(input)
 {
     const errors = [];
     const classified = classifyFleet(input, errors);
-    const failing = classified.filter((c) => blockingViolations(c, input).length > 0).map((c) => c.manifest.name).sort();
+    const blocking = classified.map((c) => ({ name: c.manifest.name, violations: blockingViolations(c, input) }));
+    const failing = blocking.filter((b) => b.violations.some((v) => PENDING_EXCUSABLE_CODES.has(v.code)))
+        .map((b) => b.name).sort();
+    const notExcusable = blocking.flatMap((b) => b.violations.filter((v) => !PENDING_EXCUSABLE_CODES.has(v.code))
+        .map((v) => ({ component: b.name, code: v.code, message: v.message })));
 
-    console.log(JSON.stringify({ date: new Date().toISOString().slice(0, 10), errors, counts: countsFor(classified, [], []), failing }, null, 4));
+    console.log(JSON.stringify({ date: new Date().toISOString().slice(0, 10), errors,
+        counts: countsFor(classified, [], []), failing, notExcusable }, null, 4));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])

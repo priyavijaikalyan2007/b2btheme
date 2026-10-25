@@ -149,10 +149,14 @@ describe("resolve — declarations", () =>
     {
         expect(codes(manifest(), [member("label", "data", { jsdoc: "" })])).toEqual([VIOLATION.MISSING_JSDOC]);
     });
-    test("a value prop on a display component fails", () =>
+    test("a two-way value (value beside the ADR-134 onChange) on a display component fails", () =>
     {
-        expect(codes(manifest({ conformance: "display" }), [member("value", "data")]))
+        expect(codes(manifest({ conformance: "display" }), [member("value", "data"), member("onChange", "function")]))
             .toEqual([VIOLATION.VALUE_BELOW_FIELD]);
+    });
+    test("a read-only value with no onChange write-back is ordinary data at display", () =>
+    {
+        expect(codes(manifest({ conformance: "display" }), [member("value", "data")])).toEqual([]);
     });
 });
 
@@ -202,12 +206,15 @@ describe("resolve — multiple claims", () =>
         });
         expect(codes(m, [member("onSelect", "function")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
     });
-    test("a channel's legacyOption is onChange with value two-way", () =>
+    test("onChange as a channel's legacyOption beside value is one callback in two roles, not a double claim", () =>
     {
         const m = manifest({
             emits: [{ name: "selection", payload: "collection", legacyOption: "onChange" }]
         });
-        expect(codes(m, [member("value", "data"), member("onChange", "function")]))
-            .toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+        const surface = resolveSurface(m, [member("value", "data"), member("onChange", "function")]);
+
+        expect(surface.violations).toEqual([]);
+        expect(surface.twoWayValue).toBe(true);
+        expect(surface.events.map((e: M) => e.actionProp)).toEqual(["onSelection"]);
     });
 });
