@@ -9935,3 +9935,9 @@
     superset of engines such as maxGraph, it has no consumers at all
     today, and none of that is an argument for shrinking its
     surface.
+- id: ADR-219
+  title: "Agent-protocol schemas: classifier-gated typia, computed conformance level, versioned A2UI catalog"
+  date: "2026-10-25"
+  status: Accepted
+  context: "Epic #16 makes every component usable over A2UI and MCP Apps. The library had manifests but no machine-readable option schema. A TypeScript-checker classifier sorts every factory option into data/function/element/too-broad and rejects undeclared nested hazards; typia 12.2.1 then emits schemas for approved data members only, because a 2026-10-25 trial showed ts-json-schema-generator, typescript-json-schema and ts-to-zod all dropping or garbling parts silently. The A2UI v0.9.1 catalog (https://static.outcrop.us/a2ui/catalog/v1.json) re-exports the basic catalog, models each channel as a binding prop plus an on<Channel> action, and is diffed against a committed baseline so a breaking change needs a major bump. Under-declaring a conformance level becomes a defect (amends SURFACE_CONTRACT.md §1, ADR-141). Migration lists PENDING_CLASSIFICATION and BELOW_REQUIRED may only shrink."
+  files: ["scripts/agentui/", "runtime/src/conformance.ts", "runtime/src/types.ts", "runtime/fleet-conformance.test.ts", "specs/agentui-schema.prd.md", "AGENTS.md"]

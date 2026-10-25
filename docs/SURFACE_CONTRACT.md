@@ -16,7 +16,7 @@ The uniform contract a canvas-mounted component satisfies. Defined by **ADR-141*
 
 > The level is **verified by the conformance suite, never self-declared.** A manifest claiming `surface` while failing the suite fails the build.
 
-Pick the lowest level that is honest. A component declared `display` is still resolvable, mountable and virtualizable — it simply cannot be wired. Over-declaring produces a failing build; under-declaring produces a component the canvas cannot bind, which is a smaller problem and easily corrected later.
+Pick the level the evidence requires. Since ADR-219 the suite computes a required level — emits, accepts or providers require surface; a value-shaped handle requires field — and declaring less fails the gate, because an agent cannot read a value from a display component. Over-declaring still fails too. Components measured below their required level on the gate's landing date are listed in BELOW_REQUIRED (scripts/agentui/migration.mjs); the list may only shrink.
 
 ---
 

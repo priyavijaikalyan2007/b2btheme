@@ -31,6 +31,7 @@ import {
 
 import { validateManifest } from "./src/registry";
 import { formatIssues } from "./src/errors";
+import { BELOW_REQUIRED } from "../scripts/agentui/migration.mjs";
 
 import type { CapabilityManifest } from "./src/types";
 
@@ -448,6 +449,28 @@ describe("fleet gate — manifest coverage", () =>
     });
 });
 
+describe("fleet gate — BELOW_REQUIRED hygiene (ADR-219)", () =>
+{
+    test("every listed component exists", () =>
+    {
+        const unknown = [...BELOW_REQUIRED].filter((n) => !COMPONENT_DIRS.includes(n));
+        expect(unknown, `BELOW_REQUIRED names no such component: ${unknown.join(", ")}`).toEqual([]);
+    });
+
+    test.runIf(BELOW_REQUIRED.size > 0).each([...BELOW_REQUIRED])(
+        "%s still needs to be on BELOW_REQUIRED",
+        async (name: string) =>
+        {
+            const manifest = await loadManifest(name);
+            const target = await buildTarget(name, manifest!);
+            const findings = runConformance(target!);
+
+            expect(findings.some((f) => f.check === "level-meets-required"),
+                `${name} now meets its required level. Remove it from BELOW_REQUIRED in `
+                + "scripts/agentui/migration.mjs; the list may only shrink.").toBe(true);
+        });
+});
+
 describe("fleet gate — conformance", () =>
 {
     const migrated = COMPONENT_DIRS.filter(
@@ -537,7 +560,8 @@ describe("fleet gate — conformance", () =>
                 .toBeTruthy();
 
             const findings = runConformance(target!);
-            const blocking = blockingFailures(findings);
+            const blocking = blockingFailures(findings).filter((f) =>
+                !(BELOW_REQUIRED.has(name) && f.check === "level-meets-required"));
 
             expect(blocking, formatConformance(name, findings)).toEqual([]);
         });

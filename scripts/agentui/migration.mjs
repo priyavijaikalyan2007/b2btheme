@@ -19,7 +19,9 @@
 
 /** Components with at least one §3.3 violation, excluded from the catalog loudly. */
 export const PENDING_CLASSIFICATION = new Set([
-    // Measured 2026-10-25 by `node scripts/agentui/generate.mjs --measure`: 96 of 101.
+    // Measured 2026-10-25 by `node scripts/agentui/generate.mjs --measure`: 96 of 101;
+    // reconciled 2026-10-25 after BELOW_REQUIRED landed: 94 of 101 (orientationpicker and
+    // toolcolorpicker failed only value-below-field, now covered by BELOW_REQUIRED).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -77,7 +79,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "multiselectcombo",
     "navrail",
     "notificationcenter",
-    "orientationpicker",
     "peoplepicker",
     "periodpicker",
     "permissionmatrix",
@@ -111,7 +112,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "timeline",
     "timepicker",
     "timezonepicker",
-    "toolcolorpicker",
     "treegrid",
     "treeview",
     "usermenu",
@@ -119,4 +119,46 @@ export const PENDING_CLASSIFICATION = new Set([
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */
-export const BELOW_REQUIRED = new Set([]);
+export const BELOW_REQUIRED = new Set([
+    // Measured 2026-10-25: 40 of 101 declared below their required level.
+    "anglepicker",
+    "codeeditor",
+    "colorpicker",
+    "columnspicker",
+    "cronpicker",
+    "durationpicker",
+    "editablecombobox",
+    "facetsearch",
+    "fileexplorer",
+    "fontdropdown",
+    "gauge",
+    "gradientpicker",
+    "latexeditor",
+    "layoutpicker",
+    "lineendingpicker",
+    "lineshapepicker",
+    "linetypepicker",
+    "linewidthpicker",
+    "marginspicker",
+    "markdowneditor",
+    "maskedentry",
+    "multiselectcombo",
+    "orientationpicker",
+    "peoplepicker",
+    "periodpicker",
+    "permissionmatrix",
+    "richtextinput",
+    "searchbox",
+    "sizespicker",
+    "slider",
+    "spacingpicker",
+    "sprintpicker",
+    "stacklayout",
+    "symbolpicker",
+    "timeline",
+    "timepicker",
+    "timezonepicker",
+    "toolcolorpicker",
+    "usermenu",
+    "visualtableeditor",
+]);

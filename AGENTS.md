@@ -223,6 +223,8 @@ resolution), ADR-144 (factory argument order), and `specs/dynamicui.prd.md`.
 The level is **verified by the conformance suite, never self-declared**. A
 manifest claiming `surface` while failing the suite fails the build.
 
+**And the minimum level is computed (ADR-219).** emits, accepts or a protocol provider require surface; a handle with getValue/setValue requires field. Declaring less fails the gate. BELOW_REQUIRED in scripts/agentui/migration.mjs holds the measured backlog and may only shrink — never add a new component to it.
+
 ### The manifest
 
 Every component folder carries `<name>.manifest.ts` exporting one
