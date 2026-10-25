@@ -211,7 +211,7 @@ protocol: {
 | Event action | `on<Channel>` | Casing: if `legacyOption` minus its `on` prefix equals the channel name case-insensitively, use the legacy option name verbatim (`bulkchange` + `onBulkChange` → `onBulkChange`; `signout` + `onSignOut` → `onSignOut`). Otherwise `on` + PascalCase(channel) (`selection` → `onSelection`). |
 | Manifest `actions[]` entry | `on<Id>` (PascalCase) | If its `id` equals a channel name, it is the SAME event: one action prop, no duplicate. |
 | Provider | `on<Request>` + `<request>Result` | `ProviderSpec` becomes `{ request }` only. The request payload goes under `eventData/<request>`. The agent answers by `updateDataModel` at the path bound to `<request>Result` (literal or binding; its schema is the provider's awaited return type). |
-| `protocol.bindAs` | removed | No longer needed: nothing derived can collide with a data prop except `eventData` itself, which stays a PROP_COLLISION violation. |
+| `protocol.bindAs` | removed | There is no rename knob. If `eventData`, an `on…` action or a `<request>Result` coincides with a data option, or two derived names coincide, the build fails with PROP_COLLISION. |
 
 StickyNote, for example, has `value`, `anchor` (data), `eventData`, `onChange` (its `change` channel, payload in `value`) and `onAnchor` (its `anchor` channel, `legacyOption` `onAnchorChange`, which is not `on` + `anchor`).
 

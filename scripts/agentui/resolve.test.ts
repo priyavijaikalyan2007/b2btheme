@@ -64,7 +64,7 @@ describe("resolve — classes", () =>
     {
         const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
         expect(resolveSurface(m, [member("onSelect", "function")]).events[0]).toEqual({ channel: "selection",
-            option: "onSelect", actionProp: "onSelection", payload: "collection", payloadInValue: false });
+            option: "onSelect", actionProp: "onSelection", payload: "collection", multi: true, payloadInValue: false });
     });
     test("onChange beside value is the two-way write-back", () =>
     {
@@ -233,12 +233,12 @@ describe("resolve — naming rule (user decision, 2026-10-25)", () =>
     });
     test("a two-way field's change channel carries its payload in value", () =>
     {
-        const m = manifest({ conformance: "field", emits: [{ name: "change", payload: "scalar", legacyOption: "onChange" }] });
+        const m = manifest({ conformance: "field", emits: [{ name: "change", payload: "scalar", multi: false, legacyOption: "onChange" }] });
         const surface = resolveSurface(m, [member("value", "data"), member("onChange", "function")]);
 
         expect(surface.violations).toEqual([]);
         expect(surface.events).toEqual([{ channel: "change", option: "onChange", actionProp: "onChange",
-            payload: "scalar", payloadInValue: true }]);
+            payload: "scalar", multi: false, payloadInValue: true }]);
     });
     test("an onChange channel without a value member is an ordinary payload-carrying event", () =>
     {

@@ -15,6 +15,7 @@ import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
 import {
     BASIC_CATALOG_ID, COMMON_TYPES_ID, buildCatalog, catalogId, catalogName, describeComponent, relocateDefs,
 } from "./catalog.mjs";
+import { DATA_SHAPES } from "../../runtime/src/constants";
 import { VIOLATION } from "./resolve.mjs";
 
 const MANIFEST = {
@@ -36,7 +37,8 @@ const SURFACE = {
     name: "widget",
     dataProps: [{ name: "pageSize", jsdoc: "Rows per page." }, { name: "columns", jsdoc: "Columns." }],
     twoWayValue: false,
-    events: [{ channel: "selection", option: "onSelect", actionProp: "onSelection", payload: "collection", payloadInValue: false }],
+    events: [{ channel: "selection", option: "onSelect", actionProp: "onSelection", payload: "collection", multi: true,
+        payloadInValue: false }],
     providers: [{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }],
     actions: [{ id: "export", label: "Export CSV", actionProp: "onExport" }],
     hostOnly: {}, violations: [],
@@ -117,7 +119,34 @@ describe("catalog — component entry", () =>
         const { onSelection } = ownProps(build().catalog, "Widget");
 
         expect(onSelection.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
-        expect(onSelection.description).toBe("Sent when \"selection\" emits. Its payload is at <eventData path>/selection.");
+        expect(onSelection.description)
+            .toBe("Sent when \"selection\" emits. Its payload (one or more collections) is at <eventData path>/selection.");
+    });
+    test("a single-item channel's description names one payload of its shape", () =>
+    {
+        const s = { ...SURFACE, events: [{ ...SURFACE.events[0], channel: "anchor", actionProp: "onAnchor",
+            payload: "record", multi: false }] };
+        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget").onAnchor.description)
+            .toBe("Sent when \"anchor\" emits. Its payload (a record) is at <eventData path>/anchor.");
+    });
+    test("a multi-item channel uses the shape's English plural", () =>
+    {
+        const s = { ...SURFACE, events: [{ ...SURFACE.events[0], payload: "hierarchy" }] };
+        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget").onSelection.description)
+            .toContain("(one or more hierarchies)");
+    });
+    test("every DataShape has a payload phrase, so the closed set and the plurals cannot drift", () =>
+    {
+        const phrase = (payload: string) => ownProps(build([{ manifest: MANIFEST, schema: SCHEMA,
+            surface: { ...SURFACE, events: [{ ...SURFACE.events[0], payload }] } }]).catalog, "Widget").onSelection.description;
+
+        expect(DATA_SHAPES.filter((shape) => !/\(one or more \w+\)/.test(phrase(shape)))).toEqual([]);
+    });
+    test("a payload shape outside the closed DataShape set throws a literate error", () =>
+    {
+        const s = { ...SURFACE, events: [{ ...SURFACE.events[0], payload: "blob" }] };
+        expect(() => build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]))
+            .toThrow(/widget: channel "selection" has payload shape "blob", which is not a DataShape/);
     });
     test("a provider gets on<Request> and <request>Result", () =>
     {
@@ -130,7 +159,8 @@ describe("catalog — component entry", () =>
     test("eventData is absent when no event or provider carries a payload", () =>
     {
         const s = { ...SURFACE, twoWayValue: true, providers: [],
-            events: [{ channel: "change", option: "onChange", actionProp: "onChange", payload: "scalar", payloadInValue: true }] };
+            events: [{ channel: "change", option: "onChange", actionProp: "onChange", payload: "scalar", multi: false,
+                payloadInValue: true }] };
         const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget");
 
         expect("eventData" in props).toBe(false);

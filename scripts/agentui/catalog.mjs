@@ -26,6 +26,12 @@ const TITLE = "Enterprise Bootstrap Theme";
 const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
 const BINDING = { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` };
 const ACTION_REF = `${COMMON_TYPES_ID}#/$defs/Action`;
+
+/** English plural of every DataShape (runtime/src/constants.ts DATA_SHAPES, a closed set). */
+const SHAPE_PLURALS = Object.freeze({
+    scalar: "scalars", record: "records", collection: "collections", hierarchy: "hierarchies", graph: "graphs",
+    timeseries: "timeseries", document: "documents", media: "media", geo: "geos", diff: "diffs",
+});
 const PREAMBLE = "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and "
     + "functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} "
     + "binding. Each event a component emits has an on<Event> action property. A component whose events or "
@@ -123,7 +129,8 @@ function entryFor({ manifest, surface, schema })
 {
     const name = catalogName(manifest);
     const { root, defs } = relocateDefs(schema, name);
-    const entries = [...dataProps(surface, root, manifest.name), ...eventDataProp(surface), ...channelProps(surface),
+    const entries = [...dataProps(surface, root, manifest.name), ...eventDataProp(surface),
+        ...channelProps(surface, manifest.name),
         ...providerProps(surface, root, manifest.name), ...actionProps(surface)];
     const props = Object.fromEntries([["component", { const: name }], ...entries]);
     const dataNames = new Set(surface.dataProps.map((d) => d.name));
@@ -200,12 +207,29 @@ function eventDataProp(surface)
     ...BINDING }]] : [];
 }
 
-/** Each channel: an on<Channel> Action whose description says where its payload is. */
-function channelProps(surface)
+/** Each channel: an on<Channel> Action whose description says what its payload is and where. */
+function channelProps(surface, component)
 {
     return surface.events.map((e) => [e.actionProp, { $ref: ACTION_REF, description: e.payloadInValue
         ? "Sent when the value changes. Read the new value through the path bound to `value`."
-        : `Sent when "${e.channel}" emits. Its payload is at <eventData path>/${e.channel}.` }]);
+        : `Sent when "${e.channel}" emits. Its payload (${payloadPhrase(e, component)}) is at `
+            + `<eventData path>/${e.channel}.` }]);
+}
+
+/** "a record", or "one or more records" for a multi-item channel. */
+function payloadPhrase(e, component)
+{
+    const plural = SHAPE_PLURALS[e.payload];
+
+    if (plural === undefined)
+    {
+        throw new Error(`${component}: channel "${e.channel}" has payload shape "${e.payload}", which is not a `
+            + `DataShape (${Object.keys(SHAPE_PLURALS).join(", ")}). Manifest validation should have rejected it; `
+            + `correct emits[${e.channel}].payload in components/${component}/${component}.manifest.ts, or add the `
+            + "new shape to SHAPE_PLURALS in scripts/agentui/catalog.mjs.");
+    }
+
+    return e.multi ? `one or more ${plural}` : `a ${e.payload}`;
 }
 
 /** Each provider: on<Request> Action (request under eventData) and <request>Result (agent answers). */

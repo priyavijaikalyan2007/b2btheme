@@ -109,15 +109,15 @@
             },
             "onSubmit": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"submit\" emits. Its payload is at <eventData path>/submit."
+              "description": "Sent when \"submit\" emits. Its payload (a scalar) is at <eventData path>/submit."
             },
             "onSelectTurn": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"selectTurn\" emits. Its payload is at <eventData path>/selectTurn."
+              "description": "Sent when \"selectTurn\" emits. Its payload (a record) is at <eventData path>/selectTurn."
             },
             "onBranch": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"branch\" emits. Its payload is at <eventData path>/branch."
+              "description": "Sent when \"branch\" emits. Its payload (a record) is at <eventData path>/branch."
             }
           },
           "required": [
@@ -893,7 +893,7 @@
             },
             "onAnchor": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"anchor\" emits. Its payload is at <eventData path>/anchor."
+              "description": "Sent when \"anchor\" emits. Its payload (a record) is at <eventData path>/anchor."
             }
           },
           "required": [
@@ -1098,23 +1098,23 @@
             },
             "onSelectCanvas": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"selectCanvas\" emits. Its payload is at <eventData path>/selectCanvas."
+              "description": "Sent when \"selectCanvas\" emits. Its payload (a record) is at <eventData path>/selectCanvas."
             },
             "onPinCanvas": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"pinCanvas\" emits. Its payload is at <eventData path>/pinCanvas."
+              "description": "Sent when \"pinCanvas\" emits. Its payload (a record) is at <eventData path>/pinCanvas."
             },
             "onCloseCanvas": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"closeCanvas\" emits. Its payload is at <eventData path>/closeCanvas."
+              "description": "Sent when \"closeCanvas\" emits. Its payload (a record) is at <eventData path>/closeCanvas."
             },
             "onNewCanvas": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"newCanvas\" emits. Its payload is at <eventData path>/newCanvas."
+              "description": "Sent when \"newCanvas\" emits. Its payload (a scalar) is at <eventData path>/newCanvas."
             },
             "onScrub": {
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
-              "description": "Sent when \"scrub\" emits. Its payload is at <eventData path>/scrub."
+              "description": "Sent when \"scrub\" emits. Its payload (a scalar) is at <eventData path>/scrub."
             }
           },
           "required": [

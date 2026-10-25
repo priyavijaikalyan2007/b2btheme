@@ -128,6 +128,7 @@ function resolveEvents(ctx, twoWayValue)
             option,
             actionProp: actionPropFor(c.name, c.legacyOption),
             payload: c.payload,
+            multi: c.multi,
             payloadInValue: twoWayValue && option === "onChange",
         };
     });
