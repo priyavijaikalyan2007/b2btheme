@@ -44,6 +44,6 @@ export const CRONPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 360, h: 280 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

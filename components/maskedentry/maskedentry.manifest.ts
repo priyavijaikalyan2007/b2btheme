@@ -44,6 +44,6 @@ export const MASKEDENTRY_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 34 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

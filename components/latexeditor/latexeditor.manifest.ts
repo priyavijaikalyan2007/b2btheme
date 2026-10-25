@@ -52,6 +52,6 @@ export const LATEXEDITOR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 400, h: 300 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

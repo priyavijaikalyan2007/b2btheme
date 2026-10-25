@@ -46,6 +46,6 @@ export const SYMBOLPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 320, h: 300 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

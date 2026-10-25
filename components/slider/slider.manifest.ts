@@ -44,6 +44,6 @@ export const SLIDER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 40 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

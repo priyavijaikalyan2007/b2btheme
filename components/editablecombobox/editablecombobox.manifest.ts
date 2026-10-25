@@ -46,6 +46,6 @@ export const EDITABLECOMBOBOX_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 34 },
     defaultOptions: { items: [] },
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

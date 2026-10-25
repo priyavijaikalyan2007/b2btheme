@@ -893,7 +893,8 @@ const BASELINES = {
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     protocolPropsMissingJsdoc: 373,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
-    componentsBelowRequiredLevel: 40,
+    // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
+    componentsBelowRequiredLevel: 6,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Adding a name, a new component included, fails [20].

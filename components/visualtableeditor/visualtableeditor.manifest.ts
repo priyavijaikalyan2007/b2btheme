@@ -48,6 +48,6 @@ export const VISUALTABLEEDITOR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 300, h: 150 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

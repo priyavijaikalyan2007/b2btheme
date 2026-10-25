@@ -52,6 +52,6 @@ export const GAUGE_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 200 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

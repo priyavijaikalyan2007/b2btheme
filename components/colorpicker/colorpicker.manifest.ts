@@ -44,6 +44,6 @@ export const COLORPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 280, h: 320 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

@@ -44,6 +44,6 @@ export const PERIODPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 40 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

@@ -44,6 +44,6 @@ export const GRADIENTPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 300, h: 340 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

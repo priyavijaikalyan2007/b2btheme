@@ -49,6 +49,6 @@ export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
     defaultSize: { w: 300, h: 100 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

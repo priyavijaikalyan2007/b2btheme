@@ -46,6 +46,6 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
     defaultSize: { w: 350, h: 34 },
     defaultOptions: { facets: [] },
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

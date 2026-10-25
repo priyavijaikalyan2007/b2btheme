@@ -98,6 +98,6 @@ export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
     // wants an empty editor, not placeholder prose.
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

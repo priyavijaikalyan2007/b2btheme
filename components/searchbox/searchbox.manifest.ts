@@ -46,6 +46,6 @@ export const SEARCHBOX_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 34 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };

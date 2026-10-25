@@ -44,6 +44,6 @@ export const ANGLEPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 160, h: 160 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "field",
     priority: 50,
 };
