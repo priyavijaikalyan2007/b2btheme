@@ -153,3 +153,38 @@ describe("catalog — violations", () =>
         expect(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).violations[0].code).toBe(VIOLATION.PROP_COLLISION);
     });
 });
+
+describe("catalog — fix round 1", () =>
+{
+    const withDef = (name: string, def: string) => ({
+        manifest: { ...MANIFEST, name: name.toLowerCase(), factory: `create${name}` },
+        surface: { ...SURFACE, name: name.toLowerCase() },
+        schema: { ...SCHEMA, $defs: { [def]: SCHEMA.$defs.Col }, properties: { ...SCHEMA.properties, columns: { type: "array", items: { $ref: `#/$defs/${def}` } } } },
+    });
+
+    test("two components relocating to the same def key fail instead of overwriting", () =>
+    {
+        const { violations } = build([withDef("A", "B__C"), withDef("A__B", "C")]);
+        expect(violations.map((v: any) => v.code)).toEqual([VIOLATION.NAME_COLLISION]);
+        expect(violations[0].message).toContain("A__B__C");
+    });
+    test("a surface data prop missing from the schema throws a literate error", () =>
+    {
+        const schema = { ...SCHEMA, properties: { searchResults: SCHEMA.properties.searchResults } };
+        expect(() => build([{ manifest: MANIFEST, surface: SURFACE, schema }]))
+            .toThrow(/widget: the surface lists data prop "pageSize" but the generated schema has no such property/);
+    });
+    test("a schema with no properties at all throws the same literate error", () =>
+    {
+        const { properties, ...schema } = SCHEMA;
+        void properties;
+        expect(() => build([{ manifest: MANIFEST, surface: SURFACE, schema }])).toThrow(/post-check in generate\.mjs/);
+    });
+    test("a provider response missing from the schema throws a literate error", () =>
+    {
+        const { searchResults, ...properties } = SCHEMA.properties;
+        void searchResults;
+        expect(() => build([{ manifest: MANIFEST, surface: SURFACE, schema: { ...SCHEMA, properties } }]))
+            .toThrow(/widget: the surface lists provider response "searchResults"/);
+    });
+});

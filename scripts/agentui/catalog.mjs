@@ -63,7 +63,7 @@ export function buildCatalog({ basic, components, major })
             $schema: DRAFT_2020_12, $id: id, title: TITLE, description: guidance(components), catalogId: id,
             components: all, functions, $defs: rootDefs(all, functions, ours),
         },
-        violations: [...violations, ...ours.flatMap((o) => o.violations)],
+        violations: [...violations, ...defCollisions(ours), ...ours.flatMap((o) => o.violations)],
     };
 }
 
@@ -91,12 +91,35 @@ function rootDefs(components, functions, ours)
     };
 }
 
+/**
+ * Relocated def keys shared by two components. UAX #31 allows "__" inside
+ * names, so `A` + `B__C` and `A__B` + `C` both yield `A__B__C`.
+ */
+function defCollisions(ours)
+{
+    const owner = new Map();
+
+    return ours.flatMap((o) => Object.keys(o.defs).flatMap((key) =>
+    {
+        const first = owner.get(key);
+        owner.set(key, first ?? o.name);
+
+        return first === undefined ? [] : [{
+            component: o.name, member: key, code: VIOLATION.NAME_COLLISION,
+            message: `${o.name}: relocated definition "${key}" is also produced by ${first}, so one would overwrite `
+                + `the other and a $ref would point at the wrong schema. Set a distinct protocol.name on `
+                + `${o.name} or ${first} (a name containing "__" makes the prefix ambiguous).`,
+        }];
+    }));
+}
+
 /** One component entry plus its relocated defs and prop-collision violations. */
 function entryFor({ manifest, surface, schema })
 {
     const name = catalogName(manifest);
     const { root, defs } = relocateDefs(schema, name);
-    const groups = [dataProps(surface, root), channelProps(surface), providerProps(surface, root), actionProps(surface)];
+    const groups = [dataProps(surface, root, manifest.name), channelProps(surface),
+        providerProps(surface, root, manifest.name), actionProps(surface)];
     const props = Object.assign({ component: { const: name } }, ...groups);
     const dataNames = new Set(surface.dataProps.map((d) => d.name));
 
@@ -131,12 +154,27 @@ export function relocateDefs(schema, prefix)
     return { root: rewrite(root), defs: Object.fromEntries(Object.entries($defs).map(([k, v]) => [`${prefix}__${k}`, rewrite(v)])) };
 }
 
+/** A schema property the surface lists; absent means surface and schema disagree. */
+function requireProperty(root, component, kind, prop)
+{
+    const found = root.properties?.[prop];
+
+    if (found === undefined)
+    {
+        throw new Error(`${component}: the surface lists ${kind} "${prop}" but the generated schema has no such `
+            + "property. The surface and schema disagree; this means the post-check in generate.mjs did not run "
+            + "or is broken.");
+    }
+
+    return found;
+}
+
 /** Data props: literal-or-binding, description outside the oneOf. */
-function dataProps(surface, root)
+function dataProps(surface, root, component)
 {
     return Object.fromEntries(surface.dataProps.map((d) =>
     {
-        const { description, ...schema } = root.properties[d.name];
+        const { description, ...schema } = requireProperty(root, component, "data prop", d.name);
         const twoWay = d.name === "value" && surface.twoWayValue
             ? " Two-way: when bound to a path, the component writes the user's changes there." : "";
 
@@ -156,11 +194,11 @@ function channelProps(surface)
 }
 
 /** Each provider: params (component writes), on<Request> Action, response (agent answers). */
-function providerProps(surface, root)
+function providerProps(surface, root, component)
 {
     return Object.fromEntries(surface.providers.flatMap((p) =>
     {
-        const { description, ...response } = root.properties[p.response];
+        const { description, ...response } = requireProperty(root, component, "provider response", p.response);
         void description;
 
         return [
