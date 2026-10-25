@@ -51,11 +51,14 @@ export function pascal(s)
 export function resolveSurface(manifest, members)
 {
     const protocol = manifest.protocol ?? {};
-    const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [] };
+    const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [], violated: new Set() };
     const events = resolveEvents(ctx);
     const providers = resolveProviders(ctx);
     const twoWayValue = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
     const claimed = claimedNames(ctx, events, twoWayValue);
+
+    checkMultipleClaims(ctx, events, providers, twoWayValue);
+
     const dataProps = members.filter((m) => !claimed.has(m.name)).flatMap((m) => resolveMember(ctx, m));
 
     checkDoubleClaims(ctx, claimed);
@@ -78,13 +81,33 @@ export function violate(ctx, member, code, message)
 /** One event per emits channel: a bindable prop plus an on<Channel> action. */
 function resolveEvents(ctx)
 {
-    return ctx.manifest.emits.map((c) => ({
-        channel: c.name,
-        option: c.legacyOption && ctx.byName.has(c.legacyOption) ? c.legacyOption : null,
-        bindProp: ctx.protocol.bindAs?.[c.name] ?? c.name,
-        actionProp: `on${pascal(c.name)}`,
-        payload: c.payload,
-    }));
+    return ctx.manifest.emits.map((c) =>
+    {
+        let option = null;
+
+        if (c.legacyOption && ctx.byName.has(c.legacyOption))
+        {
+            const m = ctx.byName.get(c.legacyOption);
+
+            if (m.cls !== MEMBER_CLASS.FUNCTION)
+            {
+                violate(ctx, c.legacyOption, VIOLATION.DOUBLE_CLASSIFIED,
+                    `is named by emits[${c.name}].legacyOption but is ${m.cls}-typed; only a function can be an event. Correct the legacyOption, or the member's type.`);
+                ctx.violated.add(c.legacyOption);
+            } else
+            {
+                option = c.legacyOption;
+            }
+        }
+
+        return {
+            channel: c.name,
+            option,
+            bindProp: ctx.protocol.bindAs?.[c.name] ?? c.name,
+            actionProp: `on${pascal(c.name)}`,
+            payload: c.payload,
+        };
+    });
 }
 
 /** Providers that name a one-parameter function member. */
@@ -114,7 +137,8 @@ function resolveProviders(ctx)
 /**
  * Members that something other than the data rule has claimed. Every declared
  * provider key that names a function is claimed, even one rejected for its
- * arity, so it is reported once (provider-arity), not twice.
+ * arity, so it is reported once (provider-arity), not twice. Invalid legacyOptions
+ * are also claimed so they don't get processed as unclaimed members.
  */
 function claimedNames(ctx, events, twoWayValue)
 {
@@ -125,10 +149,50 @@ function claimedNames(ctx, events, twoWayValue)
 
     return new Set([
         ...events.map((e) => e.option).filter(Boolean),
+        ...Array.from(ctx.violated),
         ...providerKeys,
         ...(twoWayValue ? ["onChange"] : []),
         ...implicit,
     ]);
+}
+
+/** Detects a name claimed by multiple categories. Spec §3.1: every option in exactly one. */
+function checkMultipleClaims(ctx, events, providers, twoWayValue)
+{
+    const { manifest } = ctx;
+    const claims = new Map();
+
+    for (const e of events.filter((e) => e.option))
+    {
+        const key = e.option;
+        claims.set(key, (claims.get(key) ?? 0) + 1);
+    }
+
+    for (const p of providers)
+    {
+        const key = p.option;
+        claims.set(key, (claims.get(key) ?? 0) + 1);
+    }
+
+    if (twoWayValue)
+    {
+        claims.set("onChange", (claims.get("onChange") ?? 0) + 1);
+    }
+
+    if (manifest.factoryStyle === "options-only")
+    {
+        const containerName = manifest.containerOption ?? "container";
+        claims.set(containerName, (claims.get(containerName) ?? 0) + 1);
+    }
+
+    for (const [name, count] of claims)
+    {
+        if (count > 1)
+        {
+            violate(ctx, name, VIOLATION.DOUBLE_CLASSIFIED,
+                `is claimed by ${count} different sources (events, providers, two-way value, or implicit). Each option must belong to exactly one category.`);
+        }
+    }
 }
 
 /** Resolves an unclaimed member: data prop, host-only, or a violation. */

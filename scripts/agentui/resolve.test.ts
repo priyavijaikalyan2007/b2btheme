@@ -50,6 +50,16 @@ describe("resolve — classes", () =>
         const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
         expect(codes(m, [member("onSelect", "function")])).toEqual([]);
     });
+    test("a data member named as legacyOption fails", () =>
+    {
+        const m = manifest({ emits: [{ name: "selection", payload: "collection", legacyOption: "onSelect" }] });
+        expect(codes(m, [member("onSelect", "data")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+    });
+    test("an element member named as legacyOption fails", () =>
+    {
+        const m = manifest({ emits: [{ name: "selection", payload: "collection", legacyOption: "onSelect" }] });
+        expect(codes(m, [member("onSelect", "element")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+    });
     test("an event gets a bind prop and an action prop", () =>
     {
         const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
@@ -169,5 +179,35 @@ describe("resolve — messages", () =>
     {
         const [v] = resolveSurface(manifest(), [member("onX", "function")]).violations;
         expect(v.message).toContain("components/widget/widget.manifest.ts");
+    });
+});
+
+describe("resolve — multiple claims", () =>
+{
+    test("an event and a provider claim the same function", () =>
+    {
+        const m = manifest({
+            emits: [{ name: "selection", payload: "collection", legacyOption: "onSelect" }],
+            protocol: { providers: { onSelect: { request: "search", params: "q", response: "results" } } }
+        });
+        expect(codes(m, [member("onSelect", "function")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+    });
+    test("two channels share the same legacyOption", () =>
+    {
+        const m = manifest({
+            emits: [
+                { name: "selection", payload: "collection", legacyOption: "onSelect" },
+                { name: "activate", payload: "record", legacyOption: "onSelect" }
+            ]
+        });
+        expect(codes(m, [member("onSelect", "function")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+    });
+    test("a channel's legacyOption is onChange with value two-way", () =>
+    {
+        const m = manifest({
+            emits: [{ name: "selection", payload: "collection", legacyOption: "onChange" }]
+        });
+        expect(codes(m, [member("value", "data"), member("onChange", "function")]))
+            .toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
     });
 });
