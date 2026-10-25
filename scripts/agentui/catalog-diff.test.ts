@@ -1,3 +1,14 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ */
+/**
+ * ⚓ TESTS: AgentUiCatalogDiff. The catalog diff module classifies breaking
+ *    and additive changes between committed baseline and freshly generated
+ *    catalogs, enforcing the one-step major-version rule. Spec §5.3, #17.
+ */
+
 import { describe, expect, test } from "vitest";
 
 import { diffCatalogs, versionProblem } from "./catalog-diff.mjs";
