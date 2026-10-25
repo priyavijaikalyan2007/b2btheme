@@ -444,8 +444,9 @@ tool tried drops such parts silently, so an undeclared one fails the build.
 §1). `emits`, `accepts` or a provider require `surface`; a handle with
 `getValue`/`setValue`, or a two-way `value` (a `value` data prop paired with the
 ADR-134 `onChange` write-back), requires `field`. A read-only `value`, such as a
-displayed metric, is ordinary data. Declaring less fails the gate. Under-declaring used to be "the smaller problem"; an agent cannot read
-a value from a `display`, so it is now a defect.
+displayed metric, is ordinary data. Declaring less fails the gate.
+Under-declaring used to be "the smaller problem"; an agent cannot read a value
+from a `display`, so it is now a defect.
 
 **The A2UI catalog is a permanent public identifier.** Removing, renaming,
 retyping or newly requiring anything in it breaks hosts that hard-coded
