@@ -184,24 +184,36 @@ Optional. It says how the component appears over **A2UI** and **MCP Apps**, and 
 ```typescript
 protocol: {
     name?:      string,                                   // catalog name override
-    providers?: { [option]: { request, params, response } },
+    providers?: { [option]: { request } },
     hostOnly?:  { [optionOrPath]: reason },
     schemas?:   { [option]: JSONSchema },
-    bindAs?:    { [channel]: propName },
 }
 ```
 
 - `name` — the A2UI catalog name, needed only on a collision. Absent means the factory without its `create` prefix (`createDataGrid` is `DataGrid`). It must be a UAX #31 identifier. A clash with another component, or with an A2UI basic-catalog name (`Text`, `Button`, `Tabs`, …), fails the gate, and this field is the fix; the generator never adds a suffix.
-- `providers` — function options that **ask the host for data**, keyed by option name. A classifier cannot tell that from a DOM hook, so a person declares it. Each becomes three catalog properties: `params`, the data prop the component writes the request to; `on<Request>`, the `Action` fired after it; and `response`, the data prop the agent answers at. The `params` schema is the callback's single parameter and the `response` schema its return type, with `Promise<T>` unwrapped. **A provider takes exactly one parameter**; one with more is a build error, so declare it host-only or add a single-object variant.
+- `providers` — function options that **ask the host for data**, keyed by option name, each `{ request }`. A classifier cannot tell that from a DOM hook, so a person declares it. Every catalog name derives from `request` (see the table below): the component writes the request to `<eventData path>/<request>` and sends `on<Request>`; the agent answers with `updateDataModel` at the path bound to `<request>Result`, whose schema is the callback's return type with `Promise<T>` unwrapped. **A provider takes exactly one parameter**; one with more is a build error, so declare it host-only or add a single-object variant.
 - `hostOnly` — options, or parts of options, with **no protocol equivalent**, mapped to the reason. Write the reason as what the member needs that JSON cannot carry, in **at least 20 characters**; "n/a" fails the build. The reason is published in `dist/agentui-report.json`.
   - **Key syntax:** an option name (`renderCell`), or a path into a data option with `.prop` and `[]` for array items (`columns[].renderer`).
   - **Prefix coverage:** a key covers itself and every path below it, so `columns` would cover `columns[].renderer`. Declare the narrowest path that is true; a parent key hides what else is down there.
   - **Mixed members:** a bare option name on a member like `string | (() => string)` means **its non-data arms**. The member stays a data prop whose schema has only the data arms, and the entry records that the narrowing is deliberate.
   - **Nested hazards:** a data option with a function, element or too-broad type at any depth must declare that path. Every schema tool tried drops such parts silently, so an undeclared one fails the build.
 - `schemas` — an explicit JSON Schema for a data prop typed too broadly to describe (`unknown`, `object`, `Record<string, unknown>`), keyed by option name. It replaces the generated schema for that member only. Narrowing the public TypeScript type instead would break consumers.
-- `bindAs` — the catalog prop name for an `emits` channel's bindable value, keyed by channel name, when the channel name collides with a data prop. The convention: when a channel's name collides with a data prop, bind it as `<channel>Change` (StickyNote/Annotation: `anchor` → `anchorChange`, so `protocol: { bindAs: { anchor: "anchorChange" } }`). The collision otherwise fails the build (`prop-collision`).
+**A key that names no member or path fails the build** (`stale-declaration`), for every component, `PENDING_CLASSIFICATION` included. A stale key would hide a rename. A key `protocol` (or a provider spec) does not define, such as the removed `bindAs` or a provider's old `params`/`response`, fails manifest validation.
 
-**A key that names no member, path or channel fails the build** (`stale-declaration`), for every component, `PENDING_CLASSIFICATION` included. A stale key would hide a rename.
+**Catalog names follow one rule, with no exceptions** (user decision, 2026-10-25). Channel names are persisted Dynamic UI API (canvas documents reference them), so they are never renamed; the catalog derives its names from them:
+
+| Concept | Catalog name | Rule |
+|---|---|---|
+| Data option | its option name | unchanged |
+| Two-way field value | `value` | unchanged; when bound, user changes are written there |
+| Event payloads | ONE prop per component: `eventData` | Binding-only. The component writes each event's payload to `<bound path>/<channel>`, and each provider request to `<bound path>/<request>`, BEFORE sending the matching action. Present only when the component has at least one event or provider that carries a payload. |
+| Field `change` channel | no payload carrier | When a channel's `legacyOption` is `onChange` and the component is two-way (`twoWayValue`), its payload IS `value`. The action `onChange` exists; nothing is written under `eventData` for it. |
+| Event action | `on<Channel>` | Casing: if `legacyOption` minus its `on` prefix equals the channel name case-insensitively, use the legacy option name verbatim (`bulkchange` + `onBulkChange` → `onBulkChange`; `signout` + `onSignOut` → `onSignOut`). Otherwise `on` + PascalCase(channel) (`selection` → `onSelection`). |
+| Manifest `actions[]` entry | `on<Id>` (PascalCase) | If its `id` equals a channel name, it is the SAME event: one action prop, no duplicate. |
+| Provider | `on<Request>` + `<request>Result` | `ProviderSpec` becomes `{ request }` only. The request payload goes under `eventData/<request>`. The agent answers by `updateDataModel` at the path bound to `<request>Result` (literal or binding; its schema is the provider's awaited return type). |
+| `protocol.bindAs` | removed | No longer needed: nothing derived can collide with a data prop except `eventData` itself, which stays a PROP_COLLISION violation. |
+
+StickyNote, for example, has `value`, `anchor` (data), `eventData`, `onChange` (its `change` channel, payload in `value`) and `onAnchor` (its `anchor` channel, `legacyOption` `onAnchorChange`, which is not `on` + `anchor`).
 
 The shape, in DataGrid's terms. This is **not** DataGrid's manifest today: DataGrid is on `PENDING_CLASSIFICATION`, and it has no search provider. The `columns[]` paths are the three the build reports for it.
 
@@ -218,7 +230,8 @@ protocol: {
     },
     providers: {
         // Hypothetical: `onSearch(query) => Promise<DataGridRow[]>`.
-        onSearch: { request: "search", params: "searchQuery", response: "searchResults" },
+        // Catalog: onSearch, searchResult; the query arrives at <eventData path>/search.
+        onSearch: { request: "search" },
     },
 },
 ```

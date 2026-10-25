@@ -93,7 +93,7 @@ Every member of every `<Name>Options` interface belongs to exactly one class.
 |---|---|---|
 | **Data prop** | type is JSON-serialisable | a catalog property; bindable to a data-model path |
 | **Event callback** | function-typed, and named by some `emits[].legacyOption`; **or** the ADR-134 `onChange` of a component whose options carry `value`. One `onChange` may be both: a single callback in two roles, not a double claim | an A2UI `Action`-typed catalog property (§5.4); for `onChange`, the write-back of the two-way `value` binding |
-| **Provider callback** | function-typed, declared in `protocol.providers` | an `Action` property for the request plus a data prop for the response (§5.5) |
+| **Provider callback** | function-typed, declared in `protocol.providers` | an `on<Request>` `Action` property plus a `<request>Result` data prop for the answer (§5.5) |
 | **Host-only** | declared in `protocol.hostOnly` with a reason | absent from the catalog; the reason is published in the build report |
 
 The classifier assigns data props and event callbacks automatically. Provider and host-only members are always declared by a person, because a classifier cannot tell "asks the host for data" from "decorates a DOM node".
@@ -137,12 +137,6 @@ export interface ProtocolSpec
     readonly hostOnly?: Readonly<Record<string, string>>;
 
     /**
-     * Catalog prop name for an `emits` channel's bindable value, when the
-     * channel name collides with a data prop (§5.4). Keyed by channel name.
-     */
-    readonly bindAs?: Readonly<Record<string, string>>;
-
-    /**
      * Explicit JSON Schemas for data props whose TypeScript type is too broad
      * to generate from (`unknown`, `Record<string, unknown>`), keyed by option
      * name. Replaces the generated schema for that member only.
@@ -152,21 +146,20 @@ export interface ProtocolSpec
 
 export interface ProviderSpec
 {
-    /** Catalog name of the request, e.g. "search". UAX #31. */
+    /**
+     * Catalog name of the request, e.g. "search". UAX #31. Every catalog
+     * name derives from it: `on<Request>` and `<request>Result` (§5.5).
+     */
     readonly request: string;
-
-    /** Data-prop name the component writes the request parameters to, e.g. "searchQuery". */
-    readonly params: string;
-
-    /** Data-prop name the agent binds the answer to, e.g. "searchResults". */
-    readonly response: string;
 }
 
 // CapabilityManifest gains:
 readonly protocol?: ProtocolSpec;
 ```
 
-The schema of `response` is derived from the provider callback's return type, with `Promise<T>` unwrapped to `T`. The schema of `params` is the callback's single parameter type (`Parameters<…>[0]`). A provider callback with more than one parameter is a build error: declare it host-only, or give the component an additive single-object variant.
+The schema of `<request>Result` is derived from the provider callback's return type, with `Promise<T>` unwrapped to `T`. The callback's single parameter is the request, which the component writes under `eventData` (§5.4), a binding-only prop with no schema of its own. A provider callback with more than one parameter is a build error: declare it host-only, or give the component an additive single-object variant.
+
+`ProtocolSpec` and `ProviderSpec` take no other keys. Manifest validation rejects an unknown key (for example the removed `bindAs`, or a provider's old `params`/`response`), because every catalog name is derived and nothing would read it.
 
 ### 3.3 Classification failures
 
@@ -175,7 +168,7 @@ Each of these is a build error (§8) for any component not on the migration list
 - A function-, element- or `unknown`-typed member that is in no class.
 - A member declared in two classes, for example both `hostOnly` and an `emits` `legacyOption`. An `onChange` that is both an `emits` `legacyOption` and the ADR-134 write-back is one callback in two roles (§3.1), not a double claim.
 - A data member with a nested hazard path that no `hostOnly` key declares.
-- A `providers`, `hostOnly`, `schemas` or `bindAs` key that names no member, path or channel of the interface. That is stale data, and it would hide a rename.
+- A `providers`, `hostOnly` or `schemas` key that names no member or path of the interface. That is stale data, and it would hide a rename.
 - A `hostOnly` reason shorter than 20 characters. "n/a" is not a reason.
 - A data prop whose generated schema is unconstrained (`{}` or `true`) and has no `protocol.schemas` entry.
 - A data prop with no JSDoc description. The description is what the agent reads (§5.6).
@@ -209,7 +202,7 @@ A component whose core behaviour depends on a host-only member (for example, cel
   - it is the only actively maintained candidate with a TypeScript 7 path (typia 15)
 - **Invocation.** A build-only dev dependency, pinned exactly, run programmatically: one `ts.Program` from the repo `tsconfig.json`, emitted with typia's transformer (`typia/lib/transform`) on generated entry files of the form `export default typia.json.schema<Alias, "3.1">()`. No `ts-patch`, and no change to the repo's tsconfig. Generated aliases import each type by module path, never by bare name, which avoids the `RibbonOptions` / RibbonBuilder clash the trial found.
 - **Normalisation.** typia emits OpenAPI 3.1 (the 2020-12 dialect). A post-step rewrites `#/components/schemas/<X>` to `#/$defs/<X>`, sets `$schema` to draft 2020-12, and closes objects (`additionalProperties: false`) where typia leaves them open. The step is mechanical and unit-tested; it adds no knowledge of its own.
-- **Output:** `dist/schemas/<name>.options.json`, data props and provider `params`/`response` only. Callbacks and host-only members are absent.
+- **Output:** `dist/schemas/<name>.options.json`, data props and each provider's `<request>Result` only. Callbacks and host-only members are absent.
 - **JSDoc.** The description becomes `description`. typia does not map JSDoc `@default`. The repository has none: defaults are written as prose ("Default: 25"), which carries through in the description the agent reads. `@minimum`, `@maximum` and similar tags do map.
 - **Validation:** each schema must validate its manifest's `defaultOptions`. A mismatch means one of them is wrong, and the error names both.
 - **A typia diagnostic is a build error** reported with the component name. It is never retried with different settings.
@@ -248,35 +241,48 @@ A component whose core behaviour depends on a host-only member (for example, cel
 
 ### 5.4 Entry shape
 
-Each component entry is a JSON Schema object with:
+Each component entry is a JSON Schema object. Every name in it is derived by one rule, with no exceptions and no override (user decision, 2026-10-25). Channel names are persisted Dynamic UI API (canvas documents reference them), so they are never renamed; the catalog derives its names from them:
+
+| Concept | Catalog name | Rule |
+|---|---|---|
+| Data option | its option name | unchanged |
+| Two-way field value | `value` | unchanged; when bound, user changes are written there |
+| Event payloads | ONE prop per component: `eventData` | Binding-only. The component writes each event's payload to `<bound path>/<channel>`, and each provider request to `<bound path>/<request>`, BEFORE sending the matching action. Present only when the component has at least one event or provider that carries a payload. |
+| Field `change` channel | no payload carrier | When a channel's `legacyOption` is `onChange` and the component is two-way (`twoWayValue`), its payload IS `value`. The action `onChange` exists; nothing is written under `eventData` for it. |
+| Event action | `on<Channel>` | Casing: if `legacyOption` minus its `on` prefix equals the channel name case-insensitively, use the legacy option name verbatim (`bulkchange` + `onBulkChange` → `onBulkChange`; `signout` + `onSignOut` → `onSignOut`). Otherwise `on` + PascalCase(channel) (`selection` → `onSelection`). |
+| Manifest `actions[]` entry | `on<Id>` (PascalCase) | If its `id` equals a channel name, it is the SAME event: one action prop, no duplicate. |
+| Provider | `on<Request>` + `<request>Result` | `ProviderSpec` becomes `{ request }` only. The request payload goes under `eventData/<request>`. The agent answers by `updateDataModel` at the path bound to `<request>Result` (literal or binding; its schema is the provider's awaited return type). |
+| `protocol.bindAs` | removed | No longer needed: nothing derived can collide with a data prop except `eventData` itself, which stays a PROP_COLLISION violation. |
+
+So the entry has:
 
 - `component: { const: "<Name>" }`
 - one property per data prop. Its schema is `oneOf` the generated prop schema or the v0.9.1 data-binding type, so the agent may send a literal or a path.
-- for each `emits` channel, **two** optional properties:
-  - a **bindable data prop**, named after the channel (or `protocol.bindAs`), whose schema is the channel's payload. The component writes each emission to the bound path.
-  - an **`on<PascalCaseChannel>`** property of the v0.9.1 `Action` type. The agent supplies the event name and context it wants back, and reads the emission through a path in that context.
+- `eventData`, when needed: the v0.9.1 data-binding type only. Its description states the `<path>/<channel>` and `<path>/<request>` contract.
+- one `on<Channel>` property of the v0.9.1 `Action` type per `emits` channel. The agent supplies the event name and context it wants back, and reads the payload through a path in that context. Its description says where the payload is: "Sent when "<channel>" emits. Its payload is at <eventData path>/<channel>.", or, for a two-way `change`, "Sent when the value changes. Read the new value through the path bound to `value`."
 
-  This needs no reserved keys. v0.9.1 resolves action context lazily, at send time, after the component has written to the bound path, so the agent sees the new value. (A renderer-injected `payload` key was considered and rejected: it would collide with any agent-authored `payload` key.)
-- one optional `on<PascalCaseId>` `Action` property per manifest `actions[]` entry.
+  This needs no reserved keys. v0.9.1 resolves action context lazily, at send time, after the component has written under the bound path, so the agent sees the new value. (A renderer-injected `payload` key was considered and rejected: it would collide with any agent-authored `payload` key.)
+- one optional `on<PascalCaseId>` `Action` property per manifest `actions[]` entry whose `id` is not a channel name.
 - for `field`-level components, `value` is two-way: a bound path receives user changes, which matches how A2UI's own `TextField` binds.
 - `description` (§5.6).
+
+Two generated names that coincide within one entry (`eventData`, an action prop or a `<request>Result` against a data prop, or two action props) fail the gate as `prop-collision`. There is no rename knob: the fix is a different provider `request` or action `id`, or declaring the data option host-only.
 
 The binding and `Action` definitions are referenced from the vendored v0.9.1 `json/common_types.json` (`DataBinding`, `DynamicString`, `DynamicNumber`, `DynamicBoolean`, `Action`), never retyped by hand. The catalog **file** mirrors the vendored v0.9.1 basic catalog's layout exactly: the same top-level keys, `functions` as an object, and `$defs.anyComponent` / `$defs.anyFunction` as `oneOf` lists of local refs. (`$defs/Catalog` in `client_capabilities.json` describes the different, inline form used in capability messages, where `functions` is an array, so it is not the validator for a catalog file.) Confirmed at a2ui-project/a2ui commit `409ded2`.
 
 ### 5.5 Providers
 
-A provider becomes two catalog properties:
+A provider, `{ request }`, becomes two catalog properties:
 
-- `<params>`, a bindable data prop the component writes the request parameters to
-- `on<Request>`, of type `Action`, fired after the parameters are written
-- `<response>`, a data prop the agent binds to the path it will answer at with `updateDataModel`
+- `on<Request>`, of type `Action`, sent after the component writes the request (the callback's single parameter) to `<eventData path>/<request>`
+- `<request>Result`, a data prop (literal or binding) the agent binds to the path it will answer at with `updateDataModel`. Its schema is the callback's awaited return type.
 
-That is three catalog properties per provider, and it needs nothing beyond v0.9.1. v1.0's `callAgentFunction` is a better fit and arrives with the v1.0 codec.
+It needs nothing beyond v0.9.1. v1.0's `callAgentFunction` is a better fit and arrives with the v1.0 codec.
 
 ### 5.6 Agent guidance, generated
 
-- **Catalog `description`:** v0.9.1 catalog files have no `instructions` field (the vendored basic catalog's top level is `$schema`, `$id`, `title`, `description`, `catalogId`, `components`, `functions`, `$defs`). The v1.0 codec will move this text to `instructions`. The text is a fixed preamble (what the library is, how binding works, how a channel's bound prop pairs with its `on<Channel>` action), followed by one line per component.
-- **Component `description`:** the `label`, then each affordance rendered as text ("browse, compare or edit a collection of 2 to 100,000 records"), then a summary of the component's actions.
+- **Catalog `description`:** v0.9.1 catalog files have no `instructions` field (the vendored basic catalog's top level is `$schema`, `$id`, `title`, `description`, `catalogId`, `components`, `functions`, `$defs`). The v1.0 codec will move this text to `instructions`. The text is a fixed preamble (what the library is, how binding works, the single `eventData` pattern: each event's payload at `<path>/<channel>` and each request at `<path>/<request>`, written before the matching `on<…>` action; how to answer a request at `<request>Result`; and that a two-way `value`'s `onChange` carries no other payload), followed by one line per component.
+- **Component `description`:** the `label`, then each affordance rendered as text ("browse, compare or edit a collection of 2 to 100,000 records"; "exactly 1 item" when the cardinality's min equals its max), then a summary of the component's actions.
 - **Property `description`:** the JSDoc text.
 
 None of this is hand-written per component. A component with a poor description has a poor manifest or poor JSDoc, and those are the places to fix it.
@@ -464,3 +470,6 @@ All four items open at approval were resolved by planning research on 2026-10-25
 | 2026-10-25 | One `onChange` may be both an `emits` `legacyOption` and the two-way write-back (§3.1, §3.3) | one callback in two roles is not a double claim; StickyNote leaves `PENDING_CLASSIFICATION` (94 → 93); user decision |
 | 2026-10-25 | `value` requires `field` only when two-way, paired with the ADR-134 `onChange` (§7.1) | a read-only `value` such as MetricCard's displayed metric is ordinary data at `display`; user decision |
 | 2026-10-25 | `bindAs` convention: a channel whose name collides with a data prop binds as `<channel>Change` (StickyNote and Annotation: `anchor` → `anchorChange`) | StickyNote's `anchor` channel and `anchor` option would share one catalog prop name; user decision |
+| 2026-10-25 | One naming rule for every catalog name, replacing the `bindAs` convention above: one binding-only `eventData` prop (payloads at `<path>/<channel>`, requests at `<path>/<request>`); a two-way `change` channel's payload is `value`; `on<Channel>` keeping a matching `legacyOption`'s casing; a manifest action with a channel's `id` is that event; provider = `{ request }` → `on<Request>` + `<request>Result`; `protocol.bindAs` removed; unknown `protocol` and provider keys rejected (§3.2, §5.4–5.6) | channel-named props, `<channel>Change`, a duplicated `change` channel, author-chosen provider names and miscased actions gave agents several shapes for one idea, and PermissionMatrix's `export` channel and action would both have become `onExport`; user decision |
+| 2026-10-25 | Component descriptions say "exactly N item(s)" when a cardinality's min equals its max (§5.6) | "of 1 to 1 items" read as a defect; user decision |
+| 2026-10-25 | v1 re-baselined before first publish: `specs/agentui/published/catalog-v1.json` deleted and regenerated with the naming rule, with `CATALOG_MAJOR` kept at 1. From the first push onward the breaking-change rule (§5.3) applies | the rule is breaking against the committed baseline, but nothing had been pushed, so v1 was not yet public; user decision |

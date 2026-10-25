@@ -432,13 +432,24 @@ member must be exactly one of:
 |---|---|---|
 | data | JSON-serialisable (a `Date` counts; it is sent as an ISO string) | write a JSDoc comment **on its own line above the member** — it is what the agent reads, and typia ignores a comment on the member's line |
 | event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` (one `onChange` may be both: a single callback in two roles) | nothing more |
-| provider | asks the host for data | declare it in `protocol.providers`; exactly one parameter |
+| provider | asks the host for data | declare it in `protocol.providers` as `{ request }`; exactly one parameter |
 | host-only | needs something JSON cannot carry | declare it in `protocol.hostOnly` with a reason of at least 20 characters |
 
 A data member that has a function, element or open record **nested inside it**
 (`columns[].renderer`) must declare that path in `protocol.hostOnly`. Every schema
 tool tried drops such parts silently, so an undeclared one fails the build.
 `unknown` and open records need `protocol.schemas`.
+
+**Catalog names are derived by one rule, with no override** (spec §5.4–5.5).
+Each event is an `on<Channel>` action (a `legacyOption` that is `on` + the
+channel name, compared case-insensitively, keeps its own casing); a manifest
+action is `on<Id>`, and one whose `id` equals a channel is that channel's event.
+Payloads go through ONE binding-only `eventData` prop: the component writes each
+event's payload to `<path>/<channel>` and each provider request to
+`<path>/<request>` before sending the action. A provider is `on<Request>` plus
+`<request>Result`, the prop the agent answers at. A two-way field's `onChange`
+channel carries its payload in `value`. Channel names are persisted Dynamic UI
+API, so they are never renamed to fix a name.
 
 **The conformance level is computed, not declared** (amends SURFACE_CONTRACT.md
 §1). `emits`, `accepts` or a provider require `surface`; a handle with
