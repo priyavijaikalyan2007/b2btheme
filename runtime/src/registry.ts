@@ -85,6 +85,7 @@ export function validateManifest(m: unknown): ValidationResult
     validatePorts(m, issues);
     validateWeightAndSize(m, issues);
     validateConformance(m, issues);
+    validateProtocol(m, issues);
 
     return result(issues);
 }
@@ -432,6 +433,125 @@ function validateConformance(
             + "canvas cannot restore it after virtualizing it.",
             "Declare the keys getState() returns, or lower conformance to "
             + "\"display\"."));
+    }
+}
+
+/** UAX #31 identifier, the A2UI v1.0 rule for names (spec §5.1). */
+const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
+
+/**
+ * Validates the optional agent-protocol declarations (ADR-219).
+ *
+ * @param m      - The candidate manifest.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateProtocol(
+    m: Record<string, unknown>,
+    issues: ValidationIssue[]): void
+{
+    if (m.protocol === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(m.protocol))
+    {
+        issues.push(typeIssue("protocol", "an object of protocol declarations", m.protocol));
+        return;
+    }
+
+    const p = m.protocol;
+
+    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
+    {
+        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
+    }
+
+    validateProviderMap(p.providers, issues);
+    validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
+    validateStringMap("protocol.bindAs", p.bindAs, "a UAX #31 prop name", issues, UAX31);
+    validateSchemaMap(p.schemas, issues);
+}
+
+/**
+ * Validates `protocol.providers`: every entry names its request, params and
+ * response props.
+ */
+function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.providers", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [option, spec] of Object.entries(v))
+    {
+        for (const key of ["request", "params", "response"])
+        {
+            const field = isObject(spec) ? spec[key] : undefined;
+
+            if (!(isNonEmptyString(field) && UAX31.test(field)))
+            {
+                issues.push(typeIssue(`protocol.providers.${option}.${key}`, "a UAX #31 identifier", field));
+            }
+        }
+    }
+}
+
+/** Validates a map whose values must be strings (optionally matching a pattern). */
+function validateStringMap(
+    path: string,
+    v: unknown,
+    expected: string,
+    issues: ValidationIssue[],
+    pattern?: RegExp): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue(path, "an object", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isNonEmptyString(value) || (pattern !== undefined && !pattern.test(value)))
+        {
+            issues.push(typeIssue(`${path}.${key}`, expected, value));
+        }
+    }
+}
+
+/** Validates `protocol.schemas`: every value is a JSON Schema object. */
+function validateSchemaMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.schemas", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isObject(value))
+        {
+            issues.push(typeIssue(`protocol.schemas.${key}`, "a JSON Schema object", value));
+        }
     }
 }
 

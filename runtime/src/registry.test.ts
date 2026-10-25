@@ -364,3 +364,70 @@ describe("validateManifest", () =>
         expect(res.ok).toBe(false);
     });
 });
+
+// ============================================================================
+// PROTOCOL FIELD (ADR-219)
+// ============================================================================
+
+describe("validateManifest — protocol field", () =>
+{
+    function base(protocol?: unknown): Record<string, unknown>
+    {
+        return {
+            name: "fake", factory: "createFake", label: "Fake", icon: "bi-square",
+            category: "data", affords: [], emits: [], accepts: [], actions: [],
+            stateKeys: [], weight: { js: 1, mountCost: "light", holdsResources: false },
+            defaultSize: { w: 10, h: 10 }, defaultOptions: {}, conformance: "display",
+            priority: 50,
+            ...(protocol === undefined ? {} : { protocol }),
+        };
+    }
+
+    test("a manifest without protocol stays valid", () =>
+    {
+        expect(validateManifest(base()).ok).toBe(true);
+    });
+
+    test("a complete protocol is valid", () =>
+    {
+        const protocol = {
+            name: "Fake",
+            providers: { onSearch: { request: "search", params: "searchQuery", response: "searchResults" } },
+            hostOnly: { renderCell: "Takes a DOM element, which JSON cannot carry." },
+            schemas: { extra: { type: "object" } },
+            bindAs: { selection: "selectedRows" },
+        };
+
+        expect(validateManifest(base(protocol)).ok).toBe(true);
+    });
+
+    test("protocol must be an object", () =>
+    {
+        expect(validateManifest(base("yes")).ok).toBe(false);
+    });
+
+    test("protocol.name must be a UAX #31 identifier", () =>
+    {
+        expect(validateManifest(base({ name: "user-card" })).ok).toBe(false);
+    });
+
+    test("a provider needs request, params and response", () =>
+    {
+        expect(validateManifest(base({ providers: { onSearch: { request: "search" } } })).ok).toBe(false);
+    });
+
+    test("hostOnly reasons must be strings", () =>
+    {
+        expect(validateManifest(base({ hostOnly: { renderCell: 3 } })).ok).toBe(false);
+    });
+
+    test("schemas values must be objects", () =>
+    {
+        expect(validateManifest(base({ schemas: { extra: "object" } })).ok).toBe(false);
+    });
+
+    test("bindAs values must be identifiers", () =>
+    {
+        expect(validateManifest(base({ bindAs: { selection: "" } })).ok).toBe(false);
+    });
+});
