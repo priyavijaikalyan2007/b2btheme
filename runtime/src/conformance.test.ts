@@ -609,7 +609,7 @@ describe("requiredLevel", () =>
     test("providers require surface", () =>
     {
         const m = manifest({ emits: [], accepts: [],
-            protocol: { providers: { onSearch: { request: "search", params: "q", response: "r" } } } });
+            protocol: { providers: { onSearch: { request: "search" } } } });
         expect(requiredLevel(m, {})).toBe("surface");
     });
     test("getValue and setValue require field", () =>

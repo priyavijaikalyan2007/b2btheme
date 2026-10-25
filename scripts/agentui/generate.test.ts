@@ -29,7 +29,7 @@ function widget(protocolOver: Record<string, unknown> = {})
         affords: [], emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }],
         accepts: [], actions: [], conformance: "surface", defaultOptions: { pageSize: 25 },
         protocol: {
-            providers: { onSearch: { request: "search", params: "searchQuery", response: "searchResults" } },
+            providers: { onSearch: { request: "search" } },
             hostOnly: {
                 "columns[].renderer": REASON, title: REASON, container: "Needs a DOM node, which JSON cannot carry.",
                 slot: "A live component instance with methods.", onLookup: "Two-parameter lookup with no single-object form.",
@@ -54,6 +54,15 @@ describe("runPipeline — fixture widget", () =>
     test("a fully declared component produces no errors", () => { expect(run([widget()]).errors).toEqual([]); }, 60_000);
     test("it emits its options schema", () => { expect(run([widget()]).outputs.has("schemas/widget.options.json")).toBe(true); }, 60_000);
     test("it appears in the catalog", () => { expect("Widget" in run([widget()]).catalog.components).toBe(true); }, 60_000);
+    test("its catalog entry follows the naming rule: eventData, on<Channel>, on<Request> and <request>Result", () =>
+    {
+        const props = (run([widget()]).catalog.components as any).Widget.allOf[2].properties;
+        const derived = Object.keys(props).filter((k) => ["eventData", "selection", "searchQuery"].includes(k)
+            || k.startsWith("on") || k.endsWith("Result") || k.endsWith("Results"));
+
+        expect(derived.sort()).toEqual(["eventData", "onSearch", "onSelection", "searchResult"]);
+        expect(props.searchResult.oneOf[0]).toMatchObject({ type: "array", items: { type: "string" } });
+    }, 60_000);
     test("the override replaces the too-broad schema", () =>
     {
         const schema = run([widget()]).outputs.get("schemas/widget.options.json") as any;

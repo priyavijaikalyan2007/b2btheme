@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { MIN_REASON_LENGTH, VIOLATION, pascal, resolveSurface } from "./resolve.mjs";
+import { MIN_REASON_LENGTH, VIOLATION, actionPropFor, pascal, resolveSurface } from "./resolve.mjs";
 
 type M = Record<string, unknown>;
 
@@ -60,17 +60,11 @@ describe("resolve — classes", () =>
         const m = manifest({ emits: [{ name: "selection", payload: "collection", legacyOption: "onSelect" }] });
         expect(codes(m, [member("onSelect", "element")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
     });
-    test("an event gets a bind prop and an action prop", () =>
+    test("an event is its channel, option, action prop and payload, and nothing to bind", () =>
     {
         const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
-        expect(resolveSurface(m, [member("onSelect", "function")]).events[0])
-            .toMatchObject({ bindProp: "selection", actionProp: "onSelection" });
-    });
-    test("bindAs renames the bind prop", () =>
-    {
-        const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true }],
-            protocol: { bindAs: { selection: "selectedRows" } } });
-        expect(resolveSurface(m, []).events[0].bindProp).toBe("selectedRows");
+        expect(resolveSurface(m, [member("onSelect", "function")]).events[0]).toEqual({ channel: "selection",
+            option: "onSelect", actionProp: "onSelection", payload: "collection", payloadInValue: false });
     });
     test("onChange beside value is the two-way write-back", () =>
     {
@@ -141,10 +135,6 @@ describe("resolve — declarations", () =>
             protocol: { hostOnly: { onSelect: REASON } } });
         expect(codes(m, [member("onSelect", "function")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
     });
-    test("a stale bindAs key fails", () =>
-    {
-        expect(codes(manifest({ protocol: { bindAs: { nope: "x" } } }), [])).toEqual([VIOLATION.STALE_DECLARATION]);
-    });
     test("a data member without JSDoc fails", () =>
     {
         expect(codes(manifest(), [member("label", "data", { jsdoc: "" })])).toEqual([VIOLATION.MISSING_JSDOC]);
@@ -162,12 +152,12 @@ describe("resolve — declarations", () =>
 
 describe("resolve — providers", () =>
 {
-    const spec = { onSearch: { request: "search", params: "searchQuery", response: "searchResults" } };
+    const spec = { onSearch: { request: "search" } };
 
-    test("a one-parameter provider resolves", () =>
+    test("a provider is named from its request alone: on<Request> and <request>Result", () =>
     {
-        expect(resolveSurface(manifest({ protocol: { providers: spec } }), [member("onSearch", "function")]).providers[0])
-            .toMatchObject({ actionProp: "onSearch", params: "searchQuery", response: "searchResults" });
+        expect(resolveSurface(manifest({ protocol: { providers: spec } }), [member("onSearch", "function")]).providers)
+            .toEqual([{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }]);
     });
     test("a two-parameter provider fails", () =>
     {
@@ -192,7 +182,7 @@ describe("resolve — multiple claims", () =>
     {
         const m = manifest({
             emits: [{ name: "selection", payload: "collection", legacyOption: "onSelect" }],
-            protocol: { providers: { onSelect: { request: "search", params: "q", response: "results" } } }
+            protocol: { providers: { onSelect: { request: "search" } } }
         });
         expect(codes(m, [member("onSelect", "function")])).toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
     });
@@ -216,5 +206,57 @@ describe("resolve — multiple claims", () =>
         expect(surface.violations).toEqual([]);
         expect(surface.twoWayValue).toBe(true);
         expect(surface.events.map((e: M) => e.actionProp)).toEqual(["onSelection"]);
+    });
+});
+
+describe("resolve — naming rule (user decision, 2026-10-25)", () =>
+{
+    test("a legacyOption matching its channel case-insensitively is the action name verbatim", () =>
+    {
+        expect(actionPropFor("bulkchange", "onBulkChange")).toBe("onBulkChange");
+        expect(actionPropFor("signout", "onSignOut")).toBe("onSignOut");
+        expect(actionPropFor("selectCanvas", "onSelectCanvas")).toBe("onSelectCanvas");
+    });
+    test("a legacyOption that does not match its channel yields on + PascalCase(channel)", () =>
+    {
+        expect(actionPropFor("selection", "onSelect")).toBe("onSelection");
+        expect(actionPropFor("anchor", "onAnchorChange")).toBe("onAnchor");
+    });
+    test("no legacyOption yields on + PascalCase(channel)", () =>
+    {
+        expect(actionPropFor("row-activate", undefined)).toBe("onRowActivate");
+    });
+    test("an event's action prop follows the rule from the manifest's legacyOption", () =>
+    {
+        const m = manifest({ emits: [{ name: "bulkchange", payload: "collection", legacyOption: "onBulkChange" }] });
+        expect(resolveSurface(m, [member("onBulkChange", "function")]).events[0].actionProp).toBe("onBulkChange");
+    });
+    test("a two-way field's change channel carries its payload in value", () =>
+    {
+        const m = manifest({ conformance: "field", emits: [{ name: "change", payload: "scalar", legacyOption: "onChange" }] });
+        const surface = resolveSurface(m, [member("value", "data"), member("onChange", "function")]);
+
+        expect(surface.violations).toEqual([]);
+        expect(surface.events).toEqual([{ channel: "change", option: "onChange", actionProp: "onChange",
+            payload: "scalar", payloadInValue: true }]);
+    });
+    test("an onChange channel without a value member is an ordinary payload-carrying event", () =>
+    {
+        const m = manifest({ emits: [{ name: "change", payload: "scalar", legacyOption: "onChange" }] });
+        expect(resolveSurface(m, [member("onChange", "function")]).events[0].payloadInValue).toBe(false);
+    });
+    test("a manifest action whose id equals a channel is the same event: one action prop, no duplicate", () =>
+    {
+        const m = manifest({ emits: [{ name: "export", payload: "collection" }],
+            actions: [{ id: "export", label: "Export" }, { id: "reset", label: "Reset" }] });
+        const surface = resolveSurface(m, []);
+
+        expect(surface.events.map((e: M) => e.actionProp)).toEqual(["onExport"]);
+        expect(surface.actions).toEqual([{ id: "reset", label: "Reset", actionProp: "onReset" }]);
+    });
+    test("a manifest action is on + PascalCase(id)", () =>
+    {
+        expect(resolveSurface(manifest({ actions: [{ id: "bulk-edit", label: "Edit" }] }), []).actions[0].actionProp)
+            .toBe("onBulkEdit");
     });
 });

@@ -19,7 +19,7 @@ const CACHE = path.join(__dirname, "..", "..", "node_modules", ".cache", "agentu
 const ENTRY = {
     id: "widget", alias: "AgentUiWidget", file: path.join(FIXTURES, "widget.ts"), factory: "createWidget",
     paramIndex: 1, pick: ["pageSize", "columns", "value", "title"],
-    providers: [{ option: "onSearch", params: "searchQuery", response: "searchResults" }],
+    providers: [{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }],
 };
 
 let schema: Record<string, any>;
@@ -36,7 +36,7 @@ describe("emitSchemas — typia 12.2.1 on the fixture widget", () =>
     test("emits exactly the picked members and provider props", () =>
     {
         expect(Object.keys(schema.properties).sort())
-            .toEqual(["columns", "pageSize", "searchQuery", "searchResults", "title", "value"]);
+            .toEqual(["columns", "pageSize", "searchResult", "title", "value"]);
     });
     test("drops the declared nested callback", () =>
     {
@@ -49,10 +49,9 @@ describe("emitSchemas — typia 12.2.1 on the fixture widget", () =>
     {
         expect(schema.properties.pageSize.description).toBe("Rows per page.");
     });
-    test("derives provider params from the parameter", () => { expect(schema.properties.searchQuery.type).toBe("string"); });
-    test("derives provider response from the awaited return", () =>
+    test("derives <request>Result from the provider's awaited return", () =>
     {
-        expect(schema.properties.searchResults.type).toBe("array");
+        expect(schema.properties.searchResult).toMatchObject({ type: "array", items: { type: "string" } });
     });
 });
 
@@ -61,6 +60,13 @@ describe("entrySource", () =>
     test("imports the factory as a type, never by interface name", () =>
     {
         expect(entrySource(ENTRY, CACHE)).toContain("import type { createWidget } from");
+    });
+    test("a provider contributes only its <request>Result, never a params member", () =>
+    {
+        const source = entrySource(ENTRY, CACHE);
+
+        expect(source).toContain("searchResult?: Awaited<ReturnType<NonNullable<Options[\"onSearch\"]>>>;");
+        expect(source).not.toContain("Parameters<NonNullable<Options");
     });
     test("an empty pick picks never", () =>
     {

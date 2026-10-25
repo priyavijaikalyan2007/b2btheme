@@ -467,15 +467,41 @@ function validateProtocol(
         issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
     }
 
+    unknownKeys("protocol", p, PROTOCOL_KEYS, issues);
     validateProviderMap(p.providers, issues);
     validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
-    validateStringMap("protocol.bindAs", p.bindAs, "a UAX #31 prop name", issues, UAX31);
     validateSchemaMap(p.schemas, issues);
 }
 
+/** The keys `protocol` may carry. */
+const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas"];
+
+/** The keys a provider spec may carry; every catalog name derives from `request`. */
+const PROVIDER_KEYS: readonly string[] = ["request"];
+
 /**
- * Validates `protocol.providers`: every entry names its request, params and
- * response props.
+ * Reports every key of `obj` outside `allowed`. The generator derives all
+ * catalog names (spec §5.4), so a key it does not read, such as a removed
+ * `bindAs` or a provider's old `params`, would otherwise pass silently.
+ */
+function unknownKeys(
+    path: string,
+    obj: Record<string, unknown>,
+    allowed: readonly string[],
+    issues: ValidationIssue[]): void
+{
+    for (const key of Object.keys(obj).filter((k) => !allowed.includes(k)))
+    {
+        issues.push(issue(
+            `${path}.${key}`,
+            `"${key}" is not a ${path} key; nothing reads it, so it would be ignored silently.`,
+            `Remove it. ${path} takes only ${allowed.join(", ")}.`));
+    }
+}
+
+/**
+ * Validates `protocol.providers`: every entry names its request and nothing
+ * else.
  */
 function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
 {
@@ -492,14 +518,16 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
 
     for (const [option, spec] of Object.entries(v))
     {
-        for (const key of ["request", "params", "response"])
-        {
-            const field = isObject(spec) ? spec[key] : undefined;
+        const request = isObject(spec) ? spec.request : undefined;
 
-            if (!(isNonEmptyString(field) && UAX31.test(field)))
-            {
-                issues.push(typeIssue(`protocol.providers.${option}.${key}`, "a UAX #31 identifier", field));
-            }
+        if (!(isNonEmptyString(request) && UAX31.test(request)))
+        {
+            issues.push(typeIssue(`protocol.providers.${option}.request`, "a UAX #31 identifier", request));
+        }
+
+        if (isObject(spec))
+        {
+            unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
         }
     }
 }

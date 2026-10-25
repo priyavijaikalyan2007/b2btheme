@@ -194,20 +194,15 @@ export interface WeightSpec
 
 /**
  * A function-typed option that asks the host for data (ADR-219, spec §3.2).
- * Over A2UI it becomes three catalog properties: `<params>` (the component
- * writes the request there), `on<Request>` (fired after the write) and
- * `<response>` (the agent answers there with updateDataModel).
+ * Every catalog name is derived from `request` (spec §5.5): the component
+ * writes the request to `<eventData path>/<request>`, then sends
+ * `on<Request>`; the agent answers with updateDataModel at the path bound
+ * to `<request>Result`.
  */
 export interface ProviderSpec
 {
     /** Catalog name of the request, e.g. "search". UAX #31. */
     readonly request: string;
-
-    /** Data-prop name the component writes the request parameters to. */
-    readonly params: string;
-
-    /** Data-prop name the agent binds the answer to. */
-    readonly response: string;
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
@@ -235,9 +230,6 @@ export interface ProtocolSpec
      * to generate from (`unknown`, `Record<string, unknown>`), keyed by option.
      */
     readonly schemas?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
-
-    /** Catalog prop name for a channel's bindable value, keyed by channel. */
-    readonly bindAs?: Readonly<Record<string, string>>;
 }
 
 /**

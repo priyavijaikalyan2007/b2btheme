@@ -41,6 +41,25 @@ export function pascal(s)
 }
 
 /**
+ * The catalog action prop for a channel (user decision, 2026-10-25). A
+ * legacyOption that is "on" + the channel name, compared case-insensitively,
+ * is used verbatim, so its casing survives (`bulkchange` + `onBulkChange` →
+ * `onBulkChange`). Anything else, or no legacyOption, is "on" +
+ * PascalCase(channel) (`selection` + `onSelect` → `onSelection`).
+ *
+ * @param channel      - The emits channel name.
+ * @param legacyOption - The channel's declared legacyOption, if any.
+ * @returns The action prop name.
+ */
+export function actionPropFor(channel, legacyOption)
+{
+    const matches = typeof legacyOption === "string" && legacyOption.startsWith("on")
+        && legacyOption.slice(2).toLowerCase() === channel.toLowerCase();
+
+    return matches ? legacyOption : `on${pascal(channel)}`;
+}
+
+/**
  * Resolves one component's protocol surface (spec §3).
  *
  * @param manifest - The capability manifest.
@@ -52,9 +71,9 @@ export function resolveSurface(manifest, members)
 {
     const protocol = manifest.protocol ?? {};
     const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [], violated: new Set() };
-    const events = resolveEvents(ctx);
-    const providers = resolveProviders(ctx);
     const twoWayValue = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
+    const events = resolveEvents(ctx, twoWayValue);
+    const providers = resolveProviders(ctx);
     const claimed = claimedNames(ctx, events, twoWayValue);
 
     checkMultipleClaims(ctx, events, providers, twoWayValue);
@@ -78,8 +97,12 @@ export function violate(ctx, member, code, message)
         message: `${name}.${member}: ${message} (components/${name}/${name}.manifest.ts)` });
 }
 
-/** One event per emits channel: a bindable prop plus an on<Channel> action. */
-function resolveEvents(ctx)
+/**
+ * One event per emits channel, named by actionPropFor. A two-way field's
+ * onChange channel carries its payload in `value` (payloadInValue), so
+ * nothing is written under eventData for it.
+ */
+function resolveEvents(ctx, twoWayValue)
 {
     return ctx.manifest.emits.map((c) =>
     {
@@ -103,14 +126,14 @@ function resolveEvents(ctx)
         return {
             channel: c.name,
             option,
-            bindProp: ctx.protocol.bindAs?.[c.name] ?? c.name,
-            actionProp: `on${pascal(c.name)}`,
+            actionProp: actionPropFor(c.name, c.legacyOption),
             payload: c.payload,
+            payloadInValue: twoWayValue && option === "onChange",
         };
     });
 }
 
-/** Providers that name a one-parameter function member. */
+/** Providers that name a one-parameter function member: on<Request> and <request>Result. */
 function resolveProviders(ctx)
 {
     return Object.entries(ctx.protocol.providers ?? {}).flatMap(([option, spec]) =>
@@ -125,12 +148,12 @@ function resolveProviders(ctx)
         if (m.arity !== 1)
         {
             violate(ctx, option, VIOLATION.PROVIDER_ARITY, `provider takes ${m.arity} parameters; a provider `
-                + `takes exactly one, which becomes the "${spec.params}" prop. Declare it in protocol.hostOnly `
-                + "instead, or give the component an additive single-object variant.");
+                + `takes exactly one, which the component writes to <eventData path>/${spec.request}. Declare it `
+                + "in protocol.hostOnly instead, or give the component an additive single-object variant.");
             return [];
         }
 
-        return [{ option, ...spec, actionProp: `on${pascal(spec.request)}` }];
+        return [{ option, request: spec.request, actionProp: `on${pascal(spec.request)}`, response: `${spec.request}Result` }];
     });
 }
 
@@ -271,12 +294,10 @@ function checkStaleDeclarations(ctx, members)
     const { protocol } = ctx;
     const isMember = (k) => ctx.byName.has(k);
     const isPath = (k) => members.some((m) => m.hazards.some((h) => isCovered(h.path, { [k]: "" })));
-    const channels = new Set(ctx.manifest.emits.map((e) => e.name));
 
     staleKeys(ctx, protocol.hostOnly, (k) => isMember(k) || isPath(k), "protocol.hostOnly");
     staleKeys(ctx, protocol.providers, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.FUNCTION, "protocol.providers");
     staleKeys(ctx, protocol.schemas, isMember, "protocol.schemas");
-    staleKeys(ctx, protocol.bindAs, (k) => channels.has(k), "protocol.bindAs");
 
     for (const [key, reason] of Object.entries(protocol.hostOnly ?? {}).filter(([, r]) => r.length < MIN_REASON_LENGTH))
     {
@@ -310,8 +331,15 @@ function checkValueLevel(ctx, dataProps, twoWayValue)
     }
 }
 
-/** One on<Id> action prop per declared manifest action. */
+/**
+ * One on<Id> action prop per declared manifest action. An action whose id
+ * equals a channel name is the same event, so the channel's action stands
+ * for both and no separate entry is made.
+ */
 function resolveActions(manifest)
 {
-    return manifest.actions.map((a) => ({ id: a.id, label: a.label, actionProp: `on${pascal(a.id)}` }));
+    const channels = new Set(manifest.emits.map((c) => c.name));
+
+    return manifest.actions.filter((a) => !channels.has(a.id))
+        .map((a) => ({ id: a.id, label: a.label, actionProp: `on${pascal(a.id)}` }));
 }

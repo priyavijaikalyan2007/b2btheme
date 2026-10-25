@@ -6,7 +6,8 @@
  * ⚓ COMPONENT: AgentUiCatalog
  * 📜 PURPOSE: Assemble the A2UI v0.9.1 catalog file from manifests, surfaces
  *    and schemas: basic-catalog re-exports plus one entry per component,
- *    with channels and providers expanded to plain properties. Spec §5.
+ *    with channels and providers expanded to plain properties by one naming
+ *    rule: eventData, on<Channel>, on<Request>, <request>Result. Spec §5.4–5.5.
  * 🔗 RELATES: [[AgentProtocolSchema]], [[AgentUiResolver]], [[AgentUiNormaliser]]
  * ⚡ FLOW: [manifest + surface + schema] -> [entryFor] -> [buildCatalog]
  *          -> [catalog file + violations]
@@ -27,9 +28,13 @@ const BINDING = { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` };
 const ACTION_REF = `${COMMON_TYPES_ID}#/$defs/Action`;
 const PREAMBLE = "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and "
     + "functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} "
-    + "binding. For each event a component emits, it has a binding property it writes each emission to, and an "
-    + "on<Event> action property. Bind the first to a path and read that path in the action's context; the "
-    + "context is resolved after the write.";
+    + "binding. Each event a component emits has an on<Event> action property. A component whose events or "
+    + "requests carry a payload has one binding-only eventData property: bind it to a path, and the component "
+    + "writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending "
+    + "the matching action, so read that path in the action's context; the context is resolved after the "
+    + "write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound "
+    + "to its <request>Result property. A two-way value property receives the user's changes at its bound "
+    + "path, and its onChange action carries no other payload.";
 
 /** The permanent catalog ID for a catalog major version. */
 export function catalogId(major)
@@ -118,14 +123,14 @@ function entryFor({ manifest, surface, schema })
 {
     const name = catalogName(manifest);
     const { root, defs } = relocateDefs(schema, name);
-    const groups = [dataProps(surface, root, manifest.name), channelProps(surface),
-        providerProps(surface, root, manifest.name), actionProps(surface)];
-    const props = Object.assign({ component: { const: name } }, ...groups);
+    const entries = [...dataProps(surface, root, manifest.name), ...eventDataProp(surface), ...channelProps(surface),
+        ...providerProps(surface, root, manifest.name), ...actionProps(surface)];
+    const props = Object.fromEntries([["component", { const: name }], ...entries]);
     const dataNames = new Set(surface.dataProps.map((d) => d.name));
 
     return {
         name, defs,
-        violations: propCollisions(manifest, groups),
+        violations: propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
         entry: {
             type: "object",
             description: describeComponent(manifest),
@@ -172,61 +177,76 @@ function requireProperty(root, component, kind, prop)
 /** Data props: literal-or-binding, description outside the oneOf. */
 function dataProps(surface, root, component)
 {
-    return Object.fromEntries(surface.dataProps.map((d) =>
+    return surface.dataProps.map((d) =>
     {
         const { description, ...schema } = requireProperty(root, component, "data prop", d.name);
         const twoWay = d.name === "value" && surface.twoWayValue
             ? " Two-way: when bound to a path, the component writes the user's changes there." : "";
 
         return [d.name, { description: `${description ?? d.jsdoc}${twoWay}`, oneOf: [schema, BINDING] }];
-    }));
+    });
 }
 
-/** Each channel: a binding-only prop the component writes, and an on<Channel> Action. */
+/**
+ * The one binding-only eventData prop, present only when some event or
+ * provider carries a payload (a two-way field's change carries it in value).
+ */
+function eventDataProp(surface)
+{
+    const carries = surface.events.some((e) => !e.payloadInValue) || surface.providers.length > 0;
+
+    return carries ? [["eventData", { description: "Bind to a path. The component writes each event's payload "
+        + "to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+    ...BINDING }]] : [];
+}
+
+/** Each channel: an on<Channel> Action whose description says where its payload is. */
 function channelProps(surface)
 {
-    return Object.fromEntries(surface.events.flatMap((e) => [
-        [e.bindProp, { description: `Bind to a path. The component writes each "${e.channel}" emission `
-            + `(a ${e.payload}) there before sending ${e.actionProp}.`, ...BINDING }],
-        [e.actionProp, { description: `Sent when "${e.channel}" emits. Read the emission through the path `
-            + `bound to ${e.bindProp}.`, $ref: ACTION_REF }],
-    ]));
+    return surface.events.map((e) => [e.actionProp, { $ref: ACTION_REF, description: e.payloadInValue
+        ? "Sent when the value changes. Read the new value through the path bound to `value`."
+        : `Sent when "${e.channel}" emits. Its payload is at <eventData path>/${e.channel}.` }]);
 }
 
-/** Each provider: params (component writes), on<Request> Action, response (agent answers). */
+/** Each provider: on<Request> Action (request under eventData) and <request>Result (agent answers). */
 function providerProps(surface, root, component)
 {
-    return Object.fromEntries(surface.providers.flatMap((p) =>
+    return surface.providers.flatMap((p) =>
     {
         const { description, ...response } = requireProperty(root, component, "provider response", p.response);
         void description;
 
         return [
-            [p.params, { description: `Bind to a path. The component writes the "${p.request}" request there `
-                + `before sending ${p.actionProp}.`, ...BINDING }],
-            [p.actionProp, { description: `Sent when the component needs "${p.request}" answered.`, $ref: ACTION_REF }],
+            [p.actionProp, { description: `Sent when the component needs "${p.request}" answered. Its request is `
+                + `at <eventData path>/${p.request}. Answer with updateDataModel at the path bound to ${p.response}.`,
+            $ref: ACTION_REF }],
             [p.response, { description: `Bind to the path you will answer ${p.actionProp} at with updateDataModel.`,
                 oneOf: [response, BINDING] }],
         ];
-    }));
+    });
 }
 
+/** Each manifest action not merged into a same-named channel: an on<Id> Action. */
 function actionProps(surface)
 {
-    return Object.fromEntries(surface.actions.map((a) =>
-        [a.actionProp, { description: `Sent when the user invokes "${a.label}".`, $ref: ACTION_REF }]));
+    return surface.actions.map((a) =>
+        [a.actionProp, { description: `Sent when the user invokes "${a.label}".`, $ref: ACTION_REF }]);
 }
 
-/** A generated prop name used twice within one component. */
-function propCollisions(manifest, groups)
+/**
+ * A generated prop name used twice within one component. Checked on the
+ * name list, before Object.fromEntries could silently keep only the last.
+ */
+function propCollisions(manifest, names)
 {
-    const names = ["component", ...groups.flatMap((g) => Object.keys(g))];
     const dupes = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
 
     return dupes.map((n) => ({
         component: manifest.name, member: n, code: VIOLATION.PROP_COLLISION,
-        message: `${manifest.name}.${n}: two catalog properties would share the name "${n}". Rename the `
-            + `channel's prop with protocol.bindAs, or the provider's params/response, in `
+        message: `${manifest.name}.${n}: two catalog properties would share the name "${n}". Catalog names are `
+            + "derived by one rule with no override (specs/agentui-schema.prd.md §5.4): eventData, on<Channel>, "
+            + "on<Id>, on<Request> and <request>Result. Change the protocol.providers request or the actions[] id "
+            + "that derives it, or declare the colliding data option in protocol.hostOnly, in "
             + `components/${manifest.name}/${manifest.name}.manifest.ts`,
     }));
 }
@@ -262,10 +282,16 @@ function nameViolations(basic, components)
 export function describeComponent(manifest)
 {
     const uses = manifest.affords.map((a) =>
-        `Use it to ${a.intents.join(", ")} a ${a.shape}${a.cardinality ? ` of ${a.cardinality.min} to ${a.cardinality.max} items` : ""}.`);
+        `Use it to ${a.intents.join(", ")} a ${a.shape}${a.cardinality ? cardinalityText(a.cardinality) : ""}.`);
     const actions = manifest.actions.length > 0 ? [`Actions: ${manifest.actions.map((a) => a.label).join(", ")}.`] : [];
 
     return [`${manifest.label}.`, ...uses, ...actions].join(" ");
+}
+
+/** " of 2 to 500 items"; " of exactly 1 item" when min equals max. */
+function cardinalityText({ min, max })
+{
+    return min === max ? ` of exactly ${min} item${min === 1 ? "" : "s"}` : ` of ${min} to ${max} items`;
 }
 
 /** The catalog description: preamble, then one line per component. */

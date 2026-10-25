@@ -392,10 +392,9 @@ describe("validateManifest — protocol field", () =>
     {
         const protocol = {
             name: "Fake",
-            providers: { onSearch: { request: "search", params: "searchQuery", response: "searchResults" } },
+            providers: { onSearch: { request: "search" } },
             hostOnly: { renderCell: "Takes a DOM element, which JSON cannot carry." },
             schemas: { extra: { type: "object" } },
-            bindAs: { selection: "selectedRows" },
         };
 
         expect(validateManifest(base(protocol)).ok).toBe(true);
@@ -411,9 +410,32 @@ describe("validateManifest — protocol field", () =>
         expect(validateManifest(base({ name: "user-card" })).ok).toBe(false);
     });
 
-    test("a provider needs request, params and response", () =>
+    test("a provider needs a UAX #31 request", () =>
     {
-        expect(validateManifest(base({ providers: { onSearch: { request: "search" } } })).ok).toBe(false);
+        expect(validateManifest(base({ providers: { onSearch: {} } })).ok).toBe(false);
+        expect(validateManifest(base({ providers: { onSearch: { request: "find-all" } } })).ok).toBe(false);
+    });
+
+    // Unknown keys are REJECTED, in a provider spec and in protocol itself.
+    // Since 2026-10-25 every catalog name is derived (on<Request>,
+    // <request>Result, eventData), so nothing in the generator reads a
+    // provider's old params/response or protocol.bindAs. A leftover would pass
+    // every other gate silently; this validator is the one place left to say so.
+    test("a provider's leftover params or response key is rejected", () =>
+    {
+        const res = validateManifest(base({ providers: { onSearch: { request: "search", params: "q", response: "r" } } }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.map((i) => i.path).sort())
+            .toEqual(["protocol.providers.onSearch.params", "protocol.providers.onSearch.response"]);
+    });
+
+    test("an unknown protocol key such as the removed bindAs is rejected", () =>
+    {
+        const res = validateManifest(base({ bindAs: { anchor: "anchorChange" } }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.map((i) => i.path)).toEqual(["protocol.bindAs"]);
     });
 
     test("hostOnly reasons must be strings", () =>
@@ -424,10 +446,5 @@ describe("validateManifest — protocol field", () =>
     test("schemas values must be objects", () =>
     {
         expect(validateManifest(base({ schemas: { extra: "object" } })).ok).toBe(false);
-    });
-
-    test("bindAs values must be identifiers", () =>
-    {
-        expect(validateManifest(base({ bindAs: { selection: "" } })).ok).toBe(false);
     });
 });

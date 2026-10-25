@@ -27,17 +27,18 @@ const typiaTransform = require("typia/lib/transform").default;
 /**
  * The TypeScript source of one typia entry file.
  *
- * @param entry    - { alias, file, factory, paramIndex, pick, providers }.
+ * @param entry    - { alias, file, factory, paramIndex, pick, providers }; each
+ *                   provider is { option, response } from resolveSurface.
  * @param cacheDir - Directory the entry file is written to.
  * @returns The source text.
  */
 export function entrySource(entry, cacheDir)
 {
     const pick = entry.pick.length > 0 ? entry.pick.map((n) => JSON.stringify(n)).join(" | ") : "never";
-    const extras = entry.providers.flatMap((p) => [
-        `    ${p.params}?: Parameters<NonNullable<Options[${JSON.stringify(p.option)}]>>[0];`,
-        `    ${p.response}?: Awaited<ReturnType<NonNullable<Options[${JSON.stringify(p.option)}]>>>;`,
-    ]);
+    // A provider's request goes under eventData (binding-only, no schema);
+    // only its answer, <request>Result, is typed: the awaited return.
+    const extras = entry.providers.map((p) =>
+        `    ${p.response}?: Awaited<ReturnType<NonNullable<Options[${JSON.stringify(p.option)}]>>>;`);
     const shape = extras.length > 0 ? [`Pick<Options, ${pick}> & {`, ...extras, "}"] : [`Pick<Options, ${pick}>`];
 
     return [

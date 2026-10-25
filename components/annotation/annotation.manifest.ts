@@ -65,8 +65,6 @@ export const ANNOTATION_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 140 },
     defaultOptions: {},
 
-    protocol: { bindAs: { anchor: "anchorChange" } },
-
     conformance: "surface",
     priority: 25,
 };

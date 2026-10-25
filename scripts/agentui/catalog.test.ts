@@ -27,7 +27,7 @@ const SCHEMA = {
     properties: {
         pageSize: { type: "number", description: "Rows per page." },
         columns: { type: "array", items: { $ref: "#/$defs/Col" } },
-        searchResults: { type: "array", items: { type: "string" } },
+        searchResult: { type: "array", items: { type: "string" } },
     },
     required: ["columns"],
     $defs: { Col: { type: "object", properties: { id: { type: "string" } }, additionalProperties: false } },
@@ -36,8 +36,8 @@ const SURFACE = {
     name: "widget",
     dataProps: [{ name: "pageSize", jsdoc: "Rows per page." }, { name: "columns", jsdoc: "Columns." }],
     twoWayValue: false,
-    events: [{ channel: "selection", option: "onSelect", bindProp: "selection", actionProp: "onSelection", payload: "collection" }],
-    providers: [{ option: "onSearch", request: "search", params: "searchQuery", response: "searchResults", actionProp: "onSearch" }],
+    events: [{ channel: "selection", option: "onSelect", actionProp: "onSelection", payload: "collection", payloadInValue: false }],
+    providers: [{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }],
     actions: [{ id: "export", label: "Export CSV", actionProp: "onExport" }],
     hostOnly: {}, violations: [],
 };
@@ -99,17 +99,48 @@ describe("catalog — component entry", () =>
     {
         expect(ownProps(build().catalog, "Widget").pageSize.oneOf[1]).toEqual({ $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` });
     });
-    test("a channel's bind prop is binding-only", () =>
+    test("one binding-only eventData prop carries every payload", () =>
     {
-        expect(ownProps(build().catalog, "Widget").selection.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/DataBinding`);
+        const { eventData } = ownProps(build().catalog, "Widget");
+
+        expect(eventData.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/DataBinding`);
+        expect(eventData.description).toContain("<path>/<channel>");
+        expect(eventData.description).toContain("<path>/<request>");
     });
-    test("a channel has an on<Channel> Action", () =>
+    test("no channel-named or params props remain", () =>
     {
-        expect(ownProps(build().catalog, "Widget").onSelection.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
+        const props = ownProps(build().catalog, "Widget");
+        expect(["selection", "searchQuery", "searchResults"].filter((p) => p in props)).toEqual([]);
     });
-    test("a provider gets params, action and response", () =>
+    test("a channel has an on<Channel> Action that says where its payload is", () =>
     {
-        expect(["searchQuery", "onSearch", "searchResults"].every((p) => p in ownProps(build().catalog, "Widget"))).toBe(true);
+        const { onSelection } = ownProps(build().catalog, "Widget");
+
+        expect(onSelection.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
+        expect(onSelection.description).toBe("Sent when \"selection\" emits. Its payload is at <eventData path>/selection.");
+    });
+    test("a provider gets on<Request> and <request>Result", () =>
+    {
+        const props = ownProps(build().catalog, "Widget");
+
+        expect(props.onSearch.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
+        expect(props.onSearch.description).toContain("<eventData path>/search");
+        expect(props.searchResult.oneOf[0]).toEqual({ type: "array", items: { type: "string" } });
+    });
+    test("eventData is absent when no event or provider carries a payload", () =>
+    {
+        const s = { ...SURFACE, twoWayValue: true, providers: [],
+            events: [{ channel: "change", option: "onChange", actionProp: "onChange", payload: "scalar", payloadInValue: true }] };
+        const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget");
+
+        expect("eventData" in props).toBe(false);
+        expect(props.onChange.description)
+            .toBe("Sent when the value changes. Read the new value through the path bound to `value`.");
+    });
+    test("eventData is absent for a component with no events or providers", () =>
+    {
+        const s = { ...SURFACE, events: [], providers: [] };
+        expect("eventData" in ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget")).toBe(false);
     });
     test("a manifest action gets an on<Id> Action", () => { expect("onExport" in ownProps(build().catalog, "Widget")).toBe(true); });
     test("required carries component and required data props", () =>
@@ -132,6 +163,20 @@ describe("catalog — guidance", () =>
     {
         expect(describeComponent(MANIFEST)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
     });
+    test("a cardinality whose min equals its max reads exactly 1 item", () =>
+    {
+        const m = { ...MANIFEST, actions: [], affords: [{ shape: "document", intents: ["author"], cardinality: { min: 1, max: 1 } }] };
+        expect(describeComponent(m)).toBe("Widget. Use it to author a document of exactly 1 item.");
+    });
+    test("exactly N items is plural above 1", () =>
+    {
+        const m = { ...MANIFEST, actions: [], affords: [{ shape: "collection", intents: ["compare"], cardinality: { min: 2, max: 2 } }] };
+        expect(describeComponent(m)).toBe("Widget. Use it to compare a collection of exactly 2 items.");
+    });
+    test("the preamble describes the single eventData pattern", () =>
+    {
+        expect(build().catalog.description).toContain("eventData");
+    });
     test("the catalog description lists the component", () => { expect(build().catalog.description).toContain("- Widget: Widget."); });
 });
 
@@ -147,10 +192,27 @@ describe("catalog — violations", () =>
         const m = { ...MANIFEST, protocol: { name: "my-widget" } };
         expect(build([{ manifest: m, surface: SURFACE, schema: SCHEMA }]).violations[0].code).toBe(VIOLATION.NAME_INVALID);
     });
-    test("a generated prop colliding with a data prop fails", () =>
+    test("eventData colliding with a data prop fails", () =>
     {
-        const s = { ...SURFACE, events: [{ ...SURFACE.events[0], bindProp: "pageSize" }] };
-        expect(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).violations[0].code).toBe(VIOLATION.PROP_COLLISION);
+        const s = { ...SURFACE, dataProps: [...SURFACE.dataProps, { name: "eventData", jsdoc: "Data." }] };
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, eventData: { type: "string" } } };
+        const { violations } = build([{ manifest: MANIFEST, surface: s, schema }]);
+
+        expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, "eventData"]]);
+    });
+    test("a <request>Result colliding with a data prop fails", () =>
+    {
+        const s = { ...SURFACE, dataProps: [...SURFACE.dataProps, { name: "searchResult", jsdoc: "Data." }] };
+        const { violations } = build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]);
+
+        expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, "searchResult"]]);
+    });
+    test("two events deriving the same action prop fail instead of collapsing into one", () =>
+    {
+        const s = { ...SURFACE, events: [SURFACE.events[0], { ...SURFACE.events[0], channel: "Selection" }] };
+        const { violations } = build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]);
+
+        expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, "onSelection"]]);
     });
 });
 
@@ -170,7 +232,7 @@ describe("catalog — fix round 1", () =>
     });
     test("a surface data prop missing from the schema throws a literate error", () =>
     {
-        const schema = { ...SCHEMA, properties: { searchResults: SCHEMA.properties.searchResults } };
+        const schema = { ...SCHEMA, properties: { searchResult: SCHEMA.properties.searchResult } };
         expect(() => build([{ manifest: MANIFEST, surface: SURFACE, schema }]))
             .toThrow(/widget: the surface lists data prop "pageSize" but the generated schema has no such property/);
     });
@@ -182,9 +244,9 @@ describe("catalog — fix round 1", () =>
     });
     test("a provider response missing from the schema throws a literate error", () =>
     {
-        const { searchResults, ...properties } = SCHEMA.properties;
-        void searchResults;
+        const { searchResult, ...properties } = SCHEMA.properties;
+        void searchResult;
         expect(() => build([{ manifest: MANIFEST, surface: SURFACE, schema: { ...SCHEMA, properties } }]))
-            .toThrow(/widget: the surface lists provider response "searchResults"/);
+            .toThrow(/widget: the surface lists provider response "searchResult"/);
     });
 });

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "title": "Enterprise Bootstrap Theme",
-  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} binding. For each event a component emits, it has a binding property it writes each emission to, and an on<Event> action property. Bind the first to a path and read that path in the action's context; the context is resolved after the write.\n\n- ChatDock: ChatDock.\n- GraphLegend: Graph Legend.\n- OrientationPicker: Orientation Picker.\n- Ruler: Ruler.\n- SkeletonLoader: Skeleton Loader.\n- StickyNote: Sticky Note. Use it to author, summarize a document of 1 to 1 items.\n- ToolColorPicker: Tool Color Picker.\n- WorkspaceShell: WorkspaceShell.",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property. A two-way value property receives the user's changes at its bound path, and its onChange action carries no other payload.\n\n- ChatDock: ChatDock.\n- GraphLegend: Graph Legend.\n- OrientationPicker: Orientation Picker.\n- Ruler: Ruler.\n- SkeletonLoader: Skeleton Loader.\n- StickyNote: Sticky Note. Use it to author, summarize a document of exactly 1 item.\n- ToolColorPicker: Tool Color Picker.\n- WorkspaceShell: WorkspaceShell.",
   "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "components": {
     "AudioPlayer": {
@@ -103,29 +103,21 @@
                 }
               ]
             },
-            "submit": {
-              "description": "Bind to a path. The component writes each \"submit\" emission (a scalar) there before sending onSubmit.",
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
             },
             "onSubmit": {
-              "description": "Sent when \"submit\" emits. Read the emission through the path bound to submit.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "selectTurn": {
-              "description": "Bind to a path. The component writes each \"selectTurn\" emission (a record) there before sending onSelectTurn.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"submit\" emits. Its payload is at <eventData path>/submit."
             },
             "onSelectTurn": {
-              "description": "Sent when \"selectTurn\" emits. Read the emission through the path bound to selectTurn.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "branch": {
-              "description": "Bind to a path. The component writes each \"branch\" emission (a record) there before sending onBranch.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"selectTurn\" emits. Its payload is at <eventData path>/selectTurn."
             },
             "onBranch": {
-              "description": "Sent when \"branch\" emits. Read the emission through the path bound to branch.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"branch\" emits. Its payload is at <eventData path>/branch."
             }
           },
           "required": [
@@ -744,7 +736,7 @@
     },
     "StickyNote": {
       "type": "object",
-      "description": "Sticky Note. Use it to author, summarize a document of 1 to 1 items.",
+      "description": "Sticky Note. Use it to author, summarize a document of exactly 1 item.",
       "allOf": [
         {
           "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
@@ -891,21 +883,17 @@
                 }
               ]
             },
-            "change": {
-              "description": "Bind to a path. The component writes each \"change\" emission (a scalar) there before sending onChange.",
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
             },
             "onChange": {
-              "description": "Sent when \"change\" emits. Read the emission through the path bound to change.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "anchorChange": {
-              "description": "Bind to a path. The component writes each \"anchor\" emission (a record) there before sending onAnchor.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when the value changes. Read the new value through the path bound to `value`."
             },
             "onAnchor": {
-              "description": "Sent when \"anchor\" emits. Read the emission through the path bound to anchorChange.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"anchor\" emits. Its payload is at <eventData path>/anchor."
             }
           },
           "required": [
@@ -1104,45 +1092,29 @@
                 }
               ]
             },
-            "selectCanvas": {
-              "description": "Bind to a path. The component writes each \"selectCanvas\" emission (a record) there before sending onSelectCanvas.",
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
               "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
             },
             "onSelectCanvas": {
-              "description": "Sent when \"selectCanvas\" emits. Read the emission through the path bound to selectCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "pinCanvas": {
-              "description": "Bind to a path. The component writes each \"pinCanvas\" emission (a record) there before sending onPinCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"selectCanvas\" emits. Its payload is at <eventData path>/selectCanvas."
             },
             "onPinCanvas": {
-              "description": "Sent when \"pinCanvas\" emits. Read the emission through the path bound to pinCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "closeCanvas": {
-              "description": "Bind to a path. The component writes each \"closeCanvas\" emission (a record) there before sending onCloseCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"pinCanvas\" emits. Its payload is at <eventData path>/pinCanvas."
             },
             "onCloseCanvas": {
-              "description": "Sent when \"closeCanvas\" emits. Read the emission through the path bound to closeCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "newCanvas": {
-              "description": "Bind to a path. The component writes each \"newCanvas\" emission (a scalar) there before sending onNewCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"closeCanvas\" emits. Its payload is at <eventData path>/closeCanvas."
             },
             "onNewCanvas": {
-              "description": "Sent when \"newCanvas\" emits. Read the emission through the path bound to newCanvas.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
-            },
-            "scrub": {
-              "description": "Bind to a path. The component writes each \"scrub\" emission (a scalar) there before sending onScrub.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"newCanvas\" emits. Its payload is at <eventData path>/newCanvas."
             },
             "onScrub": {
-              "description": "Sent when \"scrub\" emits. Read the emission through the path bound to scrub.",
-              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"scrub\" emits. Its payload is at <eventData path>/scrub."
             }
           },
           "required": [
