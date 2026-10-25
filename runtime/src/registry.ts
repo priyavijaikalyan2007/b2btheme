@@ -532,13 +532,12 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
     }
 }
 
-/** Validates a map whose values must be strings (optionally matching a pattern). */
+/** Validates a map whose values must be non-empty strings. */
 function validateStringMap(
     path: string,
     v: unknown,
     expected: string,
-    issues: ValidationIssue[],
-    pattern?: RegExp): void
+    issues: ValidationIssue[]): void
 {
     if (v === undefined)
     {
@@ -553,7 +552,7 @@ function validateStringMap(
 
     for (const [key, value] of Object.entries(v))
     {
-        if (!isNonEmptyString(value) || (pattern !== undefined && !pattern.test(value)))
+        if (!isNonEmptyString(value))
         {
             issues.push(typeIssue(`${path}.${key}`, expected, value));
         }
