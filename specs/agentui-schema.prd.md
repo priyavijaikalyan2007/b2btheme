@@ -285,7 +285,7 @@ None of this is hand-written per component. A component with a poor description 
 
 | File | Contents | Consumed by |
 |---|---|---|
-| `dist/mcp/renderer.meta.json` | `_meta.ui` for the renderer resource: `csp.resourceDomains` = `https://static.outcrop.us`, `https://fonts.googleapis.com`, `https://fonts.gstatic.com`; `prefersBorder` | #19's view and server helper |
+| `dist/mcp/renderer.meta.json` | `_meta.ui` for the renderer resource: `csp.resourceDomains` = `https://static.outcrop.us`, `https://fonts.googleapis.com`, `https://fonts.gstatic.com` | #19's view and server helper |
 
 - **CSP names origins, not paths,** so #17 needs no version. The view's `<script>` and `<link>` tags carry the path, and that path must be pinned: a push deploys, so a `ui://` page loading an unversioned path would change code running inside Claude and ChatGPT on every push. **No versioned path exists today.** CDN_CONTRACT §1 serves unversioned URLs, and its `/v<major>/` snapshot tree was never built. That CDN-contract change is a dependency of #19, recorded there.
 - **The origin is `static.outcrop.us`, not `static.knobby.io` (D13).** That keeps every emitted file host-neutral, and lets `[29]`'s `knobby` check (§11) hold.
@@ -455,3 +455,4 @@ All four items open at approval were resolved by planning research on 2026-10-25
 | 2026-10-25 | Channel → bindable prop + Action, and provider `params`; no reserved `payload` key (§5.4–5.5) | a reserved key would collide with agent-authored context keys |
 | 2026-10-25 | Versioned path moved to #19 (§6) | none exists; CSP needs only the origin |
 | 2026-10-25 | Catalog ID drops `/theme/`; layout mirrors the basic catalog file; `description` not `instructions`; JSDoc parity post-check; single-parameter providers; migration lists in `migration.mjs` | found while writing the plan: dist is served at the root; v0.9.1 files have no `instructions`; typia ignores same-line JSDoc |
+| 2026-10-25 | `prefersBorder` left to #19 (§6) | it describes the view's presentation, which #17 does not build |
