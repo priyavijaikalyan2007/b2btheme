@@ -1,0 +1,1388 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
+  "title": "Enterprise Bootstrap Theme",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal or a {\"path\": …} binding. For each event a component emits, it has a binding property it writes each emission to, and an on<Event> action property. Bind the first to a path and read that path in the action's context; the context is resolved after the write.\n\n- ChatDock: ChatDock.\n- GraphLegend: Graph Legend.\n- OrientationPicker: Orientation Picker.\n- Ruler: Ruler.\n- SkeletonLoader: Skeleton Loader.\n- ToolColorPicker: Tool Color Picker.\n- WorkspaceShell: WorkspaceShell.",
+  "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
+  "components": {
+    "AudioPlayer": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/AudioPlayer"
+        }
+      ]
+    },
+    "Button": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Button"
+        }
+      ]
+    },
+    "Card": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Card"
+        }
+      ]
+    },
+    "ChatDock": {
+      "type": "object",
+      "description": "ChatDock.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "ChatDock"
+            },
+            "turns": {
+              "description": "Initial turns.",
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ChatDock__ChatTurn"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Input placeholder.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "ariaLabel": {
+              "description": "Accessible label for the input.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "busy": {
+              "description": "Start with the input disabled.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "showTranscript": {
+              "description": "Show the transcript above the input. Default true.\n\nThe transcript is a FIXED-height scrolling region, so the dock never\nchanges size as the conversation grows. Set false for a pure input bar\nwhere history lives in a separate panel.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "submit": {
+              "description": "Bind to a path. The component writes each \"submit\" emission (a scalar) there before sending onSubmit.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSubmit": {
+              "description": "Sent when \"submit\" emits. Read the emission through the path bound to submit.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "selectTurn": {
+              "description": "Bind to a path. The component writes each \"selectTurn\" emission (a record) there before sending onSelectTurn.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSelectTurn": {
+              "description": "Sent when \"selectTurn\" emits. Read the emission through the path bound to selectTurn.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "branch": {
+              "description": "Bind to a path. The component writes each \"branch\" emission (a record) there before sending onBranch.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onBranch": {
+              "description": "Sent when \"branch\" emits. Read the emission through the path bound to branch.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "CheckBox": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/CheckBox"
+        }
+      ]
+    },
+    "ChoicePicker": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/ChoicePicker"
+        }
+      ]
+    },
+    "Column": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Column"
+        }
+      ]
+    },
+    "DateTimeInput": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/DateTimeInput"
+        }
+      ]
+    },
+    "Divider": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Divider"
+        }
+      ]
+    },
+    "GraphLegend": {
+      "type": "object",
+      "description": "Graph Legend.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "GraphLegend"
+            },
+            "nodeTypes": {
+              "description": "Initial list of node types.",
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/GraphLegend__LegendNodeType"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "edgeTypes": {
+              "description": "Initial list of edge types.",
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/GraphLegend__LegendEdgeType"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "title": {
+              "description": "Panel title. Default: \"Legend\".",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "collapsed": {
+              "description": "Start collapsed. Default: false.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "showEdgeTypes": {
+              "description": "Show the edge types section. Default: true.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "showCounts": {
+              "description": "Show count badges next to types. Default: false.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "position": {
+              "description": "Panel corner position. Default: \"bottom-left\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "bottom-left"
+                    },
+                    {
+                      "const": "bottom-right"
+                    },
+                    {
+                      "const": "top-left"
+                    },
+                    {
+                      "const": "top-right"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "maxHeight": {
+              "description": "Max height before scrolling (px). Default: 300.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component",
+            "nodeTypes"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Icon": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Icon"
+        }
+      ]
+    },
+    "Image": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Image"
+        }
+      ]
+    },
+    "List": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/List"
+        }
+      ]
+    },
+    "Modal": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Modal"
+        }
+      ]
+    },
+    "OrientationPicker": {
+      "type": "object",
+      "description": "Orientation Picker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "OrientationPicker"
+            },
+            "value": {
+              "description": "Initial orientation. Default: \"portrait\". Two-way: when bound to a path, the component writes the user's changes there.",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "portrait"
+                    },
+                    {
+                      "const": "landscape"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "ribbonMode": {
+              "description": "Render as ribbon-compatible dropdown. Default: false.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Row": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Row"
+        }
+      ]
+    },
+    "Ruler": {
+      "type": "object",
+      "description": "Ruler.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "Ruler"
+            },
+            "orientation": {
+              "description": "Ruler orientation. Default: \"horizontal\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "horizontal"
+                    },
+                    {
+                      "const": "vertical"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "markingSide": {
+              "description": "Side where tick marks appear. Default: depends on orientation.",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "top"
+                    },
+                    {
+                      "const": "bottom"
+                    },
+                    {
+                      "const": "left"
+                    },
+                    {
+                      "const": "right"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "unit": {
+              "description": "Measurement unit. Default: \"px\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "unit"
+                    },
+                    {
+                      "const": "px"
+                    },
+                    {
+                      "const": "cm"
+                    },
+                    {
+                      "const": "mm"
+                    },
+                    {
+                      "const": "in"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "unitScale": {
+              "description": "For \"unit\" mode: CSS pixels per unit. Default: 1.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "length": {
+              "description": "Ruler length in CSS px. Default: container width/height.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "majorInterval": {
+              "description": "Override auto-calculated major tick interval (in current unit).",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "showCursor": {
+              "description": "Show the cursor tracking line. Default: true.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "cursorColor": {
+              "description": "Cursor line colour. Default: \"#e03131\" (red).",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "origin": {
+              "description": "Offset in CSS px where 0 starts. Default: 0.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "Disable interaction. Default: false.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "SkeletonLoader": {
+      "type": "object",
+      "description": "Skeleton Loader.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "SkeletonLoader"
+            },
+            "preset": {
+              "description": "Visual preset. Default: \"text\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "text"
+                    },
+                    {
+                      "const": "avatar"
+                    },
+                    {
+                      "const": "card"
+                    },
+                    {
+                      "const": "table"
+                    },
+                    {
+                      "const": "paragraph"
+                    },
+                    {
+                      "const": "custom"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "lines": {
+              "description": "Number of lines for text/paragraph. Default: 3.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "rows": {
+              "description": "Number of rows for table. Default: 5.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "columns": {
+              "description": "Number of columns for table. Default: 4.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "width": {
+              "description": "CSS width for custom/avatar. Default: \"100%\".",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "height": {
+              "description": "CSS height for custom/avatar. Default: \"1rem\".",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "gap": {
+              "description": "CSS gap between lines/rows. Default: \"0.5rem\".",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "animate": {
+              "description": "Enable shimmer animation. Default: true.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "borderRadius": {
+              "description": "CSS border-radius. Default: \"0\".",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "circle": {
+              "description": "Circle shape for avatar. Default: false.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Additional CSS class(es).",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Slider": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Slider"
+        }
+      ]
+    },
+    "Tabs": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Tabs"
+        }
+      ]
+    },
+    "Text": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Text"
+        }
+      ]
+    },
+    "TextField": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/TextField"
+        }
+      ]
+    },
+    "ToolColorPicker": {
+      "type": "object",
+      "description": "Tool Color Picker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "ToolColorPicker"
+            },
+            "tool": {
+              "description": "Tool type determines the icon shape. Default: \"pen\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "pen"
+                    },
+                    {
+                      "const": "marker"
+                    },
+                    {
+                      "const": "pencil"
+                    },
+                    {
+                      "const": "highlighter"
+                    },
+                    {
+                      "const": "brush"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "colors": {
+              "description": "Available colours. Defaults to the built-in pack for the tool type.",
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ToolColorPicker__ToolColor"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "value": {
+              "description": "Currently selected colour hex. Default: first colour. Two-way: when bound to a path, the component writes the user's changes there.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "layout": {
+              "description": "Layout mode. Default: \"row\".",
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "row"
+                    },
+                    {
+                      "const": "grid"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "gridColumns": {
+              "description": "Grid columns when layout is \"grid\". Default: 6.",
+              "oneOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "showTooltips": {
+              "description": "Show colour name tooltip on hover. Default: true.",
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Video": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Video"
+        }
+      ]
+    },
+    "WorkspaceShell": {
+      "type": "object",
+      "description": "WorkspaceShell.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "WorkspaceShell"
+            },
+            "canvases": {
+              "description": "Initial canvases.",
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/WorkspaceShell__WorkspaceCanvas"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "activeCanvasId": {
+              "description": "Canvas to mark active on first render.",
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                }
+              ]
+            },
+            "selectCanvas": {
+              "description": "Bind to a path. The component writes each \"selectCanvas\" emission (a record) there before sending onSelectCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSelectCanvas": {
+              "description": "Sent when \"selectCanvas\" emits. Read the emission through the path bound to selectCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "pinCanvas": {
+              "description": "Bind to a path. The component writes each \"pinCanvas\" emission (a record) there before sending onPinCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onPinCanvas": {
+              "description": "Sent when \"pinCanvas\" emits. Read the emission through the path bound to pinCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "closeCanvas": {
+              "description": "Bind to a path. The component writes each \"closeCanvas\" emission (a record) there before sending onCloseCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onCloseCanvas": {
+              "description": "Sent when \"closeCanvas\" emits. Read the emission through the path bound to closeCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "newCanvas": {
+              "description": "Bind to a path. The component writes each \"newCanvas\" emission (a scalar) there before sending onNewCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onNewCanvas": {
+              "description": "Sent when \"newCanvas\" emits. Read the emission through the path bound to newCanvas.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "scrub": {
+              "description": "Bind to a path. The component writes each \"scrub\" emission (a scalar) there before sending onScrub.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onScrub": {
+              "description": "Sent when \"scrub\" emits. Read the emission through the path bound to scrub.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  },
+  "functions": {
+    "and": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/and"
+        }
+      ]
+    },
+    "email": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/email"
+        }
+      ]
+    },
+    "formatCurrency": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/formatCurrency"
+        }
+      ]
+    },
+    "formatDate": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/formatDate"
+        }
+      ]
+    },
+    "formatNumber": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/formatNumber"
+        }
+      ]
+    },
+    "formatString": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/formatString"
+        }
+      ]
+    },
+    "length": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/length"
+        }
+      ]
+    },
+    "not": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/not"
+        }
+      ]
+    },
+    "numeric": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/numeric"
+        }
+      ]
+    },
+    "openUrl": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/openUrl"
+        }
+      ]
+    },
+    "or": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/or"
+        }
+      ]
+    },
+    "pluralize": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/pluralize"
+        }
+      ]
+    },
+    "regex": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/regex"
+        }
+      ]
+    },
+    "required": {
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/functions/required"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "CatalogComponentCommon": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/$defs/CatalogComponentCommon"
+        }
+      ]
+    },
+    "theme": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/$defs/theme"
+        }
+      ]
+    },
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/AudioPlayer"
+        },
+        {
+          "$ref": "#/components/Button"
+        },
+        {
+          "$ref": "#/components/Card"
+        },
+        {
+          "$ref": "#/components/ChatDock"
+        },
+        {
+          "$ref": "#/components/CheckBox"
+        },
+        {
+          "$ref": "#/components/ChoicePicker"
+        },
+        {
+          "$ref": "#/components/Column"
+        },
+        {
+          "$ref": "#/components/DateTimeInput"
+        },
+        {
+          "$ref": "#/components/Divider"
+        },
+        {
+          "$ref": "#/components/GraphLegend"
+        },
+        {
+          "$ref": "#/components/Icon"
+        },
+        {
+          "$ref": "#/components/Image"
+        },
+        {
+          "$ref": "#/components/List"
+        },
+        {
+          "$ref": "#/components/Modal"
+        },
+        {
+          "$ref": "#/components/OrientationPicker"
+        },
+        {
+          "$ref": "#/components/Row"
+        },
+        {
+          "$ref": "#/components/Ruler"
+        },
+        {
+          "$ref": "#/components/SkeletonLoader"
+        },
+        {
+          "$ref": "#/components/Slider"
+        },
+        {
+          "$ref": "#/components/Tabs"
+        },
+        {
+          "$ref": "#/components/Text"
+        },
+        {
+          "$ref": "#/components/TextField"
+        },
+        {
+          "$ref": "#/components/ToolColorPicker"
+        },
+        {
+          "$ref": "#/components/Video"
+        },
+        {
+          "$ref": "#/components/WorkspaceShell"
+        }
+      ]
+    },
+    "anyFunction": {
+      "oneOf": [
+        {
+          "$ref": "#/functions/and"
+        },
+        {
+          "$ref": "#/functions/email"
+        },
+        {
+          "$ref": "#/functions/formatCurrency"
+        },
+        {
+          "$ref": "#/functions/formatDate"
+        },
+        {
+          "$ref": "#/functions/formatNumber"
+        },
+        {
+          "$ref": "#/functions/formatString"
+        },
+        {
+          "$ref": "#/functions/length"
+        },
+        {
+          "$ref": "#/functions/not"
+        },
+        {
+          "$ref": "#/functions/numeric"
+        },
+        {
+          "$ref": "#/functions/openUrl"
+        },
+        {
+          "$ref": "#/functions/or"
+        },
+        {
+          "$ref": "#/functions/pluralize"
+        },
+        {
+          "$ref": "#/functions/regex"
+        },
+        {
+          "$ref": "#/functions/required"
+        }
+      ]
+    },
+    "ChatDock__ChatTurn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable turn identifier, linking the turn to a canvas revision."
+        },
+        "role": {
+          "type": "string",
+          "description": "Who spoke."
+        },
+        "text": {
+          "type": "string",
+          "description": "Turn text. Untrusted — rendered via textContent only."
+        },
+        "revision": {
+          "type": "number",
+          "description": "Canvas revision this turn produced, when it produced one."
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "text"
+      ],
+      "description": "One conversation turn.",
+      "additionalProperties": false
+    },
+    "GraphLegend__LegendEdgeType": {
+      "type": "object",
+      "properties": {
+        "relationshipKey": {
+          "type": "string",
+          "description": "Relationship key, e.g. \"owned_by\"."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display label, e.g. \"owned by\"."
+        },
+        "color": {
+          "type": "string",
+          "description": "Edge color hex. Default: #94a3b8."
+        },
+        "style": {
+          "oneOf": [
+            {
+              "const": "solid"
+            },
+            {
+              "const": "dashed"
+            },
+            {
+              "const": "dotted"
+            }
+          ],
+          "description": "Line style. Default: \"solid\"."
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of this edge type in the graph."
+        }
+      },
+      "required": [
+        "relationshipKey",
+        "displayName"
+      ],
+      "description": "Configuration for an edge type entry in the legend.",
+      "additionalProperties": false
+    },
+    "GraphLegend__LegendNodeType": {
+      "type": "object",
+      "properties": {
+        "typeKey": {
+          "type": "string",
+          "description": "Ontology type key, e.g. \"strategy.okr\"."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display label, e.g. \"OKR\"."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Bootstrap icon name (without \"bi bi-\" prefix)."
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color for the badge."
+        },
+        "count": {
+          "type": "number",
+          "description": "Number of this type in the graph."
+        },
+        "status": {
+          "oneOf": [
+            {
+              "const": "active"
+            },
+            {
+              "const": "planned"
+            },
+            {
+              "const": "deprecated"
+            },
+            {
+              "const": "external"
+            }
+          ],
+          "description": "Visual status indicator."
+        }
+      },
+      "required": [
+        "typeKey",
+        "displayName",
+        "icon",
+        "color"
+      ],
+      "description": "Configuration for a node type entry in the legend.",
+      "additionalProperties": false
+    },
+    "ToolColorPicker__ToolColor": {
+      "type": "object",
+      "properties": {
+        "hex": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "alpha": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "hex",
+        "label"
+      ],
+      "description": "A single colour entry with hex value, label, and optional alpha.",
+      "additionalProperties": false
+    },
+    "WorkspaceShell__WorkspaceCanvas": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable canvas identifier."
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title. Untrusted — rendered via textContent only."
+        },
+        "pinned": {
+          "type": "boolean",
+          "description": "Pinned canvases sort first and are visually marked."
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "description": "One canvas in the workspace.",
+      "additionalProperties": false
+    }
+  }
+}

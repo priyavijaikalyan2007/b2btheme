@@ -58,6 +58,8 @@ import { scanComponents } from "./trace-scan.mjs";
 import { census as testCensus, standInsOf, guardedAssertions } from "./test-assertions.mjs";
 import { factoriesReturningClass, handlesWithoutImplements }
     from "./gen-handles.mjs";
+import { measureClassification } from "./agentui/generate.mjs";
+import { BELOW_REQUIRED } from "./agentui/migration.mjs";
 
 /**
  * THE FILE SET, stated once. Tracked TypeScript sources only: no test or
@@ -884,6 +886,14 @@ const BASELINES = {
     // reader can see it is not empty and a probe has nothing to
     // find. All five that left had fired in the sweep.
     guardedAssertions: 74,
+    // ADR-219 (2026-10-25): options the agent-protocol gate cannot classify,
+    // measured by scripts/agentui/generate.mjs over every built manifest.
+    // May only fall; target 0. A new component that adds one fails [20].
+    unclassifiedOptions: 546,
+    // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
+    protocolPropsMissingJsdoc: 373,
+    // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
+    componentsBelowRequiredLevel: 40,
 };
 
 /*
@@ -1564,6 +1574,9 @@ function measure()
         siblingStandIns: 0,
         guardedAssertions: 0,
         testBlocks: 0,
+        unclassifiedOptions: 0,
+        protocolPropsMissingJsdoc: 0,
+        componentsBelowRequiredLevel: 0,
     };
     const consoleLogKinds = {};
     const windowCastKinds = {};
@@ -1679,6 +1692,13 @@ function measure()
     // UNUSED-1. A source copy of a bundled constant that LIES: the
     // bundler strips each module's declaration and emits its own.
     counts.bundlePreambleMismatches = bundlePreambleMismatches().length;
+
+    // ADR-219. The generator's own tested classifier, not a second one:
+    // it needs dist/capability-manifest.json, so run after the build.
+    const protocol = measureClassification();
+    counts.unclassifiedOptions = protocol.unclassifiedOptions;
+    counts.protocolPropsMissingJsdoc = protocol.protocolPropsMissingJsdoc;
+    counts.componentsBelowRequiredLevel = BELOW_REQUIRED.size;
 
     // PAT-1. The compiler, not a regex: `Toolbar` and `ToolbarHandle`
     // differ by a resolved symbol.
