@@ -50,7 +50,11 @@ export function resetLoaderForTests(): void
     loads = new Map();
 }
 
-function checkBase(baseUrl: string): void
+/**
+ * Throws a literate error unless baseUrl is an absolute http(s): or file: URL
+ * with no trailing slash.
+ */
+export function checkBase(baseUrl: string): void
 {
     let url: URL;
 
