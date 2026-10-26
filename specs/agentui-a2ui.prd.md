@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI 1: A2UI Adapter
 
-**Status:** Approved 2026-10-26 (design approved section by section on 2026-10-25; written spec approved 2026-10-26)
+**Status:** Approved 2026-10-26; amended 2026-10-26 (planning, §14)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16), this sub-project [#18](https://github.com/priyavijaikalyan2007/b2btheme/issues/18)
 **Depends on:** #17 (`specs/agentui-schema.prd.md`): the catalog, the classification and the generator.
 **Followed by:** #30 (local demo harness, message checker, advertising demos), #31 (actions and providers), #19 (MCP Apps renderer view)
@@ -189,13 +189,13 @@ A literal changed by `updateComponents` takes the same route as a bound value. A
 
 ### 5.3 Readiness
 
-- The component is not mounted until its assets have loaded (§6.1) **and** every bound prop resolves to a value other than `undefined`.
+- The component is not mounted until the element is **connected** to the document, its assets have loaded (§6.1), **and** every bound prop resolves to a valid value other than `undefined`. Binding starts on the first `context`; mounting waits for connection because container-first factories resolve their container with `document.getElementById`.
 - Until then the element renders an empty container with `aria-busy="true"`. `web_core`'s `MISSING_DATA_BINDING` warning already informs the agent.
 - After mount, a bound prop that resolves to `undefined` sends `OUTCROP_BINDING_LOST` with its path, and the component keeps its last good state.
 
 ### 5.4 Runtime validation of bound values
 
-- Build time: Ajv standalone compiles one validator per data prop from the prop's **literal** schema (the non-binding, non-call arm), and the validators are embedded in the bundle. Ajv stays a devDependency; the bundle ships only the generated code.
+- Build time: Ajv standalone compiles one validator per data prop from the prop's **literal** schema (the non-binding, non-call arm), and the validators are embedded in the bundle. Ajv stays a devDependency. The generated code `require`s two Ajv runtime helpers (`ajv/dist/runtime/ucs2length`, `ajv/dist/runtime/equal`, the latter pulling in `fast-deep-equal`), so the bundle **serves** that code. The closure gate (§9, G2) allows exactly the packages `ajv` and `fast-deep-equal`, and they are audited with the `/lib` closure.
 - At runtime, a bound value that fails sends `VALIDATION_FAILED` with the prop's path. The component keeps its last good state, and the invalid value is never applied.
 
 ### 5.5 Dates
@@ -225,14 +225,17 @@ Both steps run synchronously in that order. An agent that binds no `eventData` s
 ### 6.1 Loader
 
 - `assetBaseUrl` is required; there is no default domain (D2).
+- **The base theme is the host's responsibility by default** (user decision, 2026-10-26). The host links `/css/custom.css` and sets `data-bs-theme`, as every CDN consumer does. With `injectBaseTheme: true` (§7), the loader also injects `<link rel="stylesheet" href="<assetBaseUrl>/css/custom.css">` once per page before the first component mounts. A failure is `OUTCROP_ASSET_LOAD_FAILED` for every element waiting on it. The adapter never sets `data-bs-theme`.
+- The element must live in the document's light DOM. If `getRootNode() !== document` at mount, it sends `OUTCROP_MOUNT_FAILED`, naming the light-DOM requirement. Verified 2026-10-26: `@a2ui/lit` and `@a2ui/react` 0.14.0 keep custom elements in the light DOM, including inside a basic `Column`.
 - On the first use of a component, the loader injects `<script src="<base>/<assets.js>">` and `<link rel="stylesheet" href="<base>/<assets.css>">` once per page, deduplicated by URL across elements and catalogs.
 - Mount waits for both `load` events.
 - A load error sends `OUTCROP_ASSET_LOAD_FAILED` with the URL. The element stays unmounted and `aria-busy` is cleared.
 - After the script loads, the factory global named in the descriptor must exist. If it doesn't, that's `OUTCROP_MOUNT_FAILED`.
+- `assets.css` exists only when `dist/components/<dir>/<dir>.css` existed at generation time. Manifest `defaultOptions` are never applied.
 
 ### 6.2 Shared mount logic
 
-The factory-style argument order and the attach logic (`mountMethod`) move from `runtime/src/conformance.ts` into a new `runtime/src/mount.ts`. Both `conformance.ts` and the adapter use it; esbuild bundles it into the adapter. DynamicCanvas keeps its private copy, so the published component's behaviour is unchanged. A factory that throws sends `OUTCROP_MOUNT_FAILED` with the error's message.
+The factory-style argument order and the attach logic (`mountMethod`) move from `runtime/src/conformance.ts` into a new `runtime/src/mount.ts`. Both `conformance.ts` and the adapter use it; esbuild bundles it into the adapter. DynamicCanvas keeps its private copy, so the published component's behaviour is unchanged. A factory that throws sends `OUTCROP_MOUNT_FAILED` with the error's message. `attachHandle` throws a literate error when the declared `mountMethod` names a method the handle lacks (it used to skip silently). The conformance suite catches factory-time errors as a mount finding, so its verdicts only get stricter.
 
 ---
 
@@ -240,11 +243,13 @@ The factory-style argument order and the attach logic (`mountMethod`) move from 
 
 ```ts
 export function createOutcropCatalog(
-    webCore: OutcropWebCore,   // the host's own @a2ui/web_core module namespace
-    options: { assetBaseUrl: string }
+    webCore: OutcropWebCore,   // { Catalog, basicCatalog, BASIC_FUNCTIONS } from the host's own @a2ui/web_core
+    options: { assetBaseUrl: string; injectBaseTheme?: boolean }
 ): Catalog;
 ```
 
+- `webCore` is a structural object. A host assembles it from `@a2ui/web_core/v0_9` (`Catalog`) and `@a2ui/web_core/v0_9/basic_catalog` (`basicCatalog`, `BASIC_FUNCTIONS`), and may substitute its renderer's own basic catalog.
+- `assetBaseUrl` and `injectBaseTheme` are **page-global**. The first call fixes them, and a later call with a different value throws, because the element classes are shared per tag.
 - The function builds our catalog from the embedded JSON with `webCore`'s `Catalog.fromJson`.
 - It links Google's basic catalog as a peer and adds the `BASIC_FUNCTIONS` implementations, both taken from `webCore`.
 - It attaches `{tagName, element}` to each of our entries. Basic re-exports keep the host renderer's own implementations.
@@ -279,7 +284,7 @@ export function createOutcropCatalog(
 | Gate | Where | Fails when |
 |---|---|---|
 | G1 Unsupported capability | `build:agentui` | A catalog component declares a non-empty `actions[]` or any `protocol.providers`. The message names the component and #31. Pending components are unaffected until they are classified. |
-| G2 Descriptor coverage | `build:agentui`, plus `[29]` | A catalog component has no descriptor, a data prop has no route, two tags collide (§3.3), or the catalog text embedded in the bundle is not byte-identical to `dist/a2ui/catalog/v1.json`. `check-dist.mjs` checks this independently by reading the built bundle. |
+| G2 Descriptor coverage | `build:agentui`, plus `[29]` | A catalog component has no descriptor, a data prop has no route, two tags collide (§3.3), or the catalog embedded in the bundle (its `catalogJson` export, serialised as the generator writes it) is not byte-identical to `dist/a2ui/catalog/v1.json`. `check-dist.mjs` checks this independently by importing the built bundle. The bundle's `node_modules` closure must come only from the packages `ajv` and `fast-deep-equal`, and must include nothing from `@a2ui/*`. |
 | G3 Fleet adapter conformance | vitest | Any catalog component fails the scripted round trip in §10.2. |
 
 ---
@@ -340,7 +345,7 @@ React gets one smoke scenario covering the field component's round trip.
 
 ### 12.1 Contract impact (D11)
 
-Everything is additive. No existing factory, handle, option, legacy callback or published file changes. `runtime/src/mount.ts` is internal; no new name is added to `window.EnterpriseRuntime`.
+Everything is additive. No existing factory, handle, option, legacy callback or published file changes. `runtime/src/mount.ts` is internal; no new name is added to `window.EnterpriseRuntime`. The bundle has no top-level DOM access, because its `HTMLElement` base class is created lazily, so it can be imported in Node (`[29]`, server-rendering hosts).
 
 ### 12.2 New public names, documented in the same change
 
@@ -348,7 +353,8 @@ Everything is additive. No existing factory, handle, option, legacy callback or 
 |---|---|
 | `/a2ui/adapter/v1.js` | ESM bundle. Updated additively in place; a breaking change ships as `v2.js`, and v1 stays served. |
 | `/a2ui/adapter/v1.d.ts` | Types for hosts |
-| `createOutcropCatalog` | Named export |
+| `createOutcropCatalog` | Named export, options `assetBaseUrl` and optional `injectBaseTheme` |
+| `catalogJson` | Named export: the parsed catalog the bundle embeds, for inline advertising and for G2 |
 | `outcrop-<kebab>` | Custom element tags, one per catalog component |
 | `OUTCROP_BINDING_LOST`, `OUTCROP_ASSET_LOAD_FAILED`, `OUTCROP_MOUNT_FAILED` | A2UI error codes |
 
@@ -408,3 +414,4 @@ None blocking. Recorded for the plan:
 | Date | Change | By |
 |---|---|---|
 | 2026-10-25 | Initial spec from the brainstorm. Decisions: re-create on create-time prop change; actions and providers deferred behind G1; theme follows the host page; wait for bound data, then error on loss; a literal `value` is allowed and documented; lazy asset loading with an explicit `assetBaseUrl`; tag prefix `outcrop-`; architecture A (one generic element plus generated descriptors). | User decisions |
+| 2026-10-26 | Planning amendments 1–9: connected before mount (§5.3); strict attach (§6.2); `webCore` shape and page-global options (§7); `catalogJson` export (§12.2); served Ajv helpers and the closure gate (§5.4, §9); css presence and no `defaultOptions` (§6.1); light-DOM requirement (§6.1); no top-level DOM access (§12.1); optional `injectBaseTheme`, the host's responsibility by default (§6.1, §7). Amendment 9 is a user decision; the rest change no user decision. | Agent + User |
