@@ -71,6 +71,7 @@
     "shell-quote": "^1.11.0"
   },
   "devDependencies": {
+    "@a2ui/web_core": "0.14.0",
     "@codemirror/autocomplete": "6.20.4",
     "@codemirror/commands": "6.11.1",
     "@codemirror/lang-css": "6.3.1",
