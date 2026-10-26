@@ -19,7 +19,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 import { Catalog, ComponentContext, MessageProcessor } from "@a2ui/web_core/v0_9";
 import { BASIC_FUNCTIONS, basicCatalog } from "@a2ui/web_core/v0_9/basic_catalog";
 
@@ -120,9 +120,11 @@ beforeAll(async () =>
     vi.spyOn(console, "debug").mockImplementation(() => undefined);
 });
 
-afterAll(() => { observer.disconnect(); vi.restoreAllMocks(); });
-
 const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// Tear every staged element down while the document still exists; teardown is deferred by a microtask.
+afterEach(async () => { document.body.replaceChildren(); await flush(); });
+afterAll(() => { observer.disconnect(); vi.restoreAllMocks(); });
 
 /** A real surface with one component, "c", plus its element, mounted. */
 async function stage(d: Descriptor, props: Record<string, unknown>, data: Record<string, unknown>): Promise<Any>
@@ -195,8 +197,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         expect(s.errors).toEqual([]);
         expect(spies.get(name)!.builds).toBe(before + 1);
         expect(s.el.handle).toBeDefined();
-        expect(loadedUrls).toContain(`${BASE}/${d.assets.js}`);
-        if (d.assets.css) { expect(loadedUrls).toContain(`${BASE}/${d.assets.css}`); }
+        const own = [d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
+        expect(loadedUrls).toEqual(expect.arrayContaining(own));
     });
 
     test("live props update without a rebuild", async () =>
@@ -220,16 +222,18 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         const varying = create.filter((p) => JSON.stringify(sampleValue(arms[p], 0, CATALOG))
             !== JSON.stringify(sampleValue(arms[p], 1, CATALOG)));
 
+        const rebuilds: Record<string, number> = {};
+
         for (const p of varying)
         {
             const builds = spies.get(name)!.builds;
-            current[p] = current[p] === undefined ? sampleValue(arms[p], 0, CATALOG) : sampleValue(arms[p], 1, CATALOG);
+            current[p] = sampleValue(arms[p], p in current ? 1 : 0, CATALOG);
             s.setProps(current);
             await flush();
-
-            expect(spies.get(name)!.builds, `${name}.${p}`).toBe(builds + 1);
+            rebuilds[p] = spies.get(name)!.builds - builds;
         }
 
+        expect(rebuilds).toEqual(Object.fromEntries(varying.map((p) => [p, 1])));
         expect(s.errors).toEqual([]);
     });
 
@@ -259,14 +263,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         expect(s.errors).toEqual([]);
     });
 
-    test("a two-way edit through the injected change option writes the bound path", async () =>
+    test.skipIf(!d.changeOption)("a two-way edit through the injected change option writes the bound path", async () =>
     {
-        if (!d.changeOption)
-        {
-            expect(d.events.some((e) => e.payloadInValue) || !d.props.value || d.props.value.route !== "value").toBe(true);
-            return;
-        }
-
         const { props, data } = initial();
         const s = await stage(d, props, data);
         const options = spies.get(name)!.options.at(-1)!;

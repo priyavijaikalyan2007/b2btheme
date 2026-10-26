@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI 1: A2UI Adapter
 
-**Status:** Approved 2026-10-26; amended 2026-10-26 (planning, §14)
+**Status:** Implemented 2026-10-26 (approved 2026-10-26; amended 2026-10-26, planning, §14)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16), this sub-project [#18](https://github.com/priyavijaikalyan2007/b2btheme/issues/18)
 **Depends on:** #17 (`specs/agentui-schema.prd.md`): the catalog, the classification and the generator.
 **Followed by:** #30 (local demo harness, message checker, advertising demos), #31 (actions and providers), #19 (MCP Apps renderer view)

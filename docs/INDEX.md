@@ -48,6 +48,12 @@ How to load the theme, components and vendored dependencies from
 deliberately carry no hash, and what your code must do when a load fails.
 **Read this before integrating.**
 
+### 2a. **[A2UI Integration Guide](A2UI_INTEGRATION_GUIDE.md)**
+Let AI agents render and drive these components inside Google's A2UI
+renderers (Lit, React): the `/a2ui/adapter/v1.js` bundle,
+`createOutcropCatalog`, the base-theme requirement, error codes, and a worked
+round trip.
+
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
 

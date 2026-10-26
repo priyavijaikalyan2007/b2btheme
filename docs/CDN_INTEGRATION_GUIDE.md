@@ -434,9 +434,9 @@ anywhere else, that pin is the exposure.
 
 ## 7. Using the components from an AI agent
 
-The build now publishes what an agent needs to *describe* these components
-over **A2UI** and **MCP Apps** (ADR-219). It does not yet publish the code
-that *renders* them for an agent; see the last paragraph.
+The build publishes what an agent needs to *describe* these components over
+**A2UI** and **MCP Apps** (ADR-219), and the adapter that *renders* them in A2UI
+hosts (ADR-220).
 
 - **The A2UI catalog** is `https://static.outcrop.us/a2ui/catalog/v1.json`.
   That URL is its `catalogId`: put it in your surface's `catalogId` as
@@ -448,13 +448,18 @@ that *renders* them for an agent; see the last paragraph.
   the components in the catalog.
 - **The MCP Apps metadata** is `/mcp/renderer.meta.json`: the `_meta.ui` block,
   with the CSP origins the renderer view loads from.
+- **The A2UI adapter** is `/a2ui/adapter/v1.js` (ESM, types at `v1.d.ts`).
+  Import it into a page that runs Google's A2UI renderer and call
+  `createOutcropCatalog(webCore, { assetBaseUrl: "https://static.outcrop.us" })`;
+  every catalog component then renders as an `<outcrop-*>` element. Your page
+  links `/css/custom.css` itself (or opts in to `injectBaseTheme: true`). The
+  full host guide is [`A2UI_INTEGRATION_GUIDE.md`](A2UI_INTEGRATION_GUIDE.md).
 
 `static.outcrop.us` is the host-neutral name for this same origin (D13), so
 nothing an agent reads names a consuming app. Not every component is in the
-catalog yet: `/agentui-report.json` lists the ones left out and why. The
-runtime that turns a catalog entry into a mounted component arrives with
-**#18** (A2UI) and **#19** (the MCP Apps view and server helper). The cache
-rules and the versioning promise are in [`CDN_CONTRACT.md`](../CDN_CONTRACT.md) §2c.
+catalog yet: `/agentui-report.json` lists the ones left out and why. The MCP
+Apps view and server helper arrive with **#19**. The cache rules and the
+versioning promise are in [`CDN_CONTRACT.md`](../CDN_CONTRACT.md) §2c.
 
 ## 8. Related reading
 

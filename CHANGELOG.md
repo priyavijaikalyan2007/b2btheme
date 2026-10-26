@@ -13,9 +13,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **A2UI adapter** — `https://static.outcrop.us/a2ui/adapter/v1.js` lets any host running Google's A2UI renderer (Lit, React) render every catalog component as an `<outcrop-*>` element, with bindings, two-way values and events flowing back to the agent. `createOutcropCatalog(webCore, { assetBaseUrl, injectBaseTheme? })` uses the host's own `@a2ui/web_core`; component assets lazy-load from `assetBaseUrl`. Gates G1–G3 keep every catalog component working through it. Host guide: `docs/A2UI_INTEGRATION_GUIDE.md`; rules: `A2UI.md`. ADR-220.
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Changed
+- **A manifest `mountMethod` naming a method the handle lacks now fails** instead of silently leaving the component unattached (`runtime/src/mount.ts`, shared by the conformance suite and the A2UI adapter). No component trips it. ADR-220.
 - **Conformance level is now computed; under-declaring fails the gate.** ADR-219.
 - **`PENDING_CLASSIFICATION` excuses only backlog violations, and its length is pinned by `[20]`.** A stale `protocol` key, a short reason or a double claim now fails the build for a listed component too. ADR-219.
 - **StickyNote joins the A2UI catalog** (additive within v1): one `onChange` serving both its `change` channel and the `value` write-back is no longer a double claim. ADR-219.

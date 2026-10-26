@@ -185,6 +185,24 @@ Four standalone design tools are included, accessible from the [demo index](http
 
 Each studio uses the component library's own Sidebar and Toolbar components for its UI, dogfooding the library.
 
+## AI Agents: A2UI Support
+
+AI agents can render and drive these components directly. The library publishes
+an [A2UI](https://github.com/a2ui-project/a2ui) catalog and an adapter, so any
+host running Google's A2UI renderer (Lit or React) can let an agent show a
+sticky note, a chat dock, a picker and more, with the user's edits and events
+flowing back to the agent. Every component in the catalog is checked by the
+build to work this way, and new components join as they are classified.
+
+| What | Where |
+|---|---|
+| A2UI catalog (its URL is its `catalogId`) | `https://static.outcrop.us/a2ui/catalog/v1.json` |
+| Adapter (ESM) | `https://static.outcrop.us/a2ui/adapter/v1.js` |
+| Host guide | [`docs/A2UI_INTEGRATION_GUIDE.md`](docs/A2UI_INTEGRATION_GUIDE.md) |
+| Rules for contributors | [`A2UI.md`](A2UI.md) |
+
+Support for MCP Apps hosts is in progress (#19).
+
 ## CDN & Agent Discovery
 
 The theme is deployed to Cloudflare Workers on every push.

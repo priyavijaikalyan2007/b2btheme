@@ -77,7 +77,8 @@ function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: st
         const props = (schema.properties ?? {}) as Record<string, Schema>;
         const required = (schema.required ?? []) as string[];
 
-        return Object.fromEntries(required.map((k) => [k, sampleValue(props[k], variant, root, `${pointer}/properties/${k}`)]));
+        return Object.fromEntries(required.map((k) =>
+            [k, sampleValue(props[k], variant, root, `${pointer}/properties/${k}`)]));
     }
 
     throw new Error(`sampleValue: no type, const, oneOf or $ref at ${pointer}; extend a2ui/sample-values.ts.`);

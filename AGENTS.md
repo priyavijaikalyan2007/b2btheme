@@ -467,6 +467,14 @@ raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
 change, additive included, needs `npm run build:agentui -- --write-baseline`
 and the baseline committed in the same change.
 
+**Rendering is generated too: read [`A2UI.md`](A2UI.md).** The A2UI adapter
+(#18, ADR-220) derives one `<outcrop-*>` element per catalog component from the
+manifest, so a classified component renders in A2UI hosts with no wrapper code.
+A prop updates in place only if the manifest declares it an `accepts` slot or a
+`stateKeys` entry (or it is a two-way `value`); any other prop rebuilds the
+component. Gates G1–G3 fail the build if a catalog component would not work
+through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`.
+
 **`PENDING_CLASSIFICATION` and `BELOW_REQUIRED`** in `scripts/agentui/migration.mjs`
 are the measured backlog of 2026-10-25. A component on `PENDING_CLASSIFICATION`
 is left out of the catalog and reported in `dist/agentui-report.json` instead of
@@ -491,6 +499,10 @@ landed conforms from its first commit.
 - [ ] Every non-data option is an event, a provider, or host-only with a reason.
 - [ ] Its declared `conformance` meets the computed required level.
 - [ ] The catalog baseline is rewritten and committed.
+- [ ] It works through the A2UI adapter: gates G1–G3 pass (`npm run build`,
+      `npm test`), every channel has a conformance-glue trigger, and each prop
+      that should update in place is an `accepts` slot or a `stateKeys` entry
+      ([`A2UI.md`](A2UI.md)). Never hand-write a wrapper.
 
 ## (CRITICAL) No Fabricated Reads
 
