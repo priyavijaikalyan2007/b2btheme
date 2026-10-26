@@ -29,7 +29,8 @@ import { ERROR_CODES, reportError } from "./errors";
 import { loadAssets } from "./loader";
 import { logDebug, logInfo } from "./log";
 import { PropTracker, type Delivery } from "./props";
-import { bindingPath, fromWire, sameComponent } from "./values";
+import { changeOptions, dispatchActionProp, wireRoundTrip, type RoundTrip } from "./roundtrip";
+import { bindingPath, fromWire, sameComponent, sameValue, toWire } from "./values";
 import type { AdapterDescriptor, ComponentContextLike, Sub, Validators } from "./types";
 
 /** What a per-tag subclass supplies. */
@@ -147,6 +148,9 @@ class Binding
     #assets: "pending" | "ready" | "failed" = "pending";
     #handle: Record<string, unknown> | undefined;
     #container: HTMLElement | undefined;
+    #roundTrip: RoundTrip | undefined;
+    #applying = false;
+    #lastWritten: { value: unknown } | undefined;
     #disposed = false;
 
     constructor(host: HTMLElement, ctx: ComponentContextLike, env: ElementEnv)
@@ -210,8 +214,39 @@ class Binding
     {
         if (this.#disposed || !this.#accept(name, value, delivery)) { return; }
 
-        if (this.#handle) { this.#route(name, this.#values.get(name)); }
-        else { this.tryMount(); }
+        if (!this.#handle) { this.tryMount(); return; }
+
+        if (name === "value" && this.#isEcho(value)) { return; }
+
+        this.#route(name, this.#values.get(name));
+    }
+
+    /** True, once, for the value the element itself just wrote to the bound path (spec §5.6). */
+    #isEcho(value: unknown): boolean
+    {
+        const echo = this.#lastWritten !== undefined && sameValue(value, this.#lastWritten.value);
+
+        this.#lastWritten = undefined;
+
+        return echo;
+    }
+
+    /** A user edit of the two-way value: write the bound path, then fire the change action. */
+    #onUserValue(value: unknown): void
+    {
+        if (this.#applying || this.#disposed) { return; }
+
+        const path = bindingPath(this.#tracker.raw("value"));
+
+        if (path !== undefined)
+        {
+            this.#lastWritten = { value: toWire(value) };
+            this.#ctx.dataContext.set(path, this.#lastWritten.value);
+        }
+
+        const change = this.#env.descriptor.events.find((e) => e.payloadInValue);
+
+        if (change) { dispatchActionProp(this.#ctx, change.actionProp); }
     }
 
     /** Records an accepted value; reports and returns false for one that must not be applied. */
@@ -282,7 +317,10 @@ class Binding
         }
 
         logDebug("route", this.#where(), name, method);
-        fn.apply(this.#handle, args);
+        this.#applying = true;
+
+        try { fn.apply(this.#handle, args); }
+        finally { this.#applying = false; }
     }
 
     #rebuild(prop: string): void
@@ -327,16 +365,27 @@ class Binding
     #construct(factory: unknown, container: HTMLElement): Record<string, unknown>
     {
         const d = this.#env.descriptor;
-        const handle = invokerFor(d)(factory, container.id, Object.fromEntries(this.#values));
+        const options = { ...Object.fromEntries(this.#values), ...changeOptions(d, (v) => this.#onUserValue(v)) };
+        const handle = invokerFor(d)(factory, container.id, options) as Record<string, unknown> | null;
 
         if (!handle || typeof handle !== "object")
         {
             throw new Error(`it returned ${handle === null ? "null" : typeof handle}, expected a handle object`);
         }
 
-        attachHandle(handle as Record<string, unknown>, d, container);
+        try
+        {
+            attachHandle(handle, d, container);
+            this.#roundTrip = wireRoundTrip(this.#ctx, d, handle, {
+                onUserValue: (v) => this.#onUserValue(v), isApplying: () => this.#applying });
+        }
+        catch (err)
+        {
+            (handle.destroy as (() => void) | undefined)?.call(handle);
+            throw err;
+        }
 
-        return handle as Record<string, unknown>;
+        return handle;
     }
 
     #unmount(): void
@@ -344,6 +393,8 @@ class Binding
         const handle = this.#handle;
 
         this.#handle = undefined;
+        this.#roundTrip?.release();
+        this.#roundTrip = undefined;
         this.#container?.remove();
         this.#container = undefined;
 
