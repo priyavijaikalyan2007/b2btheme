@@ -106,7 +106,10 @@ Reading the code while planning turned up six refinements. None changes a user d
   4. **§12.2:** a new named export, `catalogJson`, is the parsed catalog the bundle embeds. Hosts can send it inline, and `[29]` uses it to prove the bundle matches the published catalog (G2).
   5. **§5.4, §9:** Ajv standalone code `require`s two Ajv runtime helpers (`ajv/dist/runtime/ucs2length`, `ajv/dist/runtime/equal`, which pulls in `fast-deep-equal`). The bundle therefore **serves** that code. G2 gains a closure check: the bundle's `node_modules` inputs must come from exactly the packages `ajv` and `fast-deep-equal`, and nothing from `@a2ui/*`. Those packages are recorded in `dist/agentui-report.json` under `adapter.packages`, and `scripts/vendor-audit.mjs` audits them with the `/lib` closure.
   6. **§3.1:** `assets.css` is present only when `dist/components/<dir>/<dir>.css` exists at generation time. `defaultOptions` are never applied.
-- [ ] **Step 2:** Add one §14 row dated 2026-10-26: "Planning amendments 1–6 (connected-before-mount, strict attach, webCore shape and page-global assetBaseUrl, `catalogJson` export, served Ajv helpers and closure gate, css presence). No user decision changed." Set **Status** to "Approved 2026-10-26; amended 2026-10-26 (planning, §14)".
+  7. **§4.1, §6.2:** the element must live in the document's light DOM, because container-first factories resolve their container by id and component CSS is injected into `document.head`. Verified 2026-10-26: under `@a2ui/lit` and `@a2ui/react` 0.14.0, a custom element inside a basic `Column` has `getRootNode() === document`. If `getRootNode() !== document` at mount, the element sends `OUTCROP_MOUNT_FAILED`: "<tag> is inside a shadow root; outcrop components mount in the light DOM. Render this surface without shadow DOM."
+  9. **§6.1, §7, §12.3 (user decision, 2026-10-26):** the base theme (`/css/custom.css` plus `data-bs-theme`) is the **host's** responsibility by default; the guide makes linking it a required step. `createOutcropCatalog` accepts an optional `injectBaseTheme: boolean` (default `false`). When `true`, the loader injects `<link rel="stylesheet" href="<assetBaseUrl>/css/custom.css">` once per page before the first component mounts. A load failure is `OUTCROP_ASSET_LOAD_FAILED` for every element waiting on it. `injectBaseTheme` is page-global like `assetBaseUrl`, and a later call with a different value throws. `data-bs-theme` is never set by the adapter. The guide warns that injecting restyles the whole host page, because the stylesheet is Bootstrap.
+  8. **§12.1:** the module has no top-level DOM access. The `HTMLElement` base class is created lazily on first use (`outcropElementBase()`), so importing the bundle in Node (`[29]`, server-side rendering hosts) does not throw.
+- [ ] **Step 2:** Add one §14 row dated 2026-10-26: "Planning amendments 1–9 (connected-before-mount, strict attach, webCore shape and page-global assetBaseUrl, `catalogJson` export, served Ajv helpers and closure gate, css presence, light-DOM requirement, no top-level DOM access, optional `injectBaseTheme`). Amendment 9 is a user decision; the rest change no user decision." Set **Status** to "Approved 2026-10-26; amended 2026-10-26 (planning, §14)".
 - [ ] **Step 3:** Commit: `docs(agentui): record planning amendments to the A2UI adapter spec`, then `git push`.
 
 ---
@@ -397,7 +400,8 @@ export const ERROR_CODES = Object.freeze({ VALIDATION_FAILED: "VALIDATION_FAILED
 export function reportError(ctx: ComponentContextLike, code: string, message: string, path?: string): void;
 
 // loader.ts
-export function loadAssets(baseUrl: string, assets: { js: string; css?: string }): Promise<void>;
+export function loadAssets(baseUrl: string, assets: { js: string; css?: string }, injectBaseTheme: boolean): Promise<void>;
+    // when injectBaseTheme, also awaits `<baseUrl>/css/custom.css` (deduped like every URL)
 export function resetLoaderForTests(): void;
 ```
 
@@ -417,7 +421,7 @@ Behaviour:
   - Injects `<script src>` (no `async`, no `type=module`, because the components are classic IIFE scripts) and `<link rel="stylesheet">` into `document.head`.
   - Resolves when both fire `load`.
   - Rejects with `Error("Could not load <url> …")` on `error`. A failed URL stays rejected for the page.
-- **`log.ts`:** copy the FRONTEND_LOGGING.md component pattern exactly: `LOG_PREFIX = "[A2UI]"`, `window.createLogUtility` when loaded, timestamped `console.*` otherwise. Export `logInfo`, `logDebug`, `logError`.
+- **`log.ts`:** copy the FRONTEND_LOGGING.md component pattern exactly: `LOG_PREFIX = "[A2UI]"`, `window.createLogUtility` when loaded, timestamped `console.*` otherwise. Export `logInfo`, `logDebug`, `logError`. Resolve the logger **inside** each call (or memoise on first call), never at module top level, so the module has no top-level `window` access (spec amendment 8).
 
 - [ ] **Step 1: Write the failing tests:**
   - `values.test.ts`: every branch of each helper. For `sameComponent`, include a case where only `dataContext.path` differs, which must return false.
@@ -428,6 +432,7 @@ Behaviour:
     - `error` rejects with the URL in the message.
     - A trailing slash or relative base throws.
     - css absent means only a script is injected.
+    - `injectBaseTheme: true` injects `<base>/css/custom.css` once across many components; `false` never does.
     - Call `resetLoaderForTests()` in `beforeEach`.
 - [ ] **Step 2:** Run `npx vitest run a2ui/`. Expected: FAIL.
 - [ ] **Step 3: Implement** the five modules. `a2ui/tsconfig.json`:
@@ -469,8 +474,14 @@ export class PropTracker
 }
 
 // element.ts
-export interface ElementEnv { readonly descriptor: AdapterDescriptor; readonly validators: Validators; readonly assetBaseUrl: () => string }
-export class OutcropComponentElement extends HTMLElement
+export interface ElementEnv { readonly descriptor: AdapterDescriptor; readonly validators: Validators; readonly assetBaseUrl: () => string; readonly injectBaseTheme: () => boolean }
+/**
+ * The base class is created on first call and memoised, so this module has no
+ * top-level DOM access and can be imported in Node (spec amendment 8). The
+ * class body below is what the factory returns.
+ */
+export function outcropElementBase(): new () => OutcropComponentElement;
+export interface OutcropComponentElement extends HTMLElement
 {
     protected readonly env: ElementEnv;     // set by the per-tag subclass (Task 7)
     get context(): ComponentContextLike | undefined; set context(c: ComponentContextLike | undefined);
@@ -479,7 +490,7 @@ export class OutcropComponentElement extends HTMLElement
     /** Test seam: the live handle, or undefined when unmounted. */
     get handle(): Record<string, unknown> | undefined;
 }
-export function defineTestElement(tag: string, env: ElementEnv): typeof OutcropComponentElement; // used by tests and Task 7
+export function defineTestElement(tag: string, env: ElementEnv): CustomElementConstructor; // `class extends outcropElementBase()` with `env`; used by tests
 ```
 
 **`PropTracker` behaviour:**
@@ -493,7 +504,7 @@ export function defineTestElement(tag: string, env: ElementEnv): typeof OutcropC
 1. **`set context(c)`:**
    - same component (`sameComponent`) → keep `c`, do nothing else;
    - otherwise → `#teardown()`, store `c`, subscribe `componentModel.onUpdated` → `#tracker.refresh()`, create the `PropTracker`, set `aria-busy="true"`, start `#ensureAssets()`, then `#tryMount()`.
-2. **`#ensureAssets()`:** `loadAssets(env.assetBaseUrl(), descriptor.assets)`. On reject: `reportError(ASSET_LOAD_FAILED, …)`, remove `aria-busy`, and stay unmounted. On resolve, `#tryMount()`.
+2. **`#ensureAssets()`:** `loadAssets(env.assetBaseUrl(), descriptor.assets, env.injectBaseTheme())`. On reject: `reportError(ASSET_LOAD_FAILED, …)`, remove `aria-busy`, and stay unmounted. On resolve, `#tryMount()`.
 3. **`#tryMount()`:** proceeds only when all of these hold:
    - a context exists;
    - `isConnected`;
@@ -503,6 +514,7 @@ export function defineTestElement(tag: string, env: ElementEnv): typeof OutcropC
    - every bound value is currently valid.
 
    Then:
+   - if `this.getRootNode() !== document` → `MOUNT_FAILED` (spec amendment 7) and stop;
    - create a child `<div class="outcrop-host" id="outcrop-<counter>">`;
    - build options from `current()`, applying `fromWire` for `dates`;
    - look up `window[descriptor.factory]`. If it is missing, report `MOUNT_FAILED`: "createX is not defined after loading <url>; the asset is not this component's script".
@@ -555,6 +567,8 @@ A fake widget factory `window.createFake` is registered in tests. It records its
   12. Factory throws → `OUTCROP_MOUNT_FAILED` with the thrown message.
   13. Disconnect then reconnect within the same task → no destroy. Disconnect and await a microtask → `destroy` called, and subscriptions released (a later data set does nothing).
   14. An absent optional prop is omitted from the factory options, and `defaultOptions` are never read.
+  15. An element attached inside a shadow root → `OUTCROP_MOUNT_FAILED` naming the light-DOM requirement.
+  16. Importing `element.ts` touches no DOM: a test deletes `globalThis.HTMLElement` temporarily, imports the module afresh (`vi.resetModules()`), expects no throw, then restores it.
 - [ ] **Step 2:** Run `npx vitest run a2ui/src/element.test.ts`. Expected: FAIL.
 - [ ] **Step 3: Implement** `props.ts` and `element.ts` (round-trip hooks are left for Task 6).
 - [ ] **Step 4:** Run `npx vitest run a2ui/` and `npm run typecheck:a2ui`. Expected: PASS.
@@ -624,7 +638,8 @@ export function wireRoundTrip(ctx: ComponentContextLike, descriptor: AdapterDesc
 // catalog.ts
 export interface Embedded { readonly catalogText: string; readonly descriptors: readonly AdapterDescriptor[]; readonly validators: Validators }
 export interface OutcropWebCore { readonly Catalog: CatalogCtor; readonly basicCatalog: BasicCatalogLike; readonly BASIC_FUNCTIONS: readonly unknown[] }
-export function createOutcropCatalogFrom(embedded: Embedded, webCore: OutcropWebCore, options: { assetBaseUrl: string }): unknown;
+export interface OutcropCatalogOptions { readonly assetBaseUrl: string; readonly injectBaseTheme?: boolean }
+export function createOutcropCatalogFrom(embedded: Embedded, webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown;
 export function elementClassFor(descriptor: AdapterDescriptor, validators: Validators): CustomElementConstructor; // cached per tag
 export function resetCatalogStateForTests(): void;
 
@@ -633,12 +648,12 @@ import catalogText from "virtual:outcrop/catalog";
 import descriptors from "virtual:outcrop/descriptors";
 import { validators } from "virtual:outcrop/validators";
 export const catalogJson: unknown = JSON.parse(catalogText);
-export function createOutcropCatalog(webCore: OutcropWebCore, options: { assetBaseUrl: string }): unknown;
+export function createOutcropCatalog(webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown;
 ```
 
 **Behaviour** (spec §7 plus amendment 3):
 1. **Member check:** `Catalog` must be a function with a static `fromJson`; `basicCatalog.components` must be a `Map`; `BASIC_FUNCTIONS` must be an array. Each missing member throws: "createOutcropCatalog: webCore.<member> is missing or not a <kind>. Pass { Catalog } from '@a2ui/web_core/v0_9' and { basicCatalog, BASIC_FUNCTIONS } from '@a2ui/web_core/v0_9/basic_catalog' (tested with 0.14.0)."
-2. **`assetBaseUrl`:** validate it as in the loader. The first call stores it module-wide; a later call with a different value throws, naming both values.
+2. **`assetBaseUrl` and `injectBaseTheme`:** validate `assetBaseUrl` as in the loader; `injectBaseTheme`, when given, must be a boolean (absent means `false`). The first call stores both module-wide; a later call with a different value for either throws, naming both values.
 3. **Building the catalog:**
    - `schemas = webCore.Catalog.fromJson(JSON.parse(catalogText)).withPeerCatalogs([webCore.basicCatalog])`.
    - For each `api` of `schemas.components.values()`:
@@ -649,7 +664,7 @@ export function createOutcropCatalog(webCore: OutcropWebCore, options: { assetBa
 4. **`elementClassFor`:** caches one subclass per tag in a module `Map`:
 
 ```ts
-class extends OutcropComponentElement { protected readonly env = { descriptor, validators, assetBaseUrl: () => currentBase() } }
+class extends outcropElementBase() { protected readonly env = { descriptor, validators, assetBaseUrl: () => currentBase(), injectBaseTheme: () => currentInjectBaseTheme() } }
 ```
 
    The same tag always returns the same constructor, so `registerUniversalElement` never throws. Calling `customElements.define` is left to the renderer, which defines lazily.
@@ -660,7 +675,7 @@ class extends OutcropComponentElement { protected readonly env = { descriptor, v
   1. Each missing member throws its literate message.
   2. The returned catalog's `components` contains `StickyNote` with `tagName === "outcrop-sticky-note"`, and `Text` keeps the basic implementation's `tagName`.
   3. Two calls return entries whose `element` is identical (`===`).
-  4. A second call with a different `assetBaseUrl` throws, naming both.
+  4. A second call with a different `assetBaseUrl`, or a different `injectBaseTheme`, throws, naming both values. A non-boolean `injectBaseTheme` throws.
   5. A real `MessageProcessor([catalog])` processes `createSurface` (our catalog ID) plus `updateComponents` with `{ id: "root", component: "StickyNote", text: { path: "/t" } }` without throwing. A message with an unknown prop throws, which proves the schema is enforced.
   6. No entry has a `render` key.
 - [ ] **Step 2:** Run. Expected: FAIL.
@@ -699,7 +714,7 @@ export function bundleAdapter({ catalogText, descriptors, validatorsSource, repo
   - `virtual:outcrop/catalog` → `export default <JSON.stringify(catalogText)>`;
   - `virtual:outcrop/descriptors` → `export default <JSON.stringify(descriptors)>`;
   - `virtual:outcrop/validators` → `validatorsSource`, with `resolveDir: repoRoot` so its `require("ajv/dist/runtime/…")` resolves.
-- `buildSync` does not support plugins, so use `esbuild.build` and make `bundleAdapter` async, or use a `stdin` entry that inlines the virtual modules. Pick `build` (async), and make `runPipeline` async accordingly. Update `main()` and the tests to `await`.
+- `buildSync` does not support plugins, so use `esbuild.build` and make `bundleAdapter` async. `runPipeline` becomes async, which cascades to: `main()` and `measure()` in `generate.mjs`; every `runPipeline` call in `generate.test.ts`; `measureClassification` only if it starts calling `runPipeline` (it does not today; leave it synchronous). `checkDist` also becomes async (for the dynamic `import()`), which cascades to its `main` and every call in `check-dist.test.ts`.
 - **Closure gate:**
   - From `metafile.inputs`, collect the package names of every path containing `node_modules/`.
   - Any package not in `ALLOWED_PACKAGES`, or any `@a2ui/` path, throws: "The A2UI adapter bundle would serve <pkg> (<input path>). Only ajv runtime helpers are allowed; the element must not import @a2ui/* (spec §4.1, amendment 5)."
@@ -716,7 +731,7 @@ export function bundleAdapter({ catalogText, descriptors, validatorsSource, repo
   - Require `JSON.stringify(mod.catalogJson, null, 2) + "\n"` to equal the text of `dist/a2ui/catalog/v1.json`.
   - Require `typeof mod.createOutcropCatalog === "function"`.
   - Require `dist/a2ui/adapter/v1.d.ts` to exist.
-  - Require every non-basic catalog component to appear in `report.adapter.descriptors` with a `route` for every data prop in its catalog entry: every property except `component`, `eventData`, the `on*` action props and `*Result` props.
+  - Require every non-basic catalog component to appear in `report.adapter.descriptors` with a `route` for every data prop in its catalog entry. A data prop is any property of `allOf[2].properties` except `component`, `eventData` (a bare `$ref` to common_types `DataBinding`), action props (a `$ref` to common_types `Action`) and provider results (name ending in `Result` **and** listed by no descriptor route). Detect by schema, never by an `on` prefix, so a data prop named `online` is still checked.
   - `checkDist` becomes async; update `main` and the tests.
   - `fixtureProblems` applies only to `.json` files.
 
@@ -751,10 +766,10 @@ export function bundleAdapter({ catalogText, descriptors, validatorsSource, repo
 - Produces: `sampleValue(schema: object, variant: 0 | 1, root: object): unknown`. It gives two distinct valid values for a literal-arm schema, covering `type` boolean/string/number/integer/array/object, `enum`, `const`, `format: date-time`, `minimum`/`maximum`, `minItems`, `required`, `oneOf`/`anyOf` (first arm for variant 0, second arm or variant 1 of the first arm otherwise) and `$ref` into `root.$defs`. Any other keyword throws "sampleValue: unsupported keyword <k> at <pointer>; extend sample-values.ts". Fail rather than guess.
 
 **Setup:**
-- The test file uses `// @vitest-environment jsdom` and loads the built component script and CSS through the real loader, via jsdom file URLs.
-- Configure jsdom resources for this file, either with the vitest per-file environment options docblock `/** @vitest-environment-options {"resources":"usable","runScripts":"dangerously","url":"file:///<repo>/dist/"} */`, or, if vitest 4 rejects per-file options, with a second vitest project in `vitest.config.ts` scoped to `a2ui/fleet-adapter.test.ts`, whose `environmentOptions.jsdom` sets them.
-- `assetBaseUrl` is `pathToFileURL(dist).href` without a trailing slash.
-- A missing `dist` build throws: "run npm run build first".
+- Components are loaded exactly as `runtime/fleet-conformance.test.ts` loads them: `import.meta.glob("../components/*/*.ts")`, so `window.createX` exists from the TypeScript source and `tests/setup.ts` polyfills apply. Do **not** have jsdom execute the dist IIFEs: scripts jsdom runs live in a separate vm context without vitest's globals. Task 10 covers the dist IIFEs in a real browser.
+- The real adapter loader still runs. A `MutationObserver` on `document.head`, installed in `beforeAll`, dispatches `new Event("load")` on every `<script>` and `<link>` the loader injects, after asserting each URL equals `<assetBaseUrl>/<descriptor.assets.*>`. So G3 also checks the asset paths.
+- `assetBaseUrl` is `"https://assets.test"`.
+- The adapter comes from the built bundle (`dist/a2ui/adapter/v1.js`), the descriptors from `dist/agentui-report.json`. A missing `dist` build throws: "run npm run build first".
 
 **Per component** (`describe.each` over the descriptors), with a real `MessageProcessor` and surface, and the element created directly by assigning `context`:
 1. **Mount:** send `updateComponents` with every required data prop set to `sampleValue(…, 0)`. Await the element's `handle`. Expect the factory to have been called once (spy by wrapping `window[descriptor.factory]` after the script loads).
@@ -803,7 +818,8 @@ Also add a coverage test: the descriptor list is non-empty, and its names equal 
    - `StickyNote` with `value: {path:"/note"}`, `eventData: {path:"/ev"}`, `onChange: {event:{name:"noteChanged", context:{text:{path:"/note"}}}}`.
    - Typing into the note updates `/note`, and one `noteChanged` action is captured whose context holds the typed text.
    - Changing a create-time prop, `readOnly: true`, re-creates it: the element's `handle` identity changes. Expose `window.__handleOf(id)` in the harness by reading the element's `handle` getter.
-4. **Errors:**
+4. **Base theme:** a second page created with `injectBaseTheme: true` and **no** hand-linked `custom.css` → after the first component mounts, exactly one `link[href$="/css/custom.css"]` is in `<head>`. The default page (false) gets none injected by the adapter.
+5. **Errors:**
    - Binding `StickyNote.collapsed` to a string → one `VALIDATION_FAILED` with path `/c`.
    - `assetBaseUrl` pointing at a 404 path, in a second page → `OUTCROP_ASSET_LOAD_FAILED`.
 
@@ -843,6 +859,7 @@ Also add a coverage test: the descriptor list is non-empty, and its names equal 
   - a Lit recipe and a React recipe, the code taken from the e2e harnesses;
   - an Angular note (`useUniversalComponents: true`, untested);
   - the `webCore` object;
+  - **base theme, a required step:** link `/css/custom.css` and set `data-bs-theme`. Explain `injectBaseTheme: true` for demo, prototype or agent-only pages, with the warning that it restyles the whole page because it is Bootstrap;
   - `assetBaseUrl` and CSP (`script-src` and `style-src` for that origin; module `import` of `/a2ui/adapter/v1.js` needs CORS, already served);
   - advertising the catalog (`getRendererCapabilities` / `catalogJson`);
   - handling `onError` and sending v0.9.1 `error` messages;
