@@ -19,6 +19,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
 import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
 import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from "./checks.mjs";
@@ -53,7 +54,7 @@ export const PENDING_EXCUSABLE_CODES = new Set(Object.values(BACKLOG_COUNTS).fla
  * The whole generator, without touching dist (spec §§3–6, §8).
  *
  * @param input - See the Task 8 interface block.
- * @returns { errors, excluded, outputs, catalog, counts }.
+ * @returns { errors, excluded, outputs, catalog, descriptors, counts }.
  */
 // @entrypoint
 export function runPipeline(input)
@@ -69,7 +70,11 @@ export function runPipeline(input)
     errors.push(...violations.map((v) => v.message));
     checkBaseline(catalog, input, errors);
 
-    return { errors, excluded, catalog, outputs: outputsFor(ready, schemas, catalog, excluded, input),
+    const adapter = buildDescriptors(ready, catalog, input.assetExists);
+    errors.push(...adapter.problems);
+
+    return { errors, excluded, catalog, descriptors: adapter.descriptors,
+        outputs: outputsFor(ready, schemas, catalog, excluded, input),
         counts: { ...countsFor(classified, ready, excluded), belowRequired: input.belowRequired.size } };
 }
 
@@ -399,6 +404,7 @@ function repoInputs(repoRoot, writeBaseline)
         pending: PENDING_CLASSIFICATION, belowRequired: BELOW_REQUIRED,
         basic: JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", "catalogs", "basic", "catalog.json"), "utf8")),
         baselines: loadBaselines(), major: CATALOG_MAJOR, writeBaseline,
+        assetExists: (rel) => fs.existsSync(path.join(repoRoot, "dist", rel)),
     };
 }
 
