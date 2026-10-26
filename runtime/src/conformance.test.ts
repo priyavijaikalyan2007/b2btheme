@@ -14,7 +14,7 @@
 
 import { describe, test, expect } from "vitest";
 
-import { CONFORMANCE_CHECKS, runConformance, sampleFor } from "./conformance";
+import { CONFORMANCE_CHECKS, requiredLevel, runConformance, sampleFor } from "./conformance";
 
 import type { CapabilityManifest, ConformanceLevel } from "./types";
 
@@ -577,5 +577,60 @@ describe("CONFORMANCE_CHECKS", () =>
         const ids = CONFORMANCE_CHECKS.map((c) => c.id);
 
         expect(new Set(ids).size).toBe(ids.length);
+    });
+});
+
+// ============================================================================
+// REQUIRED LEVEL (ADR-219)
+// ============================================================================
+
+function fieldFactory()
+{
+    return function create(hostId: string)
+    {
+        const el = document.createElement("div");
+        el.textContent = "field";
+        document.getElementById(hostId)?.appendChild(el);
+        let value: unknown = null;
+        return {
+            getValue: () => value,
+            setValue: (v: unknown) => { value = v; },
+            destroy: () => { el.remove(); },
+        };
+    };
+}
+
+describe("requiredLevel", () =>
+{
+    test("emits require surface", () =>
+    {
+        expect(requiredLevel(manifest({ conformance: "display" }), {})).toBe("surface");
+    });
+    test("providers require surface", () =>
+    {
+        const m = manifest({ emits: [], accepts: [],
+            protocol: { providers: { onSearch: { request: "search" } } } });
+        expect(requiredLevel(m, {})).toBe("surface");
+    });
+    test("getValue and setValue require field", () =>
+    {
+        expect(requiredLevel(manifest({ emits: [], accepts: [] }), { getValue() {}, setValue() {} })).toBe("field");
+    });
+    test("nothing requires display", () =>
+    {
+        expect(requiredLevel(manifest({ emits: [], accepts: [] }), {})).toBe("display");
+    });
+});
+
+describe("conformance — level-meets-required", () =>
+{
+    test("a field-shaped handle declared display fails", () =>
+    {
+        const findings = check(fieldFactory(), { conformance: "display", emits: [], accepts: [], stateKeys: [] });
+        expect(failedChecks(findings)).toContain("level-meets-required");
+    });
+    test("a conforming surface component does not fail it", () =>
+    {
+        expect(failedChecks(check())).not.toContain("level-meets-required");
     });
 });

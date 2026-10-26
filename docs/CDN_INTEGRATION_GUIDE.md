@@ -432,7 +432,31 @@ them.
 origin serves DOMPurify at 3.4.16; if your application pins an older one
 anywhere else, that pin is the exposure.
 
-## 7. Related reading
+## 7. Using the components from an AI agent
+
+The build now publishes what an agent needs to *describe* these components
+over **A2UI** and **MCP Apps** (ADR-219). It does not yet publish the code
+that *renders* them for an agent; see the last paragraph.
+
+- **The A2UI catalog** is `https://static.outcrop.us/a2ui/catalog/v1.json`.
+  That URL is its `catalogId`: put it in your surface's `catalogId` as
+  written. It re-exports the A2UI v0.9.1 basic catalog, so an agent can compose
+  `Row`, `Column`, `Text` and the rest around our components on one surface.
+  Within `v1` it only grows; a breaking change publishes `v2` and `v1` stays
+  served.
+- **Per-component option schemas** are at `/schemas/<name>.options.json`, for
+  the components in the catalog.
+- **The MCP Apps metadata** is `/mcp/renderer.meta.json`: the `_meta.ui` block,
+  with the CSP origins the renderer view loads from.
+
+`static.outcrop.us` is the host-neutral name for this same origin (D13), so
+nothing an agent reads names a consuming app. Not every component is in the
+catalog yet: `/agentui-report.json` lists the ones left out and why. The
+runtime that turns a catalog entry into a mounted component arrives with
+**#18** (A2UI) and **#19** (the MCP Apps view and server helper). The cache
+rules and the versioning promise are in [`CDN_CONTRACT.md`](../CDN_CONTRACT.md) §2c.
+
+## 8. Related reading
 
 - [`CDN_CONTRACT.md`](../CDN_CONTRACT.md) — caching policy, the `/lib/` contract, version-bump rules
 - [`APPS_TEAM_USAGE_GUIDE.md`](APPS_TEAM_USAGE_GUIDE.md) — factory naming, renames, CI guards

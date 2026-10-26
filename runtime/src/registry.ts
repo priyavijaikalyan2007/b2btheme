@@ -85,6 +85,7 @@ export function validateManifest(m: unknown): ValidationResult
     validatePorts(m, issues);
     validateWeightAndSize(m, issues);
     validateConformance(m, issues);
+    validateProtocol(m, issues);
 
     return result(issues);
 }
@@ -432,6 +433,152 @@ function validateConformance(
             + "canvas cannot restore it after virtualizing it.",
             "Declare the keys getState() returns, or lower conformance to "
             + "\"display\"."));
+    }
+}
+
+/** UAX #31 identifier, the A2UI v1.0 rule for names (spec §5.1). */
+const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
+
+/**
+ * Validates the optional agent-protocol declarations (ADR-219).
+ *
+ * @param m      - The candidate manifest.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateProtocol(
+    m: Record<string, unknown>,
+    issues: ValidationIssue[]): void
+{
+    if (m.protocol === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(m.protocol))
+    {
+        issues.push(typeIssue("protocol", "an object of protocol declarations", m.protocol));
+        return;
+    }
+
+    const p = m.protocol;
+
+    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
+    {
+        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
+    }
+
+    unknownKeys("protocol", p, PROTOCOL_KEYS, issues);
+    validateProviderMap(p.providers, issues);
+    validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
+    validateSchemaMap(p.schemas, issues);
+}
+
+/** The keys `protocol` may carry. */
+const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas"];
+
+/** The keys a provider spec may carry; every catalog name derives from `request`. */
+const PROVIDER_KEYS: readonly string[] = ["request"];
+
+/**
+ * Reports every key of `obj` outside `allowed`. The generator derives all
+ * catalog names (spec §5.4), so a key it does not read, such as a removed
+ * `bindAs` or a provider's old `params`, would otherwise pass silently.
+ */
+function unknownKeys(
+    path: string,
+    obj: Record<string, unknown>,
+    allowed: readonly string[],
+    issues: ValidationIssue[]): void
+{
+    for (const key of Object.keys(obj).filter((k) => !allowed.includes(k)))
+    {
+        issues.push(issue(
+            `${path}.${key}`,
+            `"${key}" is not a ${path} key; nothing reads it, so it would be ignored silently.`,
+            `Remove it. ${path} takes only ${allowed.join(", ")}.`));
+    }
+}
+
+/**
+ * Validates `protocol.providers`: every entry names its request and nothing
+ * else.
+ */
+function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.providers", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [option, spec] of Object.entries(v))
+    {
+        const request = isObject(spec) ? spec.request : undefined;
+
+        if (!(isNonEmptyString(request) && UAX31.test(request)))
+        {
+            issues.push(typeIssue(`protocol.providers.${option}.request`, "a UAX #31 identifier", request));
+        }
+
+        if (isObject(spec))
+        {
+            unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
+        }
+    }
+}
+
+/** Validates a map whose values must be non-empty strings. */
+function validateStringMap(
+    path: string,
+    v: unknown,
+    expected: string,
+    issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue(path, "an object", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isNonEmptyString(value))
+        {
+            issues.push(typeIssue(`${path}.${key}`, expected, value));
+        }
+    }
+}
+
+/** Validates `protocol.schemas`: every value is a JSON Schema object. */
+function validateSchemaMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.schemas", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isObject(value))
+        {
+            issues.push(typeIssue(`protocol.schemas.${key}`, "a JSON Schema object", value));
+        }
     }
 }
 

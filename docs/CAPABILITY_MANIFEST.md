@@ -172,7 +172,71 @@ Roughly: `70` for a primary data surface, `50` default, `25–40` for a speciali
 - [ ] `stateKeys` non-empty if `conformance: "surface"`.
 - [ ] `legacyOption` set on every channel that has a pre-existing callback.
 - [ ] Component removed from `EXEMPT` in the gate.
+- [ ] Every non-data option is classified (see §9).
 - [ ] `npm test` passes.
+
+---
+
+## 9. `protocol` — agent-protocol declarations (ADR-219)
+
+Optional. It says how the component appears over **A2UI** and **MCP Apps**, and only for what the generator cannot decide alone. `scripts/agentui/generate.mjs` sorts every member of `<Name>Options` with the TypeScript checker: a JSON-serialisable member is a **data** prop, and a function named by an `emits[].legacyOption` (or the ADR-134 `onChange` beside `value`; one `onChange` may be both) is an **event**. Everything else must be written down here, or the build fails. The one exception is the measured backlog: a component on `PENDING_CLASSIFICATION` (`scripts/agentui/migration.mjs`) is left out of the catalog and reported in `dist/agentui-report.json` instead, for the backlog kinds only (unclassified, undeclared mixed, undeclared nested hazard, too broad, missing JSDoc). Every other violation fails the build for it too. Both migration lists in `scripts/agentui/migration.mjs` (`PENDING_CLASSIFICATION`, `BELOW_REQUIRED`) are pinned exactly by check `[20]` (`componentsPendingClassification`, `componentsBelowRequiredLevel`, each a ceiling and a floor of the same value in `scripts/audit-counts.mjs`). Adding a name fails `npm test`; removing one fails too until the pin is lowered in the same change, so a freed slot cannot be reused. The full rule is in `specs/agentui-schema.prd.md` §3.
+
+```typescript
+protocol: {
+    name?:      string,                                   // catalog name override
+    providers?: { [option]: { request } },
+    hostOnly?:  { [optionOrPath]: reason },
+    schemas?:   { [option]: JSONSchema },
+}
+```
+
+- `name` — the A2UI catalog name, needed only on a collision. Absent means the factory without its `create` prefix (`createDataGrid` is `DataGrid`). It must be a UAX #31 identifier. A clash with another component, or with an A2UI basic-catalog name (`Text`, `Button`, `Tabs`, …), fails the gate, and this field is the fix; the generator never adds a suffix.
+- `providers` — function options that **ask the host for data**, keyed by option name, each `{ request }`. A classifier cannot tell that from a DOM hook, so a person declares it. Every catalog name derives from `request` (see the table below): the component writes the request to `<eventData path>/<request>` and sends `on<Request>`; the agent answers with `updateDataModel` at the path bound to `<request>Result`, whose schema is the callback's return type with `Promise<T>` unwrapped. **A provider takes exactly one parameter**; one with more is a build error, so declare it host-only or add a single-object variant.
+- `hostOnly` — options, or parts of options, with **no protocol equivalent**, mapped to the reason. Write the reason as what the member needs that JSON cannot carry, in **at least 20 characters**; "n/a" fails the build. The reason is published in `dist/agentui-report.json`.
+  - **Key syntax:** an option name (`renderCell`), or a path into a data option with `.prop` and `[]` for array items (`columns[].renderer`).
+  - **Prefix coverage:** a key covers itself and every path below it, so `columns` would cover `columns[].renderer`. Declare the narrowest path that is true; a parent key hides what else is down there.
+  - **Mixed members:** a bare option name on a member like `string | (() => string)` means **its non-data arms**. The member stays a data prop whose schema has only the data arms, and the entry records that the narrowing is deliberate.
+  - **Nested hazards:** a data option with a function, element or too-broad type at any depth must declare that path. Every schema tool tried drops such parts silently, so an undeclared one fails the build.
+- `schemas` — an explicit JSON Schema for a data prop typed too broadly to describe (`unknown`, `object`, `Record<string, unknown>`), keyed by option name. It replaces the generated schema for that member only. Narrowing the public TypeScript type instead would break consumers.
+**A key that names no member or path fails the build** (`stale-declaration`), for every component, `PENDING_CLASSIFICATION` included. A stale key would hide a rename. A key `protocol` (or a provider spec) does not define, such as the removed `bindAs` or a provider's old `params`/`response`, fails manifest validation.
+
+**Catalog names follow one rule, with no exceptions** (user decision, 2026-10-25). Channel names are persisted Dynamic UI API (canvas documents reference them), so they are never renamed; the catalog derives its names from them:
+
+| Concept | Catalog name | Rule |
+|---|---|---|
+| Data option | its option name | unchanged |
+| Two-way field value | `value` | unchanged; when bound, user changes are written there |
+| Event payloads | ONE prop per component: `eventData` | Binding-only. The component writes each event's payload to `<bound path>/<channel>`, and each provider request to `<bound path>/<request>`, BEFORE sending the matching action. Present only when the component has at least one event or provider that carries a payload. |
+| Field `change` channel | no payload carrier | When a channel's `legacyOption` is `onChange` and the component is two-way (`twoWayValue`), its payload IS `value`. The action `onChange` exists; nothing is written under `eventData` for it. |
+| Event action | `on<Channel>` | Casing: if `legacyOption` minus its `on` prefix equals the channel name case-insensitively, use the legacy option name verbatim (`bulkchange` + `onBulkChange` → `onBulkChange`; `signout` + `onSignOut` → `onSignOut`). Otherwise `on` + PascalCase(channel) (`selection` → `onSelection`). |
+| Manifest `actions[]` entry | `on<Id>` (PascalCase) | If its `id` equals a channel name, it is the SAME event: one action prop, no duplicate. |
+| Provider | `on<Request>` + `<request>Result` | `ProviderSpec` becomes `{ request }` only. The request payload goes under `eventData/<request>`. The agent answers by `updateDataModel` at the path bound to `<request>Result` (literal, binding or function call; its schema is the provider's awaited return type). |
+| `protocol.bindAs` | removed | There is no rename knob. If `eventData`, an `on…` action or a `<request>Result` coincides with a data option, or two derived names coincide, the build fails with PROP_COLLISION. |
+
+StickyNote, for example, has `value`, `anchor` (data), `eventData`, `onChange` (its `change` channel, payload in `value`) and `onAnchor` (its `anchor` channel, `legacyOption` `onAnchorChange`, which is not `on` + `anchor`).
+
+The shape, in DataGrid's terms. This is **not** DataGrid's manifest today: DataGrid is on `PENDING_CLASSIFICATION`, and it has no search provider. The `columns[]` paths are the three the build reports for it.
+
+```typescript
+protocol: {
+    hostOnly: {
+        "columns[].renderer":   "writes into a cell HTMLElement the host owns",
+        "columns[].comparator": "a sort function; JSON cannot carry code",
+        "columns[].aggregate":  "a reduce function; JSON cannot carry code",
+    },
+    schemas: {
+        // `emptyStateOptions` is typed `object`, which describes nothing.
+        emptyStateOptions: { type: "object", properties: { heading: { type: "string" }, description: { type: "string" } } },
+    },
+    providers: {
+        // Hypothetical: `onSearch(query) => Promise<DataGridRow[]>`.
+        // Catalog: onSearch, searchResult; the query arrives at <eventData path>/search.
+        onSearch: { request: "search" },
+    },
+},
+```
+
+A member in two classes (for example both `hostOnly` and an `emits` `legacyOption`) fails the build. So does an option that is in none.
 
 ---
 
@@ -181,4 +245,5 @@ Roughly: `70` for a primary data surface, `50` default, `25–40` for a speciali
 - [SURFACE_CONTRACT.md](SURFACE_CONTRACT.md) — the contract a manifest describes
 - [DYNAMIC_UI_GUIDE.md](DYNAMIC_UI_GUIDE.md) — concepts and the host contract
 - `runtime/src/types.ts` — the authoritative type
-- ADR-142 (manifests), ADR-144 (factory styles)
+- `specs/agentui-schema.prd.md` — the agent-protocol rules behind §9
+- ADR-142 (manifests), ADR-144 (factory styles), ADR-219 (agent-protocol schemas)

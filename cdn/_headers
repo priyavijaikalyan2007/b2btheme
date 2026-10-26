@@ -60,3 +60,17 @@
 # Build metadata: always revalidate — consumers use it to see what is live.
 /build.json
   Cache-Control: no-cache
+
+# Agent-protocol artefacts (ADR-219): the A2UI catalog is a permanent public
+# identifier that third-party tools fetch cross-origin, so CORS is open.
+/a2ui/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: *
+
+/schemas/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: *
+
+/mcp/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Access-Control-Allow-Origin: *

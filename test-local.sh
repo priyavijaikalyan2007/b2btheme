@@ -727,6 +727,20 @@ else
 fi
 echo ""
 
+# ── 29. The agent-protocol artefacts are sound (ADR-219) ──
+#
+# Reads ONLY what the build emitted (dist/a2ui, dist/schemas, dist/mcp,
+# dist/agentui-report.json), the vendored A2UI v0.9.1 schemas, and the
+# committed baseline. It imports nothing from the generator: a check that
+# shares an oracle with the thing it checks passes by construction ([19]).
+echo "[29] The agent-protocol catalog is sound and host-neutral (ADR-219)"
+if node scripts/agentui/check-dist.mjs; then
+    pass "The A2UI catalog matches its baseline, resolves, covers the fleet and names no host"
+else
+    fail "the agent-protocol artefacts are inconsistent (see above)"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

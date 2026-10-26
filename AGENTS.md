@@ -223,6 +223,8 @@ resolution), ADR-144 (factory argument order), and `specs/dynamicui.prd.md`.
 The level is **verified by the conformance suite, never self-declared**. A
 manifest claiming `surface` while failing the suite fails the build.
 
+**And the minimum level is computed (ADR-219).** emits, accepts or a protocol provider require surface; a handle with getValue/setValue requires field. Declaring less fails the gate. BELOW_REQUIRED in scripts/agentui/migration.mjs holds the measured backlog and may only shrink — never add a new component to it.
+
 ### The manifest
 
 Every component folder carries `<name>.manifest.ts` exporting one
@@ -413,6 +415,82 @@ Re-measuring a deferral means re-reading the CODE it describes.
 
 The empty `EXEMPT` set stays in the file. It is where a new exemption would
 have to be written down, and the comment above it is the rule.
+
+## (CRITICAL) Agent-Protocol-Capable Components
+
+Every canvas-mountable component must be usable by AI agents over **A2UI**
+and **MCP Apps** (epic #16, ADR-219, `specs/agentui-schema.prd.md`). That is
+enforced by the build, not by this document: `npm run build` runs
+`scripts/agentui/generate.mjs`, and `npm test` runs the conformance gate,
+check `[20]`'s counts and check `[29]`.
+
+**Every option of your factory is classified, or the build fails.** The
+generator reads your `<Name>Options` type with the TypeScript checker, and each
+member must be exactly one of:
+
+| Class | How it is recognised | You do |
+|---|---|---|
+| data | JSON-serialisable (a `Date` counts; it is sent as an ISO string) | write a JSDoc comment **on its own line above the member** — it is what the agent reads, and typia ignores a comment on the member's line |
+| event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` (one `onChange` may be both: a single callback in two roles) | nothing more |
+| provider | asks the host for data | declare it in `protocol.providers` as `{ request }`; exactly one parameter |
+| host-only | needs something JSON cannot carry | declare it in `protocol.hostOnly` with a reason of at least 20 characters |
+
+A data member that has a function, element or open record **nested inside it**
+(`columns[].renderer`) must declare that path in `protocol.hostOnly`. Every schema
+tool tried drops such parts silently, so an undeclared one fails the build.
+`unknown` and open records need `protocol.schemas`.
+
+**Catalog names are derived by one rule, with no override** (spec §5.4–5.5).
+Each event is an `on<Channel>` action (a `legacyOption` that is `on` + the
+channel name, compared case-insensitively, keeps its own casing); a manifest
+action is `on<Id>`, and one whose `id` equals a channel is that channel's event.
+Payloads go through ONE binding-only `eventData` prop: the component writes each
+event's payload to `<path>/<channel>` and each provider request to
+`<path>/<request>` before sending the action. A provider is `on<Request>` plus
+`<request>Result`, the prop the agent answers at. A two-way field's `onChange`
+channel carries its payload in `value`. Channel names are persisted Dynamic UI
+API, so they are never renamed to fix a name.
+
+**The conformance level is computed, not declared** (amends SURFACE_CONTRACT.md
+§1). `emits`, `accepts` or a provider require `surface`; a handle with
+`getValue`/`setValue`, or a two-way `value` (a `value` data prop paired with the
+ADR-134 `onChange` write-back), requires `field`. A read-only `value`, such as a
+displayed metric, is ordinary data. Declaring less fails the gate.
+Under-declaring used to be "the smaller problem"; an agent cannot read a value
+from a `display`, so it is now a defect.
+
+**The A2UI catalog is a permanent public identifier.** Removing, renaming,
+retyping or newly requiring anything in it breaks hosts that hard-coded
+`https://static.outcrop.us/a2ui/catalog/v1.json`. The gate diffs every build
+against `specs/agentui/published/`, and a breaking change needs `CATALOG_MAJOR`
+raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
+change, additive included, needs `npm run build:agentui -- --write-baseline`
+and the baseline committed in the same change.
+
+**`PENDING_CLASSIFICATION` and `BELOW_REQUIRED`** in `scripts/agentui/migration.mjs`
+are the measured backlog of 2026-10-25. A component on `PENDING_CLASSIFICATION`
+is left out of the catalog and reported in `dist/agentui-report.json` instead of
+failing the build, **for the backlog kinds only**: an unclassified option, an
+undeclared mixed member, an undeclared nested hazard, a too-broad type, missing
+JSDoc. Every other violation (a stale declaration, a short reason, a provider's
+arity, a double claim) fails the build for every component, listed or not. Both
+lists, and the `unclassifiedOptions` and `protocolPropsMissingJsdoc` counts, are
+pinned EXACTLY by check `[20]`: each is a ceiling in `BASELINES` and a floor in
+`FLOORS` of `scripts/audit-counts.mjs` at the same value
+(`componentsPendingClassification`, `componentsBelowRequiredLevel`). Growing
+fails. Shrinking also fails until the pin is lowered in both places in the same
+change, so a freed slot can never be reused.
+**Never add a new component to either**; a component written after the gate
+landed conforms from its first commit.
+
+### Checklist for a new component (in addition to the Surface checklist)
+
+- [ ] `npm run build` prints no `[agentui]` problem for it, and it appears in
+      `dist/a2ui/catalog/v1.json`.
+- [ ] Every protocol-visible option has JSDoc on its own line.
+- [ ] Every non-data option is an event, a provider, or host-only with a reason.
+- [ ] Its declared `conformance` meets the computed required level.
+- [ ] The catalog baseline is rewritten and committed.
 
 ## (CRITICAL) No Fabricated Reads
 

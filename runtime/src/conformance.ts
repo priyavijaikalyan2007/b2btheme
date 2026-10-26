@@ -118,7 +118,68 @@ export const CONFORMANCE_CHECKS: readonly CheckDeclaration[] =
     { id: "data-changes-render", minLevel: "display", description: "Fixture data changes what the host contains." },
     { id: "destroy-clears-dom", minLevel: "display", description: "destroy() removes everything the component added." },
     { id: "destroy-idempotent", minLevel: "display", description: "A second destroy() is a no-op." },
+    {
+        id: "level-meets-required",
+        minLevel: "display",
+        description: "Declared level is at least what the handle and manifest require (ADR-219).",
+    },
 ];
+
+/** Ordering of conformance levels, lowest first. */
+export const LEVEL_ORDER: Readonly<Record<ConformanceLevel, number>> = { display: 0, field: 1, surface: 2 };
+
+/**
+ * The level the evidence requires (spec §7.1). Declarations the canvas wires
+ * (emits, accepts, providers) require surface; a value-shaped handle requires
+ * field. The generator separately requires field for a two-way `value`.
+ *
+ * @param manifest - The capability manifest.
+ * @param handle   - The mounted handle.
+ * @returns The required level.
+ */
+export function requiredLevel(
+    manifest: CapabilityManifest,
+    handle: Record<string, unknown>): ConformanceLevel
+{
+    const providers = Object.keys(manifest.protocol?.providers ?? {}).length;
+
+    if (manifest.emits.length > 0 || manifest.accepts.length > 0 || providers > 0)
+    {
+        return "surface";
+    }
+
+    if (typeof handle.getValue === "function" && typeof handle.setValue === "function")
+    {
+        return "field";
+    }
+
+    return "display";
+}
+
+/**
+ * Fails when the declared level is below the required one. Under-declaring is
+ * a defect since ADR-219: an agent cannot read a value from a `display`.
+ *
+ * @param target - The component under test.
+ * @param handle - The mounted handle.
+ * @param out    - Findings accumulator.
+ */
+function checkRequiredLevel(
+    target: ConformanceTarget,
+    handle: Record<string, unknown>,
+    out: ConformanceFailure[]): void
+{
+    const declared = target.manifest.conformance;
+    const required = requiredLevel(target.manifest, handle);
+
+    if (LEVEL_ORDER[declared] < LEVEL_ORDER[required])
+    {
+        fail(out, "level-meets-required",
+            `Declared "${declared}" but the evidence requires "${required}". Raise conformance in `
+            + `components/${target.manifest.name}/${target.manifest.name}.manifest.ts and make the handle `
+            + `pass the ${required} checks (SURFACE_CONTRACT.md, ADR-219).`);
+    }
+}
 
 // ============================================================================
 // SAMPLE DATA
@@ -309,6 +370,7 @@ function runMounted(
         }
 
         checkMethods(target, handle, out);
+        checkRequiredLevel(target, handle, out);
         checkRendered(target, host, out);
         checkDataChangesRender(target, host, out);
         checkSurface(target, handle, spies, out);

@@ -215,6 +215,46 @@ interface WeightSpec
 }
 
 /**
+ * A function-typed option that asks the host for data (ADR-219, spec §3.2).
+ * Every catalog name is derived from `request` (spec §5.5): the component
+ * writes the request to `<eventData path>/<request>`, then sends
+ * `on<Request>`; the agent answers with updateDataModel at the path bound
+ * to `<request>Result`.
+ */
+interface ProviderSpec
+{
+    /** Catalog name of the request, e.g. "search". UAX #31. */
+    readonly request: string;
+}
+
+/** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
+interface ProtocolSpec
+{
+    /** Catalog name when the derived one collides. UAX #31. */
+    readonly name?: string;
+
+    /** Function-typed options that ask the host for data, keyed by option. */
+    readonly providers?: Readonly<Record<string, ProviderSpec>>;
+
+    /**
+     * Options, or parts of options, with no protocol equivalent. The value is
+     * the reason: what the member needs that JSON cannot carry. A key is an
+     * option name, or a path into a data option using `.prop` and `[]` for
+     * array items and index signatures (`columns[].renderer`). A key covers
+     * every hazard at or below its path. A bare option name on a MIXED member
+     * (data | function) means "its non-data arms"; on any other member it
+     * means "the whole member".
+     */
+    readonly hostOnly?: Readonly<Record<string, string>>;
+
+    /**
+     * Explicit JSON Schemas for data props whose TypeScript type is too broad
+     * to generate from (`unknown`, `Record<string, unknown>`), keyed by option.
+     */
+    readonly schemas?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+}
+
+/**
  * The semantic layer above a raw component. Colocated in the component's own
  * folder as `<name>.manifest.ts` and aggregated at build time.
  */
@@ -339,6 +379,9 @@ interface CapabilityManifest
 
     /** Deterministic tie-break for equal resolver scores. Higher wins. */
     readonly priority: number;
+
+    /** Agent-protocol declarations (ADR-219). Optional; absent means none. */
+    readonly protocol?: ProtocolSpec;
 }
 
 // ============================================================================
@@ -2395,6 +2438,7 @@ function validateManifest(m: unknown): ValidationResult
     validatePorts(m, issues);
     validateWeightAndSize(m, issues);
     validateConformance(m, issues);
+    validateProtocol(m, issues);
 
     return result(issues);
 }
@@ -2742,6 +2786,152 @@ function validateConformance(
             + "canvas cannot restore it after virtualizing it.",
             "Declare the keys getState() returns, or lower conformance to "
             + "\"display\"."));
+    }
+}
+
+/** UAX #31 identifier, the A2UI v1.0 rule for names (spec §5.1). */
+const UAX31 = /^[\p{XID_Start}_][\p{XID_Continue}]*$/u;
+
+/**
+ * Validates the optional agent-protocol declarations (ADR-219).
+ *
+ * @param m      - The candidate manifest.
+ * @param issues - Accumulator appended to in place.
+ */
+function validateProtocol(
+    m: Record<string, unknown>,
+    issues: ValidationIssue[]): void
+{
+    if (m.protocol === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(m.protocol))
+    {
+        issues.push(typeIssue("protocol", "an object of protocol declarations", m.protocol));
+        return;
+    }
+
+    const p = m.protocol;
+
+    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
+    {
+        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
+    }
+
+    unknownKeys("protocol", p, PROTOCOL_KEYS, issues);
+    validateProviderMap(p.providers, issues);
+    validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
+    validateSchemaMap(p.schemas, issues);
+}
+
+/** The keys `protocol` may carry. */
+const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas"];
+
+/** The keys a provider spec may carry; every catalog name derives from `request`. */
+const PROVIDER_KEYS: readonly string[] = ["request"];
+
+/**
+ * Reports every key of `obj` outside `allowed`. The generator derives all
+ * catalog names (spec §5.4), so a key it does not read, such as a removed
+ * `bindAs` or a provider's old `params`, would otherwise pass silently.
+ */
+function unknownKeys(
+    path: string,
+    obj: Record<string, unknown>,
+    allowed: readonly string[],
+    issues: ValidationIssue[]): void
+{
+    for (const key of Object.keys(obj).filter((k) => !allowed.includes(k)))
+    {
+        issues.push(issue(
+            `${path}.${key}`,
+            `"${key}" is not a ${path} key; nothing reads it, so it would be ignored silently.`,
+            `Remove it. ${path} takes only ${allowed.join(", ")}.`));
+    }
+}
+
+/**
+ * Validates `protocol.providers`: every entry names its request and nothing
+ * else.
+ */
+function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.providers", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [option, spec] of Object.entries(v))
+    {
+        const request = isObject(spec) ? spec.request : undefined;
+
+        if (!(isNonEmptyString(request) && UAX31.test(request)))
+        {
+            issues.push(typeIssue(`protocol.providers.${option}.request`, "a UAX #31 identifier", request));
+        }
+
+        if (isObject(spec))
+        {
+            unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
+        }
+    }
+}
+
+/** Validates a map whose values must be non-empty strings. */
+function validateStringMap(
+    path: string,
+    v: unknown,
+    expected: string,
+    issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue(path, "an object", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isNonEmptyString(value))
+        {
+            issues.push(typeIssue(`${path}.${key}`, expected, value));
+        }
+    }
+}
+
+/** Validates `protocol.schemas`: every value is a JSON Schema object. */
+function validateSchemaMap(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.schemas", "an object keyed by option name", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v))
+    {
+        if (!isObject(value))
+        {
+            issues.push(typeIssue(`protocol.schemas.${key}`, "a JSON Schema object", value));
+        }
     }
 }
 
@@ -5285,7 +5475,68 @@ const CONFORMANCE_CHECKS: readonly CheckDeclaration[] =
     { id: "data-changes-render", minLevel: "display", description: "Fixture data changes what the host contains." },
     { id: "destroy-clears-dom", minLevel: "display", description: "destroy() removes everything the component added." },
     { id: "destroy-idempotent", minLevel: "display", description: "A second destroy() is a no-op." },
+    {
+        id: "level-meets-required",
+        minLevel: "display",
+        description: "Declared level is at least what the handle and manifest require (ADR-219).",
+    },
 ];
+
+/** Ordering of conformance levels, lowest first. */
+const LEVEL_ORDER: Readonly<Record<ConformanceLevel, number>> = { display: 0, field: 1, surface: 2 };
+
+/**
+ * The level the evidence requires (spec §7.1). Declarations the canvas wires
+ * (emits, accepts, providers) require surface; a value-shaped handle requires
+ * field. The generator separately requires field for a two-way `value`.
+ *
+ * @param manifest - The capability manifest.
+ * @param handle   - The mounted handle.
+ * @returns The required level.
+ */
+function requiredLevel(
+    manifest: CapabilityManifest,
+    handle: Record<string, unknown>): ConformanceLevel
+{
+    const providers = Object.keys(manifest.protocol?.providers ?? {}).length;
+
+    if (manifest.emits.length > 0 || manifest.accepts.length > 0 || providers > 0)
+    {
+        return "surface";
+    }
+
+    if (typeof handle.getValue === "function" && typeof handle.setValue === "function")
+    {
+        return "field";
+    }
+
+    return "display";
+}
+
+/**
+ * Fails when the declared level is below the required one. Under-declaring is
+ * a defect since ADR-219: an agent cannot read a value from a `display`.
+ *
+ * @param target - The component under test.
+ * @param handle - The mounted handle.
+ * @param out    - Findings accumulator.
+ */
+function checkRequiredLevel(
+    target: ConformanceTarget,
+    handle: Record<string, unknown>,
+    out: ConformanceFailure[]): void
+{
+    const declared = target.manifest.conformance;
+    const required = requiredLevel(target.manifest, handle);
+
+    if (LEVEL_ORDER[declared] < LEVEL_ORDER[required])
+    {
+        fail(out, "level-meets-required",
+            `Declared "${declared}" but the evidence requires "${required}". Raise conformance in `
+            + `components/${target.manifest.name}/${target.manifest.name}.manifest.ts and make the handle `
+            + `pass the ${required} checks (SURFACE_CONTRACT.md, ADR-219).`);
+    }
+}
 
 // ============================================================================
 // SAMPLE DATA
@@ -5476,6 +5727,7 @@ function runMounted(
         }
 
         checkMethods(target, handle, out);
+        checkRequiredLevel(target, handle, out);
         checkRendered(target, host, out);
         checkDataChangesRender(target, host, out);
         checkSurface(target, handle, spies, out);
