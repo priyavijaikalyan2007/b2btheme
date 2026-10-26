@@ -22,60 +22,50 @@
 /** Log prefix for all output from the adapter. */
 const LOG_PREFIX = "[A2UI]";
 
-interface Logger
-{
-    info(...a: unknown[]): void;
-    debug(...a: unknown[]): void;
-    error(...a: unknown[]): void;
-}
+/** Hosts where debug output is on unless the page says otherwise (LOG-3). */
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
 
-interface LogWindow
-{
-    createLogUtility?: () => { getLogger(name: string): Logger };
-    __ebt_debug_logging?: boolean;
-}
+type Logger = ReturnType<ReturnType<NonNullable<Window["createLogUtility"]>>["getLogger"]>;
 
 let resolved: Logger | null | undefined;
 
-/** LogUtility's logger when the host page loads it, else null. Resolved once. */
+/** LogUtility's logger when the host page loads it, else null. Resolved once, on first use. */
 function logUtility(): Logger | null
 {
     if (resolved === undefined)
     {
-        const w = window as unknown as LogWindow;
+        const create = window.createLogUtility;
 
-        resolved = typeof w.createLogUtility === "function" ? w.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1)) : null;
+        resolved = typeof create === "function" ? create().getLogger(LOG_PREFIX.slice(1, -1)) : null;
     }
 
     return resolved;
 }
 
 /** True when the page asks for debug output. Read on every call. */
-function debugEnabled(): boolean
+function _dbg(): boolean
 {
-    return !!(window as unknown as LogWindow).__ebt_debug_logging;
+    const f = window.__ebt_debug_logging;
+    return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
 }
 
 /** Emits a structured info log. */
-export function logInfo(...args: unknown[]): void
+export function logInfo(...a: unknown[]): void
 {
     const lu = logUtility();
-
-    lu ? lu.info(...args) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...args);
+    lu ? lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
 }
 
 /** Emits a structured debug log. */
-export function logDebug(...args: unknown[]): void
+export function logDebug(...a: unknown[]): void
 {
     const lu = logUtility();
-
-    lu ? lu.debug(...args) : debugEnabled() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...args);
+    lu ? lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
 
 /** Emits a structured error. */
-export function logError(...args: unknown[]): void
+export function logError(...a: unknown[]): void
 {
     const lu = logUtility();
-
-    lu ? lu.error(...args) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...args);
+    lu ? lu.error(...a) : console.error(new Date().toISOString(), "[ERROR]", LOG_PREFIX, ...a);
 }

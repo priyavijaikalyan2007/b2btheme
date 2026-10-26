@@ -55,6 +55,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const MANIFEST = "dist/lib-manifest.json";
+const AGENTUI_REPORT = "dist/agentui-report.json";
+const ADAPTER_ASSET = "a2ui/adapter (A2UI adapter bundle)";
 
 /**
  * The packages this origin serves, with the version each asset records.
@@ -85,6 +87,8 @@ function servedPackages()
         }
     }
 
+    addAdapterPackages(served, assets);
+
     if (served.size === 0)
     {
         throw new Error(
@@ -93,6 +97,36 @@ function servedPackages()
     }
 
     return { served, assets };
+}
+
+/**
+ * Adds the packages the A2UI adapter bundle serves (Ajv's standalone runtime
+ * helpers, when a validator needs them) at their installed versions. The
+ * generator records them from esbuild's metafile in the agentui report.
+ *
+ * @param {Map<string, string>} served Package name to version; extended.
+ * @param {Map<string, string[]>} assets Package name to asset names; extended.
+ */
+function addAdapterPackages(served, assets)
+{
+    if (!existsSync(AGENTUI_REPORT))
+    {
+        throw new Error(`${AGENTUI_REPORT} is absent, so the packages the A2UI adapter serves are unknown. `
+            + "Run `npm run build` first.");
+    }
+
+    const packages = JSON.parse(readFileSync(AGENTUI_REPORT, "utf8")).adapter?.packages;
+
+    if (!Array.isArray(packages))
+    {
+        throw new Error(`${AGENTUI_REPORT} has no adapter.packages list. Run \`npm run build:agentui\`.`);
+    }
+
+    for (const name of packages)
+    {
+        served.set(name, JSON.parse(readFileSync(`node_modules/${name}/package.json`, "utf8")).version);
+        assets.set(name, [...(assets.get(name) ?? []), ADAPTER_ASSET]);
+    }
 }
 
 /**

@@ -74,7 +74,8 @@ let classes = new Map<string, CustomElementConstructor>();
  * @throws When webCore lacks a member, an option is invalid or changes, or a
  *         catalog component has no descriptor.
  */
-export function createOutcropCatalogFrom(embedded: Embedded, webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown
+export function createOutcropCatalogFrom(
+    embedded: Embedded, webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown
 {
     const { Catalog, basicCatalog } = checkWebCore(webCore);
 
@@ -145,7 +146,8 @@ function checkWebCore(webCore: OutcropWebCore): { Catalog: CatalogClass; basicCa
 
     if (typeof basic?.components?.get !== "function" || typeof basic.components.has !== "function")
     {
-        throw new Error(`createOutcropCatalog: webCore.basicCatalog is missing or not a catalog with components. ${hint}`);
+        throw new Error("createOutcropCatalog: webCore.basicCatalog is missing or not a catalog with components. "
+            + hint);
     }
 
     if (!Array.isArray(webCore.BASIC_FUNCTIONS))
@@ -161,7 +163,8 @@ function fixConfig(options: OutcropCatalogOptions): void
 {
     if (options.injectBaseTheme !== undefined && typeof options.injectBaseTheme !== "boolean")
     {
-        throw new Error(`createOutcropCatalog: injectBaseTheme must be a boolean, got ${JSON.stringify(options.injectBaseTheme)}.`);
+        throw new Error("createOutcropCatalog: injectBaseTheme must be a boolean, got "
+            + `${JSON.stringify(options.injectBaseTheme)}.`);
     }
 
     checkBase(options.assetBaseUrl);
@@ -174,7 +177,8 @@ function fixConfig(options: OutcropCatalogOptions): void
     {
         if (config[key] !== next[key])
         {
-            throw new Error(`createOutcropCatalog: ${key} is page-global and was already ${JSON.stringify(config[key])}; `
+            throw new Error(`createOutcropCatalog: ${key} is page-global and was already `
+                + `${JSON.stringify(config[key])}; `
                 + `this call passed ${JSON.stringify(next[key])}. The outcrop-* element classes are shared per tag, so `
                 + "every call on a page must use the same options.");
         }
@@ -185,7 +189,8 @@ function current(): { assetBaseUrl: string; injectBaseTheme: boolean }
 {
     if (!config)
     {
-        throw new Error("An outcrop-* element was used before createOutcropCatalog was called. Build the catalog first.");
+        throw new Error("An outcrop-* element was used before createOutcropCatalog was called. "
+            + "Build the catalog first.");
     }
 
     return config;

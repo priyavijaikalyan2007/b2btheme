@@ -48,7 +48,8 @@ type On = (channel: string, handler: (payload: unknown) => void) => unknown;
  * @param onUserValue - Receives each edit.
  * @returns `{ [changeOption]: callback }`, or {} when the component has none.
  */
-export function changeOptions(descriptor: AdapterDescriptor, onUserValue: (value: unknown) => void): Record<string, unknown>
+export function changeOptions(
+    descriptor: AdapterDescriptor, onUserValue: (value: unknown) => void): Record<string, unknown>
 {
     return descriptor.changeOption ? { [descriptor.changeOption]: (value: unknown) => onUserValue(value) } : {};
 }
@@ -65,8 +66,10 @@ export function wireRoundTrip(ctx: ComponentContextLike, descriptor: AdapterDesc
 
     if (typeof handle.on !== "function")
     {
-        throw new Error(`${descriptor.name} declares channels [${descriptor.events.map((e) => e.channel).join(", ")}], but its `
-            + "handle has no on() method, so its events could never reach the agent. Implement the Surface contract's on().");
+        const channels = descriptor.events.map((e) => e.channel).join(", ");
+
+        throw new Error(`${descriptor.name} declares channels [${channels}], but its handle has no on() method, so `
+            + "its events could never reach the agent. Implement the Surface contract's on().");
     }
 
     const offs = descriptor.events.map((e) => subscribe(handle, e, (payload) => onEvent(ctx, e, payload, hooks)));

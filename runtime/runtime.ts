@@ -5435,7 +5435,8 @@ function attachHandle(handle: Record<string, unknown>, spec: MountSpec, host: HT
     if (typeof handle[method] !== "function")
     {
         throw new Error(`The manifest declares mountMethod "${method}", but the handle has no ${method}() method, `
-            + `so the component would never be attached. Add ${method}() to the handle, or correct mountMethod in the manifest.`);
+            + `so the component would never be attached. Add ${method}() to the handle, or correct mountMethod `
+            + "in the manifest.");
     }
 
     if (method === "show")

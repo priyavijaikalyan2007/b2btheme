@@ -45,7 +45,8 @@ type Any = any;
  * Builds a real surface with one Fake component carrying `props`, and `data`
  * in its data model.
  */
-export function realContext(props: Record<string, unknown>, data: Record<string, unknown> = {}, surfaceId = "s1"): RealContext
+export function realContext(
+    props: Record<string, unknown>, data: Record<string, unknown> = {}, surfaceId = "s1"): RealContext
 {
     const api = (Catalog as Any).fromJson({ $schema: "https://json-schema.org/draft/2020-12/schema", $id: CATALOG_ID,
         catalogId: CATALOG_ID, functions: {}, components: { Fake: { type: "object", required: ["component", "id"],
@@ -67,8 +68,10 @@ export function realContext(props: Record<string, unknown>, data: Record<string,
     return {
         ctx: new (ComponentContext as Any)(surface, "root", "/") as ComponentContextLike,
         freshContext: () => new (ComponentContext as Any)(surface, "root", "/") as ComponentContextLike,
-        setProps: (p) => send({ updateComponents: { surfaceId, components: [{ id: "root", component: "Fake", ...p }] } }),
-        setData: (path, value) => send({ updateDataModel: { surfaceId, path, ...(value === undefined ? {} : { value }) } }),
+        setProps: (p) => send({ updateComponents: { surfaceId,
+            components: [{ id: "root", component: "Fake", ...p }] } }),
+        setData: (path, value) => send({ updateDataModel: { surfaceId, path,
+            ...(value === undefined ? {} : { value }) } }),
         getData: (path) => surface.dataModel.get(path),
         errors, actions,
     };
@@ -93,7 +96,7 @@ export function installFakeFactory(): FakeRecord
 {
     const record: FakeRecord = { builds: [], calls: [], destroyed: 0, listeners: new Map() };
 
-    (window as Any).createFake = (id: string, options: Record<string, unknown>) =>
+    window.createFake = (id: string, options: Record<string, unknown>) =>
     {
         record.builds.push({ id, options });
         record.listeners = new Map();
@@ -156,7 +159,8 @@ export function fakeDescriptor(over: Partial<AdapterDescriptor> = {}): AdapterDe
     return {
         name: "Fake", tagName: "outcrop-fake", factory: "createFake", factoryStyle: "container-first",
         mountMethod: "auto", conformance: "surface", assets: { js: "components/fake/fake.js" },
-        props: { title: { route: "create" }, items: { route: "slot", slot: "items" }, mode: { route: "state", key: "mode" },
+        props: { title: { route: "create" }, items: { route: "slot", slot: "items" },
+            mode: { route: "state", key: "mode" },
             value: { route: "value" } },
         twoWay: true, events: [], dates: [], ...over,
     };

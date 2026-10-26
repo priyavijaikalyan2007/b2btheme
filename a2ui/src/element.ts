@@ -176,8 +176,9 @@ class Binding
 
         if (this.#host.getRootNode() !== document)
         {
-            this.#fail(`<${this.#host.localName}> is inside a shadow root, but outcrop components mount in the light DOM `
-                + "(their factories find the container by id and their CSS lives in document.head). Render this surface without shadow DOM.");
+            this.#fail(`<${this.#host.localName}> is inside a shadow root, but outcrop components mount in the `
+                + "light DOM (their factories find the container by id and their CSS lives in document.head). "
+                + "Render this surface without shadow DOM.");
             return;
         }
 
@@ -266,7 +267,9 @@ class Binding
         }
 
         this.#invalid.delete(name);
-        this.#values.set(name, (fromWire(value, this.#env.descriptor.dates.includes(name)) as { value: unknown }).value);
+        const wire = fromWire(value, this.#env.descriptor.dates.includes(name));
+
+        if (wire.ok) { this.#values.set(name, wire.value); }
 
         return true;
     }
@@ -281,9 +284,16 @@ class Binding
         const d = this.#env.descriptor;
         const validate = this.#env.validators[`${d.name}.${name}`];
 
-        if (bound && !validate) { return `${d.name}.${name} has no compiled validator; the adapter bundle is out of date. Rebuild it.`; }
+        if (bound && !validate)
+        {
+            return `${d.name}.${name} has no compiled validator; the adapter bundle is out of date. Rebuild it.`;
+        }
 
-        if (bound && !validate(value)) { return `${d.name}.${name} received ${JSON.stringify(value)}, which does not match its schema in the catalog.`; }
+        if (bound && !validate(value))
+        {
+            return `${d.name}.${name} received ${JSON.stringify(value)}, which does not match its schema `
+                + "in the catalog.";
+        }
 
         const wire = fromWire(value, d.dates.includes(name));
 
@@ -294,8 +304,10 @@ class Binding
     {
         if (!this.#handle) { return; }
 
-        reportError(this.#ctx, ERROR_CODES.BINDING_LOST, `${this.#env.descriptor.name}.${name} is bound, but its value is `
-            + "now undefined; the component keeps its last value. Restore the data, or remove the binding.", this.#pathOf(name));
+        const message = `${this.#env.descriptor.name}.${name} is bound, but its value is now undefined; the component `
+            + "keeps its last value. Restore the data, or remove the binding.";
+
+        reportError(this.#ctx, ERROR_CODES.BINDING_LOST, message, this.#pathOf(name));
     }
 
     #route(name: string, value: unknown): void
@@ -333,11 +345,12 @@ class Binding
     #mount(): void
     {
         const d = this.#env.descriptor;
-        const factory = (window as unknown as Record<string, unknown>)[d.factory];
+        const factory = window[d.factory];
 
         if (typeof factory !== "function")
         {
-            this.#fail(`${d.factory} is not defined after loading ${this.#env.assetBaseUrl()}/${d.assets.js}; that file is not `
+            this.#fail(`${d.factory} is not defined after loading ${this.#env.assetBaseUrl()}/${d.assets.js}; `
+                + "that file is not "
                 + "this component's script, or it failed to run. Check assetBaseUrl.");
             return;
         }
@@ -422,6 +435,8 @@ class Binding
 
     #where(): string
     {
-        return `<${this.#host.localName}> ${this.#ctx.componentModel.id} on surface ${String(this.#ctx.dataContext.surface?.id)}`;
+        const surface = String(this.#ctx.dataContext.surface?.id);
+
+        return `<${this.#host.localName}> ${this.#ctx.componentModel.id} on surface ${surface}`;
     }
 }

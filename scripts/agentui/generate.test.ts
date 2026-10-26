@@ -103,7 +103,8 @@ describe("runPipeline — fixture widget", () =>
     test("a pending component with no violations is a stale-list error", () =>
     {
         expect(run([widget()], ["widget"]).errors[0]).toMatch(/PENDING_CLASSIFICATION/);
-    }, 60_000);    test("it gets an adapter descriptor", () =>
+    }, 60_000);
+    test("it gets an adapter descriptor", () =>
     {
         expect(run([widget()]).descriptors).toMatchObject([{ name: "Widget", tagName: "outcrop-widget", factory: "createWidget" }]);
     }, 60_000);
@@ -111,7 +112,7 @@ describe("runPipeline — fixture widget", () =>
     {
         const errors = run([{ ...widget(), actions: [{ id: "export", label: "Export", destructive: false, requires: [] }] }]).errors;
 
-        expect(errors.some((e: string) => /Widget declares actions \[export\].*#31/.test(e))).toBe(true);
+        expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#31/);
     }, 60_000);
 });
 
@@ -229,6 +230,16 @@ describe("runPipeline — build summary counts", () =>
 
 describe("writeOutputs", () =>
 {
+    test("a string value is written verbatim; anything else as pretty JSON", () =>
+    {
+        const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
+
+        writeOutputs(new Map<string, unknown>([["a2ui/adapter/v1.js", "export{};"], ["a2ui/catalog/v1.json", { a: 1 }]]), dist);
+
+        expect(fs.readFileSync(path.join(dist, "a2ui", "adapter", "v1.js"), "utf8")).toBe("export{};");
+        expect(fs.readFileSync(path.join(dist, "a2ui", "catalog", "v1.json"), "utf8")).toBe('{\n  "a": 1\n}\n');
+    });
+
     test("a failure before writing leaves dist byte-identical", () =>
     {
         const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));

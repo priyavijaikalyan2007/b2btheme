@@ -86,7 +86,7 @@ export interface AdapterDescriptor
 {
     name: string;
     tagName: string;
-    factory: string;
+    factory: `create${string}`;
     factoryStyle: "container-first" | "options-first" | "options-only";
     containerOption?: string;
     containerAs?: "element" | "id";

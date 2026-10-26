@@ -127,10 +127,13 @@ describe("createOutcropCatalog — in a real MessageProcessor", () =>
     {
         const mp = processor();
 
-        expect(() => mp.processMessages([create, { version: "v0.9.1", updateComponents: { surfaceId: "s", components: [
+        mp.processMessages([create, { version: "v0.9.1", updateComponents: { surfaceId: "s", components: [
             { id: "root", component: "Column", children: ["n"] },
             { id: "n", component: "StickyNote", text: { path: "/t" } },
-        ] } }])).not.toThrow();
+        ] } }]);
+
+        expect(mp.getSurface("s").componentsModel.get("n").type).toBe("StickyNote");
+        expect(mp.getSurface("s").componentsModel.get("n").properties.text).toEqual({ path: "/t" });
     });
 
     test("rejects a prop the catalog does not declare", () =>

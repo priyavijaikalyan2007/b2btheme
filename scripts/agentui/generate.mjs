@@ -19,7 +19,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { bundleAdapter } from "./adapter-bundle.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
+import { compileValidators } from "./adapter-validators.mjs";
 import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
 import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
 import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from "./checks.mjs";
@@ -271,6 +273,28 @@ function outputsFor(ready, schemas, catalog, excluded, input)
     return outputs;
 }
 
+/**
+ * Compiles the validators and bundles the A2UI adapter into the outputs, so
+ * it is written in the same dist swap as the catalog it embeds (spec §3.4).
+ * Call only when runPipeline returned no errors.
+ *
+ * @param result - runPipeline's result; its outputs are extended in place.
+ * @param input  - Needs basic, commonTypes, major and repoRoot.
+ * @param bundle - The bundler; injectable for tests.
+ */
+export async function addAdapter(result, input, bundle = bundleAdapter)
+{
+    const catalogText = `${JSON.stringify(result.catalog, null, 2)}\n`;
+    const validatorsSource = compileValidators({ catalog: result.catalog, basic: input.basic,
+        commonTypes: input.commonTypes, descriptors: result.descriptors });
+    const out = await bundle({ catalogText, descriptors: result.descriptors, validatorsSource, repoRoot: input.repoRoot });
+    const report = result.outputs.get("agentui-report.json");
+
+    result.outputs.set(`a2ui/adapter/v${input.major}.js`, out.js);
+    result.outputs.set(`a2ui/adapter/v${input.major}.d.ts`, out.dts);
+    result.outputs.set("agentui-report.json", { ...report, adapter: { descriptors: result.descriptors, packages: out.packages } });
+}
+
 function countsFor(classified, ready, excluded)
 {
     const all = classified.flatMap((c) => c.surface.violations);
@@ -297,13 +321,14 @@ function countsFor(classified, ready, excluded)
  * left as it was (if the rollback itself fails, the staging directory is kept
  * and the error names where the old roots are). Content outside the generated roots is never touched.
  *
- * @param outputs - Map of dist-relative path to JSON value.
+ * @param outputs - Map of dist-relative path to a JSON value, or to a string written verbatim.
  * @param distDir - The dist directory.
  * @param fsImpl - The file-system module; injectable so a test can fail a rename.
  */
 export function writeOutputs(outputs, distDir, fsImpl = fs)
 {
-    const serialised = [...outputs].map(([rel, value]) => [rel, `${JSON.stringify(value, null, 2)}\n`]);
+    const serialised = [...outputs].map(([rel, value]) =>
+        [rel, typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`]);
     const staging = fsImpl.mkdtempSync(path.join(distDir, ".agentui-staging-"));
     let stranded = false;
 
@@ -403,6 +428,8 @@ function repoInputs(repoRoot, writeBaseline)
         cacheDir: path.join(repoRoot, "node_modules", ".cache", "agentui"),
         pending: PENDING_CLASSIFICATION, belowRequired: BELOW_REQUIRED,
         basic: JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", "catalogs", "basic", "catalog.json"), "utf8")),
+        commonTypes: JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", "common_types.json"), "utf8")),
+        repoRoot,
         baselines: loadBaselines(), major: CATALOG_MAJOR, writeBaseline,
         assetExists: (rel) => fs.existsSync(path.join(repoRoot, "dist", rel)),
     };
@@ -440,7 +467,7 @@ export function measureClassification(repoRoot = REPO)
 }
 
 /** CLI. */
-function main(argv)
+async function main(argv)
 {
     const writeBaseline = argv.includes("--write-baseline");
     const input = repoInputs(REPO, writeBaseline);
@@ -453,6 +480,17 @@ function main(argv)
     {
         console.error(result.errors.map((e) => `[agentui] ${e}`).join("\n"));
         console.error(`[agentui] ${result.errors.length} problem(s); nothing was written to dist/.`);
+        process.exit(1);
+    }
+
+    try
+    {
+        await addAdapter(result, input);
+    }
+    catch (err)
+    {
+        console.error(`[agentui] ${err.message}`);
+        console.error("[agentui] The A2UI adapter could not be built; nothing was written to dist/.");
         process.exit(1);
     }
 
@@ -492,5 +530,5 @@ function measure(input)
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
 {
-    main(process.argv.slice(2));
+    await main(process.argv.slice(2));
 }

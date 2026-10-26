@@ -35,7 +35,8 @@ let loads = new Map<string, Promise<void>>();
  * @returns Resolves when every asset has loaded; rejects naming the first that failed.
  * @throws When baseUrl is not an acceptable base.
  */
-export function loadAssets(baseUrl: string, assets: { js: string; css?: string }, injectBaseTheme: boolean): Promise<void>
+export function loadAssets(
+    baseUrl: string, assets: { js: string; css?: string }, injectBaseTheme: boolean): Promise<void>
 {
     checkBase(baseUrl);
 
@@ -92,8 +93,10 @@ function inject(url: string, baseUrl: string): Promise<void>
         const el = url.endsWith(".js") ? scriptFor(url) : stylesheetFor(url);
 
         el.addEventListener("load", () => resolve(), { once: true });
-        el.addEventListener("error", () => reject(new Error(`Could not load ${url}. Check that assetBaseUrl `
-            + `(${baseUrl}) serves the library's dist/ tree and that the page's CSP allows that origin.`)), { once: true });
+        const failure = `Could not load ${url}. Check that assetBaseUrl (${baseUrl}) serves the library's dist/ tree `
+            + "and that the page's CSP allows that origin.";
+
+        el.addEventListener("error", () => reject(new Error(failure)), { once: true });
         document.head.appendChild(el);
     });
 }
