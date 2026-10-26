@@ -40,6 +40,21 @@
  * the finding. The alternative is a filter that decides for them, and a
  * filter wrong once hides the advisory this gate exists to surface.
  *
+ * WHICH INSTALLED COPY AN ADVISORY IS ABOUT
+ * -----------------------------------------
+ * `npm audit` groups advisories by package NAME, and node_modules can hold
+ * several copies of one name. A test-only devDependency may nest its own
+ * older copy of a package this origin serves. On 2026-10-26
+ * @a2ui/markdown-it nested dompurify 3.4.11 under itself, and a name-only
+ * match failed CI against the served 3.4.17, which no advisory covered.
+ *
+ * Each entry's `nodes` names the install paths the advisory is about, so a
+ * served package counts when one of those copies is at the version this
+ * origin serves. That is not a filter deciding for a person. It is the
+ * same identity vendor-closure.mjs records: the version of the copy esbuild
+ * actually bundled, nested or not. Dependents reached through a `via`
+ * chain still count, because npm lists the dependent's own install path.
+ *
  * THIS GATE NEEDS THE NETWORK AND FAILS WITHOUT IT
  * -------------------------------------------------
  * `npm audit` asks the registry. When the registry is unreachable there
@@ -53,6 +68,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const MANIFEST = "dist/lib-manifest.json";
 const AGENTUI_REPORT = "dist/agentui-report.json";
@@ -193,20 +209,48 @@ function describe(via)
     return `${via.title} [${via.severity}] ${via.url}`;
 }
 
+/** The version installed at an install path npm names in `nodes`. */
+function versionOnDisk(node)
+{
+    return JSON.parse(readFileSync(`${node}/package.json`, "utf8")).version;
+}
+
+/**
+ * The audit entries that are about a copy this origin serves.
+ *
+ * @param {Record<string, {nodes?: string[]}>} vulnerabilities `npm audit --json` vulnerabilities.
+ * @param {Map<string, string>} served Package name to the version served.
+ * @param {(node: string) => string} versionAt Version at an install path.
+ * @returns {{name: string, entry: object}[]} One hit per served package.
+ * @throws When an entry for a served package names no install paths.
+ */
+export function servedHits(vulnerabilities, served, versionAt = versionOnDisk)
+{
+    const hits = [];
+
+    for (const [name, entry] of Object.entries(vulnerabilities))
+    {
+        if (!served.has(name)) { continue; }
+
+        if (!Array.isArray(entry.nodes))
+        {
+            throw new Error(`npm audit's entry for ${name} has no \`nodes\` list, so which installed copy it `
+                + "is about is unknown. Check the npm version's audit JSON format.");
+        }
+
+        if (entry.nodes.some((node) => versionAt(node) === served.get(name))) { hits.push({ name, entry }); }
+    }
+
+    return hits;
+}
+
 function main()
 {
     const { served, assets } = servedPackages();
     assertFresh(served);
 
     const report = auditReport();
-    const vulnerabilities = report.vulnerabilities ?? {};
-    const hits = [];
-
-    for (const [name, entry] of Object.entries(vulnerabilities))
-    {
-        if (!served.has(name)) { continue; }
-        hits.push({ name, entry });
-    }
+    const hits = servedHits(report.vulnerabilities ?? {}, served);
 
     console.log(`[vendor-audit] ${served.size} package(s) served from ` +
         `${new Set([...assets.values()].flat()).size} asset(s) in ${MANIFEST}`);
@@ -243,9 +287,12 @@ function main()
     process.exit(1);
 }
 
-try { main(); }
-catch (err)
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
 {
-    console.error(`[vendor-audit] ${String(err.message ?? err)}`);
-    process.exit(1);
+    try { main(); }
+    catch (err)
+    {
+        console.error(`[vendor-audit] ${String(err.message ?? err)}`);
+        process.exit(1);
+    }
 }
