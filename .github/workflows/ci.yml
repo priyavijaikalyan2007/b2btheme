@@ -57,6 +57,9 @@ jobs:
       - name: Typecheck the runtime
         run: npm run typecheck:runtime
 
+      - name: Typecheck the A2UI adapter
+        run: npm run typecheck:a2ui
+
       - name: Run unit tests with coverage
         run: npm run test:unit:coverage
 

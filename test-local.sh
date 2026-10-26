@@ -733,9 +733,9 @@ echo ""
 # dist/agentui-report.json), the vendored A2UI v0.9.1 schemas, and the
 # committed baseline. It imports nothing from the generator: a check that
 # shares an oracle with the thing it checks passes by construction ([19]).
-echo "[29] The agent-protocol catalog is sound and host-neutral (ADR-219)"
+echo "[29] The agent-protocol catalog and A2UI adapter are sound and host-neutral (ADR-219, #18)"
 if node scripts/agentui/check-dist.mjs; then
-    pass "The A2UI catalog matches its baseline, resolves, covers the fleet and names no host"
+    pass "The A2UI catalog and adapter match the baseline, resolve, cover the fleet and name no host"
 else
     fail "the agent-protocol artefacts are inconsistent (see above)"
 fi

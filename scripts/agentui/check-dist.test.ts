@@ -19,6 +19,12 @@ import { checkDist } from "./check-dist.mjs";
 const VENDOR = path.join(__dirname, "vendor", "a2ui-v0_9_1");
 const ID = "https://static.outcrop.us/a2ui/catalog/v1.json";
 
+/** A stand-in adapter bundle embedding `catalog`, as the generator would. */
+function bundleFor(catalog: unknown): string
+{
+    return `export const catalogJson = ${JSON.stringify(catalog)};\nexport function createOutcropCatalog() { return null; }\n`;
+}
+
 function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undefined): string
 {
     const basic = JSON.parse(fs.readFileSync(path.join(VENDOR, "catalogs", "basic", "catalog.json"), "utf8"));
@@ -36,7 +42,11 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
         "dist/mcp/renderer.meta.json": { csp: { resourceDomains: ["https://static.outcrop.us", "https://fonts.googleapis.com", "https://fonts.gstatic.com"] } },
         "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }], hostOnly: {} },
     };
+    files["dist/a2ui/adapter/v1.d.ts"] = "export {};\n";
+    files["dist/agentui-report.json"] = { ...(files["dist/agentui-report.json"] as object), adapter: { packages: [],
+        descriptors: [{ name: "Widget", tagName: "outcrop-widget", props: {} }] } };
     mutate(files);
+    files["dist/a2ui/adapter/v1.js"] ??= bundleFor(files["dist/a2ui/catalog/v1.json"]);
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-checkdist-"));
     for (const [rel, value] of Object.entries(files))
     {
@@ -49,35 +59,35 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
 
 describe("checkDist ([29])", () =>
 {
-    test("a consistent dist passes", () => { expect(checkDist(fakeRepo())).toEqual([]); });
-    test("a catalog differing from the committed baseline fails", () =>
+    test("a consistent dist passes", async () => { expect(await checkDist(fakeRepo())).toEqual([]); });
+    test("a catalog differing from the committed baseline fails", async () =>
     {
-        expect(checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; })).join()).toMatch(/baseline/);
+        expect((await checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; }))).join()).toMatch(/baseline/);
     });
-    test("a built major with no committed baseline fails", () =>
+    test("a built major with no committed baseline fails", async () =>
     {
-        expect(checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; })).join())
+        expect((await checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; }))).join())
             .toMatch(/v2/);
     });
-    test("a missing component entry fails", () =>
+    test("a missing component entry fails", async () =>
     {
         const root = fakeRepo((f) => { (f["dist/agentui-report.json"] as any).excluded = []; });
-        expect(checkDist(root).join()).toMatch(/Panel/);
+        expect((await checkDist(root)).join()).toMatch(/Panel/);
     });
-    test("knobby in an emitted file fails", () =>
+    test("knobby in an emitted file fails", async () =>
     {
-        expect(checkDist(fakeRepo((f) => { (f["dist/mcp/renderer.meta.json"] as any).csp.resourceDomains[0] = "https://static.knobby.io"; })).join())
+        expect((await checkDist(fakeRepo((f) => { (f["dist/mcp/renderer.meta.json"] as any).csp.resourceDomains[0] = "https://static.knobby.io"; }))).join())
             .toMatch(/knobby/);
     });
-    test("a layout that drifts from the basic catalog fails", () =>
+    test("a layout that drifts from the basic catalog fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
             for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"]) { (f[k] as any).instructions = "x"; }
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/layout/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/layout/);
     });
-    test("an unresolvable $ref fails", () =>
+    test("an unresolvable $ref fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
@@ -86,34 +96,34 @@ describe("checkDist ([29])", () =>
                 (f[k] as any).components.Widget.allOf.push({ $ref: "#/$defs/Nope" });
             }
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/can.t resolve reference .*Nope/);
     });
-    test("a prop named placeholder, described as one, passes", () =>
+    test("a prop named placeholder, described as one, passes", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
             (f["dist/schemas/widget.options.json"] as any) = { type: "object", properties: { placeholder: { type: "string", description: "Input placeholder." } } };
             (f["dist/agentui-report.json"] as any).excluded[0].violations = ["placeholder is a sample"];
         };
-        expect(checkDist(fakeRepo(mutate))).toEqual([]);
+        expect(await checkDist(fakeRepo(mutate))).toEqual([]);
     });
-    test("a fixture literal in a default fails", () =>
+    test("a fixture literal in a default fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
             f["dist/schemas/widget.options.json"] = { properties: { owner: { type: "string", default: "John Doe" } } };
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/john doe/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/john doe/);
     });
-    test("a fixture literal in an examples item fails", () =>
+    test("a fixture literal in an examples item fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
             f["dist/schemas/widget.options.json"] = { properties: { url: { type: "string", examples: ["https://example.com/x"] } } };
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/example\.com/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/example\.com/);
     });
-    test("a dangling $ref inside functions fails", () =>
+    test("a dangling $ref inside functions fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
@@ -122,9 +132,9 @@ describe("checkDist ([29])", () =>
                 (f[k] as any).functions.Bogus = { allOf: [{ $ref: "#/$defs/Nope" }] };
             }
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/can.t resolve reference .*Nope/);
     });
-    test("a dangling $ref inside an unreferenced $defs entry fails", () =>
+    test("a dangling $ref inside an unreferenced $defs entry fails", async () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
@@ -133,12 +143,68 @@ describe("checkDist ([29])", () =>
                 (f[k] as any).$defs.Orphan = { allOf: [{ $ref: "#/$defs/Nope" }] };
             }
         };
-        expect(checkDist(fakeRepo(mutate)).join()).toMatch(/can.t resolve reference .*Nope/);
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/can.t resolve reference .*Nope/);
     });
-    test("a stranded generator staging directory fails", () =>
+    test("a stranded generator staging directory fails", async () =>
     {
         const root = fakeRepo();
         fs.mkdirSync(path.join(root, "dist", ".agentui-staging-abc"), { recursive: true });
-        expect(checkDist(root).join()).toMatch(/agentui-staging/);
+        expect((await checkDist(root)).join()).toMatch(/agentui-staging/);
+    });
+});
+
+describe("checkDist ([29]) — the A2UI adapter (G2)", () =>
+{
+    test("a missing bundle fails", async () =>
+    {
+        const root = fakeRepo();
+        fs.rmSync(path.join(root, "dist", "a2ui", "adapter", "v1.js"));
+
+        expect((await checkDist(root)).join()).toMatch(/adapter\/v1\.js is missing/);
+    });
+
+    test("a bundle embedding a different catalog fails", async () =>
+    {
+        const mutate = (f: Record<string, unknown>) => { f["dist/a2ui/adapter/v1.js"] = bundleFor({ other: true }); };
+
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/embeds a catalog that differs/);
+    });
+
+    test("a bundle without createOutcropCatalog fails", async () =>
+    {
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            f["dist/a2ui/adapter/v1.js"] = `export const catalogJson = ${JSON.stringify(f["dist/a2ui/catalog/v1.json"])};\n`;
+        };
+
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/does not export createOutcropCatalog/);
+    });
+
+    test("a served package outside the allowed set fails", async () =>
+    {
+        const mutate = (f: Record<string, unknown>) => { (f["dist/agentui-report.json"] as any).adapter.packages = ["zod"]; };
+
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/serves zod/);
+    });
+
+    test("a data prop without a route fails, whatever its name", async () =>
+    {
+        const binding = { $ref: "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding" };
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"])
+            {
+                (f[k] as any).components.Widget.allOf[0].properties.online = { anyOf: [{ type: "boolean" }, binding] };
+            }
+        };
+
+        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/Widget\.online is a data prop with no adapter route/);
+    });
+
+    test("a JavaScript file under dist/a2ui is scanned for host names but not parsed as JSON", async () =>
+    {
+        expect(await checkDist(fakeRepo())).toEqual([]);
+        expect((await checkDist(fakeRepo((f) => { f["dist/a2ui/adapter/v1.js"] = `${bundleFor(f["dist/a2ui/catalog/v1.json"])}// knobby\n`; }))).join())
+            .toMatch(/knobby/);
     });
 });

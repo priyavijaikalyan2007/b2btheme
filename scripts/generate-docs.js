@@ -871,6 +871,7 @@ function generateMasterComponentIndexMd()
 const HAND_WRITTEN_DOCS = {
     "INDEX.md": "Documentation Index",
     "GETTING_STARTED.md": "Getting Started",
+    "A2UI_INTEGRATION_GUIDE.md": "A2UI Integration Guide",
     "CDN_INTEGRATION_GUIDE.md": "CDN Integration Guide",
     "APPS_TEAM_USAGE_GUIDE.md": "Apps Team Usage Guide",
     "BEGINNERS_GUIDE.md": "Beginners Guide",

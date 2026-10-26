@@ -14,10 +14,11 @@
  *          -> [checkDist] -> [problems] -> [exit code]
  */
 
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
 const Ajv2020 = require("ajv/dist/2020").default;
@@ -31,6 +32,11 @@ const FIXTURE_WORDS = ["lorem ipsum", "test user", "john doe", "jane doe", "exam
 // The only keys whose values are shipped data rather than schema vocabulary.
 const DATA_KEYS = new Set(["default", "const", "example", "examples", "enum"]);
 const REPORT_FILE = "agentui-report.json";
+// What the adapter bundle may serve besides our own code (spec §5.4). Stated
+// here independently of the generator's own list, as everything in this file is.
+const ADAPTER_PACKAGES = new Set(["ajv", "fast-deep-equal"]);
+const BASIC_PREFIX = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#";
+const DATA_BINDING = "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding";
 
 /**
  * Every [29] problem in a built repository.
@@ -39,7 +45,7 @@ const REPORT_FILE = "agentui-report.json";
  * @returns Problems; empty means pass.
  */
 // @entrypoint
-export function checkDist(root)
+export async function checkDist(root)
 {
     const read = (rel) => readJson(root, rel);
     const major = highestBaseline(root);
@@ -53,7 +59,87 @@ export function checkDist(root)
         ...textProblems(root),
         ...cspProblems(read("dist/mcp/renderer.meta.json")),
         ...stagingProblems(root),
+        ...(await adapterProblems(root, major, read(catalogRel), read("dist/agentui-report.json"))),
     ];
+}
+
+/**
+ * G2 (spec §9): the adapter bundle exists, imports without a DOM, embeds
+ * exactly the published catalog, serves only the allowed packages, and has a
+ * route for every data prop of every component of ours.
+ */
+async function adapterProblems(root, major, catalog, report)
+{
+    const rel = `dist/a2ui/adapter/v${major}`;
+    const missing = [".js", ".d.ts"].filter((ext) => !fs.existsSync(path.join(root, `${rel}${ext}`)));
+
+    if (missing.length > 0) { return missing.map((ext) => `${rel}${ext} is missing; run \`npm run build:agentui\`.`); }
+
+    return [
+        ...bundleProblems(root, rel, major),
+        ...(report.adapter?.packages ?? ["<no adapter section in dist/agentui-report.json>"])
+            .filter((p) => !ADAPTER_PACKAGES.has(p))
+            .map((p) => `${rel}.js serves ${p}; only ${[...ADAPTER_PACKAGES].join(", ")} are allowed (spec §5.4).`),
+        ...routeProblems(catalog, report.adapter?.descriptors ?? []),
+    ];
+}
+
+/**
+ * Imports the bundle in a separate, plain Node process: that proves it loads
+ * with no DOM and no test environment, and keeps this script free of a
+ * dynamic import a bundler would rewrite.
+ */
+function bundleProblems(root, rel, major)
+{
+    const probe = "const m = await import(process.argv[1]); process.stdout.write(JSON.stringify("
+        + "{ catalogText: JSON.stringify(m.catalogJson, null, 2) + '\\n', create: typeof m.createOutcropCatalog }));";
+    let seen;
+
+    try
+    {
+        seen = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", probe,
+            pathToFileURL(path.join(root, `${rel}.js`)).href], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }));
+    }
+    catch (err)
+    {
+        return [`${rel}.js does not import in plain Node: ${String(err.stderr || err.message).trim().split("\n")[0]}.`];
+    }
+
+    const published = fs.readFileSync(path.join(root, "dist", "a2ui", "catalog", `v${major}.json`), "utf8");
+
+    return [
+        ...(seen.catalogText === published ? [] : [`${rel}.js embeds a catalog that differs from dist/a2ui/catalog/v${major}.json; `
+            + "the adapter and the catalog must be built together by `npm run build:agentui`."]),
+        ...(seen.create === "function" ? [] : [`${rel}.js does not export createOutcropCatalog.`]),
+    ];
+}
+
+/**
+ * Every component of ours (not a basic re-export) has a descriptor, and every
+ * data prop a route. A data prop is told apart by its schema — a literal,
+ * DataBinding or FunctionCall anyOf — never by its name.
+ */
+function routeProblems(catalog, descriptors)
+{
+    const byName = new Map(descriptors.map((d) => [d.name, d]));
+
+    return Object.entries(catalog.components)
+        .filter(([, entry]) => !entry.allOf?.[0]?.$ref?.startsWith(BASIC_PREFIX))
+        .flatMap(([name, entry]) =>
+        {
+            const d = byName.get(name);
+
+            if (!d) { return [`${name} has no adapter descriptor in dist/agentui-report.json, so it could never render.`]; }
+
+            const own = entry.allOf?.find((arm) => arm.properties)?.properties;
+
+            if (!own) { return [`${name} has no properties of its own in the catalog; its entry is malformed.`]; }
+
+            return Object.entries(own)
+                .filter(([, schema]) => schema.anyOf?.some((arm) => arm.$ref === DATA_BINDING))
+                .filter(([prop]) => !d.props[prop]?.route)
+                .map(([prop]) => `${name}.${prop} is a data prop with no adapter route.`);
+        });
 }
 
 function readJson(root, rel)
@@ -172,7 +258,9 @@ function textProblems(root)
         const name = path.relative(root, file);
         const knobby = raw.toLowerCase().includes("knobby") ? [`${name} contains "knobby".`] : [];
 
-        return [...knobby, ...(path.basename(file) === REPORT_FILE ? [] : fixtureProblems(name, raw))];
+        const scanned = file.endsWith(".json") && path.basename(file) !== REPORT_FILE;
+
+        return [...knobby, ...(scanned ? fixtureProblems(name, raw) : [])];
     });
 }
 
@@ -233,7 +321,7 @@ function stagingProblems(root)
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
 {
-    const problems = checkDist(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
+    const problems = await checkDist(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
     for (const p of problems) { console.log(`      ${p}`); }
     process.exit(problems.length === 0 ? 0 : 1);
 }

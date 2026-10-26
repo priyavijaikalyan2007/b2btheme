@@ -92,7 +92,7 @@ for (const name of ["localStorage", "sessionStorage"] as const)
  * matchMedia is not fully implemented in jsdom. Provide a minimal stub
  * for components like ThemeToggle that read OS prefers-color-scheme.
  */
-if (typeof window.matchMedia !== "function")
+if (typeof window !== "undefined" && typeof window.matchMedia !== "function")
 {
     Object.defineProperty(window, "matchMedia", {
         writable: true,
@@ -123,4 +123,11 @@ if (typeof window.matchMedia !== "function")
  * wants to exercise the automatic behavior sets the flag back to
  * `undefined` for its own duration.
  */
-window.__ebt_debug_logging = false;
+/*
+ * A test file may opt into `// @vitest-environment node` (tools such as
+ * esbuild reject jsdom's TextEncoder), and then there is no window.
+ */
+if (typeof window !== "undefined")
+{
+    window.__ebt_debug_logging = false;
+}

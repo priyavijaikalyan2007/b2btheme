@@ -31,6 +31,7 @@ FILES=(
     "wiring.ts"
     "packer.ts"
     "lifecycle.ts"
+    "mount.ts"
     "conformance.ts"
 )
 

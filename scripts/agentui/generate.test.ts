@@ -30,15 +30,24 @@ function widget(protocolOver: Record<string, unknown> = {})
         affords: [], emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }],
         accepts: [], actions: [], conformance: "surface", defaultOptions: { pageSize: 25 },
         protocol: {
-            providers: { onSearch: { request: "search" } },
             hostOnly: {
                 "columns[].renderer": REASON, title: REASON, container: "Needs a DOM node, which JSON cannot carry.",
                 slot: "A live component instance with methods.", onLookup: "Two-parameter lookup with no single-object form.",
+                onSearch: REASON,
             },
             schemas: { extra: { type: "object", additionalProperties: { type: "string" } } },
             ...protocolOver,
         },
     };
+}
+
+/** The widget with onSearch declared as a provider instead of host-only. */
+function withProvider()
+{
+    const m = widget({ providers: { onSearch: { request: "search" } } });
+    const { onSearch: _omitted, ...hostOnly } = m.protocol.hostOnly as Record<string, string>;
+
+    return { ...m, protocol: { ...m.protocol, hostOnly } };
 }
 
 type Version = { baselines?: Map<number, unknown>; major?: number; writeBaseline?: boolean; belowRequired?: string[] };
@@ -50,6 +59,7 @@ function run(manifests: unknown[], pending: string[] = [], version: Version = {}
         tsconfigPath: path.join(FIXTURES, "tsconfig.json"), cacheDir: CACHE,
         pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic,
         baselines: version.baselines ?? new Map(), major: version.major ?? 1, writeBaseline: version.writeBaseline ?? true,
+        assetExists: () => true,
     });
 }
 
@@ -60,7 +70,11 @@ describe("runPipeline — fixture widget", () =>
     test("it appears in the catalog", () => { expect("Widget" in run([widget()]).catalog.components).toBe(true); }, 60_000);
     test("its catalog entry follows the naming rule: eventData, on<Channel>, on<Request> and <request>Result", () =>
     {
-        const props = (run([widget()]).catalog.components as any).Widget.allOf[2].properties;
+        const result = run([withProvider()]);
+        const props = (result.catalog.components as any).Widget.allOf[2].properties;
+
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toMatch(/Widget declares providers \[search\].*#31/);
         const derived = Object.keys(props).filter((k) => ["eventData", "selection", "searchQuery"].includes(k)
             || k.startsWith("on") || k.endsWith("Result") || k.endsWith("Results"));
 
@@ -89,6 +103,16 @@ describe("runPipeline — fixture widget", () =>
     test("a pending component with no violations is a stale-list error", () =>
     {
         expect(run([widget()], ["widget"]).errors[0]).toMatch(/PENDING_CLASSIFICATION/);
+    }, 60_000);
+    test("it gets an adapter descriptor", () =>
+    {
+        expect(run([widget()]).descriptors).toMatchObject([{ name: "Widget", tagName: "outcrop-widget", factory: "createWidget" }]);
+    }, 60_000);
+    test("G1: a catalog component with a manifest action fails the pipeline", () =>
+    {
+        const errors = run([{ ...widget(), actions: [{ id: "export", label: "Export", destructive: false, requires: [] }] }]).errors;
+
+        expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#31/);
     }, 60_000);
 });
 
@@ -206,6 +230,16 @@ describe("runPipeline — build summary counts", () =>
 
 describe("writeOutputs", () =>
 {
+    test("a string value is written verbatim; anything else as pretty JSON", () =>
+    {
+        const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
+
+        writeOutputs(new Map<string, unknown>([["a2ui/adapter/v1.js", "export{};"], ["a2ui/catalog/v1.json", { a: 1 }]]), dist);
+
+        expect(fs.readFileSync(path.join(dist, "a2ui", "adapter", "v1.js"), "utf8")).toBe("export{};");
+        expect(fs.readFileSync(path.join(dist, "a2ui", "catalog", "v1.json"), "utf8")).toBe('{\n  "a": 1\n}\n');
+    });
+
     test("a failure before writing leaves dist byte-identical", () =>
     {
         const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
