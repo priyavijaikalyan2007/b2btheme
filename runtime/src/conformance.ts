@@ -22,6 +22,7 @@
 // @entrypoint
 
 import { LOG_PREFIX } from "./constants";
+import { attachHandle, invokerFor } from "./mount";
 import { validateManifest } from "./registry";
 
 import type {
@@ -417,15 +418,19 @@ function mount(
 
     try
     {
-        const invoke = target.invoke ?? defaultInvoke(target.manifest);
+        const host = document.getElementById(hostId);
+
+        if (!host)
+        {
+            throw new Error(`Host element #${hostId} is not in the document, so the component has nowhere to mount.`);
+        }
+
+        const invoke = target.invoke ?? invokerFor(target.manifest);
         const handle = invoke(target.factory, hostId, options);
 
         if (handle && typeof handle === "object")
         {
-            attachHandle(
-                handle as Record<string, unknown>,
-                target.manifest,
-                document.getElementById(hostId));
+            attachHandle(handle as Record<string, unknown>, target.manifest, host);
 
             return handle as Record<string, unknown>;
         }
@@ -443,73 +448,8 @@ function mount(
     }
 }
 
-/**
- * Attaches a component that does not attach itself.
- *
- * @param handle   - The freshly constructed handle.
- * @param manifest - Declares how attachment works.
- * @param host     - The host element.
- */
-function attachHandle(
-    handle: Record<string, unknown>,
-    manifest: CapabilityManifest,
-    host: HTMLElement | null): void
-{
-    if (!host || !manifest.mountMethod || manifest.mountMethod === "auto")
-    {
-        return;
-    }
-
-    if (manifest.mountMethod === "show" && typeof handle.show === "function")
-    {
-        (handle.show as (h: HTMLElement) => void).call(handle, host);
-        return;
-    }
-
-    if (manifest.mountMethod === "getElement"
-        && typeof handle.getElement === "function")
-    {
-        const el = (handle.getElement as () => unknown).call(handle);
-
-        if (el instanceof Element)
-        {
-            host.appendChild(el);
-        }
-    }
-}
-
 /** Reason the most recent mount failed, surfaced in the finding. */
 let mountError = "";
-
-/**
- * Builds the factory invoker for a declared argument order.
- *
- * @param manifest - Declares factoryStyle and, for options-only, the option
- *                   key carrying the host element.
- * @returns An invoker matching that convention.
- */
-function defaultInvoke(
-    manifest: CapabilityManifest):
-    (f: unknown, id: string, o: Record<string, unknown>) => unknown
-{
-    if (manifest.factoryStyle === "options-first")
-    {
-        return (f, id, o) =>
-            (f as (a: unknown, b: string) => unknown)(o, id);
-    }
-
-    if (manifest.factoryStyle === "options-only")
-    {
-        const key = manifest.containerOption ?? "container";
-        const asId = manifest.containerAs === "id";
-
-        return (f, id, o) => (f as (a: unknown) => unknown)(
-            { ...o, [key]: asId ? id : document.getElementById(id) });
-    }
-
-    return (f, id, o) =>
-        (f as (a: string, b: unknown) => unknown)(id, o);
-}
 
 /**
  * A signature of what a host contains: its element sequence and its text.
