@@ -93,13 +93,20 @@ html, body
 .a2ui-log [data-status="rejected"]::before { content: "\2717  "; color: var(--bs-danger); }
 .a2ui-log [data-status="pending"]::before { content: "\00B7  "; color: var(--bs-secondary-color); }
 
-.a2ui-findings
+.a2ui-findings,
+.a2ui-paste-findings
 {
     margin: 0;
     padding: 0.5rem;
     white-space: pre-wrap;
     font-family: "JetBrains Mono", monospace;
     font-size: 0.75rem;
+}
+
+.a2ui-paste-findings
+{
+    max-height: 4.5rem;
+    overflow: auto;
 }
 
 .a2ui-agent-bar

@@ -1,0 +1,9 @@
+{"kind":"header","title":"Pick an orientation","provenance":"scripted"}
+{"kind":"user","text":"Ask me whether the page should be portrait or landscape."}
+{"kind":"say","text":"Pick one, then press Done."}
+{"kind":"a2ui","message":{"version":"v0.9.1","createSurface":{"surfaceId":"s","catalogId":"https://static.outcrop.us/a2ui/catalog/v1.json"}}}
+{"kind":"a2ui","message":{"version":"v0.9.1","updateComponents":{"surfaceId":"s","components":[{"id":"root","component":"Column","children":["question","picker","done"]},{"id":"question","component":"Text","text":"Which orientation should the page use?"},{"id":"picker","component":"OrientationPicker","value":{"path":"/orientation"}},{"id":"done","component":"Button","child":"doneLabel","action":{"event":{"name":"orientationChosen","context":{"orientation":{"path":"/orientation"}}}}},{"id":"doneLabel","component":"Text","text":"Done"}]}}}
+{"kind":"a2ui","message":{"version":"v0.9.1","updateDataModel":{"surfaceId":"s","path":"/","value":{"orientation":"portrait"}}}}
+{"kind":"action","message":{"version":"v0.9.1","action":{"name":"orientationChosen","surfaceId":"s","sourceComponentId":"done","context":{"orientation":"landscape"}}}}
+{"kind":"say","text":"Landscape it is."}
+{"kind":"a2ui","message":{"version":"v0.9.1","updateComponents":{"surfaceId":"s","components":[{"id":"question","component":"Text","text":"You chose landscape."}]}}}

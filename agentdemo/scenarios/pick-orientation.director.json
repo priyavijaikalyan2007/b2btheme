@@ -1,0 +1,16 @@
+{
+  "5": [
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] .orientationpicker-trigger"
+    },
+    {
+      "type": "click",
+      "target": ".orientationpicker-panel [data-value=\"landscape\"]"
+    },
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] button:has-text(\"Done\")"
+    }
+  ]
+}

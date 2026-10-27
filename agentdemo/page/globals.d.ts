@@ -13,6 +13,8 @@
  * ----------------------------------------------------------------------------
  */
 
+import type { PlaygroundAutomation } from "./automation";
+
 interface PlaygroundLogger
 {
     info(...a: unknown[]): void;
@@ -29,6 +31,9 @@ declare global
 
         /** Per-level logging override, as every component reads it. */
         __ebt_debug_logging?: boolean;
+
+        /** The playground's automation API (automation.ts); replay and recording drive it. */
+        a2uiPlayground?: PlaygroundAutomation;
 
         /** Component factories, published by each component's script. */
         [factory: `create${string}`]: unknown;
