@@ -36,6 +36,7 @@
     "test:demos": "npx playwright test tests/demo-pages.spec.ts",
     "test:e2e:dynamicui": "npx playwright test tests/dynamic-ui.spec.ts tests/dynamic-ui-visual.spec.ts tests/placement.spec.ts",
     "test:e2e:headed": "npx playwright test --headed",
+    "check:a2ui": "node scripts/agentui/check-a2ui.mjs",
     "test:e2e:a2ui": "npx playwright test tests/a2ui-adapter.spec.ts",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
