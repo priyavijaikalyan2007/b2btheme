@@ -1,0 +1,34 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: A2uiReferenceAgent / Rules
+ * 📜 PURPOSE: What agents are told about this library's components: the
+ *    body of A2UI.md's "What agents (the AI kind) are told", verbatim
+ *    (#30 spec §6.2). prompt.test.ts fails if the two drift apart, so edit
+ *    A2UI.md and this file together.
+ * 🔗 RELATES: [[A2uiReferenceAgent]], [[A2uiRules]]
+ * ----------------------------------------------------------------------------
+ */
+
+export const AGENT_RULES = [
+    "- **Bind `value` to read the user's edit.** A literal `value` means \"set it and don't read it back\". "
+        + "`onChange` still fires.",
+    "- **Bind `eventData` to read event payloads.** The component writes each payload to "
+        + "`<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can "
+        + "read it. Without `eventData` the action still fires, with no payload.",
+    "- **Expect these error codes** through the surface:",
+    "",
+    "  | Code | Meaning | Component state |",
+    "  |---|---|---|",
+    "  | `VALIDATION_FAILED` | a bound value does not match the prop's schema (`path` names it) | keeps its last "
+        + "good state |",
+    "  | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount | keeps its last value |",
+    "  | `OUTCROP_ASSET_LOAD_FAILED` | the component's script or CSS (or the injected base theme) failed to load | "
+        + "not mounted |",
+    "  | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the "
+        + "element is in a shadow root | not mounted |",
+].join("\n");
