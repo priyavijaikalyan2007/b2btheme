@@ -159,7 +159,8 @@ export interface ProtocolSpec
 
 ### 3.4 Catalog
 
-- `cleared: null` adds `{ "type": "null" }` to the literal arm of `value`. The plan's first task confirms that `catalog-diff.mjs` classifies this widening as additive. If it doesn't, the spec is amended to record the rule change; it is not worked around.
+- `cleared: null` wraps the literal arm of `value` as `{ anyOf: [<schema>, { "type": "null" }] }`. The arm stays at `anyOf/0`, so the adapter's literal validator accepts `null`.
+- **Amendment (plan Task 1, 2026-10-27):** `catalog-diff.mjs` classified *any* prop change other than a description as breaking, so it would have rejected this widening. It now has one narrow rule: a prop whose next literal arm is exactly `anyOf [previous literal arm, { "type": "null" }]`, with everything else equal, is **additive** ("now also accepts null"). Any other change to the prop is still breaking. This is a change to the #17 diff rule, and it is recorded here and in ADR-222.
 - In step 1, only ToolColorPicker declares `change`, and its catalog entry does not change.
 
 ---
