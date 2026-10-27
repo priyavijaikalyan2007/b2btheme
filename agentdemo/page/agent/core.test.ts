@@ -50,9 +50,9 @@ function rig(replies: Array<string | Error>, applyResult: ApplyResult = APPLIED)
 
         return { text: next, usage: { input: 10, output: 5, cached: 3 } };
     } };
-    const apply = vi.fn(() => applyResult);
+    const apply = vi.fn((m: readonly unknown[]): ApplyResult => (JSON.stringify(m).includes("nope")
+        ? { applied: false, findings: [FINDING], errors: [] } : applyResult));
     const session = new Session({ provider, model: () => "m", key: () => KEY, system: "SYSTEM",
-        checkSchema: (m) => (JSON.stringify(m).includes("nope") ? [FINDING] : []),
         formatFindings: (f) => f.map((x) => x.message).join("\n"), apply, onEvent: (e) => events.push(e) });
 
     return { session, events, requests, apply };
@@ -98,23 +98,24 @@ describe("Session", () =>
         expect(kinds(r.events)).toContain("repair");
     });
 
-    test("schema findings are sent back and nothing is applied until a valid reply", async () =>
+    test("a rejected batch's findings are sent back, and only the valid reply is applied", async () =>
     {
         const r = rig([BAD, OK]);
 
         expect(await r.session.send("go")).toBe("applied");
         expect(r.requests[1].turns.at(-1)?.text).toContain("bad message");
-        expect(r.apply).toHaveBeenCalledTimes(1);
+        expect(r.apply).toHaveBeenCalledTimes(2);
+        expect(r.apply.mock.results.map((x) => (x.value as ApplyResult).applied)).toEqual([false, true]);
         expect(r.session.transcript().map((l) => l.kind)).toEqual(["user", "finding", "say", "a2ui"]);
     });
 
-    test("after two failed repairs the loop stops, says so and applies nothing", async () =>
+    test("after two failed repairs the loop stops, says so, and nothing was applied", async () =>
     {
         const r = rig([BAD, BAD, BAD, OK]);
 
         expect(await r.session.send("go")).toBe("failed");
         expect(r.requests).toHaveLength(MAX_REPAIRS + 1);
-        expect(r.apply).not.toHaveBeenCalled();
+        expect(r.apply.mock.results.every((x) => !(x.value as ApplyResult).applied)).toBe(true);
         expect(r.events.find((e) => e.kind === "failed")).toMatchObject({ message: FAILED_UNAPPLIED });
     });
 
@@ -153,16 +154,64 @@ describe("Session", () =>
     test("stop aborts the request in flight", async () =>
     {
         const events: SessionEvent[] = [];
+        let started = false;
         const provider: Provider = { id: "openai", label: "Slow", complete: (req) => new Promise((_, reject) =>
-            req.signal.addEventListener("abort", () => reject(new Error("aborted")))) };
-        const session = new Session({ provider, model: () => "m", key: () => KEY, system: "S", checkSchema: () => [],
+        {
+            started = true;
+            req.signal.addEventListener("abort", () => reject(new Error("aborted")));
+        }) };
+        const session = new Session({ provider, model: () => "m", key: () => KEY, system: "S",
             formatFindings: () => "", apply: () => APPLIED, onEvent: (e) => events.push(e) });
         const outcome = session.send("go");
 
+        await vi.waitFor(() => expect(started).toBe(true));
         session.stop();
 
         expect(await outcome).toBe("stopped");
         expect(kinds(events)).toEqual(["busy", "busy"]);
+    });
+
+    test("turns run one at a time: an action sent mid-reply waits for that reply", async () =>
+    {
+        let release: () => void = () => undefined;
+        const gate = new Promise<void>((r) => { release = r; });
+        const seen: string[] = [];
+        const provider: Provider = { id: "anthropic", label: "Gated", complete: async (req) =>
+        {
+            seen.push(req.turns.at(-1)?.text ?? "");
+            if (seen.length === 1) { await gate; }
+
+            return { text: OK, usage: { input: 0, output: 0, cached: 0 } };
+        } };
+        const session = new Session({ provider, model: () => "m", key: () => KEY, system: "S",
+            formatFindings: () => "", apply: () => APPLIED, onEvent: () => undefined });
+        const first = session.send("first");
+        const second = session.deliver({ version: V, action: { name: "a" } });
+
+        await Promise.resolve();
+        expect(seen).toEqual(["first"]);
+        release();
+
+        expect(await Promise.all([first, second])).toEqual(["applied", "applied"]);
+        expect(seen[1]).toContain('"name":"a"');
+    });
+
+    test("retry asks again for the unanswered turn without adding to the conversation", async () =>
+    {
+        const r = rig([new Error("503"), OK]);
+
+        expect(await r.session.send("go")).toBe("providerError");
+        expect(await r.session.retry()).toBe("applied");
+        expect(r.requests[1].turns).toEqual([{ role: "user", text: "go" }]);
+    });
+
+    test("retry with nothing to retry is refused", async () =>
+    {
+        const r = rig([OK]);
+
+        await r.session.send("go");
+
+        await expect(r.session.retry()).rejects.toThrow("There is no unanswered turn to retry.");
     });
 
     test("the key appears nowhere: not in events, transcript, logs or provider-visible turns", async () =>

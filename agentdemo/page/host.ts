@@ -35,13 +35,21 @@ export interface HostOptions
 
 type Listener<T> = (value: T) => void;
 
+/**
+ * `duringApply` is true for an error raised while `apply` ran: that error is
+ * also in apply's result. An error raised later (a component's asset
+ * failing to load, a bound value lost) is false, and only these need
+ * reporting on their own.
+ */
+export type ErrorListener = (message: A2uiErrorMessage, duringApply: boolean) => void;
+
 export class Host
 {
     readonly #opts: HostOptions;
     readonly #processor: MessageProcessor;
     readonly #frames = new Map<string, HTMLElement>();
     readonly #actionListeners = new Set<Listener<A2uiActionMessage>>();
-    readonly #errorListeners = new Set<Listener<A2uiErrorMessage>>();
+    readonly #errorListeners = new Set<ErrorListener>();
     #batch: A2uiErrorMessage[] | null = null;
 
     constructor(opts: HostOptions)
@@ -89,7 +97,7 @@ export class Host
     }
 
     /** Subscribes to errors, as A2UI error messages; returns an unsubscribe function. */
-    onError(listener: Listener<A2uiErrorMessage>): () => void
+    onError(listener: ErrorListener): () => void
     {
         this.#errorListeners.add(listener);
 
@@ -163,6 +171,6 @@ export class Host
         const message: A2uiErrorMessage = { version: A2UI_VERSION, error };
 
         this.#batch?.push(message);
-        for (const listener of this.#errorListeners) { listener(message); }
+        for (const listener of this.#errorListeners) { listener(message, this.#batch !== null); }
     }
 }

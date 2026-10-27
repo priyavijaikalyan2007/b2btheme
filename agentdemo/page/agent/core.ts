@@ -13,8 +13,8 @@
  *    Plain TypeScript with no Node-only APIs, so a Worker or another page
  *    can run it unchanged.
  * 🔗 RELATES: [[A2uiPlaygroundHost]], [[AgentUiMessageChecker]], [[A2uiPlaygroundScenario]]
- * ⚡ FLOW: [user text | action | error] -> [provider] -> [parse] -> [checkSchema]
- *          -> [apply] -> [applied | repair (≤ 2) | failed]
+ * ⚡ FLOW: [user text | action | error] -> [provider] -> [parse] -> [apply: schema check, all or nothing]
+ *          -> [applied | repair (≤ 2) | failed]
  *
  * WHY THE REPAIR LOOP IS NOT A FALLBACK
  * -------------------------------------
@@ -26,7 +26,7 @@
 
 import { logDebug, logInfo } from "../log";
 import type { ScenarioLine } from "../scenario";
-import type { ApplyResult, CheckSchema, Finding } from "../types";
+import type { ApplyResult, Finding } from "../types";
 import { redactKey } from "./redact";
 import type { Provider, Turn, TurnOutcome, Usage } from "./types";
 
@@ -50,8 +50,8 @@ export interface SessionDeps
     readonly model: () => string;
     readonly key: () => string;
     readonly system: string;
-    readonly checkSchema: CheckSchema;
     readonly formatFindings: (findings: readonly Finding[]) => string;
+    /** The host's one apply path: it schema-checks the batch, all or nothing, and records it either way. */
     readonly apply: (messages: readonly unknown[]) => ApplyResult;
     readonly onEvent: (event: SessionEvent) => void;
 }
@@ -69,26 +69,49 @@ export class Session
     #transcript: ScenarioLine[] = [];
     #abort: AbortController | null = null;
     #appliedThisTurn = false;
+    #queue: Promise<unknown> = Promise.resolve();
 
     constructor(deps: SessionDeps)
     {
         this.#d = deps;
     }
 
-    /** The user's chat text. */
+    /** The user's chat text. Turns run one at a time, in the order they arrive. */
     send(text: string): Promise<TurnOutcome>
     {
-        this.#transcript.push({ kind: "user", text });
+        return this.#enqueue(() =>
+        {
+            this.#transcript.push({ kind: "user", text });
 
-        return this.#turn(text);
+            return this.#turn(text);
+        });
     }
 
     /** A surface's action or error message, sent to the model verbatim. */
     deliver(message: { readonly action: unknown } | { readonly error: unknown }): Promise<TurnOutcome>
     {
-        this.#transcript.push("action" in message ? { kind: "action", message } : { kind: "error", message });
+        return this.#enqueue(() =>
+        {
+            this.#transcript.push("action" in message ? { kind: "action", message } : { kind: "error", message });
 
-        return this.#turn(JSON.stringify(message));
+            return this.#turn(JSON.stringify(message));
+        });
+    }
+
+    /**
+     * Asks the provider again for the last turn, after a provider error or
+     * Stop. Nothing is added to the conversation.
+     *
+     * @throws When the conversation does not end with an unanswered user turn.
+     */
+    retry(): Promise<TurnOutcome>
+    {
+        return this.#enqueue(() =>
+        {
+            if (this.#turns.at(-1)?.role !== "user") { throw new Error("There is no unanswered turn to retry."); }
+
+            return this.#run();
+        });
     }
 
     /** Aborts the request in flight. */
@@ -111,9 +134,24 @@ export class Session
         return [...this.#transcript];
     }
 
-    async #turn(userText: string): Promise<TurnOutcome>
+    #enqueue(work: () => Promise<TurnOutcome>): Promise<TurnOutcome>
+    {
+        const next = this.#queue.then(work, work);
+
+        this.#queue = next.catch(() => undefined);
+
+        return next;
+    }
+
+    #turn(userText: string): Promise<TurnOutcome>
     {
         this.#turns.push({ role: "user", text: userText });
+
+        return this.#run();
+    }
+
+    async #run(): Promise<TurnOutcome>
+    {
         this.#appliedThisTurn = false;
         this.#d.onEvent({ kind: "busy", on: true });
 
@@ -177,11 +215,9 @@ export class Session
         try { reply = parseReply(text); }
         catch (err) { return err instanceof Error ? err.message : String(err); }
 
-        const findings = this.#d.checkSchema(reply.messages);
-
-        if (findings.length > 0) { return this.#d.formatFindings(findings); }
-
         const result = this.#d.apply(reply.messages);
+
+        if (!result.applied) { return this.#d.formatFindings(result.findings); }
 
         this.#appliedThisTurn = true;
         this.#transcript.push({ kind: "say", text: reply.say },

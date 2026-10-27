@@ -29,7 +29,8 @@ import { Host } from "./host";
 import { logError, logInfo } from "./log";
 import { LogModel } from "./log-model";
 import { Playground } from "./playground";
-import { buildChat } from "./ui/chat";
+import { systemPrompt } from "./agent/prompt";
+import { buildAgentPanel } from "./ui/agent-panel";
 import { buildInspect } from "./ui/inspect";
 import type { Inspect } from "./ui/inspect";
 import { buildLayout } from "./ui/layout";
@@ -67,18 +68,25 @@ async function start(): Promise<void>
         catalog: adapter.createOutcropCatalog({ Catalog, basicCatalog, BASIC_FUNCTIONS },
             { assetBaseUrl: location.origin, injectBaseTheme: false }) });
     const inspect = buildInspect(regions.inspectEl, pasteHandlers(() => playground, deps, () => inspect));
-    const chat = buildChat(regions.agentEl, () => undefined);
-    const playground = new Playground({ host, log, inspect, chat, formatFindings });
+    const agent = buildAgentPanel({ el: regions.agentEl, host, inspect, playground: () => playground, formatFindings,
+        system: systemPrompt(adapter.catalogJson, basicJson) });
+    const playground = new Playground({ host, log, inspect, chat: agent.chat, formatFindings });
 
-    chat.enable(false);
     buildMessagesView(regions.messagesEl, log);
-    const controls = { toolbar: null as ToolbarHandle | null };
-    const actions = toolbarActions(playground, inspect, deps, () => syncControls(controls.toolbar, playground));
-
-    controls.toolbar = buildToolbar(regions.toolbarEl, await scenarioIndex(), actions);
-    syncControls(controls.toolbar, playground);
+    await mountToolbar(regions.toolbarEl, playground, inspect, deps, () => agent.reset());
     exposeAutomation(playground, log);
     logInfo("playground ready", { adapter: ADAPTER_URL });
+}
+
+async function mountToolbar(el: HTMLElement, playground: Playground, inspect: Inspect, deps: CheckDeps,
+    takeover: () => void): Promise<void>
+{
+    const controls = { toolbar: null as ToolbarHandle | null };
+    const actions = toolbarActions(playground, inspect, deps, () => syncControls(controls.toolbar, playground),
+        takeover);
+
+    controls.toolbar = buildToolbar(el, await scenarioIndex(), actions);
+    syncControls(controls.toolbar, playground);
 }
 
 /** The checker's dependencies in the page: the adapter's own catalog and the vendored spec schemas. */
@@ -137,10 +145,12 @@ function parseMessages(text: string, inspect: Inspect): unknown[] | null
     }
 }
 
-function toolbarActions(playground: Playground, inspect: Inspect, deps: CheckDeps, sync: () => void): ToolbarActions
+/** `takeover` ends any agent session before a scenario drives the surfaces. */
+function toolbarActions(playground: Playground, inspect: Inspect, deps: CheckDeps, sync: () => void,
+    takeover: () => void): ToolbarActions
 {
     let timer: ReturnType<typeof setInterval> | null = null;
-    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } takeover(); };
     const then = (act: () => void) => () => { stop(); act(); sync(); };
 
     return {

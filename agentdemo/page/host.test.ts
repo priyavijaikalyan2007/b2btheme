@@ -59,7 +59,8 @@ describe("Host", () =>
         const result = host.apply([surface("s"), surface("t")]);
 
         expect(result).toEqual({ applied: true, findings: [], errors: [] });
-        expect([...el.querySelectorAll("[data-surface]")].map((f) => f.getAttribute("data-surface"))).toEqual(["s", "t"]);
+        expect([...el.querySelectorAll("[data-surface]")].map((f) => f.getAttribute("data-surface")))
+            .toEqual(["s", "t"]);
         expect(el.querySelector('[data-surface="s"] header')?.textContent).toBe('surface "s"');
         expect(host.surfaces()).toEqual(["s", "t"]);
     });
@@ -100,7 +101,8 @@ describe("Host", () =>
     {
         const { host } = makeHost();
 
-        host.apply([surface(), { version: V, updateDataModel: { surfaceId: "s", path: "/", value: { o: "portrait" } } }]);
+        host.apply([surface(), { version: V, updateDataModel: { surfaceId: "s", path: "/",
+            value: { o: "portrait" } } }]);
 
         expect(host.dataModel("s")).toEqual({ o: "portrait" });
     });
@@ -124,18 +126,19 @@ describe("Host", () =>
             sourceComponentId: "root" }) }]);
     });
 
-    test("onError receives surface errors as A2UI error messages, and unsubscribing stops them", () =>
+    test("onError receives errors as A2UI error messages, marked as raised during apply, until unsubscribed", () =>
     {
         const { host } = makeHost();
-        const seen: A2uiErrorMessage[] = [];
-        const off = host.onError((e) => seen.push(e));
+        const seen: Array<[A2uiErrorMessage, boolean]> = [];
+        const off = host.onError((e, duringApply) => seen.push([e, duringApply]));
 
         host.apply([components([], "nope")]);
         off();
         host.apply([components([], "nope")]);
 
         expect(seen).toHaveLength(1);
-        expect(seen[0].error.code).toBe("MESSAGE_REJECTED");
+        expect(seen[0][0].error.code).toBe("MESSAGE_REJECTED");
+        expect(seen[0][1]).toBe(true);
     });
 
     test("reset deletes every surface", () =>

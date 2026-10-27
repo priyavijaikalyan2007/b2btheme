@@ -125,6 +125,19 @@ html, body
     width: 14rem;
 }
 
+.a2ui-agent
+{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.a2ui-chat
+{
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
 .a2ui-usage
 {
     font-family: "JetBrains Mono", monospace;
