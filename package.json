@@ -41,7 +41,7 @@
     "build:demo:a2ui": "node agentdemo/build.mjs",
     "demo:a2ui": "node agentdemo/build.mjs && node agentdemo/serve.mjs",
     "demo:a2ui:record": "npx playwright test -c agentdemo/record/record.config.ts && node agentdemo/record/encode.mjs",
-    "test:e2e:a2ui": "npx playwright test tests/a2ui-adapter.spec.ts tests/a2ui-playground.spec.ts tests/a2ui-scenarios.spec.ts",
+    "test:e2e:a2ui": "npx playwright test tests/a2ui-adapter.spec.ts tests/a2ui-catalog-render.spec.ts tests/a2ui-components tests/a2ui-playground.spec.ts tests/a2ui-scenarios.spec.ts",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
     "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
