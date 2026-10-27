@@ -32,6 +32,13 @@ export const WORKSPACESHELL_MANIFEST: CapabilityManifest =
     icon: "bi-window-stack",
     category: "navigation",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Show several named canvases as tabs the user can select, pin, close "
+            + "or create, with a history scrubber.",
+        avoidWhen: "For simple tabbed content without canvas actions use Tabs.",
+    },
+
     affords: [],
 
     emits: [

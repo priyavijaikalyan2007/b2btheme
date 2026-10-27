@@ -20,6 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { bundleAdapter } from "./adapter-bundle.mjs";
+import { checkAgentDescription } from "./agent-description.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { compileValidators } from "./adapter-validators.mjs";
 import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
@@ -71,6 +72,7 @@ export function runPipeline(input)
         components: ready.map((c) => ({ ...c, schema: schemas.get(c.manifest.name) })), major: input.major });
 
     errors.push(...violations.map((v) => v.message));
+    errors.push(...ready.flatMap((c) => checkAgentDescription(c.manifest, Object.keys(catalog.components))));
     checkBaseline(catalog, input, errors);
 
     const adapter = buildDescriptors(ready, catalog, input.assetExists);

@@ -335,7 +335,9 @@ export function describeComponent(manifest)
     const shown = manifest.actions.filter((a) => hostOnly[a.id] === undefined);
     const actions = shown.length > 0 ? [`Actions: ${shown.map((a) => a.label).join(", ")}.`] : [];
 
-    return [`${manifest.label}.`, ...uses, ...actions].join(" ");
+    const agent = manifest.agent ? [manifest.agent.useWhen, manifest.agent.avoidWhen] : [];
+
+    return [`${manifest.label}.`, ...agent, ...uses, ...actions].join(" ");
 }
 
 /** " of 2 to 500 items"; " of exactly 1 item" when min equals max. */

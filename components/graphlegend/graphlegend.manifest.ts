@@ -34,6 +34,12 @@ export const GRAPHLEGEND_MANIFEST: CapabilityManifest =
     icon: "bi-list-columns",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Explain the node and edge types of a graph or diagram, with colours, icons and optional counts.",
+        avoidWhen: "For a plain key-value list use List with Text; it is not a legend for numeric chart series.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],

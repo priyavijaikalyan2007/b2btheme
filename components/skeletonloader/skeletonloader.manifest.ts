@@ -33,6 +33,12 @@ export const SKELETONLOADER_MANIFEST: CapabilityManifest =
     icon: "bi-placeholder",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Hold the place of content that is still loading, shaped like text, a card, an avatar or a table.",
+        avoidWhen: "For a status the user should read use Text; replace the loader as soon as the content arrives.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],

@@ -226,6 +226,12 @@ describe("catalog — guidance", () =>
     {
         expect(describeComponent(MANIFEST)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
     });
+    test("useWhen and avoidWhen follow the label, before the affordances (ADR-222)", () =>
+    {
+        const m = { ...MANIFEST, agent: { useWhen: "Show rows to compare.", avoidWhen: "For one record use Card." } };
+        expect(describeComponent(m)).toBe("Widget. Show rows to compare. For one record use Card. "
+            + "Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
+    });
     test("a host-only action is left out of the Actions sentence (ADR-222)", () =>
     {
         const m = { ...MANIFEST, protocol: { hostOnlyActions: { export: "Writes a file in the browser." } } };

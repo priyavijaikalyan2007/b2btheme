@@ -35,6 +35,13 @@ export const TOOLCOLORPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-palette-fill",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Let the user pick a drawing colour for a pen, marker, pencil, "
+            + "highlighter or brush from a small palette.",
+        avoidWhen: "For choosing between named options that are not colours use ChoicePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],

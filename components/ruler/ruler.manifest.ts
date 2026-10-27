@@ -32,6 +32,12 @@ export const RULER_MANIFEST: CapabilityManifest =
     icon: "bi-rulers",
     category: "navigation",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Show a measuring ruler in px, cm, mm or inches beside a canvas or document area.",
+        avoidWhen: "For choosing a number use Slider or TextField; a ruler only displays a scale.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],

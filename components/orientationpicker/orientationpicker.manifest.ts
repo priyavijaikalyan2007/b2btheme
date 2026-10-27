@@ -35,6 +35,12 @@ export const ORIENTATIONPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-aspect-ratio",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Let the user choose portrait or landscape page orientation, shown as two page icons.",
+        avoidWhen: "For any other choice between a few options use ChoicePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
