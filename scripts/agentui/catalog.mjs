@@ -331,7 +331,9 @@ export function describeComponent(manifest)
 {
     const uses = manifest.affords.map((a) =>
         `Use it to ${a.intents.join(", ")} a ${a.shape}${a.cardinality ? cardinalityText(a.cardinality) : ""}.`);
-    const actions = manifest.actions.length > 0 ? [`Actions: ${manifest.actions.map((a) => a.label).join(", ")}.`] : [];
+    const hostOnly = manifest.protocol?.hostOnlyActions ?? {};
+    const shown = manifest.actions.filter((a) => hostOnly[a.id] === undefined);
+    const actions = shown.length > 0 ? [`Actions: ${shown.map((a) => a.label).join(", ")}.`] : [];
 
     return [`${manifest.label}.`, ...uses, ...actions].join(" ");
 }

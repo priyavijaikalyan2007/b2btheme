@@ -273,6 +273,29 @@ describe("resolve — naming rule (user decision, 2026-10-25)", () =>
     });
 });
 
+describe("resolve — protocol.hostOnlyActions (ADR-222, #31)", () =>
+{
+    const exporting = (hostOnlyActions: M) => manifest({ actions: [{ id: "export", label: "Export CSV" }],
+        protocol: { hostOnlyActions } });
+
+    test("a host-only action gets no action prop and is listed host-only with its reason", () =>
+    {
+        const surface = resolveSurface(exporting({ export: REASON }), []);
+
+        expect(surface.actions).toEqual([]);
+        expect(surface.hostOnly).toEqual({ "actions.export": REASON });
+        expect(surface.violations).toEqual([]);
+    });
+    test("a key that names no manifest action is stale", () =>
+    {
+        expect(codes(exporting({ exprt: REASON }), [])).toEqual([VIOLATION.STALE_DECLARATION]);
+    });
+    test("a reason shorter than the minimum is reported", () =>
+    {
+        expect(codes(exporting({ export: "short" }), [])).toEqual([VIOLATION.SHORT_REASON]);
+    });
+});
+
 describe("resolve — protocol.change (ADR-222, #39)", () =>
 {
     const field = (protocol?: M, over: M = {}) => manifest({ conformance: "field", ...(protocol ? { protocol } : {}), ...over });

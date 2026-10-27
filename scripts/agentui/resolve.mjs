@@ -89,7 +89,7 @@ export function resolveSurface(manifest, members)
     checkChange(ctx, change, hasPair, twoWayValue);
 
     return { name: manifest.name, dataProps, twoWayValue, change: twoWayValue ? change : null, events, providers,
-        actions: resolveActions(manifest), hostOnly: protocol.hostOnly ?? {}, violations: ctx.violations };
+        actions: resolveActions(manifest, protocol), hostOnly: hostOnlyOf(protocol), violations: ctx.violations };
 }
 
 /** Records one violation, with the file the author has to edit. */
@@ -303,21 +303,34 @@ function checkStaleDeclarations(ctx, members)
     staleKeys(ctx, protocol.hostOnly, (k) => isMember(k) || isPath(k), "protocol.hostOnly");
     staleKeys(ctx, protocol.providers, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.FUNCTION, "protocol.providers");
     staleKeys(ctx, protocol.schemas, isMember, "protocol.schemas");
+    staleKeys(ctx, protocol.hostOnlyActions, (k) => ctx.manifest.actions.some((a) => a.id === k),
+        "protocol.hostOnlyActions", "the manifest's actions");
 
-    for (const [key, reason] of Object.entries(protocol.hostOnly ?? {}).filter(([, r]) => r.length < MIN_REASON_LENGTH))
+    for (const [key, reason] of Object.entries(hostOnlyOf(protocol)).filter(([, r]) => r.length < MIN_REASON_LENGTH))
     {
         violate(ctx, key, VIOLATION.SHORT_REASON, `has the reason "${reason}". Write what the member needs that `
             + `JSON cannot carry, in at least ${MIN_REASON_LENGTH} characters.`);
     }
 }
 
+/**
+ * Every host-only member and action with its reason. Actions are keyed
+ * `actions.<id>`, so the report lists them beside members (ADR-222).
+ */
+function hostOnlyOf(protocol)
+{
+    const actions = Object.entries(protocol.hostOnlyActions ?? {}).map(([id, reason]) => [`actions.${id}`, reason]);
+
+    return { ...protocol.hostOnly, ...Object.fromEntries(actions) };
+}
+
 /** Reports every key of a declaration map that fails the test. */
-function staleKeys(ctx, map, isLive, where)
+function staleKeys(ctx, map, isLive, where, what = "the options type")
 {
     for (const key of Object.keys(map ?? {}).filter((k) => !isLive(k)))
     {
-        violate(ctx, key, VIOLATION.STALE_DECLARATION, `is named in ${where} but matches nothing in the options `
-            + "type. Stale declarations hide renames; remove it or correct the name.");
+        violate(ctx, key, VIOLATION.STALE_DECLARATION, `is named in ${where} but matches nothing in ${what}. `
+            + "Stale declarations hide renames; remove it or correct the name.");
     }
 }
 
@@ -397,12 +410,13 @@ function changeProblem(change, fit)
 /**
  * One on<Id> action prop per declared manifest action. An action whose id
  * equals a channel name is the same event, so the channel's action stands
- * for both and no separate entry is made.
+ * for both and no separate entry is made. A host-only action (ADR-222) gets none.
  */
-function resolveActions(manifest)
+function resolveActions(manifest, protocol)
 {
     const channels = new Set(manifest.emits.map((c) => c.name));
+    const hostOnly = protocol.hostOnlyActions ?? {};
 
-    return manifest.actions.filter((a) => !channels.has(a.id))
+    return manifest.actions.filter((a) => !channels.has(a.id) && hostOnly[a.id] === undefined)
         .map((a) => ({ id: a.id, label: a.label, actionProp: `on${pascal(a.id)}` }));
 }

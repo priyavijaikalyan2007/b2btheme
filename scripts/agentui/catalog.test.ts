@@ -226,6 +226,11 @@ describe("catalog — guidance", () =>
     {
         expect(describeComponent(MANIFEST)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
     });
+    test("a host-only action is left out of the Actions sentence (ADR-222)", () =>
+    {
+        const m = { ...MANIFEST, protocol: { hostOnlyActions: { export: "Writes a file in the browser." } } };
+        expect(describeComponent(m)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items.");
+    });
     test("a cardinality whose min equals its max reads exactly 1 item", () =>
     {
         const m = { ...MANIFEST, actions: [], affords: [{ shape: "document", intents: ["author"], cardinality: { min: 1, max: 1 } }] };
