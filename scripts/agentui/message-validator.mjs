@@ -5,8 +5,8 @@
  *
  * ⚓ COMPONENT: AgentUiMessageValidator
  * 📜 PURPOSE: Precompile the A2UI checker's schema layer (#30 spec §3.3):
- *    one validator per server-to-client message type and one per catalog
- *    component, as standalone ESM. A page whose CSP forbids `unsafe-eval`
+ *    one validator per server-to-client message type, per catalog component
+ *    and per catalog function, as standalone ESM. A page whose CSP forbids `unsafe-eval`
  *    cannot let Ajv compile at runtime, and the CLI and the playground must
  *    run the same code, so both import the one file this writes.
  * 🔗 RELATES: [[AgentUiMessageChecker]], [[AgentUiAdapterValidators]], [[AgentUiCatalog]]
@@ -48,11 +48,13 @@ function defName(type)
  * runtime helpers; `bundleMessageValidator` inlines them.
  *
  * @param {{catalog: object, basic: object, commonTypes: object, envelope: object}} schemas
- * @returns {string} Source exporting `messageValidators = { messages, components }`.
+ * @returns {string} Source exporting `messageValidators = { messages, components, functions }`.
  */
 export function compileMessageValidator({ catalog, basic, commonTypes, envelope })
 {
-    const ajv = new Ajv2020({ code: { source: true, esm: true }, strict: false, validateFormats: false });
+    // allErrors: a person or a model repairing a message wants every problem in one pass.
+    const ajv = new Ajv2020({ code: { source: true, esm: true }, strict: false, validateFormats: false,
+        allErrors: true });
 
     ajv.addSchema(commonTypes);
     ajv.addSchema(basic);
@@ -61,15 +63,17 @@ export function compileMessageValidator({ catalog, basic, commonTypes, envelope 
     ajv.addSchema(envelope);
 
     const names = Object.keys(catalog.components);
+    const fns = Object.keys(catalog.functions ?? {});
     const refs = Object.fromEntries([
         ...MESSAGE_TYPES.map((t) => [`m_${t}`, `${envelope.$id}#/$defs/${defName(t)}`]),
         ...names.map((n, i) => [`c${i}`, `${catalog.$id}#/components/${n}`]),
+        ...fns.map((n, i) => [`f${i}`, `${catalog.$id}#/functions/${n}`]),
     ]);
+    const table = (list, prefix) => list.map((n, i) => `${JSON.stringify(n)}: ${prefix}${i}`).join(", ");
     const messages = MESSAGE_TYPES.map((t) => `${t}: m_${t}`).join(", ");
-    const components = names.map((n, i) => `${JSON.stringify(n)}: c${i}`).join(", ");
 
     return `${standaloneCode(ajv, refs)}\nexport const messageValidators = { messages: { ${messages} }, `
-        + `components: { ${components} } };\n`;
+        + `components: { ${table(names, "c")} }, functions: { ${table(fns, "f")} } };\n`;
 }
 
 /**

@@ -24,7 +24,8 @@ import catalog from "../../specs/agentui/published/catalog-v1.json";
 import { bundleMessageValidator, CATALOG_ALIAS, compileMessageValidator, MESSAGE_TYPES } from "./message-validator.mjs";
 
 type Validate = ((v: unknown) => boolean) & { errors?: unknown[] | null };
-type Validators = { messages: Record<string, Validate>; components: Record<string, Validate> };
+type Validators = { messages: Record<string, Validate>; components: Record<string, Validate>;
+    functions: Record<string, Validate> };
 
 const V = "v0.9.1";
 const ID = "https://static.outcrop.us/a2ui/catalog/v1.json";
@@ -60,6 +61,15 @@ describe("compileMessageValidator", () =>
     {
         expect(Object.keys(v.components).sort()).toEqual(Object.keys(catalog.components).sort());
         expect(Object.keys(v.components)).toEqual(expect.arrayContaining(["StickyNote", "Ruler", "Row", "Text"]));
+    });
+
+    test("exports one validator per catalog function, which checks that function's arguments", () =>
+    {
+        expect(Object.keys(v.functions).sort()).toEqual(Object.keys(catalog.functions).sort());
+        const call = (args: unknown) => ({ call: "formatDate", args });
+
+        expect(v.functions.formatDate(call({ value: "2026-10-27", format: "yyyy" }))).toBe(true);
+        expect(v.functions.formatDate(call({}))).toBe(false);
     });
 
     test("a component validator checks that component's props", () =>
