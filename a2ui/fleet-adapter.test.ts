@@ -28,6 +28,7 @@ import { sampleValue } from "./sample-values";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string; twoWay: boolean;
+    change?: { valueFrom: string } | { cleared: null };
     assets: { js: string; css?: string }; props: Record<string, { route: string }>;
     events: { channel: string; actionProp: string; payloadInValue: boolean }[] };
 
@@ -269,11 +270,20 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         const s = await stage(d, props, data);
         const options = spies.get(name)!.options.at(-1)!;
         const edit = sampleValue(arms.value, 1, CATALOG);
+        // The payload the component's onChange sends, per its protocol.change (ADR-222).
+        const payload = d.change && "valueFrom" in d.change ? { [d.change.valueFrom]: edit } : edit;
 
-        (options[d.changeOption] as (v: unknown) => void)(edit);
+        (options[d.changeOption] as (v: unknown) => void)(payload);
 
         expect(s.surface.dataModel.get("/p/value")).toEqual(edit);
         expect(s.errors).toEqual([]);
+
+        if (d.change && "cleared" in d.change)
+        {
+            (options[d.changeOption] as (v: unknown) => void)(null);
+            expect(s.surface.dataModel.get("/p/value")).toBeUndefined();
+            expect(s.errors).toEqual([]);
+        }
     });
 
     test("teardown destroys the handle", async () =>

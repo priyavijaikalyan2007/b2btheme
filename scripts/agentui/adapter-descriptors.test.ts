@@ -165,4 +165,13 @@ describe("buildDescriptors — fields", () =>
     {
         expect(buildDescriptors([sticky, picker], cat, css).problems).toEqual([]);
     });
+
+    test("a declared change mapping is carried; an undeclared one adds no key (ADR-222)", () =>
+    {
+        const mapped = { ...picker, surface: { ...picker.surface, change: { valueFrom: "hex" } } };
+        const [d] = buildDescriptors([mapped], cat, css).descriptors;
+
+        expect(d.change).toEqual({ valueFrom: "hex" });
+        expect(p).not.toHaveProperty("change");
+    });
 });

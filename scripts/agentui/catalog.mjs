@@ -201,10 +201,21 @@ function dataProps(surface, root, component)
     {
         const { description, ...schema } = requireProperty(root, component, "data prop", d.name);
         const twoWay = d.name === "value" && surface.twoWayValue
-            ? " Two-way: when bound to a path, the component writes the user's changes there." : "";
+            ? ` Two-way: when bound to a path, the component writes the user's changes there.${clearText(surface)}` : "";
 
         return [d.name, { description: `${description ?? d.jsdoc}${twoWay}`, ...literalBindingOrCall(schema) }];
     });
+}
+
+/**
+ * A `{ cleared: null }` component can be emptied. An A2UI data model cannot
+ * hold null (setting it deletes the key), so cleared is an absent path, in
+ * both directions, and the description says so (ADR-222).
+ */
+function clearText(surface)
+{
+    return surface.change && "cleared" in surface.change
+        ? " When the user clears it, the path is deleted; delete the path to clear it." : "";
 }
 
 /**

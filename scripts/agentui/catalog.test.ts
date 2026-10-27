@@ -181,6 +181,25 @@ describe("catalog — component entry", () =>
         expect(props.onChange.description)
             .toBe("Sent when the value changes. Read the new value through the path bound to `value`.");
     });
+    test("cleared: null keeps value's literal arm and says that cleared is an absent path (ADR-222)", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Day." } } };
+        const s = { ...SURFACE, twoWayValue: true, change: { cleared: null },
+            dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Day." }] };
+        const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
+
+        expect(props.value.anyOf[0]).toEqual({ type: "string" });
+        expect(props.value.description).toContain("the path is deleted; delete the path to clear it.");
+    });
+    test("valueFrom leaves value's literal arm as generated", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Hex." } } };
+        const s = { ...SURFACE, twoWayValue: true, change: { valueFrom: "hex" },
+            dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Hex." }] };
+        const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
+
+        expect(props.value.anyOf[0]).toEqual({ type: "string" });
+    });
     test("eventData is absent for a component with no events or providers", () =>
     {
         const s = { ...SURFACE, events: [], providers: [] };

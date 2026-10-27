@@ -96,7 +96,7 @@ Four mechanisms. Steps 2–5 depend on all of them:
 
 - The three manifest fields, their types in `runtime/src/types.ts`, their manifest validation, and their checks in the resolver.
 - Adapter support for `protocol.change`.
-- Catalog generation: descriptions, the `null` arm, host-only actions left out.
+- Catalog generation: descriptions, the cleared-is-absent text, host-only actions left out.
 - Two-sentence agent descriptions for the 8 components already in the catalog.
 - `protocol.change: { valueFrom: "hex" }` for ToolColorPicker. This fixes #39's live defect.
 - The testing infrastructure in §6. PR #40's tests and the existing per-component tests move into it.
@@ -132,7 +132,7 @@ export interface ProtocolSpec
 |---|---|---|---|
 | absent | true | the payload | unchanged |
 | `{ valueFrom: "p" }` | true | `payload.p` | unchanged |
-| `{ cleared: null }` | true | the payload; `null` when the payload is `null` | gains a `{ "type": "null" }` literal arm |
+| `{ cleared: null }` | true | the payload; when the payload is `null`, the bound path is **deleted** (§3.4) | unchanged; the description says that cleared is an absent path |
 | `"event"` | **false** | nothing; `onChange` must be an emits channel's `legacyOption` | unchanged, and the "Two-way" text is dropped |
 
 `valueFrom` names **one property**, not a path. Every surveyed item payload carries its value one level down. Paths can be added later without breaking anything.
@@ -156,12 +156,19 @@ export interface ProtocolSpec
 - The descriptor carries `change: { valueFrom } | { cleared: null }` when declared. `"event"` produces no `changeOption` and no `payloadInValue`.
 - `#onUserValue` maps the payload before writing it: `payload[valueFrom]` or `null`. With no mapping declared, the payload is written as it is; the build has already proved its type.
 - The echo check (`#isEcho`) compares the **mapped** value.
+- For a `{ cleared: null }` component, after mount, an absent bound `value` means "cleared". It is applied as `setValue(null)` rather than reported as `OUTCROP_BINDING_LOST`. Before mount, an absent value still waits, as for every bound prop. Components without `cleared` still report a deleted bound value as a lost binding.
 
-### 3.4 Catalog
+### 3.4 Catalog, and why "cleared" is "absent"
 
-- `cleared: null` wraps the literal arm of `value` as `{ anyOf: [<schema>, { "type": "null" }] }`. The arm stays at `anyOf/0`, so the adapter's literal validator accepts `null`.
-- **Amendment (plan Task 1, 2026-10-27):** `catalog-diff.mjs` classified *any* prop change other than a description as breaking, so it would have rejected this widening. It now has one narrow rule: a prop whose next literal arm is exactly `anyOf [previous literal arm, { "type": "null" }]`, with everything else equal, is **additive** ("now also accepts null"). Any other change to the prop is still breaking. This is a change to the #17 diff rule, and it is recorded here and in ADR-222.
-- In step 1, only ToolColorPicker declares `change`, and its catalog entry does not change.
+- **Amendment (plan Task 4, 2026-10-27):** the approved design wrote `null` to the bound path and added a `{ "type": "null" }` arm to the catalog. **An A2UI data model cannot hold `null`.**
+  - `@a2ui/web_core`'s `DataModel.set(path, null)` deletes the key, and A2UI's `updateDataModel` likewise uses "no value" to mean delete.
+  - So a written `null` would have arrived as an absent path, and the element would then have reported its own write as `OUTCROP_BINDING_LOST`.
+- **The design that fits A2UI: cleared is an absent path, in both directions.**
+  - When the user clears the field, the adapter deletes the bound path.
+  - When the agent deletes the bound path, the component is cleared with `setValue(null)`.
+- The catalog schema is unchanged. The `value` description gains: "When the user clears it, the path is deleted; delete the path to clear it."
+- Plan Task 1 had added a `catalog-diff` rule treating a `null` arm as additive. With no `null` arm, the rule had no user, so it was removed and `catalog-diff.mjs` is unchanged from `main`.
+- In step 1, only ToolColorPicker declares `change` (`valueFrom`), and its catalog entry does not change.
 
 ---
 
@@ -322,7 +329,7 @@ The jsdom two-way test stays as a plumbing test. It applies the declared `change
 
 | Risk | Mitigation |
 |---|---|
-| `catalog-diff` classifies the `null` arm as breaking | Verified in the plan's first task. No catalog component uses `cleared: null` in step 1, so step 1 cannot ship a break either way. |
+| An agent misreads an absent value as "never set" | The `value` description says that cleared is an absent path, and the agent can read the user's clear from the `onChange` action. |
 | Generic samples can't render some components | The `OVERRIDES` map, with the reason recorded beside each entry; the test never skips silently. |
 | The `avoidWhen` name rule is gamed by naming any component | Review catches it; the rule guarantees an alternative is named, not that it's the right one. |
 | Type assignability is too strict for structurally equal types written differently | The check uses the checker's `isTypeAssignableTo`, which is structural, as the survey did. |

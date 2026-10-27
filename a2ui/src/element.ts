@@ -83,6 +83,27 @@ export function defineTestElement(tag: string, env: ElementEnv): CustomElementCo
     return cls;
 }
 
+/**
+ * Applies the manifest's declared change mapping (ADR-222, #39). The build
+ * proved the mapped type is assignable to value, so nothing is inferred here.
+ * A `{ cleared: null }` component's null becomes undefined: an A2UI data model
+ * cannot hold null (setting it deletes the key), so "cleared" is "absent".
+ */
+function mapChange(change: AdapterDescriptor["change"], payload: unknown): unknown
+{
+    if (change === undefined) { return payload; }
+
+    if ("valueFrom" in change) { return (payload as Record<string, unknown>)[change.valueFrom]; }
+
+    return payload === null ? undefined : payload;
+}
+
+/** True when an absent bound value means "cleared" rather than a lost binding (ADR-222). */
+function clearsWhenAbsent(descriptor: AdapterDescriptor): boolean
+{
+    return descriptor.change !== undefined && "cleared" in descriptor.change;
+}
+
 function createBase(): ElementClass
 {
     return class OutcropComponentElementImpl extends HTMLElement implements OutcropComponentElement
@@ -233,10 +254,11 @@ class Binding
     }
 
     /** A user edit of the two-way value: write the bound path, then fire the change action. */
-    #onUserValue(value: unknown): void
+    #onUserValue(payload: unknown): void
     {
         if (this.#applying || this.#disposed) { return; }
 
+        const value = mapChange(this.#env.descriptor.change, payload);
         const path = bindingPath(this.#tracker.raw("value"));
 
         if (path !== undefined)
@@ -254,6 +276,13 @@ class Binding
     #accept(name: string, value: unknown, delivery: Delivery): boolean
     {
         if (delivery.removed) { this.#values.delete(name); this.#invalid.delete(name); return true; }
+
+        if (value === undefined && name === "value" && this.#handle && clearsWhenAbsent(this.#env.descriptor))
+        {
+            this.#invalid.delete(name);
+            this.#values.set(name, null);
+            return true;
+        }
 
         if (value === undefined) { this.#lost(name); return false; }
 

@@ -47,22 +47,6 @@ describe("diffCatalogs", () =>
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows.", oneOf: [{ type: "string" }] } })).breaking)
             .toEqual(["Widget.pageSize changed"]);
     });
-    test("a literal arm widened to also accept null is additive (readiness spec §3.4)", () =>
-    {
-        const binding = { $ref: "common#/$defs/DataBinding" };
-        const prev = cat({ value: { description: "Day.", anyOf: [{ type: "string" }, binding] } });
-        const next = cat({ value: { description: "Day.", anyOf: [{ anyOf: [{ type: "string" }, { type: "null" }] }, binding] } });
-
-        expect(diffCatalogs(prev, next)).toEqual({ breaking: [], additive: ["Widget.value now also accepts null"] });
-    });
-    test("a null arm that also changes the literal is breaking", () =>
-    {
-        const binding = { $ref: "common#/$defs/DataBinding" };
-        const prev = cat({ value: { description: "Day.", anyOf: [{ type: "string" }, binding] } });
-        const next = cat({ value: { description: "Day.", anyOf: [{ anyOf: [{ type: "number" }, { type: "null" }] }, binding] } });
-
-        expect(diffCatalogs(prev, next).breaking).toEqual(["Widget.value changed"]);
-    });
     test("a description-only change is not breaking", () =>
     {
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })).breaking)

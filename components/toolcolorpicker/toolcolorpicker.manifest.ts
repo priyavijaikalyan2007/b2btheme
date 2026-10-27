@@ -49,4 +49,9 @@ export const TOOLCOLORPICKER_MANIFEST: CapabilityManifest =
 
     conformance: "field",
     priority: 50,
+
+    protocol: {
+        // onChange passes the whole ToolColor; value is its hex (#39, ADR-222).
+        change: { valueFrom: "hex" },
+    },
 };

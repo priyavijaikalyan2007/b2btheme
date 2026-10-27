@@ -75,6 +75,70 @@ describe("two-way value", () =>
         expect(rc.actions).toEqual([]);
     });
 
+    // ADR-222 (#39): the manifest's protocol.change mapping is applied before the write.
+    test("valueFrom writes that property of the payload, and its echo is not applied back", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, { v: "#f00" });
+        await mounted(fakeDescriptor({ ...FIELD, change: { valueFrom: "hex" } }), rc);
+
+        (record.builds[0].options.onChange as (v: unknown) => void)({ hex: "#00f", label: "Blue" });
+        await flush();
+
+        expect(rc.getData("/v")).toBe("#00f");
+        expect(record.calls).toEqual([]);
+    });
+
+    test("valueFrom applies to a surface's change channel too", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" }, onChange: { event: { name: "changed", context: { v: { path: "/v" } } } } },
+            { v: "#f00" });
+        const handle = await mounted(fakeDescriptor({ ...SURFACE, change: { valueFrom: "hex" } }), rc);
+
+        handle.emit("change", { hex: "#0f0", label: "Green" });
+        await flush();
+
+        expect(rc.getData("/v")).toBe("#0f0");
+        expect(rc.actions).toMatchObject([{ name: "changed", context: { v: "#0f0" } }]);
+    });
+
+    // An A2UI data model cannot hold null: setting it deletes the key. So for a
+    // { cleared: null } component, cleared is absent, in both directions.
+    test("cleared: the user clearing the value deletes the bound path, with no lost-binding error", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, { v: "a" });
+        await mounted(fakeDescriptor({ ...FIELD, change: { cleared: null } }), rc);
+
+        (record.builds[0].options.onChange as (v: unknown) => void)(null);
+        await flush();
+
+        expect(rc.getData("/v")).toBeUndefined();
+        expect(rc.errors).toEqual([]);
+        expect(record.calls).toEqual([]);
+    });
+
+    test("cleared: the agent deleting the bound path clears the component with setValue(null)", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, { v: "a" });
+        await mounted(fakeDescriptor({ ...FIELD, change: { cleared: null } }), rc);
+
+        rc.setData("/v", undefined);
+        await flush();
+
+        expect(record.calls).toEqual([["setValue", null]]);
+        expect(rc.errors).toEqual([]);
+    });
+
+    test("without cleared, the agent deleting the bound path is still a lost binding", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, { v: "a" });
+        await mounted(FIELD, rc);
+
+        rc.setData("/v", undefined);
+        await flush();
+
+        expect(rc.errors).toEqual([expect.objectContaining({ code: "OUTCROP_BINDING_LOST" })]);
+    });
+
     test("a surface's change channel writes the bound path, then dispatches onChange", async () =>
     {
         const rc = realContext({ value: { path: "/v" }, onChange: { event: { name: "changed", context: { v: { path: "/v" } } } } }, { v: "a" });

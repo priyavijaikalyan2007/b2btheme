@@ -47,6 +47,7 @@ export const BACKLOG_COUNTS = Object.freeze({
     unclassifiedOptions: new Set([VIOLATION.UNCLASSIFIED, VIOLATION.UNDECLARED_MIXED,
         VIOLATION.UNDECLARED_HAZARD, VIOLATION.TOO_BROAD]),
     protocolPropsMissingJsdoc: new Set([VIOLATION.MISSING_JSDOC]),
+    changeMismatches: new Set([VIOLATION.CHANGE_MISMATCH]),
 });
 
 /** Every code a PENDING_CLASSIFICATION entry excuses: the union of BACKLOG_COUNTS. */
@@ -90,8 +91,9 @@ function classifyFleet(input, errors)
         try
         {
             const file = input.componentFile(manifest.name);
-            const { type, location } = factoryOptionsType(ctx, file, manifest.factory, optionsParameterIndex(manifest));
-            const members = classifyMembers(ctx, type, location);
+            const { type, location, handleType } = factoryOptionsType(ctx, file, manifest.factory,
+                optionsParameterIndex(manifest));
+            const members = classifyMembers(ctx, type, location, handleType);
 
             return [{ manifest, members, file, surface: resolveSurface(manifest, members) }];
         }
@@ -451,7 +453,7 @@ function loadBaselines()
  * Fleet classification counts for scripts/audit-counts.mjs (check [20]).
  *
  * @param repoRoot - Repository root.
- * @returns { unclassifiedOptions, protocolPropsMissingJsdoc }.
+ * @returns { unclassifiedOptions, protocolPropsMissingJsdoc, changeMismatches }.
  */
 export function measureClassification(repoRoot = REPO)
 {
@@ -463,7 +465,8 @@ export function measureClassification(repoRoot = REPO)
 
     const counts = countsFor(classified, [], []);
 
-    return { unclassifiedOptions: counts.unclassifiedOptions, protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc };
+    return { unclassifiedOptions: counts.unclassifiedOptions, protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc,
+        changeMismatches: counts.changeMismatches };
 }
 
 /** CLI. */

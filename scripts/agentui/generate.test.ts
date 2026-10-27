@@ -143,7 +143,7 @@ describe("runPipeline — what PENDING_CLASSIFICATION excuses", () =>
     test("the excusable set is exactly the backlog codes [20] ratchets", () =>
     {
         expect([...PENDING_EXCUSABLE_CODES].sort()).toEqual(
-            ["missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
+            ["change-mismatch", "missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
     });
 });
 

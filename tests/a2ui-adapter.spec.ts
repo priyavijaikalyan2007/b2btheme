@@ -119,8 +119,6 @@ test.describe("A2UI adapter under @a2ui/lit", () =>
 
     test("field: ToolColorPicker shows the agent's colours, and the user's pick is written back", async ({ page }) =>
     {
-        // Today the pick writes the whole ToolColor ({hex, label}) and raises VALIDATION_FAILED at /c.
-        test.fail(true, "#39: onChange passes a ToolColor, but value is its hex");
         await open(page, "lit");
         const colors = [{ hex: "#ff0000", label: "Red" }, { hex: "#0000ff", label: "Blue" }];
         await send(page, surface("s", { id: "root", component: "ToolColorPicker", tool: "marker", colors,

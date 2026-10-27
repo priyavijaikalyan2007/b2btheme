@@ -110,6 +110,7 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
         props: routesFor(manifest, surface),
         twoWay: surface.twoWayValue,
         ...(changeOption ? { changeOption } : {}),
+        ...(surface.change ? { change: surface.change } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
         dates: datesFor(catalog, name, surface),
     };

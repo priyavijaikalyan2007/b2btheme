@@ -29,6 +29,7 @@ export const VIOLATION = Object.freeze({
     NAME_INVALID: "name-invalid",
     NAME_COLLISION: "name-collision",
     PROP_COLLISION: "prop-collision",
+    CHANGE_MISMATCH: "change-mismatch",
 });
 
 /** "n/a" is not a reason (spec §3.3). */
@@ -71,7 +72,9 @@ export function resolveSurface(manifest, members)
 {
     const protocol = manifest.protocol ?? {};
     const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [], violated: new Set() };
-    const twoWayValue = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
+    const change = protocol.change ?? null;
+    const hasPair = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
+    const twoWayValue = hasPair && change !== "event";
     const events = resolveEvents(ctx, twoWayValue);
     const providers = resolveProviders(ctx);
     const claimed = claimedNames(ctx, events, twoWayValue);
@@ -83,8 +86,9 @@ export function resolveSurface(manifest, members)
     checkDoubleClaims(ctx, claimed);
     checkStaleDeclarations(ctx, members);
     checkValueLevel(ctx, dataProps, twoWayValue);
+    checkChange(ctx, change, hasPair, twoWayValue);
 
-    return { name: manifest.name, dataProps, twoWayValue, events, providers,
+    return { name: manifest.name, dataProps, twoWayValue, change: twoWayValue ? change : null, events, providers,
         actions: resolveActions(manifest), hostOnly: protocol.hostOnly ?? {}, violations: ctx.violations };
 }
 
@@ -330,6 +334,64 @@ function checkValueLevel(ctx, dataProps, twoWayValue)
             + "agent will read the user's changes back, but the manifest declares conformance \"display\". "
             + "Raise it to \"field\" and pass the field checks.");
     }
+}
+
+/** How to declare a mapping, appended to every change-mismatch message. */
+const CHANGE_FORMS = "Declare protocol.change: { valueFrom: \"<property>\" } when the value is a property of the "
+    + "payload, { cleared: null } when the payload is the value or null when the user clears it, or \"event\" when "
+    + "onChange is not a value change (value becomes one-way; name onChange in an emits channel).";
+
+/**
+ * protocol.change against the classifier's value fit (ADR-222, #39): the
+ * adapter writes onChange's (mapped) argument to the path bound to value, so
+ * anything that is not assignable to value would reach the agent as data its
+ * catalog schema rejects.
+ */
+function checkChange(ctx, change, hasPair, twoWayValue)
+{
+    if (change !== null && !hasPair)
+    {
+        violate(ctx, "change", VIOLATION.STALE_DECLARATION, "protocol.change is declared, but the options do not "
+            + "have both `value` and a function `onChange`, so there is nothing to map. Remove it.");
+        return;
+    }
+
+    if (!twoWayValue) { return; }
+
+    const fit = ctx.byName.get("onChange").valueFit;
+
+    if (fit === undefined)
+    {
+        throw new Error(`${ctx.manifest.name}: the classifier gave onChange no valueFit, so its write-back cannot `
+            + "be checked. Call classifyMembers with the factory's handle type.");
+    }
+
+    const problem = changeProblem(change, fit);
+
+    if (problem) { violate(ctx, "onChange", VIOLATION.CHANGE_MISMATCH, `${problem} ${CHANGE_FORMS}`); }
+}
+
+/** Why the declared mapping does not fit, or null when it does. */
+function changeProblem(change, fit)
+{
+    if (change === null)
+    {
+        return fit.direct ? null : `passes ${fit.param}, which is not assignable to value, so the adapter would `
+            + "write the wrong type to the path bound to value.";
+    }
+
+    if ("valueFrom" in change)
+    {
+        const fits = fit.fromProperty.length > 0 ? `; ${fit.fromProperty.join(", ")} would fit` : "";
+
+        return fit.fromProperty.includes(change.valueFrom) ? null
+            : `has no property "${change.valueFrom}" assignable to value on every arm of ${fit.param}${fits}.`;
+    }
+
+    if (!fit.withoutNull) { return `passes ${fit.param}, which is not assignable to value even without null.`; }
+
+    return fit.setValueAcceptsNull ? null : "is declared { cleared: null }, but the handle's setValue does not "
+        + "accept null, so an agent that clears the value could not apply it.";
 }
 
 /**

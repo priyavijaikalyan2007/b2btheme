@@ -33,14 +33,14 @@ Created: 2026
 - **New check [20] counts** are pinned exactly: a ceiling in `BASELINES` and a floor of the same value, each with a dated comment.
 - **Agent sentences:** 30–240 characters each; each ends with `.`; neither equals the label (case-folded, punctuation stripped); `avoidWhen` names another catalog component in exact PascalCase.
 - **Host-only reasons:** at least `MIN_REASON_LENGTH` (20) characters.
-- **The catalog's `null` arm** wraps the literal arm: `{ anyOf: [<schema>, { "type": "null" }] }`, so `anyOf/0` (the adapter's validator pointer) accepts `null`.
+- **Cleared is absent.** An A2UI data model cannot hold `null`, so a `{ cleared: null }` component's clear deletes the bound path, and the catalog gets no `null` arm (spec §3.4, amended in Task 4). *Superseded:* `null` arm.
 - **Repo style:** Allman braces; functions of 30 lines or fewer; lines of 120 columns or fewer; SPDX and ⚓ markers. Test assertions use string matchers, never regex literals containing quotes.
 - **Commits** end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. No session links in commits, PRs or issues. Push `feat/agentui-readiness` after each task.
 - **Dependency:** PR #40 must merge first. This branch is stacked on it, and the PR targets `main`.
 
 ---
 
-## Task 1: Confirm the catalog-diff classification of a `null` arm
+## Task 1: Confirm the catalog-diff classification of a `null` arm (done, then superseded by the Task 4 amendment; the rule was removed)
 
 **Files:**
 - Test: `scripts/agentui/catalog-diff.test.ts`
@@ -365,7 +365,7 @@ function changeProblem(change, fit)
 ## Task 4: The catalog, descriptors and adapter apply `change`; ToolColorPicker declares `valueFrom`
 
 **Files:**
-- Modify: `scripts/agentui/catalog.mjs` (`dataProps`: the `null` arm)
+- Modify: `scripts/agentui/catalog.mjs` (`dataProps`: the cleared-is-absent description; the `null` arm was superseded, spec §3.4)
 - Modify: `scripts/agentui/adapter-descriptors.mjs` (`descriptorFor`: `change`)
 - Modify: `a2ui/src/types.ts` (`AdapterDescriptor.change?`)
 - Modify: `a2ui/src/element.ts` (`#onUserValue`)

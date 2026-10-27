@@ -96,6 +96,8 @@ export interface AdapterDescriptor
     props: Record<string, PropRoute>;
     twoWay: boolean;
     changeOption?: string;
+    /** The manifest's protocol.change mapping (ADR-222); absent when onChange passes the value itself. */
+    change?: { valueFrom: string } | { cleared: null };
     events: AdapterEvent[];
     dates: string[];
 }

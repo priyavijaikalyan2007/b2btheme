@@ -77,38 +77,12 @@ function diffComponent(name, prev, next, out)
     if (!sameish(entryShape(prev), entryShape(next))) { out.breaking.push(`${name} changed`); }
 
     diffMap(p.properties ?? {}, n.properties ?? {}, (prop) => `${name}.${prop}`, out, (prop) =>
-        diffProp(`${name}.${prop}`, p.properties[prop], n.properties[prop], out));
+        sameish(p.properties[prop], n.properties[prop]) || out.breaking.push(`${name}.${prop} changed`));
 
     for (const r of (n.required ?? []).filter((k) => !(p.required ?? []).includes(k)))
     {
         out.breaking.push(`${name}.${r} became required`);
     }
-}
-
-/**
- * One prop: equal, null-widened (additive), or changed (breaking). A literal
- * arm wrapped as anyOf [same literal, null] only accepts more, so a host that
- * sent the old values still validates (readiness spec §3.4, ADR-222).
- */
-function diffProp(label, prev, next, out)
-{
-    if (sameish(prev, next)) { return; }
-
-    if (widenedToNull(prev, next)) { out.additive.push(`${label} now also accepts null`); return; }
-
-    out.breaking.push(`${label} changed`);
-}
-
-/** True when next equals prev except that its literal arm (anyOf[0]) is anyOf [prev's arm, null]. */
-function widenedToNull(prev, next)
-{
-    const arm = next?.anyOf?.[0]?.anyOf;
-
-    if (!Array.isArray(prev?.anyOf) || !Array.isArray(arm) || arm.length !== 2) { return false; }
-
-    const unwrapped = { ...next, anyOf: [arm[0], ...next.anyOf.slice(1)] };
-
-    return sameish(arm[1], { type: "null" }) && sameish(prev, unwrapped);
 }
 
 /** Our own entries carry their properties in allOf[2]; re-exports have none. */
