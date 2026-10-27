@@ -8,6 +8,7 @@ export default defineConfig({
             "runtime/**/*.test.ts",
             "scripts/**/*.test.ts",
             "a2ui/**/*.test.ts",
+            "agentdemo/**/*.test.ts",
         ],
         exclude: ["node_modules", "dist"],
         globals: true,
