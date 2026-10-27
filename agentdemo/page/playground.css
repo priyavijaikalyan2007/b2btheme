@@ -1,0 +1,126 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ *
+ * ⚓ COMPONENT: A2uiPlayground / Styles
+ * 📜 PURPOSE: Layout and the agent-rendered surface frames (#30 spec §5.3).
+ *    Colours come from the library's tokens, so both themes work.
+ */
+
+html, body
+{
+    height: 100%;
+    margin: 0;
+}
+
+.a2ui-app
+{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.a2ui-toolbar
+{
+    flex: 0 0 auto;
+}
+
+.a2ui-main
+{
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.a2ui-pane
+{
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.a2ui-surfaces
+{
+    padding: 0.75rem;
+}
+
+/* Agent-rendered UI is framed and captioned so it is never mistaken for the page's own chrome. */
+.a2ui-frame
+{
+    border: 1px dashed var(--bs-primary);
+    margin-bottom: 0.75rem;
+    background: var(--bs-body-bg);
+}
+
+.a2ui-frame > header
+{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    color: var(--bs-primary);
+    border-bottom: 1px dashed var(--bs-primary);
+}
+
+.a2ui-frame > a2ui-surface
+{
+    display: block;
+    padding: 0.5rem;
+}
+
+.a2ui-log
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+}
+
+.a2ui-log > li
+{
+    padding: 0.125rem 0.5rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.a2ui-log > li[aria-current="true"]
+{
+    background: var(--bs-secondary-bg);
+}
+
+.a2ui-log [data-status="applied"]::before { content: "\2713  "; color: var(--bs-success); }
+.a2ui-log [data-status="applied-with-errors"]::before { content: "\26A0  "; color: var(--bs-warning); }
+.a2ui-log [data-status="rejected"]::before { content: "\2717  "; color: var(--bs-danger); }
+.a2ui-log [data-status="pending"]::before { content: "\00B7  "; color: var(--bs-secondary-color); }
+
+.a2ui-findings
+{
+    margin: 0;
+    padding: 0.5rem;
+    white-space: pre-wrap;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+}
+
+.a2ui-agent-bar
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.a2ui-agent-bar input[type="password"],
+.a2ui-agent-bar input[type="text"]
+{
+    width: 14rem;
+}
+
+.a2ui-usage
+{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}

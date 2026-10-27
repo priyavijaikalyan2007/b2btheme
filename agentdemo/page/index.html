@@ -1,0 +1,58 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-FileCopyrightText: 2026 Outcrop Inc
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: A2uiPlayground
+  PURPOSE: Local A2UI playground and bring-your-own-key reference agent (#30).
+     Loads this library from dist/ exactly as a third-party host would, and
+     renders agent messages with Google's Lit renderer through the adapter.
+     Dev tooling: never copied into dist/ or deployed (spec §4.1).
+  RELATES: [[A2uiPlaygroundHost]], [[A2uiAdapter]], [[AgentUiMessageChecker]]
+  CSP: connect-src is the key guarantee. A pasted API key can only ever be
+     sent to this origin and the two provider APIs (spec §5.6). There is no
+     inline script anywhere on this page.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self' https://api.anthropic.com https://api.openai.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2UI Playground</title>
+
+    <script src="/js/theme-init.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/custom.css">
+    <link rel="stylesheet" href="/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="/components/logutility/logutility.css">
+    <link rel="stylesheet" href="/components/toolbar/toolbar.css">
+    <link rel="stylesheet" href="/components/splitlayout/splitlayout.css">
+    <link rel="stylesheet" href="/components/codeeditor/codeeditor.css">
+    <link rel="stylesheet" href="/components/tabbedpanel/tabbedpanel.css">
+    <link rel="stylesheet" href="/components/logconsole/logconsole.css">
+    <link rel="stylesheet" href="/components/conversation/conversation.css">
+    <link rel="stylesheet" href="/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="playground.css">
+</head>
+<body>
+    <div id="app" class="a2ui-app"></div>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/components/logutility/logutility.js"></script>
+    <script src="{{CODEMIRROR_URL}}"></script>
+    <script src="/components/toolbar/toolbar.js"></script>
+    <script src="/components/splitlayout/splitlayout.js"></script>
+    <script src="/components/codeeditor/codeeditor.js"></script>
+    <script src="/components/tabbedpanel/tabbedpanel.js"></script>
+    <script src="/components/logconsole/logconsole.js"></script>
+    <script src="/components/conversation/conversation.js"></script>
+    <script src="/components/themetoggle/themetoggle.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
