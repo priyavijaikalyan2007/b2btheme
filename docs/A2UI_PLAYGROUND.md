@@ -99,7 +99,7 @@ The page calls the provider **directly from your browser over HTTPS**. Nothing p
 
 **Known limits:**
 
-- The catalog's component descriptions are thin today (#37), so the model may choose components poorly until that lands.
+- Every catalog component's description says when to choose it and what to use instead (ADR-222). There are 8 components today, so for most requests the model builds from A2UI's basic components.
 - Lit's `Text` warns that no markdown renderer is configured and renders plain text. Adding `@a2ui/markdown-it` would bring in a vulnerable nested `dompurify`.
 
 **The agent's code is the pattern to copy** for your own host: `agentdemo/page/agent/core.ts`, under 300 lines, provider-neutral, with no Node-only APIs. It covers prompt, check, apply, and actions as turns. Each provider is one small file in `agentdemo/page/agent/providers/`.

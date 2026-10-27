@@ -165,11 +165,13 @@ The adapter reports through `surface.onError`. Forward each one to the agent as 
 | Code | Cause | What the user sees | Fix |
 |---|---|---|---|
 | `VALIDATION_FAILED` (with `path`) | a bound value does not match the prop's schema | the component keeps its last good state | the agent sends a value of the right type |
-| `OUTCROP_BINDING_LOST` (with `path`) | a bound value became undefined after mount | the last value stays | restore the data, or drop the binding |
+| `OUTCROP_BINDING_LOST` (with `path`) | a bound value became undefined after mount (not for a clearable `value`; see below) | the last value stays | restore the data, or drop the binding |
 | `OUTCROP_ASSET_LOAD_FAILED` | a script or stylesheet failed to load | the component stays empty | check `assetBaseUrl` and your CSP |
 | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a handle method is missing, or the element sits in a shadow root | the component stays empty | read the message; render surfaces in the light DOM |
 
 While a bound value has not arrived yet, the component waits, empty, with `aria-busy="true"`. `web_core` itself warns `MISSING_DATA_BINDING`.
+
+**Cleared values are absent paths.** An A2UI data model cannot hold `null`: `set(path, null)` deletes the key. So for components whose `value` description says "When the user clears it, the path is deleted", the user clearing the field deletes the bound path, and your agent deleting the path clears the component. It is not a lost binding.
 
 ## 8. Which components
 

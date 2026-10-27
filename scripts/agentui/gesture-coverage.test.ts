@@ -21,6 +21,9 @@ const SPECS = path.join(ROOT, "tests", "a2ui-components");
 
 type Descriptor = { name: string; twoWay: boolean; events: unknown[] };
 
+/** A test title that starts with a catalog name and a colon; \x22 is a double quote (the [20] parser misreads them in patterns). */
+const TITLE = new RegExp("\\btest\\(\\x22([A-Za-z0-9]+): ", "g");
+
 function descriptors(): Descriptor[]
 {
     if (!fs.existsSync(REPORT)) { throw new Error(`${REPORT} is missing; run \`npm run build\` first.`); }
@@ -28,11 +31,11 @@ function descriptors(): Descriptor[]
     return JSON.parse(fs.readFileSync(REPORT, "utf8")).adapter.descriptors;
 }
 
-/** The component name each gesture test's title starts with, as in test("ChatDock: …"). */
+/** The component name each gesture test title starts with, such as ChatDock in a ChatDock title. */
 function testedComponents(): Set<string>
 {
     const titles = fs.readdirSync(SPECS).filter((f) => f.endsWith(".spec.ts"))
-        .flatMap((f) => [...fs.readFileSync(path.join(SPECS, f), "utf8").matchAll(/\btest\("([A-Za-z0-9]+): /g)]);
+        .flatMap((f) => [...fs.readFileSync(path.join(SPECS, f), "utf8").matchAll(TITLE)]);
 
     return new Set(titles.map((m) => m[1]));
 }
@@ -44,12 +47,9 @@ describe("every interactive catalog component has a gesture test", () =>
 
     test("the catalog has interactive components to check", () => { expect(interactive.length).toBeGreaterThan(0); });
 
-    for (const d of interactive)
+    test.each(interactive.map((d) => d.name))("%s has a gesture test", (name) =>
     {
-        test(d.name, () =>
-        {
-            expect(tested.has(d.name), `${d.name} has a two-way value or events but no test("${d.name}: …") `
-                + "in tests/a2ui-components/. Drive it like a user there (readiness spec §6.2).").toBe(true);
-        });
-    }
+        expect(tested.has(name), `${name} has a two-way value or events but no gesture test titled `
+            + `${name}: … in tests/a2ui-components/. Drive it like a user there (readiness spec §6.2).`).toBe(true);
+    });
 });

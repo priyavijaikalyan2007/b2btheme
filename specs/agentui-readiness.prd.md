@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI readiness, step 1: fleet-wide mechanisms
 
-**Status:** Approved 2026-10-27
+**Status:** Implemented 2026-10-27 (approved 2026-10-27; amended during implementation in §3.4 and §4.2)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16). Closes [#39](https://github.com/priyavijaikalyan2007/b2btheme/issues/39) and [#37](https://github.com/priyavijaikalyan2007/b2btheme/issues/37); re-scopes [#31](https://github.com/priyavijaikalyan2007/b2btheme/issues/31); prepares [#20](https://github.com/priyavijaikalyan2007/b2btheme/issues/20).
 **Depends on:** #17 and #18 (catalog v1, adapter v1), and PR #40 (browser tests for every catalog component), which must merge first.
 **Spec author:** Agent + User
@@ -203,7 +203,7 @@ export interface CapabilityManifest
 4. the existing `affords` sentences, unchanged
 5. the "Actions: …" sentence, **listing only actions that are not host-only** (§5)
 
-The MCP descriptors use the same function.
+**Amendment (plan Task 8, 2026-10-27):** the MCP descriptors carry no component description today (`scripts/agentui/mcp-descriptors.mjs` emits renderer metadata only). When #19 adds one, it uses `describeComponent`, so it carries the same sentences.
 
 ### 4.3 Build check: `agent-description`
 
@@ -308,6 +308,7 @@ The jsdom two-way test stays as a plumbing test. It applies the declared `change
   - the catalog;
   - `agentui-report.json` and the MCP descriptors;
   - `capability-manifest.json`, which carries the new manifest fields;
+  - `runtime/runtime.js` and `runtime.d.ts`: `validateManifest` accepts and checks the three new optional fields. Before, an unknown `protocol` key was rejected. *Amendment, verified 2026-10-27: this file was missing from the original list.*
   - docs pages;
   - build metadata.
 
