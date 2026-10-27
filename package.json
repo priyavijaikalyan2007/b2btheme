@@ -40,7 +40,7 @@
     "check:a2ui": "node scripts/agentui/check-a2ui.mjs",
     "build:demo:a2ui": "node agentdemo/build.mjs",
     "demo:a2ui": "node agentdemo/build.mjs && node agentdemo/serve.mjs",
-    "test:e2e:a2ui": "npx playwright test tests/a2ui-adapter.spec.ts tests/a2ui-playground.spec.ts",
+    "test:e2e:a2ui": "npx playwright test tests/a2ui-adapter.spec.ts tests/a2ui-playground.spec.ts tests/a2ui-scenarios.spec.ts",
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
     "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
