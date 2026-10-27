@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI 1b: A2UI Playground, Reference Agent and Demos
 
-**Status:** Draft 2026-10-27 (design approved in brainstorming 2026-10-27; awaiting spec review)
+**Status:** Approved 2026-10-27; amended 2026-10-27 after the spike (§14)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16), this sub-project [#30](https://github.com/priyavijaikalyan2007/b2btheme/issues/30)
 **Depends on:** #18 (`specs/agentui-a2ui.prd.md`): the adapter at `/a2ui/adapter/v1.js`.
 **Related:** #36 (public live demo, blocked on `zod`), #37 (catalog component descriptions; lands before recording)
@@ -90,14 +90,25 @@ If item 1 or 2 is false, that provider's browser path is not built. The spec is 
 
 ## 3. The checker
 
-### 3.1 Two layers; a message list is valid only if both accept it
+### 3.1 Three layers; a message list is valid only if every layer accepts it
 
 1. **Schema layer (Ajv, JSON Schema 2020-12).** Validates against the spec's `server_to_client_list.json`. Component and function references resolve to our `dist/a2ui/catalog/v1.json`, which links Google's basic catalog the same way the published catalog does. This layer is the stricter of the two on `FunctionCall`.
 2. **Dry-run layer (`web_core`).** A fresh `MessageProcessor` processes the whole list headless.
    - Its catalog is ours, **linked schema-only**: `Catalog.fromJson(catalogJson).withPeerCatalogs([basicCatalog])`, then `withEntries` with Google's basic entries and `BASIC_FUNCTIONS`. These are the steps `createOutcropCatalogFrom` takes, minus our element classes.
    - It can't use `createOutcropCatalog` itself, because that builds element classes extending `HTMLElement`, which plain Node lacks (`a2ui/src/catalog.ts:132`).
    - A unit test asserts that the schema-only catalog and `createOutcropCatalog`'s expose the same component names and schemas, so the dry run cannot drift from what hosts load.
-   - `catalogJson` is the adapter's own export, which imports in plain Node (#18 gate G2). Every parse error, `surface.onError` payload and thrown exception is collected. This catches sequencing and reference errors a schema cannot see: `updateComponents` before `createSurface`, an unknown surface, duplicate component IDs, a child that references a missing ID.
+   - The CLI reads `dist/a2ui/catalog/v1.json`. The page uses the adapter's `catalogJson` export. #18 gate G2 guarantees the two are byte-identical.
+   - `processMessages` throws at the first bad message and stops, so the dry run feeds **one message at a time**. It records each throw against that message's index and carries on with the surface state built so far.
+   - It catches what the schema cannot see:
+     - a message for a surface never created;
+     - an unknown catalog ID;
+     - prop values that fail `web_core`'s per-component Zod schemas.
+   - It does **not** catch an unknown component name (the schema layer does) or a dangling child reference (layer 3 does).
+3. **References layer.** Runs once, after the whole list.
+   - **Dangling references:** every component ID referenced from a prop whose schema is `common_types` `ComponentId` or `ChildList` must exist on its surface. That covers a static child list, and the `componentId` of a template.
+   - **No root:** every surface that received components must have a component with ID `root`.
+   - Which props hold references is **derived from the catalog schemas**, never hard-coded. In the basic catalog today that is `Row`, `Column` and `List` `children`; `Card` and `Button` `child`; `Tabs` `tabs[].child`; and `Modal` `trigger` and `content`.
+   - Re-sending a component ID is an update in A2UI, not an error, so it is never reported.
 
 When the layers disagree, the result says which accepted and which rejected, for example `schema rejects, web_core accepts: it would render but breaks the catalog contract`. Neither layer overrides the other.
 
@@ -125,7 +136,8 @@ The agent feeds the model exactly this text during repair (§6.3), so a develope
   - `checkSchema(messages, validate)` returns findings from the schema layer.
   - `linkSchemaOnly(catalogJson, webCore)` returns the schema-only catalog of §3.1.
   - `dryRun(messages, webCore, catalogJson)` returns findings from the dry-run layer.
-  - `check(messages, deps)` returns both, with disagreements marked.
+  - `checkReferences(messages, catalogs)` returns findings from the references layer.
+  - `check(messages, deps)` returns all three, with schema/dry-run disagreements marked.
   - `formatFindings(findings)` returns the text of §3.2.
 - **`scripts/agentui/check-a2ui.mjs`:** the CLI. File reading, format selection and the exit code only.
 
@@ -465,4 +477,22 @@ Steps 1–5 do not depend on #37. Step 7 does.
 
 ## 14. Amendment log
 
-_(Empty. The spike's results and any planning amendments are recorded here.)_
+### 14.1 Spike results (2026-10-27)
+
+1. **Anthropic, browser access: verified.** A preflight from `http://127.0.0.1:8123` returns 200 and allows `x-api-key`, `anthropic-version`, `anthropic-dangerous-direct-browser-access` and `content-type` (`access-control-allow-origin: *`). A 401 response also carries `access-control-allow-origin: *`, so the page can read Anthropic's error body.
+2. **OpenAI, browser access: preflight verified; successful responses unverified.**
+   - Preflights to `/v1/chat/completions` (origin echoed back) and `/v1/responses` (`*`) both return 200 and allow `authorization` and `content-type`.
+   - **A 401 response from either endpoint carries no `access-control-allow-origin`**, so the browser cannot read it. `fetch` rejects with a `TypeError`, indistinguishable from a network failure.
+   - OpenAI's 401 body also **echoes the key** (`Incorrect API key provided: sk-…`).
+   - No key was available, so a successful response's CORS headers are unverified.
+   - Consequences:
+     - The OpenAI provider uses **`POST /v1/chat/completions`** with `response_format: { type: "json_object" }`.
+     - A `TypeError` from OpenAI is reported as: `OpenAI's response could not be read. Either the network failed, or OpenAI rejected the request (a wrong key, model or quota); OpenAI does not let browsers read its error responses.`
+     - Every provider error text is **scrubbed of the key** before display (§6.5).
+     - The manual live check (§10.3) is the gate for OpenAI. If a successful response is unreadable, the OpenAI path is removed and the user is told.
+3. **`web_core` headless in Node: verified, with corrections now in §3.1.**
+   - A schema-only linked catalog (26 components) processes valid messages with no errors.
+   - It throws on a missing surface, an unknown catalog, a bad envelope and a prop that fails Zod.
+   - It accepts an unknown component name and a dangling child reference silently. That is why §3.1 has a references layer and runs the dry run one message at a time.
+   - Importing `dist/a2ui/adapter/v1.js` in Node prints `MODULE_TYPELESS_PACKAGE_JSON`, so the CLI reads the catalog JSON file instead.
+4. **CSP compatibility:** verified by the playground's end-to-end test (§5.6), which fails on any `securitypolicyviolation` event.
