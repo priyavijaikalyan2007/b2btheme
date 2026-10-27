@@ -162,3 +162,6 @@ Thumbs.db
 # Lighthouse reports
 *.lighthouse*.json
 demopage-lighthouse-*.json
+
+# A2UI playground build output (#30)
+agentdemo/.out/

@@ -11,7 +11,8 @@ Created: 2026
 
 Copied verbatim from https://github.com/a2ui-project/a2ui at commit `409ded2`
 (2026-10-24): `specification/v0_9_1/json/common_types.json` and
-`specification/v0_9_1/catalogs/basic/catalog.json`. These are data, not served,
+`specification/v0_9_1/catalogs/basic/catalog.json`; and, for the message checker (#30),
+`specification/v0_9_1/json/server_to_client.json` and `server_to_client_list.json`. These are data, not served,
 and never fetched at build time. To update, re-copy at a new commit, record it
 here, and expect the catalog-diff gate to report what changed.
 
