@@ -200,6 +200,7 @@ build to work this way, and new components join as they are classified.
 | Adapter (ESM) | `https://static.outcrop.us/a2ui/adapter/v1.js` |
 | Host guide | [`docs/A2UI_INTEGRATION_GUIDE.md`](docs/A2UI_INTEGRATION_GUIDE.md) |
 | Rules for contributors | [`A2UI.md`](A2UI.md) |
+| Try it locally, check agent output, bring-your-own-key agent | [`docs/A2UI_PLAYGROUND.md`](docs/A2UI_PLAYGROUND.md) (`npm run demo:a2ui`, `npm run check:a2ui`) |
 
 Support for MCP Apps hosts is in progress (#19).
 

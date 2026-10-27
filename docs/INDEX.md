@@ -54,6 +54,12 @@ renderers (Lit, React): the `/a2ui/adapter/v1.js` bundle,
 `createOutcropCatalog`, the base-theme requirement, error codes, and a worked
 round trip.
 
+### 2b. **[A2UI Playground](A2UI_PLAYGROUND.md)**
+Watch an agent build UI from these components on your own machine: the local
+playground, the `check:a2ui` message checker, the bring-your-own-key reference
+agent (Claude, OpenAI), saved scenarios that replay as tests, and recording
+demos.
+
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
 

@@ -43,6 +43,13 @@ Created: 2026
 - **A1. Director files are `<name>.director.json`, not `.ts`.** They are data, and JSON is validated by the scenario tests and loaded by Playwright without a TypeScript import.
 - **A2. `.gitignore` ignores `*.png`.** Task 11 adds `!docs/media/a2ui/*.png` so recorded posters are committed.
 - **A3. The page exposes a small automation API, `window.a2uiPlayground`**, which replay and recording use: `loadScenario`, `step`, `actions`, `snapshot`. It is documented, read-mostly, and changes no behaviour.
+- **A4–A9 (made during implementation):** see spec §14.2. In brief:
+  - the agent uses the host's apply path, with no `checkSchema` dependency;
+  - turns are queued, and `retry()` was added;
+  - `Host.onError` passes `duringApply`;
+  - director entries are gesture lists;
+  - the scripted scenario is `pick-orientation`;
+  - checker error text is built from the value's shape, with per-function validators.
 
 ## File structure
 

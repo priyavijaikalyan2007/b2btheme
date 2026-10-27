@@ -4579,3 +4579,27 @@ the thing that varies.
 **Request.** "Let's go on #18," after asking for the local demo to be filed separately (#30). During the brainstorm the user decided: a create-time prop change re-creates the component; actions and providers are deferred behind a gate (#31); theming follows the host page; missing bound data waits, then errors if lost; a literal `value` is allowed; assets lazy-load from an explicit `assetBaseUrl`; tags are `outcrop-*`; and the base theme is the host's responsibility, with an optional "auto load" (`injectBaseTheme`). The user asked for the work to be pushed regularly, executed inline, and noted that the epic needs detailed docs, advertising demos and a README update at the end.
 
 **Outcome.** Research and a Playwright spike first verified that Google's renderers accept framework-free custom elements and that a plain element using only the renderer's `context` round-trips in Lit and React. The adapter ships as `dist/a2ui/adapter/v1.js`, generated and bundled by `scripts/agentui/` in the same swap as the catalog, with gates G1–G3; all 8 catalog components pass the fleet round trip, and 8 end-to-end scenarios pass under `@a2ui/lit` and `@a2ui/react` 0.14.0 with the real dist components. Docs: `A2UI.md` (linked from AGENTS.md), `docs/A2UI_INTEGRATION_GUIDE.md`, the README, CDN_CONTRACT.md §2c. ADR-220.
+
+## Agent UI 1b (#30): the A2UI playground and a bring-your-own-key agent (2026-10-27)
+
+**Request.** "Yeah, go for #30," then "plan & implement," with one critical constraint: "existing functionality should not break for current component users. This comes as an enhancement, not a breakage." During the brainstorm the user decided:
+- local now, with the preferred public live demo filed as tech debt (#36), because serving `web_core`'s `zod` 3 would fail `audit:vendor`;
+- developers as the audience;
+- a real agent ("I would prefer we build B");
+- Claude and OpenAI, not Gemini;
+- bring-your-own-key, with the browser calling the providers directly over HTTPS.
+
+**Outcome.**
+- **Spike first.** Anthropic is readable cross-origin. OpenAI's preflight passes, but its 401 is unreadable and echoes the key. `web_core` stops at the first thrown message and misses unknown components and dangling children.
+- **The checker** has three layers, plus a CLI.
+- **The playground** is built from the library's own components, under a CSP with no `unsafe-eval` and `connect-src` limited to self and the two APIs.
+- **The agent core** is provider-neutral, with a bounded repair loop, queued turns, and a key sentinel test.
+- **Scenarios** replay as key-free regression tests.
+- **Recordings** are made by Playwright plus ffmpeg, under a 2 MB GIF budget.
+- **Filed along the way:** #36 (public demo) and #37 (bare catalog descriptions, which the agent's prompt exposes).
+- **Two usability defects found by the end-to-end tests and fixed:**
+  - pressing Check hid Apply;
+  - Step could run before its scenario loaded.
+- **One accessibility defect fixed:** toolbar accessible names lacked their visible labels (WCAG 2.5.3).
+- **Not breaking:** nothing lands in `dist/`.
+- **Still to do:** #37, then live sessions recorded with the user's keys for the advertising set.

@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI 1b: A2UI Playground, Reference Agent and Demos
 
-**Status:** Approved 2026-10-27; amended 2026-10-27 after the spike (§14)
+**Status:** Implemented 2026-10-27 (approved 2026-10-27; amended after the spike and during implementation, §14)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16), this sub-project [#30](https://github.com/priyavijaikalyan2007/b2btheme/issues/30)
 **Depends on:** #18 (`specs/agentui-a2ui.prd.md`): the adapter at `/a2ui/adapter/v1.js`.
 **Related:** #36 (public live demo, blocked on `zod`), #37 (catalog component descriptions; lands before recording)
@@ -496,3 +496,16 @@ Steps 1–5 do not depend on #37. Step 7 does.
    - It accepts an unknown component name and a dangling child reference silently. That is why §3.1 has a references layer and runs the dry run one message at a time.
    - Importing `dist/a2ui/adapter/v1.js` in Node prints `MODULE_TYPELESS_PACKAGE_JSON`, so the CLI reads the catalog JSON file instead.
 4. **CSP compatibility:** verified by the playground's end-to-end test (§5.6), which fails on any `securitypolicyviolation` event.
+
+### 14.2 Implementation amendments (2026-10-27)
+
+1. **One apply path for the agent too.** The agent core takes no `checkSchema` dependency. It calls the host's `apply`, which schema-checks the batch, all or nothing, and records it either way. A rejected agent reply therefore shows as ✗ in the log, as §5.2 requires, and the findings come from `ApplyResult.findings`.
+2. **Turns are queued.** A click while a reply is pending waits for that reply, so the conversation is never interleaved. `Session.retry()` asks again for an unanswered turn without adding to the conversation.
+3. **Errors are marked by when they happened.** `Host.onError` listeners receive `duringApply`. An error raised while `apply` ran is already in its result, and so already in the repair loop. Only later errors, such as an asset failing to load or a binding being lost, are delivered as turns, at most two in a row before the user acts again.
+4. **A director entry is a list of gestures.** One action can need several, for example opening a picker, choosing, then pressing Done. The file is `<name>.director.json` (plan amendment A1).
+5. **The shipped scripted scenario is `pick-orientation`.** It uses an `OrientationPicker` with a `Button`, because the picker is a two-way field with no action of its own.
+6. **Checker error text is built from the received value's shape.** Ajv's schema paths across `$ref`s cannot name the arm that should have matched. A value with `call` gets "unknown function" or that function's own errors, from per-function validators added to the generated module. A value with `path` gets the binding's errors. Anything else gets "expected a literal (…), a data binding, or a function call; got …". `allErrors` is on, so one pass reports every problem.
+7. **The page renders Lit's `basicCatalog`.** The checker links `web_core`'s schema-only. Both render basic components, as verified.
+8. **Toolbar tooltips start with the visible label.** The toolbar component uses the tooltip as the accessible name, so "Step" must be in it (WCAG 2.5.3).
+9. **Vditor is not loaded.** Its preview injects scripts from `unpkg.com`, which `script-src 'self'` forbids, so `conversation` renders the agent's text as plain text.
+10. **`ffmpeg` was not installed on the implementation machine.** The encoder is unit-tested with a stub, the Playwright video capture was run for real, and `docs/A2UI_PLAYGROUND.md` §6 names the prerequisite.
