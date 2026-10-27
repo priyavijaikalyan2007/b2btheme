@@ -90,8 +90,8 @@ describe("two-way value", () =>
 
     test("valueFrom applies to a surface's change channel too", async () =>
     {
-        const rc = realContext({ value: { path: "/v" }, onChange: { event: { name: "changed", context: { v: { path: "/v" } } } } },
-            { v: "#f00" });
+        const onChange = { event: { name: "changed", context: { v: { path: "/v" } } } };
+        const rc = realContext({ value: { path: "/v" }, onChange }, { v: "#f00" });
         const handle = await mounted(fakeDescriptor({ ...SURFACE, change: { valueFrom: "hex" } }), rc);
 
         handle.emit("change", { hex: "#0f0", label: "Green" });
@@ -126,6 +126,23 @@ describe("two-way value", () =>
 
         expect(record.calls).toEqual([["setValue", null]]);
         expect(rc.errors).toEqual([]);
+    });
+
+    test("cleared on a surface's change channel: the path is deleted, then onChange fires", async () =>
+    {
+        const onChange = { event: { name: "changed", context: { v: { path: "/v" } } } };
+        const rc = realContext({ value: { path: "/v" }, onChange }, { v: "a" });
+        const handle = await mounted(fakeDescriptor({ ...SURFACE, change: { cleared: null } }), rc);
+
+        handle.emit("change", null);
+        await flush();
+
+        expect(rc.getData("/v")).toBeUndefined();
+        expect(rc.errors).toEqual([]);
+        expect(rc.actions).toHaveLength(1);
+        expect(rc.actions[0]).toMatchObject({ name: "changed" });
+        // The bound value is absent, so on the wire (JSON) the agent sees the key omitted.
+        expect(JSON.parse(JSON.stringify((rc.actions[0] as { context: unknown }).context))).toEqual({});
     });
 
     test("without cleared, the agent deleting the bound path is still a lost binding", async () =>
