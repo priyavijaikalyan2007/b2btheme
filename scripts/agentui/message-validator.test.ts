@@ -100,7 +100,7 @@ describe("the generated source", () =>
     test("compiles nothing at runtime and requires only Ajv's runtime helpers", () =>
     {
         const source = compileMessageValidator(inputs);
-        const required = [...source.matchAll(/require\("([^"]+)"\)/g)].map((m) => m[1]);
+        const required = [...source.matchAll(new RegExp('require\\("([^"]+)"\\)', "g"))].map((m) => m[1]);
 
         expect(source).not.toMatch(/new Function|\beval\(/);
         expect(required.every((s) => s.startsWith("ajv/dist/runtime/") || s === "fast-deep-equal")).toBe(true);

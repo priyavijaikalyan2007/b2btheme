@@ -71,7 +71,7 @@ describe("check-a2ui", () =>
         const r = await cli([file("bad.jsonl", INVALID.map((m) => JSON.stringify(m)).join("\n"))]);
 
         expect(r.code).toBe(1);
-        expect(r.out).toMatch(/^#1 updateComponents\.components\[0\]\.component: unknown component "Nope"/);
+        expect(r.out.startsWith('#1 updateComponents.components[0].component: unknown component "Nope"')).toBe(true);
         expect(r.out).toMatch(/1 finding\(s\) in 2 message\(s\)\n$/);
     });
 
@@ -122,7 +122,7 @@ describe("check-a2ui", () =>
         const r = await cli([file("ok2.json", JSON.stringify(VALID))], empty);
 
         expect(r.code).toBe(2);
-        expect(r.err).toMatch(/dist\/a2ui\/catalog\/v1\.json is absent\. Run `npm run build:agentui`/);
+        expect(r.err).toContain("dist/a2ui/catalog/v1.json is absent. Run `npm run build:agentui`");
     });
 
     test("a missing generated validator exits 2 and names the command that generates it", async () =>
@@ -136,7 +136,7 @@ describe("check-a2ui", () =>
         const r = await cli([file("ok4.json", JSON.stringify(VALID))], root);
 
         expect(r.code).toBe(2);
-        expect(r.err).toMatch(/message-validator\.mjs is absent\. Run `npm run build:demo:a2ui`/);
+        expect(r.err).toContain("message-validator.mjs is absent. Run `npm run build:demo:a2ui`");
     });
 
     test("the script runs as a command", () =>

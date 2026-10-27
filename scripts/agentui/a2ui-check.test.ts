@@ -84,7 +84,7 @@ describe("checkSchema", () =>
         expect(findings).toHaveLength(1);
         expect(findings[0]).toMatchObject({ index: 1, path: "updateComponents.components[0].component",
             layer: "schema" });
-        expect(findings[0].message).toMatch(/^unknown component "Nope"/);
+        expect(findings[0].message.startsWith('unknown component "Nope"')).toBe(true);
     });
 
     test("a wrongly typed prop is one finding at its path", () =>
@@ -104,7 +104,8 @@ describe("checkSchema", () =>
             orientation: "diagonal" }])], validators);
 
         expect(findings).toHaveLength(1);
-        expect(findings[0].message).toMatch(/^expected a literal one of "horizontal", "vertical", a data binding/);
+        expect(findings[0].message.startsWith('expected a literal one of "horizontal", "vertical", a data binding'))
+            .toBe(true);
     });
 
     test("an unknown function names the functions the catalog has", () =>
@@ -113,7 +114,8 @@ describe("checkSchema", () =>
             text: { call: "nope", args: {} } }])], validators);
 
         expect(findings).toHaveLength(1);
-        expect(findings[0].message).toMatch(/^unknown function "nope"; this catalog's functions are and, email, /);
+        expect(findings[0].message.startsWith('unknown function "nope"; this catalog\'s functions are and, email, '))
+            .toBe(true);
     });
 
     test("a known function with bad arguments reports that function's own errors", () =>
@@ -122,7 +124,7 @@ describe("checkSchema", () =>
             text: { call: "formatDate", args: {} } }])], validators);
 
         expect(findings).toHaveLength(1);
-        expect(findings[0].message).toMatch(/^function "formatDate": args must have required property/);
+        expect(findings[0].message.startsWith('function "formatDate": args must have required property')).toBe(true);
     });
 
     test("a malformed binding reports the binding's own errors", () =>
@@ -215,7 +217,7 @@ describe("checkReferences", () =>
             children: { componentId: "row", path: "/items" } }])], catalogs);
 
         expect(findings).toHaveLength(1);
-        expect(findings[0].message).toMatch(/references "row"/);
+        expect(findings[0].message).toContain('references "row"');
     });
 
     test("a surface with components but no root is a finding", () =>
