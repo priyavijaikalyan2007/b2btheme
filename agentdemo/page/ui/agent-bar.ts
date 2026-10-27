@@ -52,7 +52,7 @@ export function buildAgentBar(el: HTMLElement, keys: KeyStore, on: AgentBarActio
     const [stop, retry, fresh, save] = [btn("Stop", on.stop), btn("Retry", on.retry), btn("New session", on.newSession),
         btn("Save session", on.save)];
     const usage = node("span", "a2ui-usage");
-    const note = node("span", "a2ui-usage");
+    const note = node("span", "a2ui-usage a2ui-note");
 
     key.value = keys.get();
     remember.box.checked = keys.remembered();

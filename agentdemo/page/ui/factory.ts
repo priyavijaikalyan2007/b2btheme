@@ -17,6 +17,8 @@
 export interface SplitLayoutHandle
 {
     getPaneElement(paneId: string): HTMLElement | null;
+    getSizes(): Record<string, number>;
+    setSizes(sizes: Record<string, number>): void;
 }
 
 export interface ToolbarHandle

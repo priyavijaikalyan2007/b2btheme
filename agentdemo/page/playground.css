@@ -30,6 +30,13 @@ html, body
 {
     flex: 1 1 auto;
     min-height: 0;
+    overflow: hidden;
+}
+
+/* Only the panes scroll. Without this, focusing the chat input scrolled the whole split upwards. */
+.a2ui-main > .splitlayout
+{
+    overflow: hidden;
 }
 
 .a2ui-pane
@@ -136,6 +143,11 @@ html, body
 {
     flex: 1 1 auto;
     min-height: 0;
+}
+
+.a2ui-note
+{
+    flex-basis: 100%;
 }
 
 .a2ui-usage

@@ -40,6 +40,7 @@ export function buildLayout(app: HTMLElement): Regions
         { id: "agent", initialSize: "30%", minSize: 120 }] }, "a2ui-main");
 
     pane(outer, "top").id = "a2ui-top";
+    new ResizeObserver(() => fitHeight(outer, main)).observe(main);
 
     const inner = create({ orientation: "horizontal", panes: [{ id: "messages", initialSize: "26%", minSize: 180 },
         { id: "surfaces", initialSize: "1fr", minSize: 240 }, { id: "inspect", initialSize: "30%", minSize: 220 }] },
@@ -47,6 +48,31 @@ export function buildLayout(app: HTMLElement): Regions
 
     return { toolbarEl, messagesEl: fill(pane(inner, "messages")), surfacesEl: fill(pane(inner, "surfaces"), true),
         inspectEl: fill(pane(inner, "inspect")), agentEl: fill(pane(outer, "agent")) };
+}
+
+/**
+ * SplitLayout sizes its panes in pixels once, when it is created, and does not
+ * follow its container. The toolbar mounts later and the window can resize,
+ * so the outer split is re-fitted to its container, keeping the current
+ * proportions. Without this, the split overflowed and the chat input's
+ * focus scrolled the whole split upwards.
+ */
+function fitHeight(outer: SplitLayoutHandle, main: HTMLElement): void
+{
+    const sizes = outer.getSizes();
+    const current = sizes.top + sizes.agent;
+    const root = main.firstElementChild;
+
+    if (!root || current <= 0) { return; }
+
+    const divider = root.scrollHeight - current;
+    const available = main.clientHeight - divider;
+    const top = Math.round(available * (sizes.top / current));
+
+    if (Math.abs(available - current) < 1) { return; }
+
+    outer.setSizes({ top, agent: available - top });
+    root.scrollTop = 0;
 }
 
 function region(tag: string, className: string): HTMLElement
