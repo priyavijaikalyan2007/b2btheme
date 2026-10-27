@@ -58,6 +58,12 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
   | `OUTCROP_ASSET_LOAD_FAILED` | the component's script or CSS (or the injected base theme) failed to load | not mounted |
   | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the element is in a shadow root | not mounted |
 
+## Checking and trying it
+
+- `npm run check:a2ui -- <file>` checks agent-written messages against the catalog in three layers: schema, `web_core` dry run, references. `npm run demo:a2ui` runs the local playground and the bring-your-own-key reference agent. See [`docs/A2UI_PLAYGROUND.md`](docs/A2UI_PLAYGROUND.md).
+- **"What agents are told" above is also the reference agent's prompt.** `agentdemo/page/agent/rules.ts` holds it verbatim, and a test fails if the two drift. Edit both together.
+- **A scenario in `agentdemo/scenarios/` is a regression test.** If a component change alters the action a recorded gesture emits, its replay fails.
+
 ## Gates
 
 | Gate | Where | Fails when |

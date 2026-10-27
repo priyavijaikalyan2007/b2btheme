@@ -108,6 +108,18 @@ processor.onSurfaceDeleted((id) =>
 
 Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in the library's end-to-end tests (`npm run test:e2e:a2ui`).
 
+## 4a. Try it, and a reference agent
+
+- **Try it locally:** `npm run demo:a2ui` opens a playground that renders A2UI messages with these components through this exact recipe. See [`A2UI_PLAYGROUND.md`](A2UI_PLAYGROUND.md).
+- **Check what your agent writes:** `npm run check:a2ui -- messages.json` runs the A2UI schemas, a `web_core` dry run and a reference check, all against this catalog.
+- **Wire an agent:** `agentdemo/page/agent/core.ts` is a small, provider-neutral reference.
+  1. Put both catalogs and the rules from [`A2UI.md`](../A2UI.md) in the system prompt.
+  2. Check each reply and apply it all or nothing.
+  3. Send the findings back for at most two repairs.
+  4. Send each `action` and later `error` back verbatim as the next turn.
+
+  It runs in the browser with the user's own Claude or OpenAI key.
+
 ## 5. Advertising the catalog to the agent
 
 - `processor.getRendererCapabilities({ versions: ["v0.9"] })` lists our catalog ID among `supportedCatalogIds`. Send it the way your transport sends A2UI client capabilities.

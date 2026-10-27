@@ -14,6 +14,8 @@ __pycache__/
 
 # Screenshots used for Debugging
 *.png
+# ...except the A2UI demo posters, which the README shows (#30)
+!docs/media/a2ui/*.png
 
 # Repo Index & Metrics
 local/
@@ -162,3 +164,6 @@ Thumbs.db
 # Lighthouse reports
 *.lighthouse*.json
 demopage-lighthouse-*.json
+
+# A2UI playground build output (#30)
+agentdemo/.out/
