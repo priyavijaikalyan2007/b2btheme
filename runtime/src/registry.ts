@@ -86,6 +86,7 @@ export function validateManifest(m: unknown): ValidationResult
     validateWeightAndSize(m, issues);
     validateConformance(m, issues);
     validateProtocol(m, issues);
+    validateAgent(m, issues);
 
     return result(issues);
 }
@@ -471,10 +472,78 @@ function validateProtocol(
     validateProviderMap(p.providers, issues);
     validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
     validateSchemaMap(p.schemas, issues);
+    validateChange(p.change, issues);
+    validateStringMap("protocol.hostOnlyActions", p.hostOnlyActions, "a reason string", issues);
 }
 
 /** The keys `protocol` may carry. */
-const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas"];
+const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions"];
+
+/** The keys `agent` carries (ADR-222). */
+const AGENT_KEYS: readonly string[] = ["useWhen", "avoidWhen"];
+
+/**
+ * Validates `protocol.change`: exactly one of the three ChangeSpec forms
+ * (ADR-222). Whether the form fits the types is the generator's check.
+ */
+function validateChange(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined || v === "event")
+    {
+        return;
+    }
+
+    const expected = "\"event\", { valueFrom: \"<property>\" } or { cleared: null }";
+
+    if (!isObject(v) || Object.keys(v).length !== 1)
+    {
+        issues.push(typeIssue("protocol.change", expected, v));
+        return;
+    }
+
+    if ("valueFrom" in v)
+    {
+        if (!isNonEmptyString(v.valueFrom))
+        {
+            issues.push(typeIssue("protocol.change.valueFrom", "a property name of the onChange payload", v.valueFrom));
+        }
+
+        return;
+    }
+
+    if (v.cleared !== null)
+    {
+        issues.push(typeIssue("protocol.change", expected, v));
+    }
+}
+
+/**
+ * Validates `agent`: exactly useWhen and avoidWhen, both non-empty strings
+ * (ADR-222). Length and content rules belong to the generator, which can
+ * see the catalog an avoidWhen must name a component from.
+ */
+function validateAgent(m: Record<string, unknown>, issues: ValidationIssue[]): void
+{
+    if (m.agent === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(m.agent))
+    {
+        issues.push(typeIssue("agent", "an object with useWhen and avoidWhen", m.agent));
+        return;
+    }
+
+    const agent = m.agent;
+
+    unknownKeys("agent", agent, AGENT_KEYS, issues);
+
+    for (const key of AGENT_KEYS.filter((k) => !isNonEmptyString(agent[k])))
+    {
+        issues.push(typeIssue(`agent.${key}`, "a non-empty sentence", agent[key]));
+    }
+}
 
 /** The keys a provider spec may carry; every catalog name derives from `request`. */
 const PROVIDER_KEYS: readonly string[] = ["request"];
