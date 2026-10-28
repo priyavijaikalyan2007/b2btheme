@@ -293,6 +293,15 @@ describe("catalog — violations", () =>
 
         expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, "searchResult"]]);
     });
+    test.each(["id", "accessibility", "weight"])("a data prop named %s, which A2UI gives every component, fails (B4)", (n) =>
+    {
+        const s = { ...SURFACE, dataProps: [...SURFACE.dataProps, { name: n, jsdoc: "Data." }] };
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, [n]: { type: "string" } } };
+        const { violations } = build([{ manifest: MANIFEST, surface: s, schema }]);
+
+        expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, n]]);
+        expect(violations[0].message).toContain("protocol.hostOnly");
+    });
     test("two events deriving the same action prop fail instead of collapsing into one", () =>
     {
         const s = { ...SURFACE, events: [SURFACE.events[0], { ...SURFACE.events[0], channel: "Selection" }] };
