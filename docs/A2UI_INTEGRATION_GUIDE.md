@@ -182,7 +182,7 @@ While a bound value has not arrived yet, the component waits, empty, with `aria-
 
 ## 8. Which components
 
-- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 9 today.
+- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 19 today.
 - `/agentui-report.json` lists the components not yet in the catalog, and why.
 - More arrive as they are classified. A component in the catalog is guaranteed by the build to work through the adapter: gates G1–G3 in [`A2UI.md`](../A2UI.md).
 - Containers that hold child components are not in the catalog yet.

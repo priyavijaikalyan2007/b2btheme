@@ -517,7 +517,9 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   whose information `value` already carries, decisions (`onDragValidate`,
   `filterFn`), render hooks and formatters are `protocol.hostOnly` with a
   reason. An event makes the component `surface`, which needs additive
-  `on()`/`getState()`/`setState()` on its handle.
+  `on()`/`getState()`/`setState()` on its handle. A component whose only view
+  state is its selection declares it as `stateKeys: ["value"]`: `getState()`
+  returns `{ value }` and `setState()` selects it (ADR-226, B1-2).
 - **Options the component passes to `fetch`, `XMLHttpRequest`, `import()` or
   `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
   this URL from the user's browser with the host's credentials; an agent must
