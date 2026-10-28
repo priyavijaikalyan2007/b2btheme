@@ -83,9 +83,13 @@ describe("createColumnsPicker", () =>
         expect(Object.keys(picker).sort()).toEqual([
             "destroy",
             "getElement",
+            "getState",
             "getValue",
             "hide",
+            "on",
+            "setData",
             "setPresets",
+            "setState",
             "setValue",
             "show",
         ]);
@@ -664,6 +668,66 @@ describe("item selection highlight", () =>
         picker.show();
         const selected = document.body.querySelector(".columnspicker-item--selected");
         expect(selected?.getAttribute("aria-selected")).toBe("true");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B1-1, B1-2): additive on("custom"),
+// getState/setState and setData. onCustom keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    function clickCustom(picker: { show(): void }): void
+    {
+        picker.show();
+        (document.body.querySelector(".columnspicker-custom") as HTMLElement).click();
+    }
+
+    test("on(custom)_HearsTheCustomLink_AfterOnCustom_WithThePresetName", () =>
+    {
+        const order: string[] = [];
+        const picker = createColumnsPicker(defaultOpts({ value: "Two", onCustom: () => order.push("option") }));
+        picker.on("custom", (name) => order.push(`channel:${String(name)}`));
+
+        clickCustom(picker);
+
+        expect(order).toEqual(["option", "channel:Two"]);
+        picker.destroy();
+    });
+
+    test("on_ReturnsAnUnsubscribe", () =>
+    {
+        const heard = vi.fn();
+        const picker = createColumnsPicker(defaultOpts());
+        picker.on("custom", heard)();
+
+        clickCustom(picker);
+
+        expect(heard).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts({ value: "Three" }));
+        const captured = picker.getState();
+
+        picker.setValue("Two");
+        expect(picker.getState()).toEqual({ value: "Two" });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ value: "Three" });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = createColumnsPicker(defaultOpts());
+
+        expect(() => picker.on("selection", () => undefined)).toThrow("custom");
+        expect(() => picker.setData("presets", [])).toThrow("no data slots");
         picker.destroy();
     });
 });
