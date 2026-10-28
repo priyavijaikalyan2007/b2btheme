@@ -1254,10 +1254,20 @@ export interface SymbolPickerHandle
     setMode(mode: "unicode" | "icons"): void;
     open(): void;
     close(): void;
+
+    /** The surface contract (additive): SymbolPicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "insert", fired with the symbol the user inserts; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selected symbol code, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class SymbolPicker implements SymbolPickerHandle
 {
+    private readonly insertHandlers = new Set<(payload: unknown) => void>();
     private readonly instanceId: string;
     private opts: SymbolPickerOptions;
     private activeMode: "unicode" | "icons";
@@ -1395,6 +1405,7 @@ export class SymbolPicker implements SymbolPickerHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.insertHandlers.clear();
         this.closePopup();
         this.hide();
         this.rootEl = null;
@@ -1470,6 +1481,39 @@ export class SymbolPicker implements SymbolPickerHandle
     public setMode(mode: "unicode" | "icons"): void
     {
         this.switchMode(mode);
+    }
+
+    // ── Surface contract (additive, readiness step 2 B3) ──
+
+    /** SymbolPicker has no data slots; the selection is setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): SymbolPicker has no data slots. Use setValue().`);
+    }
+
+    /** Subscribes to "insert"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "insert")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "insert".`);
+        }
+
+        this.insertHandlers.add(handler);
+
+        return () => { this.insertHandlers.delete(handler); };
+    }
+
+    /** The selected symbol code. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores a selection captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
     }
 
     /** Open the popup panel. */
@@ -2048,6 +2092,9 @@ export class SymbolPicker implements SymbolPickerHandle
         this.selectedSymbol = item;
         this.pushRecent(item);
         safeCallback(this.opts.onInsert, item);
+
+        for (const handler of this.insertHandlers) { safeCallback(handler, { ...item } as unknown); }
+
         this.closePopup();
     }
 
