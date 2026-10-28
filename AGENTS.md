@@ -475,12 +475,52 @@ A prop updates in place only if the manifest declares it an `accepts` slot or a
 component. Gates G1–G3 fail the build if a catalog component would not work
 through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`.
 
+**Three more declarations (ADR-222, `specs/agentui-readiness.prd.md`):**
+
+- **`protocol.change`: when `onChange` is not the value.** The adapter writes
+  `onChange`'s first argument to the path bound to `value`, so the build checks
+  with the TypeScript checker that it is assignable to `value`. If it isn't,
+  you get `change-mismatch`, naming the properties that would fit. Declare one
+  of three forms:
+  - `{ valueFrom: "hex" }`: the value is that property of the payload, e.g.
+    `onChange(color: ToolColor)` with `value: string`.
+  - `{ cleared: null }`: the payload is the value, or `null` when the user
+    clears it. The handle's `setValue` must accept `null`. An A2UI data model
+    cannot hold `null`, so **cleared is an absent path, in both directions**:
+    the user clearing deletes the bound path, and the agent deleting it calls
+    `setValue(null)`.
+  - `"event"`: `onChange` is not a value change. `value` becomes one-way, and
+    `onChange` must be named by an `emits[].legacyOption` like any event.
+- **`agent: { useWhen, avoidWhen }`: what a model reads to choose the component.**
+  Two sentences, each 30–240 characters, ending with a full stop, and neither
+  just the label. `avoidWhen` must name another catalog component exactly as
+  the catalog spells it (`For any other choice use ChoicePicker.`). Without
+  them a catalog component fails with `agent-description`.
+- **`protocol.hostOnlyActions: { <actionId>: reason }`: a manifest action an
+  agent cannot act on.** For example, DataGrid's CSV export happens in the
+  browser. It gets no `on<Id>` catalog prop and is listed host-only in the
+  report. Gate G1 fails on any other catalog action until the adapter supports
+  actions (#31).
+
+**The testing bar for joining the catalog (readiness spec §6):**
+
+- **Rendering:** `tests/a2ui-catalog-render.spec.ts` renders every catalog
+  component from catalog sample values in a real browser, automatically. If
+  yours needs specific props, add an `OVERRIDES` entry with the reason; never
+  skip it.
+- **Interaction:** a component with a two-way `value` or any event needs a
+  gesture test in `tests/a2ui-components/`, titled `"<CatalogName>: …"`. It
+  must drive the component like a user and assert the written value with
+  `expectCatalogValid` or the action's `{ name, context }`. The coverage gate
+  (`scripts/agentui/gesture-coverage.test.ts`) fails, by name, for an
+  interactive component without one.
+
 **`PENDING_CLASSIFICATION` and `BELOW_REQUIRED`** in `scripts/agentui/migration.mjs`
 are the measured backlog of 2026-10-25. A component on `PENDING_CLASSIFICATION`
 is left out of the catalog and reported in `dist/agentui-report.json` instead of
 failing the build, **for the backlog kinds only**: an unclassified option, an
 undeclared mixed member, an undeclared nested hazard, a too-broad type, missing
-JSDoc. Every other violation (a stale declaration, a short reason, a provider's
+JSDoc, a `change-mismatch` (pinned as `changeMismatches`). Every other violation (a stale declaration, a short reason, a provider's
 arity, a double claim) fails the build for every component, listed or not. Both
 lists, and the `unclassifiedOptions` and `protocolPropsMissingJsdoc` counts, are
 pinned EXACTLY by check `[20]`: each is a ceiling in `BASELINES` and a floor in
@@ -503,6 +543,11 @@ landed conforms from its first commit.
       `npm test`), every channel has a conformance-glue trigger, and each prop
       that should update in place is an `accepts` slot or a `stateKeys` entry
       ([`A2UI.md`](A2UI.md)). Never hand-write a wrapper.
+- [ ] `agent.useWhen` and `agent.avoidWhen` say when to choose it and what to
+      use instead.
+- [ ] If `onChange` does not pass the value, `protocol.change` says how it maps.
+- [ ] It renders in `tests/a2ui-catalog-render.spec.ts`, and, if it has a
+      two-way value or events, it has a gesture test in `tests/a2ui-components/`.
 
 ## (CRITICAL) No Fabricated Reads
 

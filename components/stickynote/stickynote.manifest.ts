@@ -36,6 +36,12 @@ export const STICKYNOTE_MANIFEST: CapabilityManifest =
     icon: "bi-sticky",
     category: "annotation",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Let the user write or read one short free-form note, styled as a coloured sticky note.",
+        avoidWhen: "For a labelled form input use TextField; for read-only prose use Text.",
+    },
+
     affords: [
         {
             shape: "document",

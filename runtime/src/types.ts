@@ -230,6 +230,40 @@ export interface ProtocolSpec
      * to generate from (`unknown`, `Record<string, unknown>`), keyed by option.
      */
     readonly schemas?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+
+    /**
+     * How a two-way component's `onChange` relates to its `value` (ADR-222).
+     * Absent: the first argument IS the value. The generator checks every
+     * form against the TypeScript types.
+     */
+    readonly change?: ChangeSpec;
+
+    /**
+     * Manifest actions with no protocol equivalent, keyed by action id. The
+     * value is the reason an agent cannot act on it (ADR-222).
+     */
+    readonly hostOnlyActions?: Readonly<Record<string, string>>;
+}
+
+/**
+ * The three ways an `onChange` maps to `value` (ADR-222):
+ * `{ valueFrom }` — the value is that property of the payload;
+ * `{ cleared: null }` — the payload is the value, or null when the user clears it;
+ * `"event"` — not a value change: `value` is one-way and `onChange` is an emits channel.
+ */
+export type ChangeSpec =
+    | { readonly valueFrom: string }
+    | { readonly cleared: null }
+    | "event";
+
+/** Agent-facing description (ADR-222). */
+export interface AgentDescription
+{
+    /** When to choose this component. One sentence. */
+    readonly useWhen: string;
+
+    /** When to choose something else, naming that component. One sentence. */
+    readonly avoidWhen: string;
 }
 
 /**
@@ -360,6 +394,12 @@ export interface CapabilityManifest
 
     /** Agent-protocol declarations (ADR-219). Optional; absent means none. */
     readonly protocol?: ProtocolSpec;
+
+    /**
+     * What an agent's model reads to choose this component (ADR-222). Required
+     * before a component joins the A2UI catalog; the generator checks the text.
+     */
+    readonly agent?: AgentDescription;
 }
 
 // ============================================================================

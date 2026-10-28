@@ -32,6 +32,13 @@ export const CHATDOCK_MANIFEST: CapabilityManifest =
     icon: "bi-chat-dots",
     category: "navigation",
 
+    // What an agent's model reads to choose this component (ADR-222, #37).
+    agent: {
+        useWhen: "Show a running conversation with a message input, so the user can "
+            + "talk to the agent inside the surface.",
+        avoidWhen: "For a single free-text answer use TextField; for a static transcript use List with Text.",
+    },
+
     affords: [],
 
     emits: [

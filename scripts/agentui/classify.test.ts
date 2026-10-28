@@ -22,11 +22,15 @@ import {
 
 const FIXTURES = path.join(__dirname, "fixtures");
 
+type ValueFit = { param: string; direct: boolean; withoutNull: boolean; fromProperty: string[];
+    setValueAcceptsNull: boolean };
 type Member = { name: string; cls: string; arity: number | null; mixedArms: string[];
-    hazards: { path: string; cls: string }[]; jsdoc: string };
+    hazards: { path: string; cls: string }[]; jsdoc: string; valueFit?: ValueFit };
 
 let widget: Map<string, Member>;
 let panel: Map<string, Member>;
+let swatch: Map<string, Member>;
+let clearable: Map<string, Member>;
 
 beforeAll(() =>
 {
@@ -34,12 +38,14 @@ beforeAll(() =>
     const ctx = createClassifier(path.join(FIXTURES, "tsconfig.json"), cache);
     const read = (file: string, factory: string, index: number) =>
     {
-        const { type, location } = factoryOptionsType(ctx, path.join(FIXTURES, file), factory, index);
-        return new Map((classifyMembers(ctx, type, location) as Member[]).map((m) => [m.name, m]));
+        const { type, location, handleType } = factoryOptionsType(ctx, path.join(FIXTURES, file), factory, index);
+        return new Map((classifyMembers(ctx, type, location, handleType) as Member[]).map((m) => [m.name, m]));
     };
 
     widget = read("widget.ts", "createWidget", 1);
     panel = read("panel.ts", "createPanel", 0);
+    swatch = read("pickers.ts", "createSwatchPicker", 0);
+    clearable = read("pickers.ts", "createClearable", 0);
 });
 
 describe("classify — member classes", () =>
@@ -70,6 +76,28 @@ describe("classify — arity and JSDoc", () =>
     test("data members carry arity null", () => { expect(widget.get("pageSize")!.arity).toBeNull(); });
     test("JSDoc text is read", () => { expect(widget.get("pageSize")!.jsdoc).toBe("Rows per page."); });
     test("a member without JSDoc reads as empty", () => { expect(panel.get("heading")!.jsdoc).toBe(""); });
+});
+
+describe("classify — value fit of onChange (ADR-222)", () =>
+{
+    test("an onChange that passes the value fits directly", () =>
+    {
+        expect(widget.get("onChange")!.valueFit).toMatchObject({ direct: true, withoutNull: true });
+    });
+    // Types only: label is a string too, so it fits as well as hex. Which one is
+    // the value is the manifest author's declaration, not something to infer.
+    test("an item payload fits through every property whose type matches the value", () =>
+    {
+        expect(swatch.get("onChange")!.valueFit).toMatchObject(
+            { direct: false, withoutNull: false, fromProperty: ["hex", "label"], setValueAcceptsNull: false });
+        expect(swatch.get("onChange")!.valueFit!.param).toContain("Swatch");
+    });
+    test("a nullable payload fits without null, and the handle's setValue accepts null", () =>
+    {
+        expect(clearable.get("onChange")!.valueFit).toEqual({ param: "Date | null", direct: false, withoutNull: true,
+            fromProperty: [], setValueAcceptsNull: true });
+    });
+    test("only onChange carries a value fit", () => { expect(widget.get("onSelect")!.valueFit).toBeUndefined(); });
 });
 
 describe("classify — factory resolution", () =>

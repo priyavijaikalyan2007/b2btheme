@@ -181,6 +181,25 @@ describe("catalog — component entry", () =>
         expect(props.onChange.description)
             .toBe("Sent when the value changes. Read the new value through the path bound to `value`.");
     });
+    test("cleared: null keeps value's literal arm and says that cleared is an absent path (ADR-222)", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Day." } } };
+        const s = { ...SURFACE, twoWayValue: true, change: { cleared: null },
+            dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Day." }] };
+        const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
+
+        expect(props.value.anyOf[0]).toEqual({ type: "string" });
+        expect(props.value.description).toContain("the path is deleted; delete the path to clear it.");
+    });
+    test("valueFrom leaves value's literal arm as generated", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Hex." } } };
+        const s = { ...SURFACE, twoWayValue: true, change: { valueFrom: "hex" },
+            dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Hex." }] };
+        const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
+
+        expect(props.value.anyOf[0]).toEqual({ type: "string" });
+    });
     test("eventData is absent for a component with no events or providers", () =>
     {
         const s = { ...SURFACE, events: [], providers: [] };
@@ -206,6 +225,17 @@ describe("catalog — guidance", () =>
     test("describes affordances in words", () =>
     {
         expect(describeComponent(MANIFEST)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
+    });
+    test("useWhen and avoidWhen follow the label, before the affordances (ADR-222)", () =>
+    {
+        const m = { ...MANIFEST, agent: { useWhen: "Show rows to compare.", avoidWhen: "For one record use Card." } };
+        expect(describeComponent(m)).toBe("Widget. Show rows to compare. For one record use Card. "
+            + "Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
+    });
+    test("a host-only action is left out of the Actions sentence (ADR-222)", () =>
+    {
+        const m = { ...MANIFEST, protocol: { hostOnlyActions: { export: "Writes a file in the browser." } } };
+        expect(describeComponent(m)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items.");
     });
     test("a cardinality whose min equals its max reads exactly 1 item", () =>
     {

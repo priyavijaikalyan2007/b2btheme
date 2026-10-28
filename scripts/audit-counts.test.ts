@@ -981,7 +981,7 @@ describe("countCdnModuleSpecifiers", () =>
 // forces the pin down in the same change.
 describe("ADR-219 migration counts are pinned exactly", () =>
 {
-    test.each(["unclassifiedOptions", "protocolPropsMissingJsdoc", "componentsBelowRequiredLevel",
+    test.each(["unclassifiedOptions", "protocolPropsMissingJsdoc", "changeMismatches", "componentsBelowRequiredLevel",
         "componentsPendingClassification"])("%s is a ceiling and a floor at the same value", (key) =>
     {
         const ceilings = BASELINES as Record<string, number>;

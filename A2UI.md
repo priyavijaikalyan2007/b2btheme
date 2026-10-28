@@ -40,7 +40,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 7. **No top-level DOM access in `a2ui/src/`.** The bundle must import in plain Node: `[29]` imports it, and server-rendering hosts do too. The `HTMLElement` base class and the logger are created on first use.
 8. **No fallbacks** (AGENTS.md):
    - A bound value that is missing waits.
-   - A bound value that is lost after mount is `OUTCROP_BINDING_LOST`.
+   - A bound value that is lost after mount is `OUTCROP_BINDING_LOST`, except a `value` whose manifest declares `protocol.change: { cleared: null }`, for which an absent path means "cleared" and is applied as `setValue(null)`.
    - A bound value that fails its schema is `VALIDATION_FAILED`, and the component keeps its last good state.
    - An option the agent did not send is omitted, so the component's own default applies.
    - Manifest `defaultOptions` are never applied.
@@ -48,13 +48,14 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 ## What agents (the AI kind) are told
 
 - **Bind `value` to read the user's edit.** A literal `value` means "set it and don't read it back". `onChange` still fires.
+- **Read each component's description.** It says when to choose the component and what to use instead. When a `value` description says the path is deleted on clear, an absent path means the user cleared it; delete the path to clear it yourself.
 - **Bind `eventData` to read event payloads.** The component writes each payload to `<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can read it. Without `eventData` the action still fires, with no payload.
 - **Expect these error codes** through the surface:
 
   | Code | Meaning | Component state |
   |---|---|---|
   | `VALIDATION_FAILED` | a bound value does not match the prop's schema (`path` names it) | keeps its last good state |
-  | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount | keeps its last value |
+  | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount, unless its description says deleting the path clears it | keeps its last value |
   | `OUTCROP_ASSET_LOAD_FAILED` | the component's script or CSS (or the injected base theme) failed to load | not mounted |
   | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the element is in a shadow root | not mounted |
 
@@ -68,18 +69,20 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 
 | Gate | Where | Fails when |
 |---|---|---|
-| G1 | `npm run build:agentui` | a catalog component declares manifest `actions[]` or `protocol.providers`. The adapter cannot serve them yet (#31), so their catalog action props would never fire. |
+| G1 | `npm run build:agentui` | a catalog component declares a manifest action that isn't in `protocol.hostOnlyActions`, or any `protocol.providers`. The adapter cannot serve them yet (#31), so their catalog action props would never fire. |
 | G2 | `npm run build:agentui` and `[29]` | a data prop has no route, two tags collide, the bundle's embedded catalog differs from `dist/a2ui/catalog/v1.json`, it does not import in plain Node, or it would serve a forbidden package |
 | G3 | `a2ui/fleet-adapter.test.ts` | any catalog component fails the round trip through the built bundle and a real `web_core` surface: mount, live updates without a rebuild (live taken from the **manifest**), create-time rebuilds, events, two-way edits, teardown |
 
 G3 triggers each channel through the component's `<name>.conformance.ts` glue. **A surface component with channels needs a glue trigger for every channel**, as the runtime fleet gate already requires.
+
+The build also fails a catalog component on `change-mismatch` (its `onChange` is not its value and `protocol.change` doesn't say how it maps) and on `agent-description` (missing or weak `agent.useWhen`/`agent.avoidWhen`). AGENTS.md "Agent-Protocol-Capable Components" has both rules and the testing bar: the generated render test (`tests/a2ui-catalog-render.spec.ts`), gesture tests in `tests/a2ui-components/`, and their coverage gate.
 
 ## Scope today
 
 - **In the catalog:** the 8 components that are. The 93 components on `PENDING_CLASSIFICATION` join as #20 classifies them.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
-  - Manifest actions and providers are #31.
+  - Manifest actions an agent could use, and providers, are #31. Actions it can't use are declared in `protocol.hostOnlyActions`.
   - The A2UI v1.0 codec is later.
   - `theme.primaryColor` is ignored by decision: components follow the host page's theme.
 - **Verified renderers:**

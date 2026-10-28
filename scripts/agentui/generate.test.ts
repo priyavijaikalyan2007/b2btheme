@@ -29,6 +29,8 @@ function widget(protocolOver: Record<string, unknown> = {})
         name: "widget", factory: "createWidget", factoryStyle: "container-first", label: "Widget",
         affords: [], emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }],
         accepts: [], actions: [], conformance: "surface", defaultOptions: { pageSize: 25 },
+        agent: { useWhen: "Show rows of records the user can select and compare.",
+            avoidWhen: "For a single record use Card; for a short list of labels use List." },
         protocol: {
             hostOnly: {
                 "columns[].renderer": REASON, title: REASON, container: "Needs a DOM node, which JSON cannot carry.",
@@ -114,6 +116,22 @@ describe("runPipeline — fixture widget", () =>
 
         expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#31/);
     }, 60_000);
+    test("G1: a host-only action passes, and its reason is in the report", () =>
+    {
+        const action = { id: "export", label: "Export", destructive: false, requires: [] };
+        const result = run([{ ...widget({ hostOnlyActions: { export: "Writes a file the agent cannot receive." } }),
+            actions: [action] }]);
+
+        expect(result.errors).toEqual([]);
+        expect("onExport" in result.catalog.components.Widget.allOf[2].properties).toBe(false);
+    }, 60_000);
+    test("a catalog component without agent sentences fails the pipeline (ADR-222)", () =>
+    {
+        const { agent, ...bare } = widget();
+        void agent;
+
+        expect(run([bare]).errors.join("\n")).toContain("widget: agent.useWhen is missing");
+    }, 60_000);
 });
 
 describe("runPipeline — what PENDING_CLASSIFICATION excuses", () =>
@@ -143,7 +161,7 @@ describe("runPipeline — what PENDING_CLASSIFICATION excuses", () =>
     test("the excusable set is exactly the backlog codes [20] ratchets", () =>
     {
         expect([...PENDING_EXCUSABLE_CODES].sort()).toEqual(
-            ["missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
+            ["change-mismatch", "missing-jsdoc", "too-broad", "unclassified", "undeclared-hazard", "undeclared-mixed"]);
     });
 });
 

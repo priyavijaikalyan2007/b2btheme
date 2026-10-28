@@ -98,6 +98,14 @@ describe("buildDescriptors — gate G1", () =>
             .toMatch(/Widget declares actions \[export\].*#31/);
     });
 
+    test("the G1 problem points at protocol.hostOnlyActions (ADR-222)", () =>
+    {
+        const ready = [{ manifest: manifest({ actions: [{ id: "export", label: "Export" }] }),
+            surface: surface({ actions: [{ id: "export", label: "Export", actionProp: "onExport" }] }) }];
+
+        expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0]).toContain("protocol.hostOnlyActions");
+    });
+
     test("a catalog component with providers is a problem naming #31", () =>
     {
         const ready = [{ manifest: manifest(), surface: surface({
@@ -164,5 +172,14 @@ describe("buildDescriptors — fields", () =>
     test("a clean fleet has no problems", () =>
     {
         expect(buildDescriptors([sticky, picker], cat, css).problems).toEqual([]);
+    });
+
+    test("a declared change mapping is carried; an undeclared one adds no key (ADR-222)", () =>
+    {
+        const mapped = { ...picker, surface: { ...picker.surface, change: { valueFrom: "hex" } } };
+        const [d] = buildDescriptors([mapped], cat, css).descriptors;
+
+        expect(d.change).toEqual({ valueFrom: "hex" });
+        expect(p).not.toHaveProperty("change");
     });
 });

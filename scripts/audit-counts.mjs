@@ -895,6 +895,10 @@ export const BASELINES = {
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     protocolPropsMissingJsdoc: 373,
+    // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
+    // so the adapter would write the wrong type back. Target 0. Each is fixed by a
+    // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
+    changeMismatches: 18,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
@@ -990,9 +994,11 @@ export const FLOORS = {
     // takes its place with every gate green (final review I-3). With the
     // floor, a fall fails here until BOTH numbers are lowered in the same
     // change, and a rise fails the ceiling. Measured 2026-10-25, unchanged
-    // by the final-review fixes: 546, 373, 6, 93.
+    // by the final-review fixes: 546, 373, 6, 93. changeMismatches (ADR-222) added
+    // 2026-10-27 at its measured 18.
     unclassifiedOptions: 546,
     protocolPropsMissingJsdoc: 373,
+    changeMismatches: 18,
     componentsBelowRequiredLevel: 6,
     componentsPendingClassification: 93,
 };
@@ -1600,6 +1606,7 @@ function measure()
         testBlocks: 0,
         unclassifiedOptions: 0,
         protocolPropsMissingJsdoc: 0,
+        changeMismatches: 0,
         componentsBelowRequiredLevel: 0,
         componentsPendingClassification: 0,
     };
@@ -1723,6 +1730,7 @@ function measure()
     const protocol = measureClassification();
     counts.unclassifiedOptions = protocol.unclassifiedOptions;
     counts.protocolPropsMissingJsdoc = protocol.protocolPropsMissingJsdoc;
+    counts.changeMismatches = protocol.changeMismatches;
     counts.componentsBelowRequiredLevel = BELOW_REQUIRED.size;
     counts.componentsPendingClassification = PENDING_CLASSIFICATION.size;
 

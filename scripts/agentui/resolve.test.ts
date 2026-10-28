@@ -29,6 +29,18 @@ function manifest(over: M = {}): M
 
 const REASON = "Needs a DOM node, which JSON cannot carry.";
 
+/** The classifier's value fit (ADR-222); by default onChange passes the value itself. */
+function fit(over: M = {}): M
+{
+    return { param: "string", direct: true, withoutNull: true, fromProperty: [], setValueAcceptsNull: false, ...over };
+}
+
+/** A two-way onChange member, as the classifier reports it. */
+function onChange(over: M = {}): M
+{
+    return member("onChange", "function", { valueFit: fit(over) });
+}
+
 function codes(m: M, members: M[]): string[]
 {
     return resolveSurface(m, members).violations.map((v: { code: string }) => v.code);
@@ -68,7 +80,7 @@ describe("resolve — classes", () =>
     });
     test("onChange beside value is the two-way write-back", () =>
     {
-        expect(resolveSurface(manifest(), [member("value", "data"), member("onChange", "function")]).twoWayValue)
+        expect(resolveSurface(manifest(), [member("value", "data"), onChange()]).twoWayValue)
             .toBe(true);
     });
     test("an element declared host-only is excluded", () =>
@@ -141,7 +153,7 @@ describe("resolve — declarations", () =>
     });
     test("a two-way value (value beside the ADR-134 onChange) on a display component fails", () =>
     {
-        expect(codes(manifest({ conformance: "display" }), [member("value", "data"), member("onChange", "function")]))
+        expect(codes(manifest({ conformance: "display" }), [member("value", "data"), onChange()]))
             .toEqual([VIOLATION.VALUE_BELOW_FIELD]);
     });
     test("a read-only value with no onChange write-back is ordinary data at display", () =>
@@ -201,7 +213,7 @@ describe("resolve — multiple claims", () =>
         const m = manifest({
             emits: [{ name: "selection", payload: "collection", legacyOption: "onChange" }]
         });
-        const surface = resolveSurface(m, [member("value", "data"), member("onChange", "function")]);
+        const surface = resolveSurface(m, [member("value", "data"), onChange()]);
 
         expect(surface.violations).toEqual([]);
         expect(surface.twoWayValue).toBe(true);
@@ -234,7 +246,7 @@ describe("resolve — naming rule (user decision, 2026-10-25)", () =>
     test("a two-way field's change channel carries its payload in value", () =>
     {
         const m = manifest({ conformance: "field", emits: [{ name: "change", payload: "scalar", multi: false, legacyOption: "onChange" }] });
-        const surface = resolveSurface(m, [member("value", "data"), member("onChange", "function")]);
+        const surface = resolveSurface(m, [member("value", "data"), onChange()]);
 
         expect(surface.violations).toEqual([]);
         expect(surface.events).toEqual([{ channel: "change", option: "onChange", actionProp: "onChange",
@@ -258,5 +270,111 @@ describe("resolve — naming rule (user decision, 2026-10-25)", () =>
     {
         expect(resolveSurface(manifest({ actions: [{ id: "bulk-edit", label: "Edit" }] }), []).actions[0].actionProp)
             .toBe("onBulkEdit");
+    });
+});
+
+describe("resolve — protocol.hostOnlyActions (ADR-222, #31)", () =>
+{
+    const exporting = (hostOnlyActions: M) => manifest({ actions: [{ id: "export", label: "Export CSV" }],
+        protocol: { hostOnlyActions } });
+
+    test("a host-only action gets no action prop and is listed host-only with its reason", () =>
+    {
+        const surface = resolveSurface(exporting({ export: REASON }), []);
+
+        expect(surface.actions).toEqual([]);
+        expect(surface.hostOnly).toEqual({ "actions.export": REASON });
+        expect(surface.violations).toEqual([]);
+    });
+    test("a key that names no manifest action is stale", () =>
+    {
+        expect(codes(exporting({ exprt: REASON }), [])).toEqual([VIOLATION.STALE_DECLARATION]);
+    });
+    test("a reason shorter than the minimum is reported", () =>
+    {
+        expect(codes(exporting({ export: "short" }), [])).toEqual([VIOLATION.SHORT_REASON]);
+    });
+});
+
+describe("resolve — protocol.change (ADR-222, #39)", () =>
+{
+    const field = (protocol?: M, over: M = {}) => manifest({ conformance: "field", ...(protocol ? { protocol } : {}), ...over });
+    const messages = (m: M, members: M[]) =>
+        resolveSurface(m, members).violations.map((v: { message: string }) => v.message).join("\n");
+
+    test("an undeclared onChange that does not pass the value is a change mismatch naming protocol.change", () =>
+    {
+        const members = [member("value", "data"), onChange({ direct: false, param: "Swatch" })];
+
+        expect(codes(field(), members)).toEqual([VIOLATION.CHANGE_MISMATCH]);
+        expect(messages(field(), members)).toContain("protocol.change");
+        expect(messages(field(), members)).toContain("Swatch");
+    });
+    test("valueFrom naming a fitting property is two-way and carries the mapping", () =>
+    {
+        const surface = resolveSurface(field({ change: { valueFrom: "hex" } }),
+            [member("value", "data"), onChange({ direct: false, fromProperty: ["hex"] })]);
+
+        expect(surface.violations).toEqual([]);
+        expect(surface.twoWayValue).toBe(true);
+        expect(surface.change).toEqual({ valueFrom: "hex" });
+    });
+    test("valueFrom naming a property that does not fit is a mismatch that names the ones that would", () =>
+    {
+        const m = field({ change: { valueFrom: "rgb" } });
+        const members = [member("value", "data"), onChange({ direct: false, fromProperty: ["hex"] })];
+
+        expect(codes(m, members)).toEqual([VIOLATION.CHANGE_MISMATCH]);
+        expect(messages(m, members)).toContain("hex would fit");
+    });
+    test("cleared: null fits a nullable payload when the handle's setValue accepts null", () =>
+    {
+        const m = field({ change: { cleared: null } });
+
+        expect(codes(m, [member("value", "data"), onChange({ direct: false, setValueAcceptsNull: true })])).toEqual([]);
+    });
+    test("cleared: null is a mismatch when setValue does not accept null", () =>
+    {
+        const m = field({ change: { cleared: null } });
+        const members = [member("value", "data"), onChange({ direct: false })];
+
+        expect(codes(m, members)).toEqual([VIOLATION.CHANGE_MISMATCH]);
+        expect(messages(m, members)).toContain("setValue");
+    });
+    test("cleared: null is a mismatch when even the payload without null does not fit", () =>
+    {
+        const m = field({ change: { cleared: null } });
+
+        const members = [member("value", "data"), onChange({ direct: false, withoutNull: false, setValueAcceptsNull: true })];
+
+        expect(codes(m, members)).toEqual([VIOLATION.CHANGE_MISMATCH]);
+    });
+    test("\"event\" makes value one-way and leaves onChange to be classified like any callback", () =>
+    {
+        const surface = resolveSurface(field({ change: "event" }),
+            [member("value", "data"), onChange({ direct: false })]);
+
+        expect(surface.twoWayValue).toBe(false);
+        expect(surface.change).toBeNull();
+        expect(surface.violations.map((v: M) => v.code)).toEqual([VIOLATION.UNCLASSIFIED]);
+    });
+    test("\"event\" with onChange named by an emits channel is an ordinary event", () =>
+    {
+        const m = field({ change: "event" },
+            { emits: [{ name: "change", payload: "record", multi: false, legacyOption: "onChange" }] });
+        const surface = resolveSurface(m, [member("value", "data"), onChange({ direct: false })]);
+
+        expect(surface.violations).toEqual([]);
+        expect(surface.events[0]).toMatchObject({ channel: "change", payloadInValue: false });
+    });
+    test("protocol.change without value and onChange is stale", () =>
+    {
+        expect(codes(field({ change: { valueFrom: "hex" } }), [member("label", "data")]))
+            .toEqual([VIOLATION.STALE_DECLARATION]);
+    });
+    test("a two-way onChange the classifier gave no value fit is a literate error, not a pass", () =>
+    {
+        expect(() => resolveSurface(field(), [member("value", "data"), member("onChange", "function")]))
+            .toThrow("valueFit");
     });
 });

@@ -447,4 +447,65 @@ describe("validateManifest — protocol field", () =>
     {
         expect(validateManifest(base({ schemas: { extra: "object" } })).ok).toBe(false);
     });
+
+    // ADR-222: protocol.change, protocol.hostOnlyActions.
+    const paths = (protocol: unknown) => validateManifest(base(protocol)).issues.map((i) => i.path);
+
+    test("each protocol.change form is valid", () =>
+    {
+        expect(paths({ change: { valueFrom: "hex" } })).toEqual([]);
+        expect(paths({ change: { cleared: null } })).toEqual([]);
+        expect(paths({ change: "event" })).toEqual([]);
+    });
+
+    test("protocol.change.valueFrom must name a property", () =>
+    {
+        expect(paths({ change: { valueFrom: "" } })).toEqual(["protocol.change.valueFrom"]);
+    });
+
+    test("protocol.change outside the three forms is rejected", () =>
+    {
+        expect(paths({ change: { valueFrom: "a", cleared: null } })).toEqual(["protocol.change"]);
+        expect(paths({ change: "two-way" })).toEqual(["protocol.change"]);
+        expect(paths({ change: { cleared: false } })).toEqual(["protocol.change"]);
+    });
+
+    test("protocol.hostOnlyActions reasons must be strings", () =>
+    {
+        expect(paths({ hostOnlyActions: { export: 1 } })).toEqual(["protocol.hostOnlyActions.export"]);
+        expect(paths({ hostOnlyActions: { export: "Writes a file in the browser." } })).toEqual([]);
+    });
+});
+
+describe("validateManifest — agent field (ADR-222)", () =>
+{
+    function withAgent(agent: unknown): string[]
+    {
+        const m = { name: "fake", factory: "createFake", label: "Fake", icon: "bi-square",
+            category: "data", affords: [], emits: [], accepts: [], actions: [],
+            stateKeys: [], weight: { js: 1, mountCost: "light", holdsResources: false },
+            defaultSize: { w: 10, h: 10 }, defaultOptions: {}, conformance: "display", priority: 50, agent };
+
+        return validateManifest(m).issues.map((i) => i.path);
+    }
+
+    test("two sentences are valid here; the generator checks their content", () =>
+    {
+        expect(withAgent({ useWhen: "x", avoidWhen: "y" })).toEqual([]);
+    });
+
+    test("a missing sentence is reported by path", () =>
+    {
+        expect(withAgent({ useWhen: "x" })).toEqual(["agent.avoidWhen"]);
+    });
+
+    test("an unknown key is rejected", () =>
+    {
+        expect(withAgent({ useWhen: "x", avoidWhen: "y", extra: 1 })).toEqual(["agent.extra"]);
+    });
+
+    test("agent must be an object", () =>
+    {
+        expect(withAgent("x")).toEqual(["agent"]);
+    });
 });

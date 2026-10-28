@@ -109,7 +109,8 @@ export function optionsParameterIndex(manifest)
  * @param file        - Absolute path of the component's entry module.
  * @param factoryName - The exported factory, e.g. "createDataGrid".
  * @param paramIndex  - Which parameter holds the options.
- * @returns The non-nullable options type and the location to resolve it at.
+ * @returns The non-nullable options type, the location to resolve it at, and
+ *          the factory's return (handle) type.
  */
 export function factoryOptionsType(ctx, file, factoryName, paramIndex)
 {
@@ -133,7 +134,7 @@ export function factoryOptionsType(ctx, file, factoryName, paramIndex)
 
     const type = ctx.checker.getTypeOfSymbolAtLocation(parameter, source);
 
-    return { type: ctx.checker.getNonNullableType(type), location: source };
+    return { type: ctx.checker.getNonNullableType(type), location: source, handleType: signature.getReturnType() };
 }
 
 /** Finds an exported symbol by name, resolving re-export aliases. */
@@ -152,17 +153,78 @@ function findExport(ctx, source, name)
 }
 
 /**
- * Classifies every member of an options type (spec §3.1).
+ * Classifies every member of an options type (spec §3.1). The onChange report
+ * of a component with `value` also carries its value fit (ADR-222).
  *
  * @param ctx         - Classifier context.
  * @param optionsType - The options type.
  * @param location    - Node to resolve member types at.
+ * @param handleType  - The factory's return type, whose setValue the fit reads.
  * @returns One report per member.
  */
 // @entrypoint
-export function classifyMembers(ctx, optionsType, location)
+export function classifyMembers(ctx, optionsType, location, handleType)
 {
-    return ctx.checker.getPropertiesOfType(optionsType).map((symbol) => classifyMember(ctx, symbol, location));
+    const reports = ctx.checker.getPropertiesOfType(optionsType).map((symbol) => classifyMember(ctx, symbol, location));
+    const fit = valueFit(ctx, optionsType, location, handleType);
+
+    return fit ? reports.map((r) => (r.name === "onChange" ? { ...r, valueFit: fit } : r)) : reports;
+}
+
+/**
+ * What onChange's first parameter can be mapped to (ADR-222, #39), or null
+ * when the options lack `value` or a function `onChange`.
+ *
+ * @returns { param, direct, withoutNull, fromProperty, setValueAcceptsNull }:
+ *          the parameter as text; whether it, or it without null, is
+ *          assignable to value; which of its properties (present on every
+ *          arm) are; and whether the handle's setValue accepts null.
+ */
+function valueFit(ctx, optionsType, location, handleType)
+{
+    const c = ctx.checker;
+    const typeOf = (s) => c.getNonNullableType(c.getTypeOfSymbolAtLocation(s, location));
+    const value = optionsType.getProperty("value");
+    const onChange = optionsType.getProperty("onChange");
+    const signature = onChange && unionArms(typeOf(onChange)).flatMap((a) => a.getCallSignatures())[0];
+
+    if (!value || !signature) { return null; }
+
+    const target = typeOf(value);
+    const first = signature.parameters[0];
+    const param = first ? c.getTypeOfSymbolAtLocation(first, location) : null;
+
+    return {
+        param: param ? c.typeToString(param) : "(none)",
+        direct: param !== null && c.isTypeAssignableTo(param, target),
+        withoutNull: param !== null && c.isTypeAssignableTo(c.getNonNullableType(param), target),
+        fromProperty: param ? assignableProperties(ctx, param, target) : [],
+        setValueAcceptsNull: acceptsNull(ctx, handleType, location),
+    };
+}
+
+/** Properties present on every arm of `t` whose type is assignable to `target`. */
+function assignableProperties(ctx, t, target)
+{
+    const arms = unionArms(t);
+
+    return ctx.checker.getPropertiesOfType(arms[0]).map((p) => p.name).filter((n) => arms.every((arm) =>
+    {
+        const p = arm.getProperty(n);
+
+        return p !== undefined && ctx.checker.isTypeAssignableTo(ctx.checker.getTypeOfSymbol(p), target);
+    }));
+}
+
+/** True when some arm of the handle's setValue first parameter is null. */
+function acceptsNull(ctx, handleType, location)
+{
+    const setValue = handleType?.getProperty("setValue");
+    const signature = setValue && ctx.checker.getTypeOfSymbolAtLocation(setValue, location).getCallSignatures()[0];
+    const first = signature?.parameters[0];
+
+    return first !== undefined && unionArms(ctx.checker.getTypeOfSymbolAtLocation(first, location))
+        .some((a) => (a.flags & ts.TypeFlags.Null) !== 0);
 }
 
 /** Classifies one member: its class, mixed arms, nested hazards and JSDoc. */

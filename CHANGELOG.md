@@ -13,9 +13,18 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Agent UI readiness, step 1** (ADR-222). Manifests can now say what an agent needs to know:
+  - **`protocol.change`** declares how `onChange` maps to `value`. The build checks it against the TypeScript types and fails with `change-mismatch` instead of letting the adapter write the wrong type back.
+  - **`agent.useWhen` / `agent.avoidWhen`** are required for every catalog component and lead its A2UI description. `avoidWhen` must name the component to use instead.
+  - **`protocol.hostOnlyActions`** keeps an action an agent can't use out of the catalog.
+
+  Every catalog component is now rendered in a real browser by a generated test, and interactive ones need a gesture test, enforced by a coverage gate. No component's options, callbacks or methods changed.
 - **A2UI playground, message checker and reference agent** (local tooling; nothing is deployed). `npm run check:a2ui -- <file>` checks agent-written A2UI against this catalog in three layers: schemas, a `web_core` dry run, and dangling references. `npm run demo:a2ui` serves a playground where you paste, load or replay messages and watch them render with these components, with the data model and the actions going back to the agent in view. A bring-your-own-key agent (Claude or OpenAI) runs in the browser and calls the provider directly. The key is confined by the page's CSP, held in memory unless you ask, and proven never to reach the DOM, logs or saved sessions. Saved sessions replay as key-free regression tests, and `npm run demo:a2ui:record` turns them into README GIFs. Guide: `docs/A2UI_PLAYGROUND.md`. A public version waits on #36. ADR-221.
 - **A2UI adapter** — `https://static.outcrop.us/a2ui/adapter/v1.js` lets any host running Google's A2UI renderer (Lit, React) render every catalog component as an `<outcrop-*>` element, with bindings, two-way values and events flowing back to the agent. `createOutcropCatalog(webCore, { assetBaseUrl, injectBaseTheme? })` uses the host's own `@a2ui/web_core`; component assets lazy-load from `assetBaseUrl`. Gates G1–G3 keep every catalog component working through it. Host guide: `docs/A2UI_INTEGRATION_GUIDE.md`; rules: `A2UI.md`. ADR-220.
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
+
+### Fixed
+- **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.
 
 ### Changed
 - **A manifest `mountMethod` naming a method the handle lacks now fails** instead of silently leaving the component unattached (`runtime/src/mount.ts`, shared by the conformance suite and the A2UI adapter). No component trips it. ADR-220.

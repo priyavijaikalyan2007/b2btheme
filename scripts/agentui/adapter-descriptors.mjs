@@ -91,7 +91,8 @@ function unsupported(name, surface)
 
     return found.map(([kind, ids]) => `${name} declares ${kind} [${ids.join(", ")}], which the A2UI adapter does not `
         + `support yet, so its catalog action props would never fire. Support lands with ${ACTIONS_ISSUE}; until then keep `
-        + "the component on PENDING_CLASSIFICATION or remove the declaration.");
+        + "the component on PENDING_CLASSIFICATION or remove the declaration, or, for an action an agent cannot act on, "
+        + "declare it in protocol.hostOnlyActions with a reason.");
 }
 
 function descriptorFor({ manifest, surface }, catalog, assetExists)
@@ -110,6 +111,7 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
         props: routesFor(manifest, surface),
         twoWay: surface.twoWayValue,
         ...(changeOption ? { changeOption } : {}),
+        ...(surface.change ? { change: surface.change } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
         dates: datesFor(catalog, name, surface),
     };

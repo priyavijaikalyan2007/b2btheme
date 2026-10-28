@@ -17,6 +17,9 @@
 export const AGENT_RULES = [
     "- **Bind `value` to read the user's edit.** A literal `value` means \"set it and don't read it back\". "
         + "`onChange` still fires.",
+    "- **Read each component's description.** It says when to choose the component and what to use instead. When a "
+        + "`value` description says the path is deleted on clear, an absent path means the user cleared it; delete "
+        + "the path to clear it yourself.",
     "- **Bind `eventData` to read event payloads.** The component writes each payload to "
         + "`<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can "
         + "read it. Without `eventData` the action still fires, with no payload.",
@@ -26,7 +29,8 @@ export const AGENT_RULES = [
     "  |---|---|---|",
     "  | `VALIDATION_FAILED` | a bound value does not match the prop's schema (`path` names it) | keeps its last "
         + "good state |",
-    "  | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount | keeps its last value |",
+    "  | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount, unless its description says deleting "
+        + "the path clears it | keeps its last value |",
     "  | `OUTCROP_ASSET_LOAD_FAILED` | the component's script or CSS (or the injected base theme) failed to load | "
         + "not mounted |",
     "  | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the "

@@ -20,6 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { bundleAdapter } from "./adapter-bundle.mjs";
+import { checkAgentDescription } from "./agent-description.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { compileValidators } from "./adapter-validators.mjs";
 import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
@@ -47,6 +48,7 @@ export const BACKLOG_COUNTS = Object.freeze({
     unclassifiedOptions: new Set([VIOLATION.UNCLASSIFIED, VIOLATION.UNDECLARED_MIXED,
         VIOLATION.UNDECLARED_HAZARD, VIOLATION.TOO_BROAD]),
     protocolPropsMissingJsdoc: new Set([VIOLATION.MISSING_JSDOC]),
+    changeMismatches: new Set([VIOLATION.CHANGE_MISMATCH]),
 });
 
 /** Every code a PENDING_CLASSIFICATION entry excuses: the union of BACKLOG_COUNTS. */
@@ -70,6 +72,7 @@ export function runPipeline(input)
         components: ready.map((c) => ({ ...c, schema: schemas.get(c.manifest.name) })), major: input.major });
 
     errors.push(...violations.map((v) => v.message));
+    errors.push(...ready.flatMap((c) => checkAgentDescription(c.manifest, Object.keys(catalog.components))));
     checkBaseline(catalog, input, errors);
 
     const adapter = buildDescriptors(ready, catalog, input.assetExists);
@@ -90,8 +93,9 @@ function classifyFleet(input, errors)
         try
         {
             const file = input.componentFile(manifest.name);
-            const { type, location } = factoryOptionsType(ctx, file, manifest.factory, optionsParameterIndex(manifest));
-            const members = classifyMembers(ctx, type, location);
+            const { type, location, handleType } = factoryOptionsType(ctx, file, manifest.factory,
+                optionsParameterIndex(manifest));
+            const members = classifyMembers(ctx, type, location, handleType);
 
             return [{ manifest, members, file, surface: resolveSurface(manifest, members) }];
         }
@@ -451,7 +455,7 @@ function loadBaselines()
  * Fleet classification counts for scripts/audit-counts.mjs (check [20]).
  *
  * @param repoRoot - Repository root.
- * @returns { unclassifiedOptions, protocolPropsMissingJsdoc }.
+ * @returns { unclassifiedOptions, protocolPropsMissingJsdoc, changeMismatches }.
  */
 export function measureClassification(repoRoot = REPO)
 {
@@ -463,7 +467,8 @@ export function measureClassification(repoRoot = REPO)
 
     const counts = countsFor(classified, [], []);
 
-    return { unclassifiedOptions: counts.unclassifiedOptions, protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc };
+    return { unclassifiedOptions: counts.unclassifiedOptions, protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc,
+        changeMismatches: counts.changeMismatches };
 }
 
 /** CLI. */
