@@ -109,5 +109,19 @@ describe("normaliseTypiaUnit", () =>
         expect(normaliseTypiaUnit(unit).properties.kids.oneOf)
             .toEqual([{ const: null, description: "Lazy." }, { type: "array", items: { type: "string" } }]);
     });
+
+    // TypeScript's readonly means "not reassigned", but JSON Schema's readOnly tells an agent the value is
+    // owned elsewhere and not its to set. DocViewer's options are readonly (readiness step 2 P1).
+    test("the readOnly keyword is dropped, and a property named readOnly is kept", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: { Page: { type: "object", readOnly: true,
+            properties: { id: { type: "string", readOnly: true } } } } }, schema: { type: "object", properties: {
+            pages: { type: "array", readOnly: true, items: { $ref: "#/components/schemas/Page" } },
+            readOnly: { type: "boolean", description: "Locks the editor." } } } };
+        const out = normaliseTypiaUnit(unit);
+
+        expect(JSON.stringify(out)).not.toMatch(/"readOnly":true/);
+        expect(out.properties.readOnly).toEqual({ type: "boolean", description: "Locks the editor." });
+    });
 });
 

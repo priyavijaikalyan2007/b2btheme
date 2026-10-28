@@ -53,11 +53,29 @@ export function normaliseTypiaUnit(unit)
     }
 
     const toDefs = (ref) => (ref.startsWith(TYPIA_PREFIX) ? DEFS_PREFIX + ref.slice(TYPIA_PREFIX.length) : ref);
-    const tidy = (node) => sortConstUnions(dropCoveredArms(nullAsConst(closeObjects(mapRefs(node, toDefs)))));
+    const tidy = (node) =>
+        sortConstUnions(dropCoveredArms(nullAsConst(dropReadOnly(closeObjects(mapRefs(node, toDefs))))));
     const defs = tidy(unit.components?.schemas ?? {});
     const root = inlineRoot(tidy(unit.schema), defs);
 
     return { $schema: DRAFT_2020_12, ...root, ...(Object.keys(defs).length > 0 ? { $defs: defs } : {}) };
+}
+
+/**
+ * Drops the `readOnly` keyword typia emits for a TypeScript `readonly`
+ * member. In TypeScript it means "not reassigned"; in JSON Schema it tells
+ * an agent the value is owned elsewhere and not its to set, which is the
+ * opposite of an option (readiness step 2 P1). Only a boolean is the keyword:
+ * a property named readOnly holds a schema, and stays.
+ */
+function dropReadOnly(node)
+{
+    if (Array.isArray(node)) { return node.map(dropReadOnly); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    return Object.fromEntries(Object.entries(node).filter(([k, v]) => !(k === "readOnly" && typeof v === "boolean"))
+        .map(([k, v]) => [k, dropReadOnly(v)]));
 }
 
 /**
