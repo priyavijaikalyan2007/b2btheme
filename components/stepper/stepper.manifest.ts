@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B5): it emits
+ * "stepChange", "finish" and "saveDraft" through an additive on(), and
+ * restores its active step through getState().
  */
 export const STEPPER_MANIFEST: CapabilityManifest =
 {
@@ -34,11 +33,50 @@ export const STEPPER_MANIFEST: CapabilityManifest =
     icon: "bi-list-ol",
     category: "feedback",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show the steps of a multi-step task with progress and Back, Next and Finish; the agent hears each "
+            + "step change and shows that step's content.",
+        avoidWhen: "For switching freely between views use Tabs; for a single progress value use Gauge.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "stepChange", payload: "record", multi: false, legacyOption: "onStepChange" },
+        { name: "finish", payload: "scalar", multi: false, legacyOption: "onFinish" },
+        { name: "saveDraft", payload: "scalar", multi: false, legacyOption: "onSaveAsDraft" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["activeStep"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        hostOnly: {
+            "steps[].content": "An element; over A2UI the agent shows each step's content beside the stepper until "
+                + "layouts take A2UI children (step 4).",
+            "steps[].validate": "A check that must answer synchronously, which an agent round trip cannot; steps "
+                + "advance without it.",
+        },
+        schemas: {
+            // typia cannot describe content (an element) or validate (a function); the agent's steps carry the rest.
+            steps: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        label: { type: "string", description: "The step's name." },
+                        description: { type: "string", description: "Shown below the label." },
+                        icon: { type: "string", description: "Bootstrap Icons class for the indicator." },
+                        summary: { type: "string", description: "Shown below the step once it is complete." },
+                        optional: { type: "boolean", description: "The user may skip the step." },
+                    },
+                    required: ["label"],
+                    additionalProperties: false,
+                },
+            },
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6764, mountCost: "trivial", holdsResources: false },
@@ -46,6 +84,6 @@ export const STEPPER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 500, h: 60 },
     defaultOptions: { steps: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

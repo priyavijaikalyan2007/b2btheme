@@ -30,6 +30,21 @@
 
 // @semantic-marker dynamicformswitcher-conformance-glue
 
+/** Minimal view of the handle, limited to what the trigger needs. */
+interface DynamicFormSwitcherLike
+{
+    getElement(): HTMLElement;
+}
+
+/**
+ * Two variants keyed by the sampler's first two strings, so G3's sampled
+ * initialVariant names one of them.
+ */
+const SAMPLED_VARIANTS = {
+    a: { label: "First", fields: [{ name: "endpoint", label: "Endpoint", type: "url" }] },
+    b: { label: "Second", fields: [{ name: "region", label: "Region", type: "text" }] },
+};
+
 export const CONFORMANCE_GLUE =
 {
     options:
@@ -54,5 +69,22 @@ export const CONFORMANCE_GLUE =
         },
         initialVariant: "primary",
         showSelector: true,
+    },
+
+    heldProps: { variants: SAMPLED_VARIANTS },
+
+    trigger: (
+        channel: string,
+        handle: Record<string, unknown>): boolean =>
+    {
+        const field = (handle as unknown as DynamicFormSwitcherLike).getElement()
+            .querySelector<HTMLInputElement>("input[name]");
+
+        if (channel !== "change" || !field) { return false; }
+
+        field.value = "https://fixture.example";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+
+        return true;
     },
 };
