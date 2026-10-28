@@ -1759,15 +1759,15 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 | Component | Value | Host-only | Events (payload) | Level, `stateKeys` |
 |---|---|---|---|---|
 | StatusBadge | — | — | `click` (scalar: the label) | surface, `[]` |
-| MetricCard | — | `href` (link rule) | `click` (scalar: the title) | surface, `[]` |
+| MetricCard | — | `href` (link rule) | `click` (scalar: the label); additive `clickable` option | surface, `[]` |
 | Pill | — | `href` (link rule), `onHover`, `onHoverOut` | `click`, `dismiss` (scalar: the label) | surface, `[]` |
 | Gauge | **one-way** (`protocol.change: "event"`) | `onChange` (fires inside `setValue`, so it echoes the writer), `onOverLimit`, `onOverdue` (follow from the value, limit and deadline the agent set), `formatValue` | — | field (unchanged) |
-| EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label) | surface, `[]` |
+| EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label); the buttons emit without `onAction`/`onSecondary` | surface, `[]` |
 | Breadcrumb | — | `items[].href` (link rule), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
 | PersonChip | — | `href` (link rule), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
-| PresenceIndicator | — | `onExpand`, `onCollapse` (view state, restored through `expanded`) | `click` (record: the person) | surface, `["expanded"]` |
+| PresenceIndicator | — | `onExpand`, `onCollapse` (view state, restored through `expanded`) | `click` (record: the person); additive `clickable` option | surface, `["expanded"]` |
 | ThemeToggle | — | — | `change` (record: `{ theme, mode }`) | surface, `["mode"]` |
-| ReasoningAccordion | — | `steps[].metadata` (too broad), `onExpandChange` (view state, restored through `expanded`) | `stepClick` (record: the step) | surface, `["expanded"]` (the expanded step ids) |
+| ReasoningAccordion | — | `steps[].metadata` (too broad), `onStepClick` and `onExpandChange` (a step click toggles its expansion: view state, not intent) | — | display (unchanged) |
 
 - **DocViewer stays pending.**
   - It throws without MarkdownRenderer, and the adapter loads only a component's own script and CSS.
@@ -1775,6 +1775,8 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 
   Joining needs manifest-declared script dependencies loaded by the adapter, which a follow-up issue tracks. The reason goes to #20.
 - **URL-fetch rule:** none of the ten calls `fetch`, `XMLHttpRequest`, `import()` or `EventSource`. DocViewer is the only B4 component that does.
+- **Clickable without a callback:** MetricCard and PresenceIndicator are clickable only when `onClick` is passed, and the adapter subscribes through `on()` instead. Each gains an additive `clickable` option, the name StatusBadge, Pill and PersonChip already use. EmptyState binds its buttons only when `onAction`/`onSecondary` is passed. Its buttons now always listen, and the callbacks still fire first. Every existing combination behaves as before.
+- **ReasoningAccordion changed during implementation:** its step click is the expansion toggle (`handleStepClick`), so it is view state under S6, not an event. It joins at display with no handle changes.
 - **Payloads are JSON:** Pill, PersonChip and Gauge pass their own instance to the legacy callbacks. The new channels send the label or a record instead, never `this`.
 
 ### Task B4.1: the runtime accepts empty `stateKeys` (ADR-229)
@@ -1784,7 +1786,7 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 - **Docs:** one sentence in `docs/SURFACE_CONTRACT.md` §2.
 
 ### Task B4.2: additive surface methods
-For the nine surface components above:
+For the eight surface components above:
 - **`setData`** throws (no slots).
 - **`on(channel)`** accepts the declared channels only.
 - **`getState`/`setState`** cover the `stateKeys`: `{}` and a no-op for the six with none.
@@ -1795,7 +1797,7 @@ For the nine surface components above:
 - **Manifests:**
   - agent sentences, `protocol` and `emits` per the table;
   - JSDoc for PersonChip (12), PresenceIndicator (7) and ReasoningAccordion (13), comment-only.
-- **Conformance glue:** a trigger per channel for the nine.
+- **Conformance glue:** a trigger per channel for the eight.
 - **Bookkeeping:**
   - remove ten from the pending list (DocViewer stays);
   - lower the pins;
@@ -1803,7 +1805,7 @@ For the nine surface components above:
   - G3 and runtime conformance pass.
 
 ### Task B4.4: gesture tests
-`tests/a2ui-components/b4-display.spec.ts`, one literal `"<Name>: …"` test per surface component, plus Gauge's one-way value.
+`tests/a2ui-components/b4-display.spec.ts`, one literal `"<Name>: …"` test per surface component, plus Gauge's one-way value and ReasoningAccordion rendering its steps.
 
 ### Task B4.5: docs, verification, PR
 - **Records:**
@@ -1815,6 +1817,6 @@ For the nine surface components above:
   - the script-dependency issue.
 - **Verification:**
   - full suites and mutation checks;
-  - the dist diff (the nine components' JS, and the runtime);
+  - the dist diff (the eight components' JS, and the runtime);
   - token growth.
 - **The PR,** stacked on #50.
