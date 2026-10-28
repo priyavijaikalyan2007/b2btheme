@@ -154,7 +154,7 @@ function emitAndCheck(included, input, errors)
 {
     const entries = included.map((c) => ({
         id: c.manifest.name, alias: `AgentUi_${c.manifest.name}`, file: c.file, factory: c.manifest.factory,
-        paramIndex: optionsParameterIndex(c.manifest), pick: c.surface.dataProps.map((d) => d.name),
+        paramIndex: optionsParameterIndex(c.manifest), pick: typiaPick(c),
         providers: c.surface.providers,
     }));
     const results = emitSchemas(entries, { tsconfigPath: input.tsconfigPath, cacheDir: input.cacheDir });
@@ -169,6 +169,18 @@ function emitAndCheck(included, input, errors)
     return out;
 }
 
+/**
+ * The data props typia describes: all but those with a protocol.schemas
+ * entry, whose generated schema would be replaced anyway, and whose type may
+ * be one typia cannot describe at all (Stepper's steps hold elements, B5).
+ */
+export function typiaPick(c)
+{
+    const overridden = c.manifest.protocol?.schemas ?? {};
+
+    return c.surface.dataProps.map((d) => d.name).filter((n) => overridden[n] === undefined);
+}
+
 /** One component's schema, or null with its problems recorded. */
 function schemaFor(c, result, errors)
 {
@@ -177,7 +189,7 @@ function schemaFor(c, result, errors)
     if (result.error) { errors.push(`${name}: typia could not describe the options: ${result.error}`); return null; }
 
     const stripped = stripHostOnlyPaths(normaliseTypiaUnit(result.unit), c);
-    const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {});
+    const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {}, c.surface.dataProps);
     const problems = [
         ...stripped.problems,
         ...missingDataMembers(schema, c.surface.dataProps.map((d) => d.name)).map((m) =>
@@ -251,16 +263,21 @@ function arms(schema, node)
  * drops the $defs only a replaced schema used (B4): an orphan would still
  * describe, say, an href the override left out on purpose.
  */
-function applyOverrides(schema, overrides)
+function applyOverrides(schema, overrides, dataProps)
 {
     const properties = { ...schema.properties };
+    const jsdoc = new Map(dataProps.map((d) => [d.name, d.jsdoc]));
 
     for (const [name, override] of Object.entries(overrides))
     {
-        properties[name] = { ...override, description: schema.properties[name]?.description };
+        // typia was not asked about an overridden prop (typiaPick), so its JSDoc is the description.
+        properties[name] = { ...override, description: jsdoc.get(name) };
     }
 
-    return pruneDefs({ ...schema, properties });
+    const required = [...new Set([...(schema.required ?? []),
+        ...dataProps.filter((d) => overrides[d.name] !== undefined && !d.optional).map((d) => d.name)])];
+
+    return pruneDefs({ ...schema, properties, ...(required.length > 0 ? { required } : {}) });
 }
 
 /** Keeps the $defs reachable from the schema's own properties. */
