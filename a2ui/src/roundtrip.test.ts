@@ -148,6 +148,35 @@ describe("two-way value", () =>
         expect(rc.errors).toEqual([]);
     });
 
+    // Absent is "cleared" at mount too: an agent that binds an empty clearable
+    // picker (nothing chosen yet) must get an empty picker, not one waiting for
+    // data forever (found in B2: PeriodPicker and SprintPicker never mounted).
+    // A factory's value option need not accept null (DatePicker's is `Date`), but
+    // every clearable handle's setValue does: the build checks it (ADR-222).
+    test("cleared: a value bound to an absent path mounts without a value option, then setValue(null)", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, {});
+        await mounted(fakeDescriptor({ ...FIELD, change: { cleared: null } }), rc);
+
+        expect(record.builds).toHaveLength(1);
+        expect("value" in record.builds[0].options).toBe(false);
+        expect(record.calls).toEqual([["setValue", null]]);
+        expect(rc.getData("/v")).toBeUndefined();
+        expect(rc.errors).toEqual([]);
+
+        rc.setData("/v", "b");
+        await flush();
+        expect(record.calls).toEqual([["setValue", null], ["setValue", "b"]]);
+    });
+
+    test("a value bound to an absent path still waits when the component is not clearable", async () =>
+    {
+        const rc = realContext({ value: { path: "/v" } }, {});
+        await mounted(FIELD, rc);
+
+        expect(record.builds).toHaveLength(0);
+    });
+
     test("cleared on a surface's change channel: the path is deleted, then onChange fires", async () =>
     {
         const onChange = { event: { name: "changed", context: { v: { path: "/v" } } } };

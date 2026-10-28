@@ -486,7 +486,7 @@
               "const": "DatePicker"
             },
             "value": {
-              "description": "Initial selected date. Defaults to today. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "description": "Initial selected date. Defaults to today. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it, or leave it absent to start empty.",
               "anyOf": [
                 {
                   "type": "string",
@@ -2246,7 +2246,7 @@
               ]
             },
             "value": {
-              "description": "Initial selected value. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "description": "Initial selected value. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it, or leave it absent to start empty.",
               "anyOf": [
                 {
                   "oneOf": [
@@ -3196,7 +3196,7 @@
               ]
             },
             "value": {
-              "description": "Initial sprint value. Provided for the DynamicFormSwitcher\nfield-capable component convention (AGENTS.md). Applied by\ncalling `setValue(value)` once the picker has built its\ninternal sprint list. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "description": "Initial sprint value. Provided for the DynamicFormSwitcher\nfield-capable component convention (AGENTS.md). Applied by\ncalling `setValue(value)` once the picker has built its\ninternal sprint list. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it, or leave it absent to start empty.",
               "anyOf": [
                 {
                   "oneOf": [
@@ -3473,7 +3473,7 @@
               "const": "TimePicker"
             },
             "value": {
-              "description": "Initial time value. Defaults to current time. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "description": "Initial time value. Defaults to current time. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it, or leave it absent to start empty.",
               "anyOf": [
                 {
                   "$ref": "#/$defs/TimePicker__TimeValue"

@@ -192,7 +192,8 @@ describe("catalog — component entry", () =>
         const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
 
         expect(props.value.anyOf[0]).toEqual({ type: "string" });
-        expect(props.value.description).toContain("the path is deleted; delete the path to clear it.");
+        expect(props.value.description).toContain("the path is deleted; delete the path to clear it, or leave it absent "
+            + "to start empty.");
     });
     test("valueFrom leaves value's literal arm as generated", () =>
     {
