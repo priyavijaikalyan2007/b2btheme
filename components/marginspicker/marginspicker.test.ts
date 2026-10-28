@@ -695,3 +695,60 @@ describe("aria attributes", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B1-1, B1-2): additive on("custom"),
+// getState/setState and setData. onCustom keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(custom)_HearsTheCustomLink_AfterOnCustom_WithThePresetName", () =>
+    {
+        const order: string[] = [];
+        const picker = createMarginsPicker(makeOpts({ value: "Wide", onCustom: () => order.push("option") }));
+        picker.on("custom", (name) => order.push(`channel:${String(name)}`));
+        picker.show();
+
+        (document.body.querySelector(".marginspicker-custom") as HTMLElement).click();
+
+        expect(order).toEqual(["option", "channel:Wide"]);
+        picker.destroy();
+    });
+
+    test("on_ReturnsAnUnsubscribe", () =>
+    {
+        const heard = vi.fn();
+        const picker = createMarginsPicker(makeOpts());
+        const off = picker.on("custom", heard);
+        off();
+        picker.show();
+
+        (document.body.querySelector(".marginspicker-custom") as HTMLElement).click();
+
+        expect(heard).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const picker = createMarginsPicker(makeOpts({ value: "Narrow" }));
+        const captured = picker.getState();
+
+        picker.setValue("Wide");
+        expect(picker.getState()).toEqual({ value: "Wide" });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ value: "Narrow" });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = createMarginsPicker(makeOpts());
+
+        expect(() => picker.on("selection", () => undefined)).toThrow("custom");
+        expect(() => picker.setData("presets", [])).toThrow("no data slots");
+        picker.destroy();
+    });
+});
