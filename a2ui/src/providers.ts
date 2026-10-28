@@ -81,7 +81,6 @@ class ProviderChannel
     #outstanding: Pending | undefined;
     #waiting: Pending[] = [];
     #timer: ReturnType<typeof setTimeout> | undefined;
-    #released = false;
 
     constructor(ctx: ComponentContextLike, p: AdapterProvider, validate: Validator | undefined, key: string,
         where: { timeoutMs: number; eventPath: string })
@@ -113,10 +112,13 @@ class ProviderChannel
         });
     }
 
-    /** Teardown: pending promises are dropped, never settled into a torn-down component. */
+    /**
+     * Teardown: pending promises are dropped, never settled into a torn-down
+     * component. Unsubscribing stops late answers and clearing the timer stops
+     * a late timeout, so nothing can call back after this.
+     */
     release(): void
     {
-        this.#released = true;
         clearTimeout(this.#timer);
         this.#sub.unsubscribe();
         this.#outstanding = undefined;
@@ -135,7 +137,7 @@ class ProviderChannel
 
     #onResult(value: unknown): void
     {
-        if (this.#released || !this.#outstanding || value === undefined)
+        if (!this.#outstanding || value === undefined)
         {
             logDebug("provider", this.#key, "ignored a write that is not an answer");
             return;
@@ -192,6 +194,6 @@ class ProviderChannel
     {
         const next = this.#waiting.shift();
 
-        if (next && !this.#released) { this.#send(next); }
+        if (next) { this.#send(next); }
     }
 }

@@ -195,6 +195,38 @@ describe("failure", () =>
         expect(rc.actions).toHaveLength(2);
     });
 
+    test("teardown stops the timer, so no timeout is reported later", async () =>
+    {
+        vi.useFakeTimers();
+        const { rc, w } = wired(BOUND, 1000);
+        void w.options.onLoad({ id: "1" });
+
+        w.release();
+        await vi.advanceTimersByTimeAsync(1000);
+
+        expect(rc.errors).toEqual([]);
+    });
+
+    test("teardown unsubscribes from every result path", () =>
+    {
+        const rc = realContext(BOUND);
+        const subscribe = rc.ctx.dataContext.subscribeDynamicValue.bind(rc.ctx.dataContext);
+        const unsubscribes: ReturnType<typeof vi.fn>[] = [];
+        vi.spyOn(rc.ctx.dataContext, "subscribeDynamicValue").mockImplementation((v, cb) =>
+        {
+            const sub = subscribe(v, cb);
+            const unsubscribe = vi.fn(() => sub.unsubscribe());
+            unsubscribes.push(unsubscribe);
+            return { value: sub.value, unsubscribe };
+        });
+        const w = wireProviders(rc.ctx, fakeDescriptor({ providers: [LOAD, FIND] }), VALIDATORS, 30_000);
+
+        w.release();
+
+        expect(unsubscribes).toHaveLength(2);
+        unsubscribes.forEach((u) => expect(u).toHaveBeenCalledTimes(1));
+    });
+
     test("teardown drops pending requests unsettled, and a late answer is ignored", async () =>
     {
         const { rc, w } = wired();
