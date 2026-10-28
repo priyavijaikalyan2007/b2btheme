@@ -1764,8 +1764,8 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 | Gauge | **one-way** (`protocol.change: "event"`) | `onChange` (fires inside `setValue`, so it echoes the writer), `onOverLimit`, `onOverdue` (follow from the value, limit and deadline the agent set), `formatValue` | — | field (unchanged) |
 | EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label); the buttons emit without `onAction`/`onSecondary` | surface, `[]` |
 | Breadcrumb | — | `items[].href` (link rule), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
-| PersonChip | — | `href` (link rule), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
-| PresenceIndicator | — | `onExpand`, `onCollapse` (view state, restored through `expanded`) | `click` (record: the person); additive `clickable` option | surface, `["expanded"]` |
+| PersonChip | — | `href` (link rule), `metadata` (data-* attributes), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
+| PresenceIndicator | — | `onClick` (per-person clicks render through PersonChip, which the adapter does not load), `onExpand`, `onCollapse` (view state), `people[].metadata` (data-* attributes) | — | display (unchanged) |
 | ThemeToggle | — | — | `change` (record: `{ theme, mode }`) | surface, `["mode"]` |
 | ReasoningAccordion | — | `steps[].metadata` (too broad), `onStepClick` and `onExpandChange` (a step click toggles its expansion: view state, not intent) | — | display (unchanged) |
 
@@ -1775,7 +1775,9 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 
   Joining needs manifest-declared script dependencies loaded by the adapter, which a follow-up issue tracks. The reason goes to #20.
 - **URL-fetch rule:** none of the ten calls `fetch`, `XMLHttpRequest`, `import()` or `EventSource`. DocViewer is the only B4 component that does.
-- **Clickable without a callback:** MetricCard and PresenceIndicator are clickable only when `onClick` is passed, and the adapter subscribes through `on()` instead. Each gains an additive `clickable` option, the name StatusBadge, Pill and PersonChip already use. EmptyState binds its buttons only when `onAction`/`onSecondary` is passed. Its buttons now always listen, and the callbacks still fire first. Every existing combination behaves as before.
+- **Clickable without a callback:** MetricCard is clickable only when `onClick` is passed, and the adapter subscribes through `on()` instead. It gains an additive `clickable` option, the name StatusBadge, Pill and PersonChip already use. MetricCard's existing lifecycle `setState("ready" | "loading" | "error")` gains an overload that takes the contract's record and does nothing. EmptyState binds its buttons only when `onAction`/`onSecondary` is passed. Its buttons now always listen, and the callbacks still fire first. Every existing combination behaves as before.
+- **PresenceIndicator changed during implementation:** its clickable avatars are built by `window.createPersonChip`. Without it, the fallback avatars aren't clickable, even with `onClick`, and the adapter loads only PresenceIndicator's own script. Over A2UI a `click` channel could never fire, so `onClick` is host-only and PresenceIndicator joins at display until the script-dependency issue lands. The handle change was discarded.
+- **`metadata` is host-only** (PersonChip `metadata`, PresenceIndicator `people[].metadata`). It becomes `data-*` attributes on the root element, which host scripts read: Bootstrap's `data-bs-toggle` and `data-bs-target`, for example, act on click.
 - **ReasoningAccordion changed during implementation:** its step click is the expansion toggle (`handleStepClick`), so it is view state under S6, not an event. It joins at display with no handle changes.
 - **Payloads are JSON:** Pill, PersonChip and Gauge pass their own instance to the legacy callbacks. The new channels send the label or a record instead, never `this`.
 
@@ -1786,7 +1788,7 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 - **Docs:** one sentence in `docs/SURFACE_CONTRACT.md` §2.
 
 ### Task B4.2: additive surface methods
-For the eight surface components above:
+For the seven surface components above:
 - **`setData`** throws (no slots).
 - **`on(channel)`** accepts the declared channels only.
 - **`getState`/`setState`** cover the `stateKeys`: `{}` and a no-op for the six with none.
@@ -1797,7 +1799,7 @@ For the eight surface components above:
 - **Manifests:**
   - agent sentences, `protocol` and `emits` per the table;
   - JSDoc for PersonChip (12), PresenceIndicator (7) and ReasoningAccordion (13), comment-only.
-- **Conformance glue:** a trigger per channel for the eight.
+- **Conformance glue:** a trigger per channel for the seven.
 - **Bookkeeping:**
   - remove ten from the pending list (DocViewer stays);
   - lower the pins;
@@ -1817,6 +1819,6 @@ For the eight surface components above:
   - the script-dependency issue.
 - **Verification:**
   - full suites and mutation checks;
-  - the dist diff (the eight components' JS, and the runtime);
+  - the dist diff (the seven components' JS, and the runtime);
   - token growth.
 - **The PR,** stacked on #50.
