@@ -1572,3 +1572,69 @@ node -e 'const a=require("/tmp/claude-501/dist-main/a2ui/catalog/v1.json"), b=re
   - **title:** "feat(agentui): providers over A2UI (#31) and TreeView in catalog v1"
   - **body:** what changed; the non-breaking evidence (Step 3); the mutation table (Step 2); the token growth (Step 4); the spec amendments (S6, S7, pilot); `Closes #31`, with a line naming #<N> as the action bar's new home.
   - End the body with "🤖 Generated with [Claude Code](https://claude.com/claude-code)", and no session link.
+
+---
+
+## B1: pickers with an item payload
+
+**Goal:** the 10 B1 pickers join catalog v1, with two-way `value` mapped through `protocol.change`.
+
+**Decisions (user, 2026-10-28):**
+- **B1-1:** the "Custom…" link of MarginsPicker, SizesPicker, SpacingPicker and ColumnsPicker becomes a `custom` event; it is not host-only. Per S6 those four pickers become `surface`, with additive handle methods.
+- **B1-2:** a surface component with no other view state declares its selection as its state: `stateKeys: ["value"]`. `getState()` returns `{ value }` and `setState({ value })` selects it. This is the precedent for later batches (spec §5.2 item 8).
+
+**Per component:**
+
+| Component | `protocol.change` | Host-only | Events | Level |
+|---|---|---|---|---|
+| FontDropdown | `{ valueFrom: "value" }` | `onOpen`, `onClose` | — | field |
+| LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker | `{ valueFrom: "value" }` | `onOpen`, `onClose` | — | field |
+| MarginsPicker, SizesPicker, SpacingPicker, ColumnsPicker | `{ valueFrom: "name" }` | — | `custom` (scalar, the current preset name; `legacyOption: "onCustom"`) | surface, `stateKeys: ["value"]` |
+| LayoutPicker | `{ valueFrom: "id" }` | `customAlgorithms[].thumbnail` | — | field |
+
+The mapped property is the one each component's own `setValue` matches: `find(x => x.value === v)`, `find(p => p.name === v)` and `find(a => a.id === v)` respectively.
+
+**URL-fetch rule (§4):** none of the ten calls `fetch`, `XMLHttpRequest`, `import()` or `EventSource`.
+
+### Task B1.1: additive surface methods on the four preset pickers
+
+For each of MarginsPicker and SizesPicker (classes) and SpacingPicker and ColumnsPicker (closure factories):
+- **The API interface gains:**
+  - `setData(slot: string, value: unknown): void` (throws: the picker has no data slots);
+  - `on(channel: string, handler: (payload: unknown) => void): () => void` (accepts only `"custom"`, throws otherwise);
+  - `getState(): Record<string, unknown>` (returns `{ value: <selected preset name> }`);
+  - `setState(state: Record<string, unknown>): void` (calls `setValue(state.value)` when `"value"` is present).
+- **The "Custom…" click** goes through one `emitCustom()` that calls the existing `onCustom` handler exactly as before (same error handling) and then each `custom` subscriber with the selected preset name.
+- **`destroy()`** clears the subscribers.
+- **TDD:** each component's `*.test.ts` gains tests:
+  - `on("custom")` hears a click on the "Custom…" link, after `onCustom`;
+  - `getState()`/`setState()` round-trip the selection;
+  - `on()` of an unknown channel and `setData()` throw.
+- **Commit:** `feat(<name>): additive on("custom"), getState/setState and setData for the surface contract (B1-1)`.
+
+### Task B1.2: manifests, glue, bookkeeping
+
+- **Manifests:** each gains `agent`, `protocol` (change, and hostOnly where listed) and, for the four, `emits`, `stateKeys: ["value"]` and `conformance: "surface"`.
+- **Conformance glue** (new `<name>.conformance.ts` for the four): `trigger("custom")` clicks the "Custom…" link.
+- **Build:** `npm run build:manifest && npm run build:agentui` must report no B1 violations.
+- **Bookkeeping:**
+  - remove the ten from `PENDING_CLASSIFICATION`;
+  - lower `componentsPendingClassification`, `unclassifiedOptions` and `changeMismatches` (ceiling and floor) to the measured values;
+  - rewrite the baseline;
+  - G3 and runtime fleet conformance pass.
+
+### Task B1.3: gesture tests
+
+`tests/a2ui-components/b1-pickers.spec.ts`:
+- one `"<Name>: …"` test per picker: open it, pick an item, assert the bound value with `expectCatalogValid`;
+- for the four preset pickers, also click "Custom…" and assert the `onCustom` action with the preset name at `eventData/custom`.
+
+### Task B1.4: docs, verification, PR
+
+- **Docs and records:** CHANGELOG, `history.jsonl`, an ADR (ADR-226: B1-1 and B1-2), AGENTS.md (the B1-2 rule), and #20 checkboxes.
+- **Verification** as in P0 Task 7:
+  - full suites;
+  - mutation checks: a picker's `valueFrom`, the `custom` emit, `getState`;
+  - the dist diff (exactly the four surface pickers' JS differ);
+  - catalog token growth.
+- **PR.**
