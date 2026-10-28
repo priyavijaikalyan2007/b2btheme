@@ -234,3 +234,126 @@ describe("vditorCdn", () =>
         delete (window as unknown as Record<string, unknown>).Vditor;
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B5): additive on("save"), getState/setState
+// and setData. onSave keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    // Vditor raises Ctrl+Enter itself, so a test reaches the gesture through
+    // the `ctrlEnter` option the editor handed to Vditor.
+    let lastVditorOptions: Record<string, unknown> | null = null;
+
+    class CapturingVditor extends MockVditor
+    {
+        constructor(el: HTMLElement | string, options: Record<string, unknown>)
+        {
+            super(el, options);
+            lastVditorOptions = options;
+        }
+    }
+
+    function pressCtrlEnter(value: string): void
+    {
+        (lastVditorOptions!.ctrlEnter as (v: string) => void)(value);
+    }
+
+    beforeEach(() =>
+    {
+        lastVditorOptions = null;
+        (window as unknown as Record<string, unknown>)["Vditor"] = CapturingVditor;
+    });
+
+    test("on_Save_HearsTheMarkdown_AfterOnSave_AndUnsubscribeStopsIt", () =>
+    {
+        const order: string[] = [];
+        const editor = new MarkdownEditor(container, makeOptions({
+            onSave: (v) => order.push(`option:${v}`),
+        }));
+        const off = editor.on("save", (p) => order.push(`channel:${String(p)}`));
+
+        pressCtrlEnter("# one");
+        off();
+        pressCtrlEnter("# two");
+
+        expect(order).toEqual(["option:# one", "channel:# one", "option:# two"]);
+        editor.destroy();
+    });
+
+    test("on_Save_EmitsWithNoOnSave", () =>
+    {
+        const heard = vi.fn();
+        const editor = new MarkdownEditor(container, makeOptions());
+        editor.on("save", heard);
+
+        pressCtrlEnter("# saved");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("# saved");
+        expect(JSON.parse(JSON.stringify(heard.mock.calls[0][0]))).toEqual("# saved");
+        editor.destroy();
+    });
+
+    test("on_Save_ThrowingHandler_DoesNotStopTheNextHandler", () =>
+    {
+        const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const heard = vi.fn();
+        const editor = new MarkdownEditor(container, makeOptions());
+        editor.on("save", () => { throw new Error("boom"); });
+        editor.on("save", heard);
+
+        pressCtrlEnter("x");
+
+        expect(heard).toHaveBeenCalledWith("x");
+        err.mockRestore();
+        editor.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_NamingSave", () =>
+    {
+        const editor = new MarkdownEditor(container, makeOptions());
+
+        expect(() => editor.on("bogus", () => undefined)).toThrow("save");
+        editor.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const editor = new MarkdownEditor(container, makeOptions());
+
+        expect(() => editor.setData("value", "x")).toThrow("no data slots");
+        expect(() => editor.setData("value", "x")).toThrow("MarkdownEditor");
+        expect(() => editor.setData("value", "x")).toThrow("setValue()");
+        editor.destroy();
+    });
+
+    test("getState_SetState_RoundTripValue", () =>
+    {
+        const editor = new MarkdownEditor(container, makeOptions({ value: "# first" }));
+        const captured = editor.getState();
+
+        expect(captured).toEqual({ value: "# first" });
+
+        editor.setValue("# second");
+        expect(editor.getState()).toEqual({ value: "# second" });
+
+        editor.setState(captured);
+        expect(editor.getValue()).toBe("# first");
+        expect(JSON.parse(JSON.stringify(captured))).toEqual(captured);
+        editor.destroy();
+    });
+
+    test("destroy_ClearsSaveHandlers", () =>
+    {
+        const editor = new MarkdownEditor(container, makeOptions());
+        const heard = vi.fn();
+        editor.on("save", heard);
+
+        editor.destroy();
+        pressCtrlEnter("after");
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+});
