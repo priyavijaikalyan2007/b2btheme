@@ -54,7 +54,7 @@ Agent ──messages──► Host's MessageProcessor ──► Renderer ──�
 
   For a demo, prototype or agent-only page you can opt in to `injectBaseTheme: true` instead (§3). The adapter then adds the stylesheet itself the first time a component appears. It **never** sets `data-bs-theme`; light or dark is yours to choose. The agent's `createSurface.theme.primaryColor` is ignored, because one colour cannot reproduce the hover, focus and contrast shades derived from our primary token.
 
-- **CSP:** allow the asset origin in `script-src` and `style-src` (for example `https://static.outcrop.us`). `import()` of the adapter is a CORS request, and `/a2ui/*` is served with `Access-Control-Allow-Origin: *`.
+- **CSP:** allow the asset origin in `script-src` and `style-src` (for example `https://static.outcrop.us`), and in `font-src` if agents use components that render math (KaTeX's fonts). Some components need a library or another component first, such as DocViewer, which renders through MarkdownRenderer and marked. The adapter loads these from the same origin, libraries with their integrity hash, so no other origin is involved. `import()` of the adapter is a CORS request, and `/a2ui/*` is served with `Access-Control-Allow-Origin: *`.
 
 ## 3. Lit recipe
 

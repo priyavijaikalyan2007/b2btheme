@@ -1778,6 +1778,10 @@
   definition: "Readiness step 2 rule S5: an option a component passes to fetch, XMLHttpRequest, import() or EventSource is declared in protocol.hostOnly, because the browser would fetch it with the host's credentials and an agent that chose the URL could reach the host's own endpoints. Data reaches the agent through a provider instead. Image URLs are not covered."
   anchor_file: "AGENTS.md"
   related: ["A2uiAdapter", "AgentProtocolSchema"]
+- name: "ComponentDependencies"
+  definition: "protocol.dependencies (ADR-230, #51): the vendored libraries (dist/lib-manifest.json names) and other components a catalog component needs on the page. The generator puts them in the adapter descriptor, libraries with their integrity hash, and the A2UI adapter loads them before the component's own script, once per page."
+  anchor_file: "AGENTS.md"
+  related: ["A2uiAdapter", "VendorClosure", "AgentProtocolSchema"]
 - name: "LinkRule"
   definition: "Readiness step 2 rule (ADR-229): an option that becomes an <a href> is host-only, because an agent-chosen javascript: URL would run in the host's origin when the user followed it; the agent hears the click and answers with openUrl. A nested href is left out of a protocol.schemas override, and the closed catalog schema rejects it. Options written as data-* attributes (metadata) are host-only for the same reason."
   anchor_file: "AGENTS.md"
