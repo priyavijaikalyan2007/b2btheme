@@ -81,4 +81,19 @@ describe("normaliseTypiaUnit", () =>
 
         expect(normaliseTypiaUnit(unit).properties.v.oneOf).toEqual([{ type: "string" }, { const: "a" }]);
     });
+
+    // Date | string: every date string matches both arms, and oneOf demands
+    // exactly one, so web_core rejected every value (SprintPicker.anchorDate, B2).
+    test("drops a format arm that a plain arm of the same type already covers, and unwraps one arm", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object", properties: {
+            when: { oneOf: [{ type: "string", format: "date-time" }, { type: "string" }] },
+            either: { oneOf: [{ type: "string", format: "date-time" }, { type: "string" }, { type: "number" }] },
+            dateOnly: { oneOf: [{ type: "string", format: "date-time" }, { type: "null" }] } } } };
+        const props = normaliseTypiaUnit(unit).properties;
+
+        expect(props.when).toEqual({ type: "string" });
+        expect(props.either).toEqual({ oneOf: [{ type: "string" }, { type: "number" }] });
+        expect(props.dateOnly).toEqual({ oneOf: [{ type: "string", format: "date-time" }, { type: "null" }] });
+    });
 });
