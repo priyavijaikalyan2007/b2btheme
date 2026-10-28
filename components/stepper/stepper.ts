@@ -66,6 +66,9 @@ void [logInfo, logWarn, logError, logDebug, logTrace];
 
 let instanceCounter = 0;
 
+const CHANNELS = ["stepChange", "finish", "saveDraft"] as const;
+type Channel = typeof CHANNELS[number];
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -132,6 +135,18 @@ export interface StepperHandle
     getCompletionPercent(): number;
     getElement(): HTMLElement;
     destroy(): void;
+
+    /** The surface contract (additive): Stepper has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "stepChange" ({ from, to }), "finish" (the active step index) or
+     * "saveDraft" (the active step index). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { activeStep }: the active step index. */
+    getState(): Record<string, unknown>;
+    /** Navigates to state.activeStep when it differs from the active step. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -171,6 +186,11 @@ class Stepper implements StepperHandle
     private size: string;
     private rootEl: HTMLElement | null = null;
     private destroyed = false;
+    private readonly handlers: Record<Channel, Set<(payload: unknown) => void>> = {
+        stepChange: new Set(),
+        finish: new Set(),
+        saveDraft: new Set()
+    };
 
     constructor(options: StepperOptions)
     {
@@ -220,6 +240,7 @@ class Stepper implements StepperHandle
 
             this.states[this.activeIndex] = "completed";
             if (this.options.onFinish) { this.options.onFinish(); }
+            this.emit("finish", () => this.activeIndex);
             this.render();
             return true;
         }
@@ -265,6 +286,7 @@ class Stepper implements StepperHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        for (const set of Object.values(this.handlers)) { set.clear(); }
 
         if (this.rootEl?.parentNode)
         {
@@ -272,6 +294,67 @@ class Stepper implements StepperHandle
         }
         this.rootEl = null;
         logInfo("Destroyed", this.id);
+    }
+
+    // ── Surface contract (additive, readiness step 2 B5) ──
+
+    /** Stepper has no data slots; use goToStep(), nextStep(), prevStep() or setStepState(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): Stepper has no data slots. `
+            + "Use goToStep(), nextStep(), prevStep() or setStepState().");
+    }
+
+    /** Subscribes to a channel; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (!(CHANNELS as readonly string[]).includes(channel))
+        {
+            const valid = CHANNELS.map(c => `"${c}"`).join(", ");
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the channels are ${valid}.`);
+        }
+
+        const set = this.handlers[channel as Channel];
+        set.add(handler);
+
+        return () => { set.delete(handler); };
+    }
+
+    /** The active step index. */
+    getState(): Record<string, unknown>
+    {
+        return { activeStep: this.getActiveStep() };
+    }
+
+    /** Restores state captured by getState(); navigation is not awaited, a rejection is logged. */
+    setState(state: Record<string, unknown>): void
+    {
+        if (!("activeStep" in state)) { return; }
+
+        const index = state.activeStep as number;
+        if (index === this.activeIndex) { return; }
+
+        this.goToStep(index).catch((err: unknown) => logError("setState: goToStep failed", err));
+    }
+
+    /**
+     * Calls every handler on the channel, each with its own freshly built payload so one
+     * handler cannot mutate what the next hears. A throwing handler is logged, not propagated.
+     */
+    private emit(channel: Channel, payload: () => unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload());
+            }
+            catch (err)
+            {
+                logError(`"${channel}" handler threw`, err);
+            }
+        }
     }
 
     // ====================================================================
@@ -311,6 +394,7 @@ class Stepper implements StepperHandle
         {
             this.options.onStepChange(from, index);
         }
+        this.emit("stepChange", () => ({ from, to: index }));
 
         this.render();
         return true;
@@ -600,6 +684,7 @@ class Stepper implements StepperHandle
             {
                 this.options.onSaveAsDraft();
             }
+            this.emit("saveDraft", () => this.activeIndex);
         });
         return btn;
     }
@@ -635,7 +720,11 @@ export function createStepper(options: StepperOptions): StepperHandle
         setStepState: (i, s) => inst.setStepState(i, s),
         getCompletionPercent: () => inst.getCompletionPercent(),
         getElement: () => inst.getElement(),
-        destroy: () => inst.destroy()
+        destroy: () => inst.destroy(),
+        setData: (slot, value) => inst.setData(slot, value),
+        on: (channel, handler) => inst.on(channel, handler),
+        getState: () => inst.getState(),
+        setState: (state) => inst.setState(state)
     };
 }
 

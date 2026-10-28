@@ -635,3 +635,287 @@ describe("progress bar", () =>
         stepper.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B5): additive on("stepChange" | "finish" |
+// "saveDraft"), getState/setState and setData. Legacy callbacks fire first.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    function getDraftBtn(): HTMLButtonElement | null
+    {
+        return Array.from(container.querySelectorAll("button"))
+            .find(b => b.textContent === "Save as Draft") ?? null;
+    }
+
+    async function settle(): Promise<void>
+    {
+        for (let i = 0; i < 5; i++) { await Promise.resolve(); }
+    }
+
+    test("on(stepChange)_ClickingNext_HearsFromAndTo_AfterOnStepChange", async () =>
+    {
+        const order: string[] = [];
+        const stepper = createStepper(defaultOpts({
+            onStepChange: (from, to) => order.push(`option:${from}>${to}`),
+        }));
+        const off = stepper.on("stepChange", (p) =>
+        {
+            const { from, to } = p as { from: number; to: number };
+            order.push(`channel:${from}>${to}`);
+        });
+
+        getNextBtn()!.click();
+        await settle();
+        off();
+        getNextBtn()!.click();
+        await settle();
+
+        expect(order).toEqual(["option:0>1", "channel:0>1", "option:1>2"]);
+        stepper.destroy();
+    });
+
+    test("on(stepChange)_WithoutOnStepChange_StillEmits", async () =>
+    {
+        const heard = vi.fn();
+        const stepper = createStepper(defaultOpts());
+        stepper.on("stepChange", heard);
+
+        getNextBtn()!.click();
+        await settle();
+
+        expect(heard).toHaveBeenCalledOnce();
+        expect(heard).toHaveBeenCalledWith({ from: 0, to: 1 });
+        stepper.destroy();
+    });
+
+    test("on(stepChange)_ClickingBack_HearsFromAndTo", async () =>
+    {
+        const heard = vi.fn();
+        const stepper = createStepper(defaultOpts());
+        await stepper.goToStep(2);
+        stepper.on("stepChange", heard);
+
+        getBackBtn()!.click();
+
+        expect(heard).toHaveBeenCalledWith({ from: 2, to: 1 });
+        stepper.destroy();
+    });
+
+    test("on(finish)_ClickingFinish_HearsActiveIndex_AfterOnFinish", async () =>
+    {
+        const order: string[] = [];
+        const stepper = createStepper(defaultOpts({ onFinish: () => order.push("option") }));
+        await stepper.goToStep(2);
+        const off = stepper.on("finish", (p) => order.push(`channel:${String(p)}`));
+
+        getNextBtn()!.click();
+        await settle();
+        off();
+        getNextBtn()!.click();
+        await settle();
+
+        expect(order).toEqual(["option", "channel:2", "option"]);
+        stepper.destroy();
+    });
+
+    test("on(finish)_WithoutOnFinish_StillEmitsAndStillCompletesTheStep", async () =>
+    {
+        const heard = vi.fn();
+        const stepper = createStepper(defaultOpts());
+        await stepper.goToStep(2);
+        stepper.on("finish", heard);
+
+        getNextBtn()!.click();
+        await settle();
+
+        expect(heard).toHaveBeenCalledOnce();
+        expect(heard).toHaveBeenCalledWith(2);
+        expect(stepper.getCompletionPercent()).toBe(67);
+        stepper.destroy();
+    });
+
+    test("on(finish)_FailedValidation_DoesNotEmit", async () =>
+    {
+        const heard = vi.fn();
+        const steps = sampleSteps();
+        steps[2].validate = () => false;
+        const stepper = createStepper(defaultOpts({ steps }));
+        await stepper.goToStep(2);
+        stepper.on("finish", heard);
+
+        getNextBtn()!.click();
+        await settle();
+
+        expect(heard).not.toHaveBeenCalled();
+        stepper.destroy();
+    });
+
+    test("on(saveDraft)_ClickingSaveAsDraft_HearsActiveIndex_AfterOnSaveAsDraft", async () =>
+    {
+        const order: string[] = [];
+        const stepper = createStepper(defaultOpts({
+            showSaveAsDraft: true,
+            onSaveAsDraft: () => order.push("option"),
+        }));
+        await stepper.goToStep(1);
+        const off = stepper.on("saveDraft", (p) => order.push(`channel:${String(p)}`));
+
+        getDraftBtn()!.click();
+        off();
+        getDraftBtn()!.click();
+
+        expect(order).toEqual(["option", "channel:1", "option"]);
+        stepper.destroy();
+    });
+
+    test("on(saveDraft)_WithoutOnSaveAsDraft_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const stepper = createStepper(defaultOpts({ showSaveAsDraft: true }));
+        stepper.on("saveDraft", heard);
+
+        getDraftBtn()!.click();
+
+        expect(heard).toHaveBeenCalledOnce();
+        expect(heard).toHaveBeenCalledWith(0);
+        stepper.destroy();
+    });
+
+    test("on(saveDraft)_WithoutShowSaveAsDraft_NoButtonSoNoEmit", () =>
+    {
+        const stepper = createStepper(defaultOpts());
+        stepper.on("saveDraft", () => undefined);
+
+        expect(getDraftBtn()).toBeNull();
+        stepper.destroy();
+    });
+
+    test("on_HandlerThatThrows_DoesNotBreakLaterHandlersOrTheStepper", async () =>
+    {
+        const heard = vi.fn();
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const stepper = createStepper(defaultOpts());
+        stepper.on("stepChange", () => { throw new Error("boom"); });
+        stepper.on("stepChange", heard);
+
+        getNextBtn()!.click();
+        await settle();
+
+        expect(heard).toHaveBeenCalledOnce();
+        expect(stepper.getActiveStep()).toBe(1);
+        errorSpy.mockRestore();
+        stepper.destroy();
+    });
+
+    test("payloads_ArePlainJson", async () =>
+    {
+        const payloads: unknown[] = [];
+        const stepper = createStepper(defaultOpts({ showSaveAsDraft: true }));
+        stepper.on("stepChange", (p) => payloads.push(p));
+        stepper.on("saveDraft", (p) => payloads.push(p));
+        stepper.on("finish", (p) => payloads.push(p));
+
+        getNextBtn()!.click();
+        await settle();
+        getDraftBtn()!.click();
+        await stepper.goToStep(2);
+        getNextBtn()!.click();
+        await settle();
+
+        expect(payloads.length).toBe(4);
+        for (const p of payloads)
+        {
+            expect(JSON.parse(JSON.stringify(p))).toEqual(p);
+        }
+        stepper.destroy();
+    });
+
+    test("stepChangePayload_IsACopy_HandlerMutationDoesNotReachOtherHandlers", async () =>
+    {
+        const second = vi.fn();
+        const stepper = createStepper(defaultOpts());
+        stepper.on("stepChange", (p) => { (p as { to: number }).to = 99; });
+        stepper.on("stepChange", second);
+
+        getNextBtn()!.click();
+        await settle();
+
+        expect(second).toHaveBeenCalledWith({ from: 0, to: 1 });
+        stepper.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_NamingTheValidChannels", () =>
+    {
+        const stepper = createStepper(defaultOpts());
+
+        expect(() => stepper.on("bogus", () => undefined)).toThrow(/stepChange.*finish.*saveDraft/);
+        stepper.destroy();
+    });
+
+    test("setData_Throws_NamingTheSettersToUse", () =>
+    {
+        const stepper = createStepper(defaultOpts());
+
+        expect(() => stepper.setData("steps", [])).toThrow(/Stepper.*no data slots.*goToStep/);
+        stepper.destroy();
+    });
+
+    test("getState_SetState_RoundTripActiveStep", async () =>
+    {
+        const stepper = createStepper(defaultOpts());
+        await stepper.goToStep(1);
+        const captured = stepper.getState();
+        expect(captured).toEqual({ activeStep: 1 });
+
+        await stepper.goToStep(2);
+        expect(stepper.getState()).toEqual({ activeStep: 2 });
+
+        stepper.setState(captured);
+        await settle();
+
+        expect(stepper.getActiveStep()).toBe(1);
+        expect(stepper.getState()).toEqual(captured);
+        stepper.destroy();
+    });
+
+    test("setState_SameStep_DoesNotNavigate", async () =>
+    {
+        const onStepChange = vi.fn();
+        const stepper = createStepper(defaultOpts({ onStepChange }));
+
+        stepper.setState({ activeStep: 0 });
+        await settle();
+
+        expect(onStepChange).not.toHaveBeenCalled();
+        stepper.destroy();
+    });
+
+    test("setState_RejectedGoToStep_IsLoggedNotUnhandled", async () =>
+    {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const steps = sampleSteps();
+        steps[0].validate = () => { throw new Error("validate failed"); };
+        const stepper = createStepper(defaultOpts({ steps }));
+
+        stepper.setState({ activeStep: 2 });
+        await settle();
+
+        expect(errorSpy).toHaveBeenCalled();
+        errorSpy.mockRestore();
+        stepper.destroy();
+    });
+
+    test("destroy_ClearsHandlers_SoLaterNavigationHearsNothing", async () =>
+    {
+        const heard = vi.fn();
+        const stepper = createStepper(defaultOpts());
+        stepper.on("stepChange", heard);
+
+        stepper.destroy();
+        await stepper.goToStep(1);
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+});
