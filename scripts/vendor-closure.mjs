@@ -216,6 +216,42 @@ const ASSETS = [
         note: "whole dist tree; set vditor's `cdn` option to /lib/vditor-3.11.2",
     },
     {
+        // MarkdownRenderer's parser (window.marked), so the A2UI adapter can
+        // load it for DocViewer instead of the host fetching it from a public
+        // CDN (#51, ADR-230). The UMD build is the one that assigns a global.
+        name: "marked",
+        kind: "copy",
+        from: "node_modules/marked/lib/marked.umd.js",
+        global: "marked",
+        note: "MarkdownRenderer's parser; DocViewer reaches it through MarkdownRenderer (#51)",
+    },
+    {
+        // LaTeX rendering (window.katex) for LatexEditor's preview and
+        // MarkdownRenderer's math (#51, ADR-230). 0.19.0 rather than 0.19.1:
+        // the newer one was six days old when pinned and fixes only a parsing
+        // edge case; every KaTeX advisory was patched by 0.18.2.
+        name: "katex",
+        kind: "copy",
+        from: "node_modules/katex/dist/katex.min.js",
+        global: "katex",
+        note: "LatexEditor's preview and MarkdownRenderer's math (#51)",
+    },
+    {
+        // KaTeX's stylesheet and the fonts it pulls: a directory, like
+        // font-awesome. The stylesheet carries the SRI hash; fonts cannot.
+        name: "katex-css",
+        kind: "tree",
+        assetType: "stylesheet",
+        version: "0.19.0",
+        pkg: "katex",
+        entry: "katex.min.css",
+        include: [
+            { from: "node_modules/katex/dist/katex.min.css", to: "katex.min.css" },
+            { from: "node_modules/katex/dist/fonts", to: "fonts" },
+        ],
+        note: "the stylesheet katex renders against, with its fonts (#51)",
+    },
+    {
         name: "font-awesome",
         kind: "tree",
         assetType: "stylesheet",
