@@ -19,9 +19,10 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance (readiness step 2 B4): per-person clicks
- * render through PersonChip, which the A2UI adapter does not load, so over
- * agent protocols onClick is host-only and nothing is emitted.
+ * Declared at `surface` conformance (readiness step 2 P1, ADR-230): with
+ * `clickable`, a person in the expanded list emits "click" through an
+ * additive on(), and getState() restores whether the list is expanded. Its
+ * avatars render through PersonChip, which the adapter loads first.
  */
 export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
 {
@@ -39,15 +40,16 @@ export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
     },
 
     affords: [],
-    emits: [],
+    emits: [
+        { name: "click", payload: "record", multi: false, legacyOption: "onClick" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["expanded"],
 
     // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
     protocol: {
         hostOnly: {
-            onClick: "Per-person clicks render through PersonChip, which the A2UI adapter does not load yet.",
             onExpand: "Fires when the list opens; that is view state, not information for an agent.",
             onCollapse: "Fires when the list closes; that is view state, not information for an agent.",
         },
@@ -71,6 +73,8 @@ export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
                 },
             },
         },
+        // Clickable avatars are PersonChips; without it the fallback avatars ignore clicks (ADR-230, #51).
+        dependencies: { components: ["personchip"] },
     },
 
     // weight.js is overwritten by the build from the compiled bundle size.
@@ -79,6 +83,6 @@ export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 120, h: 32 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
