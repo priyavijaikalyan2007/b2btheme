@@ -71,19 +71,77 @@ export function sameComponent(a: ComponentContextLike, b: ComponentContextLike):
 }
 
 /**
- * Reads a data-model value into an option value.
+ * Reads a data-model value into an option value, reviving the ISO strings at
+ * each date path into Dates. A path is relative to the value: "" is the value
+ * itself, ".start" a field, "[]" each item, joined: ".days[]" (readiness step 2
+ * B2). An absent field is left alone; the input is never mutated.
  *
- * @param value  - The resolved value.
- * @param isDate - True when the prop's literal arm is a date-time string.
+ * @param value - The resolved value.
+ * @param paths - The prop's date paths (datePathsFor).
  * @returns The option value, or the reason it is not one.
  */
-export function fromWire(value: unknown, isDate: boolean): WireResult
+export function fromWire(value: unknown, paths: readonly string[]): WireResult
 {
-    if (!isDate) { return { ok: true, value }; }
+    let out = value;
+
+    for (const path of paths)
+    {
+        const r = revive(out, path.match(/\.[^.[\]]+|\[\]/g) ?? [], "");
+
+        if (!r.ok) { return r; }
+
+        out = r.value;
+    }
+
+    return { ok: true, value: out };
+}
+
+/**
+ * One prop's date paths, relative to it, from a descriptor's `dates`.
+ *
+ * @param dates - The descriptor's date paths, e.g. ["due", "value.start"].
+ * @param prop  - A catalog prop name.
+ */
+export function datePathsFor(dates: readonly string[], prop: string): string[]
+{
+    return dates.filter((p) => p === prop || p.startsWith(`${prop}.`) || p.startsWith(`${prop}[]`))
+        .map((p) => p.slice(prop.length));
+}
+
+function revive(value: unknown, segments: string[], where: string): WireResult
+{
+    if (segments.length === 0) { return toDate(value, where); }
+
+    const [head, ...rest] = segments;
+
+    if (head === "[]")
+    {
+        if (!Array.isArray(value)) { return { ok: true, value }; }
+
+        const items = value.map((v, i) => revive(v, rest, `${where}[${i}]`));
+        const bad = items.find((r) => !r.ok);
+
+        return bad ?? { ok: true, value: items.map((r) => (r as { value: unknown }).value) };
+    }
+
+    const key = head.slice(1);
+
+    if (!isPlainObject(value) || value[key] === undefined) { return { ok: true, value }; }
+
+    const r = revive(value[key], rest, `${where}.${key}`);
+
+    return r.ok ? { ok: true, value: { ...value, [key]: r.value } } : r;
+}
+
+function toDate(value: unknown, where: string): WireResult
+{
+    if (value === null) { return { ok: true, value }; }
 
     if (typeof value === "string" && !Number.isNaN(Date.parse(value))) { return { ok: true, value: new Date(value) }; }
 
-    return { ok: false, reason: `expected an ISO 8601 date-time string, got ${JSON.stringify(value)}` };
+    const at = where === "" ? "" : `${where.replace(/^\./, "")}: `;
+
+    return { ok: false, reason: `${at}expected an ISO 8601 date-time string, got ${JSON.stringify(value)}` };
 }
 
 /**

@@ -31,7 +31,7 @@ import { logDebug, logInfo } from "./log";
 import { PropTracker, type Delivery } from "./props";
 import { wireProviders, type WiredProviders } from "./providers";
 import { changeOptions, dispatchActionProp, wireRoundTrip, type RoundTrip } from "./roundtrip";
-import { bindingPath, fromWire, sameComponent, sameValue, toWire } from "./values";
+import { bindingPath, datePathsFor, fromWire, sameComponent, sameValue, toWire } from "./values";
 import type { AdapterDescriptor, ComponentContextLike, Sub, Validators } from "./types";
 
 /** What a per-tag subclass supplies. */
@@ -299,7 +299,7 @@ class Binding
         }
 
         this.#invalid.delete(name);
-        const wire = fromWire(value, this.#env.descriptor.dates.includes(name));
+        const wire = fromWire(value, datePathsFor(this.#env.descriptor.dates, name));
 
         if (wire.ok) { this.#values.set(name, wire.value); }
 
@@ -327,7 +327,7 @@ class Binding
                 + "in the catalog.";
         }
 
-        const wire = fromWire(value, d.dates.includes(name));
+        const wire = fromWire(value, datePathsFor(d.dates, name));
 
         return wire.ok ? undefined : `${d.name}.${name}: ${wire.reason}.`;
     }
@@ -439,7 +439,14 @@ class Binding
         const d = this.#env.descriptor;
         const options = { ...Object.fromEntries(this.#values), ...changeOptions(d, (v) => this.#onUserValue(v)),
             ...providers.options };
-        const handle = invokerFor(d)(factory, container.id, options) as Record<string, unknown> | null;
+        // A component that normalises its own initial value fires onChange from
+        // its constructor (SprintPicker). That is not a user edit: no write-back,
+        // and no second mount from the value it would write (readiness step 2 B2).
+        this.#applying = true;
+        let handle: Record<string, unknown> | null;
+
+        try { handle = invokerFor(d)(factory, container.id, options) as Record<string, unknown> | null; }
+        finally { this.#applying = false; }
 
         if (!handle || typeof handle !== "object")
         {

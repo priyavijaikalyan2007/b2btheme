@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { bindingPath, fromWire, isDynamic, sameComponent, sameValue, toWire } from "./values";
+import { bindingPath, datePathsFor, fromWire, isDynamic, sameComponent, sameValue, toWire } from "./values";
 import type { ComponentContextLike } from "./types";
 
 describe("bindingPath and isDynamic", () =>
@@ -70,7 +70,7 @@ describe("fromWire and toWire", () =>
 {
     test("a date prop turns an ISO string into a Date", () =>
     {
-        const r = fromWire("2026-10-26T10:00:00.000Z", true);
+        const r = fromWire("2026-10-26T10:00:00.000Z", [""]);
 
         expect(r.ok).toBe(true);
         expect(r.ok && (r.value as Date).toISOString()).toBe("2026-10-26T10:00:00.000Z");
@@ -78,15 +78,45 @@ describe("fromWire and toWire", () =>
 
     test("a date prop rejects a non-date value with a reason", () =>
     {
-        expect(fromWire("not a date", true)).toEqual({ ok: false, reason: 'expected an ISO 8601 date-time string, got "not a date"' });
-        expect(fromWire(5, true)).toEqual({ ok: false, reason: "expected an ISO 8601 date-time string, got 5" });
+        expect(fromWire("not a date", [""])).toEqual({ ok: false, reason: 'expected an ISO 8601 date-time string, got "not a date"' });
+        expect(fromWire(5, [""])).toEqual({ ok: false, reason: "expected an ISO 8601 date-time string, got 5" });
     });
 
     test("a non-date prop passes through unchanged", () =>
     {
         const v = { a: 1 };
 
-        expect(fromWire(v, false)).toEqual({ ok: true, value: v });
+        expect(fromWire(v, [])).toEqual({ ok: true, value: v });
+    });
+
+    test("nested dates revive along their paths: object fields and array items (B2)", () =>
+    {
+        const wire = { name: "S1", start: "2026-01-05T00:00:00.000Z", days: ["2026-01-06T00:00:00.000Z"] };
+        const r = fromWire(wire, [".start", ".days[]"]);
+
+        expect(r.ok).toBe(true);
+        const v = (r as { value: { name: string; start: Date; days: Date[] } }).value;
+        expect(v.name).toBe("S1");
+        expect(v.start).toBeInstanceOf(Date);
+        expect(v.days[0]).toBeInstanceOf(Date);
+        expect(wire.start).toBe("2026-01-05T00:00:00.000Z");
+    });
+
+    test("a bad nested date names where it is; an absent optional field is left alone", () =>
+    {
+        expect(fromWire({ start: "soon" }, [".start"]))
+            .toEqual({ ok: false, reason: 'start: expected an ISO 8601 date-time string, got "soon"' });
+        expect(fromWire({ name: "S1" }, [".start"])).toEqual({ ok: true, value: { name: "S1" } });
+    });
+
+    test("datePathsFor gives a prop's paths relative to it", () =>
+    {
+        const dates = ["due", "value.start", "value.days[]", "values", "list[]"];
+
+        expect(datePathsFor(dates, "due")).toEqual([""]);
+        expect(datePathsFor(dates, "value")).toEqual([".start", ".days[]"]);
+        expect(datePathsFor(dates, "list")).toEqual(["[]"]);
+        expect(datePathsFor(dates, "title")).toEqual([]);
     });
 
     test("toWire turns Dates into ISO strings through arrays and plain objects", () =>

@@ -125,11 +125,73 @@ function assetsFor(dir, assetExists)
 }
 
 /** Data props whose literal arm is a date-time string (spec §5.5). */
+/**
+ * Every date-time position in a component's data props, as a path the adapter
+ * revives ISO strings at: "due", "value.startDate", "disabledDates[]" (B2).
+ * A Date nested in an object or an array crosses the wire as a string too.
+ */
 function datesFor(catalog, name, surface)
 {
     const props = catalog.components[name].allOf[2].properties;
 
-    return surface.dataProps.map((d) => d.name).filter((p) => props[p]?.anyOf?.[0]?.format === "date-time");
+    return surface.dataProps.flatMap((d) => datePaths(props[d.name]?.anyOf?.[0], d.name, catalog, []));
+}
+
+/**
+ * The date-time paths under one schema. A recursive type with a date in it
+ * cannot be described by finite paths, so it is a build error rather than a
+ * date left as a string.
+ */
+function datePaths(schema, at, catalog, seen)
+{
+    if (!schema || typeof schema !== "object") { return []; }
+
+    if (typeof schema.$ref === "string") { return refDatePaths(schema.$ref, at, catalog, seen); }
+
+    if (schema.type === "string" && schema.format === "date-time") { return [at]; }
+
+    const arms = [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])];
+
+    if (arms.length > 0) { return [...new Set(arms.flatMap((a) => datePaths(a, at, catalog, seen)))]; }
+
+    if (schema.type === "array") { return datePaths(schema.items, `${at}[]`, catalog, seen); }
+
+    return Object.entries(schema.properties ?? {}).flatMap(([k, v]) => datePaths(v, `${at}.${k}`, catalog, seen));
+}
+
+function refDatePaths(ref, at, catalog, seen)
+{
+    if (!ref.startsWith("#/$defs/")) { return []; }
+
+    const def = catalog.$defs?.[ref.slice("#/$defs/".length)];
+
+    if (!seen.includes(ref)) { return datePaths(def, at, catalog, [...seen, ref]); }
+
+    if (containsDate(def, catalog, []))
+    {
+        throw new Error(`${at}: ${ref} is recursive and holds a date-time, so the A2UI adapter cannot revive every `
+            + "date in it. Make the date a string in the options type, or declare the member host-only.");
+    }
+
+    return [];
+}
+
+/** Whether a schema holds a date-time anywhere, following refs once each. */
+function containsDate(schema, catalog, seen)
+{
+    if (!schema || typeof schema !== "object") { return false; }
+
+    if (typeof schema.$ref === "string")
+    {
+        const key = schema.$ref;
+        return key.startsWith("#/$defs/") && !seen.includes(key)
+            && containsDate(catalog.$defs?.[key.slice("#/$defs/".length)], catalog, [...seen, key]);
+    }
+
+    if (schema.type === "string" && schema.format === "date-time") { return true; }
+
+    return [...(schema.oneOf ?? []), ...(schema.anyOf ?? []), schema.items, ...Object.values(schema.properties ?? {})]
+        .some((s) => containsDate(s, catalog, seen));
 }
 
 function tagCollisions(descriptors)
