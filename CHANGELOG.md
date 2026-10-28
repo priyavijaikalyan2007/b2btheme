@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **A2UI providers and TreeView** (ADR-225, #31). A catalog component can now ask the agent for data: TreeView's lazy children and server-side search are answered by the agent through `on<Request>` and a bound `<request>Result`. `createOutcropCatalog` takes `providerTimeoutMs` (default 30 s); an unanswered request reports `OUTCROP_PROVIDER_TIMEOUT`. TreeView is in catalog v1. No component's options, callbacks or methods changed.
 - **Agent UI readiness, step 1** (ADR-222). Manifests can now say what an agent needs to know:
   - **`protocol.change`** declares how `onChange` maps to `value`. The build checks it against the TypeScript types and fails with `change-mismatch` instead of letting the adapter write the wrong type back.
   - **`agent.useWhen` / `agent.avoidWhen`** are required for every catalog component and lead its A2UI description. `avoidWhen` must name the component to use instead.
@@ -24,6 +25,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **TreeView's double-click activation reaches `on("activate")` subscribers.** Only Enter emitted the declared `activate` channel; a double-click called `onActivate` alone, so the Dynamic UI canvas and the A2UI adapter never heard it. `onActivate` is still called exactly once. ADR-225.
 - **GraphLegend over A2UI stays inside its surface** (#41). It's a floating overlay, and the adapter gave it nothing to float in, so it landed in the page's corner, clipped. Components that declare `presentation: "overlay"` now mount in a positioned box as tall as their default height. `createGraphLegend()` is unchanged. ADR-224.
 - **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.
 

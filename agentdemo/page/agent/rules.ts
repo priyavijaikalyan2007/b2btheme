@@ -23,6 +23,11 @@ export const AGENT_RULES = [
     "- **Bind `eventData` to read event payloads.** The component writes each payload to "
         + "`<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can "
         + "read it. Without `eventData` the action still fires, with no payload.",
+    "- **Answer a component's requests (providers).** A component that needs data sends `on<Request>`, with the "
+        + "request at `<eventData path>/<request>`. It asks only when `on<Request>`, `<request>Result` (bound to a "
+        + "path) and `eventData` are all set. Answer each request once, with `updateDataModel` at the path bound to "
+        + "`<request>Result`, with a value matching the `$defs` entry its description names. It asks again only "
+        + "after you answer; a request you never answer fails with `OUTCROP_PROVIDER_TIMEOUT`.",
     "- **Expect these error codes** through the surface:",
     "",
     "  | Code | Meaning | Component state |",
@@ -35,4 +40,6 @@ export const AGENT_RULES = [
         + "not mounted |",
     "  | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the "
         + "element is in a shadow root | not mounted |",
+    "  | `OUTCROP_PROVIDER_TIMEOUT` | you did not answer an `on<Request>` in time (`path` is the `<request>Result` "
+        + "path) | handles the failure as it would a failed load |",
 ].join("\n");

@@ -80,7 +80,13 @@ processor.onSurfaceDeleted((id) => document.getElementById(`surface-${id}`)?.rem
 onAgentMessages((messages) => processor.processMessages(messages));
 ```
 
-If your bundler cannot import a URL, mark it external, or load the adapter with `await import(url)`. Both `options` values are **page-global**: every `createOutcropCatalog` call on a page must pass the same ones.
+If your bundler cannot import a URL, mark it external, or load the adapter with `await import(url)`. Every `options` value is **page-global**: every `createOutcropCatalog` call on a page must pass the same ones.
+
+| Option | Default | Meaning |
+|---|---|---|
+| `assetBaseUrl` | (required) | where the library's `dist/` tree is served; no trailing slash |
+| `injectBaseTheme` | `false` | also load `<assetBaseUrl>/css/custom.css` (§2) |
+| `providerTimeoutMs` | `30000` | how long a component's data request waits for the agent's answer, in milliseconds, before `OUTCROP_PROVIDER_TIMEOUT` (ADR-225) |
 
 ## 4. React recipe
 
@@ -168,6 +174,7 @@ The adapter reports through `surface.onError`. Forward each one to the agent as 
 | `OUTCROP_BINDING_LOST` (with `path`) | a bound value became undefined after mount (not for a clearable `value`; see below) | the last value stays | restore the data, or drop the binding |
 | `OUTCROP_ASSET_LOAD_FAILED` | a script or stylesheet failed to load | the component stays empty | check `assetBaseUrl` and your CSP |
 | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a handle method is missing, or the element sits in a shadow root | the component stays empty | read the message; render surfaces in the light DOM |
+| `OUTCROP_PROVIDER_TIMEOUT` (with `path`) | the agent did not answer a component's data request (`on<Request>`) within `providerTimeoutMs` | the component handles it as a failed load (TreeView: the node stays collapsed) | the agent answers at the `<request>Result` path, once per request; or raise `providerTimeoutMs` |
 
 While a bound value has not arrived yet, the component waits, empty, with `aria-busy="true"`. `web_core` itself warns `MISSING_DATA_BINDING`.
 
@@ -175,7 +182,7 @@ While a bound value has not arrived yet, the component waits, empty, with `aria-
 
 ## 8. Which components
 
-- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 8 today.
+- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 9 today.
 - `/agentui-report.json` lists the components not yet in the catalog, and why.
 - More arrive as they are classified. A component in the catalog is guaranteed by the build to work through the adapter: gates G1–G3 in [`A2UI.md`](../A2UI.md).
 - Containers that hold child components are not in the catalog yet.
