@@ -372,10 +372,11 @@ function validateWeightAndSize(
 }
 
 /**
- * Validates the conformance level and the obligations it implies.
+ * Validates the conformance level, the state keys and the regions.
  *
- * A manifest claiming `surface` must declare the state it can restore;
- * otherwise the canvas cannot virtualize it without losing the user's place.
+ * A `surface` manifest may declare no state keys: a component with nothing
+ * to restore, such as a clickable badge, still emits (ADR-229). Declaring the
+ * view state it does have (scroll, expansion, selection) is a review rule.
  *
  * @param m      - The candidate manifest.
  * @param issues - Accumulator appended to in place.
@@ -424,16 +425,6 @@ function validateConformance(
                     + "address another component's region by accident."));
             }
         }
-    }
-
-    if (m.conformance === "surface" && m.stateKeys.length === 0)
-    {
-        issues.push(issue(
-            "stateKeys",
-            "A surface-conformant component declares no state keys, so the "
-            + "canvas cannot restore it after virtualizing it.",
-            "Declare the keys getState() returns, or lower conformance to "
-            + "\"display\"."));
     }
 }
 

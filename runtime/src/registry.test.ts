@@ -327,7 +327,7 @@ describe("validateManifest", () =>
         expect(res.issues.some((i) => i.path === "weight.mountCost")).toBe(true);
     });
 
-    test("requires a surface-level manifest to declare state keys", () =>
+    test("allows a surface manifest with no view state (ADR-229)", () =>
     {
         const res = validateManifest(manifest("x", {
             conformance: "surface",
@@ -336,7 +336,7 @@ describe("validateManifest", () =>
             accepts: [],
         }));
 
-        expect(res.ok).toBe(false);
+        expect(res.issues).toEqual([]);
     });
 
     test("allows a display-level manifest with no channels or slots", () =>
