@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B3): its onSearch is a
+ * provider an A2UI agent answers (ADR-225). It emits no channels; it restores
+ * its selection through getState()/setState().
  */
 export const PEOPLEPICKER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,34 @@ export const PEOPLEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-people",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user find and pick one or more people by name, with each search answered by the agent.",
+        avoidWhen: "For free-form tags use Tagger; for a fixed list of options use ChoicePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        providers: {
+            onSearch: { request: "search" },
+        },
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+            // The URL-fetch rule (readiness step 2 §4).
+            searchUrl: "The component fetches this URL from the user's browser with the host's credentials; "
+                + "an agent must not choose it.",
+            onSelect: "Fires per picked person; the two-way value already carries the selection.",
+            onDeselect: "Fires per removed person; the two-way value already carries the selection.",
+            onSearchError: "A failed search already reaches the agent as OUTCROP_PROVIDER_TIMEOUT.",
+        },
+    },
 
     regions: ["peoplepicker:dropdown"],
 
@@ -47,6 +68,6 @@ export const PEOPLEPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 40 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

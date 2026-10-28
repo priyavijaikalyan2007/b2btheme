@@ -33,11 +33,25 @@ export const ANGLEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-arrow-clockwise",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user set an angle in degrees with a dial, such as a rotation or a gradient direction.",
+        avoidWhen: "For a plain number on a scale use RangeSlider; for a typed number use TextField.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 13251, mountCost: "light", holdsResources: false },

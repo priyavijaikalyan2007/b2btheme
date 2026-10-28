@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B3): onChange cannot map
+ * to the numeric value, so over A2UI it is a "change" event through an
+ * additive on(), and value is one-way. It restores value and range.
  */
 export const SLIDER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,32 @@ export const SLIDER_MANIFEST: CapabilityManifest =
     icon: "bi-sliders",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose a number, or a low-high range, by dragging along a scale with steps.",
+        avoidWhen: "For an angle use AnglePicker; for a typed number use TextField.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "change", payload: "scalar", multi: false, legacyOption: "onChange" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value", "range"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        // A2UI's basic catalog already has a Slider; this one also does ranges.
+        name: "RangeSlider",
+        // onChange passes number | { low, high }, which cannot map to the numeric value: value is one-way.
+        change: "event",
+        hostOnly: {
+            formatValue: "A formatting function; the default number format applies over A2UI.",
+            onSlideStart: "Fires when dragging starts; that is view state, not information for an agent.",
+            onSlideEnd: "Fires when dragging ends; the change event already carries the value.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 9674, mountCost: "light", holdsResources: false },
@@ -45,6 +64,6 @@ export const SLIDER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 40 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

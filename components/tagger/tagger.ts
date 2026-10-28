@@ -42,21 +42,36 @@ export interface TagItem
 /** Configuration options for the Tagger component. */
 export interface TaggerOptions
 {
+    /** Tags shown when the component opens. */
     tags?: TagItem[];
+    /** Categories of known tags offered in the dropdown, each with its values. */
     taxonomy?: TagCategory[];
+    /** Allow tags that are not in the taxonomy. Default: true. */
     allowFreeform?: boolean;
+    /** The most tags allowed; unset means no limit. */
     maxTags?: number;
+    /** Input placeholder text. Default: "Add tag...". */
     placeholder?: string;
+    /** How chips are coloured: by category, by a hash of the value, or not at all. Default: "category". */
     colorMode?: "category" | "hash" | "none";
     validator?: (value: string) => boolean | string;
+    /** What adding an existing tag does: reject it with a message, or ignore it silently. Default: "reject". */
     duplicateMode?: "reject" | "ignore";
+    /** Show each chip's category name. Default: true. */
     showCategoryBadge?: boolean;
+    /** Size variant. Default: "default". */
     size?: "sm" | "default" | "lg";
+    /** Disable the tagger. */
     disabled?: boolean;
+    /** Show the tags without allowing changes. */
     readonly?: boolean;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** The most suggestions to list. Accepted but not yet applied by the component. */
     maxDropdownItems?: number;
+    /** Characters to type before suggestions are filtered. Default: 0. */
     minFilterLength?: number;
+    /** Milliseconds to wait after typing before filtering suggestions. Default: 150. */
     filterDebounceMs?: number;
     onAdd?: (tag: TagItem) => void;
     onRemove?: (tag: TagItem) => void;

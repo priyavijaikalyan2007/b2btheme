@@ -33,11 +33,27 @@ export const COLORPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-palette",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick any colour, with a palette, a colour field and hex or RGB entry.",
+        avoidWhen: "For a drawing tool's stroke and fill use ToolColorPicker; for a gradient use GradientPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+            onInput: "Fires continuously while dragging; the two-way value carries the committed colour.",
+            triggerElement: "Takes a DOM element to anchor to, which JSON cannot carry.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 23042, mountCost: "moderate", holdsResources: false },

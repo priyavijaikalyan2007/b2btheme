@@ -337,12 +337,22 @@ describe("surface contract", () =>
         pp.destroy();
     });
 
-    test("on_AnyChannel_AndSetData_Throw", () =>
+    // The surface contract's on() returns an unsubscribe for any channel (the
+    // runtime suite probes it), so with no channels it warns, never calls back.
+    test("on_AnyChannel_WarnsAndReturnsAnUnsubscribe_AndSetDataThrows", () =>
     {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
         const pp = createPeoplePicker("test-peoplepicker", {});
+        const heard = vi.fn();
 
-        expect(() => pp.on("change", () => undefined)).toThrow("emits no channels");
+        const off = pp.on("change", heard);
+        pp.setValue([MOCK_PEOPLE[0]]);
+        off();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(warn.mock.calls.flat().join(" ")).toContain("emits no channels");
         expect(() => pp.setData("selected", [])).toThrow("no data slots");
         pp.destroy();
+        warn.mockRestore();
     });
 });
