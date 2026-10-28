@@ -51,7 +51,8 @@ export const LAYOUTPICKER_MANIFEST: CapabilityManifest =
     protocol: {
         change: { valueFrom: "id" },
         hostOnly: {
-            "customAlgorithms[].thumbnail": "A function that draws into an SVG element; JSON cannot carry it, so custom thumbnails stay host-only.",
+            "customAlgorithms[].thumbnail":
+                "A function that draws into an SVG element; JSON cannot carry it, so custom thumbnails stay host-only.",
         },
     },
 
