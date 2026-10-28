@@ -44,6 +44,12 @@ Agent ──messages──► Host's MessageProcessor ──► Renderer ──�
   <html data-bs-theme="light">   <!-- or "dark" -->
   ```
 
+- **Bootstrap Icons on your page (required):** components draw their icons with it, and some controls are icon-only, such as Breadcrumb's actions caret. Without it they have no size and can't be clicked.
+
+  ```html
+  <link rel="stylesheet" href="https://static.outcrop.us/icons/bootstrap-icons.css">
+  ```
+
   Our components are styled by this stylesheet. It is Bootstrap plus our design tokens, so **it also restyles your page's own buttons, forms and typography**. That is why adding it is your decision.
 
   For a demo, prototype or agent-only page you can opt in to `injectBaseTheme: true` instead (§3). The adapter then adds the stylesheet itself the first time a component appears. It **never** sets `data-bs-theme`; light or dark is yours to choose. The agent's `createSurface.theme.primaryColor` is ignored, because one colour cannot reproduce the hover, focus and contrast shades derived from our primary token.

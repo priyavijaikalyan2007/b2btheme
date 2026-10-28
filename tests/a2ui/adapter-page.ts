@@ -45,8 +45,11 @@ export async function open(page: Page, renderer: "lit" | "react", query: Record<
 
         if (name.endsWith(".html"))
         {
+            // The page a host sets up (docs/A2UI_INTEGRATION_GUIDE.md §2): the icon font, and the base theme
+            // unless the test has the adapter inject it.
             await route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8">`
-                + `${themeLink}</head><body><script type="module" src="/__a2ui/${renderer}.js"></script></body></html>` });
+                + `<link rel="stylesheet" href="/icons/bootstrap-icons.css">${themeLink}</head><body>`
+                + `<script type="module" src="/__a2ui/${renderer}.js"></script></body></html>` });
             return;
         }
 
