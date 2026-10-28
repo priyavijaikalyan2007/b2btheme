@@ -34,14 +34,16 @@ const SHAPE_PLURALS = Object.freeze({
     timeseries: "timeseries", document: "documents", media: "media", geo: "geos", diff: "diffs",
 });
 const PREAMBLE = "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and "
-    + "functions, which this catalog re-exports. Every data property, <request>Result included, accepts a "
-    + "literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions. "
+    + "functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding "
+    + "or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts "
+    + "only a binding. "
     + "Each event a component emits has an on<Event> action property. A component whose events or "
     + "requests carry a payload has one binding-only eventData property: bind it to a path, and the component "
     + "writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending "
     + "the matching action, so read that path in the action's context; the context is resolved after the "
     + "write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound "
-    + "to its <request>Result property. A two-way value property receives the user's changes at its bound "
+    + "to its <request>Result property, with a value matching the $defs entry its description names, once per "
+    + "request. A two-way value property receives the user's changes at its bound "
     + "path. Some two-way components also send an action when the value changes; that action carries no "
     + "payload of its own, so read the new value through the path bound to value.";
 
@@ -134,12 +136,12 @@ function entryFor({ manifest, surface, schema })
     const { root, defs } = relocateDefs(schema, name);
     const entries = [...dataProps(surface, root, manifest.name), ...eventDataProp(surface),
         ...channelProps(surface, manifest.name),
-        ...providerProps(surface, root, manifest.name), ...actionProps(surface)];
+        ...providerProps(surface, name), ...actionProps(surface)];
     const props = Object.fromEntries([["component", { const: name }], ...entries]);
     const dataNames = new Set(surface.dataProps.map((d) => d.name));
 
     return {
-        name, defs,
+        name, defs: { ...defs, ...providerDefs(surface, root, manifest.name, name) },
         violations: propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
         entry: {
             type: "object",
@@ -256,22 +258,34 @@ function payloadPhrase(e, component)
     return e.multi ? `one or more ${plural}` : `a ${e.payload}`;
 }
 
-/** Each provider: on<Request> Action (request under eventData) and <request>Result (agent answers). */
-function providerProps(surface, root, component)
+/**
+ * Each provider: an on<Request> Action (request under eventData) and a
+ * binding-only <request>Result. A literal cannot answer a request, so the
+ * answer's schema lives at $defs["<Component>__<request>Result"] and the
+ * description names it (ADR-225, spec S7).
+ */
+function providerProps(surface, name)
 {
-    return surface.providers.flatMap((p) =>
+    return surface.providers.flatMap((p) => [
+        [p.actionProp, { description: `Sent when the component needs "${p.request}" answered. Its request is `
+            + `at <eventData path>/${p.request}. Answer with updateDataModel at the path bound to ${p.response}.`,
+        $ref: ACTION_REF }],
+        [p.response, { description: `Bind to the path you will answer ${p.actionProp} at with updateDataModel, and `
+            + `write a value matching #/$defs/${name}__${p.response} there. A literal cannot answer a request.`,
+        ...BINDING }],
+    ]);
+}
+
+/** Each provider's answer schema, relocated to the catalog root as <Component>__<request>Result. */
+function providerDefs(surface, root, component, name)
+{
+    return Object.fromEntries(surface.providers.map((p) =>
     {
-        const { description, ...response } = requireProperty(root, component, "provider response", p.response);
+        const { description, ...answer } = requireProperty(root, component, "provider response", p.response);
         void description;
 
-        return [
-            [p.actionProp, { description: `Sent when the component needs "${p.request}" answered. Its request is `
-                + `at <eventData path>/${p.request}. Answer with updateDataModel at the path bound to ${p.response}.`,
-            $ref: ACTION_REF }],
-            [p.response, { description: `Bind to the path you will answer ${p.actionProp} at with updateDataModel.`,
-                ...literalBindingOrCall(response) }],
-        ];
-    });
+        return [`${name}__${p.response}`, answer];
+    }));
 }
 
 /** Each manifest action not merged into a same-named channel: an on<Id> Action. */

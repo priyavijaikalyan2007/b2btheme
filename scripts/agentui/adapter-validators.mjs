@@ -34,6 +34,20 @@ export function literalArmPointer(catalogId, name, prop)
 }
 
 /**
+ * The JSON pointer of a provider's answer schema: catalog.mjs relocates it to
+ * $defs["<Name>__<resultProp>"] (ADR-225).
+ *
+ * @param catalogId  - The catalog's $id.
+ * @param name       - Catalog component name.
+ * @param resultProp - The provider's <request>Result prop.
+ * @returns The absolute schema reference.
+ */
+export function resultDefPointer(catalogId, name, resultProp)
+{
+    return `${catalogId}#/$defs/${name}__${resultProp}`;
+}
+
+/**
  * Ajv standalone ESM source exporting `validators`, keyed "<Name>.<prop>".
  *
  * @param input - { catalog, basic, commonTypes, descriptors }.
@@ -45,19 +59,48 @@ export function literalArmPointer(catalogId, name, prop)
 export function compileValidators({ catalog, basic, commonTypes, descriptors })
 {
     const ajv = new Ajv2020({ code: { source: true, esm: true }, strict: false, validateFormats: false });
-    const keys = descriptors.flatMap((d) => Object.keys(d.props).map((prop) => ({ key: `${d.name}.${prop}`, name: d.name, prop })));
+    const keys = [...propKeys(catalog, descriptors), ...resultKeys(catalog, descriptors)];
     const exportNames = new Map(keys.map(({ key }, i) => [key, `v${i}_${key.replace(/[^A-Za-z0-9_]/g, "_")}`]));
 
     ajv.addSchema(commonTypes);
     ajv.addSchema(basic);
     ajv.addSchema(catalog);
 
-    for (const { key, name, prop } of keys) { checkArm(catalog, key, name, prop); }
+    for (const k of keys) { k.check(); }
 
-    const refs = Object.fromEntries(keys.map(({ key, name, prop }) => [exportNames.get(key), literalArmPointer(catalog.$id, name, prop)]));
+    const refs = Object.fromEntries(keys.map(({ key, pointer }) => [exportNames.get(key), pointer]));
     const table = keys.map(({ key }) => `    ${JSON.stringify(key)}: ${exportNames.get(key)},`).join("\n");
 
     return `${standaloneCode(ajv, refs)}\nexport const validators = {\n${table}\n};\n`;
+}
+
+/** One validator per data prop, compiled from its literal arm. */
+function propKeys(catalog, descriptors)
+{
+    return descriptors.flatMap((d) => Object.keys(d.props).map((prop) => ({ key: `${d.name}.${prop}`,
+        pointer: literalArmPointer(catalog.$id, d.name, prop),
+        check: () => checkArm(catalog, `${d.name}.${prop}`, d.name, prop) })));
+}
+
+/**
+ * One validator per provider answer, compiled from its $defs entry. `providers`
+ * is optional only for descriptors written before ADR-225; every generated
+ * descriptor carries the array.
+ */
+function resultKeys(catalog, descriptors)
+{
+    return descriptors.flatMap((d) => (d.providers ?? []).map((p) => ({ key: `${d.name}.${p.resultProp}`,
+        pointer: resultDefPointer(catalog.$id, d.name, p.resultProp),
+        check: () => checkDef(catalog, `${d.name}.${p.resultProp}`, `${d.name}__${p.resultProp}`) })));
+}
+
+function checkDef(catalog, key, def)
+{
+    if (catalog.$defs?.[def] === undefined)
+    {
+        throw new Error(`Cannot compile the adapter validator for ${key}: the catalog has no $defs entry "${def}". `
+            + "The descriptor and the catalog disagree; rebuild both with `npm run build:agentui`.");
+    }
 }
 
 function checkArm(catalog, key, name, prop)
