@@ -37,7 +37,11 @@ const CATALOG = readDist(path.join("a2ui", "catalog", "v1.json"));
 const DESCRIPTORS: { name: string; tagName: string }[] = readDist("agentui-report.json").adapter.descriptors;
 
 /** Props a component needs beyond generic samples to render, each with its reason. Empty is the goal. */
-const OVERRIDES: Record<string, Record<string, unknown>> = {};
+const OVERRIDES: Record<string, Record<string, unknown>> = {
+    // width and height are CSS lengths, which a generic string sample is not. The first preset sampled
+    // is "avatar" (const unions are sorted since B1), the one preset that sizes itself from them.
+    SkeletonLoader: { width: "3rem", height: "3rem" },
+};
 
 /**
  * Components that cannot render in a surface today, each with its issue. They
