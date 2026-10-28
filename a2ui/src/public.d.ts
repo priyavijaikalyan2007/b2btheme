@@ -21,7 +21,8 @@ export type OutcropErrorCode =
     | "VALIDATION_FAILED"
     | "OUTCROP_BINDING_LOST"
     | "OUTCROP_ASSET_LOAD_FAILED"
-    | "OUTCROP_MOUNT_FAILED";
+    | "OUTCROP_MOUNT_FAILED"
+    | "OUTCROP_PROVIDER_TIMEOUT";
 
 /** The members of @a2ui/web_core (0.14.x) the adapter needs. */
 export interface OutcropWebCore
@@ -34,13 +35,18 @@ export interface OutcropWebCore
     readonly BASIC_FUNCTIONS: unknown;
 }
 
-/** createOutcropCatalog's options. Both are page-global: every call on a page must match. */
+/** createOutcropCatalog's options. All are page-global: every call on a page must match. */
 export interface OutcropCatalogOptions
 {
     /** Where the library's dist/ tree is served, e.g. "https://static.outcrop.us". No trailing slash. */
     readonly assetBaseUrl: string;
     /** Also load <assetBaseUrl>/css/custom.css, which restyles the whole page (it is Bootstrap). Default false. */
     readonly injectBaseTheme?: boolean;
+    /**
+     * How long a component's data request waits for the agent's answer, in
+     * milliseconds; then OUTCROP_PROVIDER_TIMEOUT. A positive integer. Default 30000.
+     */
+    readonly providerTimeoutMs?: number;
 }
 
 /** The A2UI catalog this bundle serves (https://static.outcrop.us/a2ui/catalog/v1.json), parsed. */

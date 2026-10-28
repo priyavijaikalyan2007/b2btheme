@@ -37,7 +37,7 @@ async function mounted(descriptor: AdapterDescriptor, rc: RealContext): Promise<
 {
     const tag = `outcrop-rt-${++tagCount}`;
     const env: ElementEnv = { descriptor, validators: { "Fake.value": () => true },
-        assetBaseUrl: () => "https://cdn.test", injectBaseTheme: () => false };
+        assetBaseUrl: () => "https://cdn.test", injectBaseTheme: () => false, providerTimeoutMs: () => 30_000 };
 
     defineTestElement(tag, env);
     const el = document.createElement(tag) as HTMLElement & { context: unknown; handle: Handle };
