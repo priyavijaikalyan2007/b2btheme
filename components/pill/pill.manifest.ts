@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B4): it emits "click"
+ * and "dismiss" with its label through an additive on(). It has no view
+ * state, so stateKeys is empty (ADR-229).
  */
 export const PILL_MANIFEST: CapabilityManifest =
 {
@@ -35,11 +34,33 @@ export const PILL_MANIFEST: CapabilityManifest =
     icon: "bi-capsule",
     category: "social",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a compact tag, filter or mention that the user can click, or dismiss to remove it.",
+        avoidWhen: "For a status with a colour meaning use StatusBadge; for a person with an avatar use PersonChip.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "click", payload: "scalar", multi: false, legacyOption: "onClick" },
+        { name: "dismiss", payload: "scalar", multi: false, legacyOption: "onDismiss" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            // The link rule (readiness step 2 B4, ADR-229).
+            href: "A link the user follows from the host's page; an agent must not choose it. Over A2UI, listen for "
+                + "the click event and answer with openUrl.",
+            metadata: "Written as data-* attributes that host scripts read (Bootstrap's data-bs-* act on click); an "
+                + "agent must not set them.",
+            onHover: "Fires as the pointer enters; transient, not information for an agent.",
+            onHoverOut: "Fires as the pointer leaves; transient, not information for an agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 4484, mountCost: "trivial", holdsResources: false },
@@ -47,6 +68,6 @@ export const PILL_MANIFEST: CapabilityManifest =
     defaultSize: { w: 100, h: 24 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

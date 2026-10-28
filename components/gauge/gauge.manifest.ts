@@ -20,10 +20,8 @@ import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
  * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * (ADR-134). Over agent protocols value is one-way (readiness step 2 B4):
+ * onChange fires inside setValue, so it would only echo the writer's value.
  */
 export const GAUGE_MANIFEST: CapabilityManifest =
 {
@@ -33,6 +31,13 @@ export const GAUGE_MANIFEST: CapabilityManifest =
     label: "Gauge",
     icon: "bi-speedometer2",
     category: "other",
+
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a value against a maximum, a limit or a deadline as a ring, bar or tile gauge with coloured "
+            + "thresholds.",
+        avoidWhen: "For a number with a trend and no scale use MetricCard; for a value the user drags use RangeSlider.",
+    },
 
     affords: [
         {
@@ -46,6 +51,18 @@ export const GAUGE_MANIFEST: CapabilityManifest =
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        // onChange fires inside setValue, not on a user edit: value is one-way.
+        change: "event",
+        hostOnly: {
+            onChange: "Fires inside setValue, so it echoes the value the agent or host just wrote.",
+            onOverLimit: "Follows from the value and limit the agent set; it adds nothing the agent does not know.",
+            onOverdue: "Follows from the deadline the agent set; it adds nothing the agent does not know.",
+            formatValue: "A formatting function; the default number format applies over A2UI.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 12616, mountCost: "light", holdsResources: false },

@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `display` conformance (readiness step 2 B4): per-person clicks
+ * render through PersonChip, which the A2UI adapter does not load, so over
+ * agent protocols onClick is host-only and nothing is emitted.
  */
 export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
 {
@@ -32,11 +31,47 @@ export const PRESENCEINDICATOR_MANIFEST: CapabilityManifest =
     icon: "bi-people-fill",
     category: "social",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show who is here as a stack of avatars with a count of the rest, which the user can expand into a "
+            + "list.",
+        avoidWhen: "For one person with their name use PersonChip; to let the user pick people use PeoplePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            onClick: "Per-person clicks render through PersonChip, which the A2UI adapter does not load yet.",
+            onExpand: "Fires when the list opens; that is view state, not information for an agent.",
+            onCollapse: "Fires when the list closes; that is view state, not information for an agent.",
+        },
+        schemas: {
+            // people[].metadata is left out: PersonChip writes it as data-* attributes that host scripts read
+            // (Bootstrap's data-bs-* act on click), so an agent's metadata is rejected.
+            people: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string", description: "Unique identifier." },
+                        name: { type: "string", description: "Display name; the initials come from it." },
+                        email: { type: "string", description: "Email address, shown in the tooltip." },
+                        avatarUrl: { type: "string", description: "Avatar image URL; without one, coloured initials." },
+                        role: { type: "string", description: "Role or job title." },
+                        status: { enum: ["online", "offline", "busy", "away"], description: "Presence dot." },
+                    },
+                    required: ["id", "name"],
+                    additionalProperties: false,
+                },
+            },
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 7208, mountCost: "trivial", holdsResources: false },

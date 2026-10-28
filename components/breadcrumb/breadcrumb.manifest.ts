@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B4): it emits
+ * "itemClick" and "actionClick" through an additive on(). It has no view
+ * state, so stateKeys is empty (ADR-229).
  */
 export const BREADCRUMB_MANIFEST: CapabilityManifest =
 {
@@ -34,11 +33,44 @@ export const BREADCRUMB_MANIFEST: CapabilityManifest =
     icon: "bi-chevron-right",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show where the user is in a hierarchy as a trail of links, with actions on the last segment; the "
+            + "agent hears each click.",
+        avoidWhen: "For switching between sibling views use Tabs; for browsing a whole hierarchy use TreeView.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "itemClick", payload: "record", multi: false, legacyOption: "onItemClick" },
+        { name: "actionClick", payload: "record", multi: false, legacyOption: "onActionClick" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            "items[].data": "An arbitrary payload for host callbacks; it has no schema an agent could follow.",
+        },
+        schemas: {
+            // The link rule (readiness step 2 B4, ADR-229): items[].href is left out, so an agent's link is rejected.
+            // Over A2UI, listen for itemClick and answer with openUrl.
+            items: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        label: { type: "string", description: "Display label." },
+                        icon: { type: "string", description: "Bootstrap Icons class (e.g. \"bi-house-fill\")." },
+                    },
+                    required: ["label"],
+                    additionalProperties: false,
+                },
+            },
+        },
+    },
 
     regions: ["breadcrumb:nav-dropdown"],
 
@@ -48,6 +80,6 @@ export const BREADCRUMB_MANIFEST: CapabilityManifest =
     defaultSize: { w: 400, h: 28 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

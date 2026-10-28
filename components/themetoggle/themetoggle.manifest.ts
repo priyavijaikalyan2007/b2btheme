@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B4): it emits "change"
+ * with { theme, mode } through an additive on(), and restores its mode
+ * through getState()/setState() (stateKeys: mode).
  */
 export const THEMETOGGLE_MANIFEST: CapabilityManifest =
 {
@@ -34,11 +33,20 @@ export const THEMETOGGLE_MANIFEST: CapabilityManifest =
     icon: "bi-circle-half",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user switch the whole page between light, dark and automatic themes; it restyles the host "
+            + "page, not just the surface.",
+        avoidWhen: "For a choice that affects only your own content use ChoicePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "change", payload: "record", multi: false, legacyOption: "onChange" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["mode"],
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 2978, mountCost: "trivial", holdsResources: false },
@@ -46,6 +54,6 @@ export const THEMETOGGLE_MANIFEST: CapabilityManifest =
     defaultSize: { w: 100, h: 32 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
