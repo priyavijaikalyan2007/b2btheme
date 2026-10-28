@@ -27,6 +27,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.
 
 ### Changed
+- **CI now runs the A2UI browser tests** (`npm run test:e2e:a2ui`) on every pull request and push to `main`, so a catalog component can't join broken. The other e2e specs stay local. ADR-223.
 - **A manifest `mountMethod` naming a method the handle lacks now fails** instead of silently leaving the component unattached (`runtime/src/mount.ts`, shared by the conformance suite and the A2UI adapter). No component trips it. ADR-220.
 - **Conformance level is now computed; under-declaring fails the gate.** ADR-219.
 - **`PENDING_CLASSIFICATION` excuses only backlog violations, and its length is pinned by `[20]`.** A stale `protocol` key, a short reason or a double claim now fails the build for a listed component too. ADR-219.
