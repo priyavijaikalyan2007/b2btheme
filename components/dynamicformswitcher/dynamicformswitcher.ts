@@ -163,6 +163,18 @@ export interface DynamicFormSwitcherHandle
 
     refresh(): void;
     destroy(): void;
+
+    /** The surface contract (additive): DynamicFormSwitcher has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "change": { variantId, values } after a field edit and after a
+     * variant switch. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { variant, values }: the active variant id and every variant's values. */
+    getState(): Record<string, unknown>;
+    /** Applies state.values then state.variant when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -416,6 +428,7 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
 
     private currentVariant: string;
     private destroyed: boolean = false;
+    private readonly changeHandlers = new Set<(payload: unknown) => void>();
 
     /** Per-variant value store. */
     private readonly store: Map<string, Values> = new Map();
@@ -1369,6 +1382,23 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         {
             logError("onChange callback threw:", err);
         }
+        this.emitChange();
+    }
+
+    /** Tells "change" subscribers the active variant and a copy of its values. */
+    private emitChange(): void
+    {
+        for (const handler of this.changeHandlers)
+        {
+            try
+            {
+                handler({ variantId: this.currentVariant, values: structuredClone(this.collectActiveValues()) });
+            }
+            catch (err)
+            {
+                logError("change handler threw:", err);
+            }
+        }
     }
 
     // ------------------------------------------------------------------
@@ -1444,6 +1474,7 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         {
             logError("onVariantChange callback threw:", err);
         }
+        this.emitChange();
     }
 
     private focusFirstField(): void
@@ -1580,10 +1611,52 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
         this.render();
     }
 
+    // ── Surface contract (additive, readiness step 2 B5) ──
+
+    /** DynamicFormSwitcher has no data slots; use setVariant() or setValues(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): DynamicFormSwitcher has no data slots. ` +
+            `Use setVariant() or setValues().`);
+    }
+
+    /** Subscribes to "change"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "change".`);
+        }
+
+        this.changeHandlers.add(handler);
+
+        return () => { this.changeHandlers.delete(handler); };
+    }
+
+    /** The active variant id and a deep copy of every variant's values. */
+    public getState(): Record<string, unknown>
+    {
+        return { variant: this.getVariant(), values: structuredClone(this.getAllValues()) };
+    }
+
+    /** Restores state captured by getState(): values first, then the variant. */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("values" in state)
+        {
+            const all = state.values as Record<string, Values>;
+            for (const id of Object.keys(all)) { this.setValues(id, all[id]); }
+        }
+
+        if ("variant" in state) { this.setVariant(state.variant as string); }
+    }
+
     public destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.changeHandlers.clear();
         this.tearDownActiveAdapters();
         if (this.rootEl && this.rootEl.parentElement === this.container)
         {
