@@ -6,7 +6,8 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: Slider / ConformanceGlue
- * 📜 PURPOSE: Channel trigger for the conformance gate and A2UI G3: moves the thumb with the keyboard (readiness step 2 B3).
+ * 📜 PURPOSE: Channel trigger for the conformance gate and A2UI G3: moves the
+ *    thumb with the keyboard (readiness step 2 B3).
  * 🔗 RELATES: [[Slider]], [[Conformance]]
  * ----------------------------------------------------------------------------
  */

@@ -6,7 +6,8 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: SearchBox / ConformanceGlue
- * 📜 PURPOSE: Channel triggers for the conformance gate and A2UI G3: clears the box, and presses Enter (readiness step 2 B3).
+ * 📜 PURPOSE: Channel triggers for the conformance gate and A2UI G3: clears
+ *    the box, and presses Enter (readiness step 2 B3).
  * 🔗 RELATES: [[SearchBox]], [[Conformance]]
  * ----------------------------------------------------------------------------
  */
