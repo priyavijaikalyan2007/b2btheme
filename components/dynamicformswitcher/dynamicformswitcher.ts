@@ -164,6 +164,9 @@ export interface DynamicFormSwitcherOptions
 
 export interface DynamicFormSwitcherHandle
 {
+    /** The root element (additive, readiness step 2 B5). Throws after destroy(). */
+    getElement(): HTMLElement;
+
     getVariant(): string;
     setVariant(id: string): void;
 
@@ -1457,6 +1460,17 @@ class DynamicFormSwitcherImpl implements DynamicFormSwitcherHandle
     // ==================================================================
     // PUBLIC API
     // ==================================================================
+
+    /** The root element. Throws after destroy(), when there is none. */
+    public getElement(): HTMLElement
+    {
+        if (!this.rootEl)
+        {
+            throw new Error(`${LOG_PREFIX} getElement(): the switcher has been destroyed.`);
+        }
+
+        return this.rootEl;
+    }
 
     public getVariant(): string
     {

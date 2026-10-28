@@ -1355,6 +1355,16 @@ describe("surface contract (B5)", () =>
         el.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
+    test("getElement_ReturnsTheRootTheFieldsLiveIn", () =>
+    {
+        const handle = build();
+
+        expect(handle.getElement().classList.contains("dynamicformswitcher")).toBe(true);
+        expect(handle.getElement().querySelector("[name=base_url]")).toBe(input("base_url"));
+
+        handle.destroy();
+    });
+
     test("on_Change_DeliversVariantIdAndValues_AfterOnChangeExactlyOnce", () =>
     {
         const order: string[] = [];
