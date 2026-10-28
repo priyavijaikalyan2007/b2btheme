@@ -284,6 +284,15 @@ export interface PersonChipHandle
     setStatus(status: PersonChipStatus | undefined): void;
     setRole(role: string | undefined): void;
     destroy(): void;
+
+    /** The surface contract (additive): PersonChip has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "click": { name, email? }, after onClick. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to capture (ADR-229): PersonChip declares no state keys. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229): PersonChip declares no state keys. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class PersonChip implements PersonChipHandle
@@ -291,6 +300,7 @@ export class PersonChip implements PersonChipHandle
     // --- State ---
     private opts: PersonChipOptions;
     private size: PersonChipSize;
+    private readonly clickHandlers = new Set<(payload: unknown) => void>();
 
     // --- DOM references (nullable for destroy) ---
     private rootEl: HTMLElement | null = null;
@@ -370,9 +380,44 @@ export class PersonChip implements PersonChipHandle
         this.updateTooltip();
     }
 
+    // ── Surface contract (additive, readiness step 2 B4) ──
+
+    /** PersonChip has no data slots; use setName(), setEmail(), setAvatarUrl(), setStatus() or setRole(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): PersonChip has no data slots. `
+            + "Use setName(), setEmail(), setAvatarUrl(), setStatus() or setRole().");
+    }
+
+    /** Subscribes to "click"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "click")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "click".`);
+        }
+
+        this.clickHandlers.add(handler);
+
+        return () => { this.clickHandlers.delete(handler); };
+    }
+
+    /** Nothing to capture (ADR-229). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public setState(_state: Record<string, unknown>): void
+    {
+    }
+
     /** Remove listeners, DOM, null refs. */
     public destroy(): void
     {
+        this.clickHandlers.clear();
         this.detachListeners();
 
         if (this.rootEl && this.rootEl.parentNode)
@@ -612,7 +657,9 @@ export class PersonChip implements PersonChipHandle
 
         const isClickable = this.opts.clickable || this.opts.onClick || this.opts.href;
 
-        if (isClickable && this.opts.onClick)
+        // The click listener also serves "click" subscribers, which arrive after
+        // construction and without an onClick option.
+        if (isClickable)
         {
             this.boundClick = this.handleClick.bind(this);
             this.rootEl.addEventListener("click", this.boundClick);
@@ -669,12 +716,13 @@ export class PersonChip implements PersonChipHandle
     /** Handle click event. */
     private handleClick(e: Event): void
     {
-        e.preventDefault();
-
+        // Without onClick the chip never swallowed the click, so an href still navigates.
         if (this.opts.onClick)
         {
-            this.opts.onClick(this);
+            e.preventDefault();
         }
+
+        this.activate();
     }
 
     /** Handle keyboard activation (Enter/Space). */
@@ -689,10 +737,40 @@ export class PersonChip implements PersonChipHandle
         }
 
         e.preventDefault();
+        this.activate();
+    }
 
+    /** Run onClick first, then tell the "click" subscribers. */
+    private activate(): void
+    {
         if (this.opts.onClick)
         {
             this.opts.onClick(this);
+        }
+
+        this.emitClick();
+    }
+
+    /** Send each "click" subscriber its own { name, email? } copy; a throwing handler is logged, not rethrown. */
+    private emitClick(): void
+    {
+        for (const handler of this.clickHandlers)
+        {
+            const payload: { name: string; email?: string } = { name: this.opts.name };
+
+            if (this.opts.email)
+            {
+                payload.email = this.opts.email;
+            }
+
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError("click handler threw:", err);
+            }
         }
     }
 
