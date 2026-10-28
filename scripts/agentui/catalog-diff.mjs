@@ -149,13 +149,37 @@ function sameish(a, b)
 
 function canonical(node, parentKey = "")
 {
-    if (Array.isArray(node)) { return `[${node.map((n) => canonical(n)).join(",")}]`; }
+    if (Array.isArray(node))
+    {
+        const members = node.map((n) => canonical(n));
+
+        return `[${(isConstSet(parentKey, node) ? members.sort() : members).join(",")}]`;
+    }
 
     if (node === null || typeof node !== "object") { return JSON.stringify(node); }
 
     const keys = Object.keys(node).filter((k) => parentKey === "properties" || k !== "description").sort();
 
     return `{${keys.map((k) => `${JSON.stringify(k)}:${canonical(node[k], k)}`).join(",")}}`;
+}
+
+/**
+ * A oneOf/anyOf whose members are all `{ const }`, or an enum: a set of values,
+ * where order carries no meaning. TypeScript orders a literal union by internal
+ * type id, which any file in the program can shift (readiness step 2 B1).
+ */
+function isConstSet(key, members)
+{
+    if (key === "enum") { return true; }
+
+    return (key === "oneOf" || key === "anyOf") && members.length > 0 && members.every(isConstMember);
+}
+
+/** `{ const }`, ignoring a description (a description is not a contract). */
+export function isConstMember(m)
+{
+    return m !== null && typeof m === "object" && !Array.isArray(m) && "const" in m
+        && Object.keys(m).every((k) => k === "const" || k === "description");
 }
 
 /**

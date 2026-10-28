@@ -64,4 +64,21 @@ describe("normaliseTypiaUnit", () =>
     {
         expect(mapRefs({ a: [{ $ref: "x" }] }, () => "y")).toEqual({ a: [{ $ref: "y" }] });
     });
+
+    test("sorts a union of consts into a stable order, whatever order TypeScript gave", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object",
+            properties: { layout: { oneOf: [{ const: "row" }, { const: "grid" }, { const: 2 }, { const: 10 }] } } } };
+
+        expect(normaliseTypiaUnit(unit).properties.layout.oneOf)
+            .toEqual([{ const: 2 }, { const: 10 }, { const: "grid" }, { const: "row" }]);
+    });
+
+    test("leaves a union that is not all consts in its order", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object",
+            properties: { v: { oneOf: [{ type: "string" }, { const: "a" }] } } } };
+
+        expect(normaliseTypiaUnit(unit).properties.v.oneOf).toEqual([{ type: "string" }, { const: "a" }]);
+    });
 });

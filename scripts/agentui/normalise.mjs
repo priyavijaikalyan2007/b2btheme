@@ -12,6 +12,8 @@
  *          -> [2020-12 schema]
  */
 
+import { isConstMember } from "./catalog-diff.mjs";
+
 export const DRAFT_2020_12 = "https://json-schema.org/draft/2020-12/schema";
 
 const TYPIA_PREFIX = "#/components/schemas/";
@@ -51,10 +53,49 @@ export function normaliseTypiaUnit(unit)
     }
 
     const toDefs = (ref) => (ref.startsWith(TYPIA_PREFIX) ? DEFS_PREFIX + ref.slice(TYPIA_PREFIX.length) : ref);
-    const defs = closeObjects(mapRefs(unit.components?.schemas ?? {}, toDefs));
-    const root = inlineRoot(closeObjects(mapRefs(unit.schema, toDefs)), defs);
+    const defs = sortConstUnions(closeObjects(mapRefs(unit.components?.schemas ?? {}, toDefs)));
+    const root = inlineRoot(sortConstUnions(closeObjects(mapRefs(unit.schema, toDefs))), defs);
 
     return { $schema: DRAFT_2020_12, ...root, ...(Object.keys(defs).length > 0 ? { $defs: defs } : {}) };
+}
+
+/**
+ * Sorts every oneOf/anyOf made only of `{ const }` members, grouped by type
+ * (booleans, numbers, strings): numbers in numeric order, the rest in
+ * code-point order. TypeScript orders a literal
+ * union by internal type id, which any file in the program can shift, so
+ * without this an unrelated change reorders a published enum (readiness step 2 B1).
+ */
+function sortConstUnions(node)
+{
+    if (Array.isArray(node)) { return node.map(sortConstUnions); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    const out = Object.fromEntries(Object.entries(node).map(([k, v]) => [k, sortConstUnions(v)]));
+
+    for (const key of ["oneOf", "anyOf"])
+    {
+        if (Array.isArray(out[key]) && out[key].length > 0 && out[key].every(isConstMember))
+        {
+            out[key] = [...out[key]].sort(byConst);
+        }
+    }
+
+    return out;
+}
+
+function byConst(a, b)
+{
+    const [x, y] = [a.const, b.const];
+
+    if (typeof x !== typeof y) { return typeof x < typeof y ? -1 : 1; }
+
+    if (typeof x === "number") { return x - y; }
+
+    const [sx, sy] = [String(x), String(y)];
+
+    return sx < sy ? -1 : (sx > sy ? 1 : 0);
 }
 
 /** Replaces a bare root `$ref` by its definition, dropping the definition if nothing else uses it. */

@@ -47,6 +47,29 @@ describe("diffCatalogs", () =>
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows.", oneOf: [{ type: "string" }] } })).breaking)
             .toEqual(["Widget.pageSize changed"]);
     });
+    // TypeScript orders a literal union by internal type id, which any file in
+    // the program can shift (readiness step 2 B1). Order is not meaning.
+    test("a reordered union of consts is not a change", () =>
+    {
+        const before = cat({ layout: { oneOf: [{ const: "row" }, { const: "grid" }] } });
+        const after = cat({ layout: { oneOf: [{ const: "grid" }, { const: "row" }] } });
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [], additive: [] });
+    });
+    test("a union of consts that loses a member is breaking", () =>
+    {
+        const before = cat({ layout: { oneOf: [{ const: "row" }, { const: "grid" }] } });
+        const after = cat({ layout: { oneOf: [{ const: "grid" }] } });
+
+        expect(diffCatalogs(before, after).breaking).toEqual(["Widget.layout changed"]);
+    });
+    test("a reordered union that is not all consts is still a change", () =>
+    {
+        const before = cat({ v: { oneOf: [{ type: "string" }, { type: "number" }] } });
+        const after = cat({ v: { oneOf: [{ type: "number" }, { type: "string" }] } });
+
+        expect(diffCatalogs(before, after).breaking).toEqual(["Widget.v changed"]);
+    });
     test("a description-only change is not breaking", () =>
     {
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })).breaking)
