@@ -448,6 +448,16 @@ describe("runConformance — legacy surface", () =>
         expect(failedChecks(check(factory))).toContain("channel-observable");
     });
 
+    test("a channel the trigger reaches only asynchronously is a warning naming the suites that verify it", () =>
+    {
+        const findings = check(makeFactory(), {}, { trigger: () => "async" });
+        const async = findings.filter((f) => f.check === "channel-observable");
+
+        expect(failedChecks(findings)).not.toContain("channel-observable");
+        expect(async.length).toBeGreaterThan(0);
+        expect(async.every((f) => f.severity === "warning" && /asynchronously/.test(f.detail))).toBe(true);
+    });
+
     test("records an untriggered channel as a warning, not a failure", () =>
     {
         const failures = runConformance({

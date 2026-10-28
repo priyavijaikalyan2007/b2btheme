@@ -298,7 +298,8 @@ function runLibrary(name: string): void
 
     const asset = JSON.parse(fs.readFileSync(manifestPath, "utf8")).assets[name] as { url: string };
 
-    (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8"));
+    // A stylesheet (katex-css, vditor-css) publishes nothing to run.
+    if (asset.url.endsWith(".js")) { (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8")); }
 }
 
 /**
@@ -323,7 +324,17 @@ async function buildTarget(
 
     // What it declares it needs comes first, as the A2UI adapter loads it (ADR-230): DocViewer renders through
     // MarkdownRenderer and marked; a PresenceIndicator avatar is clickable only through PersonChip.
-    for (const lib of manifest.protocol?.dependencies?.libraries ?? []) { runLibrary(lib); }
+    const glueLoad = GLUE_LOADERS[`../components/${name}/${name}.conformance.ts`];
+    const glue = glueLoad ? await glueLoad() : {};
+    const standIns = (glue.CONFORMANCE_GLUE as { jsdomStandIns?: Record<string, () => void> } | undefined)
+        ?.jsdomStandIns ?? {};
+
+    // A library jsdom cannot run (Vditor) has a stand-in in the glue; the browser suite loads the real one.
+    for (const lib of manifest.protocol?.dependencies?.libraries ?? [])
+    {
+        if (standIns[lib]) { standIns[lib](); }
+        else { runLibrary(lib); }
+    }
 
     for (const dep of manifest.protocol?.dependencies?.components ?? [])
     {
@@ -337,9 +348,6 @@ async function buildTarget(
     {
         return null;
     }
-
-    const glueLoad = GLUE_LOADERS[`../components/${name}/${name}.conformance.ts`];
-    const glue = glueLoad ? await glueLoad() : {};
 
     return {
         manifest,

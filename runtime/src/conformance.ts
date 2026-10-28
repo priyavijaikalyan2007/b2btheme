@@ -76,11 +76,14 @@ export interface ConformanceTarget
     /**
      * Causes a channel to emit, so the legacy-callback and channel-observable
      * checks can run. Without it those obligations are reported as warnings
-     * rather than silently skipped.
+     * rather than silently skipped. "async" means the gesture was started but
+     * reaches the channel only after a promise settles (Stepper's finish
+     * awaits validation); these checks are synchronous, so that is a warning,
+     * and A2UI G3 and the browser suite verify the channel.
      */
     readonly trigger?: (
         channel: string,
-        handle: Record<string, unknown>) => boolean | void;
+        handle: Record<string, unknown>) => boolean | "async" | void;
 }
 
 /** Declaration of one check, for documentation and coverage reporting. */
@@ -799,7 +802,7 @@ function exerciseChannel(
     call(handle, "on", channel, (v: unknown) => observed.push(v));
 
     const before = seen?.length ?? 0;
-    let driven: boolean | void = undefined;
+    let driven: boolean | "async" | void = undefined;
     let err: Error | null = null;
 
     try
@@ -815,6 +818,15 @@ function exerciseChannel(
     {
         fail(out, "channel-observable",
             `Triggering "${channel}" threw: ${err.message}`);
+        return;
+    }
+
+    if (driven === "async")
+    {
+        fail(out, "channel-observable",
+            `Channel "${channel}" is reached asynchronously, after a promise `
+            + "settles, so these synchronous checks cannot observe it. A2UI G3 "
+            + "and the browser suite verify it.", "warning");
         return;
     }
 
