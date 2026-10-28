@@ -501,6 +501,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   browser. It gets no `on<Id>` catalog prop and is listed host-only in the
   report. Gate G1 fails on any other catalog action until the adapter supports
   actions (#31).
+- **`presentation: "overlay"`: the component floats.** A component that
+  positions itself absolutely inside its container (a legend over a graph)
+  declares it. The adapter then mounts it in a `position: relative` box whose
+  `min-height` is `defaultSize.h`; otherwise it lands against the page and
+  adds no height to the surface (#41, ADR-224).
 
 **The testing bar for joining the catalog (readiness spec §6):**
 

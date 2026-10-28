@@ -94,6 +94,24 @@ describe("binding and mounting", () =>
         expect(el.hasAttribute("aria-busy")).toBe(false);
     });
 
+    test("an overlay component mounts in a positioned box as tall as its manifest height (#41)", async () =>
+    {
+        const el = create(tagFor(fakeDescriptor({ overlay: { height: 300 } })), realContext({ title: "t" }));
+        await loaded();
+
+        const box = el.querySelector<HTMLElement>(".outcrop-host")!;
+        expect(box.style.position).toBe("relative");
+        expect(box.style.minHeight).toBe("300px");
+    });
+
+    test("a framed component's box has no inline style", async () =>
+    {
+        const el = create(tagFor(), realContext({ title: "t" }));
+        await loaded();
+
+        expect(el.querySelector(".outcrop-host")!.getAttribute("style")).toBeNull();
+    });
+
     test("a new context object for the same component does not rebuild", async () =>
     {
         const rc = realContext({ title: "t" });

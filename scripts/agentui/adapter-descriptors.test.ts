@@ -182,4 +182,13 @@ describe("buildDescriptors — fields", () =>
         expect(d.change).toEqual({ valueFrom: "hex" });
         expect(p).not.toHaveProperty("change");
     });
+
+    test("an overlay manifest carries its default height; a framed one adds no key (#41)", () =>
+    {
+        const legend = { ...picker, manifest: { ...picker.manifest, presentation: "overlay", defaultSize: { w: 240, h: 300 } } };
+        const [d] = buildDescriptors([legend], cat, css).descriptors;
+
+        expect(d.overlay).toEqual({ height: 300 });
+        expect(p).not.toHaveProperty("overlay");
+    });
 });
