@@ -231,10 +231,23 @@ export interface SearchBoxHandle
     focus(): void;
     clearValue(): void;
     setDisabled(disabled: boolean): void;
+
+    /** The surface contract (additive): SearchBox has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "search" (debounced query) or "submit" (Enter); returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The query, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Sets state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The channels SearchBox emits (readiness step 2 B3). */
+const SEARCHBOX_CHANNELS = ["search", "submit"] as const;
 
 export class SearchBox implements SearchBoxHandle
 {
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>();
     private readonly instanceId: string;
     private readonly options: Required<Pick<SearchBoxOptions,
         "placeholder" | "debounceMs" | "minChars" | "size" | "disabled"
@@ -349,6 +362,7 @@ export class SearchBox implements SearchBoxHandle
     public destroy(): void
     {
         this.hide();
+        this.channelHandlers.clear();
 
         this.rootEl = null;
         this.inputEl = null;
@@ -439,6 +453,55 @@ export class SearchBox implements SearchBoxHandle
     {
         this.options.disabled = disabled;
         this.applyDisabledState(disabled);
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B3)
+    // ========================================================================
+
+    /** SearchBox has no data slots; the query is setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): SearchBox has no data slots. Use setValue().`);
+    }
+
+    /** Subscribes to "search" or "submit"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (!(SEARCHBOX_CHANNELS as readonly string[]).includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the channels are "search" and "submit".`);
+        }
+
+        const set = this.channelHandlers.get(channel) ?? new Set();
+        set.add(handler);
+        this.channelHandlers.set(channel, set);
+
+        return () => { set.delete(handler); };
+    }
+
+    /** The query. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores a query captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
+    }
+
+    /** The option callback first, exactly as before, then the channel's subscribers. */
+    private emit(channel: string, legacy: ((query: string) => void) | undefined, query: string): void
+    {
+        legacy?.(query);
+
+        for (const handler of this.channelHandlers.get(channel) ?? [])
+        {
+            try { handler(query); }
+            catch (err) { logError(`${channel} handler error:`, err); }
+        }
     }
 
     // ========================================================================
@@ -817,9 +880,9 @@ export class SearchBox implements SearchBoxHandle
         {
             this.selectSuggestion(this.highlightedIndex);
         }
-        else if (this.options.onSubmit)
+        else
         {
-            this.options.onSubmit(this.getValue());
+            this.emit("submit", this.options.onSubmit, this.getValue());
         }
     }
 
@@ -1281,10 +1344,7 @@ export class SearchBox implements SearchBoxHandle
      */
     private executeSearch(query: string): void
     {
-        if (this.options.onSearch)
-        {
-            this.options.onSearch(query);
-        }
+        this.emit("search", this.options.onSearch, query);
     }
 }
 
