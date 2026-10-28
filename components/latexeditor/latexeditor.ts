@@ -189,6 +189,18 @@ export interface LatexEditor
 
     /** Get the root DOM element. */
     getElement(): HTMLElement;
+
+    /** The surface contract (additive): LatexEditor has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+
+    /** Subscribes to "confirm": { latex, mathml }. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** { value }: the current LaTeX expression. */
+    getState(): Record<string, unknown>;
+
+    /** Applies state.value, when present, through setExpression(). */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -254,6 +266,9 @@ interface InternalState
 
     /** Size dropdown element (shown/hidden). */
     sizeDropdownEl: HTMLElement | null;
+
+    /** Subscribers to the "confirm" channel (surface contract). */
+    confirmHandlers: Set<(payload: unknown) => void>;
 }
 
 // ============================================================================
@@ -785,6 +800,7 @@ function createState(opts: LatexEditorOptions): InternalState
         searchTimer: null,
         toolbarEl: null,
         sizeDropdownEl: null,
+        confirmHandlers: new Set(),
     };
 }
 
@@ -1507,9 +1523,23 @@ function fireOnChange(state: InternalState): void
 /** Fire the onConfirm callback. */
 function fireOnConfirm(state: InternalState): void
 {
+    const mathml = getMathMLInternal(state);
+
     if (state.options.onConfirm)
     {
-        state.options.onConfirm(state.expression, getMathMLInternal(state));
+        state.options.onConfirm(state.expression, mathml);
+    }
+
+    for (const handler of state.confirmHandlers)
+    {
+        try
+        {
+            handler({ latex: state.expression, mathml });
+        }
+        catch (err)
+        {
+            logError("confirm handler threw:", err);
+        }
     }
 }
 
@@ -1666,9 +1696,41 @@ function destroyEditor(state: InternalState): void
 {
     if (state.destroyed) { return; }
     state.destroyed = true;
+    state.confirmHandlers.clear();
     clearTimers(state);
     teardownDom(state);
     logInfo("Destroyed", { id: state.id });
+}
+
+// ── Surface contract (additive, readiness step 2 B5) ──
+
+/** LatexEditor has no data slots; use setExpression(). */
+function setDataPublic(slot: string): never
+{
+    throw new Error(
+        `${LOG_PREFIX} setData("${slot}"): LatexEditor has no data slots. Use setExpression() or setValue().`);
+}
+
+/** Subscribes to "confirm"; returns the unsubscribe. */
+function onPublic(
+    state: InternalState,
+    channel: string,
+    handler: (payload: unknown) => void): () => void
+{
+    if (channel !== "confirm")
+    {
+        throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "confirm".`);
+    }
+
+    state.confirmHandlers.add(handler);
+
+    return () => { state.confirmHandlers.delete(handler); };
+}
+
+/** Restores state captured by getState(). */
+function setStatePublic(state: InternalState, saved: Record<string, unknown>): void
+{
+    if ("value" in saved) { setExpressionInternal(state, saved.value as string); }
 }
 
 /** Build the public API handle. */
@@ -1687,6 +1749,10 @@ function buildPublicHandle(state: InternalState): LatexEditor
         focus: () => { if (state.sourceEl && !state.destroyed) { state.sourceEl.focus(); } },
         destroy: () => destroyEditor(state),
         getElement: () => state.rootEl!,
+        setData: (slot: string) => setDataPublic(slot),
+        on: (channel: string, handler: (payload: unknown) => void) => onPublic(state, channel, handler),
+        getState: () => ({ value: state.expression }),
+        setState: (saved: Record<string, unknown>) => setStatePublic(state, saved),
     };
 }
 

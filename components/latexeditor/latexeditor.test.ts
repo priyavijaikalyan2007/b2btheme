@@ -1582,3 +1582,142 @@ describe("LatexEditor — Embed Integration", () =>
         expect(typeof win["createLatexEditor"]).toBe("function");
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B5): additive on("confirm"),
+// getState/setState and setData. onConfirm keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    /** Presses Ctrl+Enter in the source textarea, the one gesture that confirms. */
+    function pressConfirm(editor: LatexEditor): void
+    {
+        const textarea = editor.getElement().querySelector(".le-source") as HTMLTextAreaElement;
+
+        textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }));
+    }
+
+    test("on_Confirm_DeliversLatexAndMathml_AfterOnConfirm_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const editor = createLatexEditor(defaultOptions({
+            expression: "x^2",
+            onConfirm: (latex, mathml) => order.push(`option:${latex}|${mathml}`),
+        }));
+        editor.on("confirm", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        pressConfirm(editor);
+
+        expect(order).toEqual(["option:x^2|", `channel:${JSON.stringify({ latex: "x^2", mathml: "" })}`]);
+        editor.destroy();
+    });
+
+    test("on_Confirm_WithoutOnConfirm_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const editor = createLatexEditor(defaultOptions({ expression: "a+b" }));
+        editor.on("confirm", heard);
+
+        pressConfirm(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith({ latex: "a+b", mathml: "" });
+        editor.destroy();
+    });
+
+    test("on_Confirm_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const editor = createLatexEditor(defaultOptions());
+        const off = editor.on("confirm", heard);
+
+        pressConfirm(editor);
+        off();
+        pressConfirm(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        editor.destroy();
+    });
+
+    test("on_Confirm_PayloadIsPlainJson", () =>
+    {
+        const payloads: unknown[] = [];
+        const editor = createLatexEditor(defaultOptions({ expression: "\\frac{1}{2}" }));
+        editor.on("confirm", (p) => payloads.push(p));
+
+        pressConfirm(editor);
+
+        expect(JSON.parse(JSON.stringify(payloads[0]))).toEqual(payloads[0]);
+        editor.destroy();
+    });
+
+    test("on_Confirm_ThrowingHandler_DoesNotStopOtherHandlers", () =>
+    {
+        const heard = vi.fn();
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const editor = createLatexEditor(defaultOptions());
+        editor.on("confirm", () => { throw new Error("boom"); });
+        editor.on("confirm", heard);
+
+        pressConfirm(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        errorSpy.mockRestore();
+        editor.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_NamingValidChannels", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+
+        expect(() => editor.on("bogus", () => undefined)).toThrow(/LatexEditor.*"bogus".*"confirm"/);
+        editor.destroy();
+    });
+
+    test("setData_Throws_NoDataSlots", () =>
+    {
+        const editor = createLatexEditor(defaultOptions());
+
+        expect(() => editor.setData("value", "x")).toThrow(/LatexEditor.*no data slots.*setExpression/);
+        editor.destroy();
+    });
+
+    test("getState_SetState_RoundTripsValue", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "e^{i\\pi}" }));
+        const captured = editor.getState();
+
+        expect(captured).toEqual({ value: "e^{i\\pi}" });
+
+        editor.setExpression("other");
+        editor.setState(captured);
+
+        expect(editor.getLatex()).toBe("e^{i\\pi}");
+        expect(editor.getState()).toEqual(captured);
+        editor.destroy();
+    });
+
+    test("setState_WithoutValue_ChangesNothing", () =>
+    {
+        const editor = createLatexEditor(defaultOptions({ expression: "keep" }));
+
+        editor.setState({});
+
+        expect(editor.getLatex()).toBe("keep");
+        editor.destroy();
+    });
+
+    test("destroy_ClearsChannelHandlers", () =>
+    {
+        const heard = vi.fn();
+        const editor = createLatexEditor(defaultOptions());
+        const textarea = editor.getElement().querySelector(".le-source") as HTMLTextAreaElement;
+        editor.on("confirm", heard);
+
+        editor.destroy();
+        textarea.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }));
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+});
