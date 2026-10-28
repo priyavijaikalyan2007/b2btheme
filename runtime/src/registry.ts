@@ -465,10 +465,59 @@ function validateProtocol(
     validateSchemaMap(p.schemas, issues);
     validateChange(p.change, issues);
     validateStringMap("protocol.hostOnlyActions", p.hostOnlyActions, "a reason string", issues);
+    validateDependencies(p.dependencies, issues);
 }
 
 /** The keys `protocol` may carry. */
-const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions"];
+const PROTOCOL_KEYS: readonly string[] =
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies"];
+
+/** The keys `protocol.dependencies` may carry (ADR-230). */
+const DEPENDENCY_KEYS: readonly string[] = ["libraries", "components"];
+
+/** A lib-manifest asset name ("chart.js", "katex-css") or a component directory ("personchip"). */
+const DEPENDENCY_NAME = /^[a-z0-9][a-z0-9.-]*$/;
+
+/**
+ * Validates `protocol.dependencies` (ADR-230, #51): lists of vendored library
+ * names and component directory names. Whether each exists is the
+ * generator's check, which can see dist/.
+ */
+function validateDependencies(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.dependencies", "{ libraries?, components? }, each a list of names", v));
+        return;
+    }
+
+    unknownKeys("protocol.dependencies", v, DEPENDENCY_KEYS, issues);
+
+    for (const key of DEPENDENCY_KEYS.filter((k) => v[k] !== undefined))
+    {
+        const list = v[key];
+        const path = `protocol.dependencies.${key}`;
+
+        if (!Array.isArray(list))
+        {
+            issues.push(typeIssue(path, "a list of names", list));
+            continue;
+        }
+
+        for (const [i, name] of list.entries())
+        {
+            if (typeof name !== "string" || !DEPENDENCY_NAME.test(name))
+            {
+                issues.push(typeIssue(`${path}[${i}]`, "a lowercase name such as \"marked\" or \"personchip\"", name));
+            }
+        }
+    }
+}
 
 /** The keys `agent` carries (ADR-222). */
 const AGENT_KEYS: readonly string[] = ["useWhen", "avoidWhen"];

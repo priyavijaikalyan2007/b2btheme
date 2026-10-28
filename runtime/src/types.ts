@@ -251,6 +251,24 @@ export interface ProtocolSpec
      * value is the reason an agent cannot act on it (ADR-222).
      */
     readonly hostOnlyActions?: Readonly<Record<string, string>>;
+
+    /**
+     * What must be on the page before the component's own script (ADR-230,
+     * #51): vendored libraries by their dist/lib-manifest.json name, then
+     * other components by directory name. The A2UI adapter loads them in that
+     * order, libraries with their integrity hash.
+     */
+    readonly dependencies?: DependencySpec;
+}
+
+/** Scripts a component needs on the page, ahead of its own (ADR-230). */
+export interface DependencySpec
+{
+    /** Vendored library names, such as "marked" or "chart.js". */
+    readonly libraries?: readonly string[];
+
+    /** Component directory names, such as "markdownrenderer". */
+    readonly components?: readonly string[];
 }
 
 /**
