@@ -216,6 +216,23 @@ const ASSETS = [
         note: "whole dist tree; set vditor's `cdn` option to /lib/vditor-3.11.2",
     },
     {
+        // Vditor's stylesheet as its own SRI-hashed asset, so the A2UI adapter
+        // can load it with MarkdownEditor (readiness step 2 B5, ADR-230). The
+        // tree above already serves it, unhashed, at dist/index.css; this
+        // entry gives it a manifest URL and an integrity hash. Self-contained:
+        // its one image is a data: URI.
+        name: "vditor-css",
+        kind: "tree",
+        assetType: "stylesheet",
+        version: "3.11.2",
+        pkg: "vditor",
+        entry: "index.css",
+        include: [
+            { from: "node_modules/vditor/dist/index.css", to: "index.css" },
+        ],
+        note: "vditor's stylesheet, hashed, for MarkdownEditor over A2UI",
+    },
+    {
         // MarkdownRenderer's parser (window.marked), so the A2UI adapter can
         // load it for DocViewer instead of the host fetching it from a public
         // CDN (#51, ADR-230). The UMD build is the one that assigns a global.
