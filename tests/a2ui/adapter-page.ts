@@ -30,7 +30,10 @@ export function useHarness(): void
     test.beforeAll(async () => { harnessDir = await buildHarness(); });
 }
 
-/** Opens a harness page served under /__a2ui/ next to the real dist tree. */
+/**
+ * Opens a harness page served under /__a2ui/ next to the real dist tree.
+ * Query keys: base, inject, providerTimeoutMs (tests/a2ui/harness-shared.ts).
+ */
 export async function open(page: Page, renderer: "lit" | "react", query: Record<string, string> = {}): Promise<void>
 {
     const qs = new URLSearchParams({ base: ORIGIN, ...query }).toString();
