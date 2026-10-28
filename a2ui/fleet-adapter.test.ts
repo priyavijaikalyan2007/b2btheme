@@ -29,7 +29,8 @@ import { sampleProp, sampleValue } from "./sample-values";
 type Any = any;
 type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string; twoWay: boolean;
     change?: { valueFrom: string } | { cleared: null };
-    assets: { js: string; css?: string }; props: Record<string, { route: string }>;
+    assets: { js: string; css?: string; deps?: { path: string; integrity?: string }[] };
+    props: Record<string, { route: string }>;
     events: { channel: string; actionProp: string; payloadInValue: boolean }[];
     providers: { request: string; actionProp: string; resultProp: string; concurrency: string }[] };
 
@@ -65,10 +66,29 @@ function optionsOf(style: string, args: unknown[]): Record<string, unknown>
     return (style === "container-first" ? args[1] : args[0]) as Record<string, unknown>;
 }
 
-/** Loads a component's source module and wraps its window factory with a spy. */
+/**
+ * Puts what a declared dependency publishes on window (ADR-230): another
+ * component's source module, or a vendored library's built file run in global
+ * scope, since jsdom does not execute the <script> the loader injects.
+ */
+async function installDependency(dep: { path: string }): Promise<void>
+{
+    if (dep.path.startsWith("components/") && dep.path.endsWith(".js"))
+    {
+        const dir = dep.path.split("/")[1];
+        await COMPONENTS[`../components/${dir}/${dir}.ts`]();
+    }
+    else if (dep.path.startsWith("lib/") && dep.path.endsWith(".js"))
+    {
+        (0, eval)(fs.readFileSync(path.join(DIST, dep.path), "utf8"));
+    }
+}
+
+/** Loads a component's source module, after its dependencies, and wraps its window factory with a spy. */
 async function install(d: Descriptor): Promise<void>
 {
     const dir = d.assets.js.split("/")[1];
+    for (const dep of d.assets.deps ?? []) { await installDependency(dep); }
     await COMPONENTS[`../components/${dir}/${dir}.ts`]();
     const real = (window as Any)[d.factory];
     const spy: Spy = { builds: 0, options: [], destroyed: 0 };
@@ -190,7 +210,7 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         return { props, data: { p: data } };
     }
 
-    test("mounts once, loading exactly its own assets", async () =>
+    test("mounts once, loading its own assets and its declared dependencies", async () =>
     {
         const before = spies.get(name)!.builds;
         const { props, data } = initial();
@@ -199,7 +219,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         expect(s.errors).toEqual([]);
         expect(spies.get(name)!.builds).toBe(before + 1);
         expect(s.el.handle).toBeDefined();
-        const own = [d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
+        const deps = (d.assets.deps ?? []).map((dep) => dep.path);
+        const own = [...deps, d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
         expect(loadedUrls).toEqual(expect.arrayContaining(own));
     });
 
@@ -218,10 +239,15 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
     test("each create-time prop that can vary rebuilds exactly once", async () =>
     {
+        const dir = d.assets.js.split("/")[1];
+        // heldProps: create-time props other props' valid values depend on, mounted with and held fixed
+        // (DocViewer's activePage must name one of its pages; ADR-230).
+        const held: Record<string, unknown> = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())
+            ?.CONFORMANCE_GLUE?.heldProps ?? {};
         const { props, data } = initial();
-        const s = await stage(d, props, data);
-        const current = { ...props };
-        const varying = create.filter((p) => JSON.stringify(sampleProp(p, arms[p], 0, CATALOG))
+        const s = await stage(d, { ...props, ...held }, data);
+        const current = { ...props, ...held };
+        const varying = create.filter((p) => !(p in held) && JSON.stringify(sampleProp(p, arms[p], 0, CATALOG))
             !== JSON.stringify(sampleProp(p, arms[p], 1, CATALOG)));
 
         const rebuilds: Record<string, number> = {};
