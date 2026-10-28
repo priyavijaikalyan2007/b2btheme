@@ -70,15 +70,36 @@ function routeFor(name, slots, stateKeys, twoWay)
  * @param ready       - [{ manifest, surface }] for the components in the catalog.
  * @param catalog     - The built catalog (for date-time literal arms).
  * @param assetExists - (distRelativePath) => boolean.
+ * @param libraries   - dist/lib-manifest.json's assets, keyed by name (ADR-230).
  * @returns { descriptors, problems }.
  */
 // @entrypoint
-export function buildDescriptors(ready, catalog, assetExists)
+export function buildDescriptors(ready, catalog, assetExists, libraries = {})
 {
-    const problems = ready.flatMap(({ manifest, surface }) => unsupported(catalogName(manifest), surface));
-    const descriptors = ready.map((c) => descriptorFor(c, catalog, assetExists));
+    const problems = ready.flatMap(({ manifest, surface }) => [...unsupported(catalogName(manifest), surface),
+        ...dependencyProblems(manifest, assetExists, libraries)]);
+    const descriptors = ready.map((c) => descriptorFor(c, catalog, assetExists, libraries));
 
     return { descriptors, problems: [...problems, ...tagCollisions(descriptors)] };
+}
+
+/** protocol.dependencies names that resolve to nothing the page could load (ADR-230). */
+function dependencyProblems(manifest, assetExists, libraries)
+{
+    const name = catalogName(manifest);
+    const { libraries: libs = [], components = [] } = manifest.protocol?.dependencies ?? {};
+    const file = `components/${manifest.name}/${manifest.name}.manifest.ts`;
+
+    return [
+        ...libs.filter((l) => libraries[l] === undefined).map((l) => `${name}: protocol.dependencies.libraries names `
+            + `"${l}", which dist/lib-manifest.json does not serve. Add it to scripts/vendor-closure.mjs, or correct `
+            + `the name in ${file}.`),
+        ...components.filter((c) => c !== manifest.name && !assetExists(`components/${c}/${c}.js`)).map((c) =>
+            `${name}: protocol.dependencies.components names "${c}", but components/${c}/${c}.js was not built. `
+            + `Correct the name in ${file}.`),
+        ...components.filter((c) => c === manifest.name).map(() => `${name}: protocol.dependencies.components names `
+            + `itself; its own script is always loaded. Remove it from ${file}.`),
+    ];
 }
 
 /** Gate G1: catalog action props the adapter could never fire. Providers are served since ADR-225. */
@@ -92,7 +113,7 @@ function unsupported(name, surface)
         + "act on, declare it in protocol.hostOnlyActions with a reason."];
 }
 
-function descriptorFor({ manifest, surface }, catalog, assetExists)
+function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
 {
     const name = catalogName(manifest);
     const changeOption = surface.twoWayValue && !surface.events.some((e) => e.payloadInValue) ? "onChange" : undefined;
@@ -104,7 +125,7 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
         ...(manifest.containerAs ? { containerAs: manifest.containerAs } : {}),
         mountMethod: manifest.mountMethod ?? "auto",
         conformance: manifest.conformance,
-        assets: assetsFor(manifest.name, assetExists),
+        assets: assetsFor(manifest, assetExists, libraries),
         props: routesFor(manifest, surface),
         twoWay: surface.twoWayValue,
         ...(changeOption ? { changeOption } : {}),
@@ -117,11 +138,39 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
     };
 }
 
-function assetsFor(dir, assetExists)
+function assetsFor(manifest, assetExists, libraries)
+{
+    const deps = dependencyAssets(manifest, assetExists, libraries);
+
+    return { ...ownAssets(manifest.name, assetExists), ...(deps.length > 0 ? { deps } : {}) };
+}
+
+function ownAssets(dir, assetExists)
 {
     const css = `components/${dir}/${dir}.css`;
 
     return { js: `components/${dir}/${dir}.js`, ...(assetExists(css) ? { css } : {}) };
+}
+
+/**
+ * What the adapter loads ahead of the component's own script (ADR-230):
+ * libraries first, with their integrity hash, then other components' script
+ * and stylesheet. A dependency's own dependencies are not followed; the
+ * dependent names everything it needs, so the list is the whole truth.
+ */
+function dependencyAssets(manifest, assetExists, libraries)
+{
+    const { libraries: libs = [], components = [] } = manifest.protocol?.dependencies ?? {};
+
+    return [
+        ...libs.filter((l) => libraries[l]).map((l) =>
+            ({ path: libraries[l].url.replace(/^\//, ""), integrity: libraries[l].integrity })),
+        ...components.filter((c) => c !== manifest.name).flatMap((c) =>
+        {
+            const own = ownAssets(c, assetExists);
+            return [{ path: own.js }, ...(own.css ? [{ path: own.css }] : [])];
+        }),
+    ];
 }
 
 /** Data props whose literal arm is a date-time string (spec §5.5). */
