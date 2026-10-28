@@ -44,9 +44,7 @@ const OVERRIDES: Record<string, Record<string, unknown>> = {};
  * are run as expected failures, so each goes red the day it is fixed and has
  * to be removed from here. Empty is the goal.
  */
-const KNOWN_BROKEN: Record<string, string> = {
-    GraphLegend: "#41: absolute-positioned overlay escapes its surface",
-};
+const KNOWN_BROKEN: Record<string, string> = {};
 
 /** A literal sample for every data prop; action props and eventData are left unset. */
 function sampleProps(name: string): Record<string, unknown>

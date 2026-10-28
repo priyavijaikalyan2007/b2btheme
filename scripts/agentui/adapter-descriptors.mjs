@@ -112,6 +112,7 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
         twoWay: surface.twoWayValue,
         ...(changeOption ? { changeOption } : {}),
         ...(surface.change ? { change: surface.change } : {}),
+        ...(manifest.presentation === "overlay" ? { overlay: { height: manifest.defaultSize.h } } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
         dates: datesFor(catalog, name, surface),
     };

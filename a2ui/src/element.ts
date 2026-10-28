@@ -388,6 +388,14 @@ class Binding
         container.className = "outcrop-host";
         container.id = `outcrop-${++containerCount}`;
 
+        if (d.overlay)
+        {
+            // An overlay positions itself absolutely; without a positioned,
+            // sized box it lands against the page and adds no height (#41).
+            container.style.position = "relative";
+            container.style.minHeight = `${d.overlay.height}px`;
+        }
+
         try
         {
             this.#handle = this.#construct(factory, container);

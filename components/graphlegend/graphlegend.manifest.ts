@@ -30,6 +30,9 @@ export const GRAPHLEGEND_MANIFEST: CapabilityManifest =
     factory: "createGraphLegend",
     factoryStyle: "options-only",
     containerOption: "container",
+    // A legend floats over its graph: it positions itself absolutely inside
+    // its container. The A2UI adapter gives it a positioned box (#41).
+    presentation: "overlay",
     label: "Graph Legend",
     icon: "bi-list-columns",
     category: "other",

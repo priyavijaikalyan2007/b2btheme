@@ -24,6 +24,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **GraphLegend over A2UI stays inside its surface** (#41). It's a floating overlay, and the adapter gave it nothing to float in, so it landed in the page's corner, clipped. Components that declare `presentation: "overlay"` now mount in a positioned box as tall as their default height. `createGraphLegend()` is unchanged. ADR-224.
 - **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.
 
 ### Changed

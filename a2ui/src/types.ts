@@ -98,6 +98,12 @@ export interface AdapterDescriptor
     changeOption?: string;
     /** The manifest's protocol.change mapping (ADR-222); absent when onChange passes the value itself. */
     change?: { valueFrom: string } | { cleared: null };
+    /**
+     * Set for a manifest with `presentation: "overlay"` (#41): the component
+     * positions itself absolutely inside its container, so the adapter gives
+     * the container `position: relative` and the manifest's default height.
+     */
+    overlay?: { height: number };
     events: AdapterEvent[];
     dates: string[];
 }

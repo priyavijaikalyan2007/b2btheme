@@ -108,6 +108,22 @@ test.describe("catalog v1 under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
+    test("GraphLegend: floats inside its own box, not against the page (#41)", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "GraphLegend", title: "Kinds",
+            nodeTypes: [{ typeKey: "svc", displayName: "Service", icon: "gear", color: "#2563eb" }], edgeTypes: [] }));
+
+        const box = (await page.locator("outcrop-graph-legend .outcrop-host").boundingBox())!;
+        const panel = (await page.locator("outcrop-graph-legend .graphlegend").boundingBox())!;
+
+        expect(box.height).toBeGreaterThanOrEqual(300);
+        expect(panel.x).toBeGreaterThanOrEqual(box.x);
+        expect(panel.y).toBeGreaterThanOrEqual(box.y);
+        expect(panel.x + panel.width).toBeLessThanOrEqual(box.x + box.width);
+        expect(panel.y + panel.height).toBeLessThanOrEqual(box.y + box.height);
+    });
+
     test("ChatDock: shows the agent's turns and sends what the user submits as onSubmit", async ({ page }) =>
     {
         await open(page, "lit");
