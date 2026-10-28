@@ -62,7 +62,7 @@ export interface DatePickerOptions
     /** Size variant. Default: "default". */
     size?: "mini" | "sm" | "default" | "lg";
 
-    /** Locale for month/day names. Default: "en-US". */
+    /** BCP 47 language tag for month and day names, such as "en-US" or "fr-FR". Default: "en-US". */
     locale?: string;
 
     /** Show format hint below input. Default: true. */

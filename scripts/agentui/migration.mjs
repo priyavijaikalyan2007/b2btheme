@@ -29,6 +29,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // "change" channel and the value write-back, which is one callback in two roles (ADR-219).
     // 92 on 2026-10-28: treeview classified with two providers (readiness step 2 P0, ADR-225).
     // 82 on 2026-10-28: the ten B1 pickers classified (readiness step 2 B1, ADR-226).
+    // 75 on 2026-10-28: the seven B2 date and time pickers classified (readiness step 2 B2, ADR-227).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -45,13 +46,10 @@ export const PENDING_CLASSIFICATION = new Set([
     "colorpicker",
     "commentoverlay",
     "conversation",
-    "cronpicker",
     "datagrid",
-    "datepicker",
     "diagramengine",
     "docklayout",
     "docviewer",
-    "durationpicker",
     "dynamicformswitcher",
     "editablecombobox",
     "emptystate",
@@ -79,7 +77,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "navrail",
     "notificationcenter",
     "peoplepicker",
-    "periodpicker",
     "permissionmatrix",
     "personchip",
     "pill",
@@ -96,7 +93,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "slider",
     "spinemap",
     "splitlayout",
-    "sprintpicker",
     "stacklayout",
     "statusbadge",
     "stepper",
@@ -106,8 +102,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "tenantswitcher",
     "themetoggle",
     "timeline",
-    "timepicker",
-    "timezonepicker",
     "treegrid",
     "usermenu",
     "visualtableeditor",

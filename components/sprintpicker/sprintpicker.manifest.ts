@@ -33,11 +33,29 @@ export const SPRINTPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-kanban",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick an agile sprint from a list computed from a start date and a sprint length.",
+        avoidWhen: "For a fiscal month or quarter use PeriodPicker; for a single calendar date use DatePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        // Cleared is an absent path: clearing deletes the bound value (readiness spec §3.4).
+        change: { cleared: null },
+        hostOnly: {
+            onSelect: "Fires when the user commits a pick; the two-way value already carries it to the agent.",
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+            sprintNaming: "Its function arm names sprints in host code; only the data arms cross the protocol.",
+        },
+    },
 
     regions: ["sprintpicker:list"],
 

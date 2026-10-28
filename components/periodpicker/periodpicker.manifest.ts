@@ -33,11 +33,28 @@ export const PERIODPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-calendar-week",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick a reporting period such as a month, quarter, half or year from a grid.",
+        avoidWhen: "For a single calendar date use DatePicker; for an agile sprint use SprintPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        // Cleared is an absent path: clearing deletes the bound value (readiness spec §3.4).
+        change: { cleared: null },
+        hostOnly: {
+            onSelect: "Fires when the user commits a pick; the two-way value already carries it to the agent.",
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 13466, mountCost: "light", holdsResources: false },

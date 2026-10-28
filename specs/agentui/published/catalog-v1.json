@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "title": "Enterprise Bootstrap Theme",
-  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts only a binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property, with a value matching the $defs entry its description names, once per request. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- ColumnsPicker: Columns Picker. Let the user choose how many text columns a page or section uses, from presets that preview it. For page margins use MarginsPicker; for paper size use SizesPicker.\n- FontDropdown: Font Dropdown. Let the user choose a font family from a list that previews each font in its own typeface. For choices that are not fonts use ChoicePicker; for a free-text font name use TextField.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- LayoutPicker: Layout Picker. Let the user choose an automatic layout algorithm for a graph or diagram, shown as thumbnails. For choices that are not layout algorithms use ChoicePicker.\n- LineEndingPicker: Line Ending Picker. Let the user choose an arrowhead or other end marker for a line or connector in a diagram. For a line's dash pattern use LineTypePicker; for its thickness use LineWidthPicker.\n- LineShapePicker: Line Shape Picker. Let the user choose the routing shape of a connector in a diagram, such as straight or curved. For a line's dash pattern use LineTypePicker; for its end markers use LineEndingPicker.\n- LineTypePicker: Line Type Picker. Let the user choose a line's dash pattern, such as solid, dashed or dotted, with a preview. For a line's thickness use LineWidthPicker; for its routing shape use LineShapePicker.\n- LineWidthPicker: Line Width Picker. Let the user choose a line or border thickness from a list that previews each width. For a line's dash pattern use LineTypePicker; for an arbitrary number use Slider.\n- MarginsPicker: Margins Picker. Let the user choose page margins from named presets such as Normal, Narrow and Wide. For paper size use SizesPicker; for line and paragraph spacing use SpacingPicker.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SizesPicker: Sizes Picker. Let the user choose a paper or page size, such as Letter, Legal or A4, from named presets. For page margins use MarginsPicker; for text columns use ColumnsPicker.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- SpacingPicker: Spacing Picker. Let the user choose line and paragraph spacing for text from named presets such as Single or Double. For page margins use MarginsPicker; for a free numeric value use Slider.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- TreeView: Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts only a binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property, with a value matching the $defs entry its description names, once per request. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- ColumnsPicker: Columns Picker. Let the user choose how many text columns a page or section uses, from presets that preview it. For page margins use MarginsPicker; for paper size use SizesPicker.\n- CronPicker: CRON Picker. Let the user build a recurring schedule as a CRON expression, with presets and a readable summary. For a single date use DatePicker; for a length of time use DurationPicker.\n- DatePicker: Date Picker. Let the user pick one calendar date from a popup calendar, with optional limits. For a date and a time use DateTimeInput; for a fiscal month or quarter use PeriodPicker. Use it to edit, schedule a scalar of exactly 1 item.\n- DurationPicker: Duration Picker. Let the user enter a length of time in units such as days, hours and minutes. For a time of day use TimePicker; for a recurring schedule use CronPicker.\n- FontDropdown: Font Dropdown. Let the user choose a font family from a list that previews each font in its own typeface. For choices that are not fonts use ChoicePicker; for a free-text font name use TextField.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- LayoutPicker: Layout Picker. Let the user choose an automatic layout algorithm for a graph or diagram, shown as thumbnails. For choices that are not layout algorithms use ChoicePicker.\n- LineEndingPicker: Line Ending Picker. Let the user choose an arrowhead or other end marker for a line or connector in a diagram. For a line's dash pattern use LineTypePicker; for its thickness use LineWidthPicker.\n- LineShapePicker: Line Shape Picker. Let the user choose the routing shape of a connector in a diagram, such as straight or curved. For a line's dash pattern use LineTypePicker; for its end markers use LineEndingPicker.\n- LineTypePicker: Line Type Picker. Let the user choose a line's dash pattern, such as solid, dashed or dotted, with a preview. For a line's thickness use LineWidthPicker; for its routing shape use LineShapePicker.\n- LineWidthPicker: Line Width Picker. Let the user choose a line or border thickness from a list that previews each width. For a line's dash pattern use LineTypePicker; for an arbitrary number use Slider.\n- MarginsPicker: Margins Picker. Let the user choose page margins from named presets such as Normal, Narrow and Wide. For paper size use SizesPicker; for line and paragraph spacing use SpacingPicker.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- PeriodPicker: Period Picker. Let the user pick a reporting period such as a month, quarter, half or year from a grid. For a single calendar date use DatePicker; for an agile sprint use SprintPicker.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SizesPicker: Sizes Picker. Let the user choose a paper or page size, such as Letter, Legal or A4, from named presets. For page margins use MarginsPicker; for text columns use ColumnsPicker.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- SpacingPicker: Spacing Picker. Let the user choose line and paragraph spacing for text from named presets such as Single or Double. For page margins use MarginsPicker; for a free numeric value use Slider.\n- SprintPicker: Sprint Picker. Let the user pick an agile sprint from a list computed from a start date and a sprint length. For a fiscal month or quarter use PeriodPicker; for a single calendar date use DatePicker.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- TimePicker: Time Picker. Let the user pick a time of day, in a 12- or 24-hour clock, optionally with a timezone. For a date and time together use DateTimeInput; for a length of time use DurationPicker.\n- TimezonePicker: Timezone Picker. Let the user pick an IANA timezone from a searchable list that shows each zone's offset. For a time of day with its own timezone selector use TimePicker.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- TreeView: Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
   "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "components": {
     "AudioPlayer": {
@@ -257,6 +257,514 @@
       ],
       "unevaluatedProperties": false
     },
+    "CronPicker": {
+      "type": "object",
+      "description": "CRON Picker. Let the user build a recurring schedule as a CRON expression, with presets and a readable summary. For a single date use DatePicker; for a length of time use DurationPicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "CronPicker"
+            },
+            "value": {
+              "description": "Initial CRON expression. Default: \"0 * * * * *\" (every minute). Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showPresets": {
+              "description": "Show the presets dropdown. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showDescription": {
+              "description": "Show the human-readable description. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showRawExpression": {
+              "description": "Show the raw expression input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "allowRawEdit": {
+              "description": "Allow editing the raw expression input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHint": {
+              "description": "Show the format hint. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "presets": {
+              "description": "Custom presets to display. Uses default presets when not provided.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/CronPicker__CronPreset"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, inputs are read-only. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CronPicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "mode": {
+              "description": "Display mode. \"inline\" renders in container, \"dropdown\" shows as trigger + popup. Default: \"inline\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "dropdown"
+                    },
+                    {
+                      "const": "inline"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "DatePicker": {
+      "type": "object",
+      "description": "Date Picker. Let the user pick one calendar date from a popup calendar, with optional limits. For a date and a time use DateTimeInput; for a fiscal month or quarter use PeriodPicker. Use it to edit, schedule a scalar of exactly 1 item.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "DatePicker"
+            },
+            "value": {
+              "description": "Initial selected date. Defaults to today. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "format": {
+              "description": "Date display format. Default: \"yyyy-MM-dd\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "firstDayOfWeek": {
+              "description": "First day of the week: 0 = Sunday … 6 = Saturday. Default: 0.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showWeekNumbers": {
+              "description": "Show ISO week numbers in the left column. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showTodayButton": {
+              "description": "Show the \"Today\" button in the footer. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minDate": {
+              "description": "Earliest selectable date.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxDate": {
+              "description": "Latest selectable date.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabledDates": {
+              "description": "Specific dates that cannot be selected.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, input is not editable but calendar works. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text. Default: format string.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "mini"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "locale": {
+              "description": "BCP 47 language tag for month and day names, such as \"en-US\" or \"fr-FR\". Default: \"en-US\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHint": {
+              "description": "Show format hint below input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHint": {
+              "description": "Custom format hint text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHelp": {
+              "description": "Show format help icon. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHelpText": {
+              "description": "Custom help tooltip text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DatePicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "DateTimeInput": {
       "type": "object",
       "allOf": [
@@ -272,6 +780,253 @@
           "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Divider"
         }
       ]
+    },
+    "DurationPicker": {
+      "type": "object",
+      "description": "Duration Picker. Let the user enter a length of time in units such as days, hours and minutes. For a time of day use TimePicker; for a recurring schedule use CronPicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "DurationPicker"
+            },
+            "pattern": {
+              "description": "The unit pattern determining which spinner columns are shown.\nA hyphen-separated string of unit identifiers.\nDefault: \"h-m\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Initial duration value. Defaults to all zeros. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DurationPicker__DurationValue"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "unitSteps": {
+              "description": "Step increment for each unit. Default: 1 for all units.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DurationPicker__PartialRecordDurationUnitnumber"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "unitMax": {
+              "description": "Maximum value for each unit. Uses natural range defaults if not specified.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DurationPicker__PartialRecordDurationUnitnumber"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "carry": {
+              "description": "When true, overflowing a subordinate unit carries into the next larger unit. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "hideZeroLeading": {
+              "description": "Hide leading zero-value units in the display. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showClearButton": {
+              "description": "Show the \"Clear\" button in the dropdown footer. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHint": {
+              "description": "Show the ISO 8601 format hint below the input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHelp": {
+              "description": "Show the format help icon and tooltip. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHelpText": {
+              "description": "Custom help text for the format tooltip.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the input is disabled. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, the input is not editable by typing but dropdown works. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text when duration is zero.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "mini"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DurationPicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
     },
     "FontDropdown": {
       "type": "object",
@@ -1436,6 +2191,197 @@
       ],
       "unevaluatedProperties": false
     },
+    "PeriodPicker": {
+      "type": "object",
+      "description": "Period Picker. Let the user pick a reporting period such as a month, quarter, half or year from a grid. For a single calendar date use DatePicker; for an agile sprint use SprintPicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "PeriodPicker"
+            },
+            "mode": {
+              "description": "Determines whether the resolved date is the first or last day of the period.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "end"
+                    },
+                    {
+                      "const": "start"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "granularities": {
+              "description": "Which period types to show in the dropdown. Default: all four.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PeriodPicker__PeriodGranularity"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Initial selected value. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/PeriodPicker__PeriodValue"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minYear": {
+              "description": "Earliest navigable year. Default: currentYear - 10.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxYear": {
+              "description": "Latest navigable year. Default: currentYear + 10.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant for the input and dropdown.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, input is not editable.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Input placeholder text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override map keyed by action name; merged with DEFAULT_KEY_BINDINGS.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PeriodPicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "Row": {
       "type": "object",
       "allOf": [
@@ -2045,6 +2991,254 @@
       ],
       "unevaluatedProperties": false
     },
+    "SprintPicker": {
+      "type": "object",
+      "description": "Sprint Picker. Let the user pick an agile sprint from a list computed from a start date and a sprint length. For a fiscal month or quarter use PeriodPicker; for a single calendar date use DatePicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "SprintPicker"
+            },
+            "anchorDate": {
+              "description": "First sprint start date; must fall on weekStartDay.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "sprintLength": {
+              "description": "Sprint duration in weeks (1–8). Default: 2.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "weekStartDay": {
+              "description": "Week start day (0 = Sun, 1 = Mon, …). Default: 1 (Monday).",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "mode": {
+              "description": "Determines whether the resolved date is the first or last day of the sprint.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "end"
+                    },
+                    {
+                      "const": "start"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxSprints": {
+              "description": "Maximum sprints to pre-compute. Default: 26.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "sprintNaming": {
+              "description": "Naming strategy for sprint labels.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "monthly"
+                    },
+                    {
+                      "const": "short"
+                    },
+                    {
+                      "const": "sprint"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "viewMode": {
+              "description": "Initial dropdown view mode. Default: \"list\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "calendar"
+                    },
+                    {
+                      "const": "list"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant for the input and dropdown.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, input is not editable.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Input placeholder text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Initial sprint value. Provided for the DynamicFormSwitcher\nfield-capable component convention (AGENTS.md). Applied by\ncalling `setValue(value)` once the picker has built its\ninternal sprint list. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/SprintPicker__SprintValue"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override map keyed by action name; merged with DEFAULT_KEY_BINDINGS.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SprintPicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component",
+            "anchorDate"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "StickyNote": {
       "type": "object",
       "description": "Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.",
@@ -2261,6 +3455,529 @@
           "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/TextField"
         }
       ]
+    },
+    "TimePicker": {
+      "type": "object",
+      "description": "Time Picker. Let the user pick a time of day, in a 12- or 24-hour clock, optionally with a timezone. For a date and time together use DateTimeInput; for a length of time use DurationPicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "TimePicker"
+            },
+            "value": {
+              "description": "Initial time value. Defaults to current time. Two-way: when bound to a path, the component writes the user's changes there. When the user clears it, the path is deleted; delete the path to clear it.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimePicker__TimeValue"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "clockMode": {
+              "description": "Clock mode: \"12\" for 12-hour with AM/PM, \"24\" for 24-hour. Default: \"24\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "12"
+                    },
+                    {
+                      "const": "24"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showSeconds": {
+              "description": "Show seconds spinner column. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "format": {
+              "description": "Time display format. Default: \"HH:mm:ss\" (24h) or \"hh:mm:ss A\" (12h).",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minuteStep": {
+              "description": "Minute step interval (1, 5, 15, 30). Default: 1.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "secondStep": {
+              "description": "Second step interval. Default: 1.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minTime": {
+              "description": "Earliest selectable time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimePicker__TimeValue"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxTime": {
+              "description": "Latest selectable time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimePicker__TimeValue"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showNowButton": {
+              "description": "Show the \"Now\" button in the dropdown footer. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showTimezone": {
+              "description": "Show the timezone selector. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "timezone": {
+              "description": "Initial timezone (IANA string). Default: \"UTC\". Use \"local\" for browser timezone.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHint": {
+              "description": "Show format hint below input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHint": {
+              "description": "Custom format hint text. Defaults to the value of format.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHelp": {
+              "description": "Show format help icon. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHelpText": {
+              "description": "Custom help tooltip text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, input is not editable but dropdown works. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text. Default: format string.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "mini"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimePicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onTimezone": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"timezone\" emits. Its payload (a scalar) is at <eventData path>/timezone."
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TimezonePicker": {
+      "type": "object",
+      "description": "Timezone Picker. Let the user pick an IANA timezone from a searchable list that shows each zone's offset. For a time of day with its own timezone selector use TimePicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "TimezonePicker"
+            },
+            "timezone": {
+              "description": "Initial timezone (IANA string). Default: \"UTC\". Use \"local\" for browser timezone.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Alias of `timezone` — provided to satisfy the DynamicFormSwitcher\nfield-capable component convention (AGENTS.md). When both are set,\n`timezone` wins. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showTimePreview": {
+              "description": "Show live time preview in the dropdown footer. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHint": {
+              "description": "Show format hint below input. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFormatHelp": {
+              "description": "Show format help icon and tooltip. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatHelpText": {
+              "description": "Custom help tooltip text.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "When true, the component is disabled. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "When true, input is not editable but dropdown works. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "mini"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text. Default: \"Select a timezone...\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TimezonePicker__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
     },
     "ToolColorPicker": {
       "type": "object",
@@ -3028,10 +4745,19 @@
           "$ref": "#/components/ColumnsPicker"
         },
         {
+          "$ref": "#/components/CronPicker"
+        },
+        {
+          "$ref": "#/components/DatePicker"
+        },
+        {
           "$ref": "#/components/DateTimeInput"
         },
         {
           "$ref": "#/components/Divider"
+        },
+        {
+          "$ref": "#/components/DurationPicker"
         },
         {
           "$ref": "#/components/FontDropdown"
@@ -3073,6 +4799,9 @@
           "$ref": "#/components/OrientationPicker"
         },
         {
+          "$ref": "#/components/PeriodPicker"
+        },
+        {
           "$ref": "#/components/Row"
         },
         {
@@ -3091,6 +4820,9 @@
           "$ref": "#/components/SpacingPicker"
         },
         {
+          "$ref": "#/components/SprintPicker"
+        },
+        {
           "$ref": "#/components/StickyNote"
         },
         {
@@ -3101,6 +4833,12 @@
         },
         {
           "$ref": "#/components/TextField"
+        },
+        {
+          "$ref": "#/components/TimePicker"
+        },
+        {
+          "$ref": "#/components/TimezonePicker"
         },
         {
           "$ref": "#/components/ToolColorPicker"
@@ -3219,6 +4957,131 @@
       ],
       "description": "A single column layout preset.",
       "additionalProperties": false
+    },
+    "CronPicker__CronPreset": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Display label for the preset."
+        },
+        "value": {
+          "type": "string",
+          "description": "CRON expression value."
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "description": "Represents a named CRON preset with a label and expression value.",
+      "additionalProperties": false
+    },
+    "CronPicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "DatePicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "DurationPicker__DurationValue": {
+      "type": "object",
+      "properties": {
+        "y": {
+          "type": "number",
+          "description": "Years."
+        },
+        "q": {
+          "type": "number",
+          "description": "Quarters."
+        },
+        "mo": {
+          "type": "number",
+          "description": "Months."
+        },
+        "fn": {
+          "type": "number",
+          "description": "Fortnights."
+        },
+        "w": {
+          "type": "number",
+          "description": "Weeks."
+        },
+        "d": {
+          "type": "number",
+          "description": "Days."
+        },
+        "h": {
+          "type": "number",
+          "description": "Hours."
+        },
+        "m": {
+          "type": "number",
+          "description": "Minutes."
+        },
+        "s": {
+          "type": "number",
+          "description": "Seconds."
+        }
+      },
+      "required": [],
+      "description": "Represents a duration value as a map of unit to numeric value.\nOnly units present in the configured pattern will have entries.",
+      "additionalProperties": false
+    },
+    "DurationPicker__PartialRecordDurationUnitnumber": {
+      "type": "object",
+      "properties": {
+        "y": {
+          "type": "number"
+        },
+        "q": {
+          "type": "number"
+        },
+        "mo": {
+          "type": "number"
+        },
+        "fn": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "d": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        },
+        "m": {
+          "type": "number"
+        },
+        "s": {
+          "type": "number"
+        }
+      },
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": false
+    },
+    "DurationPicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "FontDropdown__FontItem": {
       "type": "object",
@@ -3531,6 +5394,66 @@
       "description": "A single margin preset definition. Values are in inches.",
       "additionalProperties": false
     },
+    "PeriodPicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "PeriodPicker__PeriodGranularity": {
+      "oneOf": [
+        {
+          "const": "half"
+        },
+        {
+          "const": "month"
+        },
+        {
+          "const": "quarter"
+        },
+        {
+          "const": "year"
+        }
+      ],
+      "description": "Granularity levels for period selection."
+    },
+    "PeriodPicker__PeriodValue": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "number",
+          "description": "Calendar year of the selected period."
+        },
+        "period": {
+          "type": "string",
+          "description": "Display label for the period (e.g. \"Jan\", \"Q1\", \"H1\", \"2026\")."
+        },
+        "type": {
+          "$ref": "#/$defs/PeriodPicker__PeriodGranularity",
+          "description": "Granularity level of the selection."
+        },
+        "date": {
+          "type": "string",
+          "description": "Resolved date based on start/end mode.",
+          "format": "date-time"
+        },
+        "monthIndex": {
+          "type": "number",
+          "description": "Zero-based month index; present only when type is \"month\"."
+        }
+      },
+      "required": [
+        "year",
+        "period",
+        "type",
+        "date"
+      ],
+      "description": "Represents a selected period value.",
+      "additionalProperties": false
+    },
     "SizesPicker__SizePreset": {
       "type": "object",
       "properties": {
@@ -3587,6 +5510,93 @@
       ],
       "description": "A single spacing preset.",
       "additionalProperties": false
+    },
+    "SprintPicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "SprintPicker__SprintValue": {
+      "type": "object",
+      "properties": {
+        "sprintIndex": {
+          "type": "number",
+          "description": "Zero-based sprint ordinal."
+        },
+        "sprintName": {
+          "type": "string",
+          "description": "Display label produced by the naming strategy."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "First working day of the sprint (inclusive).",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Last working day of the sprint (inclusive).",
+          "format": "date-time"
+        },
+        "date": {
+          "type": "string",
+          "description": "Resolved date based on start/end mode.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "sprintIndex",
+        "sprintName",
+        "startDate",
+        "endDate",
+        "date"
+      ],
+      "description": "Represents a selected sprint value.",
+      "additionalProperties": false
+    },
+    "TimePicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "TimePicker__TimeValue": {
+      "type": "object",
+      "properties": {
+        "hours": {
+          "type": "number",
+          "description": "Hours (0-23)."
+        },
+        "minutes": {
+          "type": "number",
+          "description": "Minutes (0-59)."
+        },
+        "seconds": {
+          "type": "number",
+          "description": "Seconds (0-59). Omitted when seconds are not shown."
+        }
+      },
+      "required": [
+        "hours",
+        "minutes"
+      ],
+      "description": "Represents a time value with hours, minutes, and optional seconds.",
+      "additionalProperties": false
+    },
+    "TimezonePicker__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "ToolColorPicker__ToolColor": {
       "type": "object",
