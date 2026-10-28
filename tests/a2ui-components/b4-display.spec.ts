@@ -6,8 +6,9 @@
 /**
  * E2E: the ten B4 display components under @a2ui/lit (readiness step 2 B4,
  * ADR-229). The seven surface ones send their clicks with the payload under
- * eventData; Gauge's value is one-way; PresenceIndicator and
- * ReasoningAccordion render and send nothing. Breadcrumb's items schema
+ * eventData; Gauge's value is one-way; ReasoningAccordion renders and sends
+ * nothing. PresenceIndicator moved to p1-dependencies.spec.ts when it gained
+ * its click (ADR-230). Breadcrumb's items schema
  * leaves href out (the link rule), so an agent's link is rejected.
  */
 
@@ -141,16 +142,6 @@ test.describe("B4 display components under @a2ui/lit", () =>
         await expect.poll(() => page.evaluate((t) =>
             (window as unknown as { handleOf(x: string): { getValue(): number } }).handleOf(t).getValue(),
         tagOf("Gauge"))).toBe(70);
-        expect(await actions(page)).toEqual([]);
-        expect(await errors(page)).toEqual([]);
-    });
-
-    test("PresenceIndicator: renders the people and sends nothing", async ({ page }) =>
-    {
-        await mount(page, "PresenceIndicator", { people: [{ id: "1", name: "Alice Johnson" },
-            { id: "2", name: "Bob Smith", status: "online" }] });
-
-        await expect(page.locator(`${tagOf("PresenceIndicator")} .presence-indicator`)).toBeVisible();
         expect(await actions(page)).toEqual([]);
         expect(await errors(page)).toEqual([]);
     });
