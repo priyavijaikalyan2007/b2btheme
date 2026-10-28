@@ -287,6 +287,8 @@ The jsdom two-way test stays as a plumbing test. It applies the declared `change
 
 `test:e2e:a2ui` includes `tests/a2ui-catalog-render.spec.ts` and `tests/a2ui-components/`.
 
+**Amendment (2026-10-28, ADR-223):** CI ran no browser when this shipped. `.github/workflows/ci.yml` now runs `test:e2e:a2ui` on every pull request and push to `main`, after the structure checks.
+
 ---
 
 ## 7. Docs, verification and issues
