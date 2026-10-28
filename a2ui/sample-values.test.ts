@@ -91,8 +91,10 @@ describe("sampleValue — readiness step 2 B2", () =>
     test("a null arm is never sampled, because a data model cannot hold null", () =>
     {
         const schema = { oneOf: [{ type: "null" }, { type: "number" }] };
+        const asConst = { oneOf: [{ const: null }, { type: "number" }] };
 
         expect([sampleValue(schema, 0, {}), sampleValue(schema, 1, {})]).toEqual([1, 2]);
+        expect([sampleValue(asConst, 0, {}), sampleValue(asConst, 1, {})]).toEqual([1, 2]);
     });
 
     test("locale and timezone strings are real ones; other strings are not", () =>

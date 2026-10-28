@@ -70,6 +70,13 @@ describe("diffCatalogs", () =>
 
         expect(diffCatalogs(before, after).breaking).toEqual(["Widget.v changed"]);
     });
+    test("{ type: null } and { const: null } are the same schema", () =>
+    {
+        const before = cat({ kids: { oneOf: [{ type: "null" }, { type: "array" }] } });
+        const after = cat({ kids: { oneOf: [{ const: null }, { type: "array" }] } });
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [], additive: [] });
+    });
     test("a description-only change is not breaking", () =>
     {
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })).breaking)

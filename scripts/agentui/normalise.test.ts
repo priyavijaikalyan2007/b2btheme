@@ -94,6 +94,20 @@ describe("normaliseTypiaUnit", () =>
 
         expect(props.when).toEqual({ type: "string" });
         expect(props.either).toEqual({ oneOf: [{ type: "string" }, { type: "number" }] });
-        expect(props.dateOnly).toEqual({ oneOf: [{ type: "string", format: "date-time" }, { type: "null" }] });
+        expect(props.dateOnly).toEqual({ oneOf: [{ type: "string", format: "date-time" }, { const: null }] });
+    });
+
+    // web_core converts a type it does not know, "null" included, to z.unknown(),
+    // which matches everything: oneOf [null, X] then rejected every literal X
+    // (PeriodPicker.value, TreeView's TreeNode.children). { const: null } means
+    // the same in JSON Schema and web_core reads it as z.literal(null) (B2).
+    test("a null type is emitted as { const: null }, keeping its description", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object", properties: {
+            kids: { oneOf: [{ type: "null", description: "Lazy." }, { type: "array", items: { type: "string" } }] } } } };
+
+        expect(normaliseTypiaUnit(unit).properties.kids.oneOf)
+            .toEqual([{ const: null, description: "Lazy." }, { type: "array", items: { type: "string" } }]);
     });
 });
+

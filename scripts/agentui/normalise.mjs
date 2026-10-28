@@ -53,11 +53,33 @@ export function normaliseTypiaUnit(unit)
     }
 
     const toDefs = (ref) => (ref.startsWith(TYPIA_PREFIX) ? DEFS_PREFIX + ref.slice(TYPIA_PREFIX.length) : ref);
-    const tidy = (node) => sortConstUnions(dropCoveredArms(closeObjects(mapRefs(node, toDefs))));
+    const tidy = (node) => sortConstUnions(dropCoveredArms(nullAsConst(closeObjects(mapRefs(node, toDefs)))));
     const defs = tidy(unit.components?.schemas ?? {});
     const root = inlineRoot(tidy(unit.schema), defs);
 
     return { $schema: DRAFT_2020_12, ...root, ...(Object.keys(defs).length > 0 ? { $defs: defs } : {}) };
+}
+
+/**
+ * Rewrites `{ type: "null" }` as `{ const: null }`, the same schema in JSON
+ * Schema. web_core converts a type it does not know, "null" included, to
+ * z.unknown(), which matches everything, so oneOf [null, X] rejected every
+ * literal X; it reads `const` as z.literal (readiness step 2 B2).
+ */
+function nullAsConst(node)
+{
+    if (Array.isArray(node)) { return node.map(nullAsConst); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    const out = Object.fromEntries(Object.entries(node).map(([k, v]) => [k, nullAsConst(v)]));
+
+    if (out.type !== "null") { return out; }
+
+    const { type, ...rest } = out;
+    void type;
+
+    return { const: null, ...rest };
 }
 
 /**

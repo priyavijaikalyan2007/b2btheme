@@ -2251,7 +2251,7 @@
                 {
                   "oneOf": [
                     {
-                      "type": "null"
+                      "const": null
                     },
                     {
                       "$ref": "#/$defs/PeriodPicker__PeriodValue"
@@ -3201,7 +3201,7 @@
                 {
                   "oneOf": [
                     {
-                      "type": "null"
+                      "const": null
                     },
                     {
                       "$ref": "#/$defs/SprintPicker__SprintValue"
@@ -5734,7 +5734,7 @@
         "children": {
           "oneOf": [
             {
-              "type": "null"
+              "const": null
             },
             {
               "type": "array",

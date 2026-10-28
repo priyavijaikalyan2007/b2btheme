@@ -83,12 +83,12 @@ export function sampleValue(schema: Schema, variant: Variant, root: Schema, poin
 const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required", "format"]);
 
 /**
- * Samples a oneOf, skipping a `{ type: "null" }` arm: an A2UI data model cannot
+ * Samples a oneOf, skipping a null arm (`{ type: "null" }` or `{ const: null }`): an A2UI data model cannot
  * hold null (setting it deletes the key), so a bound null would never arrive.
  */
 function sampleOneOf(arms: Schema[], variant: Variant, root: Schema, pointer: string): unknown
 {
-    const usable = arms.map((arm, i) => ({ arm, i })).filter(({ arm }) => arm.type !== "null");
+    const usable = arms.map((arm, i) => ({ arm, i })).filter(({ arm }) => arm.type !== "null" && arm.const !== null);
 
     if (usable.length === 0) { throw new Error(`sampleValue: every arm of the oneOf at ${pointer} is null.`); }
 

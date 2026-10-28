@@ -158,6 +158,14 @@ function canonical(node, parentKey = "")
 
     if (node === null || typeof node !== "object") { return JSON.stringify(node); }
 
+    // { type: "null" } and { const: null } are one schema (normalise.mjs emits the latter since B2).
+    if (node.type === "null" && !("const" in node))
+    {
+        const { type, ...rest } = node;
+        void type;
+        return canonical({ const: null, ...rest }, parentKey);
+    }
+
     const keys = Object.keys(node).filter((k) => parentKey === "properties" || k !== "description").sort();
 
     return `{${keys.map((k) => `${JSON.stringify(k)}:${canonical(node[k], k)}`).join(",")}}`;
