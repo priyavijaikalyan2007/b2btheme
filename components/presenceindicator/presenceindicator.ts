@@ -124,6 +124,11 @@ export interface PresenceIndicatorOptions
     cssClass?: string;
     /** Dims the indicator and ignores interaction. Default: false. */
     disabled?: boolean;
+    /**
+     * Makes each avatar in the expanded list clickable. An onClick callback does this by itself; an agent's
+     * onClick action is sent only when this is true. Default: false.
+     */
+    clickable?: boolean;
     onClick?: (person: PersonData) => void;
     onExpand?: () => void;
     onCollapse?: () => void;
@@ -258,6 +263,15 @@ export interface PresenceIndicatorHandle
     collapse(): void;
     toggle(): void;
     isExpanded(): boolean;
+
+    /** The surface contract (additive): PresenceIndicator has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "click": a copy of the clicked person, after onClick. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { expanded }: whether the list of everyone is showing. */
+    getState(): Record<string, unknown>;
+    /** Expands or collapses to match state.expanded when it is present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class PresenceIndicator implements PresenceIndicatorHandle
@@ -269,6 +283,7 @@ export class PresenceIndicator implements PresenceIndicatorHandle
     private maxVisible: number;
     private expanded: boolean;
     private expandable: boolean;
+    private readonly clickHandlers = new Set<(payload: unknown) => void>();
 
     // --- DOM references ---
     private rootEl: HTMLElement | null = null;
@@ -340,6 +355,7 @@ export class PresenceIndicator implements PresenceIndicatorHandle
     /** Remove listeners, DOM, null refs. */
     public destroy(): void
     {
+        this.clickHandlers.clear();
         this.destroyChips();
         this.detachDocumentListeners();
 
@@ -435,6 +451,53 @@ export class PresenceIndicator implements PresenceIndicatorHandle
     public isExpanded(): boolean
     {
         return this.expanded;
+    }
+
+    // ── Surface contract (additive, readiness step 2 P1) ──
+
+    /** PresenceIndicator has no data slots; use setPeople(), addPerson() or removePerson(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): PresenceIndicator has no data slots. `
+            + "Use setPeople(), addPerson() or removePerson().");
+    }
+
+    /** Subscribes to "click"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "click")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "click".`);
+        }
+
+        this.clickHandlers.add(handler);
+
+        return () => { this.clickHandlers.delete(handler); };
+    }
+
+    /** Whether the list of everyone is showing. */
+    public getState(): Record<string, unknown>
+    {
+        return { expanded: this.isExpanded() };
+    }
+
+    /** Restores state captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (typeof state.expanded !== "boolean" || state.expanded === this.expanded)
+        {
+            return;
+        }
+
+        if (state.expanded)
+        {
+            this.expand();
+        }
+        else
+        {
+            this.collapse();
+        }
     }
 
     // ========================================================================
@@ -582,7 +645,7 @@ export class PresenceIndicator implements PresenceIndicatorHandle
         }
 
         const chipSize = CHIP_SIZE_MAP[this.size] || "sm";
-        const hasClick = !!this.opts.onClick;
+        const hasClick = !!this.opts.onClick || this.opts.clickable === true;
 
         const chip = factory({
             name: person.name,
@@ -826,7 +889,25 @@ export class PresenceIndicator implements PresenceIndicatorHandle
             {
                 self.opts.onClick(person);
             }
+
+            self.emitClick(person);
         };
+    }
+
+    /** Send each "click" subscriber its own copy of the person; a throwing handler is logged, not rethrown. */
+    private emitClick(person: PersonData): void
+    {
+        for (const handler of this.clickHandlers)
+        {
+            try
+            {
+                handler(structuredClone(person));
+            }
+            catch (err)
+            {
+                logError("click handler threw:", err);
+            }
+        }
     }
 }
 
