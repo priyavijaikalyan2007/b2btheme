@@ -42,7 +42,7 @@ export interface StatusBadgeOptions
     /** Enable/disable pulse animation. Default: auto (true for operational/in-progress). */
     pulse?: boolean;
 
-    /** Whether the badge responds to click events. Default: false. */
+    /** Makes the badge respond to clicks and Enter or Space; onClick fires only when this is true. Default: false. */
     clickable?: boolean;
 
     /** Callback invoked on click when clickable is true. */

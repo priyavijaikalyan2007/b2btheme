@@ -94,9 +94,9 @@ export interface PillOptions
     borderRadius?: string;
     /** Size variant. Default "md". */
     size?: "sm" | "md" | "lg";
-    /** Show close button. */
+    /** Shows a close button; onDismiss fires only when this is true. Default: false. */
     dismissible?: boolean;
-    /** Pointer cursor + click/keyboard activation. */
+    /** Makes the pill respond to clicks and Enter or Space; onClick fires only when this is true. Default: false. */
     clickable?: boolean;
     /** Render as anchor instead of span. */
     href?: string;

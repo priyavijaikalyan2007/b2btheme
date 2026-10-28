@@ -78,7 +78,10 @@ export interface MetricCardOptions
      *  is not also set). */
     onClick?: (evt: MouseEvent) => void;
 
-    /** Makes the card a button without an onClick; on("click") hears it. Default: false. */
+    /**
+     * Makes the card a button the user can click. An onClick callback does this by itself; an agent's onClick
+     * action is sent only when this is true. Default: false.
+     */
     clickable?: boolean;
 
     /** Lifecycle state. Default "ready". */

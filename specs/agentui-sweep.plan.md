@@ -1752,7 +1752,9 @@ For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
 **The link rule (new, ADR-229):** an option whose value becomes an `<a href>` is host-only, with the reason
 > "A link the user follows from the host's page; an agent must not choose it. Over A2UI, listen for the click event and answer with openUrl."
 
-An agent-chosen `javascript:` URL would run in the host's origin when the user clicked it. B4 covers Breadcrumb `items[].href`, MetricCard `href`, PersonChip `href` and Pill `href`. Image URLs stay data (§4).
+An agent-chosen `javascript:` URL would run in the host's origin when the user clicked it. B4 covers MetricCard `href`, PersonChip `href` and Pill `href`. Image URLs stay data (§4).
+
+Breadcrumb `items[].href` is a nested plain string, and `hostOnly` can't name one. Instead, a `protocol.schemas` override for `items` leaves it out, and the closed schema rejects an agent's link (amended during implementation).
 
 **Per component:**
 
@@ -1763,7 +1765,7 @@ An agent-chosen `javascript:` URL would run in the host's origin when the user c
 | Pill | — | `href` (link rule), `onHover`, `onHoverOut` | `click`, `dismiss` (scalar: the label) | surface, `[]` |
 | Gauge | **one-way** (`protocol.change: "event"`) | `onChange` (fires inside `setValue`, so it echoes the writer), `onOverLimit`, `onOverdue` (follow from the value, limit and deadline the agent set), `formatValue` | — | field (unchanged) |
 | EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label); the buttons emit without `onAction`/`onSecondary` | surface, `[]` |
-| Breadcrumb | — | `items[].href` (link rule), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
+| Breadcrumb | — | `items[].href` (link rule, through a `protocol.schemas` override for `items`), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
 | PersonChip | — | `href` (link rule), `metadata` (data-* attributes), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
 | PresenceIndicator | — | `onClick` (per-person clicks render through PersonChip, which the adapter does not load), `onExpand`, `onCollapse` (view state), `people[].metadata` (data-* attributes) | — | display (unchanged) |
 | ThemeToggle | — | — | `change` (record: `{ theme, mode }`) | surface, `["mode"]` |

@@ -33,8 +33,8 @@ export const STATUSBADGE_MANIFEST: CapabilityManifest =
 
     // What an agent's model reads to choose this component (ADR-222).
     agent: {
-        useWhen: "Show a short status, such as Operational or Degraded, as a coloured badge the user can click for "
-            + "details.",
+        useWhen: "Show a short status, such as Operational or Degraded, as a coloured badge, optionally clickable "
+            + "for details.",
         avoidWhen: "For a removable tag or filter use Pill; for a number with a trend use MetricCard.",
     },
 

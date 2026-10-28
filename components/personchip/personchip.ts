@@ -107,7 +107,10 @@ export interface PersonChipOptions
     status?: PersonChipStatus;
     /** Size variant: "sm", "md" or "lg". Default: "md". */
     size?: PersonChipSize;
-    /** Makes the chip a button that the user can activate. Default: false. */
+    /**
+     * Makes the chip a button the user can activate. An onClick callback or an href does this by itself; an
+     * agent's onClick action is sent only when this is true. Default: false.
+     */
     clickable?: boolean;
     /** Turns the chip into a link to this URL. */
     href?: string;
