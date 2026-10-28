@@ -27,6 +27,31 @@ const SCALARS: Record<string, [unknown, unknown]> = {
     string: ["a", "b"], number: [1, 2], integer: [1, 2], boolean: [false, true],
 };
 
+/** String formats the catalog uses, with two valid values each (readiness step 2 B2). */
+const FORMATS: Record<string, [string, string]> = {
+    "date-time": ["2026-01-15T09:30:00.000Z", "2026-02-20T14:45:00.000Z"],
+};
+
+/**
+ * Props whose string must parse, by name: a generic string sample is not a
+ * language tag or a timezone, and a component rightly fails to mount on one
+ * (readiness step 2 B2: DatePicker.locale threw "Invalid language tag: a").
+ */
+const NAMED: Record<string, [string, string]> = {
+    locale: ["en-US", "fr-FR"],
+    timezone: ["UTC", "Asia/Tokyo"],
+};
+
+/**
+ * A value for catalog prop `prop`: a NAMED sample when its schema is a plain
+ * string, else sampleValue().
+ */
+export function sampleProp(prop: string, schema: Schema, variant: Variant, root: Schema, pointer = "#"): unknown
+{
+    return prop in NAMED && schema.type === "string" && Object.keys(schema).every((k) => k === "type" || IGNORED.has(k))
+        ? NAMED[prop][variant] : sampleValue(schema, variant, root, pointer);
+}
+
 /**
  * A value of `schema`; variants 0 and 1 differ wherever the schema allows.
  *
@@ -55,18 +80,29 @@ export function sampleValue(schema: Schema, variant: Variant, root: Schema, poin
     return sampleTyped(schema, variant, root, pointer);
 }
 
-const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required"]);
+const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required", "format"]);
 
+/**
+ * Samples a oneOf, skipping a `{ type: "null" }` arm: an A2UI data model cannot
+ * hold null (setting it deletes the key), so a bound null would never arrive.
+ */
 function sampleOneOf(arms: Schema[], variant: Variant, root: Schema, pointer: string): unknown
 {
-    if (variant === 1 && arms.length > 1) { return sampleValue(arms[1], 0, root, `${pointer}/oneOf/1`); }
+    const usable = arms.map((arm, i) => ({ arm, i })).filter(({ arm }) => arm.type !== "null");
 
-    return sampleValue(arms[0], variant, root, `${pointer}/oneOf/0`);
+    if (usable.length === 0) { throw new Error(`sampleValue: every arm of the oneOf at ${pointer} is null.`); }
+
+    const pick = variant === 1 && usable.length > 1 ? usable[1] : usable[0];
+    const inner: Variant = variant === 1 && usable.length > 1 ? 0 : variant;
+
+    return sampleValue(pick.arm, inner, root, `${pointer}/oneOf/${pick.i}`);
 }
 
 function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: string): unknown
 {
     const type = schema.type as string;
+
+    if (typeof schema.format === "string") { return sampleFormat(type, schema.format, variant, pointer); }
 
     if (type in SCALARS) { return SCALARS[type][variant]; }
 
@@ -82,6 +118,17 @@ function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: st
     }
 
     throw new Error(`sampleValue: no type, const, oneOf or $ref at ${pointer}; extend a2ui/sample-values.ts.`);
+}
+
+function sampleFormat(type: string, format: string, variant: Variant, pointer: string): string
+{
+    if (type !== "string" || !(format in FORMATS))
+    {
+        throw new Error(`sampleValue: unsupported format "${format}" on type "${type}" at ${pointer}; extend `
+            + "FORMATS in a2ui/sample-values.ts.");
+    }
+
+    return FORMATS[format][variant];
 }
 
 function resolve(ref: string, root: Schema): Schema

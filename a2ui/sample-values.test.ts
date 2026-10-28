@@ -12,7 +12,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { sampleValue } from "./sample-values";
+import { sampleProp, sampleValue } from "./sample-values";
 
 const ROOT = { $defs: { Item: { type: "object", properties: { id: { type: "string" }, n: { type: "number" } },
     required: ["id"], additionalProperties: false } } };
@@ -71,3 +71,36 @@ describe("sampleValue", () =>
         expect(() => sampleValue({ $ref: "#/$defs/Nope" }, 0, ROOT)).toThrow(/cannot resolve \$ref #\/\$defs\/Nope/);
     });
 });
+
+describe("sampleValue — readiness step 2 B2", () =>
+{
+    test("a date-time string gets two distinct ISO timestamps", () =>
+    {
+        const schema = { type: "string", format: "date-time" };
+        const [a, b] = [sampleValue(schema, 0, {}), sampleValue(schema, 1, {})] as string[];
+
+        expect(a).not.toBe(b);
+        expect(new Date(a).toISOString()).toBe(a);
+    });
+
+    test("an unknown format is refused, not guessed", () =>
+    {
+        expect(() => sampleValue({ type: "string", format: "email" }, 0, {})).toThrow("unsupported format");
+    });
+
+    test("a null arm is never sampled, because a data model cannot hold null", () =>
+    {
+        const schema = { oneOf: [{ type: "null" }, { type: "number" }] };
+
+        expect([sampleValue(schema, 0, {}), sampleValue(schema, 1, {})]).toEqual([1, 2]);
+    });
+
+    test("locale and timezone strings are real ones; other strings are not", () =>
+    {
+        expect(sampleProp("locale", { type: "string" }, 0, {})).toBe("en-US");
+        expect(sampleProp("timezone", { type: "string" }, 1, {})).toBe("Asia/Tokyo");
+        expect(sampleProp("title", { type: "string" }, 0, {})).toBe("a");
+        expect(sampleProp("locale", { type: "string", format: "date-time" }, 0, {})).not.toBe("en-US");
+    });
+});
+
