@@ -851,3 +851,63 @@ describe("click-outside closes", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B1-1, B1-2): additive on("custom"),
+// getState/setState and setData. onCustom keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    function clickCustom(): void
+    {
+        (container.querySelector(".sizespicker-trigger") as HTMLElement).click();
+        (document.body.querySelector(".sizespicker-panel .sizespicker-custom") as HTMLElement).click();
+    }
+
+    test("on(custom)_HearsTheCustomLink_AfterOnCustom_WithThePresetName", () =>
+    {
+        const order: string[] = [];
+        const picker = createSizesPicker(makeOptions({ value: "A4", onCustom: () => order.push("option") }));
+        picker.on("custom", (name) => order.push(`channel:${String(name)}`));
+
+        clickCustom();
+
+        expect(order).toEqual(["option", "channel:A4"]);
+        picker.destroy();
+    });
+
+    test("on_ReturnsAnUnsubscribe", () =>
+    {
+        const heard = vi.fn();
+        const picker = createSizesPicker(makeOptions());
+        picker.on("custom", heard)();
+
+        clickCustom();
+
+        expect(heard).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const picker = createSizesPicker(makeOptions({ value: "Legal" }));
+        const captured = picker.getState();
+
+        picker.setValue("A5");
+        expect(picker.getState()).toEqual({ value: "A5" });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ value: "Legal" });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = createSizesPicker(makeOptions());
+
+        expect(() => picker.on("selection", () => undefined)).toThrow("custom");
+        expect(() => picker.setData("sizes", [])).toThrow("no data slots");
+        picker.destroy();
+    });
+});

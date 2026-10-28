@@ -72,6 +72,15 @@ export interface SizesPickerAPI
     hide(): void;
     destroy(): void;
     getElement(): HTMLElement;
+
+    /** The surface contract (additive): SizesPicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "custom", fired with the selected size name when "More Paper Sizes…" is chosen. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selected size name, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -124,6 +133,9 @@ function logTrace(...a: unknown[]): void
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const CLS = "sizespicker";
+
+/** The one channel SizesPicker emits (readiness step 2 B1-1). */
+const CUSTOM_CHANNEL = "custom";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const THUMB_MAX_HEIGHT = 40;
 let instanceCounter = 0;
@@ -279,6 +291,7 @@ export class SizesPicker implements SizesPickerAPI
     private readonly category: string | undefined;
     private onChange?: (size: SizePreset) => void;
     private onCustom?: (() => void) | undefined;
+    private readonly customHandlers = new Set<(payload: unknown) => void>();
 
     // DOM refs
     private rootEl: HTMLElement | null = null;
@@ -368,6 +381,7 @@ export class SizesPicker implements SizesPickerAPI
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.customHandlers.clear();
         this.removeGlobalListeners();
         if (this.panelEl && this.panelEl.parentElement)
         {
@@ -387,6 +401,40 @@ export class SizesPicker implements SizesPickerAPI
     public getElement(): HTMLElement
     {
         return this.rootEl as HTMLElement;
+    }
+
+    // ── Public API: surface contract (additive, readiness step 2 B1) ──
+
+    /** SizesPicker has no data slots; sizes change through setSizes(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): SizesPicker has no data slots. Use setSizes() or `
+            + "setValue().");
+    }
+
+    /** Subscribes to "custom"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== CUSTOM_CHANNEL)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "${CUSTOM_CHANNEL}".`);
+        }
+
+        this.customHandlers.add(handler);
+
+        return () => { this.customHandlers.delete(handler); };
+    }
+
+    /** The selected size name. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.selected.name };
+    }
+
+    /** Restores a selection captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
     }
 
     // ── Private: options resolution ──
@@ -701,6 +749,11 @@ export class SizesPicker implements SizesPickerAPI
     {
         this.closePanel();
         safeCallback(this.onCustom);
+
+        for (const handler of this.customHandlers)
+        {
+            safeCallback(handler, this.selected.name as unknown);
+        }
     }
 
     private onDocumentClick(e: MouseEvent): void
