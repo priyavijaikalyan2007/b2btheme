@@ -426,6 +426,21 @@ describe("keyboard navigation", () =>
         tree.destroy();
     });
 
+    test("doubleClick_ActivatesNode_OnceForTheOptionAndOnTheActivateChannel", () =>
+    {
+        const onActivate = vi.fn();
+        const subscriber = vi.fn();
+        const tree = createTreeView(defaultOpts({ onActivate }));
+        tree.on("activate", subscriber);
+
+        getTreeItemByNodeId("folder-1")?.querySelector(":scope > .treeview-node-row")
+            ?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true }));
+
+        expect(onActivate).toHaveBeenCalledTimes(1);
+        expect(subscriber).toHaveBeenCalledWith(expect.objectContaining({ id: "folder-1" }));
+        tree.destroy();
+    });
+
     test("space_TogglesSelection", () =>
     {
         const tree = createTreeView(defaultOpts());
