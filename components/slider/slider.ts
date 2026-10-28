@@ -73,6 +73,15 @@ export interface SliderHandle
     disable(): void;
     getElement(): HTMLElement;
     destroy(): void;
+
+    /** The surface contract (additive): Slider has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "change": the value, or { low, high } in range mode. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { value, range }: the single value and the range, whichever mode is shown. */
+    getState(): Record<string, unknown>;
+    /** Applies state.value and state.range when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -228,6 +237,7 @@ class SliderImpl implements SliderHandle
     private readonly instanceId: number;
     private opts: Required<Pick<SliderOptions, "min" | "max" | "step">> & SliderOptions;
     private mode: "single" | "range";
+    private readonly changeHandlers = new Set<(payload: unknown) => void>();
     private value: number;
     private valueLow: number;
     private valueHigh: number;
@@ -365,10 +375,50 @@ class SliderImpl implements SliderHandle
     }
 
     /** Destroy the component. */
+    // ── Surface contract (additive, readiness step 2 B3) ──
+
+    /** Slider has no data slots; use setValue() or setRange(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): Slider has no data slots. Use setValue() or setRange().`);
+    }
+
+    /** Subscribes to "change"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "change".`);
+        }
+
+        this.changeHandlers.add(handler);
+
+        return () => { this.changeHandlers.delete(handler); };
+    }
+
+    /** The single value and the range. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue(), range: this.getRange() };
+    }
+
+    /** Restores state captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as number); }
+
+        if ("range" in state)
+        {
+            const r = state.range as { low: number; high: number };
+            this.setRange(r.low, r.high);
+        }
+    }
+
     public destroy(): void
     {
         if (this.destroyed) { return; }
 
+        this.changeHandlers.clear();
         this.destroyed = true;
         this.rootEl.remove();
         logInfo("destroyed instance", this.instanceId);
@@ -896,16 +946,13 @@ class SliderImpl implements SliderHandle
     /** Fire the onChange callback with current value(s). */
     private fireChange(): void
     {
-        if (this.mode === "range")
+        const payload = this.mode === "range" ? { low: this.valueLow, high: this.valueHigh } : this.value;
+
+        safeCallback(this.opts.onChange, payload);
+
+        for (const handler of this.changeHandlers)
         {
-            safeCallback(
-                this.opts.onChange,
-                { low: this.valueLow, high: this.valueHigh }
-            );
-        }
-        else
-        {
-            safeCallback(this.opts.onChange, this.value);
+            safeCallback(handler, (typeof payload === "number" ? payload : { ...payload }) as unknown);
         }
     }
 }
@@ -951,6 +998,10 @@ export function createSlider(
         disable: () => impl.disable(),
         getElement: () => impl.getElement(),
         destroy: () => impl.destroy(),
+        setData: (slot, value) => impl.setData(slot, value),
+        on: (channel, handler) => impl.on(channel, handler),
+        getState: () => impl.getState(),
+        setState: (state) => impl.setState(state),
     };
 }
 

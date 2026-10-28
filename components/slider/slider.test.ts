@@ -615,3 +615,60 @@ describe("custom formatter", () =>
         slider.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): additive on("change"),
+// getState/setState and setData. onChange keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(change)_HearsTheValue_AfterOnChange", () =>
+    {
+        const order: string[] = [];
+        const slider = createDefaultSlider({ value: 50, onChange: (v) => order.push(`option:${String(v)}`) });
+        const off = slider.on("change", (v) => order.push(`channel:${String(v)}`));
+        const thumb = getThumb(slider.getElement())!;
+
+        pressKey(thumb, "ArrowRight");
+        off();
+        pressKey(thumb, "ArrowRight");
+
+        expect(order).toEqual(["option:51", "channel:51", "option:52"]);
+        slider.destroy();
+    });
+
+    test("on(change)_InRangeMode_HearsLowAndHigh", () =>
+    {
+        const heard = vi.fn();
+        const slider = createDefaultSlider({ mode: "range", valueLow: 20, valueHigh: 80 });
+        slider.on("change", heard);
+
+        pressKey(getThumbLow(slider.getElement())!, "ArrowRight");
+
+        expect(heard).toHaveBeenCalledWith({ low: 21, high: 80 });
+        slider.destroy();
+    });
+
+    test("getState_SetState_RoundTripValueAndRange", () =>
+    {
+        const slider = createDefaultSlider({ value: 30 });
+        const captured = slider.getState();
+
+        slider.setValue(70);
+        expect(slider.getState()).toMatchObject({ value: 70 });
+
+        slider.setState(captured);
+        expect(slider.getState()).toEqual(captured);
+        slider.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const slider = createDefaultSlider();
+
+        expect(() => slider.on("slideEnd", () => undefined)).toThrow("change");
+        expect(() => slider.setData("value", 1)).toThrow("no data slots");
+        slider.destroy();
+    });
+});
