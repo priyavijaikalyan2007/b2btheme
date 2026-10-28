@@ -17,7 +17,8 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-type AjvError = { instancePath: string; schemaPath: string; message?: string };
+type AjvError = { instancePath: string; schemaPath: string; keyword?: string; message?: string;
+    params?: { missingProperty?: string } };
 type Validate = ((value: unknown) => boolean) & { errors?: AjvError[] | null };
 
 const ROOT = path.join(__dirname, "..", "..");
@@ -39,8 +40,10 @@ function componentValidators(): Promise<Record<string, Validate>>
 }
 
 /**
- * Throws, with Ajv's errors, unless `{ component, [prop]: value }` is a valid
- * instance of `component` in the built catalog.
+ * Throws, with Ajv's errors, unless `value` is valid for `component.prop` in
+ * the built catalog. The instance carries only that prop, so a "required"
+ * complaint about another prop (SprintPicker's anchorDate) is not about the
+ * value and is ignored; any error at or under the prop fails.
  */
 export async function expectCatalogValid(component: string, prop: string, value: unknown): Promise<void>
 {
@@ -51,7 +54,11 @@ export async function expectCatalogValid(component: string, prop: string, value:
         throw new Error(`${component} is not in the built catalog; run \`npm run build\`.`);
     }
 
-    if (!validate({ id: "x", component, [prop]: value }))
+    const ok = validate({ id: "x", component, [prop]: value });
+    const otherRequired = (e: AjvError) => e.keyword === "required" && e.instancePath === ""
+        && e.params?.missingProperty !== prop;
+
+    if (!ok && !(validate.errors ?? []).every(otherRequired))
     {
         throw new Error(`${component}.${prop} = ${JSON.stringify(value)} is not valid in the catalog: `
             + literalArmErrors(validate.errors ?? [], prop));
