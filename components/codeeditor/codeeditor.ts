@@ -268,6 +268,15 @@ export interface CodeEditorHandle
     toggleWordWrap(): void;
     toggleLineNumbers(): void;
     getEditorInstance(): unknown;
+
+    /** The surface contract (additive): CodeEditor has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "save": the code string, after onSave. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { value }: the code. */
+    getState(): Record<string, unknown>;
+    /** Applies state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class CodeEditor implements CodeEditorHandle
@@ -284,6 +293,7 @@ export class CodeEditor implements CodeEditorHandle
     private currentTheme: "light" | "dark";
     private wordWrapEnabled: boolean;
     private lineNumbersEnabled: boolean;
+    private readonly saveHandlers = new Set<(payload: unknown) => void>();
 
     // -- DOM
     private rootEl!: HTMLElement;
@@ -348,6 +358,7 @@ export class CodeEditor implements CodeEditorHandle
         this.hide();
         this.clearTimers();
         this.destroyCMView();
+        this.saveHandlers.clear();
         this.destroyed = true;
         logDebug(`Destroyed: ${this.instanceId}`);
     }
@@ -396,6 +407,44 @@ export class CodeEditor implements CodeEditorHandle
     // ========================================================================
     // PUBLIC — STATE
     // ========================================================================
+
+    // ── Surface contract (additive, readiness step 2 B5) ──
+
+    /** CodeEditor has no data slots; use setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): CodeEditor has no data slots. Use setValue().`);
+    }
+
+    /** Subscribes to "save"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "save")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "save".`);
+        }
+
+        this.saveHandlers.add(handler);
+        this.updateToolbarDisabledStates();
+
+        return () =>
+        {
+            this.saveHandlers.delete(handler);
+            this.updateToolbarDisabledStates();
+        };
+    }
+
+    /** The code. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores state captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
+    }
 
     public setReadOnly(readOnly: boolean): void
     {
@@ -983,7 +1032,7 @@ export class CodeEditor implements CodeEditorHandle
             key: this.cmKeyFor("save", "Mod-s"),
             run: () =>
             {
-                this.options.onSave?.(this.getValue());
+                this.fireSave();
                 return true;
             }
         });
@@ -1301,7 +1350,7 @@ export class CodeEditor implements CodeEditorHandle
             case "wordwrap": this.toggleWordWrap(); break;
             case "copy": this.copyToClipboard(); break;
             case "format": this.format(); break;
-            case "save": this.options.onSave?.(this.getValue()); break;
+            case "save": this.fireSave(); break;
         }
 
         this.focus();
@@ -1376,10 +1425,8 @@ export class CodeEditor implements CodeEditorHandle
             this.langSelectEl.disabled = this.options.disabled || false;
         }
 
-        if (!this.options.onSave)
-        {
-            this.setToolbarBtnDisabled("save", true);
-        }
+        // A "save" subscriber is as good as onSave: the gesture has somewhere to go.
+        this.setToolbarBtnDisabled("save", !this.options.onSave && this.saveHandlers.size === 0);
     }
 
     private setToolbarBtnDisabled(action: string, disabled: boolean): void
@@ -1449,6 +1496,22 @@ export class CodeEditor implements CodeEditorHandle
         {
             this.liveRegionEl.textContent = message;
         });
+    }
+
+    /** Fire onSave first, then the "save" subscribers, each with the code string. */
+    private fireSave(): void
+    {
+        if (!this.options.onSave && this.saveHandlers.size === 0) { return; }
+
+        const value = this.getValue();
+
+        this.options.onSave?.(value);
+
+        for (const handler of this.saveHandlers)
+        {
+            try { handler(value); }
+            catch (err) { logError("A save subscriber threw:", err); }
+        }
     }
 
     private fireChange(): void
