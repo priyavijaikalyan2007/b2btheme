@@ -546,7 +546,10 @@ function validateAgent(m: Record<string, unknown>, issues: ValidationIssue[]): v
 }
 
 /** The keys a provider spec may carry; every catalog name derives from `request`. */
-const PROVIDER_KEYS: readonly string[] = ["request"];
+const PROVIDER_KEYS: readonly string[] = ["request", "concurrency"];
+
+/** How the A2UI adapter orders a provider's requests (ADR-225). */
+const PROVIDER_CONCURRENCY: readonly string[] = ["latest", "queue"];
 
 /**
  * Reports every key of `obj` outside `allowed`. The generator derives all
@@ -596,6 +599,12 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
 
         if (isObject(spec))
         {
+            if (spec.concurrency !== undefined && !PROVIDER_CONCURRENCY.includes(spec.concurrency as string))
+            {
+                issues.push(enumIssue(`protocol.providers.${option}.concurrency`, spec.concurrency,
+                    PROVIDER_CONCURRENCY));
+            }
+
             unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
         }
     }

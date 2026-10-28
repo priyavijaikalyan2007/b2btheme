@@ -506,6 +506,22 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   declares it. The adapter then mounts it in a `position: relative` box whose
   `min-height` is `defaultSize.h`; otherwise it lands against the page and
   adds no height to the surface (#41, ADR-224).
+- **`protocol.providers: { <option>: { request, concurrency? } }`: a callback
+  that loads data on demand** (`onLoadChildren`, `onSearch`, `fetchFn`). The
+  agent answers it (ADR-225). Declare `concurrency: "queue"` for keyed loads (a
+  node's children, a page); the default `"latest"` suits searches. A provider
+  makes the component `surface`. Its conformance glue needs a
+  `request(request, handle)` trigger for G3.
+- **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
+  callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`), callbacks
+  whose information `value` already carries, decisions (`onDragValidate`,
+  `filterFn`), render hooks and formatters are `protocol.hostOnly` with a
+  reason. An event makes the component `surface`, which needs additive
+  `on()`/`getState()`/`setState()` on its handle.
+- **Options the component passes to `fetch`, `XMLHttpRequest`, `import()` or
+  `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
+  this URL from the user's browser with the host's credentials; an agent must
+  not choose it." Image URLs are not covered.
 
 **The testing bar for joining the catalog (readiness spec §6):**
 

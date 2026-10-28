@@ -203,6 +203,14 @@ export interface ProviderSpec
 {
     /** Catalog name of the request, e.g. "search". UAX #31. */
     readonly request: string;
+
+    /**
+     * What the A2UI adapter does when the component asks again before the
+     * agent answers (ADR-225). "latest" (the generator's default): a newer
+     * request replaces a waiting one; for searches. "queue": every request is
+     * sent, strictly in order; for keyed loads such as a node's children.
+     */
+    readonly concurrency?: "latest" | "queue";
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */

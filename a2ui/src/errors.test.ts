@@ -21,10 +21,11 @@ function ctx(surface: unknown): ComponentContextLike
 
 describe("reportError", () =>
 {
-    test("the four codes are the spec's", () =>
+    test("the codes are the spec's, plus the provider timeout (ADR-225)", () =>
     {
         expect(ERROR_CODES).toEqual({ VALIDATION_FAILED: "VALIDATION_FAILED", BINDING_LOST: "OUTCROP_BINDING_LOST",
-            ASSET_LOAD_FAILED: "OUTCROP_ASSET_LOAD_FAILED", MOUNT_FAILED: "OUTCROP_MOUNT_FAILED" });
+            ASSET_LOAD_FAILED: "OUTCROP_ASSET_LOAD_FAILED", MOUNT_FAILED: "OUTCROP_MOUNT_FAILED",
+            PROVIDER_TIMEOUT: "OUTCROP_PROVIDER_TIMEOUT" });
     });
 
     test("dispatches code, message and path through the surface", () =>

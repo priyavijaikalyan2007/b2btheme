@@ -75,13 +75,13 @@ describe("runPipeline — fixture widget", () =>
         const result = run([withProvider()]);
         const props = (result.catalog.components as any).Widget.allOf[2].properties;
 
-        expect(result.errors).toHaveLength(1);
-        expect(result.errors[0]).toMatch(/Widget declares providers \[search\].*#31/);
+        expect(result.errors).toEqual([]);
         const derived = Object.keys(props).filter((k) => ["eventData", "selection", "searchQuery"].includes(k)
             || k.startsWith("on") || k.endsWith("Result") || k.endsWith("Results"));
 
         expect(derived.sort()).toEqual(["eventData", "onSearch", "onSelection", "searchResult"]);
-        expect(props.searchResult.anyOf[0]).toMatchObject({ type: "array", items: { type: "string" } });
+        expect(props.searchResult.$ref).toContain("#/$defs/DataBinding");
+        expect((result.catalog as any).$defs.Widget__searchResult).toMatchObject({ type: "array", items: { type: "string" } });
     }, 60_000);
     test("the override replaces the too-broad schema", () =>
     {
@@ -114,7 +114,7 @@ describe("runPipeline — fixture widget", () =>
     {
         const errors = run([{ ...widget(), actions: [{ id: "export", label: "Export", destructive: false, requires: [] }] }]).errors;
 
-        expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#31/);
+        expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#45/);
     }, 60_000);
     test("G1: a host-only action passes, and its reason is in the report", () =>
     {

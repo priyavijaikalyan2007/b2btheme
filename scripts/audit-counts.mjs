@@ -891,7 +891,8 @@ export const BASELINES = {
     // Target 0. A new component that adds one fails [20]. Pinned exactly:
     // the same value is a FLOOR (2026-10-25, final review I-3), so a fix
     // lowers this number and the floor in the same change.
-    unclassifiedOptions: 546,
+    // ADR-225 (2026-10-28): 546 -> 528, treeview classified (readiness step 2 P0).
+    unclassifiedOptions: 528,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     protocolPropsMissingJsdoc: 373,
@@ -908,7 +909,8 @@ export const BASELINES = {
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
     // removing a name means lowering both numbers in the same change, and adding one fails [20].
-    componentsPendingClassification: 93,
+    // ADR-225 (2026-10-28): 93 -> 92, treeview classified (readiness step 2 P0).
+    componentsPendingClassification: 92,
 };
 
 /*
@@ -995,12 +997,13 @@ export const FLOORS = {
     // floor, a fall fails here until BOTH numbers are lowered in the same
     // change, and a rise fails the ceiling. Measured 2026-10-25, unchanged
     // by the final-review fixes: 546, 373, 6, 93. changeMismatches (ADR-222) added
-    // 2026-10-27 at its measured 18.
-    unclassifiedOptions: 546,
+    // 2026-10-27 at its measured 18. ADR-225 (2026-10-28): 528 and 92 once treeview was
+    // classified (readiness step 2 P0).
+    unclassifiedOptions: 528,
     protocolPropsMissingJsdoc: 373,
     changeMismatches: 18,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 93,
+    componentsPendingClassification: 92,
 };
 
 /**

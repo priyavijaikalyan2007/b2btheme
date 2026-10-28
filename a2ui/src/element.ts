@@ -29,6 +29,7 @@ import { ERROR_CODES, reportError } from "./errors";
 import { loadAssets } from "./loader";
 import { logDebug, logInfo } from "./log";
 import { PropTracker, type Delivery } from "./props";
+import { wireProviders, type WiredProviders } from "./providers";
 import { changeOptions, dispatchActionProp, wireRoundTrip, type RoundTrip } from "./roundtrip";
 import { bindingPath, fromWire, sameComponent, sameValue, toWire } from "./values";
 import type { AdapterDescriptor, ComponentContextLike, Sub, Validators } from "./types";
@@ -40,6 +41,7 @@ export interface ElementEnv
     readonly validators: Validators;
     readonly assetBaseUrl: () => string;
     readonly injectBaseTheme: () => boolean;
+    readonly providerTimeoutMs: () => number;
 }
 
 /** The element contract: web_core's A2uiWebComponentElement, structurally. */
@@ -170,6 +172,7 @@ class Binding
     #handle: Record<string, unknown> | undefined;
     #container: HTMLElement | undefined;
     #roundTrip: RoundTrip | undefined;
+    #providers: WiredProviders | undefined;
     #applying = false;
     #lastWritten: { value: unknown } | undefined;
     #disposed = false;
@@ -412,10 +415,30 @@ class Binding
         logInfo("mount", this.#where());
     }
 
+    /** Builds the component with its provider callbacks, releasing them if the build fails (ADR-225). */
     #construct(factory: unknown, container: HTMLElement): Record<string, unknown>
     {
+        const providers = wireProviders(this.#ctx, this.#env.descriptor, this.#env.validators,
+            this.#env.providerTimeoutMs());
+
+        try
+        {
+            const handle = this.#build(factory, container, providers);
+            this.#providers = providers;
+            return handle;
+        }
+        catch (err)
+        {
+            providers.release();
+            throw err;
+        }
+    }
+
+    #build(factory: unknown, container: HTMLElement, providers: WiredProviders): Record<string, unknown>
+    {
         const d = this.#env.descriptor;
-        const options = { ...Object.fromEntries(this.#values), ...changeOptions(d, (v) => this.#onUserValue(v)) };
+        const options = { ...Object.fromEntries(this.#values), ...changeOptions(d, (v) => this.#onUserValue(v)),
+            ...providers.options };
         const handle = invokerFor(d)(factory, container.id, options) as Record<string, unknown> | null;
 
         if (!handle || typeof handle !== "object")
@@ -445,6 +468,8 @@ class Binding
         this.#handle = undefined;
         this.#roundTrip?.release();
         this.#roundTrip = undefined;
+        this.#providers?.release();
+        this.#providers = undefined;
         this.#container?.remove();
         this.#container = undefined;
 

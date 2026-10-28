@@ -2438,10 +2438,8 @@ export class TreeView implements TreeViewHandle
             return;
         }
 
-        if (this.options.onActivate)
-        {
-            this.options.onActivate(node);
-        }
+        // Through the channel, as Enter already is, so on("activate") hears it too.
+        this.emitChannel("activate", () => this.options.onActivate?.(node), node);
     }
 
     /**
@@ -2881,10 +2879,8 @@ export class TreeView implements TreeViewHandle
 
             e.preventDefault();
 
-            if (this.options.onActivate)
-            {
-                this.options.onActivate(node);
-            }
+            // Through the channel, as Enter already is, so on("activate") hears it too.
+            this.emitChannel("activate", () => this.options.onActivate?.(node), node);
         });
 
         // Drag and drop

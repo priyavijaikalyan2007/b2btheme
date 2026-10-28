@@ -8,7 +8,7 @@
  * to write one. It imports the BUILT adapter from the served dist tree, builds
  * the catalog with the host's own @a2ui/web_core, and exposes send() and dm()
  * to the Playwright spec. Query parameters: base (assetBaseUrl), inject
- * (injectBaseTheme=1).
+ * (injectBaseTheme=1), providerTimeoutMs (milliseconds).
  */
 
 import { Catalog, MessageProcessor } from "@a2ui/web_core/v0_9";
@@ -33,8 +33,10 @@ export async function startHost(mount: (surface: Any) => void, unmount: (surface
     if (!base) { throw new Error("The harness needs ?base=<assetBaseUrl>."); }
 
     const { createOutcropCatalog } = await import(/* @vite-ignore */ ADAPTER);
+    const timeout = params.get("providerTimeoutMs");
     const catalog = createOutcropCatalog({ Catalog, basicCatalog, BASIC_FUNCTIONS },
-        { assetBaseUrl: base, injectBaseTheme: params.get("inject") === "1" });
+        { assetBaseUrl: base, injectBaseTheme: params.get("inject") === "1",
+            ...(timeout === null ? {} : { providerTimeoutMs: Number(timeout) }) });
     const processor = new (MessageProcessor as Any)([catalog], (a: Any) => w.__actions.push(a));
 
     w.__actions = [];

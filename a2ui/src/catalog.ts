@@ -47,7 +47,14 @@ export interface OutcropCatalogOptions
 {
     readonly assetBaseUrl: string;
     readonly injectBaseTheme?: boolean;
+    /** How long a provider request waits for the agent's answer, in milliseconds. Default 30000 (ADR-225). */
+    readonly providerTimeoutMs?: number;
 }
+
+/** The page-global options once fixed. */
+interface Config { assetBaseUrl: string; injectBaseTheme: boolean; providerTimeoutMs: number }
+
+const DEFAULT_PROVIDER_TIMEOUT_MS = 30_000;
 
 interface Entry { readonly name: string; readonly [key: string]: unknown }
 interface LoadedCatalog
@@ -60,7 +67,7 @@ interface CatalogClass { fromJson(json: unknown): LoadedCatalog }
 interface BasicCatalog { readonly components: ReadonlyMap<string, Entry> }
 
 /** The page-global options, fixed by the first call. */
-let config: { assetBaseUrl: string; injectBaseTheme: boolean } | undefined;
+let config: Config | undefined;
 
 /** One element class per tag for the life of the page. */
 let classes = new Map<string, CustomElementConstructor>();
@@ -106,7 +113,7 @@ export function elementClassFor(descriptor: AdapterDescriptor, validators: Valid
     if (existing) { return existing; }
 
     const env: ElementEnv = { descriptor, validators, assetBaseUrl: () => current().assetBaseUrl,
-        injectBaseTheme: () => current().injectBaseTheme };
+        injectBaseTheme: () => current().injectBaseTheme, providerTimeoutMs: () => current().providerTimeoutMs };
     const cls = class extends outcropElementBase() { protected readonly env = env; };
 
     classes.set(descriptor.tagName, cls);
@@ -167,13 +174,15 @@ function fixConfig(options: OutcropCatalogOptions): void
             + `${JSON.stringify(options.injectBaseTheme)}.`);
     }
 
+    checkTimeout(options.providerTimeoutMs);
     checkBase(options.assetBaseUrl);
 
-    const next = { assetBaseUrl: options.assetBaseUrl, injectBaseTheme: options.injectBaseTheme === true };
+    const next: Config = { assetBaseUrl: options.assetBaseUrl, injectBaseTheme: options.injectBaseTheme === true,
+        providerTimeoutMs: options.providerTimeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS };
 
     if (!config) { config = next; return; }
 
-    for (const key of ["assetBaseUrl", "injectBaseTheme"] as const)
+    for (const key of ["assetBaseUrl", "injectBaseTheme", "providerTimeoutMs"] as const)
     {
         if (config[key] !== next[key])
         {
@@ -185,7 +194,17 @@ function fixConfig(options: OutcropCatalogOptions): void
     }
 }
 
-function current(): { assetBaseUrl: string; injectBaseTheme: boolean }
+/** A provider timeout must be a positive whole number of milliseconds (ADR-225). */
+function checkTimeout(ms: unknown): void
+{
+    if (ms !== undefined && !(Number.isInteger(ms) && (ms as number) > 0))
+    {
+        throw new Error("createOutcropCatalog: providerTimeoutMs must be a positive integer (milliseconds), got "
+            + `${JSON.stringify(ms)}.`);
+    }
+}
+
+function current(): Config
 {
     if (!config)
     {

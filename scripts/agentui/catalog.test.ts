@@ -161,14 +161,17 @@ describe("catalog — component entry", () =>
         expect(() => build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]))
             .toThrow(/widget: channel "selection" has payload shape "blob", which is not a DataShape/);
     });
-    test("a provider gets on<Request> and <request>Result", () =>
+    test("a provider gets on<Request> and a binding-only <request>Result whose schema is a $defs entry", () =>
     {
-        const props = ownProps(build().catalog, "Widget");
+        const built = build().catalog;
+        const props = ownProps(built, "Widget");
 
         expect(props.onSearch.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
         expect(props.onSearch.description).toContain("<eventData path>/search");
-        expect(props.searchResult.anyOf).toEqual([{ type: "array", items: { type: "string" } },
-            { $ref: `${COMMON_TYPES_ID}#/$defs/DataBinding` }, { $ref: `${COMMON_TYPES_ID}#/$defs/FunctionCall` }]);
+        expect(props.searchResult.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/DataBinding`);
+        expect("anyOf" in props.searchResult).toBe(false);
+        expect(props.searchResult.description).toContain("#/$defs/Widget__searchResult");
+        expect(built.$defs.Widget__searchResult).toEqual({ type: "array", items: { type: "string" } });
     });
     test("eventData is absent when no event or provider carries a payload", () =>
     {

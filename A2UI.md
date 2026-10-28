@@ -50,6 +50,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 - **Bind `value` to read the user's edit.** A literal `value` means "set it and don't read it back". `onChange` still fires.
 - **Read each component's description.** It says when to choose the component and what to use instead. When a `value` description says the path is deleted on clear, an absent path means the user cleared it; delete the path to clear it yourself.
 - **Bind `eventData` to read event payloads.** The component writes each payload to `<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can read it. Without `eventData` the action still fires, with no payload.
+- **Answer a component's requests (providers).** A component that needs data sends `on<Request>`, with the request at `<eventData path>/<request>`. It asks only when `on<Request>`, `<request>Result` (bound to a path) and `eventData` are all set. Answer each request once, with `updateDataModel` at the path bound to `<request>Result`, with a value matching the `$defs` entry its description names. It asks again only after you answer; a request you never answer fails with `OUTCROP_PROVIDER_TIMEOUT`.
 - **Expect these error codes** through the surface:
 
   | Code | Meaning | Component state |
@@ -58,6 +59,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
   | `OUTCROP_BINDING_LOST` | a bound value became `undefined` after mount, unless its description says deleting the path clears it | keeps its last value |
   | `OUTCROP_ASSET_LOAD_FAILED` | the component's script or CSS (or the injected base theme) failed to load | not mounted |
   | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a declared handle method is missing, or the element is in a shadow root | not mounted |
+  | `OUTCROP_PROVIDER_TIMEOUT` | you did not answer an `on<Request>` in time (`path` is the `<request>Result` path) | handles the failure as it would a failed load |
 
 ## Checking and trying it
 
@@ -69,20 +71,20 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 
 | Gate | Where | Fails when |
 |---|---|---|
-| G1 | `npm run build:agentui` | a catalog component declares a manifest action that isn't in `protocol.hostOnlyActions`, or any `protocol.providers`. The adapter cannot serve them yet (#31), so their catalog action props would never fire. |
+| G1 | `npm run build:agentui` | a catalog component declares a manifest action that isn't in `protocol.hostOnlyActions`. The adapter has no action bar yet (#45), so its catalog action props would never fire. Providers are served (ADR-225). |
 | G2 | `npm run build:agentui` and `[29]` | a data prop has no route, two tags collide, the bundle's embedded catalog differs from `dist/a2ui/catalog/v1.json`, it does not import in plain Node, or it would serve a forbidden package |
-| G3 | `a2ui/fleet-adapter.test.ts` | any catalog component fails the round trip through the built bundle and a real `web_core` surface: mount, live updates without a rebuild (live taken from the **manifest**), create-time rebuilds, events, two-way edits, teardown |
+| G3 | `a2ui/fleet-adapter.test.ts` | any catalog component fails the round trip through the built bundle and a real `web_core` surface: mount, live updates without a rebuild (live taken from the **manifest**), create-time rebuilds, events, two-way edits, provider requests, teardown |
 
-G3 triggers each channel through the component's `<name>.conformance.ts` glue. **A surface component with channels needs a glue trigger for every channel**, as the runtime fleet gate already requires.
+G3 triggers each channel through the component's `<name>.conformance.ts` glue. **A surface component with channels needs a glue trigger for every channel**, as the runtime fleet gate already requires. **A component with providers needs a glue `request(request, handle)` for every provider**, plus any create-time props the request needs in `requestProps`.
 
 The build also fails a catalog component on `change-mismatch` (its `onChange` is not its value and `protocol.change` doesn't say how it maps) and on `agent-description` (missing or weak `agent.useWhen`/`agent.avoidWhen`). AGENTS.md "Agent-Protocol-Capable Components" has both rules and the testing bar: the generated render test (`tests/a2ui-catalog-render.spec.ts`), gesture tests in `tests/a2ui-components/`, and their coverage gate.
 
 ## Scope today
 
-- **In the catalog:** the 8 components that are. The 93 components on `PENDING_CLASSIFICATION` join as #20 classifies them.
+- **In the catalog:** the 9 components that are. The 92 components on `PENDING_CLASSIFICATION` join as #20 classifies them, in the batches of `specs/agentui-sweep.prd.md`.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
-  - Manifest actions an agent could use, and providers, are #31. Actions it can't use are declared in `protocol.hostOnlyActions`.
+  - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.
   - The A2UI v1.0 codec is later.
   - `theme.primaryColor` is ignored by decision: components follow the host page's theme.
 - **Verified renderers:**

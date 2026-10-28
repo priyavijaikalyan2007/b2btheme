@@ -7,7 +7,7 @@
  * 📜 PURPOSE: Derive one A2UI adapter descriptor per catalog component from
  *    its manifest and resolved surface (spec §3). Nothing is hand-written, so
  *    a newly classified component is supported with no adapter change. Gate
- *    G1 (actions and providers the adapter cannot serve yet) and tag
+ *    G1 (manifest actions the adapter cannot serve yet) and tag
  *    collisions are literate problems.
  * 🔗 RELATES: [[AgentUiResolver]], [[AgentUiCatalog]], [[A2uiAdapter]]
  * ⚡ FLOW: [ready components + catalog] -> [buildDescriptors]
@@ -18,7 +18,7 @@ import { catalogName } from "./catalog.mjs";
 
 export const TAG_PREFIX = "outcrop-";
 
-const ACTIONS_ISSUE = "#31";
+const ACTIONS_ISSUE = "#45";
 
 /**
  * The custom element tag for a catalog name (spec §3.3).
@@ -81,18 +81,15 @@ export function buildDescriptors(ready, catalog, assetExists)
     return { descriptors, problems: [...problems, ...tagCollisions(descriptors)] };
 }
 
-/** Gate G1: catalog action props the adapter could never fire. */
+/** Gate G1: catalog action props the adapter could never fire. Providers are served since ADR-225. */
 function unsupported(name, surface)
 {
-    const found = [
-        ["actions", surface.actions.map((a) => a.id)],
-        ["providers", surface.providers.map((p) => p.request)],
-    ].filter(([, ids]) => ids.length > 0);
+    const ids = surface.actions.map((a) => a.id);
 
-    return found.map(([kind, ids]) => `${name} declares ${kind} [${ids.join(", ")}], which the A2UI adapter does not `
-        + `support yet, so its catalog action props would never fire. Support lands with ${ACTIONS_ISSUE}; until then keep `
-        + "the component on PENDING_CLASSIFICATION or remove the declaration, or, for an action an agent cannot act on, "
-        + "declare it in protocol.hostOnlyActions with a reason.");
+    return ids.length === 0 ? [] : [`${name} declares actions [${ids.join(", ")}], which the A2UI adapter does not `
+        + `support yet, so its catalog action props would never fire. Support lands with ${ACTIONS_ISSUE}; until then `
+        + "keep the component on PENDING_CLASSIFICATION or remove the declaration, or, for an action an agent cannot "
+        + "act on, declare it in protocol.hostOnlyActions with a reason."];
 }
 
 function descriptorFor({ manifest, surface }, catalog, assetExists)
@@ -114,6 +111,8 @@ function descriptorFor({ manifest, surface }, catalog, assetExists)
         ...(surface.change ? { change: surface.change } : {}),
         ...(manifest.presentation === "overlay" ? { overlay: { height: manifest.defaultSize.h } } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
+        providers: surface.providers.map(({ option, request, actionProp, response }) => ({ option, request, actionProp,
+            resultProp: response, concurrency: manifest.protocol?.providers?.[option]?.concurrency ?? "latest" })),
         dates: datesFor(catalog, name, surface),
     };
 }

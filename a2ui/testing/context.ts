@@ -162,6 +162,6 @@ export function fakeDescriptor(over: Partial<AdapterDescriptor> = {}): AdapterDe
         props: { title: { route: "create" }, items: { route: "slot", slot: "items" },
             mode: { route: "state", key: "mode" },
             value: { route: "value" } },
-        twoWay: true, events: [], dates: [], ...over,
+        twoWay: true, events: [], providers: [], dates: [], ...over,
     };
 }

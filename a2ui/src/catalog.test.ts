@@ -68,6 +68,20 @@ describe("createOutcropCatalog — webCore check", () =>
             .toThrow(/injectBaseTheme must be a boolean/);
     });
 
+    test.each([[0], [-1], [1.5], ["30000"]])("providerTimeoutMs %s is rejected", (bad) =>
+    {
+        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any, { ...OPTIONS, providerTimeoutMs: bad as Any }))
+            .toThrow("providerTimeoutMs must be a positive integer");
+    });
+
+    test("providerTimeoutMs is page-global like assetBaseUrl", () =>
+    {
+        createOutcropCatalogFrom(embedded(), WEB_CORE as Any, { ...OPTIONS, providerTimeoutMs: 5000 });
+
+        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any, { ...OPTIONS, providerTimeoutMs: 6000 }))
+            .toThrow("providerTimeoutMs is page-global");
+    });
+
     test("a catalog component with no descriptor is a literate error", () =>
     {
         expect(() => createOutcropCatalogFrom(embedded(OURS.slice(1)), WEB_CORE as Any, OPTIONS))

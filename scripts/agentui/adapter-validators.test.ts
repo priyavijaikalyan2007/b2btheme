@@ -22,7 +22,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
 import commonTypes from "./vendor/a2ui-v0_9_1/common_types.json";
 import catalog from "../../specs/agentui/published/catalog-v1.json";
-import { compileValidators, literalArmPointer } from "./adapter-validators.mjs";
+import { compileValidators, literalArmPointer, resultDefPointer } from "./adapter-validators.mjs";
 
 const REPO = path.resolve(__dirname, "..", "..");
 const STICKY = { name: "StickyNote", props: { text: { route: "slot", slot: "text" },
@@ -48,6 +48,38 @@ describe("literalArmPointer", () =>
     {
         expect(literalArmPointer("https://x/c.json", "StickyNote", "text"))
             .toBe("https://x/c.json#/components/StickyNote/allOf/2/properties/text/anyOf/0");
+    });
+});
+
+describe("resultDefPointer", () =>
+{
+    test("points at the provider's answer def at the catalog root", () =>
+    {
+        expect(resultDefPointer("https://x/c.json", "TreeView", "loadChildrenResult"))
+            .toBe("https://x/c.json#/$defs/TreeView__loadChildrenResult");
+    });
+});
+
+describe("compileValidators — provider results", () =>
+{
+    const LOOKUP = { option: "onLookup", request: "lookup", actionProp: "onLookup", resultProp: "lookupResult",
+        concurrency: "latest" };
+
+    test("a descriptor provider gets a validator compiled from its $defs entry", async () =>
+    {
+        const withDef = { ...catalog, $defs: { ...catalog.$defs,
+            StickyNote__lookupResult: { type: "array", items: { type: "string" } } } };
+        const v = await load(compileValidators({ catalog: withDef, basic, commonTypes,
+            descriptors: [{ ...STICKY, providers: [LOOKUP] }] }));
+
+        expect(v["StickyNote.lookupResult"](["a"])).toBe(true);
+        expect(v["StickyNote.lookupResult"]([1])).toBe(false);
+    }, 60_000);
+
+    test("a provider with no $defs entry is a literate build error", () =>
+    {
+        expect(() => compileValidators({ catalog, basic, commonTypes, descriptors: [{ ...STICKY, providers: [LOOKUP] }] }))
+            .toThrow("StickyNote.lookupResult");
     });
 });
 

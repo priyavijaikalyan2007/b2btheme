@@ -89,13 +89,13 @@ describe("routesFor", () =>
 
 describe("buildDescriptors — gate G1", () =>
 {
-    test("a catalog component with actions is a problem naming #31", () =>
+    test("a catalog component with actions is a problem naming the action-bar issue", () =>
     {
         const ready = [{ manifest: manifest({ actions: [{ id: "export", label: "Export" }] }),
             surface: surface({ actions: [{ id: "export", label: "Export", actionProp: "onExport" }] }) }];
 
         expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0])
-            .toMatch(/Widget declares actions \[export\].*#31/);
+            .toMatch(/Widget declares actions \[export\].*#45/);
     });
 
     test("the G1 problem points at protocol.hostOnlyActions (ADR-222)", () =>
@@ -106,13 +106,12 @@ describe("buildDescriptors — gate G1", () =>
         expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0]).toContain("protocol.hostOnlyActions");
     });
 
-    test("a catalog component with providers is a problem naming #31", () =>
+    test("providers pass G1; only undeclared actions fail it (ADR-225)", () =>
     {
         const ready = [{ manifest: manifest(), surface: surface({
             providers: [{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }] }) }];
 
-        expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0])
-            .toMatch(/Widget declares providers \[search\].*#31/);
+        expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems).toEqual([]);
     });
 });
 
@@ -157,6 +156,7 @@ describe("buildDescriptors — fields", () =>
                 color: { route: "state", key: "color" }, due: { route: "create" } },
             twoWay: true,
             events: [{ channel: "change", option: "onChange", actionProp: "onChange", payloadInValue: true }],
+            providers: [],
             dates: ["due"],
         });
     });
@@ -181,6 +181,22 @@ describe("buildDescriptors — fields", () =>
 
         expect(d.change).toEqual({ valueFrom: "hex" });
         expect(p).not.toHaveProperty("change");
+    });
+
+    test("a provider is carried with its concurrency; latest when undeclared (ADR-225)", () =>
+    {
+        const lazy = { manifest: { ...picker.manifest, protocol: { providers: {
+            onLoad: { request: "load", concurrency: "queue" }, onFind: { request: "find" } } } },
+        surface: { ...picker.surface, providers: [
+            { option: "onLoad", request: "load", actionProp: "onLoad", response: "loadResult" },
+            { option: "onFind", request: "find", actionProp: "onFind", response: "findResult" }] } };
+        const [d] = buildDescriptors([lazy], cat, css).descriptors;
+
+        expect(d.providers).toEqual([
+            { option: "onLoad", request: "load", actionProp: "onLoad", resultProp: "loadResult", concurrency: "queue" },
+            { option: "onFind", request: "find", actionProp: "onFind", resultProp: "findResult", concurrency: "latest" },
+        ]);
+        expect(p.providers).toEqual([]);
     });
 
     test("an overlay manifest carries its default height; a framed one adds no key (#41)", () =>

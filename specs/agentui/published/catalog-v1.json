@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "title": "Enterprise Bootstrap Theme",
-  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property, <request>Result included, accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts only a binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property, with a value matching the $defs entry its description names, once per request. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- TreeView: Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
   "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "components": {
     "AudioPlayer": {
@@ -1193,6 +1193,406 @@
       ],
       "unevaluatedProperties": false
     },
+    "TreeView": {
+      "type": "object",
+      "description": "Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "TreeView"
+            },
+            "roots": {
+              "description": "Root-level tree nodes.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/TreeView__TreeNode"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "nodeTypes": {
+              "description": "Registry of node type descriptors keyed by kind.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TreeView__RecordstringTreeNodeTypeDescriptor"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "selectionMode": {
+              "description": "Selection mode. Default: \"single\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "single"
+                    },
+                    {
+                      "const": "multi"
+                    },
+                    {
+                      "const": "none"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "sortMode": {
+              "description": "Sort mode for siblings. Default: \"alpha-asc\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "custom"
+                    },
+                    {
+                      "const": "alpha-asc"
+                    },
+                    {
+                      "const": "alpha-desc"
+                    },
+                    {
+                      "const": "newest"
+                    },
+                    {
+                      "const": "oldest"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showStarred": {
+              "description": "Show the starred/favourites group at the top. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "starredLabel": {
+              "description": "Label for the starred group header. Default: \"Starred\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showSearch": {
+              "description": "Show the search box in the toolbar. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "searchDebounceMs": {
+              "description": "Debounce delay for search input in milliseconds. Default: 300.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showDefaultGroupActions": {
+              "description": "When true, prepend four default group actions (sort A→Z, sort Z→A,\nexpand all, collapse all) to the toolbar. Default: false. ADR-128.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "enableDragDrop": {
+              "description": "Enable drag and drop. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "enableInlineRename": {
+              "description": "Enable F2 inline rename. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "enableContextMenu": {
+              "description": "Enable right-click context menu. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "indentPx": {
+              "description": "Per-level indent in pixels. Default: 20.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "height": {
+              "description": "Component height CSS value. Default: \"100%\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "width": {
+              "description": "Component width CSS value. Default: \"100%\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Additional CSS class on the root element.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "emptyMessage": {
+              "description": "Message shown when the tree is empty. Default: \"No items to display\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "rowHeight": {
+              "description": "Row height in pixels for virtual scrolling. Default: 28.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "virtualScrolling": {
+              "description": "Enable virtual scrolling explicitly.\n\"auto\" = enabled when visible nodes > 5000. Default: \"auto\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "disabled"
+                    },
+                    {
+                      "const": "auto"
+                    },
+                    {
+                      "const": "enabled"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "scrollBuffer": {
+              "description": "Rows to render above/below the viewport as buffer. Default: 50.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "searchAsyncThreshold": {
+              "description": "Node count above which onSearchAsync is preferred. Default: 5000.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TreeView__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSelection": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"selection\" emits. Its payload (one or more records) is at <eventData path>/selection."
+            },
+            "onActivate": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"activate\" emits. Its payload (a record) is at <eventData path>/activate."
+            },
+            "onLoadChildren": {
+              "description": "Sent when the component needs \"loadChildren\" answered. Its request is at <eventData path>/loadChildren. Answer with updateDataModel at the path bound to loadChildrenResult.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "loadChildrenResult": {
+              "description": "Bind to the path you will answer onLoadChildren at with updateDataModel, and write a value matching #/$defs/TreeView__loadChildrenResult there. A literal cannot answer a request.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSearch": {
+              "description": "Sent when the component needs \"search\" answered. Its request is at <eventData path>/search. Answer with updateDataModel at the path bound to searchResult.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action"
+            },
+            "searchResult": {
+              "description": "Bind to the path you will answer onSearch at with updateDataModel, and write a value matching #/$defs/TreeView__searchResult there. A literal cannot answer a request.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            }
+          },
+          "required": [
+            "component",
+            "roots"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "Video": {
       "type": "object",
       "allOf": [
@@ -1473,6 +1873,9 @@
           "$ref": "#/components/ToolColorPicker"
         },
         {
+          "$ref": "#/components/TreeView"
+        },
+        {
           "$ref": "#/components/Video"
         },
         {
@@ -1664,6 +2067,229 @@
       ],
       "description": "A single colour entry with hex value, label, and optional alpha.",
       "additionalProperties": false
+    },
+    "TreeView__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "TreeView__RecordstringTreeNodeTypeDescriptor": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Construct a type with a set of properties K of type T",
+      "additionalProperties": {
+        "$ref": "#/$defs/TreeView__TreeNodeTypeDescriptor"
+      }
+    },
+    "TreeView__TreeBadge": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Badge text content."
+        },
+        "variant": {
+          "oneOf": [
+            {
+              "const": "primary"
+            },
+            {
+              "const": "secondary"
+            },
+            {
+              "const": "success"
+            },
+            {
+              "const": "danger"
+            },
+            {
+              "const": "warning"
+            },
+            {
+              "const": "info"
+            }
+          ],
+          "description": "Bootstrap badge colour variant. Default: \"secondary\"."
+        },
+        "tooltip": {
+          "type": "string",
+          "description": "Native tooltip text."
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "description": "A badge displayed after the node label.",
+      "additionalProperties": false
+    },
+    "TreeView__TreeContextMenuItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique item identifier."
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Bootstrap Icons class."
+        },
+        "shortcutHint": {
+          "type": "string",
+          "description": "Keyboard shortcut hint text (display only)."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether this item is disabled."
+        },
+        "separator": {
+          "type": "boolean",
+          "description": "When true, renders a separator line instead of a clickable item."
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "description": "A context menu item for right-click menus.",
+      "additionalProperties": false
+    },
+    "TreeView__TreeNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier across the entire tree."
+        },
+        "label": {
+          "type": "string",
+          "description": "Display text."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Node kind — must match a key in options.nodeTypes if provided."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Bootstrap Icons class override (takes precedence over type descriptor)."
+        },
+        "children": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TreeView__TreeNode"
+              }
+            }
+          ],
+          "description": "Child nodes. null means lazy-loadable; undefined/[] means no children."
+        },
+        "lazy": {
+          "type": "boolean",
+          "description": "When true and children is null, expand triggers onLoadChildren."
+        },
+        "expanded": {
+          "type": "boolean",
+          "description": "Whether this node starts expanded. Default: false."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "When true, this node cannot be selected, expanded, or interacted with."
+        },
+        "starred": {
+          "type": "boolean",
+          "description": "Whether this node appears in the starred group."
+        },
+        "tooltip": {
+          "type": "string",
+          "description": "Native tooltip text for the node row."
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeView__TreeBadge"
+          },
+          "description": "Badges displayed after the label."
+        },
+        "data": {
+          "description": "Arbitrary consumer data passed back in callbacks."
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind"
+      ],
+      "description": "Represents a single node in the tree.\nThe consumer owns this data; the TreeView reads but never mutates it\n(except for expanded state tracking which is internal).",
+      "additionalProperties": false
+    },
+    "TreeView__TreeNodeTypeDescriptor": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind identifier matching TreeNode.kind."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Default Bootstrap Icons class for this kind."
+        },
+        "isParent": {
+          "type": "boolean",
+          "description": "Whether this kind can have children. Default: false."
+        },
+        "renamable": {
+          "type": "boolean",
+          "description": "Whether nodes of this kind can be renamed inline. Default: true."
+        },
+        "draggable": {
+          "type": "boolean",
+          "description": "Whether nodes of this kind can be dragged. Default: true."
+        },
+        "droppable": {
+          "type": "boolean",
+          "description": "Whether nodes of this kind accept drops. Default: true for parents."
+        },
+        "contextMenuItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeView__TreeContextMenuItem"
+          },
+          "description": "Context menu items specific to this kind."
+        },
+        "cssClass": {
+          "type": "string",
+          "description": "Additional CSS class added to the node row."
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "description": "Describes the behaviour and appearance of a node kind.\nRegistered via options.nodeTypes.",
+      "additionalProperties": false
+    },
+    "TreeView__loadChildrenResult": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TreeView__TreeNode"
+      }
+    },
+    "TreeView__searchResult": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "WorkspaceShell__WorkspaceCanvas": {
       "type": "object",

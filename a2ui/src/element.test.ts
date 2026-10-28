@@ -23,6 +23,8 @@ import {
 } from "../testing/context";
 
 const BASE = "https://cdn.test";
+const LOAD_PROVIDER = { option: "onLoad", request: "load", actionProp: "onLoad", resultProp: "loadResult",
+    concurrency: "queue" as const };
 let tagCount = 0;
 let record: FakeRecord;
 
@@ -31,7 +33,7 @@ function tagFor(descriptor: AdapterDescriptor = fakeDescriptor()): string
 {
     const tag = `outcrop-fake-${++tagCount}`;
     const env: ElementEnv = { descriptor, validators: { "Fake.items": (v) => Array.isArray(v), "Fake.title": (v) => typeof v === "string" },
-        assetBaseUrl: () => BASE, injectBaseTheme: () => false };
+        assetBaseUrl: () => BASE, injectBaseTheme: () => false, providerTimeoutMs: () => 30_000 };
 
     defineTestElement(tag, env);
 
@@ -102,6 +104,33 @@ describe("binding and mounting", () =>
         const box = el.querySelector<HTMLElement>(".outcrop-host")!;
         expect(box.style.position).toBe("relative");
         expect(box.style.minHeight).toBe("300px");
+    });
+
+    test("a bound provider reaches the factory as its option, and unmount releases it (ADR-225)", async () =>
+    {
+        const rc = realContext({ title: "t", onLoad: { event: { name: "load" } }, loadResult: { path: "/a" },
+            eventData: { path: "/ev" } });
+        const el = create(tagFor(fakeDescriptor({ providers: [LOAD_PROVIDER] })), rc);
+        await loaded();
+
+        const onLoad = record.builds[0].options.onLoad as (r: unknown) => Promise<unknown>;
+        expect(onLoad).toBeTypeOf("function");
+
+        void onLoad({ id: "n" });
+        expect(rc.actions.map((a) => a.name)).toEqual(["load"]);
+
+        el.remove();
+        await flush();
+        rc.setData("/a", ["late"]);
+        expect(rc.errors).toEqual([]);
+    });
+
+    test("an unbound provider is not passed to the factory", async () =>
+    {
+        create(tagFor(fakeDescriptor({ providers: [LOAD_PROVIDER] })), realContext({ title: "t" }));
+        await loaded();
+
+        expect("onLoad" in record.builds[0].options).toBe(false);
     });
 
     test("a framed component's box has no inline style", async () =>
