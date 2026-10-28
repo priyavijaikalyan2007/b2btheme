@@ -45,21 +45,37 @@ export type CodeEditorToolbarAction =
 /** Configuration options for the CodeEditor component. */
 export interface CodeEditorOptions
 {
+    /** The code. */
     value?: string;
+    /** Syntax highlighting language. Default: "javascript". */
     language?: CodeEditorLanguage;
+    /** Shows the code without letting the user edit it. Default: false. */
     readOnly?: boolean;
+    /** Shows line numbers. Default: true. */
     lineNumbers?: boolean;
+    /** Wraps long lines. Default: false. */
     wordWrap?: boolean;
+    /** Not applied yet; the editor's default indentation is used. */
     tabSize?: number;
+    /** Text shown while the editor is empty. */
     placeholder?: string;
+    /** Editor height as a CSS length. Default: "300px". */
     height?: string;
+    /** Maximum height as a CSS length. */
     maxHeight?: string;
+    /** Not applied yet; the editor keeps its height. */
     autoGrow?: boolean;
+    /** Colour theme: "light" or "dark". Default: "light". */
     theme?: "light" | "dark";
+    /** Shows the toolbar. Default: true. */
     showToolbar?: boolean;
+    /** Toolbar buttons, in order. Default: every action. Save is enabled only when someone listens for it. */
     toolbarActions?: CodeEditorToolbarAction[];
+    /** Problems to mark in the gutter: a line, an optional column, a message and a severity. */
     diagnostics?: CodeEditorDiagnostic[];
+    /** Disables the editor and the language picker. Default: false. */
     disabled?: boolean;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
     onChange?: (value: string) => void;
     onSave?: (value: string) => void;

@@ -128,22 +128,37 @@ export interface DynamicFormVariant
 
 export interface DynamicFormSwitcherOptions
 {
+    /**
+     * The forms, keyed by variant id. Each has a label and a list of fields;
+     * a field has a name (its key in the values), a label and a type, and
+     * optionally a placeholder, help text, options (for select and radio),
+     * an initial value and whether it is required.
+     */
     variants: Record<string, DynamicFormVariant>;
+    /** The variant shown first. Required. */
     initialVariant: string;
 
+    /** Shows a control for choosing the variant. Default: false. */
     showSelector?: boolean;
+    /** Label above the variant control. */
     selectorLabel?: string;
+    /** How the variant control looks: "dropdown", "segmented" or "tabs". Default: "dropdown". */
     selectorStyle?: "dropdown" | "segmented" | "tabs";
+    /** Help text under the variant control. */
     selectorHelpText?: string;
 
+    /** Initial values: field name to value for the shown variant, or variant id to such a map for several. */
     value?: Record<string, unknown> | Record<string, Record<string, unknown>>;
+    /** Keeps each variant's values when the user switches away and back. Default: true. */
     retainStateAcrossSwitches?: boolean;
 
     onChange?: (variantId: string, values: Record<string, unknown>) => void;
     onVariantChange?: (newVariantId: string, previousVariantId: string) => void;
     onValidate?: (variantId: string, values: Record<string, unknown>) => string | null;
 
+    /** Maximum width: "sm", "md", "lg", "xl", or "auto" for the container's width. Default: "auto". */
     size?: "sm" | "md" | "lg" | "xl" | "auto";
+    /** Extra CSS classes on the root element. */
     className?: string;
 }
 
