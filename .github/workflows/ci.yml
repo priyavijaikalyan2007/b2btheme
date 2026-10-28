@@ -73,6 +73,28 @@ jobs:
       - name: Run structure checks
         run: npm run test:structure
 
+      # The A2UI testing bar (readiness spec §6, ADR-223): render every
+      # catalog component and drive the interactive ones in a real browser,
+      # against the dist tree built above. It ran locally only until
+      # 2026-10-28, so a component could join the catalog broken in a branch
+      # this workflow called green. Public repositories run standard hosted
+      # runners at no charge; the suite itself takes about 7 seconds, and the
+      # browser install most of the rest. The other e2e specs stay local
+      # until someone measures them on Linux.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run A2UI browser tests
+        run: npm run test:e2e:a2ui
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 14
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7

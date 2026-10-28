@@ -519,6 +519,7 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `expectCatalogValid` or the action's `{ name, context }`. The coverage gate
   (`scripts/agentui/gesture-coverage.test.ts`) fails, by name, for an
   interactive component without one.
+- **CI** runs both (`npm run test:e2e:a2ui`) on every pull request (ADR-223).
 
 **`PENDING_CLASSIFICATION` and `BELOW_REQUIRED`** in `scripts/agentui/migration.mjs`
 are the measured backlog of 2026-10-25. A component on `PENDING_CLASSIFICATION`
