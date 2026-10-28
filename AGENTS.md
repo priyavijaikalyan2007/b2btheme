@@ -525,6 +525,13 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `disabledDates[]`) and the adapter turns those ISO strings into `Date`s. A
   recursive type that holds a date fails the build; make that date a string,
   or declare the member host-only.
+- **A surface component with no channels** (PeoplePicker, made surface by its
+  provider) still implements `on()`: it returns an unsubscribe for any channel
+  and logs that the handler will never be called. The conformance suite probes
+  `on()`, so it must not throw (ADR-228).
+- **A catalog name that collides with an A2UI basic component** needs
+  `protocol.name`: the generated catalog would otherwise shadow it. Slider is
+  `RangeSlider` (ADR-228).
 - **Options the component passes to `fetch`, `XMLHttpRequest`, `import()` or
   `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
   this URL from the user's browser with the host's credentials; an agent must

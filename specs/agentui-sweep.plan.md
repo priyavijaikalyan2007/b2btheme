@@ -1712,7 +1712,7 @@ As in B1:
 
 - **FileUpload stays pending (§5.3).** `onUpload` receives browser `File` objects for the host to upload, and JSON can't carry them. Over A2UI files would queue and never upload, so it would render but not work. The reason goes to #20.
 - **URL-fetch rule:** PeoplePicker `searchUrl`. Task B3.2 checks the other nine.
-- **Component fix (separate commit):** GradientPicker's `clear()` resets to the default gradient but fires only `onClear`, although `onChange` is documented to fire "on any gradient change". A bound value would go stale. `clear()` now also fires `onChange` with the reset value, after `onClear`.
+- **~~Component fix~~ (withdrawn during implementation):** GradientPicker's `clear()` already calls `emitChange()` right after `onClear`. A truncated grep had hidden that line, so there is nothing to fix.
 
 ### Task B3.1: additive surface methods
 For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
@@ -1722,8 +1722,7 @@ For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
 - **Each new channel** emits after the existing callback, which still fires first and exactly once.
 - **TDD per component;** one commit each.
 
-### Task B3.2: GradientPicker fix, manifests, glue, bookkeeping
-- **GradientPicker fix:** TDD; `fix(gradientpicker)`.
+### Task B3.2: manifests, glue, bookkeeping
 - **Manifests:** agent sentences, `protocol` and `emits` per the table; PeoplePicker's 15 JSDoc comments and Tagger's 15 (comment-only).
 - **Conformance glue** for the five surface components: a trigger per channel, and PeoplePicker's `request("search")`.
 - **Bookkeeping:**
@@ -1737,5 +1736,5 @@ For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
 
 ### Task B3.4: docs, verification, PR
 - **Records:** ADR-228, CHANGELOG, `history.jsonl`, #20.
-- **Verification:** full suites, mutation checks, the dist diff (the five surface components' JS plus `gradientpicker.js`), token growth.
+- **Verification:** full suites, mutation checks, the dist diff (the five surface components' JS), token growth.
 - **The PR,** stacked on #48.
