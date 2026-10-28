@@ -33,11 +33,26 @@ export const LINETYPEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-dash-lg",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose a line's dash pattern, such as solid, dashed or dotted, with a preview.",
+        avoidWhen: "For a line's thickness use LineWidthPicker; for its routing shape use LineShapePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "value" },
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["linetypepicker:list"],
 

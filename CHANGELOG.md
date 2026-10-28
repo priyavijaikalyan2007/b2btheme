@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Ten more components in the A2UI catalog** (ADR-226): FontDropdown, LineEndingPicker, LineShapePicker, LineTypePicker, LineWidthPicker, MarginsPicker, SizesPicker, SpacingPicker, ColumnsPicker and LayoutPicker, 19 in all. A pick writes the item's value, name or id to the bound `value`. MarginsPicker, SizesPicker, SpacingPicker and ColumnsPicker gain an additive `on("custom")`, `getState()`/`setState()` and `setData()`; choosing their "Custom…" link still calls `onCustom` first, exactly once, and now also tells `on("custom")` subscribers (and an A2UI agent) the selected preset.
 - **A2UI providers and TreeView** (ADR-225, #31). A catalog component can now ask the agent for data: TreeView's lazy children and server-side search are answered by the agent through `on<Request>` and a bound `<request>Result`. `createOutcropCatalog` takes `providerTimeoutMs` (default 30 s); an unanswered request reports `OUTCROP_PROVIDER_TIMEOUT`. TreeView is in catalog v1. No component's options, callbacks or methods changed.
 - **Agent UI readiness, step 1** (ADR-222). Manifests can now say what an agent needs to know:
   - **`protocol.change`** declares how `onChange` maps to `value`. The build checks it against the TypeScript types and fails with `change-mismatch` instead of letting the adapter write the wrong type back.
@@ -25,6 +26,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **A reordered enum is no longer a "breaking" catalog change.** TypeScript orders a literal union by an internal id that any unrelated file can shift; the catalog diff now treats a union of constants as a set, and the generator emits one stable order. ADR-226.
 - **TreeView's double-click activation reaches `on("activate")` subscribers.** Only Enter emitted the declared `activate` channel; a double-click called `onActivate` alone, so the Dynamic UI canvas and the A2UI adapter never heard it. `onActivate` is still called exactly once. ADR-225.
 - **GraphLegend over A2UI stays inside its surface** (#41). It's a floating overlay, and the adapter gave it nothing to float in, so it landed in the page's corner, clipped. Components that declare `presentation: "overlay"` now mount in a positioned box as tall as their default height. `createGraphLegend()` is unchanged. ADR-224.
 - **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.

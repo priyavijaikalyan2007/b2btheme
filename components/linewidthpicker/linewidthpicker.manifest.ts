@@ -33,11 +33,26 @@ export const LINEWIDTHPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-border-width",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose a line or border thickness from a list that previews each width.",
+        avoidWhen: "For a line's dash pattern use LineTypePicker; for an arbitrary number use Slider.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "value" },
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["linewidthpicker:list"],
 

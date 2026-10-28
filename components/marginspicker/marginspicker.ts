@@ -86,6 +86,15 @@ export interface MarginsPickerAPI
     hide(): void;
     destroy(): void;
     getElement(): HTMLElement;
+
+    /** The surface contract (additive): MarginsPicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "custom", fired with the selected preset name when "Custom Margins…" is chosen. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selected preset name, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -138,6 +147,9 @@ function logTrace(...a: unknown[]): void
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const CLS = "marginspicker";
+
+/** The one channel MarginsPicker emits (readiness step 2 B1-1). */
+const CUSTOM_CHANNEL = "custom";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
 
@@ -413,6 +425,7 @@ export class MarginsPicker implements MarginsPickerAPI
     // Callbacks
     private onChange?: (preset: MarginPreset) => void;
     private onCustom?: () => void;
+    private readonly customHandlers = new Set<(payload: unknown) => void>();
 
     // DOM refs
     private rootEl: HTMLElement | null = null;
@@ -490,6 +503,7 @@ export class MarginsPicker implements MarginsPickerAPI
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.customHandlers.clear();
         this.removeGlobalListeners();
         if (this.panelEl && this.panelEl.parentElement)
         {
@@ -507,6 +521,40 @@ export class MarginsPicker implements MarginsPickerAPI
     public getElement(): HTMLElement
     {
         return this.rootEl as HTMLElement;
+    }
+
+    // ── Public API: surface contract (additive, readiness step 2 B1) ──
+
+    /** MarginsPicker has no data slots; presets change through setPresets(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): MarginsPicker has no data slots. Use setPresets() or `
+            + "setValue().");
+    }
+
+    /** Subscribes to "custom"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== CUSTOM_CHANNEL)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "${CUSTOM_CHANNEL}".`);
+        }
+
+        this.customHandlers.add(handler);
+
+        return () => { this.customHandlers.delete(handler); };
+    }
+
+    /** The selected preset name. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.selectedName };
+    }
+
+    /** Restores a selection captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
     }
 
     // ── Private: mounting ──
@@ -758,6 +806,11 @@ export class MarginsPicker implements MarginsPickerAPI
     {
         this.closePanel();
         safeCallback(this.onCustom);
+
+        for (const handler of this.customHandlers)
+        {
+            safeCallback(handler, this.selectedName as unknown);
+        }
     }
 
     private onDocumentClick(e: MouseEvent): void

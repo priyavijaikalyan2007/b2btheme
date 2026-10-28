@@ -58,6 +58,14 @@ export interface ColumnsPickerOptions
 /** Public API returned by the factory. */
 export interface ColumnsPicker
 {
+    /** The surface contract (additive): ColumnsPicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "custom", fired with the selected preset name when "Custom Columns…" is chosen. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selected preset name, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
     getValue(): ColumnPreset;
     setValue(presetName: string): void;
     setPresets(presets: ColumnPreset[]): void;
@@ -117,6 +125,9 @@ function logTrace(...a: unknown[]): void
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const CLS = "columnspicker";
+
+/** The one channel ColumnsPicker emits (readiness step 2 B1-1). */
+const CUSTOM_CHANNEL = "custom";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
 
@@ -293,6 +304,39 @@ function appendDivider(svg: SVGElement, x: number): void
 // ============================================================================
 
 /** Create the ColumnsPicker and return its public API. */
+/** The "custom" channel's subscribers; on() accepts no other channel (readiness step 2 B1-1). */
+function createCustomChannel(): {
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    emit(payload: unknown): void;
+    clear(): void;
+}
+{
+    const handlers = new Set<(payload: unknown) => void>();
+
+    return {
+        on(channel, handler)
+        {
+            if (channel !== CUSTOM_CHANNEL)
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "${CUSTOM_CHANNEL}".`);
+            }
+
+            handlers.add(handler);
+
+            return () => { handlers.delete(handler); };
+        },
+        emit(payload)
+        {
+            for (const handler of handlers)
+            {
+                try { handler(payload); }
+                catch (err) { logError("custom handler error:", err); }
+            }
+        },
+        clear() { handlers.clear(); },
+    };
+}
+
 export function createColumnsPicker(
     options: ColumnsPickerOptions
 ): ColumnsPicker
@@ -301,6 +345,7 @@ export function createColumnsPicker(
     const presets = options.presets || [...DEFAULT_PRESETS];
     const showCustom = options.showCustom !== false;
     let selectedName = options.value || "One";
+    const customChannel = createCustomChannel();
     let isOpen = false;
     let destroyed = false;
 
@@ -448,6 +493,8 @@ export function createColumnsPicker(
                 try { options.onCustom(); }
                 catch (err) { logError("onCustom error:", err); }
             }
+
+            customChannel.emit(selectedName);
         });
 
         panel.appendChild(link);
@@ -667,6 +714,24 @@ export function createColumnsPicker(
 
     const api: ColumnsPicker =
     {
+        setData(slot: string, _value: unknown): void
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): ColumnsPicker has no data slots. Use setPresets() or `
+                + "setValue().");
+        },
+
+        on: (channel, handler) => customChannel.on(channel, handler),
+
+        getState(): Record<string, unknown>
+        {
+            return { value: selectedName };
+        },
+
+        setState(state: Record<string, unknown>): void
+        {
+            if ("value" in state) { api.setValue(state.value as string); }
+        },
+
         getValue(): ColumnPreset
         {
             const found = presets.find((p) => p.name === selectedName);
@@ -721,6 +786,7 @@ export function createColumnsPicker(
             if (destroyed) { return; }
 
             destroyed = true;
+            customChannel.clear();
             removeGlobalListeners();
 
             if (panelEl && panelEl.parentElement)

@@ -35,11 +35,26 @@ export const LAYOUTPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-diagram-3",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose an automatic layout algorithm for a graph or diagram, shown as thumbnails.",
+        avoidWhen: "For choices that are not layout algorithms use ChoicePicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "id" },
+        hostOnly: {
+            "customAlgorithms[].thumbnail":
+                "A function that draws into an SVG element; JSON cannot carry it, so custom thumbnails stay host-only.",
+        },
+    },
 
     regions: ["layoutpicker:panel"],
 

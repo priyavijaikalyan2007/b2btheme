@@ -33,11 +33,26 @@ export const LINESHAPEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-bezier",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose the routing shape of a connector in a diagram, such as straight or curved.",
+        avoidWhen: "For a line's dash pattern use LineTypePicker; for its end markers use LineEndingPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "value" },
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["lineshapepicker:list"],
 

@@ -19,11 +19,10 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B1): it emits "custom"
+ * when the user chooses the "Custom…" link, through an additive on(), and
+ * restores its selection through getState()/setState() (stateKeys: value).
+ * Its value is the selected preset's name.
  */
 export const SIZESPICKER_MANIFEST: CapabilityManifest =
 {
@@ -35,11 +34,26 @@ export const SIZESPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-rulers",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose a paper or page size, such as Letter, Legal or A4, from named presets.",
+        avoidWhen: "For page margins use MarginsPicker; for text columns use ColumnsPicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        // "Custom…" asks for a value the presets lack; the agent can answer with its own inputs (B1-1).
+        { name: "custom", payload: "scalar", multi: false, legacyOption: "onCustom" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    // The selection is the state a canvas restores (B1-2).
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "name" },
+    },
 
     regions: ["sizespicker:list"],
 
@@ -49,6 +63,6 @@ export const SIZESPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 40 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };
