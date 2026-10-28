@@ -1638,3 +1638,53 @@ For each of MarginsPicker and SizesPicker (classes) and SpacingPicker and Column
   - the dist diff (exactly the four surface pickers' JS differ);
   - catalog token growth.
 - **PR.**
+
+---
+
+## B2: date and time
+
+**Goal:** the seven B2 pickers join catalog v1. The four whose `onChange` sends `T | null` declare `{ cleared: null }`: clearing deletes the bound path, and deleting the path clears the picker (readiness spec §3.4).
+
+**Per component:**
+
+| Component | `protocol.change` | Host-only | Events | Level |
+|---|---|---|---|---|
+| DatePicker | `{ cleared: null }` | `onSelect` (value carries it), `onOpen`, `onClose`, `isDateDisabled` (a decision) | — | field |
+| PeriodPicker | `{ cleared: null }` | `onSelect`, `onOpen`, `onClose` | — | field |
+| SprintPicker | `{ cleared: null }` | `onSelect`, `onOpen`, `onClose`, `sprintNaming` (its function arm) | — | field |
+| TimePicker | `{ cleared: null }` | `onSelect`, `onOpen`, `onClose` | `timezone` (scalar IANA name, `legacyOption: "onTimezoneChange"`) | **surface**, `stateKeys: ["timezone"]` |
+| DurationPicker | — (`onChange` passes the value) | `displayFormat` (a formatter), `onOpen`, `onClose` | — | field |
+| CronPicker | — | `onPresetSelect` (value carries the expression) | — | field |
+| TimezonePicker | — | `onSelect`, `onOpen`, `onClose` | — | field |
+
+**TimePicker's timezone (S6).** `TimeValue` is `{ hours, minutes, seconds? }`; the timezone lives outside it. When `showTimezone` is on, a user can change the zone, which changes what the time means, and the agent would not hear it. So it's an event. Because the timezone is real view state, B1-2's `"value"` rule doesn't apply. As a state key, `timezone` updates live through `setState` instead of rebuilding.
+
+**URL-fetch rule (§4):** checked per component in Task B2.2.
+
+### Task B2.1: TimePicker's additive surface methods
+- **Handle additions:**
+  - `setData` throws (no slots);
+  - `on("timezone")`, with any other channel throwing;
+  - `getState()` returns `{ timezone }`;
+  - `setState({ timezone })` calls `setTimezone`.
+- **Both timezone paths** (`setTimezone` and the selector) go through one emit: `onTimezoneChange` first, exactly once, then the subscribers.
+- **TDD in `timepicker.test.ts`;** commit `feat(timepicker): …`.
+
+### Task B2.2: manifests, glue, bookkeeping
+- **Manifests** gain `agent`, `protocol` and TimePicker's `emits`, `stateKeys` and `surface`.
+- **Glue:** `timepicker.conformance.ts` triggers `timezone` by calling `setTimezone`. It's a real user path, but the runtime suite accepts a programmatic trigger, as TreeView's `selectNode` does.
+- **The build** must report no B2 violations, including the `{ cleared: null }` check that `setValue` accepts `null`.
+- **Bookkeeping:** remove the seven from the pending list; lower the pins (ceiling and floor); rewrite the baseline; G3 and runtime conformance pass.
+
+### Task B2.3: gesture tests
+`tests/a2ui-components/b2-datetime.spec.ts`, one literal `"<Name>: …"` test each:
+- picking writes a value that passes `expectCatalogValid`;
+- for the four `cleared` pickers, clearing deletes the bound path;
+- deleting the path clears the picker;
+- TimePicker's timezone change sends `onTimezone`.
+
+### Task B2.4: docs, verification, PR
+As in B1:
+- docs and records: ADR-227 if a new decision is recorded (the TimePicker timezone event), CHANGELOG, `history.jsonl`, #20;
+- full suites, mutation checks, the dist diff (only `timepicker.js`), token growth;
+- the PR.
