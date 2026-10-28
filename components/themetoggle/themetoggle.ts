@@ -96,6 +96,21 @@ export interface ThemeToggleHandle
 
     /** Tear down listeners and DOM. */
     destroy(): void;
+
+    /** The surface contract (additive): ThemeToggle has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+
+    /**
+     * Subscribes to "change": `{ theme, mode }` (ResolvedTheme and ThemeMode), fired wherever `onChange` fires,
+     * after it. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** `{ mode }`: the current mode ("light" | "dark" | "auto"). */
+    getState(): Record<string, unknown>;
+
+    /** Applies state.mode through setTheme() when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -134,6 +149,7 @@ export class ThemeToggle implements ThemeToggleHandle
     private mediaQuery: MediaQueryList;
     private mediaHandler: ((e: MediaQueryListEvent) => void) | null = null;
     private buttons: Map<ThemeMode, HTMLButtonElement> = new Map();
+    private readonly changeHandlers = new Set<(payload: unknown) => void>();
 
     constructor(options: ThemeToggleOptions)
     {
@@ -175,8 +191,42 @@ export class ThemeToggle implements ThemeToggleHandle
         logInfo("setTheme", mode, "→", this.resolvedTheme);
     }
 
+    // ── Surface contract (additive, B4) ──
+
+    /** ThemeToggle has no data slots; use setTheme(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): ThemeToggle has no data slots. Use setTheme().`);
+    }
+
+    /** Subscribes to "change"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "change".`);
+        }
+
+        this.changeHandlers.add(handler);
+
+        return () => { this.changeHandlers.delete(handler); };
+    }
+
+    /** The current mode. */
+    getState(): Record<string, unknown>
+    {
+        return { mode: this.getMode() };
+    }
+
+    /** Restores state captured by getState(). */
+    setState(state: Record<string, unknown>): void
+    {
+        if ("mode" in state) { this.setTheme(state.mode as ThemeMode); }
+    }
+
     destroy(): void
     {
+        this.changeHandlers.clear();
         this.unbindMediaListener();
         if (this.root.parentElement)
         {
@@ -309,6 +359,18 @@ export class ThemeToggle implements ThemeToggleHandle
         {
             this.onChange(this.resolvedTheme, this.mode);
         }
+
+        for (const handler of this.changeHandlers)
+        {
+            try
+            {
+                handler({ theme: this.resolvedTheme, mode: this.mode });
+            }
+            catch (err)
+            {
+                logError("change handler threw:", err);
+            }
+        }
     }
 }
 
@@ -330,7 +392,11 @@ export function createThemeToggle(options: ThemeToggleOptions): ThemeToggleHandl
         getTheme: () => instance.getTheme(),
         getMode: () => instance.getMode(),
         setTheme: (mode: ThemeMode) => instance.setTheme(mode),
-        destroy: () => instance.destroy()
+        destroy: () => instance.destroy(),
+        setData: (slot: string, value: unknown) => instance.setData(slot, value),
+        on: (channel: string, handler: (payload: unknown) => void) => instance.on(channel, handler),
+        getState: () => instance.getState(),
+        setState: (state: Record<string, unknown>) => instance.setState(state)
     };
 }
 
