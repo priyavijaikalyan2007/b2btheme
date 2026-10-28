@@ -422,3 +422,49 @@ describe("edge cases", () =>
         expect(result).toBe(false);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): additive on("change"),
+// getState/setState and setData. onChange keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(change)_HearsEveryChange_AfterOnChange", () =>
+    {
+        const order: string[] = [];
+        const tagger = createTagger("test-tagger", { onChange: (t) => order.push(`option:${t.length}`) });
+        const off = tagger.on("change", (t) => order.push(`channel:${(t as unknown[]).length}`));
+
+        tagger.addTag({ value: "a" });
+        tagger.addTag({ value: "b" });
+        tagger.removeTag("a");
+        off();
+        tagger.clearTags();
+
+        expect(order).toEqual(["option:1", "channel:1", "option:2", "channel:2", "option:1", "channel:1", "option:0"]);
+        tagger.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheTags", () =>
+    {
+        const tagger = createTagger("test-tagger", { tags: [{ value: "x" }] });
+        const captured = tagger.getState();
+
+        tagger.setTags([{ value: "y" }, { value: "z" }]);
+        expect((tagger.getState().tags as { value: string }[]).map((t) => t.value)).toEqual(["y", "z"]);
+
+        tagger.setState(captured);
+        expect((tagger.getState().tags as { value: string }[]).map((t) => t.value)).toEqual(["x"]);
+        tagger.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const tagger = createTagger("test-tagger");
+
+        expect(() => tagger.on("add", () => undefined)).toThrow("change");
+        expect(() => tagger.setData("tags", [])).toThrow("no data slots");
+        tagger.destroy();
+    });
+});
