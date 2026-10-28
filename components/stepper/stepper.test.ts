@@ -825,10 +825,7 @@ describe("surface contract (B5)", () =>
         await settle();
 
         expect(payloads.length).toBe(4);
-        for (const p of payloads)
-        {
-            expect(JSON.parse(JSON.stringify(p))).toEqual(p);
-        }
+        expect(JSON.parse(JSON.stringify(payloads))).toEqual(payloads);
         stepper.destroy();
     });
 
