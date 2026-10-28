@@ -425,3 +425,168 @@ describe("destroy", () =>
         expect(container.querySelector(".inlinetoolbar")).toBeNull();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B5): additive on("itemClick"),
+// getState/setState and setData. onClick keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    test("on_ItemClick_HearsIdAndActive_AfterOnClick", () =>
+    {
+        const order: string[] = [];
+        const onClick = (_item: InlineToolbarItem, active: boolean): void =>
+        {
+            order.push(`option:${String(active)}`);
+        };
+        const items: InlineToolbarItem[] = [
+            { id: "filter", icon: "funnel", tooltip: "Filter", type: "toggle", onClick },
+            { id: "refresh", icon: "arrow-clockwise", tooltip: "Refresh", onClick },
+        ];
+        const handle = createInlineToolbar({ container, items });
+        handle.on("itemClick", (p) => order.push(`channel:${JSON.stringify(p)}`));
+        const [filter, refresh] = getButtons(container);
+
+        filter.click();
+        refresh.click();
+
+        expect(order).toEqual([
+            "option:true",
+            'channel:{"id":"filter","active":true}',
+            "option:false",
+            'channel:{"id":"refresh","active":false}',
+        ]);
+    });
+
+    test("on_ItemClick_Toggle_ReportsStateAfterEachClick", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard: unknown[] = [];
+        handle.on("itemClick", (p) => heard.push(p));
+        const filter = getButtons(container)[0];
+
+        filter.click();
+        filter.click();
+
+        expect(heard).toEqual([{ id: "filter", active: true }, { id: "filter", active: false }]);
+    });
+
+    test("on_ItemClick_ItemWithoutOnClick_StillEmits", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        getButtons(container)[1].click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith({ id: "expand", active: false });
+    });
+
+    test("on_ItemClick_DisabledItem_EmitsNothing", () =>
+    {
+        const handle = createInlineToolbar({
+            container,
+            items: [{ id: "btn1", icon: "star", tooltip: "Star", disabled: true }],
+        });
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        getButtons(container)[0].click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_ItemClick_SeparatorClick_EmitsNothing", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        getSeparators(container)[0].click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_ItemClick_Unsubscribe_StopsDelivery", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard = vi.fn();
+        const off = handle.on("itemClick", heard);
+        const refresh = getButtons(container)[2];
+
+        refresh.click();
+        off();
+        refresh.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+    });
+
+    test("on_ItemClick_PayloadIsPlainJson", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        let payload: unknown;
+        handle.on("itemClick", (p) => { payload = p; });
+
+        getButtons(container)[0].click();
+
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        expect(payload).toEqual({ id: "filter", active: true });
+    });
+
+    test("on_ItemClick_ThrowingHandler_DoesNotStopOthers", () =>
+    {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard = vi.fn();
+        handle.on("itemClick", () => { throw new Error("boom"); });
+        handle.on("itemClick", heard);
+
+        getButtons(container)[2].click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        errorSpy.mockRestore();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const heard = vi.fn();
+        const button = getButtons(container)[2];
+        handle.on("itemClick", heard);
+
+        handle.destroy();
+        container.appendChild(handle.getElement());
+        button.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws_NamingValidChannels", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+
+        expect(() => handle.on("bogus", () => undefined)).toThrow("itemClick");
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+
+        expect(() => handle.setData("items", []))
+            .toThrow(/InlineToolbar.*no data slots.*setItemDisabled\(\).*setItemActive\(\)/);
+    });
+
+    test("getState_IsEmpty_AndSetStateDoesNothing", () =>
+    {
+        const handle = createInlineToolbar({ container, items: sampleItems() });
+        const before = handle.getElement().outerHTML;
+
+        expect(handle.getState()).toEqual({});
+        handle.setState({ anything: 1 });
+
+        expect(handle.getState()).toEqual({});
+        expect(handle.getElement().outerHTML).toBe(before);
+    });
+});
