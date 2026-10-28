@@ -58,6 +58,14 @@ export interface SpacingPickerOptions
 /** Public API returned by the factory. */
 export interface SpacingPicker
 {
+    /** The surface contract (additive): SpacingPicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "custom", fired with the selected preset name when "Custom Spacing…" is chosen. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selected preset name, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
     getValue(): SpacingPreset;
     setValue(presetName: string): void;
     setPresets(presets: SpacingPreset[]): void;
@@ -117,6 +125,9 @@ function logTrace(...a: unknown[]): void
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const CLS = "spacingpicker";
+
+/** The one channel SpacingPicker emits (readiness step 2 B1-1). */
+const CUSTOM_CHANNEL = "custom";
 const SVG_NS = "http://www.w3.org/2000/svg";
 let instanceCounter = 0;
 
@@ -257,6 +268,39 @@ function appendSpacingLines(
 // ============================================================================
 
 /** Create the SpacingPicker and return its public API. */
+/** The "custom" channel's subscribers; on() accepts no other channel (readiness step 2 B1-1). */
+function createCustomChannel(): {
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    emit(payload: unknown): void;
+    clear(): void;
+}
+{
+    const handlers = new Set<(payload: unknown) => void>();
+
+    return {
+        on(channel, handler)
+        {
+            if (channel !== CUSTOM_CHANNEL)
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "${CUSTOM_CHANNEL}".`);
+            }
+
+            handlers.add(handler);
+
+            return () => { handlers.delete(handler); };
+        },
+        emit(payload)
+        {
+            for (const handler of handlers)
+            {
+                try { handler(payload); }
+                catch (err) { logError("custom handler error:", err); }
+            }
+        },
+        clear() { handlers.clear(); },
+    };
+}
+
 export function createSpacingPicker(
     options: SpacingPickerOptions
 ): SpacingPicker
@@ -265,6 +309,7 @@ export function createSpacingPicker(
     const presets = options.presets || [...DEFAULT_PRESETS];
     const showCustom = options.showCustom !== false;
     let selectedName = options.value || "1.15";
+    const customChannel = createCustomChannel();
     let isOpen = false;
     let destroyed = false;
 
@@ -412,6 +457,8 @@ export function createSpacingPicker(
                 try { options.onCustom(); }
                 catch (err) { logError("onCustom error:", err); }
             }
+
+            customChannel.emit(selectedName);
         });
 
         panel.appendChild(link);
@@ -631,6 +678,24 @@ export function createSpacingPicker(
 
     const api: SpacingPicker =
     {
+        setData(slot: string, _value: unknown): void
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): SpacingPicker has no data slots. Use setPresets() or `
+                + "setValue().");
+        },
+
+        on: (channel, handler) => customChannel.on(channel, handler),
+
+        getState(): Record<string, unknown>
+        {
+            return { value: selectedName };
+        },
+
+        setState(state: Record<string, unknown>): void
+        {
+            if ("value" in state) { api.setValue(state.value as string); }
+        },
+
         getValue(): SpacingPreset
         {
             const found = presets.find((p) => p.name === selectedName);
@@ -685,6 +750,7 @@ export function createSpacingPicker(
             if (destroyed) { return; }
 
             destroyed = true;
+            customChannel.clear();
             removeGlobalListeners();
 
             if (panelEl && panelEl.parentElement)
