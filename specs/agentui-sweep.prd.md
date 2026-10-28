@@ -11,12 +11,12 @@ Created: 2026
 
 # Agent UI readiness, step 2: providers and the #20 sweep
 
-**Status:** Draft, awaiting review (design approved section by section on 2026-10-28)
+**Status:** Approved 2026-10-28; amended the same day before planning (S2, S6, S7; §1.3, §1.4, §3.2, §3.8, §5.2, §5.3, §6.1, §8)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16). Closes [#31](https://github.com/priyavijaikalyan2007/b2btheme/issues/31) (except the action bar, which moves to a new issue) and [#20](https://github.com/priyavijaikalyan2007/b2btheme/issues/20) (for the 76 components in §5).
 **Depends on:** readiness step 1 (`specs/agentui-readiness.prd.md`, ADR-222), #41 (ADR-224) and browser tests in CI (ADR-223), all merged.
 **Spec author:** Agent + User
 **Date:** 2026-10-28
-**Plan / progress:** `./specs/agentui-sweep.plan.md` for P0, written after this spec is approved; each batch adds a short section to it.
+**Plan / progress:** `./specs/agentui-sweep.plan.md` for P0; each batch adds a short section to it.
 
 ---
 
@@ -44,14 +44,16 @@ A small number need real decisions: callbacks that load data on demand, render h
 | # | Decision |
 |---|---|
 | S1 | **All 76 join catalog v1.** Agents should be able to render a whole interactive application. The catalog grows additively; if its size becomes a measured problem, a host can offer a smaller catalog. Rejected: agent-facing components only; deciding membership per batch. |
-| S2 | **Build provider support (#31) first,** as PR P0, with PeoplePicker as its pilot. Components with data-loading callbacks then join with live loading. Rejected: host-only loaders now with providers later; deferring all provider components. |
+| S2 | **Build provider support (#31) first,** as PR P0, with **TreeView** as its pilot (amended: PeoplePicker was chosen first; see S6 and §3.8). Components with data-loading callbacks then join with live loading. Rejected: host-only loaders now with providers later; deferring all provider components. |
 | S3 | **Provider correlation:** one outstanding request per provider. `concurrency: "latest"` (default) or `"queue"` is declared per provider (§3). |
 | S4 | **Ten PRs:** P0, then B1–B9 by family (§5). One spec (this), a detailed plan for P0, and a short plan section per batch. |
 | S5 | **Options that make a component fetch a URL are host-only** (§4). |
+| S6 | **Only meaningful callbacks become events** (amendment, user). Any event or provider raises a component's required level to `surface` (fact 9), which needs additive `on()`, `getState()` and `setState()` on its handle. So lifecycle callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`) and callbacks whose information `value` already carries (`onSelect`/`onDeselect` on a two-way picker) are host-only. An event is promoted, with additive handle methods, only where it tells the agent something `value` doesn't: row and node clicks, submits, creates and deletes. Rejected: every callback an event (about 70 components promoted); relaxing the surface rule (a separate design). |
+| S7 | **A provider's answer schema lives at `$defs["<Component>__<request>Result"]`** (amendment). The `<request>Result` prop is a binding whose description names that def, so a literal is rejected by schema while the agent can still read what to write. |
 
 ### 1.3 Constraints
 
-- **Non-breaking** (user, 2026-10-27): existing component users see no change. Batch changes are manifests, JSDoc and tests. A gesture test that finds a real component bug gets a separate, labelled commit that changes behaviour only where the component was broken (the #39 precedent), called out in the PR.
+- **Non-breaking** (user, 2026-10-27): existing component users see no change. Batch changes are manifests, JSDoc, tests and, where a component's level rises to `surface` (S6), **additive** handle methods (`on()`, `getState()`, `setState()`, `setData()`). No existing option, callback, method or return value changes. A gesture test that finds a real component bug gets a separate, labelled commit that changes behaviour only where the component was broken (the #39 precedent), called out in the PR.
 - **No fallbacks** (AGENTS.md). Anything the adapter can't serve is a loud error.
 - **Every list and count may only shrink.** Each component that leaves `PENDING_CLASSIFICATION` lowers every pin it affects, in both ceiling and floor, in the same commit.
 
@@ -73,6 +75,9 @@ A small number need real decisions: callbacks that load data on demand, render h
    - without `onSearch` it uses `searchUrl`, and otherwise returns no results.
 7. **PeoplePicker's `searchUrl`** is passed to `fetch()` from the user's browser. That sends the host's cookies on same-origin requests (§4).
 8. **No manifest has an agent-usable action** after step 1: DataGrid's `export` is host-only by R4. The action bar has no consumer yet.
+9. **Any `emits`, `accepts` or `protocol.providers` makes the required level `surface`** (`runtime/src/conformance.ts` `requiredLevel`; schema spec §7). A `surface` manifest must declare `stateKeys` (`runtime/src/registry.ts`), and the adapter's `wireRoundTrip` throws for a handle with channels but no `on()`. Of the 76, only five handles have an `on(channel)` method (datagrid, treeview, diagramengine, graphminimap, annotation).
+10. **TreeView** is already `surface`, with `on()`, `getState()`/`setState()`, `stateKeys: ["expanded", "selection"]` and emits `selection` and `activate`. Its `onLoadChildren?: (node: TreeNode) => Promise<TreeNode[]>` and `onSearchAsync?: (query: string) => Promise<string[]>` are both one-parameter promise callbacks. `onSearchAsync` is used only when the tree has at least `searchAsyncThreshold` nodes (default 5000; `0` is falsy and falls back to the default).
+11. **Catalog component defs are relocated under `<Component>__<def>`** at the catalog root (`relocateDefs`), and `defCollisions` checks every relocated key. A new `$defs` key is additive to `catalog-diff`.
 
 ---
 
@@ -120,8 +125,10 @@ export interface ProviderSpec
 
 ### 3.2 Catalog
 
-- **`<request>Result` becomes binding-only.** Today it accepts a literal, binding or function call. A literal can't answer a request, so it's rejected by schema. No published component has a provider, so nothing that shipped changes.
-- **Descriptions** stay as generated: `on<Request>` says where the request is, and `<request>Result` says to bind it to the path the agent answers at.
+- **`<request>Result` becomes binding-only** (S7). Today it accepts a literal, binding or function call. A literal can't answer a request, so the prop becomes the `DataBinding` ref alone, and the answer's schema moves to `$defs["<Component>__<request>Result"]` (fact 11's naming, so `defCollisions` covers it). The prop's description says: bind it to the path you will answer `on<Request>` at, and write a value matching `#/$defs/<Component>__<request>Result` there. No published component has a provider, so nothing that shipped changes.
+- **Tools that find data props by their literal arm** (`check-dist.mjs` route problems, G3's `literalArms`, the render test's samples) skip the result prop without exceptions, because it has no `anyOf`.
+- **The adapter's validator** for `<Name>.<request>Result` compiles from that def (`compileValidators` gains a second pointer form).
+- **The catalog preamble** stops saying `<request>Result` accepts a literal. That's a description change, not a contract change.
 
 ### 3.3 The adapter: one request's life
 
@@ -130,7 +137,7 @@ The adapter passes a provider callback to the factory only when the agent has se
 - `<request>Result` as a binding;
 - `eventData` as a binding.
 
-Without them the agent could neither see the request nor answer it. The component then behaves as it does for a host that passes no callback: PeoplePicker searches nothing and offers its `frequentContacts`.
+Without them the agent could neither see the request nor answer it. The component then behaves as it does for a host that passes no callback: TreeView leaves a lazy node unexpandable and searches client-side.
 
 When the component calls the callback with a request:
 
@@ -161,7 +168,7 @@ Each provider has at most **one outstanding request** (sent, awaiting an answer)
   - A later answer to the timed-out request then arrives with nothing outstanding and is ignored (§3.3 step 4), unless a newer request is already outstanding, in which case it answers that one. This is the accepted cost of having no request ids, and it's documented for agents: answer each request once, and promptly.
 - **Teardown (unmount, rebuild, surface deleted):** clear the queue and stop the timers. Pending promises are **dropped, never settled.** Settling them would run the component's success or error path against a torn-down DOM. A dropped promise is collected with the component.
   - *Changed from the approved section 3, which said "rejects": found while writing this spec, and flagged for review.*
-- **The component's own error handling is untouched.** A rejected provider promise reaches PeoplePicker's existing `catch` and its `onSearchError`.
+- **The component's own error handling is untouched.** A rejected provider promise reaches the component's existing `catch`: TreeView logs the failure and clears the node's loading state.
 
 ### 3.6 Errors
 
@@ -171,16 +178,24 @@ Each provider has at most **one outstanding request** (sent, awaiting an answer)
 
 G1 stops failing on `protocol.providers` and fails only on manifest actions not declared in `protocol.hostOnlyActions`. Its message names the new action-bar issue instead of #31.
 
-### 3.8 Pilot: PeoplePicker
+### 3.8 Pilot: TreeView (amended from PeoplePicker)
 
-PeoplePicker completes the whole #20 checklist (§5.2) in P0:
-- `protocol.providers: { onSearch: { request: "search" } }` with the default `latest`;
-- `searchUrl` host-only (§4);
-- its other callbacks classified;
-- its 15 missing JSDoc comments;
-- `agent` sentences;
-- a G3 trigger for each channel;
-- a gesture test.
+PeoplePicker was the first choice. It's `field` level with no `on()` and no obvious view state, and its provider alone would make it `surface` (fact 9), so it would need handle work in P0. TreeView needs none (fact 10) and pilots both concurrency modes. PeoplePicker moves to B3, where its handle work is planned with the batch.
+
+TreeView completes the whole #20 checklist (§5.2) in P0:
+- **Providers:** `onLoadChildren: { request: "loadChildren", concurrency: "queue" }` and `onSearchAsync: { request: "search" }` (`latest`).
+- **Events kept:** `selection` and `activate`, which it already emits.
+- **Host-only, with reasons:**
+  - decisions (`onDragValidate`, `onRename`);
+  - hooks (`sortComparator`, `nodeRenderer`, `filterPredicate`);
+  - lifecycle and view callbacks (`onToggle`, `onRefreshComplete`, `onSortModeChange`, `onCollapseStateChange`);
+  - callbacks the `selection` channel already covers (`onSelect`);
+  - drag and drop (`onDrop`, `onExternalDrop`);
+  - `onStarToggle` and `onContextMenuAction`, which take two parameters and would need new channels (S6: deferred until an agent needs them);
+  - `roots[].data` (too broad) and `toolbarActions` (click handlers).
+- **`agent` sentences.**
+- **Conformance glue:** an `activate` trigger (G3 requires every channel to trigger) and a `request` trigger for each provider.
+- **A gesture test.**
 
 It leaves `PENDING_CLASSIFICATION`, and every pin it affects drops.
 
@@ -196,7 +211,7 @@ It leaves `PENDING_CLASSIFICATION`, and every pin it affects drops.
 
 **Not covered:** image URLs (`avatarUrl`, `iconUrl`, `logoUrl`). A cross-origin image can't be read by the page, and an agent can already show any image through the basic `Image` component.
 
-**How it's applied:** each batch reads the source of each of its components for these calls and lists, in its PR, every option the rule covered, or "none". Known so far: PeoplePicker `searchUrl` (P0). The rule joins #20's checklist and AGENTS.md.
+**How it's applied:** each batch reads the source of each of its components for these calls and lists, in its PR, every option the rule covered, or "none". Known so far: PeoplePicker `searchUrl` (B3). TreeView has none (P0). The rule joins #20's checklist and AGENTS.md.
 
 ---
 
@@ -206,13 +221,13 @@ It leaves `PENDING_CLASSIFICATION`, and every pin it affects drops.
 
 | PR | Batch | Components | n |
 |---|---|---|---|
-| P0 | Providers (#31) and pilot | peoplepicker | 1 |
+| P0 | Providers (#31) and pilot | treeview | 1 |
 | B1 | Pickers with an item payload (`valueFrom`) | fontdropdown, lineendingpicker, lineshapepicker, linetypepicker, linewidthpicker, marginspicker, sizespicker, spacingpicker, columnspicker, layoutpicker | 10 |
 | B2 | Date and time (`cleared`) | datepicker, periodpicker, sprintpicker, timepicker, durationpicker, cronpicker, timezonepicker | 7 |
-| B3 | Other value inputs | anglepicker, colorpicker, gradientpicker, symbolpicker, slider, maskedentry, editablecombobox, searchbox, fileupload, tagger | 10 |
+| B3 | Other value inputs | anglepicker, colorpicker, gradientpicker, symbolpicker, slider, maskedentry, editablecombobox, searchbox, fileupload, tagger, peoplepicker | 11 |
 | B4 | Display | statusbadge, metriccard, pill, gauge, emptystate, breadcrumb, personchip, presenceindicator, themetoggle, docviewer, reasoningaccordion | 11 |
 | B5 | Editors and forms | richtextinput, markdowneditor, latexeditor, codeeditor, propertyinspector, stepper, dynamicformswitcher, inlinetoolbar | 8 |
-| B6 | Data views | datagrid, treegrid, treeview, chartpanel, activityfeed, auditlogviewer, logconsole, notificationcenter, facetsearch, visualtableeditor | 10 |
+| B6 | Data views | datagrid, treegrid, chartpanel, activityfeed, auditlogviewer, logconsole, notificationcenter, facetsearch, visualtableeditor | 9 |
 | B7 | Collaboration and AI | conversation, commentoverlay, actionitems, prompttemplatemanager, relationshipmanager, explorerpicker | 6 |
 | B8 | App shell | applauncher, ribbon, ribbonbuilder, tenantswitcher, navrail, helpdrawer, sitefooter, marketinghero | 8 |
 | B9 | Canvas | diagramengine, graphcanvas, graphminimap, spinemap, annotation | 5 |
@@ -233,15 +248,17 @@ The batches add up to 76. They merge in order, because each batch lowers pins th
 5. **`protocol.hostOnlyActions`** for a manifest action an agent can't use (DataGrid `export`, B6).
 6. **The URL-fetch rule** (§4).
 7. **Rendering:** it passes the generated render test, with an `OVERRIDES` entry and a reason if it needs specific props.
-8. **A gesture test** in `tests/a2ui-components/<batch>.spec.ts` if it has a two-way `value`, events or providers. It drives the component like a user and checks the written value or action context against the catalog.
-9. **G3:** a glue trigger for every channel and provider (`<name>.conformance.ts`).
-10. **Bookkeeping:**
+8. **Additive handle methods where the level rises** (S6): `on()`, `getState()`, `setState()` and `stateKeys` for a component that gains an event or provider. What a component with no natural view state declares as `stateKeys` is the step-3 design question (#21–#26); the first batch that meets one brings that question to the user before it's implemented.
+9. **A gesture test** in `tests/a2ui-components/<batch>.spec.ts` if it has a two-way `value`, events or providers. It drives the component like a user and checks the written value or action context against the catalog.
+10. **G3:** a glue trigger for every channel and provider (`<name>.conformance.ts`).
+11. **Bookkeeping:**
     - remove it from `PENDING_CLASSIFICATION`;
     - lower `componentsPendingClassification`, `unclassifiedOptions`, `protocolPropsMissingJsdoc` and `changeMismatches` exactly, in ceiling and floor, with a dated comment;
     - rewrite the catalog baseline (`npm run build:agentui -- --write-baseline`), which may only add.
 
 ### 5.3 Rules across batches
 
+- **Only meaningful callbacks become events** (S6). Lifecycle callbacks and callbacks `value` already carries are host-only, with a reason naming what the agent sees instead.
 - **Data-loading callbacks become providers** (`onLoadChildren`, `onLoadMore`, `onLoadPage`, `onSearch`, `onSearchAsync`, `onMentionSearch`, `onSearchResources`, `onLoadTemplates`, `onLoadSession`, `fetchFn`, `ontologyFetchFn`):
   - `queue` for keyed loads (children of a node, a page number);
   - `latest` for searches.
@@ -278,14 +295,15 @@ The batches add up to 76. They merge in order, because each batch lowers pins th
   - `<request>Result` binding-only;
   - G1 passes a provider and still fails an undeclared action.
 - **Unit, catalog creation:** `providerTimeoutMs` validation.
-- **G3** (`a2ui/fleet-adapter.test.ts`): PeoplePicker's provider round trip through the built bundle and a real web_core surface.
-- **Browser** (`tests/a2ui-components/providers.spec.ts`):
-  1. the user types in PeoplePicker;
-  2. the harness, acting as the agent, receives `onSearch` with the query in its context and writes `searchResult`;
-  3. the user picks a person;
-  4. the written `value` passes `expectCatalogValid`.
+- **G3** (`a2ui/fleet-adapter.test.ts`): a generic test for every catalog provider. The glue's `request(request, handle)` makes the component ask, and the test checks the write order and the dispatch, then answers and checks that the request settled. It runs for TreeView's two providers.
+- **Browser** (`tests/a2ui-components/treeview.spec.ts`), with the harness playing the agent:
+  - clicking a row sends `onSelection`, with the selected node in context;
+  - expanding a lazy node sends `onLoadChildren` with that node; the agent writes `loadChildrenResult`, and the children render;
+  - expanding two lazy nodes sends the second request only after the first is answered (`queue`);
+  - typing in the search box sends `onSearch`; the answer highlights the matching node;
+  - an unanswered request times out with a short `providerTimeoutMs`, giving `OUTCROP_PROVIDER_TIMEOUT`.
 
-  A second test lets a request time out with a short `providerTimeoutMs` and asserts `OUTCROP_PROVIDER_TIMEOUT`. Both run in CI.
+  All run in CI.
 
 ### 6.2 Batches
 
@@ -304,7 +322,7 @@ Each batch adds its gesture tests and G3 triggers (§5.2). The render test and t
   - ADR-225;
   - `concepts.yaml` (`ProviderConcurrency`, `UrlFetchRule`);
   - `history.jsonl`;
-  - CHANGELOG (Added: provider support; PeoplePicker in the catalog).
+  - CHANGELOG (Added: provider support; TreeView in the catalog).
 
 Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, and an ADR only if it makes a new decision.
 
@@ -321,7 +339,7 @@ Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, an
 
 - **P0:**
   - closes #31 after opening a new issue for the action bar;
-  - updates #20's checklist with the URL-fetch rule and ticks PeoplePicker.
+  - updates #20's checklist with the S6 and URL-fetch rules and ticks TreeView.
 - **Each batch:** ticks its components on #20, or comments why one stays pending.
 - **#20 closes** when B9 merges, with any pending leftovers moved to their own issue.
 
@@ -331,7 +349,8 @@ Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, an
 
 | Risk | Mitigation |
 |---|---|
-| A late answer to a timed-out request answers a newer one (no request ids). | Documented for agents; 30 s default; the component's own staleness checks (PeoplePicker's generation counter) discard a mismatched answer. Request ids would need a breaking change to the published provider shape, which isn't worth it before a real failure. |
+| A late answer to a timed-out request answers a newer one (no request ids). | Documented for agents; 30 s default; the component's own staleness checks (the search generation counters in TreeView and PeoplePicker) discard a mismatched answer. Request ids would need a breaking change to the published provider shape, which isn't worth it before a real failure. |
+| Promoting components to `surface` (S6) is component code across data views, collaboration and canvas. | Additive methods only; each batch lists them in its PR; the stateless-state question goes to the user at the first batch that needs it (§5.2 item 8). |
 | A slow agent makes every search wait. | `latest` sends at most two requests per burst of typing; `providerTimeoutMs` is the host's to tune. |
 | A batch finds a component that needs code changes to work over A2UI. | It stays pending, with its reason (§5.3), or gets a separate labelled fix commit that changes behaviour only where it was broken (§1.3). |
 | Catalog size grows from 8 to about 84 entries. | Accepted (S1). Measure the catalog's token size per batch in the PR; a smaller catalog per host is the remedy if it's needed. |
@@ -344,3 +363,4 @@ Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, an
 | Date | Change | Reason |
 |---|---|---|
 | 2026-10-28 | Initial spec. Decisions S1–S5. Teardown drops pending provider promises instead of rejecting them (§3.5). | User decisions; settling into a torn-down component is unsafe |
+| 2026-10-28 | Before planning: S6 (only meaningful events), S7 (answer schema in `$defs`), pilot TreeView instead of PeoplePicker (PeoplePicker to B3). §1.3 allows additive handle methods. | Found while planning: any event or provider forces `surface` (fact 9); a binding-only result would have hidden the answer's schema. User decisions on S6 and the pilot. |
