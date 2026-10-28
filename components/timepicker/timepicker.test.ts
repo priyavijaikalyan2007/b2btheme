@@ -653,3 +653,65 @@ describe("minute step", () =>
         expect(val!.minutes % 5).toBe(0);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B2): additive on("timezone"),
+// getState/setState and setData. onTimezoneChange keeps firing first, once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(timezone)_HearsTheSelector_AfterOnTimezoneChange", () =>
+    {
+        const order: string[] = [];
+        const picker = createTimePicker("test-time-container", defaultOpts({ showTimezone: true,
+            onTimezoneChange: (tz) => order.push(`option:${tz}`) }));
+        picker.on("timezone", (tz) => order.push(`channel:${String(tz)}`));
+
+        (container.querySelector(".timepicker-tz-input") as HTMLElement).click();
+        const option = document.querySelectorAll(".timepicker-tz-option")[1] as HTMLElement;
+        const tz = picker.getTimezone();
+        option.dispatchEvent(new Event("pointerdown", { bubbles: true, cancelable: true }));
+
+        expect(picker.getTimezone()).not.toBe(tz);
+        expect(order).toEqual([`option:${picker.getTimezone()}`, `channel:${picker.getTimezone()}`]);
+        picker.destroy();
+    });
+
+    test("on(timezone)_HearsSetTimezone_AfterOnTimezoneChange", () =>
+    {
+        const order: string[] = [];
+        const picker = createTimePicker("test-time-container", defaultOpts({
+            onTimezoneChange: (tz) => order.push(`option:${tz}`) }));
+        const off = picker.on("timezone", (tz) => order.push(`channel:${String(tz)}`));
+
+        picker.setTimezone("Europe/Paris");
+        off();
+        picker.setTimezone("Asia/Tokyo");
+
+        expect(order).toEqual(["option:Europe/Paris", "channel:Europe/Paris", "option:Asia/Tokyo"]);
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheTimezone", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ timezone: "America/New_York" }));
+        const captured = picker.getState();
+
+        picker.setTimezone("Asia/Tokyo");
+        expect(picker.getState()).toEqual({ timezone: "Asia/Tokyo" });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ timezone: "America/New_York" });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts());
+
+        expect(() => picker.on("change", () => undefined)).toThrow("timezone");
+        expect(() => picker.setData("value", null)).toThrow("no data slots");
+        picker.destroy();
+    });
+});
