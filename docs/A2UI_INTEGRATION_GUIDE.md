@@ -178,11 +178,11 @@ The adapter reports through `surface.onError`. Forward each one to the agent as 
 
 While a bound value has not arrived yet, the component waits, empty, with `aria-busy="true"`. `web_core` itself warns `MISSING_DATA_BINDING`.
 
-**Cleared values are absent paths.** An A2UI data model cannot hold `null`: `set(path, null)` deletes the key. So for components whose `value` description says "When the user clears it, the path is deleted", the user clearing the field deletes the bound path, and your agent deleting the path clears the component. It is not a lost binding.
+**Cleared values are absent paths.** An A2UI data model cannot hold `null`: `set(path, null)` deletes the key. So for components whose `value` description says "When the user clears it, the path is deleted", the user clearing the field deletes the bound path, and your agent deleting the path clears the component. It is not a lost binding. Binding `value` to a path that does not exist yet mounts the component empty.
 
 ## 8. Which components
 
-- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 19 today.
+- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 26 today.
 - `/agentui-report.json` lists the components not yet in the catalog, and why.
 - More arrive as they are classified. A component in the catalog is guaranteed by the build to work through the adapter: gates G1–G3 in [`A2UI.md`](../A2UI.md).
 - Containers that hold child components are not in the catalog yet.

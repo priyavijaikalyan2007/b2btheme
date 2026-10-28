@@ -520,6 +520,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `on()`/`getState()`/`setState()` on its handle. A component whose only view
   state is its selection declares it as `stateKeys: ["value"]`: `getState()`
   returns `{ value }` and `setState()` selects it (ADR-226, B1-2).
+- **Dates nested in an option's type are revived by path** (ADR-227): the
+  generator lists every `date-time` position (`value.startDate`,
+  `disabledDates[]`) and the adapter turns those ISO strings into `Date`s. A
+  recursive type that holds a date fails the build; make that date a string,
+  or declare the member host-only.
 - **Options the component passes to `fetch`, `XMLHttpRequest`, `import()` or
   `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
   this URL from the user's browser with the host's credentials; an agent must
