@@ -117,6 +117,77 @@ test.describe("A2UI adapter under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
+    test("field: ToolColorPicker shows the agent's colours, and the user's pick is written back", async ({ page }) =>
+    {
+        // Today the pick writes the whole ToolColor ({hex, label}) and raises VALIDATION_FAILED at /c.
+        test.fail(true, "#39: onChange passes a ToolColor, but value is its hex");
+        await open(page, "lit");
+        const colors = [{ hex: "#ff0000", label: "Red" }, { hex: "#0000ff", label: "Blue" }];
+        await send(page, surface("s", { id: "root", component: "ToolColorPicker", tool: "marker", colors,
+            value: { path: "/c" } }, { c: "#ff0000" }));
+        const swatches = page.locator("outcrop-tool-color-picker .toolcolorpicker-swatch");
+        await expect(swatches).toHaveCount(2);
+
+        await page.locator('outcrop-tool-color-picker [data-hex="#0000ff"]').click();
+        await expect.poll(() => dm(page, "s", "/c")).toBe("#0000ff");
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("display: SkeletonLoader renders the table preset at the agent's size", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "SkeletonLoader", preset: "table", rows: 2, columns: 3 }));
+
+        await expect(page.locator("outcrop-skeleton-loader .skeleton-loader-table")).toBeVisible();
+        await expect(page.locator("outcrop-skeleton-loader .skeleton-cell")).toHaveCount(6);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("display: GraphLegend lists the agent's node and edge types", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "GraphLegend", title: "Kinds",
+            nodeTypes: [{ typeKey: "svc", displayName: "Service", icon: "gear", color: "#2563eb" },
+                { typeKey: "db", displayName: "Database", icon: "database", color: "#16a34a" }],
+            edgeTypes: [{ relationshipKey: "uses", displayName: "uses", style: "dashed" }] }));
+
+        await expect(page.locator("outcrop-graph-legend .graphlegend-node-item")).toHaveCount(2);
+        await expect(page.locator("outcrop-graph-legend .graphlegend-edge-item")).toHaveCount(1);
+        await expect(page.locator("outcrop-graph-legend")).toContainText("Database");
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("events: ChatDock shows the agent's turns and sends what the user submits as onSubmit", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "ChatDock", eventData: { path: "/ev" },
+            turns: [{ id: "t1", role: "assistant", text: "Hello from the agent" }],
+            onSubmit: { event: { name: "asked", context: { text: { path: "/ev/submit" } } } } }));
+        await expect(page.locator("outcrop-chat-dock .chatdock-turns")).toContainText("Hello from the agent");
+
+        await page.locator("outcrop-chat-dock .chatdock-input").fill("what next?");
+        await page.locator("outcrop-chat-dock .chatdock-send").click();
+        await expect.poll(async () => (await actions(page)).at(-1)).toMatchObject(
+            { name: "asked", context: { text: "what next?" } });
+        expect(await dm(page, "s", "/ev/submit")).toBe("what next?");
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("events: WorkspaceShell renders the agent's canvases and sends the selected one", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "WorkspaceShell", eventData: { path: "/ev" },
+            canvases: [{ id: "a", title: "Plan" }, { id: "b", title: "Budget", pinned: true }], activeCanvasId: "a",
+            onSelectCanvas: { event: { name: "opened", context: { canvas: { path: "/ev/selectCanvas/id" } } } } }));
+        await expect(page.locator("outcrop-workspace-shell .workspaceshell-tab")).toHaveCount(2);
+
+        await page.locator('outcrop-workspace-shell [data-canvas-id="b"] .workspaceshell-tab-title').click();
+        await expect.poll(async () => (await actions(page)).at(-1)).toMatchObject(
+            { name: "opened", context: { canvas: "b" } });
+        await expect(page.locator('outcrop-workspace-shell [data-canvas-id="b"]')).toHaveAttribute("aria-selected", "true");
+        expect(await errors(page)).toEqual([]);
+    });
+
     test("injectBaseTheme loads custom.css exactly once", async ({ page }) =>
     {
         await open(page, "lit", { inject: "1" });
