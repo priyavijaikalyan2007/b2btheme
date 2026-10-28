@@ -218,6 +218,15 @@ export interface StatusBadgeHandle
     setStatus(status: StatusBadgeOptions["status"]): void;
     setLabel(label: string): void;
     setPulse(enabled: boolean): void;
+
+    /** The surface contract (additive): StatusBadge has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "click": the current label, or "" when none. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-229): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229): does nothing. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class StatusBadge implements StatusBadgeHandle
@@ -232,6 +241,8 @@ export class StatusBadge implements StatusBadgeHandle
 
     // Bound event handler for cleanup
     private boundClickHandler: (() => void) | null = null;
+
+    private readonly clickHandlers = new Set<(payload: unknown) => void>();
 
     constructor(options: StatusBadgeOptions)
     {
@@ -302,6 +313,7 @@ export class StatusBadge implements StatusBadgeHandle
      */
     public destroy(): void
     {
+        this.clickHandlers.clear();
         this.removeClickListener();
         this.hide();
 
@@ -383,6 +395,54 @@ export class StatusBadge implements StatusBadgeHandle
         {
             this.dotEl.classList.remove("statusbadge-pulse");
         }
+    }
+
+    // ========================================================================
+    // PUBLIC -- SURFACE CONTRACT (additive, B4)
+    // ========================================================================
+
+    /**
+     * StatusBadge has no data slots; use setStatus(), setLabel() or setPulse().
+     *
+     * @param slot - The slot name the caller tried to set
+     * @param _value - Unused: there are no slots
+     */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): StatusBadge has no data slots. `
+            + "Use setStatus(), setLabel() or setPulse().");
+    }
+
+    /**
+     * Subscribes to "click": the current label, or "" when none.
+     *
+     * @param channel - Must be "click"
+     * @param handler - Called after onClick, with the label string
+     * @returns The unsubscribe function
+     */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "click")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "click".`);
+        }
+
+        this.clickHandlers.add(handler);
+
+        return () => { this.clickHandlers.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No state keys.
     }
 
     // ========================================================================
@@ -608,22 +668,35 @@ export class StatusBadge implements StatusBadgeHandle
     }
 
     /**
-     * Invokes the onClick callback safely within a try-catch.
+     * Invokes the onClick callback safely within a try-catch, then tells
+     * the "click" subscribers the current label.
      */
     private handleClick(): void
     {
-        if (!this.options.onClick)
+        if (this.options.onClick)
         {
-            return;
+            try
+            {
+                this.options.onClick();
+            }
+            catch (err)
+            {
+                logError("onClick callback error:", err);
+            }
         }
 
-        try
+        const label = this.resolveLabel();
+
+        for (const handler of this.clickHandlers)
         {
-            this.options.onClick();
-        }
-        catch (err)
-        {
-            logError("onClick callback error:", err);
+            try
+            {
+                handler(label);
+            }
+            catch (err)
+            {
+                logError("click channel handler error:", err);
+            }
         }
     }
 
