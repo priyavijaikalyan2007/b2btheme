@@ -1738,3 +1738,83 @@ For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
 - **Records:** ADR-228, CHANGELOG, `history.jsonl`, #20.
 - **Verification:** full suites, mutation checks, the dist diff (the five surface components' JS), token growth.
 - **The PR,** stacked on #48.
+
+---
+
+## B4: display
+
+**Goal:** ten of the eleven B4 components join catalog v1. DocViewer stays pending (below).
+
+**User decisions (2026-10-29):**
+- **B4-1, empty `stateKeys`:** a surface component with nothing to restore declares `stateKeys: []`, and its `getState()` returns `{}`. The runtime rule that rejected this is removed (ADR-229). Clicks that express intent become events; hover stays host-only. Expansion is view state, so PresenceIndicator and ReasoningAccordion declare it.
+- **B4-2, ThemeToggle joins:** `onChange(theme, mode)` becomes a `change` event carrying `{ theme, mode }`, and `mode` is its state key. Its agent sentence says it restyles the whole page.
+
+**The link rule (new, ADR-229):** an option whose value becomes an `<a href>` is host-only, with the reason
+> "A link the user follows from the host's page; an agent must not choose it. Over A2UI, listen for the click event and answer with openUrl."
+
+An agent-chosen `javascript:` URL would run in the host's origin when the user clicked it. B4 covers Breadcrumb `items[].href`, MetricCard `href`, PersonChip `href` and Pill `href`. Image URLs stay data (§4).
+
+**Per component:**
+
+| Component | Value | Host-only | Events (payload) | Level, `stateKeys` |
+|---|---|---|---|---|
+| StatusBadge | — | — | `click` (scalar: the label) | surface, `[]` |
+| MetricCard | — | `href` (link rule) | `click` (scalar: the title) | surface, `[]` |
+| Pill | — | `href` (link rule), `onHover`, `onHoverOut` | `click`, `dismiss` (scalar: the label) | surface, `[]` |
+| Gauge | **one-way** (`protocol.change: "event"`) | `onChange` (fires inside `setValue`, so it echoes the writer), `onOverLimit`, `onOverdue` (follow from the value, limit and deadline the agent set), `formatValue` | — | field (unchanged) |
+| EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label) | surface, `[]` |
+| Breadcrumb | — | `items[].href` (link rule), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
+| PersonChip | — | `href` (link rule), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
+| PresenceIndicator | — | `onExpand`, `onCollapse` (view state, restored through `expanded`) | `click` (record: the person) | surface, `["expanded"]` |
+| ThemeToggle | — | — | `change` (record: `{ theme, mode }`) | surface, `["mode"]` |
+| ReasoningAccordion | — | `steps[].metadata` (too broad), `onExpandChange` (view state, restored through `expanded`) | `stepClick` (record: the step) | surface, `["expanded"]` (the expanded step ids) |
+
+- **DocViewer stays pending.**
+  - It throws without MarkdownRenderer, and the adapter loads only a component's own script and CSS.
+  - `pages[].url` goes to `fetch()`, so the URL-fetch rule makes it host-only, leaving `pages[].markdown` as the agent's way in.
+
+  Joining needs manifest-declared script dependencies loaded by the adapter, which a follow-up issue tracks. The reason goes to #20.
+- **URL-fetch rule:** none of the ten calls `fetch`, `XMLHttpRequest`, `import()` or `EventSource`. DocViewer is the only B4 component that does.
+- **Payloads are JSON:** Pill, PersonChip and Gauge pass their own instance to the legacy callbacks. The new channels send the label or a record instead, never `this`.
+
+### Task B4.1: the runtime accepts empty `stateKeys` (ADR-229)
+- **Code:** remove the `surface && stateKeys.length === 0` issue from `runtime/src/registry.ts`.
+- **Tests:** turn `registry.test.ts`'s "requires a surface-level manifest to declare state keys" into "allows a surface manifest with no view state".
+- **Bundle:** regenerate `runtime/runtime.ts`.
+- **Docs:** one sentence in `docs/SURFACE_CONTRACT.md` §2.
+
+### Task B4.2: additive surface methods
+For the nine surface components above:
+- **`setData`** throws (no slots).
+- **`on(channel)`** accepts the declared channels only.
+- **`getState`/`setState`** cover the `stateKeys`: `{}` and a no-op for the six with none.
+- **Each new channel** emits after the existing callback, which still fires first and exactly once.
+- **TDD per component;** one commit each.
+
+### Task B4.3: manifests, glue, bookkeeping
+- **Manifests:**
+  - agent sentences, `protocol` and `emits` per the table;
+  - JSDoc for PersonChip (12), PresenceIndicator (7) and ReasoningAccordion (13), comment-only.
+- **Conformance glue:** a trigger per channel for the nine.
+- **Bookkeeping:**
+  - remove ten from the pending list (DocViewer stays);
+  - lower the pins;
+  - rewrite the baseline;
+  - G3 and runtime conformance pass.
+
+### Task B4.4: gesture tests
+`tests/a2ui-components/b4-display.spec.ts`, one literal `"<Name>: …"` test per surface component, plus Gauge's one-way value.
+
+### Task B4.5: docs, verification, PR
+- **Records:**
+  - ADR-229 (empty `stateKeys`, the link rule);
+  - AGENTS.md rules;
+  - A2UI.md and its `rules.ts` mirror if agent-facing text changes;
+  - CHANGELOG, `history.jsonl`;
+  - #20, plus a note on #26 that the `stateKeys` blocker is gone;
+  - the script-dependency issue.
+- **Verification:**
+  - full suites and mutation checks;
+  - the dist diff (the nine components' JS, and the runtime);
+  - token growth.
+- **The PR,** stacked on #50.
