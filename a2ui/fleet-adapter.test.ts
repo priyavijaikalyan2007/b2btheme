@@ -245,7 +245,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
             ?.CONFORMANCE_GLUE;
         const { props, data } = initial();
         const actionProps = Object.fromEntries(d.events.map((e) => [e.actionProp, { event: { name: e.actionProp } }]));
-        const s = await stage(d, { ...props, ...actionProps, eventData: { path: "/ev" } }, data);
+        // eventProps: what an agent sets to make a channel reachable, such as clickable: true (B4).
+        const s = await stage(d, { ...props, ...glue?.eventProps, ...actionProps, eventData: { path: "/ev" } }, data);
 
         const writes = vi.spyOn(s.surface.dataModel, "set");
 
