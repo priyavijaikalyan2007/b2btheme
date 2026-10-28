@@ -116,6 +116,9 @@ export interface PillOptions
     onHoverOut?: (pill: Pill, event: MouseEvent) => void;
 }
 
+/** The channels on() accepts. */
+type PillChannel = "click" | "dismiss";
+
 /** Style overrides for setStyle(). */
 export interface PillStyleOverrides
 {
@@ -166,6 +169,15 @@ export interface PillHandle
     setColor(color: PillColor): void;
     setStyle(overrides: PillStyleOverrides): void;
     destroy(): void;
+
+    /** The surface contract (additive): Pill has no data slots, so this throws. Use setLabel(). */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "click" or "dismiss", each hearing the label. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to capture (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class Pill implements PillHandle
@@ -174,6 +186,8 @@ export class Pill implements PillHandle
     private labelEl: HTMLElement | null = null;
     private options: PillOptions;
     private boundHandlers: Array<{ el: HTMLElement; event: string; fn: EventListener }> = [];
+    private readonly channelHandlers: Record<PillChannel, Set<(payload: unknown) => void>> =
+        { click: new Set(), dismiss: new Set() };
 
     constructor(options: PillOptions)
     {
@@ -241,9 +255,46 @@ export class Pill implements PillHandle
         }
     }
 
+    // ── Surface contract (additive, B4) ──
+
+    /** Pill has no data slots; use setLabel(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): Pill has no data slots. Use setLabel().`);
+    }
+
+    /** Subscribes to "click" or "dismiss"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "click" && channel !== "dismiss")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "click", "dismiss".`);
+        }
+
+        const handlers = this.channelHandlers[channel];
+        handlers.add(handler);
+
+        return () => { handlers.delete(handler); };
+    }
+
+    /** Nothing to capture (ADR-229). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No state keys.
+    }
+
     /** Remove listeners, remove from DOM, null refs. */
     public destroy(): void
     {
+        this.channelHandlers.click.clear();
+        this.channelHandlers.dismiss.clear();
+
         for (const { el, event, fn } of this.boundHandlers)
         {
             el.removeEventListener(event, fn);
@@ -361,6 +412,7 @@ export class Pill implements PillHandle
         {
             e.stopPropagation();
             this.options.onDismiss?.(this);
+            this.emit("dismiss");
             this.destroy();
         };
 
@@ -426,6 +478,7 @@ export class Pill implements PillHandle
         const clickHandler = (): void =>
         {
             this.options.onClick?.(this);
+            this.emit("click");
         };
 
         const keyHandler = (e: Event): void =>
@@ -436,6 +489,7 @@ export class Pill implements PillHandle
             {
                 e.preventDefault();
                 this.options.onClick?.(this);
+                this.emit("click");
             }
         };
 
@@ -445,6 +499,22 @@ export class Pill implements PillHandle
             { el: this.rootEl, event: "click", fn: clickHandler as EventListener },
             { el: this.rootEl, event: "keydown", fn: keyHandler as EventListener }
         );
+    }
+
+    /** Tells each subscriber of the channel the label, a plain string. A throwing handler is logged, not rethrown. */
+    private emit(channel: PillChannel): void
+    {
+        for (const handler of this.channelHandlers[channel])
+        {
+            try
+            {
+                handler(this.options.label);
+            }
+            catch (err)
+            {
+                logError(`on("${channel}") handler threw:`, err);
+            }
+        }
     }
 
     /** mouseenter/mouseleave handlers. */
