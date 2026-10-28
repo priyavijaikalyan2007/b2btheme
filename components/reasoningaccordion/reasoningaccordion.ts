@@ -31,17 +31,33 @@ export interface ReasoningStep
 
 export interface ReasoningAccordionOptions
 {
+    /** The root element's id; step content ids derive from it. Default: generated. */
     id?: string;
+    /**
+     * The reasoning steps, in order. Each has an id, a title, a status
+     * (pending, thinking, complete or error), and optionally markdown content,
+     * a duration in milliseconds and a confidence from 0 to 1.
+     */
     steps?: ReasoningStep[];
+    /** Heading above the steps. */
     title?: string;
+    /** Expands every step when it is added. Default: false. */
     expandAll?: boolean;
+    /** Shows each step's duration and the total. Default: true. */
     showTimings?: boolean;
+    /** Numbers the steps. Default: true. */
     showStepNumbers?: boolean;
+    /** Shows each step's confidence as a bar. Default: false. */
     showConfidence?: boolean;
+    /** Shows a button that expands or collapses every step. Default: true. */
     showExpandAllButton?: boolean;
+    /** Expands a step while its status is "thinking". Default: true. */
     autoExpandActive?: boolean;
+    /** Collapses a step when its status becomes "complete". Default: false. */
     autoCollapseCompleted?: boolean;
+    /** Size variant: "sm", "default" or "lg". Default: "default". */
     size?: ReasoningAccordionSize;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
     onStepClick?: (step: ReasoningStep) => void;
     onExpandChange?: (stepId: string, expanded: boolean) => void;

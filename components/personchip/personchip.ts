@@ -95,17 +95,29 @@ export type PersonChipStatus = typeof VALID_STATUSES[number];
 /** Configuration options for a PersonChip instance. */
 export interface PersonChipOptions
 {
+    /** The person's display name; the initials come from it. Required. */
     name: string;
+    /** Email address, shown in the tooltip and at size "lg". */
     email?: string;
+    /** Avatar image URL; without one the chip shows coloured initials. */
     avatarUrl?: string;
+    /** Role or job title, shown in the tooltip and at size "lg". */
     role?: string;
+    /** Presence dot: "online", "offline", "busy" or "away". Omit for no dot. */
     status?: PersonChipStatus;
+    /** Size variant: "sm", "md" or "lg". Default: "md". */
     size?: PersonChipSize;
+    /** Makes the chip a button that the user can activate. Default: false. */
     clickable?: boolean;
+    /** Turns the chip into a link to this URL. */
     href?: string;
+    /** Tooltip text. Default: generated from the name, email and role. */
     tooltip?: string;
+    /** Shows only the avatar, with the name in the tooltip. Default: false. */
     avatarOnly?: boolean;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** Written to the root element as data-* attributes, one per key. */
     metadata?: Record<string, string>;
     onClick?: (chip: PersonChip) => void;
     onHover?: (chip: PersonChip, event: MouseEvent) => void;
