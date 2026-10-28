@@ -30,7 +30,8 @@ type Any = any;
 type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string; twoWay: boolean;
     change?: { valueFrom: string } | { cleared: null };
     assets: { js: string; css?: string }; props: Record<string, { route: string }>;
-    events: { channel: string; actionProp: string; payloadInValue: boolean }[] };
+    events: { channel: string; actionProp: string; payloadInValue: boolean }[];
+    providers: { request: string; actionProp: string; resultProp: string; concurrency: string }[] };
 
 const DIST = path.join(__dirname, "..", "dist");
 const BASE = "https://assets.test";
@@ -259,6 +260,35 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
             const path = e.payloadInValue ? "/p/value" : `/ev/${e.channel}`;
             expect(writes.mock.calls.map((c) => c[0]), `${name}.${e.channel} wrote nothing to ${path}`).toContain(path);
             expect(s.actions.map((a: Any) => a.name), `${name}.${e.channel}`).toContain(e.actionProp);
+        }
+
+        expect(s.errors).toEqual([]);
+    });
+
+    test.skipIf(d.providers.length === 0)("each provider clears its answer, writes its request, dispatches, and takes the answer", async () =>
+    {
+        const dir = d.assets.js.split("/")[1];
+        const glue = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())?.CONFORMANCE_GLUE;
+        const { props, data } = initial();
+        const bindings = Object.fromEntries(d.providers.flatMap((p) => [[p.actionProp, { event: { name: p.actionProp } }],
+            [p.resultProp, { path: `/answers/${p.request}` }]]));
+        const s = await stage(d, { ...props, ...glue?.requestProps, ...bindings, eventData: { path: "/ev" } }, data);
+        const writes = vi.spyOn(s.surface.dataModel, "set");
+
+        for (const p of d.providers)
+        {
+            expect(glue?.request, `add a request trigger for "${p.request}" to the ${name} conformance glue`)
+                .toBeTypeOf("function");
+            s.actions.length = 0;
+            writes.mockClear();
+            expect(glue.request(p.request, s.el.handle), `${name} glue cannot request "${p.request}"`).toBe(true);
+            await vi.waitFor(() => expect(s.actions.map((a: Any) => a.name)).toContain(p.actionProp), { timeout: 2000 });
+
+            const paths = writes.mock.calls.map((c) => c[0]);
+            expect(paths.indexOf(`/answers/${p.request}`), `${name}.${p.request} clears its answer before the request`)
+                .toBeLessThan(paths.indexOf(`/ev/${p.request}`));
+            s.setData(`/answers/${p.request}`, sampleValue(CATALOG.$defs[`${name}__${p.resultProp}`], 1, CATALOG));
+            await flush();
         }
 
         expect(s.errors).toEqual([]);

@@ -27,6 +27,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // toolcolorpicker failed only value-below-field, now covered by BELOW_REQUIRED);
     // 93 of 101 on 2026-10-25: stickynote's only violation was onChange counted as both its
     // "change" channel and the value write-back, which is one callback in two roles (ADR-219).
+    // 92 on 2026-10-28: treeview classified with two providers (readiness step 2 P0, ADR-225).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -117,7 +118,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "timepicker",
     "timezonepicker",
     "treegrid",
-    "treeview",
     "usermenu",
     "visualtableeditor",
 ]);
