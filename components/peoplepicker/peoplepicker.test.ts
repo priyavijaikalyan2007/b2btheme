@@ -315,3 +315,34 @@ describe("edge cases", () =>
         expect(pp.getElement()).not.toBeNull();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): its onSearch provider makes it a
+// surface component, so it gains additive getState/setState, on and setData.
+// It emits no channels: its value reaches an agent through two-way binding.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const pp = createPeoplePicker("test-peoplepicker", { selected: [MOCK_PEOPLE[0]] });
+        const captured = pp.getState();
+
+        pp.setValue([MOCK_PEOPLE[1], MOCK_PEOPLE[2]]);
+        expect((pp.getState().value as { id: string }[]).map((p) => p.id)).toEqual(["2", "3"]);
+
+        pp.setState(captured);
+        expect((pp.getState().value as { id: string }[]).map((p) => p.id)).toEqual(["1"]);
+        pp.destroy();
+    });
+
+    test("on_AnyChannel_AndSetData_Throw", () =>
+    {
+        const pp = createPeoplePicker("test-peoplepicker", {});
+
+        expect(() => pp.on("change", () => undefined)).toThrow("emits no channels");
+        expect(() => pp.setData("selected", [])).toThrow("no data slots");
+        pp.destroy();
+    });
+});

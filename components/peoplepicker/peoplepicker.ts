@@ -302,6 +302,15 @@ export interface PeoplePickerHandle
     setReadonly(flag: boolean): void;
     setFrequentContacts(contacts: PersonData[]): void;
     focus(): void;
+
+    /** The surface contract (additive): PeoplePicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** PeoplePicker emits no channels; its value is two-way. Always throws. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selection, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class PeoplePicker implements PeoplePickerHandle
@@ -554,6 +563,36 @@ export class PeoplePicker implements PeoplePickerHandle
     public focus(): void
     {
         this.inputEl?.focus();
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B3)
+    // ========================================================================
+
+    /** PeoplePicker has no data slots; the selection is setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): PeoplePicker has no data slots. Use setValue() or `
+            + "setFrequentContacts().");
+    }
+
+    /** PeoplePicker emits no channels: its selection is the two-way value. */
+    public on(channel: string, _handler: (payload: unknown) => void): () => void
+    {
+        throw new Error(`${LOG_PREFIX} on("${channel}"): PeoplePicker emits no channels; read the selection `
+            + "through getValue() or onChange.");
+    }
+
+    /** The selection. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores a selection captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as PersonData[]); }
     }
 
     // ========================================================================
