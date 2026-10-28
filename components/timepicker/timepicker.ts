@@ -367,6 +367,38 @@ function formatTime(
     return result;
 }
 
+/** The regex fragment each time-format token matches. */
+const TIME_TOKENS: Readonly<Record<string, string>> = {
+    HH: "(\\d{2})", hh: "(\\d{2})", mm: "(\\d{2})", ss: "(\\d{2})",
+    H: "(\\d{1,2})", h: "(\\d{1,2})", m: "(\\d{1,2})", s: "(\\d{1,2})",
+    A: "([AP]M)", a: "([ap]m)",
+};
+
+/**
+ * A time format as a regex source plus its tokens in the order they appear.
+ * Read left to right: the literal text between tokens is escaped and each
+ * token becomes its capture. Two bugs found by the A2UI gesture test
+ * (readiness step 2 B2) lived here: escaping after inserting the captures
+ * also escaped their {2} quantifiers, so no typed time ever matched, and
+ * captures were recorded in table order, so "H.mm" read minutes as hours.
+ */
+function timeFormatPattern(format: string): { pattern: string; captures: string[] }
+{
+    const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const captures: string[] = [];
+    let pattern = "";
+    let last = 0;
+
+    for (const token of format.matchAll(/HH|hh|mm|ss|H|h|m|s|A|a/g))
+    {
+        pattern += escape(format.slice(last, token.index)) + TIME_TOKENS[token[0]];
+        captures.push(token[0]);
+        last = (token.index ?? 0) + token[0].length;
+    }
+
+    return { pattern: pattern + escape(format.slice(last)), captures };
+}
+
 function parseTime(
     text: string, format: string, clockMode: "12" | "24"
 ): TimeValue | null
@@ -376,42 +408,7 @@ function parseTime(
     let seconds = 0;
     let period: string | null = null;
 
-    let pattern = format;
-    const captures: string[] = [];
-
-    const tokenMap: [string, string][] = [
-        ["HH", "(\\d{2})"],
-        ["hh", "(\\d{2})"],
-        ["mm", "(\\d{2})"],
-        ["ss", "(\\d{2})"],
-        ["H", "(\\d{1,2})"],
-        ["h", "(\\d{1,2})"],
-        ["m", "(\\d{1,2})"],
-        ["s", "(\\d{1,2})"],
-        ["A", "([AP]M)"],
-        ["a", "([ap]m)"],
-    ];
-
-    for (const [token, regex] of tokenMap)
-    {
-        const idx = pattern.indexOf(token);
-        if (idx !== -1)
-        {
-            captures.push(token);
-            pattern = pattern.replace(token, regex);
-        }
-    }
-
-    // Escape remaining special characters that could interfere
-    pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, (match) =>
-    {
-        // Don't escape capture groups we already placed
-        if (match === "(" || match === ")" || match === "\\" || match === "[" || match === "]")
-        {
-            return match;
-        }
-        return "\\" + match;
-    });
+    const { pattern, captures } = timeFormatPattern(format);
 
     try
     {

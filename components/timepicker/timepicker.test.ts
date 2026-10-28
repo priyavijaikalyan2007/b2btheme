@@ -715,3 +715,53 @@ describe("surface contract", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// TYPED INPUT (found by the A2UI gesture test, readiness step 2 B2): every
+// typed time was rejected, because the format's regex quantifiers ({2}) were
+// escaped along with its literal characters.
+// ============================================================================
+
+describe("typed input", () =>
+{
+    test.each([
+        ["HH:mm:ss", "10:45:15", { hours: 10, minutes: 45, seconds: 15 }],
+        ["HH:mm", "07:05", { hours: 7, minutes: 5 }],
+        ["H.mm", "7.05", { hours: 7, minutes: 5 }],
+    ])("format %s accepts typed %s", (format, typed, expected) =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ format, showSeconds: format.includes("ss") }));
+        const input = getInput() as HTMLInputElement;
+
+        input.value = typed;
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject(expected);
+        picker.destroy();
+    });
+
+    test("a 12-hour format reads its hours before its minutes", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ format: "h:mm A", clockMode: "12",
+            showSeconds: false }));
+        const input = getInput() as HTMLInputElement;
+
+        input.value = "7:05 PM";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject({ hours: 19, minutes: 5 });
+        picker.destroy();
+    });
+
+    test("a malformed time is still rejected and reverted", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts());
+        const input = getInput() as HTMLInputElement;
+
+        input.value = "10:4x:15";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject({ hours: 14, minutes: 30 });
+        picker.destroy();
+    });
+});
