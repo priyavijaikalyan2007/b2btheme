@@ -33,11 +33,26 @@ export const FONTDROPDOWN_MANIFEST: CapabilityManifest =
     icon: "bi-fonts",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose a font family from a list that previews each font in its own typeface.",
+        avoidWhen: "For choices that are not fonts use ChoicePicker; for a free-text font name use TextField.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "value" },
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["fontdropdown:list"],
 

@@ -28,6 +28,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 93 of 101 on 2026-10-25: stickynote's only violation was onChange counted as both its
     // "change" channel and the value write-back, which is one callback in two roles (ADR-219).
     // 92 on 2026-10-28: treeview classified with two providers (readiness step 2 P0, ADR-225).
+    // 82 on 2026-10-28: the ten B1 pickers classified (readiness step 2 B1, ADR-226).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -42,7 +43,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "chartpanel",
     "codeeditor",
     "colorpicker",
-    "columnspicker",
     "commentoverlay",
     "conversation",
     "cronpicker",
@@ -61,7 +61,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "fileupload",
     "flexgridlayout",
     "flowlayout",
-    "fontdropdown",
     "gauge",
     "gradientpicker",
     "graphcanvas",
@@ -71,13 +70,7 @@ export const PENDING_CLASSIFICATION = new Set([
     "inlinetoolbar",
     "latexeditor",
     "layerlayout",
-    "layoutpicker",
-    "lineendingpicker",
-    "lineshapepicker",
-    "linetypepicker",
-    "linewidthpicker",
     "logconsole",
-    "marginspicker",
     "markdowneditor",
     "marketinghero",
     "maskedentry",
@@ -100,9 +93,7 @@ export const PENDING_CLASSIFICATION = new Set([
     "richtextinput",
     "searchbox",
     "sitefooter",
-    "sizespicker",
     "slider",
-    "spacingpicker",
     "spinemap",
     "splitlayout",
     "sprintpicker",

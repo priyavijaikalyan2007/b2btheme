@@ -33,11 +33,26 @@ export const LINEENDINGPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-arrow-right",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user choose an arrowhead or other end marker for a line or connector in a diagram.",
+        avoidWhen: "For a line's dash pattern use LineTypePicker; for its thickness use LineWidthPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B1).
+    protocol: {
+        change: { valueFrom: "value" },
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["lineendingpicker:list"],
 
