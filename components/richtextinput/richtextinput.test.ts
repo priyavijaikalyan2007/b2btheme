@@ -774,3 +774,181 @@ describe("edge cases", () =>
         expect(editor.getStieEngine()).toBeNull();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B5): additive on("submit"), getState/setState and setData.
+// onSubmit keeps firing first, exactly once; the channel fires after it.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    /** Press Ctrl+Enter in the editable (the submit gesture). */
+    function pressCtrlEnter(editor: ReturnType<typeof createRichTextInput>): void
+    {
+        getEditable(editor.getElement())!.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true, cancelable: true }));
+    }
+
+    test("on_Submit_HearsTheValue_AfterOnSubmit_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const editor = createRichTextInput({
+            value: "<b>hi</b>",
+            submitOnCtrlEnter: true,
+            onSubmit: (v) => order.push(`option:${v}`)
+        });
+        editor.on("submit", (v) => order.push(`channel:${String(v)}`));
+
+        pressCtrlEnter(editor);
+
+        expect(order).toEqual(["option:<strong>hi</strong>", "channel:<strong>hi</strong>"]);
+        editor.destroy();
+    });
+
+    test("on_Submit_EmitsWithoutOnSubmitCallback", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text", submitOnCtrlEnter: true });
+        editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("text");
+        editor.destroy();
+    });
+
+    test("on_Submit_HonoursSubmitOnCtrlEnterGate", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text" });
+        editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+
+        expect(heard).not.toHaveBeenCalled();
+        editor.destroy();
+    });
+
+    test("on_Submit_MetaEnterAlsoEmits", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text", submitOnCtrlEnter: true });
+        editor.on("submit", heard);
+
+        getEditable(editor.getElement())!.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Enter", metaKey: true, bubbles: true, cancelable: true }));
+
+        expect(heard).toHaveBeenCalledWith("text");
+        editor.destroy();
+    });
+
+    test("on_Submit_InMarkdownMode_HearsTheMarkdown", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "<b>hi</b>", outputFormat: "markdown", submitOnCtrlEnter: true });
+        editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+
+        expect(heard).toHaveBeenCalledWith(editor.getValue());
+        editor.destroy();
+    });
+
+    test("on_Submit_UnsubscribeStopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text", submitOnCtrlEnter: true });
+        const off = editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+        off();
+        pressCtrlEnter(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        editor.destroy();
+    });
+
+    test("on_Submit_ThrowingHandler_IsLoggedAndOthersStillHear", () =>
+    {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text", submitOnCtrlEnter: true });
+        editor.on("submit", () => { throw new Error("boom"); });
+        editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalled();
+        editor.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "text", submitOnCtrlEnter: true });
+        editor.on("submit", heard);
+        const el = getEditable(editor.getElement())!;
+
+        editor.destroy();
+        el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }));
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws_NamingTheValidChannel", () =>
+    {
+        const editor = createRichTextInput({});
+
+        expect(() => editor.on("bogus", () => undefined)).toThrow("submit");
+        editor.destroy();
+    });
+
+    test("setData_Throws_NoDataSlots", () =>
+    {
+        const editor = createRichTextInput({});
+
+        expect(() => editor.setData("value", "x")).toThrow("no data slots");
+        editor.destroy();
+    });
+
+    test("getState_SetState_RoundTripValue", () =>
+    {
+        const editor = createRichTextInput({ value: "<strong>one</strong>" });
+        const captured = editor.getState();
+
+        editor.setValue("two");
+        expect(editor.getState()).toEqual({ value: "two" });
+
+        editor.setState(captured);
+        expect(editor.getState()).toEqual({ value: "<strong>one</strong>" });
+        expect(editor.getHtml()).toBe("<strong>one</strong>");
+        editor.destroy();
+    });
+
+    test("setState_WithoutValueKey_ChangesNothing", () =>
+    {
+        const editor = createRichTextInput({ value: "keep" });
+
+        editor.setState({});
+
+        expect(editor.getValue()).toBe("keep");
+        editor.destroy();
+    });
+
+    test("payloads_AreJson", () =>
+    {
+        const heard = vi.fn();
+        const editor = createRichTextInput({ value: "<i>x</i>", submitOnCtrlEnter: true });
+        editor.on("submit", heard);
+
+        pressCtrlEnter(editor);
+
+        const payload = heard.mock.calls[0][0];
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        const state = editor.getState();
+        expect(JSON.parse(JSON.stringify(state))).toEqual(state);
+        editor.destroy();
+    });
+});
