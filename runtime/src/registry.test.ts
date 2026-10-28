@@ -416,6 +416,19 @@ describe("validateManifest — protocol field", () =>
         expect(validateManifest(base({ providers: { onSearch: { request: "find-all" } } })).ok).toBe(false);
     });
 
+    test("a provider's concurrency is latest or queue", () =>
+    {
+        expect(validateManifest(base({ providers: { onSearch: { request: "search", concurrency: "latest" } } })).ok)
+            .toBe(true);
+        expect(validateManifest(base({ providers: { onLoad: { request: "load", concurrency: "queue" } } })).ok)
+            .toBe(true);
+
+        const res = validateManifest(base({ providers: { onLoad: { request: "load", concurrency: "parallel" } } }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.map((i) => i.path)).toEqual(["protocol.providers.onLoad.concurrency"]);
+    });
+
     // Unknown keys are REJECTED, in a provider spec and in protocol itself.
     // Since 2026-10-25 every catalog name is derived (on<Request>,
     // <request>Result, eventData), so nothing in the generator reads a
