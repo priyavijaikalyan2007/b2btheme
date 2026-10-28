@@ -153,7 +153,7 @@ function canonical(node, parentKey = "")
     {
         const members = node.map((n) => canonical(n));
 
-        return `[${(isConstSet(parentKey, node) ? members.sort() : members).join(",")}]`;
+        return `[${(isUnorderedSet(parentKey, node) ? members.sort() : members).join(",")}]`;
     }
 
     if (node === null || typeof node !== "object") { return JSON.stringify(node); }
@@ -172,15 +172,31 @@ function canonical(node, parentKey = "")
 }
 
 /**
- * A oneOf/anyOf whose members are all `{ const }`, or an enum: a set of values,
- * where order carries no meaning. TypeScript orders a literal union by internal
- * type id, which any file in the program can shift (readiness step 2 B1).
+ * An enum, or a oneOf/anyOf whose members are all scalar arms: a set, where
+ * order carries no meaning. TypeScript orders a union by internal type id,
+ * which any file in the program can shift (readiness step 2 B1, B5).
  */
-function isConstSet(key, members)
+function isUnorderedSet(key, members)
 {
     if (key === "enum") { return true; }
 
-    return (key === "oneOf" || key === "anyOf") && members.length > 0 && members.every(isConstMember);
+    return (key === "oneOf" || key === "anyOf") && members.length > 0 && members.every(isScalarArm);
+}
+
+/** Bare primitive types: arms no validator transforms, so their order cannot change an outcome. */
+const PRIMITIVE_TYPES = ["string", "number", "integer", "boolean", "null"];
+
+/**
+ * `{ const }`, or a bare primitive type such as `{ type: "number" }`, each
+ * ignoring a description. An object arm is not one: two can overlap, and a
+ * validator that tries arms in order may keep the first one's shape.
+ */
+export function isScalarArm(m)
+{
+    if (isConstMember(m)) { return true; }
+
+    return m !== null && typeof m === "object" && !Array.isArray(m) && PRIMITIVE_TYPES.includes(m.type)
+        && Object.keys(m).every((k) => k === "type" || k === "description");
 }
 
 /** `{ const }`, ignoring a description (a description is not a contract). */
