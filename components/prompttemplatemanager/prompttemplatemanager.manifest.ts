@@ -19,10 +19,11 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B7): selecting, saving,
+ * deleting and duplicating a template emit through an additive on(); the
+ * agent rewrites the list through the "templates" slot, which keeps the
+ * user's selection (B7-1); the selection, filled variables and preview
+ * restore through getState().
  */
 export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +34,41 @@ export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
     icon: "bi-file-earmark-code",
     category: "ai",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a library of prompt templates with {{variable}} placeholders that the user can browse, edit, "
+            + "fill in, duplicate and delete; the agent supplies the templates and hears each select, save, delete "
+            + "and duplicate.",
+        avoidWhen: "For a single free-text prompt use RichTextInput; for code use CodeEditor; set showImportExport "
+            + "to false when the agent must see every template, since imports and exports stay in the browser.",
+    },
+
     affords: [],
-    emits: [],
-    accepts: [],
+    emits: [
+        { name: "select", payload: "scalar", multi: false, legacyOption: "onSelect" },
+        { name: "save", payload: "record", multi: false, legacyOption: "onSave" },
+        { name: "delete", payload: "scalar", multi: false, legacyOption: "onDelete" },
+        { name: "duplicate", payload: "record", multi: false, legacyOption: "onDuplicate" },
+    ],
+    accepts: [
+        { name: "templates", payload: "collection", required: false },
+    ],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["selected", "variables", "preview"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B7).
+    protocol: {
+        hostOnly: {
+            "templates[].metadata": "Host data attached to a template, typed as an open record, so no schema "
+                + "checks it; an agent supplies none.",
+            onPreview: "Takes two parameters and renders the preview text on the host; over A2UI the built-in "
+                + "{{variable}} substitution applies.",
+            onLoadTemplates: "Takes no parameter, and a provider needs one to carry its request; over A2UI the "
+                + "agent supplies the templates.",
+            onChange: "Fires on every keystroke in the editor; over A2UI the save event carries the finished "
+                + "template.",
+        },
+    },
 
     regions: [
         "prompttemplatemanager:list",
@@ -51,6 +82,6 @@ export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 600, h: 450 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

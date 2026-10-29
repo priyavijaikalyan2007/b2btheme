@@ -39,6 +39,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 47 on 2026-10-29: seven B5 editors and forms classified (readiness step 2 B5, ADR-231); propertyinspector
     // stays: its content arrives through open() as DOM elements, which needs A2UI children (step 4).
     // 38 on 2026-10-29: the nine B6 data views classified (readiness step 2 B6, ADR-232).
+    // 37 on 2026-10-29: prompttemplatemanager classified (readiness step 2 B7, ADR-234).
     "actionitems",
     "anchorlayout",
     "annotation",
@@ -64,7 +65,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "multiselectcombo",
     "navrail",
     "permissionmatrix",
-    "prompttemplatemanager",
     "propertyinspector",
     "relationshipmanager",
     "ribbon",
