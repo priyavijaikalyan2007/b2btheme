@@ -290,3 +290,127 @@ describe("MarketingHero safety and lifecycle", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    function buttons(hero: MarketingHero): HTMLElement[]
+    {
+        return Array.from(hero.getElement()!.querySelectorAll<HTMLElement>(".marketinghero-actions .btn"));
+    }
+
+    test("on_Primary_HearsTheText_AfterOnClick_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const hero = new MarketingHero(makeOptions({
+            primaryAction: { text: "Get started", onClick: () => order.push("option") },
+        }));
+        hero.on("primary", (p) => order.push(`channel:${String(p)}`));
+
+        buttons(hero)[0].click();
+
+        expect(order).toEqual(["option", "channel:Get started"]);
+        hero.destroy();
+    });
+
+    test("on_Primary_WithoutOnClickOrHref_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const hero = new MarketingHero(makeOptions({ primaryAction: { text: "Get started" } }));
+        hero.on("primary", heard);
+
+        buttons(hero)[0].click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Get started");
+        hero.destroy();
+    });
+
+    test("on_Secondary_HearsTheText_AfterOnClick_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const hero = new MarketingHero(makeOptions({
+            primaryAction: { text: "Get started" },
+            secondaryAction: { text: "Read the docs", onClick: () => order.push("option") },
+        }));
+        hero.on("secondary", (p) => order.push(`channel:${String(p)}`));
+        hero.on("primary", () => order.push("wrong channel"));
+
+        buttons(hero)[1].click();
+
+        expect(order).toEqual(["option", "channel:Read the docs"]);
+        hero.destroy();
+    });
+
+    test("on_Primary_AThrowingOnClick_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const hero = new MarketingHero(makeOptions({
+            primaryAction: { text: "Go", onClick: () => { throw new Error("host bug"); } },
+        }));
+        hero.on("primary", heard);
+        const onError = vi.fn((e: ErrorEvent) => e.preventDefault());
+        window.addEventListener("error", onError);
+
+        buttons(hero)[0].click();
+
+        window.removeEventListener("error", onError);
+        expect(heard).toHaveBeenCalledWith("Go");
+        hero.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const hero = new MarketingHero(makeOptions({ primaryAction: { text: "Go" } }));
+        const off = hero.on("primary", heard);
+
+        off();
+        buttons(hero)[0].click();
+
+        expect(heard).not.toHaveBeenCalled();
+        hero.destroy();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const hero = new MarketingHero(makeOptions());
+
+        expect(() => hero.on("click", vi.fn())).toThrow(/"primary" and "secondary"/);
+        hero.destroy();
+    });
+
+    test("setData_AnySlot_Throws", () =>
+    {
+        const hero = new MarketingHero(makeOptions());
+
+        expect(() => hero.setData("title", "x")).toThrow(/no data slots/);
+        hero.destroy();
+    });
+
+    test("getState_IsEmpty_AndSetStateDoesNothing", () =>
+    {
+        const hero = new MarketingHero(makeOptions());
+
+        hero.setState({ anything: 1 });
+
+        expect(hero.getState()).toEqual({});
+        hero.destroy();
+    });
+
+    test("Markup_WithSubscriber_IsUnchanged", () =>
+    {
+        const plain = new MarketingHero(makeOptions({ primaryAction: { text: "Go", href: "/go" } }));
+        const heard = new MarketingHero(makeOptions({ primaryAction: { text: "Go", href: "/go" } }));
+        heard.on("primary", vi.fn());
+
+        const markup = (h: MarketingHero) => h.getElement()!.innerHTML.replace(/marketinghero-\d+/g, "ID");
+
+        expect(markup(heard)).toBe(markup(plain));
+        plain.destroy();
+        heard.destroy();
+    });
+});

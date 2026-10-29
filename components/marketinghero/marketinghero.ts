@@ -157,7 +157,23 @@ export interface MarketingHeroHandle
     hide(): void;
     destroy(): void;
     getElement(): HTMLElement | null;
+
+    /** The surface contract (additive, B8): MarketingHero has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "primary" or "secondary": the clicked action's text, after
+     * its onClick. The buttons emit with or without onClick or href. Returns
+     * the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to report (ADR-229): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels: one per action (B8). */
+type HeroChannel = "primary" | "secondary";
 
 export class MarketingHero implements MarketingHeroHandle
 {
@@ -167,6 +183,8 @@ export class MarketingHero implements MarketingHeroHandle
     private rootEl: HTMLElement | null = null;
     private destroyed = false;
     private readonly boundHandlers: Array<[HTMLElement, () => void]> = [];
+    private readonly handlers: Record<HeroChannel, Set<(payload: unknown) => void>> =
+        { primary: new Set(), secondary: new Set() };
 
     constructor(options: MarketingHeroOptions)
     {
@@ -228,6 +246,8 @@ export class MarketingHero implements MarketingHeroHandle
             el.removeEventListener("click", handler);
         }
         this.boundHandlers.length = 0;
+        this.handlers.primary.clear();
+        this.handlers.secondary.clear();
 
         this.hide();
         this.rootEl = null;
@@ -238,6 +258,58 @@ export class MarketingHero implements MarketingHeroHandle
     getElement(): HTMLElement | null
     {
         return this.rootEl;
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** MarketingHero has no data slots: its text and actions are options. */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): MarketingHero has no data slots. `
+            + "Its title, text and actions are options.");
+    }
+
+    /** Subscribes to "primary" or "secondary"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "primary" && channel !== "secondary")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "primary" and "secondary".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** Nothing to report (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: HeroChannel, payload: string): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     // ========================================================================
@@ -334,20 +406,24 @@ export class MarketingHero implements MarketingHeroHandle
 
         if (primaryAction)
         {
-            actions.appendChild(this.buildAction(primaryAction, "btn-primary"));
+            actions.appendChild(this.buildAction(primaryAction, "btn-primary", "primary"));
         }
 
         if (secondaryAction)
         {
             actions.appendChild(
-                this.buildAction(secondaryAction, "btn-outline-secondary"));
+                this.buildAction(secondaryAction, "btn-outline-secondary", "secondary"));
         }
 
         content.appendChild(actions);
     }
 
-    /** Build one action. An href renders an anchor; otherwise a button. */
-    private buildAction(action: MarketingHeroAction, variant: string): HTMLElement
+    /**
+     * Build one action. An href renders an anchor; otherwise a button. The
+     * channel's listener is added after onClick's, so onClick runs first and
+     * the channel still hears the click if onClick throws (B8).
+     */
+    private buildAction(action: MarketingHeroAction, variant: string, channel: HeroChannel): HTMLElement
     {
         const tag = action.href ? "a" : "button";
         const el = createElement(tag, `btn ${variant}`);
@@ -368,6 +444,11 @@ export class MarketingHero implements MarketingHeroHandle
             el.addEventListener("click", handler);
             this.boundHandlers.push([el, handler]);
         }
+
+        const text = action.text;
+        const emitClick = (): void => { this.emit(channel, text); };
+        el.addEventListener("click", emitClick);
+        this.boundHandlers.push([el, emitClick]);
 
         return el;
     }
