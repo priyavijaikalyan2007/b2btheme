@@ -70,6 +70,7 @@ export interface TreeGridNode
     id: string;
     label: string;
     icon?: string;
+    /** The row's values for the data columns, keyed by column id. */
     data?: Record<string, unknown>;
     children?: TreeGridNode[] | null;
     expanded?: boolean;

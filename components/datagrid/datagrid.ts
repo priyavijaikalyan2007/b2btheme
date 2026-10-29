@@ -76,9 +76,13 @@ function toGridRow(item: unknown, index: number): DataGridRow
 
 export interface DataGridRow
 {
+    /** Unique row id. */
     id: string;
+    /** The row's cell values, keyed by column id. */
     data: Record<string, unknown>;
+    /** Extra CSS classes on the row. */
     cssClass?: string;
+    /** Shows the row greyed out, not selectable or editable. */
     disabled?: boolean;
 }
 

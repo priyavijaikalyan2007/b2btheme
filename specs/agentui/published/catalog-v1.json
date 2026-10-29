@@ -14358,16 +14358,20 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "description": "Unique row id."
         },
         "data": {
-          "$ref": "#/$defs/DataGrid__Recordstringunknown"
+          "$ref": "#/$defs/DataGrid__Recordstringunknown",
+          "description": "The row's cell values, keyed by column id."
         },
         "cssClass": {
-          "type": "string"
+          "type": "string",
+          "description": "Extra CSS classes on the row."
         },
         "disabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Shows the row greyed out, not selectable or editable."
         }
       },
       "required": [
@@ -16101,7 +16105,8 @@
           "type": "string"
         },
         "data": {
-          "$ref": "#/$defs/TreeGrid__Recordstringunknown"
+          "$ref": "#/$defs/TreeGrid__Recordstringunknown",
+          "description": "The row's values for the data columns, keyed by column id."
         },
         "children": {
           "oneOf": [
