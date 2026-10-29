@@ -465,7 +465,9 @@ retyping or newly requiring anything in it breaks hosts that hard-coded
 against `specs/agentui/published/`, and a breaking change needs `CATALOG_MAJOR`
 raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
 change, additive included, needs `npm run build:agentui -- --write-baseline`
-and the baseline committed in the same change.
+and the baseline committed in the same change. The lean agent catalog,
+`dist/a2ui/catalog/v<N>.agent.json` (ADR-233), is generated from it and has no
+baseline; the build fails if it drops anything.
 
 **Rendering is generated too: read [`A2UI.md`](A2UI.md).** The A2UI adapter
 (#18, ADR-220) derives one `<outcrop-*>` element per catalog component from the

@@ -125,7 +125,7 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 - **Try it locally:** `npm run demo:a2ui` opens a playground that renders A2UI messages with these components through this exact recipe. See [`A2UI_PLAYGROUND.md`](A2UI_PLAYGROUND.md).
 - **Check what your agent writes:** `npm run check:a2ui -- messages.json` runs the A2UI schemas, a `web_core` dry run and a reference check, all against this catalog.
 - **Wire an agent:** `agentdemo/page/agent/core.ts` is a small, provider-neutral reference.
-  1. Put both catalogs and the rules from [`A2UI.md`](../A2UI.md) in the system prompt.
+  1. Put the lean catalog (§5), Google's basic catalog and the rules from [`A2UI.md`](../A2UI.md) in the system prompt.
   2. Check each reply and apply it all or nothing.
   3. Send the findings back for at most two repairs.
   4. Send each `action` and later `error` back verbatim as the next turn.
@@ -136,6 +136,11 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 
 - `processor.getRendererCapabilities({ versions: ["v0.9"] })` lists our catalog ID among `supportedCatalogIds`. Send it the way your transport sends A2UI client capabilities.
 - The adapter also exports `catalogJson`, the exact catalog it serves, for agents that take an inline catalog.
+- **For your agent's prompt, use `https://static.outcrop.us/a2ui/catalog/v1.agent.json`.**
+  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 41,429 against 87,256 in o200k_base tokens, measured on 2026-10-29.
+  - It leaves out the data-binding and function-call alternatives that every data prop repeats. It says once where they apply.
+  - It lists the Google basic components and functions it re-exports by name only. Put Google's basic catalog in the prompt beside it, about 7,000 tokens more.
+  - It's a prompt aid, not a schema. Its layout may change within v1, so paste it whole, and validate your agent's messages against the full catalog.
 - Each entry's descriptions are written for an agent to read.
 - The catalog re-exports Google's basic components (`Row`, `Column`, `Text` …), so one surface can mix both.
 
