@@ -5,7 +5,8 @@
  */
 /**
  * ⚓ TESTS: A2uiReferenceAgent / Prompt. The rules the agent is told are
- *    A2UI.md's, verbatim (#30 spec §6.2), the catalogs are included whole,
+ *    A2UI.md's, verbatim (#30 spec §6.2), the lean agent catalog (#49) and
+ *    the basic catalog are included whole,
  *    and the prompt is identical on every call so providers can cache it.
  */
 
@@ -37,10 +38,11 @@ describe("AGENT_RULES", () =>
 
 describe("systemPrompt", () =>
 {
-    const ours = { $id: "https://static.outcrop.us/a2ui/catalog/v1.json", components: { StickyNote: {} } };
+    const ours = { catalogId: "https://static.outcrop.us/a2ui/catalog/v1.json", notation: "lean",
+        components: { StickyNote: {} } };
     const basic = { $id: "basic", components: { Text: {} } };
 
-    test("contains the rules, both catalogs verbatim and the reply contract", () =>
+    test("contains the rules, the lean catalog and the basic catalog verbatim, and the reply contract", () =>
     {
         const prompt = systemPrompt(ours, basic);
 

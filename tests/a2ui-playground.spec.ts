@@ -10,6 +10,8 @@
  * and a scenario steps forward through the toolbar.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 import { cspViolations, openPlayground } from "./a2ui/playground-route";
@@ -96,7 +98,11 @@ const BUTTON_UI = JSON.stringify({ say: "Here is a button.", messages: [surface,
 const UNKNOWN = JSON.stringify({ say: "Oops.", messages: [surface,
     { version: V, updateComponents: { surfaceId: "s", components: [{ id: "root", component: "Nope" }] } }] });
 
-interface Sent { headers: Record<string, string>; body: { messages: { role: string; content: string }[] } }
+interface Sent
+{
+    headers: Record<string, string>;
+    body: { system: { text: string }[]; messages: { role: string; content: string }[] };
+}
 
 /** Answers Anthropic's Messages API with `replies` in order, including the CORS preflight. */
 async function mockAnthropic(page: Page, replies: string[]): Promise<Sent[]>
@@ -142,6 +148,22 @@ test.describe("A2UI playground agent (mocked provider)", () =>
         await expect(page.locator(".a2ui-usage").first()).toHaveText("in 100 · out 20 · cached 80");
         expect(await cspViolations(page)).toEqual([]);
     });
+
+    test("the system prompt carries the lean agent catalog and the basic catalog, not the full catalog (#49)",
+        async ({ page }) =>
+        {
+            const read = (rel: string) => JSON.parse(fs.readFileSync(path.join(__dirname, "..", rel), "utf8"));
+            const sent = await mockAnthropic(page, ['{"say":"Hello.","messages":[]}']);
+
+            await openPlayground(page);
+            await ask(page, "Hello");
+            await expect.poll(() => sent.length).toBe(1);
+
+            const system = sent[0].body.system[0].text;
+            expect(system).toContain(JSON.stringify(read("dist/a2ui/catalog/v1.agent.json")));
+            expect(system).toContain(JSON.stringify(read("scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json")));
+            expect(system).not.toContain(JSON.stringify(read("dist/a2ui/catalog/v1.json").components.StatusBadge));
+        });
 
     test("an invalid reply is repaired in view: rejected, then applied", async ({ page }) =>
     {

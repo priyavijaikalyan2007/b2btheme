@@ -41,6 +41,8 @@ import type { ToolbarHandle } from "./ui/factory";
 
 /** Loaded at run time from dist/, exactly as a third-party host loads it; never bundled. */
 const ADAPTER_URL = "/a2ui/adapter/v1.js";
+/** The catalog's lean rendering for prompts (#49); messages are still checked against the full catalog. */
+const AGENT_CATALOG_URL = "/a2ui/catalog/v1.agent.json";
 const PLAY_INTERVAL_MS = 900;
 
 interface AdapterModule
@@ -57,6 +59,7 @@ async function start(): Promise<void>
     }
 
     const adapter = await import(/* @vite-ignore */ ADAPTER_URL) as AdapterModule;
+    const agentCatalog = JSON.parse(await fetchText(AGENT_CATALOG_URL, "npm run build")) as object;
     const app = document.getElementById("app");
 
     if (!app) { throw new Error("The playground page has no #app element."); }
@@ -69,7 +72,7 @@ async function start(): Promise<void>
             { assetBaseUrl: location.origin, injectBaseTheme: false }) });
     const inspect = buildInspect(regions.inspectEl, pasteHandlers(() => playground, deps, () => inspect));
     const agent = buildAgentPanel({ el: regions.agentEl, host, inspect, playground: () => playground, formatFindings,
-        system: systemPrompt(adapter.catalogJson, basicJson) });
+        system: systemPrompt(agentCatalog, basicJson) });
     const playground = new Playground({ host, log, inspect, chat: agent.chat, formatFindings });
 
     buildMessagesView(regions.messagesEl, log);
@@ -157,7 +160,7 @@ function toolbarActions(playground: Playground, inspect: Inspect, deps: CheckDep
         scenario: async (name) =>
         {
             stop();
-            playground.loadScenario(await fetchText(`scenarios/${name}.jsonl`));
+            playground.loadScenario(await fetchText(`scenarios/${name}.jsonl`, "npm run build:demo:a2ui"));
             sync();
         },
         back: then(() => playground.back()),
@@ -199,16 +202,17 @@ function loadFile(text: string, playground: Playground, inspect: Inspect): void
 
 async function scenarioIndex(): Promise<ScenarioEntry[]>
 {
-    return JSON.parse(await fetchText("scenarios/index.json")) as ScenarioEntry[];
+    return JSON.parse(await fetchText("scenarios/index.json", "npm run build:demo:a2ui")) as ScenarioEntry[];
 }
 
-async function fetchText(url: string): Promise<string>
+/** Fetches a file the build writes; `rebuild` is the command that writes it. */
+async function fetchText(url: string, rebuild: string): Promise<string>
 {
     const res = await fetch(url);
 
     if (!res.ok)
     {
-        throw new Error(`Could not load ${url}: HTTP ${res.status}. Rebuild with npm run build:demo:a2ui.`);
+        throw new Error(`Could not load ${url}: HTTP ${res.status}. Rebuild with ${rebuild}.`);
     }
 
     return res.text();
