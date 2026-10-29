@@ -7,7 +7,8 @@
  * E2E: the B7 collaboration and AI components under @a2ui/lit (readiness
  * step 2 B7). Each event reaches the agent with its payload under eventData,
  * and an agent rewriting a component's list through its slot keeps what the
- * user was in the middle of (B7-1).
+ * user was in the middle of (B7-1). ExplorerPicker's tree and searches are
+ * answered by the agent, and nothing reaches the host's /api/.
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -135,6 +136,39 @@ const CONV = { ...EV, session: { path: "/session" } };
 /** Writes the agent's session to the slot. */
 const writeSession = (page: Page, messages: Record<string, unknown>[]) =>
     send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/session", value: chatSession(messages) } }]);
+
+/** A node as an agent sends it: every field ExplorerNode requires. */
+const exNode = (id: string, name: string, nodeType: string, parentId: string | null, hasChildren = false) => ({
+    id, name, nodeType, parentId, hasChildren, resourceId: nodeType === "ASSET_REF" ? `res-${id}` : null,
+    resourceType: nodeType === "ASSET_REF" ? "doc" : null, sourceId: null, url: null, linkType: null,
+});
+
+/** The record a selected node is sent as, its breadcrumb the path of names from its root. */
+const exPick = (n: ReturnType<typeof exNode>, breadcrumb: string) => ({ nodeId: n.id, resourceId: n.resourceId,
+    name: n.name, nodeType: n.nodeType, resourceType: n.resourceType, sourceId: n.sourceId, breadcrumb, url: n.url });
+
+const DOCS = exNode("docs", "Docs", "FOLDER", null, true);
+const SPEC = exNode("spec", "Spec", "ASSET_REF", null);
+const README = exNode("readme", "README", "ASSET_REF", "docs");
+const GUIDE = exNode("guide", "Setup guide", "ASSET_REF", "docs");
+
+/** The picker with both providers bound: the agent answers at /answers/children and /answers/search. */
+const EP = { ...EV, onLoadChildren: { event: { name: "children", context: { req: { path: "/ev/loadChildren" } } } },
+    loadChildrenResult: { path: "/answers/children" },
+    onSearch: { event: { name: "find", context: { req: { path: "/ev/search" } } } },
+    searchResult: { path: "/answers/search" } };
+
+/** The agent answers at `path`. */
+const answer = (page: Page, path: string, value: unknown) =>
+    send(page, [{ version: V, updateDataModel: { surfaceId: "s", path, value } }]);
+
+/** Records every request the page makes to the host's /api/. */
+function apiRequests(page: Page): string[]
+{
+    const seen: string[] = [];
+    page.on("request", (r) => { if (new URL(r.url()).pathname.startsWith("/api/")) { seen.push(r.url()); } });
+    return seen;
+}
 
 test.describe("B7 collaboration and AI under @a2ui/lit", () =>
 {
@@ -584,4 +618,113 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
         await expect(page.locator("iframe")).toHaveCount(0);
         await expect(page.locator(".conversation-message")).toHaveCount(0);
     });
+
+    test("ExplorerPicker: the agent answers the roots and a folder's children; nothing reaches /api/",
+        async ({ page }) =>
+        {
+            const api = apiRequests(page);
+            await mount(page, "ExplorerPicker", EP);
+
+            await expect.poll(() => actions(page)).toEqual([expect.objectContaining({ name: "children",
+                context: { req: { nodeId: null } } })]);
+            await answer(page, "/answers/children", [DOCS, SPEC]);
+            await expect(page.locator(".explorerpicker-node-row")).toHaveCount(2);
+
+            await page.locator('.explorerpicker-node[data-node-id="docs"] .explorerpicker-toggle').first().click();
+            await expect.poll(async () => (await actions(page)).length).toBe(2);
+            expect((await actions(page))[1]).toEqual(expect.objectContaining({ name: "children",
+                context: { req: { nodeId: "docs" } } }));
+            await answer(page, "/answers/children", [README, GUIDE]);
+
+            await expect(page.locator(".explorerpicker-label")).toHaveText(["Docs", "README", "Setup guide", "Spec"]);
+            expect(await errors(page)).toEqual([]);
+            expect(api).toEqual([]);
+        });
+
+    test("ExplorerPicker: the agent answers a search, and Load more asks with its cursor; nothing reaches /api/",
+        async ({ page }) =>
+        {
+            const api = apiRequests(page);
+            await mount(page, "ExplorerPicker", { ...EP, staticNodes: [DOCS, SPEC] });
+
+            await page.locator(".explorerpicker-search-input").fill("read");
+            await expect.poll(() => actions(page)).toEqual([expect.objectContaining({ name: "find",
+                context: { req: { query: "read", cursor: null } } })]);
+            await answer(page, "/answers/search", { results: [README], cursor: "page-2" });
+            await page.locator(".explorerpicker-load-more").click();
+            await expect.poll(async () => (await actions(page)).length).toBe(2);
+            expect((await actions(page))[1]).toEqual(expect.objectContaining({ name: "find",
+                context: { req: { query: "read", cursor: "page-2" } } }));
+            await answer(page, "/answers/search", { results: [GUIDE], cursor: null });
+
+            await expect(page.locator(".explorerpicker-result-item .explorerpicker-label"))
+                .toHaveText(["README", "Setup guide"]);
+            await expect(page.locator(".explorerpicker-load-more")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+            expect(api).toEqual([]);
+        });
+
+    test("ExplorerPicker: picking nodes sends onSelection, and Select sends onConfirm, with the node records",
+        async ({ page }) =>
+        {
+            await mount(page, "ExplorerPicker", { ...EP, staticNodes: [DOCS, SPEC], mode: "multi",
+                onSelection: act("picked", "selection"), onConfirm: act("chosen", "confirm") });
+
+            await page.locator('.explorerpicker-node-row[data-node-id="spec"]').click();
+            await page.locator('.explorerpicker-node[data-node-id="docs"] .explorerpicker-toggle').first().click();
+            await expect.poll(async () => (await actions(page)).length).toBe(2);
+            await answer(page, "/answers/children", [README, GUIDE]);
+            await page.locator('.explorerpicker-node-row[data-node-id="readme"]').click();
+            await page.locator(".explorerpicker-btn-confirm").click();
+
+            const both = [exPick(SPEC, "Spec"), exPick(README, "Docs > README")];
+            await expect.poll(() => actions(page)).toEqual([
+                expect.objectContaining({ name: "picked", context: { p: [exPick(SPEC, "Spec")] } }),
+                expect.objectContaining({ name: "children", context: { req: { nodeId: "docs" } } }),
+                expect.objectContaining({ name: "picked", context: { p: both } }),
+                expect.objectContaining({ name: "chosen", context: { p: both } }),
+            ]);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("ExplorerPicker: Cancel sends onCancel with the selection the user abandoned", async ({ page }) =>
+    {
+        await mount(page, "ExplorerPicker", { ...EP, staticNodes: [DOCS, SPEC], cancellable: true,
+            onCancel: act("dismissed", "cancel") });
+
+        await page.locator('.explorerpicker-node-row[data-node-id="spec"]').click();
+        await page.locator(".explorerpicker-btn-cancel").click();
+
+        await sent(page, [["dismissed", [exPick(SPEC, "Spec")]]]);
+    });
+
+    test("ExplorerPicker: an icon that is not one word, or a field a node does not have, is rejected",
+        async ({ page }) =>
+        {
+            await mount(page, "ExplorerPicker", { ...EP, staticNodes: { path: "/nodes" } },
+                { nodes: [{ ...SPEC, icon: "bi-file-earmark" }] });
+            await expect(page.locator(".explorerpicker-node-row")).toHaveCount(1);
+
+            await answer(page, "/nodes", [{ ...SPEC, icon: "bi-file-earmark text-danger" }]);
+            await answer(page, "/nodes", [{ ...SPEC, owner: "agent" }]);
+            await expect.poll(() => errors(page)).toEqual([
+                expect.objectContaining({ code: "VALIDATION_FAILED", path: "/nodes" }),
+                expect.objectContaining({ code: "VALIDATION_FAILED", path: "/nodes" })]);
+
+            await expect(page.locator(".explorerpicker-node-row")).toHaveCount(1);
+            await expect(page.locator(".text-danger")).toHaveCount(0);
+        });
+
+    test("ExplorerPicker: an answer whose icon is not one word fails validation and renders nothing",
+        async ({ page }) =>
+        {
+            await mount(page, "ExplorerPicker", EP);
+
+            await expect.poll(async () => (await actions(page)).length).toBe(1);
+            await answer(page, "/answers/children", [{ ...SPEC, icon: "bi-file-earmark text-danger" }]);
+
+            await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED" })]);
+            await expect(page.locator(".explorerpicker-node-row")).toHaveCount(0);
+            await expect(page.locator(".text-danger")).toHaveCount(0);
+        });
 });
