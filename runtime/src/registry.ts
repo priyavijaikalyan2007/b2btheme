@@ -473,7 +473,10 @@ function validateProtocol(
 const PROTOCOL_KEYS: readonly string[] =
     ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed"];
 
-/** True for a value JSON carries unchanged: null, a string, a finite number, a boolean, or lists and records of them. */
+/**
+ * True for a value JSON carries unchanged: null, a string, a finite number,
+ * a boolean, or lists and records of them.
+ */
 function isJsonValue(v: unknown): boolean
 {
     if (v === null || typeof v === "string" || typeof v === "boolean") { return true; }
