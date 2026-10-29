@@ -909,7 +909,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 264 -> 258, TenantSwitcher classified (B8).
     // ADR-235 (2026-10-29): 258 -> 252, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 252 -> 231, Ribbon classified (B8).
-    unclassifiedOptions: 231,
+    // ADR-235 (2026-10-29): 231 -> 228, RibbonBuilder classified (B8).
+    unclassifiedOptions: 228,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -960,7 +961,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 31 -> 30, TenantSwitcher classified (B8).
     // ADR-235 (2026-10-29): 30 -> 29, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 29 -> 28, Ribbon classified (B8).
-    componentsPendingClassification: 28,
+    // ADR-235 (2026-10-29): 28 -> 27, RibbonBuilder classified (B8).
+    componentsPendingClassification: 27,
 };
 
 /*
@@ -1062,11 +1064,12 @@ export const FLOORS = {
     // ADR-235 (2026-10-29): 258, 149 and 30 once TenantSwitcher was classified (B8).
     // ADR-235 (2026-10-29): 252, 130 and 29 once AppLauncher was classified (B8).
     // ADR-235 (2026-10-29): 231, 104 and 28 once Ribbon was classified (B8).
-    unclassifiedOptions: 231,
+    // ADR-235 (2026-10-29): 228 and 27 once RibbonBuilder was classified (B8).
+    unclassifiedOptions: 228,
     protocolPropsMissingJsdoc: 104,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 28,
+    componentsPendingClassification: 27,
 };
 
 /**
