@@ -2017,3 +2017,36 @@ In this order: MarketingHero, SiteFooter, TenantSwitcher, AppLauncher, then `pro
 - **Records:** ADR-235 (B8-1 to B8-3, `protocol.fixed`), AGENTS.md, CHANGELOG, `history.jsonl`, concepts, and #20 with the two pending reasons.
 - **Verification:** full suites and mutation checks; the dist diff; the prompt-size line.
 - **The PR,** to main.
+
+---
+
+## B9: canvas
+
+**Goal:** four of five join catalog v1: Annotation, GraphCanvas, SpineMap and DiagramEngine. GraphMinimap stays pending.
+
+**User decisions (2026-10-29):**
+- **B9-1, DiagramEngine joins with a change event.**
+  - It is surface, and `document` is an `accepts` slot updated in place, keeping zoom and pan.
+  - Events: `selection` (ids) and `objectDoubleClick`, plus a new `change` channel, with no legacy callback, carrying the document after each user edit.
+  - Host-only: `onChange`, `onObjectClick`, `onConnectorClick` and `onTextEditRequest`, with "The component never calls this option."
+  - Host-only and stripped from the schema: embeds (`presentation.embed`, which mounts any registered component with any options), image `headers` (which turn an image into an XHR fetch, the URL-fetch rule), template data (`document.data`, `data`) and the open `semantic.data` records.
+- **B9-2, GraphCanvas overloads `setData`.** When the first argument is a string, it is the contract's `setData("nodes" | "edges", value)`, which keeps the other half, zoom, pan and selection. `setData(nodes, edges)` with arrays works as today.
+
+**Per component:**
+
+| Component | Slots | Events | Providers | `stateKeys` | Host-only and notes |
+|---|---|---|---|---|---|
+| Annotation (already surface) | `label` | `change`, `anchor` (as before) | — | `["kind", "label", "color"]` | `protocol.change: "event"` (its `onChange` passes a state record, not `value`); `onToggle` is view state |
+| GraphCanvas | `nodes`, `edges` (B9-2) | `nodeClick`, `nodeDoubleClick`, `edgeClick` (the node or edge), `selection` (`{ nodeIds, edgeIds }`), `edgeCreated` (`{ sourceId, targetId }`), `expandRequest` (the node id) | — | `["selection"]` | `onNodeHover`, `onEdgeHover`, `onLayoutComplete` (lifecycle); tooltip renderers; `nodes[].properties`/`edges[].properties` (open records); colours take the hex pattern |
+| SpineMap | `data` (through `loadData`, silent) | `nodeClick`, `nodeDoubleClick`, `nodeAdd`, `nodeChange`, `nodeRemove`, `nodeReparent`, `connectionAdd`, `connectionRemove` | — | `["layout", "zoom", "selection"]` (to be confirmed against its methods) | `onNodeHover`, `onLayoutChange`, `onZoomChange` (view state); `onConfirmRemove` (a decision; the default dialog applies); `popoverFields` (library pickers need their scripts, and renderers are host code); node `link` (link rule); depends on `confirmdialog` |
+| DiagramEngine | `document` (B9-1) | `selection`, `objectDoubleClick`, `change` | — | `["viewport"]` (to be confirmed) | B9-1; `contentRenderer`, hover-card renderers; its existing event-bus `on()` keeps accepting its events and gains a returned unsubscribe (DataGrid's B6 precedent) |
+
+- **GraphMinimap stays pending.** Its required `graphCanvas` option is a live GraphCanvas instance, which an agent cannot send. GraphCanvas's own `showMinimap` covers the need. Its reason goes to #20.
+
+### Task B9.1: per component
+In this order: Annotation, GraphCanvas, SpineMap, DiagramEngine. Each gets the component commit (additive surface, TDD), the agentui commit (manifest, glue, bookkeeping, baseline, A2UI.md) and gesture tests in `tests/a2ui-components/b9-canvas.spec.ts`.
+
+### Task B9.2: docs, verification, PR
+- **Records:** ADR-236 (B9-1, B9-2), CHANGELOG, `history.jsonl`, and #20 with GraphMinimap's reason. #20 closes when B9 merges, with any pending leftovers moved to their own issue (spec §5.3).
+- **Verification:** full suites and mutation checks; the dist diff; the prompt-size line.
+- **The PR:** to main once #63 merges, or stacked on it with the merge order stated.
