@@ -465,3 +465,222 @@ describe("NotificationCenter edge cases", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B6): additive on("notificationClick" | "dismiss" |
+// "markAllRead"), setData, and empty state. Legacy callbacks fire first.
+// ============================================================================
+
+describe("surface contract (B6)", () =>
+{
+    function openWith(
+        items: NotificationItem[],
+        overrides?: Partial<NotificationCenterOptions>
+    ): NotificationCenterHandle
+    {
+        const handle = createNotificationCenter(defaultOptions({ notifications: items, ...overrides }));
+        handle.open();
+        vi.advanceTimersByTime(300);
+        return handle;
+    }
+
+    function clickDismiss(index: number): void
+    {
+        const btn = getItems()[index].querySelector(".notificationcenter-item-dismiss") as HTMLElement;
+        btn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    }
+
+    function clickMarkAll(): void
+    {
+        const btn = document.querySelector(".notificationcenter-mark-all") as HTMLElement;
+        btn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    }
+
+    test("on_NotificationClick_DeliversCopyWithoutData_AfterLegacyCallback", () =>
+    {
+        const order: string[] = [];
+        const handle = openWith(
+            [makeNotification("n1", { data: { secret: 1 } })],
+            { onNotificationClick: (n) => order.push(`option:${n.id}`) }
+        );
+        const heard = vi.fn((p: unknown) => order.push(`channel:${(p as NotificationItem).id}`));
+        handle.on("notificationClick", heard);
+
+        getItems()[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(order).toEqual(["option:n1", "channel:n1"]);
+        expect(heard).toHaveBeenCalledTimes(1);
+        const payload = heard.mock.calls[0][0] as Record<string, unknown>;
+        expect("data" in payload).toBe(false);
+        expect(payload).toMatchObject({ id: "n1", title: "Notification n1", read: true });
+        handle.destroy();
+    });
+
+    test("on_NotificationClick_KeyboardEnter_Emits", () =>
+    {
+        const heard = vi.fn();
+        const handle = openWith([makeNotification("n1")]);
+        handle.on("notificationClick", heard);
+
+        getItems()[0].dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("on_NotificationClick_PayloadIsACopy_HandlerCannotMutateTheComponent", () =>
+    {
+        const handle = openWith([makeNotification("n1")]);
+        handle.on("notificationClick", (p) => { (p as NotificationItem).title = "mutated"; });
+
+        getItems()[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(handle.getNotifications()[0].title).toBe("Notification n1");
+        handle.destroy();
+    });
+
+    test("on_NotificationClick_DateTimestamp_PayloadIsJson", () =>
+    {
+        const stamp = new Date("2026-01-02T03:04:05.000Z");
+        const heard = vi.fn();
+        const handle = openWith([makeNotification("n1", { timestamp: stamp })]);
+        handle.on("notificationClick", heard);
+
+        getItems()[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        const payload = heard.mock.calls[0][0];
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        expect((payload as NotificationItem).timestamp).toBe("2026-01-02T03:04:05.000Z");
+        handle.destroy();
+    });
+
+    test("on_Dismiss_DeliversId_AfterLegacyCallback_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const handle = openWith(
+            [makeNotification("d1"), makeNotification("d2")],
+            { onDismiss: (id) => order.push(`option:${id}`) }
+        );
+        handle.on("dismiss", (id) => order.push(`channel:${String(id)}`));
+
+        clickDismiss(0);
+
+        expect(order).toEqual(["option:d1", "channel:d1"]);
+        handle.destroy();
+    });
+
+    test("on_Dismiss_DeleteKey_Emits_WithNoLegacyCallback", () =>
+    {
+        const heard = vi.fn();
+        const handle = openWith([makeNotification("d1")]);
+        handle.on("dismiss", heard);
+
+        getItems()[0].dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+
+        expect(heard).toHaveBeenCalledExactlyOnceWith("d1");
+        handle.destroy();
+    });
+
+    test("on_MarkAllRead_DeliversIdsThatWereUnread_AfterLegacyCallback", () =>
+    {
+        const order: string[] = [];
+        const handle = openWith(
+            [makeNotification("a"), makeNotification("b", { read: true }), makeNotification("c")],
+            { onMarkAllRead: () => order.push("option") }
+        );
+        handle.on("markAllRead", (ids) => order.push(`channel:${(ids as string[]).join(",")}`));
+
+        clickMarkAll();
+
+        expect(order).toEqual(["option", "channel:a,c"]);
+        handle.destroy();
+    });
+
+    test("on_MarkAllRead_ViaHandleMethod_Emits_WithNoLegacyCallback", () =>
+    {
+        const heard = vi.fn();
+        const handle = createNotificationCenter(defaultOptions({
+            notifications: [makeNotification("a"), makeNotification("b")],
+        }));
+        handle.on("markAllRead", heard);
+
+        handle.markAllRead();
+        handle.markAllRead();
+
+        expect(heard).toHaveBeenNthCalledWith(1, ["a", "b"]);
+        expect(heard).toHaveBeenNthCalledWith(2, []);
+        handle.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const handle = openWith([makeNotification("d1"), makeNotification("d2")]);
+        const off = handle.on("dismiss", heard);
+
+        clickDismiss(0);
+        off();
+        clickDismiss(0);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("on_HandlerThatThrows_DoesNotStopOtherHandlers", () =>
+    {
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const heard = vi.fn();
+        const handle = createNotificationCenter(defaultOptions({ notifications: [makeNotification("a")] }));
+        handle.on("markAllRead", () => { throw new Error("boom"); });
+        handle.on("markAllRead", heard);
+
+        handle.markAllRead();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        errSpy.mockRestore();
+        handle.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const handle = createNotificationCenter(defaultOptions({ notifications: [makeNotification("a")] }));
+        handle.on("markAllRead", heard);
+
+        handle.destroy();
+        handle.markAllRead();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws_NamingValidChannels", () =>
+    {
+        const handle = createNotificationCenter(defaultOptions());
+
+        expect(() => handle.on("bogus", () => undefined)).toThrow(
+            /NotificationCenter.*bogus.*notificationClick.*dismiss.*markAllRead/
+        );
+        handle.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const handle = createNotificationCenter(defaultOptions());
+
+        expect(() => handle.setData("notifications", [])).toThrow(
+            /NotificationCenter.*no data slots.*setNotifications/
+        );
+        handle.destroy();
+    });
+
+    test("getState_IsEmpty_AndSetStateDoesNothing", () =>
+    {
+        const handle = createNotificationCenter(defaultOptions({ notifications: [makeNotification("a")] }));
+
+        expect(handle.getState()).toEqual({});
+        handle.setState({ anything: 1 });
+        expect(handle.getState()).toEqual({});
+        expect(handle.getNotifications().length).toBe(1);
+        handle.destroy();
+    });
+});

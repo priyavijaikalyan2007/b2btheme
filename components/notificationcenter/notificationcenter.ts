@@ -151,7 +151,22 @@ export interface NotificationCenterHandle
     toggle(): void;
     getElement(): HTMLElement;
     destroy(): void;
+
+    /** The surface contract (additive): NotificationCenter has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "notificationClick" (the item without its data), "dismiss" (the id) or
+     * "markAllRead" (the ids that were unread). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to capture (ADR-229). */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The channels on("...") accepts. */
+const CHANNELS = ["notificationClick", "dismiss", "markAllRead"] as const;
 
 // ============================================================================
 // DOM HELPERS
@@ -189,6 +204,9 @@ class NotificationCenter implements NotificationCenterHandle
     private size: string;
     private isOpen = false;
     private destroyed = false;
+    private readonly handlers = new Map<string, Set<(payload: unknown) => void>>(
+        CHANNELS.map(c => [c, new Set()])
+    );
 
     private bellEl: HTMLElement | null = null;
     private badgeEl: HTMLElement | null = null;
@@ -275,6 +293,8 @@ class NotificationCenter implements NotificationCenterHandle
 
     markAllRead(): void
     {
+        const newlyRead = this.notifications.filter(n => !n.read).map(n => n.id);
+
         for (const n of this.notifications)
         {
             n.read = true;
@@ -282,6 +302,7 @@ class NotificationCenter implements NotificationCenterHandle
         this.updateBadge();
         if (this.isOpen) { this.renderList(); }
         if (this.options.onMarkAllRead) { this.options.onMarkAllRead(); }
+        this.emit("markAllRead", newlyRead);
     }
 
     getUnreadCount(): number
@@ -337,10 +358,65 @@ class NotificationCenter implements NotificationCenterHandle
         return this.bellEl as HTMLElement;
     }
 
+    // ── Surface contract (additive, readiness step 2 B6) ──
+
+    /** NotificationCenter has no data slots; use setNotifications() or setCategories(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): NotificationCenter has no data slots. `
+            + "Use setNotifications() or setCategories().");
+    }
+
+    /** Subscribes to a channel; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const set = this.handlers.get(channel);
+
+        if (!set)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): the valid channels are ${CHANNELS.map(c => `"${c}"`).join(", ")}.`);
+        }
+
+        set.add(handler);
+
+        return () => { set.delete(handler); };
+    }
+
+    /** Nothing to capture (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+        // No state keys.
+    }
+
+    /** Delivers a JSON payload to every handler of a channel; a throwing handler is logged, not propagated. */
+    private emit(channel: typeof CHANNELS[number], payload: unknown): void
+    {
+        for (const handler of this.handlers.get(channel) as Set<(payload: unknown) => void>)
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`${channel} handler threw:`, err);
+            }
+        }
+    }
+
     destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        for (const set of this.handlers.values()) { set.clear(); }
         this.close();
 
         document.removeEventListener("mousedown", this.boundOutsideClick, true);
@@ -758,12 +834,19 @@ class NotificationCenter implements NotificationCenterHandle
         {
             this.options.onNotificationClick(n);
         }
+
+        const { data: _data, ...copy } = n;
+        this.emit("notificationClick", {
+            ...copy,
+            timestamp: copy.timestamp instanceof Date ? copy.timestamp.toISOString() : copy.timestamp
+        });
     }
 
     private handleDismiss(id: string): void
     {
         this.removeNotification(id);
         if (this.options.onDismiss) { this.options.onDismiss(id); }
+        this.emit("dismiss", id);
     }
 
     private handleOutsideClick(e: MouseEvent): void
@@ -874,7 +957,11 @@ export function createNotificationCenter(
         close: () => inst.close(),
         toggle: () => inst.toggle(),
         getElement: () => inst.getElement(),
-        destroy: () => inst.destroy()
+        destroy: () => inst.destroy(),
+        setData: (slot, value) => inst.setData(slot, value),
+        on: (channel, handler) => inst.on(channel, handler),
+        getState: () => inst.getState(),
+        setState: (state) => inst.setState(state)
     };
 }
 
