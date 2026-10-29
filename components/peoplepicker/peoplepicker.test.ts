@@ -315,3 +315,44 @@ describe("edge cases", () =>
         expect(pp.getElement()).not.toBeNull();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): its onSearch provider makes it a
+// surface component, so it gains additive getState/setState, on and setData.
+// It emits no channels: its value reaches an agent through two-way binding.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const pp = createPeoplePicker("test-peoplepicker", { selected: [MOCK_PEOPLE[0]] });
+        const captured = pp.getState();
+
+        pp.setValue([MOCK_PEOPLE[1], MOCK_PEOPLE[2]]);
+        expect((pp.getState().value as { id: string }[]).map((p) => p.id)).toEqual(["2", "3"]);
+
+        pp.setState(captured);
+        expect((pp.getState().value as { id: string }[]).map((p) => p.id)).toEqual(["1"]);
+        pp.destroy();
+    });
+
+    // The surface contract's on() returns an unsubscribe for any channel (the
+    // runtime suite probes it), so with no channels it warns, never calls back.
+    test("on_AnyChannel_WarnsAndReturnsAnUnsubscribe_AndSetDataThrows", () =>
+    {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const pp = createPeoplePicker("test-peoplepicker", {});
+        const heard = vi.fn();
+
+        const off = pp.on("change", heard);
+        pp.setValue([MOCK_PEOPLE[0]]);
+        off();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(warn.mock.calls.flat().join(" ")).toContain("emits no channels");
+        expect(() => pp.setData("selected", [])).toThrow("no data slots");
+        pp.destroy();
+        warn.mockRestore();
+    });
+});

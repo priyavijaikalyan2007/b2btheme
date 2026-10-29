@@ -1688,3 +1688,53 @@ As in B1:
 - docs and records: ADR-227 if a new decision is recorded (the TimePicker timezone event), CHANGELOG, `history.jsonl`, #20;
 - full suites, mutation checks, the dist diff (only `timepicker.js`), token growth;
 - the PR.
+
+---
+
+## B3: other value inputs, and PeoplePicker
+
+**Goal:** ten of the eleven B3 components join catalog v1. FileUpload stays pending (below).
+
+**Per component:**
+
+| Component | Value | Host-only | Events | Level, `stateKeys` |
+|---|---|---|---|---|
+| AnglePicker | two-way | `onOpen`, `onClose` | — | field |
+| ColorPicker | two-way (`onChange(color, alpha)`; the colour is the value) | `onInput` (continuous; value carries the commit), `onOpen`, `onClose`, `triggerElement` | — | field |
+| GradientPicker | two-way | `onInput`, `onOpen`, `onClose`, `onClear` (onChange carries the reset; see the fix below) | — | field |
+| MaskedEntry | two-way | `onCopy`, `onReveal` (local actions on a secret; not for an agent) | — | field |
+| EditableComboBox | two-way | `onSelect` (value carries it), `onOpen`, `onClose`, `filterFn` (a decision) | — | field |
+| SymbolPicker | two-way | `onSelect` (a highlight), `onOpen`, `onClose`, `triggerElement` | `insert` (record: the symbol) | surface, `["value"]` (B1-2) |
+| Slider | **one-way** (`protocol.change: "event"`: `onChange` passes `number \| { low, high }`) | `formatValue`, `onSlideStart`, `onSlideEnd` | `change` (scalar or record) | surface, `["value", "range"]` |
+| SearchBox | none (`getValue()` is the query) | `suggestions`' function arm | `search` (scalar, debounced), `submit` (scalar) | surface, `["value"]` (B1-2) |
+| Tagger | `tags` (data, now a state key, so updates live) | `onAdd`/`onRemove` (change carries them), `validator`, `onValidationError`, `tags[].data` | `change` (collection) | surface, `["tags"]` |
+| PeoplePicker | two-way | `searchUrl` (URL-fetch rule), `onSelect`/`onDeselect` (value carries them), `onOpen`, `onClose`, `onSearchError` (a provider failure already reaches the agent as `OUTCROP_PROVIDER_TIMEOUT`) | — ; provider `onSearch` (`latest`) | surface (the provider), `["value"]` (B1-2) |
+
+- **FileUpload stays pending (§5.3).** `onUpload` receives browser `File` objects for the host to upload, and JSON can't carry them. Over A2UI files would queue and never upload, so it would render but not work. The reason goes to #20.
+- **URL-fetch rule:** PeoplePicker `searchUrl`. Task B3.2 checks the other nine.
+- **~~Component fix~~ (withdrawn during implementation):** GradientPicker's `clear()` already calls `emitChange()` right after `onClear`. A truncated grep had hidden that line, so there is nothing to fix.
+
+### Task B3.1: additive surface methods
+For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
+- **`setData`** throws (no slots).
+- **`on(channel)`** accepts the declared channels only; PeoplePicker declares none, so every channel throws.
+- **`getState`/`setState`** cover the `stateKeys` above.
+- **Each new channel** emits after the existing callback, which still fires first and exactly once.
+- **TDD per component;** one commit each.
+
+### Task B3.2: manifests, glue, bookkeeping
+- **Manifests:** agent sentences, `protocol` and `emits` per the table; PeoplePicker's 15 JSDoc comments and Tagger's 15 (comment-only).
+- **Conformance glue** for the five surface components: a trigger per channel, and PeoplePicker's `request("search")`.
+- **Bookkeeping:**
+  - remove ten from the pending list (FileUpload stays);
+  - lower the pins;
+  - rewrite the baseline;
+  - G3 and runtime conformance pass.
+
+### Task B3.3: gesture tests
+`tests/a2ui-components/b3-inputs.spec.ts`, one literal `"<Name>: …"` test per component (PeoplePicker's provider round trip included).
+
+### Task B3.4: docs, verification, PR
+- **Records:** ADR-228, CHANGELOG, `history.jsonl`, #20.
+- **Verification:** full suites, mutation checks, the dist diff (the five surface components' JS), token growth.
+- **The PR,** stacked on #48.

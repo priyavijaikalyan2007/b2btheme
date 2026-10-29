@@ -320,3 +320,71 @@ describe("edge cases", () =>
         expect(() => sb.show("nonexistent-id")).toThrow(/was not found/);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): additive on("search") and
+// on("submit"), getState/setState and setData. The options callbacks keep
+// firing first, exactly once; subscribers fire even when no callback is given.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(search)_FiresAfterTheDebounce_AfterOnSearch", () =>
+    {
+        vi.useFakeTimers();
+        const order: string[] = [];
+        const sb = new SearchBox({ onSearch: (q) => order.push(`option:${q}`), debounceMs: 100 });
+        sb.show("test-searchbox");
+        sb.on("search", (q) => order.push(`channel:${String(q)}`));
+        const input = queryInput()!;
+
+        input.value = "query";
+        input.dispatchEvent(new Event("input"));
+        vi.advanceTimersByTime(100);
+
+        expect(order).toEqual(["option:query", "channel:query"]);
+        sb.destroy();
+        vi.useRealTimers();
+    });
+
+    test("on(submit)_FiresOnEnter_EvenWithoutAnOnSubmitOption", () =>
+    {
+        const heard = vi.fn();
+        const sb = new SearchBox({});
+        sb.show("test-searchbox");
+        const off = sb.on("submit", heard);
+        const input = queryInput()!;
+
+        input.value = "go";
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        off();
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(heard.mock.calls).toEqual([["go"]]);
+        sb.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheQuery", () =>
+    {
+        const sb = new SearchBox({});
+        sb.show("test-searchbox");
+        sb.setValue("first");
+        const captured = sb.getState();
+
+        sb.setValue("second");
+        expect(sb.getState()).toEqual({ value: "second" });
+
+        sb.setState(captured);
+        expect(sb.getState()).toEqual({ value: "first" });
+        sb.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const sb = new SearchBox({});
+
+        expect(() => sb.on("change", () => undefined)).toThrow("search");
+        expect(() => sb.setData("suggestions", [])).toThrow("no data slots");
+        sb.destroy();
+    });
+});

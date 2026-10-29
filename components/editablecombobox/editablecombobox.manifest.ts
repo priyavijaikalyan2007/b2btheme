@@ -33,11 +33,27 @@ export const EDITABLECOMBOBOX_MANIFEST: CapabilityManifest =
     icon: "bi-menu-button-wide",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user type freely or pick from a filtered list of suggestions in one field.",
+        avoidWhen: "To choose only from a fixed list use ChoicePicker; for a search query use SearchBox.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+            onSelect: "Fires when the user picks an item; the two-way value already carries it.",
+            filterFn: "A matching function; the default filter applies over A2UI.",
+        },
+    },
 
     regions: ["editablecombobox:combobox-listbox"],
 

@@ -1231,3 +1231,57 @@ describe("category filtering", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B3): additive on("insert"),
+// getState/setState and setData. onInsert keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    function inline(onInsert?: (s: unknown) => void): SymbolPicker
+    {
+        const picker = new SymbolPicker({ inline: true, mode: "unicode", categories: [buildTestCategory()], onInsert });
+        picker.show("test-symbolpicker-container");
+        return picker;
+    }
+
+    test("on(insert)_HearsADoubleClickedSymbol_AfterOnInsert", () =>
+    {
+        const order: string[] = [];
+        const picker = inline((s) => order.push(`option:${(s as { code: string }).code}`));
+        const off = picker.on("insert", (s) => order.push(`channel:${(s as { code: string }).code}`));
+        const cell = picker.getElement()!.querySelector(".symbolpicker-cell") as HTMLElement;
+
+        cell.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+        off();
+        cell.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(order).toEqual(["option:U+0041", "channel:U+0041", "option:U+0041"]);
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheSelection", () =>
+    {
+        const picker = inline();
+        const codes = buildTestCategory().items.map((s) => s.code);
+        picker.setValue(codes[0]);
+        const captured = picker.getState();
+
+        picker.setValue(codes[1]);
+        expect(picker.getState()).toEqual({ value: codes[1] });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ value: codes[0] });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = inline();
+
+        expect(() => picker.on("select", () => undefined)).toThrow("insert");
+        expect(() => picker.setData("categories", [])).toThrow("no data slots");
+        picker.destroy();
+    });
+});

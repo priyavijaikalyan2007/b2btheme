@@ -33,11 +33,25 @@ export const MASKEDENTRY_MANIFEST: CapabilityManifest =
     icon: "bi-shield-lock",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user enter a secret such as a password or API key, masked, with reveal and copy.",
+        avoidWhen: "For ordinary text that need not be hidden use TextField.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onCopy: "Copying the secret is a local action; an agent must not be told about it.",
+            onReveal: "Revealing the secret is a local view action, not information for an agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 8279, mountCost: "light", holdsResources: false },

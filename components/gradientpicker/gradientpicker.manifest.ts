@@ -33,11 +33,27 @@ export const GRADIENTPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-palette2",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user design a linear or radial colour gradient with stops, an angle and presets.",
+        avoidWhen: "For a single solid colour use ColorPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+            onInput: "Fires continuously while dragging; the two-way value carries the committed gradient.",
+            onClear: "Clearing also fires onChange with the reset gradient, so the two-way value carries it.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 29936, mountCost: "moderate", holdsResources: false },

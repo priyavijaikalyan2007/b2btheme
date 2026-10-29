@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B3): it emits "search"
+ * (debounced) and "submit" through an additive on(), and restores its query
+ * through getState()/setState() (stateKeys: value).
  */
 export const SEARCHBOX_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,27 @@ export const SEARCHBOX_MANIFEST: CapabilityManifest =
     icon: "bi-search",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Give the user a search field with suggestions; the agent hears each query and each submit.",
+        avoidWhen: "To pick people use PeoplePicker; to type or pick from a list use EditableComboBox.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "search", payload: "scalar", multi: false, legacyOption: "onSearch" },
+        { name: "submit", payload: "scalar", multi: false, legacyOption: "onSubmit" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            suggestions: "Its function arm loads suggestions in host code; only the static list crosses the protocol.",
+        },
+    },
 
     regions: ["searchbox:suggestions"],
 
@@ -47,6 +61,6 @@ export const SEARCHBOX_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 34 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

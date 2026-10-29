@@ -34,8 +34,11 @@ export interface PersonData
 /** Configuration options for the PeoplePicker component. */
 export interface PeoplePickerOptions
 {
+    /** Allow several people to be picked. Default: true. */
     multiple?: boolean;
+    /** The most people that can be picked; 0 or unset means no limit. */
     maxSelections?: number;
+    /** People picked when the component opens. */
     selected?: PersonData[];
     /**
      * Alias of `selected` — provided to satisfy the DynamicFormSwitcher
@@ -43,17 +46,28 @@ export interface PeoplePickerOptions
      * `selected` wins.
      */
     value?: PersonData[];
+    /** People offered before the user types, for a quick pick. */
     frequentContacts?: PersonData[];
     onSearch?: (query: string) => Promise<PersonData[]>;
+    /** URL the component queries itself with ?q=<text> when onSearch is not set. */
     searchUrl?: string;
+    /** Milliseconds to wait after typing before searching. Default: 300. */
     debounceMs?: number;
+    /** Characters to type before a search runs. Default: 2. */
     minSearchChars?: number;
+    /** Input placeholder text. Default: "Search people...". */
     placeholder?: string;
+    /** Chips shown before the rest collapse into a "+N" count. Default: 5. */
     maxChipsVisible?: number;
+    /** Text shown when a search finds no one. Default: "No results found". */
     noResultsText?: string;
+    /** Size variant. Default: "md". */
     size?: "sm" | "md" | "lg";
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** Disable the picker. */
     disabled?: boolean;
+    /** Show the picked people without allowing changes. */
     readonly?: boolean;
     onSelect?: (person: PersonData) => void;
     onDeselect?: (person: PersonData) => void;
@@ -61,6 +75,7 @@ export interface PeoplePickerOptions
     onOpen?: () => void;
     onClose?: () => void;
     onSearchError?: (error: Error) => void;
+    /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
 }
 
@@ -302,6 +317,15 @@ export interface PeoplePickerHandle
     setReadonly(flag: boolean): void;
     setFrequentContacts(contacts: PersonData[]): void;
     focus(): void;
+
+    /** The surface contract (additive): PeoplePicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** PeoplePicker emits no channels; its value is two-way. Warns, and the handler is never called. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The selection, as { value }. */
+    getState(): Record<string, unknown>;
+    /** Selects state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class PeoplePicker implements PeoplePickerHandle
@@ -554,6 +578,42 @@ export class PeoplePicker implements PeoplePickerHandle
     public focus(): void
     {
         this.inputEl?.focus();
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B3)
+    // ========================================================================
+
+    /** PeoplePicker has no data slots; the selection is setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): PeoplePicker has no data slots. Use setValue() or `
+            + "setFrequentContacts().");
+    }
+
+    /**
+     * PeoplePicker emits no channels: its selection is the two-way value. The
+     * surface contract's on() still returns an unsubscribe for any channel (the
+     * conformance suite probes it), so this warns and never calls back.
+     */
+    public on(channel: string, _handler: (payload: unknown) => void): () => void
+    {
+        logWarn(`on("${channel}"): PeoplePicker emits no channels, so this handler will never be called; read `
+            + "the selection through getValue() or onChange.");
+
+        return () => undefined;
+    }
+
+    /** The selection. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores a selection captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as PersonData[]); }
     }
 
     // ========================================================================

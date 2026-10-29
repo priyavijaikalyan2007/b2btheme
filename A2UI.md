@@ -81,7 +81,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 26 components that are. The 75 components on `PENDING_CLASSIFICATION` join as #20 classifies them, in the batches of `specs/agentui-sweep.prd.md`.
+- **In the catalog:** the 36 components that are. The 65 components on `PENDING_CLASSIFICATION` join as #20 classifies them, in the batches of `specs/agentui-sweep.prd.md`.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.

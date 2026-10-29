@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B3): it emits "insert"
+ * through an additive on() when the user inserts a symbol, and restores its
+ * selection through getState()/setState() (stateKeys: value).
  */
 export const SYMBOLPICKER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,29 @@ export const SYMBOLPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-emoji-smile",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user browse and insert special characters or icons from categorised grids.",
+        avoidWhen: "To show one fixed icon use Icon; to pick from a short list of options use ChoicePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "insert", payload: "record", multi: false, legacyOption: "onInsert" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the popup opens; that is view state, not information for an agent.",
+            onClose: "Fires when the popup closes; that is view state, not information for an agent.",
+            onSelect: "Fires when a symbol is highlighted; the two-way value carries the choice.",
+            triggerElement: "Takes a DOM element to anchor to, which JSON cannot carry.",
+        },
+    },
 
     regions: ["symbolpicker:panel", "symbolpicker:grid-wrap"],
 
@@ -47,6 +63,6 @@ export const SYMBOLPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 320, h: 300 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

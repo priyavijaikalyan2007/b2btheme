@@ -42,21 +42,36 @@ export interface TagItem
 /** Configuration options for the Tagger component. */
 export interface TaggerOptions
 {
+    /** Tags shown when the component opens. */
     tags?: TagItem[];
+    /** Categories of known tags offered in the dropdown, each with its values. */
     taxonomy?: TagCategory[];
+    /** Allow tags that are not in the taxonomy. Default: true. */
     allowFreeform?: boolean;
+    /** The most tags allowed; unset means no limit. */
     maxTags?: number;
+    /** Input placeholder text. Default: "Add tag...". */
     placeholder?: string;
+    /** How chips are coloured: by category, by a hash of the value, or not at all. Default: "category". */
     colorMode?: "category" | "hash" | "none";
     validator?: (value: string) => boolean | string;
+    /** What adding an existing tag does: reject it with a message, or ignore it silently. Default: "reject". */
     duplicateMode?: "reject" | "ignore";
+    /** Show each chip's category name. Default: true. */
     showCategoryBadge?: boolean;
+    /** Size variant. Default: "default". */
     size?: "sm" | "default" | "lg";
+    /** Disable the tagger. */
     disabled?: boolean;
+    /** Show the tags without allowing changes. */
     readonly?: boolean;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** The most suggestions to list. Accepted but not yet applied by the component. */
     maxDropdownItems?: number;
+    /** Characters to type before suggestions are filtered. Default: 0. */
     minFilterLength?: number;
+    /** Milliseconds to wait after typing before filtering suggestions. Default: 150. */
     filterDebounceMs?: number;
     onAdd?: (tag: TagItem) => void;
     onRemove?: (tag: TagItem) => void;
@@ -268,10 +283,20 @@ export interface TaggerHandle
     focus(): void;
     enable(): void;
     disable(): void;
+
+    /** The surface contract (additive): Tagger has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "change", fired with every tag list; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The tags, as { tags }. */
+    getState(): Record<string, unknown>;
+    /** Sets state.tags when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class Tagger implements TaggerHandle
 {
+    private readonly changeHandlers = new Set<(payload: unknown) => void>();
     // -- Configuration
     private readonly instanceId: string;
     private options: TaggerOptions;
@@ -385,11 +410,61 @@ export class Tagger implements TaggerHandle
         if (this.destroyed) { return; }
         this.hide();
         this.clearTimers();
+        this.changeHandlers.clear();
         this.destroyed = true;
         logDebug(`Destroyed: ${this.instanceId}`);
     }
 
     public getElement(): HTMLElement { return this.rootEl; }
+
+    // ========================================================================
+    // PUBLIC — SURFACE CONTRACT (additive, readiness step 2 B3)
+    // ========================================================================
+
+    /** Tagger has no data slots; the tags are setTags(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): Tagger has no data slots. Use setTags().`);
+    }
+
+    /** Subscribes to "change"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "change".`);
+        }
+
+        this.changeHandlers.add(handler);
+
+        return () => { this.changeHandlers.delete(handler); };
+    }
+
+    /** The tags. */
+    public getState(): Record<string, unknown>
+    {
+        return { tags: this.getTags() };
+    }
+
+    /** Restores tags captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("tags" in state) { this.setTags(state.tags as TagItem[]); }
+    }
+
+    /** onChange first, exactly as before, then the "change" subscribers. */
+    private emitChange(): void
+    {
+        const tags = this.getTags();
+
+        this.options.onChange?.(tags);
+
+        for (const handler of this.changeHandlers)
+        {
+            try { handler(this.getTags()); }
+            catch (err) { logError("change handler error:", err); }
+        }
+    }
 
     // ========================================================================
     // PUBLIC — TAGS
@@ -409,7 +484,7 @@ export class Tagger implements TaggerHandle
         for (const t of tags) { this.pushTag(t); }
 
         this.renderChips();
-        this.options.onChange?.(this.getTags());
+        this.emitChange();
     }
 
     public addTag(tag: TagItem): boolean
@@ -425,7 +500,7 @@ export class Tagger implements TaggerHandle
         this.pushTag(trimmed);
         this.addChipDOM(trimmed);
         this.options.onAdd?.(trimmed);
-        this.options.onChange?.(this.getTags());
+        this.emitChange();
         this.announce(this.formatTagAnnounce(trimmed, "added"));
         logInfo(`Tag "${trimmed.value}" added`);
         return true;
@@ -443,7 +518,7 @@ export class Tagger implements TaggerHandle
         this.tagMap.delete(key);
         this.removeChipDOM(value, category);
         this.options.onRemove?.(tag);
-        this.options.onChange?.(this.getTags());
+        this.emitChange();
         this.announce(`Tag ${value} removed`);
         logInfo(`Tag "${value}" removed`);
         return true;
@@ -455,7 +530,7 @@ export class Tagger implements TaggerHandle
         this.tags = [];
         this.tagMap.clear();
         this.renderChips();
-        this.options.onChange?.(this.getTags());
+        this.emitChange();
     }
 
     public hasTag(value: string, category?: string): boolean

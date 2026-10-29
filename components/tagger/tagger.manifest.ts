@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B3): it emits "change"
+ * with the tag list through an additive on(), and restores its tags through
+ * getState()/setState(), so an agent's tags update in place.
  */
 export const TAGGER_MANIFEST: CapabilityManifest =
 {
@@ -32,11 +31,30 @@ export const TAGGER_MANIFEST: CapabilityManifest =
     icon: "bi-tags",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user add and remove tags, free-form or from a categorised taxonomy, as chips.",
+        avoidWhen: "To pick people use PeoplePicker; to choose one option from a list use ChoicePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "change", payload: "record", multi: true, legacyOption: "onChange" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["tags"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B3).
+    protocol: {
+        hostOnly: {
+            onAdd: "Fires per added tag; the change event already carries the whole tag list.",
+            onRemove: "Fires per removed tag; the change event already carries the whole tag list.",
+            validator: "Returns an accept-or-reject decision as the user types; an agent round trip cannot.",
+            onValidationError: "Reports a rejected entry to the user in place; nothing reaches the tag list.",
+            "tags[].data": "Arbitrary consumer data for host callbacks; it has no schema an agent could fill.",
+        },
+    },
 
     regions: ["tagger:dropdown"],
 
@@ -46,6 +64,6 @@ export const TAGGER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 34 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
