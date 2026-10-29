@@ -429,6 +429,16 @@ describe("validateManifest — protocol field", () =>
         expect(res.issues.map((i) => i.path)).toEqual(["protocol.providers.onLoad.concurrency"]);
     });
 
+    test("a provider's required flag is a boolean (ADR-234)", () =>
+    {
+        expect(validateManifest(base({ providers: { onLoad: { request: "load", required: true } } })).ok).toBe(true);
+
+        const res = validateManifest(base({ providers: { onLoad: { request: "load", required: "yes" } } }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.map((i) => i.path)).toEqual(["protocol.providers.onLoad.required"]);
+    });
+
     // Unknown keys are REJECTED, in a provider spec and in protocol itself.
     // Since 2026-10-25 every catalog name is derived (on<Request>,
     // <request>Result, eventData), so nothing in the generator reads a

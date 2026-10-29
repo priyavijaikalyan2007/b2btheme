@@ -899,7 +899,12 @@ export const BASELINES = {
     // ADR-230 (2026-10-29): 427 -> 425, DocViewer classified once the adapter loads its dependencies.
     // ADR-231 (2026-10-29): 425 -> 392, seven B5 editors and forms classified.
     // ADR-232 (2026-10-29): 392 -> 326, the nine B6 data views classified.
-    unclassifiedOptions: 326,
+    // ADR-234 (2026-10-29): 326 -> 318, PromptTemplateManager classified (B7).
+    // ADR-234 (2026-10-29): 318 -> 299, ActionItems classified (B7).
+    // ADR-234 (2026-10-29): 299 -> 288, RelationshipManager classified (B7).
+    // ADR-234 (2026-10-29): 288 -> 276, Conversation classified (B7).
+    // ADR-234 (2026-10-29): 276 -> 268, ExplorerPicker classified (B7).
+    unclassifiedOptions: 268,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -907,7 +912,10 @@ export const BASELINES = {
     // documented (B4).
     // ADR-231 (2026-10-29): 312 -> 286, CodeEditor's and DynamicFormSwitcher's options documented (B5).
     // ADR-232 (2026-10-29): 286 -> 202, seven B6 data views' options documented.
-    protocolPropsMissingJsdoc: 202,
+    // ADR-234 (2026-10-29): 202 -> 191, PromptTemplateManager's options documented (B7).
+    // ADR-234 (2026-10-29): 191 -> 181, RelationshipManager's options documented (B7).
+    // ADR-234 (2026-10-29): 181 -> 161, ExplorerPicker's options documented (B7).
+    protocolPropsMissingJsdoc: 161,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -934,7 +942,12 @@ export const BASELINES = {
     // ADR-230 (2026-10-29): 55 -> 54, docviewer classified (the adapter loads MarkdownRenderer and marked).
     // ADR-231 (2026-10-29): 54 -> 47, seven B5 editors and forms classified (propertyinspector stays pending).
     // ADR-232 (2026-10-29): 47 -> 38, the nine B6 data views classified.
-    componentsPendingClassification: 38,
+    // ADR-234 (2026-10-29): 38 -> 37, PromptTemplateManager classified (B7).
+    // ADR-234 (2026-10-29): 37 -> 36, ActionItems classified (B7).
+    // ADR-234 (2026-10-29): 36 -> 35, RelationshipManager classified (B7).
+    // ADR-234 (2026-10-29): 35 -> 34, Conversation classified (B7).
+    // ADR-234 (2026-10-29): 34 -> 33, ExplorerPicker classified (B7).
+    componentsPendingClassification: 33,
 };
 
 /*
@@ -1026,11 +1039,16 @@ export const FLOORS = {
     // ADR-227 (2026-10-28): 491, 4 and 75 after B2. ADR-228 (2026-10-28): 452, 343, 3 and 65 after B3.
     // ADR-229 (2026-10-29): 427, 312, 2 and 55 after B4. ADR-230 (2026-10-29): 425 and 54 after P1.
     // ADR-231 (2026-10-29): 392, 286, 1 and 47 after B5. ADR-232 (2026-10-29): 326, 202 and 38 after B6.
-    unclassifiedOptions: 326,
-    protocolPropsMissingJsdoc: 202,
+    // ADR-234 (2026-10-29): 318, 191 and 37 once PromptTemplateManager was classified (B7).
+    // ADR-234 (2026-10-29): 299 and 36 once ActionItems was classified (B7).
+    // ADR-234 (2026-10-29): 288, 181 and 35 once RelationshipManager was classified (B7).
+    // ADR-234 (2026-10-29): 276 and 34 once Conversation was classified (B7).
+    // ADR-234 (2026-10-29): 268, 161 and 33 once ExplorerPicker was classified (B7).
+    unclassifiedOptions: 268,
+    protocolPropsMissingJsdoc: 161,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 38,
+    componentsPendingClassification: 33,
 };
 
 /**

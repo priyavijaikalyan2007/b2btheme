@@ -1790,3 +1790,11 @@
   definition: "Readiness step 2 rule (ADR-229): an option that becomes an <a href> is host-only, because an agent-chosen javascript: URL would run in the host's origin when the user followed it; the agent hears the click and answers with openUrl. A nested href is left out of a protocol.schemas override, and the closed catalog schema rejects it. Options written as data-* attributes (metadata) are host-only for the same reason."
   anchor_file: "AGENTS.md"
   related: ["UrlFetchRule", "A2uiAdapter", "AgentProtocolSchema"]
+- name: "SlotUpdatedInPlace"
+  definition: "Readiness step 2 rule B7-1 (ADR-234): a data collection an agent rewrites after each turn (a transcript, a template list, action items, relationships) is an accepts slot set through setData, which re-renders in place and keeps what the user is in the middle of (a draft, unsaved edits, focus, scroll), never a create prop that remounts. A conformance glue's slotSamples gives the gate a complete sample for such a slot."
+  anchor_file: "AGENTS.md"
+  related: ["SurfaceContract", "AgentProtocolSchema"]
+- name: "RequiredProvider"
+  definition: "protocol.providers.<option>.required (ADR-234): the catalog requires the provider's on<Request>, <request>Result and eventData, because the adapter wires only a provider the agent binds. For a provider whose absence makes the component fall back to host-side behaviour an agent must not trigger, such as ExplorerPicker fetching the host's API with the user's credentials."
+  anchor_file: "AGENTS.md"
+  related: ["ProviderConcurrency", "UrlFetchRule", "A2uiAdapter"]

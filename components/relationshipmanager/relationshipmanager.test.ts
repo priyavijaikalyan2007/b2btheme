@@ -17,6 +17,9 @@ import
 // DEBT-TEST-1c. Side-effect import: the ADR-128 block mounts the real
 // InlineToolbar rather than a stub of it.
 import "../inlinetoolbar/inlinetoolbar";
+// The delete confirmation goes through the real ConfirmDialog when it is
+// loaded, as it is here; the native confirm() block removes it for its test.
+import "../confirmdialog/confirmdialog";
 import type
 {
     RelationshipManagerOptions,
@@ -710,5 +713,368 @@ describe("provenance renders as the badge the README documents", () =>
         expect(container.querySelector(".rm-item-meta")?.textContent)
             .toBe("service · MANUAL · 2026-03-19");
         rm.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B7)
+// ============================================================================
+
+describe("surface contract (B7)", () =>
+{
+    /** A manual relationship and an AI-inferred one, so every row action exists. */
+    function surfaceRows(): RelationshipInstance[]
+    {
+        return [
+            makeRelationship({ id: "rel-1", otherResourceId: "res-a", otherResourceDisplayName: "Alpha" }),
+            makeRelationship({ id: "rel-2", relationshipKey: "owned_by", relationshipDisplayName: "Owned By",
+                otherResourceId: "res-b", otherResourceDisplayName: "Beta" }),
+            makeRelationship({ id: "rel-ai", provenance: "ai_inferred", confidence: 0.8,
+                otherResourceId: "res-c", otherResourceDisplayName: "Gamma" }),
+        ];
+    }
+
+    /** A definition with a properties form, beside the two without one. */
+    function defsWithForm(): RelationshipDefinitionSummary[]
+    {
+        return [
+            ...makeRelDefs(),
+            {
+                key: "linked_to", displayName: "Linked To", targetTypeKeys: ["doc"], sourceTypeKeys: null,
+                cardinality: "many-to-many", propertiesSchema: { note: { title: "Note", type: "string" } },
+            },
+        ];
+    }
+
+    const TARGET = { id: "res-t", displayName: "Target", typeKey: "service" };
+
+    /** Records every legacy call and channel payload, in order. */
+    function recorder(): { log: unknown[][]; legacy(name: string): (...a: unknown[]) => Promise<void> }
+    {
+        const log: unknown[][] = [];
+
+        return {
+            log,
+            legacy: (name: string) => (...a: unknown[]) => { log.push([name, ...a]); return Promise.resolve(); },
+        };
+    }
+
+    /** Subscribes to every channel, recording into `log`. */
+    function listen(rm: RelationshipManager, log: unknown[][]): void
+    {
+        for (const channel of ["createRelationship", "deleteRelationship", "navigate", "confirmInferred",
+            "dismissInferred"])
+        {
+            rm.on(channel, (p) => log.push([`channel:${channel}`, p]));
+        }
+    }
+
+    /** The row whose name is `name`. */
+    function row(name: string): HTMLElement
+    {
+        return Array.from(container.querySelectorAll<HTMLElement>(".rm-item"))
+            .find((i) => i.querySelector(".rm-item-name")?.textContent === name)!;
+    }
+
+    /** Opens the Add panel, picks the definition named `def`, types `query` and waits out the debounce. */
+    async function searchFor(def: string, query: string): Promise<void>
+    {
+        container.querySelector<HTMLElement>(".rm-add-btn")!.click();
+        Array.from(container.querySelectorAll<HTMLElement>(".rm-def-item"))
+            .find((i) => i.querySelector(".rm-def-name")?.textContent === def)!.click();
+        const input = container.querySelector<HTMLInputElement>(".rm-search-input")!;
+        input.value = query;
+        input.dispatchEvent(new Event("input"));
+        await vi.advanceTimersByTimeAsync(300);
+    }
+
+    const panelOpen = (): boolean =>
+        container.querySelector<HTMLElement>(".rm-add-panel")!.style.display !== "none";
+
+    afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+
+    test("on() refuses an undeclared channel and returns a working unsubscribe", () =>
+    {
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows() }));
+        const seen: unknown[] = [];
+
+        expect(() => rm.on("select", () => undefined)).toThrow(/unknown channel/);
+        const off = rm.on("navigate", (p) => seen.push(p));
+        off();
+        row("Alpha").querySelector<HTMLElement>('[aria-label="Navigate to resource"]')!.click();
+
+        expect(seen).toEqual([]);
+        rm.destroy();
+    });
+
+    test("navigate, confirmInferred and dismissInferred fire after their legacy callbacks, with the id", () =>
+    {
+        const { log, legacy } = recorder();
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(),
+            onNavigate: legacy("onNavigate"), onConfirmInferred: legacy("onConfirmInferred"),
+            onDismissInferred: legacy("onDismissInferred") }));
+        listen(rm, log);
+
+        row("Alpha").querySelector<HTMLElement>('[aria-label="Navigate to resource"]')!.click();
+        row("Gamma").querySelector<HTMLElement>(".rm-confirm-btn")!.click();
+        row("Gamma").querySelector<HTMLElement>(".rm-dismiss-btn")!.click();
+
+        expect(log).toEqual([
+            ["onNavigate", "res-a"], ["channel:navigate", "res-a"],
+            ["onConfirmInferred", "rel-ai"], ["channel:confirmInferred", "rel-ai"],
+            ["onDismissInferred", "rel-ai"], ["channel:dismissInferred", "rel-ai"],
+        ]);
+        rm.destroy();
+    });
+
+    test("the row channels fire without their legacy callbacks", () =>
+    {
+        const log: unknown[][] = [];
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows() }));
+        listen(rm, log);
+
+        row("Beta").querySelector<HTMLElement>('[aria-label="Navigate to resource"]')!.click();
+        row("Gamma").querySelector<HTMLElement>(".rm-confirm-btn")!.click();
+
+        expect(log).toEqual([["channel:navigate", "res-b"], ["channel:confirmInferred", "rel-ai"]]);
+        rm.destroy();
+    });
+
+    test("deleteRelationship fires after onDeleteRelationship once the native confirm says yes", () =>
+    {
+        const { log, legacy } = recorder();
+        const dialog = window.showConfirmDialog;
+        delete window.showConfirmDialog;
+
+        try
+        {
+            const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(),
+                onDeleteRelationship: legacy("onDeleteRelationship") }));
+            listen(rm, log);
+            const ask = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+            row("Alpha").querySelector<HTMLElement>(".rm-more-btn")!.click();
+            row("Alpha").querySelector<HTMLElement>(".rm-more-btn")!.click();
+
+            expect(ask).toHaveBeenCalledTimes(2);
+            expect(log).toEqual([["onDeleteRelationship", "rel-1"], ["channel:deleteRelationship", "rel-1"]]);
+            rm.destroy();
+        }
+        finally
+        {
+            window.showConfirmDialog = dialog;
+        }
+    });
+
+    test("deleteRelationship fires once the user confirms in ConfirmDialog, without a legacy callback", async () =>
+    {
+        const log: unknown[][] = [];
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows() }));
+        listen(rm, log);
+
+        row("Beta").querySelector<HTMLElement>(".rm-more-btn")!.click();
+        document.querySelector<HTMLElement>(".confirmdialog-cancel")!.click();
+        await Promise.resolve();
+        expect(log).toEqual([]);
+
+        row("Beta").querySelector<HTMLElement>(".rm-more-btn")!.click();
+        document.querySelector<HTMLElement>(".confirmdialog-confirm")!.click();
+        await Promise.resolve();
+
+        expect(log).toEqual([["channel:deleteRelationship", "rel-2"]]);
+        rm.destroy();
+    });
+
+    test("with onCreateRelationship, the panel closes and createRelationship fires after its promise settles",
+        async () =>
+        {
+            vi.useFakeTimers();
+            const log: unknown[][] = [];
+            let settle: () => void = () => undefined;
+            const rm = createRelationshipManager(makeOptions({
+                relationships: surfaceRows(),
+                onSearchResources: (q, t) =>
+                {
+                    log.push(["onSearchResources", q, t]);
+                    return Promise.resolve([TARGET]);
+                },
+                onCreateRelationship: (r) =>
+                {
+                    log.push(["onCreateRelationship", r]);
+                    return new Promise<void>((resolve) => { settle = resolve; });
+                },
+            }));
+            listen(rm, log);
+
+            await searchFor("Owned By", "ta");
+            container.querySelector<HTMLElement>(".rm-search-item")!.click();
+
+            const request = { targetResourceId: "res-t", relationshipKey: "owned_by", properties: {} };
+            expect(log).toEqual([["onSearchResources", "ta", ["user"]], ["onCreateRelationship", request]]);
+            expect(panelOpen()).toBe(true);
+
+            settle();
+            await vi.advanceTimersByTimeAsync(0);
+
+            expect(panelOpen()).toBe(false);
+            expect(log.slice(2)).toEqual([["channel:createRelationship", request]]);
+            rm.destroy();
+        });
+
+    test("without onCreateRelationship, a createRelationship subscriber hears the step 3 form and the panel closes",
+        async () =>
+        {
+            vi.useFakeTimers();
+            const log: unknown[][] = [];
+            const rm = createRelationshipManager(makeOptions({
+                relationships: surfaceRows(), relationshipDefinitions: defsWithForm(), showAddButton: true,
+                onSearchTargets: (r) => { log.push(["onSearchTargets", r]); return Promise.resolve([TARGET]); },
+            }));
+            listen(rm, log);
+
+            await searchFor("Linked To", "tar");
+            container.querySelector<HTMLElement>(".rm-search-item")!.click();
+            container.querySelector<HTMLInputElement>('.rm-props-form input[name="note"]')!.value = "weekly";
+            container.querySelector<HTMLElement>(".rm-create-btn")!.click();
+
+            expect(log).toEqual([
+                ["onSearchTargets", { query: "tar", typeKeys: ["doc"] }],
+                ["channel:createRelationship",
+                    { targetResourceId: "res-t", relationshipKey: "linked_to", properties: { note: "weekly" } }],
+            ]);
+            expect(panelOpen()).toBe(false);
+            rm.destroy();
+        });
+
+    test("with neither onCreateRelationship nor a subscriber, picking a target does nothing, as before", async () =>
+    {
+        vi.useFakeTimers();
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(), showAddButton: true,
+            onSearchTargets: () => Promise.resolve([TARGET]) }));
+
+        await searchFor("Depends On", "ta");
+        container.querySelector<HTMLElement>(".rm-search-item")!.click();
+
+        expect(panelOpen()).toBe(true);
+        rm.destroy();
+    });
+
+    test("onSearchTargets gets { query, typeKeys }; an empty targetTypeKeys asks with []", async () =>
+    {
+        vi.useFakeTimers();
+        const asked: unknown[] = [];
+        const rm = createRelationshipManager(makeOptions({ showAddButton: true,
+            onSearchTargets: (r) => { asked.push(r); return Promise.resolve([TARGET]); } }));
+
+        await searchFor("Depends On", "t");
+        await searchFor("Depends On", "targ");
+
+        expect(asked).toEqual([{ query: "targ", typeKeys: [] }]);
+        expect(container.querySelector(".rm-search-name")?.textContent).toBe("Target");
+        rm.destroy();
+    });
+
+    test("passing both onSearchResources and onSearchTargets throws, naming both", () =>
+    {
+        expect(() => createRelationshipManager(makeOptions({
+            onSearchResources: () => Promise.resolve([]),
+            onSearchTargets: () => Promise.resolve([]),
+        }))).toThrow(/onSearchResources.*onSearchTargets/);
+    });
+
+    test("setData(\"relationships\") replaces the rows silently, keeping the open Add panel, collapse, sort and scroll",
+        async () =>
+        {
+            vi.useFakeTimers();
+            const log: unknown[][] = [];
+            const fired = (name: string) => (...a: unknown[]) => { log.push([name, ...a]); return Promise.resolve(); };
+            const rm = createRelationshipManager(makeOptions({
+                relationships: surfaceRows(),
+                onSearchTargets: (r) => { log.push(["onSearchTargets", r]); return Promise.resolve([TARGET]); },
+                onCreateRelationship: fired("onCreateRelationship"), onSortModeChange: fired("onSortModeChange"),
+                onCollapseStateChange: fired("onCollapseStateChange"),
+            }));
+            rm.setSortMode("desc");
+            container.querySelectorAll<HTMLElement>(".rm-group-header")[0].click();
+            await searchFor("Owned By", "tar");
+            container.querySelector<HTMLElement>(".rm-list")!.scrollTop = 40;
+            log.length = 0;
+            listen(rm, log);
+
+            rm.setData("relationships", [
+                ...surfaceRows().slice(1),
+                makeRelationship({ id: "rel-new", otherResourceDisplayName: "Delta" }),
+            ]);
+
+            expect(log).toEqual([]);
+            expect(container.textContent).toContain("Delta");
+            expect(container.textContent).not.toContain("Alpha");
+            expect(rm.getState()).toEqual({ sortMode: "desc", collapsed: ["Owned By"] });
+            expect(container.querySelector(".rm-add-step")?.textContent).toBe("Step 2 of 3");
+            expect(container.querySelector<HTMLInputElement>(".rm-search-input")!.value).toBe("tar");
+            expect(container.querySelector(".rm-search-name")?.textContent).toBe("Target");
+            expect(container.querySelector<HTMLElement>(".rm-list")!.scrollTop).toBe(40);
+
+            // The add flow is still live: picking the target creates against the definition the user chose.
+            container.querySelector<HTMLElement>(".rm-search-item")!.click();
+            expect(log).toEqual([["onCreateRelationship",
+                { targetResourceId: "res-t", relationshipKey: "owned_by", properties: {} }]]);
+            rm.destroy();
+        });
+
+    test("setData refuses another slot, a non-array and a row without a string id", () =>
+    {
+        const rm = createRelationshipManager(makeOptions());
+
+        expect(() => rm.setData("rows", [])).toThrow(/unknown slot "rows"/);
+        expect(() => rm.setData("relationships", { id: "x" })).toThrow(/expected an array/);
+        expect(() => rm.setData("relationships", [makeRelationship(), { name: "no id" }])).toThrow(/relationship 1/);
+        rm.destroy();
+    });
+
+    test("getState reports sortMode and the collapsed groups; setState restores them silently", () =>
+    {
+        const log: unknown[][] = [];
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(),
+            onSortModeChange: (m) => log.push(["onSortModeChange", m]),
+            onCollapseStateChange: (s) => log.push(["onCollapseStateChange", s]) }));
+
+        expect(rm.getState()).toEqual({ sortMode: null, collapsed: [] });
+
+        rm.setState({ sortMode: "asc", collapsed: ["AI Suggested", "Depends On"] });
+
+        expect(log).toEqual([]);
+        expect(rm.getSortMode()).toBe("asc");
+        expect(rm.getState()).toEqual({ sortMode: "asc", collapsed: ["AI Suggested", "Depends On"] });
+        const labels = Array.from(container.querySelectorAll(".rm-group-label")).map((l) => l.textContent);
+        expect(labels).toEqual(["Depends On (1)", "Owned By (1)", "AI Suggested (1)"]);
+        const hidden = Array.from(container.querySelectorAll<HTMLElement>(".rm-group-body"))
+            .map((b) => b.style.display === "none");
+        expect(hidden).toEqual([true, false, true]);
+
+        rm.setState({ collapsed: [] });
+        expect(rm.getState()).toEqual({ sortMode: "asc", collapsed: [] });
+        rm.setState(rm.getState());
+        expect(rm.getState()).toEqual({ sortMode: "asc", collapsed: [] });
+        rm.destroy();
+    });
+
+    test("setState refuses an unknown sortMode and a collapsed that is not an array of group names", () =>
+    {
+        const rm = createRelationshipManager(makeOptions());
+
+        expect(() => rm.setState({ sortMode: "up" })).toThrow(/sortMode/);
+        expect(() => rm.setState({ collapsed: "Depends On" })).toThrow(/collapsed/);
+        expect(() => rm.setState({ collapsed: [1] })).toThrow(/collapsed/);
+        rm.destroy();
+    });
+
+    test("getElement returns the root the component mounted", () =>
+    {
+        const rm = createRelationshipManager(makeOptions());
+
+        expect(rm.getElement()).toBe(container.querySelector(".rm-root"));
+        rm.destroy();
+        expect(rm.getElement()).toBeNull();
     });
 });

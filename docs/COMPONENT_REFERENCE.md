@@ -4117,6 +4117,7 @@ The Conversation component applies defence-in-depth to prevent cross-site script
 
 - **User messages** are rendered using `textContent` only. HTML in user input is never interpreted.
 - **Assistant messages** are rendered through `Vditor.preview()` with `sanitize: true`, which strips dangerous markup before rendering Markdown.
+- **Vditor's lazily loaded renderers** (lute, highlight.js, KaTeX and the rest) come from this library's own mirror, `/lib/vditor-3.11.2` on the origin that served `conversation.js`, never from `unpkg.com` (ADR-149), so no third-party script reaches the page through the preview.
 - **HTML copy export** passes through `DOMPurify.sanitize()` before being written to the clipboard. If DOMPurify is not loaded, a console warning is emitted.
 - **System messages** and **error messages** use `textContent` for all user-visible strings.
 - **MCP App iframes** are sandboxed with `sandbox="allow-scripts allow-forms"` — no `allow-same-origin`, preventing access to the host page's DOM, cookies, or storage. A CSP meta tag is injected restricting `default-src` to `'none'`, `script-src` and `style-src` to `'unsafe-inline'`, and `connect-src` to explicitly listed domains only. PostMessage validation uses `event.source === iframe.contentWindow` (not origin, since sandboxed iframe origin is `"null"`). Each frame gets a unique ID for routing.
@@ -6307,10 +6308,15 @@ dialog.open();
 | `ontologyTypes` | `OntologyTypeEntry[]` | — | Pre-loaded ontology types (skips API) |
 | `confirmButtonText` | `string \| (count) => string` | `"Select"` | Confirm button text |
 | `cancelButtonText` | `string` | `"Cancel"` | Cancel button text |
-| `onConfirm` | `(selections) => void` | — | Called on confirm (required) |
-| `onCancel` | `() => void` | — | Called on cancel |
+| `onConfirm` | `(selections) => void` | — | Called on confirm. Optional since 2026-10-29: the `confirm` channel of `on()` delivers it too |
+| `onCancel` | `() => void` | — | Called on cancel; passing it shows the Cancel button |
 | `onSelectionChange` | `(selections) => void` | — | Called on every selection change |
-| `onError` | `(error, context) => void` | — | Called on API errors |
+| `onError` | `(error, context) => void` | — | Called when the initial load fails |
+| `staticNodes` | `ExplorerNode[]` | — | The initial tree, flat, each node naming its `parentId`; the tree, ontology, recent and starred items are not requested |
+| `onLoadChildren` | `({ nodeId }) => Promise<ExplorerNode[]>` | — | Loads one level: a node's children, or the roots when `nodeId` is `null`. With it nothing is requested from `apiBase` or `ontologyApiBase`: Recent and Starred are not shown, and search needs `onSearch`. Answers that list the node, an ancestor or another parent's child are cut to the real children |
+| `onSearch` | `({ query, cursor }) => Promise<{ results, cursor }>` | — | Answers a search instead of `apiBase/search`; a non-null `cursor` shows "Load more results" |
+| `cancellable` | `boolean` | `false` | Show the Cancel button without `onCancel` |
+| `showSearch` | `boolean` | `true` | Show the search box |
 
 ## Instance API
 
@@ -6330,6 +6336,9 @@ dialog.open();
 | `destroy()` | `void` | Full cleanup |
 | `isLoading()` | `boolean` | Whether data is loading |
 | `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `on(channel, handler)` | `() => void` | Subscribe to `"selection"`, `"confirm"` or `"cancel"`; each sends the selection records (cancel: the selection abandoned) after the matching callback |
+| `getState()` / `setState(state)` | — | `{ expanded, selection }` node ids; `setState` restores them without firing anything |
+| `setData(slot, value)` | `void` | Throws: there are no data slots |
 
 ## Data Types
 

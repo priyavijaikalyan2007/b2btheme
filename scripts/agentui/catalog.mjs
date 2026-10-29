@@ -151,7 +151,8 @@ function entryFor({ manifest, surface, schema })
                 { $ref: `${COMMON_TYPES_ID}#/$defs/ComponentCommon` },
                 { $ref: "#/$defs/CatalogComponentCommon" },
                 { type: "object", properties: props,
-                    required: ["component", ...(root.required ?? []).filter((n) => dataNames.has(n))] },
+                    required: ["component", ...(root.required ?? []).filter((n) => dataNames.has(n)),
+                        ...requiredProviderProps(surface)] },
             ],
             unevaluatedProperties: false,
         },
@@ -276,6 +277,19 @@ function providerProps(surface, name)
             + `write a value matching #/$defs/${name}__${p.response} there. A literal cannot answer a request.`,
         ...BINDING }],
     ]);
+}
+
+/**
+ * What a required provider makes the catalog require (ADR-234): its on<Request>
+ * action and <request>Result binding, and eventData, without which the adapter
+ * wires no provider at all. A component that would otherwise fall back to
+ * host-side behaviour an agent must not trigger then fails validation instead.
+ */
+function requiredProviderProps(surface)
+{
+    const required = surface.providers.filter((p) => p.required === true);
+
+    return required.length === 0 ? [] : ["eventData", ...required.flatMap((p) => [p.actionProp, p.response])];
 }
 
 /** Each provider's answer schema, relocated to the catalog root as <Component>__<request>Result. */

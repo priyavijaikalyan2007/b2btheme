@@ -538,6 +538,7 @@ The Conversation component applies defence-in-depth to prevent cross-site script
 
 - **User messages** are rendered using `textContent` only. HTML in user input is never interpreted.
 - **Assistant messages** are rendered through `Vditor.preview()` with `sanitize: true`, which strips dangerous markup before rendering Markdown.
+- **Vditor's lazily loaded renderers** (lute, highlight.js, KaTeX and the rest) come from this library's own mirror, `/lib/vditor-3.11.2` on the origin that served `conversation.js`, never from `unpkg.com` (ADR-149), so no third-party script reaches the page through the preview.
 - **HTML copy export** passes through `DOMPurify.sanitize()` before being written to the clipboard. If DOMPurify is not loaded, a console warning is emitted.
 - **System messages** and **error messages** use `textContent` for all user-visible strings.
 - **MCP App iframes** are sandboxed with `sandbox="allow-scripts allow-forms"` — no `allow-same-origin`, preventing access to the host page's DOM, cookies, or storage. A CSP meta tag is injected restricting `default-src` to `'none'`, `script-src` and `style-src` to `'unsafe-inline'`, and `connect-src` to explicitly listed domains only. PostMessage validation uses `event.source === iframe.contentWindow` (not origin, since sandboxed iframe origin is `"null"`). Each frame gets a unique ID for routing.

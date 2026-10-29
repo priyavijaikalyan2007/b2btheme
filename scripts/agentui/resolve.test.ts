@@ -181,6 +181,14 @@ describe("resolve — providers", () =>
         expect(resolveSurface(manifest({ protocol: { providers: spec } }), [member("onSearch", "function")]).providers)
             .toEqual([{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }]);
     });
+    test("a required provider carries the flag into the surface (ADR-234)", () =>
+    {
+        const required = { onSearch: { request: "search", required: true } };
+
+        expect(resolveSurface(manifest({ protocol: { providers: required } }), [member("onSearch", "function")])
+            .providers).toEqual([{ option: "onSearch", request: "search", actionProp: "onSearch",
+            response: "searchResult", required: true }]);
+    });
     test("a two-parameter provider fails", () =>
     {
         expect(codes(manifest({ protocol: { providers: spec } }), [member("onSearch", "function", { arity: 2 })]))

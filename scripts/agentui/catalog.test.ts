@@ -210,6 +210,14 @@ describe("catalog — component entry", () =>
         expect("eventData" in ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget")).toBe(false);
     });
     test("a manifest action gets an on<Id> Action", () => { expect("onExport" in ownProps(build().catalog, "Widget")).toBe(true); });
+    test("a required provider requires its action, its result binding and eventData (ADR-234)", () =>
+    {
+        const s = { ...SURFACE, providers: [{ ...SURFACE.providers[0], required: true }] };
+        const built = build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog;
+
+        expect(built.components.Widget.allOf[2].required)
+            .toEqual(["component", "columns", "eventData", "onSearch", "searchResult"]);
+    });
     test("required carries component and required data props", () =>
     {
         expect(build().catalog.components.Widget.allOf[2].required).toEqual(["component", "columns"]);

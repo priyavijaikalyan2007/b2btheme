@@ -1403,3 +1403,499 @@ describe("show is safe to call twice", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// A NODE ID IS DATA, NOT A SELECTOR
+// ============================================================================
+
+describe("node ids holding selector syntax", () =>
+{
+    // The id was interpolated into `[data-node-id="${id}"]`, so a quote
+    // threw a SyntaxError from querySelector: scrollToNode threw, a
+    // folder's expand rejected before its request, and a row click lost
+    // its focus ring. Valid ids find the same element as before.
+    const QUOTED = 'say "hi"';
+    const FOLDER = 'odd "folder" ] , [x';
+
+    /** The first element carrying the id, which is the one a valid id's selector found (the tree item). */
+    function firstWithId(id: string): HTMLElement | undefined
+    {
+        return [...container.querySelectorAll<HTMLElement>("[data-node-id]")].find((el) => el.dataset.nodeId === id);
+    }
+
+    function quotedTree(): ExplorerNode[]
+    {
+        return [makeFolder(FOLDER, "Odd folder"), makeAsset(QUOTED, "Quoted asset")];
+    }
+
+    test("scrollToNode finds the row and flashes it", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree() }));
+        Element.prototype.scrollIntoView ??= () => undefined;
+
+        picker.scrollToNode(QUOTED);
+
+        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-flash")).toBe(true);
+        picker.destroy();
+    });
+
+    test("expanding the folder loads and renders its children", async () =>
+    {
+        const fetchFn = vi.fn().mockResolvedValue({
+            ok: true, json: () => Promise.resolve([makeAsset("kid", "Kid", FOLDER)]) });
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree(), fetchFn }));
+
+        await picker.expandNode(FOLDER);
+
+        expect(fetchFn).toHaveBeenCalledTimes(1);
+        expect([...container.querySelectorAll(".explorerpicker-label")].map((n) => n.textContent))
+            .toContain("Kid");
+        picker.destroy();
+    });
+
+    test("clicking the row selects it and gives it the focus ring", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree() }));
+        const row = () => [...container.querySelectorAll<HTMLElement>(".explorerpicker-node-row")]
+            .find((r) => r.dataset.nodeId === QUOTED)!;
+
+        row().click();
+
+        expect(picker.getSelection().map((s) => s.nodeId)).toEqual([QUOTED]);
+        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-focused")).toBe(true);
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// PROVIDERS: onLoadChildren AND onSearch (readiness step 2 B7)
+// ============================================================================
+
+/** Settles pending promise callbacks. */
+async function settle(): Promise<void>
+{
+    for (let i = 0; i < 5; i++) { await Promise.resolve(); }
+}
+
+/** The labels of the rendered tree rows and results, in order. */
+function labels(): (string | null)[]
+{
+    return [...container.querySelectorAll(".explorerpicker-label")].map((n) => n.textContent);
+}
+
+/** The labels of the search results, in order. */
+function resultLabels(): (string | null)[]
+{
+    return [...container.querySelectorAll(".explorerpicker-result-item .explorerpicker-label")]
+        .map((n) => n.textContent);
+}
+
+/** A folder tree as an agent answers it, one level per request. */
+const LEVELS: Record<string, ExplorerNode[]> = {
+    root: [makeFolder("docs", "Docs"), makeFolder("specs", "Specs")],
+    docs: [makeAsset("readme", "README", "docs"), makeFolder("guides", "Guides", "docs")],
+    guides: [makeAsset("setup", "Setup guide", "guides")],
+};
+
+/** An onLoadChildren that answers from LEVELS. */
+function levelLoader(): ReturnType<typeof vi.fn>
+{
+    return vi.fn((r: { nodeId: string | null }) => Promise.resolve(LEVELS[r.nodeId ?? "root"] ?? []));
+}
+
+describe("onLoadChildren and onSearch: nothing reaches apiBase", () =>
+{
+    let realFetch: typeof window.fetch;
+    let windowFetch: ReturnType<typeof vi.fn>;
+
+    beforeEach(() =>
+    {
+        realFetch = window.fetch;
+        windowFetch = vi.fn();
+        window.fetch = windowFetch as unknown as typeof window.fetch;
+        Element.prototype.scrollIntoView ??= () => undefined;
+    });
+
+    afterEach(() =>
+    {
+        window.fetch = realFetch;
+    });
+
+    test("mount, expand, search, load more, refresh, confirm and cancel make no request at all", async () =>
+    {
+        const fetchFn = vi.fn();
+        const ontologyFetchFn = vi.fn();
+        let failRoots = true;
+        const onLoadChildren = vi.fn((r: { nodeId: string | null }) =>
+        {
+            if (r.nodeId === null && failRoots) { failRoots = false; return Promise.reject(new Error("offline")); }
+            return Promise.resolve(LEVELS[r.nodeId ?? "root"] ?? []);
+        });
+        const onSearch = vi.fn((r: { query: string; cursor: string | null }) => Promise.resolve(r.cursor
+            ? { results: [makeAsset("more", "More result", "docs")], cursor: null }
+            : { results: [makeAsset("readme", "README", "docs")], cursor: "page-2" }));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn, ontologyFetchFn,
+            onLoadChildren, onSearch, onCancel: vi.fn(), mode: "multi" }));
+        await settle();
+
+        // The failed root load shows the banner; refresh() asks the provider again.
+        expect(container.querySelector<HTMLElement>(".explorerpicker-error")!.style.display).toBe("");
+        await picker.refresh();
+        expect(labels()).toEqual(["Docs", "Specs"]);
+
+        await picker.expandNode("docs");
+        await picker.expandNode("guides");
+        picker.setSearchQuery("read");
+        await settle();
+        container.querySelector<HTMLElement>(".explorerpicker-load-more")!.click();
+        await settle();
+        expect(resultLabels()).toEqual(["README", "More result"]);
+
+        container.querySelector<HTMLElement>(".explorerpicker-result-item")!.click();
+        queryConfirmBtn()!.click();
+        queryCancelBtn()!.click();
+
+        expect(onLoadChildren.mock.calls.map((c) => c[0])).toEqual(
+            [{ nodeId: null }, { nodeId: null }, { nodeId: "docs" }, { nodeId: "guides" }]);
+        expect(onSearch.mock.calls.map((c) => c[0])).toEqual(
+            [{ query: "read", cursor: null }, { query: "read", cursor: "page-2" }]);
+        expect(fetchFn).not.toHaveBeenCalled();
+        expect(ontologyFetchFn).not.toHaveBeenCalled();
+        expect(windowFetch).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("without onSearch the search box is hidden and setSearchQuery refuses", async () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, onLoadChildren: levelLoader() }));
+        await settle();
+
+        expect(querySearchInput()).toBeNull();
+        expect(() => picker.setSearchQuery("x")).toThrow(/needs onSearch/);
+        expect(windowFetch).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("the Recent and Starred sections are not shown", async () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ onLoadChildren: levelLoader() }));
+
+        expect(container.querySelector(".explorerpicker-section-recent")).toBeNull();
+        expect(container.querySelector(".explorerpicker-section-starred")).toBeNull();
+        expect(container.querySelector(".explorerpicker-section-browse")).not.toBeNull();
+        picker.destroy();
+    });
+});
+
+describe("onLoadChildren", () =>
+{
+    test("the roots come from staticNodes when given, and their known children count as loaded", async () =>
+    {
+        const onLoadChildren = levelLoader();
+        const picker = createExplorerPicker(defaultOpts({ onLoadChildren }));
+
+        await picker.expandNode("eng");
+        await picker.expandNode("platform");
+
+        expect(onLoadChildren).not.toHaveBeenCalled();
+        expect(labels()).toContain("Architecture Diagrams");
+        picker.destroy();
+    });
+
+    test("expanding a folder staticNodes leaves empty asks once, and a collapse keeps the answer", async () =>
+    {
+        const onLoadChildren = levelLoader();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeFolder("docs", "Docs")],
+            onLoadChildren }));
+
+        await picker.expandNode("docs");
+        picker.collapseNode("docs");
+        await picker.expandNode("docs");
+
+        expect(onLoadChildren.mock.calls.map((c) => c[0])).toEqual([{ nodeId: "docs" }]);
+        expect(labels()).toEqual(["Docs", "README", "Guides"]);
+        picker.destroy();
+    });
+
+    test("an answer listing the node, its ancestor or another parent's child is cut to the real children",
+        async () =>
+        {
+            const answer = [
+                makeFolder("guides", "Guides"),                 // the node itself
+                makeFolder("docs", "Docs again"),               // its parent
+                makeAsset("stray", "Stray", "elsewhere"),       // another parent's child
+                makeAsset("setup", "Setup guide", "guides"),    // a real child
+                makeAsset("orphan", "Orphan", null),            // no parent: it is set to the node
+            ];
+            const original = structuredClone(answer);
+            const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+            const onLoadChildren = vi.fn((r: { nodeId: string | null }) =>
+                Promise.resolve(r.nodeId === "guides" ? answer : LEVELS[r.nodeId ?? "root"] ?? []));
+            const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, onLoadChildren }));
+            await settle();
+
+            await picker.expandNode("docs");
+            await picker.expandNode("guides");
+
+            expect(labels()).toEqual(["Docs", "README", "Guides", "Setup guide", "Orphan", "Specs"]);
+            expect(warn.mock.calls.filter((c) => c.join(" ").includes("Skipped node"))).toHaveLength(3);
+            expect(answer).toEqual(original);
+            queryNodeRow("orphan")!.click();
+            expect(picker.getSelection()[0].breadcrumb).toBe("Docs > Guides > Orphan");
+            warn.mockRestore();
+            picker.destroy();
+        });
+
+    test("resourceTypeFilter applies to an answer, as it does to staticNodes", async () =>
+    {
+        const onLoadChildren = vi.fn(() => Promise.resolve([
+            makeAsset("d1", "Diagram", "docs", "diagrams.diagram"), makeAsset("s1", "Sheet", "docs", "sheets.sheet")]));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeFolder("docs", "Docs")],
+            onLoadChildren, resourceTypeFilter: ["diagrams.diagram"] }));
+
+        await picker.expandNode("docs");
+
+        expect(labels()).toEqual(["Docs", "Diagram"]);
+        picker.destroy();
+    });
+
+    test("a failed root load shows the banner and reaches onError", async () =>
+    {
+        const onError = vi.fn();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, onError,
+            onLoadChildren: vi.fn(() => Promise.reject(new Error("offline"))) }));
+        await settle();
+
+        expect(container.querySelector<HTMLElement>(".explorerpicker-error")!.style.display).toBe("");
+        expect(onError).toHaveBeenCalledWith(expect.any(Error), "loadInitialData");
+        picker.destroy();
+    });
+
+    test("a failed expand leaves the folder collapsed", async () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeFolder("docs", "Docs")],
+            onLoadChildren: vi.fn(() => Promise.reject(new Error("timeout"))) }));
+
+        await picker.expandNode("docs");
+
+        expect(picker.getState().expanded).toEqual([]);
+        picker.destroy();
+    });
+});
+
+describe("onSearch", () =>
+{
+    test("a newer search's answer wins over an older one that arrives late", async () =>
+    {
+        const answers: ((page: { results: ExplorerNode[]; cursor: string | null }) => void)[] = [];
+        const onSearch = vi.fn(() => new Promise<{ results: ExplorerNode[]; cursor: string | null }>(
+            (resolve) => { answers.push(resolve); }));
+        const picker = createExplorerPicker(defaultOpts({ onSearch }));
+
+        picker.setSearchQuery("old");
+        picker.setSearchQuery("new");
+        answers[1]({ results: [makeAsset("n", "New hit")], cursor: null });
+        await settle();
+        answers[0]({ results: [makeAsset("o", "Old hit")], cursor: null });
+        await settle();
+
+        expect(resultLabels()).toEqual(["New hit"]);
+        picker.destroy();
+    });
+
+    test("without onLoadChildren, onSearch replaces only the search request", async () =>
+    {
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(buildMockTree()) });
+        const onSearch = vi.fn(() => Promise.resolve({ results: [], cursor: null }));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn, onSearch }));
+        await settle();
+        const before = fetchFn.mock.calls.length;
+
+        picker.setSearchQuery("x");
+        await settle();
+
+        expect(onSearch).toHaveBeenCalledTimes(1);
+        expect(fetchFn.mock.calls.length).toBe(before);
+        expect(fetchFn.mock.calls.map((c) => c[0])).toContain("/api/v1/explorer/tree");
+        picker.destroy();
+    });
+});
+
+describe("showSearch and cancellable", () =>
+{
+    test("showSearch false hides the search box", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ showSearch: false }));
+
+        expect(querySearchInput()).toBeNull();
+        expect(queryTreeItems().length).toBeGreaterThan(0);
+        picker.destroy();
+    });
+
+    test("cancellable shows the Cancel button without onCancel", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ cancellable: true }));
+
+        expect(queryCancelBtn()).not.toBeNull();
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B7)
+// ============================================================================
+
+describe("surface channels", () =>
+{
+    beforeEach(() => { Element.prototype.scrollIntoView ??= () => undefined; });
+
+    test("selection fires after onSelectionChange with the whole selection as plain JSON", () =>
+    {
+        const order: string[] = [];
+        const onSelectionChange = vi.fn(() => order.push("legacy"));
+        const picker = createExplorerPicker(defaultOpts({ onSelectionChange, mode: "multi",
+            staticNodes: [makeAsset("a1", "Alpha"), makeAsset("a2", "Beta")] }));
+        const payloads: unknown[] = [];
+        picker.on("selection", (p) => { order.push("channel"); payloads.push(p); });
+
+        queryNodeRow("a1")!.click();
+        queryNodeRow("a2")!.click();
+
+        expect(order).toEqual(["legacy", "channel", "legacy", "channel"]);
+        expect(payloads[1]).toEqual(picker.getSelection());
+        expect(JSON.parse(JSON.stringify(payloads[1]))).toEqual(payloads[1]);
+        expect((payloads[1] as { nodeId: string }[]).map((s) => s.nodeId)).toEqual(["a1", "a2"]);
+        picker.destroy();
+    });
+
+    test("confirm fires after onConfirm, and without onConfirm", () =>
+    {
+        const order: string[] = [];
+        const picker = createExplorerPicker(defaultOpts({ onConfirm: () => order.push("legacy"),
+            staticNodes: [makeAsset("a1", "Alpha")] }));
+        picker.on("confirm", (p) => order.push(`channel:${(p as { nodeId: string }[])[0].nodeId}`));
+        queryNodeRow("a1")!.click();
+        queryConfirmBtn()!.click();
+        expect(order).toEqual(["legacy", "channel:a1"]);
+        picker.destroy();
+
+        const bare = createExplorerPicker({ container, staticNodes: [makeAsset("a1", "Alpha")] });
+        const seen: unknown[] = [];
+        bare.on("confirm", (p) => seen.push(p));
+        queryNodeRow("a1")!.click();
+        queryConfirmBtn()!.click();
+        expect(seen).toEqual([bare.getSelection()]);
+        bare.destroy();
+    });
+
+    test("a single-mode double-click confirms but, as before, sends no selection", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeAsset("a1", "Alpha")] }));
+        const seen: string[] = [];
+        picker.on("selection", () => seen.push("selection"));
+        picker.on("confirm", () => seen.push("confirm"));
+
+        queryNodeRow("a1")!.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(seen).toEqual(["confirm"]);
+        picker.destroy();
+    });
+
+    test("cancel fires after onCancel with the abandoned selection, from the button and from Escape", () =>
+    {
+        const order: string[] = [];
+        const picker = createExplorerPicker(defaultOpts({ onCancel: () => order.push("legacy"),
+            staticNodes: [makeAsset("a1", "Alpha")] }));
+        const payloads: unknown[] = [];
+        picker.on("cancel", (p) => { order.push("channel"); payloads.push(p); });
+
+        queryNodeRow("a1")!.click();
+        queryCancelBtn()!.click();
+        queryRoot()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+        expect(order).toEqual(["legacy", "channel", "legacy", "channel"]);
+        expect((payloads[0] as { nodeId: string }[]).map((s) => s.nodeId)).toEqual(["a1"]);
+        picker.destroy();
+    });
+
+    test("a throwing subscriber does not stop the next; unsubscribe stops delivery; unknown channels throw", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeAsset("a1", "Alpha")] }));
+        const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const seen: string[] = [];
+        picker.on("selection", () => { throw new Error("boom"); });
+        const off = picker.on("selection", () => seen.push("second"));
+
+        queryNodeRow("a1")!.click();
+        off();
+        queryNodeRow("a1")!.click();
+
+        expect(seen).toEqual(["second"]);
+        expect(() => picker.on("expand", () => undefined)).toThrow(/unknown channel/);
+        error.mockRestore();
+        picker.destroy();
+    });
+});
+
+describe("getState and setState", () =>
+{
+    test("round-trips expanded and selection, silently", async () =>
+    {
+        const onSelectionChange = vi.fn();
+        // onLoadChildren makes staticNodes' children count as loaded, so eng expands without a request.
+        const picker = createExplorerPicker(defaultOpts({ onSelectionChange, mode: "multi",
+            selectionTarget: "any", onLoadChildren: levelLoader() }));
+        await picker.expandNode("eng");
+        queryNodeRow("product")!.click();
+        const captured = picker.getState();
+        expect(captured).toEqual({ expanded: ["eng"], selection: ["product"] });
+        const channel = vi.fn();
+        picker.on("selection", channel);
+        onSelectionChange.mockClear();
+
+        picker.setState({ expanded: [], selection: [] });
+        expect(picker.getState()).toEqual({ expanded: [], selection: [] });
+        picker.setState(captured);
+
+        expect(picker.getState()).toEqual(captured);
+        expect(labels()).toContain("Product Team");
+        expect(queryNodeRow("product")!.classList.contains("explorerpicker-node-row-selected")).toBe(true);
+        expect(queryConfirmBtn()!.disabled).toBe(false);
+        expect(onSelectionChange).not.toHaveBeenCalled();
+        expect(channel).not.toHaveBeenCalled();
+        picker.destroy();
+    });
+
+    test("drops ids of nodes not loaded, as restoreState does", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts());
+
+        picker.setState({ expanded: ["eng", "ghost"], selection: ["marketing", "ghost"] });
+
+        expect(picker.getState()).toEqual({ expanded: ["eng"], selection: ["marketing"] });
+        picker.destroy();
+    });
+
+    test("a folder not loaded yet starts its load through onLoadChildren", async () =>
+    {
+        const onLoadChildren = levelLoader();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [makeFolder("docs", "Docs")],
+            onLoadChildren }));
+
+        picker.setState({ expanded: ["docs"] });
+        await settle();
+
+        expect(onLoadChildren).toHaveBeenCalledWith({ nodeId: "docs" });
+        expect(picker.getState().expanded).toEqual(["docs"]);
+        expect(labels()).toEqual(["Docs", "README", "Guides"]);
+        picker.destroy();
+    });
+
+    test("setData throws: there are no slots", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts());
+
+        expect(() => picker.setData("nodes", [])).toThrow(/no data slots/);
+        picker.destroy();
+    });
+});

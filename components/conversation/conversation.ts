@@ -76,7 +76,12 @@ export interface McpAppConfig
  */
 export interface ConversationMessage
 {
-    /** Unique message identifier.  Auto-generated if not provided. */
+    /**
+     * Unique message identifier: the message's DOM key and the target of its
+     * feedback, so keep it stable across writes of the session. Messages the
+     * component adds itself (addUserMessage, the send button, ...) get a
+     * generated one; a session passed in must carry its own.
+     */
     id: string;
 
     /** Who sent the message. */
@@ -191,7 +196,12 @@ export interface ConversationOptions
     /** Maximum messages to retain in buffer.  0 = unlimited.  Default: 0. */
     maxMessages?: number;
 
-    /** Initial session to load. */
+    /**
+     * The transcript to show. Over A2UI it updates in place: write the whole
+     * session after each reply, every message with its stable id, role,
+     * content and timestamp, and the transcript re-renders while the user's
+     * half-typed message, focus and scroll stay.
+     */
     session?: ConversationSession;
 
     /** Placeholder text for the input textarea.  Default: "Type a message...". */
@@ -322,7 +332,43 @@ export interface ConversationOptions
 
 const LOG_PREFIX = "[Conversation]";
 
-const _lu = (typeof window.createLogUtility === "function")
+/**
+ * Origin-relative base for the sub-resources Vditor.preview() fetches
+ * lazily: lute (its markdown engine), highlight.js, KaTeX and the other
+ * renderers (ADR-149, B7-2).
+ *
+ * The same derivation as MarkdownEditor's VDITOR_CDN, reproduced here
+ * because each component is built as a standalone script. Vditor builds
+ * these as `${cdn}/dist/js/...`, so this is the directory CONTAINING
+ * vditor's own `dist/`. Derived from the script's own origin so the mirror
+ * works on any host serving this library rather than one hardcoded domain.
+ *
+ * Pinned to the version the vendored tree serves. A Vditor upgrade must
+ * bump this, MarkdownEditor's constant and the tree in
+ * `scripts/vendor-closure.mjs` together.
+ */
+const VDITOR_VERSION = "3.11.2";
+
+const VDITOR_CDN = ((): string =>
+{
+    try
+    {
+        const self = document.currentScript as HTMLScriptElement | null;
+        const origin = self?.src
+            ? new URL(self.src).origin
+            : window.location.origin;
+
+        return `${origin}/lib/vditor-${VDITOR_VERSION}`;
+    }
+    catch
+    {
+        // Same-origin relative path. Never fall through to a public CDN:
+        // that is the behaviour this constant exists to remove.
+        return `/lib/vditor-${VDITOR_VERSION}`;
+    }
+})();
+
+const _lu =(typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
@@ -396,6 +442,29 @@ const DEFAULT_CANVAS_MAX_FRACTION = 0.6;
 const CANVAS_RESIZE_STEP_PX = 20;
 
 let mcpFrameCounter = 0;
+
+// ============================================================================
+// S2A — SURFACE CONTRACT HELPERS (readiness step 2 B7)
+// ============================================================================
+
+/** The channels on() accepts (surface contract, B7). */
+const SURFACE_CHANNELS = ["sendMessage", "feedback", "newSession", "clearSession"] as const;
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
+
+/** The roles a message may have. */
+const ROLES: readonly ConversationRole[] = ["user", "assistant", "system", "error"];
+
+/** True for a non-null object that is not an array. */
+function isPlainRecord(value: unknown): value is Record<string, unknown>
+{
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** True for a Date that holds a time (not an Invalid Date). */
+function isValidDate(value: unknown): value is Date
+{
+    return value instanceof Date && !Number.isNaN(value.getTime());
+}
 
 // ============================================================================
 // S3 — PRIVATE HELPERS: DOM
@@ -1001,6 +1070,30 @@ export interface ConversationHandle
     isStreaming(): boolean;
     isVisible(): boolean;
     getElement(): HTMLElement | null;
+
+    /**
+     * The surface contract (additive, readiness step 2 B7): replaces the
+     * transcript from the "session" slot as loadSession() does, silently (no
+     * callback, no channel), keeping the textarea draft, focus and scroll
+     * (at the bottom it stays at the bottom). Any other slot, or a value that
+     * is not a session, throws.
+     */
+    setData(slot: string, value: unknown): void;
+
+    /**
+     * Subscribes to "sendMessage" (the text sent), "feedback" ({ messageId,
+     * sentiment, comment, timestamp }), "newSession" (the new session's id)
+     * or "clearSession" (the cleared session's id); any other channel throws.
+     * Each fires after its legacy callback, and without it. Payloads are
+     * plain JSON. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** Nothing to restore (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+
+    /** Nothing to restore (ADR-229): does nothing. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class Conversation implements ConversationHandle
@@ -1049,6 +1142,20 @@ export class Conversation implements ConversationHandle
     private canvasFrame: McpAppFrame | null = null;
     private expandedMsgId: string | null = null;
     private themeObserver: MutationObserver | null = null;
+
+    /**
+     * Puts the message list's scroll back where setData found it: at the
+     * bottom, or at the user's place. Armed only while setData's loadSession
+     * renders, so each preview started then carries it to its after().
+     */
+    private settlingScroll: (() => void) | null = null;
+
+    /** The latest setData's settle; an older one's late previews must not move the scroll. */
+    private latestScrollSettle: (() => void) | null = null;
+
+    /** Surface contract channel subscribers, one Set per declared channel (B7). */
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
 
     /**
      * Creates a new Conversation instance and builds its DOM.
@@ -1198,6 +1305,7 @@ export class Conversation implements ConversationHandle
         this.canvasHandleEl = null;
         this.canvasFrame = null;
         this.messageElements.clear();
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
         this.destroyed = true;
         logDebug("Destroyed:", this.instanceId);
     }
@@ -1432,6 +1540,7 @@ export class Conversation implements ConversationHandle
             {
                 const sess = await this.opts.onNewSession();
                 this.loadSession(sess);
+                this.emitChannel("newSession", () => this.session.id);
                 return;
             }
             catch (err)
@@ -1440,6 +1549,9 @@ export class Conversation implements ConversationHandle
             }
         }
         this.loadSession(this.createDefaultSession());
+        // The transcript is gone, so a subscriber (over A2UI, the agent) must
+        // hear it, or its next write of the session would bring it back (B7).
+        this.emitChannel("newSession", () => this.session.id);
     }
 
     /**
@@ -1463,6 +1575,7 @@ export class Conversation implements ConversationHandle
         this.session.updatedAt = new Date();
         this.clearMessageList();
         logDebug("Session cleared:", this.session.id);
+        this.emitChannel("clearSession", () => this.session.id);
     }
 
     /**
@@ -1600,6 +1713,153 @@ export class Conversation implements ConversationHandle
     getElement(): HTMLElement | null
     {
         return this.rootEl;
+    }
+
+    // ========================================================================
+    // PUBLIC — SURFACE CONTRACT (additive, readiness step 2 B7)
+    // ========================================================================
+
+    /**
+     * Replaces the transcript from the "session" slot silently: loadSession()
+     * as it is, with no callback and no channel. An agent rewrites the whole
+     * session after each reply (B7-1), so what the user is in the middle of
+     * stays: the textarea keeps its half-typed message and focus, and the
+     * message list keeps its place. A user at the bottom stays at the bottom,
+     * so the new reply shows; one who scrolled up keeps their scroll, which
+     * clearing and refilling the list would otherwise reset. The place is
+     * applied again as each re-rendered reply's preview finishes, because
+     * Vditor fills a bubble asynchronously: until then the list is shorter
+     * (a restored scroll clamps) and then grows (the bottom moves away).
+     *
+     * @param slot - Must be "session"
+     * @param value - The whole session, as ConversationSession describes it
+     */
+    setData(slot: string, value: unknown): void
+    {
+        if (slot !== "session")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "session".');
+        }
+
+        this.assertSession(value);
+
+        const list = this.messageListEl;
+        const scrollTop = list?.scrollTop ?? 0;
+        // scrollToBottom, not autoScrollMessages: the clear's clamp queues a
+        // scroll event that can read "not at bottom" before a late preview.
+        const settle = this.autoScrollEnabled
+            ? (): void => { this.scrollToBottom(); }
+            : (): void => { if (list) { list.scrollTop = scrollTop; } };
+
+        this.latestScrollSettle = settle;
+        this.settlingScroll = settle;
+
+        try { this.loadSession(value); }
+        finally { this.settlingScroll = null; }
+
+        settle();
+
+        logDebug("setData(session):", value.id, value.messages.length, "messages");
+    }
+
+    /**
+     * Subscribes to a declared channel.
+     *
+     * @param channel - One of SURFACE_CHANNELS
+     * @param handler - Receives each payload
+     * @returns The unsubscribe
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-229): the transcript is the "session" slot. */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /**
+     * Refuses a value setData cannot render: loadSession copies the messages
+     * and every bubble keys on its id and labels itself with its timestamp's
+     * time, so a missing id or a timestamp that is not a Date would break
+     * the transcript part-way. An agent's ISO strings arrive as Dates: the
+     * A2UI adapter revives every date-time path before the write.
+     *
+     * @param value - The slot value
+     */
+    private assertSession(value: unknown): asserts value is ConversationSession
+    {
+        const where = `${LOG_PREFIX} setData("session")`;
+
+        if (!isPlainRecord(value) || typeof value.id !== "string")
+        {
+            throw new Error(`${where}: expected a session with a string id, got `
+                + `${Array.isArray(value) ? "an array" : value === null ? "null" : typeof value}.`);
+        }
+
+        if (!Array.isArray(value.messages))
+        {
+            throw new Error(`${where}: messages must be an array of messages.`);
+        }
+
+        value.messages.forEach((m: unknown, i: number) =>
+        {
+            const bad = !isPlainRecord(m) ? "is not a message"
+                : typeof m.id !== "string" ? "has no string id"
+                    : !ROLES.includes(m.role as ConversationRole) ? `has the role ${JSON.stringify(m.role)}`
+                        : typeof m.content !== "string" ? "has no string content"
+                            : !isValidDate(m.timestamp) ? "has a timestamp that is not a Date"
+                                : null;
+
+            if (bad)
+            {
+                throw new Error(`${where}: message ${i} ${bad}. Each message needs id, role (`
+                    + `${ROLES.join(", ")}), content and a Date timestamp.`);
+            }
+        });
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by try/catch.
+     * The caller has already invoked the legacy callback. Each subscriber
+     * gets its own payload, built only when somebody listens.
+     *
+     * @param channel - The declared channel
+     * @param buildPayload - Builds a plain-JSON payload
+     */
+    private emitChannel(channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        for (const handler of this.channelHandlers.get(channel)!)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
     }
 
     // ========================================================================
@@ -2082,7 +2342,7 @@ export class Conversation implements ConversationHandle
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(container, markdown,
-                this.getVditorPreviewConfig(container));
+                this.getVditorPreviewConfig(container, this.settlingScroll));
         }
         else
         {
@@ -2093,14 +2353,24 @@ export class Conversation implements ConversationHandle
 
     /**
      * Returns the Vditor preview configuration for assistant messages.
+     *
+     * @param container - The bubble's content element
+     * @param settle - setData's scroll settle, when setData's render started
+     *     this preview; null otherwise, and then after() leaves the scroll be
      */
     private getVditorPreviewConfig(
-        container: HTMLElement
+        container: HTMLElement, settle: (() => void) | null = null
     ): Record<string, unknown>
     {
         const isDark = document.documentElement
             .getAttribute("data-bs-theme") === "dark";
         return {
+            // (CRITICAL) Without this, Vditor.preview() fetches lute, KaTeX
+            // and its other renderers from `unpkg.com` at runtime, as script
+            // tags it injects itself: executable third-party code on a page
+            // that may be showing an admin session. VDITOR_CDN points at this
+            // library's own mirror of the full tree (ADR-149, B7-2).
+            cdn: VDITOR_CDN,
             mode: isDark ? "dark" : "light",
             hljs: {
                 enable: true,
@@ -2115,6 +2385,7 @@ export class Conversation implements ConversationHandle
             after: () =>
             {
                 fixRenderedTableStyles(container);
+                if (settle && settle === this.latestScrollSettle) { settle(); }
                 logDebug("Assistant content rendered");
             },
         };
@@ -3025,6 +3296,7 @@ export class Conversation implements ConversationHandle
         {
             this.opts.onSendMessage(text, this.getSession());
         }
+        this.emitChannel("sendMessage", () => text);
     }
 
     /**
@@ -3184,6 +3456,13 @@ export class Conversation implements ConversationHandle
         {
             this.opts.onFeedback(msgId, feedback, this.getSession());
         }
+        // A comment left blank is null, so the key survives the JSON copy.
+        this.emitChannel("feedback", () => ({
+            messageId: msgId,
+            sentiment: feedback.sentiment,
+            comment: feedback.comment ?? null,
+            timestamp: feedback.timestamp.toISOString(),
+        }));
         logDebug("Feedback submitted:", msgId,
             feedback.sentiment);
     }

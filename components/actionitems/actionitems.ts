@@ -382,7 +382,10 @@ export interface ActionItemsOptions
     /** Show due date display. Default: true. */
     showDueDates?: boolean;
 
-    /** Show comment count badge and comment slot. Default: true. */
+    /**
+     * Show comment count badge and comment slot. The slot is filled by
+     * onRenderCommentSlot, and opens empty without it. Default: true.
+     */
     showComments?: boolean;
 
     /** Show tags/labels on items. Default: true. */
@@ -505,7 +508,7 @@ export interface ActionItemsOptions
      * Mount an InlineToolbar in the panel header offering a secondary
      * alphabetic sort (asc/desc) of items within each section, plus
      * expand-all / collapse-all. Default: false (opt-in).
-     * No-op when `window.createInlineToolbar` is not loaded.
+     * Throws when `window.createInlineToolbar` is not loaded.
      */
     showInlineToolbar?: boolean;
 
@@ -588,6 +591,35 @@ export interface ActionItemsHandle
 
     /** Destroy the component and clean up. */
     destroy(): void;
+
+    /**
+     * The surface contract (additive): replaces the list from the "items" slot silently (no callback, no
+     * channel), unlike addItem(), removeItem() and updateItem(), which fire. Selection, collapsed sections,
+     * sort, filter and scroll stay; ids the new list leaves out are dropped from the selection. An item the
+     * user is editing keeps the user's copy and typed text when the new list still holds its id, in the new
+     * list's position, and is dropped when it does not. Any other slot, or a value that is not an array of
+     * items with ids, throws.
+     */
+    setData(slot: string, value: unknown): void;
+
+    /**
+     * Subscribes to "itemCreate" (the item), "itemUpdate" ({ itemId, changes }), "statusChange"
+     * ({ itemId, oldStatus, newStatus }), "itemReorder" ({ itemId, newOrder, newParentId }),
+     * "assignmentRequest" ({ itemId, currentAssignee }), "itemDelete" (the id), "bulkDelete" and "bulkAssign"
+     * (the ids) or "selection" (the selected ids); any other channel throws. Each fires after its legacy
+     * callback, and without it. Payloads are plain JSON copies; an absent value in a record is null. Returns
+     * the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** { selection, collapsed, sort, filter, showArchived }: ids, statuses, a SortOption, a filter or null. */
+    getState(): Record<string, unknown>;
+
+    /**
+     * Silently (no callback, no channel) restores the keys given. Selection becomes the given ids that exist;
+     * filter null clears it. An unknown sort or status, or a value of the wrong type, throws.
+     */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -959,6 +991,70 @@ function buildItemFromPartial(
         createdBy: partial.createdBy,
         commentCount: partial.commentCount ?? 0,
     };
+}
+
+/**
+ * The component's own copy of a supplied item, as the constructor has always
+ * taken it: a new object, with tags and commentCount filled when absent.
+ *
+ * @param item - Item from options.items or the "items" slot
+ * @returns A copy the component can mutate without touching the caller's
+ */
+function copySuppliedItem(item: ActionItem): ActionItem
+{
+    return {
+        ...item,
+        tags: item.tags ?? [],
+        commentCount: item.commentCount ?? 0,
+    };
+}
+
+// ============================================================================
+// S4A: SURFACE CONTRACT HELPERS (readiness step 2 B7)
+// ============================================================================
+
+/** The channels on() accepts (surface contract, B7). */
+const SURFACE_CHANNELS = [
+    "itemCreate", "itemUpdate", "statusChange", "itemReorder", "assignmentRequest",
+    "itemDelete", "bulkDelete", "bulkAssign", "selection",
+] as const;
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
+
+/** Every status a section can be collapsed for, as getState().collapsed names them. */
+const ALL_STATUSES: readonly ActionItemStatus[] = ["not-started", "in-progress", "done", "archived"];
+
+/** True for a non-null object that is not an array. */
+function isPlainRecord(value: unknown): value is Record<string, unknown>
+{
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** A plain-JSON copy for a channel payload, sharing nothing with the component's state. */
+function toJsonCopy<T>(value: T): T
+{
+    return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/**
+ * A plain-JSON copy of an itemUpdate change set. A property set to undefined
+ * (an unassigned item, a move to the top level) becomes null, because a JSON
+ * copy would drop it and the payload would no longer say what changed.
+ */
+function toChangesPayload(changes: Partial<ActionItem>): Record<string, unknown>
+{
+    return JSON.parse(JSON.stringify(changes, function (this: unknown, _key: string, value: unknown)
+    {
+        return value === undefined && this === changes ? null : value;
+    })) as Record<string, unknown>;
+}
+
+/** A typed draft in an edit box, carried across a re-render. */
+interface EditDraft
+{
+    value: string;
+    focused: boolean;
+    selectionStart: number | null;
+    selectionEnd: number | null;
 }
 
 // ============================================================================
@@ -1716,6 +1812,10 @@ export class ActionItems implements ActionItemsHandle
     /** Whether the component has been destroyed. */
     private destroyed = false;
 
+    /** Surface contract channel subscribers, one Set per declared channel (B7). */
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
+
     /**
      * Creates a new ActionItems instance.
      *
@@ -1809,11 +1909,7 @@ export class ActionItems implements ActionItemsHandle
      */
     private initializeItems(initialItems: ActionItem[]): void
     {
-        this.items = initialItems.map(item => ({
-            ...item,
-            tags: item.tags ?? [],
-            commentCount: item.commentCount ?? 0,
-        }));
+        this.items = initialItems.map(copySuppliedItem);
 
         this.updateGlobalIndex();
     }
@@ -3577,6 +3673,11 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onAssignmentRequest(item.id, item.assignee);
         }
+
+        this.emitChannel("assignmentRequest", () => ({
+            itemId: item.id,
+            currentAssignee: item.assignee ? toJsonCopy(item.assignee) : null,
+        }));
     }
 
     // ========================================================================
@@ -3594,6 +3695,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onItemCreate(item);
         }
+
+        this.emitChannel("itemCreate", () => toJsonCopy(item));
     }
 
     /**
@@ -3610,6 +3713,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onItemUpdate(itemId, changes);
         }
+
+        this.emitChannel("itemUpdate", () => ({ itemId, changes: toChangesPayload(changes) }));
     }
 
     /**
@@ -3623,6 +3728,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onItemDelete(itemId);
         }
+
+        this.emitChannel("itemDelete", () => itemId);
     }
 
     /**
@@ -3642,6 +3749,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onStatusChange(itemId, oldStatus, newStatus);
         }
+
+        this.emitChannel("statusChange", () => ({ itemId, oldStatus, newStatus }));
     }
 
     /**
@@ -3681,6 +3790,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onSelectionChange([...this.selectedIds]);
         }
+
+        this.emitChannel("selection", () => [...this.selectedIds]);
     }
 
     /**
@@ -3700,6 +3811,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onItemReorder(itemId, newOrder, newParentId);
         }
+
+        this.emitChannel("itemReorder", () => ({ itemId, newOrder, newParentId: newParentId ?? null }));
     }
 
     /**
@@ -3729,6 +3842,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onBulkDelete(ids);
         }
+
+        this.emitChannel("bulkDelete", () => [...ids]);
     }
 
     /**
@@ -3742,6 +3857,8 @@ export class ActionItems implements ActionItemsHandle
         {
             this.options.onBulkAssign(ids);
         }
+
+        this.emitChannel("bulkAssign", () => [...ids]);
     }
 
     // ========================================================================
@@ -5999,6 +6116,297 @@ export class ActionItems implements ActionItemsHandle
     }
 
     // ========================================================================
+    // S7.27: SURFACE CONTRACT (additive, readiness step 2 B7)
+    // ========================================================================
+
+    /**
+     * Replaces the list from the "items" slot silently: no callback and no
+     * channel, unlike addItem(), removeItem() and updateItem(). An agent
+     * rewrites the list mid-conversation (B7-1), so the user's selection,
+     * collapsed sections, sort, filter and scroll stay. An item the user is
+     * editing is their work in progress: when the new list still holds its
+     * id it keeps the user's copy, in the new list's position, with its edit
+     * box and typed text; when the list leaves it out, it is dropped.
+     *
+     * @param slot - Must be "items"
+     * @param value - The whole list, each item as ActionItem describes it
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "items")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "items".');
+        }
+
+        if (!Array.isArray(value))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("items"): expected an array of items, got `
+                + `${value === null ? "null" : typeof value}. Pass the whole list, as getItems() returns it.`);
+        }
+
+        const missing = value.findIndex((row) => !isPlainRecord(row) || typeof row.id !== "string");
+
+        if (missing >= 0)
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("items"): item ${missing} is not an item with a string id. `
+                + "Each entry is an ActionItem.");
+        }
+
+        const editing = new Map(
+            this.items.filter((i) => this.editingItems.has(i.id)).map((i) => [i.id, i]));
+        const rows = value as ActionItem[];
+
+        this.renderKeepingWork(() =>
+        {
+            this.items = rows.map((row) => editing.get(row.id) ?? copySuppliedItem(row));
+            this.pruneMissingIds();
+            this.updateGlobalIndex();
+        });
+
+        logDebug("setData(items):", this.items.length, "items;", this.editingItems.size, "still being edited");
+    }
+
+    /**
+     * Subscribes to a declared channel.
+     *
+     * @param channel - One of SURFACE_CHANNELS
+     * @param handler - Receives each payload
+     * @returns The unsubscribe
+     */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /**
+     * The view state: the selected ids, the collapsed sections, the sort,
+     * the filter (null when none) and whether archived items are shown.
+     *
+     * @returns A JSON-serialisable record of the declared stateKeys
+     */
+    public getState(): Record<string, unknown>
+    {
+        return {
+            selection: [...this.selectedIds],
+            collapsed: [...this.collapsedSections],
+            sort: this.currentSort,
+            filter: this.activeFilter ? toJsonCopy(this.activeFilter) : null,
+            showArchived: this.showArchived,
+        };
+    }
+
+    /**
+     * Restores state captured by getState() silently: no onSelectionChange,
+     * no onCollapseStateChange and no channel. Keys left out (or undefined)
+     * are left alone. Selection becomes the given ids that exist, as
+     * TreeGrid's does; filter null clears the filter.
+     *
+     * @param state - A partial getState() record
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        const { selection, collapsed, sort, filter, showArchived } = state;
+
+        if (selection !== undefined
+            && !(Array.isArray(selection) && selection.every((id) => typeof id === "string")))
+        {
+            throw new Error(`${LOG_PREFIX} setState: selection must be an array of item ids.`);
+        }
+
+        if (collapsed !== undefined && !(Array.isArray(collapsed)
+            && collapsed.every((s) => ALL_STATUSES.includes(s as ActionItemStatus))))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: collapsed must be an array of statuses, from `
+                + `${ALL_STATUSES.map((s) => `"${s}"`).join(", ")}.`);
+        }
+
+        if (sort !== undefined
+            && !(typeof sort === "string" && Object.prototype.hasOwnProperty.call(SORT_LABELS, sort)))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: sort must be a SortOption, one of `
+                + `${Object.keys(SORT_LABELS).map((s) => `"${s}"`).join(", ")}.`);
+        }
+
+        if (filter !== undefined && filter !== null
+            && !(isPlainRecord(filter) && Object.values(filter).every((v) => v === undefined || Array.isArray(v))))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: filter must be null or an ActionItemFilter, whose facets are arrays.`);
+        }
+
+        if (showArchived !== undefined && typeof showArchived !== "boolean")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: showArchived must be true or false, got ${typeof showArchived}.`);
+        }
+
+        this.renderKeepingWork(() =>
+        {
+            if (selection !== undefined)
+            {
+                const known = new Set(this.items.map((i) => i.id));
+                this.selectedIds = new Set((selection as string[]).filter((id) => known.has(id)));
+            }
+
+            if (collapsed !== undefined) { this.collapsedSections = new Set(collapsed as ActionItemStatus[]); }
+            if (sort !== undefined) { this.currentSort = sort as SortOption; }
+            if (filter !== undefined) { this.activeFilter = filter === null ? null : toJsonCopy(filter); }
+            if (showArchived !== undefined) { this.showArchived = showArchived; }
+        });
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by try/catch.
+     * The caller has already invoked the legacy callback. Each subscriber
+     * gets its own fresh copy, built only when somebody listens.
+     *
+     * @param channel - The declared channel
+     * @param buildPayload - Builds a plain-JSON payload
+     */
+    private emitChannel(channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        const handlers = this.channelHandlers.get(channel)!;
+
+        if (handlers.size === 0)
+        {
+            return;
+        }
+
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
+    }
+
+    /**
+     * Drops ids that no longer name an item from the selection, the edit
+     * boxes, the open comment slots, the focus and the range anchor.
+     */
+    private pruneMissingIds(): void
+    {
+        const known = new Set(this.items.map((i) => i.id));
+        const keep = (ids: Iterable<string>): string[] => [...ids].filter((id) => known.has(id));
+
+        this.selectedIds = new Set(keep(this.selectedIds));
+        this.expandedComments = new Set(keep(this.expandedComments));
+
+        for (const id of [...this.editingItems.keys()])
+        {
+            if (!known.has(id)) { this.editingItems.delete(id); }
+        }
+
+        if (this.focusedItemId !== null && !known.has(this.focusedItemId)) { this.focusedItemId = null; }
+        if (this.lastSelectedId !== null && !known.has(this.lastSelectedId)) { this.lastSelectedId = null; }
+    }
+
+    /**
+     * Applies a silent change and re-renders, keeping what the user was in
+     * the middle of: the body's scroll and the text typed into each edit
+     * box. A plain render() rebuilds every edit box from the item's saved
+     * content, so the typed text, which lives only in the input, would be
+     * lost.
+     *
+     * @param change - Mutates the component's state; fires nothing
+     */
+    private renderKeepingWork(change: () => void): void
+    {
+        const scrollTop = this.bodyElement()?.scrollTop ?? 0;
+        const drafts = this.captureEditDrafts();
+
+        change();
+        this.render();
+
+        const body = this.bodyElement();
+        if (body) { body.scrollTop = scrollTop; }
+        this.restoreEditDrafts(drafts);
+    }
+
+    /** The scrolling body, or null before the first render or after destroy. */
+    private bodyElement(): HTMLElement | null
+    {
+        return this.rootEl ? this.rootEl.querySelector<HTMLElement>(`.${CLS}-body`) : null;
+    }
+
+    /** The typed text in each open edit box, keyed by item id. */
+    private captureEditDrafts(): Map<string, EditDraft>
+    {
+        const drafts = new Map<string, EditDraft>();
+
+        if (!this.rootEl) { return drafts; }
+
+        for (const input of this.rootEl.querySelectorAll<HTMLInputElement>(`.${CLS}-edit-input`))
+        {
+            const id = input.closest("[data-id]")?.getAttribute("data-id");
+
+            if (!id) { continue; }
+
+            drafts.set(id, {
+                value: input.value,
+                focused: input === document.activeElement,
+                selectionStart: input.selectionStart,
+                selectionEnd: input.selectionEnd,
+            });
+        }
+
+        return drafts;
+    }
+
+    /**
+     * Puts typed text back into the rebuilt edit boxes. The caret and focus
+     * are restored on the next frame, after renderEditInput's own focus,
+     * which moves the caret to the end.
+     *
+     * @param drafts - From captureEditDrafts(), before the render
+     */
+    private restoreEditDrafts(drafts: Map<string, EditDraft>): void
+    {
+        if (!this.rootEl || drafts.size === 0) { return; }
+
+        for (const input of this.rootEl.querySelectorAll<HTMLInputElement>(`.${CLS}-edit-input`))
+        {
+            const id = input.closest("[data-id]")?.getAttribute("data-id");
+            const draft = id ? drafts.get(id) : undefined;
+
+            if (!draft) { continue; }
+
+            input.value = draft.value;
+
+            if (draft.focused)
+            {
+                requestAnimationFrame(() =>
+                {
+                    input.focus();
+                    input.setSelectionRange(draft.selectionStart, draft.selectionEnd);
+                });
+            }
+        }
+    }
+
+    // ========================================================================
     // S7.8: HOVER CARD (ADR-126)
     // ========================================================================
 
@@ -6144,6 +6552,8 @@ export class ActionItems implements ActionItemsHandle
         this.cleanup();
         this.destroyed = true;
 
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
+
         if (this.hoverCard)
         {
             try { this.hoverCard.destroy(); }
@@ -6240,6 +6650,11 @@ function buildHandle(instance: ActionItems): ActionItemsHandle
         scrollToItem: (id) => instance.scrollToItem(id),
         getElement: () => instance.getElement(),
         destroy: () => instance.destroy(),
+        // Surface contract (additive, readiness step 2 B7)
+        setData: (slot, value) => instance.setData(slot, value),
+        on: (channel, handler) => instance.on(channel, handler),
+        getState: () => instance.getState(),
+        setState: (state) => instance.setState(state),
     };
 }
 

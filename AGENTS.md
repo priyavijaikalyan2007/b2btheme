@@ -508,12 +508,20 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   declares it. The adapter then mounts it in a `position: relative` box whose
   `min-height` is `defaultSize.h`; otherwise it lands against the page and
   adds no height to the surface (#41, ADR-224).
-- **`protocol.providers: { <option>: { request, concurrency? } }`: a callback
+- **`protocol.providers: { <option>: { request, concurrency?, required? } }`: a callback
   that loads data on demand** (`onLoadChildren`, `onSearch`, `fetchFn`). The
   agent answers it (ADR-225). Declare `concurrency: "queue"` for keyed loads (a
   node's children, a page); the default `"latest"` suits searches. A provider
   makes the component `surface`. Its conformance glue needs a
   `request(request, handle)` trigger for G3.
+- **`required: true` on a provider: the catalog requires it bound** (ADR-234).
+  The adapter wires a provider only when the agent binds its `on<Request>`,
+  its `<request>Result` and `eventData`; an unbound one leaves the component on
+  its host path. When that path does something an agent must not trigger
+  (ExplorerPicker without `onLoadChildren` fetches the host's API with the
+  user's credentials), declare `required: true`: the catalog then requires all
+  three, so a component without them fails validation and never mounts. G3
+  binds required providers itself; the render test needs an `OVERRIDES` entry.
 - **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
   callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`), callbacks
   whose information `value` already carries, decisions (`onDragValidate`,
@@ -570,6 +578,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   depend on (DocViewer's `activePage` must name one of its `pages`,
   DynamicFormSwitcher's `initialVariant` one of its `variants`); every G3 test
   mounts with them, and the rebuild test holds them fixed.
+- **A glue's `slotSamples`** give a slot a sample of its own when the
+  generic `{ id, name }` rows would fail the component's input validation
+  (Conversation's `session` needs timestamps, RelationshipManager's
+  `relationships` a `createdAt`). The `slots-accept-data` check feeds that
+  sample to the slot instead (B7). Don't make the component accept junk.
 - **A glue trigger returns `"async"`** when the gesture reaches the channel
   only after a promise settles (Stepper's finish awaits validation). The
   synchronous conformance checks record a warning; G3 waits for it.

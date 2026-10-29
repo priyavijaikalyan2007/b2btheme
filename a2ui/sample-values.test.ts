@@ -62,8 +62,8 @@ describe("sampleValue", () =>
 
     test("an unsupported keyword is a literate error naming it and the pointer", () =>
     {
-        expect(() => sampleValue({ type: "string", pattern: "^#" }, 0, ROOT, "#/x"))
-            .toThrow(/unsupported keyword "pattern" at #\/x.*extend a2ui\/sample-values\.ts/);
+        expect(() => sampleValue({ type: "string", minLength: 3 }, 0, ROOT, "#/x"))
+            .toThrow(/unsupported keyword "minLength" at #\/x.*extend a2ui\/sample-values\.ts/);
     });
 
     test("an unresolvable $ref is a literate error", () =>
@@ -95,6 +95,15 @@ describe("sampleValue — readiness step 2 B2", () =>
 
         expect([sampleValue(schema, 0, {}), sampleValue(schema, 1, {})]).toEqual([1, 2]);
         expect([sampleValue(asConst, 0, {}), sampleValue(asConst, 1, {})]).toEqual([1, 2]);
+    });
+
+    test("a pattern the plain samples match keeps them; any other pattern is refused (B7)", () =>
+    {
+        const icon = { type: "string", pattern: "^[A-Za-z0-9_-]+$" };
+
+        expect([sampleValue(icon, 0, {}), sampleValue(icon, 1, {})]).toEqual(["a", "b"]);
+        expect(() => sampleValue({ type: "string", pattern: "^#" }, 0, {}, "#/x"))
+            .toThrow(/the sample "a" does not match pattern "\^#" on type "string" at #\/x/);
     });
 
     test("locale and timezone strings are real ones; other strings are not", () =>

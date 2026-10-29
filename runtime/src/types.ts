@@ -211,6 +211,17 @@ export interface ProviderSpec
      * sent, strictly in order; for keyed loads such as a node's children.
      */
     readonly concurrency?: "latest" | "queue";
+
+    /**
+     * Default false. True means the A2UI catalog requires the component's
+     * `on<Request>` action, its `<request>Result` binding and `eventData`,
+     * the three the adapter needs to wire the provider, so a component
+     * without them fails validation. Use it for a provider whose absence
+     * makes the component fall back to host-side behaviour an agent must not
+     * trigger, such as fetching the host's API with the user's credentials
+     * (ExplorerPicker's onLoadChildren, ADR-234).
+     */
+    readonly required?: boolean;
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */

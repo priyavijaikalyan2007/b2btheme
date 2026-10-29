@@ -624,3 +624,389 @@ describe("Conversation edge cases", () =>
         conv.destroy();
     });
 });
+
+// ===========================================================================
+// ADR-149, B7-2: Vditor.preview must not fetch its engine from a public CDN
+// ===========================================================================
+
+describe("vditorCdn", () =>
+{
+    test("assistantPreview_SetsCdnToThisLibrarysMirror_NotUnpkg", () =>
+    {
+        // Vditor.preview lazily fetches lute (its markdown engine), KaTeX and
+        // its other renderers as script tags it injects itself. Left at its
+        // default that is executable code from unpkg.com. The `cdn` option is
+        // the only thing that redirects it.
+        let captured: Record<string, unknown> | null = null;
+
+        (window as unknown as Record<string, unknown>)["Vditor"] = {
+            preview: (target: HTMLElement, md: string, opts: Record<string, unknown>) =>
+            {
+                captured = opts;
+                target.textContent = md;
+            },
+        };
+
+        const conv = createConversation(defaultOptions(), container);
+        conv.addAssistantMessage("Hello **there**");
+
+        expect(captured).not.toBeNull();
+
+        const cdn = String((captured as unknown as Record<string, unknown>).cdn ?? "");
+
+        expect(cdn).toMatch(/\/lib\/vditor-\d+\.\d+\.\d+$/);
+        expect(cdn).not.toContain("unpkg.com");
+        expect(cdn).not.toContain("jsdelivr");
+
+        conv.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B7): additive on() for sendMessage,
+// feedback, newSession and clearSession, setData("session") and an empty
+// state. Legacy callbacks keep firing first, exactly once.
+// ============================================================================
+
+/** A complete message, every field ConversationMessage requires, with a Date timestamp. */
+function message(id: string, role: "user" | "assistant", content: string): ConversationMessage
+{
+    return { id, role, content, timestamp: new Date("2026-10-29T09:00:00.000Z") };
+}
+
+/** A session holding `messages`, as a host passes it (Dates, not ISO strings). */
+function session(id: string, messages: ConversationMessage[]): ConversationSession
+{
+    const at = new Date("2026-10-29T09:00:00.000Z");
+    return { id, title: "Support", messages, createdAt: at, updatedAt: at };
+}
+
+/** One question and its answer. */
+const QA = (): ConversationMessage[] => [
+    message("m1", "user", "What is the capital of France?"),
+    message("m2", "assistant", "Paris."),
+];
+
+/** Types `text` into the textarea, then clicks Send. */
+function typeAndSend(text: string): void
+{
+    const textarea = getTextarea()!;
+    textarea.value = text;
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    getSendBtn()!.click();
+}
+
+/** Clicks a reply's thumb, types an optional comment and submits the feedback modal. */
+function rate(msgId: string, label: "Rate as helpful" | "Rate as unhelpful", comment = ""): void
+{
+    container.querySelector<HTMLElement>(
+        `.conversation-message[data-message-id="${msgId}"] [aria-label="${label}"]`)!.click();
+    container.querySelector<HTMLTextAreaElement>(".conversation-feedback-textarea")!.value = comment;
+    container.querySelector<HTMLElement>(".conversation-feedback-submit")!.click();
+}
+
+/** Clicks a header button by its label. */
+function clickHeader(label: "New conversation" | "Clear context"): void
+{
+    container.querySelector<HTMLElement>(`.conversation-header-btn[aria-label="${label}"]`)!.click();
+}
+
+/** The rendered message ids, in order. */
+function renderedIds(): (string | null)[]
+{
+    return getMessages().map((el) => el.getAttribute("data-message-id"));
+}
+
+/**
+ * Gives the message list the layout jsdom lacks, as a browser would: 200px tall, 1000px of content once every
+ * reply has rendered and 150px while one is still empty, and a scroll that clamps to that. The Vditor stand-in
+ * fills a reply a microtask later, then calls after(), as the real preview does once lute has run.
+ */
+function layOut(): HTMLElement
+{
+    const list = getMessageList()!;
+    let pending = 0;
+    let top = 0;
+    const height = (): number => (pending > 0 ? 150 : 1000);
+
+    Object.defineProperty(list, "clientHeight", { configurable: true, get: () => 200 });
+    Object.defineProperty(list, "scrollHeight", { configurable: true, get: height });
+    Object.defineProperty(list, "scrollTop", { configurable: true, get: () => top,
+        set: (v: number) => { top = Math.max(0, Math.min(v, height() - 200)); } });
+    (window as unknown as Record<string, unknown>)["Vditor"] = {
+        preview: (target: HTMLElement, md: string, opts: { after?: () => void }) =>
+        {
+            pending++;
+            void Promise.resolve().then(() => { target.textContent = md; pending--; opts.after?.(); });
+        },
+    };
+    return list;
+}
+
+describe("Conversation surface contract (B7)", () =>
+{
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const conv = createConversation(defaultOptions(), container);
+
+        expect(() => conv.on("reply", () => {})).toThrow(/unknown channel/);
+        conv.destroy();
+    });
+
+    test("send_FiresOnSendMessageFirstThenTheChannelWithTheText", () =>
+    {
+        const order: string[] = [];
+        const onSendMessage = vi.fn(() => { order.push("legacy"); });
+        const conv = createConversation(defaultOptions({ onSendMessage }), container);
+        const heard: unknown[] = [];
+        conv.on("sendMessage", (p) => { order.push("channel"); heard.push(p); });
+
+        typeAndSend("  Hello there  ");
+
+        expect(onSendMessage).toHaveBeenCalledTimes(1);
+        expect(onSendMessage.mock.calls[0][0]).toBe("Hello there");
+        expect(order).toEqual(["legacy", "channel"]);
+        expect(heard).toEqual(["Hello there"]);
+        conv.destroy();
+    });
+
+    test("send_WithoutOnSendMessage_StillReachesTheChannel", () =>
+    {
+        const conv = createConversation(defaultOptions(), container);
+        const heard: unknown[] = [];
+        const off = conv.on("sendMessage", (p) => heard.push(p));
+
+        typeAndSend("Hi");
+        off();
+        typeAndSend("Again");
+
+        expect(heard).toEqual(["Hi"]);
+        expect(conv.getMessages().map((m) => m.content)).toEqual(["Hi", "Again"]);
+        conv.destroy();
+    });
+
+    test("feedback_FiresOnFeedbackFirstThenTheChannelWithAJsonRecord", () =>
+    {
+        const order: string[] = [];
+        const onFeedback = vi.fn(() => { order.push("legacy"); });
+        const conv = createConversation(defaultOptions({ onFeedback, session: session("s1", QA()) }), container);
+        const heard: unknown[] = [];
+        conv.on("feedback", (p) => { order.push("channel"); heard.push(p); });
+
+        rate("m2", "Rate as unhelpful", "Too short");
+
+        expect(onFeedback).toHaveBeenCalledTimes(1);
+        expect(onFeedback.mock.calls[0][0]).toBe("m2");
+        expect(order).toEqual(["legacy", "channel"]);
+        expect(heard).toEqual([{ messageId: "m2", sentiment: "negative", comment: "Too short",
+            timestamp: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) }]);
+        conv.destroy();
+    });
+
+    test("feedback_WithoutAComment_SendsCommentNull", () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+        const heard: Record<string, unknown>[] = [];
+        conv.on("feedback", (p) => heard.push(p as Record<string, unknown>));
+
+        rate("m2", "Rate as helpful");
+
+        expect(heard).toHaveLength(1);
+        expect(heard[0]).toMatchObject({ messageId: "m2", sentiment: "positive", comment: null });
+        expect(JSON.parse(JSON.stringify(heard[0]))).toEqual(heard[0]);
+        conv.destroy();
+    });
+
+    test("newConversation_WithoutOnNewSession_ClearsLocallyAndEmitsTheNewSessionId", async () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+        const heard: unknown[] = [];
+        conv.on("newSession", (p) => heard.push(p));
+
+        clickHeader("New conversation");
+        await Promise.resolve();
+
+        expect(getMessages()).toHaveLength(0);
+        expect(conv.getSession().id).not.toBe("s1");
+        expect(heard).toEqual([conv.getSession().id]);
+        conv.destroy();
+    });
+
+    test("newConversation_WithOnNewSession_EmitsOnceTheHostsSessionLoads", async () =>
+    {
+        const onNewSession = vi.fn(() => Promise.resolve(session("host-2", [])));
+        const conv = createConversation(defaultOptions({ onNewSession, session: session("s1", QA()) }), container);
+        const heard: unknown[] = [];
+        conv.on("newSession", (p) => heard.push(p));
+
+        await conv.newSession();
+
+        expect(onNewSession).toHaveBeenCalledTimes(1);
+        expect(heard).toEqual(["host-2"]);
+        conv.destroy();
+    });
+
+    test("clearContext_FiresOnClearSessionFirstThenTheChannelWithTheSessionId", async () =>
+    {
+        const order: string[] = [];
+        const onClearSession = vi.fn(() => { order.push("legacy"); });
+        const conv = createConversation(defaultOptions({ onClearSession, session: session("s1", QA()) }),
+            container);
+        conv.on("clearSession", (p) => { order.push(`channel:${String(p)}`); });
+
+        clickHeader("Clear context");
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(onClearSession).toHaveBeenCalledTimes(1);
+        expect(onClearSession).toHaveBeenCalledWith("s1");
+        expect(order).toEqual(["legacy", "channel:s1"]);
+        expect(getMessages()).toHaveLength(0);
+        conv.destroy();
+    });
+
+    test("setDataSession_RendersTheTranscriptSilently", () =>
+    {
+        const onSaveSession = vi.fn();
+        const onSendMessage = vi.fn();
+        const onFeedback = vi.fn();
+        const conv = createConversation(defaultOptions({ onSaveSession, onSendMessage, onFeedback }), container);
+        const heard: unknown[] = [];
+        for (const channel of ["sendMessage", "feedback", "newSession", "clearSession"])
+        {
+            conv.on(channel, (p) => heard.push(p));
+        }
+
+        conv.setData("session", session("s9", QA()));
+
+        expect(renderedIds()).toEqual(["m1", "m2"]);
+        expect(conv.getSession().id).toBe("s9");
+        expect(onSaveSession).not.toHaveBeenCalled();
+        expect(onSendMessage).not.toHaveBeenCalled();
+        expect(onFeedback).not.toHaveBeenCalled();
+        expect(heard).toEqual([]);
+        conv.destroy();
+    });
+
+    test("setDataSession_KeepsTheDraftAndFocus", () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", [QA()[0]]) }), container);
+        const textarea = getTextarea()!;
+        textarea.value = "And Germany";
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        textarea.focus();
+
+        conv.setData("session", session("s1", QA()));
+
+        expect(renderedIds()).toEqual(["m1", "m2"]);
+        expect(getTextarea()).toBe(textarea);
+        expect(textarea.value).toBe("And Germany");
+        expect(document.activeElement).toBe(textarea);
+        expect(getSendBtn()!.hasAttribute("disabled")).toBe(false);
+        conv.destroy();
+    });
+
+    test("setDataSession_ScrolledUp_KeepsTheUsersPlaceOnceTheRepliesRender", async () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+        const list = layOut();
+        list.scrollTop = 300;
+        list.dispatchEvent(new Event("scroll"));
+
+        conv.setData("session", session("s1", [...QA(), message("m3", "user", "More"),
+            message("m4", "assistant", "Lyon.")]));
+
+        expect(renderedIds()).toEqual(["m1", "m2", "m3", "m4"]);
+        // The replies are still empty, so the list is too short to hold the place yet.
+        expect(list.scrollTop).toBe(0);
+        await Promise.resolve();
+        expect(list.scrollTop).toBe(300);
+        conv.destroy();
+    });
+
+    test("setDataSession_AtTheBottom_StaysAtTheBottomOnceTheRepliesRender", async () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+        const list = layOut();
+        list.scrollTop = 800;
+        list.dispatchEvent(new Event("scroll"));
+
+        conv.setData("session", session("s1", [...QA(), message("m3", "assistant", "Anything else?")]));
+        await Promise.resolve();
+
+        expect(list.scrollHeight).toBe(1000);
+        expect(list.scrollTop).toBe(800);
+        conv.destroy();
+    });
+
+    test("setDataSession_LaterRepliesTheHostAdds_LeaveTheScrollAlone", async () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+        const list = layOut();
+        conv.setData("session", session("s1", QA()));
+        await Promise.resolve();
+        list.scrollTop = 100;
+        list.dispatchEvent(new Event("scroll"));
+
+        conv.addAssistantMessage("A host-added reply.");
+        await Promise.resolve();
+
+        expect(list.scrollTop).toBe(100);
+        conv.destroy();
+    });
+
+    test("setDataSession_AnOlderWritesLateReplies_DoNotMoveTheScroll", () =>
+    {
+        const queued: (() => void)[][] = [];
+        (window as unknown as Record<string, unknown>)["Vditor"] = {
+            preview: (target: HTMLElement, md: string, opts: { after?: () => void }) =>
+            {
+                queued.at(-1)!.push(() => { target.textContent = md; opts.after?.(); });
+            },
+        };
+        const conv = createConversation(defaultOptions(), container);
+        const list = getMessageList()!;
+        Object.defineProperty(list, "scrollHeight", { configurable: true, value: 1000 });
+        Object.defineProperty(list, "clientHeight", { configurable: true, value: 200 });
+        list.scrollTop = 300;
+        list.dispatchEvent(new Event("scroll"));
+
+        queued.push([]);
+        conv.setData("session", session("s1", QA()));
+        list.scrollTop = 500;
+        list.dispatchEvent(new Event("scroll"));
+        queued.push([]);
+        conv.setData("session", session("s1", [...QA(), message("m3", "assistant", "More.")]));
+        // The newer write's replies finish first; the older write's first lute load lands last.
+        for (const finish of [...queued[1], ...queued[0]]) { finish(); }
+
+        expect(list.scrollTop).toBe(500);
+        conv.destroy();
+    });
+
+    test("setData_UnknownSlotOrMalformedSession_Throws", () =>
+    {
+        const conv = createConversation(defaultOptions(), container);
+
+        expect(() => conv.setData("messages", [])).toThrow(/unknown slot "messages"/);
+        expect(() => conv.setData("session", [])).toThrow(/expected a session/);
+        expect(() => conv.setData("session", { id: "s1", messages: {} })).toThrow(/messages must be an array/);
+        expect(() => conv.setData("session", { id: "s1", messages: [
+            { id: "m1", role: "user", content: "Hi", timestamp: "2026-10-29T09:00:00.000Z" }] }))
+            .toThrow(/message 0.*timestamp/);
+        expect(() => conv.setData("session", { id: "s1", messages: [
+            { role: "user", content: "Hi", timestamp: new Date() }] })).toThrow(/message 0.*id/);
+        conv.destroy();
+    });
+
+    test("state_IsEmpty_AndSetStateDoesNothing", () =>
+    {
+        const conv = createConversation(defaultOptions({ session: session("s1", QA()) }), container);
+
+        expect(conv.getState()).toEqual({});
+        conv.setState({});
+        conv.setState(conv.getState());
+        expect(renderedIds()).toEqual(["m1", "m2"]);
+        conv.destroy();
+    });
+});

@@ -92,6 +92,12 @@ export interface RelationshipDefinitionSummary
     targetTypeKeys: string[] | null;
     sourceTypeKeys: string[] | null;
     cardinality: string;
+    /**
+     * The form shown at step 3 of the Add flow, one field per key. Each entry
+     * is read as `{ title?: string; type?: "string" | "number" | "boolean" }`;
+     * a definition without it creates the relationship as soon as the user
+     * picks a target.
+     */
     propertiesSchema?: Record<string, unknown>;
 }
 
@@ -114,6 +120,7 @@ export interface RelationshipInstance
     otherResourceId: string;
     otherResourceDisplayName: string;
     otherResourceType: string;
+    /** Extra values, shown as "key: value" text after the date. Required; pass {} for none. */
     properties: Record<string, unknown>;
     provenance: string;
     confidence?: number;
@@ -136,24 +143,61 @@ export interface ResourceSearchResult
     displayName: string;
     typeKey: string;
     icon?: string;
+    /**
+     * The type badge's colour, as #RGB or #RRGGBB hex. A colour in any other
+     * form gives the badge an unusable background.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+}
+
+/** What onSearchTargets asks for: the text the user typed and the definition's target types. */
+export interface ResourceSearchRequest
+{
+    query: string;
+    typeKeys: string[];
 }
 
 /** Configuration for RelationshipManager. */
 export interface RelationshipManagerOptions
 {
     container: HTMLElement;
+    /** The id of the resource whose relationships are shown. Context only: the component does not render it. */
     resourceId: string;
+    /** The type of that resource. Context only: the component does not render it. */
     resourceType: string;
+    /** The name of that resource, written to the log. The header reads "Relationships (N)", not this name. */
     resourceDisplayName: string;
+    /**
+     * The relationship types the user can add, listed at step 1 of the Add
+     * flow. Each definition's targetTypeKeys go to the target search.
+     */
     relationshipDefinitions: RelationshipDefinitionSummary[];
+    /**
+     * The relationships shown, grouped by relationshipDisplayName; those with
+     * provenance "ai_inferred" form an "AI Suggested" group with Confirm and
+     * Dismiss buttons. The component never changes this list itself: answer
+     * each create, delete, confirm or dismiss by writing the new list.
+     */
     relationships: RelationshipInstance[];
+    /** Hide the Add button and each row's delete button. Default: false. */
     readOnly?: boolean;
-    /** Show the Add button. Default: inferred from onCreateRelationship presence. */
+    /**
+     * Show the Add button. Default: inferred from onCreateRelationship
+     * presence. Over A2UI no callback is passed, so set this to true to let
+     * the user add relationships.
+     */
     showAddButton?: boolean;
+    /** The definition keys offered at step 1 of the Add flow. Default: every definition. */
     allowedRelationshipKeys?: string[];
+    /** Show each relationship's provenance as a badge. Default: true. */
     showProvenance?: boolean;
+    /**
+     * Nothing reads this option: the confidence badge always shows for
+     * AI-inferred relationships that carry a confidence.
+     */
     showConfidence?: boolean;
+    /** Group the relationships by type under collapsible headers. Default: true. */
     groupByType?: boolean;
     onCreateRelationship?: (req: CreateRelationshipRequest) => Promise<void>;
     onDeleteRelationship?: (relationshipId: string) => Promise<void>;
@@ -162,12 +206,18 @@ export interface RelationshipManagerOptions
     onConfirmInferred?: (relationshipId: string) => Promise<void>;
     onDismissInferred?: (relationshipId: string) => Promise<void>;
     onSearchResources?: (query: string, typeKeys: string[]) => Promise<ResourceSearchResult[]>;
+    /**
+     * The target search at step 2 of the Add flow, as one request object
+     * (additive, readiness step 2 B7): the same search as onSearchResources,
+     * which takes two parameters. Pass one or the other; passing both throws.
+     */
+    onSearchTargets?: (request: ResourceSearchRequest) => Promise<ResourceSearchResult[]>;
 
     // -- CategorizedDataInlineToolbar pattern (ADR-128) --
     /**
      * Mount an InlineToolbar in the panel header offering sort asc/desc by
      * group name, expand-all, and collapse-all. Default: false (opt-in).
-     * No-op when window.createInlineToolbar is not available.
+     * Throws when window.createInlineToolbar is not loaded.
      */
     showInlineToolbar?: boolean;
     /** Initial sort mode applied to group keys. Default: null (insertion order). */
@@ -195,6 +245,35 @@ export interface RelationshipManager
     getSortMode(): RelationshipSortMode;
     refresh(): void;
     destroy(): void;
+
+    /** The component's root element, or null after destroy() (additive, readiness step 2 B7). */
+    getElement(): HTMLElement | null;
+
+    /**
+     * The surface contract (additive): replaces the rows from the "relationships" slot silently (no callback,
+     * no channel). An open Add panel keeps its step, chosen type, typed query and results; collapsed groups,
+     * the sort and the list's scroll stay. Any other slot, or a value that is not an array of relationships
+     * with ids, throws.
+     */
+    setData(slot: string, value: unknown): void;
+
+    /**
+     * Subscribes to "createRelationship" ({ targetResourceId, relationshipKey, properties }),
+     * "deleteRelationship", "confirmInferred" or "dismissInferred" (the relationship id), or "navigate" (the
+     * other resource's id); any other channel throws. Each fires after its legacy callback, and without it;
+     * createRelationship fires once onCreateRelationship's promise settles, or at once without it, which also
+     * closes the Add panel. Payloads are plain JSON copies. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** { sortMode, collapsed }: "asc", "desc" or null, and the collapsed group names. */
+    getState(): Record<string, unknown>;
+
+    /**
+     * Silently (no onSortModeChange, no onCollapseStateChange, no channel) restores the keys given. An unknown
+     * sortMode, or a collapsed that is not an array of group names, throws.
+     */
+    setState(state: Record<string, unknown>): void;
 }
 
 /** Handle shape we expect from window.createInlineToolbar (ADR-128 resilience). */
@@ -227,6 +306,31 @@ function htmlEl(
 }
 
 // ============================================================================
+// SURFACE CONTRACT HELPERS (readiness step 2 B7)
+// ============================================================================
+
+/** The channels on() accepts (surface contract, B7). */
+const SURFACE_CHANNELS = [
+    "createRelationship", "deleteRelationship", "navigate", "confirmInferred", "dismissInferred",
+] as const;
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
+
+/** The sort modes setState accepts, as getSortMode() reports them. */
+const SORT_MODES: readonly RelationshipSortMode[] = ["asc", "desc", null];
+
+/** True for a non-null object that is not an array. */
+function isPlainRecord(value: unknown): value is Record<string, unknown>
+{
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** A plain-JSON copy for a channel payload, sharing nothing with the component's state. */
+function toJsonCopy<T>(value: T): T
+{
+    return JSON.parse(JSON.stringify(value)) as T;
+}
+
+// ============================================================================
 // RELATIONSHIP MANAGER IMPLEMENTATION
 // ============================================================================
 
@@ -255,6 +359,10 @@ class RelationshipManagerImpl implements RelationshipManager
     private selectedRelDef: RelationshipDefinitionSummary | null = null;
     private selectedTarget: ResourceSearchResult | null = null;
     private searchDebounceTimer: number | null = null;
+
+    /** Surface contract channel subscribers, one Set per declared channel (B7). */
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
 
     constructor(opts: RelationshipManagerOptions)
     {
@@ -364,7 +472,168 @@ class RelationshipManagerImpl implements RelationshipManager
         this.listEl = null;
         this.addBtnEl = null;
         this.addPanelEl = null;
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
         logInfo("Destroyed.");
+    }
+
+    /** The component's root element, or null after destroy(). */
+    public getElement(): HTMLElement | null
+    {
+        return this.root;
+    }
+
+    // ====================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B7)
+    // ====================================================================
+
+    /**
+     * Replaces the rows from the "relationships" slot silently: no callback
+     * and no channel. An agent rewrites the list after each event (B7-1), so
+     * what the user is in the middle of stays: an open Add panel keeps its
+     * step, chosen type, typed query and results (the list re-renders
+     * without it), collapsed groups and the sort stay, and the list keeps
+     * its scroll, which clearing and refilling it would reset.
+     *
+     * @param slot - Must be "relationships"
+     * @param value - The whole list, each row as RelationshipInstance describes it
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "relationships")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "relationships".');
+        }
+
+        if (!Array.isArray(value))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("relationships"): expected an array of relationships, got `
+                + `${value === null ? "null" : typeof value}. Pass the whole list.`);
+        }
+
+        const missing = value.findIndex((row) => !isPlainRecord(row) || typeof row.id !== "string");
+
+        if (missing >= 0)
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("relationships"): relationship ${missing} is not a relationship with a `
+                + "string id. Each entry is a RelationshipInstance.");
+        }
+
+        this.renderKeepingScroll(() => { this.relationships = [...(value as RelationshipInstance[])]; });
+        logDebug("setData(relationships):", this.relationships.length, "relationships");
+    }
+
+    /**
+     * Subscribes to a declared channel.
+     *
+     * @param channel - One of SURFACE_CHANNELS
+     * @param handler - Receives each payload
+     * @returns The unsubscribe
+     */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /**
+     * The view state: the group sort mode and the collapsed group names
+     * ("AI Suggested" included).
+     *
+     * @returns A JSON-serialisable record of the declared stateKeys
+     */
+    public getState(): Record<string, unknown>
+    {
+        return { sortMode: this.sortMode, collapsed: [...this.collapsedGroups] };
+    }
+
+    /**
+     * Restores state captured by getState() silently: unlike setSortMode,
+     * expandAll and collapseAll, no onSortModeChange, no
+     * onCollapseStateChange and no channel. Keys left out (or undefined) are
+     * left alone. A collapsed name with no group today is kept, so that
+     * group starts collapsed when its rows arrive.
+     *
+     * @param state - A partial getState() record
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        const { sortMode, collapsed } = state;
+
+        if (sortMode !== undefined && !SORT_MODES.includes(sortMode as RelationshipSortMode))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: sortMode must be "asc", "desc" or null, got ${JSON.stringify(sortMode)}.`);
+        }
+
+        if (collapsed !== undefined
+            && !(Array.isArray(collapsed) && collapsed.every((key) => typeof key === "string")))
+        {
+            throw new Error(`${LOG_PREFIX} setState: collapsed must be an array of group names.`);
+        }
+
+        this.renderKeepingScroll(() =>
+        {
+            if (sortMode !== undefined)
+            {
+                this.sortMode = sortMode as RelationshipSortMode;
+                this.syncToolbarSortButtons();
+            }
+
+            if (collapsed !== undefined) { this.collapsedGroups = new Set(collapsed as string[]); }
+        });
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by try/catch.
+     * The caller has already invoked the legacy callback. Each subscriber
+     * gets its own fresh copy, built only when somebody listens.
+     *
+     * @param channel - The declared channel
+     * @param buildPayload - Builds a plain-JSON payload
+     */
+    private emitChannel(channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        for (const handler of this.channelHandlers.get(channel)!)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
+    }
+
+    /**
+     * Applies a silent change and re-renders the list, keeping its scroll:
+     * renderList() empties the list before refilling it, which resets it.
+     *
+     * @param change - Mutates the component's state; fires nothing
+     */
+    private renderKeepingScroll(change: () => void): void
+    {
+        const scrollTop = this.listEl?.scrollTop ?? 0;
+
+        change();
+        this.rebuild();
+
+        if (this.listEl) { this.listEl.scrollTop = scrollTop; }
     }
 
     /** Compute aggregate collapse state across visible groups. ADR-128. */
@@ -870,11 +1139,13 @@ class RelationshipManagerImpl implements RelationshipManager
     private handleConfirmInferred(id: string): void
     {
         this.opts.onConfirmInferred?.(id);
+        this.emitChannel("confirmInferred", () => id);
     }
 
     private handleDismissInferred(id: string): void
     {
         this.opts.onDismissInferred?.(id);
+        this.emitChannel("dismissInferred", () => id);
     }
 
     private handleDelete(id: string): void
@@ -890,21 +1161,29 @@ class RelationshipManagerImpl implements RelationshipManager
                 variant: "danger"
             }).then((confirmed: boolean) =>
             {
-                if (confirmed) { this.opts.onDeleteRelationship?.(id); }
+                if (confirmed) { this.confirmDelete(id); }
             });
         }
         else
         {
             if (confirm("Delete this relationship?"))
             {
-                this.opts.onDeleteRelationship?.(id);
+                this.confirmDelete(id);
             }
         }
+    }
+
+    /** The user said yes to deleting `id`: the legacy callback, then the channel. */
+    private confirmDelete(id: string): void
+    {
+        this.opts.onDeleteRelationship?.(id);
+        this.emitChannel("deleteRelationship", () => id);
     }
 
     private handleNavigate(resourceId: string): void
     {
         this.opts.onNavigate?.(resourceId);
+        this.emitChannel("navigate", () => resourceId);
     }
 
     // ====================================================================
@@ -1053,10 +1332,21 @@ class RelationshipManagerImpl implements RelationshipManager
         this.searchDebounceTimer = window.setTimeout(() =>
         {
             const typeKeys = this.selectedRelDef?.targetTypeKeys ?? [];
-            this.opts.onSearchResources?.(query, typeKeys).then((results) =>
+            if (this.opts.onSearchResources)
+            {
+                this.opts.onSearchResources(query, typeKeys).then((results) =>
+                {
+                    this.renderSearchResults(results);
+                });
+                return;
+            }
+            // The single-object variant (B7). Over A2UI the agent answers it,
+            // and a request it never answers rejects; the adapter has already
+            // reported that on the surface, so the results stay as they were.
+            this.opts.onSearchTargets?.({ query, typeKeys }).then((results) =>
             {
                 this.renderSearchResults(results);
-            });
+            }, (err: unknown) => { logError("onSearchTargets rejected:", err); });
         }, DEBOUNCE_MS);
     }
 
@@ -1236,11 +1526,26 @@ class RelationshipManagerImpl implements RelationshipManager
             properties
         };
 
-        this.opts.onCreateRelationship?.(request).then(() =>
+        if (this.opts.onCreateRelationship)
         {
+            this.opts.onCreateRelationship(request).then(() =>
+            {
+                this.closeAddPanel();
+                logInfo("Relationship created:", request.relationshipKey);
+                this.emitChannel("createRelationship", () => toJsonCopy(request));
+            });
+            return;
+        }
+
+        // No callback to wait for (over A2UI): the subscriber hears the
+        // request, and the agent answers by writing the new relationships.
+        // With no subscriber either, nothing happens, as before (B7).
+        if (this.channelHandlers.get("createRelationship")!.size > 0)
+        {
+            this.emitChannel("createRelationship", () => toJsonCopy(request));
             this.closeAddPanel();
-            logInfo("Relationship created:", request.relationshipKey);
-        });
+            logInfo("Relationship requested:", request.relationshipKey);
+        }
     }
 }
 
@@ -1291,6 +1596,15 @@ export function createRelationshipManager(
         throw new Error(
             `${LOG_PREFIX} options.relationships is required. `
             + "Pass it when creating the RelationshipManager.");
+    }
+
+    // The two forms of the target search are one search; with both, neither
+    // could be chosen without silently ignoring the other (B7).
+    if (options.onSearchResources && options.onSearchTargets)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.onSearchResources and options.onSearchTargets are both set. `
+            + "They are the same target search; pass one of them.");
     }
 
     // ERR-1. A caller that named a container asked for that container.

@@ -22,22 +22,56 @@
 /** Node types in the Explorer tree. */
 export type ExplorerNodeType = "ORG_UNIT" | "FOLDER" | "ASSET_REF" | "LINK";
 
-/** A node returned by the Explorer API. */
+/** A node returned by the Explorer API, or by onLoadChildren and onSearch. */
 export interface ExplorerNode
 {
+    /** Unique node id; selections, expansion and parentId refer to it. */
     id: string;
+    /** Label shown on the row. */
     name: string;
+    /** ORG_UNIT and FOLDER are containers; ASSET_REF and LINK are resources. */
     nodeType: ExplorerNodeType;
+    /** The resource this node points at, returned in the selection. */
     resourceId: string | null;
+    /** The resource's type key: shown as a badge, and matched by resourceTypeFilter and ontologyTypes. */
     resourceType: string | null;
+    /** The resource's source system id, returned in the selection. */
     sourceId: string | null;
+    /** The resource's URL, returned in the selection; never rendered as a link. */
     url: string | null;
+    /** A LINK's kind (google_docs, sharepoint, confluence, github), which picks its default icon. */
     linkType: string | null;
+    /** True when the node has children, so it shows an expand toggle. */
     hasChildren: boolean;
+    /**
+     * Bootstrap Icons class for a resource (e.g. "bi-file-earmark-code"); containers keep their folder icons.
+     * @pattern ^[A-Za-z0-9_-]+$
+     */
     icon?: string;
+    /** The id of the node's parent, or null for a root. */
     parentId: string | null;
     /** Server-provided breadcrumb (search results). */
     breadcrumb?: string;
+}
+
+/** What onLoadChildren asks for: the node whose children to load, or null for the roots. */
+export interface ExplorerChildrenRequest
+{
+    nodeId: string | null;
+}
+
+/** What onSearch asks for: the text typed, and the cursor of the page to continue from (null for the first). */
+export interface ExplorerSearchRequest
+{
+    query: string;
+    cursor: string | null;
+}
+
+/** One page of search results; a cursor that is not null shows "Load more results", which asks for the next. */
+export interface ExplorerSearchPage
+{
+    results: ExplorerNode[];
+    cursor: string | null;
 }
 
 /** Enriched selection returned by onConfirm / onSelectionChange. */
@@ -57,6 +91,10 @@ export interface ExplorerPickerSelection
 export interface OntologyTypeEntry
 {
     key: string;
+    /**
+     * Bootstrap Icons class for resources of this type.
+     * @pattern ^[A-Za-z0-9_-]+$
+     */
     icon: string;
     color?: string;
     parentTypeKey?: string | null;
@@ -77,35 +115,80 @@ export interface ExplorerPickerState
 export interface ExplorerPickerOptions
 {
     container: HTMLElement | string;
+    /** "single" picks one node (double-click confirms it); "multi" picks several with checkboxes. Default "single". */
     mode?: "single" | "multi";
+    /** Which nodes can be picked: resources (assets and links), containers (org units and folders), or any. */
     selectionTarget?: "resource" | "container" | "any";
+    /** Resource type keys to show; other resources are hidden, containers always show. Child types match too. */
     resourceTypeFilter?: string[];
+    /** Node ids shown dimmed and not selectable, such as the resource being linked from. */
     excludeNodeIds?: string[];
+    /** Accepted for compatibility; nothing reads it. */
     hideSystemFolders?: boolean;
+    /** A node to reveal once the tree has loaded from apiBase; the staticNodes and onLoadChildren paths ignore it. */
     initialExpandedNodeId?: string;
+    /** Node ids selected when the picker opens. */
     preSelectedNodeIds?: string[];
+    /** Base URL of the Explorer API the tree, search, recent and starred items load from. */
     apiBase?: string;
+    /** The fetch the component calls for every Explorer API request. Default window.fetch. */
     fetchFn?: typeof fetch;
+    /** Show the Recent section, loaded from apiBase. Default true. */
     showRecentItems?: boolean;
+    /** Show the Starred section, loaded from apiBase. Default true. */
     showStarredItems?: boolean;
+    /** How many recent and starred items to show. Default 5. */
     quickAccessLimit?: number;
+    /** Placeholder of the search box. Default "Search resources..." ("Search folders..." for containers). */
     searchPlaceholder?: string;
+    /** Message shown when a search finds nothing. Default "No results found.". */
     emptySearchMessage?: string;
+    /** Message shown when the tree has no nodes. Default "No resources found.". */
     emptyTreeMessage?: string;
+    /** CSS height of the picker, such as "400px". Default "400px". */
     height?: string;
+    /** Extra CSS classes for the root element, separated by single spaces. */
     cssClass?: string;
+    /** Returns the icon class for a resource node, ahead of the node's own icon and the ontology's. */
     iconResolver?: (node: ExplorerNode) => string | undefined;
+    /** Base URL of the ontology API that resource type icons and colours load from. */
     ontologyApiBase?: string;
+    /** The fetch the component calls for the ontology request. Default fetchFn. */
     ontologyFetchFn?: typeof fetch;
+    /** Resource types with their icons and colours, used instead of loading them from ontologyApiBase. */
     ontologyTypes?: OntologyTypeEntry[];
-    onConfirm: (selections: ExplorerPickerSelection[]) => void;
+    /** Called with the selection when the user confirms it, by the confirm button or a double-click. */
+    onConfirm?: (selections: ExplorerPickerSelection[]) => void;
+    /** Called when the user cancels, by the Cancel button or Escape; passing it shows the Cancel button. */
     onCancel?: () => void;
+    /** Called with the whole selection each time the user changes it. */
     onSelectionChange?: (selections: ExplorerPickerSelection[]) => void;
+    /** Called when the initial load fails, with the error and "loadInitialData". */
     onError?: (error: Error, context: string) => void;
+    /** Confirm button label. Default "Select" or "Select (N selected)"; host code may pass a function of the count. */
     confirmButtonText?: string | ((count: number) => string);
+    /** Cancel button label. Default "Cancel". */
     cancelButtonText?: string;
-    /** Static nodes for testing without API calls. */
+    /**
+     * The initial tree, as a flat list in which each node names its parentId (null for a root). With it, the
+     * tree, the ontology and the recent and starred items are not requested; expanding a node and searching
+     * still request apiBase unless onLoadChildren and onSearch answer them.
+     */
     staticNodes?: ExplorerNode[];
+    /**
+     * Loads a node's children, or the roots when nodeId is null, answered with one level: nodes whose parentId
+     * is that node (or null). With it, no request goes to apiBase or ontologyApiBase: the roots come from
+     * staticNodes when given, types come from ontologyTypes, the Recent and Starred sections are not shown,
+     * and search goes through onSearch (the search box is hidden without it). Children staticNodes already
+     * gives count as loaded.
+     */
+    onLoadChildren?: (request: ExplorerChildrenRequest) => Promise<ExplorerNode[]>;
+    /** Answers a search with one page of results, instead of a request to apiBase. */
+    onSearch?: (request: ExplorerSearchRequest) => Promise<ExplorerSearchPage>;
+    /** Show the Cancel button even without onCancel. Default false. */
+    cancellable?: boolean;
+    /** Show the search box. Default true. */
+    showSearch?: boolean;
 }
 
 // ============================================================================
@@ -307,14 +390,24 @@ export interface ExplorerPickerHandle
     getElement(): HTMLElement | null;
     exportState(): ExplorerPickerState;
     restoreState(state: ExplorerPickerState): Promise<void>;
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The channels on() accepts (readiness step 2 B7). */
+const SURFACE_CHANNELS = ["selection", "confirm", "cancel"] as const;
+
+/** One of the channels on() accepts. */
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
 
 export class ExplorerPickerImpl implements ExplorerPickerHandle
 {
     // ── Options & Identity ──────────────────────────────────────────────
     private opts: Required<Pick<ExplorerPickerOptions,
         "mode" | "selectionTarget" | "apiBase" | "height" | "showRecentItems" |
-        "showStarredItems" | "quickAccessLimit" | "onConfirm">> & ExplorerPickerOptions;
+        "showStarredItems" | "quickAccessLimit">> & ExplorerPickerOptions;
     private instanceId: string;
 
     // ── DOM References ──────────────────────────────────────────────────
@@ -365,6 +458,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     // ── Bound Handlers ──────────────────────────────────────────────────
     private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
 
+    // ── Surface contract channel subscribers, one Set per channel (B7) ──
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
+
     constructor(options: ExplorerPickerOptions)
     {
         instanceCounter++;
@@ -396,7 +493,6 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             showRecentItems: opts.showRecentItems ?? true,
             showStarredItems: opts.showStarredItems ?? true,
             quickAccessLimit: opts.quickAccessLimit ?? DEFAULT_QUICK_ACCESS_LIMIT,
-            onConfirm: opts.onConfirm,
         };
     }
 
@@ -442,7 +538,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             this.rootEl.classList.add(...this.opts.cssClass.split(" "));
         }
 
-        this.buildSearchBar();
+        if (this.isSearchShown())
+        {
+            this.buildSearchBar();
+        }
         this.buildBody();
         this.buildBreadcrumb();
         this.buildFooter();
@@ -476,6 +575,20 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.rootEl!.appendChild(bar);
     }
 
+    /**
+     * The search box shows unless showSearch is false, or onLoadChildren
+     * answers the tree and no onSearch answers searches: a search box
+     * there would request apiBase.
+     */
+    private isSearchShown(): boolean
+    {
+        if (this.opts.showSearch === false)
+        {
+            return false;
+        }
+        return this.opts.onSearch !== undefined || this.opts.onLoadChildren === undefined;
+    }
+
     private getSearchPlaceholder(): string
     {
         if (this.opts.searchPlaceholder)
@@ -492,10 +605,15 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         // Canvas anchors name this region rather than counting it (ADR-162).
         this.bodyEl.setAttribute("data-dui-region", "explorerpicker:body");
 
-        this.recentSection = this.buildSection(
-            "Recent", "explorerpicker-section-recent");
-        this.starredSection = this.buildSection(
-            "Starred", "explorerpicker-section-starred");
+        // Recent and Starred load only from apiBase, which onLoadChildren
+        // replaces, so with it they are not built at all (B7).
+        if (!this.opts.onLoadChildren)
+        {
+            this.recentSection = this.buildSection(
+                "Recent", "explorerpicker-section-recent");
+            this.starredSection = this.buildSection(
+                "Starred", "explorerpicker-section-starred");
+        }
 
         const browseSection = this.buildSection(
             "Browse", "explorerpicker-section-browse");
@@ -510,8 +628,11 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             "Results", "explorerpicker-section-results");
         this.resultsSection.style.display = "none";
 
-        this.bodyEl.appendChild(this.recentSection);
-        this.bodyEl.appendChild(this.starredSection);
+        if (this.recentSection && this.starredSection)
+        {
+            this.bodyEl.appendChild(this.recentSection);
+            this.bodyEl.appendChild(this.starredSection);
+        }
         this.bodyEl.appendChild(browseSection);
         this.bodyEl.appendChild(this.resultsSection);
         this.rootEl!.appendChild(this.bodyEl);
@@ -545,7 +666,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private buildFooter(): void
     {
         const footer = createElement("div", ["explorerpicker-footer"]);
-        if (this.opts.onCancel)
+        if (this.opts.onCancel || this.opts.cancellable)
         {
             this.cancelBtn = document.createElement("button");
             this.cancelBtn.classList.add(
@@ -669,6 +790,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.abortInflight();
         this.clearDebounce();
         this.hide();
+        for (const handlers of this.channelHandlers.values())
+        {
+            handlers.clear();
+        }
         this.nodeMap.clear();
         this.childrenMap.clear();
         this.expandedSet.clear();
@@ -887,7 +1012,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
 
     private onCancelClick = (): void =>
     {
-        this.opts.onCancel?.();
+        this.fireCancel();
     };
 
     // ════════════════════════════════════════════════════════════════════
@@ -1173,7 +1298,45 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             this.updateConfirmState();
             return;
         }
+        if (this.opts.onLoadChildren)
+        {
+            await this.loadRootsFromProvider(this.opts.onLoadChildren);
+            return;
+        }
         await this.loadFromApi();
+    }
+
+    /**
+     * The roots from onLoadChildren({ nodeId: null }), with the types
+     * from ontologyTypes: nothing is requested from apiBase or
+     * ontologyApiBase (B7). A failure shows the same banner and Retry,
+     * and reaches onError, as a failed API load.
+     */
+    private async loadRootsFromProvider(
+        load: NonNullable<ExplorerPickerOptions["onLoadChildren"]>): Promise<void>
+    {
+        this.showLoading(true);
+        this.loadPresetOntology();
+        try
+        {
+            logDebug("onLoadChildren: roots");
+            const roots = await load({ nodeId: null });
+            if (this.destroyed)
+            {
+                return;
+            }
+            this.populateFromNodes(this.acceptProviderNodes(null, roots));
+            this.renderTree();
+            this.updateConfirmState();
+        }
+        catch (err)
+        {
+            this.handleLoadError(err);
+        }
+        finally
+        {
+            this.showLoading(false);
+        }
     }
 
     private async loadFromApi(): Promise<void>
@@ -1237,6 +1400,11 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             return;
         }
+        if (this.opts.onLoadChildren)
+        {
+            await this.fetchChildrenFromProvider(nodeId, this.opts.onLoadChildren);
+            return;
+        }
         const params = this.buildFilterParams();
         const url = `${this.opts.apiBase}/nodes/${nodeId}/children${params}`;
         const data = await this.apiFetch<ExplorerNode[]>(url);
@@ -1245,6 +1413,72 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             this.addChildNodes(nodeId, data);
             this.loadedSet.add(nodeId);
         }
+    }
+
+    /**
+     * A node's children from onLoadChildren (B7). Children staticNodes
+     * already gave count as loaded, so expanding that node asks nothing.
+     */
+    private async fetchChildrenFromProvider(
+        nodeId: string,
+        load: NonNullable<ExplorerPickerOptions["onLoadChildren"]>): Promise<void>
+    {
+        if (this.childrenMap.has(nodeId))
+        {
+            this.loadedSet.add(nodeId);
+            return;
+        }
+        logDebug("onLoadChildren:", nodeId);
+        const children = await load({ nodeId });
+        if (this.destroyed)
+        {
+            return;
+        }
+        this.addChildNodes(nodeId, this.acceptProviderNodes(nodeId, children));
+        this.loadedSet.add(nodeId);
+    }
+
+    /**
+     * The nodes of a provider's answer for `parentId` (null for the
+     * roots) that belong there, each a copy whose parentId is
+     * `parentId`.
+     *
+     * (CRITICAL) AN ANSWER IS DATA FROM OUTSIDE THE PAGE. addChildNodes
+     * trusts the list it is given, so an answer for node a that listed
+     * a itself, or one of a's ancestors, put a loop in childrenMap and
+     * the next render recursed until the stack overflowed. A node whose
+     * parentId names another node is skipped too, since the answer is
+     * one level. resourceTypeFilter is applied here, as on the
+     * staticNodes path: the request does not carry it.
+     */
+    private acceptProviderNodes(
+        parentId: string | null, nodes: ExplorerNode[]): ExplorerNode[]
+    {
+        const ancestors = new Set(
+            parentId === null ? [] : this.getAncestorChain(parentId));
+        const where = parentId === null ? "the roots" : `"${parentId}"`;
+        const accepted: ExplorerNode[] = [];
+        for (const node of nodes)
+        {
+            const claimed = node.parentId ?? null;
+            if (claimed !== null && claimed !== parentId)
+            {
+                logWarn(`Skipped node "${node.id}" answered for ${where}: `
+                    + `its parentId is "${claimed}".`);
+                continue;
+            }
+            if (ancestors.has(node.id))
+            {
+                logWarn(`Skipped node "${node.id}" answered for ${where}: `
+                    + "it is that node or one of its ancestors, which would loop the tree.");
+                continue;
+            }
+            if (this.matchesTypeFilter(node))
+            {
+                accepted.push({ ...node, parentId });
+            }
+        }
+        return accepted;
     }
 
     /** Load ontology types from options (sync, no API call). */
@@ -1852,6 +2086,19 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             cursor: string | null;
         } | null>
     {
+        if (this.opts.onSearch)
+        {
+            logDebug("onSearch:", { cursor });
+            return this.opts.onSearch({ query, cursor });
+        }
+        if (this.opts.onLoadChildren)
+        {
+            // The invariant, not a UI detail: with onLoadChildren nothing
+            // reaches apiBase, and setSearchQuery refuses before this.
+            throw new Error(
+                `${LOG_PREFIX} Search needs onSearch when onLoadChildren loads the tree; `
+                + "nothing is sent to apiBase.");
+        }
         let url = `${this.opts.apiBase}/search?q=${
             encodeURIComponent(query)}&pageSize=${
             DEFAULT_SEARCH_PAGE_SIZE}`;
@@ -2382,9 +2629,9 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private showNodeSpinner(
         nodeId: string, show: boolean): void
     {
-        const toggle = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"] .explorerpicker-toggle`
-        );
+        const toggle = this.findNodeElements(nodeId)
+            .map((el) => el.querySelector(".explorerpicker-toggle"))
+            .find((el) => el !== null);
         if (!toggle)
         {
             return;
@@ -2539,7 +2786,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
                 this.onSearchClear();
                 return true;
             }
-            this.opts.onCancel?.();
+            this.fireCancel();
             return true;
         }
         return false;
@@ -2737,8 +2984,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private updateFocusVisual(
         nodeId: string, focused: boolean): void
     {
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"]`) as HTMLElement | null;
+        const row = this.findNodeElements(nodeId)[0];
         if (!row)
         {
             return;
@@ -2758,9 +3004,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             return;
         }
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${this.focusedNodeId}"]`
-        ) as HTMLElement | null;
+        const row = this.findNodeElements(this.focusedNodeId)[0];
         if (row?.scrollIntoView)
         {
             row.scrollIntoView({ block: "nearest" });
@@ -2848,6 +3092,25 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     // UTILITY
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * Every element under the root whose data-node-id is `nodeId`, in
+     * document order.
+     *
+     * A NODE ID IS DATA, NOT A SELECTOR. The id used to be interpolated
+     * into `[data-node-id="${id}"]`, so an id holding a quote or a
+     * backslash threw a SyntaxError from querySelector, and one holding
+     * `"] , [x` matched other elements. Comparing the attribute as a
+     * string finds the same first element for every id that parsed
+     * before. Not CSS.escape: jsdom has no CSS global, so a consumer's
+     * jsdom test that clicks a row would start throwing.
+     */
+    private findNodeElements(nodeId: string): HTMLElement[]
+    {
+        const all = this.rootEl?.querySelectorAll<HTMLElement>("[data-node-id]");
+
+        return Array.from(all ?? []).filter((el) => el.dataset.nodeId === nodeId);
+    }
+
     private clearDebounce(): void
     {
         if (this.debounceTimer)
@@ -2861,7 +3124,8 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     {
         const selections = this.getSelection();
         logInfo("Confirm:", selections.length, "items");
-        this.opts.onConfirm(selections);
+        this.opts.onConfirm?.(selections);
+        this.emitChannel("confirm", () => this.getSelection());
     }
 
     private fireSelectionChange(): void
@@ -2869,6 +3133,37 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         if (this.opts.onSelectionChange)
         {
             this.opts.onSelectionChange(this.getSelection());
+        }
+        this.emitChannel("selection", () => this.getSelection());
+    }
+
+    /** The Cancel button and Escape: onCancel, then the selection the user abandoned (B7). */
+    private fireCancel(): void
+    {
+        this.opts.onCancel?.();
+        this.emitChannel("cancel", () => this.getSelection());
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by
+     * try/catch. The caller has already invoked the legacy callback.
+     * Each subscriber gets its own fresh copy, built only when somebody
+     * listens; getSelection() returns plain JSON.
+     */
+    private emitChannel(
+        channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        const handlers = this.channelHandlers.get(channel)!;
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
         }
     }
 
@@ -2879,6 +3174,12 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     /** Programmatically set search query and trigger search. */
     public setSearchQuery(query: string): void
     {
+        if (query && this.opts.onLoadChildren && !this.opts.onSearch)
+        {
+            throw new Error(
+                `${LOG_PREFIX} setSearchQuery("${query}"): searching needs onSearch when onLoadChildren `
+                + "loads the tree. Pass onSearch, or leave the query empty.");
+        }
         if (this.searchInput)
         {
             this.searchInput.value = query;
@@ -2932,8 +3233,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     /** Scroll a node into view and briefly highlight it. */
     public scrollToNode(nodeId: string): void
     {
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"]`) as HTMLElement | null;
+        const row = this.findNodeElements(nodeId)[0];
         if (!row)
         {
             return;
@@ -3036,6 +3336,80 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             this.bodyEl.scrollTop = state.scrollTop;
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // SURFACE CONTRACT (additive, readiness step 2 B7)
+    // ════════════════════════════════════════════════════════════════════
+
+    /** ExplorerPicker has no data slots: the tree comes from staticNodes, onLoadChildren or apiBase. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): ExplorerPicker has no data slots. `
+            + "Pass staticNodes or onLoadChildren when creating it, or call refresh().");
+    }
+
+    /** Subscribes to "selection", "confirm" or "cancel"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+        handlers.add(handler);
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /** The ids of the expanded nodes and of the selected nodes. */
+    public getState(): Record<string, unknown>
+    {
+        return { expanded: Array.from(this.expandedSet), selection: Array.from(this.selectedSet) };
+    }
+
+    /**
+     * Restores state captured by getState() silently: no callback and no
+     * channel fires. Ids of nodes not loaded are dropped, as
+     * restoreState drops them, and selection becomes exactly the rest.
+     * A folder whose children are known expands at once; one not loaded
+     * yet starts its load after the render, as a click would, and leaves
+     * expanded again if the load fails.
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (Array.isArray(state.selection))
+        {
+            this.selectedSet = new Set(
+                (state.selection as string[]).filter((id) => this.nodeMap.has(id)));
+        }
+        const toLoad: string[] = [];
+        if (Array.isArray(state.expanded))
+        {
+            this.expandedSet.clear();
+            for (const id of state.expanded as string[])
+            {
+                if (!this.nodeMap.get(id)?.hasChildren)
+                {
+                    continue;
+                }
+                if (this.loadedSet.has(id) || this.childrenMap.has(id))
+                {
+                    this.expandedSet.add(id);
+                }
+                else
+                {
+                    toLoad.push(id);
+                }
+            }
+        }
+        this.updateConfirmState();
+        this.renderTree();
+        this.renderSelectionState();
+        // expandNode fires nothing; it shows the spinner and asks for the children.
+        toLoad.forEach((id) => { void this.expandNode(id); });
     }
 }
 

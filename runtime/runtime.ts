@@ -233,6 +233,17 @@ interface ProviderSpec
      * sent, strictly in order; for keyed loads such as a node's children.
      */
     readonly concurrency?: "latest" | "queue";
+
+    /**
+     * Default false. True means the A2UI catalog requires the component's
+     * `on<Request>` action, its `<request>Result` binding and `eventData`,
+     * the three the adapter needs to wire the provider, so a component
+     * without them fails validation. Use it for a provider whose absence
+     * makes the component fall back to host-side behaviour an agent must not
+     * trigger, such as fetching the host's API with the user's credentials
+     * (ExplorerPicker's onLoadChildren, ADR-234).
+     */
+    readonly required?: boolean;
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
@@ -3005,7 +3016,7 @@ function validateAgent(m: Record<string, unknown>, issues: ValidationIssue[]): v
 }
 
 /** The keys a provider spec may carry; every catalog name derives from `request`. */
-const PROVIDER_KEYS: readonly string[] = ["request", "concurrency"];
+const PROVIDER_KEYS: readonly string[] = ["request", "concurrency", "required"];
 
 /** How the A2UI adapter orders a provider's requests (ADR-225). */
 const PROVIDER_CONCURRENCY: readonly string[] = ["latest", "queue"];
@@ -3062,6 +3073,11 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
             {
                 issues.push(enumIssue(`protocol.providers.${option}.concurrency`, spec.concurrency,
                     PROVIDER_CONCURRENCY));
+            }
+
+            if (spec.required !== undefined && typeof spec.required !== "boolean")
+            {
+                issues.push(typeIssue(`protocol.providers.${option}.required`, "a boolean", spec.required));
             }
 
             unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
@@ -5722,6 +5738,15 @@ interface ConformanceTarget
     readonly trigger?: (
         channel: string,
         handle: Record<string, unknown>) => boolean | "async" | void;
+
+    /**
+     * A sample per slot name, used instead of the generic sample of its
+     * payload shape. For a slot whose items need fields the generic
+     * `{ id, name }` lacks (a transcript's timestamps, a relationship's
+     * createdAt), so that the check exercises the slot rather than the
+     * component's input validation (readiness step 2 B7).
+     */
+    readonly slotSamples?: Readonly<Record<string, unknown>>;
 }
 
 /** Declaration of one check, for documentation and coverage reporting. */
@@ -6668,6 +6693,9 @@ function fillSlots(
 {
     for (const slot of target.manifest.accepts)
     {
+        const sample = target.slotSamples && slot.name in target.slotSamples
+            ? target.slotSamples[slot.name]
+            : sampleFor(slot.payload);
         const custom = slot.setter && slot.setter !== "setData"
             && typeof handle[slot.setter] === "function"
             ? slot.setter
@@ -6677,11 +6705,11 @@ function fillSlots(
         {
             if (custom)
             {
-                call(handle, custom, sampleFor(slot.payload));
+                call(handle, custom, sample);
                 return;
             }
 
-            call(handle, "setData", slot.name, sampleFor(slot.payload));
+            call(handle, "setData", slot.name, sample);
         });
 
         if (err)

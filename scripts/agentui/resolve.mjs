@@ -158,7 +158,9 @@ function resolveProviders(ctx)
             return [];
         }
 
-        return [{ option, request: spec.request, actionProp: `on${pascal(spec.request)}`, response: `${spec.request}Result` }];
+        // required (ADR-234): the catalog requires on<Request>, <request>Result and eventData.
+        return [{ option, request: spec.request, actionProp: `on${pascal(spec.request)}`,
+            response: `${spec.request}Result`, ...(spec.required === true ? { required: true } : {}) }];
     });
 }
 
