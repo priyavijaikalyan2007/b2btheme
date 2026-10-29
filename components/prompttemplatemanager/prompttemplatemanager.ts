@@ -309,8 +309,9 @@ export interface PromptTemplateManagerHandle
     /**
      * The surface contract (additive): replaces the list from "templates" silently (no callback, no channel).
      * The selection stays when its id is still in the list, otherwise the first template is selected; filled
-     * variables, an open preview and the search stay. Unsaved edits are replaced with the new list and lose their
-     * markers. Unlike setTemplates(), which is unchanged. Any other slot, or a value that is not an array, throws.
+     * variables, an open preview and the search stay. A template with unsaved edits that the list still holds
+     * keeps the user's edited copy, in the list's position, and its marker; one the list leaves out is dropped.
+     * Unlike setTemplates(), which is unchanged. Any other slot, or a value that is not an array, throws.
      */
     setData(slot: string, value: unknown): void;
     /**
@@ -2110,7 +2111,9 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
      * Replaces the list from the "templates" slot silently: no onSelect and no channel, unlike setTemplates(),
      * which resets to the first template and fires onSelect. An agent rewrites the list mid-conversation (B7-1),
      * so the selection stays when its id is still there, and the filled variables, an open preview, the search
-     * and the list's scroll stay too. Unsaved edits are template data: the new list replaces them.
+     * and the list's scroll stay too. An unsaved edit is the user's draft: a dirty template the list still holds
+     * keeps the local edited copy, in the list's position, and its marker. A dirty template the list leaves out is
+     * dropped with its marker, because the agent removed it. Clean templates take the agent's rows.
      */
     public setData(slot: string, value: unknown): void
     {
@@ -2131,8 +2134,14 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         const previewOpen = this.previewVisible;
         const scrollTop = this.listEl ? this.listEl.scrollTop : 0;
 
-        this.templates = (value as PromptTemplate[]).map(function(t) { return { ...t }; });
-        this.dirtyIds.clear();
+        const drafts = new Map(this.templates.filter((t) => this.dirtyIds.has(t.id)).map((t) => [t.id, t]));
+
+        this.templates = (value as PromptTemplate[]).map(function(t)
+        {
+            const draft = drafts.get(t.id);
+            return draft !== undefined ? draft : { ...t };
+        });
+        this.dirtyIds = new Set(this.templates.filter((t) => drafts.has(t.id)).map((t) => t.id));
 
         const kept = previous !== null && this.templates.some((t) => t.id === previous);
         this.selectedId = kept ? previous
@@ -2142,9 +2151,13 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         if (this.searchInput && this.searchInput.value.trim().length > 0) { this.filterTemplates(); }
         if (this.listEl) { this.listEl.scrollTop = scrollTop; }
 
+        // A selected draft is already in the editor; leave it alone, caret and preview included. Otherwise
         // renderDetail() closes the preview, as any selection does; reopen it for the template still selected.
-        this.renderDetail();
-        if (kept && previewOpen) { this.togglePreview(); }
+        if (!(kept && this.dirtyIds.has(previous as string)))
+        {
+            this.renderDetail();
+            if (kept && previewOpen) { this.togglePreview(); }
+        }
 
         logDebug("setData(templates):", this.templates.length, "templates; selected:", this.selectedId);
     }

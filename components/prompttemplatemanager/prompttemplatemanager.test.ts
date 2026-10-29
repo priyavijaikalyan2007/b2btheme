@@ -622,16 +622,42 @@ describe("surface contract (B7)", () =>
         mgr.destroy();
     });
 
-    test("setData(templates)_ReplacesAnUnsavedEdit_AndClearsItsMarker", () =>
+    test("setData(templates)_KeepsAnUnsavedEdit_AndItsMarker_WhileNewRowsAppear", () =>
+    {
+        const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+        const editor = el<HTMLTextAreaElement>(".promptmanager-editor");
+        el<HTMLInputElement>(".promptmanager-name-input").value = "Draft";
+        el(".promptmanager-name-input").dispatchEvent(new Event("input"));
+        editor.value = "Draft body {{name}}";
+        editor.dispatchEvent(new Event("input"));
+        expect(listItem("t1").classList.contains("promptmanager-list-item-dirty")).toBe(true);
+
+        mgr.setData("templates", [makeTemplate({ id: "tB", name: "New B" }),
+            makeTemplate({ id: "t1", name: "From agent", content: "Agent body" })]);
+
+        expect(mgr.getTemplates().map((t) => [t.id, t.name])).toEqual([["tB", "New B"], ["t1", "Draft"]]);
+        expect(mgr.getTemplates()[1].content).toBe("Draft body {{name}}");
+        expect(el<HTMLInputElement>(".promptmanager-name-input").value).toBe("Draft");
+        expect(editor.value).toBe("Draft body {{name}}");
+        expect(listItem("t1").classList.contains("promptmanager-list-item-dirty")).toBe(true);
+        expect(listItem("tB").classList.contains("promptmanager-list-item-dirty")).toBe(false);
+        expect(mgr.getSelectedTemplate()?.id).toBe("t1");
+        mgr.destroy();
+    });
+
+    test("setData(templates)_DropsADirtyTemplateTheListLeavesOut_WithItsMarker", () =>
     {
         const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
         el<HTMLInputElement>(".promptmanager-name-input").value = "Draft";
         el(".promptmanager-name-input").dispatchEvent(new Event("input"));
-        expect(listItem("t1").classList.contains("promptmanager-list-item-dirty")).toBe(true);
 
-        mgr.setData("templates", [makeTemplate({ id: "t1", name: "From agent" })]);
+        mgr.setData("templates", [makeTemplate({ id: "t2", name: "Farewell v2" })]);
+        expect(mgr.getTemplates().map((t) => t.id)).toEqual(["t2"]);
+        expect(listItem("t2").classList.contains("promptmanager-list-item-dirty")).toBe(false);
 
-        expect(el<HTMLInputElement>(".promptmanager-name-input").value).toBe("From agent");
+        // t1 returning later is the agent's row, with no marker: its dirty state left with it.
+        mgr.setData("templates", [makeTemplate({ id: "t1", name: "Back" }), makeTemplate({ id: "t2", name: "F" })]);
+        expect(mgr.getTemplates()[0].name).toBe("Back");
         expect(listItem("t1").classList.contains("promptmanager-list-item-dirty")).toBe(false);
         mgr.destroy();
     });
