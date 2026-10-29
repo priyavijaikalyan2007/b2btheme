@@ -1883,3 +1883,26 @@ For the seven surface components above:
   - `unclassifiedOptions` 425 → 392;
   - `protocolPropsMissingJsdoc` 312 → 286;
   - `changeMismatches` 2 → 1.
+
+---
+
+## B6: data views (as built)
+
+**All nine join catalog v1, for 63 in all.**
+
+| Component | Over A2UI |
+|---|---|
+| DataGrid | adds `cellEdit`; export is a host-only action; `on()` unchanged (accepts any name) |
+| TreeGrid | surface: `selection`, `activate`, `editCommit`, `contextMenuAction`, `drop`; `["expanded", "selection"]`, restored silently; provider `loadChildren` (queue) |
+| ActivityFeed | `eventClick`, `actorClick`, `targetClick`; `onLoadMore` host-only (no parameter) |
+| AuditLogViewer | `rowClick`; `onLoadPage` (two parameters), `serverSide` and `autoRefresh` host-only |
+| NotificationCenter | `notificationClick`, `dismiss`, `markAllRead` |
+| FacetSearch | `search`; `["value"]` |
+| ChartPanel | display; dep `chart.js` |
+| LogConsole | display; additive `entries` option; `theme` host-only (deprecated) |
+| VisualTableEditor | field; its fine-grained callbacks host-only |
+
+**Pins:**
+- pending 47 → 38;
+- `unclassifiedOptions` 392 → 326;
+- `protocolPropsMissingJsdoc` 286 → 202.
