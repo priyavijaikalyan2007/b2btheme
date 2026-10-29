@@ -62,6 +62,15 @@ const LAUNCHER = { ...EV, mode: "fullpage", apps: [{ id: "a1", name: "Dashboard"
     { id: "a2", name: "Projects", icon: "bi-kanban" }],
 onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } }, searchResult: { path: "/answers/search" } };
 
+/** A ribbon tab with a button, a toggle, a dropdown and a gallery, as an agent writes it. */
+const RIBBON_TABS = [{ id: "home", label: "Home", groups: [{ id: "edit", label: "Edit", controls: [
+    { type: "button", id: "save", label: "Save", icon: "bi bi-save" },
+    { type: "button", id: "bold", label: "Bold", toggle: true },
+    { type: "dropdown", id: "font", options: [{ value: "serif", label: "Serif" }, { value: "sans", label: "Sans" }] },
+    { type: "gallery", id: "styles", inlineCount: 2,
+        options: [{ id: "h1", label: "Heading" }, { id: "body", label: "Body" }] },
+] }] }, { id: "view", label: "View", groups: [] }];
+
 test.describe("B8 app-shell components under @a2ui/lit", () =>
 {
     test("MarketingHero: each call to action sends its event with its text", async ({ page }) =>
@@ -160,5 +169,44 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
         await page.locator(".applauncher-tile[data-app-id='a9']").click();
 
         await sent(page, [["find", "bil"], ["open", { id: "a9", name: "Billing", icon: "bi-receipt" }]]);
+    });
+
+    test("Ribbon: each control sends onControlClick with its id and value", async ({ page }) =>
+    {
+        await mount(page, "Ribbon", { ...EV, tabs: RIBBON_TABS, activeTabId: "home",
+            onControlClick: act("use", "controlClick") });
+
+        await page.locator("[data-control-id='save']").click();
+        await page.locator("[data-control-id='bold']").click();
+        await page.locator(".ribbon-dropdown").selectOption("sans");
+        await page.locator(".ribbon-gallery-option", { hasText: "Body" }).first().click();
+
+        await sent(page, [["use", { controlId: "save", value: null }], ["use", { controlId: "bold", value: true }],
+            ["use", { controlId: "font", value: "sans" }], ["use", { controlId: "styles", value: "body" }]]);
+    });
+
+    test("Ribbon: its keys are confined to it, so the page keeps Ctrl+F1 (keyScope fixed)", async ({ page }) =>
+    {
+        await mount(page, "Ribbon", { tabs: RIBBON_TABS, activeTabId: "home" });
+
+        await page.locator("body").press("Control+F1");
+        await expect(page.locator(".ribbon-panel")).toBeVisible();
+        await page.locator("[data-control-id='save']").press("Control+F1");
+        await expect(page.locator(".ribbon-panel")).toBeHidden();
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("Ribbon: keyScope from the agent is rejected, and so is a custom control", async ({ page }) =>
+    {
+        // keyScope is fixed (ADR-235): the catalog has no such prop, so the renderer refuses the component.
+        await open(page, "lit");
+        await expect(send(page, surface("s", { id: "root", component: "Ribbon", tabs: [], keyScope: "document" })))
+            .rejects.toThrow(/Validation failed for component 'Ribbon'.*Unrecognized key.*keyScope/);
+        await expect(page.locator(".ribbon")).toHaveCount(0);
+
+        await send(page, surface("t", { id: "root", component: "Ribbon", tabs: { path: "/tabs" } }, { tabs: [{
+            id: "home", label: "Home", groups: [{ id: "g", label: "G", controls: [{ type: "custom", id: "x" }] }] }] }));
+        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
+            path: "/tabs" })]);
     });
 });
