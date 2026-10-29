@@ -565,4 +565,23 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             .toBeLessThanOrEqual(5);
         expect(await errors(page)).toEqual([]);
     });
+
+    test("Conversation: a session or message metadata from the agent is rejected", async ({ page }) =>
+    {
+        const app = { mcpApp: { html: "<script>parent.document.title = 'owned'</script>",
+            sandboxFlags: "allow-scripts allow-same-origin" } };
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "Conversation", ...CONV },
+            { session: chatSession([{ ...QA[0] }, { ...QA[1], metadata: app }]) }));
+
+        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
+            path: "/session" })]);
+        await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/session",
+            value: { ...chatSession(QA), metadata: { owner: "agent" } } } }]);
+
+        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED" }),
+            expect.objectContaining({ code: "VALIDATION_FAILED", path: "/session" })]);
+        await expect(page.locator("iframe")).toHaveCount(0);
+        await expect(page.locator(".conversation-message")).toHaveCount(0);
+    });
 });

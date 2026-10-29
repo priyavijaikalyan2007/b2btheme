@@ -2181,7 +2181,111 @@
               "description": "The transcript to show. Over A2UI it updates in place: write the whole\nsession after each reply, every message with its stable id, role,\ncontent and timestamp, and the transcript re-renders while the user's\nhalf-typed message, focus and scroll stay.",
               "anyOf": [
                 {
-                  "$ref": "#/$defs/Conversation__ConversationSession"
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique session identifier."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable session title. The header shows the title option instead when it is set."
+                    },
+                    "messages": {
+                      "type": "array",
+                      "description": "Messages in this session, oldest first: every message so far, the user's included, in each write.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Unique message identifier: the message's DOM key and the target of its feedback, so keep it stable across writes of the session."
+                          },
+                          "role": {
+                            "description": "Who sent the message. A system or error message is shown as a plain notice.",
+                            "oneOf": [
+                              {
+                                "const": "assistant"
+                              },
+                              {
+                                "const": "error"
+                              },
+                              {
+                                "const": "system"
+                              },
+                              {
+                                "const": "user"
+                              }
+                            ]
+                          },
+                          "content": {
+                            "type": "string",
+                            "description": "Message content: markdown for the assistant, plain text otherwise."
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "When the message was sent."
+                          },
+                          "feedback": {
+                            "type": "object",
+                            "description": "The user's rating of this reply. The feedback event tells you of each rating; repeat it here in every later write, or the reply's thumb is shown unrated again.",
+                            "properties": {
+                              "sentiment": {
+                                "description": "Positive or negative sentiment.",
+                                "oneOf": [
+                                  {
+                                    "const": "negative"
+                                  },
+                                  {
+                                    "const": "positive"
+                                  }
+                                ]
+                              },
+                              "comment": {
+                                "type": "string",
+                                "description": "Optional written comment from the user."
+                              },
+                              "timestamp": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "When the rating was given."
+                              }
+                            },
+                            "required": [
+                              "sentiment",
+                              "timestamp"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "role",
+                          "content",
+                          "timestamp"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the session was created."
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the session was last updated."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "messages",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "additionalProperties": false
                 },
                 {
                   "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
@@ -15588,138 +15692,6 @@
       "description": "A single column layout preset.",
       "additionalProperties": false
     },
-    "Conversation__ConversationMessage": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique message identifier: the message's DOM key and the target of its\nfeedback, so keep it stable across writes of the session. Messages the\ncomponent adds itself (addUserMessage, the send button, ...) get a\ngenerated one; a session passed in must carry its own."
-        },
-        "role": {
-          "$ref": "#/$defs/Conversation__ConversationRole",
-          "description": "Who sent the message."
-        },
-        "content": {
-          "type": "string",
-          "description": "Message content (markdown for assistant, plain text for user)."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "UTC timestamp.",
-          "format": "date-time"
-        },
-        "feedback": {
-          "$ref": "#/$defs/Conversation__FeedbackData",
-          "description": "Feedback on this message (assistant messages only)."
-        },
-        "metadata": {
-          "$ref": "#/$defs/Conversation__Recordstringunknown",
-          "description": "Arbitrary metadata the consumer can attach."
-        }
-      },
-      "required": [
-        "id",
-        "role",
-        "content",
-        "timestamp"
-      ],
-      "description": "A single message in the conversation.",
-      "additionalProperties": false
-    },
-    "Conversation__ConversationRole": {
-      "oneOf": [
-        {
-          "const": "assistant"
-        },
-        {
-          "const": "error"
-        },
-        {
-          "const": "system"
-        },
-        {
-          "const": "user"
-        }
-      ],
-      "description": "Role of a message participant."
-    },
-    "Conversation__ConversationSession": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique session identifier."
-        },
-        "title": {
-          "type": "string",
-          "description": "Human-readable session title."
-        },
-        "messages": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Conversation__ConversationMessage"
-          },
-          "description": "Messages in this session."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "When the session was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "When the session was last updated.",
-          "format": "date-time"
-        },
-        "metadata": {
-          "$ref": "#/$defs/Conversation__Recordstringunknown",
-          "description": "Arbitrary session metadata."
-        }
-      },
-      "required": [
-        "id",
-        "messages",
-        "createdAt",
-        "updatedAt"
-      ],
-      "description": "A session representing a conversation thread.",
-      "additionalProperties": false
-    },
-    "Conversation__FeedbackData": {
-      "type": "object",
-      "properties": {
-        "sentiment": {
-          "$ref": "#/$defs/Conversation__FeedbackSentiment",
-          "description": "Positive or negative sentiment."
-        },
-        "comment": {
-          "type": "string",
-          "description": "Optional written comment from the user."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "UTC timestamp of when feedback was given.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "sentiment",
-        "timestamp"
-      ],
-      "description": "Feedback data attached to an assistant message.",
-      "additionalProperties": false
-    },
-    "Conversation__FeedbackSentiment": {
-      "oneOf": [
-        {
-          "const": "negative"
-        },
-        {
-          "const": "positive"
-        }
-      ],
-      "description": "Feedback sentiment."
-    },
     "Conversation__PartialRecordstringstring": {
       "type": "object",
       "properties": {},
@@ -15728,13 +15700,6 @@
       "additionalProperties": {
         "type": "string"
       }
-    },
-    "Conversation__Recordstringunknown": {
-      "type": "object",
-      "properties": {},
-      "required": [],
-      "description": "Construct a type with a set of properties K of type T",
-      "additionalProperties": {}
     },
     "CronPicker__CronPreset": {
       "type": "object",
