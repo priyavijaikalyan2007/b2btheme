@@ -226,3 +226,122 @@ describe("TenantSwitcher destroy", () =>
 // ADR-154: the deprecated surface must WORK, not merely exist
 // ===========================================================================
 
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    function items(): HTMLElement[]
+    {
+        return Array.from(document.querySelectorAll<HTMLElement>(".tenantswitcher-item"));
+    }
+
+    test("on_Switch_HearsTheTenantWithoutData_AfterOnSwitch_ExactlyOnce", () =>
+    {
+        const order: unknown[] = [];
+        const tenants = makeTenants();
+        tenants[1].data = { secret: "host-only" };
+        const ts = new TenantSwitcher(makeOptions({ tenants, onSwitch: (t) => order.push(`option:${t.id}`) }));
+        ts.on("switch", (p) => order.push(p));
+
+        ts.open();
+        items()[1].click();
+
+        expect(order).toEqual(["option:ws-2", { id: "ws-2", name: "Beta LLC", role: "Member" }]);
+        ts.destroy();
+    });
+
+    test("on_Switch_PickingTheActiveTenant_IsSilent", () =>
+    {
+        const heard = vi.fn();
+        const ts = new TenantSwitcher(makeOptions());
+        ts.on("switch", heard);
+
+        ts.open();
+        items()[0].click();
+
+        expect(heard).not.toHaveBeenCalled();
+        ts.destroy();
+    });
+
+    test("on_Create_HearsTheSearchText_AfterOnCreate", () =>
+    {
+        vi.useFakeTimers();
+        const order: unknown[] = [];
+        const ts = new TenantSwitcher(makeOptions({ showSearch: true, onCreate: () => order.push("option") }));
+        ts.on("create", (p) => order.push(p));
+
+        ts.open();
+        const input = document.querySelector<HTMLInputElement>(".tenantswitcher-search-input")!;
+        input.value = "  Delta  ";
+        document.querySelector<HTMLElement>(".tenantswitcher-create")!.click();
+
+        expect(order).toEqual(["option", "Delta"]);
+        ts.destroy();
+        vi.useRealTimers();
+    });
+
+    test("on_Create_WithoutSearch_HearsAnEmptyString", () =>
+    {
+        const heard = vi.fn();
+        const ts = new TenantSwitcher(makeOptions({ showSearch: false }));
+        ts.on("create", heard);
+
+        ts.open();
+        document.querySelector<HTMLElement>(".tenantswitcher-create")!.click();
+
+        expect(heard).toHaveBeenCalledWith("");
+        ts.destroy();
+    });
+
+    test("getState_ReportsTheActiveTenant_AndSetStateRestoresItSilently", () =>
+    {
+        const onSwitch = vi.fn();
+        const heard = vi.fn();
+        const ts = new TenantSwitcher(makeOptions({ onSwitch }));
+        ts.on("switch", heard);
+
+        ts.setState({ activeTenantId: "ws-3" });
+
+        expect(ts.getState()).toEqual({ activeTenantId: "ws-3" });
+        expect(ts.getActiveTenant()?.name).toBe("Gamma Inc");
+        expect(onSwitch).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
+        ts.destroy();
+    });
+
+    test("setState_WithoutTheKey_LeavesTheActiveTenant", () =>
+    {
+        const ts = new TenantSwitcher(makeOptions());
+
+        ts.setState({});
+
+        expect(ts.getState()).toEqual({ activeTenantId: "ws-1" });
+        ts.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_AndUnsubscribeStopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const ts = new TenantSwitcher(makeOptions());
+        const off = ts.on("switch", heard);
+
+        off();
+        ts.open();
+        items()[1].click();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(() => ts.on("open", vi.fn())).toThrow(/"switch" and "create"/);
+        ts.destroy();
+    });
+
+    test("setData_AnySlot_Throws", () =>
+    {
+        const ts = new TenantSwitcher(makeOptions());
+
+        expect(() => ts.setData("tenants", [])).toThrow(/no data slots/);
+        ts.destroy();
+    });
+});

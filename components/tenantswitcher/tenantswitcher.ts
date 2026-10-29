@@ -185,7 +185,23 @@ export interface TenantSwitcherHandle
     setTenants(tenants: Tenant[]): void;
     addTenant(tenant: Tenant): void;
     removeTenant(id: string): void;
+
+    /** The surface contract (additive, B8): TenantSwitcher has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "switch" (the tenant the user picked, without data, after
+     * onSwitch) or "create" (the search box's text when Create was clicked,
+     * after onCreate). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { activeTenantId }: the active tenant's id. */
+    getState(): Record<string, unknown>;
+    /** Restores activeTenantId as setActiveTenant does: silently, no callback, no channel. */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels (B8). */
+type TenantChannel = "switch" | "create";
 
 export class TenantSwitcher implements TenantSwitcherHandle
 {
@@ -217,6 +233,8 @@ export class TenantSwitcher implements TenantSwitcherHandle
     private searchTimer = 0;
 
     // -- Bound handlers ------------------------------------------------------
+    private readonly handlers: Record<TenantChannel, Set<(payload: unknown) => void>> =
+        { switch: new Set(), create: new Set() };
     private boundOnDocClick = this.onDocClick.bind(this);
     private boundOnDocKeydown = this.onDocKeydown.bind(this);
 
@@ -292,6 +310,8 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.listEl = null;
         this.liveEl = null;
         clearTimeout(this.searchTimer);
+        this.handlers.switch.clear();
+        this.handlers.create.clear();
         logInfo("Destroyed");
     }
 
@@ -336,6 +356,61 @@ export class TenantSwitcher implements TenantSwitcherHandle
     {
         this.activeId = id;
         this.updateTriggerContent();
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** TenantSwitcher has no data slots: its tenants are an option. */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): TenantSwitcher has no data slots. Its tenants are an option.`);
+    }
+
+    /** Subscribes to "switch" or "create"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "switch" && channel !== "create")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "switch" and "create".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** The active tenant's id. */
+    getState(): Record<string, unknown>
+    {
+        return { activeTenantId: this.activeId };
+    }
+
+    /** Restores the active tenant through setActiveTenant, which fires nothing. */
+    setState(state: Record<string, unknown>): void
+    {
+        if (typeof state.activeTenantId === "string")
+        {
+            this.setActiveTenant(state.activeTenantId);
+        }
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: TenantChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     setTenants(tenants: Tenant[]): void
@@ -891,13 +966,22 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.updateTriggerContent();
         this.closePortal();
         safeCallback(this.opts.onSwitch, ws);
+        if (this.handlers.switch.size > 0)
+        {
+            // A JSON copy without data, which is host-only (B8).
+            const { data: _data, ...tenant } = ws;
+            this.emit("switch", JSON.parse(JSON.stringify(tenant)));
+        }
         logInfo(`Switched to tenant: ${ws.name}`);
     }
 
     private onCreateClick(): void
     {
+        // Read before closePortal discards the search box (B8).
+        const query = this.searchInputEl?.value.trim() ?? "";
         this.closePortal();
         safeCallback(this.opts.onCreate);
+        this.emit("create", query);
     }
 
     // ========================================================================
