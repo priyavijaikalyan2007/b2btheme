@@ -5722,6 +5722,15 @@ interface ConformanceTarget
     readonly trigger?: (
         channel: string,
         handle: Record<string, unknown>) => boolean | "async" | void;
+
+    /**
+     * A sample per slot name, used instead of the generic sample of its
+     * payload shape. For a slot whose items need fields the generic
+     * `{ id, name }` lacks (a transcript's timestamps, a relationship's
+     * createdAt), so that the check exercises the slot rather than the
+     * component's input validation (readiness step 2 B7).
+     */
+    readonly slotSamples?: Readonly<Record<string, unknown>>;
 }
 
 /** Declaration of one check, for documentation and coverage reporting. */
@@ -6668,6 +6677,9 @@ function fillSlots(
 {
     for (const slot of target.manifest.accepts)
     {
+        const sample = target.slotSamples && slot.name in target.slotSamples
+            ? target.slotSamples[slot.name]
+            : sampleFor(slot.payload);
         const custom = slot.setter && slot.setter !== "setData"
             && typeof handle[slot.setter] === "function"
             ? slot.setter
@@ -6677,11 +6689,11 @@ function fillSlots(
         {
             if (custom)
             {
-                call(handle, custom, sampleFor(slot.payload));
+                call(handle, custom, sample);
                 return;
             }
 
-            call(handle, "setData", slot.name, sampleFor(slot.payload));
+            call(handle, "setData", slot.name, sample);
         });
 
         if (err)

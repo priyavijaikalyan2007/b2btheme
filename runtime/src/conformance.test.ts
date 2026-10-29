@@ -355,6 +355,25 @@ describe("runConformance — detects violations", () =>
             .toContain("slots-accept-data");
     });
 
+    test("fills a slot with the glue's sample for it instead of the generic one (B7)", () =>
+    {
+        const seen: unknown[] = [];
+        const strict = (hostId: string, options: FakeOptions = {}) =>
+        {
+            const handle = makeFactory()(hostId, options) as Record<string, unknown>;
+            return { ...handle, setData: (_slot: string, value: unknown) =>
+            {
+                if (!Array.isArray(value) || !value.every((r) => "createdAt" in r)) { throw new Error("no createdAt"); }
+                seen.push(value);
+            } };
+        };
+        const sample = [{ id: "r1", createdAt: "2026-10-29T10:00:00.000Z" }];
+
+        expect(failedChecks(check(strict))).toContain("slots-accept-data");
+        expect(failedChecks(check(strict, {}, { slotSamples: { rows: sample } }))).not.toContain("slots-accept-data");
+        expect(seen).toContainEqual(sample);
+    });
+
     test("fails when getState returns an undeclared key", () =>
     {
         expect(failedChecks(check({ undeclaredStateKey: true })))

@@ -570,6 +570,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   depend on (DocViewer's `activePage` must name one of its `pages`,
   DynamicFormSwitcher's `initialVariant` one of its `variants`); every G3 test
   mounts with them, and the rebuild test holds them fixed.
+- **A glue's `slotSamples`** give a slot a sample of its own when the
+  generic `{ id, name }` rows would fail the component's input validation
+  (Conversation's `session` needs timestamps, RelationshipManager's
+  `relationships` a `createdAt`). The `slots-accept-data` check feeds that
+  sample to the slot instead (B7). Don't make the component accept junk.
 - **A glue trigger returns `"async"`** when the gesture reaches the channel
   only after a promise settles (Stepper's finish awaits validation). The
   synchronous conformance checks record a warning; G3 waits for it.
