@@ -1200,7 +1200,7 @@ $control-height-xl=46px
 - CSS: `components/relationshipmanager/relationshipmanager.css`
 - JS: `components/relationshipmanager/relationshipmanager.js`
 - Globals: `createRelationshipManager()`
-- Exports: `interface RelationshipDefinitionSummary`, `type RelationshipSortMode`, `type RelationshipCollapseState`, `interface RelationshipInstance`, `interface CreateRelationshipRequest`, `interface ResourceSearchResult`, `interface RelationshipManagerOptions`, `interface RelationshipManager`, `function createRelationshipManager`
+- Exports: `interface RelationshipDefinitionSummary`, `type RelationshipSortMode`, `type RelationshipCollapseState`, `interface RelationshipInstance`, `interface CreateRelationshipRequest`, `interface ResourceSearchResult`, `interface ResourceSearchRequest`, `interface RelationshipManagerOptions`, `interface RelationshipManager`, `function createRelationshipManager`
 
 ### ribbon
 

@@ -41,6 +41,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 38 on 2026-10-29: the nine B6 data views classified (readiness step 2 B6, ADR-232).
     // 37 on 2026-10-29: prompttemplatemanager classified (readiness step 2 B7, ADR-234).
     // 36 on 2026-10-29: actionitems classified (readiness step 2 B7, ADR-234).
+    // 35 on 2026-10-29: relationshipmanager classified (readiness step 2 B7, ADR-234).
     "anchorlayout",
     "annotation",
     "applauncher",
@@ -66,7 +67,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "navrail",
     "permissionmatrix",
     "propertyinspector",
-    "relationshipmanager",
     "ribbon",
     "ribbonbuilder",
     "sitefooter",
