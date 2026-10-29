@@ -17,6 +17,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 import { bundleAdapter } from "./adapter-bundle.mjs";
@@ -32,6 +33,9 @@ import { classifyMembers, createClassifier, factoryOptionsType, optionsParameter
 import { rendererMeta } from "./mcp-descriptors.mjs";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./migration.mjs";
 import { normaliseTypiaUnit, pruneDefs } from "./normalise.mjs";
+
+const require = createRequire(import.meta.url);
+const Ajv2020 = require("ajv/dist/2020").default;
 import { VIOLATION, isCovered, resolveSurface } from "./resolve.mjs";
 import { emitSchemas } from "./schema.mjs";
 
@@ -198,7 +202,9 @@ export function typiaPick(c)
 {
     const overridden = c.manifest.protocol?.schemas ?? {};
 
-    return c.surface.dataProps.map((d) => d.name).filter((n) => overridden[n] === undefined);
+    // protocol.fixed (ADR-235) is described too, so its values can be checked, then taken out (withoutFixed).
+    return [...c.surface.dataProps.map((d) => d.name).filter((n) => overridden[n] === undefined),
+        ...Object.keys(c.surface.fixed ?? {})];
 }
 
 /** One component's schema, or null with its problems recorded. */
@@ -219,10 +225,44 @@ function schemaFor(c, result, errors)
             + "Move the /** … */ onto the line above."),
         ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}).map((e) =>
             `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or the options type.`),
+        ...fixedProblems(schema, c),
     ];
 
     errors.push(...problems);
-    return problems.length === 0 ? schema : null;
+    return problems.length === 0 ? withoutFixed(schema, c) : null;
+}
+
+/**
+ * A protocol.fixed value its option's schema rejects (ADR-235). The adapter
+ * passes it on every mount, and nothing else would catch a value the
+ * component cannot take.
+ */
+function fixedProblems(schema, c)
+{
+    const ajv = new Ajv2020({ strict: false, allErrors: true });
+
+    return Object.entries(c.surface.fixed ?? {}).flatMap(([option, value]) =>
+    {
+        const validate = ajv.compile({ ...schema.properties[option], $defs: schema.$defs ?? {} });
+
+        return validate(value) ? [] : [`${c.manifest.name}.${option}: protocol.fixed gives it ${JSON.stringify(value)}, `
+            + `which its type rejects (${ajv.errorsText(validate.errors)}). The adapter passes this value on every `
+            + "mount; give one the option accepts."];
+    });
+}
+
+/** The schema without the fixed options, which no agent sees (ADR-235), and the defs only they used. */
+function withoutFixed(schema, c)
+{
+    const fixed = new Set(Object.keys(c.surface.fixed ?? {}));
+
+    if (fixed.size === 0) { return schema; }
+
+    const properties = Object.fromEntries(Object.entries(schema.properties).filter(([k]) => !fixed.has(k)));
+    const required = (schema.required ?? []).filter((k) => !fixed.has(k));
+    const { required: _required, ...rest } = schema;
+
+    return pruneDefs({ ...rest, properties, ...(required.length > 0 ? { required } : {}) });
 }
 
 /**

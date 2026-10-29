@@ -527,8 +527,8 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   (Ribbon's `keyScope`, whose default `"document"` takes the page's keys),
   map it to the JSON value the adapter passes on every mount. The catalog
   leaves it out, so an agent can neither see nor set it. The key must name a
-  data option (`stale-declaration` otherwise), the value must fit its type
-  (`fixed-mismatch`), and it cannot also be host-only (`double-classified`).
+  data option (`stale-declaration` otherwise), the build fails on a value its
+  type rejects, and it cannot also be host-only (`double-classified`).
   Prefer an additive option with today's behaviour as its default, fixed to
   the contained behaviour over A2UI.
 - **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
