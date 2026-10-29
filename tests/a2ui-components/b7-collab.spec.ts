@@ -97,7 +97,7 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             name: "Greeting (Copy)", content: "Hello {{name}}, welcome to {{place}}." })]]);
     });
 
-    test("PromptTemplateManager: the agent's new templates keep the user's selection, variables and preview",
+    test("PromptTemplateManager: the agent's new templates keep the user's selection, draft, variables and preview",
         async ({ page }) =>
         {
             await mount(page, "PromptTemplateManager", { ...PTM, onSelect: act("pick", "select") },
@@ -107,6 +107,7 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await page.locator('.promptmanager-variable-input[data-variable="name"]').fill("Ada");
             await page.locator(".promptmanager-btn-preview").click();
             await expect(page.locator(".promptmanager-preview-panel")).toHaveText("Goodbye Ada.");
+            await page.locator(".promptmanager-desc-input").fill("For leaving users");
 
             await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/templates", value: [
                 { id: "t0", name: "Intro", content: "Hi {{name}}." }, TEMPLATES[0],
@@ -115,9 +116,13 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await expect(page.locator('.promptmanager-list-item[data-template-id="t0"]')).toHaveCount(1);
             await expect(page.locator('.promptmanager-list-item[data-template-id="t2"]'))
                 .toHaveAttribute("aria-selected", "true");
-            await expect(page.locator(".promptmanager-name-input")).toHaveValue("Farewell (edited)");
+            // The unsaved edit is the user's draft: t2 keeps it and its marker over the agent's version.
+            await expect(page.locator(".promptmanager-name-input")).toHaveValue("Farewell");
+            await expect(page.locator(".promptmanager-desc-input")).toHaveValue("For leaving users");
+            await expect(page.locator('.promptmanager-list-item[data-template-id="t2"]'))
+                .toHaveClass(/promptmanager-list-item-dirty/);
             await expect(page.locator('.promptmanager-variable-input[data-variable="name"]')).toHaveValue("Ada");
-            await expect(page.locator(".promptmanager-preview-panel")).toHaveText("Goodbye Ada, see you soon.");
+            await expect(page.locator(".promptmanager-preview-panel")).toHaveText("Goodbye Ada.");
             await sent(page, [["pick", "t2"]]);
         });
 });
