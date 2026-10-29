@@ -88,6 +88,22 @@ describe("runPipeline — fixture widget", () =>
         const schema = run([widget()]).outputs.get("schemas/widget.options.json") as any;
         expect(schema.properties.extra.additionalProperties).toEqual({ type: "string" });
     }, 60_000);
+    test("a nested hostOnly path on a plain field leaves the schema, required included (ADR-230)", () =>
+    {
+        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].id": "A link the agent must not choose." };
+        const result = run([widget({ hostOnly })]);
+        const column = (result.catalog as any).$defs.Widget__Column;
+
+        expect(result.errors).toEqual([]);
+        expect(column.properties).not.toHaveProperty("id");
+        expect(column.required ?? []).not.toContain("id");
+    }, 60_000);
+    test("a nested hostOnly path that names nothing in the schema is an error", () =>
+    {
+        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].nosuch": "A link the agent must not choose." };
+
+        expect(run([widget({ hostOnly })]).errors).toEqual([expect.stringMatching(/widget\.columns\[\]\.nosuch.*names nothing/)]);
+    }, 60_000);
     test("a def that only the overridden prop used is dropped, so the catalog carries no orphan (B4)", () =>
     {
         const before = run([widget()]).catalog as any;

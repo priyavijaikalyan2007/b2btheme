@@ -115,6 +115,50 @@ describe("buildDescriptors — gate G1", () =>
     });
 });
 
+describe("buildDescriptors — dependencies (ADR-230, #51)", () =>
+{
+    const LIBS = {
+        marked: { url: "/lib/marked-18.0.12.js", integrity: "sha384-AAA" },
+        "katex-css": { url: "/lib/katex-css-0.19.0/katex.min.css", integrity: "sha384-BBB" },
+    };
+    const viewer = (dependencies: unknown) =>
+        [{ manifest: manifest({ protocol: { dependencies } }), surface: surface() }];
+    const exists = (rel: string) => ["components/widget/widget.js", "components/markdownrenderer/markdownrenderer.js",
+        "components/markdownrenderer/markdownrenderer.css"].includes(rel);
+
+    test("libraries come first with their integrity, then components with their css, before the component's own", () =>
+    {
+        const r = buildDescriptors(viewer({ libraries: ["marked", "katex-css"], components: ["markdownrenderer"] }),
+            catalog([["Widget", {}]]), exists, LIBS);
+
+        expect(r.problems).toEqual([]);
+        expect(r.descriptors[0].assets).toEqual({ js: "components/widget/widget.js", deps: [
+            { path: "lib/marked-18.0.12.js", integrity: "sha384-AAA" },
+            { path: "lib/katex-css-0.19.0/katex.min.css", integrity: "sha384-BBB" },
+            { path: "components/markdownrenderer/markdownrenderer.js" },
+            { path: "components/markdownrenderer/markdownrenderer.css" },
+        ] });
+    });
+
+    test("a component without dependencies gets no deps key", () =>
+    {
+        expect(buildDescriptors(viewer(undefined), catalog([["Widget", {}]]), exists, LIBS).descriptors[0].assets)
+            .toEqual({ js: "components/widget/widget.js" });
+    });
+
+    test("a library the CDN does not serve, an unbuilt component and the component itself are problems", () =>
+    {
+        const r = buildDescriptors(viewer({ libraries: ["lodash"], components: ["nosuch", "widget"] }),
+            catalog([["Widget", {}]]), exists, LIBS);
+
+        expect(r.problems).toEqual([
+            expect.stringMatching(/Widget.*"lodash".*lib-manifest\.json.*vendor-closure\.mjs/),
+            expect.stringMatching(/Widget.*"nosuch".*components\/nosuch\/nosuch\.js/),
+            expect.stringMatching(/Widget.*names itself/),
+        ]);
+    });
+});
+
 describe("buildDescriptors — tags", () =>
 {
     test("two catalog names mapping to one tag are a problem naming both", () =>

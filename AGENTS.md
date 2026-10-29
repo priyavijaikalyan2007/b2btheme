@@ -539,9 +539,10 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
 - **The link rule (ADR-229): an option that becomes an `<a href>` is
   `protocol.hostOnly`.** An agent-chosen `javascript:` URL would run in the
   host's origin when the user clicked it; over A2UI the agent hears the click
-  and answers with `openUrl`. A nested `href` (`items[].href`) can't be named in
-  `hostOnly`, so give the array a `protocol.schemas` entry that leaves it out:
-  catalog objects are closed, so an agent's link is rejected. Options written as
+  and answers with `openUrl`. Name a nested one as a path (`items[].href`): the
+  generator removes it from the schema (ADR-230), and catalog objects are
+  closed, so an agent's link is rejected. (Breadcrumb and PresenceIndicator
+  predate that and keep a `protocol.schemas` override.) Options written as
   `data-*` attributes (`metadata`) are host-only too: host scripts read them,
   and Bootstrap's `data-bs-*` act on click.
 - **A surface component with nothing to restore declares `stateKeys: []`**
@@ -555,6 +556,17 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   (EmptyState). A click rendered by another component the adapter doesn't load
   (PresenceIndicator's avatars, through PersonChip) stays host-only. The glue's
   `eventProps` is what G3 mounts with to reach the channel (`clickable: true`).
+- **`protocol.dependencies: { libraries?, components? }`: what must be on the
+  page before the component's own script** (ADR-230, #51). Libraries are
+  `dist/lib-manifest.json` names (add a new one to `scripts/vendor-closure.mjs`,
+  pinned exactly); components are directory names. The adapter loads them
+  first, libraries with their integrity hash. A dependency's own dependencies
+  are not followed, so list everything (DocViewer: `marked` and
+  `markdownrenderer`). A component that throws or shows a "required" notice
+  without a library is not "can't work" any more: declare the library.
+- **A glue's `heldProps`** are create-time props other props' valid values
+  depend on (DocViewer's `activePage` must name one of its `pages`); G3 mounts
+  with them and holds them fixed.
 - **A data option named `id`, `accessibility` or `weight` fails the build**:
   A2UI gives every component those. Declare it host-only (MetricCard and
   ReasoningAccordion `id`, ADR-229).

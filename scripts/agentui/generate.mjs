@@ -30,7 +30,7 @@ import { classifyMembers, createClassifier, factoryOptionsType, optionsParameter
 import { rendererMeta } from "./mcp-descriptors.mjs";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./migration.mjs";
 import { normaliseTypiaUnit } from "./normalise.mjs";
-import { VIOLATION, resolveSurface } from "./resolve.mjs";
+import { VIOLATION, isCovered, resolveSurface } from "./resolve.mjs";
 import { emitSchemas } from "./schema.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -75,7 +75,7 @@ export function runPipeline(input)
     errors.push(...ready.flatMap((c) => checkAgentDescription(c.manifest, Object.keys(catalog.components))));
     checkBaseline(catalog, input, errors);
 
-    const adapter = buildDescriptors(ready, catalog, input.assetExists);
+    const adapter = buildDescriptors(ready, catalog, input.assetExists, input.libraries);
     errors.push(...adapter.problems);
 
     return { errors, excluded, catalog, descriptors: adapter.descriptors,
@@ -176,8 +176,10 @@ function schemaFor(c, result, errors)
 
     if (result.error) { errors.push(`${name}: typia could not describe the options: ${result.error}`); return null; }
 
-    const schema = applyOverrides(normaliseTypiaUnit(result.unit), c.manifest.protocol?.schemas ?? {});
+    const stripped = stripHostOnlyPaths(normaliseTypiaUnit(result.unit), c);
+    const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {});
     const problems = [
+        ...stripped.problems,
         ...missingDataMembers(schema, c.surface.dataProps.map((d) => d.name)).map((m) =>
             `${name}.${m}: the schema tool dropped this data member without saying so. Report it on #17.`),
         ...missingDescriptions(schema, c.surface.dataProps).map((m) =>
@@ -189,6 +191,59 @@ function schemaFor(c, result, errors)
 
     errors.push(...problems);
     return problems.length === 0 ? schema : null;
+}
+
+/**
+ * Removes the plain fields that nested protocol.hostOnly paths name, such as
+ * Breadcrumb's items[].href (ADR-230): catalog objects are closed, so an
+ * agent's value there is rejected. A path that covers a hazard is a
+ * declaration only, as before; the schema tool already drops or opens it.
+ */
+function stripHostOnlyPaths(schema, c)
+{
+    const nested = Object.keys(c.manifest.protocol?.hostOnly ?? {}).filter((k) => /[.[]/.test(k)
+        && !c.members.some((m) => m.hazards.some((h) => isCovered(h.path, { [k]: "" }))));
+
+    if (nested.length === 0) { return { schema, problems: [] }; }
+
+    const out = structuredClone(schema);
+    const problems = nested.filter((k) => !removePath(out, k)).map((k) => `${c.manifest.name}.${k}: protocol.hostOnly `
+        + "names nothing in the generated schema, so nothing was removed. Correct the path in "
+        + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
+
+    return { schema: out, problems };
+}
+
+/** Deletes the field `path` names ("pages[].url"), through $refs and union arms; false when it names nothing. */
+function removePath(schema, path)
+{
+    const [root, ...rest] = path.split(/(?=\[\])|\.|(?<=\[\])/).filter(Boolean);
+    const field = rest.pop();
+    let nodes = [schema.properties[root]].filter(Boolean);
+
+    for (const seg of rest)
+    {
+        nodes = nodes.flatMap((n) => arms(schema, n)).flatMap((n) => (seg === "[]" ? (n.items ? [n.items] : [])
+            : (n.properties?.[seg] ? [n.properties[seg]] : [])));
+    }
+
+    const owners = nodes.flatMap((n) => arms(schema, n)).filter((n) => n.properties?.[field] !== undefined);
+
+    for (const o of owners)
+    {
+        delete o.properties[field];
+        if (Array.isArray(o.required)) { o.required = o.required.filter((r) => r !== field); }
+    }
+
+    return owners.length > 0;
+}
+
+/** A schema node, dereferenced, and every arm of its unions. */
+function arms(schema, node)
+{
+    const n = node.$ref?.startsWith("#/$defs/") ? schema.$defs[node.$ref.slice("#/$defs/".length)] : node;
+
+    return [n, ...[...(n.anyOf ?? []), ...(n.oneOf ?? [])].flatMap((a) => arms(schema, a))];
 }
 
 /**
@@ -462,7 +517,22 @@ function repoInputs(repoRoot, writeBaseline)
         repoRoot,
         baselines: loadBaselines(), major: CATALOG_MAJOR, writeBaseline,
         assetExists: (rel) => fs.existsSync(path.join(repoRoot, "dist", rel)),
+        libraries: libraryAssets(repoRoot),
     };
+}
+
+/** dist/lib-manifest.json's assets, which protocol.dependencies.libraries names (ADR-230). */
+function libraryAssets(repoRoot)
+{
+    const libPath = path.join(repoRoot, "dist", "lib-manifest.json");
+
+    if (!fs.existsSync(libPath))
+    {
+        throw new Error(`${libPath} does not exist. The generator resolves protocol.dependencies against it; run `
+            + "`npm run build:vendor` first (npm run build runs it before build:agentui).");
+    }
+
+    return JSON.parse(fs.readFileSync(libPath, "utf8")).assets;
 }
 
 /** Committed baselines, keyed by major. */

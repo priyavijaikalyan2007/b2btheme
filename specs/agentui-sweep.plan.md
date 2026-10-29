@@ -1824,3 +1824,32 @@ For the seven surface components above:
   - the dist diff (the seven components' JS, and the runtime);
   - token growth.
 - **The PR,** stacked on #50.
+
+---
+
+## P1: component dependencies (#51), before B5
+
+**User decisions (2026-10-29):** build #51 before B5, and serve marked and KaTeX from `/lib/`.
+
+**Goal:** a catalog component can need a vendored library or another component, and the adapter loads it first. DocViewer joins, and PresenceIndicator gains its click. B5 and B6 can then include CodeEditor (CodeMirror 6), MarkdownEditor (Vditor), LatexEditor (KaTeX) and ChartPanel (Chart.js).
+
+**As built:**
+- **Vendor:**
+  - `marked` 18.0.12, pinned exactly; it was `^18.0.12`, so nothing moved;
+  - `katex` 0.19.0, a single file;
+  - `katex-css` 0.19.0, the stylesheet plus fonts;
+  - `build:vendor` now runs before `build:agentui`.
+- **`protocol.dependencies: { libraries?, components? }`:**
+  - the registry validates its shape;
+  - the generator resolves it into descriptor `deps`: libraries with URL and integrity, then component script and CSS. Problems for unknown names; dependencies aren't followed transitively.
+- **Adapter loader:** `deps` are injected before the component's script, libraries with `integrity` and `crossorigin`; once per URL.
+- **Generator:**
+  - nested `hostOnly` paths to plain fields are removed from the schema;
+  - the `readOnly` keyword is dropped.
+
+  Breadcrumb and PresenceIndicator keep their B4 overrides, so a published B4 schema never changes.
+- **Tests:**
+  - G3 and the fleet gate install dependencies;
+  - G3 honours glue `heldProps`;
+  - `p1-dependencies.spec.ts`: DocViewer renders through marked with SRI, its page URL is rejected, and a PresenceIndicator click reaches the agent.
+- **Bookkeeping:** pending 55 → 54; `unclassifiedOptions` 427 → 425.

@@ -135,6 +135,16 @@ describe("resolve — declarations", () =>
     {
         expect(codes(manifest({ protocol: { hostOnly: { gone: REASON } } }), [])).toEqual([VIOLATION.STALE_DECLARATION]);
     });
+    test("a nested path into a data member is left to the schema step, which removes it (ADR-230)", () =>
+    {
+        const m = manifest({ protocol: { hostOnly: { "items[].href": REASON } } });
+        expect(codes(m, [member("items", "data")])).toEqual([]);
+    });
+    test("a nested path into no member is stale", () =>
+    {
+        const m = manifest({ protocol: { hostOnly: { "gone[].href": REASON } } });
+        expect(codes(m, [])).toEqual([VIOLATION.STALE_DECLARATION]);
+    });
     test("a short reason fails", () =>
     {
         const m = manifest({ protocol: { hostOnly: { container: "n/a" } } });

@@ -223,6 +223,9 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `cytoscape` | 3.26.0 | Was missing from the original request |
 | `chart.js` | 4.5.1 | Also still at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
+| `marked` | 18.0.12 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
+| `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
+| `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
 
 `font-awesome` is CSS plus webfonts rather than a script, so it is served as a
 versioned **directory**:

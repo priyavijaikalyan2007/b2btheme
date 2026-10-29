@@ -34,6 +34,8 @@ export const PENDING_CLASSIFICATION = new Set([
     // never reach an agent and uploading needs a host handler.
     // 55 on 2026-10-29: ten B4 display components classified (readiness step 2 B4, ADR-229); docviewer stays: it
     // throws without MarkdownRenderer, which the adapter does not load.
+    // 54 on 2026-10-29: docviewer classified; the adapter loads MarkdownRenderer and marked first (readiness
+    // step 2 P1, ADR-230).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -50,7 +52,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "datagrid",
     "diagramengine",
     "docklayout",
-    "docviewer",
     "dynamicformswitcher",
     "explorerpicker",
     "facetsearch",

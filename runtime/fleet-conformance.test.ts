@@ -20,6 +20,8 @@
  * Covers PRD §16.2 and plan Phase 6.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import { describe, test, expect } from "vitest";
 
 import {
@@ -279,6 +281,27 @@ async function loadManifest(name: string): Promise<CapabilityManifest | null>
 }
 
 /**
+ * Runs a vendored library's built file in global scope, so it publishes its
+ * global as the <script> the adapter injects would. jsdom does not run those.
+ *
+ * @param name - The library's dist/lib-manifest.json name.
+ */
+function runLibrary(name: string): void
+{
+    const dist = path.join(__dirname, "..", "dist");
+    const manifestPath = path.join(dist, "lib-manifest.json");
+
+    if (!fs.existsSync(manifestPath))
+    {
+        throw new Error(`${manifestPath} is missing; run \`npm run build\` first.`);
+    }
+
+    const asset = JSON.parse(fs.readFileSync(manifestPath, "utf8")).assets[name] as { url: string };
+
+    (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8"));
+}
+
+/**
  * Builds a conformance target, applying optional per-component glue from
  * `<name>.conformance.ts` when the component needs a non-canonical invocation
  * or a way to trigger its channels.
@@ -296,6 +319,15 @@ async function buildTarget(
     if (!load)
     {
         return null;
+    }
+
+    // What it declares it needs comes first, as the A2UI adapter loads it (ADR-230): DocViewer renders through
+    // MarkdownRenderer and marked; a PresenceIndicator avatar is clickable only through PersonChip.
+    for (const lib of manifest.protocol?.dependencies?.libraries ?? []) { runLibrary(lib); }
+
+    for (const dep of manifest.protocol?.dependencies?.components ?? [])
+    {
+        await COMPONENT_LOADERS[entryPath(dep)]();
     }
 
     const mod = await load();

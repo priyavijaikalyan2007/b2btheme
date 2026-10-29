@@ -299,8 +299,11 @@ function checkStaleDeclarations(ctx, members)
     const { protocol } = ctx;
     const isMember = (k) => ctx.byName.has(k);
     const isPath = (k) => members.some((m) => m.hazards.some((h) => isCovered(h.path, { [k]: "" })));
+    // A nested path to a plain field (items[].href) is removed from the schema by the generator, which
+    // fails the build when the path names nothing there (ADR-230); here its root must be a data member.
+    const isNestedData = (k) => /[.[]/.test(k) && ctx.byName.get(k.split(/[.[]/)[0])?.cls === MEMBER_CLASS.DATA;
 
-    staleKeys(ctx, protocol.hostOnly, (k) => isMember(k) || isPath(k), "protocol.hostOnly");
+    staleKeys(ctx, protocol.hostOnly, (k) => isMember(k) || isPath(k) || isNestedData(k), "protocol.hostOnly");
     staleKeys(ctx, protocol.providers, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.FUNCTION, "protocol.providers");
     staleKeys(ctx, protocol.schemas, isMember, "protocol.schemas");
     staleKeys(ctx, protocol.hostOnlyActions, (k) => ctx.manifest.actions.some((a) => a.id === k),
