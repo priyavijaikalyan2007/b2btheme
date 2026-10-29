@@ -111,16 +111,33 @@ export interface PromptTemplate
 
 export interface PromptTemplateManagerOptions
 {
+    /**
+     * The templates to list, each with an id, a name and its prompt content, where {{name}} marks a variable.
+     * The first is selected when the manager is shown. Default: none.
+     */
     templates?: PromptTemplate[];
+    /** The category names offered in each template's Category select, after "No category". Default: none. */
     categories?: string[];
+    /** Shows the Preview button, which renders the prompt with the filled variables. Default: true. */
     showPreview?: boolean;
+    /** Shows an input for each {{variable}} detected in the selected template's prompt. Default: true. */
     showVariableEditor?: boolean;
+    /**
+     * Shows the Import and Export buttons. Imports and exports stay in the user's browser: imported templates
+     * fire no callback, and an export is a file download. Default: true.
+     */
     showImportExport?: boolean;
+    /** Shows the search box above the list, matching names, descriptions, categories and tags. Default: true. */
     showSearch?: boolean;
+    /** CSS height of the prompt editor, such as "300px". Default: "300px". */
     editorHeight?: string;
+    /** Starting width of the template list in pixels; the user can drag the divider. Default: 300. */
     listWidth?: number;
+    /** CSS height of the whole manager, such as "600px". Default: "600px". */
     height?: string;
+    /** Hides New, Save, Duplicate, Delete and the tag remove buttons; the prompt is read-only. Default: false. */
     readOnly?: boolean;
+    /** Extra space-separated CSS classes added to the root element. Default: none. */
     cssClass?: string;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
@@ -236,6 +253,30 @@ function substituteVariables(
 }
 
 // ============================================================================
+// SURFACE CONTRACT HELPERS (readiness step 2 B7)
+// ============================================================================
+
+/** The channels on() accepts (surface contract, B7). */
+const SURFACE_CHANNELS = ["select", "save", "delete", "duplicate"] as const;
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
+
+/** True for a non-null object that is not an array. */
+function isPlainRecord(value: unknown): value is Record<string, unknown>
+{
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * A plain-JSON copy of a template for a channel payload: no metadata, which is host data typed as an open record,
+ * and nothing shared with the stored template.
+ */
+function toTemplatePayload(tpl: PromptTemplate): Record<string, unknown>
+{
+    const { metadata: _metadata, ...rest } = tpl;
+    return JSON.parse(JSON.stringify(rest)) as Record<string, unknown>;
+}
+
+// ============================================================================
 // CLASS: PromptTemplateManager
 // ============================================================================
 
@@ -264,6 +305,27 @@ export interface PromptTemplateManagerHandle
     importTemplates(json: string): void;
     refresh(): Promise<void>;
     getPreviewContent(variables?: Record<string, string>): string;
+
+    /**
+     * The surface contract (additive): replaces the list from "templates" silently (no callback, no channel).
+     * The selection stays when its id is still in the list, otherwise the first template is selected; filled
+     * variables, an open preview and the search stay. Unsaved edits are replaced with the new list and lose their
+     * markers. Unlike setTemplates(), which is unchanged. Any other slot, or a value that is not an array, throws.
+     */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "select" (the id), "save" (the saved template), "delete" (the id) or "duplicate" (the new
+     * template); any other channel throws. Each fires after its legacy callback, and without it; save, delete and
+     * duplicate only once the change has happened. Payloads are plain JSON copies. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { selected, variables, preview }: the selected id or null, filled values by template id, the preview open. */
+    getState(): Record<string, unknown>;
+    /**
+     * Silently (no callback, no channel) restores the keys given: selecting closes the preview, as the user's
+     * selection does, unless preview is given too. An unknown selected id, or a value of the wrong type, throws.
+     */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class PromptTemplateManager implements PromptTemplateManagerHandle
@@ -277,6 +339,10 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
     private previewVisible = false;
     private destroyed = false;
     private shown = false;
+
+    // Surface contract channel subscribers, one Set per declared channel (B7)
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
 
     // DOM
     private rootEl: HTMLElement | null = null;
@@ -1452,12 +1518,15 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         // A save that fails keeps the edit, keeps the dirty marker, and says
         // so. The marker is the only thing standing between the user and
         // silent loss, so it is cleared on the success path ONLY.
+        let stored = tpl;
+
         if (this.opts.onSave)
         {
             try
             {
                 const saved = await this.opts.onSave(tpl);
                 this.replaceTemplate(saved);
+                stored = saved;
             }
             catch (err)
             {
@@ -1475,6 +1544,7 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         this.refreshListItem(tpl);
         this.updateStatusBar();
         logInfo("Saved:", tpl.id, "v" + tpl.version);
+        this.emitChannel("save", () => toTemplatePayload(stored));
     }
 
     // ========================================================================
@@ -1515,6 +1585,7 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         this.renderTemplateList();
         this.renderDetail();
         logInfo("Deleted:", tpl.id);
+        this.emitChannel("delete", () => tpl.id);
     }
 
     // ========================================================================
@@ -1542,6 +1613,8 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         // ADR-148. A rejected duplicate used to fall back to the local copy
         // and push it, creating a template the backend has never heard of —
         // which then looks real until the next refresh silently removes it.
+        let added: PromptTemplate;
+
         if (this.opts.onDuplicate)
         {
             let result: PromptTemplate;
@@ -1561,17 +1634,20 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
             if (!result.id) { result.id = generateId(); }
             this.templates.push(result);
             this.selectedId = result.id;
+            added = result;
         }
         else
         {
             copy.id = generateId();
             this.templates.push(copy);
             this.selectedId = copy.id;
+            added = copy;
         }
 
         this.renderTemplateList();
         this.renderDetail();
         logInfo("Duplicated:", tpl.id, "->", this.selectedId);
+        this.emitChannel("duplicate", () => toTemplatePayload(added));
     }
 
     // ========================================================================
@@ -1842,6 +1918,7 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
         this.hide();
         this.rootEl = null;
         this.splitEl = null;
@@ -1906,6 +1983,8 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         {
             safeCallback(() => { this.opts.onSelect!(tpl); }, undefined);
         }
+
+        this.emitChannel("select", () => id);
     }
 
     private updateListSelection(): void
@@ -2021,6 +2100,149 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         const values = variables
             || this.collectVariableValues(tpl.id);
         return substituteVariables(tpl.content || "", values);
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B7)
+    // ========================================================================
+
+    /**
+     * Replaces the list from the "templates" slot silently: no onSelect and no channel, unlike setTemplates(),
+     * which resets to the first template and fires onSelect. An agent rewrites the list mid-conversation (B7-1),
+     * so the selection stays when its id is still there, and the filled variables, an open preview, the search
+     * and the list's scroll stay too. Unsaved edits are template data: the new list replaces them.
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "templates")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "templates".');
+        }
+        if (!Array.isArray(value))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("templates"): expected an array of templates, got `
+                + `${value === null ? "null" : typeof value}. Pass the whole list, as getTemplates() returns it.`);
+        }
+
+        const previous = this.selectedId;
+        const previewOpen = this.previewVisible;
+        const scrollTop = this.listEl ? this.listEl.scrollTop : 0;
+
+        this.templates = (value as PromptTemplate[]).map(function(t) { return { ...t }; });
+        this.dirtyIds.clear();
+
+        const kept = previous !== null && this.templates.some((t) => t.id === previous);
+        this.selectedId = kept ? previous
+            : (this.templates.length > 0 ? this.templates[0].id : null);
+
+        this.renderTemplateList();
+        if (this.searchInput && this.searchInput.value.trim().length > 0) { this.filterTemplates(); }
+        if (this.listEl) { this.listEl.scrollTop = scrollTop; }
+
+        // renderDetail() closes the preview, as any selection does; reopen it for the template still selected.
+        this.renderDetail();
+        if (kept && previewOpen) { this.togglePreview(); }
+
+        logDebug("setData(templates):", this.templates.length, "templates; selected:", this.selectedId);
+    }
+
+    /** Subscribes to a declared channel; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /** The selected id or null, the filled variable values by template id, and whether the preview is open. */
+    public getState(): Record<string, unknown>
+    {
+        const variables: Record<string, Record<string, string>> = {};
+        for (const [id, values] of this.variableValues) { variables[id] = { ...values }; }
+
+        return { selected: this.selectedId, variables, preview: this.previewVisible };
+    }
+
+    /**
+     * Restores state captured by getState() silently: no onSelect and no channel fires. Keys left out (or
+     * undefined) are left alone. Selecting closes the preview, as the user's selection does, unless preview is
+     * given too. An unknown selected id throws, as selectTemplate() does (ADR-200).
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        const { selected, variables, preview } = state;
+
+        if (selected !== undefined && selected !== null && typeof selected !== "string")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: selected must be a template id or null, got ${typeof selected}.`);
+        }
+        if (typeof selected === "string" && !this.templates.some((t) => t.id === selected))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: no template with id "${selected}". `
+                + "Pass an id from getTemplates().");
+        }
+        if (variables !== undefined && !(isPlainRecord(variables) && Object.values(variables).every(isPlainRecord)))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setState: variables must map template ids to { name: value } records, as getState() `
+                + "returns them.");
+        }
+        if (preview !== undefined && typeof preview !== "boolean")
+        {
+            throw new Error(`${LOG_PREFIX} setState: preview must be true or false, got ${typeof preview}.`);
+        }
+
+        if (selected !== undefined)
+        {
+            this.selectedId = selected as string | null;
+            this.updateListSelection();
+            this.renderDetail();
+        }
+
+        if (variables !== undefined)
+        {
+            const entries = Object.entries(variables as Record<string, Record<string, string>>);
+            this.variableValues = new Map(entries.map(([id, values]) => [id, { ...values }]));
+            this.renderVariables();
+            if (this.previewVisible) { this.renderPreview(); }
+        }
+
+        if (preview !== undefined && preview !== this.previewVisible) { this.togglePreview(); }
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by try/catch. The caller has already invoked the
+     * legacy callback. Each subscriber gets its own fresh copy, built only when somebody listens.
+     */
+    private emitChannel(channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        const handlers = this.channelHandlers.get(channel)!;
+        if (handlers.size === 0) { return; }
+
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
     }
 }
 
