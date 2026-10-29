@@ -72,6 +72,49 @@ const AI = { ...EV, items: { path: "/items" } };
 const pickRow = (page: Page, id: string, add = false) => page.locator(
     `.actionitems-item[data-id="${id}"] .actionitems-number`).click(add ? { modifiers: ["ControlOrMeta"] } : {});
 
+/** A complete relationship, every field RelationshipInstance requires, as an agent sends it. */
+const relationship = (id: string, name: string, group: string, extra: object = {}) => ({
+    id, relationshipKey: group.toLowerCase().replace(/ /g, "_"), relationshipDisplayName: group,
+    direction: "outbound", otherResourceId: `res-${id}`, otherResourceDisplayName: name, otherResourceType: "service",
+    properties: {}, provenance: "manual", createdAt: "2026-10-29T09:00:00.000Z", ...extra,
+});
+
+/** Two manual groups and an AI suggestion. */
+const RELATIONSHIPS = [
+    relationship("r1", "Billing API", "Depends On"),
+    relationship("r2", "Platform team", "Owned By"),
+    relationship("r3", "Ledger", "Depends On", { provenance: "ai_inferred", confidence: 0.8 }),
+];
+
+/** One definition that creates as soon as a target is picked, and one with a properties form. */
+const DEFINITIONS = [
+    { key: "depends_on", displayName: "Depends On", targetTypeKeys: ["service"], sourceTypeKeys: null,
+        cardinality: "many-to-many" },
+    { key: "documented_by", displayName: "Documented By", targetTypeKeys: ["doc"], sourceTypeKeys: null,
+        cardinality: "many-to-one", propertiesSchema: { section: { title: "Section", type: "string" } } },
+];
+
+/** The manager with its relationships in the slot at /relationships, the Add button, and the target search. */
+const RM = { ...EV, resourceId: "svc-checkout", resourceType: "service", resourceDisplayName: "Checkout",
+    relationshipDefinitions: DEFINITIONS, relationships: { path: "/relationships" }, showAddButton: true,
+    onSearch: act("find", "search"), searchResult: { path: "/answers/search" } };
+
+/** Clicks + Add, picks the definition named `def` and types `query` into the target search. */
+async function searchTargets(page: Page, def: string, query: string): Promise<void>
+{
+    await page.locator(".rm-add-btn").click();
+    await page.locator(".rm-def-item", { hasText: def }).click();
+    await page.locator(".rm-search-input").fill(query);
+}
+
+/** The agent answers the target search. */
+const answerSearch = (page: Page, value: unknown[]) =>
+    send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/answers/search", value } }]);
+
+/** A button on the row for `name`. */
+const rowButton = (page: Page, name: string, selector: string) =>
+    page.locator(".rm-item", { has: page.locator(".rm-item-name", { hasText: name }) }).locator(selector);
+
 test.describe("B7 collaboration and AI under @a2ui/lit", () =>
 {
     test("PromptTemplateManager: clicking a template sends onSelect with its id", async ({ page }) =>
@@ -277,5 +320,120 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await input.blur();
             await sent(page, [["created", created],
                 ["updated", { itemId: created.id, changes: { content: "Order lunch" } }]]);
+        });
+
+    test("RelationshipManager: the agent answers a target search, and picking a result sends onCreateRelationship",
+        async ({ page }) =>
+        {
+            await mount(page, "RelationshipManager", { ...RM,
+                onCreateRelationship: act("create", "createRelationship") }, { relationships: RELATIONSHIPS });
+
+            await searchTargets(page, "Depends On", "led");
+            await expect.poll(() => actions(page)).toEqual([expect.objectContaining({ name: "find",
+                context: { p: { query: "led", typeKeys: ["service"] } } })]);
+            await answerSearch(page, [{ id: "svc-ledger", displayName: "Ledger", typeKey: "service",
+                color: "#2E7D32" }]);
+            await page.locator(".rm-search-item", { hasText: "Ledger" }).click();
+
+            await sent(page, [["find", { query: "led", typeKeys: ["service"] }],
+                ["create", { targetResourceId: "svc-ledger", relationshipKey: "depends_on", properties: {} }]]);
+            await expect(page.locator(".rm-add-panel")).toBeHidden();
+        });
+
+    test("RelationshipManager: a definition's form sends its values with onCreateRelationship", async ({ page }) =>
+    {
+        await mount(page, "RelationshipManager", { ...RM,
+            onCreateRelationship: act("create", "createRelationship") }, { relationships: RELATIONSHIPS });
+
+        await searchTargets(page, "Documented By", "run");
+        await expect.poll(async () => (await actions(page)).length).toBe(1);
+        await answerSearch(page, [{ id: "doc-runbook", displayName: "Runbook", typeKey: "doc" }]);
+        await page.locator(".rm-search-item", { hasText: "Runbook" }).click();
+        await page.locator('.rm-props-form input[name="section"]').fill("Payments");
+        await page.locator(".rm-create-btn").click();
+
+        await sent(page, [["find", { query: "run", typeKeys: ["doc"] }], ["create", { targetResourceId: "doc-runbook",
+            relationshipKey: "documented_by", properties: { section: "Payments" } }]]);
+    });
+
+    test("RelationshipManager: a search answer whose colour is not hex fails validation and renders nothing",
+        async ({ page }) =>
+        {
+            await mount(page, "RelationshipManager", RM, { relationships: RELATIONSHIPS });
+
+            await searchTargets(page, "Depends On", "led");
+            await expect.poll(async () => (await actions(page)).length).toBe(1);
+            await answerSearch(page, [{ id: "svc-ledger", displayName: "Ledger", typeKey: "service", color: "red" }]);
+
+            await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED" })]);
+            await expect(page.locator(".rm-search-item")).toHaveCount(0);
+        });
+
+    test("RelationshipManager: deleting asks ConfirmDialog, then sends onDeleteRelationship with the id",
+        async ({ page }) =>
+        {
+            await mount(page, "RelationshipManager", { ...RM,
+                onDeleteRelationship: act("delete", "deleteRelationship") }, { relationships: RELATIONSHIPS });
+
+            await rowButton(page, "Billing API", ".rm-more-btn").click();
+            await page.locator(".confirmdialog-cancel").click();
+            await rowButton(page, "Platform team", ".rm-more-btn").click();
+            await page.locator(".confirmdialog-confirm").click();
+
+            await sent(page, [["delete", "r2"]]);
+        });
+
+    test("RelationshipManager: Navigate, Confirm and Dismiss send onNavigate, onConfirmInferred and onDismissInferred",
+        async ({ page }) =>
+        {
+            await mount(page, "RelationshipManager", { ...RM, onNavigate: act("open", "navigate"),
+                onConfirmInferred: act("confirm", "confirmInferred"),
+                onDismissInferred: act("dismiss", "dismissInferred") }, { relationships: RELATIONSHIPS });
+
+            await rowButton(page, "Billing API", '[aria-label="Navigate to resource"]').click();
+            await rowButton(page, "Ledger", ".rm-confirm-btn").click();
+            await rowButton(page, "Ledger", ".rm-dismiss-btn").click();
+
+            await sent(page, [["open", "res-r1"], ["confirm", "r3"], ["dismiss", "r3"]]);
+        });
+
+    test("RelationshipManager: the agent's new relationships keep the open Add panel, sort, collapsed group and scroll",
+        async ({ page }) =>
+        {
+            await mount(page, "RelationshipManager", { ...RM, showInlineToolbar: true,
+                onCreateRelationship: act("create", "createRelationship") }, { relationships: RELATIONSHIPS });
+            // A host that gives the manager a height, so its list scrolls.
+            await page.addStyleTag({ content: ".rm-root { height: 260px; }" });
+            const many = Array.from({ length: 12 }, (_, i) => relationship(`m${i}`, `Service ${i}`, "Depends On"));
+            await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/relationships",
+                value: [...RELATIONSHIPS, ...many] } }]);
+
+            await page.locator('[data-item-id="rm-sort-desc"]').click();
+            await page.locator(".rm-group-header", { hasText: "Owned By" }).click();
+            await searchTargets(page, "Depends On", "led");
+            await expect.poll(async () => (await actions(page)).length).toBe(1);
+            await answerSearch(page, [{ id: "svc-ledger", displayName: "Ledger", typeKey: "service" }]);
+            await expect(page.locator(".rm-search-item")).toHaveCount(1);
+            await page.locator(".rm-list").evaluate((list) => { list.scrollTop = 60; });
+
+            // The agent drops Billing API and adds Audit Log.
+            await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/relationships", value: [
+                ...RELATIONSHIPS.slice(1), ...many, relationship("r4", "Audit Log", "Depends On")] } }]);
+
+            await expect(page.locator(".rm-item-name", { hasText: "Audit Log" })).toHaveCount(1);
+            await expect(page.locator(".rm-item-name", { hasText: "Billing API" })).toHaveCount(0);
+            await expect(page.locator(".rm-group-label")).toHaveText(
+                ["Owned By (1)", "Depends On (13)", "AI Suggested (1)"]);
+            await expect(page.locator(".rm-group-header", { hasText: "Owned By" }).locator(".rm-group-arrow"))
+                .toHaveText("\u25b8");
+            await expect(page.locator(".rm-add-step")).toHaveText("Step 2 of 3");
+            await expect(page.locator(".rm-search-input")).toHaveValue("led");
+            expect(await page.locator(".rm-list").evaluate((list) => list.scrollTop)).toBe(60);
+            expect(await actions(page)).toHaveLength(1);
+
+            // The Add flow is still live: picking the result creates against the definition the user chose.
+            await page.locator(".rm-search-item", { hasText: "Ledger" }).click();
+            await sent(page, [["find", { query: "led", typeKeys: ["service"] }],
+                ["create", { targetResourceId: "svc-ledger", relationshipKey: "depends_on", properties: {} }]]);
         });
 });
