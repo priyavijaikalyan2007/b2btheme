@@ -128,6 +128,12 @@ describe("leanCatalog refuses what it cannot render", () =>
         expect(() => leanCatalog({ catalog: withEntry(entry), basic, commonTypes }))
             .toThrow(/Odd: .*does not know the catalog part/);
     });
+    test("a function of our own, which it would list as the basic catalog's", () =>
+    {
+        const odd = { ...catalog, functions: { ...catalog.functions, shout: { type: "object" } } };
+
+        expect(() => leanCatalog({ catalog: odd, basic, commonTypes })).toThrow(/function shout is not a basic re-export/);
+    });
     test("a common type it has no rule for", () =>
     {
         const entry = { allOf: [{ ...own, properties: { ...own.properties,

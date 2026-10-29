@@ -43,6 +43,13 @@ export function leanCatalog({ catalog, basic, commonTypes })
     const entries = Object.entries(catalog.components);
     const common = commonDefs(commonTypes);
     const clash = Object.keys(catalog.$defs).find((k) => k in common);
+    const native = Object.entries(catalog.functions).find(([, f]) => !reexported(f));
+
+    if (native)
+    {
+        throw new Error(`The catalog's function ${native[0]} is not a basic re-export; the lean catalog lists only `
+            + "re-exported functions. Teach scripts/agentui/agent-catalog.mjs to render it.");
+    }
 
     if (clash)
     {
