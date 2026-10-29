@@ -81,7 +81,7 @@ export const CONFORMANCE_GLUE =
 
     trigger: (channel: string): boolean =>
     {
-        const editor = VditorStandIn.instances.at(-1);
+        const editor = VditorStandIn.instances[VditorStandIn.instances.length - 1];
 
         if (channel !== "save" || !editor) { return false; }
 

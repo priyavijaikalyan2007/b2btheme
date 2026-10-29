@@ -52,7 +52,7 @@ export const CONFORMANCE_GLUE =
 
         if (channel === "saveDraft")
         {
-            const draft = [...stepper.getElement().querySelectorAll("button")]
+            const draft = Array.from(stepper.getElement().querySelectorAll("button"))
                 .find((b) => b.textContent === "Save as Draft");
             draft?.click();
             return draft !== undefined;
