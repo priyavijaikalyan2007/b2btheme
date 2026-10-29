@@ -1403,3 +1403,66 @@ describe("show is safe to call twice", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// A NODE ID IS DATA, NOT A SELECTOR
+// ============================================================================
+
+describe("node ids holding selector syntax", () =>
+{
+    // The id was interpolated into `[data-node-id="${id}"]`, so a quote
+    // threw a SyntaxError from querySelector: scrollToNode threw, a
+    // folder's expand rejected before its request, and a row click lost
+    // its focus ring. Valid ids find the same element as before.
+    const QUOTED = 'say "hi"';
+    const FOLDER = 'odd "folder" ] , [x';
+
+    /** The first element carrying the id, which is the one a valid id's selector found (the tree item). */
+    function firstWithId(id: string): HTMLElement | undefined
+    {
+        return [...container.querySelectorAll<HTMLElement>("[data-node-id]")].find((el) => el.dataset.nodeId === id);
+    }
+
+    function quotedTree(): ExplorerNode[]
+    {
+        return [makeFolder(FOLDER, "Odd folder"), makeAsset(QUOTED, "Quoted asset")];
+    }
+
+    test("scrollToNode finds the row and flashes it", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree() }));
+        Element.prototype.scrollIntoView ??= () => undefined;
+
+        picker.scrollToNode(QUOTED);
+
+        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-flash")).toBe(true);
+        picker.destroy();
+    });
+
+    test("expanding the folder loads and renders its children", async () =>
+    {
+        const fetchFn = vi.fn().mockResolvedValue({
+            ok: true, json: () => Promise.resolve([makeAsset("kid", "Kid", FOLDER)]) });
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree(), fetchFn }));
+
+        await picker.expandNode(FOLDER);
+
+        expect(fetchFn).toHaveBeenCalledTimes(1);
+        expect([...container.querySelectorAll(".explorerpicker-label")].map((n) => n.textContent))
+            .toContain("Kid");
+        picker.destroy();
+    });
+
+    test("clicking the row selects it and gives it the focus ring", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree() }));
+        const row = () => [...container.querySelectorAll<HTMLElement>(".explorerpicker-node-row")]
+            .find((r) => r.dataset.nodeId === QUOTED)!;
+
+        row().click();
+
+        expect(picker.getSelection().map((s) => s.nodeId)).toEqual([QUOTED]);
+        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-focused")).toBe(true);
+        picker.destroy();
+    });
+});

@@ -2382,9 +2382,9 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private showNodeSpinner(
         nodeId: string, show: boolean): void
     {
-        const toggle = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"] .explorerpicker-toggle`
-        );
+        const toggle = this.findNodeElements(nodeId)
+            .map((el) => el.querySelector(".explorerpicker-toggle"))
+            .find((el) => el !== null);
         if (!toggle)
         {
             return;
@@ -2737,8 +2737,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private updateFocusVisual(
         nodeId: string, focused: boolean): void
     {
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"]`) as HTMLElement | null;
+        const row = this.findNodeElements(nodeId)[0];
         if (!row)
         {
             return;
@@ -2758,9 +2757,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             return;
         }
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${this.focusedNodeId}"]`
-        ) as HTMLElement | null;
+        const row = this.findNodeElements(this.focusedNodeId)[0];
         if (row?.scrollIntoView)
         {
             row.scrollIntoView({ block: "nearest" });
@@ -2848,6 +2845,25 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     // UTILITY
     // ════════════════════════════════════════════════════════════════════
 
+    /**
+     * Every element under the root whose data-node-id is `nodeId`, in
+     * document order.
+     *
+     * A NODE ID IS DATA, NOT A SELECTOR. The id used to be interpolated
+     * into `[data-node-id="${id}"]`, so an id holding a quote or a
+     * backslash threw a SyntaxError from querySelector, and one holding
+     * `"] , [x` matched other elements. Comparing the attribute as a
+     * string finds the same first element for every id that parsed
+     * before. Not CSS.escape: jsdom has no CSS global, so a consumer's
+     * jsdom test that clicks a row would start throwing.
+     */
+    private findNodeElements(nodeId: string): HTMLElement[]
+    {
+        const all = this.rootEl?.querySelectorAll<HTMLElement>("[data-node-id]");
+
+        return Array.from(all ?? []).filter((el) => el.dataset.nodeId === nodeId);
+    }
+
     private clearDebounce(): void
     {
         if (this.debounceTimer)
@@ -2932,8 +2948,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     /** Scroll a node into view and briefly highlight it. */
     public scrollToNode(nodeId: string): void
     {
-        const row = this.rootEl?.querySelector(
-            `[data-node-id="${nodeId}"]`) as HTMLElement | null;
+        const row = this.findNodeElements(nodeId)[0];
         if (!row)
         {
             return;
