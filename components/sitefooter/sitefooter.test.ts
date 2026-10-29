@@ -319,3 +319,113 @@ describe("SiteFooter safety and lifecycle", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    const agentOptions = (): SiteFooterOptions => makeOptions({
+        groups: [{ title: "Product", links: [{ text: "Overview" }, { text: "Pricing" }] }],
+        legal: { copyright: "© 2026 Outcrop Inc", links: [{ text: "Privacy" }] },
+    });
+
+    test("Link_WithoutHref_RendersAButtonNotAnAnchor", () =>
+    {
+        const footer = new SiteFooter(agentOptions());
+        const links = footer.getElement()!.querySelector(".sitefooter-links")!;
+
+        expect(links.querySelectorAll("a")).toHaveLength(0);
+        expect(Array.from(links.querySelectorAll("button")).map((b) => [b.type, b.textContent]))
+            .toEqual([["button", "Overview"], ["button", "Pricing"]]);
+        footer.destroy();
+    });
+
+    test("on_LinkClick_HearsTheTextAndGroup", () =>
+    {
+        const heard = vi.fn();
+        const footer = new SiteFooter(agentOptions());
+        footer.on("linkClick", heard);
+
+        const buttons = footer.getElement()!.querySelectorAll<HTMLElement>("button");
+        buttons[1].click();
+        buttons[2].click();
+
+        expect(heard.mock.calls).toEqual([[{ text: "Pricing", group: "Product" }],
+            [{ text: "Privacy", group: null }]]);
+        footer.destroy();
+    });
+
+    test("on_LinkClick_AnchorWithHref_AlsoEmits_AndKeepsItsHref", () =>
+    {
+        const heard = vi.fn();
+        const footer = new SiteFooter(makeOptions());
+        footer.on("linkClick", heard);
+        const anchor = footer.getElement()!.querySelector<HTMLAnchorElement>(".sitefooter-links a")!;
+        anchor.addEventListener("click", (e) => e.preventDefault());
+
+        anchor.click();
+
+        expect(anchor.getAttribute("href")).toBe("/overview");
+        expect(heard).toHaveBeenCalledWith({ text: "Overview", group: "Product" });
+        footer.destroy();
+    });
+
+    test("on_LinkClick_ContactLines_DoNotEmit", () =>
+    {
+        const heard = vi.fn();
+        const footer = new SiteFooter(makeOptions({ contact: { email: "help@example.com" } }));
+        footer.on("linkClick", heard);
+        const mail = footer.getElement()!.querySelector<HTMLAnchorElement>("a[href^='mailto:']")!;
+        mail.addEventListener("click", (e) => e.preventDefault());
+
+        mail.click();
+
+        expect(heard).not.toHaveBeenCalled();
+        footer.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery_AndAThrowingHandlerDoesNotStarveTheRest", () =>
+    {
+        const heard = vi.fn();
+        const footer = new SiteFooter(agentOptions());
+        const off = footer.on("linkClick", vi.fn());
+        footer.on("linkClick", () => { throw new Error("handler bug"); });
+        footer.on("linkClick", heard);
+
+        off();
+        footer.getElement()!.querySelector<HTMLElement>("button")!.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        footer.destroy();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const footer = new SiteFooter(makeOptions());
+
+        expect(() => footer.on("click", vi.fn())).toThrow(/"linkClick"/);
+        footer.destroy();
+    });
+
+    test("setData_Throws_GetStateIsEmpty_SetStateDoesNothing", () =>
+    {
+        const footer = new SiteFooter(makeOptions());
+
+        footer.setState({ anything: 1 });
+
+        expect(() => footer.setData("groups", [])).toThrow(/no data slots/);
+        expect(footer.getState()).toEqual({});
+        footer.destroy();
+    });
+
+    test("Markup_WithHrefs_IsUnchanged", () =>
+    {
+        const footer = new SiteFooter(makeOptions());
+
+        expect(footer.getElement()!.querySelector(".sitefooter-links")!.outerHTML).toBe(
+            "<ul class=\"sitefooter-links\"><li><a href=\"/overview\">Overview</a></li></ul>");
+        footer.destroy();
+    });
+});

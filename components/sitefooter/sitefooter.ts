@@ -80,8 +80,13 @@ export interface SiteFooterLink
 {
     /** Visible label. Rendered as text. */
     text: string;
-    /** Destination. */
-    href: string;
+    /**
+     * Destination. Without it the link renders as a button whose click only
+     * reaches linkClick subscribers (B8); over A2UI an agent's href is left
+     * out by the link rule, so it listens for linkClick and answers with
+     * openUrl.
+     */
+    href?: string;
 }
 
 /** One named group of navigation links. */
@@ -139,9 +144,20 @@ function createElement(tag: string, className?: string): HTMLElement
     return el;
 }
 
-/** Create an anchor with text and destination, both set safely. */
+/**
+ * Create an anchor with text and destination, both set safely; a link with
+ * no destination is a button (B8).
+ */
 function createLink(link: SiteFooterLink): HTMLElement
 {
+    if (link.href === undefined)
+    {
+        const button = createElement("button");
+        button.setAttribute("type", "button");
+        button.textContent = link.text;
+        return button;
+    }
+
     const a = createElement("a");
     a.textContent = link.text;
     a.setAttribute("href", link.href);
@@ -156,15 +172,22 @@ function createContactLine(scheme: string, value: string): HTMLElement
     return p;
 }
 
-/** Build a list of links as a `<ul>` with the given class. */
-function createLinkList(links: SiteFooterLink[], className: string): HTMLElement
+/**
+ * Build a list of links as a `<ul>` with the given class, telling `register`
+ * about each link element so a click on it can be reported.
+ */
+function createLinkList(
+    links: SiteFooterLink[], className: string, register: (el: HTMLElement, link: SiteFooterLink) => void
+): HTMLElement
 {
     const list = createElement("ul", className);
 
     for (const link of links)
     {
         const item = createElement("li");
-        item.appendChild(createLink(link));
+        const el = createLink(link);
+        register(el, link);
+        item.appendChild(el);
         list.appendChild(item);
     }
 
@@ -205,6 +228,27 @@ export interface SiteFooterHandle
     hide(): void;
     destroy(): void;
     getElement(): HTMLElement | null;
+
+    /** The surface contract (additive, B8): SiteFooter has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "linkClick": { text, group } for a click on a group or
+     * legal link, group being the group's title, or null for the legal row.
+     * Links with and without an href emit; contact lines do not. Returns the
+     * unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to report (ADR-229): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
+}
+
+/** What a linkClick reports about the link clicked (B8). */
+interface LinkClick
+{
+    text: string;
+    group: string | null;
 }
 
 export class SiteFooter implements SiteFooterHandle
@@ -214,6 +258,11 @@ export class SiteFooter implements SiteFooterHandle
 
     private rootEl: HTMLElement | null = null;
     private destroyed = false;
+
+    /** Each group and legal link element, with what its click reports (B8). */
+    private readonly linkClicks = new WeakMap<Element, LinkClick>();
+    private readonly linkClickHandlers = new Set<(payload: unknown) => void>();
+    private readonly onRootClick = (e: MouseEvent): void => { this.handleRootClick(e); };
 
     constructor(options: SiteFooterOptions)
     {
@@ -258,16 +307,13 @@ export class SiteFooter implements SiteFooterHandle
         }
     }
 
-    /**
-     * Tear down the DOM. Idempotent.
-     *
-     * Every action in this component is a link, so there are no listeners to
-     * detach — nothing here binds a handler.
-     */
+    /** Tear down the DOM and the one delegated click listener. Idempotent. */
     destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.rootEl?.removeEventListener("click", this.onRootClick);
+        this.linkClickHandlers.clear();
         this.hide();
         this.rootEl = null;
         logInfo("Destroyed", this.instanceId);
@@ -277,6 +323,66 @@ export class SiteFooter implements SiteFooterHandle
     getElement(): HTMLElement | null
     {
         return this.rootEl;
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** SiteFooter has no data slots: its content is options. */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): SiteFooter has no data slots. Its content is options.`);
+    }
+
+    /** Subscribes to "linkClick"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "linkClick")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "linkClick".`);
+        }
+
+        this.linkClickHandlers.add(handler);
+
+        return () => { this.linkClickHandlers.delete(handler); };
+    }
+
+    /** Nothing to report (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /**
+     * Reports a click on a group or legal link to every subscriber, each
+     * isolated so one throw cannot starve the rest. An anchor still follows
+     * its href: the click is only reported.
+     */
+    private handleRootClick(e: MouseEvent): void
+    {
+        const target = e.target instanceof Element ? e.target.closest("a, button") : null;
+        const click = target ? this.linkClicks.get(target) : undefined;
+
+        if (!click) { return; }
+
+        for (const handler of this.linkClickHandlers)
+        {
+            try
+            {
+                handler({ ...click });
+            }
+            catch (err)
+            {
+                logError("Channel \"linkClick\" handler threw:", err);
+            }
+        }
     }
 
     // ========================================================================
@@ -294,6 +400,7 @@ export class SiteFooter implements SiteFooterHandle
 
         const root = createElement("footer", parts.join(" "));
         root.id = this.instanceId;
+        root.addEventListener("click", this.onRootClick);
         root.appendChild(this.buildGrid());
 
         const legal = this.buildLegal();
@@ -424,7 +531,8 @@ export class SiteFooter implements SiteFooterHandle
         heading.textContent = group.title;
         nav.setAttribute("aria-labelledby", headingId);
         nav.appendChild(heading);
-        nav.appendChild(createLinkList(group.links, "sitefooter-links"));
+        nav.appendChild(createLinkList(group.links, "sitefooter-links",
+            (el, link) => { this.linkClicks.set(el, { text: link.text, group: group.title }); }));
 
         return nav;
     }
@@ -448,7 +556,8 @@ export class SiteFooter implements SiteFooterHandle
 
         if (legal?.links?.length)
         {
-            row.appendChild(createLinkList(legal.links, "sitefooter-legallinks"));
+            row.appendChild(createLinkList(legal.links, "sitefooter-legallinks",
+                (el, link) => { this.linkClicks.set(el, { text: link.text, group: null }); }));
         }
 
         if (this.options.buildInfo)
