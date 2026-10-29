@@ -63,7 +63,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "gridlayout",
     "helpdrawer",
     "layerlayout",
-    "marketinghero",
     "multiselectcombo",
     "navrail",
     "permissionmatrix",
