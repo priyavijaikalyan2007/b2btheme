@@ -876,15 +876,12 @@ describe("surface contract (B6)", () =>
         grid.destroy();
     });
 
-    test("on_AcceptsEveryDeclaredChannel", () =>
+    test("on_EveryDeclaredChannel_ReturnsAnUnsubscribe", () =>
     {
         const grid = editableGrid();
+        const offs = ["selection", "sort", "page", "activate", "cellEdit"].map((c) => grid.on(c, () => undefined));
 
-        for (const channel of ["selection", "sort", "page", "activate", "cellEdit"])
-        {
-            expect(() => grid.on(channel, () => undefined)).not.toThrow();
-        }
-
+        expect(offs.map((off) => typeof off)).toEqual(["function", "function", "function", "function", "function"]);
         grid.destroy();
     });
 

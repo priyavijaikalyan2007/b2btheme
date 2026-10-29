@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B6): clicks on an event,
+ * its actor or its target emit through an additive on(). Nothing to restore
+ * (ADR-229).
  */
 export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
 {
@@ -33,6 +32,14 @@ export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
     icon: "bi-rss",
     category: "social",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a timeline of who did what and when, grouped by day; the agent hears clicks on an event, its "
+            + "actor or its target.",
+        avoidWhen: "For a log of technical messages use LogConsole; for alerts the user must act on use "
+            + "NotificationCenter.",
+    },
+
     affords: [
         {
             shape: "collection",
@@ -41,10 +48,23 @@ export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
             minViewport: { w: 280, h: 200 },
         },
     ],
-    emits: [],
+    emits: [
+        { name: "eventClick", payload: "record", multi: false, legacyOption: "onEventClick" },
+        { name: "actorClick", payload: "record", multi: false, legacyOption: "onActorClick" },
+        { name: "targetClick", payload: "record", multi: false, legacyOption: "onTargetClick" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            "events[].metadata": "An arbitrary payload for host code; it has no schema an agent could follow.",
+            onLoadMore: "Takes no parameter, and a provider needs one to carry its request; over A2UI the agent "
+                + "supplies the events.",
+        },
+    },
 
     regions: ["activityfeed:feed"],
 
@@ -54,6 +74,6 @@ export const ACTIVITYFEED_MANIFEST: CapabilityManifest =
     defaultSize: { w: 350, h: 400 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

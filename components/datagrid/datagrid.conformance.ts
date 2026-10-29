@@ -20,7 +20,20 @@ interface GridLike
     selectRow(rowId: string): void;
     sort(columnId: string): void;
     setPageSize(size: number): void;
+    getElement(): HTMLElement;
 }
+
+/** Two rows and an editable column, so a cell edit and a row double-click have targets. */
+const FIXTURE = {
+    columns: [
+        { id: "id", label: "ID" },
+        { id: "name", label: "Name", editable: true },
+    ],
+    rows: [
+        { id: "r1", data: { id: "r1", name: "One" } },
+        { id: "r2", data: { id: "r2", name: "Two" } },
+    ],
+};
 
 /**
  * DataGrid's `(options, containerId)` argument order is declared in its
@@ -33,16 +46,10 @@ export const CONFORMANCE_GLUE =
 {
     // Mount fixture. Deliberately NOT in the manifest's defaultOptions, which
     // is shipped to consumers and must not carry placeholder content.
-    options: {
-        columns: [
-            { id: "id", label: "ID" },
-            { id: "name", label: "Name" },
-        ],
-        rows: [
-            { id: "r1", data: { id: "r1", name: "One" } },
-            { id: "r2", data: { id: "r2", name: "Two" } },
-        ],
-    },
+    options: FIXTURE,
+
+    // What an agent sets for a grid the user can edit (readiness step 2 B6).
+    eventProps: FIXTURE,
 
     trigger: (
         channel: string,
@@ -68,8 +75,27 @@ export const CONFORMANCE_GLUE =
             return true;
         }
 
-        // "activate" fires from a row double-click and has no programmatic
-        // entry point. Declining is recorded as a warning by the gate.
-        return false;
+        const root = grid.getElement();
+
+        if (channel === "activate")
+        {
+            const row = root.querySelector<HTMLElement>(".datagrid-row");
+            row?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+            return row !== null;
+        }
+
+        if (channel !== "cellEdit") { return false; }
+
+        // A double-click on the editable cell opens its editor; leaving it commits (readiness step 2 B6).
+        root.querySelector<HTMLElement>('.datagrid-cell[data-col-id="name"]')
+            ?.dispatchEvent(new MouseEvent("dblclick"));
+        const editor = root.querySelector<HTMLInputElement>(".datagrid-editor");
+
+        if (!editor) { return false; }
+
+        editor.value = "Edited";
+        editor.dispatchEvent(new Event("blur"));
+
+        return true;
     },
 };

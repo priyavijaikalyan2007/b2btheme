@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `display` conformance (readiness step 2 B6): it shows the
+ * entries the agent supplies, through the additive entries option, and emits
+ * nothing.
  */
 export const LOGCONSOLE_MANIFEST: CapabilityManifest =
 {
@@ -35,11 +34,27 @@ export const LOGCONSOLE_MANIFEST: CapabilityManifest =
     icon: "bi-terminal-fill",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a scrolling log of timestamped messages with level filters, such as a build or job output.",
+        avoidWhen: "For a timeline of user actions use ActivityFeed; for an audit trail use AuditLogViewer.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            theme: "Deprecated and ignored: colours follow the design tokens, so there is nothing for an agent to set.",
+            onClear: "Fires when the user clears the console's own view; nothing an agent acts on.",
+            onExport: "Writes a file in the user's browser; an agent cannot receive it.",
+            onEntry: "Fires as each entry is added, echoing what the agent or host just logged.",
+        },
+    },
 
     regions: ["logconsole:body"],
 

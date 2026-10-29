@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B6): a row click emits
+ * "rowClick" through an additive on(). Paging and filtering run over the
+ * entries the agent supplies; server-side loading stays with the host.
  */
 export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
 {
@@ -33,6 +32,13 @@ export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
     icon: "bi-journal-text",
     category: "governance",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show an audit trail of who changed what, with severity, filters and paging; the agent hears which "
+            + "entry the user opens.",
+        avoidWhen: "For a running log of messages use LogConsole; for a social timeline use ActivityFeed.",
+    },
+
     affords: [
         {
             shape: "collection",
@@ -41,10 +47,29 @@ export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
             minViewport: { w: 320, h: 200 },
         },
     ],
-    emits: [],
+    emits: [
+        { name: "rowClick", payload: "record", multi: false, legacyOption: "onRowClick" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            "entries[].detail": "Typed as an open record, so it has no schema an agent could follow.",
+            "entries[].metadata": "An arbitrary payload for host code; it has no schema an agent could follow.",
+            serverSide: "Hands filtering and paging to onLoadPage, which is host-only; over A2UI the agent supplies "
+                + "the entries.",
+            autoRefresh: "Reloads the page through onLoadPage, which is host-only.",
+            onFilter: "Fires as the user filters the visible entries; that is view state, not information for an "
+                + "agent.",
+            onPageChange: "Fires as the user pages; that is view state, not information for an agent.",
+            onLoadPage: "Takes a page and filters, and a provider takes one parameter; over A2UI the agent supplies "
+                + "the entries.",
+            onExport: "Writes a file in the user's browser; an agent cannot receive it.",
+        },
+    },
 
     regions: [
         "auditlogviewer:table",
@@ -57,6 +82,6 @@ export const AUDITLOGVIEWER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 600, h: 350 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
