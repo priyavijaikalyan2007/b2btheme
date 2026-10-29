@@ -500,6 +500,16 @@ describe("surface contract (B8)", () =>
         builder.destroy();
     });
 
+    test("show_AnElement_MountsInIt (B8: the A2UI adapter mounts it this way)", () =>
+    {
+        const builder = createRibbonBuilder(makeOptions({ container: undefined }));
+
+        builder.show(container);
+
+        expect(container.querySelector(".ribbonbuilder")).not.toBeNull();
+        builder.destroy();
+    });
+
     test("on_UnknownChannel_Throws_SetDataThrows_StateIsEmpty", () =>
     {
         const builder = createRibbonBuilder(makeOptions());

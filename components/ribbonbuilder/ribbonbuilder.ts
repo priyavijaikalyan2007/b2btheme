@@ -92,7 +92,8 @@ export interface RibbonBuilderOptions
 /** Public handle returned by createRibbonBuilder(). */
 export interface RibbonBuilderHandle
 {
-    show(containerId?: string): void;
+    /** Mounts in the element, or the element with this id; without either, in options.container. */
+    show(container?: string | HTMLElement): void;
     destroy(): void;
     getConfig(): RibbonOptions;
     setConfig(config: RibbonOptions): void;
@@ -370,9 +371,9 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
     // ========================================================================
 
     /** Mount into a container or the configured container. */
-    public show(containerId?: string): void
+    public show(container?: string | HTMLElement): void
     {
-        const target = this.resolveContainer(containerId);
+        const target = container instanceof HTMLElement ? container : this.resolveContainer(container);
 
         if (!target)
         {
@@ -3319,7 +3320,7 @@ export function createRibbonBuilder(
     const impl = new RibbonBuilderImpl(options);
 
     const handle: RibbonBuilderHandle = {
-        show: (id?: string) => impl.show(id || containerId),
+        show: (container?: string | HTMLElement) => impl.show(container || containerId),
         destroy: () => impl.destroy(),
         getConfig: () => impl.getConfig(),
         setConfig: (c) => impl.setConfig(c),
