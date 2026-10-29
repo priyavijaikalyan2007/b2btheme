@@ -60,20 +60,31 @@ export interface ChartPanelXAxis
 export interface ChartPanelOptions
 {
     container: HTMLElement;
+    /** Chart type: "bar", "line", "area" or "sparkline". Required. */
     kind: ChartPanelKind;
 
+    /** The x-axis labels, one per data point. Required. */
     categories: string[];
+    /** The data series: each has an id, a label, one number per category, and an optional colour intent. */
     series: ChartPanelSeries[];
 
+    /** The y-axis: min, max, whole numbers only, a label, and grid lines. */
     yAxis?: ChartPanelYAxis;
+    /** The x-axis: a label, grid lines, and label rotation (0, 45 or 90). */
     xAxis?: ChartPanelXAxis;
 
+    /** Shows the legend. Default: shown when there is more than one series. */
     showLegend?: boolean;
+    /** Prints each value on its bar or point. */
     showValueLabels?: boolean;
+    /** Line smoothing for line and area charts: "none" or "monotone". Default: "monotone". */
     smoothing?: "none" | "monotone";
 
+    /** "ready", "loading", "error" (with errorText) or "empty" (with emptyText). Default: "ready". */
     state?: ChartPanelState;
+    /** Message shown in the error state. */
     errorText?: string;
+    /** Message shown in the empty state. Default: "No data". */
     emptyText?: string;
 
     /** REQUIRED. Chart is not decorative. */
@@ -81,7 +92,9 @@ export interface ChartPanelOptions
     /** Default true. Renders a visually-hidden <table> for SR users. */
     fallbackTable?: boolean;
 
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** The root element's id. */
     id?: string;
 }
 
