@@ -47,7 +47,6 @@ export const PENDING_CLASSIFICATION = new Set([
     // step 2 B7, ADR-234).
     "anchorlayout",
     "annotation",
-    "applauncher",
     "borderlayout",
     "boxlayout",
     "cardlayout",
