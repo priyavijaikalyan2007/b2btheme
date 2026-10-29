@@ -727,4 +727,22 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await expect(page.locator(".explorerpicker-node-row")).toHaveCount(0);
             await expect(page.locator(".text-danger")).toHaveCount(0);
         });
+
+    test("ExplorerPicker: a component without onLoadChildren is rejected and fetches nothing", async ({ page }) =>
+    {
+        // onLoadChildren is a required provider (ADR-234): unbound, the picker would load the host's own tree from
+        // /api/ with the user's credentials, so the catalog rejects it before anything mounts.
+        const api = apiRequests(page);
+        const { onLoadChildren, loadChildrenResult, ...unbound } = EP;
+        void onLoadChildren;
+        void loadChildrenResult;
+        await open(page, "lit");
+
+        await expect(send(page, surface("s", { id: "root", component: "ExplorerPicker", ...unbound })))
+            .rejects.toThrow(/Validation failed for component 'ExplorerPicker'.*onLoadChildren.*loadChildrenResult/);
+        await page.waitForLoadState("networkidle");
+
+        await expect(page.locator(".explorerpicker")).toHaveCount(0);
+        expect(api).toEqual([]);
+    });
 });

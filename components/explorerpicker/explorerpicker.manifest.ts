@@ -58,7 +58,8 @@ const TYPE_SCHEMA = {
     properties: {
         key: { type: "string", description: "The resource type key nodes name in resourceType." },
         icon: { ...ICON, description: "Bootstrap Icons class for resources of this type." },
-        color: { type: "string", description: "CSS colour of the icon, such as \"#2E7D32\"." },
+        color: { type: "string", pattern: "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+            description: "The icon's colour, as #RGB or #RRGGBB hex, such as \"#2E7D32\"." },
         parentTypeKey: { ...NULLABLE_STRING, description: "The parent type's key; resourceTypeFilter matches a "
             + "type through its parents." },
         isExternal: { type: "boolean", description: "True for a resource held outside, which shows an external "
@@ -73,8 +74,8 @@ const TYPE_SCHEMA = {
  * selection, confirming it and cancelling emit through an additive on();
  * the agent answers a folder's children (onLoadChildren) and searches
  * (onSearch), and with onLoadChildren nothing is requested from the host's
- * Explorer API; the expanded folders and the selection restore through
- * getState().
+ * Explorer API, so the catalog requires it (ADR-234); the expanded folders
+ * and the selection restore through getState().
  */
 export const EXPLORERPICKER_MANIFEST: CapabilityManifest =
 {
@@ -88,8 +89,8 @@ export const EXPLORERPICKER_MANIFEST: CapabilityManifest =
 
     // What an agent's model reads to choose this component (ADR-222).
     agent: {
-        useWhen: "Let the user browse and search a folder tree and pick items to link or attach; give the top of "
-            + "the tree as staticNodes, and bind onLoadChildren and onSearch, which you answer.",
+        useWhen: "Let the user browse and search a folder tree and pick items to link or attach; you answer each "
+            + "folder's children and, if you bind onSearch, each search.",
         avoidWhen: "To pick from a short flat list use ChoicePicker; for a tree the user only browses or edits use "
             + "TreeView or TreeGrid.",
     },
@@ -107,9 +108,12 @@ export const EXPLORERPICKER_MANIFEST: CapabilityManifest =
     // How this component appears to agent protocols (ADR-219, ADR-222, ADR-225, ADR-229, readiness step 2 B7).
     protocol: {
         providers: {
-            // A folder's children, or the roots when nodeId is null; one node at a time, in order.
-            onLoadChildren: { request: "loadChildren", concurrency: "queue" },
-            // A search page; a newer query replaces an unanswered one.
+            // A folder's children, or the roots when nodeId is null; one node at a time, in order. Required
+            // (ADR-234): without it the component fetches the host's Explorer and ontology APIs with the user's
+            // credentials, so the catalog rejects a picker that leaves it unbound.
+            onLoadChildren: { request: "loadChildren", concurrency: "queue", required: true },
+            // A search page; a newer query replaces an unanswered one. Optional: with onLoadChildren bound and
+            // onSearch not, the search box is hidden and nothing is searched.
             onSearch: { request: "search" },
         },
         hostOnly: {

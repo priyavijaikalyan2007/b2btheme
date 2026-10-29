@@ -49,6 +49,11 @@ const OVERRIDES: Record<string, Record<string, unknown>> = {
     // userAvatar and assistantAvatar are a Bootstrap Icons class or an image URL; a generic string sample is
     // read as a URL, so "a" would 404 as an <img>.
     Conversation: { userAvatar: "bi-person-circle", assistantAvatar: "bi-robot" },
+    // onLoadChildren is a required provider (ADR-234): the catalog rejects the picker without its action, its
+    // result binding and eventData, which samples leave unset. The staticNodes sample gives the roots, so
+    // nothing is asked.
+    ExplorerPicker: { eventData: { path: "/ev" }, onLoadChildren: { event: { name: "children" } },
+        loadChildrenResult: { path: "/answers/children" } },
     // initialVariant must name one of the variants, which independent samples cannot arrange.
     DynamicFormSwitcher: { initialVariant: "a", variants: { a: { label: "A",
         fields: [{ name: "a", label: "A", type: "text" }] } } },

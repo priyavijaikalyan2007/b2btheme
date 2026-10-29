@@ -217,7 +217,20 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         for (const p of required.filter((r) => create.includes(r))) { props[p] = sampleProp(p, arms[p], 0, CATALOG); }
         for (const p of live) { props[p] = { path: `/p/${p}` }; data[p] = sampleProp(p, arms[p], 0, CATALOG); }
 
-        return { props: { ...props, ...held }, data: { p: data }, held };
+        return { props: { ...props, ...requiredProviders(), ...held }, data: { p: data }, held };
+    }
+
+    /**
+     * A required provider's catalog props (ADR-234): its action, its result binding and eventData, bound as the
+     * provider test binds them. A literal cannot sample them, and the catalog rejects the component without them.
+     */
+    function requiredProviders(): Record<string, unknown>
+    {
+        const bound = d.providers.filter((p) => required.includes(p.actionProp));
+
+        return bound.length === 0 ? {} : Object.fromEntries([["eventData", { path: "/ev" }],
+            ...bound.flatMap((p) => [[p.actionProp, { event: { name: p.actionProp } }],
+                [p.resultProp, { path: `/answers/${p.request}` }]])]);
     }
 
     test("mounts once, loading its own assets and its declared dependencies", async () =>
