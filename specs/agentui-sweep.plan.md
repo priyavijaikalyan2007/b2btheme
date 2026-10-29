@@ -1992,7 +1992,7 @@ In this order: PromptTemplateManager, ActionItems, RelationshipManager, Conversa
 | TenantSwitcher | `switch` (the tenant without `data`), `create` (scalar: the search text) | `onSearch` → `search` (latest) | `["activeTenantId"]` | `onOpen`/`onClose` (lifecycle); `tenants[].data` |
 | AppLauncher | `select` (the app without `data`), `favoriteToggle` (`{ appId, isFavorite }`) | `onSearch` → `search` (latest) | `[]` | `onOpen`/`onClose`; `favoritesKey`/`recentKey` (localStorage keys on the host's origin: an agent could make the component read and overwrite any stored entry); `apps[].url` ("Nothing reads this option."); `apps[].data` |
 | Ribbon | `controlClick` (`{ controlId, value }`, the value from `getControlValue`) | — | `["activeTabId", "collapsed", "contextualTabs", "controlValues", "autoCollapseDelay"]` (the existing `getState()`; additive `setState` restores silently) | `onTabChange`, `onCollapse` (view state); `onQATCustomize` ("The component never calls this option."); `statusBar` (element); closed overrides for `tabs`, `menuBar` and `qat` leave out nested callbacks, `custom` controls and backstage content; colours take the hex pattern; `fixed: { keyScope: "ribbon" }` |
-| RibbonBuilder | `change` (the config), `export` (scalar: the markdown) | — | `[]` | `container` (element arm); `initialConfig` reuses Ribbon's closed schemas; dependencies `ribbon` and `symbolpicker` |
+| RibbonBuilder | `change` (the config), `export` (scalar: the markdown) | — | `[]` | `initialConfig` host-only (amended: a manifest loads standalone and cannot import Ribbon's closed schemas, and a copy would drift); `options-only` with `mountMethod: "show"` and an additive `show(element)`, which keeps the element-typed `container` out of the catalog; dependencies `ribbon` and `symbolpicker` |
 
 - **Rules carried from B7:**
   - nested open records are closed by overrides;
@@ -2002,6 +2002,10 @@ In this order: PromptTemplateManager, ActionItems, RelationshipManager, Conversa
   - setState restores silently;
   - existing bugs are reported, not fixed.
 - **URL-fetch rule:** none of the six fetches. HelpDrawer's `topic.url` is one of the reasons it stays pending.
+- **Amended during implementation:**
+  - `protocol.fixed` values are checked in `generate.mjs`, where typia describes the fixed option, and the option leaves both the catalog and `schemas/<name>.options.json`.
+  - Ribbon's `controlClick` also fires for galleries, input submits, split-menu items and menu-bar items, which `onControlClick` never reported. Its `setState` is new and silent, because `restoreState()` fires `onTabChange`/`onCollapse` and can open a collapsed panel. Its menus nest one submenu deep. Gallery `preview` (HTML) and the backstage are left out of its schema.
+  - The test sampler learns the hex colour pattern's samples.
 
 ### Task B8.1: per component
 In this order: MarketingHero, SiteFooter, TenantSwitcher, AppLauncher, then `protocol.fixed` (runtime type, registry validation, generator, adapter descriptor and element; tests), Ribbon, RibbonBuilder. Each component gets:

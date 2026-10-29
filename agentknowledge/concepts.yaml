@@ -1798,3 +1798,7 @@
   definition: "protocol.providers.<option>.required (ADR-234): the catalog requires the provider's on<Request>, <request>Result and eventData, because the adapter wires only a provider the agent binds. For a provider whose absence makes the component fall back to host-side behaviour an agent must not trigger, such as ExplorerPicker fetching the host's API with the user's credentials."
   anchor_file: "AGENTS.md"
   related: ["ProviderConcurrency", "UrlFetchRule", "A2uiAdapter"]
+- name: "FixedOption"
+  definition: "protocol.fixed (ADR-235): data options the A2UI adapter passes on every mount with fixed JSON values, left out of the catalog and the options schema so an agent can neither see nor set them. For an option whose default suits a host page but not an agent's surface, such as Ribbon's keyScope: 'ribbon'. The generator rejects a value the option's type refuses."
+  anchor_file: "AGENTS.md"
+  related: ["A2uiAdapter", "AgentProtocolSchema", "RequiredProvider"]
