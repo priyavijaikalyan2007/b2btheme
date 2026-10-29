@@ -464,8 +464,8 @@ describe("entries option (additive, readiness step 2 B6)", () =>
     test("entries_RenderAtConstruction_InOrder", async () =>
     {
         const lc = createLogConsole({ entries: [
-            { timestamp: "10:00:00.000", level: "info", message: "started" },
-            { timestamp: "10:00:01.000", level: "error", message: "failed" },
+            { timestamp: "10:00:00.000", level: "INFO", message: "started" },
+            { timestamp: "10:00:01.000", level: "ERROR", message: "failed" },
         ] });
 
         // Entries reach the DOM on a requestAnimationFrame, like log().
