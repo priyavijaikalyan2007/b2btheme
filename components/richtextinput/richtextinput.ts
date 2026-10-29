@@ -287,6 +287,15 @@ export interface RichTextInputHandle
     execFormat(action: FormattingAction): void;
     destroy(): void;
     handleSelectionChange(): void;
+
+    /** The surface contract (additive): RichTextInput has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "submit": the value (getValue()) on Ctrl+Enter with submitOnCtrlEnter. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { value }: the content in the configured output format. */
+    getState(): Record<string, unknown>;
+    /** Applies state.value through setValue() when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class RichTextInput implements RichTextInputHandle
@@ -302,6 +311,7 @@ export class RichTextInput implements RichTextInputHandle
     private changeTimer: ReturnType<typeof setTimeout> | null = null;
     private hasFocus = false;
     private destroyed = false;
+    private readonly submitHandlers = new Set<(payload: unknown) => void>();
     private boundHandlers: Array<{ el: EventTarget; event: string; fn: EventListener }> = [];
 
     constructor(options: RichTextInputOptions)
@@ -442,11 +452,45 @@ export class RichTextInput implements RichTextInputHandle
         this.applyFormat(action);
     }
 
+    // ── Surface contract (additive, readiness step 2 B5) ──
+
+    /** RichTextInput has no data slots; use setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): RichTextInput has no data slots. Use setValue().`);
+    }
+
+    /** Subscribes to "submit"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "submit")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "submit".`);
+        }
+
+        this.submitHandlers.add(handler);
+
+        return () => { this.submitHandlers.delete(handler); };
+    }
+
+    /** The content in the configured output format. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores state captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
+    }
+
     /** Full cleanup — remove listeners, DOM, STIE engine. */
     public destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.submitHandlers.clear();
 
         activeInstances.delete(this);
         this.destroyStie();
@@ -734,7 +778,16 @@ export class RichTextInput implements RichTextInputHandle
         if (ctrl && e.key === "Enter" && this.options.submitOnCtrlEnter)
         {
             e.preventDefault();
-            this.options.onSubmit?.(this.getValue());
+            const value = this.getValue();
+
+            this.options.onSubmit?.(value);
+
+            for (const handler of this.submitHandlers)
+            {
+                try { handler(value); }
+                catch (err) { logError("submit handler threw:", err); }
+            }
+
             return;
         }
 

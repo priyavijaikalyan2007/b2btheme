@@ -31,6 +31,7 @@ import {
     type ConformanceTarget,
 } from "./src/conformance";
 
+import { JSDOM_STANDINS } from "../tests/jsdom/standins";
 import { validateManifest } from "./src/registry";
 import { formatIssues } from "./src/errors";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "../scripts/agentui/migration.mjs";
@@ -298,7 +299,8 @@ function runLibrary(name: string): void
 
     const asset = JSON.parse(fs.readFileSync(manifestPath, "utf8")).assets[name] as { url: string };
 
-    (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8"));
+    // A stylesheet (katex-css, vditor-css) publishes nothing to run.
+    if (asset.url.endsWith(".js")) { (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8")); }
 }
 
 /**
@@ -323,7 +325,12 @@ async function buildTarget(
 
     // What it declares it needs comes first, as the A2UI adapter loads it (ADR-230): DocViewer renders through
     // MarkdownRenderer and marked; a PresenceIndicator avatar is clickable only through PersonChip.
-    for (const lib of manifest.protocol?.dependencies?.libraries ?? []) { runLibrary(lib); }
+    // A library jsdom cannot run (Vditor) has a stand-in; the browser suite loads the real one.
+    for (const lib of manifest.protocol?.dependencies?.libraries ?? [])
+    {
+        if (JSDOM_STANDINS[lib]) { JSDOM_STANDINS[lib](); }
+        else { runLibrary(lib); }
+    }
 
     for (const dep of manifest.protocol?.dependencies?.components ?? [])
     {

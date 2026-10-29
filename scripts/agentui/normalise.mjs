@@ -12,7 +12,7 @@
  *          -> [2020-12 schema]
  */
 
-import { isConstMember } from "./catalog-diff.mjs";
+import { isConstMember, isScalarArm } from "./catalog-diff.mjs";
 
 export const DRAFT_2020_12 = "https://json-schema.org/draft/2020-12/schema";
 
@@ -129,11 +129,13 @@ function dropCoveredArms(node)
 }
 
 /**
- * Sorts every oneOf/anyOf made only of `{ const }` members, grouped by type
- * (booleans, numbers, strings): numbers in numeric order, the rest in
- * code-point order. TypeScript orders a literal
- * union by internal type id, which any file in the program can shift, so
- * without this an unrelated change reorders a published enum (readiness step 2 B1).
+ * Sorts every oneOf/anyOf made only of scalar arms (`{ const }` members and
+ * bare primitive types): consts first, grouped by type (booleans, numbers,
+ * strings), numbers in numeric order and the rest in code-point order, then
+ * primitive types by name. TypeScript orders a union by internal type id,
+ * which any file in the program can shift, so without this an unrelated
+ * change reorders a published enum (readiness step 2 B1, B5). A union with an
+ * object arm keeps its order: object arms can overlap.
  */
 function sortConstUnions(node)
 {
@@ -145,13 +147,25 @@ function sortConstUnions(node)
 
     for (const key of ["oneOf", "anyOf"])
     {
-        if (Array.isArray(out[key]) && out[key].length > 0 && out[key].every(isConstMember))
+        if (Array.isArray(out[key]) && out[key].length > 0 && out[key].every(isScalarArm))
         {
-            out[key] = [...out[key]].sort(byConst);
+            out[key] = [...out[key]].sort(byScalarArm);
         }
     }
 
     return out;
+}
+
+/** Consts first, in value order, then bare primitive types by name (readiness step 2 B5). */
+function byScalarArm(a, b)
+{
+    const [ca, cb] = [isConstMember(a), isConstMember(b)];
+
+    if (ca !== cb) { return ca ? -1 : 1; }
+
+    if (ca) { return byConst(a, b); }
+
+    return a.type < b.type ? -1 : (a.type > b.type ? 1 : 0);
 }
 
 function byConst(a, b)

@@ -63,10 +63,21 @@ describe("diffCatalogs", () =>
 
         expect(diffCatalogs(before, after).breaking).toEqual(["Widget.layout changed"]);
     });
-    test("a reordered union that is not all consts is still a change", () =>
+    // Consts and bare primitive types are disjoint, so no validator's arm order can change the outcome
+    // (Gauge.size, readiness step 2 B5). Objects can overlap, so their order stays meaningful.
+    test("a reordered union of consts and bare primitive types is not a change", () =>
     {
-        const before = cat({ v: { oneOf: [{ type: "string" }, { type: "number" }] } });
-        const after = cat({ v: { oneOf: [{ type: "number" }, { type: "string" }] } });
+        const before = cat({ size: { oneOf: [{ const: "sm" }, { const: "lg" }, { type: "number" }] } });
+        const after = cat({ size: { oneOf: [{ type: "number" }, { const: "lg" }, { const: "sm" }] } });
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [], additive: [] });
+    });
+    test("a reordered union of objects is still a change", () =>
+    {
+        const a = { type: "object", properties: { x: { type: "string" } } };
+        const b = { type: "object", properties: { y: { type: "string" } } };
+        const before = cat({ v: { oneOf: [a, b] } });
+        const after = cat({ v: { oneOf: [b, a] } });
 
         expect(diffCatalogs(before, after).breaking).toEqual(["Widget.v changed"]);
     });

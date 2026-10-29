@@ -897,13 +897,15 @@ export const BASELINES = {
     // ADR-228 (2026-10-28): 491 -> 452, ten B3 inputs classified.
     // ADR-229 (2026-10-29): 452 -> 427, ten B4 display components classified.
     // ADR-230 (2026-10-29): 427 -> 425, DocViewer classified once the adapter loads its dependencies.
-    unclassifiedOptions: 425,
+    // ADR-231 (2026-10-29): 425 -> 392, seven B5 editors and forms classified.
+    unclassifiedOptions: 392,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
     // ADR-229 (2026-10-29): 343 -> 312, PersonChip's, PresenceIndicator's and ReasoningAccordion's options
     // documented (B4).
-    protocolPropsMissingJsdoc: 312,
+    // ADR-231 (2026-10-29): 312 -> 286, CodeEditor's and DynamicFormSwitcher's options documented (B5).
+    protocolPropsMissingJsdoc: 286,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -911,7 +913,8 @@ export const BASELINES = {
     // ADR-227 (2026-10-28): 8 -> 4, the four B2 pickers declared { cleared: null }.
     // ADR-228 (2026-10-28): 4 -> 3, Slider declared change: "event" (B3).
     // ADR-229 (2026-10-29): 3 -> 2, Gauge declared change: "event" (B4).
-    changeMismatches: 2,
+    // ADR-231 (2026-10-29): 2 -> 1, DynamicFormSwitcher declared change: "event" (B5).
+    changeMismatches: 1,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
@@ -927,7 +930,8 @@ export const BASELINES = {
     // ADR-228 (2026-10-28): 75 -> 65, ten B3 inputs classified (fileupload stays pending).
     // ADR-229 (2026-10-29): 65 -> 55, ten B4 display components classified (docviewer stays pending).
     // ADR-230 (2026-10-29): 55 -> 54, docviewer classified (the adapter loads MarkdownRenderer and marked).
-    componentsPendingClassification: 54,
+    // ADR-231 (2026-10-29): 54 -> 47, seven B5 editors and forms classified (propertyinspector stays pending).
+    componentsPendingClassification: 47,
 };
 
 /*
@@ -1018,11 +1022,12 @@ export const FLOORS = {
     // classified (readiness step 2 P0). ADR-226 (2026-10-28): 513, 8 and 82 after B1.
     // ADR-227 (2026-10-28): 491, 4 and 75 after B2. ADR-228 (2026-10-28): 452, 343, 3 and 65 after B3.
     // ADR-229 (2026-10-29): 427, 312, 2 and 55 after B4. ADR-230 (2026-10-29): 425 and 54 after P1.
-    unclassifiedOptions: 425,
-    protocolPropsMissingJsdoc: 312,
-    changeMismatches: 2,
+    // ADR-231 (2026-10-29): 392, 286, 1 and 47 after B5.
+    unclassifiedOptions: 392,
+    protocolPropsMissingJsdoc: 286,
+    changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 54,
+    componentsPendingClassification: 47,
 };
 
 /**

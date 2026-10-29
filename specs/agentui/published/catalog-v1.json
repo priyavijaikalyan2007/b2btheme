@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "title": "Enterprise Bootstrap Theme",
-  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts only a binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property, with a value matching the $defs entry its description names, once per request. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- AnglePicker: Angle Picker. Let the user set an angle in degrees with a dial, such as a rotation or a gradient direction. For a plain number on a scale use RangeSlider; for a typed number use TextField.\n- Breadcrumb: Breadcrumb. Show where the user is in a hierarchy as a trail of links, with actions on the last segment; the agent hears each click. For switching between sibling views use Tabs; for browsing a whole hierarchy use TreeView.\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- ColorPicker: Color Picker. Let the user pick any colour, with a palette, a colour field and hex or RGB entry. For a drawing tool's stroke and fill use ToolColorPicker; for a gradient use GradientPicker.\n- ColumnsPicker: Columns Picker. Let the user choose how many text columns a page or section uses, from presets that preview it. For page margins use MarginsPicker; for paper size use SizesPicker.\n- CronPicker: CRON Picker. Let the user build a recurring schedule as a CRON expression, with presets and a readable summary. For a single date use DatePicker; for a length of time use DurationPicker.\n- DatePicker: Date Picker. Let the user pick one calendar date from a popup calendar, with optional limits. For a date and a time use DateTimeInput; for a fiscal month or quarter use PeriodPicker. Use it to edit, schedule a scalar of exactly 1 item.\n- DocViewer: Doc Viewer. Show multi-page documentation written in markdown, with a table of contents, an outline and previous and next links. For one short piece of text use Text; for switching between a few panels use Tabs. Use it to browse, inspect a document of 1 to 500 items.\n- DurationPicker: Duration Picker. Let the user enter a length of time in units such as days, hours and minutes. For a time of day use TimePicker; for a recurring schedule use CronPicker.\n- EditableComboBox: Editable Combo Box. Let the user type freely or pick from a filtered list of suggestions in one field. To choose only from a fixed list use ChoicePicker; for a search query use SearchBox.\n- EmptyState: Empty State. Fill an empty view with an icon, a heading, a short explanation and up to two buttons, such as Create project. For a loading placeholder use SkeletonLoader; for a single call to action without the empty message use Button. Use it to browse a collection of exactly 0 items.\n- FontDropdown: Font Dropdown. Let the user choose a font family from a list that previews each font in its own typeface. For choices that are not fonts use ChoicePicker; for a free-text font name use TextField.\n- Gauge: Gauge. Show a value against a maximum, a limit or a deadline as a ring, bar or tile gauge with coloured thresholds. For a number with a trend and no scale use MetricCard; for a value the user drags use RangeSlider. Use it to monitor a scalar of exactly 1 item.\n- GradientPicker: Gradient Picker. Let the user design a linear or radial colour gradient with stops, an angle and presets. For a single solid colour use ColorPicker.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- LayoutPicker: Layout Picker. Let the user choose an automatic layout algorithm for a graph or diagram, shown as thumbnails. For choices that are not layout algorithms use ChoicePicker.\n- LineEndingPicker: Line Ending Picker. Let the user choose an arrowhead or other end marker for a line or connector in a diagram. For a line's dash pattern use LineTypePicker; for its thickness use LineWidthPicker.\n- LineShapePicker: Line Shape Picker. Let the user choose the routing shape of a connector in a diagram, such as straight or curved. For a line's dash pattern use LineTypePicker; for its end markers use LineEndingPicker.\n- LineTypePicker: Line Type Picker. Let the user choose a line's dash pattern, such as solid, dashed or dotted, with a preview. For a line's thickness use LineWidthPicker; for its routing shape use LineShapePicker.\n- LineWidthPicker: Line Width Picker. Let the user choose a line or border thickness from a list that previews each width. For a line's dash pattern use LineTypePicker; for an arbitrary number use Slider.\n- MarginsPicker: Margins Picker. Let the user choose page margins from named presets such as Normal, Narrow and Wide. For paper size use SizesPicker; for line and paragraph spacing use SpacingPicker.\n- MaskedEntry: Masked Entry. Let the user enter a secret such as a password or API key, masked, with reveal and copy. For ordinary text that need not be hidden use TextField.\n- MetricCard: Metriccard. Show one key number with its label, an optional trend and secondary text, as a dashboard tile. For a value against a maximum or target use Gauge; for a short status word use StatusBadge. Use it to monitor, summarize a scalar of exactly 1 item.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- PeoplePicker: People Picker. Let the user find and pick one or more people by name, with each search answered by the agent. For free-form tags use Tagger; for a fixed list of options use ChoicePicker.\n- PeriodPicker: Period Picker. Let the user pick a reporting period such as a month, quarter, half or year from a grid. For a single calendar date use DatePicker; for an agile sprint use SprintPicker.\n- PersonChip: Person Chip. Show one person compactly with an avatar or initials, a name and a presence dot; the user can click it. For several people at once use PresenceIndicator; to let the user pick people use PeoplePicker. Use it to summarize a record of exactly 1 item.\n- Pill: Pill. Show a compact tag, filter or mention that the user can click, or dismiss to remove it. For a status with a colour meaning use StatusBadge; for a person with an avatar use PersonChip.\n- PresenceIndicator: Presence Indicator. Show who is here as a stack of avatars with a count of the rest, which the user can expand into a list. For one person with their name use PersonChip; to let the user pick people use PeoplePicker.\n- RangeSlider: Slider. Let the user choose a number, or a low-high range, by dragging along a scale with steps. For an angle use AnglePicker; for a typed number use TextField.\n- ReasoningAccordion: Reasoning Accordion. Show an agent’s reasoning as collapsible steps with status, timing and confidence, updated as it thinks. For a plain list of items use List; for sequential tasks the user works through use Stepper.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SearchBox: Search Box. Give the user a search field with suggestions; the agent hears each query and each submit. To pick people use PeoplePicker; to type or pick from a list use EditableComboBox.\n- SizesPicker: Sizes Picker. Let the user choose a paper or page size, such as Letter, Legal or A4, from named presets. For page margins use MarginsPicker; for text columns use ColumnsPicker.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- SpacingPicker: Spacing Picker. Let the user choose line and paragraph spacing for text from named presets such as Single or Double. For page margins use MarginsPicker; for a free numeric value use Slider.\n- SprintPicker: Sprint Picker. Let the user pick an agile sprint from a list computed from a start date and a sprint length. For a fiscal month or quarter use PeriodPicker; for a single calendar date use DatePicker.\n- StatusBadge: Status Badge. Show a short status, such as Operational or Degraded, as a coloured badge, optionally clickable for details. For a removable tag or filter use Pill; for a number with a trend use MetricCard.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- SymbolPicker: Symbol Picker. Let the user browse and insert special characters or icons from categorised grids. To show one fixed icon use Icon; to pick from a short list of options use ChoicePicker.\n- Tagger: Tagger. Let the user add and remove tags, free-form or from a categorised taxonomy, as chips. To pick people use PeoplePicker; to choose one option from a list use ChoicePicker.\n- ThemeToggle: Theme Toggle. Let the user switch the whole page between light, dark and automatic themes; it restyles the host page, not just the surface. For a choice that affects only your own content use ChoicePicker.\n- TimePicker: Time Picker. Let the user pick a time of day, in a 12- or 24-hour clock, optionally with a timezone. For a date and time together use DateTimeInput; for a length of time use DurationPicker.\n- TimezonePicker: Timezone Picker. Let the user pick an IANA timezone from a searchable list that shows each zone's offset. For a time of day with its own timezone selector use TimePicker.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- TreeView: Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
+  "description": "Components of the Enterprise Bootstrap Theme, plus the A2UI basic catalog's components and functions, which this catalog re-exports. Every data property accepts a literal, a {\"path\": …} binding or a {\"call\": …} function call to one of this catalog's functions; a <request>Result property accepts only a binding. Each event a component emits has an on<Event> action property. A component whose events or requests carry a payload has one binding-only eventData property: bind it to a path, and the component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action, so read that path in the action's context; the context is resolved after the write. A request's on<Request> action asks you for data: answer with updateDataModel at the path bound to its <request>Result property, with a value matching the $defs entry its description names, once per request. A two-way value property receives the user's changes at its bound path. Some two-way components also send an action when the value changes; that action carries no payload of its own, so read the new value through the path bound to value.\n\n- AnglePicker: Angle Picker. Let the user set an angle in degrees with a dial, such as a rotation or a gradient direction. For a plain number on a scale use RangeSlider; for a typed number use TextField.\n- Breadcrumb: Breadcrumb. Show where the user is in a hierarchy as a trail of links, with actions on the last segment; the agent hears each click. For switching between sibling views use Tabs; for browsing a whole hierarchy use TreeView.\n- ChatDock: ChatDock. Show a running conversation with a message input, so the user can talk to the agent inside the surface. For a single free-text answer use TextField; for a static transcript use List with Text.\n- CodeEditor: Code Editor. Let the user read or edit code with syntax highlighting, line numbers and a toolbar; Ctrl+S saves. For prose use RichTextInput; for a LaTeX expression use LatexEditor. Use it to edit, author a document of exactly 1 item.\n- ColorPicker: Color Picker. Let the user pick any colour, with a palette, a colour field and hex or RGB entry. For a drawing tool's stroke and fill use ToolColorPicker; for a gradient use GradientPicker.\n- ColumnsPicker: Columns Picker. Let the user choose how many text columns a page or section uses, from presets that preview it. For page margins use MarginsPicker; for paper size use SizesPicker.\n- CronPicker: CRON Picker. Let the user build a recurring schedule as a CRON expression, with presets and a readable summary. For a single date use DatePicker; for a length of time use DurationPicker.\n- DatePicker: Date Picker. Let the user pick one calendar date from a popup calendar, with optional limits. For a date and a time use DateTimeInput; for a fiscal month or quarter use PeriodPicker. Use it to edit, schedule a scalar of exactly 1 item.\n- DocViewer: Doc Viewer. Show multi-page documentation written in markdown, with a table of contents, an outline and previous and next links. For one short piece of text use Text; for switching between a few panels use Tabs. Use it to browse, inspect a document of 1 to 500 items.\n- DurationPicker: Duration Picker. Let the user enter a length of time in units such as days, hours and minutes. For a time of day use TimePicker; for a recurring schedule use CronPicker.\n- DynamicFormSwitcher: Dynamic Form Switcher. Show a form whose fields the agent defines, optionally in several variants the user switches between; read the values from eventData. For one or two inputs use TextField or ChoicePicker; for a fixed set of choices use ChoicePicker. Use it to edit, author a record of exactly 1 item.\n- EditableComboBox: Editable Combo Box. Let the user type freely or pick from a filtered list of suggestions in one field. To choose only from a fixed list use ChoicePicker; for a search query use SearchBox.\n- EmptyState: Empty State. Fill an empty view with an icon, a heading, a short explanation and up to two buttons, such as Create project. For a loading placeholder use SkeletonLoader; for a single call to action without the empty message use Button. Use it to browse a collection of exactly 0 items.\n- FontDropdown: Font Dropdown. Let the user choose a font family from a list that previews each font in its own typeface. For choices that are not fonts use ChoicePicker; for a free-text font name use TextField.\n- Gauge: Gauge. Show a value against a maximum, a limit or a deadline as a ring, bar or tile gauge with coloured thresholds. For a number with a trend and no scale use MetricCard; for a value the user drags use RangeSlider. Use it to monitor a scalar of exactly 1 item.\n- GradientPicker: Gradient Picker. Let the user design a linear or radial colour gradient with stops, an angle and presets. For a single solid colour use ColorPicker.\n- GraphLegend: Graph Legend. Explain the node and edge types of a graph or diagram, with colours, icons and optional counts. For a plain key-value list use List with Text; it is not a legend for numeric chart series.\n- InlineToolbar: Inline Toolbar. Show a compact row of icon buttons and toggles, such as text formatting; the agent hears which one the user pressed. For a single action use Button; for a choice among options use ChoicePicker.\n- LatexEditor: LaTeX Editor. Let the user write a LaTeX math expression with a live rendered preview and a symbol palette; Ctrl+Enter confirms. For prose use RichTextInput; for code use CodeEditor.\n- LayoutPicker: Layout Picker. Let the user choose an automatic layout algorithm for a graph or diagram, shown as thumbnails. For choices that are not layout algorithms use ChoicePicker.\n- LineEndingPicker: Line Ending Picker. Let the user choose an arrowhead or other end marker for a line or connector in a diagram. For a line's dash pattern use LineTypePicker; for its thickness use LineWidthPicker.\n- LineShapePicker: Line Shape Picker. Let the user choose the routing shape of a connector in a diagram, such as straight or curved. For a line's dash pattern use LineTypePicker; for its end markers use LineEndingPicker.\n- LineTypePicker: Line Type Picker. Let the user choose a line's dash pattern, such as solid, dashed or dotted, with a preview. For a line's thickness use LineWidthPicker; for its routing shape use LineShapePicker.\n- LineWidthPicker: Line Width Picker. Let the user choose a line or border thickness from a list that previews each width. For a line's dash pattern use LineTypePicker; for an arbitrary number use Slider.\n- MarginsPicker: Margins Picker. Let the user choose page margins from named presets such as Normal, Narrow and Wide. For paper size use SizesPicker; for line and paragraph spacing use SpacingPicker.\n- MarkdownEditor: Markdown Editor. Let the user write and preview a markdown document, with a formatting toolbar; Ctrl+Enter saves. For a short formatted note use RichTextInput; to show markdown read-only use DocViewer. Use it to author, edit a document of exactly 1 item.\n- MaskedEntry: Masked Entry. Let the user enter a secret such as a password or API key, masked, with reveal and copy. For ordinary text that need not be hidden use TextField.\n- MetricCard: Metriccard. Show one key number with its label, an optional trend and secondary text, as a dashboard tile. For a value against a maximum or target use Gauge; for a short status word use StatusBadge. Use it to monitor, summarize a scalar of exactly 1 item.\n- OrientationPicker: Orientation Picker. Let the user choose portrait or landscape page orientation, shown as two page icons. For any other choice between a few options use ChoicePicker.\n- PeoplePicker: People Picker. Let the user find and pick one or more people by name, with each search answered by the agent. For free-form tags use Tagger; for a fixed list of options use ChoicePicker.\n- PeriodPicker: Period Picker. Let the user pick a reporting period such as a month, quarter, half or year from a grid. For a single calendar date use DatePicker; for an agile sprint use SprintPicker.\n- PersonChip: Person Chip. Show one person compactly with an avatar or initials, a name and a presence dot; the user can click it. For several people at once use PresenceIndicator; to let the user pick people use PeoplePicker. Use it to summarize a record of exactly 1 item.\n- Pill: Pill. Show a compact tag, filter or mention that the user can click, or dismiss to remove it. For a status with a colour meaning use StatusBadge; for a person with an avatar use PersonChip.\n- PresenceIndicator: Presence Indicator. Show who is here as a stack of avatars with a count of the rest, which the user can expand into a list. For one person with their name use PersonChip; to let the user pick people use PeoplePicker.\n- RangeSlider: Slider. Let the user choose a number, or a low-high range, by dragging along a scale with steps. For an angle use AnglePicker; for a typed number use TextField.\n- ReasoningAccordion: Reasoning Accordion. Show an agent’s reasoning as collapsible steps with status, timing and confidence, updated as it thinks. For a plain list of items use List; for sequential tasks the user works through use Stepper.\n- RichTextInput: Rich Text Input. Let the user write formatted text with bold, italics, lists and links; with submitOnCtrlEnter, Ctrl+Enter sends it. For plain single-line text use TextField; for long markdown documents use MarkdownEditor.\n- Ruler: Ruler. Show a measuring ruler in px, cm, mm or inches beside a canvas or document area. For choosing a number use Slider or TextField; a ruler only displays a scale.\n- SearchBox: Search Box. Give the user a search field with suggestions; the agent hears each query and each submit. To pick people use PeoplePicker; to type or pick from a list use EditableComboBox.\n- SizesPicker: Sizes Picker. Let the user choose a paper or page size, such as Letter, Legal or A4, from named presets. For page margins use MarginsPicker; for text columns use ColumnsPicker.\n- SkeletonLoader: Skeleton Loader. Hold the place of content that is still loading, shaped like text, a card, an avatar or a table. For a status the user should read use Text; replace the loader as soon as the content arrives.\n- SpacingPicker: Spacing Picker. Let the user choose line and paragraph spacing for text from named presets such as Single or Double. For page margins use MarginsPicker; for a free numeric value use Slider.\n- SprintPicker: Sprint Picker. Let the user pick an agile sprint from a list computed from a start date and a sprint length. For a fiscal month or quarter use PeriodPicker; for a single calendar date use DatePicker.\n- StatusBadge: Status Badge. Show a short status, such as Operational or Degraded, as a coloured badge, optionally clickable for details. For a removable tag or filter use Pill; for a number with a trend use MetricCard.\n- Stepper: Stepper. Show the steps of a multi-step task with progress and Back, Next and Finish; the agent hears each step change and shows that step's content. For switching freely between views use Tabs; for a single progress value use Gauge.\n- StickyNote: Sticky Note. Let the user write or read one short free-form note, styled as a coloured sticky note. For a labelled form input use TextField; for read-only prose use Text. Use it to author, summarize a document of exactly 1 item.\n- SymbolPicker: Symbol Picker. Let the user browse and insert special characters or icons from categorised grids. To show one fixed icon use Icon; to pick from a short list of options use ChoicePicker.\n- Tagger: Tagger. Let the user add and remove tags, free-form or from a categorised taxonomy, as chips. To pick people use PeoplePicker; to choose one option from a list use ChoicePicker.\n- ThemeToggle: Theme Toggle. Let the user switch the whole page between light, dark and automatic themes; it restyles the host page, not just the surface. For a choice that affects only your own content use ChoicePicker.\n- TimePicker: Time Picker. Let the user pick a time of day, in a 12- or 24-hour clock, optionally with a timezone. For a date and time together use DateTimeInput; for a length of time use DurationPicker.\n- TimezonePicker: Timezone Picker. Let the user pick an IANA timezone from a searchable list that shows each zone's offset. For a time of day with its own timezone selector use TimePicker.\n- ToolColorPicker: Tool Color Picker. Let the user pick a drawing colour for a pen, marker, pencil, highlighter or brush from a small palette. For choosing between named options that are not colours use ChoicePicker.\n- TreeView: Tree View. Show a hierarchy the user browses, expands and selects from, such as folders or categories. For a flat list without nesting use List; to pick one or more options use ChoicePicker. Use it to browse, navigate, inspect a hierarchy of 1 to 20000 items.\n- WorkspaceShell: WorkspaceShell. Show several named canvases as tabs the user can select, pin, close or create, with a history scrubber. For simple tabbed content without canvas actions use Tabs.",
   "catalogId": "https://static.outcrop.us/a2ui/catalog/v1.json",
   "components": {
     "AnglePicker": {
@@ -543,6 +543,320 @@
           "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/ChoicePicker"
         }
       ]
+    },
+    "CodeEditor": {
+      "type": "object",
+      "description": "Code Editor. Let the user read or edit code with syntax highlighting, line numbers and a toolbar; Ctrl+S saves. For prose use RichTextInput; for a LaTeX expression use LatexEditor. Use it to edit, author a document of exactly 1 item.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "CodeEditor"
+            },
+            "value": {
+              "description": "The code. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "language": {
+              "description": "Syntax highlighting language. Default: \"javascript\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "css"
+                    },
+                    {
+                      "const": "html"
+                    },
+                    {
+                      "const": "javascript"
+                    },
+                    {
+                      "const": "json"
+                    },
+                    {
+                      "const": "markdown"
+                    },
+                    {
+                      "const": "plaintext"
+                    },
+                    {
+                      "const": "python"
+                    },
+                    {
+                      "const": "sql"
+                    },
+                    {
+                      "const": "typescript"
+                    },
+                    {
+                      "const": "yaml"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readOnly": {
+              "description": "Shows the code without letting the user edit it. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "lineNumbers": {
+              "description": "Shows line numbers. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "wordWrap": {
+              "description": "Wraps long lines. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "tabSize": {
+              "description": "Not applied yet; the editor's default indentation is used.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Text shown while the editor is empty.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "height": {
+              "description": "Editor height as a CSS length. Default: \"300px\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxHeight": {
+              "description": "Maximum height as a CSS length.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "autoGrow": {
+              "description": "Not applied yet; the editor keeps its height.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "theme": {
+              "description": "Colour theme: \"light\" or \"dark\". Default: \"light\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "dark"
+                    },
+                    {
+                      "const": "light"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showToolbar": {
+              "description": "Shows the toolbar. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "toolbarActions": {
+              "description": "Toolbar buttons, in order. Default: every action. Save is enabled only when someone listens for it.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/CodeEditor__CodeEditorToolbarAction"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "diagnostics": {
+              "description": "Problems to mark in the gutter: a line, an optional column, a message and a severity.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/CodeEditor__CodeEditorDiagnostic"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "Disables the editor and the language picker. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Extra CSS classes on the root element.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CodeEditor__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSave": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"save\" emits. Its payload (a scalar) is at <eventData path>/save."
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
     },
     "ColorPicker": {
       "type": "object",
@@ -1757,6 +2071,375 @@
       ],
       "unevaluatedProperties": false
     },
+    "DynamicFormSwitcher": {
+      "type": "object",
+      "description": "Dynamic Form Switcher. Show a form whose fields the agent defines, optionally in several variants the user switches between; read the values from eventData. For one or two inputs use TextField or ChoicePicker; for a fixed set of choices use ChoicePicker. Use it to edit, author a record of exactly 1 item.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "DynamicFormSwitcher"
+            },
+            "variants": {
+              "description": "The forms, keyed by variant id. Each has a label and a list of fields;\na field has a name (its key in the values), a label and a type, and\noptionally a placeholder, help text, options (for select and radio),\nan initial value and whether it is required.",
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "description": "The variant's name in the selector."
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Help text for the variant."
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "Bootstrap Icons class."
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "The field's key in the values."
+                            },
+                            "label": {
+                              "type": "string",
+                              "description": "Label shown above the field."
+                            },
+                            "type": {
+                              "enum": [
+                                "text",
+                                "email",
+                                "password",
+                                "url",
+                                "number",
+                                "textarea",
+                                "select",
+                                "multiselect",
+                                "radio",
+                                "checkbox",
+                                "toggle",
+                                "date",
+                                "datetime",
+                                "time",
+                                "color",
+                                "code",
+                                "richtext"
+                              ],
+                              "description": "The input to show."
+                            },
+                            "placeholder": {
+                              "type": "string",
+                              "description": "Shown while the field is empty."
+                            },
+                            "required": {
+                              "type": "boolean",
+                              "description": "The field must be filled in."
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              ],
+                              "description": "Initial value."
+                            },
+                            "options": {
+                              "type": "array",
+                              "description": "Choices for select, multiselect and radio.",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "value",
+                                  "label"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "helpText": {
+                              "type": "string",
+                              "description": "Help text under the field."
+                            },
+                            "rows": {
+                              "type": "number",
+                              "description": "Rows for textarea and code."
+                            },
+                            "min": {
+                              "type": "number",
+                              "description": "Minimum for number."
+                            },
+                            "max": {
+                              "type": "number",
+                              "description": "Maximum for number."
+                            },
+                            "step": {
+                              "type": "number",
+                              "description": "Step for number."
+                            },
+                            "disabled": {
+                              "type": "boolean",
+                              "description": "Shows the field read-only."
+                            },
+                            "autocomplete": {
+                              "type": "string",
+                              "description": "The input's autocomplete hint."
+                            },
+                            "width": {
+                              "enum": [
+                                "full",
+                                "half",
+                                "third"
+                              ],
+                              "description": "Share of the row."
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "label",
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "fields"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "initialVariant": {
+              "description": "The variant shown first. Required.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showSelector": {
+              "description": "Shows a control for choosing the variant. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "selectorLabel": {
+              "description": "Label above the variant control.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "selectorStyle": {
+              "description": "How the variant control looks: \"dropdown\", \"segmented\" or \"tabs\". Default: \"dropdown\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "dropdown"
+                    },
+                    {
+                      "const": "segmented"
+                    },
+                    {
+                      "const": "tabs"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "selectorHelpText": {
+              "description": "Help text under the variant control.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Initial values: field name to value for the shown variant, or variant id to such a map for several.",
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "retainStateAcrossSwitches": {
+              "description": "Keeps each variant's values when the user switches away and back. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Maximum width: \"sm\", \"md\", \"lg\", \"xl\", or \"auto\" for the container's width. Default: \"auto\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "auto"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    },
+                    {
+                      "const": "xl"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "className": {
+              "description": "Extra CSS classes on the root element.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onChange": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"change\" emits. Its payload (a record) is at <eventData path>/change."
+            }
+          },
+          "required": [
+            "component",
+            "initialVariant",
+            "variants"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "EditableComboBox": {
       "type": "object",
       "description": "Editable Combo Box. Let the user type freely or pick from a filtered list of suggestions in one field. To choose only from a fixed list use ChoicePicker; for a search query use SearchBox.",
@@ -2502,19 +3185,19 @@
                 {
                   "oneOf": [
                     {
-                      "const": "sm"
+                      "const": "lg"
                     },
                     {
                       "const": "md"
                     },
                     {
-                      "const": "lg"
-                    },
-                    {
-                      "const": "xs"
+                      "const": "sm"
                     },
                     {
                       "const": "xl"
+                    },
+                    {
+                      "const": "xs"
                     },
                     {
                       "type": "number"
@@ -3129,6 +3812,353 @@
           "$ref": "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json#/components/Image"
         }
       ]
+    },
+    "InlineToolbar": {
+      "type": "object",
+      "description": "Inline Toolbar. Show a compact row of icon buttons and toggles, such as text formatting; the agent hears which one the user pressed. For a single action use Button; for a choice among options use ChoicePicker.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "InlineToolbar"
+            },
+            "items": {
+              "description": "Toolbar items to render.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/InlineToolbar__InlineToolbarItem"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Button height: xs=24px, sm=28px, md=32px. Default: \"sm\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    },
+                    {
+                      "const": "xs"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "align": {
+              "description": "Horizontal alignment. Default: \"left\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "center"
+                    },
+                    {
+                      "const": "left"
+                    },
+                    {
+                      "const": "right"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "compact": {
+              "description": "Reduce gaps for tight spaces. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onItemClick": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"itemClick\" emits. Its payload (a record) is at <eventData path>/itemClick."
+            }
+          },
+          "required": [
+            "component",
+            "items"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "LatexEditor": {
+      "type": "object",
+      "description": "LaTeX Editor. Let the user write a LaTeX math expression with a live rendered preview and a symbol palette; Ctrl+Enter confirms. For prose use RichTextInput; for code use CodeEditor.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "LatexEditor"
+            },
+            "expression": {
+              "description": "Initial LaTeX expression. Default: \"\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "value": {
+              "description": "Alias of `expression` — provided to satisfy the DynamicFormSwitcher\nfield-capable component convention (AGENTS.md). When both are set,\n`expression` wins. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "editMode": {
+              "description": "Initial editing mode. Default: \"visual\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "source"
+                    },
+                    {
+                      "const": "visual"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "displayMode": {
+              "description": "Display mode (block) or inline mode. Default: true (display).",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showToolbar": {
+              "description": "Show the styling toolbar. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showSymbolPalette": {
+              "description": "Show the symbol palette. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showPreview": {
+              "description": "Show the live preview pane. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "contained": {
+              "description": "Contained mode (for DiagramEngine embedding). Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minWidth": {
+              "description": "Minimum width in px. Default: 400.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minHeight": {
+              "description": "Minimum height in px. Default: 300.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Additional CSS class on root element.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readOnly": {
+              "description": "Read-only mode. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "enableChemistry": {
+              "description": "Enable mhchem chemistry extension. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "enableCancel": {
+              "description": "Enable cancel/strikethrough commands. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onConfirm": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"confirm\" emits. Its payload (a record) is at <eventData path>/confirm."
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
     },
     "LayoutPicker": {
       "type": "object",
@@ -3860,6 +4890,389 @@
       ],
       "unevaluatedProperties": false
     },
+    "MarkdownEditor": {
+      "type": "object",
+      "description": "Markdown Editor. Let the user write and preview a markdown document, with a formatting toolbar; Ctrl+Enter saves. For a short formatted note use RichTextInput; to show markdown read-only use DocViewer. Use it to author, edit a document of exactly 1 item.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "MarkdownEditor"
+            },
+            "value": {
+              "description": "Initial markdown content. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "mode": {
+              "description": "Layout mode. Default \"tabs\".\n\"display\" renders read-only markdown with no chrome. Suitable for hovers/popovers.\n\"naked\" renders an editable Vditor surface with no chrome — feels like a textarea\nthat understands markdown. Has form-control border and CSS resize.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "display"
+                    },
+                    {
+                      "const": "naked"
+                    },
+                    {
+                      "const": "sidebyside"
+                    },
+                    {
+                      "const": "tabs"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "editable": {
+              "description": "Editing mode: true = readwrite, false = readonly. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "title": {
+              "description": "Editor title shown in header bar.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "height": {
+              "description": "Default height (CSS value). Default \"70vh\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "width": {
+              "description": "Default width (CSS value). Default \"100%\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minHeight": {
+              "description": "Minimum height in pixels. Default 300.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minWidth": {
+              "description": "Minimum width in pixels. Default 400.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showExport": {
+              "description": "Show export dropdown. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showFullscreen": {
+              "description": "Show fullscreen toggle. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showInlineToolbar": {
+              "description": "Show inline selection toolbar. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showCounter": {
+              "description": "Show character counter. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text for empty editor.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "vditorMode": {
+              "description": "Vditor editing mode. Default \"ir\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "ir"
+                    },
+                    {
+                      "const": "sv"
+                    },
+                    {
+                      "const": "wysiwyg"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Bootstrap size variant.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "Disabled state. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "isolated": {
+              "description": "Scope display-mode styles to prevent CSS bleed. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "compact": {
+              "description": "Tighter vertical spacing for embedded/sidebar contexts. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "theme": {
+              "description": "Color theme for display mode. Default \"light\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "dark"
+                    },
+                    {
+                      "const": "light"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "toolbar": {
+              "description": "Custom Vditor toolbar items.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "contained": {
+              "description": "Contained mode: use \"100%\" default height instead of \"70vh\" for embedding.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "keyBindings": {
+              "description": "Override default key combos. Keys are action names, values are combo strings.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MarkdownEditor__PartialRecordstringstring"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSave": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"save\" emits. Its payload (a scalar) is at <eventData path>/save."
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "MaskedEntry": {
       "type": "object",
       "description": "Masked Entry. Let the user enter a secret such as a password or API key, masked, with reveal and copy. For ordinary text that need not be hidden use TextField.",
@@ -4147,10 +5560,10 @@
                 {
                   "oneOf": [
                     {
-                      "type": "string"
+                      "type": "number"
                     },
                     {
-                      "type": "number"
+                      "type": "string"
                     }
                   ]
                 },
@@ -5949,6 +7362,275 @@
       ],
       "unevaluatedProperties": false
     },
+    "RichTextInput": {
+      "type": "object",
+      "description": "Rich Text Input. Let the user write formatted text with bold, italics, lists and links; with submitOnCtrlEnter, Ctrl+Enter sends it. For plain single-line text use TextField; for long markdown documents use MarkdownEditor.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "RichTextInput"
+            },
+            "value": {
+              "description": "Initial HTML content. Two-way: when bound to a path, the component writes the user's changes there.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "placeholder": {
+              "description": "Placeholder text when empty.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "disabled": {
+              "description": "Disable editing. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "readonly": {
+              "description": "Read-only mode. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Bootstrap size variant. Default \"default\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "default"
+                    },
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Additional CSS class(es) on root.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxLength": {
+              "description": "Plain-text character limit. 0 = unlimited. Default 0.",
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showCounter": {
+              "description": "Show character counter. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "minHeight": {
+              "description": "CSS min-height for editable area. Default \"auto\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "maxHeight": {
+              "description": "CSS max-height for editable area. Default \"none\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "resizable": {
+              "description": "Enable CSS resize: vertical. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "formatting": {
+              "description": "Enable bold/italic/strike/link/code. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "lists": {
+              "description": "Enable ordered/unordered/task lists. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showInlineToolbar": {
+              "description": "Show floating toolbar on selection. Default true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "toolbarActions": {
+              "description": "Actions shown in toolbar.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/RichTextInput__FormattingAction"
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "submitOnCtrlEnter": {
+              "description": "Enable Ctrl+Enter submit. Default false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onSubmit": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"submit\" emits. Its payload (a scalar) is at <eventData path>/submit."
+            }
+          },
+          "required": [
+            "component"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
     "Row": {
       "type": "object",
       "allOf": [
@@ -7172,6 +8854,205 @@
           "required": [
             "component",
             "status"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Stepper": {
+      "type": "object",
+      "description": "Stepper. Show the steps of a multi-step task with progress and Back, Next and Finish; the agent hears each step change and shows that step's content. For switching freely between views use Tabs; for a single progress value use Gauge.",
+      "allOf": [
+        {
+          "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentCommon"
+        },
+        {
+          "$ref": "#/$defs/CatalogComponentCommon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "component": {
+              "const": "Stepper"
+            },
+            "steps": {
+              "description": "Step definitions. Required.",
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "description": "The step's name."
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Shown below the label."
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "Bootstrap Icons class for the indicator."
+                      },
+                      "summary": {
+                        "type": "string",
+                        "description": "Shown below the step once it is complete."
+                      },
+                      "optional": {
+                        "type": "boolean",
+                        "description": "The user may skip the step."
+                      }
+                    },
+                    "required": [
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "orientation": {
+              "description": "Layout orientation. Default: \"horizontal\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "horizontal"
+                    },
+                    {
+                      "const": "vertical"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "nonLinear": {
+              "description": "Allow clicking any step freely. Default: false (linear).",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showProgress": {
+              "description": "Show completion percentage. Default: true.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "showSaveAsDraft": {
+              "description": "Show \"Save as Draft\" button. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "finishLabel": {
+              "description": "Label for the final step's advance button. Default: \"Finish\".",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "size": {
+              "description": "Size variant. Default: \"md\".",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "lg"
+                    },
+                    {
+                      "const": "md"
+                    },
+                    {
+                      "const": "sm"
+                    }
+                  ]
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "cssClass": {
+              "description": "Additional CSS class(es).",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "eventData": {
+              "description": "Bind to a path. The component writes each event's payload to <path>/<channel>, and each request to <path>/<request>, before sending the matching action.",
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+            },
+            "onStepChange": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"stepChange\" emits. Its payload (a record) is at <eventData path>/stepChange."
+            },
+            "onFinish": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"finish\" emits. Its payload (a scalar) is at <eventData path>/finish."
+            },
+            "onSaveDraft": {
+              "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/Action",
+              "description": "Sent when \"saveDraft\" emits. Its payload (a scalar) is at <eventData path>/saveDraft."
+            }
+          },
+          "required": [
+            "component",
+            "steps"
           ]
         }
       ],
@@ -9295,6 +11176,9 @@
           "$ref": "#/components/ChoicePicker"
         },
         {
+          "$ref": "#/components/CodeEditor"
+        },
+        {
           "$ref": "#/components/ColorPicker"
         },
         {
@@ -9322,6 +11206,9 @@
           "$ref": "#/components/DurationPicker"
         },
         {
+          "$ref": "#/components/DynamicFormSwitcher"
+        },
+        {
           "$ref": "#/components/EditableComboBox"
         },
         {
@@ -9346,6 +11233,12 @@
           "$ref": "#/components/Image"
         },
         {
+          "$ref": "#/components/InlineToolbar"
+        },
+        {
+          "$ref": "#/components/LatexEditor"
+        },
+        {
           "$ref": "#/components/LayoutPicker"
         },
         {
@@ -9365,6 +11258,9 @@
         },
         {
           "$ref": "#/components/MarginsPicker"
+        },
+        {
+          "$ref": "#/components/MarkdownEditor"
         },
         {
           "$ref": "#/components/MaskedEntry"
@@ -9400,6 +11296,9 @@
           "$ref": "#/components/ReasoningAccordion"
         },
         {
+          "$ref": "#/components/RichTextInput"
+        },
+        {
           "$ref": "#/components/Row"
         },
         {
@@ -9425,6 +11324,9 @@
         },
         {
           "$ref": "#/components/StatusBadge"
+        },
+        {
+          "$ref": "#/components/Stepper"
         },
         {
           "$ref": "#/components/StickyNote"
@@ -9571,6 +11473,79 @@
       ],
       "description": "One conversation turn.",
       "additionalProperties": false
+    },
+    "CodeEditor__CodeEditorDiagnostic": {
+      "type": "object",
+      "properties": {
+        "line": {
+          "type": "number"
+        },
+        "column": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/CodeEditor__CodeEditorSeverity"
+        }
+      },
+      "required": [
+        "line",
+        "message",
+        "severity"
+      ],
+      "description": "A single diagnostic annotation displayed in the gutter.",
+      "additionalProperties": false
+    },
+    "CodeEditor__CodeEditorSeverity": {
+      "oneOf": [
+        {
+          "const": "error"
+        },
+        {
+          "const": "info"
+        },
+        {
+          "const": "warning"
+        }
+      ],
+      "description": "Severity level for a diagnostic annotation."
+    },
+    "CodeEditor__CodeEditorToolbarAction": {
+      "oneOf": [
+        {
+          "const": "copy"
+        },
+        {
+          "const": "format"
+        },
+        {
+          "const": "language"
+        },
+        {
+          "const": "redo"
+        },
+        {
+          "const": "save"
+        },
+        {
+          "const": "undo"
+        },
+        {
+          "const": "wordwrap"
+        }
+      ],
+      "description": "Toolbar action identifiers."
+    },
+    "CodeEditor__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "ColorPicker__PartialRecordstringstring": {
       "type": "object",
@@ -10120,6 +12095,52 @@
       "description": "Configuration for a node type entry in the legend.",
       "additionalProperties": false
     },
+    "InlineToolbar__InlineToolbarItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this item."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Bootstrap icon name without the bi- prefix."
+        },
+        "tooltip": {
+          "type": "string",
+          "description": "Tooltip text shown on hover."
+        },
+        "type": {
+          "oneOf": [
+            {
+              "const": "button"
+            },
+            {
+              "const": "separator"
+            },
+            {
+              "const": "toggle"
+            }
+          ],
+          "description": "Item type. Default: \"button\"."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the toggle is active. Only meaningful for type \"toggle\"."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether the item is disabled."
+        }
+      },
+      "required": [
+        "id",
+        "icon",
+        "tooltip"
+      ],
+      "description": "Configuration for a single toolbar item.",
+      "additionalProperties": false
+    },
     "LayoutPicker__CustomAlgorithmDefinition": {
       "type": "object",
       "properties": {
@@ -10303,6 +12324,15 @@
       ],
       "description": "A single margin preset definition. Values are in inches.",
       "additionalProperties": false
+    },
+    "MarkdownEditor__PartialRecordstringstring": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "description": "Make all properties in T optional",
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "MaskedEntry__PartialRecordstringstring": {
       "type": "object",
@@ -10554,6 +12584,35 @@
       "required": [],
       "description": "Construct a type with a set of properties K of type T",
       "additionalProperties": {}
+    },
+    "RichTextInput__FormattingAction": {
+      "oneOf": [
+        {
+          "const": "bold"
+        },
+        {
+          "const": "code"
+        },
+        {
+          "const": "italic"
+        },
+        {
+          "const": "link"
+        },
+        {
+          "const": "orderedList"
+        },
+        {
+          "const": "strikethrough"
+        },
+        {
+          "const": "taskList"
+        },
+        {
+          "const": "unorderedList"
+        }
+      ],
+      "description": "Formatting actions supported by the inline toolbar."
     },
     "SearchBox__PartialRecordstringstring": {
       "type": "object",

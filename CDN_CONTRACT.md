@@ -225,6 +225,7 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
 | `marked` | 18.0.12 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
 | `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
+| `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
 | `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
 
 `font-awesome` is CSS plus webfonts rather than a script, so it is served as a

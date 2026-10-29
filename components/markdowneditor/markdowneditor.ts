@@ -450,6 +450,15 @@ export interface MarkdownEditorHandle
     enable(): void;
     disable(): void;
     destroy(): void;
+
+    /** The surface contract (additive): MarkdownEditor has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "save": the markdown string, on Ctrl+Enter. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { value }: the current markdown. */
+    getState(): Record<string, unknown>;
+    /** Applies state.value when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class MarkdownEditor implements MarkdownEditorHandle
@@ -463,6 +472,7 @@ export class MarkdownEditor implements MarkdownEditorHandle
             "showCounter" | "vditorMode" | "disabled"
         >
     > & MarkdownEditorOptions;
+    private readonly saveHandlers = new Set<(payload: unknown) => void>();
     /** The Vditor instance, typed from the global this library declares. */
     private vditor: InstanceType<NonNullable<Window["Vditor"]>> | null = null;
     private wrapper: HTMLElement | null = null;
@@ -1423,6 +1433,8 @@ export class MarkdownEditor implements MarkdownEditorHandle
                 {
                     this.options.onSave(value);
                 }
+
+                this.emitSave(value);
             },
         };
 
@@ -2077,9 +2089,60 @@ ${bodyHTML}
         this.initVditor();
     }
 
+    // ── Surface contract (additive, readiness step 2 B5) ──
+
+    /** MarkdownEditor has no data slots; use setValue(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): MarkdownEditor has no data slots. Use setValue().`);
+    }
+
+    /** Subscribes to "save"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "save")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "save".`);
+        }
+
+        this.saveHandlers.add(handler);
+
+        return () => { this.saveHandlers.delete(handler); };
+    }
+
+    /** The current markdown. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores state captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
+    }
+
+    /** Tells the "save" subscribers; a handler that throws is logged and does not stop the rest. */
+    private emitSave(value: string): void
+    {
+        for (const handler of this.saveHandlers)
+        {
+            try
+            {
+                handler(value);
+            }
+            catch (err)
+            {
+                logError("save handler threw:", err);
+            }
+        }
+    }
+
     public destroy(): void
     {
         logInfo("Destroying");
+        this.saveHandlers.clear();
 
         if (this.themeObserver)
         {

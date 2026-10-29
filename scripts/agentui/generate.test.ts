@@ -17,7 +17,7 @@ import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
-import { PENDING_EXCUSABLE_CODES, runPipeline, writeOutputs } from "./generate.mjs";
+import { PENDING_EXCUSABLE_CODES, runPipeline, typiaPick, writeOutputs } from "./generate.mjs";
 
 const FIXTURES = path.join(__dirname, "fixtures");
 const CACHE = path.join(__dirname, "..", "..", "node_modules", ".cache", "agentui-test-pipeline");
@@ -87,6 +87,20 @@ describe("runPipeline — fixture widget", () =>
     {
         const schema = run([widget()]).outputs.get("schemas/widget.options.json") as any;
         expect(schema.properties.extra.additionalProperties).toEqual({ type: "string" });
+    }, 60_000);
+    test("a prop with a protocol.schemas entry is not given to typia, and keeps its JSDoc as description (B5)", () =>
+    {
+        const c = { manifest: widget(), surface: { dataProps: [{ name: "pageSize" }, { name: "extra" }] } };
+
+        expect(typiaPick(c)).toEqual(["pageSize"]);
+
+        const columns = { type: "array", items: { type: "object", properties: { id: { type: "string" } },
+            required: ["id"], additionalProperties: false } };
+        const schema = run([widget({ schemas: { extra: { type: "object" }, columns } })])
+            .outputs.get("schemas/widget.options.json") as any;
+        expect(schema.required).toContain("columns");
+        expect((run([widget()]).outputs.get("schemas/widget.options.json") as any).properties.extra.description)
+            .toBe("Extra bag.");
     }, 60_000);
     test("a nested hostOnly path on a plain field leaves the schema, required included (ADR-230)", () =>
     {

@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B5): Ctrl+S and the Save
+ * button emit "save" through an additive on(). The adapter loads CodeMirror 6
+ * first (ADR-230).
  */
 export const CODEEDITOR_MANIFEST: CapabilityManifest =
 {
@@ -33,6 +31,12 @@ export const CODEEDITOR_MANIFEST: CapabilityManifest =
     icon: "bi-code-square",
     category: "content",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user read or edit code with syntax highlighting, line numbers and a toolbar; Ctrl+S saves.",
+        avoidWhen: "For prose use RichTextInput; for a LaTeX expression use LatexEditor.",
+    },
+
     affords: [
         {
             shape: "document",
@@ -41,10 +45,24 @@ export const CODEEDITOR_MANIFEST: CapabilityManifest =
             minViewport: { w: 320, h: 200 },
         },
     ],
-    emits: [],
+    emits: [
+        { name: "save", payload: "scalar", multi: false, legacyOption: "onSave" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        hostOnly: {
+            onLanguageChange: "Fires as the user picks another highlighting language; that is view state, not "
+                + "information for an agent.",
+            onFocus: "Fires as the editor gains focus; transient, not information for an agent.",
+            onBlur: "Fires as the editor loses focus; transient, not information for an agent.",
+        },
+        // CodeMirror 6 is the editor; without it the component shows an error notice (ADR-230).
+        dependencies: { libraries: ["codemirror6"] },
+    },
 
     regions: ["codeeditor:editor", "codeeditor:cm-scroller"],
 
@@ -54,6 +72,6 @@ export const CODEEDITOR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 400, h: 300 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

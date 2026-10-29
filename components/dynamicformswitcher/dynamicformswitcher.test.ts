@@ -1340,3 +1340,250 @@ describe("unreadableFields", () =>
         handle.destroy();
     });
 });
+
+// ===========================================================================
+// SURFACE CONTRACT (B5): additive on("change"), getState/setState, setData
+// ===========================================================================
+
+describe("surface contract (B5)", () =>
+{
+    /** One real `input` event: the user typing, as opposed to setValue()'s input plus change. */
+    function typeInto(name: string, value: string): void
+    {
+        const el = input(name)!;
+        el.value = value;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    test("getElement_ReturnsTheRootTheFieldsLiveIn", () =>
+    {
+        const handle = build();
+
+        expect(handle.getElement().classList.contains("dynamicformswitcher")).toBe(true);
+        expect(handle.getElement().querySelector("[name=base_url]")).toBe(input("base_url"));
+
+        handle.destroy();
+    });
+
+    test("on_Change_DeliversVariantIdAndValues_AfterOnChangeExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const handle = build({ onChange: (id) => order.push(`option:${id}`) });
+        handle.on("change", (p) => order.push(`channel:${(p as { variantId: string }).variantId}`));
+
+        typeInto("base_url", "https://a.example");
+
+        // One input event fires the field's onChange once; the legacy callback leads.
+        expect(order).toEqual(["option:api_key", "channel:api_key"]);
+
+        handle.destroy();
+    });
+
+    test("on_Change_Payload_IsVariantIdAndActiveValues", () =>
+    {
+        const heard = vi.fn();
+        const handle = build();
+        handle.on("change", heard);
+
+        typeInto("base_url", "https://a.example");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        const payload = heard.mock.calls[0][0] as { variantId: string; values: Record<string, unknown> };
+        expect(payload.variantId).toBe("api_key");
+        expect(payload.values.base_url).toBe("https://a.example");
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+
+        handle.destroy();
+    });
+
+    test("on_Change_WithoutOnChange_StillDelivers", () =>
+    {
+        const heard = vi.fn();
+        const handle = build();
+        handle.on("change", heard);
+
+        typeInto("base_url", "https://a.example");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+
+        handle.destroy();
+    });
+
+    test("on_Change_PayloadValues_IsACopy", () =>
+    {
+        const handle = build();
+        handle.on("change", (p) =>
+        {
+            ((p as { values: Record<string, unknown> }).values).base_url = "tampered";
+        });
+
+        typeInto("base_url", "https://a.example");
+
+        expect(handle.getValues().base_url).toBe("https://a.example");
+
+        handle.destroy();
+    });
+
+    test("on_Change_AfterVariantSwitch_HearsNewVariantAndRetainedValuesAfterOnVariantChange", () =>
+    {
+        const order: string[] = [];
+        const onChange = vi.fn();
+        const handle = build({ onChange, onVariantChange: (id) => order.push(`option:${id}`) });
+        const heard: unknown[] = [];
+        handle.on("change", (p) => { order.push("channel"); heard.push(p); });
+        handle.setVariant("basic");
+        typeInto("username", "alice");
+        handle.setVariant("api_key");
+        onChange.mockClear();
+        order.length = 0;
+        heard.length = 0;
+
+        handle.setVariant("basic");
+
+        expect(order).toEqual(["option:basic", "channel"]);
+        expect(heard).toEqual([{
+            variantId: "basic",
+            values: expect.objectContaining({ username: "alice" }),
+        }]);
+        // The legacy onChange must not start firing on a variant switch.
+        expect(onChange).not.toHaveBeenCalled();
+
+        handle.destroy();
+    });
+
+    test("on_Change_SetVariantToCurrent_DoesNotFire", () =>
+    {
+        const heard = vi.fn();
+        const handle = build();
+        handle.on("change", heard);
+
+        handle.setVariant("api_key");
+
+        expect(heard).not.toHaveBeenCalled();
+
+        handle.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const handle = build();
+        const off = handle.on("change", heard);
+
+        typeInto("base_url", "https://a.example");
+        off();
+        typeInto("base_url", "https://b.example");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+
+        handle.destroy();
+    });
+
+    test("on_Change_HandlerThrows_DoesNotBreakOthersOrComponent", () =>
+    {
+        const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const heard = vi.fn();
+        const handle = build();
+        handle.on("change", () => { throw new Error("boom"); });
+        handle.on("change", heard);
+
+        typeInto("base_url", "https://a.example");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+
+        spy.mockRestore();
+        handle.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const handle = build();
+        handle.on("change", heard);
+
+        handle.destroy();
+        handle.setVariant("basic");
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws_NamingTheValidChannel", () =>
+    {
+        const handle = build();
+
+        expect(() => handle.on("bogus", () => undefined)).toThrow(/"change"/);
+
+        handle.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const handle = build();
+
+        expect(() => handle.setData("x", 1))
+            .toThrow(/DynamicFormSwitcher.*no data slots.*setVariant\(\).*setValues\(\)/);
+
+        handle.destroy();
+    });
+
+    test("getState_ReturnsVariantAndAllValues", () =>
+    {
+        const handle = build();
+        typeInto("base_url", "https://a.example");
+
+        const state = handle.getState();
+
+        expect(state.variant).toBe("api_key");
+        expect((state.values as Record<string, Record<string, unknown>>).api_key.base_url).toBe("https://a.example");
+        expect(JSON.parse(JSON.stringify(state))).toEqual(state);
+
+        handle.destroy();
+    });
+
+    test("getState_IsADeepCopy", () =>
+    {
+        const handle = build();
+        typeInto("base_url", "https://a.example");
+
+        const state = handle.getState();
+        (state.values as Record<string, Record<string, unknown>>).api_key.base_url = "tampered";
+
+        expect(handle.getValues().base_url).toBe("https://a.example");
+
+        handle.destroy();
+    });
+
+    test("getState_SetState_RoundTripVariantAndValues", () =>
+    {
+        const handle = build();
+        typeInto("base_url", "https://a.example");
+        handle.setVariant("basic");
+        typeInto("username", "alice");
+        const captured = handle.getState();
+
+        handle.setVariant("api_key");
+        typeInto("base_url", "https://changed.example");
+        handle.setValues("basic", { base_url: "x", username: "bob", password: "" });
+
+        handle.setState(captured);
+
+        expect(handle.getVariant()).toBe("basic");
+        expect(handle.getState()).toEqual(captured);
+
+        handle.destroy();
+    });
+
+    test("setState_AppliesOnlyPresentKeys", () =>
+    {
+        const handle = build();
+
+        handle.setState({ variant: "none" });
+        expect(handle.getVariant()).toBe("none");
+
+        handle.setState({ values: { api_key: { base_url: "https://z.example" } } });
+        expect(handle.getVariant()).toBe("none");
+        expect(handle.getAllValues().api_key.base_url).toBe("https://z.example");
+
+        handle.destroy();
+    });
+});

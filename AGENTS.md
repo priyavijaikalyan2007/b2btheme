@@ -565,8 +565,21 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `markdownrenderer`). A component that throws or shows a "required" notice
   without a library is not "can't work" any more: declare the library.
 - **A glue's `heldProps`** are create-time props other props' valid values
-  depend on (DocViewer's `activePage` must name one of its `pages`); G3 mounts
-  with them and holds them fixed.
+  depend on (DocViewer's `activePage` must name one of its `pages`,
+  DynamicFormSwitcher's `initialVariant` one of its `variants`); every G3 test
+  mounts with them, and the rebuild test holds them fixed.
+- **A glue trigger returns `"async"`** when the gesture reaches the channel
+  only after a promise settles (Stepper's finish awaits validation). The
+  synchronous conformance checks record a warning; G3 waits for it.
+- **`tests/jsdom/standins.ts`** replaces a library jsdom cannot run (Vditor)
+  in the conformance gate and G3, keyed by library name; the browser suite
+  loads the real one. Not beside a component: a component file that writes a
+  library's global reads as owning it, and the build compiles other files
+  under `components/`, so a `.mock.ts` there would ship.
+- **A prop with a `protocol.schemas` entry is not given to typia** (B5): its
+  override is the schema, its JSDoc the description, and a required member
+  stays required. Use one when typia cannot describe a type (elements or
+  functions nested in data, such as Stepper's `steps`).
 - **A data option named `id`, `accessibility` or `weight` fails the build**:
   A2UI gives every component those. Declare it host-only (MetricCard and
   ReasoningAccordion `id`, ADR-229).

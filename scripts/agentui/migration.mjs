@@ -36,6 +36,8 @@ export const PENDING_CLASSIFICATION = new Set([
     // throws without MarkdownRenderer, which the adapter does not load.
     // 54 on 2026-10-29: docviewer classified; the adapter loads MarkdownRenderer and marked first (readiness
     // step 2 P1, ADR-230).
+    // 47 on 2026-10-29: seven B5 editors and forms classified (readiness step 2 B5, ADR-231); propertyinspector
+    // stays: its content arrives through open() as DOM elements, which needs A2UI children (step 4).
     "actionitems",
     "activityfeed",
     "anchorlayout",
@@ -46,13 +48,11 @@ export const PENDING_CLASSIFICATION = new Set([
     "boxlayout",
     "cardlayout",
     "chartpanel",
-    "codeeditor",
     "commentoverlay",
     "conversation",
     "datagrid",
     "diagramengine",
     "docklayout",
-    "dynamicformswitcher",
     "explorerpicker",
     "facetsearch",
     "fileexplorer",
@@ -63,11 +63,8 @@ export const PENDING_CLASSIFICATION = new Set([
     "graphminimap",
     "gridlayout",
     "helpdrawer",
-    "inlinetoolbar",
-    "latexeditor",
     "layerlayout",
     "logconsole",
-    "markdowneditor",
     "marketinghero",
     "multiselectcombo",
     "navrail",
@@ -78,12 +75,10 @@ export const PENDING_CLASSIFICATION = new Set([
     "relationshipmanager",
     "ribbon",
     "ribbonbuilder",
-    "richtextinput",
     "sitefooter",
     "spinemap",
     "splitlayout",
     "stacklayout",
-    "stepper",
     "tabbedpanel",
     "tenantswitcher",
     "timeline",

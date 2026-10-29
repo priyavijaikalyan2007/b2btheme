@@ -113,7 +113,19 @@ export interface InlineToolbar
     destroy(): void;
     /** Return the toolbar root element. */
     getElement(): HTMLElement;
+
+    /** The surface contract (additive): InlineToolbar has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "itemClick": { id, active }, after the item's onClick. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229): does nothing. */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** Subscribers of the "itemClick" channel. */
+type ItemClickHandlers = Set<(payload: unknown) => void>;
 
 // ============================================================================
 // DOM HELPERS
@@ -219,7 +231,8 @@ function renderItems(
 /** Bind click handlers for all items via event delegation. */
 function bindClickHandlers(
     root: HTMLElement,
-    items: InlineToolbarItem[]
+    items: InlineToolbarItem[],
+    itemClickHandlers: ItemClickHandlers
 ): void
 {
     root.addEventListener("click", (e: Event) =>
@@ -229,14 +242,15 @@ function bindClickHandlers(
         ) as HTMLElement | null;
 
         if (!btn) { return; }
-        handleButtonClick(btn, items);
+        handleButtonClick(btn, items, itemClickHandlers);
     });
 }
 
 /** Handle a click on a toolbar button. */
 function handleButtonClick(
     btn: HTMLElement,
-    items: InlineToolbarItem[]
+    items: InlineToolbarItem[],
+    itemClickHandlers: ItemClickHandlers
 ): void
 {
     const itemId = btn.getAttribute("data-item-id");
@@ -250,7 +264,16 @@ function handleButtonClick(
         btn.classList.toggle("inlinetoolbar-btn-active", item.active);
     }
 
-    item.onClick?.(item, item.active ?? false);
+    const active = item.active ?? false;
+
+    item.onClick?.(item, active);
+
+    // Fresh JSON object per handler, so no subscriber can mutate another's payload.
+    for (const handler of itemClickHandlers)
+    {
+        try { handler({ id: item.id, active }); }
+        catch (err) { logError("itemClick handler threw:", err); }
+    }
 }
 
 // ============================================================================
@@ -288,18 +311,22 @@ export function createInlineToolbar(options: InlineToolbarOptions): InlineToolba
     const root = buildToolbarRoot(options);
 
     renderItems(root, options.items);
-    bindClickHandlers(root, options.items);
+
+    const itemClickHandlers: ItemClickHandlers = new Set();
+
+    bindClickHandlers(root, options.items, itemClickHandlers);
     options.container.appendChild(root);
 
     logInfo("Created with", options.items.length, "items");
 
-    return buildHandle(root, options.items);
+    return buildHandle(root, options.items, itemClickHandlers);
 }
 
 /** Build the public API handle. */
 function buildHandle(
     root: HTMLElement,
-    items: InlineToolbarItem[]
+    items: InlineToolbarItem[],
+    itemClickHandlers: ItemClickHandlers
 ): InlineToolbar
 {
     return {
@@ -344,6 +371,7 @@ function buildHandle(
 
         destroy(): void
         {
+            itemClickHandlers.clear();
             root.remove();
             logInfo("Destroyed");
         },
@@ -351,6 +379,37 @@ function buildHandle(
         getElement(): HTMLElement
         {
             return root;
+        },
+
+        // ── Surface contract (additive, readiness step 2 B5) ──
+
+        setData(slot: string, _value: unknown): void
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("${slot}"): InlineToolbar has no data slots. `
+                + "Use setItemDisabled() or setItemActive().");
+        },
+
+        on(channel: string, handler: (payload: unknown) => void): () => void
+        {
+            if (channel !== "itemClick")
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "itemClick".`);
+            }
+
+            itemClickHandlers.add(handler);
+
+            return () => { itemClickHandlers.delete(handler); };
+        },
+
+        getState(): Record<string, unknown>
+        {
+            return {};
+        },
+
+        setState(_state: Record<string, unknown>): void
+        {
+            // No state keys to restore.
         },
     };
 }

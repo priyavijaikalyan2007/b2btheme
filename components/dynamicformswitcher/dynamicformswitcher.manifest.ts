@@ -39,7 +39,17 @@ import type { CapabilityManifest } from "../../runtime/src/types";
  * ADR-134's exclusion table is about the FIELD contract, and ADR-142
  * supersedes it for canvas purposes with three levels. A form HOST at
  * `display` was never excluded by either.
+ *
+ * Declared at `surface` conformance (readiness step 2 B5): it emits "change"
+ * with the variant and its values through an additive on(); value is
+ * one-way. Over agent protocols only the built-in field types that need no
+ * other component are offered (protocol.schemas.variants).
  */
+/** A field value an agent can set or read. */
+const SCALAR = {
+    anyOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }, { type: "array", items: { type: "string" } }],
+};
+
 export const DYNAMICFORMSWITCHER_MANIFEST: CapabilityManifest =
 {
     name: "dynamicformswitcher",
@@ -48,6 +58,13 @@ export const DYNAMICFORMSWITCHER_MANIFEST: CapabilityManifest =
     label: "Dynamic Form Switcher",
     icon: "bi-ui-checks",
     category: "input",
+
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a form whose fields the agent defines, optionally in several variants the user switches "
+            + "between; read the values from eventData.",
+        avoidWhen: "For one or two inputs use TextField or ChoicePicker; for a fixed set of choices use ChoicePicker.",
+    },
 
     affords: [
         {
@@ -69,11 +86,93 @@ export const DYNAMICFORMSWITCHER_MANIFEST: CapabilityManifest =
     // `onValidate` are live constructor callbacks; turning them into channels
     // is the promotion to `surface`, which belongs with the component's own
     // arc rather than with clearing an exemption.
-    emits: [],
+    emits: [
+        { name: "change", payload: "record", multi: false, legacyOption: "onChange" },
+    ],
 
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["variant", "values"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        // onChange passes the variant id and the values, which cannot map to value: value is one-way.
+        change: "event",
+        hostOnly: {
+            "variants[].fields[].customElement": "An element for a custom field; over A2UI only the built-in field "
+                + "types are offered.",
+            "variants[].fields[].mount": "A function that mounts a custom field; over A2UI only the built-in field "
+                + "types are offered.",
+            "variants[].fields[].validate": "A check that must answer synchronously, which an agent round trip "
+                + "cannot; the required rule still applies.",
+            "variants[].fields[].componentOptions": "Options for a component-backed field type, which needs host "
+                + "code; over A2UI only the built-in types are offered.",
+            "variants[].fields[].value": "Its TypeScript type is unknown; protocol.schemas.variants narrows it to a "
+                + "string, number, boolean or list of strings.",
+            value: "Its TypeScript type is an open record; protocol.schemas.value narrows it to field names mapped to "
+                + "strings, numbers, booleans or lists of strings.",
+            onVariantChange: "Fires as the user switches variants; the change event carries the new variant and its "
+                + "values.",
+            onValidate: "A check that must answer synchronously, which an agent round trip cannot.",
+        },
+        schemas: {
+            // Built-in field types that need no other component; "file" yields browser File objects and
+            // "custom" needs a mount function, so neither is offered (readiness step 2 B5).
+            variants: {
+                type: "object",
+                additionalProperties: {
+                    type: "object",
+                    properties: {
+                        label: { type: "string", description: "The variant's name in the selector." },
+                        description: { type: "string", description: "Help text for the variant." },
+                        icon: { type: "string", description: "Bootstrap Icons class." },
+                        fields: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string", description: "The field's key in the values." },
+                                    label: { type: "string", description: "Label shown above the field." },
+                                    type: {
+                                        enum: ["text", "email", "password", "url", "number", "textarea", "select",
+                                            "multiselect", "radio", "checkbox", "toggle", "date", "datetime", "time",
+                                            "color", "code", "richtext"],
+                                        description: "The input to show.",
+                                    },
+                                    placeholder: { type: "string", description: "Shown while the field is empty." },
+                                    required: { type: "boolean", description: "The field must be filled in." },
+                                    value: { ...SCALAR, description: "Initial value." },
+                                    options: {
+                                        type: "array",
+                                        description: "Choices for select, multiselect and radio.",
+                                        items: {
+                                            type: "object",
+                                            properties: { value: { type: "string" }, label: { type: "string" } },
+                                            required: ["value", "label"],
+                                            additionalProperties: false,
+                                        },
+                                    },
+                                    helpText: { type: "string", description: "Help text under the field." },
+                                    rows: { type: "number", description: "Rows for textarea and code." },
+                                    min: { type: "number", description: "Minimum for number." },
+                                    max: { type: "number", description: "Maximum for number." },
+                                    step: { type: "number", description: "Step for number." },
+                                    disabled: { type: "boolean", description: "Shows the field read-only." },
+                                    autocomplete: { type: "string", description: "The input's autocomplete hint." },
+                                    width: { enum: ["full", "half", "third"], description: "Share of the row." },
+                                },
+                                required: ["name", "label", "type"],
+                                additionalProperties: false,
+                            },
+                        },
+                    },
+                    required: ["label", "fields"],
+                    additionalProperties: false,
+                },
+            },
+            value: { type: "object", additionalProperties: SCALAR },
+        },
+    },
 
     // The one scrolling region the component creates: the textarea a
     // `type: "code"` field renders. Already named in the source (DEBT-DUI-5).
@@ -91,6 +190,6 @@ export const DYNAMICFORMSWITCHER_MANIFEST: CapabilityManifest =
     // The conformance fixture lives in dynamicformswitcher.conformance.ts.
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
