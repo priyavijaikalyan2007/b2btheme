@@ -1906,3 +1906,63 @@ For the seven surface components above:
 - pending 47 → 38;
 - `unclassifiedOptions` 392 → 326;
 - `protocolPropsMissingJsdoc` 286 → 202.
+
+---
+
+## B7: collaboration and AI
+
+**Goal:** five of six join catalog v1: PromptTemplateManager, ActionItems, RelationshipManager, Conversation and ExplorerPicker. CommentOverlay stays pending.
+
+**User decisions (2026-10-29):**
+- **B7-1, an agent rewrites a list in place:** a data collection an agent rewrites mid-conversation is an `accepts` slot written through `setData`, not a create prop, so the user keeps their draft, scroll, selection, collapse and sort. This covers Conversation `session`, ActionItems `items`, RelationshipManager `relationships` and PromptTemplateManager `templates`. A slot whose rows need fields the generic `{ id, name }` sample lacks gets a glue `slotSamples` entry; this harness extension landed first (`8700a68c`).
+- **B7-2, Conversation's Vditor CDN:** `Vditor.preview()` in Conversation sets no `cdn`, so for every existing user Vditor loads lute and KaTeX from unpkg. A labelled `fix(conversation)` commit points it at the library's own mirror, as MarkdownEditor's `VDITOR_CDN` does (ADR-149).
+- **B7-3, ExplorerPicker gains its seams in B7:** it joins with new additive providers, not as pending.
+
+**Rules derived from earlier batches (no user question):**
+- **Callbacks the component never calls** are host-only with the reason "The component never calls this option." Don't make them fire, because an unused public member is not dead API. They are ActionItems `onPriorityChange`, `onDueDateChange`, `onTagChange` and `onExport`, RelationshipManager `onEditProperties`, and Conversation `onLoadSession` and `onError`. Options nothing reads (RelationshipManager `showConfidence`, ExplorerPicker `hideSystemFolders`) are host-only with "Nothing reads this option."
+- **A loader with no parameter** is host-only (B6 ActivityFeed `onLoadMore`): PromptTemplateManager `onLoadTemplates`, although §5.3 names it a provider.
+- **A loader with two parameters** gets an additive single-object variant when the component can't work over A2UI without it, and is host-only otherwise (B6 AuditLogViewer `onLoadPage`). RelationshipManager's Add flow needs its search, so `onSearchResources(query, typeKeys)` gains `onSearchTargets({ query, typeKeys })`.
+- **Selection** is both an event and a state key (TreeGrid).
+- **Script dependencies** a component throws without are declared (P1): `inlinetoolbar`, `hovercard`, `confirmdialog`, `typebadge`, `vditor`, as each component uses them.
+- **DOM slots** wait for step 4: ActionItems' comment slot means `onRenderCommentSlot` and `onCommentToggle` are host-only.
+- **New features are follow-ups:** PromptTemplateManager's "Use template" button and an ExplorerPicker static-tree expansion fix are not built in B7.
+
+**Per component:**
+
+| Component | Slot | Events (payload) | Providers | `stateKeys` | Additive API besides the surface methods |
+|---|---|---|---|---|---|
+| PromptTemplateManager | `templates`, keeping the selection | `select` (id), `save` (record), `delete` (id), `duplicate` (record) | — | `["selected", "variables", "preview"]` | — |
+| ActionItems | `items` (silent; prunes stale selection and editing ids) | `itemCreate`, `itemUpdate`, `statusChange`, `itemReorder`, `assignmentRequest` (records); `itemDelete` (id); `bulkDelete`, `bulkAssign`, `selection` (collections) | — | `["selection", "collapsed", "sort", "filter", "showArchived"]` | — |
+| RelationshipManager | `relationships` | `createRelationship` (record); `deleteRelationship`, `navigate`, `confirmInferred`, `dismissInferred` (ids) | `onSearchTargets` → `search` (latest) | `["sortMode", "collapsed"]` | `onSearchTargets`; with no `onCreateRelationship` but a `createRelationship` subscriber, Add emits and closes the panel; the legacy create result goes through `Promise.resolve` |
+| Conversation | `session` (`loadSession`, silent) | `sendMessage` (text), `feedback` (record), plus `newSession`/`clearSession` if the component clears locally | — | `[]` | — |
+| ExplorerPicker | — | `selection`, `confirm`, `cancel` (collections of node records; `cancel` carries the selection abandoned) | `onLoadChildren({ nodeId })` → `loadChildren` (queue); `onSearch({ query, cursor })` → `search` (latest) | `["expanded", "selection"]` | the two providers; `cancellable` (shows Cancel without `onCancel`); `showSearch` (default true); `onConfirm` becomes optional at the call site |
+
+- **Host-only, with reasons in each manifest:**
+  - The URL-fetch rule covers ExplorerPicker `apiBase`, `ontologyApiBase`, `fetchFn` and `ontologyFetchFn` (the `fetch` replacements also return a Response, which an agent can't supply), and its recent and starred sections, which load from the host's endpoints.
+  - Too-broad records: `session.metadata` and `session.messages[].metadata` (they also carry `mcpApp` HTML), `templates[].metadata`, `relationshipDefinitions[].propertiesSchema` and `relationships[].properties`.
+  - The link rule covers none of them; avatars and icons are image URLs.
+- **CommentOverlay stays pending.** Pins are placed only from `pins[].anchorElement` (a live DOM element) and over the host page region `container`. Over A2UI the adapter's box is empty, no element can be sent, and no user gesture starts placement. It can join once A2UI children (step 4), coordinate-only pins and a user-reachable placement trigger exist. The reason goes to #20.
+- **Payloads are JSON copies,** never live objects or the instance; Dates become ISO strings.
+- **Every new channel emits after the legacy callback,** which still fires first and exactly once. `setData` and `setState` restore silently: no legacy callback and no channel. They never reuse a method that fires (`addItem`, `setSelection`, `setSortMode`, `selectTemplate`).
+
+### Task B7.1: one component at a time
+In this order: PromptTemplateManager, ActionItems, RelationshipManager, Conversation (the `fix` commit first), then ExplorerPicker. Each component:
+- **Handle work:** additive handle and options work, TDD, one `feat(<name>)` commit;
+- **JSDoc:** for every data prop it lacks, comment-only;
+- **Manifest:** `agent`, `emits`, `accepts`, `stateKeys`, `protocol` (`hostOnly`, `providers`, `dependencies`, `schemas` where needed) and `conformance: "surface"`;
+- **Conformance glue:** `options`, `eventProps`, `slotSamples`, a trigger per channel and a `request` per provider;
+- **Bookkeeping:** out of `PENDING_CLASSIFICATION`, the pins lowered exactly, and the baseline rewritten (adds only);
+- **Gesture tests:** literal `"<Name>: …"` tests in `tests/a2ui-components/b7-collab.spec.ts`, which must include one proving that an agent's slot write keeps the user's in-progress state.
+
+### Task B7.2: docs, verification, PR
+- **Records:**
+  - ADR-234 (B7-1 slots, the derived rules);
+  - AGENTS.md (`slotSamples`, done with the harness);
+  - CHANGELOG, `history.jsonl`;
+  - #20, including CommentOverlay's reason;
+  - follow-up issues for the PromptTemplateManager Use button and ExplorerPicker's static-tree expansion.
+- **Verification:**
+  - full suites and mutation checks;
+  - the dist diff: the five components' JS, plus Conversation's labelled fix;
+  - the prompt-size line.
+- **The PR,** targeting `main` once #57 merges.
