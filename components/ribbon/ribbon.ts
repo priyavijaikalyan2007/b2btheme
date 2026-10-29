@@ -301,6 +301,21 @@ export interface RibbonOptions extends RibbonColorOptions
 
     cssClass?: string;
     keyBindings?: Partial<Record<string, string>>;
+
+    /**
+     * Where the ribbon listens for its keys: the collapse combo, Alt key tips
+     * and Escape. "document" (the default) handles them anywhere on the page;
+     * "ribbon" only while focus is inside the ribbon, so a page with other
+     * keyboard users keeps its keys (B8).
+     */
+    keyScope?: "document" | "ribbon";
+}
+
+/** What a controlClick reports (B8): the control, and its value after the interaction. */
+export interface RibbonControlClick
+{
+    controlId: string;
+    value: string | number | boolean | null;
 }
 
 export interface Ribbon
@@ -344,6 +359,25 @@ export interface Ribbon
 
     getState(): RibbonState;
     restoreState(state: Partial<RibbonState>): void;
+
+    /** The surface contract (additive, B8): Ribbon has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "controlClick": { controlId, value } after each control
+     * interaction, value being a toggle's state (null for a plain button), a
+     * field's new value, the gallery option or split-menu item picked, or the
+     * text submitted with Enter. Menu-bar items report their own id with
+     * null. It fires after onControlClick where that fires, and also for
+     * galleries, input submits, split-menu items and menu-bar items, which
+     * onControlClick never reported. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /**
+     * Restores what getState() reports, silently: no onTabChange, no
+     * onCollapse, no controlClick, and a collapsed ribbon stays collapsed
+     * (restoreState() fires both callbacks and can open the panel).
+     */
+    setState(state: Record<string, unknown>): void;
 
     setColors(colors: Partial<RibbonColorOptions>): void;
     resetColors(): void;
@@ -545,6 +579,9 @@ export class RibbonImpl implements Ribbon
     private tempExpanded: boolean;
     private visible: boolean;
     private destroyed: boolean;
+    /** True while setState restores, which silences onTabChange and onCollapse (B8). */
+    private restoring = false;
+    private readonly controlClickHandlers = new Set<(payload: unknown) => void>();
     private backstageOpen: boolean;
 
     // DOM
@@ -666,6 +703,7 @@ export class RibbonImpl implements Ribbon
     public destroy(): void
     {
         if (this.destroyed) { return; }
+        this.controlClickHandlers.clear();
         this.destroyed = true;
         this.clearAutoCollapseTimer();
         this.detachListeners();
@@ -717,7 +755,7 @@ export class RibbonImpl implements Ribbon
             this.startAutoCollapseTimer();
         }
 
-        if (prev !== tabId)
+        if (prev !== tabId && !this.restoring)
         {
             safeCallback(this.opts.onTabChange, tabId);
         }
@@ -953,7 +991,7 @@ export class RibbonImpl implements Ribbon
         this.clearAutoCollapseTimer();
         this.hidePanel();
         this.updateCollapseBtn();
-        safeCallback(this.opts.onCollapse, true);
+        if (!this.restoring) { safeCallback(this.opts.onCollapse, true); }
     }
 
     public expand(): void
@@ -965,7 +1003,7 @@ export class RibbonImpl implements Ribbon
         this.clearAutoCollapseTimer();
         this.showPanel();
         this.updateCollapseBtn();
-        safeCallback(this.opts.onCollapse, false);
+        if (!this.restoring) { safeCallback(this.opts.onCollapse, false); }
     }
 
     public toggleCollapse(): void
@@ -1157,6 +1195,7 @@ export class RibbonImpl implements Ribbon
             {
                 safeCallback(item.onClick);
                 safeCallback(this.opts.onControlClick, item.id);
+                this.emitControlClick(item.id, null);
             });
             if (item.keyTip) { btn.dataset.keyTip = item.keyTip; }
             qat.appendChild(btn);
@@ -1322,6 +1361,7 @@ export class RibbonImpl implements Ribbon
             if (!item.disabled)
             {
                 safeCallback(item.onClick);
+                this.emitControlClick(item.id, null);
                 this.closeAllMenus();
             }
         });
@@ -1835,6 +1875,7 @@ export class RibbonImpl implements Ribbon
         }
         safeCallback(btn.onClick, btn, btn.active || false);
         safeCallback(this.opts.onControlClick, btn.id);
+        this.emitControlClick(btn.id, btn.toggle ? Boolean(btn.active) : null);
     }
 
     private appendButtonContent(
@@ -1900,6 +1941,7 @@ export class RibbonImpl implements Ribbon
             }
             safeCallback(split.onClick, split, split.active || false);
             safeCallback(this.opts.onControlClick, split.id);
+            this.emitControlClick(split.id, split.toggle ? Boolean(split.active) : null);
         });
         return primary;
     }
@@ -1923,16 +1965,16 @@ export class RibbonImpl implements Ribbon
         const menu = createElement("div", [`${CLS}-split-menu`]);
         setAttr(menu, { "role": "menu" });
         menu.style.display = "none";
-        this.buildSplitMenuItems(menu, split.menuItems);
+        this.buildSplitMenuItems(menu, split);
         this.splitMenuEls.set(split.id, menu);
         return menu;
     }
 
     private buildSplitMenuItems(
-        menu: HTMLElement, items: RibbonSplitMenuItem[]
+        menu: HTMLElement, split: RibbonSplitButton
     ): void
     {
-        for (const item of items)
+        for (const item of split.menuItems)
         {
             const btn = createElement("button", [`${CLS}-split-menu-item`]);
             setAttr(btn, { "role": "menuitem", "type": "button" });
@@ -1950,7 +1992,11 @@ export class RibbonImpl implements Ribbon
             btn.appendChild(createElement("span", [], item.label));
             btn.addEventListener("click", () =>
             {
-                if (!item.disabled) { safeCallback(item.onClick, item); }
+                if (!item.disabled)
+                {
+                    safeCallback(item.onClick, item);
+                    this.emitControlClick(split.id, item.id);
+                }
                 this.closeAllPopups();
             });
             menu.appendChild(btn);
@@ -2068,6 +2114,7 @@ export class RibbonImpl implements Ribbon
                 gallery.selectedId = opt.id;
                 this.updateGallerySelection(gallery);
                 safeCallback(gallery.onSelect, opt);
+                this.emitControlClick(gallery.id, opt.id);
                 this.closeAllPopups();
             }
         });
@@ -2186,6 +2233,7 @@ export class RibbonImpl implements Ribbon
         {
             safeCallback(dropdown.onChange, sel.value);
             safeCallback(this.opts.onControlClick, dropdown.id);
+            this.emitControlClick(dropdown.id, sel.value);
         });
         wrap.appendChild(sel);
         return wrap;
@@ -2231,7 +2279,11 @@ export class RibbonImpl implements Ribbon
         inp.addEventListener("keydown", (e) =>
         {
             logTrace("keydown handler");
-            if (e.key === "Enter") { safeCallback(input.onSubmit, inp.value); }
+            if (e.key === "Enter")
+            {
+                safeCallback(input.onSubmit, inp.value);
+                this.emitControlClick(input.id, inp.value);
+            }
         });
         wrap.appendChild(inp);
         return wrap;
@@ -2260,6 +2312,7 @@ export class RibbonImpl implements Ribbon
         {
             safeCallback(color.onChange, inp.value);
             safeCallback(this.opts.onControlClick, color.id);
+            this.emitControlClick(color.id, inp.value);
         });
         wrap.appendChild(inp);
         if (color.showLabel)
@@ -2297,6 +2350,7 @@ export class RibbonImpl implements Ribbon
         {
             safeCallback(num.onChange, parseFloat(inp.value) || 0);
             safeCallback(this.opts.onControlClick, num.id);
+            this.emitControlClick(num.id, parseFloat(inp.value) || 0);
         });
         wrap.appendChild(inp);
         if (num.suffix)
@@ -2328,6 +2382,7 @@ export class RibbonImpl implements Ribbon
         {
             safeCallback(chk.onChange, inp.checked);
             safeCallback(this.opts.onControlClick, chk.id);
+            this.emitControlClick(chk.id, inp.checked);
         });
 
         wrap.appendChild(lbl);
@@ -2356,6 +2411,7 @@ export class RibbonImpl implements Ribbon
         {
             safeCallback(tog.onChange, inp.checked);
             safeCallback(this.opts.onControlClick, tog.id);
+            this.emitControlClick(tog.id, inp.checked);
         });
 
         wrap.appendChild(lbl);
@@ -3015,6 +3071,11 @@ export class RibbonImpl implements Ribbon
 
     private handleKeyDown(e: KeyboardEvent): void
     {
+        // keyScope "ribbon" (B8): keys pressed elsewhere on the page are the page's.
+        if (this.opts.keyScope === "ribbon" && !(e.target instanceof Node && this.rootEl?.contains(e.target)))
+        {
+            return;
+        }
         logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
         if (this.matchesKeyCombo(e, "collapseRibbon"))
         {
@@ -3368,6 +3429,75 @@ export class RibbonImpl implements Ribbon
         }
 
         logInfo("state restored");
+    }
+
+    // ============================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ============================================================================
+
+    /** Ribbon has no data slots: its tabs, menu bar and quick access are options. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): Ribbon has no data slots. Its tabs, menu bar and quick access `
+            + "toolbar are options.");
+    }
+
+    /** Subscribes to "controlClick"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "controlClick")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "controlClick".`);
+        }
+
+        this.controlClickHandlers.add(handler);
+
+        return () => { this.controlClickHandlers.delete(handler); };
+    }
+
+    /**
+     * Restores getState()'s keys silently. The panel is expanded while the
+     * tab is set, so a collapsed ribbon does not open its panel, and then
+     * takes the restored collapse.
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (this.destroyed) { return; }
+
+        const { collapsed, ...rest } = state as Partial<RibbonState>;
+        const target = typeof collapsed === "boolean" ? collapsed : this.collapsed;
+
+        this.restoring = true;
+        try
+        {
+            if (rest.activeTabId !== undefined) { this.expand(); }
+            this.restoreState(rest);
+            if (target) { this.collapse(); }
+            else { this.expand(); }
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** Reports a control interaction to every subscriber, each isolated so one throw cannot starve the rest. */
+    private emitControlClick(controlId: string, value: string | number | boolean | null): void
+    {
+        const click: RibbonControlClick = { controlId, value };
+
+        for (const handler of this.controlClickHandlers)
+        {
+            try
+            {
+                handler({ ...click });
+            }
+            catch (err)
+            {
+                logError("Channel \"controlClick\" handler threw:", err);
+            }
+        }
     }
 }
 
