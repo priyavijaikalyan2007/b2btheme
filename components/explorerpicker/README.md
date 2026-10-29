@@ -84,10 +84,15 @@ dialog.open();
 | `ontologyTypes` | `OntologyTypeEntry[]` | — | Pre-loaded ontology types (skips API) |
 | `confirmButtonText` | `string \| (count) => string` | `"Select"` | Confirm button text |
 | `cancelButtonText` | `string` | `"Cancel"` | Cancel button text |
-| `onConfirm` | `(selections) => void` | — | Called on confirm (required) |
-| `onCancel` | `() => void` | — | Called on cancel |
+| `onConfirm` | `(selections) => void` | — | Called on confirm. Optional since 2026-10-29: the `confirm` channel of `on()` delivers it too |
+| `onCancel` | `() => void` | — | Called on cancel; passing it shows the Cancel button |
 | `onSelectionChange` | `(selections) => void` | — | Called on every selection change |
-| `onError` | `(error, context) => void` | — | Called on API errors |
+| `onError` | `(error, context) => void` | — | Called when the initial load fails |
+| `staticNodes` | `ExplorerNode[]` | — | The initial tree, flat, each node naming its `parentId`; the tree, ontology, recent and starred items are not requested |
+| `onLoadChildren` | `({ nodeId }) => Promise<ExplorerNode[]>` | — | Loads one level: a node's children, or the roots when `nodeId` is `null`. With it nothing is requested from `apiBase` or `ontologyApiBase`: Recent and Starred are not shown, and search needs `onSearch`. Answers that list the node, an ancestor or another parent's child are cut to the real children |
+| `onSearch` | `({ query, cursor }) => Promise<{ results, cursor }>` | — | Answers a search instead of `apiBase/search`; a non-null `cursor` shows "Load more results" |
+| `cancellable` | `boolean` | `false` | Show the Cancel button without `onCancel` |
+| `showSearch` | `boolean` | `true` | Show the search box |
 
 ## Instance API
 
@@ -107,6 +112,9 @@ dialog.open();
 | `destroy()` | `void` | Full cleanup |
 | `isLoading()` | `boolean` | Whether data is loading |
 | `getElement()` | `HTMLElement \| null` | Root DOM element |
+| `on(channel, handler)` | `() => void` | Subscribe to `"selection"`, `"confirm"` or `"cancel"`; each sends the selection records (cancel: the selection abandoned) after the matching callback |
+| `getState()` / `setState(state)` | — | `{ expanded, selection }` node ids; `setState` restores them without firing anything |
+| `setData(slot, value)` | `void` | Throws: there are no data slots |
 
 ## Data Types
 
