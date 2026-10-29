@@ -1876,7 +1876,7 @@ For the seven surface components above:
   - unions of consts and bare primitive types are sorted and compared as sets.
 - **Harness:**
   - async triggers;
-  - `jsdomStandIns` (the Vditor stand-in);
+  - jsdom stand-ins (`tests/jsdom/standins.ts`: Vditor);
   - `heldProps` in every G3 test.
 - **Pins:**
   - pending 54 → 47;

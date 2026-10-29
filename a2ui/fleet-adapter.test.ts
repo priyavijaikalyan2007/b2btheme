@@ -23,6 +23,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vite
 import { Catalog, ComponentContext, MessageProcessor } from "@a2ui/web_core/v0_9";
 import { BASIC_FUNCTIONS, basicCatalog } from "@a2ui/web_core/v0_9/basic_catalog";
 
+import { JSDOM_STANDINS } from "../tests/jsdom/standins";
 import { sampleProp, sampleValue } from "./sample-values";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,18 +70,16 @@ function optionsOf(style: string, args: unknown[]): Record<string, unknown>
 /**
  * Puts what a component declares it needs on window (ADR-230): vendored
  * libraries' built files run in global scope, since jsdom does not execute the
- * <script> the loader injects, or the glue's jsdomStandIns for a library jsdom
- * cannot run (Vditor); then other components' source modules.
+ * <script> the loader injects, or a stand-in for a library jsdom cannot run
+ * (tests/jsdom/standins.ts: Vditor); then other components' source modules.
  */
-async function installDependencies(dir: string, deps: { libraries?: string[]; components?: string[] }): Promise<void>
+async function installDependencies(deps: { libraries?: string[]; components?: string[] }): Promise<void>
 {
-    const standIns: Record<string, () => void> = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())
-        ?.CONFORMANCE_GLUE?.jsdomStandIns ?? {};
     const libs = readDist("lib-manifest.json").assets;
 
     for (const lib of deps.libraries ?? [])
     {
-        if (standIns[lib]) { standIns[lib](); }
+        if (JSDOM_STANDINS[lib]) { JSDOM_STANDINS[lib](); }
         else if (libs[lib].url.endsWith(".js")) { (0, eval)(fs.readFileSync(path.join(DIST, libs[lib].url), "utf8")); }
     }
 
@@ -91,7 +90,7 @@ async function installDependencies(dir: string, deps: { libraries?: string[]; co
 async function install(d: Descriptor): Promise<void>
 {
     const dir = d.assets.js.split("/")[1];
-    await installDependencies(dir, MANIFESTS.find((m) => m.factory === d.factory)?.protocol?.dependencies ?? {});
+    await installDependencies(MANIFESTS.find((m) => m.factory === d.factory)?.protocol?.dependencies ?? {});
     await COMPONENTS[`../components/${dir}/${dir}.ts`]();
     const real = (window as Any)[d.factory];
     const spy: Spy = { builds: 0, options: [], destroyed: 0 };

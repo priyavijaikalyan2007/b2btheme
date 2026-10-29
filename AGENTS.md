@@ -571,10 +571,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
 - **A glue trigger returns `"async"`** when the gesture reaches the channel
   only after a promise settles (Stepper's finish awaits validation). The
   synchronous conformance checks record a warning; G3 waits for it.
-- **A glue's `jsdomStandIns`** replace a library jsdom cannot run (Vditor) in
-  the conformance gate and G3; the browser suite loads the real one. Keep a
-  stand-in in the glue file, not a `.mock.ts`: the build excludes glue files
-  but compiles other files under `components/`, so a mock would ship.
+- **`tests/jsdom/standins.ts`** replaces a library jsdom cannot run (Vditor)
+  in the conformance gate and G3, keyed by library name; the browser suite
+  loads the real one. Not beside a component: a component file that writes a
+  library's global reads as owning it, and the build compiles other files
+  under `components/`, so a `.mock.ts` there would ship.
 - **A prop with a `protocol.schemas` entry is not given to typia** (B5): its
   override is the schema, its JSDoc the description, and a required member
   stays required. Use one when typia cannot describe a type (elements or

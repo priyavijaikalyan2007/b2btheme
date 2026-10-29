@@ -31,6 +31,7 @@ import {
     type ConformanceTarget,
 } from "./src/conformance";
 
+import { JSDOM_STANDINS } from "../tests/jsdom/standins";
 import { validateManifest } from "./src/registry";
 import { formatIssues } from "./src/errors";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "../scripts/agentui/migration.mjs";
@@ -324,15 +325,10 @@ async function buildTarget(
 
     // What it declares it needs comes first, as the A2UI adapter loads it (ADR-230): DocViewer renders through
     // MarkdownRenderer and marked; a PresenceIndicator avatar is clickable only through PersonChip.
-    const glueLoad = GLUE_LOADERS[`../components/${name}/${name}.conformance.ts`];
-    const glue = glueLoad ? await glueLoad() : {};
-    const standIns = (glue.CONFORMANCE_GLUE as { jsdomStandIns?: Record<string, () => void> } | undefined)
-        ?.jsdomStandIns ?? {};
-
-    // A library jsdom cannot run (Vditor) has a stand-in in the glue; the browser suite loads the real one.
+    // A library jsdom cannot run (Vditor) has a stand-in; the browser suite loads the real one.
     for (const lib of manifest.protocol?.dependencies?.libraries ?? [])
     {
-        if (standIns[lib]) { standIns[lib](); }
+        if (JSDOM_STANDINS[lib]) { JSDOM_STANDINS[lib](); }
         else { runLibrary(lib); }
     }
 
@@ -348,6 +344,9 @@ async function buildTarget(
     {
         return null;
     }
+
+    const glueLoad = GLUE_LOADERS[`../components/${name}/${name}.conformance.ts`];
+    const glue = glueLoad ? await glueLoad() : {};
 
     return {
         manifest,
