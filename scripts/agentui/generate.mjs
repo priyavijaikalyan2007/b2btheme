@@ -20,6 +20,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { bundleAdapter } from "./adapter-bundle.mjs";
+import { leanCatalog, leanProblems } from "./agent-catalog.mjs";
+import { promptSizes } from "./catalog-size.mjs";
 import { checkAgentDescription } from "./agent-description.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { compileValidators } from "./adapter-validators.mjs";
@@ -29,7 +31,7 @@ import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from ".
 import { classifyMembers, createClassifier, factoryOptionsType, optionsParameterIndex } from "./classify.mjs";
 import { rendererMeta } from "./mcp-descriptors.mjs";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./migration.mjs";
-import { normaliseTypiaUnit } from "./normalise.mjs";
+import { normaliseTypiaUnit, pruneDefs } from "./normalise.mjs";
 import { VIOLATION, isCovered, resolveSurface } from "./resolve.mjs";
 import { emitSchemas } from "./schema.mjs";
 
@@ -75,12 +77,30 @@ export function runPipeline(input)
     errors.push(...ready.flatMap((c) => checkAgentDescription(c.manifest, Object.keys(catalog.components))));
     checkBaseline(catalog, input, errors);
 
+    const lean = leanFor(catalog, input, errors);
     const adapter = buildDescriptors(ready, catalog, input.assetExists, input.libraries);
     errors.push(...adapter.problems);
 
     return { errors, excluded, catalog, descriptors: adapter.descriptors,
-        outputs: outputsFor(ready, schemas, catalog, excluded, input),
+        outputs: outputsFor(ready, schemas, { catalog, lean }, excluded, input),
         counts: { ...countsFor(classified, ready, excluded), belowRequired: input.belowRequired.size } };
+}
+
+/** The agent-facing rendering (#49, ADR-233), with the problems that would make it lossy collected. */
+function leanFor(catalog, input, errors)
+{
+    try
+    {
+        const lean = leanCatalog({ catalog, basic: input.basic, commonTypes: input.commonTypes });
+
+        errors.push(...leanProblems(catalog, lean));
+        return lean;
+    }
+    catch (err)
+    {
+        errors.push(err.message);
+        return null;
+    }
 }
 
 /** Classifies and resolves every manifest; a thrown literate error is collected. */
@@ -280,28 +300,6 @@ function applyOverrides(schema, overrides, dataProps)
     return pruneDefs({ ...schema, properties, ...(required.length > 0 ? { required } : {}) });
 }
 
-/** Keeps the $defs reachable from the schema's own properties. */
-function pruneDefs(schema)
-{
-    if (!schema.$defs) { return schema; }
-
-    const { $defs, ...root } = schema;
-    const kept = new Set();
-    const visit = (node) =>
-    {
-        for (const [, key] of JSON.stringify(node).matchAll(/"\$ref":"#\/\$defs\/([^"]+)"/g))
-        {
-            if (!kept.has(key) && key in $defs) { kept.add(key); visit($defs[key]); }
-        }
-    };
-
-    visit(root);
-
-    const defs = Object.fromEntries(Object.entries($defs).filter(([key]) => kept.has(key)));
-
-    return Object.keys(defs).length > 0 ? { ...root, $defs: defs } : root;
-}
-
 /** Breaking changes need a bump; any change needs the baseline committed. */
 function checkBaseline(catalog, input, errors)
 {
@@ -357,11 +355,12 @@ function changeSummary(baseline, catalog, diff)
 }
 
 /** Every file to write, keyed by path relative to dist/. */
-function outputsFor(ready, schemas, catalog, excluded, input)
+function outputsFor(ready, schemas, { catalog, lean }, excluded, input)
 {
     const outputs = new Map(ready.map((c) => [`schemas/${c.manifest.name}.options.json`, schemas.get(c.manifest.name)]));
 
     outputs.set(`a2ui/catalog/v${input.major}.json`, catalog);
+    outputs.set(`a2ui/catalog/v${input.major}.agent.json`, lean);
 
     for (const [major, older] of input.baselines)
     {
@@ -618,11 +617,29 @@ async function main(argv)
         fs.writeFileSync(path.join(PUBLISHED, `catalog-v${input.major}.json`), `${JSON.stringify(result.catalog, null, 2)}\n`);
     }
 
+    const prompt = addPromptSizes(result, input);
     writeOutputs(result.outputs, path.join(REPO, "dist"));
     const c = result.counts;
     console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification), `
         + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members, `
         + `${c.belowRequired} below their required level (BELOW_REQUIRED)`);
+    console.log(`[agentui] In a prompt (${prompt.tokenizer} tokens): `
+        + Object.entries(prompt.sizes).map(([name, z]) => `${name} ${z.tokens.toLocaleString("en")} tokens `
+            + `(${z.bytes.toLocaleString("en")} bytes)`).join(", "));
+}
+
+/**
+ * What each catalog costs in an agent's prompt (#49), added to
+ * agentui-report.json: the full catalog, the lean agent catalog, and the
+ * basic catalog an agent needs beside the lean one for the re-exports.
+ */
+function addPromptSizes(result, input)
+{
+    const prompt = promptSizes({ catalog: result.catalog,
+        agentCatalog: result.outputs.get(`a2ui/catalog/v${input.major}.agent.json`), basicCatalog: input.basic });
+
+    result.outputs.set("agentui-report.json", { ...result.outputs.get("agentui-report.json"), prompt });
+    return prompt;
 }
 
 /**

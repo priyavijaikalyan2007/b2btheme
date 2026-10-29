@@ -17,6 +17,7 @@ import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
+import commonTypes from "./vendor/a2ui-v0_9_1/common_types.json";
 import { PENDING_EXCUSABLE_CODES, runPipeline, typiaPick, writeOutputs } from "./generate.mjs";
 
 const FIXTURES = path.join(__dirname, "fixtures");
@@ -59,7 +60,7 @@ function run(manifests: unknown[], pending: string[] = [], version: Version = {}
     return runPipeline({
         manifests, componentFile: (n: string) => path.join(FIXTURES, `${n}.ts`),
         tsconfigPath: path.join(FIXTURES, "tsconfig.json"), cacheDir: CACHE,
-        pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic,
+        pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic, commonTypes,
         baselines: version.baselines ?? new Map(), major: version.major ?? 1, writeBaseline: version.writeBaseline ?? true,
         assetExists: () => true,
     });
@@ -70,6 +71,13 @@ describe("runPipeline — fixture widget", () =>
     test("a fully declared component produces no errors", () => { expect(run([widget()]).errors).toEqual([]); }, 60_000);
     test("it emits its options schema", () => { expect(run([widget()]).outputs.has("schemas/widget.options.json")).toBe(true); }, 60_000);
     test("it appears in the catalog", () => { expect("Widget" in run([widget()]).catalog.components).toBe(true); }, 60_000);
+    test("the lean agent catalog is written beside the catalog and renders it (#49)", () =>
+    {
+        const lean = run([widget()]).outputs.get("a2ui/catalog/v1.agent.json") as any;
+
+        expect(Object.keys(lean.components)).toEqual(["Widget"]);
+        expect(lean.components.Widget.properties.onSelection.$ref).toBe("#/$defs/Action");
+    }, 60_000);
     test("its catalog entry follows the naming rule: eventData, on<Channel>, on<Request> and <request>Result", () =>
     {
         const result = run([withProvider()]);

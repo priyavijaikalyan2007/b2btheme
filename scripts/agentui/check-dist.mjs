@@ -60,7 +60,50 @@ export async function checkDist(root)
         ...cspProblems(read("dist/mcp/renderer.meta.json")),
         ...stagingProblems(root),
         ...(await adapterProblems(root, major, read(catalogRel), read("dist/agentui-report.json"))),
+        ...agentCatalogProblems(read(catalogRel), read(`dist/a2ui/catalog/v${major}.agent.json`), major),
     ];
+}
+
+/**
+ * The lean agent catalog (#49) must name the same catalog and account for
+ * every component: ours rendered with the same props and required flags,
+ * each basic re-export listed by name. The generator proves it lossless in
+ * full; this re-reads what shipped.
+ */
+function agentCatalogProblems(catalog, lean, major)
+{
+    const rel = `dist/a2ui/catalog/v${major}.agent.json`;
+    const fields = (entry) =>
+    {
+        const own = entry.allOf?.find((arm) => arm.properties) ?? { properties: {} };
+        const props = Object.keys(own.properties).filter((p) => p !== "component").sort().join(",");
+        const required = (own.required ?? []).filter((p) => p !== "component").sort().join(",");
+
+        return { props, required };
+    };
+    const identity = lean.catalogId === catalog.catalogId ? []
+        : [`${rel} names ${lean.catalogId}, not the catalog's ${catalog.catalogId}.`];
+    const entries = Object.entries(catalog.components).flatMap(([name, entry]) =>
+    {
+        if (entry.allOf?.[0]?.$ref?.startsWith(BASIC_PREFIX))
+        {
+            return lean.reexports?.components?.includes(name) ? [] : [`${rel} does not list the re-exported ${name}.`];
+        }
+
+        const mine = lean.components?.[name];
+
+        if (!mine) { return [`${rel} does not render ${name}.`]; }
+
+        const want = fields(entry);
+        const got = { props: Object.keys(mine.properties).sort().join(","),
+            required: [...(mine.required ?? [])].sort().join(",") };
+
+        return want.props === got.props && want.required === got.required ? []
+            : [`${rel} renders ${name} with props [${got.props}] required [${got.required}]; the catalog has `
+                + `[${want.props}] required [${want.required}].`];
+    });
+
+    return [...identity, ...entries];
 }
 
 /**

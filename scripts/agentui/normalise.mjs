@@ -36,6 +36,28 @@ export function mapRefs(node, fn)
         [k, k === "$ref" && typeof v === "string" ? fn(v) : mapRefs(v, fn)]));
 }
 
+/** Keeps the $defs reachable from the rest of the schema; drops $defs when none are. */
+export function pruneDefs(schema)
+{
+    if (!schema.$defs) { return schema; }
+
+    const { $defs, ...root } = schema;
+    const kept = new Set();
+    const visit = (node) =>
+    {
+        for (const [, key] of JSON.stringify(node).matchAll(/"\$ref":"#\/\$defs\/([^"]+)"/g))
+        {
+            if (!kept.has(key) && key in $defs) { kept.add(key); visit($defs[key]); }
+        }
+    };
+
+    visit(root);
+
+    const defs = Object.fromEntries(Object.entries($defs).filter(([key]) => kept.has(key)));
+
+    return Object.keys(defs).length > 0 ? { ...root, $defs: defs } : root;
+}
+
 /**
  * Normalises a typia 12 `json.schema<T, "3.1">()` unit (spec §4).
  *
