@@ -256,41 +256,108 @@ export interface RibbonQATItem
 /** Colour options subset for setColors(). */
 export interface RibbonColorOptions
 {
+    /**
+     * Ribbon background colour. Default: the theme's.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     backgroundColor?: string;
+    /**
+     * Tab bar background colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     tabBarBackgroundColor?: string;
+    /**
+     * Tab label colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     tabTextColor?: string;
+    /**
+     * Active tab label colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     tabActiveTextColor?: string;
+    /**
+     * Active tab background colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     tabActiveBackgroundColor?: string;
+    /**
+     * Panel (the area under the tabs) background colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     panelBackgroundColor?: string;
+    /**
+     * Group label colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     groupLabelColor?: string;
+    /**
+     * Colour of the line between groups.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     groupBorderColor?: string;
+    /**
+     * Control text and icon colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     controlColor?: string;
+    /**
+     * Control background colour on hover.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     controlHoverColor?: string;
+    /**
+     * Control background colour when pressed or active.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     controlActiveColor?: string;
+    /**
+     * Quick access toolbar background colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     qatBackgroundColor?: string;
+    /**
+     * Menu bar background colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     menuBarBackgroundColor?: string;
 }
 
 export interface RibbonOptions extends RibbonColorOptions
 {
+    /** The tabs, each a row of labelled groups of controls. */
     tabs: RibbonTab[];
+    /** Id of the tab shown first. Default: the first visible tab. */
     activeTabId?: string;
 
+    /** A classic menu bar (File, Edit, ...) above the tabs. */
     menuBar?: RibbonMenuBarItem[];
+    /** Quick access toolbar: small icon buttons beside the tabs. */
     qat?: RibbonQATItem[];
+    /** Quick access toolbar above or below the tabs. Default: "above". */
     qatPosition?: RibbonQATPosition;
 
+    /** Panel height in px. Default: 96. */
     panelHeight?: number;
+    /** Whether a group's controls may overflow its box. Default: "visible". */
     groupOverflow?: "visible" | "hidden";
 
+    /** Shows a button that collapses the panel to its tabs. Default: true. */
     collapsible?: boolean;
+    /** Starts with the panel collapsed. Default: false. */
     collapsed?: boolean;
+    /** Shrinks groups step by step as the ribbon narrows. Default: true. */
     adaptive?: boolean;
+    /** Shows key tips (letters to press) when Alt is pressed. Default: true. */
     keyTips?: boolean;
 
+    /** Fires when the active tab changes. */
     onTabChange?: (tabId: string) => void;
+    /** Fires when the panel collapses or expands. */
     onCollapse?: (collapsed: boolean) => void;
+    /** Never called. */
     onQATCustomize?: (items: RibbonQATItem[]) => void;
+    /** Fires with the control's id after a button, split button or field is used. */
     onControlClick?: (controlId: string) => void;
 
     /** Right-aligned status area in the tab bar (user info, entity name, etc.). */
@@ -299,7 +366,9 @@ export interface RibbonOptions extends RibbonColorOptions
     /** Auto-collapse delay in ms after temp-expanding. 0 = disabled (default). Min 5000. */
     autoCollapseDelay?: number;
 
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
 
     /**

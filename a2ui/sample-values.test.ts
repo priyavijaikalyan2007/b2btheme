@@ -97,6 +97,12 @@ describe("sampleValue — readiness step 2 B2", () =>
         expect([sampleValue(asConst, 0, {}), sampleValue(asConst, 1, {})]).toEqual([1, 2]);
     });
 
+    test("the hex colour pattern takes its own two samples (B8)", () =>
+    {
+        const color = { type: "string", pattern: "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" };
+
+        expect([sampleValue(color, 0, {}, "#/c"), sampleValue(color, 1, {}, "#/c")]).toEqual(["#336699", "#c0392b"]);
+    });
     test("a pattern the plain samples match keeps them; any other pattern is refused (B7)", () =>
     {
         const icon = { type: "string", pattern: "^[A-Za-z0-9_-]+$" };

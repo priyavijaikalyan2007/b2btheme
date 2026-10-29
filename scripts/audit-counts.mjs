@@ -908,7 +908,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 265 -> 264, SiteFooter classified (B8).
     // ADR-235 (2026-10-29): 264 -> 258, TenantSwitcher classified (B8).
     // ADR-235 (2026-10-29): 258 -> 252, AppLauncher classified (B8).
-    unclassifiedOptions: 252,
+    // ADR-235 (2026-10-29): 252 -> 231, Ribbon classified (B8).
+    unclassifiedOptions: 231,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -921,7 +922,8 @@ export const BASELINES = {
     // ADR-234 (2026-10-29): 181 -> 161, ExplorerPicker's options documented (B7).
     // ADR-235 (2026-10-29): 161 -> 149, TenantSwitcher's options documented (B8).
     // ADR-235 (2026-10-29): 149 -> 130, AppLauncher's options documented (B8).
-    protocolPropsMissingJsdoc: 130,
+    // ADR-235 (2026-10-29): 130 -> 104, Ribbon's options documented (B8).
+    protocolPropsMissingJsdoc: 104,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -957,7 +959,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 32 -> 31, SiteFooter classified (B8).
     // ADR-235 (2026-10-29): 31 -> 30, TenantSwitcher classified (B8).
     // ADR-235 (2026-10-29): 30 -> 29, AppLauncher classified (B8).
-    componentsPendingClassification: 29,
+    // ADR-235 (2026-10-29): 29 -> 28, Ribbon classified (B8).
+    componentsPendingClassification: 28,
 };
 
 /*
@@ -1058,11 +1061,12 @@ export const FLOORS = {
     // ADR-235 (2026-10-29): 264 and 31 once SiteFooter was classified (B8).
     // ADR-235 (2026-10-29): 258, 149 and 30 once TenantSwitcher was classified (B8).
     // ADR-235 (2026-10-29): 252, 130 and 29 once AppLauncher was classified (B8).
-    unclassifiedOptions: 252,
-    protocolPropsMissingJsdoc: 130,
+    // ADR-235 (2026-10-29): 231, 104 and 28 once Ribbon was classified (B8).
+    unclassifiedOptions: 231,
+    protocolPropsMissingJsdoc: 104,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 29,
+    componentsPendingClassification: 28,
 };
 
 /**
