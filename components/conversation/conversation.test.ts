@@ -624,3 +624,40 @@ describe("Conversation edge cases", () =>
         conv.destroy();
     });
 });
+
+// ===========================================================================
+// ADR-149, B7-2: Vditor.preview must not fetch its engine from a public CDN
+// ===========================================================================
+
+describe("vditorCdn", () =>
+{
+    test("assistantPreview_SetsCdnToThisLibrarysMirror_NotUnpkg", () =>
+    {
+        // Vditor.preview lazily fetches lute (its markdown engine), KaTeX and
+        // its other renderers as script tags it injects itself. Left at its
+        // default that is executable code from unpkg.com. The `cdn` option is
+        // the only thing that redirects it.
+        let captured: Record<string, unknown> | null = null;
+
+        (window as unknown as Record<string, unknown>)["Vditor"] = {
+            preview: (target: HTMLElement, md: string, opts: Record<string, unknown>) =>
+            {
+                captured = opts;
+                target.textContent = md;
+            },
+        };
+
+        const conv = createConversation(defaultOptions(), container);
+        conv.addAssistantMessage("Hello **there**");
+
+        expect(captured).not.toBeNull();
+
+        const cdn = String((captured as unknown as Record<string, unknown>).cdn ?? "");
+
+        expect(cdn).toMatch(/\/lib\/vditor-\d+\.\d+\.\d+$/);
+        expect(cdn).not.toContain("unpkg.com");
+        expect(cdn).not.toContain("jsdelivr");
+
+        conv.destroy();
+    });
+});

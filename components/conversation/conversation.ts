@@ -322,7 +322,43 @@ export interface ConversationOptions
 
 const LOG_PREFIX = "[Conversation]";
 
-const _lu = (typeof window.createLogUtility === "function")
+/**
+ * Origin-relative base for the sub-resources Vditor.preview() fetches
+ * lazily: lute (its markdown engine), highlight.js, KaTeX and the other
+ * renderers (ADR-149, B7-2).
+ *
+ * The same derivation as MarkdownEditor's VDITOR_CDN, reproduced here
+ * because each component is built as a standalone script. Vditor builds
+ * these as `${cdn}/dist/js/...`, so this is the directory CONTAINING
+ * vditor's own `dist/`. Derived from the script's own origin so the mirror
+ * works on any host serving this library rather than one hardcoded domain.
+ *
+ * Pinned to the version the vendored tree serves. A Vditor upgrade must
+ * bump this, MarkdownEditor's constant and the tree in
+ * `scripts/vendor-closure.mjs` together.
+ */
+const VDITOR_VERSION = "3.11.2";
+
+const VDITOR_CDN = ((): string =>
+{
+    try
+    {
+        const self = document.currentScript as HTMLScriptElement | null;
+        const origin = self?.src
+            ? new URL(self.src).origin
+            : window.location.origin;
+
+        return `${origin}/lib/vditor-${VDITOR_VERSION}`;
+    }
+    catch
+    {
+        // Same-origin relative path. Never fall through to a public CDN:
+        // that is the behaviour this constant exists to remove.
+        return `/lib/vditor-${VDITOR_VERSION}`;
+    }
+})();
+
+const _lu =(typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
 const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|.+\.localhost)$/;
@@ -2101,6 +2137,12 @@ export class Conversation implements ConversationHandle
         const isDark = document.documentElement
             .getAttribute("data-bs-theme") === "dark";
         return {
+            // (CRITICAL) Without this, Vditor.preview() fetches lute, KaTeX
+            // and its other renderers from `unpkg.com` at runtime, as script
+            // tags it injects itself: executable third-party code on a page
+            // that may be showing an admin session. VDITOR_CDN points at this
+            // library's own mirror of the full tree (ADR-149, B7-2).
+            cdn: VDITOR_CDN,
             mode: isDark ? "dark" : "light",
             hljs: {
                 enable: true,
