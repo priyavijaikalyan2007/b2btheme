@@ -292,6 +292,15 @@ interface ProtocolSpec
      * order, libraries with their integrity hash.
      */
     readonly dependencies?: DependencySpec;
+
+    /**
+     * Options the A2UI adapter always passes, with these JSON values, keyed
+     * by option (ADR-235). The catalog leaves them out, so an agent can
+     * neither see nor set them. For an option whose default suits a host
+     * page but not an agent's surface: Ribbon's keyScope, whose default
+     * "document" would take the host page's keys.
+     */
+    readonly fixed?: Readonly<Record<string, unknown>>;
 }
 
 /** Scripts a component needs on the page, ahead of its own (ADR-230). */
@@ -2896,11 +2905,46 @@ function validateProtocol(
     validateChange(p.change, issues);
     validateStringMap("protocol.hostOnlyActions", p.hostOnlyActions, "a reason string", issues);
     validateDependencies(p.dependencies, issues);
+    validateFixed(p.fixed, issues);
 }
 
 /** The keys `protocol` may carry. */
 const PROTOCOL_KEYS: readonly string[] =
-    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies"];
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed"];
+
+/** True for a value JSON carries unchanged: null, a string, a finite number, a boolean, or lists and records of them. */
+function isJsonValue(v: unknown): boolean
+{
+    if (v === null || typeof v === "string" || typeof v === "boolean") { return true; }
+    if (typeof v === "number") { return Number.isFinite(v); }
+    if (Array.isArray(v)) { return v.every(isJsonValue); }
+
+    return isObject(v) && Object.getPrototypeOf(v) === Object.prototype && Object.values(v).every(isJsonValue);
+}
+
+/**
+ * Validates `protocol.fixed` (ADR-235): a non-empty record of options to the
+ * JSON values the adapter always passes. Whether each names a data option
+ * and fits its type is the generator's check, which can see the types.
+ */
+function validateFixed(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v) || Object.keys(v).length === 0)
+    {
+        issues.push(typeIssue("protocol.fixed", "a non-empty record of options to JSON values", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v).filter(([, value]) => !isJsonValue(value)))
+    {
+        issues.push(typeIssue(`protocol.fixed.${key}`, "a JSON value", value));
+    }
+}
 
 /** The keys `protocol.dependencies` may carry (ADR-230). */
 const DEPENDENCY_KEYS: readonly string[] = ["libraries", "components"];

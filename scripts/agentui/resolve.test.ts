@@ -197,6 +197,37 @@ describe("resolve — providers", () =>
     test("pascal capitalises each word", () => { expect(pascal("row-activate")).toBe("RowActivate"); });
 });
 
+describe("resolve — fixed options (ADR-235)", () =>
+{
+    const fixed = { keyScope: "ribbon" };
+
+    test("a fixed data option leaves the data props and is carried into the surface", () =>
+    {
+        const surface = resolveSurface(manifest({ protocol: { fixed } }),
+            [member("keyScope", "data", { jsdoc: "" }), member("title", "data")]);
+
+        expect(surface.dataProps.map((d: M) => d.name)).toEqual(["title"]);
+        expect(surface.fixed).toEqual(fixed);
+        expect(surface.violations).toEqual([]);
+    });
+    test("a surface without fixed options carries an empty record", () =>
+    {
+        expect(resolveSurface(manifest(), [member("title", "data")]).fixed).toEqual({});
+    });
+    test("a fixed key that names no data option is stale", () =>
+    {
+        expect(codes(manifest({ protocol: { fixed } }), [member("title", "data")]))
+            .toEqual([VIOLATION.STALE_DECLARATION]);
+        expect(codes(manifest({ protocol: { fixed: { onClick: true } } }), [member("onClick", "function")]))
+            .toEqual([VIOLATION.UNCLASSIFIED, VIOLATION.STALE_DECLARATION]);
+    });
+    test("a fixed option that is also host-only is claimed twice", () =>
+    {
+        expect(codes(manifest({ protocol: { fixed, hostOnly: { keyScope: REASON } } }), [member("keyScope", "data")]))
+            .toEqual([VIOLATION.DOUBLE_CLASSIFIED]);
+    });
+});
+
 describe("resolve — messages", () =>
 {
     test("a violation names the manifest file to edit", () =>

@@ -270,6 +270,15 @@ export interface ProtocolSpec
      * order, libraries with their integrity hash.
      */
     readonly dependencies?: DependencySpec;
+
+    /**
+     * Options the A2UI adapter always passes, with these JSON values, keyed
+     * by option (ADR-235). The catalog leaves them out, so an agent can
+     * neither see nor set them. For an option whose default suits a host
+     * page but not an agent's surface: Ribbon's keyScope, whose default
+     * "document" would take the host page's keys.
+     */
+    readonly fixed?: Readonly<Record<string, unknown>>;
 }
 
 /** Scripts a component needs on the page, ahead of its own (ADR-230). */

@@ -30,6 +30,7 @@ export const VIOLATION = Object.freeze({
     NAME_COLLISION: "name-collision",
     PROP_COLLISION: "prop-collision",
     CHANGE_MISMATCH: "change-mismatch",
+    FIXED_MISMATCH: "fixed-mismatch",
 });
 
 /** "n/a" is not a reason (spec §3.3). */
@@ -89,7 +90,8 @@ export function resolveSurface(manifest, members)
     checkChange(ctx, change, hasPair, twoWayValue);
 
     return { name: manifest.name, dataProps, twoWayValue, change: twoWayValue ? change : null, events, providers,
-        actions: resolveActions(manifest, protocol), hostOnly: hostOnlyOf(protocol), violations: ctx.violations };
+        actions: resolveActions(manifest, protocol), hostOnly: hostOnlyOf(protocol), fixed: fixedOf(ctx),
+        violations: ctx.violations };
 }
 
 /** Records one violation, with the file the author has to edit. */
@@ -181,6 +183,7 @@ function claimedNames(ctx, events, twoWayValue)
         ...events.map((e) => e.option).filter(Boolean),
         ...Array.from(ctx.violated),
         ...providerKeys,
+        ...Object.keys(fixedOf(ctx)),
         ...(twoWayValue ? ["onChange"] : []),
         ...implicit,
     ]);
@@ -285,13 +288,13 @@ export function isCovered(path, hostOnly = {})
     return Object.keys(hostOnly).some((k) => path === k || path.startsWith(`${k}.`) || path.startsWith(`${k}[`));
 }
 
-/** A hostOnly entry that also names an event, provider or write-back member. */
+/** A hostOnly entry that also names an event, provider, write-back or fixed member. */
 function checkDoubleClaims(ctx, claimed)
 {
     for (const key of Object.keys(ctx.protocol.hostOnly ?? {}).filter((k) => claimed.has(k)))
     {
-        violate(ctx, key, VIOLATION.DOUBLE_CLASSIFIED, "is declared host-only and is also an event, provider or "
-            + "value write-back. Remove one of the two declarations.");
+        violate(ctx, key, VIOLATION.DOUBLE_CLASSIFIED, "is declared host-only and is also an event, provider, "
+            + "value write-back or fixed option. Remove one of the two declarations.");
     }
 }
 
@@ -308,6 +311,8 @@ function checkStaleDeclarations(ctx, members)
     staleKeys(ctx, protocol.hostOnly, (k) => isMember(k) || isPath(k) || isNestedData(k), "protocol.hostOnly");
     staleKeys(ctx, protocol.providers, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.FUNCTION, "protocol.providers");
     staleKeys(ctx, protocol.schemas, isMember, "protocol.schemas");
+    staleKeys(ctx, protocol.fixed, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.DATA, "protocol.fixed",
+        "the options type's data members");
     staleKeys(ctx, protocol.hostOnlyActions, (k) => ctx.manifest.actions.some((a) => a.id === k),
         "protocol.hostOnlyActions", "the manifest's actions");
 
@@ -316,6 +321,16 @@ function checkStaleDeclarations(ctx, members)
         violate(ctx, key, VIOLATION.SHORT_REASON, `has the reason "${reason}". Write what the member needs that `
             + `JSON cannot carry, in at least ${MIN_REASON_LENGTH} characters.`);
     }
+}
+
+/**
+ * The options the adapter always passes (ADR-235): protocol.fixed's entries
+ * that name a data member. The rest are reported as stale.
+ */
+function fixedOf(ctx)
+{
+    return Object.fromEntries(Object.entries(ctx.protocol.fixed ?? {})
+        .filter(([k]) => ctx.byName.get(k)?.cls === MEMBER_CLASS.DATA));
 }
 
 /**

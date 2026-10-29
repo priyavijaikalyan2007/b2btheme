@@ -13,8 +13,13 @@
  *          -> [catalog file + violations]
  */
 
+import { createRequire } from "node:module";
+
 import { DRAFT_2020_12, mapRefs } from "./normalise.mjs";
 import { VIOLATION } from "./resolve.mjs";
+
+const require = createRequire(import.meta.url);
+const Ajv2020 = require("ajv/dist/2020").default;
 
 // @config: CatalogIdentity — changing these changes a permanent public identifier (D7, D12).
 export const CATALOG_ORIGIN = "https://static.outcrop.us";
@@ -143,7 +148,7 @@ function entryFor({ manifest, surface, schema })
     return {
         name, defs: { ...defs, ...providerDefs(surface, root, manifest.name, name) },
         violations: [...propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
-            ...commonCollisions(manifest, surface)],
+            ...commonCollisions(manifest, surface), ...fixedMismatches(manifest, surface, root, defs)],
         entry: {
             type: "object",
             description: describeComponent(manifest),
@@ -315,6 +320,28 @@ function actionProps(surface)
  * A generated prop name used twice within one component. Checked on the
  * name list, before Object.fromEntries could silently keep only the last.
  */
+/**
+ * A protocol.fixed value its option's generated schema rejects (ADR-235).
+ * The adapter passes it on every mount, and nothing else would catch a value
+ * the component cannot take.
+ */
+function fixedMismatches(manifest, surface, root, defs)
+{
+    const ajv = new Ajv2020({ strict: false, allErrors: true });
+
+    return Object.entries(surface.fixed ?? {}).flatMap(([option, value]) =>
+    {
+        const validate = ajv.compile({ ...requireProperty(root, manifest.name, "fixed option", option), $defs: defs });
+
+        return validate(value) ? [] : [{
+            component: manifest.name, member: option, code: VIOLATION.FIXED_MISMATCH,
+            message: `${manifest.name}.${option}: protocol.fixed gives it ${JSON.stringify(value)}, which its type `
+                + `rejects (${ajv.errorsText(validate.errors)}). The adapter passes this value on every mount; give `
+                + `one the option accepts, in components/${manifest.name}/${manifest.name}.manifest.ts`,
+        }];
+    });
+}
+
 function propCollisions(manifest, names)
 {
     const dupes = [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];

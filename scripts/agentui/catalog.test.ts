@@ -218,6 +218,18 @@ describe("catalog — component entry", () =>
         expect(built.components.Widget.allOf[2].required)
             .toEqual(["component", "columns", "eventData", "onSearch", "searchResult"]);
     });
+    test("a fixed option is left out of the entry, and a value its type rejects fails (ADR-235)", () =>
+    {
+        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties,
+            keyScope: { oneOf: [{ const: "document" }, { const: "ribbon" }] } } };
+        const surface = (value: unknown) => ({ ...SURFACE, fixed: { keyScope: value } });
+        const good = build([{ manifest: MANIFEST, surface: surface("ribbon"), schema }]);
+        const bad = build([{ manifest: MANIFEST, surface: surface("page"), schema }]);
+
+        expect("keyScope" in ownProps(good.catalog, "Widget")).toBe(false);
+        expect(good.violations).toEqual([]);
+        expect(bad.violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.FIXED_MISMATCH, "keyScope"]]);
+    });
     test("required carries component and required data props", () =>
     {
         expect(build().catalog.components.Widget.allOf[2].required).toEqual(["component", "columns"]);
