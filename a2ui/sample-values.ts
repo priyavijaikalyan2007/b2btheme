@@ -80,7 +80,7 @@ export function sampleValue(schema: Schema, variant: Variant, root: Schema, poin
     return sampleTyped(schema, variant, root, pointer);
 }
 
-const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required", "format"]);
+const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required", "format", "pattern"]);
 
 /**
  * Samples a oneOf, skipping a null arm (`{ type: "null" }` or `{ const: null }`): an A2UI data model cannot
@@ -103,6 +103,8 @@ function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: st
     const type = schema.type as string;
 
     if (typeof schema.format === "string") { return sampleFormat(type, schema.format, variant, pointer); }
+
+    if (typeof schema.pattern === "string") { return samplePattern(type, schema.pattern, variant, pointer); }
 
     if (type in SCALARS) { return SCALARS[type][variant]; }
 
@@ -129,6 +131,24 @@ function sampleFormat(type: string, format: string, variant: Variant, pointer: s
     }
 
     return FORMATS[format][variant];
+}
+
+/**
+ * A string pattern is accepted only when the plain string sample already
+ * matches it, such as a class-token pattern (ExplorerPicker's icon, readiness
+ * step 2 B7); any other pattern is refused rather than guessed.
+ */
+function samplePattern(type: string, pattern: string, variant: Variant, pointer: string): string
+{
+    const sample = SCALARS.string[variant] as string;
+
+    if (type !== "string" || !new RegExp(pattern, "u").test(sample))
+    {
+        throw new Error(`sampleValue: the sample "${sample}" does not match pattern "${pattern}" on type "${type}" `
+            + `at ${pointer}; extend a2ui/sample-values.ts rather than guessing a value.`);
+    }
+
+    return sample;
 }
 
 function resolve(ref: string, root: Schema): Schema

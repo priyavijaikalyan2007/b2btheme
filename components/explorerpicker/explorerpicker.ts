@@ -165,7 +165,7 @@ export interface ExplorerPickerOptions
     onSelectionChange?: (selections: ExplorerPickerSelection[]) => void;
     /** Called when the initial load fails, with the error and "loadInitialData". */
     onError?: (error: Error, context: string) => void;
-    /** Confirm button label, or a function of the selection count. Default "Select" or "Select (N selected)". */
+    /** Confirm button label. Default "Select" or "Select (N selected)"; host code may pass a function of the count. */
     confirmButtonText?: string | ((count: number) => string);
     /** Cancel button label. Default "Cancel". */
     cancelButtonText?: string;

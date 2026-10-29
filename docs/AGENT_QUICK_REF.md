@@ -850,7 +850,7 @@ $control-height-xl=46px
 - CSS: `components/explorerpicker/explorerpicker.css`
 - JS: `components/explorerpicker/explorerpicker.js`
 - Globals: `createExplorerPicker()`
-- Exports: `type ExplorerNodeType`, `interface ExplorerNode`, `interface ExplorerPickerSelection`, `interface OntologyTypeEntry`, `interface ExplorerPickerState`, `interface ExplorerPickerOptions`, `interface ExplorerPickerHandle`, `class ExplorerPickerImpl`, `function createExplorerPicker`
+- Exports: `type ExplorerNodeType`, `interface ExplorerNode`, `interface ExplorerChildrenRequest`, `interface ExplorerSearchRequest`, `interface ExplorerSearchPage`, `interface ExplorerPickerSelection`, `interface OntologyTypeEntry`, `interface ExplorerPickerState`, `interface ExplorerPickerOptions`, `interface ExplorerPickerHandle`, `class ExplorerPickerImpl`, `function createExplorerPicker`
 
 ### facetsearch
 

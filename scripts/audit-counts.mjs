@@ -903,7 +903,8 @@ export const BASELINES = {
     // ADR-234 (2026-10-29): 318 -> 299, ActionItems classified (B7).
     // ADR-234 (2026-10-29): 299 -> 288, RelationshipManager classified (B7).
     // ADR-234 (2026-10-29): 288 -> 276, Conversation classified (B7).
-    unclassifiedOptions: 276,
+    // ADR-234 (2026-10-29): 276 -> 268, ExplorerPicker classified (B7).
+    unclassifiedOptions: 268,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -913,7 +914,8 @@ export const BASELINES = {
     // ADR-232 (2026-10-29): 286 -> 202, seven B6 data views' options documented.
     // ADR-234 (2026-10-29): 202 -> 191, PromptTemplateManager's options documented (B7).
     // ADR-234 (2026-10-29): 191 -> 181, RelationshipManager's options documented (B7).
-    protocolPropsMissingJsdoc: 181,
+    // ADR-234 (2026-10-29): 181 -> 161, ExplorerPicker's options documented (B7).
+    protocolPropsMissingJsdoc: 161,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -944,7 +946,8 @@ export const BASELINES = {
     // ADR-234 (2026-10-29): 37 -> 36, ActionItems classified (B7).
     // ADR-234 (2026-10-29): 36 -> 35, RelationshipManager classified (B7).
     // ADR-234 (2026-10-29): 35 -> 34, Conversation classified (B7).
-    componentsPendingClassification: 34,
+    // ADR-234 (2026-10-29): 34 -> 33, ExplorerPicker classified (B7).
+    componentsPendingClassification: 33,
 };
 
 /*
@@ -1040,11 +1043,12 @@ export const FLOORS = {
     // ADR-234 (2026-10-29): 299 and 36 once ActionItems was classified (B7).
     // ADR-234 (2026-10-29): 288, 181 and 35 once RelationshipManager was classified (B7).
     // ADR-234 (2026-10-29): 276 and 34 once Conversation was classified (B7).
-    unclassifiedOptions: 276,
-    protocolPropsMissingJsdoc: 181,
+    // ADR-234 (2026-10-29): 268, 161 and 33 once ExplorerPicker was classified (B7).
+    unclassifiedOptions: 268,
+    protocolPropsMissingJsdoc: 161,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 34,
+    componentsPendingClassification: 33,
 };
 
 /**
