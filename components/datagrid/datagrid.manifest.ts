@@ -81,8 +81,8 @@ export const DATAGRID_MANIFEST: CapabilityManifest =
             "columns[].renderer": "A render function; the default cell rendering applies over A2UI.",
             "columns[].comparator": "A sort function; the default comparison applies over A2UI.",
             "columns[].aggregate": "An aggregate function; over A2UI the footer shows no aggregate for the column.",
-            "rows[].data": "Cell values keyed by column id, shown as text; typed as an open record, so no schema checks "
-                + "the values.",
+            "rows[].data": "Cell values keyed by column id, shown as text; typed as an open record, so no schema "
+                + "checks the values.",
             emptyStateOptions: "Typed as an open record, so it has no schema an agent could follow. The default empty "
                 + "message applies.",
             onFilter: "Fires as the user filters the visible rows; that is view state, not information for an agent.",
