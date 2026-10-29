@@ -57,6 +57,11 @@ const TENANTS = { ...EV, tenants: [{ id: "t1", name: "Alpha Corp", role: "Admin"
     { id: "t2", name: "Beta LLC", role: "Member" }], activeTenantId: "t1", showSearch: true,
 onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } }, searchResult: { path: "/answers/search" } };
 
+/** AppLauncher rendered in place, with its search provider bound. */
+const LAUNCHER = { ...EV, mode: "fullpage", apps: [{ id: "a1", name: "Dashboard", icon: "bi-speedometer2" },
+    { id: "a2", name: "Projects", icon: "bi-kanban" }],
+onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } }, searchResult: { path: "/answers/search" } };
+
 test.describe("B8 app-shell components under @a2ui/lit", () =>
 {
     test("MarketingHero: each call to action sends its event with its text", async ({ page }) =>
@@ -130,5 +135,30 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
         await page.getByRole("option", { name: /Gamma Inc/ }).click();
 
         await sent(page, [["find", "gam"], ["switch", { id: "t9", name: "Gamma Inc", role: "Viewer" }]]);
+    });
+
+    test("AppLauncher: opening an app sends onSelect, and starring one sends onFavoriteToggle", async ({ page }) =>
+    {
+        await mount(page, "AppLauncher", { ...LAUNCHER, onSelect: act("open", "select"),
+            onFavoriteToggle: act("star", "favoriteToggle") });
+
+        await page.getByRole("button", { name: "Add Projects to favorites" }).click();
+        await page.locator(".applauncher-tile[data-app-id='a1']").click();
+
+        await sent(page, [["star", { appId: "a2", isFavorite: true }],
+            ["open", { id: "a1", name: "Dashboard", icon: "bi-speedometer2" }]]);
+    });
+
+    test("AppLauncher: the agent answers a search, and opening a result sends onSelect", async ({ page }) =>
+    {
+        await mount(page, "AppLauncher", { ...LAUNCHER, onSelect: act("open", "select") });
+
+        await page.locator(".applauncher-search-input").fill("bil");
+        await expect.poll(() => actions(page)).toEqual([expect.objectContaining({ name: "find",
+            context: { p: "bil" } })]);
+        await answerSearch(page, [{ id: "a9", name: "Billing", icon: "bi-receipt" }]);
+        await page.locator(".applauncher-tile[data-app-id='a9']").click();
+
+        await sent(page, [["find", "bil"], ["open", { id: "a9", name: "Billing", icon: "bi-receipt" }]]);
     });
 });
