@@ -76,9 +76,13 @@ function toGridRow(item: unknown, index: number): DataGridRow
 
 export interface DataGridRow
 {
+    /** Unique row id. */
     id: string;
+    /** The row's cell values, keyed by column id. */
     data: Record<string, unknown>;
+    /** Extra CSS classes on the row. */
     cssClass?: string;
+    /** Shows the row greyed out, not selectable or editable. */
     disabled?: boolean;
 }
 
@@ -92,22 +96,38 @@ interface SortEntry
 /** Configuration options for the DataGrid component. */
 export interface DataGridOptions
 {
+    /** Column definitions, in display order. Required; the grid throws without it. */
     columns: DataGridColumn[];
+    /** Initial rows, each { id, data }. Default: none (the empty state shows). Replace later with setRows(). */
     rows?: DataGridRow[];
+    /** Rows per page; 0 or less turns paging off and shows every row. Default: 50. */
     pageSize?: number;
+    /** Choices offered in the rows-per-page selector. Default: [25, 50, 100, 250]. */
     pageSizeOptions?: number[];
+    /** True when the rows are one page loaded by the host; set the total with setTotalRowCount(). Default: false. */
     serverSide?: boolean;
+    /** Windowed rendering: "enabled" always, "disabled" never, "auto" above 5000 rows on a page. Default: "auto". */
     virtualScrolling?: "auto" | "enabled" | "disabled";
+    /** Row selection on click: "single", "multi" or "checkbox" (multi plus a checkbox column). Default: off. */
     selectable?: boolean | "single" | "multi" | "checkbox";
+    /** Adds a leading # column of row numbers. Default: false. */
     showRowNumbers?: boolean;
+    /** Adds a footer row showing each column's aggregate (see the column's aggregate setting). Default: false. */
     showFooter?: boolean;
+    /** Alternating row shading. Default: true; only an explicit false turns it off. */
     striped?: boolean;
+    /** Compact rows (24px instead of 32px). Default: false. */
     dense?: boolean;
+    /** Lets the user drag column headers to reorder them. Default: true; only an explicit false turns it off. */
     enableColumnReorder?: boolean;
+    /** True when the host sorts the rows: the grid reports sorts but does not reorder them itself. Default: false. */
     externalSort?: boolean;
+    /** True when the host filters the rows: the grid reports filters but does not hide rows itself. Default: false. */
     externalFilter?: boolean;
+    /** CSS height of the scrolling area, such as "300px" or "50vh". Default: "400px". */
     height?: string;
     emptyStateOptions?: object;
+    /** Extra CSS classes for the grid's root element, space-separated. Default: none. */
     cssClass?: string;
     onSort?: (sorts: SortEntry[]) => void;
     onFilter?: (filters: Record<string, unknown>) => void;
@@ -131,6 +151,7 @@ export interface DataGridOptions
 // ============================================================================
 
 const LOG_PREFIX = "[DataGrid]";
+
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
@@ -174,6 +195,12 @@ function logTrace(...a: unknown[]): void
 // and logTrace population as a floor, and the preamble is the contract
 // FRONTEND_LOGGING.md section 1.1 states.
 void [logInfo, logWarn, logError, logDebug, logTrace];
+
+/** Copies an object value so a channel handler cannot mutate the grid's own row data; primitives pass through. */
+function cloneJson(value: unknown): unknown
+{
+    return value !== null && typeof value === "object" ? structuredClone(value) : value;
+}
 
 const DEFAULT_COL_WIDTH = 120;
 const MIN_COL_WIDTH = 60;
@@ -274,9 +301,16 @@ export interface DataGridHandle
     hide(): void;
     destroy(): void;
     getElement(): HTMLElement;
+    /**
+     * Subscribes to "selection", "sort", "page", "activate" or "cellEdit" ({ rowId, columnId, oldValue, newValue },
+     * fired for an applied edit, after onCellEdit). Throws on any other channel. Returns the unsubscribe.
+     */
     on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Fills the "rows" slot with plain records or DataGridRows; any other slot throws. */
     setData(slot: string, value: unknown): void;
+    /** { sort, page, pageSize, selection }: the view state needed to restore the grid. */
     getState(): Record<string, unknown>;
+    /** Restores the keys present in state; partial input is allowed. */
     setState(state: Record<string, unknown>): void;
     setRows(rows: DataGridRow[]): void;
     addRow(row: DataGridRow, index?: number): void;
@@ -465,13 +499,18 @@ export class DataGrid implements DataGridHandle
 
     /**
      * ⚓ METHOD: on
-     * Subscribes to a declared channel: "selection", "sort", "page", or
-     * "activate".
+     * Subscribes to a declared channel: "selection", "sort", "page",
+     * "activate", or "cellEdit".
      *
      * Purely additive. The pre-existing constructor callbacks (onRowSelect,
      * onSort, onPageChange, onRowDoubleClick) keep working exactly as before
      * and still fire FIRST — this adds a surface that can be rebound at
      * runtime, which a callback fixed at construction cannot.
+     *
+     * @param channel - Channel name.
+     * "cellEdit" has no legacy callback of its own: it follows onCellEdit,
+     * fires only for an edit that was applied, and carries
+     * { rowId, columnId, oldValue, newValue }.
      *
      * @param channel - Channel name.
      * @param handler - Called with the channel payload.
@@ -586,7 +625,19 @@ export class DataGrid implements DataGridHandle
         payload: unknown): void
     {
         legacy();
+        this.notifySubscribers(channel, payload);
+    }
 
+    /**
+     * ⚓ METHOD: notifySubscribers
+     * Delivers a channel payload to its subscribers, each isolated so one
+     * throwing handler cannot starve the rest.
+     *
+     * @param channel - Channel name.
+     * @param payload - Value delivered to channel subscribers.
+     */
+    private notifySubscribers(channel: string, payload: unknown): void
+    {
         for (const handler of this.channelHandlers.get(channel) ?? [])
         {
             try
@@ -2251,6 +2302,9 @@ export class DataGrid implements DataGridHandle
         this.refreshCellContent(rowId, columnId, newValue);
         this.renderFooter();
         this.announce(`${this.findCol(columnId)?.label} updated to ${newValue}`);
+
+        // The edit is applied (onCellEdit did not veto it), so subscribers hear it, after onCellEdit.
+        this.notifySubscribers("cellEdit", { rowId, columnId, oldValue: cloneJson(oldValue), newValue });
     }
 
     private cancelEdit(): void

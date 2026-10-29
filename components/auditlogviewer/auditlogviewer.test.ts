@@ -314,3 +314,189 @@ describe("edge cases", () =>
         warnSpy.mockRestore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B6)
+// ============================================================================
+
+describe("surface contract (B6)", () =>
+{
+    const STAMP = new Date("2026-03-01T10:00:00.000Z");
+
+    function richEntry(): AuditLogEntry
+    {
+        return makeEntry({
+            id: "rich",
+            timestamp: STAMP,
+            actorId: "u-1",
+            resourceType: "session",
+            ipAddress: "10.0.0.1",
+            severity: "warning",
+            detail: { before: 1, after: new Date() },
+            metadata: { trace: Symbol.for("not-json") as unknown as string },
+        });
+    }
+
+    function rowOf(viewer: { getElement(): HTMLElement | null }, id: string): HTMLElement
+    {
+        return viewer.getElement()!.querySelector(`[data-entry-id="${id}"]`) as HTMLElement;
+    }
+
+    const EXPECTED = {
+        id: "rich",
+        timestamp: "2026-03-01T10:00:00.000Z",
+        actor: "admin@example.com",
+        action: "user.login",
+        resource: "session-123",
+        actorId: "u-1",
+        resourceType: "session",
+        ipAddress: "10.0.0.1",
+        severity: "warning",
+    };
+
+    test("on_RowClick_DeliversEntryWithoutDetailAndMetadata", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions({ entries: [richEntry()] }), "test-auditlog");
+        const heard = vi.fn();
+        viewer.on("rowClick", heard);
+
+        rowOf(viewer, "rich").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith(EXPECTED);
+        viewer.destroy();
+    });
+
+    test("on_RowClick_PayloadSurvivesJsonRoundTrip", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions({ entries: [richEntry()] }), "test-auditlog");
+        let payload: unknown;
+        viewer.on("rowClick", (p) => { payload = p; });
+
+        rowOf(viewer, "rich").click();
+
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        viewer.destroy();
+    });
+
+    test("on_RowClick_PayloadIsACopy_MutatingItDoesNotTouchTheEntry", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions({ entries: [richEntry()] }), "test-auditlog");
+        viewer.on("rowClick", (p) => { (p as Record<string, unknown>).actor = "mutated"; });
+
+        rowOf(viewer, "rich").click();
+
+        expect(viewer.getEntries()[0].actor).toBe("admin@example.com");
+        viewer.destroy();
+    });
+
+    test("on_RowClick_FiresAfterOnRowClick_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const viewer = createAuditLogViewer(
+            makeOptions({ entries: [richEntry()], onRowClick: (e) => order.push(`option:${e.id}`) }),
+            "test-auditlog"
+        );
+        viewer.on("rowClick", (p) => order.push(`channel:${(p as { id: string }).id}`));
+
+        rowOf(viewer, "rich").click();
+
+        expect(order).toEqual(["option:rich", "channel:rich"]);
+        viewer.destroy();
+    });
+
+    test("on_RowClick_FiresWithoutOnRowClick", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+        const heard = vi.fn();
+        viewer.on("rowClick", heard);
+
+        rowOf(viewer, "e2").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard.mock.calls[0][0]).toMatchObject({ id: "e2" });
+        viewer.destroy();
+    });
+
+    test("on_RowClick_FiresOnEnterKey", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+        const heard = vi.fn();
+        viewer.on("rowClick", heard);
+
+        const table = viewer.getElement()!.querySelector(".auditlog-table-body") as HTMLElement;
+        table.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        viewer.destroy();
+    });
+
+    test("on_RowClick_UnsubscribeStopsDelivery", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+        const heard = vi.fn();
+        const off = viewer.on("rowClick", heard);
+
+        rowOf(viewer, "e1").click();
+        off();
+        rowOf(viewer, "e1").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        viewer.destroy();
+    });
+
+    test("on_RowClick_ThrowingHandler_DoesNotStopOthers", () =>
+    {
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+        const second = vi.fn();
+        viewer.on("rowClick", () => { throw new Error("boom"); });
+        viewer.on("rowClick", second);
+
+        rowOf(viewer, "e1").click();
+
+        expect(second).toHaveBeenCalledTimes(1);
+        errSpy.mockRestore();
+        viewer.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+        const heard = vi.fn();
+        viewer.on("rowClick", heard);
+        const row = rowOf(viewer, "e1");
+
+        viewer.destroy();
+        row.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws_NamingValidChannels", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+
+        expect(() => viewer.on("bogus", () => undefined)).toThrow(/rowClick/);
+        viewer.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+
+        expect(() => viewer.setData("entries", [])).toThrow(/AuditLogViewer.*no data slots.*setEntries/);
+        viewer.destroy();
+    });
+
+    test("getState_ReturnsEmptyObject_SetStateDoesNothing", () =>
+    {
+        const viewer = createAuditLogViewer(makeOptions(), "test-auditlog");
+
+        expect(viewer.getState()).toEqual({});
+        viewer.setState({ page: 3 });
+        expect(viewer.getState()).toEqual({});
+        expect(viewer.getPage()).toBe(1);
+        viewer.destroy();
+    });
+});

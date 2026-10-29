@@ -374,3 +374,267 @@ describe("new activity reaches the live region", () =>
         feed.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B6): additive on(eventClick | actorClick | targetClick),
+// getState/setState and setData. Legacy callbacks keep firing first, once.
+// ============================================================================
+
+describe("surface contract (B6)", () =>
+{
+    const when = new Date(2026, 0, 15, 10, 30);
+
+    function surfaceEvent(overrides?: Partial<ActivityEvent>): ActivityEvent
+    {
+        return makeEvent({
+            id: "evt-s",
+            actor: makeActor({ id: "a-9", name: "Bruno", avatar: "https://x.test/b.png" }),
+            action: "opened",
+            target: "Q3 plan",
+            timestamp: when,
+            metadata: { secret: { deep: 1 } },
+            ...overrides,
+        });
+    }
+
+    function mount(options?: Partial<ActivityFeedOptions>): ReturnType<typeof createActivityFeed>
+    {
+        return createActivityFeed(
+            makeOptions({ events: [surfaceEvent()], groupByDate: false, ...options }), "test-activityfeed"
+        );
+    }
+
+    const q = (sel: string): HTMLElement => container.querySelector(sel) as HTMLElement;
+
+    test("on(eventClick)_DeliversEventWithoutMetadata_AfterOnEventClick", () =>
+    {
+        const order: string[] = [];
+        const feed = mount({ onEventClick: () => order.push("option") });
+        feed.on("eventClick", () => order.push("channel"));
+
+        q(".activityfeed-event").click();
+
+        expect(order).toEqual(["option", "channel"]);
+        feed.destroy();
+    });
+
+    test("on(eventClick)_PayloadIsPlainJsonCopyWithoutMetadata", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount();
+        feed.on("eventClick", heard);
+
+        q(".activityfeed-event").click();
+
+        const payload = heard.mock.calls[0][0] as Record<string, unknown>;
+        expect(payload).toEqual({
+            id: "evt-s",
+            actor: { id: "a-9", name: "Bruno", avatar: "https://x.test/b.png" },
+            action: "opened",
+            target: "Q3 plan",
+            timestamp: when.toISOString(),
+        });
+        expect("metadata" in payload).toBe(false);
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        feed.destroy();
+    });
+
+    test("on(eventClick)_PayloadMutationDoesNotReachTheComponent", () =>
+    {
+        const feed = mount();
+        feed.on("eventClick", (p) =>
+        {
+            const e = p as { actor: { name: string }; action: string };
+            e.actor.name = "Mallory";
+            e.action = "hacked";
+        });
+
+        q(".activityfeed-event").click();
+
+        expect(feed.getEvents()[0].actor.name).toBe("Bruno");
+        expect(feed.getEvents()[0].action).toBe("opened");
+        feed.destroy();
+    });
+
+    test("on(eventClick)_EmitsWithNoLegacyCallback", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount();
+        feed.on("eventClick", heard);
+
+        q(".activityfeed-event").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        feed.destroy();
+    });
+
+    test("on(actorClick)_DeliversActorCopy_AfterOnActorClick_AndStopsTheCard", () =>
+    {
+        const order: string[] = [];
+        const heard = vi.fn((p: unknown) => order.push("channel"));
+        const feed = mount({
+            onActorClick: () => order.push("option"),
+            onEventClick: () => order.push("card"),
+        });
+        feed.on("actorClick", heard);
+
+        q(".activityfeed-actor").click();
+
+        expect(order).toEqual(["option", "channel"]);
+        const payload = heard.mock.calls[0][0];
+        expect(payload).toEqual({ id: "a-9", name: "Bruno", avatar: "https://x.test/b.png" });
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        feed.destroy();
+    });
+
+    test("on(actorClick)_EmitsWithNoLegacyCallback", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount();
+        feed.on("actorClick", heard);
+
+        q(".activityfeed-actor").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        feed.destroy();
+    });
+
+    test("on(actorClick)_PayloadMutationDoesNotReachTheComponent", () =>
+    {
+        const feed = mount();
+        feed.on("actorClick", (p) => { (p as { name: string }).name = "Mallory"; });
+
+        q(".activityfeed-actor").click();
+
+        expect(feed.getEvents()[0].actor.name).toBe("Bruno");
+        feed.destroy();
+    });
+
+    test("actorClick_WithNoCallbackAndNoSubscriber_StillBubblesToTheCard", () =>
+    {
+        const onEventClick = vi.fn();
+        const feed = mount({ onEventClick });
+
+        q(".activityfeed-actor").click();
+
+        expect(onEventClick).toHaveBeenCalledTimes(1);
+        expect(q(".activityfeed-actor").style.cursor).toBe("");
+        feed.destroy();
+    });
+
+    test("on(targetClick)_DeliversEventWithoutMetadata_AfterOnTargetClick", () =>
+    {
+        const order: string[] = [];
+        const heard = vi.fn(() => order.push("channel"));
+        const feed = mount({ onTargetClick: () => order.push("option"), onEventClick: () => order.push("card") });
+        feed.on("targetClick", heard);
+
+        q(".activityfeed-target").click();
+
+        expect(order).toEqual(["option", "channel"]);
+        const payload = (heard.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+        expect(payload.id).toBe("evt-s");
+        expect(payload.target).toBe("Q3 plan");
+        expect("metadata" in payload).toBe(false);
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        feed.destroy();
+    });
+
+    test("on(targetClick)_EmitsWithNoLegacyCallback_ForSpanAndLink", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount({
+            events: [surfaceEvent({ id: "span" }), surfaceEvent({ id: "link", targetUrl: "https://x.test/p" })],
+        });
+        feed.on("targetClick", heard);
+
+        container.querySelectorAll<HTMLElement>(".activityfeed-target").forEach((el) => el.click());
+
+        expect(heard).toHaveBeenCalledTimes(2);
+        feed.destroy();
+    });
+
+    test("targetClick_OnLink_PreventsNavigationOnlyWhenSomeoneListens", () =>
+    {
+        const feed = mount({ events: [surfaceEvent({ targetUrl: "https://x.test/p" })] });
+        const link = q("a.activityfeed-target");
+        const plain = new MouseEvent("click", { bubbles: true, cancelable: true });
+        link.dispatchEvent(plain);
+        expect(plain.defaultPrevented).toBe(false);
+
+        feed.on("targetClick", () => undefined);
+        const heard = new MouseEvent("click", { bubbles: true, cancelable: true });
+        link.dispatchEvent(heard);
+        expect(heard.defaultPrevented).toBe(true);
+        feed.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount();
+        const off = feed.on("eventClick", heard);
+
+        q(".activityfeed-event").click();
+        off();
+        q(".activityfeed-event").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        feed.destroy();
+    });
+
+    test("on_ThrowingHandler_IsContained_AndLaterHandlersStillRun", () =>
+    {
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const later = vi.fn();
+        const feed = mount();
+        feed.on("eventClick", () => { throw new Error("boom"); });
+        feed.on("eventClick", later);
+
+        q(".activityfeed-event").click();
+
+        expect(later).toHaveBeenCalledTimes(1);
+        errSpy.mockRestore();
+        feed.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_NamingTheValidChannels", () =>
+    {
+        const feed = mount();
+
+        expect(() => feed.on("bogus", () => undefined)).toThrow(/eventClick.*actorClick.*targetClick/);
+        feed.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const feed = mount();
+
+        expect(() => feed.setData("events", [])).toThrow(/ActivityFeed.*no data slots.*setEvents/);
+        feed.destroy();
+    });
+
+    test("getState_IsEmpty_AndSetStateDoesNothing", () =>
+    {
+        const feed = mount();
+
+        expect(feed.getState()).toEqual({});
+        feed.setState({ anything: 1 });
+        expect(feed.getState()).toEqual({});
+        expect(feed.getEvents()).toHaveLength(1);
+        feed.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const feed = mount();
+        feed.on("eventClick", heard);
+        const card = q(".activityfeed-event");
+
+        feed.destroy();
+        card.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+});

@@ -42,17 +42,29 @@ export interface AuditLogFilters
 
 export interface AuditLogViewerOptions
 {
+    /** Initial log entries, shown newest first. Default: none (an empty list). Replace later with setEntries(). */
     entries?: AuditLogEntry[];
+    /** Rows per page. Default: 50. */
     pageSize?: number;
+    /** Leave filtering and paging to the host through onLoadPage instead of doing them here. Default: false. */
     serverSide?: boolean;
+    /** Show the filter bar. Default: true; only false hides it. */
     showFilters?: boolean;
+    /** Show the CSV and JSON export buttons. Default: true; only false hides them. */
     showExport?: boolean;
+    /** Let a row that has `detail` expand to show it as JSON. Default: true; only false disables. */
     showDetail?: boolean;
+    /** Show the severity column and severity filter. Default: true; only false hides them. */
     showSeverity?: boolean;
+    /** Show the IP address column. Default: true; only false hides it. */
     showIPAddress?: boolean;
+    /** Milliseconds between automatic reloads of the current page. Default: 0 (off). Needs serverSide + onLoadPage. */
     autoRefresh?: number;
+    /** CSS height of the viewer, for example "400px". Default: unset, so the stylesheet decides. */
     height?: string;
+    /** Timestamp format: "iso" for ISO 8601; any other value uses the browser locale. Default: "locale". */
     dateFormat?: string;
+    /** Extra CSS class names for the root element, space separated. Default: none. */
     cssClass?: string;
     onFilter?: (filters: AuditLogFilters) => void;
     onPageChange?: (page: number) => void;
@@ -238,6 +250,18 @@ export interface AuditLogViewerHandle
     refresh(): void;
     getSelectedEntry(): AuditLogEntry | null;
     scrollToEntry(entryId: string): void;
+
+    /** The surface contract (additive): AuditLogViewer has no data slots, so this throws. Use setEntries(). */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "rowClick": the clicked entry as plain JSON, without `detail` and `metadata`, and with
+     * `timestamp` as an ISO 8601 string. Fires after `onRowClick`. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229): does nothing. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class AuditLogViewer implements AuditLogViewerHandle
@@ -269,6 +293,7 @@ export class AuditLogViewer implements AuditLogViewerHandle
     private destroyed = false;
     private refreshTimer = 0;
     private debouncedFilterText: (...args: unknown[]) => void;
+    private readonly rowClickHandlers = new Set<(payload: unknown) => void>();
 
     // ========================================================================
     // CONSTRUCTOR
@@ -329,6 +354,7 @@ export class AuditLogViewer implements AuditLogViewerHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.rowClickHandlers.clear();
         this.stopAutoRefresh();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.rootEl = null;
@@ -421,6 +447,34 @@ export class AuditLogViewer implements AuditLogViewerHandle
             if (this.opts.showDetail !== false) { this.toggleDetail(entryId); }
         }
     }
+
+    // ── Surface contract (additive, readiness step 2 B6) ──
+
+    /** AuditLogViewer has no data slots; use setEntries(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): AuditLogViewer has no data slots. Use setEntries() or addEntry().`);
+    }
+
+    /** Subscribes to "rowClick"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "rowClick")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "rowClick".`);
+        }
+
+        this.rowClickHandlers.add(handler);
+
+        return () => { this.rowClickHandlers.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-229). */
+    getState(): Record<string, unknown> { return {}; }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void { /* no state keys */ }
 
     // ========================================================================
     // BUILD — ROOT
@@ -860,9 +914,21 @@ export class AuditLogViewer implements AuditLogViewerHandle
     private onRowClick(entry: AuditLogEntry): void
     {
         safeCallback(this.opts.onRowClick, entry);
+        this.emitRowClick(entry);
         if (this.opts.showDetail !== false && entry.detail)
         {
             this.toggleDetail(entry.id);
+        }
+    }
+
+    /** Tells "rowClick" subscribers, each with its own plain-JSON copy: no detail, no metadata, ISO timestamp. */
+    private emitRowClick(entry: AuditLogEntry): void
+    {
+        for (const handler of this.rowClickHandlers)
+        {
+            const { detail: _detail, metadata: _metadata, timestamp, ...rest } = entry;
+
+            safeCallback(handler, { ...rest, timestamp: timestamp.toISOString() } as unknown);
         }
     }
 

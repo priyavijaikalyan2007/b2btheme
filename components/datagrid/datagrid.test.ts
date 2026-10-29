@@ -762,3 +762,156 @@ describe("clicking outside the grid cancels an open editor", () =>
     });
 
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B6): the cellEdit channel and the
+// channel whitelist on on(). onCellEdit keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B6)", () =>
+{
+    function editableGrid(extra?: Partial<DataGridOptions>): DataGrid
+    {
+        const grid = createDataGrid(defaultOpts({
+            columns: [
+                { id: "name", label: "Name", editable: true },
+                { id: "status", label: "Status" },
+            ],
+            rows: [{ id: "1", data: { name: "Acme Corp", status: "active" } }],
+            ...extra,
+        }));
+        grid.show(container.id);
+        return grid;
+    }
+
+    /** Opens the editor on row 1's name cell, types a value and presses Enter. */
+    function editName(value: string): void
+    {
+        const cell = container.querySelector<HTMLElement>(
+            "[data-row-id=\"1\"] [data-col-id=\"name\"]");
+
+        cell?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        const editor = container.querySelector<HTMLInputElement>(".datagrid-editor");
+
+        editor!.value = value;
+        editor!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    }
+
+    test("on(cellEdit)_HearsTheEdit_AfterOnCellEdit_AndUnsubscribeStopsIt", () =>
+    {
+        const order: string[] = [];
+        const grid = editableGrid({
+            onCellEdit: (rowId, columnId, oldValue, newValue) =>
+            {
+                order.push(`option:${rowId}:${columnId}:${String(oldValue)}:${String(newValue)}`);
+            },
+        });
+        const off = grid.on("cellEdit", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        editName("Acme Ltd");
+        off();
+        editName("Acme Inc");
+
+        expect(order).toEqual([
+            "option:1:name:Acme Corp:Acme Ltd",
+            "channel:{\"rowId\":\"1\",\"columnId\":\"name\",\"oldValue\":\"Acme Corp\",\"newValue\":\"Acme Ltd\"}",
+            "option:1:name:Acme Ltd:Acme Inc",
+        ]);
+        grid.destroy();
+    });
+
+    test("on(cellEdit)_WithoutOnCellEdit_StillHearsTheEdit", () =>
+    {
+        const heard = vi.fn();
+        const grid = editableGrid();
+        grid.on("cellEdit", heard);
+
+        editName("Acme Ltd");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith(
+            { rowId: "1", columnId: "name", oldValue: "Acme Corp", newValue: "Acme Ltd" });
+        expect(grid.getRow("1")!.data.name).toBe("Acme Ltd");
+        grid.destroy();
+    });
+
+    test("on(cellEdit)_WhenOnCellEditVetoes_IsNotHeardAndEditIsNotApplied", () =>
+    {
+        const onCellEdit = vi.fn(() => false as const);
+        const heard = vi.fn();
+        const grid = editableGrid({ onCellEdit });
+        grid.on("cellEdit", heard);
+
+        editName("Acme Ltd");
+
+        expect(onCellEdit).toHaveBeenCalledTimes(1);
+        expect(heard).not.toHaveBeenCalled();
+        expect(grid.getRow("1")!.data.name).toBe("Acme Corp");
+        grid.destroy();
+    });
+
+    test("on(cellEdit)_PayloadIsPlainJson", () =>
+    {
+        let payload: unknown;
+        const grid = editableGrid();
+        grid.on("cellEdit", (p) => { payload = p; });
+
+        editName("Acme Ltd");
+
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        grid.destroy();
+    });
+
+    test("on(cellEdit)_AHandlerThatThrows_DoesNotStarveTheNext", () =>
+    {
+        const heard = vi.fn();
+        const grid = editableGrid();
+        grid.on("cellEdit", () => { throw new Error("boom"); });
+        grid.on("cellEdit", heard);
+
+        editName("Acme Ltd");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        grid.destroy();
+    });
+
+    test("on_EveryDeclaredChannel_ReturnsAnUnsubscribe", () =>
+    {
+        const grid = editableGrid();
+        const offs = ["selection", "sort", "page", "activate", "cellEdit"].map((c) => grid.on(c, () => undefined));
+
+        expect(offs.map((off) => typeof off)).toEqual(["function", "function", "function", "function", "function"]);
+        grid.destroy();
+    });
+
+    // on() accepted any channel name before B6, so existing callers keep that: tightening it would break them.
+    test("on_UnknownChannel_StillReturnsAnUnsubscribe_AsBefore", () =>
+    {
+        const grid = editableGrid();
+        const off = grid.on("bogus", () => undefined);
+
+        expect(off).toBeTypeOf("function");
+        off();
+        grid.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheDeclaredKeys", () =>
+    {
+        const grid = createDataGrid(defaultOpts({ pageSize: 2, selectable: "multi" }), "test-grid");
+
+        grid.selectRow("2");
+        grid.sort("name", "desc");
+        const captured = grid.getState();
+
+        expect(Object.keys(captured).sort()).toEqual(["page", "pageSize", "selection", "sort"]);
+
+        grid.sort("name", "asc");
+        grid.deselectRow("2");
+        grid.setState(captured);
+
+        expect(grid.getState()).toEqual(captured);
+        expect(JSON.parse(JSON.stringify(captured))).toEqual(captured);
+        grid.destroy();
+    });
+});

@@ -38,23 +38,19 @@ export const PENDING_CLASSIFICATION = new Set([
     // step 2 P1, ADR-230).
     // 47 on 2026-10-29: seven B5 editors and forms classified (readiness step 2 B5, ADR-231); propertyinspector
     // stays: its content arrives through open() as DOM elements, which needs A2UI children (step 4).
+    // 38 on 2026-10-29: the nine B6 data views classified (readiness step 2 B6, ADR-232).
     "actionitems",
-    "activityfeed",
     "anchorlayout",
     "annotation",
     "applauncher",
-    "auditlogviewer",
     "borderlayout",
     "boxlayout",
     "cardlayout",
-    "chartpanel",
     "commentoverlay",
     "conversation",
-    "datagrid",
     "diagramengine",
     "docklayout",
     "explorerpicker",
-    "facetsearch",
     "fileexplorer",
     "fileupload",
     "flexgridlayout",
@@ -64,11 +60,9 @@ export const PENDING_CLASSIFICATION = new Set([
     "gridlayout",
     "helpdrawer",
     "layerlayout",
-    "logconsole",
     "marketinghero",
     "multiselectcombo",
     "navrail",
-    "notificationcenter",
     "permissionmatrix",
     "prompttemplatemanager",
     "propertyinspector",
@@ -82,9 +76,7 @@ export const PENDING_CLASSIFICATION = new Set([
     "tabbedpanel",
     "tenantswitcher",
     "timeline",
-    "treegrid",
     "usermenu",
-    "visualtableeditor",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */

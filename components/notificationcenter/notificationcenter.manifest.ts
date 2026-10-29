@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B6): clicking,
+ * dismissing and marking all read emit through an additive on(). Nothing to
+ * restore (ADR-229).
  */
 export const NOTIFICATIONCENTER_MANIFEST: CapabilityManifest =
 {
@@ -34,11 +33,31 @@ export const NOTIFICATIONCENTER_MANIFEST: CapabilityManifest =
     icon: "bi-bell-fill",
     category: "social",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a bell with a list of notifications the user can open, dismiss or mark read; the agent hears "
+            + "each.",
+        avoidWhen: "For a passive timeline use ActivityFeed; for one message use Text or a Modal.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "notificationClick", payload: "record", multi: false, legacyOption: "onNotificationClick" },
+        { name: "dismiss", payload: "scalar", multi: false, legacyOption: "onDismiss" },
+        { name: "markAllRead", payload: "collection", multi: false, legacyOption: "onMarkAllRead" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            "notifications[].data": "An arbitrary payload for host code; it has no schema an agent could follow.",
+            onUnreadCountChange: "Follows from the notifications and the user's reads, which the other events already "
+                + "report.",
+        },
+    },
 
     regions: ["notificationcenter:tabs", "notificationcenter:list"],
 
@@ -48,6 +67,6 @@ export const NOTIFICATIONCENTER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 350, h: 400 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
