@@ -70,4 +70,26 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
 
         await rejected(page, "/action");
     });
+
+    test("SiteFooter: a group link and a legal link each send linkClick with their text and group", async ({ page }) =>
+    {
+        await mount(page, "SiteFooter", { ...EV, organization: { name: "Outcrop Inc" },
+            groups: [{ title: "Product", links: [{ text: "Overview" }, { text: "Pricing" }] }],
+            legal: { copyright: "© 2026 Outcrop Inc", links: [{ text: "Privacy" }] },
+            onLinkClick: act("link", "linkClick") });
+
+        await page.getByRole("button", { name: "Pricing" }).click();
+        await page.getByRole("button", { name: "Privacy" }).click();
+
+        await sent(page, [["link", { text: "Pricing", group: "Product" }], ["link", { text: "Privacy", group: null }]]);
+    });
+
+    test("SiteFooter: a link href from the agent is rejected (the link rule)", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "SiteFooter", groups: { path: "/groups" } },
+            { groups: [{ title: "Product", links: [{ text: "Go", href: "javascript:alert(1)" }] }] }));
+
+        await rejected(page, "/groups");
+    });
 });
