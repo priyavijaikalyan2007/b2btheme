@@ -1966,3 +1966,50 @@ In this order: PromptTemplateManager, ActionItems, RelationshipManager, Conversa
   - the dist diff: the five components' JS, plus Conversation's labelled fix;
   - the prompt-size line.
 - **The PR,** targeting `main` once #57 merges.
+
+---
+
+## B8: app shell
+
+**Goal:** six of eight join catalog v1: MarketingHero, SiteFooter, TenantSwitcher, AppLauncher, Ribbon and RibbonBuilder. HelpDrawer and NavRail stay pending.
+
+**User decisions (2026-10-29):**
+- **B8-1, SiteFooter joins with link events.** A link with no `href` renders as a button and emits `linkClick` `{ text, group }`; the agent answers with openUrl. `SiteFooterLink.href` becomes optional (a widening). The link rule's schema override leaves every `href` out. Hosts that pass hrefs see no change.
+- **B8-2, HelpDrawer and NavRail stay pending.** Their reasons go to #20:
+  - HelpDrawer appends itself to `document.body` as a page-level drawer, and its content arrives only through `open(topic)`, a method; `topic.url` is fetched (URL-fetch rule). Over A2UI it would escape its surface, and nothing an agent sends could open it.
+  - NavRail pins itself to the viewport unless `contained`. Every rail, contained or not, registers with a page-wide manager that writes `--navrail-<edge>-width` on `<html>` and hides a second rail at the same edge. Over A2UI it would change the host's layout or hide the host's own rail.
+- **B8-3, Ribbon joins with its keys confined.**
+  - An additive `keyScope?: "document" | "ribbon"` option: `"document"` (the default) is today's behaviour; `"ribbon"` handles keys only while focus is inside the ribbon.
+  - A new manifest field, `protocol.fixed: { <option>: <JSON value> }`: the adapter always passes these values, and the catalog leaves the options out. Ribbon declares `fixed: { keyScope: "ribbon" }`.
+  - RibbonBuilder joins with Ribbon, as a component emitting `change` and `export`.
+
+**Per component:**
+
+| Component | Events (payload) | Providers | `stateKeys` | Host-only and schemas |
+|---|---|---|---|---|
+| MarketingHero | `primary`, `secondary` (scalar: the button text); the buttons always listen, callback first (EmptyState precedent) | — | `[]` | `aside` (element); a closed override for `primaryAction`/`secondaryAction` leaves `href` (link rule) and `onClick` out |
+| SiteFooter | `linkClick` (`{ text, group }`, `group` the group title or `"legal"`) | — | `[]` | `organization.logo` (element); closed overrides for `groups` and `legal` leave `href` out |
+| TenantSwitcher | `switch` (the tenant without `data`), `create` (scalar: the search text) | `onSearch` → `search` (latest) | `["activeTenantId"]` | `onOpen`/`onClose` (lifecycle); `tenants[].data` |
+| AppLauncher | `select` (the app without `data`), `favoriteToggle` (`{ appId, isFavorite }`) | `onSearch` → `search` (latest) | `[]` | `onOpen`/`onClose`; `favoritesKey`/`recentKey` (localStorage keys on the host's origin: an agent could make the component read and overwrite any stored entry); `apps[].url` ("Nothing reads this option."); `apps[].data` |
+| Ribbon | `controlClick` (`{ controlId, value }`, the value from `getControlValue`) | — | `["activeTabId", "collapsed", "contextualTabs", "controlValues", "autoCollapseDelay"]` (the existing `getState()`; additive `setState` restores silently) | `onTabChange`, `onCollapse` (view state); `onQATCustomize` ("The component never calls this option."); `statusBar` (element); closed overrides for `tabs`, `menuBar` and `qat` leave out nested callbacks, `custom` controls and backstage content; colours take the hex pattern; `fixed: { keyScope: "ribbon" }` |
+| RibbonBuilder | `change` (the config), `export` (scalar: the markdown) | — | `[]` | `container` (element arm); `initialConfig` reuses Ribbon's closed schemas; dependencies `ribbon` and `symbolpicker` |
+
+- **Rules carried from B7:**
+  - nested open records are closed by overrides;
+  - icon classes and colours follow the cross-component rule;
+  - payloads are JSON copies;
+  - every new channel emits after its legacy callback;
+  - setState restores silently;
+  - existing bugs are reported, not fixed.
+- **URL-fetch rule:** none of the six fetches. HelpDrawer's `topic.url` is one of the reasons it stays pending.
+
+### Task B8.1: per component
+In this order: MarketingHero, SiteFooter, TenantSwitcher, AppLauncher, then `protocol.fixed` (runtime type, registry validation, generator, adapter descriptor and element; tests), Ribbon, RibbonBuilder. Each component gets:
+- the component commit (additive surface, TDD);
+- the agentui commit (manifest, glue, bookkeeping, baseline, A2UI.md);
+- gesture tests in `tests/a2ui-components/b8-shell.spec.ts`.
+
+### Task B8.2: docs, verification, PR
+- **Records:** ADR-235 (B8-1 to B8-3, `protocol.fixed`), AGENTS.md, CHANGELOG, `history.jsonl`, concepts, and #20 with the two pending reasons.
+- **Verification:** full suites and mutation checks; the dist diff; the prompt-size line.
+- **The PR,** to main.
