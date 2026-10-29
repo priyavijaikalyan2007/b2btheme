@@ -38,6 +38,8 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
     const files: Record<string, unknown> = {
         "dist/capability-manifest.json": { schemaVersion: 1, components: [{ name: "widget", factory: "createWidget" }, { name: "panel", factory: "createPanel" }] },
         "dist/a2ui/catalog/v1.json": catalog,
+        "dist/a2ui/catalog/v1.agent.json": { catalogId: ID, reexports: { components: ["Text"] },
+            components: { Widget: { properties: {} } } },
         "specs/agentui/published/catalog-v1.json": structuredClone(catalog),
         "dist/mcp/renderer.meta.json": { csp: { resourceDomains: ["https://static.outcrop.us", "https://fonts.googleapis.com", "https://fonts.gstatic.com"] } },
         "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }], hostOnly: {} },
@@ -68,6 +70,17 @@ describe("checkDist ([29])", () =>
     {
         expect((await checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; }))).join())
             .toMatch(/v2/);
+    });
+    test("a lean agent catalog that drops a component, a re-export or a prop fails (#49)", async () =>
+    {
+        const lean = (f: Record<string, unknown>) => f["dist/a2ui/catalog/v1.agent.json"] as any;
+
+        expect(await checkDist(fakeRepo((f) => { delete lean(f).components.Widget; })))
+            .toEqual(["dist/a2ui/catalog/v1.agent.json does not render Widget."]);
+        expect(await checkDist(fakeRepo((f) => { lean(f).reexports.components = []; })))
+            .toEqual(["dist/a2ui/catalog/v1.agent.json does not list the re-exported Text."]);
+        expect((await checkDist(fakeRepo((f) => { lean(f).components.Widget.properties.extra = {}; }))).join())
+            .toMatch(/renders Widget with props \[extra\]/);
     });
     test("a missing component entry fails", async () =>
     {

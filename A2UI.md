@@ -18,6 +18,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 
 - **`/a2ui/adapter/v1.js`**, an ESM bundle, and `v1.d.ts`. A host calls `createOutcropCatalog(webCore, { assetBaseUrl })`, and every catalog component renders as an `<outcrop-*>` custom element inside Google's A2UI renderers.
 - **The bundle is generated, never hand-written.** `npm run build:agentui` derives one descriptor per catalog component (`scripts/agentui/adapter-descriptors.mjs`), compiles one validator per data prop (`adapter-validators.mjs`), and bundles `a2ui/src/` with both and with the catalog text (`adapter-bundle.mjs`). All of it lands in the same `dist/` swap as the catalog, so the adapter and the catalog cannot disagree.
+- **`/a2ui/catalog/v1.agent.json`**, the catalog rendered for agent prompts (#49, ADR-233): every component, prop, required flag, enum value and description of `v1.json` in about half the tokens, with the binding alternatives stated once instead of on every prop. `scripts/agentui/agent-catalog.mjs` writes it in the same swap and fails the build if it isn't lossless; it throws on a catalog shape it doesn't know, so teach it any new one. The build prints both catalogs' sizes in o200k_base tokens; each sweep PR quotes that line.
 - **One generic element** (`a2ui/src/element.ts`) serves every tag. It uses only the `context` the host renderer assigns and imports nothing from `@a2ui/*` (spec `specs/agentui-a2ui.prd.md` §1.3, §4).
 
 ## Rules

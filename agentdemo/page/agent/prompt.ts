@@ -7,8 +7,9 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: A2uiReferenceAgent / Prompt
  * 📜 PURPOSE: The system prompt (#30 spec §6.2): an A2UI primer, this
- *    library's rules (A2UI.md, verbatim), both catalogs verbatim, and the
- *    reply contract. Identical on every turn, so providers can cache it.
+ *    library's rules (A2UI.md, verbatim), our catalog's lean agent rendering
+ *    (#49) and Google's basic catalog, both verbatim, and the reply contract.
+ *    Identical on every turn, so providers can cache it.
  * 🔗 RELATES: [[A2uiReferenceAgent]], [[AgentUiCatalog]]
  * ----------------------------------------------------------------------------
  */
@@ -42,10 +43,10 @@ const PRIMER = [
 /**
  * The system prompt.
  *
- * @param catalogJson - Our catalog, as the adapter serves it.
- * @param basicCatalogJson - Google's basic catalog, which ours re-exports.
+ * @param agentCatalogJson - Our catalog's lean rendering for agents, dist/a2ui/catalog/v1.agent.json.
+ * @param basicCatalogJson - Google's basic catalog, which defines the components and functions ours re-exports.
  */
-export function systemPrompt(catalogJson: object, basicCatalogJson: object): string
+export function systemPrompt(agentCatalogJson: object, basicCatalogJson: object): string
 {
     return [
         PRIMER,
@@ -55,7 +56,7 @@ export function systemPrompt(catalogJson: object, basicCatalogJson: object): str
         "",
         "## Catalogs",
         `### ${CATALOG_ID} (use this catalogId)`,
-        JSON.stringify(catalogJson),
+        JSON.stringify(agentCatalogJson),
         "",
         "### Google's basic catalog (re-exported by the catalog above)",
         JSON.stringify(basicCatalogJson),
