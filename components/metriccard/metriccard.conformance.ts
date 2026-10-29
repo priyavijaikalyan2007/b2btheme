@@ -10,13 +10,36 @@
  *    this component with no options at all. The fixture lives here rather
  *    than in the manifest, because manifest defaultOptions ship to
  *    consumers and this is placeholder content.
+ *    The trigger clicks a clickable card (readiness step 2 B4).
  * 🔗 RELATES: [[MetricCard]], [[Conformance]]
  * ----------------------------------------------------------------------------
  */
 
 // @semantic-marker metriccard-conformance-glue
 
+/** Minimal view of the handle, limited to what the trigger needs. */
+interface MetricCardLike
+{
+    getRootElement(): HTMLElement | null;
+}
+
 export const CONFORMANCE_GLUE =
 {
-    options: { label: "FIXTURE METRIC", value: 0 },
+    options: { label: "FIXTURE METRIC", value: 0, clickable: true },
+
+    // Only a clickable card listens for clicks; an agent sets this too.
+    eventProps: { clickable: true },
+
+    trigger: (
+        channel: string,
+        handle: Record<string, unknown>): boolean =>
+    {
+        const root = (handle as unknown as MetricCardLike).getRootElement();
+
+        if (channel !== "click" || !root) { return false; }
+
+        root.click();
+
+        return true;
+    },
 };

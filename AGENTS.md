@@ -536,6 +536,28 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
   this URL from the user's browser with the host's credentials; an agent must
   not choose it." Image URLs are not covered.
+- **The link rule (ADR-229): an option that becomes an `<a href>` is
+  `protocol.hostOnly`.** An agent-chosen `javascript:` URL would run in the
+  host's origin when the user clicked it; over A2UI the agent hears the click
+  and answers with `openUrl`. A nested `href` (`items[].href`) can't be named in
+  `hostOnly`, so give the array a `protocol.schemas` entry that leaves it out:
+  catalog objects are closed, so an agent's link is rejected. Options written as
+  `data-*` attributes (`metadata`) are host-only too: host scripts read them,
+  and Bootstrap's `data-bs-*` act on click.
+- **A surface component with nothing to restore declares `stateKeys: []`**
+  (ADR-229): `getState()` returns `{}` and `setState()` does nothing. Declare
+  the view state it does have (scroll, expansion, selection, page). A click
+  that only toggles expansion is view state, not an event.
+- **A channel the adapter can't reach is not shipped.** The adapter never
+  passes `onClick`, so a component that is clickable only when `onClick` is
+  passed needs an additive `clickable` option (MetricCard, B4), and a button
+  that listens only when its callback is passed needs a listener of its own
+  (EmptyState). A click rendered by another component the adapter doesn't load
+  (PresenceIndicator's avatars, through PersonChip) stays host-only. The glue's
+  `eventProps` is what G3 mounts with to reach the channel (`clickable: true`).
+- **A data option named `id`, `accessibility` or `weight` fails the build**:
+  A2UI gives every component those. Declare it host-only (MetricCard and
+  ReasoningAccordion `id`, ADR-229).
 
 **The testing bar for joining the catalog (readiness spec §6):**
 

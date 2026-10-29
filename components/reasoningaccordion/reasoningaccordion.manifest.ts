@@ -19,10 +19,8 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `display` conformance (readiness step 2 B4): a step click only
+ * toggles that step's expansion, which is view state, so nothing is emitted.
  */
 export const REASONINGACCORDION_MANIFEST: CapabilityManifest =
 {
@@ -32,11 +30,28 @@ export const REASONINGACCORDION_MANIFEST: CapabilityManifest =
     icon: "bi-list-stars",
     category: "ai",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show an agent’s reasoning as collapsible steps with status, timing and confidence, updated as it "
+            + "thinks.",
+        avoidWhen: "For a plain list of items use List; for sequential tasks the user works through use Stepper.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            id: "Every A2UI component already has an id of its own, so this option cannot be set separately.",
+            onStepClick: "A step click toggles its expansion; that is view state, not information for an agent.",
+            onExpandChange: "Fires as a step expands or collapses; that is view state, not information for an agent.",
+            "steps[].metadata": "An arbitrary payload for host code; it has no schema an agent could follow.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 13412, mountCost: "light", holdsResources: false },

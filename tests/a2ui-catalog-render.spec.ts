@@ -41,6 +41,8 @@ const OVERRIDES: Record<string, Record<string, unknown>> = {
     // width and height are CSS lengths, which a generic string sample is not. The first preset sampled
     // is "avatar" (const unions are sorted since B1), the one preset that sizes itself from them.
     SkeletonLoader: { width: "3rem", height: "3rem" },
+    // avatarUrl is an image URL, which a generic string sample is not: "a" would 404 and log a console error.
+    PersonChip: { avatarUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" },
 };
 
 /**

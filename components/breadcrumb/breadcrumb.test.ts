@@ -350,3 +350,298 @@ describe("Breadcrumb destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B4): additive on("itemClick" | "actionClick"), empty state
+// and setData. The legacy callbacks keep firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B4)", () =>
+{
+    const ACTIONS = [
+        { id: "rename", label: "Rename" },
+        { id: "delete", label: "Delete", separator: true },
+    ];
+
+    function openActionsAndClick(handle: BreadcrumbHandle, actionId: string): void
+    {
+        const caret = handle.getElement().querySelector(".breadcrumb-nav-actions-caret") as HTMLElement;
+        caret.click();
+        const item = document.body.querySelector(`[data-action-id="${actionId}"]`) as HTMLElement;
+        item.click();
+    }
+
+    test("on(itemClick)_HearsItemAndIndex_AfterOnItemClick", () =>
+    {
+        const order: string[] = [];
+        const handle = createBreadcrumb(makeOptions({
+            onItemClick: (item, index) => order.push(`option:${item.label}:${index}`),
+        }));
+        const heard: unknown[] = [];
+        handle.on("itemClick", (payload) =>
+        {
+            order.push("channel");
+            heard.push(payload);
+        });
+
+        (handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement).click();
+
+        expect(order).toEqual(["option:Home:0", "channel"]);
+        expect(heard).toEqual([{ item: { label: "Home", icon: "bi-house-fill" }, index: 0 }]);
+        handle.destroy();
+    });
+
+    test("on(itemClick)_WithoutOnItemClick_StillEmits", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        const links = handle.getElement().querySelectorAll(".breadcrumb-nav-link");
+        (links[1] as HTMLElement).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith({ item: { label: "Projects", href: "/projects" }, index: 1 });
+        handle.destroy();
+    });
+
+    test("on(itemClick)_ItemWithoutHrefAndNoCallback_IsClickableAndEmits", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({ items: [{ label: "Root" }, { label: "Current" }] }));
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        const button = handle.getElement().querySelector("button.breadcrumb-nav-link") as HTMLElement;
+        button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+        expect(heard).toHaveBeenCalledWith({ item: { label: "Root" }, index: 0 });
+        handle.destroy();
+    });
+
+    test("on(itemClick)_PayloadOmitsData_AndIsJson", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({
+            items: [{ label: "Root", data: { fn: () => 1 } }, { label: "Current" }],
+        }));
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        (handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement).click();
+
+        const payload = heard.mock.calls[0][0] as { item: Record<string, unknown> };
+        expect("data" in payload.item).toBe(false);
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        handle.destroy();
+    });
+
+    test("on(itemClick)_PayloadIsACopy_MutatingItDoesNotChangeTheItems", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        handle.on("itemClick", (payload) =>
+        {
+            (payload as { item: { label: string } }).item.label = "Mutated";
+        });
+
+        (handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement).click();
+
+        expect(handle.getItems()[0].label).toBe("Home");
+        handle.destroy();
+    });
+
+    test("on(itemClick)_EllipsisItem_HearsTheRealIndex", () =>
+    {
+        const items = Array.from({ length: 8 }, (_, i) => ({ label: `L${i}` }));
+        const handle = createBreadcrumb(makeOptions({ items, maxVisible: 4 }));
+        const heard = vi.fn();
+        handle.on("itemClick", heard);
+
+        (handle.getElement().querySelector(".breadcrumb-nav-ellipsis") as HTMLElement).click();
+        (document.body.querySelector(".breadcrumb-nav-dropdown-item") as HTMLElement).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        const payload = heard.mock.calls[0][0] as { item: { label: string }; index: number };
+        expect(items[payload.index].label).toBe(payload.item.label);
+        expect(payload.index).toBeGreaterThan(0);
+        handle.destroy();
+    });
+
+    test("on(itemClick)_PreventDefaultBehaviourIsUnchanged", () =>
+    {
+        const withCallback = createBreadcrumb(makeOptions({
+            items: [{ label: "Root" }, { label: "Current" }],
+            onItemClick: () => undefined,
+        }));
+        const withoutCallback = createBreadcrumb(makeOptions({ items: [{ label: "Root" }, { label: "Current" }] }));
+        const withHref = createBreadcrumb(makeOptions({ onItemClick: () => undefined }));
+        withHref.on("itemClick", () => undefined);
+
+        const fire = (h: BreadcrumbHandle, selector: string): boolean =>
+        {
+            const ev = new MouseEvent("click", { bubbles: true, cancelable: true });
+            (h.getElement().querySelector(selector) as HTMLElement).dispatchEvent(ev);
+            return ev.defaultPrevented;
+        };
+
+        expect(fire(withCallback, "button.breadcrumb-nav-link")).toBe(true);
+        expect(fire(withoutCallback, "button.breadcrumb-nav-link")).toBe(true);
+        expect(fire(withHref, "a.breadcrumb-nav-link")).toBe(false);
+        withCallback.destroy();
+        withoutCallback.destroy();
+        withHref.destroy();
+    });
+
+    test("on(itemClick)_Unsubscribe_StopsDelivery", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        const heard = vi.fn();
+        const off = handle.on("itemClick", heard);
+        const link = handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement;
+
+        link.click();
+        off();
+        link.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("on(itemClick)_ThrowingHandler_DoesNotStopTheNextOne", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        const next = vi.fn();
+        handle.on("itemClick", () => { throw new Error("boom"); });
+        handle.on("itemClick", next);
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+        (handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement).click();
+
+        expect(next).toHaveBeenCalledTimes(1);
+        errors.mockRestore();
+        handle.destroy();
+    });
+
+    test("on(actionClick)_HearsActionIdAndItem_AfterOnActionClick", () =>
+    {
+        const order: string[] = [];
+        const handle = createBreadcrumb(makeOptions({
+            actions: ACTIONS,
+            onActionClick: (id, item) => order.push(`option:${id}:${item.label}`),
+        }));
+        const heard: unknown[] = [];
+        handle.on("actionClick", (payload) =>
+        {
+            order.push("channel");
+            heard.push(payload);
+        });
+
+        openActionsAndClick(handle, "delete");
+
+        expect(order).toEqual(["option:delete:Alpha", "channel"]);
+        expect(heard).toEqual([{ actionId: "delete", item: { label: "Alpha" } }]);
+        expect(document.body.querySelector(".breadcrumb-nav-dropdown")).toBeNull();
+        handle.destroy();
+    });
+
+    test("on(actionClick)_WithoutOnActionClick_StillEmitsAndClosesDropdown", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({ actions: ACTIONS }));
+        const heard = vi.fn();
+        handle.on("actionClick", heard);
+
+        openActionsAndClick(handle, "rename");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith({ actionId: "rename", item: { label: "Alpha" } });
+        expect(document.body.querySelector(".breadcrumb-nav-dropdown")).toBeNull();
+        handle.destroy();
+    });
+
+    test("on(actionClick)_PayloadOmitsData_AndIsJson", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({
+            items: [{ label: "Root" }, { label: "Current", data: { fn: () => 1 } }],
+            actions: ACTIONS,
+        }));
+        const heard = vi.fn();
+        handle.on("actionClick", heard);
+
+        openActionsAndClick(handle, "rename");
+
+        const payload = heard.mock.calls[0][0] as { item: Record<string, unknown> };
+        expect("data" in payload.item).toBe(false);
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        handle.destroy();
+    });
+
+    test("on(actionClick)_DisabledAction_DoesNotEmit", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({
+            actions: [{ id: "locked", label: "Locked", disabled: true }, ...ACTIONS],
+        }));
+        const heard = vi.fn();
+        handle.on("actionClick", heard);
+
+        const caret = handle.getElement().querySelector(".breadcrumb-nav-actions-caret") as HTMLElement;
+        caret.click();
+        (document.body.querySelector('[data-action-id="locked"]') as HTMLElement).click();
+
+        expect(heard).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+
+    test("on(actionClick)_Unsubscribe_StopsDelivery", () =>
+    {
+        const handle = createBreadcrumb(makeOptions({ actions: ACTIONS }));
+        const heard = vi.fn();
+        const off = handle.on("actionClick", heard);
+
+        openActionsAndClick(handle, "rename");
+        off();
+        openActionsAndClick(handle, "rename");
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        const heard = vi.fn();
+        const link = handle.getElement().querySelector(".breadcrumb-nav-link") as HTMLElement;
+        handle.on("itemClick", heard);
+
+        handle.destroy();
+        link.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_ThrowsNamingTheValidChannels", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+
+        expect(() => handle.on("bogus", () => undefined)).toThrow(/itemClick.*actionClick/);
+        handle.destroy();
+    });
+
+    test("setData_Throws_NamingTheComponentAndTheSetters", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+
+        expect(() => handle.setData("items", [])).toThrow(/Breadcrumb.*no data slots.*setItems\(\).*setActions\(\)/);
+        handle.destroy();
+    });
+
+    test("getState_SetState_HaveNoKeys", () =>
+    {
+        const handle = createBreadcrumb(makeOptions());
+        const before = handle.getElement().innerHTML;
+
+        expect(handle.getState()).toEqual({});
+        handle.setState({ anything: 1 });
+
+        expect(handle.getState()).toEqual({});
+        expect(handle.getElement().innerHTML).toBe(before);
+        handle.destroy();
+    });
+});

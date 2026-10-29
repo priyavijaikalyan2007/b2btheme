@@ -88,6 +88,19 @@ describe("runPipeline — fixture widget", () =>
         const schema = run([widget()]).outputs.get("schemas/widget.options.json") as any;
         expect(schema.properties.extra.additionalProperties).toEqual({ type: "string" });
     }, 60_000);
+    test("a def that only the overridden prop used is dropped, so the catalog carries no orphan (B4)", () =>
+    {
+        const before = run([widget()]).catalog as any;
+        expect(before.$defs.Widget__Column).toBeDefined();
+
+        const columns = { type: "array", items: { type: "object", properties: { key: { type: "string" } },
+            required: ["key"], additionalProperties: false } };
+        const after = run([widget({ schemas: { extra: { type: "object", additionalProperties: { type: "string" } },
+            columns } })]).catalog as any;
+
+        expect(after.$defs.Widget__Column).toBeUndefined();
+        expect(after.components.Widget.allOf[2].properties.columns.anyOf[0]).toEqual(columns);
+    }, 60_000);
     test("an undeclared hazard is an error", () =>
     {
         const m = widget({ hostOnly: { title: REASON, container: REASON, slot: REASON, onLookup: REASON } });

@@ -191,7 +191,11 @@ function schemaFor(c, result, errors)
     return problems.length === 0 ? schema : null;
 }
 
-/** Replaces generated property schemas with protocol.schemas entries. */
+/**
+ * Replaces generated property schemas with protocol.schemas entries, then
+ * drops the $defs only a replaced schema used (B4): an orphan would still
+ * describe, say, an href the override left out on purpose.
+ */
 function applyOverrides(schema, overrides)
 {
     const properties = { ...schema.properties };
@@ -201,7 +205,29 @@ function applyOverrides(schema, overrides)
         properties[name] = { ...override, description: schema.properties[name]?.description };
     }
 
-    return { ...schema, properties };
+    return pruneDefs({ ...schema, properties });
+}
+
+/** Keeps the $defs reachable from the schema's own properties. */
+function pruneDefs(schema)
+{
+    if (!schema.$defs) { return schema; }
+
+    const { $defs, ...root } = schema;
+    const kept = new Set();
+    const visit = (node) =>
+    {
+        for (const [, key] of JSON.stringify(node).matchAll(/"\$ref":"#\/\$defs\/([^"]+)"/g))
+        {
+            if (!kept.has(key) && key in $defs) { kept.add(key); visit($defs[key]); }
+        }
+    };
+
+    visit(root);
+
+    const defs = Object.fromEntries(Object.entries($defs).filter(([key]) => kept.has(key)));
+
+    return Object.keys(defs).length > 0 ? { ...root, $defs: defs } : root;
 }
 
 /** Breaking changes need a bump; any change needs the baseline committed. */

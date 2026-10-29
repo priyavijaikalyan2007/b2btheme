@@ -110,12 +110,19 @@ export interface PersonData
 /** Configuration options for a PresenceIndicator instance. */
 export interface PresenceIndicatorOptions
 {
+    /** The people present, each with an id and a name, and optionally an email, avatar, role and status. */
     people?: PersonData[];
+    /** Avatars shown in the stack before a "+N" overflow count. Default: 4. */
     maxVisible?: number;
+    /** Avatar size: "sm", "md" or "lg". Default: "md". */
     size?: PresenceSize;
+    /** Lets the user expand the stack into a list of everyone. Default: true. */
     expandable?: boolean;
+    /** Starts expanded. Default: false. */
     expanded?: boolean;
+    /** Extra CSS classes on the root element. */
     cssClass?: string;
+    /** Dims the indicator and ignores interaction. Default: false. */
     disabled?: boolean;
     onClick?: (person: PersonData) => void;
     onExpand?: () => void;

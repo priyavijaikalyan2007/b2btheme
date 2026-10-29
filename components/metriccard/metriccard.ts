@@ -78,6 +78,12 @@ export interface MetricCardOptions
      *  is not also set). */
     onClick?: (evt: MouseEvent) => void;
 
+    /**
+     * Makes the card a button the user can click. An onClick callback does this by itself; an agent's onClick
+     * action is sent only when this is true. Default: false.
+     */
+    clickable?: boolean;
+
     /** Lifecycle state. Default "ready". */
     state?: MetricCardState;
 
@@ -103,9 +109,19 @@ export interface MetricCardHandle
     setValue(value: string | number): void;
     setTrend(trend: MetricCardTrend | null): void;
     setSecondary(text: string | null): void;
+    /** Switches the lifecycle state: "ready", "loading", or "error" with its text. */
     setState(state: MetricCardState, errorText?: string): void;
+    /** The surface contract (additive): nothing to restore, so a record does nothing (ADR-229). */
+    setState(state: Record<string, unknown>): void;
     getRootElement(): HTMLElement | null;
     destroy(): void;
+
+    /** The surface contract (additive): MetricCard has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "click": the card's label. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
 }
 
 // ============================================================================
@@ -251,7 +267,7 @@ function rootTagFor(opts: MetricCardOptions): "a" | "button" | "div"
     {
         return "a";
     }
-    if (opts.onClick)
+    if (opts.onClick || opts.clickable)
     {
         return "button";
     }
@@ -308,6 +324,7 @@ export class MetricCard implements MetricCardHandle
     private errorEl: HTMLElement | null = null;
 
     private boundClick: ((e: MouseEvent) => void) | null = null;
+    private readonly clickHandlers = new Set<(payload: unknown) => void>();
     private destroyed = false;
 
     constructor(options: MetricCardOptions)
@@ -392,8 +409,18 @@ export class MetricCard implements MetricCardHandle
         }
     }
 
-    public setState(state: MetricCardState, errorText?: string): void
+    /**
+     * Switches the lifecycle state ("ready", "loading", "error"), as before.
+     * Handed a record instead (the surface contract), there is nothing to
+     * restore and it does nothing (ADR-229).
+     */
+    public setState(state: MetricCardState | Record<string, unknown>, errorText?: string): void
     {
+        if (typeof state !== "string")
+        {
+            return;
+        }
+
         this.opts.state = state;
         if (state === "error")
         {
@@ -410,6 +437,35 @@ export class MetricCard implements MetricCardHandle
         this.refreshTrendVisibility();
     }
 
+    // ── Surface contract (additive, B4) ──
+
+    /** MetricCard has no data slots; use setValue(), setTrend() or setSecondary(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): MetricCard has no data slots. `
+            + "Use setValue(), setTrend() or setSecondary().");
+    }
+
+    /** Subscribes to "click"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "click")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "click".`);
+        }
+
+        this.clickHandlers.add(handler);
+
+        return () => { this.clickHandlers.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
     public destroy(): void
     {
         if (this.destroyed)
@@ -417,6 +473,7 @@ export class MetricCard implements MetricCardHandle
             return;
         }
         this.destroyed = true;
+        this.clickHandlers.clear();
         this.removeClickListener();
         if (this.rootEl && this.rootEl.parentNode)
         {
@@ -456,7 +513,7 @@ export class MetricCard implements MetricCardHandle
         const tag = rootTagFor(this.opts);
         const root = document.createElement(tag);
         root.classList.add("metriccard", `metriccard-${this.opts.size}`);
-        if (this.opts.href || this.opts.onClick)
+        if (this.opts.href || this.opts.onClick || this.opts.clickable)
         {
             root.classList.add("metriccard-clickable");
         }
@@ -589,22 +646,42 @@ export class MetricCard implements MetricCardHandle
 
     private applyClickBehaviour(): void
     {
-        if (!this.opts.onClick || !this.rootEl)
+        if (!(this.opts.onClick || this.opts.clickable) || !this.rootEl)
         {
             return;
         }
         this.boundClick = (e: MouseEvent) =>
         {
+            if (this.opts.onClick)
+            {
+                try
+                {
+                    this.opts.onClick(e);
+                }
+                catch (err)
+                {
+                    logError("onClick callback error:", err);
+                }
+            }
+            this.emitClick();
+        };
+        this.rootEl.addEventListener("click", this.boundClick);
+    }
+
+    /** Tells the "click" subscribers the card's label, after onClick has run. */
+    private emitClick(): void
+    {
+        for (const handler of this.clickHandlers)
+        {
             try
             {
-                (this.opts.onClick as (e: MouseEvent) => void)(e);
+                handler(this.opts.label);
             }
             catch (err)
             {
-                logError("onClick callback error:", err);
+                logError("click channel handler error:", err);
             }
-        };
-        this.rootEl.addEventListener("click", this.boundClick);
+        }
     }
 
     private removeClickListener(): void

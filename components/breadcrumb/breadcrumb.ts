@@ -149,6 +149,18 @@ export interface BreadcrumbHandle
     getElement(): HTMLElement;
     /** Tear down DOM and listeners. */
     destroy(): void;
+
+    /** The surface contract (additive): Breadcrumb has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "itemClick" ({ item, index }) or "actionClick" ({ actionId, item }).
+     * Items are copies without their data property. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to capture (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
 
 // ============================================================================
@@ -172,6 +184,15 @@ function setAttr(el: HTMLElement, attrs: Record<string, string>): void
     }
 }
 
+/** A JSON-safe copy of an item for channel payloads: its data property is unknown and may not be JSON. */
+function toPayloadItem(item: BreadcrumbItem): Omit<BreadcrumbItem, "data">
+{
+    const copy: Omit<BreadcrumbItem, "data"> = { label: item.label };
+    if (item.href !== undefined) { copy.href = item.href; }
+    if (item.icon !== undefined) { copy.icon = item.icon; }
+    return copy;
+}
+
 // ============================================================================
 // BREADCRUMB CLASS
 // ============================================================================
@@ -181,6 +202,12 @@ class Breadcrumb implements BreadcrumbHandle
     private readonly id: string;
     private readonly container: HTMLElement;
     private readonly options: BreadcrumbOptions;
+    private readonly itemClickHandlers = new Set<(payload: unknown) => void>();
+    private readonly actionClickHandlers = new Set<(payload: unknown) => void>();
+    private readonly channelHandlers = new Map([
+        ["itemClick", this.itemClickHandlers],
+        ["actionClick", this.actionClickHandlers]
+    ]);
 
     private items: BreadcrumbItem[];
     private actions: BreadcrumbAction[];
@@ -267,11 +294,47 @@ class Breadcrumb implements BreadcrumbHandle
         return this.rootEl as HTMLElement;
     }
 
+    // -- Surface contract (additive, B4) --
+
+    /** Breadcrumb has no data slots; use setItems() or setActions(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): Breadcrumb has no data slots. Use setItems() or setActions().`);
+    }
+
+    /** Subscribes to "itemClick" or "actionClick"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+        if (!handlers)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the channels are "itemClick" and "actionClick".`);
+        }
+
+        handlers.add(handler);
+
+        return () => { handlers.delete(handler); };
+    }
+
+    /** Nothing to capture (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
     /** Tear down DOM and event listeners. */
     destroy(): void
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
 
         this.closeDropdown();
         document.removeEventListener("click", this.boundCloseDropdown, true);
@@ -611,6 +674,11 @@ class Breadcrumb implements BreadcrumbHandle
                 {
                     this.options.onActionClick(action.id, segment.item);
                 }
+                this.emit(
+                    this.actionClickHandlers,
+                    "actionClick",
+                    () => ({ actionId: action.id, item: toPayloadItem(segment.item) })
+                );
             });
         }
         return btn;
@@ -765,6 +833,25 @@ class Breadcrumb implements BreadcrumbHandle
             if (event && !item.href) { event.preventDefault(); }
             this.options.onItemClick(item, index);
         }
+        this.emit(this.itemClickHandlers, "itemClick", () => ({ item: toPayloadItem(item), index }));
+    }
+
+    /** Deliver a fresh payload to each subscriber of a channel; a throwing handler is logged, not propagated. */
+    private emit(
+        handlers: Set<(payload: unknown) => void>, channel: string, makePayload: () => unknown
+    ): void
+    {
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(makePayload());
+            }
+            catch (err)
+            {
+                logError(`on("${channel}") handler threw`, err);
+            }
+        }
     }
 
     /** Handle clicks outside the dropdown to close it. */
@@ -884,7 +971,11 @@ export function createBreadcrumb(options: BreadcrumbOptions): BreadcrumbHandle
         getItems: () => instance.getItems(),
         setActions: (actions) => instance.setActions(actions),
         getElement: () => instance.getElement(),
-        destroy: () => instance.destroy()
+        destroy: () => instance.destroy(),
+        setData: (slot, value) => instance.setData(slot, value),
+        on: (channel, handler) => instance.on(channel, handler),
+        getState: () => instance.getState(),
+        setState: (state) => instance.setState(state)
     };
 }
 

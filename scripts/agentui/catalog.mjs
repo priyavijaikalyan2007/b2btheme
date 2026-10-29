@@ -142,7 +142,8 @@ function entryFor({ manifest, surface, schema })
 
     return {
         name, defs: { ...defs, ...providerDefs(surface, root, manifest.name, name) },
-        violations: propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
+        violations: [...propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
+            ...commonCollisions(manifest, surface)],
         entry: {
             type: "object",
             description: describeComponent(manifest),
@@ -310,6 +311,25 @@ function propCollisions(manifest, names)
             + "derived by one rule with no override (specs/agentui-schema.prd.md §5.4): eventData, on<Channel>, "
             + "on<Id>, on<Request> and <request>Result. Change the protocol.providers request or the actions[] id "
             + "that derives it, or declare the colliding data option in protocol.hostOnly, in "
+            + `components/${manifest.name}/${manifest.name}.manifest.ts`,
+    }));
+}
+
+/**
+ * Properties A2UI gives every component: ComponentCommon's id and
+ * accessibility (common_types.json) and CatalogComponentCommon's weight (the
+ * basic catalog). A data option of the same name would be read as the
+ * component's own id, label or flex weight, never reaching the component.
+ */
+const COMMON_PROPS = ["id", "accessibility", "weight"];
+
+/** Data props named like a property every A2UI component already has (B4). */
+function commonCollisions(manifest, surface)
+{
+    return surface.dataProps.filter((d) => COMMON_PROPS.includes(d.name)).map((d) => ({
+        component: manifest.name, member: d.name, code: VIOLATION.PROP_COLLISION,
+        message: `${manifest.name}.${d.name}: every A2UI component already has "${d.name}", so the option cannot be `
+            + "set separately. Declare it in protocol.hostOnly with a reason, in "
             + `components/${manifest.name}/${manifest.name}.manifest.ts`,
     }));
 }

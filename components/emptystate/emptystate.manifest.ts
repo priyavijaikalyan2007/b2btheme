@@ -34,6 +34,14 @@ export const EMPTYSTATE_MANIFEST: CapabilityManifest =
     icon: "bi-inbox",
     category: "feedback",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Fill an empty view with an icon, a heading, a short explanation and up to two buttons, such as "
+            + "Create project.",
+        avoidWhen: "For a loading placeholder use SkeletonLoader; for a single call to action without the empty "
+            + "message use Button.",
+    },
+
     affords: [
         {
             shape: "collection",
@@ -43,10 +51,20 @@ export const EMPTYSTATE_MANIFEST: CapabilityManifest =
         },
     ],
 
-    emits: [],
+    emits: [
+        { name: "action", payload: "scalar", multi: false, legacyOption: "onAction" },
+        { name: "secondary", payload: "scalar", multi: false, legacyOption: "onSecondary" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            illustration: "An element; over A2UI the icon option stands in until layouts take A2UI children (step 4).",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 4_611, mountCost: "trivial", holdsResources: false },
@@ -54,6 +72,6 @@ export const EMPTYSTATE_MANIFEST: CapabilityManifest =
     defaultSize: { w: 320, h: 200 },
     defaultOptions: { heading: "Nothing here yet" },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 40,
 };

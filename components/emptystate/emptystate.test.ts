@@ -387,3 +387,227 @@ describe("EmptyState destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B4): additive on("action" | "secondary"), no state, no data
+// ============================================================================
+
+describe("surface contract (B4)", () =>
+{
+    function actionBtn(es: EmptyState): HTMLButtonElement
+    {
+        return es.getElement()!.querySelector<HTMLButtonElement>(".emptystate-action")!;
+    }
+
+    function secondaryBtn(es: EmptyState): HTMLButtonElement
+    {
+        return es.getElement()!.querySelector<HTMLButtonElement>(".emptystate-secondary")!;
+    }
+
+    test("on_Action_HearsTheLabel_AfterOnAction_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const es = new EmptyState(makeOptions({
+            actionLabel: "Create", onAction: () => order.push("option"),
+        }));
+        es.on("action", (p) => order.push(`channel:${String(p)}`));
+
+        actionBtn(es).click();
+
+        expect(order).toEqual(["option", "channel:Create"]);
+        es.destroy();
+    });
+
+    test("on_Action_WithoutOnAction_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ actionLabel: "Create" }));
+        es.on("action", heard);
+
+        actionBtn(es).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Create");
+        es.destroy();
+    });
+
+    test("on_Action_WithIcon_PayloadIsTheLabelOnly", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ actionLabel: "Create", actionIcon: "bi-plus-lg" }));
+        es.on("action", heard);
+
+        actionBtn(es).click();
+
+        expect(heard).toHaveBeenCalledWith("Create");
+        es.destroy();
+    });
+
+    test("on_Secondary_HearsTheLabel_AfterOnSecondary_ExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const es = new EmptyState(makeOptions({
+            secondaryLabel: "Learn more", onSecondary: () => order.push("option"),
+        }));
+        es.on("secondary", (p) => order.push(`channel:${String(p)}`));
+
+        secondaryBtn(es).click();
+
+        expect(order).toEqual(["option", "channel:Learn more"]);
+        es.destroy();
+    });
+
+    test("on_Secondary_WithoutOnSecondary_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ secondaryLabel: "Learn more" }));
+        es.on("secondary", heard);
+
+        secondaryBtn(es).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Learn more");
+        es.destroy();
+    });
+
+    test("on_Action_AfterShowActionRebind_NewestCallbackFiresOnce_ChannelHearsNewLabel", () =>
+    {
+        const order: string[] = [];
+        const es = new EmptyState(makeOptions({
+            actionLabel: "Create", onAction: () => order.push("first"),
+        }));
+        es.on("action", (p) => order.push(`channel:${String(p)}`));
+
+        es.showAction("Add item", () => order.push("second"));
+        es.showAction("Add one", () => order.push("third"));
+        actionBtn(es).click();
+
+        expect(order).toEqual(["third", "channel:Add one"]);
+        es.destroy();
+    });
+
+    test("on_Action_ShowActionOnInitiallyHiddenButton_Emits", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions());
+        es.on("action", heard);
+
+        es.showAction("Retry", () => undefined);
+        actionBtn(es).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Retry");
+        es.destroy();
+    });
+
+    test("on_Action_LegacyCallbackThrows_ChannelStillHears", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({
+            actionLabel: "Create", onAction: () => { throw new Error("boom"); },
+        }));
+        es.on("action", heard);
+        const onWindowError = (e: ErrorEvent): void => { e.preventDefault(); };
+        window.addEventListener("error", onWindowError);
+
+        actionBtn(es).click();
+
+        window.removeEventListener("error", onWindowError);
+        expect(heard).toHaveBeenCalledTimes(1);
+        es.destroy();
+    });
+
+    test("on_Action_HandlerThrows_LaterHandlersStillHear", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ actionLabel: "Create" }));
+        es.on("action", () => { throw new Error("boom"); });
+        es.on("action", heard);
+        const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+        actionBtn(es).click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        spy.mockRestore();
+        es.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ actionLabel: "Create", secondaryLabel: "More" }));
+        const offAction = es.on("action", heard);
+        const offSecondary = es.on("secondary", heard);
+
+        actionBtn(es).click();
+        secondaryBtn(es).click();
+        offAction();
+        offSecondary();
+        actionBtn(es).click();
+        secondaryBtn(es).click();
+
+        expect(heard).toHaveBeenCalledTimes(2);
+        es.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_NamingValidChannels", () =>
+    {
+        const es = new EmptyState(makeOptions());
+
+        expect(() => es.on("bogus", () => undefined)).toThrow("EmptyState");
+        expect(() => es.on("bogus", () => undefined)).toThrow("action");
+        expect(() => es.on("bogus", () => undefined)).toThrow("secondary");
+        es.destroy();
+    });
+
+    test("setData_Throws_NamingTheSetters", () =>
+    {
+        const es = new EmptyState(makeOptions());
+
+        expect(() => es.setData("heading", "x")).toThrow("EmptyState");
+        expect(() => es.setData("heading", "x")).toThrow("no data slots");
+        expect(() => es.setData("heading", "x")).toThrow("setHeading");
+        es.destroy();
+    });
+
+    test("getState_SetState_HaveNoStateKeys", () =>
+    {
+        const es = new EmptyState(makeOptions({ actionLabel: "Create" }));
+        const before = es.getElement()!.outerHTML;
+
+        expect(es.getState()).toEqual({});
+        es.setState({ anything: 1 });
+
+        expect(es.getState()).toEqual({});
+        expect(es.getElement()!.outerHTML).toBe(before);
+        es.destroy();
+    });
+
+    test("on_Payloads_AreJsonRoundTrippable", () =>
+    {
+        const payloads: unknown[] = [];
+        const es = new EmptyState(makeOptions({ actionLabel: "Create", secondaryLabel: "More" }));
+        es.on("action", (p) => payloads.push(p));
+        es.on("secondary", (p) => payloads.push(p));
+
+        actionBtn(es).click();
+        secondaryBtn(es).click();
+
+        expect(payloads).toEqual(["Create", "More"]);
+        expect(JSON.parse(JSON.stringify(payloads))).toEqual(payloads);
+        es.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const es = new EmptyState(makeOptions({ actionLabel: "Create" }));
+        es.on("action", heard);
+        const btn = actionBtn(es);
+
+        es.destroy();
+        btn.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+});
