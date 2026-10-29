@@ -42,6 +42,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 37 on 2026-10-29: prompttemplatemanager classified (readiness step 2 B7, ADR-234).
     // 36 on 2026-10-29: actionitems classified (readiness step 2 B7, ADR-234).
     // 35 on 2026-10-29: relationshipmanager classified (readiness step 2 B7, ADR-234).
+    // 34 on 2026-10-29: conversation classified (readiness step 2 B7, ADR-234).
     "anchorlayout",
     "annotation",
     "applauncher",
@@ -49,7 +50,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "boxlayout",
     "cardlayout",
     "commentoverlay",
-    "conversation",
     "diagramengine",
     "docklayout",
     "explorerpicker",
