@@ -108,7 +108,7 @@ describe("ActionItems factory", () =>
 
     // "Works" is what `toBeDefined()` already says, and the block
     // below already proves the root renders. What is left is the
-    // SURFACE: ActionItemsHandle declares twenty-two methods and a
+    // SURFACE: ActionItemsHandle declares twenty-six methods and a
     // caller gets whatever the factory built. Listing them catches
     // one that went missing and one that was added without reaching
     // the published interface.
@@ -120,9 +120,10 @@ describe("ActionItems factory", () =>
             "addItem", "clearFilters", "clearSelection", "collapseAll",
             "destroy", "expandAll", "export", "getElement", "getItem",
             "getItems", "getItemsByStatus", "getSelectedIds",
-            "importMarkdown", "removeItem", "scrollToItem", "setAssignee",
-            "setCommentCount", "setFilter", "setSelection", "setSort",
-            "toggleSection", "updateItem",
+            "getState", "importMarkdown", "on", "removeItem", "scrollToItem",
+            "setAssignee", "setCommentCount", "setData", "setFilter",
+            "setSelection", "setSort", "setState", "toggleSection",
+            "updateItem",
         ]);
 
         handle.destroy();
@@ -624,6 +625,384 @@ describe("ActionItems CategorizedDataInlineToolbar (ADR-128)", () =>
         const handle = createHandle({ onCollapseStateChange: cb });
         handle.collapseAll();
         expect(cb).toHaveBeenCalledWith("all-collapsed");
+        handle.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B7)
+// ============================================================================
+
+/** A complete item, every field ActionItem requires, as an agent writes it. */
+function fullItem(
+    id: string, content: string, status: ActionItem["status"], extra: Partial<ActionItem> = {}): ActionItem
+{
+    return {
+        id, index: Number(id.replace(/\D/g, "")) || 1, order: Number(id.replace(/\D/g, "")) || 1, content, status,
+        tags: [], createdAt: "2026-10-29T10:00:00.000Z", updatedAt: "2026-10-29T10:00:00.000Z", commentCount: 0,
+        ...extra,
+    };
+}
+
+/** The row for an item id. */
+function row(id: string): HTMLElement
+{
+    return container.querySelector<HTMLElement>(`.actionitems-item[data-id="${id}"]`)!;
+}
+
+/** Subscribes to a channel and returns what it received. */
+function listen(handle: ActionItemsHandle, channel: string): unknown[]
+{
+    const seen: unknown[] = [];
+    handle.on(channel, (p) => seen.push(p));
+    return seen;
+}
+
+describe("ActionItems surface contract (B7)", () =>
+{
+    test("On_UnknownChannel_Throws_AndCommentToggleIsHostOnly", () =>
+    {
+        const handle = createHandle();
+        expect(() => handle.on("nope", () => undefined)).toThrow(/unknown channel/);
+        expect(() => handle.on("commentToggle", () => undefined)).toThrow(/unknown channel/);
+        handle.destroy();
+    });
+
+    test("On_ReturnsUnsubscribe_ThatStopsDelivery", () =>
+    {
+        const handle = createHandle();
+        const seen: unknown[] = [];
+        const off = handle.on("selection", (p) => seen.push(p));
+        handle.setSelection(["ai-1"]);
+        off();
+        handle.setSelection(["ai-2"]);
+        expect(seen).toEqual([["ai-1"]]);
+        handle.destroy();
+    });
+
+    test("ItemCreate_AddClick_LegacyFirst_ThenAJsonCopy", () =>
+    {
+        const order: string[] = [];
+        let legacyItem: ActionItem | null = null;
+        const handle = createHandle({
+            onItemCreate: (item) => { order.push("legacy"); legacyItem = item; },
+        });
+        const seen: unknown[] = [];
+        handle.on("itemCreate", (p) => { order.push("channel"); seen.push(p); });
+
+        container.querySelector<HTMLElement>(".actionitems-add")!.click();
+
+        expect(order).toEqual(["legacy", "channel"]);
+        expect(seen[0]).toEqual(JSON.parse(JSON.stringify(legacyItem)));
+        expect(seen[0]).not.toBe(legacyItem);
+        expect(seen[0]).toMatchObject({ content: "", status: "not-started" });
+        handle.destroy();
+    });
+
+    test("ItemUpdate_ContentEdit_FiresAfterBothLegacyCallbacks", () =>
+    {
+        const order: string[] = [];
+        const handle = createHandle({
+            onContentEdit: () => order.push("contentEdit"),
+            onItemUpdate: () => order.push("itemUpdate"),
+        });
+        const seen: unknown[] = [];
+        handle.on("itemUpdate", (p) => { order.push("channel"); seen.push(p); });
+
+        row("ai-1").querySelector<HTMLElement>(".actionitems-content")!.click();
+        const input = row("ai-1").querySelector<HTMLInputElement>(".actionitems-edit-input")!;
+        input.value = "Review the design spec";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(order).toEqual(["contentEdit", "itemUpdate", "channel"]);
+        expect(seen).toEqual([{ itemId: "ai-1", changes: { content: "Review the design spec" } }]);
+        handle.destroy();
+    });
+
+    test("ItemUpdate_ClearedValue_IsNull_SoThePayloadStillSaysItChanged", () =>
+    {
+        const person: ActionItemPerson = { id: "p1", name: "Ada" };
+        const handle = createHandle();
+        const seen = listen(handle, "itemUpdate");
+
+        handle.setAssignee("ai-1", person);
+        handle.setAssignee("ai-1", undefined);
+
+        expect(seen).toEqual([
+            { itemId: "ai-1", changes: { assignee: { id: "p1", name: "Ada" } } },
+            { itemId: "ai-1", changes: { assignee: null } },
+        ]);
+        handle.destroy();
+    });
+
+    test("StatusChange_StatusClick_CarriesOldAndNewStatus", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createHandle({ onStatusChange: legacy });
+        const seen = listen(handle, "statusChange");
+
+        row("ai-1").querySelector<HTMLElement>(".actionitems-status-indicator")!.click();
+
+        expect(legacy).toHaveBeenCalledWith("ai-1", "not-started", "in-progress");
+        expect(seen).toEqual([{ itemId: "ai-1", oldStatus: "not-started", newStatus: "in-progress" }]);
+        handle.destroy();
+    });
+
+    test("ItemReorder_CtrlShiftArrow_CarriesTheNewOrder_AndNullForTopLevel", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createActionItems(container, {
+            items: [fullItem("i1", "One", "not-started"), fullItem("i2", "Two", "not-started")],
+            onItemReorder: legacy,
+        });
+        const seen = listen(handle, "itemReorder");
+
+        row("i1").click();
+        handle.getElement().dispatchEvent(new KeyboardEvent("keydown",
+            { key: "ArrowDown", ctrlKey: true, shiftKey: true, bubbles: true }));
+
+        expect(legacy).toHaveBeenCalledWith("i1", 2, undefined);
+        expect(seen).toEqual([{ itemId: "i1", newOrder: 2, newParentId: null }]);
+        handle.destroy();
+    });
+
+    test("AssignmentRequest_AssigneeClick_CarriesTheCurrentAssignee", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createActionItems(container, {
+            items: [fullItem("i1", "One", "not-started"),
+                fullItem("i2", "Two", "not-started", { assignee: { id: "p1", name: "Ada" } })],
+            onAssignmentRequest: legacy,
+        });
+        const seen = listen(handle, "assignmentRequest");
+
+        row("i1").querySelector<HTMLElement>(".actionitems-assignee")!.click();
+        row("i2").querySelector<HTMLElement>(".actionitems-assignee")!.click();
+
+        expect(legacy).toHaveBeenCalledTimes(2);
+        expect(seen).toEqual([
+            { itemId: "i1", currentAssignee: null },
+            { itemId: "i2", currentAssignee: { id: "p1", name: "Ada" } },
+        ]);
+        handle.destroy();
+    });
+
+    test("ItemDelete_EmptyNewItemBlurred_CarriesItsId", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createHandle({ onItemDelete: legacy });
+        const seen = listen(handle, "itemDelete");
+
+        container.querySelector<HTMLElement>(".actionitems-add")!.click();
+        const input = container.querySelector<HTMLInputElement>(".actionitems-edit-input")!;
+        const id = input.closest("[data-id]")!.getAttribute("data-id");
+        input.dispatchEvent(new Event("blur"));
+
+        expect(legacy).toHaveBeenCalledWith(id);
+        expect(seen).toEqual([id]);
+        handle.destroy();
+    });
+
+    test("BulkDelete_ConfirmedDelete_CarriesTheIds_ThenSelectionEmpties", () =>
+    {
+        const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+        const order: string[] = [];
+        const handle = createHandle({
+            onBulkDelete: () => order.push("legacy:bulkDelete"),
+            onSelectionChange: () => order.push("legacy:selection"),
+        });
+        handle.setSelection(["ai-1", "ai-2"]);
+        order.length = 0;
+        handle.on("bulkDelete", (p) => order.push(`bulkDelete:${JSON.stringify(p)}`));
+        handle.on("selection", (p) => order.push(`selection:${JSON.stringify(p)}`));
+
+        container.querySelector<HTMLElement>(".actionitems-bulk-btn-danger")!.click();
+
+        expect(order).toEqual([
+            "legacy:bulkDelete", 'bulkDelete:["ai-1","ai-2"]', "legacy:selection", "selection:[]",
+        ]);
+        expect(handle.getItems().map((i) => i.id)).toEqual(["ai-3"]);
+        confirm.mockRestore();
+        handle.destroy();
+    });
+
+    test("BulkAssign_AssignClick_CarriesTheSelectedIds", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createHandle({ onBulkAssign: legacy });
+        handle.setSelection(["ai-1", "ai-3"]);
+        const seen = listen(handle, "bulkAssign");
+
+        const assign = Array.from(container.querySelectorAll<HTMLElement>(".actionitems-bulk-btn"))
+            .find((b) => b.textContent === "Assign")!;
+        assign.click();
+
+        expect(legacy).toHaveBeenCalledWith(["ai-1", "ai-3"]);
+        expect(seen).toEqual([["ai-1", "ai-3"]]);
+        handle.destroy();
+    });
+
+    test("Selection_RowClicks_CarryTheWholeSelection", () =>
+    {
+        const legacy = vi.fn();
+        const handle = createHandle({ onSelectionChange: legacy });
+        const seen = listen(handle, "selection");
+
+        row("ai-1").click();
+        row("ai-2").dispatchEvent(new MouseEvent("click", { ctrlKey: true, bubbles: true }));
+
+        expect(legacy.mock.calls).toEqual([[["ai-1"]], [["ai-1", "ai-2"]]]);
+        expect(seen).toEqual([["ai-1"], ["ai-1", "ai-2"]]);
+        handle.destroy();
+    });
+
+    test("Channels_FireWithoutALegacyCallback_AndAThrowingHandlerIsIsolated", () =>
+    {
+        const handle = createHandle();
+        handle.on("statusChange", () => { throw new Error("boom"); });
+        const seen = listen(handle, "statusChange");
+
+        row("ai-2").querySelector<HTMLElement>(".actionitems-status-indicator")!.click();
+
+        expect(seen).toEqual([{ itemId: "ai-2", oldStatus: "in-progress", newStatus: "done" }]);
+        expect(handle.getItem("ai-2")!.status).toBe("done");
+        handle.destroy();
+    });
+
+    test("SetData_UnknownSlot_OrBadValue_Throws", () =>
+    {
+        const handle = createHandle();
+        expect(() => handle.setData("rows", [])).toThrow(/unknown slot "rows"/);
+        expect(() => handle.setData("items", { id: "x" })).toThrow(/expected an array/);
+        expect(() => handle.setData("items", [{ content: "no id" }])).toThrow(/item 0/);
+        handle.destroy();
+    });
+
+    test("SetData_ReplacesTheList_Silently", () =>
+    {
+        const spies = {
+            onItemCreate: vi.fn(), onItemUpdate: vi.fn(), onItemDelete: vi.fn(), onSelectionChange: vi.fn(),
+            onStatusChange: vi.fn(), onItemReorder: vi.fn(), onCollapseStateChange: vi.fn(),
+        };
+        const handle = createHandle(spies);
+        const seen: unknown[] = [];
+        for (const c of ["itemCreate", "itemUpdate", "itemDelete", "selection", "statusChange", "itemReorder"])
+        {
+            handle.on(c, (p) => seen.push(p));
+        }
+
+        handle.setData("items", [fullItem("i7", "Agent item", "in-progress"), fullItem("i8", "Other", "done")]);
+
+        expect(handle.getItems().map((i) => i.id)).toEqual(["i7", "i8"]);
+        expect(row("i7").textContent).toContain("Agent item");
+        expect(row("ai-1")).toBeNull();
+        expect(Object.values(spies).every((s) => s.mock.calls.length === 0)).toBe(true);
+        expect(seen).toEqual([]);
+        handle.destroy();
+    });
+
+    test("SetData_KeepsSelectionCollapseSortFilterAndScroll_PruningStaleIds", () =>
+    {
+        const handle = createHandle();
+        handle.setSelection(["ai-1", "ai-2"]);
+        handle.toggleSection("done", false);
+        handle.setSort("alpha-asc");
+        handle.setFilter({ priorities: ["high", "medium", "none"] });
+        const body = () => container.querySelector<HTMLElement>(".actionitems-body")!;
+        body().scrollTop = 40;
+
+        handle.setData("items", [
+            fullItem("ai-2", "Implement login flow", "in-progress", { priority: "medium" }),
+            fullItem("ai-9", "New from the agent", "not-started"),
+        ]);
+
+        expect(handle.getSelectedIds()).toEqual(["ai-2"]);
+        expect(handle.getState()).toEqual({
+            selection: ["ai-2"], collapsed: ["done"], sort: "alpha-asc",
+            filter: { priorities: ["high", "medium", "none"] }, showArchived: false,
+        });
+        expect(body().scrollTop).toBe(40);
+        handle.destroy();
+    });
+
+    test("SetData_AnItemBeingEdited_KeepsTheUsersCopyAndDraft_InTheAgentsPosition", () =>
+    {
+        const handle = createHandle();
+        row("ai-1").querySelector<HTMLElement>(".actionitems-content")!.click();
+        row("ai-1").querySelector<HTMLInputElement>(".actionitems-edit-input")!.value = "Review the spec, half typed";
+
+        handle.setData("items", [
+            fullItem("ai-9", "New from the agent", "not-started"),
+            fullItem("ai-1", "The agent's wording", "done"),
+        ]);
+
+        expect(handle.getItems().map((i) => i.id)).toEqual(["ai-9", "ai-1"]);
+        expect(handle.getItem("ai-1")).toMatchObject({ content: "Review design spec", status: "not-started" });
+        const input = row("ai-1").querySelector<HTMLInputElement>(".actionitems-edit-input")!;
+        expect(input.value).toBe("Review the spec, half typed");
+
+        // The edit is still live: committing it reports the user's text.
+        const seen = listen(handle, "itemUpdate");
+        input.dispatchEvent(new Event("blur"));
+        expect(seen).toEqual([{ itemId: "ai-1", changes: { content: "Review the spec, half typed" } }]);
+        handle.destroy();
+    });
+
+    test("SetData_AnItemBeingEdited_ThatTheListLeavesOut_IsDropped", () =>
+    {
+        const onItemDelete = vi.fn();
+        const handle = createHandle({ onItemDelete });
+        container.querySelector<HTMLElement>(".actionitems-add")!.click();
+
+        handle.setData("items", [fullItem("ai-9", "New from the agent", "not-started")]);
+
+        expect(container.querySelector(".actionitems-edit-input")).toBeNull();
+        expect(handle.getItems().map((i) => i.id)).toEqual(["ai-9"]);
+        expect(onItemDelete).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+
+    test("GetState_IsJson_AndSetStateRoundTrips_Silently", () =>
+    {
+        const onSelectionChange = vi.fn();
+        const onCollapseStateChange = vi.fn();
+        const handle = createHandle({ onSelectionChange, onCollapseStateChange });
+        const selection = listen(handle, "selection");
+
+        expect(handle.getState()).toEqual({
+            selection: [], collapsed: [], sort: "order", filter: null, showArchived: false,
+        });
+
+        const wanted = {
+            selection: ["ai-3", "ai-1"], collapsed: ["in-progress", "done"], sort: "priority-desc",
+            filter: { statuses: ["not-started", "done"] }, showArchived: true,
+        };
+        handle.setState(wanted);
+
+        expect(handle.getState()).toEqual(wanted);
+        expect(JSON.parse(JSON.stringify(handle.getState()))).toEqual(wanted);
+        expect(row("ai-1").classList.contains("actionitems-selected")).toBe(true);
+        expect(onSelectionChange).not.toHaveBeenCalled();
+        expect(onCollapseStateChange).not.toHaveBeenCalled();
+        expect(selection).toEqual([]);
+
+        handle.setState({ filter: null });
+        expect(handle.getState().filter).toBeNull();
+        expect(handle.getState().sort).toBe("priority-desc");
+        handle.destroy();
+    });
+
+    test("SetState_PrunesUnknownSelectionIds_AndRefusesBadValues", () =>
+    {
+        const handle = createHandle();
+        handle.setState({ selection: ["ai-2", "gone"] });
+        expect(handle.getState().selection).toEqual(["ai-2"]);
+
+        expect(() => handle.setState({ sort: "sideways" })).toThrow(/sort/);
+        expect(() => handle.setState({ collapsed: ["later"] })).toThrow(/collapsed/);
+        expect(() => handle.setState({ selection: "ai-1" })).toThrow(/selection/);
+        expect(() => handle.setState({ filter: ["x"] })).toThrow(/filter/);
+        expect(() => handle.setState({ showArchived: "yes" })).toThrow(/showArchived/);
         handle.destroy();
     });
 });
