@@ -331,6 +331,7 @@ Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, an
 - `npm test` green, and `npm run test:e2e:a2ui` green locally (CI repeats it).
 - A mutation check for each new rule: break it and see its test fail.
 - `npm run audit:vendor` green.
+- The build's `[agentui] In a prompt` line quoted in the PR: the full catalog, the lean agent catalog and the basic catalog, in o200k_base tokens and bytes (#49).
 - A fresh build, diffed against `main`'s:
   - every `components/*/*.js` byte-identical, except where a labelled bug-fix commit says otherwise;
   - the catalog diff additive only.

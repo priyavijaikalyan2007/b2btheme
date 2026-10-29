@@ -761,3 +761,213 @@ describe("the sparkline follows the trend", () =>
         card.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B4): additive on("click"), clickable, setData, state
+// ============================================================================
+
+describe("surface contract (B4)", () =>
+{
+    test("on_Click_HearsTheLabel_AfterOnClickAndExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const card = createMetricCard(makeOptions({
+            onClick: (e) => order.push(`option:${e.type}`),
+        }));
+        card.on("click", (label) => order.push(`channel:${String(label)}`));
+
+        card.getRootElement()!.click();
+
+        expect(order).toEqual(["option:click", "channel:Active Users"]);
+        card.destroy();
+    });
+
+    test("on_Click_Clickable_NoOnClick_StillEmits", () =>
+    {
+        const heard = vi.fn();
+        const card = createMetricCard(makeOptions({ clickable: true }));
+        card.on("click", heard);
+
+        card.getRootElement()!.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Active Users");
+        card.destroy();
+    });
+
+    test("on_Click_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const card = createMetricCard(makeOptions({ clickable: true }));
+        const off = card.on("click", heard);
+
+        card.getRootElement()!.click();
+        off();
+        card.getRootElement()!.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        card.destroy();
+    });
+
+    test("on_Click_PayloadIsPlainJson", () =>
+    {
+        let payload: unknown;
+        const card = createMetricCard(makeOptions({ clickable: true }));
+        card.on("click", (p) => { payload = p; });
+
+        card.getRootElement()!.click();
+
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        expect(typeof payload).toBe("string");
+        card.destroy();
+    });
+
+    test("on_Click_ThrowingHandler_DoesNotStopOthers", () =>
+    {
+        const heard = vi.fn();
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const card = createMetricCard(makeOptions({ clickable: true }));
+        card.on("click", () => { throw new Error("boom"); });
+        card.on("click", heard);
+
+        card.getRootElement()!.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        errSpy.mockRestore();
+        card.destroy();
+    });
+
+    test("on_Click_AfterDestroy_HearsNothing", () =>
+    {
+        const heard = vi.fn();
+        const card = createMetricCard(makeOptions({ clickable: true }));
+        card.on("click", heard);
+        const root = card.getRootElement()!;
+
+        card.destroy();
+        root.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const card = createMetricCard(makeOptions());
+
+        expect(() => card.on("bogus", () => undefined)).toThrow("click");
+        card.destroy();
+    });
+
+    test("setData_Throws", () =>
+    {
+        const card = createMetricCard(makeOptions());
+
+        expect(() => card.setData("value", 1)).toThrow("no data slots");
+        card.destroy();
+    });
+
+    test("getState_IsEmpty_AndSetStateOfARecordDoesNothing", () =>
+    {
+        const card = createMetricCard(makeOptions({ value: 5 }));
+
+        expect(card.getState()).toEqual({});
+        card.setState({ value: 99 });
+
+        expect(card.getState()).toEqual({});
+        expect(card.getRootElement()!.querySelector(".metriccard-value")?.textContent).toBe("5");
+        card.destroy();
+    });
+
+    test("setState_LifecycleString_StillWorks", () =>
+    {
+        const card = createMetricCard(makeOptions());
+
+        card.setState("error", "Couldn't load");
+
+        expect(card.getRootElement()!.querySelector(".metriccard-error")).not.toBeNull();
+        card.destroy();
+    });
+
+    describe("clickability combinations", () =>
+    {
+        const isClickable = (root: HTMLElement): boolean => root.classList.contains("metriccard-clickable");
+
+        test("OnClickAlone_IsAButtonAndClickable", () =>
+        {
+            const card = createMetricCard(makeOptions({ onClick: vi.fn() }));
+            const root = card.getRootElement()!;
+
+            expect(root.tagName.toLowerCase()).toBe("button");
+            expect(isClickable(root)).toBe(true);
+            card.destroy();
+        });
+
+        test("HrefAlone_IsAnAnchor_AndHearsNoClick", () =>
+        {
+            const heard = vi.fn();
+            const card = createMetricCard(makeOptions({ href: "#x" }));
+            const root = card.getRootElement()!;
+            card.on("click", heard);
+
+            root.click();
+
+            expect(root.tagName.toLowerCase()).toBe("a");
+            expect(isClickable(root)).toBe(true);
+            expect(heard).not.toHaveBeenCalled();
+            card.destroy();
+        });
+
+        test("Neither_IsNotClickable_AndHearsNoClick", () =>
+        {
+            const heard = vi.fn();
+            const card = createMetricCard(makeOptions());
+            const root = card.getRootElement()!;
+            card.on("click", heard);
+
+            root.click();
+
+            expect(root.tagName.toLowerCase()).toBe("div");
+            expect(isClickable(root)).toBe(false);
+            expect(heard).not.toHaveBeenCalled();
+            card.destroy();
+        });
+
+        test("ClickableAlone_MatchesOnClickAlone", () =>
+        {
+            const withOnClick = createMetricCard(makeOptions({ onClick: vi.fn() }));
+            const withClickable = createMetricCard(makeOptions({ clickable: true }));
+            const a = withOnClick.getRootElement()!;
+            const b = withClickable.getRootElement()!;
+
+            expect(b.tagName).toBe(a.tagName);
+            expect(b.className).toBe(a.className);
+            expect(b.getAttribute("type")).toBe("button");
+            withOnClick.destroy();
+            withClickable.destroy();
+        });
+
+        test("ClickableFalse_ChangesNothing", () =>
+        {
+            const card = createMetricCard(makeOptions({ clickable: false }));
+            const root = card.getRootElement()!;
+
+            expect(root.tagName.toLowerCase()).toBe("div");
+            expect(isClickable(root)).toBe(false);
+            card.destroy();
+        });
+
+        test("HrefWithClickable_StaysAnAnchor_AndHearsClick", () =>
+        {
+            const heard = vi.fn();
+            const card = createMetricCard(makeOptions({ href: "#x", clickable: true }));
+            const root = card.getRootElement()!;
+            card.on("click", heard);
+
+            root.click();
+
+            expect(root.tagName.toLowerCase()).toBe("a");
+            expect(heard).toHaveBeenCalledWith("Active Users");
+            card.destroy();
+        });
+    });
+});

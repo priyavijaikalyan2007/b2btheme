@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B6): submitting emits
+ * "search" with the parsed query through an additive on(), and the query
+ * string is two-way.
  */
 export const FACETSEARCH_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,30 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
     icon: "bi-funnel",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user search with free text plus key:value filters picked from known facets; the agent hears "
+            + "each search.",
+        avoidWhen: "For plain text search use SearchBox; for picking from a fixed list use ChoicePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "search", payload: "record", multi: false, legacyOption: "onSearch" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            "facets[].loadValues": "A function that loads a facet's values; over A2UI each facet lists its values.",
+            onFacetAdd: "Fires per added filter; the two-way value already carries the query.",
+            onFacetRemove: "Fires per removed filter; the two-way value already carries the query.",
+            onClear: "Fires when the user clears the query; the two-way value already carries it.",
+        },
+    },
 
     regions: ["facetsearch:dropdown"],
 
@@ -47,6 +64,6 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
     defaultSize: { w: 350, h: 34 },
     defaultOptions: { facets: [] },
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

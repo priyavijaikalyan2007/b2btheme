@@ -107,7 +107,8 @@ export interface AdapterDescriptor
     containerAs?: "element" | "id";
     mountMethod: "auto" | "show" | "getElement";
     conformance: "display" | "field" | "surface";
-    assets: { js: string; css?: string };
+    /** The component's own script and stylesheet, and what loads before them (ADR-230). */
+    assets: { js: string; css?: string; deps?: { path: string; integrity?: string }[] };
     props: Record<string, PropRoute>;
     twoWay: boolean;
     changeOption?: string;

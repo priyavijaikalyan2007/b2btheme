@@ -327,7 +327,7 @@ describe("validateManifest", () =>
         expect(res.issues.some((i) => i.path === "weight.mountCost")).toBe(true);
     });
 
-    test("requires a surface-level manifest to declare state keys", () =>
+    test("allows a surface manifest with no view state (ADR-229)", () =>
     {
         const res = validateManifest(manifest("x", {
             conformance: "surface",
@@ -336,7 +336,7 @@ describe("validateManifest", () =>
             accepts: [],
         }));
 
-        expect(res.ok).toBe(false);
+        expect(res.issues).toEqual([]);
     });
 
     test("allows a display-level manifest with no channels or slots", () =>
@@ -487,6 +487,22 @@ describe("validateManifest — protocol field", () =>
     {
         expect(paths({ hostOnlyActions: { export: 1 } })).toEqual(["protocol.hostOnlyActions.export"]);
         expect(paths({ hostOnlyActions: { export: "Writes a file in the browser." } })).toEqual([]);
+    });
+
+    // ADR-230 (#51): what the component needs on the page before its own script.
+    test("protocol.dependencies names libraries and components as lists of names", () =>
+    {
+        expect(paths({ dependencies: { libraries: ["marked"], components: ["markdownrenderer"] } })).toEqual([]);
+        expect(paths({ dependencies: { components: ["personchip"] } })).toEqual([]);
+    });
+
+    test("protocol.dependencies outside that shape is rejected", () =>
+    {
+        expect(paths({ dependencies: ["marked"] })).toEqual(["protocol.dependencies"]);
+        expect(paths({ dependencies: { libraries: "marked" } })).toEqual(["protocol.dependencies.libraries"]);
+        expect(paths({ dependencies: { components: ["Person Chip", ""] } }))
+            .toEqual(["protocol.dependencies.components[0]", "protocol.dependencies.components[1]"]);
+        expect(paths({ dependencies: { scripts: [] } })).toEqual(["protocol.dependencies.scripts"]);
     });
 });
 

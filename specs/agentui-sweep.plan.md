@@ -1738,3 +1738,171 @@ For SymbolPicker, Slider, SearchBox, Tagger and PeoplePicker:
 - **Records:** ADR-228, CHANGELOG, `history.jsonl`, #20.
 - **Verification:** full suites, mutation checks, the dist diff (the five surface components' JS), token growth.
 - **The PR,** stacked on #48.
+
+---
+
+## B4: display
+
+**Goal:** ten of the eleven B4 components join catalog v1. DocViewer stays pending (below).
+
+**User decisions (2026-10-29):**
+- **B4-1, empty `stateKeys`:** a surface component with nothing to restore declares `stateKeys: []`, and its `getState()` returns `{}`. The runtime rule that rejected this is removed (ADR-229). Clicks that express intent become events; hover stays host-only. Expansion is view state, so PresenceIndicator and ReasoningAccordion declare it.
+- **B4-2, ThemeToggle joins:** `onChange(theme, mode)` becomes a `change` event carrying `{ theme, mode }`, and `mode` is its state key. Its agent sentence says it restyles the whole page.
+
+**The link rule (new, ADR-229):** an option whose value becomes an `<a href>` is host-only, with the reason
+> "A link the user follows from the host's page; an agent must not choose it. Over A2UI, listen for the click event and answer with openUrl."
+
+An agent-chosen `javascript:` URL would run in the host's origin when the user clicked it. B4 covers MetricCard `href`, PersonChip `href` and Pill `href`. Image URLs stay data (§4).
+
+Breadcrumb `items[].href` is a nested plain string, and `hostOnly` can't name one. Instead, a `protocol.schemas` override for `items` leaves it out, and the closed schema rejects an agent's link (amended during implementation).
+
+**Per component:**
+
+| Component | Value | Host-only | Events (payload) | Level, `stateKeys` |
+|---|---|---|---|---|
+| StatusBadge | — | — | `click` (scalar: the label) | surface, `[]` |
+| MetricCard | — | `href` (link rule) | `click` (scalar: the label); additive `clickable` option | surface, `[]` |
+| Pill | — | `href` (link rule), `onHover`, `onHoverOut` | `click`, `dismiss` (scalar: the label) | surface, `[]` |
+| Gauge | **one-way** (`protocol.change: "event"`) | `onChange` (fires inside `setValue`, so it echoes the writer), `onOverLimit`, `onOverdue` (follow from the value, limit and deadline the agent set), `formatValue` | — | field (unchanged) |
+| EmptyState | — | `illustration` (an element; step 4) | `action`, `secondary` (scalar: the button label); the buttons emit without `onAction`/`onSecondary` | surface, `[]` |
+| Breadcrumb | — | `items[].href` (link rule, through a `protocol.schemas` override for `items`), `items[].data` (too broad) | `itemClick` (record: `{ item, index }`), `actionClick` (record: `{ actionId, item }`) | surface, `[]` |
+| PersonChip | — | `href` (link rule), `metadata` (data-* attributes), `onHover`, `onHoverOut` | `click` (record: `{ name, email }`) | surface, `[]` |
+| PresenceIndicator | — | `onClick` (per-person clicks render through PersonChip, which the adapter does not load), `onExpand`, `onCollapse` (view state), `people[].metadata` (data-* attributes) | — | display (unchanged) |
+| ThemeToggle | — | — | `change` (record: `{ theme, mode }`) | surface, `["mode"]` |
+| ReasoningAccordion | — | `steps[].metadata` (too broad), `onStepClick` and `onExpandChange` (a step click toggles its expansion: view state, not intent) | — | display (unchanged) |
+
+- **DocViewer stays pending.**
+  - It throws without MarkdownRenderer, and the adapter loads only a component's own script and CSS.
+  - `pages[].url` goes to `fetch()`, so the URL-fetch rule makes it host-only, leaving `pages[].markdown` as the agent's way in.
+
+  Joining needs manifest-declared script dependencies loaded by the adapter, which a follow-up issue tracks. The reason goes to #20.
+- **URL-fetch rule:** none of the ten calls `fetch`, `XMLHttpRequest`, `import()` or `EventSource`. DocViewer is the only B4 component that does.
+- **Clickable without a callback:** MetricCard is clickable only when `onClick` is passed, and the adapter subscribes through `on()` instead. It gains an additive `clickable` option, the name StatusBadge, Pill and PersonChip already use. MetricCard's existing lifecycle `setState("ready" | "loading" | "error")` gains an overload that takes the contract's record and does nothing. EmptyState binds its buttons only when `onAction`/`onSecondary` is passed. Its buttons now always listen, and the callbacks still fire first. Every existing combination behaves as before.
+- **PresenceIndicator changed during implementation:** its clickable avatars are built by `window.createPersonChip`. Without it, the fallback avatars aren't clickable, even with `onClick`, and the adapter loads only PresenceIndicator's own script. Over A2UI a `click` channel could never fire, so `onClick` is host-only and PresenceIndicator joins at display until the script-dependency issue lands. The handle change was discarded.
+- **`metadata` is host-only** (PersonChip `metadata`, PresenceIndicator `people[].metadata`). It becomes `data-*` attributes on the root element, which host scripts read: Bootstrap's `data-bs-toggle` and `data-bs-target`, for example, act on click.
+- **ReasoningAccordion changed during implementation:** its step click is the expansion toggle (`handleStepClick`), so it is view state under S6, not an event. It joins at display with no handle changes.
+- **Payloads are JSON:** Pill, PersonChip and Gauge pass their own instance to the legacy callbacks. The new channels send the label or a record instead, never `this`.
+
+### Task B4.1: the runtime accepts empty `stateKeys` (ADR-229)
+- **Code:** remove the `surface && stateKeys.length === 0` issue from `runtime/src/registry.ts`.
+- **Tests:** turn `registry.test.ts`'s "requires a surface-level manifest to declare state keys" into "allows a surface manifest with no view state".
+- **Bundle:** regenerate `runtime/runtime.ts`.
+- **Docs:** one sentence in `docs/SURFACE_CONTRACT.md` §2.
+
+### Task B4.2: additive surface methods
+For the seven surface components above:
+- **`setData`** throws (no slots).
+- **`on(channel)`** accepts the declared channels only.
+- **`getState`/`setState`** cover the `stateKeys`: `{}` and a no-op for the six with none.
+- **Each new channel** emits after the existing callback, which still fires first and exactly once.
+- **TDD per component;** one commit each.
+
+### Task B4.3: manifests, glue, bookkeeping
+- **Manifests:**
+  - agent sentences, `protocol` and `emits` per the table;
+  - JSDoc for PersonChip (12), PresenceIndicator (7) and ReasoningAccordion (13), comment-only.
+- **Conformance glue:** a trigger per channel for the seven.
+- **Bookkeeping:**
+  - remove ten from the pending list (DocViewer stays);
+  - lower the pins;
+  - rewrite the baseline;
+  - G3 and runtime conformance pass.
+
+### Task B4.4: gesture tests
+`tests/a2ui-components/b4-display.spec.ts`, one literal `"<Name>: …"` test per surface component, plus Gauge's one-way value and ReasoningAccordion rendering its steps.
+
+### Task B4.5: docs, verification, PR
+- **Records:**
+  - ADR-229 (empty `stateKeys`, the link rule);
+  - AGENTS.md rules;
+  - A2UI.md and its `rules.ts` mirror if agent-facing text changes;
+  - CHANGELOG, `history.jsonl`;
+  - #20, plus a note on #26 that the `stateKeys` blocker is gone;
+  - the script-dependency issue.
+- **Verification:**
+  - full suites and mutation checks;
+  - the dist diff (the seven components' JS, and the runtime);
+  - token growth.
+- **The PR,** stacked on #50.
+
+---
+
+## P1: component dependencies (#51), before B5
+
+**User decisions (2026-10-29):** build #51 before B5, and serve marked and KaTeX from `/lib/`.
+
+**Goal:** a catalog component can need a vendored library or another component, and the adapter loads it first. DocViewer joins, and PresenceIndicator gains its click. B5 and B6 can then include CodeEditor (CodeMirror 6), MarkdownEditor (Vditor), LatexEditor (KaTeX) and ChartPanel (Chart.js).
+
+**As built:**
+- **Vendor:**
+  - `marked` 18.0.12, pinned exactly; it was `^18.0.12`, so nothing moved;
+  - `katex` 0.19.0, a single file;
+  - `katex-css` 0.19.0, the stylesheet plus fonts;
+  - `build:vendor` now runs before `build:agentui`.
+- **`protocol.dependencies: { libraries?, components? }`:**
+  - the registry validates its shape;
+  - the generator resolves it into descriptor `deps`: libraries with URL and integrity, then component script and CSS. Problems for unknown names; dependencies aren't followed transitively.
+- **Adapter loader:** `deps` are injected before the component's script, libraries with `integrity` and `crossorigin`; once per URL.
+- **Generator:**
+  - nested `hostOnly` paths to plain fields are removed from the schema;
+  - the `readOnly` keyword is dropped.
+
+  Breadcrumb and PresenceIndicator keep their B4 overrides, so a published B4 schema never changes.
+- **Tests:**
+  - G3 and the fleet gate install dependencies;
+  - G3 honours glue `heldProps`;
+  - `p1-dependencies.spec.ts`: DocViewer renders through marked with SRI, its page URL is rejected, and a PresenceIndicator click reaches the agent.
+- **Bookkeeping:** pending 55 → 54; `unclassifiedOptions` 427 → 425.
+
+---
+
+## B5: editors and forms (as built)
+
+**Seven of eight join:** RichTextInput, MarkdownEditor, LatexEditor, CodeEditor, Stepper, DynamicFormSwitcher and InlineToolbar. PropertyInspector stays pending: its content arrives through `open()` as DOM elements (step 4).
+
+| Component | Events (payload) | `stateKeys` | Notes |
+|---|---|---|---|
+| RichTextInput | `submit` (the value) | `["value"]` | `outputFormat` host-only (markdown out, HTML in) |
+| MarkdownEditor | `save` (markdown) | `["value"]` | deps `vditor`, `vditor-css` (new SRI asset), `dompurify` |
+| LatexEditor | `confirm` (`{ latex, mathml }`) | `["value"]` | deps `katex`, `katex-css` |
+| CodeEditor | `save` (code) | `["value"]` | dep `codemirror6`; a subscriber enables Save |
+| Stepper | `stepChange` (`{ from, to }`), `finish`, `saveDraft` (active step) | `["activeStep"]` | `steps` schema override; content and validate host-only |
+| DynamicFormSwitcher | `change` (`{ variantId, values }`), also on a variant switch | `["variant", "values"]` | `change: "event"`; built-in field types only; additive `getElement()` |
+| InlineToolbar | `itemClick` (`{ id, active }`) | `[]` | no `legacyOption` (`onClick` is per item) |
+
+**Also built:**
+- **Generator:**
+  - a prop with a `protocol.schemas` entry isn't given to typia; it takes its JSDoc as description and stays required;
+  - unions of consts and bare primitive types are sorted and compared as sets.
+- **Harness:**
+  - async triggers;
+  - jsdom stand-ins (`tests/jsdom/standins.ts`: Vditor);
+  - `heldProps` in every G3 test.
+- **Pins:**
+  - pending 54 → 47;
+  - `unclassifiedOptions` 425 → 392;
+  - `protocolPropsMissingJsdoc` 312 → 286;
+  - `changeMismatches` 2 → 1.
+
+---
+
+## B6: data views (as built)
+
+**All nine join catalog v1, for 63 in all.**
+
+| Component | Over A2UI |
+|---|---|
+| DataGrid | adds `cellEdit`; export is a host-only action; `on()` unchanged (accepts any name) |
+| TreeGrid | surface: `selection`, `activate`, `editCommit`, `contextMenuAction`, `drop`; `["expanded", "selection"]`, restored silently; provider `loadChildren` (queue) |
+| ActivityFeed | `eventClick`, `actorClick`, `targetClick`; `onLoadMore` host-only (no parameter) |
+| AuditLogViewer | `rowClick`; `onLoadPage` (two parameters), `serverSide` and `autoRefresh` host-only |
+| NotificationCenter | `notificationClick`, `dismiss`, `markAllRead` |
+| FacetSearch | `search`; `["value"]` |
+| ChartPanel | display; dep `chart.js` |
+| LogConsole | display; additive `entries` option; `theme` host-only (deprecated) |
+| VisualTableEditor | field; its fine-grained callbacks host-only |
+
+**Pins:**
+- pending 47 → 38;
+- `unclassifiedOptions` 392 → 326;
+- `protocolPropsMissingJsdoc` 286 → 202.

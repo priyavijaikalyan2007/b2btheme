@@ -61,16 +61,27 @@ export interface FacetSearchQuery
 /** Configuration options for FacetSearch. */
 export interface FacetSearchOptions
 {
+    /** The facets the user can search by (key, label, value type). Required; pass [] for free-text only. */
     facets: FacetDefinition[];
+    /** Initial query string, parsed into chips and free text, e.g. "status:open hello". Default: empty. */
     value?: string;
+    /** Placeholder text of the input. Default: "Search...". */
     placeholder?: string;
+    /** Turns recognised key:value pairs into removable chips. Default: true. */
     showFacetChips?: boolean;
+    /** Lists recent submitted searches in the dropdown when the input is empty. Default: false. */
     showHistory?: boolean;
+    /** Most recent searches kept when showHistory is on. Default: 10. */
     maxHistory?: number;
+    /** Pressing Enter submits the search (fires onSearch and the "search" channel). Default: true. */
     submitOnEnter?: boolean;
+    /** Clears the chips and input after each submitted search. Default: false. */
     clearOnSubmit?: boolean;
+    /** Size variant: "sm", "default" or "lg". Default: "default". */
     size?: FacetSearchSize;
+    /** Starts the search bar disabled (input not editable). Default: false. */
     disabled?: boolean;
+    /** Extra CSS class added to the root element. Default: none. */
     cssClass?: string;
     onSearch?: (query: FacetSearchQuery) => void;
     onChange?: (value: string) => void;
@@ -418,6 +429,15 @@ export interface FacetSearchHandle
     getFacets(): ParsedFacet[];
     enable(): void;
     disable(): void;
+
+    /** The surface contract (additive): FacetSearch has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "search": a copy of the FacetSearchQuery that onSearch receives. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { value }: the query string getValue() returns. */
+    getState(): Record<string, unknown>;
+    /** Applies state.value through setValue() when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class FacetSearch implements FacetSearchHandle
@@ -446,6 +466,7 @@ export class FacetSearch implements FacetSearchHandle
     private parseTimer: number | null = null;
     private activeContext: "keys" | "values" | "recent" | null = null;
     private activeFacetKey: string | null = null;
+    private readonly searchHandlers = new Set<(payload: unknown) => void>();
 
     // -- bound handlers for cleanup --
     private boundInputHandler: ((e: Event) => void) | null = null;
@@ -533,6 +554,7 @@ export class FacetSearch implements FacetSearchHandle
         this.liveRegion = null;
         this.chips = [];
         this.suggestions = [];
+        this.searchHandlers.clear();
         if (this.loadTimer !== null) { clearTimeout(this.loadTimer); }
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }
         logInfo("Destroyed");
@@ -632,6 +654,57 @@ export class FacetSearch implements FacetSearchHandle
         }
         if (this.input) { this.input.disabled = true; }
         this.closeDropdown();
+    }
+
+    // ── Surface contract (additive, readiness step 2 B6) ──
+
+    /** FacetSearch has no data slots; use setValue(), addFacet() or removeFacet(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): FacetSearch has no data slots. `
+            + "Use setValue(), addFacet() or removeFacet().");
+    }
+
+    /** Subscribes to "search"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "search")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "search".`);
+        }
+
+        this.searchHandlers.add(handler);
+
+        return () => { this.searchHandlers.delete(handler); };
+    }
+
+    /** The query string. */
+    getState(): Record<string, unknown>
+    {
+        return { value: this.getValue() };
+    }
+
+    /** Restores state captured by getState(). */
+    setState(state: Record<string, unknown>): void
+    {
+        if ("value" in state) { this.setValue(state.value as string); }
+    }
+
+    /** Tells the "search" subscribers, each a fresh copy, one throwing handler not stopping the rest. */
+    private emitSearch(query: FacetSearchQuery): void
+    {
+        for (const handler of this.searchHandlers)
+        {
+            try
+            {
+                handler({ text: query.text, facets: query.facets.map((f) => ({ ...f })), raw: query.raw });
+            }
+            catch (err)
+            {
+                logError("search handler threw:", err);
+            }
+        }
     }
 
     // ====================================================================
@@ -1562,6 +1635,7 @@ export class FacetSearch implements FacetSearchHandle
             this.addToHistory(query.raw);
             logInfo("Search submitted:", query.raw);
             if (this.opts.onSearch) { this.opts.onSearch(query); }
+            this.emitSearch(query);
             if (this.opts.clearOnSubmit) { this.clear(); }
         }
 

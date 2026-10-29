@@ -164,6 +164,15 @@ export interface EmptyStateHandle
     setIcon(iconClass: string): void;
     showAction(label: string, callback: () => void): void;
     hideAction(): void;
+
+    /** The surface contract (additive): EmptyState has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "action" or "secondary": the clicked button's label. Returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to report (ADR-229): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class EmptyState implements EmptyStateHandle
@@ -181,7 +190,12 @@ export class EmptyState implements EmptyStateHandle
 
     // State
     private destroyed = false;
-    private actionHandler: (() => void) | null = null;
+    private actionCallback: (() => void) | null = null;
+    private actionLabel = "";
+    private readonly handlers: Record<"action" | "secondary", Set<(payload: unknown) => void>> = {
+        action: new Set(),
+        secondary: new Set(),
+    };
 
     constructor(options: EmptyStateOptions)
     {
@@ -242,7 +256,9 @@ export class EmptyState implements EmptyStateHandle
         this.descriptionEl = null;
         this.actionBtn = null;
         this.secondaryBtn = null;
-        this.actionHandler = null;
+        this.actionCallback = null;
+        this.handlers.action.clear();
+        this.handlers.secondary.clear();
         logInfo("Destroyed", this.instanceId);
     }
 
@@ -284,6 +300,7 @@ export class EmptyState implements EmptyStateHandle
     {
         if (!this.actionBtn) { return; }
         this.actionBtn.textContent = label;
+        this.actionLabel = label;
         this.actionBtn.style.display = "";
         this.rebindAction(callback);
     }
@@ -294,6 +311,58 @@ export class EmptyState implements EmptyStateHandle
         if (this.actionBtn)
         {
             this.actionBtn.style.display = "none";
+        }
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, ADR-229)
+    // ========================================================================
+
+    /** EmptyState has no data slots; use setHeading(), setDescription(), setIcon() or showAction(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): EmptyState has no data slots. `
+            + "Use setHeading(), setDescription(), setIcon() or showAction().");
+    }
+
+    /** Subscribes to "action" or "secondary"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "action" && channel !== "secondary")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "action" and "secondary".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** Nothing to report (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: "action" | "secondary", payload: string): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`${channel} handler threw`, err);
+            }
         }
     }
 
@@ -394,12 +463,17 @@ export class EmptyState implements EmptyStateHandle
         if (this.options.actionLabel)
         {
             this.buildActionContent(this.actionBtn);
+            this.actionLabel = this.options.actionLabel;
             this.rebindAction(this.options.onAction ?? null);
         }
         else
         {
             this.actionBtn.style.display = "none";
         }
+
+        // One internal listener for the life of the button: showAction() swaps the
+        // callback it calls, never the listener, so a rebind cannot duplicate it.
+        this.actionBtn.addEventListener("click", () => this.handleActionClick());
         root.appendChild(this.actionBtn);
     }
 
@@ -419,18 +493,22 @@ export class EmptyState implements EmptyStateHandle
         }
     }
 
-    /** Rebind the action button click handler. */
+    /** Replace the callback the action button's listener calls. */
     private rebindAction(callback: (() => void) | null): void
     {
-        if (!this.actionBtn) { return; }
-        if (this.actionHandler)
+        this.actionCallback = callback;
+    }
+
+    /** The callback runs first; the channel hears the label after it, even if the callback throws. */
+    private handleActionClick(): void
+    {
+        try
         {
-            this.actionBtn.removeEventListener("click", this.actionHandler);
+            this.actionCallback?.();
         }
-        if (callback)
+        finally
         {
-            this.actionHandler = callback;
-            this.actionBtn.addEventListener("click", this.actionHandler);
+            this.emit("action", this.actionLabel);
         }
     }
 
@@ -443,13 +521,19 @@ export class EmptyState implements EmptyStateHandle
 
         if (this.options.secondaryLabel)
         {
-            this.secondaryBtn.textContent = this.options.secondaryLabel;
-            if (this.options.onSecondary)
+            const label = this.options.secondaryLabel;
+            this.secondaryBtn.textContent = label;
+            this.secondaryBtn.addEventListener("click", () =>
             {
-                this.secondaryBtn.addEventListener(
-                    "click", this.options.onSecondary
-                );
-            }
+                try
+                {
+                    this.options.onSecondary?.();
+                }
+                finally
+                {
+                    this.emit("secondary", label);
+                }
+            });
         }
         else
         {

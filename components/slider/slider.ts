@@ -374,7 +374,6 @@ class SliderImpl implements SliderHandle
         return this.rootEl;
     }
 
-    /** Destroy the component. */
     // ── Surface contract (additive, readiness step 2 B3) ──
 
     /** Slider has no data slots; use setValue() or setRange(). */
@@ -414,6 +413,7 @@ class SliderImpl implements SliderHandle
         }
     }
 
+    /** Destroy the component. */
     public destroy(): void
     {
         if (this.destroyed) { return; }

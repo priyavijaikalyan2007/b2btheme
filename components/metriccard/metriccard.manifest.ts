@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B4): with `clickable`,
+ * the card emits "click" with its label through an additive on(). It has no
+ * view state, so stateKeys is empty (ADR-229).
  */
 export const METRICCARD_MANIFEST: CapabilityManifest =
 {
@@ -34,6 +33,12 @@ export const METRICCARD_MANIFEST: CapabilityManifest =
     icon: "bi-square",
     category: "misc",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show one key number with its label, an optional trend and secondary text, as a dashboard tile.",
+        avoidWhen: "For a value against a maximum or target use Gauge; for a short status word use StatusBadge.",
+    },
+
     affords: [
         {
             shape: "scalar",
@@ -42,10 +47,22 @@ export const METRICCARD_MANIFEST: CapabilityManifest =
             minViewport: { w: 160, h: 100 },
         },
     ],
-    emits: [],
+    emits: [
+        { name: "click", payload: "scalar", multi: false, legacyOption: "onClick" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B4).
+    protocol: {
+        hostOnly: {
+            id: "Every A2UI component already has an id of its own, so this option cannot be set separately.",
+            // The link rule (readiness step 2 B4, ADR-229).
+            href: "A link the user follows from the host's page; an agent must not choose it. Over A2UI, listen for "
+                + "the click event and answer with openUrl.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 7019, mountCost: "trivial", holdsResources: false },
@@ -53,6 +70,6 @@ export const METRICCARD_MANIFEST: CapabilityManifest =
     defaultSize: { w: 320, h: 240 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

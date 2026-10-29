@@ -270,3 +270,148 @@ describe("edge cases", () =>
         fs.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B6): additive on("search"),
+// getState/setState and setData. onSearch keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B6)", () =>
+{
+    function pressEnter(fs: { getElement(): HTMLElement | null }): void
+    {
+        const input = fs.getElement()!.querySelector("input") as HTMLInputElement;
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    }
+
+    test("on(search)_AfterOnSearch_ExactlyOnce_ThenUnsubscribes", () =>
+    {
+        const order: string[] = [];
+        const fs = createFacetSearch("test-facetsearch", makeOptions({
+            value: "status:open hello",
+            onSearch: (q) => order.push(`option:${q.raw}`),
+        }));
+        const off = fs.on("search", (q) => order.push(`channel:${(q as FacetSearchQuery).raw}`));
+
+        pressEnter(fs);
+        off();
+        pressEnter(fs);
+
+        expect(order).toEqual([
+            "option:status:open hello",
+            "channel:status:open hello",
+            "option:status:open hello",
+        ]);
+        fs.destroy();
+    });
+
+    test("on(search)_WithoutOnSearch_StillEmitsTheQuery", () =>
+    {
+        const heard = vi.fn();
+        const fs = createFacetSearch("test-facetsearch", makeOptions({ value: "status:open hello" }));
+        fs.on("search", heard);
+
+        pressEnter(fs);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith({
+            text: "hello",
+            facets: [{ key: "status", operator: ":", value: "open", negated: false }],
+            raw: "status:open hello",
+        });
+        fs.destroy();
+    });
+
+    test("on(search)_PayloadIsAJsonCopy_NotTheOnSearchObject", () =>
+    {
+        let optionQuery: FacetSearchQuery | undefined;
+        let payload: FacetSearchQuery | undefined;
+        const fs = createFacetSearch("test-facetsearch", makeOptions({
+            value: "status:open hello",
+            onSearch: (q) => { optionQuery = q; },
+        }));
+        fs.on("search", (q) => { payload = q as FacetSearchQuery; });
+
+        pressEnter(fs);
+
+        expect(payload).toEqual(optionQuery);
+        expect(payload).not.toBe(optionQuery);
+        expect(payload!.facets).not.toBe(optionQuery!.facets);
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        fs.destroy();
+    });
+
+    test("on(search)_ThrowingHandler_DoesNotStopOthers", () =>
+    {
+        const heard = vi.fn();
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const fs = createFacetSearch("test-facetsearch", makeOptions({ value: "hello" }));
+        fs.on("search", () => { throw new Error("boom"); });
+        fs.on("search", heard);
+
+        pressEnter(fs);
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        errorSpy.mockRestore();
+        fs.destroy();
+    });
+
+    test("on(search)_NoEmit_WhenSubmitOnEnterIsFalse", () =>
+    {
+        const heard = vi.fn();
+        const fs = createFacetSearch("test-facetsearch", makeOptions({ value: "hello", submitOnEnter: false }));
+        fs.on("search", heard);
+
+        pressEnter(fs);
+
+        expect(heard).not.toHaveBeenCalled();
+        fs.destroy();
+    });
+
+    test("destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const fs = new FacetSearch(makeOptions({ value: "hello" }));
+        fs.show("test-facetsearch");
+        fs.on("search", heard);
+        const el = fs.getElement()!;
+        const input = el.querySelector("input") as HTMLInputElement;
+
+        fs.destroy();
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        expect(() => fs.on("bogus", () => undefined)).toThrow(/"search"/);
+        fs.destroy();
+    });
+
+    test("setData_Throws", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        expect(() => fs.setData("value", "x")).toThrow(/FacetSearch.*no data slots.*setValue/);
+        fs.destroy();
+    });
+
+    test("getState_SetState_RoundTripValue", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions({ value: "status:open hello" }));
+        const captured = fs.getState();
+
+        expect(captured).toEqual({ value: "status:open hello" });
+        fs.setValue("author:ann");
+        expect(fs.getState()).toEqual({ value: "author:ann" });
+
+        fs.setState(captured);
+        expect(fs.getState()).toEqual(captured);
+        expect(fs.getValue()).toBe("status:open hello");
+        expect(JSON.parse(JSON.stringify(captured))).toEqual(captured);
+        fs.destroy();
+    });
+});

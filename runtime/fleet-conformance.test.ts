@@ -20,6 +20,8 @@
  * Covers PRD §16.2 and plan Phase 6.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import { describe, test, expect } from "vitest";
 
 import {
@@ -29,6 +31,7 @@ import {
     type ConformanceTarget,
 } from "./src/conformance";
 
+import { JSDOM_STANDINS } from "../tests/jsdom/standins";
 import { validateManifest } from "./src/registry";
 import { formatIssues } from "./src/errors";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "../scripts/agentui/migration.mjs";
@@ -279,6 +282,28 @@ async function loadManifest(name: string): Promise<CapabilityManifest | null>
 }
 
 /**
+ * Runs a vendored library's built file in global scope, so it publishes its
+ * global as the <script> the adapter injects would. jsdom does not run those.
+ *
+ * @param name - The library's dist/lib-manifest.json name.
+ */
+function runLibrary(name: string): void
+{
+    const dist = path.join(__dirname, "..", "dist");
+    const manifestPath = path.join(dist, "lib-manifest.json");
+
+    if (!fs.existsSync(manifestPath))
+    {
+        throw new Error(`${manifestPath} is missing; run \`npm run build\` first.`);
+    }
+
+    const asset = JSON.parse(fs.readFileSync(manifestPath, "utf8")).assets[name] as { url: string };
+
+    // A stylesheet (katex-css, vditor-css) publishes nothing to run.
+    if (asset.url.endsWith(".js")) { (0, eval)(fs.readFileSync(path.join(dist, asset.url), "utf8")); }
+}
+
+/**
  * Builds a conformance target, applying optional per-component glue from
  * `<name>.conformance.ts` when the component needs a non-canonical invocation
  * or a way to trigger its channels.
@@ -296,6 +321,20 @@ async function buildTarget(
     if (!load)
     {
         return null;
+    }
+
+    // What it declares it needs comes first, as the A2UI adapter loads it (ADR-230): DocViewer renders through
+    // MarkdownRenderer and marked; a PresenceIndicator avatar is clickable only through PersonChip.
+    // A library jsdom cannot run (Vditor) has a stand-in; the browser suite loads the real one.
+    for (const lib of manifest.protocol?.dependencies?.libraries ?? [])
+    {
+        if (JSDOM_STANDINS[lib]) { JSDOM_STANDINS[lib](); }
+        else { runLibrary(lib); }
+    }
+
+    for (const dep of manifest.protocol?.dependencies?.components ?? [])
+    {
+        await COMPONENT_LOADERS[entryPath(dep)]();
     }
 
     const mod = await load();

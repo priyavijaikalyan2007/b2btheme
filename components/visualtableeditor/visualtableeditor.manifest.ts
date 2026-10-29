@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `field` conformance: the table is the two-way value (readiness
+ * step 2 B6). Its finer-grained callbacks stay with the host, since the value
+ * carries every edit.
  */
 export const VISUALTABLEEDITOR_MANIFEST: CapabilityManifest =
 {
@@ -35,11 +33,33 @@ export const VISUALTABLEEDITOR_MANIFEST: CapabilityManifest =
     icon: "bi-table",
     category: "data",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user edit a table of text cells, with rows, columns, merges and styling; the edited table "
+            + "comes back as the value.",
+        avoidWhen: "For rows of typed records use DataGrid; for a form use DynamicFormSwitcher.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B6).
+    protocol: {
+        hostOnly: {
+            onCellChange: "Fires per cell; the two-way value already carries the table.",
+            onStyleChange: "Fires per style change; the two-way value already carries the table.",
+            onStructureChange: "Fires per row or column change; the two-way value already carries the table.",
+            onModeChange: "Fires as the user switches between editing and viewing; that is view state, not "
+                + "information for an agent.",
+            onHeaderClick: "Fires on a header click with the mouse event; the editor handles the gesture itself.",
+            onHeaderContextMenu: "Fires on a header right-click with the mouse event; the editor shows its own menu.",
+            onSelectionChange: "Fires as the user selects cells; that is view state, not information for an agent.",
+            onAggregateChange: "Follows from the table, which the two-way value already carries.",
+        },
+    },
 
     regions: ["visualtableeditor:table-container"],
 

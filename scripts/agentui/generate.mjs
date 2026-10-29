@@ -20,6 +20,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { bundleAdapter } from "./adapter-bundle.mjs";
+import { leanCatalog, leanProblems } from "./agent-catalog.mjs";
+import { promptSizes } from "./catalog-size.mjs";
 import { checkAgentDescription } from "./agent-description.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { compileValidators } from "./adapter-validators.mjs";
@@ -29,8 +31,8 @@ import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from ".
 import { classifyMembers, createClassifier, factoryOptionsType, optionsParameterIndex } from "./classify.mjs";
 import { rendererMeta } from "./mcp-descriptors.mjs";
 import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./migration.mjs";
-import { normaliseTypiaUnit } from "./normalise.mjs";
-import { VIOLATION, resolveSurface } from "./resolve.mjs";
+import { normaliseTypiaUnit, pruneDefs } from "./normalise.mjs";
+import { VIOLATION, isCovered, resolveSurface } from "./resolve.mjs";
 import { emitSchemas } from "./schema.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -75,12 +77,30 @@ export function runPipeline(input)
     errors.push(...ready.flatMap((c) => checkAgentDescription(c.manifest, Object.keys(catalog.components))));
     checkBaseline(catalog, input, errors);
 
-    const adapter = buildDescriptors(ready, catalog, input.assetExists);
+    const lean = leanFor(catalog, input, errors);
+    const adapter = buildDescriptors(ready, catalog, input.assetExists, input.libraries);
     errors.push(...adapter.problems);
 
     return { errors, excluded, catalog, descriptors: adapter.descriptors,
-        outputs: outputsFor(ready, schemas, catalog, excluded, input),
+        outputs: outputsFor(ready, schemas, { catalog, lean }, excluded, input),
         counts: { ...countsFor(classified, ready, excluded), belowRequired: input.belowRequired.size } };
+}
+
+/** The agent-facing rendering (#49, ADR-233), with the problems that would make it lossy collected. */
+function leanFor(catalog, input, errors)
+{
+    try
+    {
+        const lean = leanCatalog({ catalog, basic: input.basic, commonTypes: input.commonTypes });
+
+        errors.push(...leanProblems(catalog, lean));
+        return lean;
+    }
+    catch (err)
+    {
+        errors.push(err.message);
+        return null;
+    }
 }
 
 /** Classifies and resolves every manifest; a thrown literate error is collected. */
@@ -154,7 +174,7 @@ function emitAndCheck(included, input, errors)
 {
     const entries = included.map((c) => ({
         id: c.manifest.name, alias: `AgentUi_${c.manifest.name}`, file: c.file, factory: c.manifest.factory,
-        paramIndex: optionsParameterIndex(c.manifest), pick: c.surface.dataProps.map((d) => d.name),
+        paramIndex: optionsParameterIndex(c.manifest), pick: typiaPick(c),
         providers: c.surface.providers,
     }));
     const results = emitSchemas(entries, { tsconfigPath: input.tsconfigPath, cacheDir: input.cacheDir });
@@ -169,6 +189,18 @@ function emitAndCheck(included, input, errors)
     return out;
 }
 
+/**
+ * The data props typia describes: all but those with a protocol.schemas
+ * entry, whose generated schema would be replaced anyway, and whose type may
+ * be one typia cannot describe at all (Stepper's steps hold elements, B5).
+ */
+export function typiaPick(c)
+{
+    const overridden = c.manifest.protocol?.schemas ?? {};
+
+    return c.surface.dataProps.map((d) => d.name).filter((n) => overridden[n] === undefined);
+}
+
 /** One component's schema, or null with its problems recorded. */
 function schemaFor(c, result, errors)
 {
@@ -176,8 +208,10 @@ function schemaFor(c, result, errors)
 
     if (result.error) { errors.push(`${name}: typia could not describe the options: ${result.error}`); return null; }
 
-    const schema = applyOverrides(normaliseTypiaUnit(result.unit), c.manifest.protocol?.schemas ?? {});
+    const stripped = stripHostOnlyPaths(normaliseTypiaUnit(result.unit), c);
+    const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {}, c.surface.dataProps);
     const problems = [
+        ...stripped.problems,
         ...missingDataMembers(schema, c.surface.dataProps.map((d) => d.name)).map((m) =>
             `${name}.${m}: the schema tool dropped this data member without saying so. Report it on #17.`),
         ...missingDescriptions(schema, c.surface.dataProps).map((m) =>
@@ -191,17 +225,79 @@ function schemaFor(c, result, errors)
     return problems.length === 0 ? schema : null;
 }
 
-/** Replaces generated property schemas with protocol.schemas entries. */
-function applyOverrides(schema, overrides)
+/**
+ * Removes the plain fields that nested protocol.hostOnly paths name, such as
+ * Breadcrumb's items[].href (ADR-230): catalog objects are closed, so an
+ * agent's value there is rejected. A path that covers a hazard is a
+ * declaration only, as before; the schema tool already drops or opens it.
+ */
+function stripHostOnlyPaths(schema, c)
+{
+    const nested = Object.keys(c.manifest.protocol?.hostOnly ?? {}).filter((k) => /[.[]/.test(k)
+        && !c.members.some((m) => m.hazards.some((h) => isCovered(h.path, { [k]: "" }))));
+
+    if (nested.length === 0) { return { schema, problems: [] }; }
+
+    const out = structuredClone(schema);
+    const problems = nested.filter((k) => !removePath(out, k)).map((k) => `${c.manifest.name}.${k}: protocol.hostOnly `
+        + "names nothing in the generated schema, so nothing was removed. Correct the path in "
+        + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
+
+    return { schema: out, problems };
+}
+
+/** Deletes the field `path` names ("pages[].url"), through $refs and union arms; false when it names nothing. */
+function removePath(schema, path)
+{
+    const [root, ...rest] = path.split(/(?=\[\])|\.|(?<=\[\])/).filter(Boolean);
+    const field = rest.pop();
+    let nodes = [schema.properties[root]].filter(Boolean);
+
+    for (const seg of rest)
+    {
+        nodes = nodes.flatMap((n) => arms(schema, n)).flatMap((n) => (seg === "[]" ? (n.items ? [n.items] : [])
+            : (n.properties?.[seg] ? [n.properties[seg]] : [])));
+    }
+
+    const owners = nodes.flatMap((n) => arms(schema, n)).filter((n) => n.properties?.[field] !== undefined);
+
+    for (const o of owners)
+    {
+        delete o.properties[field];
+        if (Array.isArray(o.required)) { o.required = o.required.filter((r) => r !== field); }
+    }
+
+    return owners.length > 0;
+}
+
+/** A schema node, dereferenced, and every arm of its unions. */
+function arms(schema, node)
+{
+    const n = node.$ref?.startsWith("#/$defs/") ? schema.$defs[node.$ref.slice("#/$defs/".length)] : node;
+
+    return [n, ...[...(n.anyOf ?? []), ...(n.oneOf ?? [])].flatMap((a) => arms(schema, a))];
+}
+
+/**
+ * Replaces generated property schemas with protocol.schemas entries, then
+ * drops the $defs only a replaced schema used (B4): an orphan would still
+ * describe, say, an href the override left out on purpose.
+ */
+function applyOverrides(schema, overrides, dataProps)
 {
     const properties = { ...schema.properties };
+    const jsdoc = new Map(dataProps.map((d) => [d.name, d.jsdoc]));
 
     for (const [name, override] of Object.entries(overrides))
     {
-        properties[name] = { ...override, description: schema.properties[name]?.description };
+        // typia was not asked about an overridden prop (typiaPick), so its JSDoc is the description.
+        properties[name] = { ...override, description: jsdoc.get(name) };
     }
 
-    return { ...schema, properties };
+    const required = [...new Set([...(schema.required ?? []),
+        ...dataProps.filter((d) => overrides[d.name] !== undefined && !d.optional).map((d) => d.name)])];
+
+    return pruneDefs({ ...schema, properties, ...(required.length > 0 ? { required } : {}) });
 }
 
 /** Breaking changes need a bump; any change needs the baseline committed. */
@@ -259,11 +355,12 @@ function changeSummary(baseline, catalog, diff)
 }
 
 /** Every file to write, keyed by path relative to dist/. */
-function outputsFor(ready, schemas, catalog, excluded, input)
+function outputsFor(ready, schemas, { catalog, lean }, excluded, input)
 {
     const outputs = new Map(ready.map((c) => [`schemas/${c.manifest.name}.options.json`, schemas.get(c.manifest.name)]));
 
     outputs.set(`a2ui/catalog/v${input.major}.json`, catalog);
+    outputs.set(`a2ui/catalog/v${input.major}.agent.json`, lean);
 
     for (const [major, older] of input.baselines)
     {
@@ -436,7 +533,22 @@ function repoInputs(repoRoot, writeBaseline)
         repoRoot,
         baselines: loadBaselines(), major: CATALOG_MAJOR, writeBaseline,
         assetExists: (rel) => fs.existsSync(path.join(repoRoot, "dist", rel)),
+        libraries: libraryAssets(repoRoot),
     };
+}
+
+/** dist/lib-manifest.json's assets, which protocol.dependencies.libraries names (ADR-230). */
+function libraryAssets(repoRoot)
+{
+    const libPath = path.join(repoRoot, "dist", "lib-manifest.json");
+
+    if (!fs.existsSync(libPath))
+    {
+        throw new Error(`${libPath} does not exist. The generator resolves protocol.dependencies against it; run `
+            + "`npm run build:vendor` first (npm run build runs it before build:agentui).");
+    }
+
+    return JSON.parse(fs.readFileSync(libPath, "utf8")).assets;
 }
 
 /** Committed baselines, keyed by major. */
@@ -505,11 +617,29 @@ async function main(argv)
         fs.writeFileSync(path.join(PUBLISHED, `catalog-v${input.major}.json`), `${JSON.stringify(result.catalog, null, 2)}\n`);
     }
 
+    const prompt = addPromptSizes(result, input);
     writeOutputs(result.outputs, path.join(REPO, "dist"));
     const c = result.counts;
     console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification), `
         + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members, `
         + `${c.belowRequired} below their required level (BELOW_REQUIRED)`);
+    console.log(`[agentui] In a prompt (${prompt.tokenizer} tokens): `
+        + Object.entries(prompt.sizes).map(([name, z]) => `${name} ${z.tokens.toLocaleString("en")} tokens `
+            + `(${z.bytes.toLocaleString("en")} bytes)`).join(", "));
+}
+
+/**
+ * What each catalog costs in an agent's prompt (#49), added to
+ * agentui-report.json: the full catalog, the lean agent catalog, and the
+ * basic catalog an agent needs beside the lean one for the re-exports.
+ */
+function addPromptSizes(result, input)
+{
+    const prompt = promptSizes({ catalog: result.catalog,
+        agentCatalog: result.outputs.get(`a2ui/catalog/v${input.major}.agent.json`), basicCatalog: input.basic });
+
+    result.outputs.set("agentui-report.json", { ...result.outputs.get("agentui-report.json"), prompt });
+    return prompt;
 }
 
 /**

@@ -44,11 +44,17 @@ Agent ──messages──► Host's MessageProcessor ──► Renderer ──�
   <html data-bs-theme="light">   <!-- or "dark" -->
   ```
 
+- **Bootstrap Icons on your page (required):** components draw their icons with it, and some controls are icon-only, such as Breadcrumb's actions caret. Without it they have no size and can't be clicked.
+
+  ```html
+  <link rel="stylesheet" href="https://static.outcrop.us/icons/bootstrap-icons.css">
+  ```
+
   Our components are styled by this stylesheet. It is Bootstrap plus our design tokens, so **it also restyles your page's own buttons, forms and typography**. That is why adding it is your decision.
 
   For a demo, prototype or agent-only page you can opt in to `injectBaseTheme: true` instead (§3). The adapter then adds the stylesheet itself the first time a component appears. It **never** sets `data-bs-theme`; light or dark is yours to choose. The agent's `createSurface.theme.primaryColor` is ignored, because one colour cannot reproduce the hover, focus and contrast shades derived from our primary token.
 
-- **CSP:** allow the asset origin in `script-src` and `style-src` (for example `https://static.outcrop.us`). `import()` of the adapter is a CORS request, and `/a2ui/*` is served with `Access-Control-Allow-Origin: *`.
+- **CSP:** allow the asset origin in `script-src` and `style-src` (for example `https://static.outcrop.us`), and in `font-src` if agents use components that render math (KaTeX's fonts). Some components need a library or another component first, such as DocViewer, which renders through MarkdownRenderer and marked. The adapter loads these from the same origin, libraries with their integrity hash, so no other origin is involved. MarkdownEditor's Vditor fetches its own engine from `<origin>/lib/vditor-3.11.2`, using the origin of the script it was loaded from, so serve the library at the root of its origin when agents use MarkdownEditor: with an `assetBaseUrl` that carries a path, Vditor's engine would not load. `import()` of the adapter is a CORS request, and `/a2ui/*` is served with `Access-Control-Allow-Origin: *`.
 
 ## 3. Lit recipe
 
@@ -119,7 +125,7 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 - **Try it locally:** `npm run demo:a2ui` opens a playground that renders A2UI messages with these components through this exact recipe. See [`A2UI_PLAYGROUND.md`](A2UI_PLAYGROUND.md).
 - **Check what your agent writes:** `npm run check:a2ui -- messages.json` runs the A2UI schemas, a `web_core` dry run and a reference check, all against this catalog.
 - **Wire an agent:** `agentdemo/page/agent/core.ts` is a small, provider-neutral reference.
-  1. Put both catalogs and the rules from [`A2UI.md`](../A2UI.md) in the system prompt.
+  1. Put the lean catalog (§5), Google's basic catalog and the rules from [`A2UI.md`](../A2UI.md) in the system prompt.
   2. Check each reply and apply it all or nothing.
   3. Send the findings back for at most two repairs.
   4. Send each `action` and later `error` back verbatim as the next turn.
@@ -130,6 +136,11 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 
 - `processor.getRendererCapabilities({ versions: ["v0.9"] })` lists our catalog ID among `supportedCatalogIds`. Send it the way your transport sends A2UI client capabilities.
 - The adapter also exports `catalogJson`, the exact catalog it serves, for agents that take an inline catalog.
+- **For your agent's prompt, use `https://static.outcrop.us/a2ui/catalog/v1.agent.json`.**
+  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 41,429 against 87,256 in o200k_base tokens, measured on 2026-10-29.
+  - It leaves out the data-binding and function-call alternatives that every data prop repeats. It says once where they apply.
+  - It lists the Google basic components and functions it re-exports by name only. Put Google's basic catalog in the prompt beside it, about 7,000 tokens more.
+  - It's a prompt aid, not a schema. Its layout may change within v1, so paste it whole, and validate your agent's messages against the full catalog.
 - Each entry's descriptions are written for an agent to read.
 - The catalog re-exports Google's basic components (`Row`, `Column`, `Text` …), so one surface can mix both.
 

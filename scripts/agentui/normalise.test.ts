@@ -74,12 +74,13 @@ describe("normaliseTypiaUnit", () =>
             .toEqual([{ const: 2 }, { const: 10 }, { const: "grid" }, { const: "row" }]);
     });
 
-    test("leaves a union that is not all consts in its order", () =>
+    test("leaves a union with an object arm in its order", () =>
     {
+        const obj = { type: "object", properties: { a: { type: "string" } }, additionalProperties: false };
         const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object",
-            properties: { v: { oneOf: [{ type: "string" }, { const: "a" }] } } } };
+            properties: { v: { oneOf: [{ type: "string" }, obj] } } } };
 
-        expect(normaliseTypiaUnit(unit).properties.v.oneOf).toEqual([{ type: "string" }, { const: "a" }]);
+        expect(normaliseTypiaUnit(unit).properties.v.oneOf).toEqual([{ type: "string" }, obj]);
     });
 
     // Date | string: every date string matches both arms, and oneOf demands
@@ -93,7 +94,7 @@ describe("normaliseTypiaUnit", () =>
         const props = normaliseTypiaUnit(unit).properties;
 
         expect(props.when).toEqual({ type: "string" });
-        expect(props.either).toEqual({ oneOf: [{ type: "string" }, { type: "number" }] });
+        expect(props.either).toEqual({ oneOf: [{ type: "number" }, { type: "string" }] });
         expect(props.dateOnly).toEqual({ oneOf: [{ type: "string", format: "date-time" }, { const: null }] });
     });
 
@@ -108,6 +109,29 @@ describe("normaliseTypiaUnit", () =>
 
         expect(normaliseTypiaUnit(unit).properties.kids.oneOf)
             .toEqual([{ const: null, description: "Lazy." }, { type: "array", items: { type: "string" } }]);
+    });
+
+    test("a union of consts and bare primitive types is sorted, consts first, so TypeScript's order cannot leak", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object", properties: {
+            size: { oneOf: [{ const: "sm" }, { type: "number" }, { const: "lg" }] } } } };
+
+        expect(normaliseTypiaUnit(unit).properties.size.oneOf)
+            .toEqual([{ const: "lg" }, { const: "sm" }, { type: "number" }]);
+    });
+
+    // TypeScript's readonly means "not reassigned", but JSON Schema's readOnly tells an agent the value is
+    // owned elsewhere and not its to set. DocViewer's options are readonly (readiness step 2 P1).
+    test("the readOnly keyword is dropped, and a property named readOnly is kept", () =>
+    {
+        const unit = { version: "3.1", components: { schemas: { Page: { type: "object", readOnly: true,
+            properties: { id: { type: "string", readOnly: true } } } } }, schema: { type: "object", properties: {
+            pages: { type: "array", readOnly: true, items: { $ref: "#/components/schemas/Page" } },
+            readOnly: { type: "boolean", description: "Locks the editor." } } } };
+        const out = normaliseTypiaUnit(unit);
+
+        expect(JSON.stringify(out)).not.toMatch(/"readOnly":true/);
+        expect(out.properties.readOnly).toEqual({ type: "boolean", description: "Locks the editor." });
     });
 });
 

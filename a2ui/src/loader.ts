@@ -9,8 +9,9 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: A2uiAdapter / Loader
  * 📜 PURPOSE: Loads a component's classic script and stylesheet once per
- *    page from the host-supplied assetBaseUrl, and the base theme only when
- *    the host opts in (spec §6.1). There is no default origin (D2).
+ *    page from the host-supplied assetBaseUrl, after the libraries and
+ *    components it depends on (ADR-230), and the base theme only when the
+ *    host opts in (spec §6.1). There is no default origin (D2).
  * 🔗 RELATES: [[A2uiAdapter]], [[CdnContract]]
  * ⚡ FLOW: [element] -> [loadAssets] -> [<script>/<link> in head] -> [load]
  * 🔒 SECURITY: Loads only from the origin the host names; the host's CSP
@@ -26,23 +27,29 @@ const BASE_THEME = "css/custom.css";
 /** One load per URL for the life of the page. */
 let loads = new Map<string, Promise<void>>();
 
+/** A script or stylesheet path relative to assetBaseUrl, with its SRI hash when it has one. */
+interface Asset { path: string; integrity?: string }
+
 /**
  * Loads a component's assets (and the base theme, when asked).
  *
  * @param baseUrl         - Absolute http(s): or file: URL with no trailing slash.
- * @param assets          - Paths relative to baseUrl.
+ * @param assets          - Paths relative to baseUrl; deps load first, in order.
  * @param injectBaseTheme - Also load css/custom.css (spec §6.1).
  * @returns Resolves when every asset has loaded; rejects naming the first that failed.
  * @throws When baseUrl is not an acceptable base.
  */
 export function loadAssets(
-    baseUrl: string, assets: { js: string; css?: string }, injectBaseTheme: boolean): Promise<void>
+    baseUrl: string, assets: { js: string; css?: string; deps?: Asset[] }, injectBaseTheme: boolean): Promise<void>
 {
     checkBase(baseUrl);
 
-    const paths = [...(injectBaseTheme ? [BASE_THEME] : []), assets.js, ...(assets.css ? [assets.css] : [])];
+    // Classic scripts with async = false run in insertion order, so a dependency
+    // injected first has run before the component's own script does.
+    const all: Asset[] = [...(injectBaseTheme ? [{ path: BASE_THEME }] : []), ...(assets.deps ?? []),
+        { path: assets.js }, ...(assets.css ? [{ path: assets.css }] : [])];
 
-    return Promise.all(paths.map((p) => loadOnce(`${baseUrl}/${p}`, baseUrl))).then(() => undefined);
+    return Promise.all(all.map((a) => loadOnce(`${baseUrl}/${a.path}`, baseUrl, a.integrity))).then(() => undefined);
 }
 
 /** Forgets every load. Tests only. */
@@ -74,23 +81,31 @@ export function checkBase(baseUrl: string): void
     }
 }
 
-function loadOnce(url: string, baseUrl: string): Promise<void>
+function loadOnce(url: string, baseUrl: string, integrity: string | undefined): Promise<void>
 {
     const existing = loads.get(url);
 
     if (existing) { return existing; }
 
-    const load = inject(url, baseUrl);
+    const load = inject(url, baseUrl, integrity);
     loads.set(url, load);
 
     return load;
 }
 
-function inject(url: string, baseUrl: string): Promise<void>
+function inject(url: string, baseUrl: string, integrity: string | undefined): Promise<void>
 {
     return new Promise((resolve, reject) =>
     {
         const el = url.endsWith(".js") ? scriptFor(url) : stylesheetFor(url);
+
+        // A vendored library carries its SRI hash (CDN_CONTRACT.md /lib/). Integrity makes the request
+        // CORS, so crossorigin is mandatory; /lib/* answers with Access-Control-Allow-Origin: *.
+        if (integrity !== undefined)
+        {
+            el.setAttribute("integrity", integrity);
+            el.setAttribute("crossorigin", "anonymous");
+        }
 
         el.addEventListener("load", () => resolve(), { once: true });
         const failure = `Could not load ${url}. Check that assetBaseUrl (${baseUrl}) serves the library's dist/ tree `

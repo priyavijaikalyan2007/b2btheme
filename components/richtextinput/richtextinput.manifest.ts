@@ -19,11 +19,8 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B5): it emits "submit"
+ * through an additive on(), and restores its value through getState().
  */
 export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
 {
@@ -36,11 +33,33 @@ export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
     icon: "bi-text-paragraph",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user write formatted text with bold, italics, lists and links; with submitOnCtrlEnter, "
+            + "Ctrl+Enter sends it.",
+        avoidWhen: "For plain single-line text use TextField; for long markdown documents use MarkdownEditor.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "submit", payload: "scalar", multi: false, legacyOption: "onSubmit" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        hostOnly: {
+            triggers: "Each trigger loads its items and renders its tokens through functions, so mentions and tags "
+                + "need host code.",
+            stieOptions: "Configures the SmartTextInput engine behind triggers, which are host-only.",
+            outputFormat: "getValue() returns markdown in that format but setValue() reads HTML, so a value "
+                + "round-tripped through the agent would be corrupted; over A2UI the value is HTML.",
+            onFocus: "Fires as the editor gains focus; transient, not information for an agent.",
+            onBlur: "Fires as the editor loses focus; transient, not information for an agent.",
+        },
+    },
 
     regions: ["richtextinput:editable"],
 
@@ -50,6 +69,6 @@ export const RICHTEXTINPUT_MANIFEST: CapabilityManifest =
     defaultSize: { w: 300, h: 100 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

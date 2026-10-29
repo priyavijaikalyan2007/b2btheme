@@ -19,10 +19,8 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B5): a click emits
+ * "itemClick" through an additive on(). Nothing to restore (ADR-229).
  */
 export const INLINETOOLBAR_MANIFEST: CapabilityManifest =
 {
@@ -34,11 +32,28 @@ export const INLINETOOLBAR_MANIFEST: CapabilityManifest =
     icon: "bi-wrench",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a compact row of icon buttons and toggles, such as text formatting; the agent hears which one "
+            + "the user pressed.",
+        avoidWhen: "For a single action use Button; for a choice among options use ChoicePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "itemClick", payload: "record", multi: false },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        hostOnly: {
+            "items[].onClick": "A per-item callback; over A2UI the itemClick event carries the item's id and active "
+                + "state.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 2507, mountCost: "trivial", holdsResources: false },
@@ -46,6 +61,6 @@ export const INLINETOOLBAR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 300, h: 32 },
     defaultOptions: { items: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

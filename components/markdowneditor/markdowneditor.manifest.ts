@@ -39,6 +39,10 @@ import type { CapabilityManifest } from "../../runtime/src/types";
  *
  * ADR-160 re-measured these blockers once and eleven of sixteen did not
  * survive. This one survived because nobody opened the file (ADR-214).
+ *
+ * Declared at `surface` conformance (readiness step 2 B5): Ctrl+Enter emits
+ * "save" through an additive on(). Over agent protocols the adapter loads
+ * Vditor, its stylesheet and DOMPurify first (ADR-230).
  */
 export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
 {
@@ -48,6 +52,12 @@ export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
     label: "Markdown Editor",
     icon: "bi-markdown",
     category: "content",
+
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user write and preview a markdown document, with a formatting toolbar; Ctrl+Enter saves.",
+        avoidWhen: "For a short formatted note use RichTextInput; to show markdown read-only use DocViewer.",
+    },
 
     affords: [
         {
@@ -65,11 +75,26 @@ export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
     // Declared empty at `display`. `onChange`, `onSave` and `onModeChange`
     // are live constructor callbacks; turning them into channels is the
     // promotion to `surface` and belongs with the editor's own arc.
-    emits: [],
+    emits: [
+        { name: "save", payload: "scalar", multi: false, legacyOption: "onSave" },
+    ],
 
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        hostOnly: {
+            vditorOptions: "Raw options for the Vditor engine underneath; their shape is Vditor's, not a schema an "
+                + "agent could follow.",
+            onReady: "Fires when the editor has loaded; a lifecycle signal, not information for an agent.",
+            onModeChange: "Fires as the user switches between editing and preview layouts; that is view state, not "
+                + "information for an agent.",
+        },
+        // Vditor is the editor; DOMPurify sanitises its preview of agent-written markdown (ADR-230).
+        dependencies: { libraries: ["vditor", "vditor-css", "dompurify"] },
+    },
 
     // Every scrolling region this component names (DEBT-DUI-5).
     // `markdowneditor:modal-dialog` belongs to `showMarkdownEditorModal`
@@ -98,6 +123,6 @@ export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
     // wants an empty editor, not placeholder prose.
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

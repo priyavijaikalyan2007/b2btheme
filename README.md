@@ -197,6 +197,7 @@ build to work this way, and new components join as they are classified.
 | What | Where |
 |---|---|
 | A2UI catalog (its URL is its `catalogId`) | `https://static.outcrop.us/a2ui/catalog/v1.json` |
+| The catalog for agent prompts, about half the tokens | `https://static.outcrop.us/a2ui/catalog/v1.agent.json` |
 | Adapter (ESM) | `https://static.outcrop.us/a2ui/adapter/v1.js` |
 | Host guide | [`docs/A2UI_INTEGRATION_GUIDE.md`](docs/A2UI_INTEGRATION_GUIDE.md) |
 | Rules for contributors | [`A2UI.md`](A2UI.md) |

@@ -658,3 +658,250 @@ describe("keyBindings reaches the CodeMirror keymap", () =>
         expect(keys).not.toContain("Mod-s");
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B5): additive on("save"),
+// getState/setState and setData. onSave keeps firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B5)", () =>
+{
+    /** A CodeMirror whose document the component can read and replace. */
+    function installEditableMock(initial = ""): { keyMaps: { key: string; run: () => boolean }[] }
+    {
+        const keyMaps: { key: string; run: () => boolean }[] = [];
+        const text = { value: initial };
+        const doc = { toString: () => text.value, get length() { return text.value.length; } };
+
+        installCodeMirrorMock({
+            EditorState: { create: (cfg: { doc?: string }) => { text.value = cfg.doc ?? ""; return { doc }; } },
+            EditorView: class
+            {
+                public state = { doc };
+                public contentDOM = document.createElement("div");
+                constructor(cfg: { parent: HTMLElement })
+                {
+                    const scroller = document.createElement("div");
+                    scroller.className = "cm-scroller";
+                    cfg.parent.appendChild(scroller);
+                }
+                public dispatch(tr: { changes: { insert: string } }): void { text.value = tr.changes.insert; }
+                public destroy(): void { /* nothing to release */ }
+                public focus(): void { /* the toolbar refocuses the editor after an action */ }
+                public static updateListener = { of: (fn: unknown) => ({ fn }) };
+                public static theme = (spec: unknown): unknown => ({ spec });
+                public static lineWrapping = { ext: "lineWrapping" };
+            },
+            keymap: {
+                of: (maps: { key: string; run: () => boolean }[]) =>
+                {
+                    keyMaps.push(...maps);
+                    return { keymap: maps };
+                },
+            },
+        });
+
+        return { keyMaps };
+    }
+
+    function saveButton(): HTMLButtonElement
+    {
+        return container.querySelector("[data-action='save']") as HTMLButtonElement;
+    }
+
+    function pressModS(keyMaps: { key: string; run: () => boolean }[]): void
+    {
+        keyMaps.find((m) => m.key === "Mod-s")!.run();
+    }
+
+    beforeEach(() => { installEditableMock("let a = 1;"); });
+    afterEach(() => { removeCodeMirrorMock(); });
+
+    test("on(save)_ToolbarSave_HearsTheCode_AfterOnSave", () =>
+    {
+        const order: string[] = [];
+        const ce = createCodeEditor("test-codeeditor", {
+            value: "let a = 1;",
+            onSave: (v) => order.push(`option:${v}`),
+        });
+        const off = ce.on("save", (v) => order.push(`channel:${String(v)}`));
+
+        saveButton().click();
+        off();
+        saveButton().click();
+
+        expect(order).toEqual(["option:let a = 1;", "channel:let a = 1;", "option:let a = 1;"]);
+    });
+
+    test("on(save)_ModS_HearsTheCode_AfterOnSave", () =>
+    {
+        const { keyMaps } = installEditableMock("x");
+        const order: string[] = [];
+        const ce = createCodeEditor("test-codeeditor", {
+            value: "x",
+            onSave: (v) => order.push(`option:${v}`),
+        });
+        ce.on("save", (v) => order.push(`channel:${String(v)}`));
+
+        pressModS(keyMaps);
+
+        expect(order).toEqual(["option:x", "channel:x"]);
+    });
+
+    test("on(save)_WithNoOnSave_StillEmits", () =>
+    {
+        const { keyMaps } = installEditableMock("y");
+        const heard = vi.fn();
+        const ce = createCodeEditor("test-codeeditor", { value: "y" });
+        ce.on("save", heard);
+
+        pressModS(keyMaps);
+        saveButton().click();
+
+        expect(heard).toHaveBeenCalledTimes(2);
+        expect(heard).toHaveBeenCalledWith("y");
+    });
+
+    test("on(save)_PayloadIsPlainJson", () =>
+    {
+        const heard = vi.fn();
+        const ce = createCodeEditor("test-codeeditor", { value: "let a = 1;" });
+        ce.on("save", heard);
+
+        saveButton().click();
+
+        const payload = heard.mock.calls[0][0];
+        expect(JSON.parse(JSON.stringify(payload))).toEqual(payload);
+        expect(payload).toBe("let a = 1;");
+    });
+
+    test("on(save)_AThrowingHandler_DoesNotStopTheNext", () =>
+    {
+        const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const next = vi.fn();
+        const ce = createCodeEditor("test-codeeditor", { value: "z" });
+        ce.on("save", () => { throw new Error("boom"); });
+        ce.on("save", next);
+
+        saveButton().click();
+
+        expect(next).toHaveBeenCalledWith("z");
+        errSpy.mockRestore();
+    });
+
+    test("saveButton_WithNoOnSave_FollowsSubscription", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", {});
+        expect(saveButton().disabled).toBe(true);
+
+        const off = ce.on("save", () => undefined);
+        expect(saveButton().disabled).toBe(false);
+        expect(saveButton().hasAttribute("aria-disabled")).toBe(false);
+
+        off();
+        expect(saveButton().disabled).toBe(true);
+        expect(saveButton().getAttribute("aria-disabled")).toBe("true");
+    });
+
+    test("saveButton_WithNoOnSave_StaysEnabledUntilTheLastSubscriberLeaves", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", {});
+        const offA = ce.on("save", () => undefined);
+        const offB = ce.on("save", () => undefined);
+
+        offA();
+        expect(saveButton().disabled).toBe(false);
+        offB();
+        expect(saveButton().disabled).toBe(true);
+    });
+
+    test("saveButton_WithOnSave_IsUnchangedBySubscription", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", { onSave: vi.fn() });
+        expect(saveButton().disabled).toBe(false);
+
+        const off = ce.on("save", () => undefined);
+        expect(saveButton().disabled).toBe(false);
+
+        off();
+        expect(saveButton().disabled).toBe(false);
+    });
+
+    test("saveButton_ReadOnlyRuleIsTheSameAsWithOnSave", () =>
+    {
+        const withOnSave = createCodeEditor("test-codeeditor", { onSave: vi.fn(), readOnly: true });
+        const enabledWithOnSave = saveButton().disabled === false;
+        withOnSave.destroy();
+        container.innerHTML = "";
+
+        const ce = createCodeEditor("test-codeeditor", { readOnly: true });
+        ce.on("save", () => undefined);
+
+        expect(saveButton().disabled).toBe(!enabledWithOnSave);
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const ce = createCodeEditor("test-codeeditor", { value: "q" });
+        const off = ce.on("save", heard);
+        saveButton().click();
+
+        off();
+        ce.on("save", () => undefined); // keeps the button enabled
+        saveButton().click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+    });
+
+    test("destroy_ClearsTheHandlers", () =>
+    {
+        const { keyMaps } = installEditableMock("q");
+        const heard = vi.fn();
+        const ce = createCodeEditor("test-codeeditor", { value: "q" });
+        ce.on("save", heard);
+
+        ce.destroy();
+        pressModS(keyMaps);
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", {});
+
+        expect(() => ce.on("bogus", () => undefined)).toThrow('"save"');
+    });
+
+    test("setData_Throws", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", {});
+
+        expect(() => ce.setData("value", "x")).toThrow("no data slots");
+        expect(() => ce.setData("value", "x")).toThrow("setValue()");
+    });
+
+    test("getState_SetState_RoundTripValue", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", { value: "first" });
+        const captured = ce.getState();
+        expect(captured).toEqual({ value: "first" });
+
+        ce.setValue("second");
+        expect(ce.getState()).toEqual({ value: "second" });
+
+        ce.setState(captured);
+        expect(ce.getValue()).toBe("first");
+        expect(JSON.parse(JSON.stringify(captured))).toEqual(captured);
+    });
+
+    test("setState_WithoutValue_ChangesNothing", () =>
+    {
+        const ce = createCodeEditor("test-codeeditor", { value: "keep" });
+
+        ce.setState({});
+
+        expect(ce.getValue()).toBe("keep");
+    });
+});

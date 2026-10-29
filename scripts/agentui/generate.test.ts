@@ -17,7 +17,8 @@ import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
-import { PENDING_EXCUSABLE_CODES, runPipeline, writeOutputs } from "./generate.mjs";
+import commonTypes from "./vendor/a2ui-v0_9_1/common_types.json";
+import { PENDING_EXCUSABLE_CODES, runPipeline, typiaPick, writeOutputs } from "./generate.mjs";
 
 const FIXTURES = path.join(__dirname, "fixtures");
 const CACHE = path.join(__dirname, "..", "..", "node_modules", ".cache", "agentui-test-pipeline");
@@ -59,7 +60,7 @@ function run(manifests: unknown[], pending: string[] = [], version: Version = {}
     return runPipeline({
         manifests, componentFile: (n: string) => path.join(FIXTURES, `${n}.ts`),
         tsconfigPath: path.join(FIXTURES, "tsconfig.json"), cacheDir: CACHE,
-        pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic,
+        pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic, commonTypes,
         baselines: version.baselines ?? new Map(), major: version.major ?? 1, writeBaseline: version.writeBaseline ?? true,
         assetExists: () => true,
     });
@@ -70,6 +71,13 @@ describe("runPipeline — fixture widget", () =>
     test("a fully declared component produces no errors", () => { expect(run([widget()]).errors).toEqual([]); }, 60_000);
     test("it emits its options schema", () => { expect(run([widget()]).outputs.has("schemas/widget.options.json")).toBe(true); }, 60_000);
     test("it appears in the catalog", () => { expect("Widget" in run([widget()]).catalog.components).toBe(true); }, 60_000);
+    test("the lean agent catalog is written beside the catalog and renders it (#49)", () =>
+    {
+        const lean = run([widget()]).outputs.get("a2ui/catalog/v1.agent.json") as any;
+
+        expect(Object.keys(lean.components)).toEqual(["Widget"]);
+        expect(lean.components.Widget.properties.onSelection.$ref).toBe("#/$defs/Action");
+    }, 60_000);
     test("its catalog entry follows the naming rule: eventData, on<Channel>, on<Request> and <request>Result", () =>
     {
         const result = run([withProvider()]);
@@ -87,6 +95,49 @@ describe("runPipeline — fixture widget", () =>
     {
         const schema = run([widget()]).outputs.get("schemas/widget.options.json") as any;
         expect(schema.properties.extra.additionalProperties).toEqual({ type: "string" });
+    }, 60_000);
+    test("a prop with a protocol.schemas entry is not given to typia, and keeps its JSDoc as description (B5)", () =>
+    {
+        const c = { manifest: widget(), surface: { dataProps: [{ name: "pageSize" }, { name: "extra" }] } };
+
+        expect(typiaPick(c)).toEqual(["pageSize"]);
+
+        const columns = { type: "array", items: { type: "object", properties: { id: { type: "string" } },
+            required: ["id"], additionalProperties: false } };
+        const schema = run([widget({ schemas: { extra: { type: "object" }, columns } })])
+            .outputs.get("schemas/widget.options.json") as any;
+        expect(schema.required).toContain("columns");
+        expect((run([widget()]).outputs.get("schemas/widget.options.json") as any).properties.extra.description)
+            .toBe("Extra bag.");
+    }, 60_000);
+    test("a nested hostOnly path on a plain field leaves the schema, required included (ADR-230)", () =>
+    {
+        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].id": "A link the agent must not choose." };
+        const result = run([widget({ hostOnly })]);
+        const column = (result.catalog as any).$defs.Widget__Column;
+
+        expect(result.errors).toEqual([]);
+        expect(column.properties).not.toHaveProperty("id");
+        expect(column.required ?? []).not.toContain("id");
+    }, 60_000);
+    test("a nested hostOnly path that names nothing in the schema is an error", () =>
+    {
+        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].nosuch": "A link the agent must not choose." };
+
+        expect(run([widget({ hostOnly })]).errors).toEqual([expect.stringMatching(/widget\.columns\[\]\.nosuch.*names nothing/)]);
+    }, 60_000);
+    test("a def that only the overridden prop used is dropped, so the catalog carries no orphan (B4)", () =>
+    {
+        const before = run([widget()]).catalog as any;
+        expect(before.$defs.Widget__Column).toBeDefined();
+
+        const columns = { type: "array", items: { type: "object", properties: { key: { type: "string" } },
+            required: ["key"], additionalProperties: false } };
+        const after = run([widget({ schemas: { extra: { type: "object", additionalProperties: { type: "string" } },
+            columns } })]).catalog as any;
+
+        expect(after.$defs.Widget__Column).toBeUndefined();
+        expect(after.components.Widget.allOf[2].properties.columns.anyOf[0]).toEqual(columns);
     }, 60_000);
     test("an undeclared hazard is an error", () =>
     {

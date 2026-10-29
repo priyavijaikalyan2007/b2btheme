@@ -12,7 +12,7 @@
  *          -> [2020-12 schema]
  */
 
-import { isConstMember } from "./catalog-diff.mjs";
+import { isConstMember, isScalarArm } from "./catalog-diff.mjs";
 
 export const DRAFT_2020_12 = "https://json-schema.org/draft/2020-12/schema";
 
@@ -36,6 +36,28 @@ export function mapRefs(node, fn)
         [k, k === "$ref" && typeof v === "string" ? fn(v) : mapRefs(v, fn)]));
 }
 
+/** Keeps the $defs reachable from the rest of the schema; drops $defs when none are. */
+export function pruneDefs(schema)
+{
+    if (!schema.$defs) { return schema; }
+
+    const { $defs, ...root } = schema;
+    const kept = new Set();
+    const visit = (node) =>
+    {
+        for (const [, key] of JSON.stringify(node).matchAll(/"\$ref":"#\/\$defs\/([^"]+)"/g))
+        {
+            if (!kept.has(key) && key in $defs) { kept.add(key); visit($defs[key]); }
+        }
+    };
+
+    visit(root);
+
+    const defs = Object.fromEntries(Object.entries($defs).filter(([key]) => kept.has(key)));
+
+    return Object.keys(defs).length > 0 ? { ...root, $defs: defs } : root;
+}
+
 /**
  * Normalises a typia 12 `json.schema<T, "3.1">()` unit (spec §4).
  *
@@ -53,11 +75,29 @@ export function normaliseTypiaUnit(unit)
     }
 
     const toDefs = (ref) => (ref.startsWith(TYPIA_PREFIX) ? DEFS_PREFIX + ref.slice(TYPIA_PREFIX.length) : ref);
-    const tidy = (node) => sortConstUnions(dropCoveredArms(nullAsConst(closeObjects(mapRefs(node, toDefs)))));
+    const tidy = (node) =>
+        sortConstUnions(dropCoveredArms(nullAsConst(dropReadOnly(closeObjects(mapRefs(node, toDefs))))));
     const defs = tidy(unit.components?.schemas ?? {});
     const root = inlineRoot(tidy(unit.schema), defs);
 
     return { $schema: DRAFT_2020_12, ...root, ...(Object.keys(defs).length > 0 ? { $defs: defs } : {}) };
+}
+
+/**
+ * Drops the `readOnly` keyword typia emits for a TypeScript `readonly`
+ * member. In TypeScript it means "not reassigned"; in JSON Schema it tells
+ * an agent the value is owned elsewhere and not its to set, which is the
+ * opposite of an option (readiness step 2 P1). Only a boolean is the keyword:
+ * a property named readOnly holds a schema, and stays.
+ */
+function dropReadOnly(node)
+{
+    if (Array.isArray(node)) { return node.map(dropReadOnly); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    return Object.fromEntries(Object.entries(node).filter(([k, v]) => !(k === "readOnly" && typeof v === "boolean"))
+        .map(([k, v]) => [k, dropReadOnly(v)]));
 }
 
 /**
@@ -111,11 +151,13 @@ function dropCoveredArms(node)
 }
 
 /**
- * Sorts every oneOf/anyOf made only of `{ const }` members, grouped by type
- * (booleans, numbers, strings): numbers in numeric order, the rest in
- * code-point order. TypeScript orders a literal
- * union by internal type id, which any file in the program can shift, so
- * without this an unrelated change reorders a published enum (readiness step 2 B1).
+ * Sorts every oneOf/anyOf made only of scalar arms (`{ const }` members and
+ * bare primitive types): consts first, grouped by type (booleans, numbers,
+ * strings), numbers in numeric order and the rest in code-point order, then
+ * primitive types by name. TypeScript orders a union by internal type id,
+ * which any file in the program can shift, so without this an unrelated
+ * change reorders a published enum (readiness step 2 B1, B5). A union with an
+ * object arm keeps its order: object arms can overlap.
  */
 function sortConstUnions(node)
 {
@@ -127,13 +169,25 @@ function sortConstUnions(node)
 
     for (const key of ["oneOf", "anyOf"])
     {
-        if (Array.isArray(out[key]) && out[key].length > 0 && out[key].every(isConstMember))
+        if (Array.isArray(out[key]) && out[key].length > 0 && out[key].every(isScalarArm))
         {
-            out[key] = [...out[key]].sort(byConst);
+            out[key] = [...out[key]].sort(byScalarArm);
         }
     }
 
     return out;
+}
+
+/** Consts first, in value order, then bare primitive types by name (readiness step 2 B5). */
+function byScalarArm(a, b)
+{
+    const [ca, cb] = [isConstMember(a), isConstMember(b)];
+
+    if (ca !== cb) { return ca ? -1 : 1; }
+
+    if (ca) { return byConst(a, b); }
+
+    return a.type < b.type ? -1 : (a.type > b.type ? 1 : 0);
 }
 
 function byConst(a, b)

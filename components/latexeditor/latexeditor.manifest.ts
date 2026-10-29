@@ -19,11 +19,8 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B5): Ctrl+Enter emits
+ * "confirm" through an additive on(). The adapter loads KaTeX first (ADR-230).
  */
 export const LATEXEDITOR_MANIFEST: CapabilityManifest =
 {
@@ -35,11 +32,26 @@ export const LATEXEDITOR_MANIFEST: CapabilityManifest =
     icon: "bi-subscript",
     category: "content",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user write a LaTeX math expression with a live rendered preview and a symbol palette; "
+            + "Ctrl+Enter confirms.",
+        avoidWhen: "For prose use RichTextInput; for code use CodeEditor.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "confirm", payload: "record", multi: false, legacyOption: "onConfirm" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B5).
+    protocol: {
+        // KaTeX renders the preview; without it the preview shows the raw expression (ADR-230).
+        dependencies: { libraries: ["katex", "katex-css"] },
+    },
 
     regions: [
         "latexeditor:preview",
@@ -53,6 +65,6 @@ export const LATEXEDITOR_MANIFEST: CapabilityManifest =
     defaultSize: { w: 400, h: 300 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

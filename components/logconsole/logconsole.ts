@@ -50,11 +50,17 @@ export interface LogConsoleLevelColors
 /** Configuration options for the LogConsole component. */
 export interface LogConsoleOptions
 {
+    /** Entries to show from the start, oldest first; each also reaches onEntry. */
+    entries?: LogEntry[];
+
     /** Maximum entries kept in memory and DOM. Default: 500. */
     maxEntries?: number;
 
     /** Colour scheme. Default: "dark". */
-    /** @deprecated Ignored — colours now resolve from design tokens automatically. */
+    /**
+     * Ignored: colours follow the design tokens.
+     * @deprecated Ignored — colours now resolve from design tokens automatically.
+     */
     theme?: "dark" | "light";
 
     /** Show header bar with filter chips, Clear, Export. Default: true. */
@@ -421,6 +427,10 @@ export class LogConsole implements LogConsoleHandle
         this.activeFilters = new Set(ALL_LEVELS);
 
         this.buildRoot();
+
+        // Additive (readiness step 2 B6): an agent can only hand a log over as data.
+        for (const entry of this.opts.entries ?? []) { this.log(entry); }
+
         logDebug("Initialised:", this.consoleId);
     }
 

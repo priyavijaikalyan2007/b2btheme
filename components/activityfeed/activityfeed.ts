@@ -39,13 +39,21 @@ export interface ActivityEvent
 
 export interface ActivityFeedOptions
 {
+    /** Events to show, newest first. Only the first `maxInitialEvents` are rendered at start. Default: none. */
     events?: ActivityEvent[];
+    /** Groups events under Today / Yesterday / This Week / Earlier headings. Default: true. */
     groupByDate?: boolean;
+    /** Shows an avatar (image or initials) beside each event; ignored in compact mode. Default: true. */
     showAvatars?: boolean;
+    /** Uses a denser layout with a small type icon instead of avatars and no rich content. Default: false. */
     compact?: boolean;
+    /** How many of `events` are kept and rendered at construction; the rest are dropped. Default: 20. */
     maxInitialEvents?: number;
+    /** Overrides the empty state: `icon` (Bootstrap Icons class), `heading`, `description`. Default: built-in text. */
     emptyStateOptions?: { icon?: string; heading?: string; description?: string };
+    /** CSS height of the feed, such as "400px"; the root is clipped to it. Default: unset (grows with content). */
     height?: string;
+    /** Extra space-separated CSS classes added to the root element. Default: none. */
     cssClass?: string;
     onLoadMore?: () => Promise<ActivityEvent[]>;
     onEventClick?: (event: ActivityEvent) => void;
@@ -169,6 +177,23 @@ function safeCallback<T extends unknown[]>(
     catch (err) { logError("Callback error:", err); }
 }
 
+/** The surface channels, in the order the error message lists them. */
+const CHANNELS = ["eventClick", "actorClick", "targetClick"] as const;
+type ActivityFeedChannel = typeof CHANNELS[number];
+
+function isChannel(channel: string): channel is ActivityFeedChannel
+{
+    return (CHANNELS as readonly string[]).includes(channel);
+}
+
+/** A plain-JSON copy of an event for a channel: no metadata, timestamp as an ISO string. */
+function toEventPayload(ev: ActivityEvent): Record<string, unknown>
+{
+    const { metadata: _metadata, ...rest } = ev;
+
+    return { ...rest, actor: { ...ev.actor }, timestamp: ev.timestamp.toISOString() };
+}
+
 // ============================================================================
 // DATE / TIME HELPERS
 // ============================================================================
@@ -259,6 +284,18 @@ export interface ActivityFeedHandle
     clear(): void;
     refresh(): void;
     scrollToTop(): void;
+
+    /** The surface contract (additive): ActivityFeed has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "eventClick" (the event, without metadata), "actorClick" (the actor) or "targetClick"
+     * (the event, without metadata). Payloads are plain JSON copies. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-229): returns {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229): does nothing. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class ActivityFeed implements ActivityFeedHandle
@@ -269,6 +306,12 @@ export class ActivityFeed implements ActivityFeedHandle
     private compact: boolean;
     private maxInitial: number;
     private opts: ActivityFeedOptions;
+    private readonly handlers: Record<ActivityFeedChannel, Set<(payload: unknown) => void>> =
+    {
+        eventClick: new Set(),
+        actorClick: new Set(),
+        targetClick: new Set(),
+    };
 
     // -- Data ----------------------------------------------------------------
     private events: ActivityEvent[] = [];
@@ -352,6 +395,7 @@ export class ActivityFeed implements ActivityFeedHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        for (const set of Object.values(this.handlers)) { set.clear(); }
         this.disconnectObserver();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.rootEl = null;
@@ -425,6 +469,57 @@ export class ActivityFeed implements ActivityFeedHandle
     scrollToTop(): void
     {
         if (this.feedEl) { this.feedEl.scrollTop = 0; }
+    }
+
+    // ── Surface contract (additive, readiness step 2 B6) ──
+
+    /** ActivityFeed has no data slots; use setEvents(), addEvent() or addEvents(). */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): ActivityFeed has no data slots. `
+            + "Use setEvents(), addEvent() or addEvents().");
+    }
+
+    /** Subscribes to "eventClick", "actorClick" or "targetClick"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (!isChannel(channel))
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): the channels are ${CHANNELS.map(c => `"${c}"`).join(", ")}.`);
+        }
+
+        const set = this.handlers[channel];
+        set.add(handler);
+
+        return () => { set.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /** True when a legacy callback or a channel subscriber wants this click. */
+    private wantsClick(channel: ActivityFeedChannel, legacy: unknown): boolean
+    {
+        return !!legacy || this.handlers[channel].size > 0;
+    }
+
+    /** Calls each subscriber of a channel with its own fresh plain-JSON copy of the payload. */
+    private emit(channel: ActivityFeedChannel, makePayload: () => unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            safeCallback(handler, makePayload());
+        }
     }
 
     // ========================================================================
@@ -538,12 +633,15 @@ export class ActivityFeed implements ActivityFeedHandle
         const actionId = `action-${ev.id}`;
         setAttr(card, "aria-labelledby", actionId);
 
-        if (this.opts.onEventClick)
+        // Look unchanged: only a legacy callback makes the card focusable. The click
+        // listener is always attached so channel subscribers hear it without one.
+        if (this.opts.onEventClick) { setAttr(card, "tabindex", "0"); }
+
+        card.addEventListener("click", () =>
         {
-            setAttr(card, "tabindex", "0");
-            card.addEventListener("click", () =>
-                safeCallback(this.opts.onEventClick, ev));
-        }
+            safeCallback(this.opts.onEventClick, ev);
+            this.emit("eventClick", () => toEventPayload(ev));
+        });
 
         if (this.showAvatars && !this.compact)
         {
@@ -662,15 +760,18 @@ export class ActivityFeed implements ActivityFeedHandle
         const el = createElement("span", `${CLS}-actor`);
         el.textContent = actor.name;
 
-        if (this.opts.onActorClick)
+        // Look unchanged: the pointer cursor still needs the legacy callback. The listener
+        // is always attached, and the card hears the click as before unless someone took it.
+        if (this.opts.onActorClick) { el.style.cursor = "pointer"; }
+
+        el.addEventListener("click", (e) =>
         {
-            el.style.cursor = "pointer";
-            el.addEventListener("click", (e) =>
-            {
-                e.stopPropagation();
-                safeCallback(this.opts.onActorClick, actor);
-            });
-        }
+            if (!this.wantsClick("actorClick", this.opts.onActorClick)) { return; }
+
+            e.stopPropagation();
+            safeCallback(this.opts.onActorClick, actor);
+            this.emit("actorClick", () => ({ ...actor }));
+        });
         return el;
     }
 
@@ -684,11 +785,12 @@ export class ActivityFeed implements ActivityFeedHandle
             a.textContent = ev.target!;
             a.addEventListener("click", (e) =>
             {
-                if (this.opts.onTargetClick)
+                if (this.wantsClick("targetClick", this.opts.onTargetClick))
                 {
                     e.preventDefault();
                     e.stopPropagation();
                     safeCallback(this.opts.onTargetClick, ev);
+                    this.emit("targetClick", () => toEventPayload(ev));
                 }
             });
             return a;
@@ -696,15 +798,16 @@ export class ActivityFeed implements ActivityFeedHandle
 
         const span = createElement("span", `${CLS}-target`);
         span.textContent = ev.target!;
-        if (this.opts.onTargetClick)
+        if (this.opts.onTargetClick) { span.style.cursor = "pointer"; }
+
+        span.addEventListener("click", (e) =>
         {
-            span.style.cursor = "pointer";
-            span.addEventListener("click", (e) =>
-            {
-                e.stopPropagation();
-                safeCallback(this.opts.onTargetClick, ev);
-            });
-        }
+            if (!this.wantsClick("targetClick", this.opts.onTargetClick)) { return; }
+
+            e.stopPropagation();
+            safeCallback(this.opts.onTargetClick, ev);
+            this.emit("targetClick", () => toEventPayload(ev));
+        });
         return span;
     }
 

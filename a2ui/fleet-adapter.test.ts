@@ -23,13 +23,15 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vite
 import { Catalog, ComponentContext, MessageProcessor } from "@a2ui/web_core/v0_9";
 import { BASIC_FUNCTIONS, basicCatalog } from "@a2ui/web_core/v0_9/basic_catalog";
 
+import { JSDOM_STANDINS } from "../tests/jsdom/standins";
 import { sampleProp, sampleValue } from "./sample-values";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string; twoWay: boolean;
     change?: { valueFrom: string } | { cleared: null };
-    assets: { js: string; css?: string }; props: Record<string, { route: string }>;
+    assets: { js: string; css?: string; deps?: { path: string; integrity?: string }[] };
+    props: Record<string, { route: string }>;
     events: { channel: string; actionProp: string; payloadInValue: boolean }[];
     providers: { request: string; actionProp: string; resultProp: string; concurrency: string }[] };
 
@@ -65,10 +67,30 @@ function optionsOf(style: string, args: unknown[]): Record<string, unknown>
     return (style === "container-first" ? args[1] : args[0]) as Record<string, unknown>;
 }
 
-/** Loads a component's source module and wraps its window factory with a spy. */
+/**
+ * Puts what a component declares it needs on window (ADR-230): vendored
+ * libraries' built files run in global scope, since jsdom does not execute the
+ * <script> the loader injects, or a stand-in for a library jsdom cannot run
+ * (tests/jsdom/standins.ts: Vditor); then other components' source modules.
+ */
+async function installDependencies(deps: { libraries?: string[]; components?: string[] }): Promise<void>
+{
+    const libs = readDist("lib-manifest.json").assets;
+
+    for (const lib of deps.libraries ?? [])
+    {
+        if (JSDOM_STANDINS[lib]) { JSDOM_STANDINS[lib](); }
+        else if (libs[lib].url.endsWith(".js")) { (0, eval)(fs.readFileSync(path.join(DIST, libs[lib].url), "utf8")); }
+    }
+
+    for (const c of deps.components ?? []) { await COMPONENTS[`../components/${c}/${c}.ts`](); }
+}
+
+/** Loads a component's source module, after its dependencies, and wraps its window factory with a spy. */
 async function install(d: Descriptor): Promise<void>
 {
     const dir = d.assets.js.split("/")[1];
+    await installDependencies(MANIFESTS.find((m) => m.factory === d.factory)?.protocol?.dependencies ?? {});
     await COMPONENTS[`../components/${dir}/${dir}.ts`]();
     const real = (window as Any)[d.factory];
     const spy: Spy = { builds: 0, options: [], destroyed: 0 };
@@ -179,33 +201,42 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
     const required = (CATALOG.components[name].allOf[2].required as string[]).filter((p) => p !== "component");
 
     /** Literal create props for the required ones; live props bound under /p. */
-    function initial(): { props: Record<string, unknown>; data: Record<string, unknown> }
+    /**
+     * Literal create props for the required ones, the glue's heldProps (create-time props other props'
+     * valid values depend on, such as DynamicFormSwitcher's variants), and live props bound under /p.
+     */
+    async function initial(): Promise<{ props: Record<string, unknown>; data: Record<string, unknown>;
+        held: Record<string, unknown> }>
     {
+        const dir = d.assets.js.split("/")[1];
+        const held: Record<string, unknown> = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())
+            ?.CONFORMANCE_GLUE?.heldProps ?? {};
         const props: Record<string, unknown> = {};
         const data: Record<string, unknown> = {};
 
         for (const p of required.filter((r) => create.includes(r))) { props[p] = sampleProp(p, arms[p], 0, CATALOG); }
         for (const p of live) { props[p] = { path: `/p/${p}` }; data[p] = sampleProp(p, arms[p], 0, CATALOG); }
 
-        return { props, data: { p: data } };
+        return { props: { ...props, ...held }, data: { p: data }, held };
     }
 
-    test("mounts once, loading exactly its own assets", async () =>
+    test("mounts once, loading its own assets and its declared dependencies", async () =>
     {
         const before = spies.get(name)!.builds;
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const s = await stage(d, props, data);
 
         expect(s.errors).toEqual([]);
         expect(spies.get(name)!.builds).toBe(before + 1);
         expect(s.el.handle).toBeDefined();
-        const own = [d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
+        const deps = (d.assets.deps ?? []).map((dep) => dep.path);
+        const own = [...deps, d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
         expect(loadedUrls).toEqual(expect.arrayContaining(own));
     });
 
     test("live props update without a rebuild", async () =>
     {
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const s = await stage(d, props, data);
         const builds = spies.get(name)!.builds;
 
@@ -218,10 +249,11 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
     test("each create-time prop that can vary rebuilds exactly once", async () =>
     {
-        const { props, data } = initial();
+        // heldProps are mounted with and held fixed (DocViewer's activePage must name one of its pages; ADR-230).
+        const { props, data, held } = await initial();
         const s = await stage(d, props, data);
         const current = { ...props };
-        const varying = create.filter((p) => JSON.stringify(sampleProp(p, arms[p], 0, CATALOG))
+        const varying = create.filter((p) => !(p in held) && JSON.stringify(sampleProp(p, arms[p], 0, CATALOG))
             !== JSON.stringify(sampleProp(p, arms[p], 1, CATALOG)));
 
         const rebuilds: Record<string, number> = {};
@@ -243,9 +275,10 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
     {
         const glue = (await GLUE[`../components/${d.assets.js.split("/")[1]}/${d.assets.js.split("/")[1]}.conformance.ts`]?.())
             ?.CONFORMANCE_GLUE;
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const actionProps = Object.fromEntries(d.events.map((e) => [e.actionProp, { event: { name: e.actionProp } }]));
-        const s = await stage(d, { ...props, ...actionProps, eventData: { path: "/ev" } }, data);
+        // eventProps: what an agent sets to make a channel reachable, such as clickable: true (B4).
+        const s = await stage(d, { ...props, ...glue?.eventProps, ...actionProps, eventData: { path: "/ev" } }, data);
 
         const writes = vi.spyOn(s.surface.dataModel, "set");
 
@@ -254,8 +287,11 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
             expect(glue?.trigger, `add a trigger for "${e.channel}" to the ${name} conformance glue`).toBeTypeOf("function");
             s.actions.length = 0;
             writes.mockClear();
-            expect(glue.trigger(e.channel, s.el.handle), `${name} glue cannot trigger "${e.channel}"`).toBe(true);
+            // "async": the gesture reaches the channel after a promise settles (Stepper's finish), so wait twice.
+            const driven = glue.trigger(e.channel, s.el.handle);
+            expect([true, "async"], `${name} glue cannot trigger "${e.channel}"`).toContain(driven);
             await flush();
+            if (driven === "async") { await flush(); }
 
             const path = e.payloadInValue ? "/p/value" : `/ev/${e.channel}`;
             expect(writes.mock.calls.map((c) => c[0]), `${name}.${e.channel} wrote nothing to ${path}`).toContain(path);
@@ -269,7 +305,7 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
     {
         const dir = d.assets.js.split("/")[1];
         const glue = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())?.CONFORMANCE_GLUE;
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const bindings = Object.fromEntries(d.providers.flatMap((p) => [[p.actionProp, { event: { name: p.actionProp } }],
             [p.resultProp, { path: `/answers/${p.request}` }]]));
         const s = await stage(d, { ...props, ...glue?.requestProps, ...bindings, eventData: { path: "/ev" } }, data);
@@ -296,7 +332,7 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
     test.skipIf(!d.changeOption)("a two-way edit through the injected change option writes the bound path", async () =>
     {
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const s = await stage(d, props, data);
         const options = spies.get(name)!.options.at(-1)!;
         const edit = sampleValue(arms.value, 1, CATALOG);
@@ -318,7 +354,7 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
     test("teardown destroys the handle", async () =>
     {
-        const { props, data } = initial();
+        const { props, data } = await initial();
         const s = await stage(d, props, data);
         const destroyed = spies.get(name)!.destroyed;
 

@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B4): a clickable badge
+ * emits "click" with its label through an additive on(). It has no view
+ * state, so stateKeys is empty (ADR-229).
  */
 export const STATUSBADGE_MANIFEST: CapabilityManifest =
 {
@@ -32,8 +31,17 @@ export const STATUSBADGE_MANIFEST: CapabilityManifest =
     icon: "bi-circle-fill",
     category: "other",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show a short status, such as Operational or Degraded, as a coloured badge, optionally clickable "
+            + "for details.",
+        avoidWhen: "For a removable tag or filter use Pill; for a number with a trend use MetricCard.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "click", payload: "scalar", multi: false, legacyOption: "onClick" },
+    ],
     accepts: [],
     actions: [],
     stateKeys: [],
@@ -44,6 +52,6 @@ export const STATUSBADGE_MANIFEST: CapabilityManifest =
     defaultSize: { w: 80, h: 24 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

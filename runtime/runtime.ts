@@ -273,6 +273,24 @@ interface ProtocolSpec
      * value is the reason an agent cannot act on it (ADR-222).
      */
     readonly hostOnlyActions?: Readonly<Record<string, string>>;
+
+    /**
+     * What must be on the page before the component's own script (ADR-230,
+     * #51): vendored libraries by their dist/lib-manifest.json name, then
+     * other components by directory name. The A2UI adapter loads them in that
+     * order, libraries with their integrity hash.
+     */
+    readonly dependencies?: DependencySpec;
+}
+
+/** Scripts a component needs on the page, ahead of its own (ADR-230). */
+interface DependencySpec
+{
+    /** Vendored library names, such as "marked" or "chart.js". */
+    readonly libraries?: readonly string[];
+
+    /** Component directory names, such as "markdownrenderer". */
+    readonly components?: readonly string[];
 }
 
 /**
@@ -2773,10 +2791,11 @@ function validateWeightAndSize(
 }
 
 /**
- * Validates the conformance level and the obligations it implies.
+ * Validates the conformance level, the state keys and the regions.
  *
- * A manifest claiming `surface` must declare the state it can restore;
- * otherwise the canvas cannot virtualize it without losing the user's place.
+ * A `surface` manifest may declare no state keys: a component with nothing
+ * to restore, such as a clickable badge, still emits (ADR-229). Declaring the
+ * view state it does have (scroll, expansion, selection) is a review rule.
  *
  * @param m      - The candidate manifest.
  * @param issues - Accumulator appended to in place.
@@ -2826,16 +2845,6 @@ function validateConformance(
             }
         }
     }
-
-    if (m.conformance === "surface" && m.stateKeys.length === 0)
-    {
-        issues.push(issue(
-            "stateKeys",
-            "A surface-conformant component declares no state keys, so the "
-            + "canvas cannot restore it after virtualizing it.",
-            "Declare the keys getState() returns, or lower conformance to "
-            + "\"display\"."));
-    }
 }
 
 /** UAX #31 identifier, the A2UI v1.0 rule for names (spec §5.1). */
@@ -2875,10 +2884,59 @@ function validateProtocol(
     validateSchemaMap(p.schemas, issues);
     validateChange(p.change, issues);
     validateStringMap("protocol.hostOnlyActions", p.hostOnlyActions, "a reason string", issues);
+    validateDependencies(p.dependencies, issues);
 }
 
 /** The keys `protocol` may carry. */
-const PROTOCOL_KEYS: readonly string[] = ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions"];
+const PROTOCOL_KEYS: readonly string[] =
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies"];
+
+/** The keys `protocol.dependencies` may carry (ADR-230). */
+const DEPENDENCY_KEYS: readonly string[] = ["libraries", "components"];
+
+/** A lib-manifest asset name ("chart.js", "katex-css") or a component directory ("personchip"). */
+const DEPENDENCY_NAME = /^[a-z0-9][a-z0-9.-]*$/;
+
+/**
+ * Validates `protocol.dependencies` (ADR-230, #51): lists of vendored library
+ * names and component directory names. Whether each exists is the
+ * generator's check, which can see dist/.
+ */
+function validateDependencies(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v))
+    {
+        issues.push(typeIssue("protocol.dependencies", "{ libraries?, components? }, each a list of names", v));
+        return;
+    }
+
+    unknownKeys("protocol.dependencies", v, DEPENDENCY_KEYS, issues);
+
+    for (const key of DEPENDENCY_KEYS.filter((k) => v[k] !== undefined))
+    {
+        const list = v[key];
+        const path = `protocol.dependencies.${key}`;
+
+        if (!Array.isArray(list))
+        {
+            issues.push(typeIssue(path, "a list of names", list));
+            continue;
+        }
+
+        for (const [i, name] of list.entries())
+        {
+            if (typeof name !== "string" || !DEPENDENCY_NAME.test(name))
+            {
+                issues.push(typeIssue(`${path}[${i}]`, "a lowercase name such as \"marked\" or \"personchip\"", name));
+            }
+        }
+    }
+}
 
 /** The keys `agent` carries (ADR-222). */
 const AGENT_KEYS: readonly string[] = ["useWhen", "avoidWhen"];
@@ -5656,11 +5714,14 @@ interface ConformanceTarget
     /**
      * Causes a channel to emit, so the legacy-callback and channel-observable
      * checks can run. Without it those obligations are reported as warnings
-     * rather than silently skipped.
+     * rather than silently skipped. "async" means the gesture was started but
+     * reaches the channel only after a promise settles (Stepper's finish
+     * awaits validation); these checks are synchronous, so that is a warning,
+     * and A2UI G3 and the browser suite verify the channel.
      */
     readonly trigger?: (
         channel: string,
-        handle: Record<string, unknown>) => boolean | void;
+        handle: Record<string, unknown>) => boolean | "async" | void;
 }
 
 /** Declaration of one check, for documentation and coverage reporting. */
@@ -6379,7 +6440,7 @@ function exerciseChannel(
     call(handle, "on", channel, (v: unknown) => observed.push(v));
 
     const before = seen?.length ?? 0;
-    let driven: boolean | void = undefined;
+    let driven: boolean | "async" | void = undefined;
     let err: Error | null = null;
 
     try
@@ -6395,6 +6456,15 @@ function exerciseChannel(
     {
         fail(out, "channel-observable",
             `Triggering "${channel}" threw: ${err.message}`);
+        return;
+    }
+
+    if (driven === "async")
+    {
+        fail(out, "channel-observable",
+            `Channel "${channel}" is reached asynchronously, after a promise `
+            + "settles, so these synchronous checks cannot observe it. A2UI G3 "
+            + "and the browser suite verify it.", "warning");
         return;
     }
 

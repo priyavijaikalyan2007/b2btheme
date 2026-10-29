@@ -219,3 +219,162 @@ describe("Pill destroy", () =>
         expect(onClick).toHaveBeenCalledTimes(1);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (B4): additive on("click" | "dismiss"), getState/setState
+// and setData. Legacy callbacks keep firing first, exactly once.
+// ============================================================================
+
+describe("surface contract (B4)", () =>
+{
+    test("on(click)_ClickableActivation_HearsLabelAfterOnClick", () =>
+    {
+        const order: string[] = [];
+        const pill = createPill(makeOptions({ clickable: true, onClick: () => order.push("option") }));
+        pill.on("click", (label) => order.push(`channel:${String(label)}`));
+        const el = pill.getElement();
+
+        el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+
+        expect(order).toEqual([
+            "option", "channel:Test Pill",
+            "option", "channel:Test Pill",
+            "option", "channel:Test Pill",
+        ]);
+        pill.destroy();
+    });
+
+    test("on(click)_WithoutOnClick_StillEmitsCurrentLabel", () =>
+    {
+        const heard = vi.fn();
+        const pill = createPill(makeOptions({ clickable: true }));
+        pill.on("click", heard);
+
+        pill.setLabel("Renamed");
+        pill.getElement().dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Renamed");
+        pill.destroy();
+    });
+
+    test("on(dismiss)_DismissButton_HearsLabelAfterOnDismissAndBeforeRemoval", () =>
+    {
+        const order: string[] = [];
+        const pill = createPill(makeOptions({
+            dismissible: true,
+            onDismiss: () => order.push(`option:attached=${String(el.isConnected)}`),
+        }));
+        const el = pill.getElement();
+        container.appendChild(el);
+        pill.on("dismiss", (label) => order.push(`channel:${String(label)}:attached=${String(el.isConnected)}`));
+
+        el.querySelector<HTMLElement>(".pill-dismiss")!.click();
+
+        expect(order).toEqual(["option:attached=true", "channel:Test Pill:attached=true"]);
+        expect(el.isConnected).toBe(false);
+    });
+
+    test("on(dismiss)_WithoutOnDismiss_StillEmitsAndRemoves", () =>
+    {
+        const heard = vi.fn();
+        const pill = createPill(makeOptions({ dismissible: true }));
+        const el = pill.getElement();
+        container.appendChild(el);
+        pill.on("dismiss", heard);
+
+        el.querySelector<HTMLElement>(".pill-dismiss")!.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        expect(heard).toHaveBeenCalledWith("Test Pill");
+        expect(el.isConnected).toBe(false);
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const pill = createPill(makeOptions({ clickable: true }));
+        const off = pill.on("click", heard);
+        const el = pill.getElement();
+
+        el.click();
+        off();
+        el.click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        pill.destroy();
+    });
+
+    test("on_Destroy_ClearsHandlers", () =>
+    {
+        const heard = vi.fn();
+        const pill = createPill(makeOptions({ clickable: true }));
+        pill.on("click", heard);
+        const el = pill.getElement();
+
+        pill.destroy();
+        el.click();
+
+        expect(heard).not.toHaveBeenCalled();
+    });
+
+    test("on_ThrowingHandler_DoesNotBlockLaterHandlers", () =>
+    {
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const later = vi.fn();
+        const pill = createPill(makeOptions({ clickable: true }));
+        pill.on("click", () => { throw new Error("boom"); });
+        pill.on("click", later);
+
+        pill.getElement().click();
+
+        expect(later).toHaveBeenCalledWith("Test Pill");
+        errorSpy.mockRestore();
+        pill.destroy();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const pill = createPill(makeOptions());
+
+        expect(() => pill.on("bogus", () => undefined)).toThrow('"click", "dismiss"');
+        expect(() => pill.on("hover", () => undefined)).toThrow("Pill");
+        pill.destroy();
+    });
+
+    test("setData_AnySlot_Throws", () =>
+    {
+        const pill = createPill(makeOptions());
+
+        expect(() => pill.setData("label", "x")).toThrow("no data slots");
+        expect(() => pill.setData("label", "x")).toThrow("setLabel");
+        pill.destroy();
+    });
+
+    test("getState_SetState_HaveNoStateKeys", () =>
+    {
+        const pill = createPill(makeOptions());
+
+        expect(pill.getState()).toEqual({});
+        pill.setState({ label: "ignored" });
+        expect(pill.getState()).toEqual({});
+        expect(pill.getElement().textContent).toBe("Test Pill");
+        pill.destroy();
+    });
+
+    test("on_Payloads_AreJsonRoundTrippable", () =>
+    {
+        const payloads: unknown[] = [];
+        const pill = createPill(makeOptions({ clickable: true, dismissible: true }));
+        pill.on("click", (p) => payloads.push(p));
+        pill.on("dismiss", (p) => payloads.push(p));
+
+        pill.getElement().click();
+        pill.getElement().querySelector<HTMLElement>(".pill-dismiss")!.click();
+
+        expect(payloads).toEqual(["Test Pill", "Test Pill"]);
+        expect(JSON.parse(JSON.stringify(payloads))).toEqual(payloads);
+    });
+});

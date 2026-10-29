@@ -41,6 +41,14 @@ const OVERRIDES: Record<string, Record<string, unknown>> = {
     // width and height are CSS lengths, which a generic string sample is not. The first preset sampled
     // is "avatar" (const unions are sorted since B1), the one preset that sizes itself from them.
     SkeletonLoader: { width: "3rem", height: "3rem" },
+    // avatarUrl is an image URL, which a generic string sample is not: "a" would 404 and log a console error.
+    PersonChip: { avatarUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" },
+    // The first boolean sampled is false, and a console without its header and with only the sampled entry
+    // shows nothing; one visible entry and the header make it render.
+    LogConsole: { showHeader: true, entries: [{ timestamp: "10:00:00.000", level: "INFO", message: "Ready" }] },
+    // initialVariant must name one of the variants, which independent samples cannot arrange.
+    DynamicFormSwitcher: { initialVariant: "a", variants: { a: { label: "A",
+        fields: [{ name: "a", label: "A", type: "text" }] } } },
 };
 
 /**

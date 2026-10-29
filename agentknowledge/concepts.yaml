@@ -1778,3 +1778,15 @@
   definition: "Readiness step 2 rule S5: an option a component passes to fetch, XMLHttpRequest, import() or EventSource is declared in protocol.hostOnly, because the browser would fetch it with the host's credentials and an agent that chose the URL could reach the host's own endpoints. Data reaches the agent through a provider instead. Image URLs are not covered."
   anchor_file: "AGENTS.md"
   related: ["A2uiAdapter", "AgentProtocolSchema"]
+- name: "ComponentDependencies"
+  definition: "protocol.dependencies (ADR-230, #51): the vendored libraries (dist/lib-manifest.json names) and other components a catalog component needs on the page. The generator puts them in the adapter descriptor, libraries with their integrity hash, and the A2UI adapter loads them before the component's own script, once per page."
+  anchor_file: "AGENTS.md"
+  related: ["A2uiAdapter", "VendorClosure", "AgentProtocolSchema"]
+- name: "LeanAgentCatalog"
+  definition: "dist/a2ui/catalog/v<N>.agent.json (ADR-233, #49): the catalog rendered for agent prompts, with each prop's literal schema only and the binding and function-call alternatives stated once. Binding-only and action props keep their $defs/DataBinding and $defs/Action refs; the basic catalog's re-exports are listed by name. The build proves it lossless against the full catalog. A prompt aid, not a contract; messages are validated against the full catalog."
+  anchor_file: "A2UI.md"
+  related: ["AgentUiCatalog", "A2uiReferenceAgent"]
+- name: "LinkRule"
+  definition: "Readiness step 2 rule (ADR-229): an option that becomes an <a href> is host-only, because an agent-chosen javascript: URL would run in the host's origin when the user followed it; the agent hears the click and answers with openUrl. A nested href is left out of a protocol.schemas override, and the closed catalog schema rejects it. Options written as data-* attributes (metadata) are host-only for the same reason."
+  anchor_file: "AGENTS.md"
+  related: ["UrlFetchRule", "A2uiAdapter", "AgentProtocolSchema"]

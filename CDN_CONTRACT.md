@@ -109,6 +109,7 @@ new, opt-in bundle that a page loads only when it hosts A2UI.
 | Asset | Contract | Cache rule |
 |---|---|---|
 | `/a2ui/catalog/v<N>.json` | The A2UI v0.9.1 catalog. **Its URL is its `catalogId`, a permanent public identifier** that hosts hard-code. Within one `N` it changes **additively only**; a removal, rename, retype or new requirement raises `N`, and every older major **stays served**. Retiring one is a separate decision. Today `N = 1`. | `max-age=300, stale-while-revalidate=86400` + CORS `*` |
+| `/a2ui/catalog/v<N>.agent.json` | The catalog rendered for agent prompts (#49, ADR-233): every component, prop, required flag, enum value and description of `v<N>.json`, without the binding and function-call alternatives each data prop repeats. It lists the basic catalog's components and functions by name; an agent needs the basic catalog beside it. Built in the same swap as `v<N>.json` and proven lossless by the build. **A prompt aid, not a contract:** its layout may change within `N`, so hosts paste it whole and validate messages against `v<N>.json`. Only the current major is served. | `max-age=300, stale-while-revalidate=86400` + CORS `*` |
 | `/schemas/<name>.options.json` | The JSON Schema of one component's protocol-visible options. Present only for components in the catalog. | `max-age=300, stale-while-revalidate=86400` + CORS `*` |
 | `/mcp/renderer.meta.json` | The `_meta.ui` block for the MCP Apps renderer resource: the CSP `resourceDomains` the view needs, and no `connectDomains`. | `max-age=300, stale-while-revalidate=86400` + CORS `*` |
 | `/a2ui/adapter/v<N>.js` + `v<N>.d.ts` | The A2UI adapter (#18, ADR-220): an ESM bundle exporting `createOutcropCatalog(webCore, { assetBaseUrl, injectBaseTheme?, providerTimeoutMs? })` and `catalogJson`. It renders every component of catalog `v<N>` as a custom element named `outcrop-<kebab-case name>` (`outcrop-sticky-note`), and reports the A2UI error codes `OUTCROP_BINDING_LOST`, `OUTCROP_ASSET_LOAD_FAILED`, `OUTCROP_MOUNT_FAILED` and `OUTCROP_PROVIDER_TIMEOUT` (plus `VALIDATION_FAILED`). **The export names, the options, the tag rule and the error codes are public names.** Within one `N` they change additively only, built in the same swap as catalog `v<N>`. It bundles no `@a2ui/*` code; the host supplies its own `web_core`. | `max-age=300, stale-while-revalidate=86400` + CORS `*` |
@@ -223,6 +224,10 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `cytoscape` | 3.26.0 | Was missing from the original request |
 | `chart.js` | 4.5.1 | Also still at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
+| `marked` | 18.0.12 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
+| `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
+| `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
+| `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
 
 `font-awesome` is CSS plus webfonts rather than a script, so it is served as a
 versioned **directory**:

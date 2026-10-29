@@ -465,7 +465,9 @@ retyping or newly requiring anything in it breaks hosts that hard-coded
 against `specs/agentui/published/`, and a breaking change needs `CATALOG_MAJOR`
 raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
 change, additive included, needs `npm run build:agentui -- --write-baseline`
-and the baseline committed in the same change.
+and the baseline committed in the same change. The lean agent catalog,
+`dist/a2ui/catalog/v<N>.agent.json` (ADR-233), is generated from it and has no
+baseline; the build fails if it drops anything.
 
 **Rendering is generated too: read [`A2UI.md`](A2UI.md).** The A2UI adapter
 (#18, ADR-220) derives one `<outcrop-*>` element per catalog component from the
@@ -536,6 +538,53 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   `EventSource` are `protocol.hostOnly`** with the reason "The component fetches
   this URL from the user's browser with the host's credentials; an agent must
   not choose it." Image URLs are not covered.
+- **The link rule (ADR-229): an option that becomes an `<a href>` is
+  `protocol.hostOnly`.** An agent-chosen `javascript:` URL would run in the
+  host's origin when the user clicked it; over A2UI the agent hears the click
+  and answers with `openUrl`. Name a nested one as a path (`items[].href`): the
+  generator removes it from the schema (ADR-230), and catalog objects are
+  closed, so an agent's link is rejected. (Breadcrumb and PresenceIndicator
+  predate that and keep a `protocol.schemas` override.) Options written as
+  `data-*` attributes (`metadata`) are host-only too: host scripts read them,
+  and Bootstrap's `data-bs-*` act on click.
+- **A surface component with nothing to restore declares `stateKeys: []`**
+  (ADR-229): `getState()` returns `{}` and `setState()` does nothing. Declare
+  the view state it does have (scroll, expansion, selection, page). A click
+  that only toggles expansion is view state, not an event.
+- **A channel the adapter can't reach is not shipped.** The adapter never
+  passes `onClick`, so a component that is clickable only when `onClick` is
+  passed needs an additive `clickable` option (MetricCard, B4), and a button
+  that listens only when its callback is passed needs a listener of its own
+  (EmptyState). A click rendered by another component the adapter doesn't load
+  (PresenceIndicator's avatars, through PersonChip) stays host-only. The glue's
+  `eventProps` is what G3 mounts with to reach the channel (`clickable: true`).
+- **`protocol.dependencies: { libraries?, components? }`: what must be on the
+  page before the component's own script** (ADR-230, #51). Libraries are
+  `dist/lib-manifest.json` names (add a new one to `scripts/vendor-closure.mjs`,
+  pinned exactly); components are directory names. The adapter loads them
+  first, libraries with their integrity hash. A dependency's own dependencies
+  are not followed, so list everything (DocViewer: `marked` and
+  `markdownrenderer`). A component that throws or shows a "required" notice
+  without a library is not "can't work" any more: declare the library.
+- **A glue's `heldProps`** are create-time props other props' valid values
+  depend on (DocViewer's `activePage` must name one of its `pages`,
+  DynamicFormSwitcher's `initialVariant` one of its `variants`); every G3 test
+  mounts with them, and the rebuild test holds them fixed.
+- **A glue trigger returns `"async"`** when the gesture reaches the channel
+  only after a promise settles (Stepper's finish awaits validation). The
+  synchronous conformance checks record a warning; G3 waits for it.
+- **`tests/jsdom/standins.ts`** replaces a library jsdom cannot run (Vditor)
+  in the conformance gate and G3, keyed by library name; the browser suite
+  loads the real one. Not beside a component: a component file that writes a
+  library's global reads as owning it, and the build compiles other files
+  under `components/`, so a `.mock.ts` there would ship.
+- **A prop with a `protocol.schemas` entry is not given to typia** (B5): its
+  override is the schema, its JSDoc the description, and a required member
+  stays required. Use one when typia cannot describe a type (elements or
+  functions nested in data, such as Stepper's `steps`).
+- **A data option named `id`, `accessibility` or `weight` fails the build**:
+  A2UI gives every component those. Declare it host-only (MetricCard and
+  ReasoningAccordion `id`, ADR-229).
 
 **The testing bar for joining the catalog (readiness spec §6):**
 

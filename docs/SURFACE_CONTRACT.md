@@ -48,6 +48,8 @@ interface Surface
 
 Declare the keys in the manifest's `stateKeys`; `getState()` must return only those keys, and every value must be JSON-serialisable because the host persists it. Scroll position, sort, expansion, selection — declared, not discovered.
 
+A component with nothing to restore, such as a clickable badge, declares `stateKeys: []`; its `getState()` returns `{}` and `setState()` does nothing (ADR-229). That is a claim reviewers check, not a way out: view state the component has is declared.
+
 This bound is what makes the obligation finite. Without it, "capture the state" is an unbounded request.
 
 ---
