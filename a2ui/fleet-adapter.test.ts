@@ -23,7 +23,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vite
 import { Catalog, ComponentContext, MessageProcessor } from "@a2ui/web_core/v0_9";
 import { BASIC_FUNCTIONS, basicCatalog } from "@a2ui/web_core/v0_9/basic_catalog";
 
-import { sampleValue } from "./sample-values";
+import { sampleProp, sampleValue } from "./sample-values";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
@@ -184,8 +184,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         const props: Record<string, unknown> = {};
         const data: Record<string, unknown> = {};
 
-        for (const p of required.filter((r) => create.includes(r))) { props[p] = sampleValue(arms[p], 0, CATALOG); }
-        for (const p of live) { props[p] = { path: `/p/${p}` }; data[p] = sampleValue(arms[p], 0, CATALOG); }
+        for (const p of required.filter((r) => create.includes(r))) { props[p] = sampleProp(p, arms[p], 0, CATALOG); }
+        for (const p of live) { props[p] = { path: `/p/${p}` }; data[p] = sampleProp(p, arms[p], 0, CATALOG); }
 
         return { props, data: { p: data } };
     }
@@ -209,7 +209,7 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         const s = await stage(d, props, data);
         const builds = spies.get(name)!.builds;
 
-        for (const p of live) { s.setData(`/p/${p}`, sampleValue(arms[p], 1, CATALOG)); }
+        for (const p of live) { s.setData(`/p/${p}`, sampleProp(p, arms[p], 1, CATALOG)); }
         await flush();
 
         expect(s.errors).toEqual([]);
@@ -221,15 +221,15 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         const { props, data } = initial();
         const s = await stage(d, props, data);
         const current = { ...props };
-        const varying = create.filter((p) => JSON.stringify(sampleValue(arms[p], 0, CATALOG))
-            !== JSON.stringify(sampleValue(arms[p], 1, CATALOG)));
+        const varying = create.filter((p) => JSON.stringify(sampleProp(p, arms[p], 0, CATALOG))
+            !== JSON.stringify(sampleProp(p, arms[p], 1, CATALOG)));
 
         const rebuilds: Record<string, number> = {};
 
         for (const p of varying)
         {
             const builds = spies.get(name)!.builds;
-            current[p] = sampleValue(arms[p], p in current ? 1 : 0, CATALOG);
+            current[p] = sampleProp(p, arms[p], p in current ? 1 : 0, CATALOG);
             s.setProps(current);
             await flush();
             rebuilds[p] = spies.get(name)!.builds - builds;

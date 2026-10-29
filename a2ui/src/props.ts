@@ -75,10 +75,13 @@ export class PropTracker
         return this.#ctx.componentModel.properties[name];
     }
 
-    /** True when every bound prop has delivered a value other than undefined. */
-    allBoundResolved(): boolean
+    /**
+     * True when every bound prop has delivered a value other than undefined,
+     * except those in `absentOk`, for which absent is itself a value.
+     */
+    allBoundResolved(absentOk: readonly string[] = []): boolean
     {
-        return [...this.#bound].every((n) => this.#resolved.has(n));
+        return [...this.#bound].every((n) => this.#resolved.has(n) || absentOk.includes(n));
     }
 
     /** Releases every subscription. */

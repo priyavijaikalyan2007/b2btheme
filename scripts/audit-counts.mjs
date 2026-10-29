@@ -893,7 +893,8 @@ export const BASELINES = {
     // lowers this number and the floor in the same change.
     // ADR-225 (2026-10-28): 546 -> 528, treeview classified (readiness step 2 P0).
     // ADR-226 (2026-10-28): 528 -> 513, the ten B1 pickers classified.
-    unclassifiedOptions: 513,
+    // ADR-227 (2026-10-28): 513 -> 491, the seven B2 date and time pickers classified.
+    unclassifiedOptions: 491,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     protocolPropsMissingJsdoc: 373,
@@ -901,7 +902,8 @@ export const BASELINES = {
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
     // ADR-226 (2026-10-28): 18 -> 8, the ten B1 pickers declared protocol.change.
-    changeMismatches: 8,
+    // ADR-227 (2026-10-28): 8 -> 4, the four B2 pickers declared { cleared: null }.
+    changeMismatches: 4,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
@@ -913,7 +915,8 @@ export const BASELINES = {
     // removing a name means lowering both numbers in the same change, and adding one fails [20].
     // ADR-225 (2026-10-28): 93 -> 92, treeview classified (readiness step 2 P0).
     // ADR-226 (2026-10-28): 92 -> 82, the ten B1 pickers classified.
-    componentsPendingClassification: 82,
+    // ADR-227 (2026-10-28): 82 -> 75, the seven B2 date and time pickers classified.
+    componentsPendingClassification: 75,
 };
 
 /*
@@ -1002,11 +1005,12 @@ export const FLOORS = {
     // by the final-review fixes: 546, 373, 6, 93. changeMismatches (ADR-222) added
     // 2026-10-27 at its measured 18. ADR-225 (2026-10-28): 528 and 92 once treeview was
     // classified (readiness step 2 P0). ADR-226 (2026-10-28): 513, 8 and 82 after B1.
-    unclassifiedOptions: 513,
+    // ADR-227 (2026-10-28): 491, 4 and 75 after B2.
+    unclassifiedOptions: 491,
     protocolPropsMissingJsdoc: 373,
-    changeMismatches: 8,
+    changeMismatches: 4,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 82,
+    componentsPendingClassification: 75,
 };
 
 /**

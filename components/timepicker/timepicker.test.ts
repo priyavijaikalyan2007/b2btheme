@@ -653,3 +653,115 @@ describe("minute step", () =>
         expect(val!.minutes % 5).toBe(0);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (readiness step 2 B2): additive on("timezone"),
+// getState/setState and setData. onTimezoneChange keeps firing first, once.
+// ============================================================================
+
+describe("surface contract", () =>
+{
+    test("on(timezone)_HearsTheSelector_AfterOnTimezoneChange", () =>
+    {
+        const order: string[] = [];
+        const picker = createTimePicker("test-time-container", defaultOpts({ showTimezone: true,
+            onTimezoneChange: (tz) => order.push(`option:${tz}`) }));
+        picker.on("timezone", (tz) => order.push(`channel:${String(tz)}`));
+
+        (container.querySelector(".timepicker-tz-input") as HTMLElement).click();
+        const option = document.querySelectorAll(".timepicker-tz-option")[1] as HTMLElement;
+        const tz = picker.getTimezone();
+        option.dispatchEvent(new Event("pointerdown", { bubbles: true, cancelable: true }));
+
+        expect(picker.getTimezone()).not.toBe(tz);
+        expect(order).toEqual([`option:${picker.getTimezone()}`, `channel:${picker.getTimezone()}`]);
+        picker.destroy();
+    });
+
+    test("on(timezone)_HearsSetTimezone_AfterOnTimezoneChange", () =>
+    {
+        const order: string[] = [];
+        const picker = createTimePicker("test-time-container", defaultOpts({
+            onTimezoneChange: (tz) => order.push(`option:${tz}`) }));
+        const off = picker.on("timezone", (tz) => order.push(`channel:${String(tz)}`));
+
+        picker.setTimezone("Europe/Paris");
+        off();
+        picker.setTimezone("Asia/Tokyo");
+
+        expect(order).toEqual(["option:Europe/Paris", "channel:Europe/Paris", "option:Asia/Tokyo"]);
+        picker.destroy();
+    });
+
+    test("getState_SetState_RoundTripTheTimezone", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ timezone: "America/New_York" }));
+        const captured = picker.getState();
+
+        picker.setTimezone("Asia/Tokyo");
+        expect(picker.getState()).toEqual({ timezone: "Asia/Tokyo" });
+
+        picker.setState(captured);
+        expect(picker.getState()).toEqual({ timezone: "America/New_York" });
+        picker.destroy();
+    });
+
+    test("on_UnknownChannel_AndSetData_Throw", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts());
+
+        expect(() => picker.on("change", () => undefined)).toThrow("timezone");
+        expect(() => picker.setData("value", null)).toThrow("no data slots");
+        picker.destroy();
+    });
+});
+
+// ============================================================================
+// TYPED INPUT (found by the A2UI gesture test, readiness step 2 B2): every
+// typed time was rejected, because the format's regex quantifiers ({2}) were
+// escaped along with its literal characters.
+// ============================================================================
+
+describe("typed input", () =>
+{
+    test.each([
+        ["HH:mm:ss", "10:45:15", { hours: 10, minutes: 45, seconds: 15 }],
+        ["HH:mm", "07:05", { hours: 7, minutes: 5 }],
+        ["H.mm", "7.05", { hours: 7, minutes: 5 }],
+    ])("format %s accepts typed %s", (format, typed, expected) =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ format, showSeconds: format.includes("ss") }));
+        const input = getInput() as HTMLInputElement;
+
+        input.value = typed;
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject(expected);
+        picker.destroy();
+    });
+
+    test("a 12-hour format reads its hours before its minutes", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts({ format: "h:mm A", clockMode: "12",
+            showSeconds: false }));
+        const input = getInput() as HTMLInputElement;
+
+        input.value = "7:05 PM";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject({ hours: 19, minutes: 5 });
+        picker.destroy();
+    });
+
+    test("a malformed time is still rejected and reverted", () =>
+    {
+        const picker = createTimePicker("test-time-container", defaultOpts());
+        const input = getInput() as HTMLInputElement;
+
+        input.value = "10:4x:15";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toMatchObject({ hours: 14, minutes: 30 });
+        picker.destroy();
+    });
+});

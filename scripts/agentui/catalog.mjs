@@ -217,7 +217,8 @@ function dataProps(surface, root, component)
 function clearText(surface)
 {
     return surface.change && "cleared" in surface.change
-        ? " When the user clears it, the path is deleted; delete the path to clear it." : "";
+        ? " When the user clears it, the path is deleted; delete the path to clear it, or leave it absent to "
+            + "start empty." : "";
 }
 
 /**

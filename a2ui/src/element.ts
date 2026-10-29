@@ -31,7 +31,7 @@ import { logDebug, logInfo } from "./log";
 import { PropTracker, type Delivery } from "./props";
 import { wireProviders, type WiredProviders } from "./providers";
 import { changeOptions, dispatchActionProp, wireRoundTrip, type RoundTrip } from "./roundtrip";
-import { bindingPath, fromWire, sameComponent, sameValue, toWire } from "./values";
+import { bindingPath, datePathsFor, fromWire, sameComponent, sameValue, toWire } from "./values";
 import type { AdapterDescriptor, ComponentContextLike, Sub, Validators } from "./types";
 
 /** What a per-tag subclass supplies. */
@@ -196,7 +196,10 @@ class Binding
     {
         if (this.#handle || this.#disposed || this.#assets !== "ready" || !this.#host.isConnected) { return; }
 
-        if (!this.#tracker.allBoundResolved() || this.#invalid.size > 0) { return; }
+        // For a clearable component an absent value is "cleared", at mount too (ADR-227).
+        const absentOk = clearsWhenAbsent(this.#env.descriptor) ? ["value"] : [];
+
+        if (!this.#tracker.allBoundResolved(absentOk) || this.#invalid.size > 0) { return; }
 
         if (this.#host.getRootNode() !== document)
         {
@@ -280,7 +283,7 @@ class Binding
     {
         if (delivery.removed) { this.#values.delete(name); this.#invalid.delete(name); return true; }
 
-        if (value === undefined && name === "value" && this.#handle && clearsWhenAbsent(this.#env.descriptor))
+        if (value === undefined && name === "value" && clearsWhenAbsent(this.#env.descriptor))
         {
             this.#invalid.delete(name);
             this.#values.set(name, null);
@@ -299,7 +302,7 @@ class Binding
         }
 
         this.#invalid.delete(name);
-        const wire = fromWire(value, this.#env.descriptor.dates.includes(name));
+        const wire = fromWire(value, datePathsFor(this.#env.descriptor.dates, name));
 
         if (wire.ok) { this.#values.set(name, wire.value); }
 
@@ -327,7 +330,7 @@ class Binding
                 + "in the catalog.";
         }
 
-        const wire = fromWire(value, d.dates.includes(name));
+        const wire = fromWire(value, datePathsFor(d.dates, name));
 
         return wire.ok ? undefined : `${d.name}.${name}: ${wire.reason}.`;
     }
@@ -437,9 +440,10 @@ class Binding
     #build(factory: unknown, container: HTMLElement, providers: WiredProviders): Record<string, unknown>
     {
         const d = this.#env.descriptor;
-        const options = { ...Object.fromEntries(this.#values), ...changeOptions(d, (v) => this.#onUserValue(v)),
-            ...providers.options };
-        const handle = invokerFor(d)(factory, container.id, options) as Record<string, unknown> | null;
+        const cleared = clearsWhenAbsent(d) && this.#values.get("value") === null;
+        const values = Object.fromEntries([...this.#values].filter(([n]) => !(cleared && n === "value")));
+        const options = { ...values, ...changeOptions(d, (v) => this.#onUserValue(v)), ...providers.options };
+        const handle = this.#invoke(factory, container, options, cleared);
 
         if (!handle || typeof handle !== "object")
         {
@@ -459,6 +463,30 @@ class Binding
         }
 
         return handle;
+    }
+
+    /**
+     * Calls the factory as an adapter-applied write. A component that normalises
+     * its own initial value fires onChange from its constructor (SprintPicker);
+     * that is not a user edit, so it neither writes back nor mounts again (B2).
+     * Mounted cleared, it gets setValue(null): a value option need not accept
+     * null, but a clearable handle's setValue must (ADR-222, ADR-227).
+     */
+    #invoke(factory: unknown, container: HTMLElement, options: Record<string, unknown>,
+        cleared: boolean): Record<string, unknown> | null
+    {
+        this.#applying = true;
+
+        try
+        {
+            const invoke = invokerFor(this.#env.descriptor);
+            const handle = invoke(factory, container.id, options) as Record<string, unknown> | null;
+
+            if (cleared && handle) { (handle.setValue as (v: null) => void).call(handle, null); }
+
+            return handle;
+        }
+        finally { this.#applying = false; }
     }
 
     #unmount(): void

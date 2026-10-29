@@ -120,6 +120,9 @@ export interface TimePickerOptions
 
 const LOG_PREFIX = "[TimePicker]";
 
+/** The one channel TimePicker emits (readiness step 2 B2). */
+const TIMEZONE_CHANNEL = "timezone";
+
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
@@ -364,6 +367,38 @@ function formatTime(
     return result;
 }
 
+/** The regex fragment each time-format token matches. */
+const TIME_TOKENS: Readonly<Record<string, string>> = {
+    HH: "(\\d{2})", hh: "(\\d{2})", mm: "(\\d{2})", ss: "(\\d{2})",
+    H: "(\\d{1,2})", h: "(\\d{1,2})", m: "(\\d{1,2})", s: "(\\d{1,2})",
+    A: "([AP]M)", a: "([ap]m)",
+};
+
+/**
+ * A time format as a regex source plus its tokens in the order they appear.
+ * Read left to right: the literal text between tokens is escaped and each
+ * token becomes its capture. Two bugs found by the A2UI gesture test
+ * (readiness step 2 B2) lived here: escaping after inserting the captures
+ * also escaped their {2} quantifiers, so no typed time ever matched, and
+ * captures were recorded in table order, so "H.mm" read minutes as hours.
+ */
+function timeFormatPattern(format: string): { pattern: string; captures: string[] }
+{
+    const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const captures: string[] = [];
+    let pattern = "";
+    let last = 0;
+
+    for (const token of format.matchAll(/HH|hh|mm|ss|H|h|m|s|A|a/g))
+    {
+        pattern += escape(format.slice(last, token.index)) + TIME_TOKENS[token[0]];
+        captures.push(token[0]);
+        last = (token.index ?? 0) + token[0].length;
+    }
+
+    return { pattern: pattern + escape(format.slice(last)), captures };
+}
+
 function parseTime(
     text: string, format: string, clockMode: "12" | "24"
 ): TimeValue | null
@@ -373,42 +408,7 @@ function parseTime(
     let seconds = 0;
     let period: string | null = null;
 
-    let pattern = format;
-    const captures: string[] = [];
-
-    const tokenMap: [string, string][] = [
-        ["HH", "(\\d{2})"],
-        ["hh", "(\\d{2})"],
-        ["mm", "(\\d{2})"],
-        ["ss", "(\\d{2})"],
-        ["H", "(\\d{1,2})"],
-        ["h", "(\\d{1,2})"],
-        ["m", "(\\d{1,2})"],
-        ["s", "(\\d{1,2})"],
-        ["A", "([AP]M)"],
-        ["a", "([ap]m)"],
-    ];
-
-    for (const [token, regex] of tokenMap)
-    {
-        const idx = pattern.indexOf(token);
-        if (idx !== -1)
-        {
-            captures.push(token);
-            pattern = pattern.replace(token, regex);
-        }
-    }
-
-    // Escape remaining special characters that could interfere
-    pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, (match) =>
-    {
-        // Don't escape capture groups we already placed
-        if (match === "(" || match === ")" || match === "\\" || match === "[" || match === "]")
-        {
-            return match;
-        }
-        return "\\" + match;
-    });
+    const { pattern, captures } = timeFormatPattern(format);
 
     try
     {
@@ -592,6 +592,15 @@ export interface TimePickerHandle
     setMinTime(time: TimeValue | null): void;
     setMaxTime(time: TimeValue | null): void;
     destroy(): void;
+
+    /** The surface contract (additive): TimePicker has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Subscribes to "timezone", fired with the IANA name whenever the timezone changes. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The timezone, as { timezone }; the time itself is the two-way value. */
+    getState(): Record<string, unknown>;
+    /** Sets state.timezone when present. */
+    setState(state: Record<string, unknown>): void;
 }
 
 export class TimePicker implements TimePickerHandle
@@ -608,6 +617,7 @@ export class TimePicker implements TimePickerHandle
      * asserted `.not.toThrow()` and could see neither (DEBT-TEST-1b).
      */
     private destroyed: boolean = false;
+    private readonly timezoneHandlers = new Set<(payload: unknown) => void>();
 
     private readonly instanceId: string;
     private options: Required<Pick<TimePickerOptions,
@@ -775,8 +785,54 @@ export class TimePicker implements TimePickerHandle
         {
             this.tzInputEl.value = resolved;
         }
-        this.options.onTimezoneChange?.(resolved);
+        this.emitTimezone(resolved);
         logDebug("setTimezone:", resolved);
+    }
+
+    // ── Surface contract (additive, readiness step 2 B2) ──
+
+    /** TimePicker has no data slots; the time is setValue(), the timezone setTimezone(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): TimePicker has no data slots. Use setValue() or `
+            + "setTimezone().");
+    }
+
+    /** Subscribes to "timezone"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== TIMEZONE_CHANNEL)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "${TIMEZONE_CHANNEL}".`);
+        }
+
+        this.timezoneHandlers.add(handler);
+
+        return () => { this.timezoneHandlers.delete(handler); };
+    }
+
+    /** The timezone. */
+    public getState(): Record<string, unknown>
+    {
+        return { timezone: this.timezone };
+    }
+
+    /** Restores a timezone captured by getState(). */
+    public setState(state: Record<string, unknown>): void
+    {
+        if ("timezone" in state) { this.setTimezone(state.timezone as string); }
+    }
+
+    /** onTimezoneChange first, exactly as before, then the "timezone" subscribers. */
+    private emitTimezone(tz: string): void
+    {
+        this.options.onTimezoneChange?.(tz);
+
+        for (const handler of this.timezoneHandlers)
+        {
+            try { handler(tz); }
+            catch (err) { logError("timezone handler error:", err); }
+        }
     }
 
     public open(): void
@@ -852,6 +908,7 @@ export class TimePicker implements TimePickerHandle
         }
 
         this.destroyed = true;
+        this.timezoneHandlers.clear();
 
         document.removeEventListener("click", this.boundOnDocumentClick);
         if (this.numericTimer)
@@ -1781,7 +1838,7 @@ export class TimePicker implements TimePickerHandle
             this.tzInputEl.value = tz;
         }
         this.hideTimezoneDropdown();
-        this.options.onTimezoneChange?.(tz);
+        this.emitTimezone(tz);
         logDebug("Timezone selected:", tz);
     }
 

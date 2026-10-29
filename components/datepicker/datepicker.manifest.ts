@@ -38,6 +38,12 @@ export const DATEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-calendar-date",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick one calendar date from a popup calendar, with optional limits.",
+        avoidWhen: "For a date and a time use DateTimeInput; for a fiscal month or quarter use PeriodPicker.",
+    },
+
     affords: [
         {
             shape: "scalar",
@@ -51,6 +57,19 @@ export const DATEPICKER_MANIFEST: CapabilityManifest =
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        // Cleared is an absent path: clearing deletes the bound value (readiness spec §3.4).
+        change: { cleared: null },
+        hostOnly: {
+            onSelect: "Fires when the user commits a pick; the two-way value already carries it to the agent.",
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+            isDateDisabled:
+                "Returns a per-day decision while the calendar renders; an agent round trip cannot sit there.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 25_441, mountCost: "light", holdsResources: false },

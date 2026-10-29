@@ -145,6 +145,8 @@ describe("buildDescriptors — fields", () =>
         ["OrientationPicker", { value: { type: "string" } }]]);
     const css = (rel: string) => rel.startsWith("components/stickynote/");
     const [s, p] = buildDescriptors([sticky, picker], cat, css).descriptors;
+    const withProps = (names: string[]) => ({ ...picker,
+        surface: surface({ name: "orientationpicker", dataProps: names, twoWayValue: true }) });
 
     test("a surface component: defaults, assets with css, events, no changeOption, dates", () =>
     {
@@ -197,6 +199,34 @@ describe("buildDescriptors — fields", () =>
             { option: "onFind", request: "find", actionProp: "onFind", resultProp: "findResult", concurrency: "latest" },
         ]);
         expect(p.providers).toEqual([]);
+    });
+
+    test("dates are paths: nested object fields, array items, $refs and union arms (B2)", () =>
+    {
+        const nested = catalog([["OrientationPicker", {
+            value: { $ref: "#/$defs/Sprint" },
+            disabled: { type: "array", items: { type: "string", format: "date-time" } },
+            tree: { $ref: "#/$defs/Node" },
+            either: { oneOf: [{ type: "null" }, { type: "string", format: "date-time" }] },
+        }]]);
+        (nested as Record<string, unknown>).$defs = {
+            Sprint: { type: "object", properties: { name: { type: "string" },
+                start: { type: "string", format: "date-time" } } },
+            Node: { type: "object", properties: { label: { type: "string" },
+                children: { type: "array", items: { $ref: "#/$defs/Node" } } } },
+        };
+        const [d] = buildDescriptors([withProps(["value", "disabled", "tree", "either"])], nested, css).descriptors;
+
+        expect(d.dates).toEqual(["value.start", "disabled[]", "either"]);
+    });
+
+    test("a recursive type that holds a date is a literate build error, not a silently unrevived date", () =>
+    {
+        const recursive = catalog([["OrientationPicker", { tree: { $ref: "#/$defs/Node" } }]]);
+        (recursive as Record<string, unknown>).$defs = { Node: { type: "object", properties: { at: { type: "string", format: "date-time" },
+            children: { type: "array", items: { $ref: "#/$defs/Node" } } } } };
+
+        expect(() => buildDescriptors([withProps(["tree"])], recursive, css)).toThrow("tree.children[]");
     });
 
     test("an overlay manifest carries its default height; a framed one adds no key (#41)", () =>

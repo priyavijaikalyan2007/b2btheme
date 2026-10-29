@@ -16,7 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 
-import { sampleValue } from "../a2ui/sample-values";
+import { sampleProp } from "../a2ui/sample-values";
 import { errors, open, send, surface, useHarness } from "./a2ui/adapter-page";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +56,7 @@ function sampleProps(name: string): Record<string, unknown>
     const own: Record<string, Any> = CATALOG.components[name].allOf[2].properties;
 
     return Object.fromEntries(Object.entries(own).filter(([, schema]) => Array.isArray(schema.anyOf))
-        .map(([prop, schema]) => [prop, sampleValue(schema.anyOf[0], 0, CATALOG, `#/components/${name}/${prop}`)]));
+        .map(([prop, schema]) => [prop, sampleProp(prop, schema.anyOf[0], 0, CATALOG, `#/components/${name}/${prop}`)]));
 }
 
 useHarness();

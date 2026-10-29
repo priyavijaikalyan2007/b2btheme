@@ -19,11 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `field` conformance: the handle exposes getValue and setValue
- * (ADR-134), so the canvas can read and set its value, and the conformance
- * suite verifies that contract. `field` is also the level the suite computes
- * this component requires (ADR-219). Promoted from `display` on 2026-10-25,
- * when the suite showed it already met that level.
+ * Declared at `surface` conformance (readiness step 2 B2): it emits "timezone"
+ * through an additive on() whenever the zone changes, and restores the zone
+ * through getState()/setState(). The time itself is the two-way value.
  */
 export const TIMEPICKER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +31,31 @@ export const TIMEPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-clock",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick a time of day, in a 12- or 24-hour clock, optionally with a timezone.",
+        avoidWhen: "For a date and time together use DateTimeInput; for a length of time use DurationPicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        // The zone changes what the time means, and TimeValue does not carry it (readiness step 2 B2).
+        { name: "timezone", payload: "scalar", multi: false, legacyOption: "onTimezoneChange" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["timezone"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        // Cleared is an absent path: clearing deletes the bound value (readiness spec §3.4).
+        change: { cleared: null },
+        hostOnly: {
+            onSelect: "Fires when the user commits a pick; the two-way value already carries it to the agent.",
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+        },
+    },
 
     regions: ["timepicker:tz-list"],
 
@@ -47,6 +65,6 @@ export const TIMEPICKER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 200, h: 40 },
     defaultOptions: {},
 
-    conformance: "field",
+    conformance: "surface",
     priority: 50,
 };

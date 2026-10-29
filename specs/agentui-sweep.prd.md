@@ -11,7 +11,7 @@ Created: 2026
 
 # Agent UI readiness, step 2: providers and the #20 sweep
 
-**Status:** P0 and B1 implemented 2026-10-28. Approved 2026-10-28; amended the same day before planning (S2, S6, S7; §1.3, §1.4, §3.2, §3.8, §5.2, §5.3, §6.1, §8)
+**Status:** P0, B1 and B2 implemented 2026-10-28. Approved 2026-10-28; amended the same day before planning (S2, S6, S7; §1.3, §1.4, §3.2, §3.8, §5.2, §5.3, §6.1, §8)
 **Tracking:** epic [#16](https://github.com/priyavijaikalyan2007/b2btheme/issues/16). Closes [#31](https://github.com/priyavijaikalyan2007/b2btheme/issues/31) (except the action bar, which moves to a new issue) and [#20](https://github.com/priyavijaikalyan2007/b2btheme/issues/20) (for the 76 components in §5).
 **Depends on:** readiness step 1 (`specs/agentui-readiness.prd.md`, ADR-222), #41 (ADR-224) and browser tests in CI (ADR-223), all merged.
 **Spec author:** Agent + User
@@ -366,3 +366,4 @@ Each batch adds a CHANGELOG line, a `history.jsonl` line, its #20 checkboxes, an
 | 2026-10-28 | Before planning: S6 (only meaningful events), S7 (answer schema in `$defs`), pilot TreeView instead of PeoplePicker (PeoplePicker to B3). §1.3 allows additive handle methods. | Found while planning: any event or provider forces `surface` (fact 9); a binding-only result would have hidden the answer's schema. User decisions on S6 and the pilot. |
 | 2026-10-28 | P0: the action bar moved to #45. G3 found that TreeView's double-click called `onActivate` without emitting the declared `activate` channel; fixed in its own commit (§1.3). The catalog's description text changed with the preamble, so the baseline was rewritten in Task 2 rather than Task 4. | Implementation |
 | 2026-10-28 | B1: decisions B1-1 (the preset pickers' Custom… is an event) and B1-2 (a stateless surface component declares `stateKeys: ["value"]`). Const unions are compared as sets and emitted sorted (a TypeScript ordering bug surfaced by B1). | User decisions; implementation |
+| 2026-10-28 | B2: TimePicker's timezone is an event (S6), `stateKeys: ["timezone"]`. Cleared is absent at mount too (a step 1 gap). Fixes found by G3 and the gesture tests: nested date paths, constructor onChange, `Date | string` and nullable schemas, TimePicker typed input. | Implementation |

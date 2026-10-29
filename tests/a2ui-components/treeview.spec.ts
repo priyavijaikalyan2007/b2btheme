@@ -105,6 +105,21 @@ test.describe("TreeView under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
+    // children is TreeNode[] | null (null = lazy). As { type: "null" }, web_core matched every array
+    // against the null arm too, so a literal node with children was rejected; { const: null } since B2.
+    test("TreeView: a literal node with a children array renders, and so does a lazy null", async ({ page }) =>
+    {
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "TreeView", roots: [
+            { id: "p", label: "Parent", kind: "folder", expanded: true,
+                children: [{ id: "c", label: "Child", kind: "item" }] },
+            folder("z", "Lazy one")] }));
+
+        await expect(page.locator("outcrop-tree-view").getByText("Child")).toBeVisible();
+        await expect(page.locator("outcrop-tree-view").getByText("Lazy one")).toBeVisible();
+        expect(await errors(page)).toEqual([]);
+    });
+
     test("TreeView: an unanswered request times out with OUTCROP_PROVIDER_TIMEOUT", async ({ page }) =>
     {
         await open(page, "lit", { providerTimeoutMs: "300" });

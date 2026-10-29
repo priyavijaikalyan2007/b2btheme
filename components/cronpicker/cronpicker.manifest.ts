@@ -33,11 +33,25 @@ export const CRONPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-calendar-range",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user build a recurring schedule as a CRON expression, with presets and a readable summary.",
+        avoidWhen: "For a single date use DatePicker; for a length of time use DurationPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        hostOnly: {
+            onPresetSelect:
+                "Fires when a preset is chosen; the two-way value already carries the resulting expression.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 18743, mountCost: "light", holdsResources: false },

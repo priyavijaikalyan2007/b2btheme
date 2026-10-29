@@ -48,7 +48,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
 ## What agents (the AI kind) are told
 
 - **Bind `value` to read the user's edit.** A literal `value` means "set it and don't read it back". `onChange` still fires.
-- **Read each component's description.** It says when to choose the component and what to use instead. When a `value` description says the path is deleted on clear, an absent path means the user cleared it; delete the path to clear it yourself.
+- **Read each component's description.** It says when to choose the component and what to use instead. When a `value` description says the path is deleted on clear, an absent path means the user cleared it; delete the path to clear it yourself, or leave it absent to start the component empty.
 - **Bind `eventData` to read event payloads.** The component writes each payload to `<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can read it. Without `eventData` the action still fires, with no payload.
 - **Answer a component's requests (providers).** A component that needs data sends `on<Request>`, with the request at `<eventData path>/<request>`. It asks only when `on<Request>`, `<request>Result` (bound to a path) and `eventData` are all set. Answer each request once, with `updateDataModel` at the path bound to `<request>Result`, with a value matching the `$defs` entry its description names. It asks again only after you answer; a request you never answer fails with `OUTCROP_PROVIDER_TIMEOUT`.
 - **Expect these error codes** through the surface:
@@ -81,7 +81,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 19 components that are. The 82 components on `PENDING_CLASSIFICATION` join as #20 classifies them, in the batches of `specs/agentui-sweep.prd.md`.
+- **In the catalog:** the 26 components that are. The 75 components on `PENDING_CLASSIFICATION` join as #20 classifies them, in the batches of `specs/agentui-sweep.prd.md`.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.

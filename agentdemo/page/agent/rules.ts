@@ -19,7 +19,7 @@ export const AGENT_RULES = [
         + "`onChange` still fires.",
     "- **Read each component's description.** It says when to choose the component and what to use instead. When a "
         + "`value` description says the path is deleted on clear, an absent path means the user cleared it; delete "
-        + "the path to clear it yourself.",
+        + "the path to clear it yourself, or leave it absent to start the component empty.",
     "- **Bind `eventData` to read event payloads.** The component writes each payload to "
         + "`<eventData path>/<channel>` **before** sending the `on<Channel>` action, so the action's context can "
         + "read it. Without `eventData` the action still fires, with no payload.",

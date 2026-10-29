@@ -53,10 +53,61 @@ export function normaliseTypiaUnit(unit)
     }
 
     const toDefs = (ref) => (ref.startsWith(TYPIA_PREFIX) ? DEFS_PREFIX + ref.slice(TYPIA_PREFIX.length) : ref);
-    const defs = sortConstUnions(closeObjects(mapRefs(unit.components?.schemas ?? {}, toDefs)));
-    const root = inlineRoot(sortConstUnions(closeObjects(mapRefs(unit.schema, toDefs))), defs);
+    const tidy = (node) => sortConstUnions(dropCoveredArms(nullAsConst(closeObjects(mapRefs(node, toDefs)))));
+    const defs = tidy(unit.components?.schemas ?? {});
+    const root = inlineRoot(tidy(unit.schema), defs);
 
     return { $schema: DRAFT_2020_12, ...root, ...(Object.keys(defs).length > 0 ? { $defs: defs } : {}) };
+}
+
+/**
+ * Rewrites `{ type: "null" }` as `{ const: null }`, the same schema in JSON
+ * Schema. web_core converts a type it does not know, "null" included, to
+ * z.unknown(), which matches everything, so oneOf [null, X] rejected every
+ * literal X; it reads `const` as z.literal (readiness step 2 B2).
+ */
+function nullAsConst(node)
+{
+    if (Array.isArray(node)) { return node.map(nullAsConst); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    const out = Object.fromEntries(Object.entries(node).map(([k, v]) => [k, nullAsConst(v)]));
+
+    if (out.type !== "null") { return out; }
+
+    const { type, ...rest } = out;
+    void type;
+
+    return { const: null, ...rest };
+}
+
+/**
+ * Drops a `{ type: T, format: F }` oneOf arm when a plain `{ type: T }` arm is
+ * also there, and unwraps a oneOf left with one arm. TypeScript's `Date | string`
+ * becomes exactly that pair; every date string matches both arms, and oneOf
+ * demands exactly one, so a validator rejected every value (readiness step 2 B2).
+ */
+function dropCoveredArms(node)
+{
+    if (Array.isArray(node)) { return node.map(dropCoveredArms); }
+
+    if (node === null || typeof node !== "object") { return node; }
+
+    const out = Object.fromEntries(Object.entries(node).map(([k, v]) => [k, dropCoveredArms(v)]));
+
+    if (!Array.isArray(out.oneOf)) { return out; }
+
+    const plain = new Set(out.oneOf.filter((a) => Object.keys(a).length === 1 && typeof a.type === "string")
+        .map((a) => a.type));
+    const arms = out.oneOf.filter((a) => !(typeof a.format === "string" && plain.has(a.type)));
+
+    if (arms.length !== 1) { return { ...out, oneOf: arms }; }
+
+    const { oneOf, ...rest } = out;
+    void oneOf;
+
+    return { ...rest, ...arms[0] };
 }
 
 /**

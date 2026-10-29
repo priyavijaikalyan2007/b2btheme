@@ -33,11 +33,26 @@ export const DURATIONPICKER_MANIFEST: CapabilityManifest =
     icon: "bi-hourglass-split",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user enter a length of time in units such as days, hours and minutes.",
+        avoidWhen: "For a time of day use TimePicker; for a recurring schedule use CronPicker.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B2).
+    protocol: {
+        hostOnly: {
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+            displayFormat: "A formatting function; the default duration format applies over A2UI.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 21177, mountCost: "moderate", holdsResources: false },
