@@ -900,7 +900,8 @@ export const BASELINES = {
     // ADR-231 (2026-10-29): 425 -> 392, seven B5 editors and forms classified.
     // ADR-232 (2026-10-29): 392 -> 326, the nine B6 data views classified.
     // ADR-234 (2026-10-29): 326 -> 318, PromptTemplateManager classified (B7).
-    unclassifiedOptions: 318,
+    // ADR-234 (2026-10-29): 318 -> 299, ActionItems classified (B7).
+    unclassifiedOptions: 299,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -937,7 +938,8 @@ export const BASELINES = {
     // ADR-231 (2026-10-29): 54 -> 47, seven B5 editors and forms classified (propertyinspector stays pending).
     // ADR-232 (2026-10-29): 47 -> 38, the nine B6 data views classified.
     // ADR-234 (2026-10-29): 38 -> 37, PromptTemplateManager classified (B7).
-    componentsPendingClassification: 37,
+    // ADR-234 (2026-10-29): 37 -> 36, ActionItems classified (B7).
+    componentsPendingClassification: 36,
 };
 
 /*
@@ -1030,11 +1032,12 @@ export const FLOORS = {
     // ADR-229 (2026-10-29): 427, 312, 2 and 55 after B4. ADR-230 (2026-10-29): 425 and 54 after P1.
     // ADR-231 (2026-10-29): 392, 286, 1 and 47 after B5. ADR-232 (2026-10-29): 326, 202 and 38 after B6.
     // ADR-234 (2026-10-29): 318, 191 and 37 once PromptTemplateManager was classified (B7).
-    unclassifiedOptions: 318,
+    // ADR-234 (2026-10-29): 299 and 36 once ActionItems was classified (B7).
+    unclassifiedOptions: 299,
     protocolPropsMissingJsdoc: 191,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 37,
+    componentsPendingClassification: 36,
 };
 
 /**

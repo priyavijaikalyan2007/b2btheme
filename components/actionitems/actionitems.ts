@@ -382,7 +382,10 @@ export interface ActionItemsOptions
     /** Show due date display. Default: true. */
     showDueDates?: boolean;
 
-    /** Show comment count badge and comment slot. Default: true. */
+    /**
+     * Show comment count badge and comment slot. The slot is filled by
+     * onRenderCommentSlot, and opens empty without it. Default: true.
+     */
     showComments?: boolean;
 
     /** Show tags/labels on items. Default: true. */
