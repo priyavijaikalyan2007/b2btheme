@@ -1853,3 +1853,33 @@ For the seven surface components above:
   - G3 honours glue `heldProps`;
   - `p1-dependencies.spec.ts`: DocViewer renders through marked with SRI, its page URL is rejected, and a PresenceIndicator click reaches the agent.
 - **Bookkeeping:** pending 55 → 54; `unclassifiedOptions` 427 → 425.
+
+---
+
+## B5: editors and forms (as built)
+
+**Seven of eight join:** RichTextInput, MarkdownEditor, LatexEditor, CodeEditor, Stepper, DynamicFormSwitcher and InlineToolbar. PropertyInspector stays pending: its content arrives through `open()` as DOM elements (step 4).
+
+| Component | Events (payload) | `stateKeys` | Notes |
+|---|---|---|---|
+| RichTextInput | `submit` (the value) | `["value"]` | `outputFormat` host-only (markdown out, HTML in) |
+| MarkdownEditor | `save` (markdown) | `["value"]` | deps `vditor`, `vditor-css` (new SRI asset), `dompurify` |
+| LatexEditor | `confirm` (`{ latex, mathml }`) | `["value"]` | deps `katex`, `katex-css` |
+| CodeEditor | `save` (code) | `["value"]` | dep `codemirror6`; a subscriber enables Save |
+| Stepper | `stepChange` (`{ from, to }`), `finish`, `saveDraft` (active step) | `["activeStep"]` | `steps` schema override; content and validate host-only |
+| DynamicFormSwitcher | `change` (`{ variantId, values }`), also on a variant switch | `["variant", "values"]` | `change: "event"`; built-in field types only; additive `getElement()` |
+| InlineToolbar | `itemClick` (`{ id, active }`) | `[]` | no `legacyOption` (`onClick` is per item) |
+
+**Also built:**
+- **Generator:**
+  - a prop with a `protocol.schemas` entry isn't given to typia; it takes its JSDoc as description and stays required;
+  - unions of consts and bare primitive types are sorted and compared as sets.
+- **Harness:**
+  - async triggers;
+  - `jsdomStandIns` (the Vditor stand-in);
+  - `heldProps` in every G3 test.
+- **Pins:**
+  - pending 54 → 47;
+  - `unclassifiedOptions` 425 → 392;
+  - `protocolPropsMissingJsdoc` 312 → 286;
+  - `changeMismatches` 2 → 1.
