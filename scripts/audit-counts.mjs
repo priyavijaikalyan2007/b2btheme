@@ -905,7 +905,8 @@ export const BASELINES = {
     // ADR-234 (2026-10-29): 288 -> 276, Conversation classified (B7).
     // ADR-234 (2026-10-29): 276 -> 268, ExplorerPicker classified (B7).
     // ADR-235 (2026-10-29): 268 -> 265, MarketingHero classified (B8).
-    unclassifiedOptions: 265,
+    // ADR-235 (2026-10-29): 265 -> 264, SiteFooter classified (B8).
+    unclassifiedOptions: 264,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -949,7 +950,8 @@ export const BASELINES = {
     // ADR-234 (2026-10-29): 35 -> 34, Conversation classified (B7).
     // ADR-234 (2026-10-29): 34 -> 33, ExplorerPicker classified (B7).
     // ADR-235 (2026-10-29): 33 -> 32, MarketingHero classified (B8).
-    componentsPendingClassification: 32,
+    // ADR-235 (2026-10-29): 32 -> 31, SiteFooter classified (B8).
+    componentsPendingClassification: 31,
 };
 
 /*
@@ -1047,11 +1049,12 @@ export const FLOORS = {
     // ADR-234 (2026-10-29): 276 and 34 once Conversation was classified (B7).
     // ADR-234 (2026-10-29): 268, 161 and 33 once ExplorerPicker was classified (B7).
     // ADR-235 (2026-10-29): 265 and 32 once MarketingHero was classified (B8).
-    unclassifiedOptions: 265,
+    // ADR-235 (2026-10-29): 264 and 31 once SiteFooter was classified (B8).
+    unclassifiedOptions: 264,
     protocolPropsMissingJsdoc: 161,
     changeMismatches: 1,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 32,
+    componentsPendingClassification: 31,
 };
 
 /**

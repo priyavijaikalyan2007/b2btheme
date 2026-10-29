@@ -69,7 +69,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "propertyinspector",
     "ribbon",
     "ribbonbuilder",
-    "sitefooter",
     "spinemap",
     "splitlayout",
     "stacklayout",
