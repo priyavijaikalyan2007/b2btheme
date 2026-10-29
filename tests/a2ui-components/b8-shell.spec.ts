@@ -209,4 +209,20 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
         await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
             path: "/tabs" })]);
     });
+
+    test("RibbonBuilder: adding a tab sends onChange with the config, and Export MD sends the Markdown", async ({ page }) =>
+    {
+        await mount(page, "RibbonBuilder", { ...EV, onChange: act("change", "change"), onExport: act("md", "export") });
+
+        await page.locator(".ribbonbuilder-toolbar-btn[title='Add Tab']").click();
+        await expect.poll(async () => (await actions(page)).length).toBe(1);
+        const [change] = await actions(page);
+        expect((change.context as { p: { tabs: unknown[] } }).p.tabs.length).toBeGreaterThan(0);
+
+        await page.locator(".ribbonbuilder-toolbar-btn[title='Export MD']").click();
+        await expect.poll(async () => (await actions(page)).map((a) => a.name)).toEqual(["change", "md"]);
+        const md = (await actions(page))[1].context as { p: string };
+        expect(md.p).toContain("|");
+        expect(await errors(page)).toEqual([]);
+    });
 });
