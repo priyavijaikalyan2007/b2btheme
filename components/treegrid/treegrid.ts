@@ -99,31 +99,56 @@ export interface TreeGridContextMenuItem
 export interface TreeGridOptions
 {
     containerId: string;
+    /** Required. The grid's accessible name, set as aria-label on the treegrid element. */
     label: string;
+    /** Required. The root nodes; each may nest children. An empty array shows emptyMessage. */
     nodes: TreeGridNode[];
+    /** Required. The data columns shown to the right of the tree column; may be empty. */
     columns: TreeGridColumn[];
+    /** Header text of the tree (first) column. Default "Name". */
     treeColumnLabel?: string;
+    /** Initial width of the tree column in pixels. Default 300. */
     treeColumnWidth?: number;
+    /** Minimum width in pixels the tree column can be resized to. Default 120. */
     treeColumnMinWidth?: number;
+    /** Whether the user can drag the tree column's header edge to resize it. Default true. */
     treeColumnResizable?: boolean;
+    /** "single" (default), "multi" (Ctrl/Cmd+click toggles, Shift+click ranges, Ctrl+A all) or "none". */
     selectionMode?: TreeGridSelectionMode;
+    /** Lets the user drag rows onto other rows (before, inside or after) and fires onDrop. Default false. */
     enableDragDrop?: boolean;
+    /** Lets the user drag data column headers to reorder the columns. Default false. */
     enableColumnReorder?: boolean;
     /** When true, the grid does not sort internally. The app must sort
      *  the data in the onColumnSort callback and call refresh(). */
     externalSort?: boolean;
+    /** Shows contextMenuItems on right-click of a row. Default false. */
     enableContextMenu?: boolean;
+    /** Adds a header button that opens a checklist to show or hide data columns. Default false. */
     showColumnPicker?: boolean;
+    /** The right-click menu items, used when enableContextMenu is true; no menu opens when empty. Default none. */
     contextMenuItems?: TreeGridContextMenuItem[];
+    /** Indent in pixels per tree level in the tree column. Default 20. */
     indentPx?: number;
+    /** Zebra-stripes alternate rows. Rows are striped at render unless false; re-striping after expand/collapse
+     *  happens only when true. */
     rowStriping?: boolean;
+    /** Not applied yet; the header is always sticky (treegrid.scss). */
     stickyHeader?: boolean;
+    /** Row height in pixels for virtual scrolling (sets each virtual row's height) and scrollToNode; normal
+     *  rows keep the stylesheet height. Default 32. */
     rowHeight?: number;
+    /** CSS height of the grid root, such as "400px". Default "100%". */
     height?: string;
+    /** CSS width of the grid root. Default "100%". */
     width?: string;
+    /** Extra CSS class added to the grid root. Default none. */
     cssClass?: string;
+    /** Text shown when there are no nodes. Default "No data to display". */
     emptyMessage?: string;
+    /** "auto" (default) renders only the visible rows above 5000 nodes; "enabled" always does; "disabled" never. */
     virtualScrolling?: "auto" | "enabled" | "disabled";
+    /** Extra rows rendered above and below the viewport when virtual scrolling. Default 50. */
     scrollBuffer?: number;
     onRowSelect?: (node: TreeGridNode, selected: boolean) => void;
     onSelectionChange?: (nodes: TreeGridNode[]) => void;
@@ -463,6 +488,35 @@ export interface TreeGridHandle
     scrollToNode(nodeId: string): void;
     getElement(): HTMLElement | null;
     getId(): string;
+
+    /** The surface contract (additive): TreeGrid has no data slots, so this throws. Use setNodes() and friends. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "selection", "activate", "editCommit", "contextMenuAction" or "drop"; any other channel
+     * throws. Each fires after its legacy callback, and without it. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { expanded, selection }: the ids of the expanded nodes and of the selected nodes. */
+    getState(): Record<string, unknown>;
+    /**
+     * Silently (no callback, no channel) expands exactly state.expanded and selects exactly state.selection, when
+     * present. An unloaded lazy node starts its async load and joins expanded when it completes.
+     */
+    setState(state: Record<string, unknown>): void;
+}
+
+/** The channels on() accepts (surface contract, B6). */
+const SURFACE_CHANNELS = ["selection", "activate", "editCommit", "contextMenuAction", "drop"] as const;
+type SurfaceChannel = typeof SURFACE_CHANNELS[number];
+
+/**
+ * A JSON-safe copy of a node for a channel payload: every field except children and data, which may be large or
+ * hold non-JSON values.
+ */
+function toNodeSummary(node: TreeGridNode): Record<string, unknown>
+{
+    const { children: _children, data: _data, ...summary } = node;
+    return summary;
 }
 
 export class TreeGrid implements TreeGridHandle
@@ -493,6 +547,10 @@ export class TreeGrid implements TreeGridHandle
     private sortDirection: TreeGridSortDirection | null = null;
     private isEditing = false;
     private destroyed = false;
+
+    // Surface contract channel subscribers, one Set per declared channel (B6)
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
 
     // DOM references
     private containerEl: HTMLElement | null = null;
@@ -853,6 +911,10 @@ export class TreeGrid implements TreeGridHandle
             return;
         }
         logInfo("Destroying instance");
+        for (const handlers of this.channelHandlers.values())
+        {
+            handlers.clear();
+        }
         document.removeEventListener("click", this.boundOnDocumentClick);
         document.removeEventListener("keydown", this.boundOnDocumentKeydown);
         if (this.bodyEl)
@@ -1411,15 +1473,10 @@ export class TreeGrid implements TreeGridHandle
     }
 
     /**
-     * Fires the onSelectionChange callback with all selected nodes.
+     * Fires the onSelectionChange callback with all selected nodes, then the "selection" channel.
      */
     private fireSelectionChange(): void
     {
-        if (!this.options.onSelectionChange)
-        {
-            return;
-        }
-
         const nodes: TreeGridNode[] = [];
 
         for (const id of this.selectedIds)
@@ -1431,7 +1488,12 @@ export class TreeGrid implements TreeGridHandle
             }
         }
 
-        this.options.onSelectionChange(nodes);
+        if (this.options.onSelectionChange)
+        {
+            this.options.onSelectionChange(nodes);
+        }
+
+        this.emitChannel("selection", () => nodes.map(toNodeSummary));
     }
 
     // ========================================================================
@@ -2102,6 +2164,7 @@ export class TreeGrid implements TreeGridHandle
             {
                 this.options.onRowActivate(entry.node);
             }
+            this.emitChannel("activate", () => toNodeSummary(entry.node));
             return;
         }
 
@@ -2399,6 +2462,7 @@ export class TreeGrid implements TreeGridHandle
         {
             this.options.onEditCommit(node, col, oldValue, newValue);
         }
+        this.emitChannel("editCommit", () => ({ nodeId: node.id, columnId: col.id, oldValue, newValue }));
 
         this.finishEditing();
         this.restoreCellContent(node, col);
@@ -2792,6 +2856,10 @@ export class TreeGrid implements TreeGridHandle
             if (node && this.options.onRowActivate)
             {
                 this.options.onRowActivate(node);
+            }
+            if (node)
+            {
+                this.emitChannel("activate", () => toNodeSummary(node));
             }
             return;
         }
@@ -4106,6 +4174,7 @@ export class TreeGrid implements TreeGridHandle
             {
                 this.options.onDrop([source], target, pos);
             }
+            this.emitChannel("drop", () => ({ sourceIds: [source.id], targetId: target.id, position: pos }));
 
             logInfo(`DnD: ${sourceId} -> ${pos} ${targetId}`);
             return;
@@ -4256,6 +4325,10 @@ export class TreeGrid implements TreeGridHandle
         if (node && this.options.onContextMenuAction)
         {
             this.options.onContextMenuAction(actionId, node);
+        }
+        if (node)
+        {
+            this.emitChannel("contextMenuAction", () => ({ actionId, nodeId }));
         }
         logInfo(`Context action: ${actionId} on ${nodeId}`);
     }
@@ -4759,6 +4832,96 @@ export class TreeGrid implements TreeGridHandle
         const rowHeight = this.options.rowHeight ?? DEFAULT_ROW_HEIGHT;
         const targetTop = idx * rowHeight;
         this.bodyEl.scrollTop = targetTop;
+    }
+
+    // ── Surface contract (additive, readiness step 2 B6) ──
+
+    /** TreeGrid has no data slots; use setNodes(), addNode(), updateNode() or removeNode(). */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): TreeGrid has no data slots. `
+            + "Use setNodes(), addNode(), updateNode() or removeNode().");
+    }
+
+    /** Subscribes to a declared channel; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel);
+        if (!handlers)
+        {
+            throw new Error(
+                `${LOG_PREFIX} on("${channel}"): unknown channel. `
+                + `The channels are ${SURFACE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return (): void => { handlers.delete(handler); };
+    }
+
+    /** The ids of the expanded nodes and of the selected nodes. */
+    public getState(): Record<string, unknown>
+    {
+        return { expanded: Array.from(this.expandedIds), selection: Array.from(this.selectedIds) };
+    }
+
+    /**
+     * Restores state captured by getState() silently: no legacy callback and no channel fires. Unknown ids are
+     * ignored, and selection becomes exactly the given ids. A lazy node not loaded yet starts its async load
+     * instead, so its id joins getState().expanded, and onRowToggle fires, only when the load completes.
+     */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (Array.isArray(state.expanded))
+        {
+            this.expandedIds.clear();
+            for (const id of state.expanded as string[])
+            {
+                const node = this.nodeMap.get(id);
+                if (node && node.lazy && node.children === null)
+                {
+                    this.startLazyLoad(node);
+                }
+                else if (node && isNodeParent(node))
+                {
+                    this.expandedIds.add(id);
+                }
+            }
+        }
+
+        if (Array.isArray(state.selection))
+        {
+            this.selectedIds = new Set((state.selection as string[]).filter((id) => this.nodeMap.has(id)));
+        }
+
+        this.invalidateVisibleCache();
+        this.renderTree();
+    }
+
+    /**
+     * Delivers a channel payload to each subscriber, isolated by try/catch. The caller has already invoked the
+     * legacy callback. Each subscriber gets its own fresh copy, built only when somebody listens.
+     */
+    private emitChannel(channel: SurfaceChannel, buildPayload: () => unknown): void
+    {
+        const handlers = this.channelHandlers.get(channel)!;
+        if (handlers.size === 0)
+        {
+            return;
+        }
+
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(buildPayload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw`, err);
+            }
+        }
     }
 
     /**
