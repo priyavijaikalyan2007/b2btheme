@@ -73,7 +73,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "splitlayout",
     "stacklayout",
     "tabbedpanel",
-    "tenantswitcher",
     "timeline",
     "usermenu",
 ]);

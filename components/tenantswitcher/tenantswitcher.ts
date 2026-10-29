@@ -14,38 +14,68 @@
 // TYPES & INTERFACES
 // ============================================================================
 
+/** One tenant (organisation or workspace) the user can switch to. */
 export interface Tenant
 {
+    /** Stable id, referenced by activeTenantId. */
     id: string;
+    /** Display name. */
     name: string;
+    /** Bootstrap Icons class (e.g. "bi bi-building"), or an image URL starting with http or /. */
     icon?: string;
+    /** Avatar image URL; shown instead of the icon. */
     avatarUrl?: string;
+    /** The user's role in this tenant, such as "Admin". */
     role?: string;
+    /** Number of members, shown when showMemberCount is on. */
     memberCount?: number;
+    /** Plan name, such as "Enterprise", shown when showPlan is on. */
     plan?: string;
+    /** Arbitrary payload passed back to onSwitch. */
     data?: Record<string, unknown>;
 }
 
 export interface TenantSwitcherOptions
 {
+    /** The tenants to choose from, in display order. */
     tenants: Tenant[];
+    /** Id of the tenant the user is in now; shown on the trigger. */
     activeTenantId: string;
+    /** Opens the list as a dropdown under the trigger or as a modal dialog. Default: "dropdown". */
     mode?: "dropdown" | "modal";
+    /** Shows a search box above the list. Default: on when there are more than five tenants. */
     showSearch?: boolean;
+    /** Shows a Create button below the list. Default: true. */
     showCreateButton?: boolean;
+    /** Shows each tenant's member count. Default: false. */
     showMemberCount?: boolean;
+    /** Shows the user's role in each tenant. Default: true. */
     showRole?: boolean;
+    /** Shows each tenant's plan. Default: false. */
     showPlan?: boolean;
+    /** Create button label. Default: "Create tenant". */
     createLabel?: string;
+    /** Search box placeholder. Default: "Search tenants...". */
     placeholder?: string;
+    /** Trigger size. Default: "default". */
     size?: "sm" | "default" | "lg";
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
+    /** Fires when the user picks a tenant other than the active one. */
     onSwitch?: (tenant: Tenant) => void;
+    /** Fires when the user clicks Create. */
     onCreate?: () => void;
+    /**
+     * Searches beyond the given tenants: receives the search text and
+     * answers with the matching tenants. Without it the list is filtered
+     * locally by name.
+     */
     onSearch?: (query: string) => Promise<Tenant[]>;
+    /** Fires when the list opens. */
     onOpen?: () => void;
+    /** Fires when the list closes. */
     onClose?: () => void;
 }
 

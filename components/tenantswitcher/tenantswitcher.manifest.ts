@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B8): picking a tenant
+ * and clicking Create emit through an additive on(), the active tenant is its
+ * state, and its search can be answered by the agent.
  */
 export const TENANTSWITCHER_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +32,34 @@ export const TENANTSWITCHER_MANIFEST: CapabilityManifest =
     icon: "bi-building",
     category: "social",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user switch between the organisations or workspaces they belong to, shown as a trigger "
+            + "with the active one's name and a searchable list.",
+        avoidWhen: "For choosing an option in a form use ChoicePicker; for choosing people use PeoplePicker.",
+    },
+
     affords: [],
-    emits: [],
+    emits: [
+        { name: "switch", payload: "record", multi: false, legacyOption: "onSwitch" },
+        { name: "create", payload: "scalar", multi: false, legacyOption: "onCreate" },
+    ],
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["activeTenantId"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, ADR-225, readiness step 2 B8).
+    protocol: {
+        providers: {
+            // Searches beyond the given tenants; a newer query replaces an unanswered one.
+            onSearch: { request: "search" },
+        },
+        hostOnly: {
+            onOpen: "Fires when the list opens; that is view state, not information for an agent.",
+            onClose: "Fires when the list closes; that is view state, not information for an agent.",
+            "tenants[].data": "An arbitrary payload for host callbacks; it has no schema an agent could follow.",
+        },
+    },
 
     regions: ["tenantswitcher:list"],
 
@@ -47,6 +69,6 @@ export const TENANTSWITCHER_MANIFEST: CapabilityManifest =
     defaultSize: { w: 250, h: 300 },
     defaultOptions: { tenants: [], activeTenantId: "" },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
