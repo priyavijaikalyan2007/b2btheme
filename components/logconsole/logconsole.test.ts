@@ -458,3 +458,31 @@ describe("edge cases", () =>
         lc.destroy();
     });
 });
+
+describe("entries option (additive, readiness step 2 B6)", () =>
+{
+    test("entries_RenderAtConstruction_InOrder", async () =>
+    {
+        const lc = createLogConsole({ entries: [
+            { timestamp: "10:00:00.000", level: "info", message: "started" },
+            { timestamp: "10:00:01.000", level: "error", message: "failed" },
+        ] });
+
+        // Entries reach the DOM on a requestAnimationFrame, like log().
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        const rows = lc.getElement().querySelectorAll(".logconsole-entry");
+
+        expect(rows).toHaveLength(2);
+        expect(rows[0].textContent).toContain("started");
+        expect(rows[1].textContent).toContain("failed");
+        lc.destroy();
+    });
+
+    test("entries_Absent_StartsEmpty", () =>
+    {
+        const lc = createLogConsole();
+
+        expect(lc.getElement().querySelectorAll(".logconsole-entry")).toHaveLength(0);
+        lc.destroy();
+    });
+});
