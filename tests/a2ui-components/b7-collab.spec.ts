@@ -115,6 +115,27 @@ const answerSearch = (page: Page, value: unknown[]) =>
 const rowButton = (page: Page, name: string, selector: string) =>
     page.locator(".rm-item", { has: page.locator(".rm-item-name", { hasText: name }) }).locator(selector);
 
+/** A message as an agent sends it: an ISO timestamp, which the adapter turns into a Date. */
+const chatMessage = (id: string, role: string, content: string) =>
+    ({ id, role, content, timestamp: "2026-10-29T09:00:00.000Z" });
+
+/** A session as an agent writes it, holding `messages`. */
+const chatSession = (messages: Record<string, unknown>[]) => ({ id: "s1", title: "Support",
+    createdAt: "2026-10-29T09:00:00.000Z", updatedAt: "2026-10-29T09:00:00.000Z", messages });
+
+/** A question and its answer. */
+const QA = [
+    chatMessage("m1", "user", "What is the capital of France?"),
+    chatMessage("m2", "assistant", "**Paris**."),
+];
+
+/** The chat with its transcript in the slot at /session. */
+const CONV = { ...EV, session: { path: "/session" } };
+
+/** Writes the agent's session to the slot. */
+const writeSession = (page: Page, messages: Record<string, unknown>[]) =>
+    send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/session", value: chatSession(messages) } }]);
+
 test.describe("B7 collaboration and AI under @a2ui/lit", () =>
 {
     test("PromptTemplateManager: clicking a template sends onSelect with its id", async ({ page }) =>
@@ -436,4 +457,112 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await sent(page, [["find", { query: "led", typeKeys: ["service"] }],
                 ["create", { targetResourceId: "svc-ledger", relationshipKey: "depends_on", properties: {} }]]);
         });
+
+    test("Conversation: typing a message and sending it sends onSendMessage with the text", async ({ page }) =>
+    {
+        await mount(page, "Conversation", { ...CONV, onSendMessage: act("ask", "sendMessage") }, { session:
+            chatSession(QA) });
+
+        await page.locator(".conversation-textarea").fill("And Germany?");
+        await page.locator(".conversation-send-btn").click();
+
+        await sent(page, [["ask", "And Germany?"]]);
+        await expect(page.locator(".conversation-message-user").last()).toContainText("And Germany?");
+        await expect(page.locator(".conversation-textarea")).toHaveValue("");
+    });
+
+    test("Conversation: rating a reply sends onFeedback with its id, sentiment and comment", async ({ page }) =>
+    {
+        await mount(page, "Conversation", { ...CONV, onFeedback: act("rated", "feedback") }, { session:
+            chatSession(QA) });
+
+        await page.locator('.conversation-message[data-message-id="m2"] [aria-label="Rate as unhelpful"]').click();
+        await page.locator(".conversation-feedback-textarea").fill("Say why");
+        await page.locator(".conversation-feedback-submit").click();
+
+        await sent(page, [["rated", { messageId: "m2", sentiment: "negative", comment: "Say why",
+            timestamp: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) }]]);
+    });
+
+    test("Conversation: New conversation and Clear context send onNewSession and onClearSession with the session id",
+        async ({ page }) =>
+        {
+            await mount(page, "Conversation", { ...CONV, onNewSession: act("fresh", "newSession"),
+                onClearSession: act("cleared", "clearSession") }, { session: chatSession(QA) });
+
+            await page.locator('.conversation-header-btn[aria-label="Clear context"]').click();
+            await expect(page.locator(".conversation-message")).toHaveCount(0);
+            await writeSession(page, [chatMessage("m5", "user", "Start again")]);
+            await expect(page.locator(".conversation-message")).toHaveCount(1);
+            await page.locator('.conversation-header-btn[aria-label="New conversation"]').click();
+
+            await sent(page, [["cleared", "s1"], ["fresh", expect.stringMatching(/^session-/)]]);
+            await expect(page.locator(".conversation-message")).toHaveCount(0);
+        });
+
+    test("Conversation: the agent's reply renders while the user's half-typed message, focus and scroll stay",
+        async ({ page }) =>
+        {
+            const fetched: string[] = [];
+            page.on("request", (r) => { fetched.push(r.url()); });
+            // A height, so the messages scroll.
+            await mount(page, "Conversation", { ...CONV, height: "320px", showTimestamps: true,
+                onSendMessage: act("ask", "sendMessage") }, { session: chatSession(QA) });
+            const earlier = Array.from({ length: 6 }, (_, i) => [chatMessage(`q${i}`, "user", `Question ${i}`),
+                chatMessage(`a${i}`, "assistant", `Answer ${i}\n\n- one\n- two\n- three`)]).flat();
+            await writeSession(page, [...earlier, ...QA]);
+            await expect(page.locator('.conversation-message[data-message-id="a5"] li')).toHaveCount(3);
+
+            await page.locator(".conversation-textarea").fill("And Germany?");
+            await page.locator(".conversation-send-btn").click();
+            await sent(page, [["ask", "And Germany?"]]);
+            await page.locator(".conversation-textarea").fill("And Spain, while you are at it");
+            const list = page.locator(".conversation-messages");
+            // Scrolled up, and the list has heard it: scroll events are dispatched on the next frame.
+            await list.evaluate((el) => new Promise((done) =>
+            {
+                el.addEventListener("scroll", done, { once: true });
+                el.scrollTop = 200;
+            }));
+            expect(await list.evaluate((el) => el.scrollTop)).toBe(200);
+
+            // The agent answers by writing the whole session: the user's question and its reply.
+            await writeSession(page, [...earlier, ...QA, chatMessage("m3", "user", "And Germany?"),
+                chatMessage("m4", "assistant", "**Berlin**.")]);
+
+            const reply = page.locator('.conversation-message[data-message-id="m4"]');
+            await expect(reply.locator(".conversation-message-content strong")).toHaveText("Berlin");
+            // The agent's ISO timestamp arrived as a Date: the bubble shows its time.
+            await expect(reply.locator(".conversation-message-time")).toHaveText(/^\d\d:\d\d$/);
+            await expect(page.locator(".conversation-textarea")).toHaveValue("And Spain, while you are at it");
+            await expect(page.locator(".conversation-textarea")).toBeFocused();
+            // Every reply re-renders asynchronously; once they have, the user is back where they were.
+            await expect(page.locator('.conversation-message[data-message-id="a5"] li')).toHaveCount(3);
+            await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBe(200);
+            expect(await actions(page)).toHaveLength(1);
+            expect(await errors(page)).toEqual([]);
+            // The preview's renderers came from the library's own mirror, never from unpkg (B7-2).
+            expect(fetched.filter((u) => u.includes("unpkg.com"))).toEqual([]);
+            expect(fetched.some((u) => u.includes("/lib/vditor-3.11.2/dist/js/lute/"))).toBe(true);
+        });
+
+    test("Conversation: at the bottom, the agent's reply scrolls into view", async ({ page }) =>
+    {
+        await mount(page, "Conversation", { ...CONV, height: "320px" }, { session: chatSession(QA) });
+        const earlier = Array.from({ length: 8 }, (_, i) => [chatMessage(`q${i}`, "user", `Question ${i}`),
+            chatMessage(`a${i}`, "assistant", `Answer ${i}\n\n- one\n- two\n- three`)]).flat();
+        await writeSession(page, earlier);
+        const list = page.locator(".conversation-messages");
+        await expect(page.locator('.conversation-message[data-message-id="a7"] li')).toHaveCount(3);
+        await list.evaluate((el) => { el.scrollTop = el.scrollHeight; });
+        expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight * 2)).toBe(true);
+
+        await writeSession(page, [...earlier, chatMessage("q9", "user", "Last one?"),
+            chatMessage("a9", "assistant", "Yes.\n\n- the\n- final\n- answer")]);
+
+        await expect(page.locator('.conversation-message[data-message-id="a9"] li')).toHaveCount(3);
+        await expect.poll(() => list.evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight))
+            .toBeLessThanOrEqual(5);
+        expect(await errors(page)).toEqual([]);
+    });
 });
