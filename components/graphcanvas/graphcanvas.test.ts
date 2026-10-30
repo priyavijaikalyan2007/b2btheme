@@ -320,3 +320,126 @@ describe("GraphCanvas destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B9)
+// ============================================================================
+
+describe("surface contract (B9)", () =>
+{
+    const node = (id: string) => container.querySelector<SVGElement>(`.gc-node[data-node-id="${id}"]`)!;
+    const edge = (id: string) => container.querySelector<SVGElement>(`.gc-edge[data-edge-id="${id}"]`)!;
+    const click = (el: Element, type = "click") => el.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+
+    test("on_Clicks_HearTheNodeOrEdge_WithoutProperties_AfterTheirCallbacks", () =>
+    {
+        const order: unknown[] = [];
+        const nodes = makeNodes();
+        nodes[0].properties = { owner: "host" };
+        const gc = createGraphCanvas(makeOptions({ nodes,
+            onNodeClick: (n) => order.push(`option:${n.id}`), onEdgeClick: (e) => order.push(`option:${e.id}`) }));
+        gc.on("nodeClick", (p) => order.push(p));
+        gc.on("edgeClick", (p) => order.push(p));
+        gc.on("nodeDoubleClick", (p) => order.push(["dbl", p]));
+
+        click(node("n1"));
+        click(edge("e1"));
+        click(node("n2"), "dblclick");
+
+        expect(order).toEqual(["option:n1", { id: "n1", label: "Node A", type: "entity" },
+            "option:e1", { id: "e1", sourceId: "n1", targetId: "n2", type: "has", label: "has" },
+            ["dbl", { id: "n2", label: "Node B", type: "entity" }]]);
+        gc.destroy();
+    });
+
+    test("on_Selection_HearsTheIds_AfterOnSelectionChange", () =>
+    {
+        const order: unknown[] = [];
+        const gc = createGraphCanvas(makeOptions({ onSelectionChange: (n) => order.push(`option:${n.length}`) }));
+        gc.on("selection", (p) => order.push(p));
+
+        click(node("n2"));
+
+        expect(order).toEqual(["option:1", { nodeIds: ["n2"], edgeIds: [] }]);
+        gc.destroy();
+    });
+
+    test("on_ExpandRequest_And_EdgeCreated_HearTheirIds", () =>
+    {
+        const heard: unknown[] = [];
+        const nodes = makeNodes();
+        nodes[0].expandable = true;
+        const gc = createGraphCanvas(makeOptions({ nodes, edgeCreationEnabled: true }));
+        gc.on("expandRequest", (p) => heard.push(["expand", p]));
+        gc.on("edgeCreated", (p) => heard.push(["edge", p]));
+
+        click(node("n1").querySelector(".gc-expand-indicator")!);
+        node("n1").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+        const item = Array.from(container.querySelectorAll<HTMLElement>(".gc-context-menu-item"))
+            .find((b) => b.textContent === "Create edge from here")!;
+        item.click();
+        node("n3").dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+
+        expect(heard).toEqual([["expand", "n1"], ["edge", { sourceId: "n1", targetId: "n3" }]]);
+        gc.destroy();
+    });
+
+    test("setData_Slot_ReplacesNodesKeepingEdgesSelectionAndZoom_Silently", () =>
+    {
+        const onSelectionChange = vi.fn();
+        const gc = createGraphCanvas(makeOptions({ onSelectionChange }));
+        click(node("n1"));
+        onSelectionChange.mockClear();
+        gc.setZoomLevel(1.5);
+
+        gc.setData("nodes", [...makeNodes(), { id: "n4", label: "Node D", type: "entity" }]);
+
+        expect(gc.getNodes().map((n) => n.id)).toEqual(["n1", "n2", "n3", "n4"]);
+        expect(gc.getEdges().map((e) => e.id)).toEqual(["e1", "e2"]);
+        expect(gc.getState()).toEqual({ selection: { nodeIds: ["n1"], edgeIds: [] } });
+        expect(gc.getZoomLevel()).toBe(1.5);
+        expect(node("n1").classList.contains("gc-node-selected")).toBe(true);
+        expect(onSelectionChange).not.toHaveBeenCalled();
+        gc.destroy();
+    });
+
+    test("setData_Slot_DropsSelectionOfRemovedItems_AndRejectsOtherSlots", () =>
+    {
+        const gc = createGraphCanvas(makeOptions());
+        click(node("n3"));
+
+        gc.setData("nodes", makeNodes().slice(0, 2));
+        gc.setData("edges", []);
+
+        expect(gc.getState()).toEqual({ selection: { nodeIds: [], edgeIds: [] } });
+        expect(() => gc.setData("layout", "force")).toThrow(/"nodes" and "edges"/);
+        expect(() => gc.setData("nodes", "n1")).toThrow(/an array/);
+        gc.destroy();
+    });
+
+    test("setData_Arrays_WorksAsBefore", () =>
+    {
+        const gc = createGraphCanvas(makeOptions());
+
+        gc.setData(makeNodes().slice(0, 1), []);
+
+        expect(gc.getNodes().map((n) => n.id)).toEqual(["n1"]);
+        gc.destroy();
+    });
+
+    test("setState_RestoresSelectionSilently_AndUnknownChannelThrows", () =>
+    {
+        const onSelectionChange = vi.fn();
+        const heard = vi.fn();
+        const gc = createGraphCanvas(makeOptions({ onSelectionChange }));
+        gc.on("selection", heard);
+
+        gc.setState({ selection: { nodeIds: ["n2"], edgeIds: ["e2"] } });
+
+        expect(gc.getState()).toEqual({ selection: { nodeIds: ["n2"], edgeIds: ["e2"] } });
+        expect(edge("e2").classList.contains("gc-edge-selected")).toBe(true);
+        expect([onSelectionChange.mock.calls, heard.mock.calls]).toEqual([[], []]);
+        expect(() => gc.on("nodeHover", vi.fn())).toThrow(/valid channels/);
+        gc.destroy();
+    });
+});
