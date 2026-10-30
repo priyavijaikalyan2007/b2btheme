@@ -920,7 +920,9 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 182 -> 176, MultiselectCombo classified (readiness step 3, #22).
     // ADR-237 (2026-10-30): 176 -> 168, Timeline classified (readiness step 3, #25).
     // ADR-237 (2026-10-30): 168 -> 165, PermissionMatrix classified (readiness step 3, #23).
-    unclassifiedOptions: 165,
+    // ADR-237 (2026-10-30): 165 -> 164, data that reaches a required function or element is classed as host code
+    // (readiness step 3): three pending members move from nested hazards to unclassified host code.
+    unclassifiedOptions: 164,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -938,7 +940,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 82 -> 62, SpineMap's options documented (B9).
     // ADR-237 (2026-10-30): 62 -> 52, UserMenu's options documented (readiness step 3, #26).
     // ADR-237 (2026-10-30): 52 -> 32, PermissionMatrix's options documented (readiness step 3, #23).
-    protocolPropsMissingJsdoc: 32,
+    // ADR-237 (2026-10-30): 32 -> 31, the same rule: a pending member needing host code has no JSDoc check.
+    protocolPropsMissingJsdoc: 31,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -1100,8 +1103,9 @@ export const FLOORS = {
     // ADR-237 (2026-10-30): 176, 4 and 21 once MultiselectCombo was classified (readiness step 3, #22).
     // ADR-237 (2026-10-30): 168, 3 and 20 once Timeline was classified (readiness step 3, #25).
     // ADR-237 (2026-10-30): 165, 32, 2 and 19 once PermissionMatrix was classified (readiness step 3, #23).
-    unclassifiedOptions: 165,
-    protocolPropsMissingJsdoc: 32,
+    // ADR-237 (2026-10-30): 164 and 31 once data reaching required host code is classed as host code (step 3).
+    unclassifiedOptions: 164,
+    protocolPropsMissingJsdoc: 31,
     changeMismatches: 0,
     componentsBelowRequiredLevel: 2,
     componentsPendingClassification: 19,
