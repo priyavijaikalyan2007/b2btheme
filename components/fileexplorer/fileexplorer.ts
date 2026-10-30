@@ -213,6 +213,9 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> = {
 };
 
 type SortField = "name" | "modified" | "size" | "type";
+
+/** The surface channels (readiness step 3). */
+type ExplorerChannel = "select" | "open";
 type ViewMode = "grid" | "list" | "detail";
 const DND_MIME = "application/x-fileexplorer";
 
@@ -310,6 +313,17 @@ function getFileType(node: FileNode): string
 }
 
 /** Format a Date to YYYY-MM-DD HH:mm. */
+/**
+ * A node as an agent receives it: a JSON copy without its children or the
+ * host's data (readiness step 3). Dates become ISO strings.
+ */
+function agentNode(node: FileNode): Record<string, unknown>
+{
+    const { children: _children, data: _data, ...rest } = node;
+
+    return JSON.parse(JSON.stringify(rest)) as Record<string, unknown>;
+}
+
 function formatDate(d: Date | undefined): string
 {
     if (!d) { return "--"; }
@@ -360,6 +374,10 @@ export interface FileExplorerHandle
     getSelectedIds(): string[];
     startRenamePublic(nodeId?: string): void;
     focus(): void;
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
 }
 
 export class FileExplorer implements FileExplorerHandle
@@ -404,6 +422,12 @@ export class FileExplorer implements FileExplorerHandle
 
     // Flat mode
     private flatItems: FileNode[] | null = null;
+
+    // -- Surface channels (additive, readiness step 3) --
+    private readonly handlers: Record<ExplorerChannel, Set<(payload: unknown) => void>> =
+        { select: new Set(), open: new Set() };
+    /** True while setState restores state, which fires no callback. */
+    private restoring = false;
     private breadcrumbSegments: BreadcrumbSegment[] | null = null;
 
     // Custom columns
@@ -565,6 +589,8 @@ export class FileExplorer implements FileExplorerHandle
         this.nodeMap.clear();
         this.parentMap.clear();
         this.selection.clear();
+        this.handlers.select.clear();
+        this.handlers.open.clear();
         logInfo("Destroyed", this.id);
     }
 
@@ -593,7 +619,7 @@ export class FileExplorer implements FileExplorerHandle
             ", " + items.length + " items");
         logInfo("Navigated to", folder.name,
             "(id:", folderId + ")");
-        if (this.opts.onNavigate) { this.opts.onNavigate(folder); }
+        if (this.opts.onNavigate && !this.restoring) { this.opts.onNavigate(folder); }
     }
 
     getSelectedFiles(): FileNode[]
@@ -617,7 +643,7 @@ export class FileExplorer implements FileExplorerHandle
         this.updateToolbarViewButtons();
         this.announce("Switched to " + mode + " view");
         logInfo("View mode changed to", mode);
-        if (this.opts.onViewModeChange)
+        if (this.opts.onViewModeChange && !this.restoring)
         {
             this.opts.onViewModeChange(mode);
         }
@@ -691,7 +717,7 @@ export class FileExplorer implements FileExplorerHandle
         this.sortDir = direction;
         this.renderContent();
         this.announce("Sorted by " + field + ", " + direction);
-        if (this.opts.onSort)
+        if (this.opts.onSort && !this.restoring)
         {
             this.opts.onSort(field, direction);
         }
@@ -1515,6 +1541,7 @@ export class FileExplorer implements FileExplorerHandle
     /** Fire both onSelect and onSelectionChange callbacks. */
     private fireSelectionCallbacks(): void
     {
+        if (this.restoring) { return; }
         const selected = this.getSelectedFiles();
         if (this.opts.onSelect)
         {
@@ -1523,6 +1550,124 @@ export class FileExplorer implements FileExplorerHandle
         if (this.opts.onSelectionChange)
         {
             this.opts.onSelectionChange(selected);
+        }
+        this.emit("select", selected.map(agentNode));
+    }
+
+    /** Fires onOpen and then the "open" channel for a file. */
+    private openFile(node: FileNode): void
+    {
+        if (this.opts.onOpen) { this.opts.onOpen(node); }
+        this.emit("open", agentNode(node));
+    }
+
+    // ====================================================================
+    // SURFACE CONTRACT (additive, readiness step 3)
+    // ====================================================================
+
+    /**
+     * Replaces the folder tree ("roots") or the flat listing ("items") in
+     * place. A current folder that is gone goes back to Home, and a selected
+     * item that is gone is deselected. Fires nothing.
+     */
+    setData(slot: string, value: unknown): void
+    {
+        if (slot === "items")
+        {
+            this.flatItems = value as FileNode[];
+            this.reindex();
+        }
+        else if (slot === "roots")
+        {
+            this.virtualRoot.children = value as FileNode[];
+            this.reindex();
+            this.treeContainer?.replaceChildren();
+            this.buildTreeContent();
+        }
+        else
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): the slots are "roots" and "items".`);
+        }
+
+        if (!this.nodeMap.has(this.currentFolderId)) { this.currentFolderId = this.virtualRoot.id; }
+
+        [...this.selection].filter((id) => !this.nodeMap.has(id)).forEach((id) => this.selection.delete(id));
+        this.renderContent();
+        this.updateTreeSelection(this.currentFolderId);
+    }
+
+    /** Rebuilds the lookup maps from the tree and the flat listing. */
+    private reindex(): void
+    {
+        this.nodeMap.clear();
+        this.parentMap.clear();
+        this.indexNodes(this.virtualRoot);
+        if (this.flatItems) { this.indexFlatItems(this.flatItems); }
+    }
+
+    /** Subscribes to "select" or "open"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "select" && channel !== "open")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "select" and "open".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** The current folder, the selection, the view mode and the sort. */
+    getState(): Record<string, unknown>
+    {
+        return {
+            currentFolderId: this.currentFolderId,
+            selectedIds: this.getSelectedIds(),
+            viewMode: this.viewMode,
+            sortField: this.sortField,
+            sortDirection: this.sortDir,
+        };
+    }
+
+    /** Restores state captured by getState(), or any subset of it, firing no callback. */
+    setState(state: Record<string, unknown>): void
+    {
+        this.restoring = true;
+
+        try
+        {
+            if (typeof state.currentFolderId === "string") { this.navigate(state.currentFolderId); }
+
+            if (typeof state.viewMode === "string") { this.setViewMode(state.viewMode as ViewMode); }
+
+            if (typeof state.sortField === "string" || typeof state.sortDirection === "string")
+            {
+                this.setSort((state.sortField ?? this.sortField) as SortField,
+                    (state.sortDirection ?? this.sortDir) as "asc" | "desc");
+            }
+
+            if (Array.isArray(state.selectedIds)) { this.selectItems(state.selectedIds as string[]); }
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** Calls every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: ExplorerChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
         }
     }
 
@@ -2440,9 +2585,9 @@ export class FileExplorer implements FileExplorerHandle
         {
             this.navigate(node.id);
         }
-        else if (this.opts.onOpen)
+        else
         {
-            this.opts.onOpen(node);
+            this.openFile(node);
         }
     }
 
@@ -2465,7 +2610,7 @@ export class FileExplorer implements FileExplorerHandle
         if (selected.length !== 1) { return true; }
         const node = selected[0];
         if (node.type === "folder") { this.navigate(node.id); }
-        else if (this.opts.onOpen) { this.opts.onOpen(node); }
+        else { this.openFile(node); }
         return true;
     }
 
