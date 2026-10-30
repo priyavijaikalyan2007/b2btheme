@@ -11,7 +11,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { actions, errors, open, send, surface, useHarness, V } from "../a2ui/adapter-page";
+import { actions, dm, errors, open, send, surface, useHarness, V } from "../a2ui/adapter-page";
 
 useHarness();
 
@@ -48,6 +48,10 @@ async function sent(page: Page, expected: [string, unknown][]): Promise<void>
 /** UserMenu's items, as an agent writes them. */
 const MENU = [{ id: "profile", label: "Profile" }, { id: "sign-out", label: "Sign out", danger: true }];
 
+/** MultiselectCombo's options, as an agent writes them. */
+const FRUIT = [{ value: "apple", label: "Apple" }, { value: "banana", label: "Banana" },
+    { value: "cherry", label: "Cherry" }];
+
 test.describe("Step 3 components under @a2ui/lit", () =>
 {
     test("UserMenu: clicking an item sends onSelect, and Sign out sends onSignOut first", async ({ page }) =>
@@ -73,6 +77,36 @@ test.describe("Step 3 components under @a2ui/lit", () =>
 
         await expect(page.locator("[data-item-id='help']")).toHaveCount(1);
         await expect(page.locator("[data-item-id='profile']")).toHaveCount(0);
+        expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("MultiselectCombo: picking options writes the value and sends onChange", async ({ page }) =>
+    {
+        await mount(page, "MultiselectCombo", { items: { path: "/items" }, value: { path: "/v" },
+            onChange: { event: { name: "picked" } } }, { items: FRUIT, v: [] });
+
+        await page.locator(".multiselectcombo-input-area").click();
+        await page.locator(".multiselectcombo-item", { hasText: "Banana" }).click();
+        await page.locator(".multiselectcombo-item", { hasText: "Cherry" }).click();
+
+        await expect.poll(() => dm(page, "s", "/v")).toEqual(["banana", "cherry"]);
+        await expect.poll(async () => (await actions(page)).map((a) => a.name)).toEqual(["picked", "picked"]);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("MultiselectCombo: the agent's writes of value and items update it in place", async ({ page }) =>
+    {
+        await mount(page, "MultiselectCombo", { items: { path: "/items" }, value: { path: "/v" } },
+            { items: FRUIT, v: ["apple"] });
+        const before = await page.locator(".multiselectcombo").first().elementHandle();
+
+        await write(page, "/v", ["apple", "cherry"]);
+        await write(page, "/items", [...FRUIT, { value: "date", label: "Date" }]);
+        await page.locator(".multiselectcombo-input-area").click();
+
+        await expect(page.locator(".multiselectcombo-item")).toHaveCount(4);
+        await expect(page.locator(".multiselectcombo-item[aria-selected='true']")).toHaveCount(2);
         expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
         expect(await errors(page)).toEqual([]);
     });
