@@ -44,6 +44,9 @@ const GRAPH = { nodes: [{ id: "a", label: "Alpha", type: "service" }, { id: "b",
 const SPINE = { hubs: [{ id: "now", label: "Now", status: "in-progress", branches: [{ id: "search", label: "Search" }] },
     { id: "next", label: "Next", status: "planned", branches: [] }] };
 
+/** A one-box diagram, as the engine writes one (getDocument()). */
+const DIAGRAM = {"version": "1.0", "metadata": {"title": "Untitled Diagram", "created": "2026-10-30T07:41:06.801Z", "modified": "2026-10-30T07:41:06.801Z"}, "layers": [{"id": "default", "name": "Default", "visible": true, "locked": false, "printable": true, "opacity": 1, "order": 0}], "objects": [{"id": "box", "semantic": {"type": "generic", "data": {}}, "presentation": {"shape": "rectangle", "bounds": {"x": 100, "y": 100, "width": 120, "height": 60}, "rotation": 0, "flipX": false, "flipY": false, "style": {"fill": {"type": "solid", "color": "var(--theme-surface-raised-bg)"}, "stroke": {"color": "var(--theme-border-color)", "width": 1.5}}, "layer": "default", "zIndex": 0, "locked": false, "visible": true, "renderStyle": "clean"}}], "connectors": [], "comments": [], "pageFrames": [], "guides": [], "grid": {"size": 20, "style": "dots", "visible": true}};
+
 test.describe("B9 canvas components under @a2ui/lit", () =>
 {
     test("Annotation: editing the expanded note sends onChange with its state", async ({ page }) =>
@@ -102,5 +105,46 @@ test.describe("B9 canvas components under @a2ui/lit", () =>
 
         await expect(page.locator("[data-id='later']")).toHaveCount(1);
         expect(await errors(page)).toEqual([]);
+    });
+
+    test("DiagramEngine: the agent's document renders, and double-clicking its box sends onObjectDoubleClick",
+        async ({ page }) =>
+        {
+            await mount(page, "DiagramEngine", { ...EV, document: { path: "/doc" },
+                onObjectDoubleClick: act("open", "objectDoubleClick") }, { doc: DIAGRAM });
+
+            await page.locator("[data-id='box']").dblclick();
+
+            await expect.poll(async () => (await actions(page)).map((a) => [a.name,
+                ((a.context as { p: { id?: string } }).p ?? {}).id])).toContainEqual(["open", "box"]);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("DiagramEngine: deleting the selected box sends onChange with the whole document", async ({ page }) =>
+    {
+        await mount(page, "DiagramEngine", { ...EV, document: { path: "/doc" }, onChange: act("edit", "change") },
+            { doc: DIAGRAM });
+
+        await page.locator("[data-id='box']").click();
+        await page.keyboard.press("Delete");
+
+        // The selecting click is itself reported (a move of zero marks the engine dirty); the delete comes last.
+        await expect.poll(async () => (await actions(page)).filter((a) => a.name === "edit")
+            .map((a) => (a.context as { p: { objects: unknown[] } }).p.objects.length).at(-1)).toBe(0);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("DiagramEngine: an embed in the agent's document is rejected", async ({ page }) =>
+    {
+        const embedded = structuredClone(DIAGRAM) as typeof DIAGRAM;
+        (embedded.objects[0].presentation as Record<string, unknown>).embed =
+            { component: "explorerpicker", options: { apiBase: "/api/v1/admin" } };
+        await open(page, "lit");
+        await send(page, surface("s", { id: "root", component: "DiagramEngine", document: { path: "/doc" } },
+            { doc: embedded }));
+
+        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
+            path: "/doc" })]);
+        await expect(page.locator(".explorerpicker")).toHaveCount(0);
     });
 });
