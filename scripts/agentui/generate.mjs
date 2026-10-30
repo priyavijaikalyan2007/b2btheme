@@ -273,17 +273,25 @@ function withoutFixed(schema, c)
  */
 function stripHostOnlyPaths(schema, c)
 {
-    const nested = Object.keys(c.manifest.protocol?.hostOnly ?? {}).filter((k) => /[.[]/.test(k)
-        && !c.members.some((m) => m.hazards.some((h) => isCovered(h.path, { [k]: "" }))));
+    const keys = Object.keys(c.manifest.protocol?.hostOnly ?? {}).filter((k) => /[.[]/.test(k));
+    const hazards = c.members.flatMap((m) => m.hazards.map((h) => h.path));
+    const covers = (k) => hazards.some((p) => isCovered(p, { [k]: "" }));
+    const nested = keys.filter((k) => !covers(k));
+    // A strict parent of hazards (DiagramEngine's presentation.embed, B9) names a field an agent must not write,
+    // so it leaves the schema too. It may name nothing there (typia drops functions, and an overridden prop is
+    // not described), which is not an error. A key that IS a hazard path keeps its published schema (ADR-230).
+    const parents = keys.filter((k) => covers(k) && !hazards.includes(k));
 
-    if (nested.length === 0) { return { schema, problems: [] }; }
+    if (nested.length === 0 && parents.length === 0) { return { schema, problems: [] }; }
 
     const out = structuredClone(schema);
     const problems = nested.filter((k) => !removePath(out, k)).map((k) => `${c.manifest.name}.${k}: protocol.hostOnly `
         + "names nothing in the generated schema, so nothing was removed. Correct the path in "
         + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
 
-    return { schema: out, problems };
+    for (const k of parents) { removePath(out, k); }
+
+    return { schema: pruneDefs(out), problems };
 }
 
 /** Deletes the field `path` names ("pages[].url"), through $refs and union arms; false when it names nothing. */

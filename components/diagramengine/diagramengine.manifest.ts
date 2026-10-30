@@ -55,6 +55,13 @@ export const DIAGRAMENGINE_MANIFEST: CapabilityManifest =
     icon: "bi-diagram-3",
     category: "visualization",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user draw or edit a diagram (flowchart, network, UML, wireframe) on a canvas of shapes "
+            + "and connectors; write the document to draw it, and hear each edit as the whole document.",
+        avoidWhen: "To show nodes and relationships without drawing use GraphCanvas; for a roadmap use SpineMap.",
+    },
+
     affords: [
         {
             shape: "graph",
@@ -72,16 +79,46 @@ export const DIAGRAMENGINE_MANIFEST: CapabilityManifest =
         },
     ],
 
-    // Declared empty at `display`, the level the conformance suite proves for
-    // this component today. The engine's EventBus carries selection and
-    // object-change events, and wiring them as channels is the promotion to
-    // `surface` — a change to the component's public API rather than to this
-    // file.
-    emits: [],
+    // Surface (readiness step 2 B9, the user's decision B9-1). change has no legacy callback: onChange is
+    // declared but never called, so the channel is new; it carries the whole document once per edit.
+    emits: [
+        { name: "selection", payload: "record", multi: false, legacyOption: "onSelectionChange" },
+        { name: "objectDoubleClick", payload: "record", multi: false, legacyOption: "onObjectDoubleClick" },
+        { name: "change", payload: "record", multi: false },
+    ],
 
-    accepts: [],
+    // B7-1: the agent rewrites the diagram in place, keeping zoom and pan.
+    accepts: [
+        { name: "document", payload: "record", required: false },
+    ],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["viewport"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B9).
+    protocol: {
+        hostOnly: {
+            data: "Template data the document's {{expressions}} read; an open record no schema can check. Over "
+                + "A2UI write the text itself.",
+            contentRenderer: "A render hook that draws into an object's element; the default rendering applies.",
+            renderObjectHoverCard: "A render hook; the built-in hover card applies instead.",
+            renderConnectorHoverCard: "A render hook; the built-in hover card applies instead.",
+            onObjectClick: "The component never calls this option.",
+            onConnectorClick: "The component never calls this option.",
+            onTextEditRequest: "The component never calls this option.",
+            onChange: "The component never calls this option.",
+            onViewportChange: "Fires as the user zooms or pans; that is view state, which the viewport state key "
+                + "restores.",
+            "document.data": "Template data the document's {{expressions}} read; an open record no schema can check.",
+            "document.objects[].semantic.data": "An open record of domain data; it has no schema an agent could "
+                + "follow.",
+            "document.connectors[].semantic.data": "An open record of domain data; it has no schema an agent could "
+                + "follow.",
+            "document.objects[].presentation.embed": "Mounts any registered component with any options inside the "
+                + "object, which would let an agent set options the catalog keeps from it.",
+            "document.objects[].presentation.image.headers": "Request headers that make the component fetch the "
+                + "image from the user's browser with XMLHttpRequest; an agent must not choose such a request.",
+        },
+    },
 
     // `diagramengine.scss` sets `overflow: hidden` and declares no scrolling
     // region. The engine pans and zooms its own SVG viewBox instead, so there
@@ -100,6 +137,6 @@ export const DIAGRAMENGINE_MANIFEST: CapabilityManifest =
     // surface, which is exactly what a host that supplies nothing wants.
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

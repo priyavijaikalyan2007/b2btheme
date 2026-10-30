@@ -719,7 +719,10 @@ export const BASELINES = {
     // Curating it now would be a second breaking change for CDN
     // consumers within a day of the first, decided by a repository
     // that cannot grep its own consumer.
-    diagramengineLines: 30727,
+    // ADR-236 (2026-10-30): 30727 -> 30857, deliberately. The surface contract (readiness step 2 B9:
+    // setData("document"), three channels on on(), getState/setState and a coalesced change report) is new
+    // public API in src/engine.ts, and the bundle carries it.
+    diagramengineLines: 30857,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -913,7 +916,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 228 -> 227, Annotation classified (B9).
     // ADR-236 (2026-10-29): 227 -> 214, GraphCanvas classified (B9).
     // ADR-236 (2026-10-29): 214 -> 198, SpineMap classified (B9).
-    unclassifiedOptions: 198,
+    // ADR-236 (2026-10-29): 198 -> 182, DiagramEngine classified (B9).
+    unclassifiedOptions: 182,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -971,7 +975,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 27 -> 26, Annotation classified (B9).
     // ADR-236 (2026-10-29): 26 -> 25, GraphCanvas classified (B9).
     // ADR-236 (2026-10-29): 25 -> 24, SpineMap classified (B9).
-    componentsPendingClassification: 24,
+    // ADR-236 (2026-10-29): 24 -> 23, DiagramEngine classified (B9).
+    componentsPendingClassification: 23,
 };
 
 /*
@@ -1077,11 +1082,12 @@ export const FLOORS = {
     // ADR-236 (2026-10-29): 227, 0 and 26 once Annotation was classified (B9).
     // ADR-236 (2026-10-29): 214, 82 and 25 once GraphCanvas was classified (B9).
     // ADR-236 (2026-10-29): 198, 62 and 24 once SpineMap was classified (B9).
-    unclassifiedOptions: 198,
+    // ADR-236 (2026-10-29): 182 and 23 once DiagramEngine was classified (B9).
+    unclassifiedOptions: 182,
     protocolPropsMissingJsdoc: 62,
     changeMismatches: 0,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 24,
+    componentsPendingClassification: 23,
 };
 
 /**

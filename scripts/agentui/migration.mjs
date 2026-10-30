@@ -50,7 +50,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "boxlayout",
     "cardlayout",
     "commentoverlay",
-    "diagramengine",
     "docklayout",
     "fileexplorer",
     "fileupload",
