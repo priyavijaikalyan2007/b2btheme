@@ -547,3 +547,105 @@ describe("CategorizedDataInlineToolbar (ADR-128)", () =>
         tl.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 3)
+// ============================================================================
+
+describe("Timeline surface contract", () =>
+{
+    /** Clicks the rendered item with `id`. */
+    function clickItem(id: string): void
+    {
+        const el = document.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
+
+        expect(el).not.toBeNull();
+        el!.click();
+    }
+
+    test("select_ItemClick_EmitsTheItemWithoutDataAfterOnItemClick", () =>
+    {
+        const order: unknown[] = [];
+        const tl = createTimeline(makeOptions({
+            items: [makeItem({ id: "i1", label: "Launch", data: { secret: 1 } })],
+            onItemClick: (item) => order.push(`legacy:${item.id}`),
+        })) as Timeline;
+        tl.on("select", (p) => order.push(p));
+
+        clickItem("i1");
+
+        expect(order).toEqual(["legacy:i1",
+            { id: "i1", type: "point", start: NOW.toISOString(), label: "Launch" }]);
+        tl.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery_AndUnknownChannelThrows", () =>
+    {
+        const tl = createTimeline(makeOptions()) as Timeline;
+        const handler = vi.fn();
+
+        tl.on("select", handler)();
+        clickItem("i1");
+
+        expect(handler).not.toHaveBeenCalled();
+        expect(() => tl.on("viewport", () => undefined)).toThrow(/only channel/);
+        tl.destroy();
+    });
+
+    test("setData_Items_ReplacesItemsAndClearsAGoneSelection", () =>
+    {
+        const tl = createTimeline(makeOptions({ selectedItemId: "i1" })) as Timeline;
+
+        tl.setData("items", [makeItem({ id: "i2" }), makeItem({ id: "i3" })]);
+
+        expect(tl.getItems().map((i) => i.id)).toEqual(["i2", "i3"]);
+        expect(tl.getState().selectedItemId).toBeNull();
+        expect(document.querySelector("[data-item-id='i2']")).not.toBeNull();
+        expect(() => tl.setData("events", [])).toThrow(/slots are/);
+        tl.destroy();
+    });
+
+    test("setData_Groups_KeepsACollapsedGroupCollapsed", () =>
+    {
+        const groups: TimelineGroup[] = [{ id: "g1", label: "One" }, { id: "g2", label: "Two" }];
+        const tl = createTimeline(makeOptions({ groups })) as Timeline;
+
+        tl.toggleGroup("g1");
+        tl.setData("groups", [{ id: "g1", label: "One renamed" }, { id: "g3", label: "Three" }]);
+
+        expect(tl.getState().collapsedGroups).toEqual(["g1"]);
+        tl.destroy();
+    });
+
+    test("getState_SetState_RoundTripsFiringNoCallback", () =>
+    {
+        const callbacks = { onItemSelect: vi.fn(), onViewportChange: vi.fn(), onTimezoneChange: vi.fn(),
+            onSortModeChange: vi.fn(), onGroupToggle: vi.fn(), onCollapseStateChange: vi.fn() };
+        const groups: TimelineGroup[] = [{ id: "g1", label: "One" }, { id: "g2", label: "Two" }];
+        const tl = createTimeline(makeOptions({ groups, ...callbacks })) as Timeline;
+        const captured = {
+            selectedItemId: "i1",
+            start: NOW.toISOString(),
+            end: TWO_HOURS_AFTER.toISOString(),
+            timezone: "Asia/Tokyo",
+            sortMode: "desc",
+            collapsedGroups: ["g2"],
+        };
+
+        tl.setState(captured);
+
+        expect(tl.getState()).toEqual(captured);
+        Object.values(callbacks).forEach((cb) => expect(cb).not.toHaveBeenCalled());
+        tl.destroy();
+    });
+
+    test("setState_StartOnly_KeepsTheEnd", () =>
+    {
+        const tl = createTimeline(makeOptions()) as Timeline;
+
+        tl.setState({ start: NOW.toISOString() });
+
+        expect(tl.getViewport()).toEqual({ start: NOW, end: TWO_HOURS_AFTER });
+        tl.destroy();
+    });
+});

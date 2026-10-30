@@ -855,6 +855,10 @@ export interface TimelineHandle
     getTimezone(): string;
     setTickInterval(interval: number | TickIntervalPreset | "auto"): void;
     getTickInterval(): number | TickIntervalPreset | "auto";
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
 }
 
 export class Timeline implements TimelineHandle
@@ -876,6 +880,11 @@ export class Timeline implements TimelineHandle
     private items: Map<string, TimelineItem> = new Map();
     private groups: Map<string, TimelineGroup> = new Map();
     private selectedItemId: string | null = null;
+
+    // -- Surface channel (additive, readiness step 3) --
+    private readonly selectHandlers = new Set<(payload: unknown) => void>();
+    /** True while setState restores state, which fires no callback. */
+    private restoring = false;
     private instanceId: number;
 
     // -- DOM references --
@@ -1112,6 +1121,7 @@ export class Timeline implements TimelineHandle
         this.monthYearFormatter = null;
         this.items.clear();
         this.groups.clear();
+        this.selectHandlers.clear();
 
         logInfo(`Instance #${this.instanceId} destroyed`);
     }
@@ -1246,7 +1256,7 @@ export class Timeline implements TimelineHandle
 
         const selectedItem = id ? this.items.get(id) ?? null : null;
 
-        if (this.onItemSelect)
+        if (this.onItemSelect && !this.restoring)
         {
             this.onItemSelect(selectedItem ? { ...selectedItem } : null);
         }
@@ -1397,7 +1407,7 @@ export class Timeline implements TimelineHandle
         this.sortMode = mode;
         this.syncToolbarSortButtons();
         this.render();
-        if (typeof this.onSortModeChange === "function")
+        if (typeof this.onSortModeChange === "function" && !this.restoring)
         {
             try { this.onSortModeChange(mode); }
             catch (e) { logError("onSortModeChange threw:", e); }
@@ -1411,6 +1421,128 @@ export class Timeline implements TimelineHandle
         return this.sortMode;
     }
 
+    // -- Surface contract (additive, readiness step 3) --
+
+    /**
+     * Replaces the items ("items") or the groups ("groups") in place. A
+     * selection whose item is gone is cleared; a group keeps its collapsed
+     * state unless the new one sets it. Fires nothing.
+     */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot === "items")
+        {
+            const items = value as TimelineItem[];
+
+            items.forEach((item) => this.refuseMalformedSpan(item));
+            this.items.clear();
+            this.loadItems(items);
+
+            if (this.selectedItemId !== null && !this.items.has(this.selectedItemId))
+            {
+                this.selectedItemId = null;
+            }
+        }
+        else if (slot === "groups")
+        {
+            const collapsed = new Map([...this.groups.values()].map((g) => [g.id, g.collapsed]));
+
+            this.groups.clear();
+            this.loadGroups((value as TimelineGroup[]).map((g) =>
+                (g.collapsed === undefined && collapsed.has(g.id) ? { ...g, collapsed: collapsed.get(g.id) } : g)));
+        }
+        else
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): the slots are "items" and "groups".`);
+        }
+
+        this.render();
+    }
+
+    /** Subscribes to "select", which hears the clicked item after onItemClick; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "select")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "select".`);
+        }
+
+        this.selectHandlers.add(handler);
+
+        return () => { this.selectHandlers.delete(handler); };
+    }
+
+    /** The selection, the visible range (ISO strings), the timezone, the group order and the collapsed groups. */
+    public getState(): Record<string, unknown>
+    {
+        return {
+            selectedItemId: this.selectedItemId,
+            start: this.opts.start.toISOString(),
+            end: this.opts.end.toISOString(),
+            timezone: this.timezone,
+            sortMode: this.sortMode,
+            collapsedGroups: [...this.groups.values()].filter((g) => g.collapsed).map((g) => g.id),
+        };
+    }
+
+    /** Restores state captured by getState(), or any subset of it, firing no callback. */
+    public setState(state: Record<string, unknown>): void
+    {
+        this.restoring = true;
+
+        try
+        {
+            this.restoreState(state);
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** Applies each key setState was given, through the public setters the callbacks of which are silenced. */
+    private restoreState(state: Record<string, unknown>): void
+    {
+        if ("start" in state || "end" in state)
+        {
+            this.setViewport(new Date((state.start ?? this.opts.start) as string | Date),
+                new Date((state.end ?? this.opts.end) as string | Date));
+        }
+
+        if (typeof state.timezone === "string") { this.setTimezone(state.timezone); }
+
+        if ("sortMode" in state) { this.setSortMode(state.sortMode as TimelineSortMode); }
+
+        if (Array.isArray(state.collapsedGroups))
+        {
+            const ids = new Set(state.collapsedGroups as string[]);
+
+            this.groups.forEach((g) => { g.collapsed = ids.has(g.id); });
+            this.render();
+        }
+
+        if ("selectedItemId" in state) { this.selectItem(state.selectedItemId as string | null); }
+    }
+
+    /** Calls every "select" handler with a JSON copy of the item without data (host-only). */
+    private emitSelect(item: TimelineItem): void
+    {
+        const { data: _data, ...rest } = item;
+        const payload = JSON.parse(JSON.stringify(rest)) as unknown;
+
+        for (const handler of this.selectHandlers)
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError("Channel \"select\" handler threw:", err);
+            }
+        }
+    }
+
     // -- Viewport API --
 
     /**
@@ -1421,7 +1553,7 @@ export class Timeline implements TimelineHandle
         this.opts.start = new Date(start);
         this.opts.end = new Date(end);
 
-        if (this.onViewportChange)
+        if (this.onViewportChange && !this.restoring)
         {
             this.onViewportChange(
                 new Date(this.opts.start),
@@ -1496,7 +1628,7 @@ export class Timeline implements TimelineHandle
 
         this.rebuildFormatters();
 
-        if (this.onTimezoneChange && previous !== tz)
+        if (this.onTimezoneChange && previous !== tz && !this.restoring)
         {
             this.onTimezoneChange(tz);
         }
@@ -2264,6 +2396,8 @@ export class Timeline implements TimelineHandle
         {
             this.onItemClick({ ...item });
         }
+
+        this.emitSelect(item);
 
         // Toggle selection
         const newSelection = (this.selectedItemId === itemId) ? null : itemId;
