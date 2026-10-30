@@ -2282,10 +2282,38 @@ export interface SpineMapHandle
     refresh(): void;
     destroy(): void;
     getElement(): HTMLElement;
+
+    /**
+     * The surface contract (additive, B9): replaces the map from the "data"
+     * slot as loadData() does, silently, keeping the zoom and the selected
+     * node if it remains (no fit). Any other slot, or a value without hubs,
+     * throws.
+     */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "nodeClick" or "nodeDoubleClick" (the node), "nodeAdd"
+     * ({ node, parentId }), "nodeChange" ({ nodeId, changes }), "nodeRemove"
+     * (the id), "nodeReparent" ({ nodeId, newParentId }), "connectionAdd" (the
+     * connection) or "connectionRemove" ("from-to"). Each fires after its
+     * callback. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { layout, zoom: { scale, tx, ty }, selectedNode }. */
+    getState(): Record<string, unknown>;
+    /** Restores getState()'s keys silently: no onLayoutChange, no onZoomChange, no fit. */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels (B9). */
+const SPINE_CHANNELS = ["nodeClick", "nodeDoubleClick", "nodeAdd", "nodeChange", "nodeRemove", "nodeReparent",
+    "connectionAdd", "connectionRemove"] as const;
+type SpineChannel = typeof SPINE_CHANNELS[number];
 
 export class SpineMap implements SpineMapHandle
 {
+    private readonly channelHandlers = new Map<SpineChannel, Set<(payload: unknown) => void>>(
+        SPINE_CHANNELS.map((c) => [c, new Set()]));
+
     // ── Fields ──
 
     /**
@@ -2398,6 +2426,100 @@ export class SpineMap implements SpineMapHandle
         if (this.opts.fitOnLoad) { this.fitToView(); }
     }
 
+    // ========================================================================
+    // PUBLIC API — SURFACE CONTRACT (additive, readiness step 2 B9)
+    // ========================================================================
+
+    /** Replaces the map silently, keeping the zoom and the selected node if it remains. */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "data")
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): SpineMap declares one slot, "data".`);
+        }
+
+        const data = value as Partial<SpineMapData> | null;
+
+        if (!data || typeof data !== "object" || !Array.isArray(data.hubs))
+        {
+            throw new Error(`${LOG_PREFIX} setData("data"): expected { hubs, connections? }.`);
+        }
+
+        const selected = this.selectedId;
+        this.hubs = JSON.parse(JSON.stringify(data.hubs));
+        this.connections = JSON.parse(JSON.stringify(data.connections ?? []));
+        this.nodeMap = buildNodeMap(this.hubs);
+        this.computeLayout();
+        this.renderAll();
+        this.syncSidebar();
+        this.applyTransform();
+
+        if (selected && this.nodeMap.has(selected)) { this.selectNode(selected); }
+        else { this.selectedId = null; }
+    }
+
+    /** Subscribes to a declared channel; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel as SpineChannel);
+
+        if (!handlers)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are `
+                + `${SPINE_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return () => { handlers.delete(handler); };
+    }
+
+    /** The layout, the zoom and pan, and the selected node. */
+    public getState(): Record<string, unknown>
+    {
+        return { layout: this.opts.layout, zoom: { ...this.zoom }, selectedNode: this.selectedId };
+    }
+
+    /** Restores layout, zoom and selection without onLayoutChange, onZoomChange or a fit. */
+    public setState(state: Record<string, unknown>): void
+    {
+        const layout = state.layout as LayoutMode | undefined;
+        const zoom = state.zoom as { scale?: unknown; tx?: unknown; ty?: unknown } | undefined;
+
+        if (typeof layout === "string" && layout !== this.opts.layout)
+        {
+            this.opts.layout = layout;
+            this.manualOffsets.clear();
+            this.computeLayout();
+            this.renderAll();
+        }
+
+        if (zoom && typeof zoom.scale === "number")
+        {
+            this.zoom = { scale: zoom.scale, tx: Number(zoom.tx) || 0, ty: Number(zoom.ty) || 0 };
+            this.applyTransform();
+        }
+
+        if (typeof state.selectedNode === "string") { this.selectNode(state.selectedNode); }
+        else if (state.selectedNode === null) { this.clearSelection(); }
+    }
+
+    /** Delivers a payload to each subscriber, isolated so one throw cannot starve the rest. */
+    private emitChannel(channel: SpineChannel, payload: () => unknown): void
+    {
+        for (const handler of this.channelHandlers.get(channel)!)
+        {
+            try
+            {
+                handler(payload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
+    }
+
     public getData(): SpineMapData
     {
         return {
@@ -2424,6 +2546,7 @@ export class SpineMap implements SpineMapHandle
         }
         this.refreshAfterEdit();
         safeCallback(this.opts.onNodeAdd, h, null);
+        this.emitChannel("nodeAdd", () => ({ node: JSON.parse(JSON.stringify(h)), parentId: null }));
         this.announce(`Hub "${h.label}" added`);
     }
 
@@ -2442,6 +2565,7 @@ export class SpineMap implements SpineMapHandle
         }
         this.refreshAfterEdit();
         safeCallback(this.opts.onNodeAdd, b, parentId);
+        this.emitChannel("nodeAdd", () => ({ node: JSON.parse(JSON.stringify(b)), parentId }));
         this.announce(`Branch "${b.label}" added`);
     }
 
@@ -2455,6 +2579,7 @@ export class SpineMap implements SpineMapHandle
         Object.assign(node, changes);
         this.refreshAfterEdit();
         safeCallback(this.opts.onNodeChange, nodeId, changes);
+        this.emitChannel("nodeChange", () => ({ nodeId, changes: JSON.parse(JSON.stringify(changes)) }));
     }
 
     public removeNode(nodeId: string): void
@@ -2474,6 +2599,7 @@ export class SpineMap implements SpineMapHandle
         );
         this.refreshAfterEdit();
         safeCallback(this.opts.onNodeRemove, nodeId);
+        this.emitChannel("nodeRemove", () => nodeId);
         this.announce(`Node removed`);
     }
 
@@ -2488,6 +2614,7 @@ export class SpineMap implements SpineMapHandle
             this.addBranch(branchData, newParentId);
         }
         safeCallback(this.opts.onNodeReparent, nodeId, newParentId);
+        this.emitChannel("nodeReparent", () => ({ nodeId, newParentId }));
     }
 
     public getNode(nodeId: string): SpineHub | SpineBranch | null
@@ -2504,6 +2631,7 @@ export class SpineMap implements SpineMapHandle
         this.connections.push({ ...conn });
         this.renderConnections();
         safeCallback(this.opts.onConnectionAdd, conn);
+        this.emitChannel("connectionAdd", () => JSON.parse(JSON.stringify(conn)));
     }
 
     public removeConnection(fromId: string, toId: string): void
@@ -2517,6 +2645,7 @@ export class SpineMap implements SpineMapHandle
             this.renderConnections();
             safeCallback(this.opts.onConnectionRemove,
                 `${removed.from}-${removed.to}`);
+            this.emitChannel("connectionRemove", () => `${removed.from}-${removed.to}`);
         }
     }
 
@@ -2715,6 +2844,7 @@ export class SpineMap implements SpineMapHandle
         {
             return;
         }
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
 
         this.destroyed = true;
 
@@ -3837,6 +3967,7 @@ export class SpineMap implements SpineMapHandle
         this.showPopover(nodeId);
         const node = this.findNodeData(nodeId);
         safeCallback(this.opts.onNodeClick, node);
+        this.emitChannel("nodeClick", () => JSON.parse(JSON.stringify(node ?? null)));
     }
 
     private handleNodeDblClick(nodeId: string): void
@@ -3847,6 +3978,7 @@ export class SpineMap implements SpineMapHandle
         }
         const node = this.findNodeData(nodeId);
         safeCallback(this.opts.onNodeDoubleClick, node);
+        this.emitChannel("nodeDoubleClick", () => JSON.parse(JSON.stringify(node ?? null)));
     }
 
     // ========================================================================
