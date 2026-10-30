@@ -917,7 +917,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 227 -> 214, GraphCanvas classified (B9).
     // ADR-236 (2026-10-29): 214 -> 198, SpineMap classified (B9).
     // ADR-236 (2026-10-29): 198 -> 182, DiagramEngine classified (B9).
-    unclassifiedOptions: 182,
+    // ADR-237 (2026-10-30): 182 -> 176, MultiselectCombo classified (readiness step 3, #22).
+    unclassifiedOptions: 176,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -950,7 +951,8 @@ export const BASELINES = {
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
     // both numbers in the same change, and adding one fails.
     // ADR-237 (2026-10-30): 6 -> 5, UserMenu raised to surface (readiness step 3, #26).
-    componentsBelowRequiredLevel: 5,
+    // ADR-237 (2026-10-30): 5 -> 4, MultiselectCombo raised to surface (readiness step 3, #22).
+    componentsBelowRequiredLevel: 4,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
@@ -979,7 +981,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 25 -> 24, SpineMap classified (B9).
     // ADR-236 (2026-10-29): 24 -> 23, DiagramEngine classified (B9).
     // ADR-237 (2026-10-30): 23 -> 22, UserMenu classified (readiness step 3, #26).
-    componentsPendingClassification: 22,
+    // ADR-237 (2026-10-30): 22 -> 21, MultiselectCombo classified (readiness step 3, #22).
+    componentsPendingClassification: 21,
 };
 
 /*
@@ -1087,11 +1090,12 @@ export const FLOORS = {
     // ADR-236 (2026-10-29): 198, 62 and 24 once SpineMap was classified (B9).
     // ADR-236 (2026-10-29): 182 and 23 once DiagramEngine was classified (B9).
     // ADR-237 (2026-10-30): 52, 5 and 22 once UserMenu was classified (readiness step 3, #26).
-    unclassifiedOptions: 182,
+    // ADR-237 (2026-10-30): 176, 4 and 21 once MultiselectCombo was classified (readiness step 3, #22).
+    unclassifiedOptions: 176,
     protocolPropsMissingJsdoc: 52,
     changeMismatches: 0,
-    componentsBelowRequiredLevel: 5,
-    componentsPendingClassification: 22,
+    componentsBelowRequiredLevel: 4,
+    componentsPendingClassification: 21,
 };
 
 /**

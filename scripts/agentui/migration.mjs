@@ -46,6 +46,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 33 on 2026-10-29: explorerpicker classified with two new providers, onLoadChildren and onSearch (readiness
     // step 2 B7, ADR-234).
     // 22 on 2026-10-30: usermenu classified (readiness step 3, #26, ADR-237).
+    // 21 on 2026-10-30: multiselectcombo classified (readiness step 3, #22, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
@@ -60,7 +61,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "gridlayout",
     "helpdrawer",
     "layerlayout",
-    "multiselectcombo",
     "navrail",
     "permissionmatrix",
     "propertyinspector",
@@ -78,8 +78,8 @@ export const BELOW_REQUIRED = new Set([
     // validation before any surface check runs; whether their handles then pass setData, on,
     // getState and setState is untested. Each needs stateKeys and possibly component work (#21-#26).
     // 2026-10-30: usermenu raised to surface (readiness step 3, #26, ADR-237).
+    // 2026-10-30: multiselectcombo raised to surface (readiness step 3, #22, ADR-237).
     "fileexplorer",
-    "multiselectcombo",
     "permissionmatrix",
     "stacklayout",
     "timeline",
