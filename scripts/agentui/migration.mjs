@@ -46,7 +46,6 @@ export const PENDING_CLASSIFICATION = new Set([
     // 33 on 2026-10-29: explorerpicker classified with two new providers, onLoadChildren and onSearch (readiness
     // step 2 B7, ADR-234).
     "anchorlayout",
-    "annotation",
     "borderlayout",
     "boxlayout",
     "cardlayout",

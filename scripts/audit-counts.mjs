@@ -910,7 +910,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 258 -> 252, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 252 -> 231, Ribbon classified (B8).
     // ADR-235 (2026-10-29): 231 -> 228, RibbonBuilder classified (B8).
-    unclassifiedOptions: 228,
+    // ADR-236 (2026-10-29): 228 -> 227, Annotation classified (B9).
+    unclassifiedOptions: 227,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -933,7 +934,8 @@ export const BASELINES = {
     // ADR-228 (2026-10-28): 4 -> 3, Slider declared change: "event" (B3).
     // ADR-229 (2026-10-29): 3 -> 2, Gauge declared change: "event" (B4).
     // ADR-231 (2026-10-29): 2 -> 1, DynamicFormSwitcher declared change: "event" (B5).
-    changeMismatches: 1,
+    // ADR-236 (2026-10-29): 1 -> 0, Annotation change declared (B9).
+    changeMismatches: 0,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
@@ -962,7 +964,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 30 -> 29, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 29 -> 28, Ribbon classified (B8).
     // ADR-235 (2026-10-29): 28 -> 27, RibbonBuilder classified (B8).
-    componentsPendingClassification: 27,
+    // ADR-236 (2026-10-29): 27 -> 26, Annotation classified (B9).
+    componentsPendingClassification: 26,
 };
 
 /*
@@ -1065,11 +1068,12 @@ export const FLOORS = {
     // ADR-235 (2026-10-29): 252, 130 and 29 once AppLauncher was classified (B8).
     // ADR-235 (2026-10-29): 231, 104 and 28 once Ribbon was classified (B8).
     // ADR-235 (2026-10-29): 228 and 27 once RibbonBuilder was classified (B8).
-    unclassifiedOptions: 228,
+    // ADR-236 (2026-10-29): 227, 0 and 26 once Annotation was classified (B9).
+    unclassifiedOptions: 227,
     protocolPropsMissingJsdoc: 104,
-    changeMismatches: 1,
+    changeMismatches: 0,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 27,
+    componentsPendingClassification: 26,
 };
 
 /**
