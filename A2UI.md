@@ -82,7 +82,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 82 components that are. The 19 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **In the catalog:** the 83 components that are. The 18 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.

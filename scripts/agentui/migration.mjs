@@ -49,13 +49,13 @@ export const PENDING_CLASSIFICATION = new Set([
     // 21 on 2026-10-30: multiselectcombo classified (readiness step 3, #22, ADR-237).
     // 20 on 2026-10-30: timeline classified (readiness step 3, #25, ADR-237).
     // 19 on 2026-10-30: permissionmatrix classified (readiness step 3, #23, ADR-237).
+    // 18 on 2026-10-30: fileexplorer classified (readiness step 3, #21, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
     "cardlayout",
     "commentoverlay",
     "docklayout",
-    "fileexplorer",
     "fileupload",
     "flexgridlayout",
     "flowlayout",
@@ -81,6 +81,6 @@ export const BELOW_REQUIRED = new Set([
     // 2026-10-30: multiselectcombo raised to surface (readiness step 3, #22, ADR-237).
     // 2026-10-30: timeline raised to surface (readiness step 3, #25, ADR-237).
     // 2026-10-30: permissionmatrix raised to surface (readiness step 3, #23, ADR-237).
-    "fileexplorer",
+    // 2026-10-30: fileexplorer raised to surface (readiness step 3, #21, ADR-237).
     "stacklayout",
 ]);

@@ -86,29 +86,44 @@ export interface FileExplorerColumn
 /** Configuration options for FileExplorer. */
 export interface FileExplorerOptions
 {
+    /** The folder tree shown in the tree pane and the listing. */
     roots?: FileNode[];
     /** Initial flat items (alternative to roots — enables flat mode). */
     items?: FileNode[];
     /** Initial breadcrumb path for flat mode. */
     breadcrumb?: BreadcrumbSegment[];
+    /** Listing layout. Default: "detail". */
     viewMode?: "grid" | "list" | "detail";
     /** Column definitions for detail view. Uses defaults if omitted. */
     columns?: FileExplorerColumn[];
+    /** Shows the breadcrumb path above the listing. Default: true. */
     showBreadcrumbs?: boolean;
+    /** Shows the toolbar with the view-mode buttons. Default: true. */
     showToolbar?: boolean;
+    /** Shows the folder tree beside the listing. Default: true. */
     showTreePane?: boolean;
+    /** Tree pane width in pixels. Default: 250. */
     treePaneWidth?: number;
+    /** Narrowest the user can drag the tree pane, in pixels. Default: 150. */
     treePaneMinWidth?: number;
+    /** Widest the user can drag the tree pane, in pixels. Default: 500. */
     treePaneMaxWidth?: number;
+    /** Whether the user selects one item or several. Default: "multi". */
     selectable?: "single" | "multi";
     /** Sugar for selectable: "multi". */
     multiSelect?: boolean;
+    /** Right-click menu items, or a function returning them for the node clicked. */
     contextMenuItems?: FileContextMenuItem[]
         | ((node: FileNode | null) => FileContextMenuItem[]);
+    /** CSS height of the component. Default: "500px". */
     height?: string;
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** Shows the item and selection count under the listing. Default: true. */
     showStatusLine?: boolean;
+    /** The field the listing is sorted by. Default: "name". */
     sortField?: "name" | "modified" | "size" | "type";
+    /** Sort direction. Default: "asc". */
     sortDirection?: "asc" | "desc";
     /**
      * Grouping strategy:
