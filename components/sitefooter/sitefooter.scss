@@ -109,8 +109,22 @@
 // DEBT-WEB-2. Do not "correct" it without reading those first. Colour is not
 // the only signal: hover and focus add an underline.
 
+// A link with no href is a button (B8, an agent's link over A2UI): it takes
+// the link's look, with the user agent's button chrome removed.
+.sitefooter-links button,
+.sitefooter-legallinks button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+
 .sitefooter-links a,
-.sitefooter-legallinks a {
+.sitefooter-legallinks a,
+.sitefooter-links button,
+.sitefooter-legallinks button {
     color: var(--theme-text-secondary);
     text-decoration: none;
 

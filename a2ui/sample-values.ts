@@ -27,6 +27,15 @@ const SCALARS: Record<string, [unknown, unknown]> = {
     string: ["a", "b"], number: [1, 2], integer: [1, 2], boolean: [false, true],
 };
 
+/**
+ * String patterns the catalog uses whose values the plain samples do not
+ * match, with two valid values each: the hex colour every component's colour
+ * takes (readiness step 2 B7, B8).
+ */
+const PATTERNS: Record<string, [string, string]> = {
+    "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$": ["#336699", "#c0392b"],
+};
+
 /** String formats the catalog uses, with two valid values each (readiness step 2 B2). */
 const FORMATS: Record<string, [string, string]> = {
     "date-time": ["2026-01-15T09:30:00.000Z", "2026-02-20T14:45:00.000Z"],
@@ -134,13 +143,14 @@ function sampleFormat(type: string, format: string, variant: Variant, pointer: s
 }
 
 /**
- * A string pattern is accepted only when the plain string sample already
- * matches it, such as a class-token pattern (ExplorerPicker's icon, readiness
- * step 2 B7); any other pattern is refused rather than guessed.
+ * A string pattern takes its PATTERNS samples, or the plain string sample
+ * when that already matches it, such as a class-token pattern (ExplorerPicker's
+ * icon, readiness step 2 B7); any other pattern is refused rather than guessed.
  */
 function samplePattern(type: string, pattern: string, variant: Variant, pointer: string): string
 {
-    const sample = SCALARS.string[variant] as string;
+    const sample = type === "string" && pattern in PATTERNS ? PATTERNS[pattern][variant]
+        : SCALARS.string[variant] as string;
 
     if (type !== "string" || !new RegExp(pattern, "u").test(sample))
     {

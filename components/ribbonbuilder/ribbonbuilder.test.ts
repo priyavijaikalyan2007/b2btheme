@@ -446,3 +446,79 @@ describe("components mounted in the preview are destroyed with it", () =>
         expect(destroys).toEqual([0, 1]);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    function toolbarButton(label: string): HTMLElement
+    {
+        return container.querySelector<HTMLElement>(`.ribbonbuilder-toolbar-btn[title="${label}"]`)!;
+    }
+
+    test("on_Change_HearsTheConfig_AfterOnChange_ExactlyOnce", () =>
+    {
+        const order: unknown[] = [];
+        const builder = createRibbonBuilder(makeOptions({ initialConfig: makeConfig(),
+            onChange: (c) => order.push(`option:${c.tabs.length}`) }), "test-ribbonbuilder");
+        builder.on("change", (p) => order.push(p));
+
+        toolbarButton("Add Tab").click();
+
+        expect(order).toHaveLength(2);
+        expect(order[0]).toBe("option:2");
+        expect(order[1]).toEqual(builder.getConfig());
+        builder.destroy();
+    });
+
+    test("on_Export_HearsTheMarkdown_AfterOnExport", () =>
+    {
+        const order: unknown[] = [];
+        const builder = createRibbonBuilder(makeOptions({ initialConfig: makeConfig(),
+            onExport: () => order.push("option") }), "test-ribbonbuilder");
+        builder.on("export", (p) => order.push(p));
+
+        toolbarButton("Export MD").click();
+
+        expect(order).toEqual(["option", builder.exportMarkdown()]);
+        builder.destroy();
+    });
+
+    test("on_Change_WithoutOnChange_StillEmits_AndUnsubscribeStopsIt", () =>
+    {
+        const heard = vi.fn();
+        const builder = createRibbonBuilder(makeOptions(), "test-ribbonbuilder");
+        const off = builder.on("change", heard);
+
+        toolbarButton("Add Tab").click();
+        off();
+        toolbarButton("Add Tab").click();
+
+        expect(heard).toHaveBeenCalledTimes(1);
+        builder.destroy();
+    });
+
+    test("show_AnElement_MountsInIt (B8: the A2UI adapter mounts it this way)", () =>
+    {
+        const builder = createRibbonBuilder(makeOptions({ container: undefined }));
+
+        builder.show(container);
+
+        expect(container.querySelector(".ribbonbuilder")).not.toBeNull();
+        builder.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_SetDataThrows_StateIsEmpty", () =>
+    {
+        const builder = createRibbonBuilder(makeOptions());
+
+        builder.setState({ anything: 1 });
+
+        expect(() => builder.on("import", vi.fn())).toThrow(/"change" and "export"/);
+        expect(() => builder.setData("config", {})).toThrow(/no data slots/);
+        expect(builder.getState()).toEqual({});
+        builder.destroy();
+    });
+});

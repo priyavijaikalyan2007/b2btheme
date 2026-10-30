@@ -522,6 +522,15 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   user's credentials), declare `required: true`: the catalog then requires all
   three, so a component without them fails validation and never mounts. G3
   binds required providers itself; the render test needs an `OVERRIDES` entry.
+- **`protocol.fixed`: options the adapter always passes** (ADR-235). For a
+  data option whose default suits a host page but not an agent's surface
+  (Ribbon's `keyScope`, whose default `"document"` takes the page's keys),
+  map it to the JSON value the adapter passes on every mount. The catalog
+  leaves it out, so an agent can neither see nor set it. The key must name a
+  data option (`stale-declaration` otherwise), the build fails on a value its
+  type rejects, and it cannot also be host-only (`double-classified`).
+  Prefer an additive option with today's behaviour as its default, fixed to
+  the contained behaviour over A2UI.
 - **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
   callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`), callbacks
   whose information `value` already carries, decisions (`onDragValidate`,

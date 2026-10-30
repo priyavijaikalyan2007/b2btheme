@@ -514,6 +514,21 @@ describe("validateManifest — protocol field", () =>
             .toEqual(["protocol.dependencies.components[0]", "protocol.dependencies.components[1]"]);
         expect(paths({ dependencies: { scripts: [] } })).toEqual(["protocol.dependencies.scripts"]);
     });
+
+    test("protocol.fixed maps options to the JSON values the adapter always passes (ADR-235)", () =>
+    {
+        expect(paths({ fixed: { keyScope: "ribbon" } })).toEqual([]);
+        expect(paths({ fixed: { contained: true, limits: { max: 3, tags: ["a", null] } } })).toEqual([]);
+    });
+
+    test("protocol.fixed outside that shape is rejected", () =>
+    {
+        expect(paths({ fixed: ["keyScope"] })).toEqual(["protocol.fixed"]);
+        expect(paths({ fixed: { onClick: () => undefined } })).toEqual(["protocol.fixed.onClick"]);
+        expect(paths({ fixed: { when: new Date(0), size: Number.NaN } }))
+            .toEqual(["protocol.fixed.when", "protocol.fixed.size"]);
+        expect(paths({ fixed: {} })).toEqual(["protocol.fixed"]);
+    });
 });
 
 describe("validateManifest — agent field (ADR-222)", () =>

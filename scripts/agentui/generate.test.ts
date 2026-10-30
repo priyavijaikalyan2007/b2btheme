@@ -110,6 +110,20 @@ describe("runPipeline — fixture widget", () =>
         expect((run([widget()]).outputs.get("schemas/widget.options.json") as any).properties.extra.description)
             .toBe("Extra bag.");
     }, 60_000);
+    test("a fixed option leaves the catalog entry and the options schema (ADR-235)", () =>
+    {
+        const result = run([widget({ fixed: { pageSize: 10 } })]);
+
+        expect(result.errors).toEqual([]);
+        expect((result.catalog as any).components.Widget.allOf[2].properties).not.toHaveProperty("pageSize");
+        expect((result.outputs.get("schemas/widget.options.json") as any).properties).not.toHaveProperty("pageSize");
+        expect(result.descriptors.find((d: any) => d.name === "Widget").fixed).toEqual({ pageSize: 10 });
+    }, 60_000);
+    test("a fixed value its option's type rejects is an error (ADR-235)", () =>
+    {
+        expect(run([widget({ fixed: { pageSize: "ten" } })]).errors)
+            .toEqual([expect.stringMatching(/widget\.pageSize: protocol\.fixed gives it "ten", which its type rejects/)]);
+    }, 60_000);
     test("a nested hostOnly path on a plain field leaves the schema, required included (ADR-230)", () =>
     {
         const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].id": "A link the agent must not choose." };

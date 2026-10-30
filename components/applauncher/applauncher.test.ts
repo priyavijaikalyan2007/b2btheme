@@ -245,3 +245,75 @@ describe("AppLauncher destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    beforeEach(() => { localStorage.clear(); });
+
+    function tile(id: string): HTMLElement
+    {
+        return document.querySelector<HTMLElement>(`.applauncher-tile[data-app-id="${id}"]`)!;
+    }
+
+    test("on_Select_HearsTheAppWithoutData_AfterOnSelect_ExactlyOnce", () =>
+    {
+        const order: unknown[] = [];
+        const apps = makeApps();
+        apps[1].data = { route: "/projects" };
+        const launcher = new AppLauncher(makeOptions({ apps, onSelect: (a) => order.push(`option:${a.id}`) }));
+        launcher.on("select", (p) => order.push(p));
+
+        launcher.open();
+        tile("app-2").click();
+
+        expect(order).toEqual(["option:app-2", { id: "app-2", name: "Projects", icon: "bi-kanban" }]);
+        launcher.destroy();
+    });
+
+    test("on_FavoriteToggle_HearsTheIdAndState_AfterOnFavoriteToggle", () =>
+    {
+        const order: unknown[] = [];
+        const launcher = new AppLauncher(makeOptions({
+            onFavoriteToggle: (id, fav) => order.push(`option:${id}:${fav}`),
+        }));
+        launcher.on("favoriteToggle", (p) => order.push(p));
+
+        launcher.open();
+        tile("app-3").querySelector<HTMLElement>(".applauncher-tile-fav")!.click();
+        launcher.toggleFavorite("app-3");
+
+        expect(order).toEqual(["option:app-3:true", { appId: "app-3", isFavorite: true },
+            "option:app-3:false", { appId: "app-3", isFavorite: false }]);
+        launcher.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_AndUnsubscribeStopsDelivery", () =>
+    {
+        const heard = vi.fn();
+        const launcher = new AppLauncher(makeOptions());
+        const off = launcher.on("select", heard);
+
+        off();
+        launcher.open();
+        tile("app-1").click();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(() => launcher.on("open", vi.fn())).toThrow(/"select" and "favoriteToggle"/);
+        launcher.destroy();
+    });
+
+    test("setData_Throws_GetStateIsEmpty_SetStateDoesNothing", () =>
+    {
+        const launcher = new AppLauncher(makeOptions());
+
+        launcher.setState({ anything: 1 });
+
+        expect(() => launcher.setData("apps", [])).toThrow(/no data slots/);
+        expect(launcher.getState()).toEqual({});
+        launcher.destroy();
+    });
+});

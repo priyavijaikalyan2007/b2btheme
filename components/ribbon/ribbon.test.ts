@@ -4939,3 +4939,156 @@ describe("HTMLElement container support", () =>
         ribbon.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B8)
+// ============================================================================
+
+describe("surface contract (B8)", () =>
+{
+    function mount(controls: RibbonControl[], overrides?: Partial<RibbonOptions>): Ribbon
+    {
+        return createRibbon(makeOptions({
+            tabs: [makeTab({ id: "home", label: "Home", groups: [makeGroup({ id: "g", controls })] }),
+                makeTab({ id: "insert", label: "Insert" })],
+            ...overrides,
+        }), "test-ribbon");
+    }
+
+    function heard(ribbon: Ribbon): unknown[]
+    {
+        const payloads: unknown[] = [];
+        ribbon.on("controlClick", (p) => payloads.push(p));
+        return payloads;
+    }
+
+    function change(el: HTMLInputElement | HTMLSelectElement, value: string): void
+    {
+        el.value = value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    test("on_ControlClick_Buttons_HearTheIdAndToggleState_AfterOnControlClick", () =>
+    {
+        const order: unknown[] = [];
+        const ribbon = mount([makeButton({ id: "save", label: "Save" }),
+            makeButton({ id: "bold", label: "Bold", toggle: true })],
+        { onControlClick: (id) => order.push(`option:${id}`) });
+        ribbon.on("controlClick", (p) => order.push(p));
+
+        container.querySelector<HTMLElement>("[data-control-id='save']")!.click();
+        container.querySelector<HTMLElement>("[data-control-id='bold']")!.click();
+
+        expect(order).toEqual(["option:save", { controlId: "save", value: null },
+            "option:bold", { controlId: "bold", value: true }]);
+        ribbon.destroy();
+    });
+
+    test("on_ControlClick_ValueControls_HearTheNewValue", () =>
+    {
+        const ribbon = mount([
+            { type: "dropdown", id: "font", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }] },
+            { type: "number", id: "size", value: 11 },
+            { type: "checkbox", id: "wrap", label: "Wrap" },
+            { type: "toggle", id: "grid", label: "Grid" },
+            { type: "color", id: "ink", value: "#000000" },
+        ]);
+        const payloads = heard(ribbon);
+
+        change(container.querySelector(".ribbon-dropdown")!, "b");
+        change(container.querySelector(".ribbon-number")!, "14");
+        container.querySelector<HTMLInputElement>(".ribbon-checkbox")!.click();
+        container.querySelector<HTMLInputElement>(".ribbon-toggle")!.click();
+        change(container.querySelector(".ribbon-color")!, "#ff0000");
+
+        expect(payloads).toEqual([{ controlId: "font", value: "b" }, { controlId: "size", value: 14 },
+            { controlId: "wrap", value: true }, { controlId: "grid", value: true },
+            { controlId: "ink", value: "#ff0000" }]);
+        ribbon.destroy();
+    });
+
+    test("on_ControlClick_GalleryInputSplitMenuAndMenuBar_AlsoEmit_WithoutOnControlClick", () =>
+    {
+        const onControlClick = vi.fn();
+        const ribbon = mount([
+            { type: "gallery", id: "styles", options: [{ id: "h1", label: "Heading" }, { id: "p", label: "Body" }] },
+            { type: "input", id: "find", placeholder: "Find" },
+            { type: "split-button", id: "paste", label: "Paste", menuItems: [{ id: "paste-text", label: "Text" }] },
+        ], { onControlClick, menuBar: [{ id: "file", label: "File", items: [{ id: "open", label: "Open" }] }] });
+        const payloads = heard(ribbon);
+
+        container.querySelectorAll<HTMLElement>(".ribbon-gallery-option")[1].click();
+        const input = container.querySelector<HTMLInputElement>(".ribbon-input")!;
+        input.value = "total";
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        container.querySelector<HTMLElement>(".ribbon-split-menu-item")!.click();
+        container.querySelector<HTMLElement>(".ribbon-menu-entry")!.click();
+
+        expect(payloads).toEqual([{ controlId: "styles", value: "p" }, { controlId: "find", value: "total" },
+            { controlId: "paste", value: "paste-text" }, { controlId: "open", value: null }]);
+        expect(onControlClick).not.toHaveBeenCalled();
+        ribbon.destroy();
+    });
+
+    test("keyScope_Ribbon_IgnoresKeysOutsideIt_AndHandlesThemInside", () =>
+    {
+        const onCollapse = vi.fn();
+        const ribbon = mount([makeButton({ id: "save", label: "Save" })], { keyScope: "ribbon", onCollapse });
+        const ctrlF1 = (target: EventTarget) => target.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "F1", ctrlKey: true, bubbles: true, cancelable: true }));
+
+        ctrlF1(document.body);
+        const afterOutside = onCollapse.mock.calls.length;
+        ctrlF1(container.querySelector("[data-control-id='save']")!);
+
+        expect(afterOutside).toBe(0);
+        expect(onCollapse.mock.calls).toEqual([[true]]);
+        ribbon.destroy();
+    });
+
+    test("keyScope_Default_HandlesTheDocumentsKeys_AsBefore", () =>
+    {
+        const onCollapse = vi.fn();
+        const ribbon = mount([makeButton()], { onCollapse });
+
+        document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "F1", ctrlKey: true, bubbles: true }));
+
+        expect(onCollapse).toHaveBeenCalledWith(true);
+        ribbon.destroy();
+    });
+
+    test("setState_RestoresGetState_Silently", () =>
+    {
+        const onTabChange = vi.fn();
+        const onCollapse = vi.fn();
+        const source = mount([makeButton({ id: "bold", toggle: true }),
+            { type: "dropdown", id: "font", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }] }]);
+        change(container.querySelector(".ribbon-dropdown")!, "b");
+        source.setActiveTab("insert");
+        source.collapse();
+        const saved = source.getState();
+        source.destroy();
+
+        const ribbon = mount([makeButton({ id: "bold", toggle: true }),
+            { type: "dropdown", id: "font", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }] }],
+        { onTabChange, onCollapse });
+        const payloads = heard(ribbon);
+        ribbon.setState(saved as unknown as Record<string, unknown>);
+
+        expect(ribbon.getState()).toEqual(saved);
+        expect(ribbon.getActiveTab()).toBe("insert");
+        expect(ribbon.isCollapsed()).toBe(true);
+        expect(container.querySelector<HTMLElement>(".ribbon-panel")!.style.display).toBe("none");
+        expect([onTabChange.mock.calls, onCollapse.mock.calls, payloads]).toEqual([[], [], []]);
+        ribbon.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_SetDataThrows", () =>
+    {
+        const ribbon = mount([makeButton()]);
+
+        expect(() => ribbon.on("tabChange", vi.fn())).toThrow(/"controlClick"/);
+        expect(() => ribbon.setData("tabs", [])).toThrow(/no data slots/);
+        ribbon.destroy();
+    });
+});

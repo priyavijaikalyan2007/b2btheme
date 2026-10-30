@@ -120,6 +120,12 @@ export interface AdapterDescriptor
      * the container `position: relative` and the manifest's default height.
      */
     overlay?: { height: number };
+    /**
+     * The manifest's protocol.fixed (ADR-235): options passed on every mount
+     * with these values. The catalog leaves them out, so no agent prop can
+     * set them.
+     */
+    fixed?: Record<string, unknown>;
     events: AdapterEvent[];
     providers: AdapterProvider[];
     dates: string[];

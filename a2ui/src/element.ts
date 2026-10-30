@@ -442,7 +442,9 @@ class Binding
         const d = this.#env.descriptor;
         const cleared = clearsWhenAbsent(d) && this.#values.get("value") === null;
         const values = Object.fromEntries([...this.#values].filter(([n]) => !(cleared && n === "value")));
-        const options = { ...values, ...changeOptions(d, (v) => this.#onUserValue(v)), ...providers.options };
+        // protocol.fixed last (ADR-235): the catalog has no prop for these, so nothing above can name them.
+        const options = { ...values, ...changeOptions(d, (v) => this.#onUserValue(v)), ...providers.options,
+            ...d.fixed };
         const handle = this.#invoke(factory, container, options, cleared);
 
         if (!handle || typeof handle !== "object")

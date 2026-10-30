@@ -92,7 +92,8 @@ export interface RibbonBuilderOptions
 /** Public handle returned by createRibbonBuilder(). */
 export interface RibbonBuilderHandle
 {
-    show(containerId?: string): void;
+    /** Mounts in the element, or the element with this id; without either, in options.container. */
+    show(container?: string | HTMLElement): void;
     destroy(): void;
     getConfig(): RibbonOptions;
     setConfig(config: RibbonOptions): void;
@@ -100,7 +101,23 @@ export interface RibbonBuilderHandle
     exportJSON(): string;
     importJSON(json: string): void;
     getElement(): HTMLElement;
+
+    /** The surface contract (additive, B8): RibbonBuilder has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "change" (the whole config after each edit, as getConfig()
+     * returns it, after onChange) or "export" (the Markdown the Export MD
+     * button produced, after onExport). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to report (ADR-229): the config arrives with each change. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels (B8). */
+type BuilderChannel = "change" | "export";
 
 /** Node types in the structure tree. */
 type TreeNodeKind = "tab" | "group" | "control";
@@ -308,6 +325,8 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
     private config: RibbonOptions;
     private rootEl: HTMLElement;
     private destroyed = false;
+    private readonly handlers: Record<BuilderChannel, Set<(payload: unknown) => void>> =
+        { change: new Set(), export: new Set() };
 
     // UI panel references
     private toolbarEl!: HTMLElement;
@@ -352,9 +371,9 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
     // ========================================================================
 
     /** Mount into a container or the configured container. */
-    public show(containerId?: string): void
+    public show(container?: string | HTMLElement): void
     {
-        const target = this.resolveContainer(containerId);
+        const target = container instanceof HTMLElement ? container : this.resolveContainer(container);
 
         if (!target)
         {
@@ -390,6 +409,58 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
     public getConfig(): RibbonOptions
     {
         return JSON.parse(JSON.stringify(this.config));
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** RibbonBuilder has no data slots: setConfig() and importJSON() replace the config. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): RibbonBuilder has no data slots. `
+            + "Use setConfig() or importJSON() to replace the config.");
+    }
+
+    /** Subscribes to "change" or "export"; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change" && channel !== "export")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "change" and "export".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** Nothing to report (ADR-229). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    public setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: BuilderChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     /** Replace the current config entirely. */
@@ -2168,6 +2239,11 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
                 logError("onChange callback error:", err);
             }
         }
+
+        if (this.handlers.change.size > 0)
+        {
+            this.emit("change", this.getConfig());
+        }
     }
 
     /** Add a new tab to the config. */
@@ -3065,6 +3141,8 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
                 logError("onExport callback error:", err);
             }
         }
+
+        this.emit("export", md);
     }
 
     /** Handle Export JSON button click. */
@@ -3242,7 +3320,7 @@ export function createRibbonBuilder(
     const impl = new RibbonBuilderImpl(options);
 
     const handle: RibbonBuilderHandle = {
-        show: (id?: string) => impl.show(id || containerId),
+        show: (container?: string | HTMLElement) => impl.show(container || containerId),
         destroy: () => impl.destroy(),
         getConfig: () => impl.getConfig(),
         setConfig: (c) => impl.setConfig(c),
@@ -3250,6 +3328,10 @@ export function createRibbonBuilder(
         exportJSON: () => impl.exportJSON(),
         importJSON: (j) => impl.importJSON(j),
         getElement: () => impl.getElement(),
+        setData: (slot, value) => impl.setData(slot, value),
+        on: (channel, handler) => impl.on(channel, handler),
+        getState: () => impl.getState(),
+        setState: (state) => impl.setState(state),
     };
 
     if (containerId)

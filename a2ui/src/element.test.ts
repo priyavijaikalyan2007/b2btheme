@@ -125,6 +125,14 @@ describe("binding and mounting", () =>
         expect(rc.errors).toEqual([]);
     });
 
+    test("a fixed option reaches the factory with its value on every mount (ADR-235)", async () =>
+    {
+        create(tagFor(fakeDescriptor({ fixed: { keyScope: "ribbon" } })), realContext({ title: "t" }));
+        await loaded();
+
+        expect(record.builds[0].options).toEqual(expect.objectContaining({ title: "t", keyScope: "ribbon" }));
+    });
+
     test("an unbound provider is not passed to the factory", async () =>
     {
         create(tagFor(fakeDescriptor({ providers: [LOAD_PROVIDER] })), realContext({ title: "t" }));

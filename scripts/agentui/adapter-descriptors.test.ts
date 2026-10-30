@@ -281,4 +281,13 @@ describe("buildDescriptors — fields", () =>
         expect(d.overlay).toEqual({ height: 300 });
         expect(p).not.toHaveProperty("overlay");
     });
+
+    test("a surface's fixed options are carried for the adapter to pass; none adds no key (ADR-235)", () =>
+    {
+        const ribbon = { ...picker, surface: { ...picker.surface, fixed: { keyScope: "ribbon" } } };
+        const [d] = buildDescriptors([ribbon], cat, css).descriptors;
+
+        expect(d.fixed).toEqual({ keyScope: "ribbon" });
+        expect(p).not.toHaveProperty("fixed");
+    });
 });

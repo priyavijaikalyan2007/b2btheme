@@ -14,26 +14,43 @@
 // TYPES & INTERFACES
 // ============================================================================
 
+/** One application tile. */
 export interface AppItem
 {
+    /** Stable id, referenced by activeAppId and favourites. */
     id: string;
+    /** Display name. */
     name: string;
+    /** One-line description, shown under the name. */
     description?: string;
+    /** Bootstrap Icons class (e.g. "bi-kanban"). */
     icon?: string;
+    /** Icon image URL; shown instead of icon. */
     iconUrl?: string;
+    /** Not read by the component; onSelect decides where the app opens. */
     url?: string;
+    /** Id of the category the app belongs to (see categories). */
     category?: string;
+    /** Short badge text, such as "New" or a count. */
     badge?: string;
+    /** Badge colour. Default: "info". */
     badgeVariant?: "info" | "success" | "warning" | "danger";
+    /** Shown dimmed; it cannot be opened. */
     disabled?: boolean;
+    /** Arbitrary payload passed back to onSelect. */
     data?: Record<string, unknown>;
 }
 
+/** A category that groups apps in the launcher's sidebar. */
 export interface AppCategory
 {
+    /** Stable id, referenced by AppItem.category. */
     id: string;
+    /** Display label. */
     label: string;
+    /** Bootstrap Icons class for the category. */
     icon?: string;
+    /** Sort position; lower first. */
     order?: number;
 }
 
@@ -41,29 +58,59 @@ export type AppLauncherMode = "dropdown" | "modal" | "fullpage";
 
 export interface AppLauncherOptions
 {
+    /** The applications to show, in display order. */
     apps: AppItem[];
+    /** Categories shown in a sidebar; apps name theirs by id. */
     categories?: AppCategory[];
+    /** Id of the app the user is in now; its tile is marked current. */
     activeAppId?: string;
+    /**
+     * "dropdown" opens a grid under the trigger, "modal" a dialog, and
+     * "fullpage" renders the whole launcher in place. Default: "dropdown".
+     */
     mode?: AppLauncherMode;
+    /** Tiles per row. Default: 3 in a dropdown, 4 otherwise. */
     columns?: number;
+    /** Shows a search box. Default: true. */
     showSearch?: boolean;
+    /** Shows the user's favourite apps first, with a star on each tile. Default: true. */
     showFavorites?: boolean;
+    /** Shows recently opened apps. Default: true. */
     showRecent?: boolean;
+    /** How many recent apps to show. Default: 6. */
     maxRecent?: number;
+    /** Shows the categories sidebar when categories are given. Default: true. */
     showCategories?: boolean;
+    /** Search box placeholder. Default: "Search apps...". */
     placeholder?: string;
+    /** Bootstrap Icons class(es) for the trigger. Default: "bi bi-grid-3x3-gap". */
     triggerIcon?: string;
+    /** Trigger label. Default: "Apps". */
     triggerLabel?: string;
+    /** Shows the trigger label beside its icon. Default: true. */
     showTriggerLabel?: boolean;
+    /** Trigger size. Default: "default". */
     size?: "sm" | "default" | "lg";
+    /** localStorage key for the user's favourites. Default: "applauncher-favorites". */
     favoritesKey?: string;
+    /** localStorage key for recently opened apps. Default: "applauncher-recent". */
     recentKey?: string;
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
+    /** Fires when the user opens an app. */
     onSelect?: (app: AppItem) => void;
+    /**
+     * Searches beyond the given apps: receives the search text and answers
+     * with the matching apps. Without it the apps are filtered locally.
+     */
     onSearch?: (query: string) => Promise<AppItem[]>;
+    /** Fires when the user stars or unstars an app. */
     onFavoriteToggle?: (appId: string, isFavorite: boolean) => void;
+    /** Fires when the launcher opens. */
     onOpen?: () => void;
+    /** Fires when the launcher closes. */
     onClose?: () => void;
 }
 
@@ -277,7 +324,23 @@ export interface AppLauncherHandle
     setCategories(categories: AppCategory[]): void;
     setSearchQuery(query: string): void;
     getMode(): AppLauncherMode;
+
+    /** The surface contract (additive, B8): AppLauncher has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "select" (the app the user opened, without data, after
+     * onSelect) or "favoriteToggle" ({ appId, isFavorite }, after
+     * onFavoriteToggle). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to report (ADR-229): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-229). */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels (B8). */
+type LauncherChannel = "select" | "favoriteToggle";
 
 export class AppLauncher implements AppLauncherHandle
 {
@@ -296,6 +359,8 @@ export class AppLauncher implements AppLauncherHandle
     private visibleTiles: HTMLElement[] = [];
     private opened = false;
     private destroyed = false;
+    private readonly handlers: Record<LauncherChannel, Set<(payload: unknown) => void>> =
+        { select: new Set(), favoriteToggle: new Set() };
     private activeTab = "all";
     private activeAppId = "";
     private searchQuery = "";
@@ -364,10 +429,63 @@ export class AppLauncher implements AppLauncherHandle
         this.searchInputEl = null;
         this.sectionsEl = null;
         this.liveRegionEl = null;
+        this.handlers.select.clear();
+        this.handlers.favoriteToggle.clear();
         logInfo("Destroyed");
     }
 
     getElement(): HTMLElement | null { return this.rootEl; }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** AppLauncher has no data slots: its apps are an option. */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): AppLauncher has no data slots. Its apps are an option.`);
+    }
+
+    /** Subscribes to "select" or "favoriteToggle"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "select" && channel !== "favoriteToggle")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "select" and "favoriteToggle".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** Nothing to report (ADR-229). */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-229). */
+    setState(_state: Record<string, unknown>): void
+    {
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: LauncherChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
+    }
 
     // ========================================================================
     // BUILD — ROOT
@@ -1186,6 +1304,7 @@ export class AppLauncher implements AppLauncherHandle
 
         this.saveFavorites();
         safeCallback(this.opts.onFavoriteToggle, appId, isFav);
+        this.emit("favoriteToggle", { appId, isFavorite: isFav });
         if (this.opened) { this.renderContent(); }
         const app = this.apps.find(a => a.id === appId);
         const name = app?.name ?? appId;
@@ -1470,6 +1589,12 @@ export class AppLauncher implements AppLauncherHandle
         this.pushRecent(app.id);
         if (this.getMode() !== "fullpage") { this.close(); }
         safeCallback(this.opts.onSelect, app);
+        if (this.handlers.select.size > 0)
+        {
+            // A JSON copy without data, which is host-only (B8).
+            const { data: _data, ...item } = app;
+            this.emit("select", JSON.parse(JSON.stringify(item)));
+        }
         logInfo(`Selected app: ${app.name}`);
     }
 

@@ -14,38 +14,68 @@
 // TYPES & INTERFACES
 // ============================================================================
 
+/** One tenant (organisation or workspace) the user can switch to. */
 export interface Tenant
 {
+    /** Stable id, referenced by activeTenantId. */
     id: string;
+    /** Display name. */
     name: string;
+    /** Bootstrap Icons class (e.g. "bi bi-building"), or an image URL starting with http or /. */
     icon?: string;
+    /** Avatar image URL; shown instead of the icon. */
     avatarUrl?: string;
+    /** The user's role in this tenant, such as "Admin". */
     role?: string;
+    /** Number of members, shown when showMemberCount is on. */
     memberCount?: number;
+    /** Plan name, such as "Enterprise", shown when showPlan is on. */
     plan?: string;
+    /** Arbitrary payload passed back to onSwitch. */
     data?: Record<string, unknown>;
 }
 
 export interface TenantSwitcherOptions
 {
+    /** The tenants to choose from, in display order. */
     tenants: Tenant[];
+    /** Id of the tenant the user is in now; shown on the trigger. */
     activeTenantId: string;
+    /** Opens the list as a dropdown under the trigger or as a modal dialog. Default: "dropdown". */
     mode?: "dropdown" | "modal";
+    /** Shows a search box above the list. Default: on when there are more than five tenants. */
     showSearch?: boolean;
+    /** Shows a Create button below the list. Default: true. */
     showCreateButton?: boolean;
+    /** Shows each tenant's member count. Default: false. */
     showMemberCount?: boolean;
+    /** Shows the user's role in each tenant. Default: true. */
     showRole?: boolean;
+    /** Shows each tenant's plan. Default: false. */
     showPlan?: boolean;
+    /** Create button label. Default: "Create tenant". */
     createLabel?: string;
+    /** Search box placeholder. Default: "Search tenants...". */
     placeholder?: string;
+    /** Trigger size. Default: "default". */
     size?: "sm" | "default" | "lg";
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
+    /** Fires when the user picks a tenant other than the active one. */
     onSwitch?: (tenant: Tenant) => void;
+    /** Fires when the user clicks Create. */
     onCreate?: () => void;
+    /**
+     * Searches beyond the given tenants: receives the search text and
+     * answers with the matching tenants. Without it the list is filtered
+     * locally by name.
+     */
     onSearch?: (query: string) => Promise<Tenant[]>;
+    /** Fires when the list opens. */
     onOpen?: () => void;
+    /** Fires when the list closes. */
     onClose?: () => void;
 }
 
@@ -185,7 +215,23 @@ export interface TenantSwitcherHandle
     setTenants(tenants: Tenant[]): void;
     addTenant(tenant: Tenant): void;
     removeTenant(id: string): void;
+
+    /** The surface contract (additive, B8): TenantSwitcher has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "switch" (the tenant the user picked, without data, after
+     * onSwitch) or "create" (the search box's text when Create was clicked,
+     * after onCreate). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { activeTenantId }: the active tenant's id. */
+    getState(): Record<string, unknown>;
+    /** Restores activeTenantId as setActiveTenant does: silently, no callback, no channel. */
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface contract's channels (B8). */
+type TenantChannel = "switch" | "create";
 
 export class TenantSwitcher implements TenantSwitcherHandle
 {
@@ -217,6 +263,8 @@ export class TenantSwitcher implements TenantSwitcherHandle
     private searchTimer = 0;
 
     // -- Bound handlers ------------------------------------------------------
+    private readonly handlers: Record<TenantChannel, Set<(payload: unknown) => void>> =
+        { switch: new Set(), create: new Set() };
     private boundOnDocClick = this.onDocClick.bind(this);
     private boundOnDocKeydown = this.onDocKeydown.bind(this);
 
@@ -292,6 +340,8 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.listEl = null;
         this.liveEl = null;
         clearTimeout(this.searchTimer);
+        this.handlers.switch.clear();
+        this.handlers.create.clear();
         logInfo("Destroyed");
     }
 
@@ -336,6 +386,61 @@ export class TenantSwitcher implements TenantSwitcherHandle
     {
         this.activeId = id;
         this.updateTriggerContent();
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 2 B8)
+    // ========================================================================
+
+    /** TenantSwitcher has no data slots: its tenants are an option. */
+    setData(slot: string, _value: unknown): void
+    {
+        throw new Error(
+            `${LOG_PREFIX} setData("${slot}"): TenantSwitcher has no data slots. Its tenants are an option.`);
+    }
+
+    /** Subscribes to "switch" or "create"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "switch" && channel !== "create")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "switch" and "create".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** The active tenant's id. */
+    getState(): Record<string, unknown>
+    {
+        return { activeTenantId: this.activeId };
+    }
+
+    /** Restores the active tenant through setActiveTenant, which fires nothing. */
+    setState(state: Record<string, unknown>): void
+    {
+        if (typeof state.activeTenantId === "string")
+        {
+            this.setActiveTenant(state.activeTenantId);
+        }
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: TenantChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     setTenants(tenants: Tenant[]): void
@@ -891,13 +996,22 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.updateTriggerContent();
         this.closePortal();
         safeCallback(this.opts.onSwitch, ws);
+        if (this.handlers.switch.size > 0)
+        {
+            // A JSON copy without data, which is host-only (B8).
+            const { data: _data, ...tenant } = ws;
+            this.emit("switch", JSON.parse(JSON.stringify(tenant)));
+        }
         logInfo(`Switched to tenant: ${ws.name}`);
     }
 
     private onCreateClick(): void
     {
+        // Read before closePortal discards the search box (B8).
+        const query = this.searchInputEl?.value.trim() ?? "";
         this.closePortal();
         safeCallback(this.opts.onCreate);
+        this.emit("create", query);
     }
 
     // ========================================================================
