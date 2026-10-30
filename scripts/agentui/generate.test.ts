@@ -104,11 +104,27 @@ describe("runPipeline — fixture widget", () =>
 
         const columns = { type: "array", items: { type: "object", properties: { id: { type: "string" } },
             required: ["id"], additionalProperties: false } };
-        const schema = run([widget({ schemas: { extra: { type: "object" }, columns } })])
+        const schema = run([widget({ schemas: { extra: { type: "object", additionalProperties: { type: "string" } },
+            columns } })])
             .outputs.get("schemas/widget.options.json") as any;
         expect(schema.required).toContain("columns");
         expect((run([widget()]).outputs.get("schemas/widget.options.json") as any).properties.extra.description)
             .toBe("Extra bag.");
+    }, 60_000);
+    test("an unconstrained or open protocol.schemas override fails the build, naming the component and option (#27)", () =>
+    {
+        const errors = (schemas: Record<string, unknown>) => run([widget({ schemas })]).errors as string[];
+
+        expect(errors({ extra: {} })).toEqual([expect.stringMatching(/^widget\.extra: .*leaves extra unconstrained/)]);
+        expect(errors({ extra: { type: "object" } }))
+            .toEqual([expect.stringMatching(/^widget\.extra: .*leaves the object at extra open/)]);
+        expect(errors({ extra: { type: "object", additionalProperties: { type: "string" } },
+            columns: { type: "array", items: { type: "object", properties: { id: { type: "string" }, meta: {} },
+                additionalProperties: false } } }))
+            .toEqual([expect.stringMatching(/^widget\.columns: .*leaves columns\[\]\.meta unconstrained/)]);
+        expect(errors({ extra: { type: "object", additionalProperties: true } }))
+            .toEqual([expect.stringMatching(/open/)]);
+        expect(errors({ extra: { type: "object", additionalProperties: { type: "string" } } })).toEqual([]);
     }, 60_000);
     test("a fixed option leaves the catalog entry and the options schema (ADR-235)", () =>
     {

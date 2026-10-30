@@ -226,10 +226,73 @@ function schemaFor(c, result, errors)
         ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}).map((e) =>
             `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or the options type.`),
         ...fixedProblems(schema, c),
+        ...overrideProblems(c),
     ];
 
     errors.push(...problems);
     return problems.length === 0 ? withoutFixed(schema, c) : null;
+}
+
+/** The keywords that constrain a schema node; one without any accepts anything. */
+const CONSTRAINING = ["type", "const", "enum", "oneOf", "anyOf", "allOf", "$ref"];
+
+/**
+ * The places a protocol.schemas override is unconstrained or open (#27). The
+ * TOO_BROAD rule keeps the catalog from publishing a bag an agent can fill
+ * with anything, and an override replaced the generated schema unchecked, so
+ * `{}` or `{ type: "object" }` published exactly that. A typed record
+ * (`additionalProperties: { type: "string" }`) is constrained, and allowed.
+ */
+function overrideProblems(c)
+{
+    return Object.entries(c.manifest.protocol?.schemas ?? {}).flatMap(([option, schema]) =>
+        openPlaces(schema, option).map((place) => `${c.manifest.name}.${option}: the protocol.schemas override `
+            + `${place}, so the catalog would publish a bag an agent can fill with anything. Close it in `
+            + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`));
+}
+
+/** Each unconstrained or open node under `node`, described by its path from the option. */
+function openPlaces(node, at)
+{
+    if (node === null || typeof node !== "object" || Array.isArray(node))
+    {
+        return [`has a non-schema value at ${at}`];
+    }
+
+    const places = [];
+
+    if (!CONSTRAINING.some((k) => k in node)) { places.push(`leaves ${at} unconstrained`); }
+
+    if (node.type === "object" && node.additionalProperties !== false
+        && (typeof node.additionalProperties !== "object" || node.additionalProperties === null))
+    {
+        places.push(`leaves the object at ${at} open (give it additionalProperties: false, or a schema for its `
+            + "values)");
+    }
+
+    if (node.type === "array" && node.items === undefined)
+    {
+        places.push(`leaves the items of the array at ${at} unconstrained`);
+    }
+
+    for (const [key, child] of Object.entries(node.properties ?? {}))
+    {
+        places.push(...openPlaces(child, `${at}.${key}`));
+    }
+
+    if (typeof node.additionalProperties === "object" && node.additionalProperties !== null)
+    {
+        places.push(...openPlaces(node.additionalProperties, `${at}[]`));
+    }
+
+    if (node.items !== undefined) { places.push(...openPlaces(node.items, `${at}[]`)); }
+
+    for (const key of ["oneOf", "anyOf", "allOf"])
+    {
+        (node[key] ?? []).forEach((arm, i) => { places.push(...openPlaces(arm, `${at}.${key}[${i}]`)); });
+    }
+
+    return places;
 }
 
 /**

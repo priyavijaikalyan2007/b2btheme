@@ -200,7 +200,7 @@ protocol: {
   - **What leaves the schema:** a nested path to a plain field (`items[].href`) is removed, and so is a path that is a strict parent of hazards (DiagramEngine's `document.objects[].presentation.embed`, ADR-236). A path that is itself the hazard (`tenants[].data`) stays in the schema as an open record; close it with a `protocol.schemas` override when an agent must not write it.
   - **Required host code:** a type that reaches a **required** function or element through arrays and required members is not data, because no value of it works without host code. FileExplorer's `contextMenuItems` (items whose `action` is required, or a function) is therefore a function member, and its `hostOnly` entry removes it whole rather than publishing items an agent could write but the component could not run (ADR-237). An optional callback stays a nested hazard.
 - `fixed` — data options the A2UI adapter always passes, mapped to their JSON values (ADR-235). The catalog leaves them out, so an agent can neither see nor set them; use it for an option whose default suits a host page but not an agent's surface, such as Ribbon's `keyScope: "ribbon"`. A key must name a data option, the build fails on a value the option's type rejects, and a key cannot also be `hostOnly`.
-- `schemas` — an explicit JSON Schema for a data prop typed too broadly to describe (`unknown`, `object`, `Record<string, unknown>`), keyed by option name. It replaces the generated schema for that member only. Narrowing the public TypeScript type instead would break consumers.
+- `schemas` — an explicit JSON Schema for a data prop typed too broadly to describe (`unknown`, `object`, `Record<string, unknown>`), keyed by option name. It replaces the generated schema for that member only. Narrowing the public TypeScript type instead would break consumers. **Every node must be constrained and every object closed** (#27): a node with no `type`, `const`, `enum`, `oneOf`, `anyOf`, `allOf` or `$ref`, an object without `additionalProperties: false` (or a schema for its values, as a typed record), or an array without `items` fails the build, naming the component, option and path. An override is not passed through the generator's object-closing step, so this is what keeps it from publishing the open bag the TOO_BROAD rule exists to prevent.
 **A key that names no member or path fails the build** (`stale-declaration`), for every component, `PENDING_CLASSIFICATION` included. A stale key would hide a rename. A key `protocol` (or a provider spec) does not define, such as the removed `bindAs` or a provider's old `params`/`response`, fails manifest validation.
 
 **Catalog names follow one rule, with no exceptions** (user decision, 2026-10-25). Channel names are persisted Dynamic UI API (canvas documents reference them), so they are never renamed; the catalog derives its names from them:
@@ -229,7 +229,9 @@ protocol: {
     },
     schemas: {
         // `emptyStateOptions` is typed `object`, which describes nothing.
-        emptyStateOptions: { type: "object", properties: { heading: { type: "string" }, description: { type: "string" } } },
+        // Closed, as every override must be (#27).
+        emptyStateOptions: { type: "object", properties: { heading: { type: "string" }, description: { type: "string" } },
+            additionalProperties: false },
     },
     providers: {
         // Hypothetical: `onSearch(query) => Promise<DataGridRow[]>`.

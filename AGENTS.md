@@ -438,7 +438,9 @@ member must be exactly one of:
 A data member that has a function, element or open record **nested inside it**
 (`columns[].renderer`) must declare that path in `protocol.hostOnly`. Every schema
 tool tried drops such parts silently, so an undeclared one fails the build.
-`unknown` and open records need `protocol.schemas`. Data that reaches a
+`unknown` and open records need `protocol.schemas`, and an override must
+itself be closed: every node constrained, every object `additionalProperties:
+false` or a typed record, every array with `items` (#27). Data that reaches a
 *required* function or element (an item whose `action` is required) is not
 data: without that member no value is usable, so the option is classed as the
 host code it needs (readiness step 3, ADR-237).
