@@ -933,7 +933,8 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 130 -> 104, Ribbon's options documented (B8).
     // ADR-236 (2026-10-29): 104 -> 82, GraphCanvas's options documented (B9).
     // ADR-236 (2026-10-29): 82 -> 62, SpineMap's options documented (B9).
-    protocolPropsMissingJsdoc: 62,
+    // ADR-237 (2026-10-30): 62 -> 52, UserMenu's options documented (readiness step 3, #26).
+    protocolPropsMissingJsdoc: 52,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -948,7 +949,8 @@ export const BASELINES = {
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
     // both numbers in the same change, and adding one fails.
-    componentsBelowRequiredLevel: 6,
+    // ADR-237 (2026-10-30): 6 -> 5, UserMenu raised to surface (readiness step 3, #26).
+    componentsBelowRequiredLevel: 5,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
@@ -976,7 +978,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 26 -> 25, GraphCanvas classified (B9).
     // ADR-236 (2026-10-29): 25 -> 24, SpineMap classified (B9).
     // ADR-236 (2026-10-29): 24 -> 23, DiagramEngine classified (B9).
-    componentsPendingClassification: 23,
+    // ADR-237 (2026-10-30): 23 -> 22, UserMenu classified (readiness step 3, #26).
+    componentsPendingClassification: 22,
 };
 
 /*
@@ -1083,11 +1086,12 @@ export const FLOORS = {
     // ADR-236 (2026-10-29): 214, 82 and 25 once GraphCanvas was classified (B9).
     // ADR-236 (2026-10-29): 198, 62 and 24 once SpineMap was classified (B9).
     // ADR-236 (2026-10-29): 182 and 23 once DiagramEngine was classified (B9).
+    // ADR-237 (2026-10-30): 52, 5 and 22 once UserMenu was classified (readiness step 3, #26).
     unclassifiedOptions: 182,
-    protocolPropsMissingJsdoc: 62,
+    protocolPropsMissingJsdoc: 52,
     changeMismatches: 0,
-    componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 23,
+    componentsBelowRequiredLevel: 5,
+    componentsPendingClassification: 22,
 };
 
 /**

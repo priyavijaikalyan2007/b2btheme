@@ -45,6 +45,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 34 on 2026-10-29: conversation classified (readiness step 2 B7, ADR-234).
     // 33 on 2026-10-29: explorerpicker classified with two new providers, onLoadChildren and onSearch (readiness
     // step 2 B7, ADR-234).
+    // 22 on 2026-10-30: usermenu classified (readiness step 3, #26, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
@@ -67,7 +68,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "stacklayout",
     "tabbedpanel",
     "timeline",
-    "usermenu",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */
@@ -77,10 +77,10 @@ export const BELOW_REQUIRED = new Set([
     // The 6 left require "surface" and declare no stateKeys, so declaring "surface" fails manifest
     // validation before any surface check runs; whether their handles then pass setData, on,
     // getState and setState is untested. Each needs stateKeys and possibly component work (#21-#26).
+    // 2026-10-30: usermenu raised to surface (readiness step 3, #26, ADR-237).
     "fileexplorer",
     "multiselectcombo",
     "permissionmatrix",
     "stacklayout",
     "timeline",
-    "usermenu",
 ]);

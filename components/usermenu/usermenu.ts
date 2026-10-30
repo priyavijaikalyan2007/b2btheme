@@ -22,28 +22,49 @@
 /** Single menu item, divider, or section header inside the dropdown. */
 export interface UserMenuItem
 {
+    /** Unique id, passed to onItemClick. The id "sign-out" also fires onSignOut. */
     id: string;
+    /** Visible label. Rendered as text. */
     label: string;
+    /** Bootstrap Icons class, such as "bi-gear". */
     icon?: string;
+    /** "item" (default) is clickable; "divider" draws a rule; "header" is a section label. */
     type?: "item" | "divider" | "header";
+    /** Shown but not clickable. */
     disabled?: boolean;
+    /** Styled as a destructive action, such as Sign out. */
     danger?: boolean;
 }
 
 /** Configuration options for the UserMenu component. */
 export interface UserMenuOptions
 {
+    /** The signed-in user's display name, on the trigger and in the menu header. */
     userName: string;
+    /** A secondary line under the name, such as a job title or role. */
     userRole?: string;
+    /** Avatar image URL; without one, the avatar shows initials. */
     avatarUrl?: string;
+    /** Initials for the avatar; derived from userName when omitted. */
     avatarInitials?: string;
+    /**
+     * Background colour of the initials avatar, as a hex colour; derived from userName when omitted.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     avatarColor?: string;
+    /** Presence shown as a dot on the avatar. */
     status?: "online" | "offline" | "busy" | "away";
+    /** The dropdown's items, in order. */
     menuItems: UserMenuItem[];
+    /** Fires with the item's id when the user clicks a menu item. */
     onItemClick?: (itemId: string) => void;
+    /** Fires when the user clicks the item whose id is "sign-out", before onItemClick. */
     onSignOut?: () => void;
+    /** Trigger size. Default: "md". */
     size?: "sm" | "md" | "lg";
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
 }
 
