@@ -719,7 +719,10 @@ export const BASELINES = {
     // Curating it now would be a second breaking change for CDN
     // consumers within a day of the first, decided by a repository
     // that cannot grep its own consumer.
-    diagramengineLines: 30727,
+    // ADR-236 (2026-10-30): 30727 -> 30857, deliberately. The surface contract (readiness step 2 B9:
+    // setData("document"), three channels on on(), getState/setState and a coalesced change report) is new
+    // public API in src/engine.ts, and the bundle carries it.
+    diagramengineLines: 30857,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
@@ -910,7 +913,11 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 258 -> 252, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 252 -> 231, Ribbon classified (B8).
     // ADR-235 (2026-10-29): 231 -> 228, RibbonBuilder classified (B8).
-    unclassifiedOptions: 228,
+    // ADR-236 (2026-10-29): 228 -> 227, Annotation classified (B9).
+    // ADR-236 (2026-10-29): 227 -> 214, GraphCanvas classified (B9).
+    // ADR-236 (2026-10-29): 214 -> 198, SpineMap classified (B9).
+    // ADR-236 (2026-10-29): 198 -> 182, DiagramEngine classified (B9).
+    unclassifiedOptions: 182,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -924,7 +931,9 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 161 -> 149, TenantSwitcher's options documented (B8).
     // ADR-235 (2026-10-29): 149 -> 130, AppLauncher's options documented (B8).
     // ADR-235 (2026-10-29): 130 -> 104, Ribbon's options documented (B8).
-    protocolPropsMissingJsdoc: 104,
+    // ADR-236 (2026-10-29): 104 -> 82, GraphCanvas's options documented (B9).
+    // ADR-236 (2026-10-29): 82 -> 62, SpineMap's options documented (B9).
+    protocolPropsMissingJsdoc: 62,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -933,7 +942,8 @@ export const BASELINES = {
     // ADR-228 (2026-10-28): 4 -> 3, Slider declared change: "event" (B3).
     // ADR-229 (2026-10-29): 3 -> 2, Gauge declared change: "event" (B4).
     // ADR-231 (2026-10-29): 2 -> 1, DynamicFormSwitcher declared change: "event" (B5).
-    changeMismatches: 1,
+    // ADR-236 (2026-10-29): 1 -> 0, Annotation change declared (B9).
+    changeMismatches: 0,
     // ADR-219 (2026-10-25): length of BELOW_REQUIRED in scripts/agentui/migration.mjs. Target 0.
     // 40 -> 6 on 2026-10-25: 34 components already verified at their required level and were promoted.
     // Pinned exactly by the floor of the same value (2026-10-25): removing a name means lowering
@@ -962,7 +972,11 @@ export const BASELINES = {
     // ADR-235 (2026-10-29): 30 -> 29, AppLauncher classified (B8).
     // ADR-235 (2026-10-29): 29 -> 28, Ribbon classified (B8).
     // ADR-235 (2026-10-29): 28 -> 27, RibbonBuilder classified (B8).
-    componentsPendingClassification: 27,
+    // ADR-236 (2026-10-29): 27 -> 26, Annotation classified (B9).
+    // ADR-236 (2026-10-29): 26 -> 25, GraphCanvas classified (B9).
+    // ADR-236 (2026-10-29): 25 -> 24, SpineMap classified (B9).
+    // ADR-236 (2026-10-29): 24 -> 23, DiagramEngine classified (B9).
+    componentsPendingClassification: 23,
 };
 
 /*
@@ -1065,11 +1079,15 @@ export const FLOORS = {
     // ADR-235 (2026-10-29): 252, 130 and 29 once AppLauncher was classified (B8).
     // ADR-235 (2026-10-29): 231, 104 and 28 once Ribbon was classified (B8).
     // ADR-235 (2026-10-29): 228 and 27 once RibbonBuilder was classified (B8).
-    unclassifiedOptions: 228,
-    protocolPropsMissingJsdoc: 104,
-    changeMismatches: 1,
+    // ADR-236 (2026-10-29): 227, 0 and 26 once Annotation was classified (B9).
+    // ADR-236 (2026-10-29): 214, 82 and 25 once GraphCanvas was classified (B9).
+    // ADR-236 (2026-10-29): 198, 62 and 24 once SpineMap was classified (B9).
+    // ADR-236 (2026-10-29): 182 and 23 once DiagramEngine was classified (B9).
+    unclassifiedOptions: 182,
+    protocolPropsMissingJsdoc: 62,
+    changeMismatches: 0,
     componentsBelowRequiredLevel: 6,
-    componentsPendingClassification: 27,
+    componentsPendingClassification: 23,
 };
 
 /**
