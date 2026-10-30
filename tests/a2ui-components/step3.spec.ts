@@ -58,6 +58,15 @@ const LAUNCH = { id: "launch", type: "point", start: "2026-01-02T00:00:00.000Z",
 const SPRINT = { id: "sprint", type: "span", start: "2026-01-03T00:00:00.000Z", end: "2026-01-05T00:00:00.000Z",
     label: "Sprint" };
 
+/** A small permission grid, as an agent writes it. */
+const GRID = {
+    roles: [{ id: "admin", name: "Admin" }, { id: "viewer", name: "Viewer" }],
+    groups: [{ id: "docs", name: "Documents", permissions: [{ id: "read", name: "Read" }, { id: "write", name: "Write" }] }],
+    cells: [{ roleId: "admin", permissionId: "read", state: "granted" }, { roleId: "admin", permissionId: "write",
+        state: "granted" }, { roleId: "viewer", permissionId: "read", state: "granted" }],
+};
+const CELL = (role: string, perm: string) => `.permissionmatrix-cell[data-role-id='${role}'][data-perm-id='${perm}']`;
+
 test.describe("Step 3 components under @a2ui/lit", () =>
 {
     test("UserMenu: clicking an item sends onSelect, and Sign out sends onSignOut first", async ({ page }) =>
@@ -149,5 +158,35 @@ test.describe("Step 3 components under @a2ui/lit", () =>
 
         await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED" })]);
         await expect(page.locator("[data-item-id='launch']")).toHaveCount(1);
+    });
+
+    test("PermissionMatrix: editing a cell sends onChange, and Reset sends onReset with the unsaved count",
+        async ({ page }) =>
+        {
+            await mount(page, "PermissionMatrix", { ...EV, roles: { path: "/g/roles" }, groups: { path: "/g/groups" },
+                cells: { path: "/g/cells" }, onChange: act("edit", "change"), onReset: act("discard", "reset") },
+            { g: GRID });
+
+            await page.locator(CELL("viewer", "write")).click();
+            await page.locator(".permissionmatrix-reset-btn").click();
+
+            await sent(page, [["edit", { roleId: "viewer", permissionId: "write", previousState: "none",
+                newState: "granted" }], ["discard", 1]]);
+        });
+
+    test("PermissionMatrix: the agent's rewrite of cells is a new baseline, updated in place", async ({ page }) =>
+    {
+        await mount(page, "PermissionMatrix", { roles: { path: "/g/roles" }, groups: { path: "/g/groups" },
+            cells: { path: "/g/cells" } }, { g: GRID });
+        await page.locator(CELL("viewer", "write")).click();
+        const before = await page.locator(".permissionmatrix").first().elementHandle();
+
+        await write(page, "/g/cells", [...GRID.cells, { roleId: "viewer", permissionId: "write", state: "granted" }]);
+
+        await expect(page.locator(".permissionmatrix-reset-btn")).toBeDisabled();
+        await expect(page.locator(CELL("viewer", "write"))).toHaveClass(/permissionmatrix-cell-granted/);
+        await expect(page.locator(CELL("viewer", "write"))).not.toHaveClass(/permissionmatrix-cell-changed/);
+        expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+        expect(await errors(page)).toEqual([]);
     });
 });
