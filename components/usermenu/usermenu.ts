@@ -184,7 +184,14 @@ export interface UserMenuHandle
     setUserRole(role: string): void;
     setAvatarUrl(url: string): void;
     setMenuItems(items: UserMenuItem[]): void;
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
 }
+
+/** The surface channels (readiness step 3). */
+type UserMenuChannel = "select" | "signout";
 
 export class UserMenu implements UserMenuHandle
 {
@@ -213,6 +220,10 @@ export class UserMenu implements UserMenuHandle
     private opened = false;
     private destroyed = false;
     private focusedIndex = -1;
+
+    // -- Surface channels (additive, readiness step 3) ------------------------
+    private readonly handlers: Record<UserMenuChannel, Set<(payload: unknown) => void>> =
+        { select: new Set(), signout: new Set() };
 
     // -- Bound handlers ------------------------------------------------------
     private boundOnTriggerClick = this.onTriggerClick.bind(this);
@@ -287,6 +298,8 @@ export class UserMenu implements UserMenuHandle
 
         this.destroyed = true;
         this.close();
+        this.handlers.select.clear();
+        this.handlers.signout.clear();
         this.detachListeners();
         this.rootEl?.parentElement?.removeChild(this.rootEl);
         this.nullifyReferences();
@@ -396,6 +409,62 @@ export class UserMenu implements UserMenuHandle
         this.opts.menuItems = items;
         this.rebuildDropdownItems();
         logDebug("Menu items rebuilt:", items.length, "items");
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 3)
+    // ========================================================================
+
+    /** The one slot, "menuItems", replaces the items in place through setMenuItems. */
+    setData(slot: string, value: unknown): void
+    {
+        if (slot !== "menuItems")
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): the only slot is "menuItems".`);
+        }
+
+        this.setMenuItems(value as UserMenuItem[]);
+    }
+
+    /** Subscribes to "select" or "signout"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "select" && channel !== "signout")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "select" and "signout".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** UserMenu has no view state worth restoring: the menu closes when it is scrolled away. */
+    getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore; see getState. */
+    setState(_state: Record<string, unknown>): void
+    {
+        // No state keys (ADR-229).
+    }
+
+    /** Call every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: UserMenuChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     // ========================================================================
@@ -824,12 +893,14 @@ export class UserMenu implements UserMenuHandle
         this.close();
         this.triggerEl?.focus();
 
-        if (this.opts.onSignOut && itemId === "sign-out")
+        if (itemId === "sign-out")
         {
             safeCallback(this.opts.onSignOut);
+            this.emit("signout", this.opts.userName);
         }
 
         safeCallback(this.opts.onItemClick, itemId);
+        this.emit("select", itemId);
     }
 
     // ========================================================================

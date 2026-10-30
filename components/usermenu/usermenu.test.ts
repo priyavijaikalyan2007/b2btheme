@@ -229,3 +229,108 @@ describe("UserMenu destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 3)
+// ============================================================================
+
+describe("UserMenu surface contract", () =>
+{
+    /** Opens the menu and clicks the item with `id`. */
+    function clickItem(menu: UserMenu, id: string): void
+    {
+        menu.open();
+        const btn = document.querySelector<HTMLElement>(`[data-item-id="${id}"]`);
+
+        expect(btn).not.toBeNull();
+        btn!.click();
+    }
+
+    test("select_ItemClick_EmitsTheItemIdAfterOnItemClick", () =>
+    {
+        const order: string[] = [];
+        const menu = createUserMenu(container.id, makeOptions({
+            onItemClick: (id) => order.push(`legacy:${id}`),
+        })) as UserMenu;
+        menu.on("select", (p) => order.push(`channel:${String(p)}`));
+
+        clickItem(menu, "profile");
+
+        expect(order).toEqual(["legacy:profile", "channel:profile"]);
+        menu.destroy();
+    });
+
+    test("signout_SignOutItem_EmitsUserNameEvenWithoutOnSignOut", () =>
+    {
+        const items = [...makeItems(), { id: "sign-out", label: "Sign out" }];
+        const menu = createUserMenu(container.id, makeOptions({ menuItems: items })) as UserMenu;
+        const heard: unknown[] = [];
+        menu.on("signout", (p) => heard.push(p));
+
+        clickItem(menu, "sign-out");
+
+        expect(heard).toEqual(["Jane Doe"]);
+        menu.destroy();
+    });
+
+    test("signout_OnSignOut_FiresFirstExactlyOnce", () =>
+    {
+        const order: string[] = [];
+        const items = [{ id: "sign-out", label: "Sign out" }];
+        const menu = createUserMenu(container.id, makeOptions({
+            menuItems: items,
+            onSignOut: () => order.push("legacy"),
+        })) as UserMenu;
+        menu.on("signout", () => order.push("channel"));
+
+        clickItem(menu, "sign-out");
+
+        expect(order).toEqual(["legacy", "channel"]);
+        menu.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery", () =>
+    {
+        const menu = createUserMenu(container.id, makeOptions()) as UserMenu;
+        const handler = vi.fn();
+        const off = menu.on("select", handler);
+
+        off();
+        clickItem(menu, "profile");
+
+        expect(handler).not.toHaveBeenCalled();
+        menu.destroy();
+    });
+
+    test("on_UnknownChannel_Throws", () =>
+    {
+        const menu = createUserMenu(container.id, makeOptions()) as UserMenu;
+
+        expect(() => menu.on("open", () => undefined)).toThrow(/valid channels/);
+        menu.destroy();
+    });
+
+    test("setData_MenuItems_ReplacesItemsInPlace", () =>
+    {
+        const menu = createUserMenu(container.id, makeOptions()) as UserMenu;
+        const root = menu.getElement();
+
+        menu.setData("menuItems", [{ id: "help", label: "Help" }]);
+        menu.open();
+
+        expect(menu.getElement()).toBe(root);
+        expect(document.querySelector("[data-item-id='help']")).not.toBeNull();
+        expect(document.querySelector("[data-item-id='profile']")).toBeNull();
+        expect(() => menu.setData("items", [])).toThrow(/only slot/);
+        menu.destroy();
+    });
+
+    test("getState_NoStateKeys_ReturnsEmptyAndSetStateIsANoOp", () =>
+    {
+        const menu = createUserMenu(container.id, makeOptions()) as UserMenu;
+
+        expect(menu.getState()).toEqual({});
+        expect(() => menu.setState({})).not.toThrow();
+        menu.destroy();
+    });
+});
