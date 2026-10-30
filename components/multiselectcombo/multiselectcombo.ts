@@ -341,6 +341,10 @@ export interface MultiselectComboHandle
     enable(): void;
     disable(): void;
     focus(): void;
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
 }
 
 export class MultiselectCombo implements MultiselectComboHandle
@@ -358,6 +362,11 @@ export class MultiselectCombo implements MultiselectComboHandle
     private filterQuery = "";
     private destroyed = false;
     private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // -- Surface channel (additive, readiness step 3)
+    private readonly changeHandlers = new Set<(payload: unknown) => void>();
+    /** True while setState restores a selection, which fires nothing. */
+    private restoring = false;
 
     // -- DOM references
     private rootEl!: HTMLElement;
@@ -498,6 +507,7 @@ export class MultiselectCombo implements MultiselectComboHandle
             clearTimeout(this.debounceTimer);
         }
 
+        this.changeHandlers.clear();
         this.destroyed = true;
         logDebug(`Destroyed: ${this.instanceId}`);
     }
@@ -677,6 +687,60 @@ export class MultiselectCombo implements MultiselectComboHandle
 
         this.refreshFilteredItems();
         this.afterSelectionChange();
+    }
+
+    // ========================================================================
+    // SURFACE CONTRACT (additive, readiness step 3)
+    // ========================================================================
+
+    /** The one slot, "items", replaces the items through setItems. */
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "items")
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): the only slot is "items".`);
+        }
+
+        this.setItems(value as ComboItem[]);
+    }
+
+    /** Subscribes to "change", which hears the selected values after onChange; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "change")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "change".`);
+        }
+
+        this.changeHandlers.add(handler);
+
+        return () => { this.changeHandlers.delete(handler); };
+    }
+
+    /** The selected values. */
+    public getState(): Record<string, unknown>
+    {
+        return { value: this.getSelectedValues() };
+    }
+
+    /** Restores the selected values without firing onChange or "change". */
+    public setState(state: Record<string, unknown>): void
+    {
+        if (!Array.isArray(state.value))
+        {
+            return;
+        }
+
+        this.restoring = true;
+
+        try
+        {
+            this.setSelected(state.value as string[]);
+        }
+        finally
+        {
+            this.restoring = false;
+        }
     }
 
     // ========================================================================
@@ -1247,7 +1311,30 @@ export class MultiselectCombo implements MultiselectComboHandle
         this.updateItemCheckboxes();
         this.updateSelectAllState();
         this.updateMaxReachedState();
+
+        if (this.restoring)
+        {
+            return;
+        }
+
         this.options.onChange?.(this.getSelectedValues());
+        this.emitChange();
+    }
+
+    /** Call every "change" handler with the selected values, isolating each so one throw cannot starve the rest. */
+    private emitChange(): void
+    {
+        for (const handler of this.changeHandlers)
+        {
+            try
+            {
+                handler(this.getSelectedValues());
+            }
+            catch (err)
+            {
+                logError("Channel \"change\" handler threw:", err);
+            }
+        }
     }
 
     private updateItemCheckboxes(): void
