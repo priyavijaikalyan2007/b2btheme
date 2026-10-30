@@ -232,7 +232,7 @@ function classifyMember(ctx, symbol, location)
 {
     const type = ctx.checker.getNonNullableType(ctx.checker.getTypeOfSymbolAtLocation(symbol, location));
     const arms = unionArms(type);
-    const classes = arms.map((arm) => armClass(ctx, arm));
+    const classes = arms.map((arm) => usableClass(ctx, arm));
     const dataArms = arms.filter((_, i) => classes[i] === MEMBER_CLASS.DATA);
     const cls = dataArms.length > 0 ? MEMBER_CLASS.DATA : STRENGTH.find((c) => classes.includes(c));
     const hazards = dataArms.flatMap((arm) => childHazards(ctx, arm, symbol.name, new Set([arm])));
@@ -246,6 +246,59 @@ function classifyMember(ctx, symbol, location)
         hazards: uniqueBy(hazards, (h) => `${h.path}|${h.cls}`),
         jsdoc: ts.displayPartsToString(symbol.getDocumentationComment(ctx.checker)).trim(),
     };
+}
+
+/**
+ * The class of one member arm, where data that cannot be used without host
+ * code takes the class of the host code it needs (readiness step 3):
+ * FileExplorer's context menu items require an action, and a schema with
+ * the action dropped describes items an agent could write but the component
+ * could not run.
+ */
+function usableClass(ctx, t)
+{
+    const cls = armClass(ctx, t);
+
+    return cls === MEMBER_CLASS.DATA ? hostCodeIn(ctx, t, new Set()) ?? cls : cls;
+}
+
+/**
+ * The class (function or element) of a member that a data type reaches
+ * through arrays and required members and that is only host code, or null.
+ */
+function hostCodeIn(ctx, t, ancestors)
+{
+    if (ancestors.has(t) || (t.flags & ts.TypeFlags.Object) === 0 || isDate(ctx, t)) { return null; }
+
+    const next = new Set(ancestors).add(t);
+    const required = ctx.checker.isArrayType(t) || ctx.checker.isTupleType(t)
+        ? ctx.checker.getTypeArguments(t)
+        : ctx.checker.getPropertiesOfType(t).filter((p) => (p.flags & ts.SymbolFlags.Optional) === 0)
+            .map((p) => ctx.checker.getTypeOfSymbol(p));
+
+    for (const member of required)
+    {
+        const cls = onlyHostCode(ctx, ctx.checker.getNonNullableType(member), next);
+
+        if (cls) { return cls; }
+    }
+
+    return null;
+}
+
+/** The host-code class when every arm of a type is a function, an element, or data that needs host code. */
+function onlyHostCode(ctx, t, ancestors)
+{
+    const classes = unionArms(t).map((arm) =>
+    {
+        const cls = armClass(ctx, arm);
+
+        return cls === MEMBER_CLASS.DATA ? hostCodeIn(ctx, arm, ancestors) : cls;
+    });
+
+    if (!classes.every((c) => c === MEMBER_CLASS.FUNCTION || c === MEMBER_CLASS.ELEMENT)) { return null; }
+
+    return classes.includes(MEMBER_CLASS.ELEMENT) ? MEMBER_CLASS.ELEMENT : MEMBER_CLASS.FUNCTION;
 }
 
 /** The class of one union arm. Order matters: Date before methods, methods before Node. */

@@ -18,16 +18,14 @@
 
 import type { CapabilityManifest } from "../../runtime/src/types";
 
+/** Why an option an agent could set does nothing (readiness step 3). */
+const UNREAD = "Nothing reads this option, so setting it would change nothing.";
+
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down. Promotion to `field` or `surface` is a change to the
- * component's own public API, not to this file, and the conformance suite
- * proves the level rather than taking its word for it.
- *
- * Three required options — `roles`, `groups`, `cells` — which is why the seed
- * called the shape undetermined. They are empty in defaultOptions and real only
- * in the conformance fixture: an access-control grid is the last place to ship
- * placeholder rows.
+ * Declared at `surface` conformance (readiness step 3, #23): its edits, bulk
+ * edits, export and reset emit through an additive on(), the agent can
+ * replace the roles, groups or cells in place, and the user's unsaved edits,
+ * the expanded groups and the filter are its state, restored silently.
  */
 export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
 {
@@ -38,11 +36,18 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
     icon: "bi-grid-3x3-gap",
     category: "governance",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user review and edit which roles hold which permissions, as a grid of roles by grouped "
+            + "permissions; you hear each edit, and Reset asks you to rewrite cells without the unsaved edits.",
+        avoidWhen: "For a table of arbitrary records use DataGrid; for one yes-or-no setting use ChoicePicker; "
+            + "rewriting cells drops the user's unsaved edits, so include the ones you accepted.",
+    },
+
     affords: [
         {
             shape: "collection",
             intents: ["edit", "compare", "inspect"],
-            // Cells, not roles: a 50x100 grid is already at the ceiling.
             cardinality: { min: 0, max: 5000 },
             minViewport: { w: 420, h: 240 },
         },
@@ -55,9 +60,30 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
         { name: "reset", payload: "scalar", multi: false, legacyOption: "onReset" },
     ],
 
-    accepts: [],
+    // The data an agent rewrites, replaced in place (ADR-234): a new cells is a new baseline.
+    accepts: [
+        { name: "roles", payload: "collection", required: true },
+        { name: "groups", payload: "collection", required: true },
+        { name: "cells", payload: "collection", required: true },
+    ],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["changes", "expandedGroups", "filter"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 3).
+    protocol: {
+        hostOnly: {
+            cellRenderer: "Returns DOM elements for each cell; an agent cannot supply host code.",
+            showInheritance: UNREAD,
+            showChangeHighlight: UNREAD,
+            enableRoleBulk: UNREAD,
+            enablePermissionBulk: UNREAD,
+            stickyHeader: UNREAD,
+            stickyFirstColumn: UNREAD,
+            "roles[].data": "Arbitrary host data for callbacks; it has no schema an agent could follow.",
+            "groups[].permissions[].data": "Arbitrary host data for callbacks; it has no schema an agent could "
+                + "follow.",
+        },
+    },
 
     regions: ["permissionmatrix:grid"],
 
@@ -67,6 +93,6 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
     defaultSize: { w: 820, h: 420 },
     defaultOptions: { roles: [], groups: [], cells: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

@@ -774,3 +774,126 @@ describe("FileExplorer callbacks", () =>
         fe.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 3)
+// ============================================================================
+
+describe("FileExplorer surface contract", () =>
+{
+    /** The listing row for `id`. */
+    function row(id: string): HTMLElement
+    {
+        const el = container.querySelector<HTMLElement>(`.fileexplorer-listing [data-id="${id}"]`);
+
+        expect(el).not.toBeNull();
+
+        return el!;
+    }
+
+    test("select_ItemClick_EmitsTheSelectionWithoutDataAfterCallbacks", () =>
+    {
+        const order: unknown[] = [];
+        const tree = makeFileTree();
+        (tree[0].children![0] as FileNode).data = { secret: 1 };
+        const fe = createFileExplorer(container.id, { roots: tree,
+            onSelect: () => order.push("onSelect"),
+            onSelectionChange: () => order.push("onSelectionChange") }) as FileExplorer;
+        fe.navigate("root");
+        fe.on("select", (p) => order.push(p));
+
+        row("f1").click();
+
+        expect(order).toEqual(["onSelect", "onSelectionChange",
+            [{ id: "f1", name: "readme.md", type: "file" }]]);
+        fe.destroy();
+    });
+
+    test("open_FileDoubleClick_EmitsTheFileAfterOnOpen", () =>
+    {
+        const order: unknown[] = [];
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(),
+            onOpen: (f) => order.push(`legacy:${f.id}`) }) as FileExplorer;
+        fe.navigate("root");
+        fe.on("open", (p) => order.push(p));
+
+        row("f2").dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(order).toEqual(["legacy:f2", { id: "f2", name: "report.pdf", type: "file" }]);
+        fe.destroy();
+    });
+
+    test("open_WithoutOnOpen_StillEmits", () =>
+    {
+        const fe = createFileExplorer(container.id, { roots: makeFileTree() }) as FileExplorer;
+        const heard = vi.fn();
+        fe.navigate("root");
+        fe.on("open", heard);
+
+        row("f1").dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(heard).toHaveBeenCalledWith({ id: "f1", name: "readme.md", type: "file" });
+        fe.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_AndUnsubscribeStopsDelivery", () =>
+    {
+        const fe = createFileExplorer(container.id, { roots: makeFileTree() }) as FileExplorer;
+        const heard = vi.fn();
+        fe.navigate("root");
+
+        fe.on("select", heard)();
+        row("f1").click();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(() => fe.on("navigate", () => undefined)).toThrow(/valid channels/);
+        fe.destroy();
+    });
+
+    test("setData_Roots_ReplacesTheTreeAndKeepsAFolderThatStillExists", () =>
+    {
+        const fe = createFileExplorer(container.id, { roots: makeFileTree() }) as FileExplorer;
+        fe.navigate("root");
+        fe.selectItem("f1");
+
+        fe.setData("roots", [{ id: "root", name: "Documents", type: "folder",
+            children: [{ id: "f3", name: "notes.txt", type: "file" }] }]);
+
+        expect(fe.getState()).toMatchObject({ currentFolderId: "root", selectedIds: [] });
+        expect(row("f3")).toBeTruthy();
+        expect(container.querySelectorAll(".fileexplorer-tree [data-id='root']")).toHaveLength(1);
+
+        fe.setData("roots", []);
+        expect(fe.getState().currentFolderId).toBe("__root__");
+        expect(() => fe.setData("folders", [])).toThrow(/slots are/);
+        fe.destroy();
+    });
+
+    test("setData_Items_ReplacesTheFlatListing", () =>
+    {
+        const fe = createFileExplorer(container.id, { items: makeFlatItems() }) as FileExplorer;
+
+        fe.setData("items", [{ id: "n1", name: "New.txt", type: "file" }]);
+
+        expect(fe.getItems().map((i) => i.id)).toEqual(["n1"]);
+        fe.destroy();
+    });
+
+    test("getState_SetState_RoundTripsFiringNoCallback", () =>
+    {
+        const callbacks = { onNavigate: vi.fn(), onSelect: vi.fn(), onSelectionChange: vi.fn(),
+            onViewModeChange: vi.fn(), onSort: vi.fn() };
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(), ...callbacks }) as FileExplorer;
+        const heard = vi.fn();
+        fe.on("select", heard);
+        const captured = { currentFolderId: "root", selectedIds: ["f2"], viewMode: "grid",
+            sortField: "size", sortDirection: "desc" };
+
+        fe.setState(captured);
+
+        expect(fe.getState()).toEqual(captured);
+        Object.values(callbacks).forEach((cb) => expect(cb).not.toHaveBeenCalled());
+        expect(heard).not.toHaveBeenCalled();
+        fe.destroy();
+    });
+});

@@ -137,7 +137,7 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 - `processor.getRendererCapabilities({ versions: ["v0.9"] })` lists our catalog ID among `supportedCatalogIds`. Send it the way your transport sends A2UI client capabilities.
 - The adapter also exports `catalogJson`, the exact catalog it serves, for agents that take an inline catalog.
 - **For your agent's prompt, use `https://static.outcrop.us/a2ui/catalog/v1.agent.json`.**
-  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 57,579 against 114,936 in o200k_base tokens, measured after B8 on 2026-10-29.
+  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 75,149 against 142,751 in o200k_base tokens, measured after readiness step 3 on 2026-10-30.
   - It leaves out the data-binding and function-call alternatives that every data prop repeats. It says once where they apply.
   - It lists the Google basic components and functions it re-exports by name only. Put Google's basic catalog in the prompt beside it, about 7,000 tokens more.
   - It's a prompt aid, not a schema. Its layout may change within v1, so paste it whole, and validate your agent's messages against the full catalog.

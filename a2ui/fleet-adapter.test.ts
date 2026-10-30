@@ -290,8 +290,10 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
             ?.CONFORMANCE_GLUE;
         const { props, data } = await initial();
         const actionProps = Object.fromEntries(d.events.map((e) => [e.actionProp, { event: { name: e.actionProp } }]));
-        // eventProps: what an agent sets to make a channel reachable, such as clickable: true (B4).
-        const s = await stage(d, { ...props, ...glue?.eventProps, ...actionProps, eventData: { path: "/ev" } }, data);
+        // eventProps: what an agent sets to make a channel reachable, such as clickable: true (B4). A component whose
+        // only event is a two-way field's onChange carries its payload in value and has no eventData (step 3).
+        const eventData = d.events.some((e) => !e.payloadInValue) ? { eventData: { path: "/ev" } } : {};
+        const s = await stage(d, { ...props, ...glue?.eventProps, ...actionProps, ...eventData }, data);
 
         const writes = vi.spyOn(s.surface.dataModel, "set");
 

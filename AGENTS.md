@@ -438,7 +438,10 @@ member must be exactly one of:
 A data member that has a function, element or open record **nested inside it**
 (`columns[].renderer`) must declare that path in `protocol.hostOnly`. Every schema
 tool tried drops such parts silently, so an undeclared one fails the build.
-`unknown` and open records need `protocol.schemas`.
+`unknown` and open records need `protocol.schemas`. Data that reaches a
+*required* function or element (an item whose `action` is required) is not
+data: without that member no value is usable, so the option is classed as the
+host code it needs (readiness step 3, ADR-237).
 
 **Catalog names are derived by one rule, with no override** (spec §5.4–5.5).
 Each event is an `on<Channel>` action (a `legacyOption` that is `on` + the

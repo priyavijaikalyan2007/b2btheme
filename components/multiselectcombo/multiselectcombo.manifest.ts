@@ -19,15 +19,10 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down. Promotion to `field` or `surface` is a change to the
- * component's own public API, not to this file, and the conformance suite
- * proves the level rather than taking its word for it.
- *
- * `display` understates it — the component already carries the field-capable
- * `value` alias for DynamicFormSwitcher — but conformance is proven, not
- * claimed, and promoting it to `field` is a separate commit that runs the
- * field checks against getValue/setValue.
+ * Declared at `surface` conformance (readiness step 3, #22): its selection is
+ * a two-way value (ADR-134) whose changes also emit through an additive on(),
+ * the agent can replace the items in place, and the selection is its state,
+ * restored silently.
  */
 export const MULTISELECTCOMBO_MANIFEST: CapabilityManifest =
 {
@@ -38,11 +33,17 @@ export const MULTISELECTCOMBO_MANIFEST: CapabilityManifest =
     icon: "bi-ui-checks",
     category: "input",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Let the user pick several options from a long, filterable, optionally grouped list, shown as "
+            + "chips in a compact dropdown field.",
+        avoidWhen: "For one choice or a short list of checkboxes use ChoicePicker; for free-form tags use Tagger.",
+    },
+
     affords: [
         {
             shape: "collection",
             intents: ["edit", "browse"],
-            // The dropdown renders and filters every item in the DOM.
             cardinality: { min: 0, max: 2000 },
             minViewport: { w: 200, h: 40 },
         },
@@ -52,9 +53,26 @@ export const MULTISELECTCOMBO_MANIFEST: CapabilityManifest =
         { name: "change", payload: "collection", multi: false, legacyOption: "onChange" },
     ],
 
-    accepts: [],
+    // The options an agent rewrites, replaced in place (ADR-234).
+    accepts: [
+        { name: "items", payload: "collection", required: true },
+    ],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["value"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 3).
+    protocol: {
+        hostOnly: {
+            selected: "The older name for the initial selection, kept for existing callers; over A2UI the two-way "
+                + "value carries it.",
+            onSelect: "Fires per picked option; the two-way value already carries the selection.",
+            onDeselect: "Fires per removed option; the two-way value already carries the selection.",
+            onFilterChange: "Fires per keystroke in the filter box, which filters the list locally.",
+            onOpen: "Fires when the dropdown opens; that is view state, not information for an agent.",
+            onClose: "Fires when the dropdown closes; that is view state, not information for an agent.",
+            "items[].data": "Arbitrary consumer data for host callbacks; it has no schema an agent could follow.",
+        },
+    },
 
     regions: ["multiselectcombo:listbox"],
 
@@ -64,6 +82,6 @@ export const MULTISELECTCOMBO_MANIFEST: CapabilityManifest =
     defaultSize: { w: 320, h: 40 },
     defaultOptions: { items: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

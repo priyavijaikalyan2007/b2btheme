@@ -455,3 +455,160 @@ describe("the roving entry point survives a re-render", () =>
         matrix.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 3)
+// ============================================================================
+
+describe("PermissionMatrix surface contract", () =>
+{
+    /** Mounts a matrix with `overrides` into the test container. */
+    function mount(overrides?: Partial<PermissionMatrixOptions>): PermissionMatrix
+    {
+        const pm = createPermissionMatrix(makeOptions(overrides)) as PermissionMatrix;
+
+        pm.show(container);
+
+        return pm;
+    }
+
+    /** Clicks the cell for `roleId` and `permId`. */
+    function clickCell(roleId: string, permId: string): void
+    {
+        const cell = container.querySelector<HTMLElement>(
+            `.permissionmatrix-cell[data-role-id="${roleId}"][data-perm-id="${permId}"]`);
+
+        expect(cell).not.toBeNull();
+        cell!.click();
+    }
+
+    test("change_CellClick_EmitsTheChangeAfterOnChange", () =>
+    {
+        const order: unknown[] = [];
+        const pm = mount({ onChange: (c) => order.push(`legacy:${c.roleId}`) });
+        pm.on("change", (p) => order.push(p));
+
+        clickCell("viewer", "docs.write");
+
+        expect(order).toEqual(["legacy:viewer",
+            { roleId: "viewer", permissionId: "docs.write", previousState: "denied", newState: "none" }]);
+        pm.destroy();
+    });
+
+    test("bulkchange_GroupToggle_EmitsTheBulkChangeAfterOnBulkChange", () =>
+    {
+        const order: string[] = [];
+        const pm = mount({ enableGroupBulk: true, onBulkChange: () => order.push("legacy") });
+        pm.on("bulkchange", (p) => order.push(`channel:${(p as { groupId: string }).groupId}`));
+
+        container.querySelector<HTMLElement>("[data-bulk='group'][data-group-id='users'][data-role-id='viewer']")!
+            .click();
+
+        expect(order).toEqual(["legacy", "channel:users"]);
+        pm.destroy();
+    });
+
+    test("export_ExportClick_EmitsTheExportWithoutHostData", () =>
+    {
+        const heard: unknown[] = [];
+        const onExport = vi.fn();
+        const pm = mount({ showExport: true, onExport,
+            roles: [{ id: "admin", name: "Admin", data: { secret: 1 } }] });
+        pm.on("export", (p) => heard.push(p));
+
+        container.querySelector<HTMLElement>(".permissionmatrix-export-btn")!.click();
+
+        expect(onExport).toHaveBeenCalledTimes(1);
+        const exported = heard[0] as { roles: Record<string, unknown>[] };
+        expect(exported.roles).toEqual([{ id: "admin", name: "Admin" }]);
+        expect(onExport.mock.calls[0][0].roles[0].data).toEqual({ secret: 1 });
+        pm.destroy();
+    });
+
+    test("reset_ResetClick_EmitsThePendingCountAfterOnReset", () =>
+    {
+        const order: unknown[] = [];
+        const pm = mount({ showReset: true, onReset: () => order.push("legacy") });
+        pm.on("reset", (p) => order.push(p));
+
+        clickCell("viewer", "docs.write");
+        container.querySelector<HTMLElement>(".permissionmatrix-reset-btn")!.click();
+
+        expect(order).toEqual(["legacy", 1]);
+        pm.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_AndUnsubscribeStopsDelivery", () =>
+    {
+        const pm = mount();
+        const handler = vi.fn();
+
+        pm.on("change", handler)();
+        clickCell("viewer", "docs.write");
+
+        expect(handler).not.toHaveBeenCalled();
+        expect(() => pm.on("select", () => undefined)).toThrow(/valid channels/);
+        pm.destroy();
+    });
+
+    test("setData_Slots_ReplaceOnePartInPlace", () =>
+    {
+        const pm = mount();
+        const root = pm.getElement();
+
+        clickCell("viewer", "docs.write");
+        pm.setData("roles", [...makeRoles(), { id: "guest", name: "Guest" }]);
+        expect(pm.getChanges()).toHaveLength(1);
+        expect(container.querySelector(".permissionmatrix-cell[data-role-id='guest']")).not.toBeNull();
+
+        pm.setData("cells", [{ roleId: "guest", permissionId: "docs.read", state: "granted" }]);
+        expect(pm.getChanges()).toEqual([]);
+        expect(pm.getCellState("guest", "docs.read")).toBe("granted");
+        expect(pm.getCellState("admin", "docs.read")).toBe("none");
+
+        pm.setData("groups", [{ id: "billing", name: "Billing", permissions: [{ id: "b.view", name: "View" }] }]);
+        expect(container.querySelector(".permissionmatrix-row[data-perm-id='b.view']")).not.toBeNull();
+        expect(pm.getElement()).toBe(root);
+        expect(() => pm.setData("permissions", [])).toThrow(/slots are/);
+        pm.destroy();
+    });
+
+    test("setData_LegacyForm_StillReplacesAllThree", () =>
+    {
+        const pm = mount();
+
+        clickCell("viewer", "docs.write");
+        pm.setData(makeRoles().slice(0, 1), makeGroups(), [
+            { roleId: "admin", permissionId: "docs.read", state: "denied" }]);
+
+        expect(pm.getChanges()).toEqual([]);
+        expect(pm.getCellState("admin", "docs.read")).toBe("denied");
+        pm.destroy();
+    });
+
+    test("getState_SetState_RestoresEditsExpansionAndFilter_FiringNothing", () =>
+    {
+        const onChange = vi.fn();
+        const heard = vi.fn();
+        const pm = mount({ onChange });
+        clickCell("viewer", "docs.write");
+        pm.collapseGroup("users");
+        pm.setFilter("read");
+        const captured = pm.getState();
+        pm.on("change", heard);
+        onChange.mockClear();
+
+        pm.setData("cells", makeCells());
+        pm.expandAllGroups();
+        pm.clearFilter();
+        pm.setState(captured);
+
+        expect(pm.getState()).toEqual(captured);
+        expect(captured).toEqual({ changes: [expect.objectContaining({ roleId: "viewer" })],
+            expandedGroups: ["docs"], filter: "read" });
+        expect(pm.getCellState("viewer", "docs.write")).toBe("none");
+        expect(onChange).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
+        pm.destroy();
+    });
+});

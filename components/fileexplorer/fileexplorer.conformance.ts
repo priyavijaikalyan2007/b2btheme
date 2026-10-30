@@ -27,13 +27,43 @@
 
 // @semantic-marker fileexplorer-conformance-glue
 
+/** The slice of the handle the trigger drives. */
+interface FileExplorerLike
+{
+    getElement(): HTMLElement | null;
+}
+
+/** A folder and a file at the top level, so the listing shows a file to select and open. */
+const ROOTS = [
+    { id: "root", name: "Conformance", type: "folder", children: [] },
+    { id: "readme", name: "readme.md", type: "file" },
+];
+
 export const CONFORMANCE_GLUE =
 {
-    options:
+    options: { roots: ROOTS },
+
+    // The tree to browse, and the file as the flat listing, which shows in place of the tree when set.
+    eventProps: { roots: ROOTS, items: [{ id: "readme", name: "readme.md", type: "file" }] },
+
+    // A rewrite that keeps both and adds a file, and a flat listing (readiness step 3).
+    slotSamples: {
+        roots: [...ROOTS, { id: "notes", name: "notes.txt", type: "file" }],
+        items: [{ id: "flat", name: "flat.txt", type: "file" }],
+    },
+
+    /** Clicks the file (select) or double-clicks it (open) in the listing (readiness step 3). */
+    trigger: (
+        channel: string,
+        handle: Record<string, unknown>): boolean =>
     {
-        roots:
-        [
-            { id: "root", name: "Conformance", type: "folder", children: [] },
-        ],
+        const file = (handle as unknown as FileExplorerLike).getElement()
+            ?.querySelector<HTMLElement>(".fileexplorer-listing [data-id='readme']");
+
+        if (!file || (channel !== "select" && channel !== "open")) { return false; }
+
+        file.dispatchEvent(new MouseEvent(channel === "select" ? "click" : "dblclick", { bubbles: true }));
+
+        return true;
     },
 };

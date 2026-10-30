@@ -45,13 +45,17 @@ export const PENDING_CLASSIFICATION = new Set([
     // 34 on 2026-10-29: conversation classified (readiness step 2 B7, ADR-234).
     // 33 on 2026-10-29: explorerpicker classified with two new providers, onLoadChildren and onSearch (readiness
     // step 2 B7, ADR-234).
+    // 22 on 2026-10-30: usermenu classified (readiness step 3, #26, ADR-237).
+    // 21 on 2026-10-30: multiselectcombo classified (readiness step 3, #22, ADR-237).
+    // 20 on 2026-10-30: timeline classified (readiness step 3, #25, ADR-237).
+    // 19 on 2026-10-30: permissionmatrix classified (readiness step 3, #23, ADR-237).
+    // 18 on 2026-10-30: fileexplorer classified (readiness step 3, #21, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
     "cardlayout",
     "commentoverlay",
     "docklayout",
-    "fileexplorer",
     "fileupload",
     "flexgridlayout",
     "flowlayout",
@@ -59,15 +63,11 @@ export const PENDING_CLASSIFICATION = new Set([
     "gridlayout",
     "helpdrawer",
     "layerlayout",
-    "multiselectcombo",
     "navrail",
-    "permissionmatrix",
     "propertyinspector",
     "splitlayout",
     "stacklayout",
     "tabbedpanel",
-    "timeline",
-    "usermenu",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */
@@ -77,10 +77,10 @@ export const BELOW_REQUIRED = new Set([
     // The 6 left require "surface" and declare no stateKeys, so declaring "surface" fails manifest
     // validation before any surface check runs; whether their handles then pass setData, on,
     // getState and setState is untested. Each needs stateKeys and possibly component work (#21-#26).
-    "fileexplorer",
-    "multiselectcombo",
-    "permissionmatrix",
+    // 2026-10-30: usermenu raised to surface (readiness step 3, #26, ADR-237).
+    // 2026-10-30: multiselectcombo raised to surface (readiness step 3, #22, ADR-237).
+    // 2026-10-30: timeline raised to surface (readiness step 3, #25, ADR-237).
+    // 2026-10-30: permissionmatrix raised to surface (readiness step 3, #23, ADR-237).
+    // 2026-10-30: fileexplorer raised to surface (readiness step 3, #21, ADR-237).
     "stacklayout",
-    "timeline",
-    "usermenu",
 ]);

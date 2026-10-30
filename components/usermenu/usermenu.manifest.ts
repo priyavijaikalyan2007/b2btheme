@@ -19,15 +19,10 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down. Promotion to `field` or `surface` is a change to the
- * component's own public API, not to this file, and the conformance suite
- * proves the level rather than taking its word for it.
- *
- * The 2026-08-03 seed recorded this as blocked on an undetermined option
- * shape. `createUserMenu(containerId, options)` was already the canonical
- * container-first form and the two required options are `userName` and
- * `menuItems` — the blocker was that nobody had looked (ADR-160).
+ * Declared at `surface` conformance (readiness step 3, #26): clicking an item
+ * and signing out emit through an additive on(), and the agent can replace the
+ * menu items in place. It has no view state to restore (ADR-229): the menu
+ * closes when the canvas scrolls it away.
  */
 export const USERMENU_MANIFEST: CapabilityManifest =
 {
@@ -37,6 +32,14 @@ export const USERMENU_MANIFEST: CapabilityManifest =
     label: "User Menu",
     icon: "bi-person-circle",
     category: "social",
+
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show the signed-in user's avatar, name and presence as a trigger that opens a menu of account "
+            + "actions such as Profile, Settings and Sign out.",
+        avoidWhen: "To show a person inline without a menu use PersonChip; to switch organisations use "
+            + "TenantSwitcher.",
+    },
 
     affords: [
         {
@@ -52,7 +55,10 @@ export const USERMENU_MANIFEST: CapabilityManifest =
         { name: "signout", payload: "scalar", multi: false, legacyOption: "onSignOut" },
     ],
 
-    accepts: [],
+    // The items an agent rewrites, replaced in place (ADR-234).
+    accepts: [
+        { name: "menuItems", payload: "collection", required: true },
+    ],
     actions: [],
     stateKeys: [],
 
@@ -62,6 +68,6 @@ export const USERMENU_MANIFEST: CapabilityManifest =
     defaultSize: { w: 220, h: 36 },
     defaultOptions: { userName: "", menuItems: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

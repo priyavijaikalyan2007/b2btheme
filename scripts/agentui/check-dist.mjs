@@ -141,7 +141,9 @@ function bundleProblems(root, rel, major)
     try
     {
         seen = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", probe,
-            pathToFileURL(path.join(root, `${rel}.js`)).href], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }));
+            pathToFileURL(path.join(root, `${rel}.js`)).href],
+            // The catalog text outgrew the default 1 MiB after readiness step 3, and ENOBUFS read as a Node warning.
+            { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024 }));
     }
     catch (err)
     {

@@ -466,3 +466,91 @@ describe("edge cases", () =>
             .toBe(true);
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 3)
+// ============================================================================
+
+describe("MultiselectCombo surface contract", () =>
+{
+    /** Opens the dropdown and clicks the row labelled `label`. */
+    function clickRow(combo: MultiselectCombo, label: string): void
+    {
+        combo.open();
+        const row = Array.from(document.querySelectorAll<HTMLElement>(".multiselectcombo-item"))
+            .find((r) => r.textContent?.includes(label));
+
+        expect(row).toBeDefined();
+        row!.click();
+    }
+
+    test("change_UserToggle_EmitsSelectedValuesAfterOnChange", () =>
+    {
+        const order: string[] = [];
+        const combo = new MultiselectCombo({ items: MOCK_ITEMS,
+            onChange: (v) => order.push(`legacy:${v.join(",")}`) });
+        combo.show(container.id);
+        combo.on("change", (p) => order.push(`channel:${(p as string[]).join(",")}`));
+
+        clickRow(combo, "Banana");
+
+        expect(order).toEqual(["legacy:banana", "channel:banana"]);
+        combo.destroy();
+    });
+
+    test("on_Unsubscribe_StopsDelivery_AndUnknownChannelThrows", () =>
+    {
+        const combo = new MultiselectCombo({ items: MOCK_ITEMS });
+        combo.show(container.id);
+        const handler = vi.fn();
+
+        combo.on("change", handler)();
+        clickRow(combo, "Apple");
+
+        expect(handler).not.toHaveBeenCalled();
+        expect(() => combo.on("select", () => undefined)).toThrow(/only channel/);
+        combo.destroy();
+    });
+
+    test("getState_ReturnsSelectedValues", () =>
+    {
+        const combo = new MultiselectCombo({ items: MOCK_ITEMS, selected: ["apple", "date"] });
+
+        expect(combo.getState()).toEqual({ value: ["apple", "date"] });
+        combo.destroy();
+    });
+
+    test("setState_RestoresSelection_FiringNothing", () =>
+    {
+        const onChange = vi.fn();
+        const heard = vi.fn();
+        const combo = new MultiselectCombo({ items: MOCK_ITEMS, onChange });
+        combo.show(container.id);
+        combo.on("change", heard);
+
+        combo.setState({ value: ["cherry"] });
+
+        expect(combo.getValue()).toEqual(["cherry"]);
+        expect(onChange).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
+
+        combo.setSelected(["apple"]);
+        expect(onChange).toHaveBeenCalledWith(["apple"]);
+        expect(heard).toHaveBeenCalledWith(["apple"]);
+        combo.destroy();
+    });
+
+    test("setData_Items_ReplacesItemsAndKeepsMatchingSelection", () =>
+    {
+        const combo = new MultiselectCombo({ items: MOCK_ITEMS, selected: ["apple", "banana"] });
+        combo.show(container.id);
+        const root = combo.getElement();
+
+        combo.setData("items", [{ value: "apple", label: "Apple" }, { value: "fig", label: "Fig" }]);
+
+        expect(combo.getElement()).toBe(root);
+        expect(combo.getValue()).toEqual(["apple"]);
+        expect(() => combo.setData("value", [])).toThrow(/only slot/);
+        combo.destroy();
+    });
+});

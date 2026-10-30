@@ -13333,7 +13333,7 @@ const matrix = createPermissionMatrix({
 | `setRoles(roles)` | Replace role columns |
 | `setGroups(groups)` | Replace permission groups |
 | `setCells(cells)` | Replace cell states |
-| `getState()` | Get current state map |
+| `getState()` / `setState(state)` | The unsaved edits, expanded groups and filter; restored without firing callbacks (readiness step 3) |
 | `getPendingChanges()` | Get array of pending changes |
 | `resetChanges()` | Revert all pending changes |
 | `exportData(format)` | Export matrix data. `"json"` returns JSON, `"csv"` returns CSV. Before 2026-10-21 it returned JSON for both |

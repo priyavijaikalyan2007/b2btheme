@@ -31,6 +31,7 @@ let widget: Map<string, Member>;
 let panel: Map<string, Member>;
 let swatch: Map<string, Member>;
 let clearable: Map<string, Member>;
+let menus: Map<string, Member>;
 
 beforeAll(() =>
 {
@@ -46,6 +47,7 @@ beforeAll(() =>
     panel = read("panel.ts", "createPanel", 0);
     swatch = read("pickers.ts", "createSwatchPicker", 0);
     clearable = read("pickers.ts", "createClearable", 0);
+    menus = read("menus.ts", "createMenuHost", 0);
 });
 
 describe("classify — member classes", () =>
@@ -67,6 +69,28 @@ describe("classify — mixed members and hazards", () =>
         expect(widget.get("columns")!.hazards).toEqual([{ path: "columns[].renderer", cls: MEMBER_CLASS.FUNCTION }]);
     });
     test("a Date is not walked into", () => { expect(widget.get("value")!.hazards).toEqual([]); });
+});
+
+describe("classify — objects that need host code (readiness step 3)", () =>
+{
+    test("an arm whose items require a function is not data, so items|() => items is a function", () =>
+    {
+        expect(menus.get("items")!.cls).toBe(MEMBER_CLASS.FUNCTION);
+        expect(menus.get("items")!.mixedArms).toEqual([]);
+    });
+    test("an array of such items alone is a function", () =>
+    {
+        expect(menus.get("fixedItems")!.cls).toBe(MEMBER_CLASS.FUNCTION);
+    });
+    test("items that require a DOM element are an element", () =>
+    {
+        expect(menus.get("panels")!.cls).toBe(MEMBER_CLASS.ELEMENT);
+    });
+    test("an optional callback leaves the object data, with the callback as a hazard", () =>
+    {
+        expect(menus.get("tools")!.cls).toBe(MEMBER_CLASS.DATA);
+        expect(menus.get("tools")!.hazards).toEqual([{ path: "tools[].onUse", cls: MEMBER_CLASS.FUNCTION }]);
+    });
 });
 
 describe("classify — arity and JSDoc", () =>
