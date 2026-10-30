@@ -67,6 +67,12 @@ const GRID = {
 };
 const CELL = (role: string, perm: string) => `.permissionmatrix-cell[data-role-id='${role}'][data-perm-id='${perm}']`;
 
+/** A small folder tree, as an agent writes it: dates are ISO strings the adapter revives. */
+const TREE = [{ id: "docs", name: "Documents", type: "folder", children: [
+    { id: "plan", name: "plan.md", type: "file", size: 2048, modified: "2026-10-01T09:30:00.000Z" },
+    { id: "budget", name: "budget.xlsx", type: "file", size: 9000, modified: "2026-10-02T09:30:00.000Z" }] }];
+const ROW = (id: string) => `.fileexplorer-listing [data-id='${id}']`;
+
 test.describe("Step 3 components under @a2ui/lit", () =>
 {
     test("UserMenu: clicking an item sends onSelect, and Sign out sends onSignOut first", async ({ page }) =>
@@ -186,6 +192,36 @@ test.describe("Step 3 components under @a2ui/lit", () =>
         await expect(page.locator(".permissionmatrix-reset-btn")).toBeDisabled();
         await expect(page.locator(CELL("viewer", "write"))).toHaveClass(/permissionmatrix-cell-granted/);
         await expect(page.locator(CELL("viewer", "write"))).not.toHaveClass(/permissionmatrix-cell-changed/);
+        expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("FileExplorer: selecting and opening a file send onSelect and onOpen", async ({ page }) =>
+    {
+        await mount(page, "FileExplorer", { ...EV, roots: { path: "/tree" }, onSelect: act("picked", "select"),
+            onOpen: act("opened", "open") }, { tree: TREE });
+
+        await page.locator(ROW("docs")).dblclick();
+        await page.locator(ROW("plan")).click();
+        await page.locator(ROW("plan")).dblclick();
+
+        const plan = { id: "plan", name: "plan.md", type: "file", size: 2048, modified: "2026-10-01T09:30:00.000Z" };
+        await expect.poll(async () => (await actions(page)).map((a) => [a.name, (a.context as { p: unknown }).p]))
+            .toEqual(expect.arrayContaining([["picked", [plan]], ["opened", plan]]));
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("FileExplorer: the agent's rewrite of roots updates it in place, keeping the folder", async ({ page }) =>
+    {
+        await mount(page, "FileExplorer", { roots: { path: "/tree" } }, { tree: TREE });
+        await page.locator(ROW("docs")).dblclick();
+        const before = await page.locator(".fileexplorer").first().elementHandle();
+
+        await write(page, "/tree", [{ ...TREE[0], children: [...TREE[0].children,
+            { id: "notes", name: "notes.txt", type: "file" }] }]);
+
+        await expect(page.locator(ROW("notes"))).toHaveCount(1);
+        await expect(page.locator(ROW("plan"))).toHaveCount(1);
         expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
         expect(await errors(page)).toEqual([]);
     });
