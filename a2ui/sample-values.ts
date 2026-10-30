@@ -21,7 +21,7 @@ type Schema = Record<string, unknown>;
 type Variant = 0 | 1;
 
 /** Keywords that carry no constraint. */
-const IGNORED = new Set(["description", "additionalProperties", "title"]);
+const IGNORED = new Set(["description", "additionalProperties", "title", "deprecated"]);
 
 const SCALARS: Record<string, [unknown, unknown]> = {
     string: ["a", "b"], number: [1, 2], integer: [1, 2], boolean: [false, true],

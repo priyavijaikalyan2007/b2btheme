@@ -143,20 +143,38 @@ export type EdgeLabelDensity = "all" | "hub-compact" | "none";
 
 export interface GraphNode
 {
+    /** Stable id, referenced by edges' sourceId and targetId. */
     id: string;
+    /** Display label. */
     label: string;
+    /** A second, smaller line under the label. */
     sublabel?: string;
+    /** The node's type, used for its legend entry and type filters. */
     type: string;
+    /** Namespace, for the group-by-namespace layout. */
     namespace?: string;
+    /** Bootstrap Icons class shown in the node. */
     icon?: string;
+    /**
+     * Node colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+    /** Lifecycle status, shown as a badge. */
     status?: GraphNodeStatus;
+    /** Short badge text. */
     badge?: string;
+    /** Extra fields, shown as rows in the hover card. */
     properties?: Record<string, unknown>;
+    /** Shows a + indicator; clicking it sends an expand request. */
     expandable?: boolean;
+    /** Shows the indicator as − (already expanded). */
     expanded?: boolean;
+    /** Keeps the node where x and y put it instead of where the layout would. */
     pinned?: boolean;
+    /** Horizontal position, for a pinned node. */
     x?: number;
+    /** Vertical position, for a pinned node. */
     y?: number;
     /** Free-form description shown in the hover card body. Rendered via textContent. */
     description?: string;
@@ -164,17 +182,32 @@ export interface GraphNode
 
 export interface GraphEdge
 {
+    /** Stable id. */
     id: string;
+    /** Id of the node the edge starts at. */
     sourceId: string;
+    /** Id of the node the edge ends at. */
     targetId: string;
+    /** Label drawn on the edge. */
     label?: string;
+    /** The relationship type, used for type filters. */
     type: string;
+    /** Line style. Default: "solid". */
     style?: EdgeStyle;
+    /**
+     * Line colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+    /** Line width in px. */
     width?: number;
+    /** Animates the line, to show flow. */
     animated?: boolean;
+    /** Extra fields, shown as rows in the hover card. */
     properties?: Record<string, unknown>;
+    /** Where the relationship came from. */
     provenance?: EdgeProvenance;
+    /** Confidence from 0 to 1, for inferred relationships. */
     confidence?: number;
     /** Free-form description shown in the hover card body. */
     description?: string;
@@ -208,31 +241,54 @@ export type GraphTooltipMode = "builtin" | "custom" | "off";
 export interface GraphCanvasOptions
 {
     container: HTMLElement;
+    /** "schema" draws types and relationships; "instance" draws records. Default: "schema". */
     mode?: GraphMode;
+    /** The nodes. */
     nodes?: GraphNode[];
+    /** The edges between nodes. */
     edges?: GraphEdge[];
+    /** Layout algorithm. Default: "force". */
     layout?: GraphLayout;
+    /** Direction of the hierarchical layout. Default: "TB" (top to bottom). */
     layoutDirection?: LayoutDirection;
+    /** Colour theme. Default: the page's. */
     theme?: "light" | "dark";
+    /** Node box size in px. */
     nodeSize?: { width: number; height: number };
-    /** @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none". */
+    /**
+     * Shows labels on edges; false hides them all.
+     * @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none".
+     */
     showEdgeLabels?: boolean;
     /** On-canvas edge label density. Defaults to "hub-compact". */
     edgeLabelDensity?: EdgeLabelDensity;
     /** Node degree at which the endpoint is treated as a hub. Defaults to 5. */
     hubDegreeThreshold?: number;
+    /** Shows each node's icon. Default: true. */
     showNodeIcons?: boolean;
+    /** Shows a minimap in a corner. */
     showMinimap?: boolean;
+    /** Shows a legend of node types. */
     showLegend?: boolean;
+    /** Field of properties to group nodes by. */
     groupByField?: string;
+    /** Lets the user zoom with the wheel. Default: true. */
     zoomEnabled?: boolean;
+    /** Lets the user pan by dragging the background. Default: true. */
     panEnabled?: boolean;
+    /** Lets the user select nodes and edges. Default: true. */
     selectEnabled?: boolean;
+    /** Lets Ctrl/Cmd-click add to the selection. Default: true. */
     multiSelectEnabled?: boolean;
+    /** Lets the user drag nodes. Default: true. */
     dragEnabled?: boolean;
+    /** Offers "Create edge from here" on a node's context menu. Default: false. */
     edgeCreationEnabled?: boolean;
+    /** Shows only nodes of these types. Default: all. */
     visibleNodeTypes?: string[];
+    /** Shows only edges of these types. Default: all. */
     visibleEdgeTypes?: string[];
+    /** Hides nodes deeper than this from the roots. */
     maxDepth?: number;
     onNodeClick?: (node: GraphNode) => void;
     onNodeDoubleClick?: (node: GraphNode) => void;
@@ -250,6 +306,7 @@ export interface GraphCanvasOptions
     // status, properties, description). Set "custom" to override via
     // renderNodeTooltip / renderEdgeTooltip, or "off" to suppress.
     // -----------------------------------------------------------------
+    /** Hover card: "builtin" (default), "custom" (the render hooks) or "off". */
     tooltipMode?: GraphTooltipMode;
     renderNodeTooltip?: (node: GraphNode) => GraphTooltipRenderResult;
     renderEdgeTooltip?: (edge: GraphEdge) => GraphTooltipRenderResult;

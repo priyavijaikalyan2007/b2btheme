@@ -56,7 +56,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "fileupload",
     "flexgridlayout",
     "flowlayout",
-    "graphcanvas",
     "graphminimap",
     "gridlayout",
     "helpdrawer",

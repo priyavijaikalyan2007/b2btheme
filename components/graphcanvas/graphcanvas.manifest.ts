@@ -19,10 +19,10 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `surface` conformance (readiness step 2 B9): clicks, selection,
+ * edge creation and expand requests emit through an additive on(); nodes and
+ * edges are slots updated in place through the overloaded setData (B9-2), and
+ * the selection is its state.
  */
 export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
 {
@@ -34,6 +34,13 @@ export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
     icon: "bi-share",
     category: "data",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show nodes and the relationships between them as an interactive graph the user can zoom, select "
+            + "and expand; rewrite nodes and edges to change it in place.",
+        avoidWhen: "For a hierarchy of items use TreeView; for a flowchart the user draws use DiagramEngine.",
+    },
+
     affords: [
         {
             shape: "graph",
@@ -42,10 +49,34 @@ export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
             minViewport: { w: 360, h: 260 },
         },
     ],
-    emits: [],
-    accepts: [],
+    emits: [
+        { name: "nodeClick", payload: "record", multi: false, legacyOption: "onNodeClick" },
+        { name: "nodeDoubleClick", payload: "record", multi: false, legacyOption: "onNodeDoubleClick" },
+        { name: "edgeClick", payload: "record", multi: false, legacyOption: "onEdgeClick" },
+        { name: "selection", payload: "record", multi: false, legacyOption: "onSelectionChange" },
+        { name: "edgeCreated", payload: "record", multi: false, legacyOption: "onEdgeCreated" },
+        { name: "expandRequest", payload: "scalar", multi: false, legacyOption: "onExpandRequest" },
+    ],
+    // The user's decision B9-2: the agent rewrites the graph in place, keeping zoom, pan and selection.
+    accepts: [
+        { name: "nodes", payload: "collection", required: false },
+        { name: "edges", payload: "collection", required: false },
+    ],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["selection"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B9).
+    protocol: {
+        hostOnly: {
+            onNodeHover: "Fires as the pointer enters and leaves a node; hover is not information for an agent.",
+            onEdgeHover: "Fires as the pointer enters and leaves an edge; hover is not information for an agent.",
+            onLayoutComplete: "Fires when a layout settles; a lifecycle signal, not information for an agent.",
+            renderNodeTooltip: "A render hook; the built-in hover card applies instead.",
+            renderEdgeTooltip: "A render hook; the built-in hover card applies instead.",
+            "nodes[].properties": "An open record of extra fields; it has no schema an agent could follow.",
+            "edges[].properties": "An open record of extra fields; it has no schema an agent could follow.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 33075, mountCost: "moderate", holdsResources: false },
@@ -53,6 +84,6 @@ export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
     defaultSize: { w: 500, h: 400 },
     defaultOptions: {},
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };
