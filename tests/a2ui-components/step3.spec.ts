@@ -52,6 +52,12 @@ const MENU = [{ id: "profile", label: "Profile" }, { id: "sign-out", label: "Sig
 const FRUIT = [{ value: "apple", label: "Apple" }, { value: "banana", label: "Banana" },
     { value: "cherry", label: "Cherry" }];
 
+/** A flat timeline, as an agent writes it. */
+const EVENTS = { start: "2026-01-01T00:00:00.000Z", end: "2026-01-08T00:00:00.000Z", groups: [] };
+const LAUNCH = { id: "launch", type: "point", start: "2026-01-02T00:00:00.000Z", label: "Launch" };
+const SPRINT = { id: "sprint", type: "span", start: "2026-01-03T00:00:00.000Z", end: "2026-01-05T00:00:00.000Z",
+    label: "Sprint" };
+
 test.describe("Step 3 components under @a2ui/lit", () =>
 {
     test("UserMenu: clicking an item sends onSelect, and Sign out sends onSignOut first", async ({ page }) =>
@@ -109,5 +115,39 @@ test.describe("Step 3 components under @a2ui/lit", () =>
         await expect(page.locator(".multiselectcombo-item[aria-selected='true']")).toHaveCount(2);
         expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
         expect(await errors(page)).toEqual([]);
+    });
+
+    test("Timeline: clicking an event sends onSelect with it", async ({ page }) =>
+    {
+        await mount(page, "Timeline", { ...EV, ...EVENTS, items: { path: "/items" }, onSelect: act("pick", "select") },
+            { items: [LAUNCH, SPRINT] });
+
+        await page.locator("[data-item-id='sprint']").click();
+
+        await sent(page, [["pick", SPRINT]]);
+    });
+
+    test("Timeline: the agent's rewrite of items updates it in place, keeping the selection", async ({ page }) =>
+    {
+        await mount(page, "Timeline", { ...EVENTS, items: { path: "/items" } }, { items: [LAUNCH] });
+        await page.locator("[data-item-id='launch']").click();
+        const before = await page.locator(".timeline").elementHandle();
+
+        await write(page, "/items", [LAUNCH, SPRINT]);
+
+        await expect(page.locator("[data-item-id='sprint']")).toHaveCount(1);
+        await expect(page.locator("[data-item-id='launch']")).toHaveClass(/selected/);
+        expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("Timeline: a span the agent writes without an end is rejected", async ({ page }) =>
+    {
+        await mount(page, "Timeline", { ...EVENTS, items: { path: "/items" } }, { items: [LAUNCH] });
+
+        await write(page, "/items", [{ id: "open", type: "span", start: "2026-01-03T00:00:00.000Z", label: "Open" }]);
+
+        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED" })]);
+        await expect(page.locator("[data-item-id='launch']")).toHaveCount(1);
     });
 });
