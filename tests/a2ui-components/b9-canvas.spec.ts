@@ -40,6 +40,10 @@ const write = (page: Page, path: string, value: unknown) =>
 const GRAPH = { nodes: [{ id: "a", label: "Alpha", type: "service" }, { id: "b", label: "Beta", type: "service" }],
     edges: [{ id: "ab", sourceId: "a", targetId: "b", type: "calls" }] };
 
+/** A small roadmap, as an agent writes it. */
+const SPINE = { hubs: [{ id: "now", label: "Now", status: "in-progress", branches: [{ id: "search", label: "Search" }] },
+    { id: "next", label: "Next", status: "planned", branches: [] }] };
+
 test.describe("B9 canvas components under @a2ui/lit", () =>
 {
     test("Annotation: editing the expanded note sends onChange with its state", async ({ page }) =>
@@ -75,6 +79,28 @@ test.describe("B9 canvas components under @a2ui/lit", () =>
 
         await expect(page.locator(".gc-node")).toHaveCount(3);
         await expect(page.locator(".gc-node[data-node-id='a']")).toHaveClass(/gc-node-selected/);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("SpineMap: clicking a node sends onNodeClick with it", async ({ page }) =>
+    {
+        await mount(page, "SpineMap", { ...EV, data: { path: "/map" }, onNodeClick: act("node", "nodeClick") },
+            { map: SPINE });
+
+        await page.locator("[data-id='search']").dispatchEvent("click");
+
+        await expect.poll(async () => (await actions(page)).map((a) => [a.name, (a.context as { p: unknown }).p]))
+            .toEqual([["node", { id: "search", label: "Search" }]]);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("SpineMap: the agent's rewrite of data updates it in place", async ({ page }) =>
+    {
+        await mount(page, "SpineMap", { data: { path: "/map" } }, { map: SPINE });
+
+        await write(page, "/map", { hubs: [...SPINE.hubs, { id: "later", label: "Later", branches: [] }] });
+
+        await expect(page.locator("[data-id='later']")).toHaveCount(1);
         expect(await errors(page)).toEqual([]);
     });
 });
