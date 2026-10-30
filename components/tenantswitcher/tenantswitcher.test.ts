@@ -345,3 +345,57 @@ describe("surface contract (B8)", () =>
         ts.destroy();
     });
 });
+
+// ============================================================================
+// EXISTING BUG FIXED AT THE END OF THE AGENT-UI ARC (#62)
+// ============================================================================
+
+describe("a tenant picked from search results (#62)", () =>
+{
+    test("pickingASearchResultNotInTenants_ShowsItAsActive", async () =>
+    {
+        vi.useFakeTimers();
+        const delta: Tenant = { id: "ws-9", name: "Delta GmbH", role: "Member" };
+        const onSwitch = vi.fn();
+        const ts = new TenantSwitcher(makeOptions({ showSearch: true, onSwitch,
+            onSearch: () => Promise.resolve([delta]) }));
+        ts.show(container.id);
+
+        ts.open();
+        const input = document.querySelector<HTMLInputElement>(".tenantswitcher-search-input")!;
+        input.value = "del";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await vi.runAllTimersAsync();
+        [...document.querySelectorAll<HTMLElement>(".tenantswitcher-item")]
+            .find((el) => el.textContent?.includes("Delta"))!.click();
+
+        expect(onSwitch).toHaveBeenCalledWith(delta);
+        expect(ts.getActiveTenant()).toEqual(delta);
+        expect(container.querySelector(".tenantswitcher-trigger")!.getAttribute("aria-label"))
+            .toBe("Switch tenant, currently Delta GmbH");
+        ts.destroy();
+        vi.useRealTimers();
+    });
+
+    test("setActiveTenant_ToAnotherId_ForgetsThePickedRecord", async () =>
+    {
+        vi.useFakeTimers();
+        const delta: Tenant = { id: "ws-9", name: "Delta GmbH" };
+        const ts = new TenantSwitcher(makeOptions({ showSearch: true, onSearch: () => Promise.resolve([delta]) }));
+        ts.show(container.id);
+        ts.open();
+        const input = document.querySelector<HTMLInputElement>(".tenantswitcher-search-input")!;
+        input.value = "del";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await vi.runAllTimersAsync();
+        [...document.querySelectorAll<HTMLElement>(".tenantswitcher-item")]
+            .find((el) => el.textContent?.includes("Delta"))!.click();
+
+        ts.setActiveTenant("ws-2");
+        expect(ts.getActiveTenant()?.name).toBe("Beta LLC");
+        ts.setActiveTenant("ws-9");
+        expect(ts.getActiveTenant()).toBeUndefined();
+        ts.destroy();
+        vi.useRealTimers();
+    });
+});
