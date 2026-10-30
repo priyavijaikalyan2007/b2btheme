@@ -47,6 +47,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // step 2 B7, ADR-234).
     // 22 on 2026-10-30: usermenu classified (readiness step 3, #26, ADR-237).
     // 21 on 2026-10-30: multiselectcombo classified (readiness step 3, #22, ADR-237).
+    // 20 on 2026-10-30: timeline classified (readiness step 3, #25, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
@@ -67,7 +68,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "splitlayout",
     "stacklayout",
     "tabbedpanel",
-    "timeline",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */
@@ -79,8 +79,8 @@ export const BELOW_REQUIRED = new Set([
     // getState and setState is untested. Each needs stateKeys and possibly component work (#21-#26).
     // 2026-10-30: usermenu raised to surface (readiness step 3, #26, ADR-237).
     // 2026-10-30: multiselectcombo raised to surface (readiness step 3, #22, ADR-237).
+    // 2026-10-30: timeline raised to surface (readiness step 3, #25, ADR-237).
     "fileexplorer",
     "permissionmatrix",
     "stacklayout",
-    "timeline",
 ]);

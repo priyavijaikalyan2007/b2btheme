@@ -69,7 +69,10 @@ export interface TimelineItem
     /** Tooltip text shown on hover (native title attribute). */
     tooltip?: string;
 
-    /** CSS colour value for the event. */
+    /**
+     * Colour of the event, as a hex colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
 
     /** Additional CSS class on the item element. */
@@ -153,7 +156,10 @@ export interface TimelineOptions
     /** Height of collapsed presence band in pixels. Default 6. */
     collapsedBandHeight?: number;
 
-    /** Colour of collapsed presence band. Default "#adb5bd". */
+    /**
+     * Colour of collapsed presence band, as a hex colour. Default "#adb5bd".
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     collapsedBandColor?: string;
 
     /** Size variant. Default "md". */
