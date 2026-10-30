@@ -470,7 +470,9 @@ retyping or newly requiring anything in it breaks hosts that hard-coded
 against `specs/agentui/published/`, and a breaking change needs `CATALOG_MAJOR`
 raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
 change, additive included, needs `npm run build:agentui -- --write-baseline`
-and the baseline committed in the same change. The lean agent catalog,
+and the baseline committed in the same change. A published baseline is
+anchored to the base branch: CI (`npm run check:baselines -- <base ref>`) fails
+when one is deleted or broken, and check [29] fails on a gap in the majors (#28). The lean agent catalog,
 `dist/a2ui/catalog/v<N>.agent.json` (ADR-233), is generated from it and has no
 baseline; the build fails if it drops anything.
 

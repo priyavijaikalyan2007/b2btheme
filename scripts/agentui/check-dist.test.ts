@@ -66,6 +66,21 @@ describe("checkDist ([29])", () =>
     {
         expect((await checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; }))).join()).toMatch(/baseline/);
     });
+    test("a gap in the committed majors fails, so an older major cannot be unpublished by deleting it (#28)", async () =>
+    {
+        // v2 is built and committed, and v1's baseline was deleted.
+        const problems = await checkDist(fakeRepo((f) =>
+        {
+            for (const ext of ["json", "agent.json"]) { f[`dist/a2ui/catalog/v2.${ext}`] = f[`dist/a2ui/catalog/v1.${ext}`]; }
+            f["dist/a2ui/adapter/v2.d.ts"] = "export {};\n";
+            f["dist/a2ui/adapter/v2.js"] = bundleFor(f["dist/a2ui/catalog/v2.json"]);
+            f["specs/agentui/published/catalog-v2.json"] = f["specs/agentui/published/catalog-v1.json"];
+            delete f["specs/agentui/published/catalog-v1.json"];
+        }));
+
+        expect(problems).toContain("specs/agentui/published/ has no baseline for catalog v1 below v2. Every published "
+            + "major stays served (CDN_CONTRACT §2c); restore it from git.");
+    });
     test("a built major with no committed baseline fails", async () =>
     {
         expect((await checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; }))).join())

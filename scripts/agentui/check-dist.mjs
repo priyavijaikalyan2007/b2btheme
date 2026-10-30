@@ -52,6 +52,7 @@ export async function checkDist(root)
     const catalogRel = `dist/a2ui/catalog/v${major}.json`;
 
     return [
+        ...committedMajorProblems(root),
         ...baselineProblems(root, major),
         ...layoutProblems(read(catalogRel), read("scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json")),
         ...refProblems(root, read(catalogRel)),
@@ -201,6 +202,12 @@ function readJson(root, rel)
 
 function highestBaseline(root)
 {
+    return Math.max(...committedMajors(root));
+}
+
+/** The majors with a committed baseline in specs/agentui/published/. */
+function committedMajors(root)
+{
     const dir = path.join(root, "specs", "agentui", "published");
 
     if (!fs.existsSync(dir)) { throw new Error(`[29] ${dir} does not exist; the catalog has never been published.`); }
@@ -209,7 +216,23 @@ function highestBaseline(root)
 
     if (majors.length === 0) { throw new Error(`[29] No baseline in ${dir}; the catalog has never been published.`); }
 
-    return Math.max(...majors);
+    return majors;
+}
+
+/**
+ * The committed majors must be exactly 1..N (#28). Only committed baselines
+ * are copied into dist, so a deleted v1 beside a v2 would silently stop
+ * serving v1, which CDN_CONTRACT §2c promises stays served.
+ */
+function committedMajorProblems(root)
+{
+    const majors = new Set(committedMajors(root));
+    const highest = Math.max(...majors);
+    const missing = Array.from({ length: highest }, (_, i) => i + 1).filter((n) => !majors.has(n));
+
+    return missing.length === 0 ? [] : [`specs/agentui/published/ has no baseline for catalog `
+        + `${missing.map((n) => `v${n}`).join(", ")} below v${highest}. Every published major stays served `
+        + "(CDN_CONTRACT §2c); restore it from git."];
 }
 
 /**
