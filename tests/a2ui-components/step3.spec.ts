@@ -1,0 +1,79 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-FileCopyrightText: 2026 Outcrop Inc
+ * SPDX-License-Identifier: MIT
+ */
+/**
+ * E2E: the components readiness step 3 raised to surface (#21-#26, ADR-237),
+ * under @a2ui/lit. Each sends its gestures with the payload under eventData,
+ * and the data an agent rewrites updates in place.
+ */
+
+import { expect, test, type Page } from "@playwright/test";
+
+import { actions, errors, open, send, surface, useHarness, V } from "../a2ui/adapter-page";
+
+useHarness();
+
+const tagOf = (name: string) => `outcrop-${name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()}`;
+
+/** Mounts `name` with `props` and `data`, and waits for its handle. */
+async function mount(page: Page, name: string, props: Record<string, unknown>, data: Record<string, unknown> = {}):
+    Promise<void>
+{
+    await open(page, "lit");
+    await send(page, surface("s", { id: "root", component: name, ...props }, data));
+    await page.waitForFunction((t) => (window as unknown as { handleOf(x: string): unknown }).handleOf(t) !== undefined,
+        tagOf(name));
+}
+
+/** Where the surface components write each event's payload. */
+const EV = { eventData: { path: "/ev" } };
+
+/** An action prop that sends `name` with the channel's payload as `p`. */
+const act = (name: string, channel: string) => ({ event: { name, context: { p: { path: `/ev/${channel}` } } } });
+
+/** The agent writes `value` at `path`. */
+const write = (page: Page, path: string, value: unknown) =>
+    send(page, [{ version: V, updateDataModel: { surfaceId: "s", path, value } }]);
+
+/** Checks the agent received exactly `expected` (name and payload, in order) and nothing failed. */
+async function sent(page: Page, expected: [string, unknown][]): Promise<void>
+{
+    await expect.poll(async () => (await actions(page)).map((a) => [a.name, (a.context as { p: unknown }).p]))
+        .toEqual(expected);
+    expect(await errors(page)).toEqual([]);
+}
+
+/** UserMenu's items, as an agent writes them. */
+const MENU = [{ id: "profile", label: "Profile" }, { id: "sign-out", label: "Sign out", danger: true }];
+
+test.describe("Step 3 components under @a2ui/lit", () =>
+{
+    test("UserMenu: clicking an item sends onSelect, and Sign out sends onSignOut first", async ({ page }) =>
+    {
+        await mount(page, "UserMenu", { ...EV, userName: "Ada Lovelace", menuItems: { path: "/menu" },
+            onSelect: act("item", "select"), onSignOut: act("bye", "signout") }, { menu: MENU });
+
+        await page.locator(".usermenu-trigger").click();
+        await page.locator("[data-item-id='profile']").click();
+        await page.locator(".usermenu-trigger").click();
+        await page.locator("[data-item-id='sign-out']").click();
+
+        await sent(page, [["item", "profile"], ["bye", "Ada Lovelace"], ["item", "sign-out"]]);
+    });
+
+    test("UserMenu: the agent's rewrite of menuItems updates it in place", async ({ page }) =>
+    {
+        await mount(page, "UserMenu", { userName: "Ada Lovelace", menuItems: { path: "/menu" } }, { menu: MENU });
+        const before = await page.locator(".usermenu").elementHandle();
+
+        await write(page, "/menu", [{ id: "help", label: "Help" }]);
+        await page.locator(".usermenu-trigger").click();
+
+        await expect(page.locator("[data-item-id='help']")).toHaveCount(1);
+        await expect(page.locator("[data-item-id='profile']")).toHaveCount(0);
+        expect(await before!.evaluate((el) => el.isConnected)).toBe(true);
+        expect(await errors(page)).toEqual([]);
+    });
+});
