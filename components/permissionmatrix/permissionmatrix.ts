@@ -15,6 +15,9 @@
 // ============================================================================
 
 export type PermissionState = "granted" | "denied" | "inherited" | "none";
+
+/** The surface channels (readiness step 3). */
+type MatrixChannel = "change" | "bulkchange" | "export" | "reset";
 export type ExportFormat = "json" | "csv";
 
 export interface Role
@@ -190,6 +193,19 @@ function setAttr(el: HTMLElement, key: string, value: string): void
     el.setAttribute(key, value);
 }
 
+/** The export as an agent receives it: the host's role and permission data is host-only (readiness step 3). */
+function withoutData(data: MatrixExportData): MatrixExportData
+{
+    return {
+        ...data,
+        roles: data.roles.map(({ data: _data, ...role }) => role),
+        groups: data.groups.map(g => ({
+            ...g,
+            permissions: g.permissions.map(({ data: _data, ...perm }) => perm),
+        })),
+    };
+}
+
 function safeCallback<T extends unknown[]>(
     fn: ((...a: T) => void) | undefined,
     ...args: T
@@ -247,6 +263,10 @@ export interface PermissionMatrixHandle
     getCellState(roleId: string, permissionId: string): PermissionState;
     getEffectiveState(roleId: string, permissionId: string): PermissionState;
     setData(roles: Role[], groups: PermissionGroup[], cells: MatrixCell[]): void;
+    setData(slot: string, value: unknown): void;
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    getState(): Record<string, unknown>;
+    setState(state: Record<string, unknown>): void;
     getChanges(): PermissionChange[];
     clearChanges(): void;
     expandGroup(groupId: string): void;
@@ -274,6 +294,10 @@ export class PermissionMatrix implements PermissionMatrixHandle
     private inheritanceChains = new Map<string, string[]>();
     private pendingChanges = new Map<string, PermissionChange>();
     private expandedGroups = new Set<string>();
+
+    // -- Surface channels (additive, readiness step 3) -------------------------
+    private readonly handlers: Record<MatrixChannel, Set<(payload: unknown) => void>> =
+        { change: new Set(), bulkchange: new Set(), export: new Set(), reset: new Set() };
 
     // -- DOM -----------------------------------------------------------------
     private rootEl: HTMLElement | null = null;
@@ -362,6 +386,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
         this.originalStateMap.clear();
         this.inheritanceChains.clear();
         this.pendingChanges.clear();
+        Object.values(this.handlers).forEach((set) => set.clear());
         logInfo("Destroyed");
     }
 
@@ -394,19 +419,146 @@ export class PermissionMatrix implements PermissionMatrixHandle
         return this.resolveEffective(roleId, permissionId);
     }
 
+    /**
+     * Replaces the roles, groups and cells together, clearing pending
+     * changes; or, with a slot name, one of them (readiness step 3):
+     * "roles" and "groups" keep the cells and pending changes, and "cells"
+     * is a new baseline, so it clears them. Fires nothing.
+     */
+    setData(roles: Role[], groups: PermissionGroup[], cells: MatrixCell[]): void;
+    setData(slot: string, value: unknown): void;
     setData(
-        roles: Role[],
-        groups: PermissionGroup[],
-        cells: MatrixCell[]
+        first: Role[] | string,
+        second: PermissionGroup[] | unknown,
+        cells?: MatrixCell[]
     ): void
     {
-        this.roles = [...roles];
-        this.groups = groups.map(g => ({ ...g, permissions: [...g.permissions] }));
-        this.buildStateMaps(cells);
+        if (typeof first === "string")
+        {
+            this.setSlot(first, second);
+            return;
+        }
+
+        this.roles = [...first];
+        this.groups = (second as PermissionGroup[]).map(g => ({ ...g, permissions: [...g.permissions] }));
+        this.buildStateMaps(cells as MatrixCell[]);
         this.buildInheritanceChains();
         this.pendingChanges.clear();
         this.renderGrid();
         this.updateCounter();
+    }
+
+    /** Replaces one slot in place; see setData. */
+    private setSlot(slot: string, value: unknown): void
+    {
+        if (slot === "roles")
+        {
+            this.roles = [...(value as Role[])];
+            this.buildInheritanceChains();
+        }
+        else if (slot === "groups")
+        {
+            const known = new Set(this.groups.map(g => g.id));
+
+            this.groups = (value as PermissionGroup[]).map(g => ({ ...g, permissions: [...g.permissions] }));
+            this.groups.filter(g => !known.has(g.id) && g.expanded !== false)
+                .forEach(g => this.expandedGroups.add(g.id));
+        }
+        else if (slot === "cells")
+        {
+            this.buildStateMaps(value as MatrixCell[]);
+            this.pendingChanges.clear();
+        }
+        else
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): the slots are "roles", "groups" and "cells".`);
+        }
+
+        this.renderGrid();
+        this.updateCounter();
+    }
+
+    /** Subscribes to "change", "bulkchange", "export" or "reset"; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (!(channel in this.handlers))
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "change", "bulkchange", `
+                + "\"export\" and \"reset\".");
+        }
+
+        this.handlers[channel as MatrixChannel].add(handler);
+
+        return () => { this.handlers[channel as MatrixChannel].delete(handler); };
+    }
+
+    /** The user's unsaved edits, the expanded groups and the filter text. */
+    getState(): Record<string, unknown>
+    {
+        return {
+            changes: this.getChanges(),
+            expandedGroups: [...this.expandedGroups],
+            filter: this.filterText,
+        };
+    }
+
+    /**
+     * Restores state captured by getState(), or any subset of it, firing
+     * nothing: the edits are re-applied over the baseline cells.
+     */
+    setState(state: Record<string, unknown>): void
+    {
+        if (Array.isArray(state.changes))
+        {
+            this.revertToOriginal();
+
+            for (const c of state.changes as PermissionChange[])
+            {
+                this.setStateInternal(c.roleId, c.permissionId, c.newState);
+                this.trackChange(c.roleId, c.permissionId, c.previousState, c.newState);
+            }
+        }
+
+        if (Array.isArray(state.expandedGroups))
+        {
+            this.expandedGroups = new Set(state.expandedGroups as string[]);
+        }
+
+        this.renderGrid();
+        this.updateCounter();
+
+        if (typeof state.filter === "string") { this.setFilter(state.filter); }
+    }
+
+    /** Puts every cell back to its baseline and drops the pending changes. */
+    private revertToOriginal(): void
+    {
+        this.stateMap.clear();
+
+        for (const [roleId, perms] of this.originalStateMap)
+        {
+            this.stateMap.set(roleId, new Map(perms));
+        }
+
+        this.pendingChanges.clear();
+    }
+
+    /** Calls every handler on a channel with a JSON copy, isolating each so one throw cannot starve the rest. */
+    private emit(channel: MatrixChannel, payload: unknown): void
+    {
+        const copy = JSON.parse(JSON.stringify(payload)) as unknown;
+
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(copy);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     getChanges(): PermissionChange[]
@@ -611,6 +763,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
         btn.addEventListener("click", () =>
         {
             safeCallback(this.opts.onReset);
+            this.emit("reset", this.pendingChanges.size);
             this.announce("All changes reset");
         });
         this.resetBtnEl = btn;
@@ -1044,10 +1197,12 @@ export class PermissionMatrix implements PermissionMatrixHandle
 
         const permName = this.getPermName(permId);
         const roleName = role?.name ?? roleId;
-        safeCallback(this.opts.onChange, {
+        const change: PermissionChange = {
             roleId, permissionId: permId,
             previousState: prev, newState: next
-        });
+        };
+        safeCallback(this.opts.onChange, change);
+        this.emit("change", change);
         this.announce(
             `${permName} for ${roleName} changed to ${next}`
         );
@@ -1318,12 +1473,14 @@ export class PermissionMatrix implements PermissionMatrixHandle
 
         this.renderGrid();
         this.updateCounter();
-        safeCallback(this.opts.onBulkChange, {
+        const bulk: BulkChange = {
             type: target === "granted" ? "grant-all-in-group" : "deny-all-in-group",
             roleId,
             groupId,
             changes
-        });
+        };
+        safeCallback(this.opts.onBulkChange, bulk);
+        this.emit("bulkchange", bulk);
         this.announce(
             `All ${group.name} permissions for ${role.name} set to ${target}`
         );
@@ -1471,6 +1628,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
             const blob = new Blob([json], { type: "application/json;charset=utf-8" });
             downloadBlob(blob, "permission-matrix.json");
         }
+        this.emit("export", withoutData(data));
         logInfo("Exported matrix as JSON");
         this.announce("Permission matrix exported");
     }
