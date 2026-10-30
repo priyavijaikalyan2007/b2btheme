@@ -897,3 +897,69 @@ describe("FileExplorer surface contract", () =>
         fe.destroy();
     });
 });
+
+// ============================================================================
+// onLoadChildren (#69)
+// ============================================================================
+
+describe("onLoadChildren loads a folder whose children were never given (#69)", () =>
+{
+    /** Settles pending promise callbacks. */
+    async function settle(): Promise<void>
+    {
+        for (let i = 0; i < 5; i++) { await Promise.resolve(); }
+    }
+
+    const lazyRoots = (): FileNode[] => [{ id: "lazy", name: "Lazy", type: "folder" },
+        { id: "empty", name: "Empty", type: "folder", children: [] }];
+
+    test("openingTheFolder_AsksOnceAndShowsTheAnswer", async () =>
+    {
+        const onLoadChildren = vi.fn(() => Promise.resolve<FileNode[]>([
+            { id: "sub", name: "Sub", type: "folder", children: [] },
+            { id: "doc", name: "doc.txt", type: "file" }]));
+        const fe = createFileExplorer(container.id, { roots: lazyRoots(), onLoadChildren }) as FileExplorer;
+
+        fe.navigate("lazy");
+        await settle();
+
+        expect(onLoadChildren).toHaveBeenCalledTimes(1);
+        expect(onLoadChildren.mock.calls[0][0]).toMatchObject({ id: "lazy" });
+        expect(fe.getItems().map((i) => i.id)).toEqual(["sub", "doc"]);
+        expect(container.querySelector(".fileexplorer-tree [data-id='sub']")).not.toBeNull();
+
+        fe.navigate("__root__");
+        fe.navigate("lazy");
+        expect(onLoadChildren).toHaveBeenCalledTimes(1);
+        fe.destroy();
+    });
+
+    test("aFolderWithChildren_IsNotAskedFor", () =>
+    {
+        const onLoadChildren = vi.fn(() => Promise.resolve<FileNode[]>([]));
+        const fe = createFileExplorer(container.id, { roots: lazyRoots(), onLoadChildren }) as FileExplorer;
+
+        fe.navigate("empty");
+
+        expect(onLoadChildren).not.toHaveBeenCalled();
+        fe.destroy();
+    });
+
+    test("aFailedLoad_SaysSo_AndOpeningAgainAsksAgain", async () =>
+    {
+        const onLoadChildren = vi.fn()
+            .mockRejectedValueOnce(new Error("offline"))
+            .mockResolvedValueOnce([{ id: "doc", name: "doc.txt", type: "file" }]);
+        const fe = createFileExplorer(container.id, { roots: lazyRoots(), onLoadChildren }) as FileExplorer;
+
+        fe.navigate("lazy");
+        await settle();
+        expect(container.querySelector(".fileexplorer-listing")!.textContent).toContain("could not be loaded");
+
+        fe.navigate("lazy");
+        await settle();
+        expect(onLoadChildren).toHaveBeenCalledTimes(2);
+        expect(fe.getItems().map((i) => i.id)).toEqual(["doc"]);
+        fe.destroy();
+    });
+});

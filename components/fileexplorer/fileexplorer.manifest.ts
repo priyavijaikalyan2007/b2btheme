@@ -55,9 +55,6 @@ function nodeSchema(depth: number): Record<string, unknown>
     };
 }
 
-/** Why an option an agent could set does nothing (readiness step 3). */
-const UNREAD = "Nothing reads this option, so setting it would change nothing.";
-
 /** Why the editing callbacks stay with the host (readiness step 3, the user's decision). */
 const EDIT = "Approves the edit in host code; without it the explorer does not offer it, so over A2UI it browses, "
     + "selects and opens.";
@@ -118,7 +115,8 @@ export const FILEEXPLORER_MANIFEST: CapabilityManifest =
             onCreateFolder: EDIT,
             onUpload: "Receives the files the user picks, which cannot reach an agent; without it there is no "
                 + "Upload.",
-            onLoadChildren: UNREAD,
+            onLoadChildren: "Loads a folder's contents in host code when it is opened; over A2UI give the whole tree "
+                + "as roots (#68).",
             onNavigate: "Fires when the user opens a folder; the currentFolderId state carries it.",
             onSelect: "Fires with the selection, as onSelectionChange does; the select event carries it.",
             onSort: "Fires when the user sorts; the sortField and sortDirection state carry it.",
