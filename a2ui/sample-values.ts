@@ -49,6 +49,8 @@ const FORMATS: Record<string, [string, string]> = {
 const NAMED: Record<string, [string, string]> = {
     locale: ["en-US", "fr-FR"],
     timezone: ["UTC", "Asia/Tokyo"],
+    // An image that loads: a relative "a" 404s and logs a console error (step 3, UserMenu).
+    avatarUrl: ["data:image/gif;base64,R0lGODlhAQABAAAAACw=", "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACw="],
 };
 
 /**
