@@ -928,8 +928,6 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
                 el => this.handleQuickItemClick(el)],
             [".explorerpicker-load-more",
                 () => this.loadMoreSearchResults()],
-            [".explorerpicker-retry",
-                () => this.refresh()],
             [".explorerpicker-section-header",
                 el => this.toggleSectionCollapse(el)],
         ];
@@ -2740,16 +2738,13 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.treeEl!.appendChild(row);
     }
 
+    /**
+     * A node's depth, 1 for a root. The ancestor chain stops at a repeat, so
+     * parentIds that loop cannot hang the virtual scroll (#61).
+     */
     private getNodeLevel(nodeId: string): number
     {
-        let level = 1;
-        let current = this.nodeMap.get(nodeId);
-        while (current?.parentId)
-        {
-            level++;
-            current = this.nodeMap.get(current.parentId);
-        }
-        return level;
+        return this.getAncestorChain(nodeId).length;
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -2984,7 +2979,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private updateFocusVisual(
         nodeId: string, focused: boolean): void
     {
-        const row = this.findNodeElements(nodeId)[0];
+        const row = this.findNodeRow(nodeId);
         if (!row)
         {
             return;
@@ -3004,7 +2999,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             return;
         }
-        const row = this.findNodeElements(this.focusedNodeId)[0];
+        const row = this.findNodeRow(this.focusedNodeId);
         if (row?.scrollIntoView)
         {
             row.scrollIntoView({ block: "nearest" });
@@ -3073,6 +3068,9 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         const retry = createElement(
             "button", ["explorerpicker-retry"], "Retry");
         setAttr(retry, "type", "button");
+        // Its own listener (#61): the banner sits outside bodyEl, whose click router used to own this route, so
+        // the button did nothing, and the same route also fired for the search error's Retry.
+        retry.addEventListener("click", () => { this.refresh(); });
         this.errorEl.appendChild(text);
         this.errorEl.appendChild(retry);
         this.announce(
@@ -3109,6 +3107,16 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         const all = this.rootEl?.querySelectorAll<HTMLElement>("[data-node-id]");
 
         return Array.from(all ?? []).filter((el) => el.dataset.nodeId === nodeId);
+    }
+
+    /**
+     * The tree row for `nodeId`. The node's <li> carries the same
+     * data-node-id and comes first in document order, so the first match put
+     * the focus ring and the scroll flash on the list item (#61).
+     */
+    private findNodeRow(nodeId: string): HTMLElement | undefined
+    {
+        return this.findNodeElements(nodeId).find((el) => el.classList.contains("explorerpicker-node-row"));
     }
 
     private clearDebounce(): void
@@ -3233,7 +3241,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     /** Scroll a node into view and briefly highlight it. */
     public scrollToNode(nodeId: string): void
     {
-        const row = this.findNodeElements(nodeId)[0];
+        const row = this.findNodeRow(nodeId);
         if (!row)
         {
             return;
