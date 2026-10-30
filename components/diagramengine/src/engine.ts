@@ -175,8 +175,25 @@ export interface DiagramEngineHandle
     getPageFrameSizes(): PageFrameSize[];
     exportSVG(): string;
     exportJSON(): string;
-    on(event: string, handler: EventHandler): void;
+    /**
+     * Subscribes to an event-bus event ("object:add", "selection:change", ...)
+     * or, additively (readiness step 2 B9), to a surface channel: "selection"
+     * ({ objectIds, connectorIds }), "objectDoubleClick" (the object) or
+     * "change" (the whole document, once per edit). Returns the unsubscribe.
+     */
+    on(event: string, handler: EventHandler): () => void;
     off(event: string, handler: EventHandler): void;
+    /**
+     * The surface contract (additive, B9): replaces the diagram from the
+     * "document" slot as setDocument() does, silently (no change, no
+     * onSelectionChange), keeping the zoom and pan. Any other slot, or a value
+     * without an objects array, throws.
+     */
+    setData(slot: string, value: unknown): void;
+    /** { viewport: { x, y, zoom } }. */
+    getState(): Record<string, unknown>;
+    /** Restores the viewport silently: no onViewportChange. */
+    setState(state: Record<string, unknown>): void;
     resize(): void;
     getElement(): HTMLElement;
     group(ids: string[]): DiagramObject;
@@ -254,6 +271,16 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     private changeCount = 0;
     private themeObserver: MutationObserver | null = null;
     private destroyed = false;
+
+    /** Surface-contract subscribers, by channel (B9). */
+    private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
+        ["selection", "objectDoubleClick", "change"].map((c) => [c, new Set()]));
+
+    /** True while setData("document") loads, so the load is not reported as a user edit (B9). */
+    private loadingSlot = false;
+
+    /** True while a change emission waits for the end of the current edit (B9). */
+    private changePending = false;
     private layoutRegistry: Map<string, LayoutFunction> = new Map();
     private formatClipboard: ObjectStyle | null = null;
     private readonly embedRegistry: Map<string, EmbeddableComponentEntry> = new Map();
@@ -1574,9 +1601,86 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      * @param event - Event name (e.g. "object:add", "selection:change").
      * @param handler - Handler function.
      */
-    on(event: string, handler: EventHandler): void
+    on(event: string, handler: EventHandler): () => void
     {
+        const channel = this.channelHandlers.get(event);
+
+        if (channel)
+        {
+            const h = handler as (payload: unknown) => void;
+            channel.add(h);
+            return () => { channel.delete(h); };
+        }
+
         this.events.on(event, handler);
+        return () => { this.events.off(event, handler); };
+    }
+
+    /** Replaces the diagram silently, keeping the zoom and pan (B9). */
+    setData(slot: string, value: unknown): void
+    {
+        if (slot !== "document")
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): DiagramEngine declares one slot, "document".`);
+        }
+
+        const doc = value as DiagramDocument | null;
+
+        if (!doc || typeof doc !== "object" || !Array.isArray(doc.objects))
+        {
+            throw new Error(`${LOG_PREFIX} setData("document"): expected a document with an objects array.`);
+        }
+
+        const viewport = this.renderer.getViewport();
+
+        this.loadingSlot = true;
+        try
+        {
+            this.setDocument(doc);
+        }
+        finally
+        {
+            this.loadingSlot = false;
+        }
+
+        this.renderer.setViewport(viewport);
+    }
+
+    /** The viewport. */
+    getState(): Record<string, unknown>
+    {
+        return { viewport: { ...this.renderer.getViewport() } };
+    }
+
+    /** Restores the viewport through the renderer, which reports nothing. */
+    setState(state: Record<string, unknown>): void
+    {
+        const vp = state.viewport as Partial<ViewportState> | undefined;
+
+        if (vp && typeof vp.x === "number" && typeof vp.y === "number" && typeof vp.zoom === "number")
+        {
+            this.renderer.setViewport({ x: vp.x, y: vp.y, zoom: vp.zoom });
+        }
+    }
+
+    /** Delivers a payload to each subscriber, isolated so one throw cannot starve the rest. */
+    private emitChannel(channel: string, payload: () => unknown): void
+    {
+        const handlers = this.channelHandlers.get(channel)!;
+
+        if (handlers.size === 0) { return; }
+
+        for (const handler of handlers)
+        {
+            try
+            {
+                handler(payload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     /**
@@ -3090,12 +3194,30 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      * Destroys the engine, removing all DOM elements and event listeners.
      * The engine cannot be used after calling this method.
      */
+    /**
+     * Reports the document once the current edit finishes: an edit marks the
+     * document dirty several times (a move, then its connectors), and the
+     * agent hears one change (B9).
+     */
+    private scheduleChange(): void
+    {
+        if (this.loadingSlot || this.changePending || this.channelHandlers.get("change")!.size === 0) { return; }
+
+        this.changePending = true;
+        queueMicrotask(() =>
+        {
+            this.changePending = false;
+            if (!this.destroyed) { this.emitChannel("change", () => this.getDocument()); }
+        });
+    }
+
     destroy(): void
     {
         if (this.destroyed)
         {
             return;
         }
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
 
         this.destroyed = true;
 
@@ -3552,6 +3674,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         {
             this.startInlineTextEdit(obj.id);
         }
+
+        this.emitChannel("objectDoubleClick", () => JSON.parse(JSON.stringify(obj)));
     }
 
     /**
@@ -3665,6 +3789,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 
         safeCallback(this.opts.onSelectionChange, selected, []);
         this.events.emit("selection:change", selected);
+        if (!this.loadingSlot)
+        {
+            this.emitChannel("selection", () => ({ objectIds: [...this.selectedIds],
+                connectorIds: [...this.selectedConnectorIds] }));
+        }
     }
 
     /**
@@ -4158,6 +4287,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.dirty = true;
         this.changeCount++;
         this.events.emit("dirty:change", true);
+        this.scheduleChange();
     }
 
     /** Emits a viewport change event with the current state. */

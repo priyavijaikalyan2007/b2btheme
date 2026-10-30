@@ -1113,3 +1113,94 @@ describe("an open popover follows a zoom", () =>
         map.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 2 B9)
+// ============================================================================
+
+describe("surface contract (B9)", () =>
+{
+    function mount(over: Record<string, unknown> = {})
+    {
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+        return createSpineMap({ container: host, data: buildTestData(), ...over });
+    }
+
+    function clickNode(id: string): void
+    {
+        document.querySelector(`[data-id="${id}"]`)!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    }
+
+    test("on_NodeClick_HearsTheNode_AfterOnNodeClick", () =>
+    {
+        const order: unknown[] = [];
+        const map = mount({ onNodeClick: (n: SpineHub | SpineBranch) => order.push(`option:${n.id}`) });
+        map.on("nodeClick", (p) => order.push(p));
+
+        clickNode("branch-2");
+
+        expect(order).toEqual(["option:branch-2", { id: "branch-2", label: "Branch B", status: "planned" }]);
+        map.destroy();
+    });
+
+    test("on_EditChannels_HearEachEdit_AfterTheirCallbacks", () =>
+    {
+        const heard: unknown[] = [];
+        const map = mount();
+        for (const c of ["nodeAdd", "nodeChange", "nodeRemove", "connectionAdd", "connectionRemove"])
+        {
+            map.on(c, (p) => heard.push([c, p]));
+        }
+
+        map.addBranch({ id: "branch-3", label: "Branch C" }, "hub-2");
+        map.updateNode("branch-3", { label: "Branch C2" });
+        map.addConnection({ from: "branch-1", to: "branch-3", type: "blocks" });
+        map.removeConnection("branch-1", "branch-3");
+        map.removeNode("branch-3");
+
+        expect(heard).toEqual([
+            ["nodeAdd", { node: { id: "branch-3", label: "Branch C" }, parentId: "hub-2" }],
+            ["nodeChange", { nodeId: "branch-3", changes: { label: "Branch C2" } }],
+            ["connectionAdd", { from: "branch-1", to: "branch-3", type: "blocks" }],
+            ["connectionRemove", "branch-1-branch-3"],
+            ["nodeRemove", "branch-3"],
+        ]);
+        map.destroy();
+    });
+
+    test("setData_ReplacesTheMap_KeepingZoomAndSelection_Silently", () =>
+    {
+        const onZoomChange = vi.fn();
+        const map = mount({ onZoomChange });
+        map.selectNode("hub-1");
+        map.zoomTo(1.5);
+        onZoomChange.mockClear();
+
+        const data = buildTestData();
+        data.hubs[1].label = "Hub Two, renamed";
+        map.setData("data", data);
+
+        expect(map.getNode("hub-2")?.label).toBe("Hub Two, renamed");
+        expect(map.getZoom()).toBe(1.5);
+        expect(map.getSelectedNode()).toBe("hub-1");
+        expect(onZoomChange).not.toHaveBeenCalled();
+        expect(() => map.setData("hubs", [])).toThrow(/"data"/);
+        map.destroy();
+    });
+
+    test("getState_And_SetState_RestoreLayoutZoomAndSelection_Silently", () =>
+    {
+        const onLayoutChange = vi.fn();
+        const onZoomChange = vi.fn();
+        const map = mount({ onLayoutChange, onZoomChange });
+
+        map.setState({ layout: "horizontal", zoom: { scale: 0.8, tx: 12, ty: -4 }, selectedNode: "branch-1" });
+
+        expect(map.getState()).toEqual({ layout: "horizontal", zoom: { scale: 0.8, tx: 12, ty: -4 },
+            selectedNode: "branch-1" });
+        expect([onLayoutChange.mock.calls, onZoomChange.mock.calls]).toEqual([[], []]);
+        expect(() => map.on("zoomChange", vi.fn())).toThrow(/valid channels/);
+        map.destroy();
+    });
+});

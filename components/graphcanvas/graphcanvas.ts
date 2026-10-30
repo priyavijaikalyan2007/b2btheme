@@ -143,20 +143,38 @@ export type EdgeLabelDensity = "all" | "hub-compact" | "none";
 
 export interface GraphNode
 {
+    /** Stable id, referenced by edges' sourceId and targetId. */
     id: string;
+    /** Display label. */
     label: string;
+    /** A second, smaller line under the label. */
     sublabel?: string;
+    /** The node's type, used for its legend entry and type filters. */
     type: string;
+    /** Namespace, for the group-by-namespace layout. */
     namespace?: string;
+    /** Bootstrap Icons class shown in the node. */
     icon?: string;
+    /**
+     * Node colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+    /** Lifecycle status, shown as a badge. */
     status?: GraphNodeStatus;
+    /** Short badge text. */
     badge?: string;
+    /** Extra fields, shown as rows in the hover card. */
     properties?: Record<string, unknown>;
+    /** Shows a + indicator; clicking it sends an expand request. */
     expandable?: boolean;
+    /** Shows the indicator as − (already expanded). */
     expanded?: boolean;
+    /** Keeps the node where x and y put it instead of where the layout would. */
     pinned?: boolean;
+    /** Horizontal position, for a pinned node. */
     x?: number;
+    /** Vertical position, for a pinned node. */
     y?: number;
     /** Free-form description shown in the hover card body. Rendered via textContent. */
     description?: string;
@@ -164,17 +182,32 @@ export interface GraphNode
 
 export interface GraphEdge
 {
+    /** Stable id. */
     id: string;
+    /** Id of the node the edge starts at. */
     sourceId: string;
+    /** Id of the node the edge ends at. */
     targetId: string;
+    /** Label drawn on the edge. */
     label?: string;
+    /** The relationship type, used for type filters. */
     type: string;
+    /** Line style. Default: "solid". */
     style?: EdgeStyle;
+    /**
+     * Line colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+    /** Line width in px. */
     width?: number;
+    /** Animates the line, to show flow. */
     animated?: boolean;
+    /** Extra fields, shown as rows in the hover card. */
     properties?: Record<string, unknown>;
+    /** Where the relationship came from. */
     provenance?: EdgeProvenance;
+    /** Confidence from 0 to 1, for inferred relationships. */
     confidence?: number;
     /** Free-form description shown in the hover card body. */
     description?: string;
@@ -208,31 +241,54 @@ export type GraphTooltipMode = "builtin" | "custom" | "off";
 export interface GraphCanvasOptions
 {
     container: HTMLElement;
+    /** "schema" draws types and relationships; "instance" draws records. Default: "schema". */
     mode?: GraphMode;
+    /** The nodes. */
     nodes?: GraphNode[];
+    /** The edges between nodes. */
     edges?: GraphEdge[];
+    /** Layout algorithm. Default: "force". */
     layout?: GraphLayout;
+    /** Direction of the hierarchical layout. Default: "TB" (top to bottom). */
     layoutDirection?: LayoutDirection;
+    /** Colour theme. Default: the page's. */
     theme?: "light" | "dark";
+    /** Node box size in px. */
     nodeSize?: { width: number; height: number };
-    /** @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none". */
+    /**
+     * Shows labels on edges; false hides them all.
+     * @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none".
+     */
     showEdgeLabels?: boolean;
     /** On-canvas edge label density. Defaults to "hub-compact". */
     edgeLabelDensity?: EdgeLabelDensity;
     /** Node degree at which the endpoint is treated as a hub. Defaults to 5. */
     hubDegreeThreshold?: number;
+    /** Shows each node's icon. Default: true. */
     showNodeIcons?: boolean;
+    /** Shows a minimap in a corner. */
     showMinimap?: boolean;
+    /** Shows a legend of node types. */
     showLegend?: boolean;
+    /** Field of properties to group nodes by. */
     groupByField?: string;
+    /** Lets the user zoom with the wheel. Default: true. */
     zoomEnabled?: boolean;
+    /** Lets the user pan by dragging the background. Default: true. */
     panEnabled?: boolean;
+    /** Lets the user select nodes and edges. Default: true. */
     selectEnabled?: boolean;
+    /** Lets Ctrl/Cmd-click add to the selection. Default: true. */
     multiSelectEnabled?: boolean;
+    /** Lets the user drag nodes. Default: true. */
     dragEnabled?: boolean;
+    /** Offers "Create edge from here" on a node's context menu. Default: false. */
     edgeCreationEnabled?: boolean;
+    /** Shows only nodes of these types. Default: all. */
     visibleNodeTypes?: string[];
+    /** Shows only edges of these types. Default: all. */
     visibleEdgeTypes?: string[];
+    /** Hides nodes deeper than this from the roots. */
     maxDepth?: number;
     onNodeClick?: (node: GraphNode) => void;
     onNodeDoubleClick?: (node: GraphNode) => void;
@@ -250,9 +306,22 @@ export interface GraphCanvasOptions
     // status, properties, description). Set "custom" to override via
     // renderNodeTooltip / renderEdgeTooltip, or "off" to suppress.
     // -----------------------------------------------------------------
+    /** Hover card: "builtin" (default), "custom" (the render hooks) or "off". */
     tooltipMode?: GraphTooltipMode;
     renderNodeTooltip?: (node: GraphNode) => GraphTooltipRenderResult;
     renderEdgeTooltip?: (edge: GraphEdge) => GraphTooltipRenderResult;
+}
+
+/** The surface contract's channels (B9). */
+const GRAPH_CHANNELS = ["nodeClick", "nodeDoubleClick", "edgeClick", "selection", "edgeCreated",
+    "expandRequest"] as const;
+type GraphChannel = typeof GRAPH_CHANNELS[number];
+
+/** A node or edge as a channel payload: a JSON copy without properties, which are host-only (B9). */
+function itemPayload(item: GraphNode | GraphEdge): unknown
+{
+    const { properties: _properties, ...rest } = item;
+    return JSON.parse(JSON.stringify(rest));
 }
 
 /** Internal position type. */
@@ -281,6 +350,24 @@ interface SelectionState
 export interface GraphCanvas
 {
     setData(nodes: GraphNode[], edges: GraphEdge[]): void;
+    /**
+     * The surface contract's form (additive, B9): replaces "nodes" or "edges"
+     * alone, silently, keeping the other, the zoom, the pan and the selection
+     * of items that remain. Any other slot, or a value that is not an array,
+     * throws.
+     */
+    setData(slot: string, value: unknown): void;
+    /**
+     * Subscribes to "nodeClick", "nodeDoubleClick", "edgeClick" (the node or
+     * edge, without properties), "selection" ({ nodeIds, edgeIds }),
+     * "edgeCreated" ({ sourceId, targetId }) or "expandRequest" (the node id).
+     * Each fires after its callback. Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** { selection: { nodeIds, edgeIds } }. */
+    getState(): Record<string, unknown>;
+    /** Restores the selection silently: no onSelectionChange, no channel. */
+    setState(state: Record<string, unknown>): void;
     addNode(node: GraphNode): void;
     addEdge(edge: GraphEdge): void;
     removeNode(nodeId: string): void;
@@ -937,6 +1024,9 @@ function partitionByNamespace(
 
 class GraphCanvasImpl implements GraphCanvas
 {
+    private readonly channelHandlers = new Map<GraphChannel, Set<(payload: unknown) => void>>(
+        GRAPH_CHANNELS.map((c) => [c, new Set()]));
+
     private opts: Required<Pick<GraphCanvasOptions, "container">> & GraphCanvasOptions;
     private nodes: GraphNode[] = [];
     private edges: GraphEdge[] = [];
@@ -1164,12 +1254,103 @@ class GraphCanvasImpl implements GraphCanvas
     // ====================================================================
 
     /** Replace all nodes and edges, recompute layout, and re-render. */
-    public setData(nodes: GraphNode[], edges: GraphEdge[]): void
+    public setData(nodes: GraphNode[], edges: GraphEdge[]): void;
+    public setData(slot: string, value: unknown): void;
+    public setData(first: GraphNode[] | string, second: unknown): void
     {
-        this.nodes = [...nodes];
-        this.edges = [...edges];
+        if (typeof first === "string")
+        {
+            this.setSlot(first, second);
+            return;
+        }
+
+        this.nodes = [...first];
+        this.edges = [...(second as GraphEdge[])];
         this.computeLayout();
         this.renderAll();
+    }
+
+    // ====================================================================
+    // PUBLIC API — SURFACE CONTRACT (additive, readiness step 2 B9)
+    // ====================================================================
+
+    /** Subscribes to a declared channel; returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        const handlers = this.channelHandlers.get(channel as GraphChannel);
+
+        if (!handlers)
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are `
+                + `${GRAPH_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        handlers.add(handler);
+
+        return () => { handlers.delete(handler); };
+    }
+
+    /** The selection, as ids. */
+    public getState(): Record<string, unknown>
+    {
+        return { selection: { nodeIds: [...this.selection.nodeIds], edgeIds: [...this.selection.edgeIds] } };
+    }
+
+    /** Restores the selection without onSelectionChange or the selection channel. */
+    public setState(state: Record<string, unknown>): void
+    {
+        const sel = state.selection as { nodeIds?: unknown; edgeIds?: unknown } | undefined;
+
+        if (!sel || typeof sel !== "object") { return; }
+
+        this.selection.nodeIds = new Set(Array.isArray(sel.nodeIds) ? sel.nodeIds.map(String) : []);
+        this.selection.edgeIds = new Set(Array.isArray(sel.edgeIds) ? sel.edgeIds.map(String) : []);
+        this.updateSelectionVisuals();
+    }
+
+    /**
+     * Replaces nodes or edges alone, silently: the zoom and pan stay, and the
+     * selection keeps the items that remain (an edge whose node went goes too).
+     */
+    private setSlot(slot: string, value: unknown): void
+    {
+        if (slot !== "nodes" && slot !== "edges")
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): GraphCanvas's slots are "nodes" and "edges".`);
+        }
+
+        if (!Array.isArray(value))
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): expected an array of ${slot}.`);
+        }
+
+        if (slot === "nodes") { this.nodes = [...value] as GraphNode[]; }
+        else { this.edges = [...value] as GraphEdge[]; }
+
+        const nodeIds = new Set(this.nodes.map((n) => n.id));
+        const edgeIds = new Set(this.edges.filter((e) => nodeIds.has(e.sourceId) && nodeIds.has(e.targetId))
+            .map((e) => e.id));
+        this.selection.nodeIds = new Set([...this.selection.nodeIds].filter((id) => nodeIds.has(id)));
+        this.selection.edgeIds = new Set([...this.selection.edgeIds].filter((id) => edgeIds.has(id)));
+        this.computeLayout();
+        this.renderAll();
+        this.updateSelectionVisuals();
+    }
+
+    /** Delivers a payload to each subscriber, isolated so one throw cannot starve the rest. */
+    private emitChannel(channel: GraphChannel, payload: () => unknown): void
+    {
+        for (const handler of this.channelHandlers.get(channel)!)
+        {
+            try
+            {
+                handler(payload());
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
     }
 
     /** Add a single node, recompute layout, and re-render. */
@@ -1458,6 +1639,7 @@ class GraphCanvasImpl implements GraphCanvas
     /** Tear down event listeners, clear timers, and remove the DOM tree. */
     public destroy(): void
     {
+        for (const handlers of this.channelHandlers.values()) { handlers.clear(); }
         this.unbindEvents();
         if (this.hoverCard)
         {
@@ -2326,6 +2508,7 @@ class GraphCanvasImpl implements GraphCanvas
             this.getSelectedNodes(),
             this.getSelectedEdges()
         );
+        this.emitChannel("selection", () => this.getState().selection);
     }
 
     // ====================================================================
@@ -2502,7 +2685,9 @@ class GraphCanvasImpl implements GraphCanvas
         const targetId = target.getAttribute("data-node-id");
         if (targetId && targetId !== this.edgeSourceId)
         {
-            this.opts.onEdgeCreated?.(this.edgeSourceId, targetId);
+            const sourceId = this.edgeSourceId;
+            this.opts.onEdgeCreated?.(sourceId, targetId);
+            this.emitChannel("edgeCreated", () => ({ sourceId, targetId }));
         }
         this.edgeSourceId = null;
     }
@@ -2512,23 +2697,27 @@ class GraphCanvasImpl implements GraphCanvas
         const multi = this.opts.multiSelectEnabled !== false && (e.ctrlKey || e.metaKey);
         this.selectNodeInternal(node.id, multi);
         this.opts.onNodeClick?.(node);
+        this.emitChannel("nodeClick", () => itemPayload(node));
 
         // Expand indicator click
         if (node.expandable && (e.target as Element).classList.contains("gc-expand-indicator"))
         {
             this.opts.onExpandRequest?.(node.id);
+            this.emitChannel("expandRequest", () => node.id);
         }
     }
 
     private onNodeDblClick(node: GraphNode): void
     {
         this.opts.onNodeDoubleClick?.(node);
+        this.emitChannel("nodeDoubleClick", () => itemPayload(node));
     }
 
     private onEdgeClick(edge: GraphEdge): void
     {
         this.selectEdgeInternal(edge.id, false);
         this.opts.onEdgeClick?.(edge);
+        this.emitChannel("edgeClick", () => itemPayload(edge));
     }
 
     private onKeyDown(e: KeyboardEvent): void
@@ -2790,7 +2979,11 @@ class GraphCanvasImpl implements GraphCanvas
         {
             items.push({
                 label: node.expanded ? "Collapse" : "Expand",
-                action: () => { this.opts.onExpandRequest?.(node.id); }
+                action: () =>
+                {
+                    this.opts.onExpandRequest?.(node.id);
+                    this.emitChannel("expandRequest", () => node.id);
+                }
             });
         }
         if (this.opts.edgeCreationEnabled)

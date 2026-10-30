@@ -37,6 +37,13 @@ export const ANNOTATION_MANIFEST: CapabilityManifest =
     icon: "bi-pencil",
     category: "annotation",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Mark something with a short note the user can expand and edit: a callout, an arrow or a "
+            + "highlight, collapsed to a marker until opened.",
+        avoidWhen: "For a free-standing note use StickyNote; for a status label use StatusBadge.",
+    },
+
     affords: [
         {
             shape: "document",
@@ -58,6 +65,16 @@ export const ANNOTATION_MANIFEST: CapabilityManifest =
     actions: [],
 
     stateKeys: ["kind", "label", "color"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B9).
+    protocol: {
+        // onChange passes { kind, label, color }, not the value alias, so it is the change event (ADR-222).
+        change: "event",
+        hostOnly: {
+            onToggle: "Fires as the annotation expands or collapses; that is view state, not information for an "
+                + "agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 7_000, mountCost: "trivial", holdsResources: false },
