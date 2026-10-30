@@ -434,6 +434,51 @@
 }
 
 // ============================================================================
+// ROLE AND PERMISSION BULK CONTROLS (#70)
+// ============================================================================
+
+.permissionmatrix-role-header > .permissionmatrix-checkbox
+{
+    align-self: center;
+    margin-top: $sp-4;
+}
+
+// Only a label carrying the control changes layout; without enablePermissionBulk it is as before.
+.permissionmatrix-permission-label:has(> .permissionmatrix-checkbox)
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-6;
+}
+
+// ============================================================================
+// STICKY OPT-OUTS (#70)
+// ============================================================================
+
+// stickyHeader: false. The header row stays sticky on the left only, so a first column that is still sticky keeps
+// its corner.
+.permissionmatrix-no-sticky-header
+{
+    .permissionmatrix-header-row > *,
+    .permissionmatrix-corner-cell
+    {
+        top: auto;
+    }
+}
+
+// stickyFirstColumn: false.
+.permissionmatrix-no-sticky-column
+{
+    .permissionmatrix-corner-cell,
+    .permissionmatrix-group-label,
+    .permissionmatrix-permission-label
+    {
+        left: auto;
+    }
+}
+
+// ============================================================================
 // REDUCED MOTION
 // ============================================================================
 

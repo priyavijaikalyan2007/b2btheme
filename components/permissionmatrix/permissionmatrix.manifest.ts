@@ -18,9 +18,6 @@
 
 import type { CapabilityManifest } from "../../runtime/src/types";
 
-/** Why an option an agent could set does nothing (readiness step 3). */
-const UNREAD = "Nothing reads this option, so setting it would change nothing.";
-
 /**
  * Declared at `surface` conformance (readiness step 3, #23): its edits, bulk
  * edits, export and reset emit through an additive on(), the agent can
@@ -39,7 +36,7 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
     // What an agent's model reads to choose this component (ADR-222).
     agent: {
         useWhen: "Let the user review and edit which roles hold which permissions, as a grid of roles by grouped "
-            + "permissions; you hear each edit, and Reset asks you to rewrite cells without the unsaved edits.",
+            + "permissions; you hear each edit, and Reset discards the unsaved edits.",
         avoidWhen: "For a table of arbitrary records use DataGrid; for one yes-or-no setting use ChoicePicker; "
             + "rewriting cells drops the user's unsaved edits, so include the ones you accepted.",
     },
@@ -73,12 +70,6 @@ export const PERMISSIONMATRIX_MANIFEST: CapabilityManifest =
     protocol: {
         hostOnly: {
             cellRenderer: "Returns DOM elements for each cell; an agent cannot supply host code.",
-            showInheritance: UNREAD,
-            showChangeHighlight: UNREAD,
-            enableRoleBulk: UNREAD,
-            enablePermissionBulk: UNREAD,
-            stickyHeader: UNREAD,
-            stickyFirstColumn: UNREAD,
             "roles[].data": "Arbitrary host data for callbacks; it has no schema an agent could follow.",
             "groups[].permissions[].data": "Arbitrary host data for callbacks; it has no schema an agent could "
                 + "follow.",

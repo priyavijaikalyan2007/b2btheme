@@ -13316,28 +13316,39 @@ const matrix = createPermissionMatrix({
 | `showFilter` | `boolean` | `true` | Show search filter input |
 | `filterDebounceMs` | `number` | `250` | Filter debounce delay (ms) |
 | `showExport` | `boolean` | `true` | Show export button |
-| `showReset` | `boolean` | `true` | Show reset button |
+| `showReset` | `boolean` | `true` | Show the Reset button: it discards the unsaved edits, or calls `onReset` when given |
 | `showChangeCounter` | `boolean` | `true` | Show pending changes counter |
 | `showInheritance` | `boolean` | `true` | Resolve and display inherited permissions |
 | `showChangeHighlight` | `boolean` | `true` | Highlight cells with pending changes |
 | `enableGroupBulk` | `boolean` | `true` | Enable bulk grant/deny per group row |
+| `enableRoleBulk` | `boolean` | `false` | A control under each role heading that grants or denies all its permissions |
+| `enablePermissionBulk` | `boolean` | `false` | A control beside each permission that grants or denies it for every editable role |
+| `stickyHeader` | `boolean` | `true` | Keep the role headings visible while scrolling vertically |
+| `stickyFirstColumn` | `boolean` | `true` | Keep the permission names visible while scrolling horizontally |
 | `height` | `string` | `"400px"` | Container height |
 
 ## API
 
 | Method | Description |
 |--------|-------------|
-| `show(containerId)` | Mount to container |
-| `hide()` | Remove from DOM |
+| `show(containerOrId)` | Mount into a container element or an element id |
+| `hide()` | Remove from the DOM |
 | `destroy()` | Full cleanup |
-| `setRoles(roles)` | Replace role columns |
-| `setGroups(groups)` | Replace permission groups |
-| `setCells(cells)` | Replace cell states |
-| `getState()` / `setState(state)` | The unsaved edits, expanded groups and filter; restored without firing callbacks (readiness step 3) |
-| `getPendingChanges()` | Get array of pending changes |
-| `resetChanges()` | Revert all pending changes |
-| `exportData(format)` | Export matrix data. `"json"` returns JSON, `"csv"` returns CSV. Before 2026-10-21 it returned JSON for both |
+| `getElement()` | The root element, or `null` once destroyed |
+| `setData(roles, groups, cells)` | Replace all three, clearing pending changes |
+| `setData(slot, value)` | Replace `"roles"`, `"groups"` or `"cells"` alone; `"cells"` is a new baseline and clears pending changes (readiness step 3) |
+| `setCellState(roleId, permissionId, state)` | Set one cell, tracked as a pending change; fires no callback |
+| `getCellState(roleId, permissionId)` | The cell's explicit state |
+| `getEffectiveState(roleId, permissionId)` | The state after inheritance |
+| `getChanges()` | The pending changes |
+| `clearChanges()` | Accept the pending changes as the new baseline (it does not revert them) |
+| `expandGroup(id)` / `collapseGroup(id)` / `expandAllGroups()` / `collapseAllGroups()` | Show or hide group rows |
+| `setFilter(text)` / `clearFilter()` | Filter the permissions by name |
+| `exportData(format?)` | The matrix as `MatrixExportData`; only `"json"` is supported, and `"csv"` throws (ADR-200) |
+| `setReadOnly(readOnly)` | Turn editing off or on |
 | `refresh()` | Re-render the grid |
+| `on(channel, handler)` | Subscribe to `change`, `bulkchange`, `export` or `reset`; returns the unsubscribe (readiness step 3) |
+| `getState()` / `setState(state)` | The unsaved edits, expanded groups and filter; restored without firing callbacks (readiness step 3) |
 
 ## Permission States
 
