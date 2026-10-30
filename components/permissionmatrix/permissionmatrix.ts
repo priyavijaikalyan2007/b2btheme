@@ -20,42 +20,70 @@ export type PermissionState = "granted" | "denied" | "inherited" | "none";
 type MatrixChannel = "change" | "bulkchange" | "export" | "reset";
 export type ExportFormat = "json" | "csv";
 
+/** A role: one column of the matrix. */
 export interface Role
 {
+    /** Unique id, used in cells and changes. */
     id: string;
+    /** Column heading. Rendered as text. */
     name: string;
+    /** A longer description. Not rendered. */
     description?: string;
+    /** The id of a parent role whose granted permissions this one inherits. */
     inheritsFrom?: string;
+    /**
+     * Accent colour of the column heading, as a hex colour.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     color?: string;
+    /** Shown but not editable, such as a built-in owner role. */
     readonly?: boolean;
+    /** Arbitrary host data for callbacks. Not rendered. */
     data?: unknown;
 }
 
+/** A permission: one row of the matrix. */
 export interface Permission
 {
+    /** Unique id, used in cells and changes. */
     id: string;
+    /** Row label. Rendered as text. */
     name: string;
+    /** A longer description. Not rendered. */
     description?: string;
+    /** Arbitrary host data for callbacks. Not rendered. */
     data?: unknown;
 }
 
+/** A collapsible group of permission rows, such as Documents or Users. */
 export interface PermissionGroup
 {
+    /** Unique id. */
     id: string;
+    /** Group heading. Rendered as text. */
     name: string;
+    /** A longer description. Not rendered. */
     description?: string;
+    /** The permissions in this group, in order. */
     permissions: Permission[];
+    /** Whether the group starts expanded. Default: true. */
     expanded?: boolean;
+    /** Bootstrap Icons class shown before the heading, such as "bi-file-earmark". */
     icon?: string;
 }
 
+/** The state of one role for one permission. */
 export interface MatrixCell
 {
+    /** The role's id. */
     roleId: string;
+    /** The permission's id. */
     permissionId: string;
+    /** granted, denied, inherited (from the parent role) or none. */
     state: PermissionState;
 }
 
+/** One edited cell: what it was and what the user made it. */
 export interface PermissionChange
 {
     roleId: string;
@@ -64,6 +92,7 @@ export interface PermissionChange
     newState: PermissionState;
 }
 
+/** Several cells set at once by a bulk control, with each cell's change. */
 export interface BulkChange
 {
     type: "grant-all-for-role" | "deny-all-for-role"
@@ -75,6 +104,7 @@ export interface BulkChange
     changes: PermissionChange[];
 }
 
+/** The whole matrix as exported, with the edits not yet saved. */
 export interface MatrixExportData
 {
     exportedAt: string;
@@ -84,32 +114,58 @@ export interface MatrixExportData
     pendingChanges: PermissionChange[];
 }
 
+/** Configuration options for the PermissionMatrix component. */
 export interface PermissionMatrixOptions
 {
+    /** The roles, one column each, in order. */
     roles: Role[];
+    /** The permission groups, each with its rows. */
     groups: PermissionGroup[];
+    /** The state of each role for each permission; a pair not listed is none. */
     cells: MatrixCell[];
+    /** Disables every edit, the bulk controls and Reset. Default: false. */
     readOnly?: boolean;
+    /** Shows the filter box above the grid. Default: true. */
     showFilter?: boolean;
+    /** Delay in milliseconds between typing in the filter and filtering. Default: 250. */
     filterDebounceMs?: number;
+    /** Shows the Export button. Default: true. */
     showExport?: boolean;
+    /** Shows the Reset button, which asks the host to discard unsaved edits. Default: true. */
     showReset?: boolean;
+    /** Shows how many edits are unsaved. Default: true. */
     showChangeCounter?: boolean;
+    /** Declared but not read. */
     showInheritance?: boolean;
+    /** Declared but not read. */
     showChangeHighlight?: boolean;
+    /** Shows a control per group and role that grants or denies the whole group. Default: true. */
     enableGroupBulk?: boolean;
+    /** Declared but not read. */
     enableRoleBulk?: boolean;
+    /** Declared but not read. */
     enablePermissionBulk?: boolean;
+    /** Declared but not read. */
     stickyHeader?: boolean;
+    /** Declared but not read. */
     stickyFirstColumn?: boolean;
+    /** CSS height of the component, such as "400px". */
     height?: string;
+    /** CSS width of the component, such as "100%". */
     width?: string;
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** Text shown when the filter matches no permission. Default: "No matching permissions". */
     emptyMessage?: string;
+    /** Fires when the user edits one cell. */
     onChange?: (change: PermissionChange) => void;
+    /** Fires when the user sets several cells with a bulk control. */
     onBulkChange?: (bulkChange: BulkChange) => void;
+    /** Fires with the matrix when the user clicks Export; without it the matrix downloads as JSON. */
     onExport?: (data: MatrixExportData, format: ExportFormat) => void;
+    /** Fires when the user clicks Reset; the host discards the edits, for example by calling setData. */
     onReset?: () => void;
+    /** Renders a cell's content in place of the built-in icon. */
     cellRenderer?: (role: Role, perm: Permission, state: PermissionState) => HTMLElement | null;
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;

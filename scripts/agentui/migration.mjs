@@ -48,6 +48,7 @@ export const PENDING_CLASSIFICATION = new Set([
     // 22 on 2026-10-30: usermenu classified (readiness step 3, #26, ADR-237).
     // 21 on 2026-10-30: multiselectcombo classified (readiness step 3, #22, ADR-237).
     // 20 on 2026-10-30: timeline classified (readiness step 3, #25, ADR-237).
+    // 19 on 2026-10-30: permissionmatrix classified (readiness step 3, #23, ADR-237).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
@@ -63,7 +64,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "helpdrawer",
     "layerlayout",
     "navrail",
-    "permissionmatrix",
     "propertyinspector",
     "splitlayout",
     "stacklayout",
@@ -80,7 +80,7 @@ export const BELOW_REQUIRED = new Set([
     // 2026-10-30: usermenu raised to surface (readiness step 3, #26, ADR-237).
     // 2026-10-30: multiselectcombo raised to surface (readiness step 3, #22, ADR-237).
     // 2026-10-30: timeline raised to surface (readiness step 3, #25, ADR-237).
+    // 2026-10-30: permissionmatrix raised to surface (readiness step 3, #23, ADR-237).
     "fileexplorer",
-    "permissionmatrix",
     "stacklayout",
 ]);

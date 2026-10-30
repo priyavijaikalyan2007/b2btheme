@@ -919,7 +919,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 198 -> 182, DiagramEngine classified (B9).
     // ADR-237 (2026-10-30): 182 -> 176, MultiselectCombo classified (readiness step 3, #22).
     // ADR-237 (2026-10-30): 176 -> 168, Timeline classified (readiness step 3, #25).
-    unclassifiedOptions: 168,
+    // ADR-237 (2026-10-30): 168 -> 165, PermissionMatrix classified (readiness step 3, #23).
+    unclassifiedOptions: 165,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -936,7 +937,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-29): 104 -> 82, GraphCanvas's options documented (B9).
     // ADR-236 (2026-10-29): 82 -> 62, SpineMap's options documented (B9).
     // ADR-237 (2026-10-30): 62 -> 52, UserMenu's options documented (readiness step 3, #26).
-    protocolPropsMissingJsdoc: 52,
+    // ADR-237 (2026-10-30): 52 -> 32, PermissionMatrix's options documented (readiness step 3, #23).
+    protocolPropsMissingJsdoc: 32,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -954,7 +956,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 6 -> 5, UserMenu raised to surface (readiness step 3, #26).
     // ADR-237 (2026-10-30): 5 -> 4, MultiselectCombo raised to surface (readiness step 3, #22).
     // ADR-237 (2026-10-30): 4 -> 3, Timeline raised to surface (readiness step 3, #25).
-    componentsBelowRequiredLevel: 3,
+    // ADR-237 (2026-10-30): 3 -> 2, PermissionMatrix raised to surface (readiness step 3, #23).
+    componentsBelowRequiredLevel: 2,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
@@ -985,7 +988,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 23 -> 22, UserMenu classified (readiness step 3, #26).
     // ADR-237 (2026-10-30): 22 -> 21, MultiselectCombo classified (readiness step 3, #22).
     // ADR-237 (2026-10-30): 21 -> 20, Timeline classified (readiness step 3, #25).
-    componentsPendingClassification: 20,
+    // ADR-237 (2026-10-30): 20 -> 19, PermissionMatrix classified (readiness step 3, #23).
+    componentsPendingClassification: 19,
 };
 
 /*
@@ -1095,11 +1099,12 @@ export const FLOORS = {
     // ADR-237 (2026-10-30): 52, 5 and 22 once UserMenu was classified (readiness step 3, #26).
     // ADR-237 (2026-10-30): 176, 4 and 21 once MultiselectCombo was classified (readiness step 3, #22).
     // ADR-237 (2026-10-30): 168, 3 and 20 once Timeline was classified (readiness step 3, #25).
-    unclassifiedOptions: 168,
-    protocolPropsMissingJsdoc: 52,
+    // ADR-237 (2026-10-30): 165, 32, 2 and 19 once PermissionMatrix was classified (readiness step 3, #23).
+    unclassifiedOptions: 165,
+    protocolPropsMissingJsdoc: 32,
     changeMismatches: 0,
-    componentsBelowRequiredLevel: 3,
-    componentsPendingClassification: 20,
+    componentsBelowRequiredLevel: 2,
+    componentsPendingClassification: 19,
 };
 
 /**
