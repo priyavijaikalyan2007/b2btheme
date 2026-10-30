@@ -75,28 +75,52 @@ export interface SpinePopoverFieldConfig
 
 export interface SpineBranch
 {
+    /** Stable id, referenced by connections. */
     id: string;
+    /** Display label. */
     label: string;
+    /** Status, which colours the node. */
     status?: NodeStatus;
+    /** Label for a "custom" status. */
     statusLabel?: string;
+    /**
+     * Colour for a "custom" status.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     statusColor?: string;
+    /** A link shown in the popover. */
     link?: string;
+    /** When, as free text such as "Q3 2026". */
     timeframe?: string;
+    /** Description shown in the popover. */
     description?: string;
+    /** Extra text fields shown in the popover. */
     metadata?: Record<string, string>;
     children?: SpineBranch[];
 }
 
 export interface SpineHub
 {
+    /** Stable id, referenced by connections. */
     id: string;
+    /** Display label. */
     label: string;
+    /** Status, which colours the node. */
     status?: NodeStatus;
+    /** Label for a "custom" status. */
     statusLabel?: string;
+    /**
+     * Colour for a "custom" status.
+     * @pattern ^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$
+     */
     statusColor?: string;
+    /** A link shown in the popover. */
     link?: string;
+    /** When, as free text such as "Q3 2026". */
     timeframe?: string;
+    /** Description shown in the popover. */
     description?: string;
+    /** Extra text fields shown in the popover. */
     metadata?: Record<string, string>;
     branches: SpineBranch[];
 }
@@ -133,27 +157,47 @@ interface DeferredMount
 export interface SpineMapOptions
 {
     container: HTMLElement;
+    /** The map: hubs along a spine, each with branches (and sub-branches), and connections between nodes. */
     data?: SpineMapData;
+    /** How the spine runs. Default: "vertical". */
     layout?: LayoutMode;
+    /** Distance between hubs in px. */
     hubSpacing?: number;
+    /** Distance between sibling branches in px. */
     branchSpacing?: number;
+    /** Length of a branch's stem in px. */
     branchLength?: number;
     /** Max hubs per row in winding/serpentine layout. Default: 3. */
     windingHubsPerRow?: number;
+    /** Lets the user add, edit, move, reparent and connect nodes. Default: false. */
     editable?: boolean;
+    /** Where the outline sidebar sits, or "none". */
     sidebarPosition?: "left" | "right" | "none";
+    /** Sidebar width in px. */
     sidebarWidth?: number;
+    /** A colour per status, overriding the defaults. */
     statusColors?: Partial<Record<NodeStatus, string>>;
+    /** Lowest zoom. */
     minZoom?: number;
+    /** Highest zoom. */
     maxZoom?: number;
+    /** Zoom to start at. */
     initialZoom?: number;
+    /** Shows the zoom and layout toolbar. Default: true. */
     showToolbar?: boolean;
+    /** Draws the connections between nodes. Default: true. */
     showConnections?: boolean;
+    /** Shows the legend of statuses. Default: true. */
     showStatusLegend?: boolean;
+    /** Zooms to fit the map when data loads. Default: true. */
     fitOnLoad?: boolean;
+    /** Node size. Default: "md". */
     size?: "sm" | "md" | "lg";
+    /** Additional CSS class(es) on the root. */
     cssClass?: string;
+    /** The fields a node's popover shows and edits. */
     popoverFields?: SpinePopoverFieldConfig[];
+    /** Popover width in px. */
     popoverWidth?: number;
     onNodeClick?: (node: SpineHub | SpineBranch) => void;
     onNodeDoubleClick?: (node: SpineHub | SpineBranch) => void;

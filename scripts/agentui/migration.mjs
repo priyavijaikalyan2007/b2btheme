@@ -64,7 +64,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "navrail",
     "permissionmatrix",
     "propertyinspector",
-    "spinemap",
     "splitlayout",
     "stacklayout",
     "tabbedpanel",
