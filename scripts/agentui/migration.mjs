@@ -55,12 +55,11 @@ export const PENDING_CLASSIFICATION = new Set([
     // 14 on 2026-10-31: borderlayout, splitlayout and tabbedpanel classified (readiness step 4 L1, ADR-239).
     // 9 on 2026-10-31: anchorlayout, boxlayout, cardlayout, flexgridlayout and layerlayout classified (readiness
     // step 4 L2, ADR-240).
+    // 6 on 2026-10-31: docklayout, flowlayout and gridlayout classified, the last layouts (readiness step 4 L3,
+    // ADR-241).
     "commentoverlay",
-    "docklayout",
     "fileupload",
-    "flowlayout",
     "graphminimap",
-    "gridlayout",
     "helpdrawer",
     "navrail",
     "propertyinspector",

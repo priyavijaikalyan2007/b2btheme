@@ -93,20 +93,35 @@ export interface DockLayoutOptions
     /** Mount target element or CSS selector. Default: document.body. */
     container?: HTMLElement | string;
 
-    /** Top row — spans full width. */
-    toolbar?: DockSlotComponent;
+    /**
+     * Top row — spans full width. A component, or an element, which sizes to its
+     * content (readiness step 4 L3).
+     */
+    toolbar?: DockSlotComponent | HTMLElement;
 
-    /** Left column — between toolbar and bottom panel. */
-    leftSidebar?: DockSlotComponent;
+    /**
+     * Left column — between toolbar and bottom panel. A component, or an element, which sizes to its
+     * content (readiness step 4 L3).
+     */
+    leftSidebar?: DockSlotComponent | HTMLElement;
 
-    /** Right column — between toolbar and bottom panel. */
-    rightSidebar?: DockSlotComponent;
+    /**
+     * Right column — between toolbar and bottom panel. A component, or an element, which sizes to its
+     * content (readiness step 4 L3).
+     */
+    rightSidebar?: DockSlotComponent | HTMLElement;
 
-    /** Bottom row — spans full width, above status bar. */
-    bottomPanel?: DockSlotComponent;
+    /**
+     * Bottom row — spans full width, above status bar. A component, or an element, which sizes to its
+     * content (readiness step 4 L3).
+     */
+    bottomPanel?: DockSlotComponent | HTMLElement;
 
-    /** Very bottom row — spans full width. */
-    statusBar?: DockSlotComponent;
+    /**
+     * Very bottom row — spans full width. A component, or an element, which sizes to its
+     * content (readiness step 4 L3).
+     */
+    statusBar?: DockSlotComponent | HTMLElement;
 
     /** Center cell element or CSS selector. */
     content?: HTMLElement | string;

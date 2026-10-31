@@ -346,3 +346,59 @@ test.describe("Layouts with A2UI children, L2", () =>
             expect(await errors(page)).toEqual([]);
         });
 });
+
+// ============================================================================
+// L3: DockLayout, FlowLayout, GridLayout (ADR-241)
+// ============================================================================
+
+const DOCK = { id: "root", component: "DockLayout", toolbar: "head", statusBar: "badge", content: "field" };
+
+test.describe("Layouts with A2UI children, L3", () =>
+{
+    test("DockLayout: slots and content render their children, inside the adapter's box, not the window (Lit)",
+        async ({ page }) =>
+        {
+            await mount(page, "lit", [DOCK, HEADER, FIELD, BADGE], "outcrop-dock-layout");
+
+            const dock = page.locator(".dock-layout");
+            await expect(dock.getByText("A header child")).toBeVisible();
+            await expect(dock.getByText("A pinned child")).toBeVisible();
+            await expect(dock.locator("a2ui-basic-textfield")).toBeVisible();
+            const [box, host] = await Promise.all([dock.boundingBox(),
+                page.locator("outcrop-dock-layout").boundingBox()]);
+            expect(box!.height).toBeLessThanOrEqual(host!.height + 1);
+            expect(box!.width).toBeLessThanOrEqual(host!.width + 1);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("FlowLayout: children render in order, and one that arrives later joins them (React)", async ({ page }) =>
+    {
+        await mount(page, "react", [{ id: "root", component: "FlowLayout", children: ["head", "badge", "late"] },
+            HEADER, BADGE], "outcrop-flow-layout");
+
+        const flow = page.locator(".flowlayout");
+        await expect(flow.getByText("A header child")).toBeVisible();
+        await expect(flow.getByText("A pinned child")).toBeVisible();
+
+        await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+            { id: "late", component: "Text", text: "A late child" }] } }]);
+
+        await expect(flow.getByText("A late child")).toBeVisible();
+        expect(await flow.innerText()).toMatch(/A header child[\s\S]*A pinned child[\s\S]*A late child/);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("GridLayout: children fill its cells, and a change to columns keeps them (ADR-241)", async ({ page }) =>
+    {
+        const grid = { id: "root", component: "GridLayout", columns: 2, children: ["head", "field", "badge"] };
+        await mount(page, "lit", [grid, HEADER, FIELD, BADGE], "outcrop-grid-layout");
+        await expect(page.locator(".gridlayout a2ui-basic-textfield")).toBeVisible();
+        await mark(page, "a2ui-basic-textfield");
+
+        await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [{ ...grid, columns: 3 }] } }]);
+
+        await expect(page.locator(".gridlayout")).toHaveCSS("grid-template-columns", /^\S+ \S+ \S+$/);
+        await expect(page.locator("a2ui-basic-textfield[data-kept='yes']")).toHaveCount(1);
+        expect(await errors(page)).toEqual([]);
+    });
+});

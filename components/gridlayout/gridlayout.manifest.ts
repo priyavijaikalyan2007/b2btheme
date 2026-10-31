@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `display` conformance (readiness step 4 L3, ADR-241): its
+ * children are A2UI components, one per cell, in order. No gesture changes
+ * it, so it has no channel and no state.
  */
 export const GRIDLAYOUT_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +32,29 @@ export const GRIDLAYOUT_MANIFEST: CapabilityManifest =
     icon: "bi-grid-3x3",
     category: "layout",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Show components in equal cells, a set number of columns or as many as fit (columns \"auto\"), "
+            + "optionally square, such as a gallery; give the children as a list of component ids.",
+        avoidWhen: "For cells of different sizes or spans use FlexGridLayout; for items that wrap at their own width "
+            + "use FlowLayout.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, ADR-241).
+    protocol: {
+        children: { children: "many" },
+        hostOnly: {
+            id: "Every A2UI component already has an id of its own, so this option cannot be set separately.",
+            onLayoutChange: "Fires when the columns are recalculated or the host adds or removes a child; none of "
+                + "that is information for an agent.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6464, mountCost: "trivial", holdsResources: false },

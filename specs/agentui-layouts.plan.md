@@ -61,6 +61,13 @@ Tasks:
 - [x] **T2 manifests:** the five, each with a closed override; CardLayout's additive `on()`, `setData()`, partial `setState()`; tests.
 - [x] **T3 browser tests and records.**
 
-## L3
+## L3: DockLayout, FlowLayout, GridLayout (ADR-241), done 2026-10-31
 
-Not started: DockLayout, FlowLayout, GridLayout (spec §4).
+Child paths, checked against each options type: FlowLayout and GridLayout `children` ("many", a list of elements); DockLayout `toolbar`, `leftSidebar`, `rightSidebar`, `bottomPanel`, `statusBar` and `content` ("one" each).
+
+Decisions:
+
+- **DockLayout joins** (user, 2026-10-31). Its slots were typed `DockSlotComponent`, a handle, though the runtime already mounts a plain element there, sized to its content; the type widens additively to `DockSlotComponent | HTMLElement`. `content` is a component id only over A2UI (its string arm is a CSS selector). `protocol.fixed: { height: "100%", width: "100%" }` makes it fill the adapter's box, not the window; `containerAs: "element"`, since a string container is a selector. It is `display`: a slot's collapse and resize come from a docked component's handle, which an agent's child is not.
+- **FlowLayout and GridLayout are `display`**, the first top-level "many" slots.
+
+All twelve layouts are in the catalog; step 4's layout work is done.

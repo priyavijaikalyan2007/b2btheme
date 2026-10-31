@@ -89,6 +89,10 @@ direction: "horizontal", gap: 8
 | `getState()` | `FlowLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
 
+## Over A2UI
+
+FlowLayout is in the A2UI catalog (ADR-241). `children` is a list of A2UI component ids, rendered in order; a child that arrives later takes its place. A change to the options rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
