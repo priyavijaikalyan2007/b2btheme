@@ -205,7 +205,12 @@ export interface CardLayoutHandle
     previous(): void;
     getCardCount(): number;
     getState(): CardLayoutState;
-    setState(state: CardLayoutState): void;
+    /** Shows state.activeKey's card when present; cardCount is reported, not restored. */
+    setState(state: Partial<CardLayoutState>): void;
+    /** CardLayout emits no channels (readiness step 4 L2); the handler is never called. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** CardLayout has no data slots: its cards are an option (readiness step 4 L2). */
+    setData(slot: string, value: unknown): void;
 }
 
 export class CardLayout implements CardLayoutHandle
@@ -393,13 +398,28 @@ export class CardLayout implements CardLayoutHandle
         };
     }
 
-    /** Restores state from a snapshot. */
-    public setState(state: CardLayoutState): void
+    /** Shows state.activeKey's card when present; cardCount is reported, not restored. */
+    public setState(state: Partial<CardLayoutState>): void
     {
         if (state.activeKey && state.activeKey !== this.activeKey)
         {
             this.setActiveCard(state.activeKey);
         }
+    }
+
+    /** CardLayout emits no channels (readiness step 4 L2, ADR-240); the handler is never called. */
+    public on(channel: string, _handler: (payload: unknown) => void): () => void
+    {
+        logWarn(`on("${channel}"): CardLayout emits no channels, so this handler will never be called; read the `
+            + "active card through getActiveCard() or getState().");
+
+        return () => undefined;
+    }
+
+    /** CardLayout has no data slots: its cards are an option (readiness step 4 L2, ADR-240). */
+    public setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): CardLayout has no data slots. Its cards are an option.`);
     }
 
     // NO `contained` FIELD AND NO `setContained`, DELIBERATELY. DEBT-LAY-1

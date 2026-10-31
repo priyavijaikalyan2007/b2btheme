@@ -261,3 +261,88 @@ test.describe("Layouts with A2UI children, L1", () =>
             expect(await errors(page)).toEqual([]);
         });
 });
+
+// ============================================================================
+// L2: AnchorLayout, BoxLayout, CardLayout, FlexGridLayout, LayerLayout (ADR-240)
+// ============================================================================
+
+const BADGE = { id: "badge", component: "Text", text: "A pinned child" };
+
+/** Mounts `root` with HEADER, FIELD and BADGE, and checks every text child it names renders inside `selector`. */
+async function rendersChildren(page: Page, renderer: "lit" | "react", root: Record<string, unknown>, tag: string,
+    selector: string, texts: string[]): Promise<void>
+{
+    await mount(page, renderer, [root, HEADER, FIELD, BADGE], tag);
+
+    for (const text of texts) { await expect(page.locator(selector).getByText(text)).toBeVisible(); }
+    expect(await errors(page)).toEqual([]);
+}
+
+const BOX = { id: "root", component: "BoxLayout", direction: "horizontal",
+    children: [{ child: "head" }, { child: "field", flex: 1 }] };
+const CARDS = { id: "root", component: "CardLayout", activeKey: "one",
+    cards: [{ key: "one", child: "head" }, { key: "two", child: "field" }] };
+
+test.describe("Layouts with A2UI children, L2", () =>
+{
+    test("AnchorLayout: anchored children render inside the layout", async ({ page }) =>
+    {
+        await rendersChildren(page, "lit", { id: "root", component: "AnchorLayout", children: [
+            { child: "head", anchorTop: 0, anchorLeft: 0 }, { child: "badge", anchorBottom: 8, anchorRight: 8 }] },
+        "outcrop-anchor-layout", ".anchorlayout", ["A header child", "A pinned child"]);
+    });
+
+    test("FlexGridLayout: cells render their children in the grid", async ({ page }) =>
+    {
+        await rendersChildren(page, "react", { id: "root", component: "FlexGridLayout", columns: ["1fr", "1fr"],
+            cells: [{ child: "head", column: 0, row: 0 }, { child: "badge", column: 1, row: 0 }] },
+        "outcrop-flex-grid-layout", ".flexgridlayout", ["A header child", "A pinned child"]);
+    });
+
+    test("LayerLayout: layers stack their children", async ({ page }) =>
+    {
+        await rendersChildren(page, "lit", { id: "root", component: "LayerLayout",
+            layers: [{ child: "head", fill: true }, { child: "badge", align: "bottom-right" }] },
+        "outcrop-layer-layout", ".layerlayout", ["A header child", "A pinned child"]);
+    });
+
+    test("BoxLayout: an agent's direction change sticks after the rebuild, and the children are kept (ADR-240)",
+        async ({ page }) =>
+        {
+            await mount(page, "lit", [BOX, HEADER, FIELD], "outcrop-box-layout");
+            await expect(page.locator(".boxlayout a2ui-basic-textfield")).toBeVisible();
+            await mark(page, "a2ui-basic-textfield");
+
+            await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+                { ...BOX, direction: "vertical" }] } }]);
+
+            await expect(page.locator(".boxlayout")).toHaveCSS("flex-direction", "column");
+            await expect(page.locator("a2ui-basic-textfield[data-kept='yes']")).toHaveCount(1);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("CardLayout: an agent's activeKey switches cards in place, and a rebuild keeps the user's card (React)",
+        async ({ page }) =>
+        {
+            await mount(page, "react", [CARDS, HEADER, FIELD], "outcrop-card-layout");
+            const layout = page.locator(".cardlayout");
+            await expect(layout.getByText("A header child")).toBeVisible();
+
+            await mark(page, ".cardlayout");
+            await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+                { ...CARDS, activeKey: "two" }] } }]);
+            await expect(layout.locator("a2ui-basic-textfield")).toBeVisible();
+            await expect(page.locator(".cardlayout[data-kept='yes']")).toHaveCount(1);
+
+            // The user arrows back to the first card; adding a card rebuilds and keeps it shown.
+            await layout.focus();
+            await page.keyboard.press("ArrowLeft");
+            await expect(layout.getByText("A header child")).toBeVisible();
+            await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+                { ...CARDS, activeKey: "two", cards: [...CARDS.cards, { key: "three", child: "badge" }] },
+                BADGE] } }]);
+            await expect(page.locator(".cardlayout[data-kept='yes']")).toHaveCount(0);
+            await expect(page.locator(".cardlayout").getByText("A header child")).toBeVisible();
+            expect(await errors(page)).toEqual([]);
+        });
+});
