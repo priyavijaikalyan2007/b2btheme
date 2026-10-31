@@ -148,11 +148,21 @@ function partition(classified, input, errors)
         const excused = pending ? violations.filter((v) => PENDING_EXCUSABLE_CODES.has(v.code)) : [];
 
         errors.push(...violations.filter((v) => !excused.includes(v)).map((v) => v.message));
-        if (pending && excused.length === 0) { errors.push(staleEntry(c.manifest.name)); }
+        if (pending && excused.length === 0)
+        {
+            errors.push(staleEntry(c.manifest.name));
+        }
 
-        if (violations.length === 0) { included.push(c); continue; }
+        if (violations.length === 0)
+        {
+            included.push(c);
+            continue;
+        }
 
-        if (pending) { excluded.push({ name: c.manifest.name, violations: violations.map((v) => v.message) }); }
+        if (pending)
+        {
+            excluded.push({ name: c.manifest.name, violations: violations.map((v) => v.message) });
+        }
     }
 
     return { included, excluded };
@@ -187,7 +197,10 @@ function emitAndCheck(included, input, errors)
     for (const c of included)
     {
         const schema = schemaFor(c, results.get(c.manifest.name), errors);
-        if (schema) { out.set(c.manifest.name, schema); }
+        if (schema)
+        {
+            out.set(c.manifest.name, schema);
+        }
     }
 
     return out;
@@ -212,7 +225,11 @@ function schemaFor(c, result, errors)
 {
     const name = c.manifest.name;
 
-    if (result.error) { errors.push(`${name}: typia could not describe the options: ${result.error}`); return null; }
+    if (result.error)
+    {
+        errors.push(`${name}: typia could not describe the options: ${result.error}`);
+        return null;
+    }
 
     const stripped = stripHostOnlyPaths(normaliseTypiaUnit(result.unit), c);
     const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {}, c.surface.dataProps);
@@ -226,10 +243,79 @@ function schemaFor(c, result, errors)
         ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}).map((e) =>
             `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or the options type.`),
         ...fixedProblems(schema, c),
+        ...overrideProblems(c),
     ];
 
     errors.push(...problems);
     return problems.length === 0 ? withoutFixed(schema, c) : null;
+}
+
+/** The keywords that constrain a schema node; one without any accepts anything. */
+const CONSTRAINING = ["type", "const", "enum", "oneOf", "anyOf", "allOf", "$ref"];
+
+/**
+ * The places a protocol.schemas override is unconstrained or open (#27). The
+ * TOO_BROAD rule keeps the catalog from publishing a bag an agent can fill
+ * with anything, and an override replaced the generated schema unchecked, so
+ * `{}` or `{ type: "object" }` published exactly that. A typed record
+ * (`additionalProperties: { type: "string" }`) is constrained, and allowed.
+ */
+function overrideProblems(c)
+{
+    return Object.entries(c.manifest.protocol?.schemas ?? {}).flatMap(([option, schema]) =>
+        openPlaces(schema, option).map((place) => `${c.manifest.name}.${option}: the protocol.schemas override `
+            + `${place}, so the catalog would publish a bag an agent can fill with anything. Close it in `
+            + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`));
+}
+
+/** Each unconstrained or open node under `node`, described by its path from the option. */
+function openPlaces(node, at)
+{
+    if (node === null || typeof node !== "object" || Array.isArray(node))
+    {
+        return [`has a non-schema value at ${at}`];
+    }
+
+    const places = [];
+
+    if (!CONSTRAINING.some((k) => k in node))
+    {
+        places.push(`leaves ${at} unconstrained`);
+    }
+
+    if (node.type === "object" && node.additionalProperties !== false
+        && (typeof node.additionalProperties !== "object" || node.additionalProperties === null))
+    {
+        places.push(`leaves the object at ${at} open (give it additionalProperties: false, or a schema for its `
+            + "values)");
+    }
+
+    if (node.type === "array" && node.items === undefined)
+    {
+        places.push(`leaves the items of the array at ${at} unconstrained`);
+    }
+
+    for (const [key, child] of Object.entries(node.properties ?? {}))
+    {
+        places.push(...openPlaces(child, `${at}.${key}`));
+    }
+
+    if (typeof node.additionalProperties === "object" && node.additionalProperties !== null)
+    {
+        places.push(...openPlaces(node.additionalProperties, `${at}[]`));
+    }
+
+    if (node.items !== undefined)
+    {
+        places.push(...openPlaces(node.items, `${at}[]`));
+    }
+
+    for (const key of ["oneOf", "anyOf", "allOf"])
+    {
+        (node[key] ?? []).forEach((arm, i) => { places.push(...openPlaces(arm, `${at}.${key}[${i}]`)); });
+    }
+
+    return places;
 }
 
 /**
@@ -256,7 +342,10 @@ function withoutFixed(schema, c)
 {
     const fixed = new Set(Object.keys(c.surface.fixed ?? {}));
 
-    if (fixed.size === 0) { return schema; }
+    if (fixed.size === 0)
+    {
+        return schema;
+    }
 
     const properties = Object.fromEntries(Object.entries(schema.properties).filter(([k]) => !fixed.has(k)));
     const required = (schema.required ?? []).filter((k) => !fixed.has(k));
@@ -282,14 +371,20 @@ function stripHostOnlyPaths(schema, c)
     // not described), which is not an error. A key that IS a hazard path keeps its published schema (ADR-230).
     const parents = keys.filter((k) => covers(k) && !hazards.includes(k));
 
-    if (nested.length === 0 && parents.length === 0) { return { schema, problems: [] }; }
+    if (nested.length === 0 && parents.length === 0)
+    {
+        return { schema, problems: [] };
+    }
 
     const out = structuredClone(schema);
     const problems = nested.filter((k) => !removePath(out, k)).map((k) => `${c.manifest.name}.${k}: protocol.hostOnly `
         + "names nothing in the generated schema, so nothing was removed. Correct the path in "
         + `components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
 
-    for (const k of parents) { removePath(out, k); }
+    for (const k of parents)
+    {
+        removePath(out, k);
+    }
 
     return { schema: pruneDefs(out), problems };
 }
@@ -312,7 +407,10 @@ function removePath(schema, path)
     for (const o of owners)
     {
         delete o.properties[field];
-        if (Array.isArray(o.required)) { o.required = o.required.filter((r) => r !== field); }
+        if (Array.isArray(o.required))
+        {
+            o.required = o.required.filter((r) => r !== field);
+        }
     }
 
     return owners.length > 0;
@@ -355,7 +453,10 @@ function checkBaseline(catalog, input, errors)
 
     if (majors.length === 0)
     {
-        if (!input.writeBaseline) { errors.push("No published catalog baseline exists in specs/agentui/published/. Run `npm run build:agentui -- --write-baseline` and commit it."); }
+        if (!input.writeBaseline)
+        {
+            errors.push("No published catalog baseline exists in specs/agentui/published/. Run `npm run build:agentui -- --write-baseline` and commit it.");
+        }
         return;
     }
 
@@ -363,13 +464,19 @@ function checkBaseline(catalog, input, errors)
     const diff = diffCatalogs(input.baselines.get(previousMajor), catalog);
     const unwritten = versionProblem(diff, previousMajor, input.major) ?? unwrittenBaselineProblem(catalog, input, previousMajor, diff);
 
-    if (unwritten) { errors.push(unwritten); }
+    if (unwritten)
+    {
+        errors.push(unwritten);
+    }
 }
 
 /** The error for a baseline that must be (re)written and committed, or null. */
 function unwrittenBaselineProblem(catalog, input, previousMajor, diff)
 {
-    if (input.writeBaseline) { return null; }
+    if (input.writeBaseline)
+    {
+        return null;
+    }
 
     if (input.major > previousMajor)
     {
@@ -412,7 +519,10 @@ function outputsFor(ready, schemas, { catalog, lean }, excluded, input)
 
     for (const [major, older] of input.baselines)
     {
-        if (major < input.major) { outputs.set(`a2ui/catalog/v${major}.json`, older); }
+        if (major < input.major)
+        {
+            outputs.set(`a2ui/catalog/v${major}.json`, older);
+        }
     }
 
     outputs.set("mcp/renderer.meta.json", rendererMeta());
@@ -499,7 +609,10 @@ export function writeOutputs(outputs, distDir, fsImpl = fs)
     finally
     {
         // A failed rollback leaves the previous roots in staging; deleting it would destroy them.
-        if (!stranded) { fsImpl.rmSync(staging, { recursive: true, force: true }); }
+        if (!stranded)
+        {
+            fsImpl.rmSync(staging, { recursive: true, force: true });
+        }
     }
 }
 
@@ -547,8 +660,14 @@ function rollback({ staging, distDir, parked, placed, fsImpl })
 {
     try
     {
-        for (const t of placed) { fsImpl.renameSync(path.join(distDir, t), path.join(staging, t)); }
-        for (const t of parked) { fsImpl.renameSync(path.join(staging, ".old", t), path.join(distDir, t)); }
+        for (const t of placed)
+        {
+            fsImpl.renameSync(path.join(distDir, t), path.join(staging, t));
+        }
+        for (const t of parked)
+        {
+            fsImpl.renameSync(path.join(staging, ".old", t), path.join(distDir, t));
+        }
     }
     catch (err)
     {
@@ -602,7 +721,10 @@ function libraryAssets(repoRoot)
 /** Committed baselines, keyed by major. */
 function loadBaselines()
 {
-    if (!fs.existsSync(PUBLISHED)) { return new Map(); }
+    if (!fs.existsSync(PUBLISHED))
+    {
+        return new Map();
+    }
 
     return new Map(fs.readdirSync(PUBLISHED).flatMap((f) =>
     {
@@ -623,7 +745,10 @@ export function measureClassification(repoRoot = REPO)
     const errors = [];
     const classified = classifyFleet(input, errors);
 
-    if (errors.length > 0) { throw new Error(`Classification failed:\n  ${errors.join("\n  ")}`); }
+    if (errors.length > 0)
+    {
+        throw new Error(`Classification failed:\n  ${errors.join("\n  ")}`);
+    }
 
     const counts = countsFor(classified, [], []);
 
@@ -637,7 +762,15 @@ async function main(argv)
     const writeBaseline = argv.includes("--write-baseline");
     const input = repoInputs(REPO, writeBaseline);
 
-    if (argv.includes("--measure")) { return measure(input); }
+    if (argv.includes("--measure"))
+    {
+        // It printed its errors and exited 0 (#29); nothing gated on it, but a failed measure must say so.
+        if (measure(input).length > 0)
+        {
+            process.exitCode = 1;
+        }
+        return;
+    }
 
     const result = runPipeline(input);
 
@@ -696,6 +829,8 @@ function addPromptSizes(result, input)
  * it cannot (each fails the build whatever the list says). Applies exactly
  * the filters partition() applies, so value-below-field on a BELOW_REQUIRED
  * component appears in neither.
+ *
+ * @returns The classification errors; the CLI exits 1 when there are any.
  */
 function measure(input)
 {
@@ -709,6 +844,8 @@ function measure(input)
 
     console.log(JSON.stringify({ date: new Date().toISOString().slice(0, 10), errors,
         counts: countsFor(classified, [], []), failing, notExcusable }, null, 4));
+
+    return errors;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])

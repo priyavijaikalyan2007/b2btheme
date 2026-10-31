@@ -122,7 +122,8 @@ function resolveEvents(ctx, twoWayValue)
                 violate(ctx, c.legacyOption, VIOLATION.DOUBLE_CLASSIFIED,
                     `is named by emits[${c.name}].legacyOption but is ${m.cls}-typed; only a function can be an event. Correct the legacyOption, or the member's type.`);
                 ctx.violated.add(c.legacyOption);
-            } else
+            }
+            else
             {
                 option = c.legacyOption;
             }
@@ -235,7 +236,10 @@ function resolveMember(ctx, m)
 {
     const declared = ctx.protocol.hostOnly?.[m.name] !== undefined;
 
-    if (declared && m.mixedArms.length === 0) { return []; }
+    if (declared && m.mixedArms.length === 0)
+    {
+        return [];
+    }
 
     if (m.cls === MEMBER_CLASS.FUNCTION || m.cls === MEMBER_CLASS.ELEMENT)
     {
@@ -388,7 +392,10 @@ function checkChange(ctx, change, hasPair, twoWayValue)
         return;
     }
 
-    if (!twoWayValue) { return; }
+    if (!twoWayValue)
+    {
+        return;
+    }
 
     const fit = ctx.byName.get("onChange").valueFit;
 
@@ -400,7 +407,10 @@ function checkChange(ctx, change, hasPair, twoWayValue)
 
     const problem = changeProblem(change, fit);
 
-    if (problem) { violate(ctx, "onChange", VIOLATION.CHANGE_MISMATCH, `${problem} ${CHANGE_FORMS}`); }
+    if (problem)
+    {
+        violate(ctx, "onChange", VIOLATION.CHANGE_MISMATCH, `${problem} ${CHANGE_FORMS}`);
+    }
 }
 
 /** Why the declared mapping does not fit, or null when it does. */
@@ -420,7 +430,10 @@ function changeProblem(change, fit)
             : `has no property "${change.valueFrom}" assignable to value on every arm of ${fit.param}${fits}.`;
     }
 
-    if (!fit.withoutNull) { return `passes ${fit.param}, which is not assignable to value even without null.`; }
+    if (!fit.withoutNull)
+    {
+        return `passes ${fit.param}, which is not assignable to value even without null.`;
+    }
 
     return fit.setValueAcceptsNull ? null : "is declared { cleared: null }, but the handle's setValue does not "
         + "accept null, so an agent that clears the value could not apply it.";

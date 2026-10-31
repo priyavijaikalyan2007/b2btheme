@@ -38,6 +38,7 @@
     "test:e2e:dynamicui": "npx playwright test tests/dynamic-ui.spec.ts tests/dynamic-ui-visual.spec.ts tests/placement.spec.ts",
     "test:e2e:headed": "npx playwright test --headed",
     "check:a2ui": "node scripts/agentui/check-a2ui.mjs",
+    "check:baselines": "node scripts/agentui/check-baseline-anchor.mjs",
     "build:demo:a2ui": "node agentdemo/build.mjs",
     "demo:a2ui": "node agentdemo/build.mjs && node agentdemo/serve.mjs",
     "demo:a2ui:record": "npx playwright test -c agentdemo/record/record.config.ts && node agentdemo/record/encode.mjs",
