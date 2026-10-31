@@ -925,7 +925,8 @@ export const BASELINES = {
     // (readiness step 3): three pending members move from nested hazards to unclassified host code.
     // ADR-237 (2026-10-30): 164 -> 143, FileExplorer classified (readiness step 3, #21).
     // ADR-238 (2026-10-31): 143 -> 142, StackLayout classified (readiness step 4 L0, #24).
-    unclassifiedOptions: 142,
+    // ADR-239 (2026-10-31): 142 -> 122, BorderLayout, SplitLayout and TabbedPanel classified (readiness step 4 L1).
+    unclassifiedOptions: 122,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -1000,7 +1001,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 20 -> 19, PermissionMatrix classified (readiness step 3, #23).
     // ADR-237 (2026-10-30): 19 -> 18, FileExplorer classified (readiness step 3, #21).
     // ADR-238 (2026-10-31): 18 -> 17, StackLayout classified (readiness step 4 L0, #24).
-    componentsPendingClassification: 17,
+    // ADR-239 (2026-10-31): 17 -> 14, BorderLayout, SplitLayout and TabbedPanel classified (readiness step 4 L1).
+    componentsPendingClassification: 14,
 };
 
 /*
@@ -1114,11 +1116,12 @@ export const FLOORS = {
     // ADR-237 (2026-10-30): 164 and 31 once data reaching required host code is classed as host code (step 3).
     // ADR-237 (2026-10-30): 143, 16, 1 and 18 once FileExplorer was classified (readiness step 3, #21).
     // ADR-238 (2026-10-31): 142, 0 and 17 once StackLayout was classified (readiness step 4 L0, #24).
-    unclassifiedOptions: 142,
+    // ADR-239 (2026-10-31): 122 and 14 once BorderLayout, SplitLayout and TabbedPanel were classified (step 4 L1).
+    unclassifiedOptions: 122,
     protocolPropsMissingJsdoc: 16,
     changeMismatches: 0,
     componentsBelowRequiredLevel: 0,
-    componentsPendingClassification: 17,
+    componentsPendingClassification: 14,
 };
 
 /**

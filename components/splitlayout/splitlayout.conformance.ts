@@ -13,13 +13,44 @@
 
 // @semantic-marker splitlayout-conformance-glue
 
+/** The slice of the handle the trigger drives. */
+interface SplitLayoutLike
+{
+    getElement(): HTMLElement | null;
+}
+
+/** Presses a key on the first divider: ArrowRight resizes, Home collapses the first (collapsible) pane. */
+function pressOnDivider(handle: Record<string, unknown>, key: string): boolean
+{
+    const root = (handle as unknown as SplitLayoutLike).getElement();
+    const divider = root?.querySelector<HTMLElement>(".splitlayout-divider");
+
+    divider?.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+
+    return divider != null;
+}
+
 export const CONFORMANCE_GLUE =
 {
     options: {
         orientation: "horizontal",
         panes: [
-            { id: "fixture-a", size: 50 },
-            { id: "fixture-b", size: 50 },
+            { id: "fixture-a", initialSize: "50%", collapsible: true, content: document.createElement("div") },
+            { id: "fixture-b", initialSize: "50%", content: document.createElement("div") },
         ],
+    },
+
+    // Two panes as an agent writes them: content is a component id, which the adapter renders (ADR-239).
+    eventProps: { orientation: "horizontal", panes: [{ id: "fixture-a", collapsible: true, content: "first-child" },
+        { id: "fixture-b", content: "second-child" }] },
+
+    /** Resizes with ArrowRight, or collapses the first pane with Home, on the first divider (readiness step 4 L1). */
+    trigger: (
+        channel: string,
+        handle: Record<string, unknown>): boolean =>
+    {
+        if (channel === "resize") { return pressOnDivider(handle, "ArrowRight"); }
+
+        return channel === "collapse" && pressOnDivider(handle, "Home");
     },
 };

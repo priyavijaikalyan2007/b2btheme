@@ -366,7 +366,20 @@ export interface TabbedPanelHandle
     removeResizeListener(fn: Function): void;
     addCollapseListener(fn: (collapsed: boolean, p: TabbedPanel) => void): void;
     removeCollapseListener(fn: Function): void;
+    /** Subscribes to "tabClose" ({ tabId }), "collapse" ({ collapsed }) or "resize" ({ width, height }). */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** The active tab, whether the panel is collapsed, and its height in pixels. */
+    getState(): Record<string, unknown>;
+    /** Restores state captured by getState(), or any part of it, firing no callback or channel. */
+    setState(state: Record<string, unknown>): void;
+    /** TabbedPanel has no data slots: its tabs are an option (readiness step 4 L1). */
+    setData(slot: string, value: unknown): void;
 }
+
+/** The surface channels (readiness step 4 L1). */
+type TabbedChannel = "tabClose" | "collapse" | "resize";
+
+const TABBED_CHANNELS: readonly TabbedChannel[] = ["tabClose", "collapse", "resize"];
 
 export class TabbedPanel implements TabbedPanelHandle
 {
@@ -401,6 +414,12 @@ export class TabbedPanel implements TabbedPanelHandle
     private visible = false;
     private contained = false;
     private activeTabId: string | null = null;
+
+    // Surface (readiness step 4 L1): each channel hears after its callback; setState silences both. The DockLayout
+    // listeners are layout plumbing, not callbacks, so they still hear a restore.
+    private readonly handlers: Record<TabbedChannel, Set<(payload: unknown) => void>> =
+        { tabClose: new Set(), collapse: new Set(), resize: new Set() };
+    private restoring = false;
 
     // External listeners (for DockLayout integration)
     private resizeListeners: Array<(w: number, h: number, p: TabbedPanel) => void> = [];
@@ -587,6 +606,7 @@ export class TabbedPanel implements TabbedPanelHandle
 
         // After the veto, so a cancelled destroy stays destroyable.
         this.destroyed = true;
+        TABBED_CHANNELS.forEach((c) => this.handlers[c].clear());
 
         this.hide();
 
@@ -700,7 +720,7 @@ export class TabbedPanel implements TabbedPanelHandle
         this.applyCollapsedState();
         this.updateCssCustomProperties();
 
-        if (this.options.onCollapse)
+        if (this.options.onCollapse && !this.restoring)
         {
             this.options.onCollapse(true, this);
         }
@@ -709,6 +729,8 @@ export class TabbedPanel implements TabbedPanelHandle
         {
             fn(true, this);
         }
+
+        this.emit("collapse", { collapsed: true });
 
         logDebug("Collapsed:", this.instanceId);
     }
@@ -725,7 +747,7 @@ export class TabbedPanel implements TabbedPanelHandle
         this.applyExpandedState();
         this.updateCssCustomProperties();
 
-        if (this.options.onCollapse)
+        if (this.options.onCollapse && !this.restoring)
         {
             this.options.onCollapse(false, this);
         }
@@ -734,6 +756,8 @@ export class TabbedPanel implements TabbedPanelHandle
         {
             fn(false, this);
         }
+
+        this.emit("collapse", { collapsed: false });
 
         logDebug("Expanded:", this.instanceId);
     }
@@ -822,6 +846,7 @@ export class TabbedPanel implements TabbedPanelHandle
             this.selectAdjacentTab(idx);
         }
 
+        this.emit("tabClose", { tabId });
         logDebug("Tab removed:", tabId);
     }
 
@@ -1045,6 +1070,58 @@ export class TabbedPanel implements TabbedPanelHandle
         );
         this.applyPositionStyles();
         this.updateCssCustomProperties();
+    }
+
+    // ========================================================================
+    // PUBLIC — SURFACE (readiness step 4 L1, ADR-239)
+    // ========================================================================
+
+    /** Subscribes to "tabClose" ({ tabId }), "collapse" ({ collapsed }) or "resize" ({ width, height }). */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (!TABBED_CHANNELS.includes(channel as TabbedChannel))
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are ${
+                TABBED_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
+        }
+
+        const set = this.handlers[channel as TabbedChannel];
+        set.add(handler);
+
+        return () => { set.delete(handler); };
+    }
+
+    /** The active tab, whether the panel is collapsed, and its height in pixels. */
+    public getState(): Record<string, unknown>
+    {
+        return { activeTabId: this.activeTabId, collapsed: this.collapsed, height: this.currentHeight };
+    }
+
+    /** Restores state captured by getState(), or any part of it, firing no callback or channel. */
+    public setState(state: Record<string, unknown>): void
+    {
+        this.restoring = true;
+
+        try
+        {
+            if (typeof state.height === "number") { this.setHeight(state.height); }
+            if (state.collapsed === true) { this.collapse(); }
+            if (state.collapsed === false) { this.expand(); }
+            if (typeof state.activeTabId === "string" && this.tabs.some((t) => t.id === state.activeTabId))
+            {
+                this.selectTab(state.activeTabId);
+            }
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** TabbedPanel has no data slots: its tabs are an option (readiness step 4 L1). */
+    public setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): TabbedPanel has no data slots. Its tabs are an option.`);
     }
 
     /** Sets the panel width programmatically (floating only). */
@@ -1818,7 +1895,7 @@ export class TabbedPanel implements TabbedPanelHandle
             panel.classList.add("tabbedpanel-panel-active");
         }
 
-        if (this.options.onTabSelect)
+        if (this.options.onTabSelect && !this.restoring)
         {
             this.options.onTabSelect(tabId, this);
         }
@@ -1845,7 +1922,7 @@ export class TabbedPanel implements TabbedPanelHandle
             panel.classList.remove("tabbedpanel-panel-active");
         }
 
-        if (this.options.onTabDeselect)
+        if (this.options.onTabDeselect && !this.restoring)
         {
             this.options.onTabDeselect(tabId, this);
         }
@@ -2652,6 +2729,8 @@ export class TabbedPanel implements TabbedPanelHandle
         {
             fn(this.currentWidth, this.currentHeight, this);
         }
+
+        this.emit("resize", { width: this.currentWidth, height: this.currentHeight });
     }
 
     /** Handles keyboard arrow keys for accessible resize. */
@@ -2749,6 +2828,24 @@ export class TabbedPanel implements TabbedPanelHandle
     // ========================================================================
 
     /** Fires the onModeChange callback if configured. */
+    /** Calls every handler on a channel unless restoring, isolating each so one throw cannot starve the rest. */
+    private emit(channel: TabbedChannel, payload: unknown): void
+    {
+        if (this.restoring) { return; }
+
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
+        }
+    }
+
     private fireOnModeChange(mode: TabbedPanelMode): void
     {
         if (this.options.onModeChange)

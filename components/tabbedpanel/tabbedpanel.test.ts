@@ -412,3 +412,121 @@ describe("TabbedPanel destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// SURFACE — on(), getState/setState, setData (readiness step 4 L1, ADR-239)
+// ============================================================================
+
+describe("TabbedPanel surface", () =>
+{
+    const q = <T extends HTMLElement>(sel: string) => container.querySelector<T>(sel)!;
+
+    test("tabClose_ReachesTheChannelAfterOnTabClose", () =>
+    {
+        const order: string[] = [];
+        const panel = createTabbedPanel(makeOptions({ onTabClose: () => { order.push("callback"); } }), container);
+        panel.on("tabClose", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        q(".tabbedpanel-tab-close").click();
+
+        expect(order).toEqual(["callback", 'channel:{"tabId":"tab-debug"}']);
+        panel.destroy();
+    });
+
+    test("tabClose_VetoedByOnTabClose_ReachesNoChannel", () =>
+    {
+        const panel = createTabbedPanel(makeOptions({ onTabClose: () => false }), container);
+        const heard = vi.fn();
+        panel.on("tabClose", heard);
+
+        q(".tabbedpanel-tab-close").click();
+
+        expect(heard).not.toHaveBeenCalled();
+        expect(panel.getTabCount()).toBe(3);
+        panel.destroy();
+    });
+
+    test("collapse_AndResize_ReachTheirChannelsAfterTheirCallbacks", () =>
+    {
+        const order: string[] = [];
+        const panel = createTabbedPanel(makeOptions({ showTitleBar: false,
+            onCollapse: (c) => order.push(`onCollapse:${c}`), onResize: (_w, h) => order.push(`onResize:${h}`) }),
+            container);
+        panel.on("collapse", (p) => order.push(`collapse:${JSON.stringify(p)}`));
+        panel.on("resize", (p) => order.push(`resize:${(p as { height: number }).height}`));
+
+        q(".tabbedpanel-resize-handle-v")
+            .dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+        q(".tabbedpanel-tabbar .tabbedpanel-collapse-btn").click();
+
+        expect(order).toEqual(["onResize:260", "resize:260", "onCollapse:true", 'collapse:{"collapsed":true}']);
+        panel.destroy();
+    });
+
+    test("on_AnUnknownChannelThrows_AndTabSelectIsViewStateNotAChannel", () =>
+    {
+        const panel = createTabbedPanel(makeOptions(), container);
+
+        expect(() => panel.on("tabSelect", () => undefined)).toThrow(/"tabClose", "collapse", "resize"/);
+        panel.destroy();
+    });
+
+    test("getState_IsTheActiveTabCollapsedAndHeight_AndSetStateRoundTrips", () =>
+    {
+        const panel = createTabbedPanel(makeOptions(), container);
+        panel.selectTab("tab-errors");
+        panel.setHeight(300);
+        panel.collapse();
+        const state = panel.getState();
+        panel.destroy();
+
+        expect(state).toEqual({ activeTabId: "tab-errors", collapsed: true, height: 300 });
+
+        const again = createTabbedPanel(makeOptions(), container);
+        again.setState(JSON.parse(JSON.stringify(state)));
+
+        expect(again.getState()).toEqual(state);
+        again.destroy();
+    });
+
+    test("setState_FiresNoCallbackOrChannel_ButDockLayoutListenersStillHear", () =>
+    {
+        const onTabSelect = vi.fn();
+        const onTabDeselect = vi.fn();
+        const onCollapse = vi.fn();
+        const panel = createTabbedPanel(makeOptions({ onTabSelect, onTabDeselect, onCollapse }), container);
+        onTabSelect.mockClear();
+        const heard = vi.fn();
+        const listener = vi.fn();
+        panel.on("collapse", heard);
+        panel.addCollapseListener(listener);
+
+        panel.setState({ activeTabId: "tab-errors", collapsed: true });
+
+        expect(panel.getActiveTabId()).toBe("tab-errors");
+        expect(onTabSelect).not.toHaveBeenCalled();
+        expect(onTabDeselect).not.toHaveBeenCalled();
+        expect(onCollapse).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
+        expect(listener).toHaveBeenCalledWith(true, panel);
+        panel.destroy();
+    });
+
+    test("setState_IgnoresATabThatIsGone", () =>
+    {
+        const panel = createTabbedPanel(makeOptions(), container);
+
+        panel.setState({ activeTabId: "closed-earlier" });
+
+        expect(panel.getActiveTabId()).toBe("tab-output");
+        panel.destroy();
+    });
+
+    test("setData_Throws_BecauseTheTabsAreAnOption", () =>
+    {
+        const panel = createTabbedPanel(makeOptions(), container);
+
+        expect(() => panel.setData("tabs", [])).toThrow(/no data slots/);
+        panel.destroy();
+    });
+});

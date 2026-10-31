@@ -1598,6 +1598,10 @@ When a component is passed to a region:
 | `getState()` | `BorderLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore collapsed regions |
 
+### Over A2UI
+
+BorderLayout is in the A2UI catalog (ADR-239). Each region (`north`, `south`, `east`, `west`, `center`) is the id of another A2UI component, which the adapter renders there. A change to a region rebuilds the layout and keeps the other children. Regions collapse only through `collapseRegion()`, so `collapsible` is not available to an agent.
+
 ## BorderLayoutState
 
 ```typescript
@@ -17466,7 +17470,13 @@ A split layout container that divides available space into two or more panes sep
 | `addPane(config, index?)` | `void` | Insert a new pane |
 | `removePane(paneId)` | `void` | Remove a pane (min 2 required) |
 | `getState()` | `SplitLayoutState` | Serialisable snapshot |
-| `setState(state)` | `void` | Restore from snapshot |
+| `setState(state)` | `void` | Restore the orientation, sizes and collapsed panes, or any part of them; fires `onResize` |
+| `on(channel, handler)` | `() => void` | Hear `"resize"` (the sizes) or `"collapse"` (`{ paneId, collapsed }`) after their callbacks; returns the unsubscribe. `setState` does not reach them |
+| `setData(slot, value)` | `void` | Throws: the panes are an option |
+
+### Over A2UI
+
+SplitLayout is in the A2UI catalog (ADR-239). Each pane's `content` is the id of another A2UI component, which the adapter renders in the pane. Dragging a divider sends `onResize` and collapsing a pane sends `onCollapse`. A change to `orientation` flips the layout in place; a change to `panes` rebuilds it and keeps each child and the sizes. `persistKey` is not available to an agent.
 
 ### Convenience Function
 
@@ -18727,6 +18737,19 @@ interface TabDefinition {
 | `getRootElement()` | `HTMLElement` | Root DOM element |
 | `setTitle(title)` | `void` | Update panel title |
 | `getTitle()` | `string` | Resolved title (explicit title > active tab title > `"Panel"`) |
+
+### Surface
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `on(channel, handler)` | `() => void` | Hear `"tabClose"` (`{ tabId }`), `"collapse"` (`{ collapsed }`) or `"resize"` (`{ width, height }`) after their callbacks; returns the unsubscribe |
+| `getState()` | `{ activeTabId, collapsed, height }` | The active tab, whether collapsed, and the height in pixels |
+| `setState(state)` | `void` | Restore any part of `getState()`, firing no callback or channel; a tab that is gone is ignored |
+| `setData(slot, value)` | `void` | Throws: the tabs are an option |
+
+### Over A2UI
+
+TabbedPanel is in the A2UI catalog (ADR-239). It is always contained, docked and without its title bar, so it has no float or close button and stays inside the surface; the floating and docking options are not available to an agent. Each tab's `content` is the id of another A2UI component (for text, a Text component). Closing a tab sends `onTabClose`, collapsing sends `onCollapse` and resizing sends `onResize`. A change to `tabs` rebuilds the panel and keeps each child, the active tab, collapsed state and height.
 
 ### Convenience Functions
 

@@ -34,6 +34,21 @@ export function literalArmPointer(catalogId, name, prop)
 }
 
 /**
+ * The JSON pointer of a top-level child slot (ADR-238, ADR-239): catalog.mjs
+ * publishes it as ComponentId itself, with no binding arms, so there is no
+ * literal arm to point at.
+ *
+ * @param catalogId - The catalog's $id.
+ * @param name      - Catalog component name.
+ * @param prop      - The slot's prop name.
+ * @returns The absolute schema reference.
+ */
+export function childSlotPointer(catalogId, name, prop)
+{
+    return `${catalogId}#/components/${name}/allOf/2/properties/${prop}`;
+}
+
+/**
  * The JSON pointer of a provider's answer schema: catalog.mjs relocates it to
  * $defs["<Name>__<resultProp>"] (ADR-225).
  *
@@ -74,12 +89,20 @@ export function compileValidators({ catalog, basic, commonTypes, descriptors })
     return `${standaloneCode(ajv, refs)}\nexport const validators = {\n${table}\n};\n`;
 }
 
-/** One validator per data prop, compiled from its literal arm. */
+/** One validator per data prop, compiled from its literal arm, or from the slot itself for a top-level child slot. */
 function propKeys(catalog, descriptors)
 {
-    return descriptors.flatMap((d) => Object.keys(d.props).map((prop) => ({ key: `${d.name}.${prop}`,
-        pointer: literalArmPointer(catalog.$id, d.name, prop),
-        check: () => checkArm(catalog, `${d.name}.${prop}`, d.name, prop) })));
+    return descriptors.flatMap((d) => Object.keys(d.props).map((prop) =>
+    {
+        const key = `${d.name}.${prop}`;
+        const slot = (d.children ?? []).some((c) => c.path === prop);
+        const pointer = slot ? childSlotPointer(catalog.$id, d.name, prop)
+            : literalArmPointer(catalog.$id, d.name, prop);
+        const at = (c) => (slot ? c.components?.[d.name]?.allOf?.[2]?.properties?.[prop]
+            : c.components?.[d.name]?.allOf?.[2]?.properties?.[prop]?.anyOf?.[0]);
+
+        return { key, pointer, check: () => checkArm(catalog, key, pointer, at(catalog)) };
+    }));
 }
 
 /**
@@ -103,14 +126,11 @@ function checkDef(catalog, key, def)
     }
 }
 
-function checkArm(catalog, key, name, prop)
+function checkArm(catalog, key, pointer, arm)
 {
-    const arm = catalog.components?.[name]?.allOf?.[2]?.properties?.[prop]?.anyOf?.[0];
-
     if (arm === undefined || arm === null || typeof arm !== "object")
     {
-        throw new Error(`Cannot compile the adapter validator for ${key}: the catalog has no literal arm at `
-            + `${literalArmPointer(catalog.$id, name, prop)}. The descriptor and the catalog disagree; rebuild both with `
-            + "`npm run build:agentui`.");
+        throw new Error(`Cannot compile the adapter validator for ${key}: the catalog has no schema at ${pointer}. `
+            + "The descriptor and the catalog disagree; rebuild both with `npm run build:agentui`.");
     }
 }

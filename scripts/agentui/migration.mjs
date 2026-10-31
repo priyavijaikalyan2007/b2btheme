@@ -52,8 +52,8 @@ export const PENDING_CLASSIFICATION = new Set([
     // 18 on 2026-10-30: fileexplorer classified (readiness step 3, #21, ADR-237).
     // 17 on 2026-10-31: stacklayout classified, the first layout with A2UI children (readiness step 4 L0, #24,
     // ADR-238).
+    // 14 on 2026-10-31: borderlayout, splitlayout and tabbedpanel classified (readiness step 4 L1, ADR-239).
     "anchorlayout",
-    "borderlayout",
     "boxlayout",
     "cardlayout",
     "commentoverlay",
@@ -67,8 +67,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "layerlayout",
     "navrail",
     "propertyinspector",
-    "splitlayout",
-    "tabbedpanel",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */

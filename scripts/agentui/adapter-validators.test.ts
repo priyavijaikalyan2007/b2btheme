@@ -22,7 +22,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import basic from "./vendor/a2ui-v0_9_1/catalogs/basic/catalog.json";
 import commonTypes from "./vendor/a2ui-v0_9_1/common_types.json";
 import catalog from "../../specs/agentui/published/catalog-v1.json";
-import { compileValidators, literalArmPointer, resultDefPointer } from "./adapter-validators.mjs";
+import { childSlotPointer, compileValidators, literalArmPointer, resultDefPointer } from "./adapter-validators.mjs";
 
 const REPO = path.resolve(__dirname, "..", "..");
 const STICKY = { name: "StickyNote", props: { text: { route: "slot", slot: "text" },
@@ -57,6 +57,35 @@ describe("resultDefPointer", () =>
     {
         expect(resultDefPointer("https://x/c.json", "TreeView", "loadChildrenResult"))
             .toBe("https://x/c.json#/$defs/TreeView__loadChildrenResult");
+    });
+});
+
+describe("compileValidators — a top-level child slot (ADR-239)", () =>
+{
+    // A child slot is published as ComponentId itself, with no binding arms (catalog.mjs), as BorderLayout's regions.
+    const FRAME = { allOf: [{}, {}, { properties: { body: { $ref: `${commonTypes.$id}#/$defs/ComponentId` } } }] };
+    const withFrame = { ...catalog, components: { ...catalog.components, Frame: FRAME } };
+    const descriptor = { name: "Frame", props: { body: { route: "create" } },
+        children: [{ path: "body", cardinality: "one" }] };
+
+    test("points at the slot itself", () =>
+    {
+        expect(childSlotPointer("https://x/c.json", "Frame", "body"))
+            .toBe("https://x/c.json#/components/Frame/allOf/2/properties/body");
+    });
+
+    test("compiles a validator from the slot's ComponentId", async () =>
+    {
+        const v = await load(compileValidators({ catalog: withFrame, basic, commonTypes, descriptors: [descriptor] }));
+
+        expect(v["Frame.body"]("header-text")).toBe(true);
+        expect(v["Frame.body"](7)).toBe(false);
+    }, 60_000);
+
+    test("a slot missing from the catalog is a literate build error naming the slot's pointer", () =>
+    {
+        expect(() => compileValidators({ catalog, basic, commonTypes, descriptors: [descriptor] }))
+            .toThrow(/Frame\.body.*#\/components\/Frame\/allOf\/2\/properties\/body\./);
     });
 });
 

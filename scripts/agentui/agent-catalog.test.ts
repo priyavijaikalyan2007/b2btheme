@@ -25,6 +25,7 @@ const catalog = published as Json;
 const lean = (): Json => leanCatalog({ catalog, basic, commonTypes });
 const BINDING = `${COMMON_TYPES_ID}#/$defs/DataBinding`;
 const ACTION = `${COMMON_TYPES_ID}#/$defs/Action`;
+const COMPONENT_ID = `${COMMON_TYPES_ID}#/$defs/ComponentId`;
 
 /** Each prop of each rendered component, by the class the notation describes. */
 function propClasses(classify: (schema: Json) => string, components: Record<string, Json>, props: (e: Json) => Json)
@@ -54,10 +55,12 @@ describe("the lean rendering of catalog v1", () =>
 
     test("keeps binding-only and action props apart from props that take a value", () =>
     {
+        // A child slot (ADR-238) is a component id, or a list of them, with no binding arms.
+        const child = (s: Json, ref: string) => s.$ref === ref || (s.type === "array" && s.items?.$ref === ref);
         const full = (s: Json) => (s.$ref === BINDING ? "binding" : s.$ref === ACTION ? "action"
-            : s.anyOf?.some((a: Json) => a.$ref === BINDING) ? "value" : "other");
+            : child(s, COMPONENT_ID) ? "child" : s.anyOf?.some((a: Json) => a.$ref === BINDING) ? "value" : "other");
         const rendered = (s: Json) => (s.$ref === "#/$defs/DataBinding" ? "binding" : s.$ref === "#/$defs/Action"
-            ? "action" : "value");
+            ? "action" : child(s, "#/$defs/ComponentId") ? "child" : "value");
         const l = lean();
         const ours = Object.fromEntries(Object.keys(l.components).map((n) => [n, catalog.components[n]]));
 

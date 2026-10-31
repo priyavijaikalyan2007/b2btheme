@@ -434,7 +434,7 @@ member must be exactly one of:
 | event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` (one `onChange` may be both: a single callback in two roles) | nothing more |
 | provider | asks the host for data | declare it in `protocol.providers` as `{ request }`; exactly one parameter |
 | host-only | needs something JSON cannot carry | declare it in `protocol.hostOnly` with a reason of at least 20 characters |
-| child slot | a layout's content: an element at an option path (`panels[].content`) | declare it in `protocol.children` as `"one"` or `"many"`; the catalog publishes A2UI's `ComponentId` and the adapter mounts that component there (ADR-238). A nested slot needs a closed `protocol.schemas` override for its option. |
+| child slot | a layout's content: an element at an option path (`panels[].content`) | declare it in `protocol.children` as `"one"` or `"many"`; the catalog publishes A2UI's `ComponentId` and the adapter mounts that component there (ADR-238). A slot is a top-level option (`north`) or a path; a nested slot needs a closed `protocol.schemas` override for its option. A slot that also takes a string (`tabs[].content`) is a component id only over A2UI: leave the string arm out of the override, since text and an id look alike (ADR-239). |
 
 A data member that has a function, element or open record **nested inside it**
 (`columns[].renderer`) must declare that path in `protocol.hostOnly`. Every schema
