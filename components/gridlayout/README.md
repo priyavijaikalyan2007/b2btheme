@@ -130,6 +130,10 @@ var grid = createGridLayout({
 grid.show(document.getElementById("dashboard"));
 ```
 
+## Over A2UI
+
+GridLayout is in the A2UI catalog (ADR-241). `children` is a list of A2UI component ids, one per cell, in order. A change to the options rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
