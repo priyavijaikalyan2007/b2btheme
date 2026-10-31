@@ -19,7 +19,8 @@ useHarness();
 const CATALOG = "https://static.outcrop.us/a2ui/catalog/v1.json";
 
 /** Opens `renderer` and sends a surface with every component in `components` (the first is the root). */
-async function mount(page: Page, renderer: "lit" | "react", components: Record<string, unknown>[]): Promise<void>
+async function mount(page: Page, renderer: "lit" | "react", components: Record<string, unknown>[],
+    tag = "outcrop-stack-layout"): Promise<void>
 {
     await open(page, renderer);
     await send(page, [
@@ -27,8 +28,20 @@ async function mount(page: Page, renderer: "lit" | "react", components: Record<s
         { version: V, updateComponents: { surfaceId: "s", components } },
         { version: V, updateDataModel: { surfaceId: "s", path: "/", value: {} } },
     ]);
-    await page.waitForFunction(() =>
-        (window as unknown as { handleOf(x: string): unknown }).handleOf("outcrop-stack-layout") !== undefined);
+    await page.waitForFunction((t) =>
+        (window as unknown as { handleOf(x: string): unknown }).handleOf(t) !== undefined, tag);
+}
+
+/** Marks an element so a later check can tell it was kept, not rebuilt. */
+async function mark(page: Page, selector: string): Promise<void>
+{
+    await page.evaluate((sel) => { document.querySelector<HTMLElement>(sel)!.dataset.kept = "yes"; }, selector);
+}
+
+/** The actions sent so far, as [name, context.p]. */
+async function sent(page: Page): Promise<unknown[][]>
+{
+    return (await actions(page)).map((a) => [a.name, (a.context as { p: unknown }).p]);
 }
 
 /** A stack of a Text panel and a TextField panel, as an agent writes it. */
@@ -117,4 +130,134 @@ test.describe("Layouts with A2UI children", () =>
             message: expect.stringMatching(/lists "root", which contains it, as a child/) })]);
         await expect(page.locator(".stacklayout")).toHaveCount(2);
     });
+});
+
+// ============================================================================
+// L1: BorderLayout, SplitLayout, TabbedPanel (ADR-239)
+// ============================================================================
+
+const HEADER = { id: "head", component: "Text", text: "A header child" };
+const FIELD = { id: "field", component: "TextField", label: "Name", value: "" };
+
+/** A border layout with a header and a TextField in the center; replacing the header keeps the field. */
+async function borderKeepsChildren(page: Page, renderer: "lit" | "react"): Promise<void>
+{
+    const border = { id: "root", component: "BorderLayout", north: "head", center: "field" };
+    await mount(page, renderer, [border, HEADER, FIELD], "outcrop-border-layout");
+
+    const layout = page.locator(".borderlayout");
+    await expect(layout.getByText("A header child")).toBeVisible();
+    await expect(layout.locator("a2ui-basic-textfield")).toBeVisible();
+    await mark(page, "a2ui-basic-textfield");
+
+    await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+        { ...border, north: "head2", south: "foot" },
+        { id: "head2", component: "Text", text: "A new header" },
+        { id: "foot", component: "Text", text: "A footer child" }] } }]);
+
+    await expect(layout.getByText("A new header")).toBeVisible();
+    await expect(layout.getByText("A footer child")).toBeVisible();
+    await expect(page.locator("a2ui-basic-textfield[data-kept='yes']")).toHaveCount(1);
+    expect(await errors(page)).toEqual([]);
+}
+
+const PANES = [{ id: "left", collapsible: true, content: "head" }, { id: "right", content: "field" }];
+const SPLIT = { id: "root", component: "SplitLayout", orientation: "horizontal", panes: PANES };
+
+/** A tabbed panel with a Text tab and a TextField tab. */
+const TABS = [{ id: "notes", title: "Notes", content: "head" }, { id: "form", title: "Form", closable: true,
+    content: "field" }];
+const TABBED = { id: "root", component: "TabbedPanel", tabs: TABS };
+
+/** Selects the Form tab, adds a tab, and checks the active tab and the TextField survived the rebuild. */
+async function tabbedKeepsChildrenAndTab(page: Page, renderer: "lit" | "react"): Promise<void>
+{
+    await mount(page, renderer, [TABBED, HEADER, FIELD], "outcrop-tabbed-panel");
+
+    const panel = page.locator(".tabbedpanel");
+    await expect(panel.getByText("A header child")).toBeVisible();
+    await panel.getByRole("tab", { name: "Form" }).click();
+    await expect(panel.locator("a2ui-basic-textfield")).toBeVisible();
+    await mark(page, "a2ui-basic-textfield");
+
+    await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+        { ...TABBED, tabs: [...TABS, { id: "more", title: "More", content: "extra" }] },
+        { id: "extra", component: "Text", text: "A third child" }] } }]);
+
+    await expect(panel.getByRole("tab", { name: "More" })).toBeVisible();
+    await expect(panel.getByRole("tab", { name: "Form" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("a2ui-basic-textfield[data-kept='yes']")).toBeVisible();
+    expect(await errors(page)).toEqual([]);
+}
+
+test.describe("Layouts with A2UI children, L1", () =>
+{
+    test("BorderLayout: regions render their A2UI children, and changing regions keeps the rest (Lit)",
+        async ({ page }) => { await borderKeepsChildren(page, "lit"); });
+
+    test("BorderLayout: regions render their A2UI children, and changing regions keeps the rest (React)",
+        async ({ page }) => { await borderKeepsChildren(page, "react"); });
+
+    test("SplitLayout: arrow keys on a divider send onResize, Home sends onCollapse, and orientation flips in place",
+        async ({ page }) =>
+        {
+            await mount(page, "lit", [{ ...SPLIT, eventData: { path: "/ev" },
+                onResize: { event: { name: "size", context: { p: { path: "/ev/resize" } } } },
+                onCollapse: { event: { name: "fold", context: { p: { path: "/ev/collapse" } } } } }, HEADER, FIELD],
+            "outcrop-split-layout");
+
+            const layout = page.locator(".splitlayout");
+            await expect(layout.getByText("A header child")).toBeVisible();
+            await expect(layout.locator("a2ui-basic-textfield")).toBeVisible();
+
+            const divider = layout.locator(".splitlayout-divider");
+            await divider.focus();
+            await page.keyboard.press("ArrowRight");
+            await expect.poll(async () => (await sent(page)).filter(([n]) => n === "size").length).toBe(1);
+            const size = (await sent(page)).find(([n]) => n === "size")![1] as Record<string, number>;
+            expect(Object.keys(size).sort()).toEqual(["left", "right"]);
+
+            await page.keyboard.press("Home");
+            await expect.poll(async () => (await sent(page)).filter(([n]) => n === "fold"))
+                .toEqual([["fold", { paneId: "left", collapsed: true }]]);
+
+            // A rebuild would replace the layout's root; the state route keeps it.
+            await mark(page, ".splitlayout");
+            await mark(page, "a2ui-basic-textfield");
+            await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+                { ...SPLIT, orientation: "vertical" }] } }]);
+
+            await expect(page.locator(".splitlayout-vertical[data-kept='yes']")).toHaveCount(1);
+            await expect(page.locator("a2ui-basic-textfield[data-kept='yes']")).toHaveCount(1);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("TabbedPanel: tabs render their A2UI children, and adding a tab keeps them and the active tab (Lit)",
+        async ({ page }) => { await tabbedKeepsChildrenAndTab(page, "lit"); });
+
+    test("TabbedPanel: tabs render their A2UI children, and adding a tab keeps them and the active tab (React)",
+        async ({ page }) => { await tabbedKeepsChildrenAndTab(page, "react"); });
+
+    test("TabbedPanel: is contained, closing a tab sends onTabClose, and collapsing sends onCollapse",
+        async ({ page }) =>
+        {
+            await mount(page, "lit", [{ ...TABBED, eventData: { path: "/ev" },
+                onTabClose: { event: { name: "closed", context: { p: { path: "/ev/tabClose" } } } },
+                onCollapse: { event: { name: "fold", context: { p: { path: "/ev/collapse" } } } } }, HEADER, FIELD],
+            "outcrop-tabbed-panel");
+
+            const panel = page.locator(".tabbedpanel");
+            await expect(panel).toHaveClass(/tabbedpanel-contained/);
+            await expect(panel.locator(".tabbedpanel-float-btn:visible, .tabbedpanel-close-btn:visible"))
+                .toHaveCount(0);
+
+            await panel.locator(".tabbedpanel-tab-close").click();
+            await expect.poll(() => sent(page)).toEqual([["closed", { tabId: "form" }]]);
+            await expect(panel.getByRole("tab", { name: "Form" })).toHaveCount(0);
+
+            await panel.locator(".tabbedpanel-tabbar .tabbedpanel-collapse-btn").click();
+            await expect.poll(async () => (await sent(page)).filter(([n]) => n === "fold"))
+                .toEqual([["fold", { collapsed: true }]]);
+            expect(await errors(page)).toEqual([]);
+        });
 });

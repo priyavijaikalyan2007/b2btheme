@@ -346,3 +346,117 @@ describe("SplitLayout orientation change", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE — on(), setState, setData (readiness step 4 L1, ADR-239)
+// ============================================================================
+
+describe("SplitLayout surface", () =>
+{
+    /** Presses a key on the first divider. */
+    function press(key: string): void
+    {
+        container.querySelector<HTMLElement>(".splitlayout-divider")!
+            .dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+    }
+
+    test("resize_ReachesTheChannelAfterOnResize", () =>
+    {
+        const order: string[] = [];
+        const layout = createSplitLayout(makeOptions({ onResize: () => order.push("callback") }), container.id);
+        const heard: unknown[] = [];
+        layout.on("resize", (p) => { order.push("channel"); heard.push(p); });
+
+        press("ArrowRight");
+
+        expect(order).toEqual(["callback", "channel"]);
+        expect(Object.keys(heard[0] as object).sort()).toEqual(["left", "right"]);
+        layout.destroy();
+    });
+
+    test("collapse_ReachesTheChannelAfterOnCollapse_WithThePaneAndItsState", () =>
+    {
+        const onCollapse = vi.fn();
+        const layout = createSplitLayout(makeOptions({ onCollapse,
+            panes: [{ id: "left", initialSize: "50%", collapsible: true }, { id: "right", initialSize: "50%" }] }),
+            container.id);
+        const heard: unknown[] = [];
+        layout.on("collapse", (p) => heard.push(p));
+
+        press("Home");
+
+        expect(onCollapse).toHaveBeenCalledWith("left", true);
+        expect(heard).toEqual([{ paneId: "left", collapsed: true }]);
+        layout.destroy();
+    });
+
+    test("on_TheUnsubscribeStopsTheHandler_AndAnUnknownChannelThrows", () =>
+    {
+        const layout = createSplitLayout(makeOptions(), container.id);
+        const handler = vi.fn();
+        const off = layout.on("resize", handler);
+
+        off();
+        press("ArrowRight");
+
+        expect(handler).not.toHaveBeenCalled();
+        expect(() => layout.on("drag", () => undefined)).toThrow(/"resize" and "collapse"/);
+        layout.destroy();
+    });
+
+    test("setState_KeepsFiringOnResize_ButTheChannelsStaySilent", () =>
+    {
+        const onResize = vi.fn();
+        const layout = createSplitLayout(makeOptions({ onResize }), container.id);
+        const heard = vi.fn();
+        layout.on("resize", heard);
+        layout.on("collapse", heard);
+
+        layout.setState(layout.getState());
+
+        expect(onResize).toHaveBeenCalledTimes(1);
+        expect(heard).not.toHaveBeenCalled();
+        layout.destroy();
+    });
+
+    test("setState_TakesPartOfAState", () =>
+    {
+        const layout = createSplitLayout(makeOptions(), container.id);
+
+        expect(() => layout.setState({ collapsed: { left: false } })).not.toThrow();
+        layout.setState({ sizes: { left: 300, right: 500 } });
+
+        expect(layout.getState().sizes).toEqual({ left: 300, right: 500 });
+        layout.destroy();
+    });
+
+    test("setState_AppliesTheOrientationGetStateReports", () =>
+    {
+        const layout = createSplitLayout(makeOptions(), container.id);
+
+        layout.setState({ orientation: "vertical" });
+
+        expect(layout.getState().orientation).toBe("vertical");
+        expect(container.querySelector(".splitlayout-vertical")).not.toBeNull();
+        layout.destroy();
+    });
+
+    test("setState_RestoresSizesForARestoredOrientation_WithoutRecalculatingThem", async () =>
+    {
+        const layout = createSplitLayout(makeOptions(), container.id);
+
+        layout.setState({ orientation: "vertical", sizes: { left: 200, right: 400 } });
+        await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+
+        expect(layout.getState()).toMatchObject({ orientation: "vertical", sizes: { left: 200, right: 400 } });
+        layout.destroy();
+    });
+
+    test("setData_Throws_BecauseThePanesAreAnOption", () =>
+    {
+        const layout = createSplitLayout(makeOptions(), container.id);
+
+        expect(() => layout.setData("panes", [])).toThrow(/no data slots/);
+        layout.destroy();
+    });
+});

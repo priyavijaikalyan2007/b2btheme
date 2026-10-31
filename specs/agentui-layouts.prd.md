@@ -140,7 +140,7 @@ Each batch adds a section to the plan, with its own decisions where a layout rai
 
 The paths are confirmed per batch against each layout's options type. Known questions for the batches:
 
-- **TabbedPanel:** `tabs[].content` also accepts a string, set with `textContent`, so that arm stays ordinary data (checked 2026-10-31).
+- **TabbedPanel:** `tabs[].content` also accepts a string, set with `textContent`. Superseded in L1 (ADR-239): over A2UI the slot is a component id only, because a string could be text or an id; hosts keep the string arm.
 - **DockLayout:** its slots take a `DockSlotComponent` (a component handle), not an element, so L3 decides how a child element is presented to a slot. Its `content` string is a **CSS selector** into the host page, which an agent must not choose: host-only.
 
 ---

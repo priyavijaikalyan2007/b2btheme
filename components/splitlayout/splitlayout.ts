@@ -267,10 +267,18 @@ export interface SplitLayoutHandle
     setSizes(sizes: Record<string, number>): void;
     setOrientation(dir: "horizontal" | "vertical"): void;
     getState(): SplitLayoutState;
-    setState(state: SplitLayoutState): void;
+    /** Restores state captured by getState(), or any part of it; channels stay silent, callbacks fire as before. */
+    setState(state: Partial<SplitLayoutState>): void;
     addPane(config: SplitPaneConfig, index?: number): void;
     removePane(paneId: string): void;
+    /** Subscribes to "resize" (the pane sizes) or "collapse" ({ paneId, collapsed }); returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** SplitLayout has no data slots: its panes are an option (readiness step 4 L1). */
+    setData(slot: string, value: unknown): void;
 }
+
+/** The surface channels (readiness step 4 L1). */
+type SplitChannel = "resize" | "collapse";
 
 export class SplitLayout implements SplitLayoutHandle
 {
@@ -285,6 +293,11 @@ export class SplitLayout implements SplitLayoutHandle
 
     // DOM
     private rootEl: HTMLElement | null = null;
+
+    // Surface (readiness step 4 L1): each channel hears after its callback, and setState silences the channels.
+    private readonly handlers: Record<SplitChannel, Set<(payload: unknown) => void>> =
+        { resize: new Set(), collapse: new Set() };
+    private restoring = false;
 
     // Drag state
     private activeDividerIndex = -1;
@@ -1036,6 +1049,11 @@ export class SplitLayout implements SplitLayoutHandle
         {
             this.options.onResize(this.getSizes());
         }
+
+        if (!this.restoring)
+        {
+            this.emit("resize", this.getSizes());
+        }
     }
 
     /**
@@ -1046,6 +1064,27 @@ export class SplitLayout implements SplitLayoutHandle
         if (this.options.onCollapse)
         {
             this.options.onCollapse(paneId, collapsed);
+        }
+
+        if (!this.restoring)
+        {
+            this.emit("collapse", { paneId, collapsed });
+        }
+    }
+
+    /** Calls every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: SplitChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
         }
     }
 
@@ -1103,18 +1142,18 @@ export class SplitLayout implements SplitLayoutHandle
     /**
      * Applies a state object to the current panes.
      */
-    private applyStateInternal(state: SplitLayoutState): void
+    private applyStateInternal(state: Partial<SplitLayoutState>): void
     {
         for (const pane of this.panes)
         {
             const id = pane.config.id;
 
-            if (state.sizes[id] !== undefined)
+            if (state.sizes?.[id] !== undefined)
             {
                 pane.size = state.sizes[id];
             }
 
-            if (state.collapsed[id] !== undefined)
+            if (state.collapsed?.[id] !== undefined)
             {
                 pane.collapsed = state.collapsed[id];
 
@@ -1181,6 +1220,8 @@ export class SplitLayout implements SplitLayoutHandle
      */
     public destroy(): void
     {
+        this.handlers.resize.clear();
+        this.handlers.collapse.clear();
         this.hide();
         this.panes = [];
         this.dividers = [];
@@ -1325,6 +1366,12 @@ export class SplitLayout implements SplitLayoutHandle
             return;
         }
 
+        this.applyOrientation(dir, true);
+    }
+
+    /** Switches the axis; recalculates the pane sizes for it unless the caller restores sizes of its own. */
+    private applyOrientation(dir: "horizontal" | "vertical", recalculate: boolean): void
+    {
         this.orientation = dir;
 
         if (this.rootEl)
@@ -1364,7 +1411,10 @@ export class SplitLayout implements SplitLayoutHandle
         }
 
         // Recalculate sizes for the new axis
-        requestAnimationFrame(() => this.calculateInitialSizes());
+        if (recalculate)
+        {
+            requestAnimationFrame(() => this.calculateInitialSizes());
+        }
 
         logDebug("Orientation changed to:", dir);
     }
@@ -1389,15 +1439,53 @@ export class SplitLayout implements SplitLayoutHandle
     }
 
     /**
-     * Restores sizes and collapsed states from a SplitLayoutState.
+     * Restores the orientation, sizes and collapsed states of a
+     * SplitLayoutState, or any part of it. onResize fires as it always did;
+     * the surface channels stay silent (readiness step 4 L1). It used to
+     * ignore the orientation getState() reports, and threw on a state
+     * without sizes or collapsed.
      */
-    public setState(state: SplitLayoutState): void
+    public setState(state: Partial<SplitLayoutState>): void
     {
-        this.applyStateInternal(state);
-        this.applyConstraints();
-        this.applySizesToDom();
-        this.fireOnResize();
-        this.persistState();
+        this.restoring = true;
+
+        try
+        {
+            if (state.orientation !== undefined && state.orientation !== this.orientation)
+            {
+                // Restored sizes belong to the restored axis, so they are not recalculated for it.
+                this.applyOrientation(state.orientation, state.sizes === undefined);
+            }
+
+            this.applyStateInternal(state);
+            this.applyConstraints();
+            this.applySizesToDom();
+            this.fireOnResize();
+            this.persistState();
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** Subscribes to "resize" (the pane sizes) or "collapse" ({ paneId, collapsed }); returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "resize" && channel !== "collapse")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "resize" and "collapse".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** SplitLayout has no data slots: its panes are an option (readiness step 4 L1). */
+    public setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): SplitLayout has no data slots. Its panes are an option.`);
     }
 
     /**

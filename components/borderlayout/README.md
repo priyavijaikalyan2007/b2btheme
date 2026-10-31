@@ -113,6 +113,10 @@ When a component is passed to a region:
 | `getState()` | `BorderLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore collapsed regions |
 
+### Over A2UI
+
+BorderLayout is in the A2UI catalog (ADR-239). Each region (`north`, `south`, `east`, `west`, `center`) is the id of another A2UI component, which the adapter renders there. A change to a region rebuilds the layout and keeps the other children. Regions collapse only through `collapseRegion()`, so `collapsible` is not available to an agent.
+
 ## BorderLayoutState
 
 ```typescript

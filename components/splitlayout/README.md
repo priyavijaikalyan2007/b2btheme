@@ -85,7 +85,13 @@ A split layout container that divides available space into two or more panes sep
 | `addPane(config, index?)` | `void` | Insert a new pane |
 | `removePane(paneId)` | `void` | Remove a pane (min 2 required) |
 | `getState()` | `SplitLayoutState` | Serialisable snapshot |
-| `setState(state)` | `void` | Restore from snapshot |
+| `setState(state)` | `void` | Restore the orientation, sizes and collapsed panes, or any part of them; fires `onResize` |
+| `on(channel, handler)` | `() => void` | Hear `"resize"` (the sizes) or `"collapse"` (`{ paneId, collapsed }`) after their callbacks; returns the unsubscribe. `setState` does not reach them |
+| `setData(slot, value)` | `void` | Throws: the panes are an option |
+
+### Over A2UI
+
+SplitLayout is in the A2UI catalog (ADR-239). Each pane's `content` is the id of another A2UI component, which the adapter renders in the pane. Dragging a divider sends `onResize` and collapsing a pane sends `onCollapse`. A change to `orientation` flips the layout in place; a change to `panes` rebuilds it and keeps each child and the sizes. `persistKey` is not available to an agent.
 
 ### Convenience Function
 

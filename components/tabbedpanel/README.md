@@ -149,6 +149,19 @@ interface TabDefinition {
 | `setTitle(title)` | `void` | Update panel title |
 | `getTitle()` | `string` | Resolved title (explicit title > active tab title > `"Panel"`) |
 
+### Surface
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `on(channel, handler)` | `() => void` | Hear `"tabClose"` (`{ tabId }`), `"collapse"` (`{ collapsed }`) or `"resize"` (`{ width, height }`) after their callbacks; returns the unsubscribe |
+| `getState()` | `{ activeTabId, collapsed, height }` | The active tab, whether collapsed, and the height in pixels |
+| `setState(state)` | `void` | Restore any part of `getState()`, firing no callback or channel; a tab that is gone is ignored |
+| `setData(slot, value)` | `void` | Throws: the tabs are an option |
+
+### Over A2UI
+
+TabbedPanel is in the A2UI catalog (ADR-239). It is always contained, docked and without its title bar, so it has no float or close button and stays inside the surface; the floating and docking options are not available to an agent. Each tab's `content` is the id of another A2UI component (for text, a Text component). Closing a tab sends `onTabClose`, collapsing sends `onCollapse` and resizing sends `onResize`. A change to `tabs` rebuilds the panel and keeps each child, the active tab, collapsed state and height.
+
 ### Convenience Functions
 
 ```typescript
