@@ -30,7 +30,24 @@ export interface Sub
 export interface SurfaceLike
 {
     readonly id: string;
+    /** The surface's components, which a layout's child slots refer to by id (ADR-238). */
+    readonly componentsModel?: SurfaceComponentsLike;
     dispatchError(error: { code: string; message: string; path?: string }): Promise<void>;
+}
+
+/** The members of web_core's SurfaceComponentsModel the adapter uses (ADR-238). */
+export interface SurfaceComponentsLike
+{
+    get(id: string): ComponentModelLike | undefined;
+    readonly onCreated: { subscribe(listener: (model: ComponentModelLike) => void): Sub };
+    readonly onDeleted: { subscribe(listener: (id: string) => void): Sub };
+}
+
+/** A catalog entry as the adapter reads it to render a child: a tag and the element class behind it. */
+export interface CatalogEntryLike
+{
+    readonly tagName?: string;
+    readonly element?: CustomElementConstructor;
 }
 
 /** The members of web_core's DataContext the adapter uses. */
@@ -53,6 +70,8 @@ export interface ComponentModelLike
     readonly type: string;
     readonly properties: Record<string, unknown>;
     readonly onUpdated: { subscribe(listener: () => void): Sub };
+    /** The catalog the component was created from; a child's element comes from it (ADR-238). */
+    readonly catalog?: { readonly components: { get(type: string): CatalogEntryLike | undefined } };
 }
 
 /** The members of web_core's ComponentContext the adapter uses. */
@@ -71,6 +90,13 @@ export type PropRoute =
     | { route: "state"; key: string }
     | { route: "value" }
     | { route: "create" };
+
+/** An option path that holds one child component id, or a list of them (ADR-238). */
+export interface ChildSlot
+{
+    path: string;
+    cardinality: "one" | "many";
+}
 
 /** One emits channel, named for the catalog (spec §5.7). */
 export interface AdapterEvent
@@ -126,6 +152,8 @@ export interface AdapterDescriptor
      * set them.
      */
     fixed?: Record<string, unknown>;
+    /** Option paths that hold child components (ADR-238). */
+    children?: ChildSlot[];
     events: AdapterEvent[];
     providers: AdapterProvider[];
     dates: string[];

@@ -25,6 +25,7 @@
 // @semantic-marker a2ui-adapter-element
 
 import { attachHandle, invokerFor } from "../../runtime/src/mount";
+import { ChildElements } from "./children";
 import { ERROR_CODES, reportError } from "./errors";
 import { loadAssets } from "./loader";
 import { logDebug, logInfo } from "./log";
@@ -32,7 +33,7 @@ import { PropTracker, type Delivery } from "./props";
 import { wireProviders, type WiredProviders } from "./providers";
 import { changeOptions, dispatchActionProp, wireRoundTrip, type RoundTrip } from "./roundtrip";
 import { bindingPath, datePathsFor, fromWire, sameComponent, sameValue, toWire } from "./values";
-import type { AdapterDescriptor, ComponentContextLike, Sub, Validators } from "./types";
+import type { AdapterDescriptor, ComponentContextLike, Sub, SurfaceComponentsLike, Validators } from "./types";
 
 /** What a per-tag subclass supplies. */
 export interface ElementEnv
@@ -176,6 +177,9 @@ class Binding
     #applying = false;
     #lastWritten: { value: unknown } | undefined;
     #disposed = false;
+    /** A layout's child elements, kept by id across rebuilds (ADR-238); undefined for a component without slots. */
+    readonly #children: ChildElements | undefined;
+    readonly #childSubs: Sub[] = [];
 
     constructor(host: HTMLElement, ctx: ComponentContextLike, env: ElementEnv)
     {
@@ -185,8 +189,32 @@ class Binding
         host.setAttribute("aria-busy", "true");
         this.#tracker = new PropTracker(ctx, env.descriptor, (n, v, d) => this.#onValue(n, v, d));
         this.#modelSub = ctx.componentModel.onUpdated.subscribe(() => this.#tracker.refresh());
+        this.#children = env.descriptor.children?.length ? this.#watchChildren() : undefined;
         this.#tracker.refresh();
         this.#loadAssets();
+    }
+
+    /**
+     * Creates the child holder and follows the surface's components: a child
+     * referenced before it arrives, or deleted later, rebuilds the layout,
+     * which keeps every other child's element (ADR-238).
+     */
+    #watchChildren(): ChildElements
+    {
+        const children = new ChildElements(this.#ctx, (code, message) => reportError(this.#ctx, code, message));
+        const components = this.#ctx.dataContext.surface?.componentsModel as SurfaceComponentsLike | undefined;
+        const affected = (id: string) =>
+        {
+            if (this.#handle && children.wanted.has(id)) { this.#rebuild(`child "${id}"`); }
+        };
+
+        if (components)
+        {
+            this.#childSubs.push(components.onCreated.subscribe((model) => affected(model.id)),
+                components.onDeleted.subscribe((id) => affected(id)));
+        }
+
+        return children;
     }
 
     get handle(): Record<string, unknown> | undefined { return this.#handle; }
@@ -220,7 +248,9 @@ class Binding
         this.#disposed = true;
         this.#tracker.dispose();
         this.#modelSub.unsubscribe();
+        this.#childSubs.forEach((sub) => sub.unsubscribe());
         this.#unmount();
+        this.#children?.release();
         logInfo("teardown", this.#where());
     }
 
@@ -349,7 +379,7 @@ class Binding
     {
         const route = this.#env.descriptor.props[name];
 
-        if (route.route === "create") { this.#rebuild(name); return; }
+        if (route.route === "create") { this.#rebuild(`"${name}"`); return; }
 
         const [method, args] = route.route === "slot"
             ? (route.setter ? [route.setter, [value]] : ["setData", [route.slot, value]])
@@ -370,11 +400,58 @@ class Binding
         finally { this.#applying = false; }
     }
 
+    /**
+     * Builds the component again after a create-time change, in the same task,
+     * so child elements moved into the new instance survive (ADR-238). Its
+     * state is carried across with getState/setState, so a rebuild no longer
+     * loses the user's view.
+     */
     #rebuild(prop: string): void
     {
-        logInfo("rebuild", this.#where(), `create-time prop "${prop}" changed`);
+        logInfo("rebuild", this.#where(), `create-time prop ${prop} changed`);
+        const state = this.#captureState();
+
         this.#unmount();
         this.tryMount();
+
+        if (state !== undefined && this.#handle) { this.#restoreState(state); }
+    }
+
+    /** The mounted component's state, or undefined when it has none to carry. */
+    #captureState(): Record<string, unknown> | undefined
+    {
+        const getState = this.#handle?.getState;
+
+        if (typeof getState !== "function") { return undefined; }
+
+        try
+        {
+            return getState.call(this.#handle) as Record<string, unknown>;
+        }
+        catch (err)
+        {
+            reportError(this.#ctx, ERROR_CODES.MOUNT_FAILED, `${this.#env.descriptor.name}.getState() threw before a `
+                + `rebuild (${err instanceof Error ? err.message : String(err)}); the rebuilt component starts fresh.`);
+            return undefined;
+        }
+    }
+
+    /** Restores carried state as an adapter-applied write; a rejection is reported and the fresh state kept. */
+    #restoreState(state: Record<string, unknown>): void
+    {
+        this.#applying = true;
+
+        try
+        {
+            (this.#handle!.setState as (s: Record<string, unknown>) => void).call(this.#handle, state);
+        }
+        catch (err)
+        {
+            reportError(this.#ctx, ERROR_CODES.MOUNT_FAILED, `${this.#env.descriptor.name}.setState() rejected the `
+                + `state carried across a rebuild (${err instanceof Error ? err.message : String(err)}); it keeps `
+                + "its fresh state.");
+        }
+        finally { this.#applying = false; }
     }
 
     #mount(): void
@@ -443,8 +520,10 @@ class Binding
         const cleared = clearsWhenAbsent(d) && this.#values.get("value") === null;
         const values = Object.fromEntries([...this.#values].filter(([n]) => !(cleared && n === "value")));
         // protocol.fixed last (ADR-235): the catalog has no prop for these, so nothing above can name them.
-        const options = { ...values, ...changeOptions(d, (v) => this.#onUserValue(v)), ...providers.options,
+        const base = { ...values, ...changeOptions(d, (v) => this.#onUserValue(v)), ...providers.options,
             ...d.fixed };
+        // A layout's child slots hold ids over A2UI; the component takes the elements (ADR-238).
+        const options = this.#children ? this.#children.withElements(base, d.children ?? []) : base;
         const handle = this.#invoke(factory, container, options, cleared);
 
         if (!handle || typeof handle !== "object")
