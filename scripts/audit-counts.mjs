@@ -722,7 +722,8 @@ export const BASELINES = {
     // ADR-236 (2026-10-30): 30727 -> 30857, deliberately. The surface contract (readiness step 2 B9:
     // setData("document"), three channels on on(), getState/setState and a coalesced change report) is new
     // public API in src/engine.ts, and the bundle carries it.
-    diagramengineLines: 30857,
+    // #72 (2026-10-30): 30857 -> 30876, the select tool records a move only when something moved.
+    diagramengineLines: 30876,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

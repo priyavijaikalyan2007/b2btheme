@@ -37,6 +37,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **PermissionMatrix's six documented-but-ignored options now work** (#70): `showInheritance`, `showChangeHighlight`, `stickyHeader` and `stickyFirstColumn` (default `true`, today's look) and `enableRoleBulk`, `enablePermissionBulk` (default `false`; new role and permission bulk controls). Without `onReset`, Reset now reverts the unsaved edits instead of doing nothing. The README's methods table matches the real API.
+- **FileExplorer's `onLoadChildren` is called** (#69): opening a tree folder given without `children` loads it once, adds its subfolders to the tree and shows a failure in the listing.
+- **Timeline shows items with no group or an unknown group** in its "Other" group once groups exist (#71); they used to vanish.
+- **DiagramEngine: a click that only selects no longer records a move** (#72), so it adds no empty undo step and does not mark the document dirty or fire `change`.
+- **TenantSwitcher shows a tenant picked from search results as active** (#62), on the trigger and from `getActiveTenant()`.
+- **ExplorerPicker** (#61): the load-error banner's Retry works; the search error's Retry no longer also reloads the tree; the focus ring and scroll flash land on the row; a looping `parentId` chain can no longer hang the page.
 - **Conversation no longer loads code from unpkg.** Rendering an assistant message injected Vditor's markdown engine, highlight.js and KaTeX from `unpkg.com` without integrity checks; they now load from the library's own Vditor mirror on the asset origin, as MarkdownEditor's do (ADR-149, ADR-234). Rendering is otherwise unchanged.
 - **ExplorerPicker: a node id containing a quote no longer breaks expanding, scrolling to or highlighting that node** (ADR-234).
 - **TimePicker accepts typed times again.** Every typed entry was rejected and reverted (its format pattern escaped its own quantifiers), and 12-hour or single-digit formats read minutes as hours. ADR-227.

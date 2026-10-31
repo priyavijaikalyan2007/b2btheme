@@ -649,3 +649,33 @@ describe("Timeline surface contract", () =>
         tl.destroy();
     });
 });
+
+// ============================================================================
+// ITEMS WITHOUT A KNOWN GROUP (#71)
+// ============================================================================
+
+describe("items without a known group, once groups exist (#71)", () =>
+{
+    test("theyRenderInTheOtherGroup", () =>
+    {
+        const tl = createTimeline(makeOptions({
+            groups: [{ id: "g", label: "G" }],
+            items: [makeItem({ id: "in", group: "g" }), makeItem({ id: "none" }),
+                makeItem({ id: "unknown", group: "zz" })],
+        }));
+        const rendered = [...container.querySelectorAll("[data-item-id]")].map((e) => e.getAttribute("data-item-id"));
+
+        expect(rendered.sort()).toEqual(["in", "none", "unknown"]);
+        expect(container.querySelectorAll(".timeline-group")).toHaveLength(2);
+        tl.destroy();
+    });
+
+    test("allGrouped_NoOtherGroup", () =>
+    {
+        const tl = createTimeline(makeOptions({ groups: [{ id: "g", label: "G" }],
+            items: [makeItem({ id: "in", group: "g" })] }));
+
+        expect(container.querySelectorAll(".timeline-group")).toHaveLength(1);
+        tl.destroy();
+    });
+});

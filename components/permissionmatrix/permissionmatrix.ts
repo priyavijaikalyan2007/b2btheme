@@ -131,23 +131,23 @@ export interface PermissionMatrixOptions
     filterDebounceMs?: number;
     /** Shows the Export button. Default: true. */
     showExport?: boolean;
-    /** Shows the Reset button, which asks the host to discard unsaved edits. Default: true. */
+    /** Shows the Reset button, which discards the unsaved edits (or asks onReset to). Default: true. */
     showReset?: boolean;
     /** Shows how many edits are unsaved. Default: true. */
     showChangeCounter?: boolean;
-    /** Declared but not read. */
+    /** Resolves and shows permissions a role inherits from its parent role. Default: true. */
     showInheritance?: boolean;
-    /** Declared but not read. */
+    /** Highlights cells with unsaved edits. Default: true. */
     showChangeHighlight?: boolean;
     /** Shows a control per group and role that grants or denies the whole group. Default: true. */
     enableGroupBulk?: boolean;
-    /** Declared but not read. */
+    /** Adds a control under each role heading that grants or denies all its permissions. Default: false. */
     enableRoleBulk?: boolean;
-    /** Declared but not read. */
+    /** Adds a control beside each permission that grants or denies it for every role. Default: false. */
     enablePermissionBulk?: boolean;
-    /** Declared but not read. */
+    /** Keeps the role headings visible while the grid scrolls vertically. Default: true. */
     stickyHeader?: boolean;
-    /** Declared but not read. */
+    /** Keeps the permission names visible while the grid scrolls horizontally. Default: true. */
     stickyFirstColumn?: boolean;
     /** CSS height of the component, such as "400px". */
     height?: string;
@@ -163,7 +163,11 @@ export interface PermissionMatrixOptions
     onBulkChange?: (bulkChange: BulkChange) => void;
     /** Fires with the matrix when the user clicks Export; without it the matrix downloads as JSON. */
     onExport?: (data: MatrixExportData, format: ExportFormat) => void;
-    /** Fires when the user clicks Reset; the host discards the edits, for example by calling setData. */
+    /**
+     * Fires when the user clicks Reset; the host then discards the edits,
+     * for example by calling setData. Without it, Reset reverts them to the
+     * baseline itself (#70).
+     */
     onReset?: () => void;
     /** Renders a cell's content in place of the built-in icon. */
     cellRenderer?: (role: Role, perm: Permission, state: PermissionState) => HTMLElement | null;
@@ -710,6 +714,9 @@ export class PermissionMatrix implements PermissionMatrixHandle
     {
         const root = createElement("div", CLS);
         if (this.opts.cssClass) { root.classList.add(...this.opts.cssClass.split(" ")); }
+        // Both were declared and never read (#70); true keeps today's sticky header and first column.
+        if (this.opts.stickyHeader === false) { root.classList.add(`${CLS}-no-sticky-header`); }
+        if (this.opts.stickyFirstColumn === false) { root.classList.add(`${CLS}-no-sticky-column`); }
         if (this.opts.height) { root.style.height = this.opts.height; }
         if (this.opts.width) { root.style.width = this.opts.width; }
 
@@ -818,8 +825,21 @@ export class PermissionMatrix implements PermissionMatrixHandle
         (btn as HTMLButtonElement).disabled = true;
         btn.addEventListener("click", () =>
         {
-            safeCallback(this.opts.onReset);
-            this.emit("reset", this.pendingChanges.size);
+            const count = this.pendingChanges.size;
+
+            if (this.opts.onReset)
+            {
+                safeCallback(this.opts.onReset);
+            }
+            else
+            {
+                // Without onReset the button announced a reset and reverted nothing (#70).
+                this.revertToOriginal();
+                this.renderGrid();
+                this.updateCounter();
+            }
+
+            this.emit("reset", count);
             this.announce("All changes reset");
         });
         this.resetBtnEl = btn;
@@ -967,6 +987,16 @@ export class PermissionMatrix implements PermissionMatrixHandle
             }
         }
 
+        if (this.opts.enableRoleBulk === true && !this.readOnly && !role.readonly)
+        {
+            const pairs = this.allPermissionIds().map((p): [string, string] => [role.id, p]);
+            const btn = this.buildCheckboxBtn(this.aggregateState(pairs), true);
+            setAttr(btn, "aria-label", `Toggle every permission for ${role.name}`);
+            setAttr(btn, "data-bulk", "role");
+            setAttr(btn, "data-role-id", role.id);
+            cell.appendChild(btn);
+        }
+
         return cell;
     }
 
@@ -1055,6 +1085,15 @@ export class PermissionMatrix implements PermissionMatrixHandle
         setAttr(label, "aria-label", perm.name);
         const nameEl = this.buildPermLabel(perm);
         label.appendChild(nameEl);
+        if (this.opts.enablePermissionBulk === true && !this.readOnly)
+        {
+            const pairs = this.editableRoleIds().map((r): [string, string] => [r, perm.id]);
+            const btn = this.buildCheckboxBtn(this.aggregateState(pairs), true);
+            setAttr(btn, "aria-label", `Toggle ${perm.name} for every role`);
+            setAttr(btn, "data-bulk", "permission");
+            setAttr(btn, "data-perm-id", perm.id);
+            label.appendChild(btn);
+        }
         row.appendChild(label);
 
         // Cells per role
@@ -1096,7 +1135,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
         const effective = this.resolveEffective(role.id, perm.id);
         cell.classList.add(`${CLS}-cell-${effective}`);
 
-        if (this.isCellChanged(role.id, perm.id))
+        if (this.opts.showChangeHighlight !== false && this.isCellChanged(role.id, perm.id))
         {
             cell.classList.add(`${CLS}-cell-changed`);
         }
@@ -1214,13 +1253,16 @@ export class PermissionMatrix implements PermissionMatrixHandle
             return;
         }
 
-        // Bulk group checkbox
-        const bulkBtn = target.closest(`[data-bulk="group"]`);
+        // Bulk checkboxes: group, role (#70) and permission (#70)
+        const bulkBtn = target.closest("[data-bulk]");
         if (bulkBtn)
         {
-            const gid = bulkBtn.getAttribute("data-group-id")!;
-            const rid = bulkBtn.getAttribute("data-role-id")!;
-            this.bulkToggleGroup(gid, rid);
+            const kind = bulkBtn.getAttribute("data-bulk");
+            const rid = bulkBtn.getAttribute("data-role-id");
+            const pid = bulkBtn.getAttribute("data-perm-id");
+            if (kind === "group") { this.bulkToggleGroup(bulkBtn.getAttribute("data-group-id")!, rid!); }
+            else if (kind === "role") { this.bulkToggleRole(rid!); }
+            else if (kind === "permission") { this.bulkTogglePermission(pid!); }
             return;
         }
 
@@ -1400,7 +1442,8 @@ export class PermissionMatrix implements PermissionMatrixHandle
         {
             return explicit;
         }
-        const chain = this.inheritanceChains.get(roleId);
+        // showInheritance was declared and never read (#70); true keeps resolving it, as before.
+        const chain = this.opts.showInheritance === false ? undefined : this.inheritanceChains.get(roleId);
         if (!chain) { return "none"; }
 
         for (const ancestorId of chain)
@@ -1506,40 +1549,81 @@ export class PermissionMatrix implements PermissionMatrixHandle
         const role = this.roles.find(r => r.id === roleId);
         if (!group || !role || role.readonly) { return; }
 
-        const agg = this.aggregateGroupState(group, roleId);
-        const target: PermissionState = (agg === "granted") ? "denied" : "granted";
-        const changes: PermissionChange[] = [];
+        const target = this.bulkTarget(this.aggregateGroupState(group, roleId));
+        const changes = this.applyBulk(group.permissions.map((p) => [roleId, p.id]), target);
 
-        for (const perm of group.permissions)
-        {
-            const eff = this.resolveEffective(roleId, perm.id);
-            if (eff === "inherited") { continue; }
-            const prev = this.getExplicitState(roleId, perm.id);
-            if (prev === target) { continue; }
-
-            this.setStateInternal(roleId, perm.id, target);
-            this.trackChange(roleId, perm.id, prev, target);
-            changes.push({
-                roleId,
-                permissionId: perm.id,
-                previousState: prev,
-                newState: target
-            });
-        }
-
-        this.renderGrid();
-        this.updateCounter();
-        const bulk: BulkChange = {
+        this.reportBulk({
             type: target === "granted" ? "grant-all-in-group" : "deny-all-in-group",
             roleId,
             groupId,
             changes
-        };
+        }, `All ${group.name} permissions for ${role.name} set to ${target}`);
+    }
+
+    /** Grants or denies every permission for one role (enableRoleBulk, #70). */
+    private bulkToggleRole(roleId: string): void
+    {
+        const role = this.roles.find(r => r.id === roleId);
+        if (!role || role.readonly) { return; }
+
+        const pairs = this.allPermissionIds().map((p): [string, string] => [roleId, p]);
+        const target = this.bulkTarget(this.aggregateState(pairs));
+        const changes = this.applyBulk(pairs, target);
+
+        this.reportBulk({
+            type: target === "granted" ? "grant-all-for-role" : "deny-all-for-role",
+            roleId,
+            changes
+        }, `Every permission for ${role.name} set to ${target}`);
+    }
+
+    /** Grants or denies one permission for every editable role (enablePermissionBulk, #70). */
+    private bulkTogglePermission(permissionId: string): void
+    {
+        const pairs = this.editableRoleIds().map((r): [string, string] => [r, permissionId]);
+        const target = this.bulkTarget(this.aggregateState(pairs));
+        const changes = this.applyBulk(pairs, target);
+
+        this.reportBulk({
+            type: target === "granted" ? "grant-all-for-permission" : "deny-all-for-permission",
+            permissionId,
+            changes
+        }, `${this.getPermName(permissionId)} set to ${target} for every role`);
+    }
+
+    /** A fully granted set is denied; anything else is granted. */
+    private bulkTarget(aggregate: PermissionState): PermissionState
+    {
+        return aggregate === "granted" ? "denied" : "granted";
+    }
+
+    /** Sets each (role, permission) pair to `target`, skipping inherited cells; returns the changes. */
+    private applyBulk(pairs: Array<[string, string]>, target: PermissionState): PermissionChange[]
+    {
+        const changes: PermissionChange[] = [];
+
+        for (const [roleId, permId] of pairs)
+        {
+            if (this.resolveEffective(roleId, permId) === "inherited") { continue; }
+            const prev = this.getExplicitState(roleId, permId);
+            if (prev === target) { continue; }
+
+            this.setStateInternal(roleId, permId, target);
+            this.trackChange(roleId, permId, prev, target);
+            changes.push({ roleId, permissionId: permId, previousState: prev, newState: target });
+        }
+
+        return changes;
+    }
+
+    /** Re-renders, fires onBulkChange and the "bulkchange" channel, and announces. */
+    private reportBulk(bulk: BulkChange, message: string): void
+    {
+        this.renderGrid();
+        this.updateCounter();
         safeCallback(this.opts.onBulkChange, bulk);
         this.emit("bulkchange", bulk);
-        this.announce(
-            `All ${group.name} permissions for ${role.name} set to ${target}`
-        );
+        this.announce(message);
     }
 
     private aggregateGroupState(
@@ -1547,12 +1631,18 @@ export class PermissionMatrix implements PermissionMatrixHandle
         roleId: string
     ): PermissionState
     {
+        return this.aggregateState(group.permissions.map((p) => [roleId, p.id]));
+    }
+
+    /** "granted" when every pair is granted or inherited, "denied" when none is, else "none" (mixed). */
+    private aggregateState(pairs: Array<[string, string]>): PermissionState
+    {
         let allGranted = true;
         let allDenied = true;
 
-        for (const perm of group.permissions)
+        for (const [roleId, permId] of pairs)
         {
-            const eff = this.resolveEffective(roleId, perm.id);
+            const eff = this.resolveEffective(roleId, permId);
             if (eff !== "granted" && eff !== "inherited") { allGranted = false; }
             if (eff === "granted" || eff === "inherited") { allDenied = false; }
         }
@@ -1560,6 +1650,18 @@ export class PermissionMatrix implements PermissionMatrixHandle
         if (allGranted) { return "granted"; }
         if (allDenied) { return "denied"; }
         return "none"; // mixed -> shows as indeterminate
+    }
+
+    /** Every permission id, in group order. */
+    private allPermissionIds(): string[]
+    {
+        return this.groups.flatMap((g) => g.permissions.map((p) => p.id));
+    }
+
+    /** The ids of the roles that are not read-only. */
+    private editableRoleIds(): string[]
+    {
+        return this.roles.filter((r) => !r.readonly).map((r) => r.id);
     }
 
     // ========================================================================

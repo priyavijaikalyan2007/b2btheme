@@ -325,6 +325,9 @@ function readableOn(background: string): string
 
 const LOG_PREFIX = "[Timeline]";
 
+/** The id of the synthetic "Other" group for items with no group or an unknown one. */
+const UNGROUPED_ID = "__ungrouped__";
+
 const _lu = (typeof window.createLogUtility === "function")
     ? window.createLogUtility().getLogger(LOG_PREFIX.slice(1, -1))
     : null;
@@ -1910,7 +1913,7 @@ export class Timeline implements TimelineHandle
         }
 
         const defaultGroup: TimelineGroup = {
-            id: "__ungrouped__",
+            id: UNGROUPED_ID,
             label: "Other",
             collapsible: false,
         };
@@ -2968,6 +2971,15 @@ export class Timeline implements TimelineHandle
      */
     private getGroupItems(groupId: string): TimelineItem[]
     {
+        // The synthetic "Other" group holds the items with no group or an unknown one (#71): matching its id
+        // literally found none, so those items vanished once any group existed.
+        if (groupId === UNGROUPED_ID)
+        {
+            return Array.from(this.items.values()).filter(
+                (item) => !item.group || !this.groups.has(item.group)
+            );
+        }
+
         return Array.from(this.items.values()).filter(
             (item) => item.group === groupId
         );

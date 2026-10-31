@@ -512,7 +512,9 @@ export class SelectTool implements Tool
      */
     private finishMoveDrag(): void
     {
-        if (this.startBounds.size > 0)
+        // A press that moved nothing is a selecting click, not a move (#72): it used to push an undo step that
+        // changed nothing and mark the document dirty.
+        if (this.startBounds.size > 0 && this.anythingMoved())
         {
             this.engine.pushMoveUndo(this.startBounds);
             this.engine.updateContainment(
@@ -521,6 +523,23 @@ export class SelectTool implements Tool
         }
 
         this.engine.clearToolOverlay();
+    }
+
+    /** True when some dragged object's bounds differ from where the drag started. */
+    private anythingMoved(): boolean
+    {
+        for (const [id, start] of this.startBounds)
+        {
+            const now = this.engine.getObjectById(id)?.presentation.bounds;
+
+            if (!now || now.x !== start.x || now.y !== start.y
+                || now.width !== start.width || now.height !== start.height)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ========================================================================

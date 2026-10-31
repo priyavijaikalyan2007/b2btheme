@@ -1417,10 +1417,11 @@ describe("node ids holding selector syntax", () =>
     const QUOTED = 'say "hi"';
     const FOLDER = 'odd "folder" ] , [x';
 
-    /** The first element carrying the id, which is the one a valid id's selector found (the tree item). */
-    function firstWithId(id: string): HTMLElement | undefined
+    /** The tree row carrying the id; the focus ring and the flash belong on it, not its <li> (#61). */
+    function rowWithId(id: string): HTMLElement | undefined
     {
-        return [...container.querySelectorAll<HTMLElement>("[data-node-id]")].find((el) => el.dataset.nodeId === id);
+        return [...container.querySelectorAll<HTMLElement>(".explorerpicker-node-row")]
+            .find((el) => el.dataset.nodeId === id);
     }
 
     function quotedTree(): ExplorerNode[]
@@ -1435,7 +1436,7 @@ describe("node ids holding selector syntax", () =>
 
         picker.scrollToNode(QUOTED);
 
-        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-flash")).toBe(true);
+        expect(rowWithId(QUOTED)?.classList.contains("explorerpicker-node-row-flash")).toBe(true);
         picker.destroy();
     });
 
@@ -1462,7 +1463,7 @@ describe("node ids holding selector syntax", () =>
         row().click();
 
         expect(picker.getSelection().map((s) => s.nodeId)).toEqual([QUOTED]);
-        expect(firstWithId(QUOTED)?.classList.contains("explorerpicker-node-row-focused")).toBe(true);
+        expect(rowWithId(QUOTED)?.classList.contains("explorerpicker-node-row-focused")).toBe(true);
         picker.destroy();
     });
 });
@@ -1898,4 +1899,94 @@ describe("getState and setState", () =>
         expect(() => picker.setData("nodes", [])).toThrow(/no data slots/);
         picker.destroy();
     });
+});
+
+// ============================================================================
+// EXISTING BUGS FIXED AT THE END OF THE AGENT-UI ARC (#61)
+// ============================================================================
+
+describe("existing bugs found in B7 (#61)", () =>
+{
+    beforeEach(() =>
+    {
+        Element.prototype.scrollIntoView ??= () => undefined;
+    });
+
+    test("theInitialLoadBannersRetry_AsksForTheRootsAgain", async () =>
+    {
+        let fail = true;
+        const onLoadChildren = vi.fn((r: { nodeId: string | null }) =>
+        {
+            if (fail) { fail = false; return Promise.reject(new Error("offline")); }
+            return Promise.resolve(LEVELS[r.nodeId ?? "root"] ?? []);
+        });
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, onLoadChildren }));
+        await settle();
+
+        container.querySelector<HTMLElement>(".explorerpicker-error .explorerpicker-retry")!.click();
+        await settle();
+
+        expect(onLoadChildren).toHaveBeenCalledTimes(2);
+        expect(labels()).toEqual(["Docs", "Specs"]);
+        picker.destroy();
+    });
+
+    test("theSearchErrorsRetry_SearchesAgainWithoutReloadingTheTree", async () =>
+    {
+        const onLoadChildren = levelLoader();
+        let fail = true;
+        const onSearch = vi.fn(() =>
+        {
+            if (fail) { fail = false; return Promise.reject(new Error("offline")); }
+            return Promise.resolve({ results: [makeAsset("readme", "README", "docs")], cursor: null });
+        });
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, onLoadChildren, onSearch }));
+        await settle();
+        picker.setSearchQuery("read");
+        await settle();
+        onLoadChildren.mockClear();
+
+        container.querySelector<HTMLElement>(".explorerpicker-error-inline .explorerpicker-retry")!.click();
+        await settle();
+
+        expect(onSearch).toHaveBeenCalledTimes(2);
+        expect(onLoadChildren).not.toHaveBeenCalled();
+        expect(resultLabels()).toEqual(["README"]);
+        picker.destroy();
+    });
+
+    test("keyboardFocus_LandsOnTheRow_NotItsListItem", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ selectionTarget: "any" }));
+        const input = querySearchInput()!;
+        input.focus();
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+
+        const focused = container.querySelector<HTMLElement>(".explorerpicker-node-row-focused");
+        expect(focused!.classList.contains("explorerpicker-node-row")).toBe(true);
+        expect(document.activeElement).toBe(focused);
+        picker.destroy();
+    });
+
+    test("scrollToNode_FlashesTheRow_NotItsListItem", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts());
+        const id = container.querySelector<HTMLElement>(".explorerpicker-node-row")!.dataset.nodeId!;
+
+        picker.scrollToNode(id);
+
+        const flashed = container.querySelector<HTMLElement>(".explorerpicker-node-row-flash");
+        expect(flashed!.classList.contains("explorerpicker-node-row")).toBe(true);
+        picker.destroy();
+    });
+
+    test("getNodeLevel_ParentIdsThatLoop_Terminates", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: [
+            makeFolder("a", "A", "b"), makeFolder("b", "B", "a")] }));
+        const level = (picker as unknown as { getNodeLevel(id: string): number }).getNodeLevel("a");
+
+        expect(level).toBe(2);
+        picker.destroy();
+    }, 2000);
 });
