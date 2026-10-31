@@ -131,6 +131,8 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...(changeOption ? { changeOption } : {}),
         ...(surface.change ? { change: surface.change } : {}),
         ...(manifest.presentation === "overlay" ? { overlay: { height: manifest.defaultSize.h } } : {}),
+        // A layout fills its container (height: 100%), and an A2UI host's container has no height (ADR-238).
+        ...(manifest.category === "layout" ? { fill: { height: manifest.defaultSize.h } } : {}),
         ...(Object.keys(surface.fixed ?? {}).length > 0 ? { fixed: surface.fixed } : {}),
         ...((surface.children ?? []).length > 0 ? { children: surface.children } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),

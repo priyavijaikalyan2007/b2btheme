@@ -27,6 +27,12 @@ import type { ChildSlot, ComponentContextLike, SurfaceComponentsLike } from "./t
 /** Reports a problem to the agent. */
 type Report = (code: string, message: string) => void;
 
+/** The ids of the layouts a child element sits inside, set on each element this module creates. */
+export const ANCESTORS = Symbol("outcrop.childAncestors");
+
+/** An element that may carry the ids of the layouts above it. */
+export type WithAncestors = HTMLElement & { [ANCESTORS]?: ReadonlySet<string> };
+
 /** The element of a child that is referenced but not yet in the surface, or that cannot be shown. */
 function placeholder(id: string): HTMLElement
 {
@@ -44,12 +50,15 @@ export class ChildElements
     readonly #ctx: ComponentContextLike;
     readonly #report: Report;
     readonly #byId = new Map<string, HTMLElement>();
+    /** This layout's id and the ids of the layouts it sits inside: none of them may be its child. */
+    readonly #lineage: ReadonlySet<string>;
     #wanted = new Set<string>();
 
-    constructor(ctx: ComponentContextLike, report: Report)
+    constructor(ctx: ComponentContextLike, report: Report, ancestors: ReadonlySet<string> = new Set())
     {
         this.#ctx = ctx;
         this.#report = report;
+        this.#lineage = new Set([...ancestors, ctx.componentModel.id]);
     }
 
     /** The ids the last withElements call referred to, present in the surface or not. */
@@ -94,9 +103,11 @@ export class ChildElements
 
         this.#wanted.add(id);
 
-        if (id === this.#ctx.componentModel.id)
+        if (this.#lineage.has(id))
         {
-            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: it lists itself as a child at `
+            const what = id === this.#ctx.componentModel.id ? "itself" : `"${id}", which contains it,`;
+
+            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: it lists ${what} as a child at `
                 + `${slot.path}, which would place it inside itself forever.`);
             return null;
         }
@@ -147,9 +158,11 @@ export class ChildElements
         // As web_core's renderA2uiNode does: a universal element is defined the first time it is rendered.
         if (!customElements.get(entry.tagName)) { customElements.define(entry.tagName, entry.element); }
 
-        const el = document.createElement(entry.tagName) as HTMLElement & { context?: unknown };
+        const el = document.createElement(entry.tagName) as WithAncestors & { context?: unknown };
         const Context = this.#ctx.constructor as new (s: unknown, id: string, path: string) => unknown;
 
+        // Set before the context, which mounts it: a layout child reads it to refuse a cycle.
+        el[ANCESTORS] = this.#lineage;
         el.context = new Context(surface, id, this.#ctx.dataContext.path);
         this.#byId.set(id, el);
 

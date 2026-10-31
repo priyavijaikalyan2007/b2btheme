@@ -147,6 +147,13 @@ export interface AdapterDescriptor
      */
     overlay?: { height: number };
     /**
+     * Set for a layout (manifest category "layout", ADR-238): it fills its
+     * container, so the adapter gives the container a definite height, the
+     * manifest's default unless the host sets --outcrop-layout-height on the
+     * element.
+     */
+    fill?: { height: number };
+    /**
      * The manifest's protocol.fixed (ADR-235): options passed on every mount
      * with these values. The catalog leaves them out, so no agent prop can
      * set them.

@@ -100,7 +100,11 @@ Steps 1 and 4 apply to **every** component, not only layouts: a create-time prop
 
 A2UI may send a layout before the children it names. A referenced id that is not yet in the surface leaves its slot empty, which is not an error. The element subscribes to the surface's `componentsModel.onCreated` and rebuilds (§2.4) when a referenced id arrives, and to `onDeleted` to empty a slot whose component is removed.
 
-### 2.6 Errors
+### 2.6 A layout's height
+
+A layout fills its container (`height: 100%`), and an A2UI host gives that container no height, so a layout rendered as nothing (found 2026-10-31). The descriptor of a component in category `layout` carries `fill: { height }`, its manifest's default height, and the adapter gives the container `height: var(--outcrop-layout-height, <height>px)`; a host sets `--outcrop-layout-height` on the element to size it. Only the twelve layouts have that category, so no published component changes.
+
+### 2.7 Errors
 
 Each is reported to the agent as an A2UI error (`a2ui/src/errors.ts`), never swallowed:
 
@@ -108,7 +112,7 @@ Each is reported to the agent as an A2UI error (`a2ui/src/errors.ts`), never swa
 |---|---|---|
 | A referenced component's catalog implementation has no element (no tag name) | `OUTCROP_MOUNT_FAILED` | The slot stays empty. The message names the id and its type. |
 | The same id is referenced by two slots of one layout | `VALIDATION_FAILED` | The second slot stays empty: one element cannot be in two places. |
-| A layout that contains itself, directly or through another | (web_core) | Caught by web_core's own topology validation; a test confirms it. |
+| A layout that contains itself, directly or through another of our layouts | `VALIDATION_FAILED` | The slot stays empty. web_core's topology validation did not catch it (measured 2026-10-31: two StackLayouts holding each other rebuilt each other for seconds), so each child element carries the ids of the layouts above it and a layout refuses a child among them. |
 | `setState` rejects the state carried across a rebuild | `OUTCROP_MOUNT_FAILED` | The component keeps its fresh state. |
 
 ---

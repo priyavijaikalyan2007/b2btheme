@@ -290,4 +290,22 @@ describe("buildDescriptors — fields", () =>
         expect(d.fixed).toEqual({ keyScope: "ribbon" });
         expect(p).not.toHaveProperty("fixed");
     });
+
+    test("a layout carries its default height to fill; any other category adds no key (ADR-238)", () =>
+    {
+        const stack = { ...picker, manifest: { ...picker.manifest, category: "layout", defaultSize: { w: 360, h: 480 } } };
+        const [d] = buildDescriptors([stack], cat, css).descriptors;
+
+        expect(d.fill).toEqual({ height: 480 });
+        expect(p).not.toHaveProperty("fill");
+    });
+
+    test("a surface's child slots are carried for the adapter to mount; none adds no key (ADR-238)", () =>
+    {
+        const children = [{ path: "panels[].content", cardinality: "one" }];
+        const [d] = buildDescriptors([{ ...picker, surface: { ...picker.surface, children } }], cat, css).descriptors;
+
+        expect(d.children).toEqual(children);
+        expect(p).not.toHaveProperty("children");
+    });
 });

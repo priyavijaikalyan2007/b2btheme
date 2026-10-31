@@ -25,7 +25,7 @@
 // @semantic-marker a2ui-adapter-element
 
 import { attachHandle, invokerFor } from "../../runtime/src/mount";
-import { ChildElements } from "./children";
+import { ANCESTORS, ChildElements, type WithAncestors } from "./children";
 import { ERROR_CODES, reportError } from "./errors";
 import { loadAssets } from "./loader";
 import { logDebug, logInfo } from "./log";
@@ -201,7 +201,8 @@ class Binding
      */
     #watchChildren(): ChildElements
     {
-        const children = new ChildElements(this.#ctx, (code, message) => reportError(this.#ctx, code, message));
+        const children = new ChildElements(this.#ctx, (code, message) => reportError(this.#ctx, code, message),
+            (this.#host as WithAncestors)[ANCESTORS]);
         const components = this.#ctx.dataContext.surface?.componentsModel as SurfaceComponentsLike | undefined;
         const affected = (id: string) =>
         {
@@ -477,6 +478,12 @@ class Binding
             // sized box it lands against the page and adds no height (#41).
             container.style.position = "relative";
             container.style.minHeight = `${d.overlay.height}px`;
+        }
+
+        if (d.fill)
+        {
+            // A layout is height: 100% of this box, which an A2UI host leaves without a height (ADR-238).
+            container.style.height = `var(--outcrop-layout-height, ${d.fill.height}px)`;
         }
 
         try

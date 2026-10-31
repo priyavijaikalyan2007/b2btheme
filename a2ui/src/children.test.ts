@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { Catalog, ComponentContext, MessageProcessor } from "@a2ui/web_core/v0_9";
 import { BASIC_FUNCTIONS } from "@a2ui/web_core/v0_9/basic_catalog";
 
+import { ANCESTORS } from "./children";
 import { defineTestElement, type ElementEnv } from "./element";
 import { resetLoaderForTests } from "./loader";
 import type { AdapterDescriptor } from "./types";
@@ -217,6 +218,20 @@ describe("child slots (ADR-238)", () =>
         expect(builds[0].options.panels[0].content.className).toBe("outcrop-child-pending");
         expect(s.errors).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
             message: expect.stringMatching(/lists itself as a child/) })]);
+    });
+
+    test("each child element carries the ids of the layouts above it, so a nested layout can refuse a cycle",
+        async () =>
+    {
+        const s = mount([{ id: "root", component: "Frame", panels: panels("inner") }, leaf("note"),
+            { id: "inner", component: "Leaf" }]);
+        fireAssetLoads();
+        await flush();
+        const inner = builds[0].options.panels[0].content;
+
+        // The inner element carries the outer layout's id, as a nested outcrop layout's binding reads it.
+        expect([...inner[ANCESTORS]]).toEqual(["root"]);
+        expect(s.errors).toEqual([]);
     });
 
     test("a child whose catalog entry has no element is reported", async () =>
