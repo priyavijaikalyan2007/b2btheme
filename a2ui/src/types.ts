@@ -161,6 +161,12 @@ export interface AdapterDescriptor
     fixed?: Record<string, unknown>;
     /** Option paths that hold child components (ADR-238). */
     children?: ChildSlot[];
+    /**
+     * The manifest's stateKeys, when it declares any: the only keys of
+     * getState() a rebuild carries across (ADR-240). A key that is also an
+     * option would otherwise undo the agent's change that caused the rebuild.
+     */
+    stateKeys?: string[];
     events: AdapterEvent[];
     providers: AdapterProvider[];
     dates: string[];

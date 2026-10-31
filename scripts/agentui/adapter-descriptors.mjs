@@ -135,6 +135,8 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...(manifest.category === "layout" ? { fill: { height: manifest.defaultSize.h } } : {}),
         ...(Object.keys(surface.fixed ?? {}).length > 0 ? { fixed: surface.fixed } : {}),
         ...((surface.children ?? []).length > 0 ? { children: surface.children } : {}),
+        // Only declared state is carried across a rebuild (ADR-240).
+        ...((manifest.stateKeys ?? []).length > 0 ? { stateKeys: [...manifest.stateKeys] } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
         providers: surface.providers.map(({ option, request, actionProp, response }) => ({ option, request, actionProp,
             resultProp: response, concurrency: manifest.protocol?.providers?.[option]?.concurrency ?? "latest" })),

@@ -159,3 +159,55 @@ describe("CardLayout lifecycle", () =>
         expect(layout.getRootElement()).toBeNull();
     });
 });
+
+// ============================================================================
+// SURFACE — on(), setState, setData (readiness step 4 L2, ADR-240)
+// ============================================================================
+
+describe("CardLayout surface", () =>
+{
+    test("setState_TakesActiveKeyAlone_AndShowsThatCard", () =>
+    {
+        const layout = createCardLayout(makeOptions(), container.id);
+
+        layout.setState({ activeKey: "tab2" });
+
+        expect(layout.getState()).toEqual({ activeKey: "tab2", cardCount: 2 });
+        layout.destroy();
+    });
+
+    test("setState_RoundTripsThroughJson", () =>
+    {
+        const layout = createCardLayout(makeOptions(), container.id);
+        layout.setActiveCard("tab2");
+        const state = JSON.parse(JSON.stringify(layout.getState()));
+        layout.destroy();
+
+        const again = createCardLayout(makeOptions(), container.id);
+        again.setState(state);
+
+        expect(again.getState()).toEqual(state);
+        again.destroy();
+    });
+
+    test("on_EmitsNothing_ButReturnsAnUnsubscribeAndWarns", () =>
+    {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const layout = createCardLayout(makeOptions(), container.id);
+
+        const off = layout.on("change", () => undefined);
+
+        expect(typeof off).toBe("function");
+        expect(() => off()).not.toThrow();
+        warn.mockRestore();
+        layout.destroy();
+    });
+
+    test("setData_Throws_BecauseTheCardsAreAnOption", () =>
+    {
+        const layout = createCardLayout(makeOptions(), container.id);
+
+        expect(() => layout.setData("cards", [])).toThrow(/no data slots/);
+        layout.destroy();
+    });
+});

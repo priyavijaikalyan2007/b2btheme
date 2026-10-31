@@ -53,18 +53,15 @@ export const PENDING_CLASSIFICATION = new Set([
     // 17 on 2026-10-31: stacklayout classified, the first layout with A2UI children (readiness step 4 L0, #24,
     // ADR-238).
     // 14 on 2026-10-31: borderlayout, splitlayout and tabbedpanel classified (readiness step 4 L1, ADR-239).
-    "anchorlayout",
-    "boxlayout",
-    "cardlayout",
+    // 9 on 2026-10-31: anchorlayout, boxlayout, cardlayout, flexgridlayout and layerlayout classified (readiness
+    // step 4 L2, ADR-240).
     "commentoverlay",
     "docklayout",
     "fileupload",
-    "flexgridlayout",
     "flowlayout",
     "graphminimap",
     "gridlayout",
     "helpdrawer",
-    "layerlayout",
     "navrail",
     "propertyinspector",
 ]);

@@ -204,6 +204,7 @@ describe("buildDescriptors — fields", () =>
             events: [{ channel: "change", option: "onChange", actionProp: "onChange", payloadInValue: true }],
             providers: [],
             dates: ["due"],
+            stateKeys: ["text", "color"],
         });
     });
 

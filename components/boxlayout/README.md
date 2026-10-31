@@ -130,6 +130,10 @@ var innerBox = createBoxLayout({
 borderLayout.setNorth(innerBox);
 ```
 
+## Over A2UI
+
+BoxLayout is in the A2UI catalog (ADR-240). Each child's `child` is the id of another A2UI component. A change to `direction` or `children` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:

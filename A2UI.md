@@ -34,7 +34,7 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
    | anything else | create | destroy and rebuild the component |
 
    **To make a prop update in place, declare it as an `accepts` slot or a `stateKeys` entry.** Never add a special case to the adapter. A create-time prop that changes rebuilds the component, which loses transient UI state such as focus and scroll; its declared state is carried across the rebuild with `getState`/`setState` (ADR-238).
-   **A layout's children** (`protocol.children`, ADR-238) are component ids; the adapter puts each referenced component's element where the layout takes an `HTMLElement`, keeps it by id across rebuilds (so a child keeps its own state), fills a slot when its component arrives later, and reports a child used twice or one that contains the layout. A layout whose `setState` predates A2UI keeps firing its callbacks for hosts, so a restore silences only its channels (ADR-239). A component in category `layout` gets a container `height: var(--outcrop-layout-height, <defaultSize.h>px)`.
+   **A layout's children** (`protocol.children`, ADR-238) are component ids; the adapter puts each referenced component's element where the layout takes an `HTMLElement`, keeps it by id across rebuilds (so a child keeps its own state), fills a slot when its component arrives later, and reports a child used twice or one that contains the layout. A layout whose `setState` predates A2UI keeps firing its callbacks for hosts, so a restore silences only its channels (ADR-239). A rebuild carries only the manifest's `stateKeys` (ADR-240): a `getState()` that also reports an option's value would otherwise undo the agent's change. A component in category `layout` gets a container `height: var(--outcrop-layout-height, <defaultSize.h>px)`.
 3. **Handles must honour their declared routes.** A route names a method the handle must have (`setData`, `setState`, `setValue`, or the slot's setter). A surface component with channels must implement `on()`, returning an unsubscribe function. Every handle implements `destroy()`. A missing method is reported to the agent as `OUTCROP_MOUNT_FAILED`.
 4. **`mountMethod` must name a real method.** `runtime/src/mount.ts` throws when a manifest declares `show` or `getElement` and the handle lacks it.
 5. **Components mount in the light DOM.** Factories find their container by id and their CSS lives in `document.head`. An element inside a shadow root reports `OUTCROP_MOUNT_FAILED`.
@@ -83,8 +83,8 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 87 components that are. The 14 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
-- **Layouts with children:** StackLayout, BorderLayout, SplitLayout and TabbedPanel (ADR-238, ADR-239); the other eight follow in batches L2 and L3 (`specs/agentui-layouts.plan.md`).
+- **In the catalog:** the 92 components that are. The 9 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **Layouts with children:** StackLayout, BorderLayout, SplitLayout, TabbedPanel, AnchorLayout, BoxLayout, CardLayout, FlexGridLayout and LayerLayout (ADR-238 to ADR-240); DockLayout, FlowLayout and GridLayout follow in batch L3 (`specs/agentui-layouts.plan.md`).
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.
   - The A2UI v1.0 codec is later.
