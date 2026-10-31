@@ -26,7 +26,7 @@ import { promptSizes } from "./catalog-size.mjs";
 import { checkAgentDescription } from "./agent-description.mjs";
 import { buildDescriptors } from "./adapter-descriptors.mjs";
 import { compileValidators } from "./adapter-validators.mjs";
-import { CATALOG_MAJOR, buildCatalog, catalogId } from "./catalog.mjs";
+import { CATALOG_MAJOR, COMMON_TYPES_ID, buildCatalog, catalogId } from "./catalog.mjs";
 import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
 import { defaultOptionsErrors, missingDataMembers, missingDescriptions } from "./checks.mjs";
 import { classifyMembers, createClassifier, factoryOptionsType, optionsParameterIndex } from "./classify.mjs";
@@ -196,7 +196,7 @@ function emitAndCheck(included, input, errors)
 
     for (const c of included)
     {
-        const schema = schemaFor(c, results.get(c.manifest.name), errors);
+        const schema = schemaFor(c, results.get(c.manifest.name), errors, input.commonTypes);
         if (schema)
         {
             out.set(c.manifest.name, schema);
@@ -216,12 +216,16 @@ export function typiaPick(c)
     const overridden = c.manifest.protocol?.schemas ?? {};
 
     // protocol.fixed (ADR-235) is described too, so its values can be checked, then taken out (withoutFixed).
-    return [...c.surface.dataProps.map((d) => d.name).filter((n) => overridden[n] === undefined),
-        ...Object.keys(c.surface.fixed ?? {})];
+    // A child slot (ADR-238) is described by insertChildren, never by typia: its type takes an element. A nested
+    // slot's option has a protocol.schemas override, or insertChildren reports that it needs one.
+    const childSlots = new Set((c.surface.children ?? []).map((ch) => ch.path.split(/[.[]/)[0]));
+
+    return [...c.surface.dataProps.map((d) => d.name)
+        .filter((n) => overridden[n] === undefined && !childSlots.has(n)), ...Object.keys(c.surface.fixed ?? {})];
 }
 
 /** One component's schema, or null with its problems recorded. */
-function schemaFor(c, result, errors)
+function schemaFor(c, result, errors, commonTypes)
 {
     const name = c.manifest.name;
 
@@ -232,22 +236,106 @@ function schemaFor(c, result, errors)
     }
 
     const stripped = stripHostOnlyPaths(normaliseTypiaUnit(result.unit), c);
-    const schema = applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {}, c.surface.dataProps);
+    const children = insertChildren(applyOverrides(stripped.schema, c.manifest.protocol?.schemas ?? {},
+        c.surface.dataProps), c);
+    const schema = children.schema;
     const problems = [
         ...stripped.problems,
+        ...children.problems,
         ...missingDataMembers(schema, c.surface.dataProps.map((d) => d.name)).map((m) =>
             `${name}.${m}: the schema tool dropped this data member without saying so. Report it on #17.`),
         ...missingDescriptions(schema, c.surface.dataProps).map((m) =>
             `${name}.${m}: has JSDoc but the schema lost it; typia ignores a comment on the member's own line. `
             + "Move the /** … */ onto the line above."),
-        ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}).map((e) =>
+        ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}, commonTypes).map((e) =>
             `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or the options type.`),
-        ...fixedProblems(schema, c),
+        ...fixedProblems(schema, c, commonTypes),
         ...overrideProblems(c),
     ];
 
     errors.push(...problems);
     return problems.length === 0 ? withoutFixed(schema, c) : null;
+}
+
+/** A child slot's schema (ADR-238): A2UI's ComponentId, so web_core also knows the parent-child link. */
+const COMPONENT_ID = { $ref: `${COMMON_TYPES_ID}#/$defs/ComponentId` };
+
+/**
+ * Publishes each child slot (protocol.children, ADR-238) as ComponentId, or a
+ * list of them. A top-level slot gets its schema here, with its JSDoc as the
+ * description; a nested one (panels[].content) is set inside its option's
+ * protocol.schemas override, which it needs because typia cannot describe an
+ * element.
+ */
+function insertChildren(schema, c)
+{
+    const slots = c.surface.children ?? [];
+
+    if (slots.length === 0)
+    {
+        return { schema, problems: [] };
+    }
+
+    const out = structuredClone(schema);
+    const jsdoc = new Map(c.surface.dataProps.map((d) => [d.name, d]));
+    const problems = [];
+
+    for (const { path, cardinality } of slots)
+    {
+        const child = cardinality === "many" ? { type: "array", items: COMPONENT_ID } : COMPONENT_ID;
+        const what = cardinality === "many" ? "The ids of components, rendered here in order."
+            : "The id of a component, rendered here.";
+
+        if (!/[.[]/.test(path))
+        {
+            out.properties[path] = { ...child, description: `${jsdoc.get(path)?.jsdoc ?? ""} ${what}`.trim() };
+            out.required = jsdoc.get(path)?.optional === false
+                ? [...new Set([...(out.required ?? []), path])] : out.required;
+            continue;
+        }
+
+        const root = path.split(/[.[]/)[0];
+
+        if (c.manifest.protocol?.schemas?.[root] === undefined)
+        {
+            problems.push(`${c.manifest.name}.${path}: a nested child slot needs a closed protocol.schemas override `
+                + `for "${root}", because typia cannot describe an element; the generator then puts ComponentId at `
+                + `the path. Add it in components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
+            continue;
+        }
+
+        if (!setPath(out, path, { ...child, description: what }))
+        {
+            problems.push(`${c.manifest.name}.${path}: the protocol.schemas override for "${root}" has no object `
+                + "at that path to put the child slot in. Give the item an object schema with "
+                + "additionalProperties: false.");
+        }
+    }
+
+    return { schema: pruneDefs(out), problems };
+}
+
+/** Sets the field `path` names ("panels[].content") to `value` in every owning object; false when none. */
+function setPath(schema, path, value)
+{
+    const [root, ...rest] = path.split(/(?=\[\])|\.|(?<=\[\])/).filter(Boolean);
+    const field = rest.pop();
+    let nodes = [schema.properties[root]].filter(Boolean);
+
+    for (const seg of rest)
+    {
+        nodes = nodes.flatMap((n) => arms(schema, n)).flatMap((n) => (seg === "[]" ? (n.items ? [n.items] : [])
+            : (n.properties?.[seg] ? [n.properties[seg]] : [])));
+    }
+
+    const owners = nodes.flatMap((n) => arms(schema, n)).filter((n) => n.type === "object");
+
+    for (const o of owners)
+    {
+        o.properties = { ...o.properties, [field]: value };
+    }
+
+    return owners.length > 0;
 }
 
 /** The keywords that constrain a schema node; one without any accepts anything. */
@@ -323,9 +411,11 @@ function openPlaces(node, at)
  * passes it on every mount, and nothing else would catch a value the
  * component cannot take.
  */
-function fixedProblems(schema, c)
+function fixedProblems(schema, c, commonTypes)
 {
     const ajv = new Ajv2020({ strict: false, allErrors: true });
+
+    ajv.addSchema(commonTypes);
 
     return Object.entries(c.surface.fixed ?? {}).flatMap(([option, value]) =>
     {

@@ -66,6 +66,68 @@ function run(manifests: unknown[], pending: string[] = [], version: Version = {}
     });
 }
 
+/** The synthetic frame, whose options hold children (ADR-238). */
+function frame(protocolOver: Record<string, unknown> = {})
+{
+    return {
+        name: "frame", factory: "createFrame", factoryStyle: "container-first", label: "Frame",
+        affords: [], emits: [], accepts: [], actions: [], conformance: "display", defaultOptions: { panels: [] },
+        agent: { useWhen: "Arrange other components in titled panels beside an aside region.",
+            avoidWhen: "For a single component use Card; for tabs use Tabs." },
+        protocol: {
+            children: { "panels[].content": "one", aside: "one", footer: "many" },
+            schemas: { panels: { type: "array", items: { type: "object", properties: { id: { type: "string" },
+                title: { type: "string" } }, required: ["id", "title", "content"], additionalProperties: false } } },
+            ...protocolOver,
+        },
+    };
+}
+
+const COMPONENT_ID = { $ref: "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentId" };
+
+describe("runPipeline — child slots (ADR-238)", () =>
+{
+    test("each child slot is published as ComponentId, and the descriptor lists them", () =>
+    {
+        const result = run([frame()]);
+        expect(result.errors).toEqual([]);
+        const props = (result.catalog as any).components.Frame.allOf[2].properties;
+
+        expect(result.errors).toEqual([]);
+        expect(props.aside).toEqual({ description: "The region beside the panels. The id of a component, rendered here.",
+            ...COMPONENT_ID });
+        expect(props.footer).toMatchObject({ type: "array", items: COMPONENT_ID });
+        expect(props.panels.anyOf[0].items.properties.content).toMatchObject(COMPONENT_ID);
+        expect(props.gap.anyOf).toHaveLength(3);
+        expect(result.descriptors.find((d: any) => d.name === "Frame").children).toEqual([
+            { path: "panels[].content", cardinality: "one" }, { path: "aside", cardinality: "one" },
+            { path: "footer", cardinality: "many" }]);
+    }, 60_000);
+
+    test("a nested child slot without an override for its option fails, naming it", () =>
+    {
+        expect(run([frame({ schemas: undefined })]).errors).toContainEqual(
+            expect.stringMatching(/^frame\.panels\[\]\.content: a nested child slot needs a closed protocol\.schemas override for "panels"/));
+    }, 60_000);
+
+    test("a child slot that names nothing, or no element, is stale", () =>
+    {
+        const errors = (children: Record<string, string>) =>
+            (run([frame({ children })]).errors as string[]).join("\n");
+
+        expect(errors({ "panels[].content": "one", aside: "one", footer: "many", sidebar: "one" }))
+            .toMatch(/sidebar.*protocol\.children but matches nothing/);
+        expect(errors({ "panels[].content": "one", aside: "one", footer: "many", gap: "one" }))
+            .toMatch(/gap.*protocol\.children but matches nothing/);
+    }, 60_000);
+
+    test("a path declared both host-only and a child slot is double-classified", () =>
+    {
+        expect((run([frame({ hostOnly: { aside: "Needs a DOM node, which JSON cannot carry." } })]).errors as string[])
+            .join("\n")).toMatch(/aside.*host-only and is also a child slot/);
+    }, 60_000);
+});
+
 describe("runPipeline — fixture widget", () =>
 {
     test("a fully declared component produces no errors", () => { expect(run([widget()]).errors).toEqual([]); }, 60_000);

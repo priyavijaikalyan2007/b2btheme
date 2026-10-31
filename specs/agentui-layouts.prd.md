@@ -59,12 +59,12 @@ A new manifest field, `protocol.children`, maps an option path to `"one"` or `"m
 protocol: {
     children: { "panels[].content": "one" },   // StackLayout
     // BorderLayout: { north: "one", south: "one", east: "one", west: "one", center: "one" }
-    // FlowLayout:   { "children[]": "many" }   (each element of the array is one child)
+    // FlowLayout:   { children: "many" }   (the array at the path is a list of child ids)
 },
 ```
 
 - Path syntax is `protocol.hostOnly`'s: `.prop` and `[]` for array items.
-- `"one"`: the value at the path is a single child id. `"many"`: an array of child ids.
+- `"one"`: the value at the path is a single child id. `"many"`: the value at the path is an array, each item one child id (so FlowLayout declares `children`, not `children[]`).
 - A declared path must name a member whose type admits an element (`HTMLElement`, a component handle, or `any`); otherwise the build fails (`stale-declaration`). A path also declared `hostOnly`, or that is an event, provider or fixed option, fails as double-classified.
 - `runtime/src/registry.ts` validates the field's shape (`PROTOCOL_KEYS`), as it does for `fixed`.
 
@@ -132,7 +132,7 @@ Each batch adds a section to the plan, with its own decisions where a layout rai
 |---|---|---|
 | L1 | BorderLayout, SplitLayout, TabbedPanel | `north`…`center`; `panes[].content`; `tabs[].content` |
 | L2 | AnchorLayout, BoxLayout, CardLayout, FlexGridLayout, LayerLayout | `children[].child`, with each layout's placement fields as ordinary data |
-| L3 | DockLayout, FlowLayout, GridLayout | named slots (`leftSidebar` … `bottomPanel`, `statusBar`) and `content`; `children[]` (many); `children[]` (many) |
+| L3 | DockLayout, FlowLayout, GridLayout | named slots (`leftSidebar` … `bottomPanel`, `statusBar`) and `content`; `children` (many); `children` (many) |
 
 The paths are confirmed per batch against each layout's options type. Known questions for the batches:
 

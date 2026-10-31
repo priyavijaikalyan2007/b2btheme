@@ -132,6 +132,7 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...(surface.change ? { change: surface.change } : {}),
         ...(manifest.presentation === "overlay" ? { overlay: { height: manifest.defaultSize.h } } : {}),
         ...(Object.keys(surface.fixed ?? {}).length > 0 ? { fixed: surface.fixed } : {}),
+        ...((surface.children ?? []).length > 0 ? { children: surface.children } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
         providers: surface.providers.map(({ option, request, actionProp, response }) => ({ option, request, actionProp,
             resultProp: response, concurrency: manifest.protocol?.providers?.[option]?.concurrency ?? "latest" })),

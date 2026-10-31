@@ -279,7 +279,19 @@ export interface ProtocolSpec
      * "document" would take the host page's keys.
      */
     readonly fixed?: Readonly<Record<string, unknown>>;
+
+    /**
+     * Option paths that hold child components, keyed by path ("one" child or
+     * "many"), for a layout (readiness step 4, ADR-238). The catalog
+     * publishes each as A2UI's ComponentId (or a list of them), and the
+     * A2UI adapter mounts the referenced components' elements there, where
+     * the layout already takes an HTMLElement. Path syntax is hostOnly's.
+     */
+    readonly children?: Readonly<Record<string, ChildCardinality>>;
 }
+
+/** How many children an option path holds (ADR-238). */
+export type ChildCardinality = "one" | "many";
 
 /** Scripts a component needs on the page, ahead of its own (ADR-230). */
 export interface DependencySpec

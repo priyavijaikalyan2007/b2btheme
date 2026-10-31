@@ -201,9 +201,17 @@ function literalBindingOrCall(schema)
 /** Data props: literal, binding or function call, description outside the anyOf. */
 function dataProps(surface, root, component)
 {
+    const childSlots = new Set((surface.children ?? []).map((ch) => ch.path));
+
     return surface.dataProps.map((d) =>
     {
         const { description, ...schema } = requireProperty(root, component, "data prop", d.name);
+
+        // A child slot is a component id (ADR-238), as the basic Card's child is: never bound or computed.
+        if (childSlots.has(d.name))
+        {
+            return [d.name, { description, ...schema }];
+        }
         const twoWay = d.name === "value" && surface.twoWayValue
             ? ` Two-way: when bound to a path, the component writes the user's changes there.${clearText(surface)}` : "";
 
