@@ -137,6 +137,12 @@ export interface ExplorerPickerOptions
     showRecentItems?: boolean;
     /** Show the Starred section, loaded from apiBase. Default true. */
     showStarredItems?: boolean;
+    /**
+     * Show the footer with the Confirm (and Cancel) button. Default true. Set
+     * false inside a host dialog with its own buttons, and read the choice
+     * with getSelection() or onSelectionChange.
+     */
+    showFooter?: boolean;
     /** How many recent and starred items to show. Default 5. */
     quickAccessLimit?: number;
     /** Placeholder of the search box. Default "Search resources..." ("Search folders..." for containers). */
@@ -363,6 +369,102 @@ function hslToHex(h: number, s: number, l: number): string
 }
 
 // ============================================================================
+// EXPLORER API RESPONSES (apps request, 2026-10-31)
+// ============================================================================
+
+/**
+ * A Node as the Explorer API returns it. The picker was written against the
+ * PRD's contract (bare arrays of ExplorerNode), and the live API has always
+ * answered with objects and childCount, so against it the tree never loaded
+ * (specs/2026-10-31-explorerpicker-reads-the-explorer-api.md).
+ */
+interface ApiNode
+{
+    id: string;
+    name: string;
+    nodeType: ExplorerNodeType;
+    parentId: string | null;
+    resourceType?: string | null;
+    sourceId?: string | null;
+    resourceId?: string | null;
+    url?: string | null;
+    linkType?: string | null;
+    icon?: string;
+    childCount?: number;
+}
+
+/** GET /tree and GET /nodes/{id}/children (and /recent, should it exist). */
+interface ApiNodeList { nodes: ApiNode[] }
+
+/** GET /starred: an item's node is null when the caller can no longer see it. */
+interface ApiStarredList { items: { nodeId: string; node: ApiNode | null }[] }
+
+/** GET /search: each hit with its ancestors, root first, and the next page's token. */
+interface ApiSearchPage
+{
+    hits: { node: ApiNode; breadcrumbs: ApiNode[] }[];
+    nextPageToken: string | null;
+}
+
+/** An API Node as the picker's node: childCount decides the expand toggle. */
+function fromApiNode(n: ApiNode): ExplorerNode
+{
+    return {
+        id: n.id,
+        name: n.name,
+        nodeType: n.nodeType,
+        parentId: n.parentId,
+        resourceType: n.resourceType ?? null,
+        sourceId: n.sourceId ?? null,
+        resourceId: n.resourceId ?? null,
+        url: n.url ?? null,
+        linkType: n.linkType ?? null,
+        hasChildren: (n.childCount ?? 0) > 0,
+        ...(n.icon ? { icon: n.icon } : {}),
+    };
+}
+
+/** The nodes of a list response; anything else is an error naming the endpoint, which reaches onError. */
+function nodesOf(data: ApiNodeList, endpoint: string): ExplorerNode[]
+{
+    if (!Array.isArray(data?.nodes))
+    {
+        throw new Error(`${LOG_PREFIX} GET ${endpoint} answered without a "nodes" list; the Explorer API returns `
+            + "{ nodes: [...] }.");
+    }
+
+    return data.nodes.map(fromApiNode);
+}
+
+/** The starred nodes the caller can still see. */
+function starredNodesOf(data: ApiStarredList): ExplorerNode[]
+{
+    if (!Array.isArray(data?.items))
+    {
+        throw new Error(`${LOG_PREFIX} GET /starred answered without an "items" list; the Explorer API returns `
+            + "{ items: [...] }.");
+    }
+
+    return data.items.flatMap((item) => (item.node ? [fromApiNode(item.node)] : []));
+}
+
+/** A search response as one page of results, each with its breadcrumb built root first. */
+function searchPageOf(data: ApiSearchPage): ExplorerSearchPage
+{
+    if (!Array.isArray(data?.hits))
+    {
+        throw new Error(`${LOG_PREFIX} GET /search answered without a "hits" list; the Explorer API returns `
+            + "{ hits: [...], totalCount, nextPageToken }.");
+    }
+
+    return {
+        results: data.hits.map((h) => ({ ...fromApiNode(h.node),
+            breadcrumb: h.breadcrumbs.map((b) => b.name).join(" > ") })),
+        cursor: data.nextPageToken ?? null,
+    };
+}
+
+// ============================================================================
 // EXPLORER PICKER IMPLEMENTATION
 // ============================================================================
 
@@ -544,7 +646,11 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         }
         this.buildBody();
         this.buildBreadcrumb();
-        this.buildFooter();
+        // A host dialog has its own buttons; a second row of them is noise (apps request, 2026-10-31).
+        if (this.opts.showFooter !== false)
+        {
+            this.buildFooter();
+        }
         this.buildOverlays();
     }
 
@@ -1385,10 +1491,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     {
         const params = this.buildFilterParams();
         const url = `${this.opts.apiBase}/tree${params}`;
-        const data = await this.apiFetch<ExplorerNode[]>(url);
+        const data = await this.apiFetch<ApiNodeList>(url);
         if (data)
         {
-            this.populateFromNodes(data);
+            this.populateFromNodes(nodesOf(data, "/tree"));
         }
     }
 
@@ -1405,10 +1511,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         }
         const params = this.buildFilterParams();
         const url = `${this.opts.apiBase}/nodes/${nodeId}/children${params}`;
-        const data = await this.apiFetch<ExplorerNode[]>(url);
+        const data = await this.apiFetch<ApiNodeList>(url);
         if (data)
         {
-            this.addChildNodes(nodeId, data);
+            this.addChildNodes(nodeId, nodesOf(data, `/nodes/${nodeId}/children`));
             this.loadedSet.add(nodeId);
         }
     }
@@ -1546,18 +1652,21 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     {
         try
         {
-            const data = await this.apiFetch<ExplorerNode[]>(
+            const data = await this.apiFetch<ApiNodeList>(
                 `${this.opts.apiBase}/recent`);
             if (data)
             {
-                this.recentItems = data.slice(
+                const nodes = nodesOf(data, "/recent");
+                this.recentItems = nodes.slice(
                     0, this.opts.quickAccessLimit);
-                data.forEach(n => this.nodeMap.set(n.id, n));
+                nodes.forEach(n => this.nodeMap.set(n.id, n));
             }
         }
         catch (err)
         {
-            logDebug("Recent items fetch failed");
+            // The Explorer API has no /recent today: a 404 leaves the section empty, and an empty section is
+            // hidden, so one optional section cannot stop the tree (apps request, 2026-10-31).
+            logDebug("Recent items fetch failed; the section stays hidden:", err);
         }
     }
 
@@ -1565,13 +1674,14 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     {
         try
         {
-            const data = await this.apiFetch<ExplorerNode[]>(
+            const data = await this.apiFetch<ApiStarredList>(
                 `${this.opts.apiBase}/starred`);
             if (data)
             {
-                this.starredItems = data.slice(
+                const nodes = starredNodesOf(data);
+                this.starredItems = nodes.slice(
                     0, this.opts.quickAccessLimit);
-                data.forEach(n => this.nodeMap.set(n.id, n));
+                nodes.forEach(n => this.nodeMap.set(n.id, n));
             }
         }
         catch (err)
@@ -2100,9 +2210,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         let url = `${this.opts.apiBase}/search?q=${
             encodeURIComponent(query)}&pageSize=${
             DEFAULT_SEARCH_PAGE_SIZE}`;
+        // The Explorer API pages with nextPageToken, sent back as pageToken (apps request, 2026-10-31).
         if (cursor)
         {
-            url += `&cursor=${encodeURIComponent(cursor)}`;
+            url += `&pageToken=${encodeURIComponent(cursor)}`;
         }
         if (this.opts.resourceTypeFilter?.length)
         {
@@ -2117,7 +2228,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             throw new Error(`Search failed: ${resp.status}`);
         }
-        return resp.json();
+        return searchPageOf(await resp.json() as ApiSearchPage);
     }
 
     private async loadMoreSearchResults(): Promise<void>

@@ -37,6 +37,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **ExplorerPicker reads the Explorer API as it is** (apps request, 2026-10-31): `/tree` and `/nodes/{id}/children` answer `{ nodes }` with `childCount`, `/search` answers `{ hits, nextPageToken }` (the breadcrumb is built from `breadcrumbs`, and paging sends `pageToken`), and `/starred` answers `{ items }`, skipping an item whose node is gone. Against the live API the tree never loaded. A new `showFooter` option (default `true`) hides the Confirm and Cancel buttons inside a host dialog.
 - **PermissionMatrix's six documented-but-ignored options now work** (#70): `showInheritance`, `showChangeHighlight`, `stickyHeader` and `stickyFirstColumn` (default `true`, today's look) and `enableRoleBulk`, `enablePermissionBulk` (default `false`; new role and permission bulk controls). Without `onReset`, Reset now reverts the unsaved edits instead of doing nothing. The README's methods table matches the real API.
 - **FileExplorer's `onLoadChildren` is called** (#69): opening a tree folder given without `children` loads it once, adds its subfolders to the tree and shows a failure in the listing.
 - **Timeline shows items with no group or an unknown group** in its "Other" group once groups exist (#71); they used to vanish.

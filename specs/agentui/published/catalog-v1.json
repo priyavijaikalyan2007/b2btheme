@@ -5510,6 +5510,20 @@
                 }
               ]
             },
+            "showFooter": {
+              "description": "Show the footer with the Confirm (and Cancel) button. Default true. Set\nfalse inside a host dialog with its own buttons, and read the choice\nwith getSelection() or onSelectionChange.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
             "searchPlaceholder": {
               "description": "Placeholder of the search box. Default \"Search resources...\" (\"Search folders...\" for containers).",
               "anyOf": [
