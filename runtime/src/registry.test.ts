@@ -529,6 +529,14 @@ describe("validateManifest — protocol field", () =>
             .toEqual(["protocol.fixed.when", "protocol.fixed.size"]);
         expect(paths({ fixed: {} })).toEqual(["protocol.fixed"]);
     });
+
+    test("protocol.children maps option paths to \"one\" or \"many\" (ADR-238)", () =>
+    {
+        expect(paths({ children: { "panels[].content": "one", "children[]": "many" } })).toEqual([]);
+        expect(paths({ children: {} })).toEqual(["protocol.children"]);
+        expect(paths({ children: ["panels[].content"] })).toEqual(["protocol.children"]);
+        expect(paths({ children: { north: "single" } })).toEqual(["protocol.children.north"]);
+    });
 });
 
 describe("validateManifest — agent field (ADR-222)", () =>

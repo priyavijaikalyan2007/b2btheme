@@ -33,7 +33,8 @@ This file is referenced from the **(CRITICAL) Agent-Protocol-Capable Components*
    | `value` on a two-way component | value | `setValue(v)` |
    | anything else | create | destroy and rebuild the component |
 
-   **To make a prop update in place, declare it as an `accepts` slot or a `stateKeys` entry.** Never add a special case to the adapter. A create-time prop that changes rebuilds the component, which loses transient UI state such as focus and scroll.
+   **To make a prop update in place, declare it as an `accepts` slot or a `stateKeys` entry.** Never add a special case to the adapter. A create-time prop that changes rebuilds the component, which loses transient UI state such as focus and scroll; its declared state is carried across the rebuild with `getState`/`setState` (ADR-238).
+   **A layout's children** (`protocol.children`, ADR-238) are component ids; the adapter puts each referenced component's element where the layout takes an `HTMLElement`, keeps it by id across rebuilds (so a child keeps its own state), fills a slot when its component arrives later, and reports a child used twice or one that contains the layout. A component in category `layout` gets a container `height: var(--outcrop-layout-height, <defaultSize.h>px)`.
 3. **Handles must honour their declared routes.** A route names a method the handle must have (`setData`, `setState`, `setValue`, or the slot's setter). A surface component with channels must implement `on()`, returning an unsubscribe function. Every handle implements `destroy()`. A missing method is reported to the agent as `OUTCROP_MOUNT_FAILED`.
 4. **`mountMethod` must name a real method.** `runtime/src/mount.ts` throws when a manifest declares `show` or `getElement` and the handle lacks it.
 5. **Components mount in the light DOM.** Factories find their container by id and their CSS lives in `document.head`. An element inside a shadow root reports `OUTCROP_MOUNT_FAILED`.
@@ -82,7 +83,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 83 components that are. The 18 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **In the catalog:** the 84 components that are. The 17 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
 - **Containers with children** wait on their `children[]` hazards.
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.

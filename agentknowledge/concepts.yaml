@@ -1806,3 +1806,7 @@
   definition: "A data type that reaches a required function or element through arrays and required members (ADR-237). No value of it works without host code, so the classifier gives it the class of the code it needs; a protocol.hostOnly entry then removes the option whole, instead of publishing objects with the required member dropped. FileExplorer's contextMenuItems, whose items require an action, was the first. An optional callback stays a nested hazard."
   anchor_file: "AGENTS.md"
   related: ["AgentProtocolSchema", "FixedOption", "SlotUpdatedInPlace"]
+- name: "ChildSlot"
+  definition: "protocol.children (ADR-238): an option path of a layout that holds another A2UI component, \"one\" or \"many\". The catalog publishes it as A2UI's ComponentId, so an agent writes a component id, as for the basic Card's child; the A2UI adapter creates that component's element from the host's catalog and passes it where the layout takes an HTMLElement, keeping it by id across rebuilds so the child keeps its state."
+  anchor_file: "AGENTS.md"
+  related: ["SlotUpdatedInPlace", "RequiredHostCode", "A2uiAdapter"]

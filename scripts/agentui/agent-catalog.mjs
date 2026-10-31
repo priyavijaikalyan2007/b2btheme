@@ -20,12 +20,16 @@ const COMMON_REF = `${COMMON_TYPES_ID}#/$defs/`;
 const BINDING_REF = `${COMMON_REF}DataBinding`;
 const FUNCTION_CALL_REF = `${COMMON_REF}FunctionCall`;
 const ACTION_REF = `${COMMON_REF}Action`;
+// A child slot (ADR-238): a component id, rendered inside the component, never bound.
+const COMPONENT_ID_REF = `${COMMON_REF}ComponentId`;
 const BASIC_REF = `${BASIC_CATALOG_ID}#/`;
 
 const NOTATION = "This is a rendering of the catalog for prompts; validate messages against the full catalog at "
     + "catalogId. Each component property shows its literal schema only. As the description says, a data "
     + "binding or function call may stand in its place: a property whose schema is $defs/DataBinding takes "
-    + "only a binding, and one whose schema is $defs/Action takes only an action. Every component also takes "
+    + "only a binding, and one whose schema is $defs/Action takes only an action. A property whose schema is "
+    + "$defs/ComponentId, or a list of them, takes only component ids: those components render inside this one. "
+    + "Every component also takes "
     + "the properties under componentCommon, and id is required. The components and functions under "
     + "reexports are defined in the catalog reexports.catalogId names, which you need alongside this one.";
 
@@ -131,7 +135,10 @@ function commonDefs(commonTypes)
 
 function localCommonRef(ref)
 {
-    if (ref === ACTION_REF || ref === BINDING_REF) { return `#/$defs/${ref.slice(COMMON_REF.length)}`; }
+    if (ref === ACTION_REF || ref === BINDING_REF || ref === COMPONENT_ID_REF)
+    {
+        return `#/$defs/${ref.slice(COMMON_REF.length)}`;
+    }
 
     if (ref.startsWith(COMMON_REF) || ref.startsWith(BASIC_REF))
     {
@@ -208,15 +215,21 @@ function expandComponent(name, entry)
 /** A lean prop as the catalog writes it: binding-only and action props as they are, others with both arms back. */
 function expandProp(schema)
 {
-    const full = mapRefs(schema, (ref) => (ref === "#/$defs/DataBinding" || ref === "#/$defs/Action"
-        ? `${COMMON_REF}${ref.slice("#/$defs/".length)}` : ref));
+    const local = new Set(["#/$defs/DataBinding", "#/$defs/Action", "#/$defs/ComponentId"]);
+    const full = mapRefs(schema, (ref) => (local.has(ref) ? `${COMMON_REF}${ref.slice("#/$defs/".length)}` : ref));
 
-    if (full.$ref === BINDING_REF || full.$ref === ACTION_REF) { return full; }
+    if (full.$ref === BINDING_REF || full.$ref === ACTION_REF || isChildSlot(full)) { return full; }
 
     const { description, anyOf, ...literal } = full;
     const arms = [...(anyOf ?? [literal]), { $ref: BINDING_REF }, { $ref: FUNCTION_CALL_REF }];
 
     return { ...(description ? { description } : {}), ...(anyOf ? literal : {}), anyOf: arms };
+}
+
+/** A top-level child slot (ADR-238): a ComponentId, or a list of them, published without binding arms. */
+function isChildSlot(schema)
+{
+    return schema.$ref === COMPONENT_ID_REF || (schema.type === "array" && schema.items?.$ref === COMPONENT_ID_REF);
 }
 
 /** Where `lean` and `full` differ once both are canonical: the first differing path, or nothing. */

@@ -467,11 +467,12 @@ function validateProtocol(
     validateStringMap("protocol.hostOnlyActions", p.hostOnlyActions, "a reason string", issues);
     validateDependencies(p.dependencies, issues);
     validateFixed(p.fixed, issues);
+    validateChildren(p.children, issues);
 }
 
 /** The keys `protocol` may carry. */
 const PROTOCOL_KEYS: readonly string[] =
-    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed"];
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children"];
 
 /**
  * True for a value JSON carries unchanged: null, a string, a finite number,
@@ -507,6 +508,30 @@ function validateFixed(v: unknown, issues: ValidationIssue[]): void
     for (const [key, value] of Object.entries(v).filter(([, value]) => !isJsonValue(value)))
     {
         issues.push(typeIssue(`protocol.fixed.${key}`, "a JSON value", value));
+    }
+}
+
+/**
+ * Validates `protocol.children` (ADR-238): a non-empty record of option
+ * paths to "one" or "many". Whether each path names a member that takes an
+ * element is the generator's check, which can see the types.
+ */
+function validateChildren(v: unknown, issues: ValidationIssue[]): void
+{
+    if (v === undefined)
+    {
+        return;
+    }
+
+    if (!isObject(v) || Object.keys(v).length === 0)
+    {
+        issues.push(typeIssue("protocol.children", "a non-empty record of option paths to \"one\" or \"many\"", v));
+        return;
+    }
+
+    for (const [key, value] of Object.entries(v).filter(([, value]) => value !== "one" && value !== "many"))
+    {
+        issues.push(typeIssue(`protocol.children.${key}`, "\"one\" or \"many\"", value));
     }
 }
 

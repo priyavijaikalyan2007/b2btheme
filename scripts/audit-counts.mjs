@@ -924,7 +924,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 165 -> 164, data that reaches a required function or element is classed as host code
     // (readiness step 3): three pending members move from nested hazards to unclassified host code.
     // ADR-237 (2026-10-30): 164 -> 143, FileExplorer classified (readiness step 3, #21).
-    unclassifiedOptions: 143,
+    // ADR-238 (2026-10-31): 143 -> 142, StackLayout classified (readiness step 4 L0, #24).
+    unclassifiedOptions: 142,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -964,7 +965,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 4 -> 3, Timeline raised to surface (readiness step 3, #25).
     // ADR-237 (2026-10-30): 3 -> 2, PermissionMatrix raised to surface (readiness step 3, #23).
     // ADR-237 (2026-10-30): 2 -> 1, FileExplorer raised to surface (readiness step 3, #21).
-    componentsBelowRequiredLevel: 1,
+    // ADR-238 (2026-10-31): 1 -> 0, StackLayout raised to surface (readiness step 4 L0, #24).
+    componentsBelowRequiredLevel: 0,
     // ADR-219 (2026-10-25): length of PENDING_CLASSIFICATION in scripts/agentui/migration.mjs.
     // 94 -> 93 the same day: stickynote left once one onChange in two roles stopped counting
     // as a double claim. Target 0. Pinned exactly by the floor of the same value (2026-10-25):
@@ -997,7 +999,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 21 -> 20, Timeline classified (readiness step 3, #25).
     // ADR-237 (2026-10-30): 20 -> 19, PermissionMatrix classified (readiness step 3, #23).
     // ADR-237 (2026-10-30): 19 -> 18, FileExplorer classified (readiness step 3, #21).
-    componentsPendingClassification: 18,
+    // ADR-238 (2026-10-31): 18 -> 17, StackLayout classified (readiness step 4 L0, #24).
+    componentsPendingClassification: 17,
 };
 
 /*
@@ -1110,11 +1113,12 @@ export const FLOORS = {
     // ADR-237 (2026-10-30): 165, 32, 2 and 19 once PermissionMatrix was classified (readiness step 3, #23).
     // ADR-237 (2026-10-30): 164 and 31 once data reaching required host code is classed as host code (step 3).
     // ADR-237 (2026-10-30): 143, 16, 1 and 18 once FileExplorer was classified (readiness step 3, #21).
-    unclassifiedOptions: 143,
+    // ADR-238 (2026-10-31): 142, 0 and 17 once StackLayout was classified (readiness step 4 L0, #24).
+    unclassifiedOptions: 142,
     protocolPropsMissingJsdoc: 16,
     changeMismatches: 0,
-    componentsBelowRequiredLevel: 1,
-    componentsPendingClassification: 18,
+    componentsBelowRequiredLevel: 0,
+    componentsPendingClassification: 17,
 };
 
 /**
