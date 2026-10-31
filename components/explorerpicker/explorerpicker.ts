@@ -375,8 +375,11 @@ function hslToHex(h: number, s: number, l: number): string
 /**
  * A Node as the Explorer API returns it. The picker was written against the
  * PRD's contract (bare arrays of ExplorerNode), and the live API has always
- * answered with objects and childCount, so against it the tree never loaded
- * (specs/2026-10-31-explorerpicker-reads-the-explorer-api.md).
+ * answered with objects, so against it the tree never loaded
+ * (specs/2026-10-31-explorerpicker-reads-the-explorer-api.md). The server
+ * decides `expandable` by what the node is, and an empty folder is still
+ * expandable; it never sent childCount
+ * (specs/2026-10-31-explorerpicker-childcount-answer.md).
  */
 interface ApiNode
 {
@@ -390,7 +393,7 @@ interface ApiNode
     url?: string | null;
     linkType?: string | null;
     icon?: string;
-    childCount?: number;
+    expandable?: boolean;
 }
 
 /** GET /tree and GET /nodes/{id}/children (and /recent, should it exist). */
@@ -406,9 +409,21 @@ interface ApiSearchPage
     nextPageToken: string | null;
 }
 
-/** An API Node as the picker's node: childCount decides the expand toggle. */
-function fromApiNode(n: ApiNode): ExplorerNode
+/** How one picker reads API nodes: its selection target, and where a response with nodes lacking expandable goes. */
+interface NodeReading
 {
+    selectionTarget: "resource" | "container" | "any";
+    missingExpandable: (endpoint: string, count: number) => void;
+}
+
+/**
+ * An API Node as the picker's node. `expandable` decides the expand toggle, except that a container picker
+ * expands only containers: a checklist template is expandable, but its instances could never be picked there.
+ * A node without `expandable` is a leaf, and its response reports it.
+ */
+function fromApiNode(n: ApiNode, reading: NodeReading): ExplorerNode
+{
+    const isContainer = n.nodeType === "ORG_UNIT" || n.nodeType === "FOLDER";
     return {
         id: n.id,
         name: n.name,
@@ -419,13 +434,25 @@ function fromApiNode(n: ApiNode): ExplorerNode
         resourceId: n.resourceId ?? null,
         url: n.url ?? null,
         linkType: n.linkType ?? null,
-        hasChildren: (n.childCount ?? 0) > 0,
+        hasChildren: n.expandable === true && (reading.selectionTarget !== "container" || isContainer),
         ...(n.icon ? { icon: n.icon } : {}),
     };
 }
 
+/** The picker's nodes for one response's API nodes, reporting once if any of them lacks `expandable`. */
+function readNodes(nodes: ApiNode[], endpoint: string, reading: NodeReading): ExplorerNode[]
+{
+    const missing = nodes.filter((n) => typeof n.expandable !== "boolean").length;
+    if (missing > 0)
+    {
+        reading.missingExpandable(endpoint, missing);
+    }
+
+    return nodes.map((n) => fromApiNode(n, reading));
+}
+
 /** The nodes of a list response; anything else is an error naming the endpoint, which reaches onError. */
-function nodesOf(data: ApiNodeList, endpoint: string): ExplorerNode[]
+function nodesOf(data: ApiNodeList, endpoint: string, reading: NodeReading): ExplorerNode[]
 {
     if (!Array.isArray(data?.nodes))
     {
@@ -433,11 +460,11 @@ function nodesOf(data: ApiNodeList, endpoint: string): ExplorerNode[]
             + "{ nodes: [...] }.");
     }
 
-    return data.nodes.map(fromApiNode);
+    return readNodes(data.nodes, endpoint, reading);
 }
 
 /** The starred nodes the caller can still see. */
-function starredNodesOf(data: ApiStarredList): ExplorerNode[]
+function starredNodesOf(data: ApiStarredList, reading: NodeReading): ExplorerNode[]
 {
     if (!Array.isArray(data?.items))
     {
@@ -445,11 +472,11 @@ function starredNodesOf(data: ApiStarredList): ExplorerNode[]
             + "{ items: [...] }.");
     }
 
-    return data.items.flatMap((item) => (item.node ? [fromApiNode(item.node)] : []));
+    return readNodes(data.items.flatMap((item) => (item.node ? [item.node] : [])), "/starred", reading);
 }
 
 /** A search response as one page of results, each with its breadcrumb built root first. */
-function searchPageOf(data: ApiSearchPage): ExplorerSearchPage
+function searchPageOf(data: ApiSearchPage, reading: NodeReading): ExplorerSearchPage
 {
     if (!Array.isArray(data?.hits))
     {
@@ -457,9 +484,10 @@ function searchPageOf(data: ApiSearchPage): ExplorerSearchPage
             + "{ hits: [...], totalCount, nextPageToken }.");
     }
 
+    const nodes = readNodes(data.hits.map((h) => h.node), "/search", reading);
     return {
-        results: data.hits.map((h) => ({ ...fromApiNode(h.node),
-            breadcrumb: h.breadcrumbs.map((b) => b.name).join(" > ") })),
+        results: nodes.map((node, i) => ({ ...node,
+            breadcrumb: data.hits[i].breadcrumbs.map((b) => b.name).join(" > ") })),
         cursor: data.nextPageToken ?? null,
     };
 }
@@ -511,6 +539,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         "mode" | "selectionTarget" | "apiBase" | "height" | "showRecentItems" |
         "showStarredItems" | "quickAccessLimit">> & ExplorerPickerOptions;
     private instanceId: string;
+    private reading: NodeReading;
 
     // ── DOM References ──────────────────────────────────────────────────
     private rootEl: HTMLElement | null = null;
@@ -569,6 +598,16 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         instanceCounter++;
         this.instanceId = `explorerpicker-${instanceCounter}`;
         this.opts = this.mergeDefaults(options);
+        this.reading = {
+            selectionTarget: this.opts.selectionTarget,
+            // No guess for an older API: its nodes are leaves, and onError says why (apps answer, 2026-10-31).
+            missingExpandable: (endpoint, count) =>
+            {
+                const message = `GET ${endpoint} answered ${count} node(s) without "expandable"; they show as leaves.`;
+                logError("node.expandable missing", message);
+                this.opts.onError?.(new Error(`${LOG_PREFIX} ${message}`), "node.expandable missing");
+            },
+        };
         if (options.excludeNodeIds)
         {
             options.excludeNodeIds.forEach(id => this.excludeSet.add(id));
@@ -1494,7 +1533,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         const data = await this.apiFetch<ApiNodeList>(url);
         if (data)
         {
-            this.populateFromNodes(nodesOf(data, "/tree"));
+            this.populateFromNodes(nodesOf(data, "/tree", this.reading));
         }
     }
 
@@ -1514,7 +1553,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         const data = await this.apiFetch<ApiNodeList>(url);
         if (data)
         {
-            this.addChildNodes(nodeId, nodesOf(data, `/nodes/${nodeId}/children`));
+            this.addChildNodes(nodeId, nodesOf(data, `/nodes/${nodeId}/children`, this.reading));
             this.loadedSet.add(nodeId);
         }
     }
@@ -1656,7 +1695,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
                 `${this.opts.apiBase}/recent`);
             if (data)
             {
-                const nodes = nodesOf(data, "/recent");
+                const nodes = nodesOf(data, "/recent", this.reading);
                 this.recentItems = nodes.slice(
                     0, this.opts.quickAccessLimit);
                 nodes.forEach(n => this.nodeMap.set(n.id, n));
@@ -1678,7 +1717,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
                 `${this.opts.apiBase}/starred`);
             if (data)
             {
-                const nodes = starredNodesOf(data);
+                const nodes = starredNodesOf(data, this.reading);
                 this.starredItems = nodes.slice(
                     0, this.opts.quickAccessLimit);
                 nodes.forEach(n => this.nodeMap.set(n.id, n));
@@ -2228,7 +2267,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             throw new Error(`Search failed: ${resp.status}`);
         }
-        return searchPageOf(await resp.json() as ApiSearchPage);
+        return searchPageOf(await resp.json() as ApiSearchPage, this.reading);
     }
 
     private async loadMoreSearchResults(): Promise<void>
