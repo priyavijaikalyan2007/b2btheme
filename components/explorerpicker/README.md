@@ -119,12 +119,14 @@ The Explorer API's responses, as they are (2026-10-31): every list is an object.
 
 | Request | Response |
 |---|---|
-| `GET /tree`, `GET /nodes/{id}/children` | `{ nodes: [Node] }`; a node with `childCount > 0` gets an expand toggle |
+| `GET /tree`, `GET /nodes/{id}/children` | `{ nodes: [Node] }`; see **Which nodes expand** below |
 | `GET /search?q=&pageSize=&pageToken=` | `{ hits: [{ node, breadcrumbs: [Node] }], totalCount, nextPageToken }`; the breadcrumb is `breadcrumbs`' names, root first, joined with " > ", and `nextPageToken` is sent back as `pageToken` |
 | `GET /starred` | `{ items: [{ nodeId, starredAt, sortOrder, node }] }`; an item whose `node` is null is skipped |
 | `GET /recent` | Requested only with `showRecentItems: true`. The API has no such endpoint today: a 404 leaves the section hidden and the tree renders |
 
 A response of another shape is an error naming the endpoint, reported through `onError` with its context.
+
+**Which nodes expand.** The API marks each node `expandable` by what it is: org units, folders (an empty one too) and checklist templates. The picker shows an expand toggle on an `expandable` node, and an empty folder opens empty. A `selectionTarget: "container"` picker shows toggles only on org units and folders, since a template's instances could never be picked there. A response with nodes that lack `expandable`, from an older API, shows them as leaves and calls `onError` once, with the context `"node.expandable missing"`.
 
 ## Instance API
 

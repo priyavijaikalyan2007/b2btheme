@@ -98,25 +98,25 @@
         // ── Mock Org Tree ───────────────────────────────────────────────
 
         var mockTree = [
-            { id: "eng", name: "Engineering", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
-            { id: "platform", name: "Platform Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "eng" },
-            { id: "arch", name: "Architecture Diagrams", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "platform" },
-            { id: "sys-arch", name: "System Architecture", nodeType: "ASSET_REF", resourceId: "res-1", resourceType: "diagrams.diagram", sourceId: "src-1", url: null, linkType: null, hasChildren: false, parentId: "arch" },
-            { id: "data-arch", name: "Data Architecture", nodeType: "ASSET_REF", resourceId: "res-2", resourceType: "diagrams.diagram", sourceId: "src-2", url: null, linkType: null, hasChildren: false, parentId: "arch" },
-            { id: "api-spec", name: "API Specification", nodeType: "ASSET_REF", resourceId: "res-3", resourceType: "docs.document", sourceId: "src-3", url: null, linkType: null, hasChildren: false, parentId: "arch" },
-            { id: "docs", name: "Documentation", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "platform" },
-            { id: "adr", name: "Architecture Decision Records", nodeType: "ASSET_REF", resourceId: "res-4", resourceType: "docs.document", sourceId: "src-4", url: null, linkType: null, hasChildren: false, parentId: "docs" },
-            { id: "onboard", name: "Onboarding Checklist", nodeType: "ASSET_REF", resourceId: "res-5", resourceType: "checklists.template", sourceId: "src-5", url: null, linkType: null, hasChildren: false, parentId: "docs" },
-            { id: "product", name: "Product Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "eng" },
-            { id: "roadmap", name: "Product Roadmap", nodeType: "ASSET_REF", resourceId: "res-6", resourceType: "diagrams.diagram", sourceId: "src-6", url: null, linkType: null, hasChildren: false, parentId: "product" },
-            { id: "marketing", name: "Marketing", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
-            { id: "brand", name: "Brand Assets", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "marketing" },
-            { id: "logo-guide", name: "Logo Guidelines", nodeType: "ASSET_REF", resourceId: "res-7", resourceType: "docs.document", sourceId: "src-7", url: null, linkType: null, hasChildren: false, parentId: "brand" },
-            { id: "ops", name: "Operations", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
-            { id: "it-links", name: "IT Links", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "ops" },
-            { id: "gdrive", name: "Shared Google Drive", nodeType: "LINK", resourceId: "res-8", resourceType: "external.document.google_doc", sourceId: null, url: "https://drive.google.com", linkType: "google_docs", hasChildren: false, parentId: "it-links" },
-            { id: "confluence", name: "Confluence Wiki", nodeType: "LINK", resourceId: "res-9", resourceType: "external.document.confluence", sourceId: null, url: "https://wiki.example.com", linkType: "confluence", hasChildren: false, parentId: "it-links" },
-            { id: "github", name: "GitHub Repos", nodeType: "LINK", resourceId: "res-10", resourceType: "external.code.github", sourceId: null, url: "https://github.com/example", linkType: "github", hasChildren: false, parentId: "it-links" }
+            { id: "eng", name: "Engineering", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null },
+            { id: "platform", name: "Platform Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "eng" },
+            { id: "arch", name: "Architecture Diagrams", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "platform" },
+            { id: "sys-arch", name: "System Architecture", nodeType: "ASSET_REF", resourceId: "res-1", resourceType: "diagrams.diagram", sourceId: "src-1", url: null, linkType: null, expandable: false, parentId: "arch" },
+            { id: "data-arch", name: "Data Architecture", nodeType: "ASSET_REF", resourceId: "res-2", resourceType: "diagrams.diagram", sourceId: "src-2", url: null, linkType: null, expandable: false, parentId: "arch" },
+            { id: "api-spec", name: "API Specification", nodeType: "ASSET_REF", resourceId: "res-3", resourceType: "docs.document", sourceId: "src-3", url: null, linkType: null, expandable: false, parentId: "arch" },
+            { id: "docs", name: "Documentation", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "platform" },
+            { id: "adr", name: "Architecture Decision Records", nodeType: "ASSET_REF", resourceId: "res-4", resourceType: "docs.document", sourceId: "src-4", url: null, linkType: null, expandable: false, parentId: "docs" },
+            { id: "onboard", name: "Onboarding Checklist", nodeType: "ASSET_REF", resourceId: "res-5", resourceType: "checklists.template", sourceId: "src-5", url: null, linkType: null, expandable: true, parentId: "docs" },
+            { id: "product", name: "Product Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "eng" },
+            { id: "roadmap", name: "Product Roadmap", nodeType: "ASSET_REF", resourceId: "res-6", resourceType: "diagrams.diagram", sourceId: "src-6", url: null, linkType: null, expandable: false, parentId: "product" },
+            { id: "marketing", name: "Marketing", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null },
+            { id: "brand", name: "Brand Assets", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "marketing" },
+            { id: "logo-guide", name: "Logo Guidelines", nodeType: "ASSET_REF", resourceId: "res-7", resourceType: "docs.document", sourceId: "src-7", url: null, linkType: null, expandable: false, parentId: "brand" },
+            { id: "ops", name: "Operations", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null },
+            { id: "it-links", name: "IT Links", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "ops" },
+            { id: "gdrive", name: "Shared Google Drive", nodeType: "LINK", resourceId: "res-8", resourceType: "external.document.google_doc", sourceId: null, url: "https://drive.google.com", linkType: "google_docs", expandable: false, parentId: "it-links" },
+            { id: "confluence", name: "Confluence Wiki", nodeType: "LINK", resourceId: "res-9", resourceType: "external.document.confluence", sourceId: null, url: "https://wiki.example.com", linkType: "confluence", expandable: false, parentId: "it-links" },
+            { id: "github", name: "GitHub Repos", nodeType: "LINK", resourceId: "res-10", resourceType: "external.code.github", sourceId: null, url: "https://github.com/example", linkType: "github", expandable: false, parentId: "it-links" }
         ];
 
         // ── Mock Ontology Types ─────────────────────────────────────────
@@ -144,7 +144,8 @@
                     {
                         var match = url.match(/[?&]q=([^&]*)/);
                         var query = match ? decodeURIComponent(match[1]).toLowerCase() : "";
-                        var results = mockTree.filter(function(n)
+                        // As the Explorer API answers: each hit with its ancestors, root first.
+                        var hits = mockTree.filter(function(n)
                         {
                             return n.name.toLowerCase().indexOf(query) !== -1 &&
                                    (n.nodeType === "ASSET_REF" || n.nodeType === "LINK");
@@ -152,15 +153,15 @@
                         {
                             var parent = mockTree.find(function(p) { return p.id === n.parentId; });
                             var grandparent = parent ? mockTree.find(function(g) { return g.id === parent.parentId; }) : null;
-                            var crumbs = [];
-                            if (grandparent) { crumbs.push(grandparent.name); }
-                            if (parent) { crumbs.push(parent.name); }
-                            return Object.assign({}, n, { breadcrumb: crumbs.join(" > ") });
+                            var breadcrumbs = [];
+                            if (grandparent) { breadcrumbs.push(grandparent); }
+                            if (parent) { breadcrumbs.push(parent); }
+                            return { node: n, breadcrumbs: breadcrumbs };
                         });
 
                         resolve({
                             ok: true,
-                            json: function() { return Promise.resolve({ results: results, cursor: null }); }
+                            json: function() { return Promise.resolve({ hits: hits, totalCount: hits.length, nextPageToken: null }); }
                         });
                         return;
                     }
@@ -173,7 +174,7 @@
                         var children = mockTree.filter(function(n) { return n.parentId === parentId; });
                         resolve({
                             ok: true,
-                            json: function() { return Promise.resolve(children); }
+                            json: function() { return Promise.resolve({ nodes: children }); }
                         });
                         return;
                     }
@@ -184,7 +185,7 @@
                         var recent = [mockTree[3], mockTree[8], mockTree[10]];
                         resolve({
                             ok: true,
-                            json: function() { return Promise.resolve(recent); }
+                            json: function() { return Promise.resolve({ nodes: recent }); }
                         });
                         return;
                     }
@@ -192,18 +193,19 @@
                     // Starred endpoint
                     if (url.indexOf("/starred") !== -1)
                     {
-                        var starred = [mockTree[2]];
+                        var starred = [{ nodeId: mockTree[2].id, starredAt: "2026-10-30T09:00:00Z", sortOrder: 0, node: mockTree[2] }];
                         resolve({
                             ok: true,
-                            json: function() { return Promise.resolve(starred); }
+                            json: function() { return Promise.resolve({ items: starred }); }
                         });
                         return;
                     }
 
-                    // Tree endpoint (default)
+                    // Tree endpoint (default): the roots; children load as a node expands
+                    var roots = mockTree.filter(function(n) { return n.parentId === null; });
                     resolve({
                         ok: true,
-                        json: function() { return Promise.resolve(mockTree); }
+                        json: function() { return Promise.resolve({ nodes: roots }); }
                     });
                 }, 200);
             });

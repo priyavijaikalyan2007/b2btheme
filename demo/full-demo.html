@@ -15993,14 +15993,14 @@
         function epLog(msg) { if (epOut) { epOut.textContent += msg + "\n"; epOut.scrollTop = epOut.scrollHeight; } }
 
         var mockTree = [
-            { id: "eng", name: "Engineering", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
-            { id: "platform", name: "Platform Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "eng" },
-            { id: "arch", name: "Architecture Diagrams", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: "platform" },
-            { id: "sys-arch", name: "System Architecture", nodeType: "ASSET_REF", resourceId: "res-1", resourceType: "diagrams.diagram", sourceId: "src-1", url: null, linkType: null, hasChildren: false, parentId: "arch" },
-            { id: "data-arch", name: "Data Architecture", nodeType: "ASSET_REF", resourceId: "res-2", resourceType: "diagrams.diagram", sourceId: "src-2", url: null, linkType: null, hasChildren: false, parentId: "arch" },
-            { id: "marketing", name: "Marketing", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: true, parentId: null },
-            { id: "brand", name: "Brand Assets", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: false, parentId: "marketing" },
-            { id: "ops", name: "Operations", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, hasChildren: false, parentId: null }
+            { id: "eng", name: "Engineering", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null },
+            { id: "platform", name: "Platform Team", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "eng" },
+            { id: "arch", name: "Architecture Diagrams", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "platform" },
+            { id: "sys-arch", name: "System Architecture", nodeType: "ASSET_REF", resourceId: "res-1", resourceType: "diagrams.diagram", sourceId: "src-1", url: null, linkType: null, expandable: false, parentId: "arch" },
+            { id: "data-arch", name: "Data Architecture", nodeType: "ASSET_REF", resourceId: "res-2", resourceType: "diagrams.diagram", sourceId: "src-2", url: null, linkType: null, expandable: false, parentId: "arch" },
+            { id: "marketing", name: "Marketing", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null },
+            { id: "brand", name: "Brand Assets", nodeType: "FOLDER", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: "marketing" },
+            { id: "ops", name: "Operations", nodeType: "ORG_UNIT", resourceId: null, resourceType: null, sourceId: null, url: null, linkType: null, expandable: true, parentId: null }
         ];
 
         var ontologyTypes = [
@@ -16018,23 +16018,30 @@
                         var m = url.match(/\/nodes\/([^/]+)\/children/);
                         var pid = m ? m[1] : null;
                         var ch = mockTree.filter(function(n) { return n.parentId === pid; });
-                        resolve({ ok: true, json: function() { return Promise.resolve(ch); } });
+                        resolve({ ok: true, json: function() { return Promise.resolve({ nodes: ch }); } });
                         return;
                     }
                     if (url.indexOf("/search") !== -1)
                     {
                         var qm = url.match(/[?&]q=([^&]*)/);
                         var q = qm ? decodeURIComponent(qm[1]).toLowerCase() : "";
-                        var res = mockTree.filter(function(n) { return n.name.toLowerCase().indexOf(q) !== -1 && n.nodeType === "ASSET_REF"; });
-                        resolve({ ok: true, json: function() { return Promise.resolve({ results: res, cursor: null }); } });
+                        var hits = mockTree.filter(function(n) { return n.name.toLowerCase().indexOf(q) !== -1 && n.nodeType === "ASSET_REF"; })
+                            .map(function(n) { return { node: n, breadcrumbs: [] }; });
+                        resolve({ ok: true, json: function() { return Promise.resolve({ hits: hits, totalCount: hits.length, nextPageToken: null }); } });
                         return;
                     }
-                    if (url.indexOf("/recent") !== -1 || url.indexOf("/starred") !== -1)
+                    if (url.indexOf("/recent") !== -1)
                     {
-                        resolve({ ok: true, json: function() { return Promise.resolve([]); } });
+                        resolve({ ok: true, json: function() { return Promise.resolve({ nodes: [] }); } });
                         return;
                     }
-                    resolve({ ok: true, json: function() { return Promise.resolve(mockTree); } });
+                    if (url.indexOf("/starred") !== -1)
+                    {
+                        resolve({ ok: true, json: function() { return Promise.resolve({ items: [] }); } });
+                        return;
+                    }
+                    var roots = mockTree.filter(function(n) { return n.parentId === null; });
+                    resolve({ ok: true, json: function() { return Promise.resolve({ nodes: roots }); } });
                 }, 150);
             });
         }
