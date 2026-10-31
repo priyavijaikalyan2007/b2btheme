@@ -6299,6 +6299,7 @@ dialog.open();
 | `fetchFn` | `typeof fetch` | `window.fetch` | Custom fetch function |
 | `showRecentItems` | `boolean` | `true` | Show recent items section |
 | `showStarredItems` | `boolean` | `true` | Show starred items section |
+| `showFooter` | `boolean` | `true` | Show the footer with Confirm (and Cancel). Set `false` inside a host dialog with its own buttons, and read the choice with `getSelection()` or `onSelectionChange` |
 | `quickAccessLimit` | `number` | `5` | Max items per quick-access section |
 | `searchPlaceholder` | `string` | `"Search resources..."` | Search input placeholder |
 | `height` | `string` | `"400px"` | Picker height |
@@ -6317,6 +6318,37 @@ dialog.open();
 | `onSearch` | `({ query, cursor }) => Promise<{ results, cursor }>` | — | Answers a search instead of `apiBase/search`; a non-null `cursor` shows "Load more results" |
 | `cancellable` | `boolean` | `false` | Show the Cancel button without `onCancel` |
 | `showSearch` | `boolean` | `true` | Show the search box |
+
+### Hosted in a dialog with its own buttons
+
+```typescript
+const host = document.createElement("div");
+const picker = createExplorerPicker({
+    container: host,
+    mode: "single",
+    selectionTarget: "container",
+    showRecentItems: false,
+    showFooter: false,          // the dialog's Move/Cancel are the only buttons
+    height: "320px",
+    onSelectionChange: (s) => { target = s[0]?.nodeId ?? null; },
+});
+createFormDialog({ title: "Move", submitLabel: "Move",
+    fields: [{ name: "destination", label: "Move to", type: "custom", customElement: host }],
+    onSubmit: async () => { /* move to picker.getSelection()[0] */ } }).show();
+```
+
+### What it reads from `apiBase`
+
+The Explorer API's responses, as they are (2026-10-31): every list is an object.
+
+| Request | Response |
+|---|---|
+| `GET /tree`, `GET /nodes/{id}/children` | `{ nodes: [Node] }`; a node with `childCount > 0` gets an expand toggle |
+| `GET /search?q=&pageSize=&pageToken=` | `{ hits: [{ node, breadcrumbs: [Node] }], totalCount, nextPageToken }`; the breadcrumb is `breadcrumbs`' names, root first, joined with " > ", and `nextPageToken` is sent back as `pageToken` |
+| `GET /starred` | `{ items: [{ nodeId, starredAt, sortOrder, node }] }`; an item whose `node` is null is skipped |
+| `GET /recent` | Requested only with `showRecentItems: true`. The API has no such endpoint today: a 404 leaves the section hidden and the tree renders |
+
+A response of another shape is an error naming the endpoint, reported through `onError` with its context.
 
 ## Instance API
 

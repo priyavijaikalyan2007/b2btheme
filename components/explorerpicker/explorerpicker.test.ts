@@ -124,6 +124,12 @@ function makeLink(
 }
 
 /** Build a small test tree with 3 roots and children. */
+/** Nodes as the Explorer API answers a list: { nodes }, each with childCount instead of hasChildren. */
+function apiList(nodes: ExplorerNode[]): { nodes: Record<string, unknown>[] }
+{
+    return { nodes: nodes.map(({ hasChildren, ...n }) => ({ ...n, childCount: hasChildren ? 1 : 0 })) };
+}
+
 function buildMockTree(): ExplorerNode[]
 {
     return [
@@ -628,7 +634,7 @@ describe("API data layer", () =>
     {
         const mockFetch = vi.fn().mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve(buildMockTree()),
+            json: () => Promise.resolve(apiList(buildMockTree())),
         });
         const picker = createExplorerPicker(defaultOpts({
             staticNodes: undefined,
@@ -654,12 +660,12 @@ describe("API data layer", () =>
                 {
                     return Promise.resolve({
                         ok: true,
-                        json: () => Promise.resolve(children),
+                        json: () => Promise.resolve(apiList(children)),
                     });
                 }
                 return Promise.resolve({
                     ok: true,
-                    json: () => Promise.resolve(buildMockTree()),
+                    json: () => Promise.resolve(apiList(buildMockTree())),
                 });
             });
         const picker = createExplorerPicker(defaultOpts({
@@ -681,7 +687,7 @@ describe("API data layer", () =>
     {
         const mockFetch = vi.fn().mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve([]),
+            json: () => Promise.resolve(apiList([])),
         });
         const picker = createExplorerPicker(defaultOpts({
             staticNodes: undefined,
@@ -740,7 +746,7 @@ describe("API data layer", () =>
             callCount++;
             return Promise.resolve({
                 ok: true,
-                json: () => Promise.resolve(buildMockTree()),
+                json: () => Promise.resolve(apiList(buildMockTree())),
             });
         });
         const picker = createExplorerPicker(defaultOpts({
@@ -1443,7 +1449,7 @@ describe("node ids holding selector syntax", () =>
     test("expanding the folder loads and renders its children", async () =>
     {
         const fetchFn = vi.fn().mockResolvedValue({
-            ok: true, json: () => Promise.resolve([makeAsset("kid", "Kid", FOLDER)]) });
+            ok: true, json: () => Promise.resolve(apiList([makeAsset("kid", "Kid", FOLDER)])) });
         const picker = createExplorerPicker(defaultOpts({ staticNodes: quotedTree(), fetchFn }));
 
         await picker.expandNode(FOLDER);
@@ -1706,7 +1712,7 @@ describe("onSearch", () =>
 
     test("without onLoadChildren, onSearch replaces only the search request", async () =>
     {
-        const fetchFn = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(buildMockTree()) });
+        const fetchFn = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(apiList(buildMockTree())) });
         const onSearch = vi.fn(() => Promise.resolve({ results: [], cursor: null }));
         const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn, onSearch }));
         await settle();
@@ -1989,4 +1995,156 @@ describe("existing bugs found in B7 (#61)", () =>
         expect(level).toBe(2);
         picker.destroy();
     }, 2000);
+});
+
+// ============================================================================
+// THE LIVE EXPLORER API'S SHAPES (apps request, 2026-10-31)
+// ============================================================================
+
+describe("the Explorer API as it is (specs/2026-10-31-explorerpicker-reads-the-explorer-api.md)", () =>
+{
+    /** A Node as the Explorer API returns it: camelCase, childCount instead of hasChildren. */
+    function apiNode(id: string, name: string, nodeType: string, parentId: string | null, childCount = 0)
+    {
+        return { id, name, nodeType, parentId, path: `/${id}`, isSystem: false, systemType: null,
+            resourceType: nodeType === "ASSET_REF" ? "diagram" : null, sourceId: null, childCount };
+    }
+
+    const TREE = { nodes: [apiNode("eng", "Engineering", "FOLDER", null, 2), apiNode("ops", "Ops", "FOLDER", null)] };
+    const CHILDREN = { nodes: [apiNode("plan", "Plan", "ASSET_REF", "eng"), apiNode("sub", "Sub", "FOLDER", "eng")] };
+
+    type Route = (url: string) => { status: number; body?: unknown } | undefined;
+
+    /** A fetchFn answering the Explorer and ontology URLs, recording each URL asked for. */
+    function explorerApi(extra: Route = () => undefined)
+    {
+        const urls: string[] = [];
+        const fetchFn = vi.fn((url: string) =>
+        {
+            urls.push(url);
+            const hit = extra(url)
+                ?? (url.includes("/children") ? { status: 200, body: CHILDREN }
+                    : url.includes("/tree") ? { status: 200, body: TREE }
+                        : url.includes("/starred") ? { status: 200, body: { items: [] } }
+                            : url.includes("/recent") ? { status: 404 }
+                                : { status: 200, body: [] });
+
+            return Promise.resolve({ ok: hit.status < 400, status: hit.status, json: () => Promise.resolve(hit.body) });
+        });
+
+        return { fetchFn: fetchFn as unknown as typeof fetch, urls };
+    }
+
+    const labels = () => [...container.querySelectorAll(".explorerpicker-label")].map((n) => n.textContent);
+
+    beforeEach(() => { Element.prototype.scrollIntoView ??= () => undefined; });
+
+    test("theRoots_ComeFromNodes_AndChildCountGivesTheExpandToggle", async () =>
+    {
+        const api = explorerApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+
+        const toggles = container.querySelectorAll(
+            ".explorerpicker-node > .explorerpicker-node-row .explorerpicker-toggle");
+        expect(toggles.length).toBeGreaterThan(0);
+
+        await picker.expandNode("eng");
+        expect(labels()).toEqual(["Engineering", "Plan", "Sub", "Ops"]);
+        picker.destroy();
+    });
+
+    test("search_BuildsTheBreadcrumbFromBreadcrumbs_AndPagesWithPageToken", async () =>
+    {
+        const hit = (id: string) => ({ node: apiNode(id, `Doc ${id}`, "ASSET_REF", "eng"),
+            breadcrumbs: [apiNode("root", "Home", "ORG_UNIT", null),
+                apiNode("eng", "Engineering", "FOLDER", "root")] });
+        const api = explorerApi((url) => (!url.includes("/search") ? undefined
+            : url.includes("pageToken=p2")
+                ? { status: 200, body: { hits: [hit("b")], totalCount: 2, nextPageToken: null } }
+                : { status: 200, body: { hits: [hit("a")], totalCount: 2, nextPageToken: "p2" } }));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn }));
+        await vi.waitFor(() => expect(labels().length).toBeGreaterThan(0));
+
+        picker.setSearchQuery("doc");
+        await vi.waitFor(() => expect(container.querySelector(".explorerpicker-result-item")).not.toBeNull());
+        expect(container.querySelector(".explorerpicker-result-item")!.textContent).toContain("Home > Engineering");
+
+        container.querySelector<HTMLElement>(".explorerpicker-load-more")!.click();
+        await vi.waitFor(() => expect(container.querySelectorAll(".explorerpicker-result-item")).toHaveLength(2));
+        expect(api.urls.find((u) => u.includes("pageToken=p2"))).toBeDefined();
+        expect(api.urls.some((u) => u.includes("cursor="))).toBe(false);
+        picker.destroy();
+    });
+
+    test("starred_SkipsAnItemWhoseNodeIsNull", async () =>
+    {
+        const api = explorerApi((url) => (url.includes("/starred") ? { status: 200, body: { items: [
+            { nodeId: "plan", starredAt: "2026-10-30T00:00:00Z", sortOrder: 0,
+                node: apiNode("plan", "Plan", "ASSET_REF", "eng") },
+            { nodeId: "gone", starredAt: "2026-10-30T00:00:00Z", sortOrder: 1, node: null }] } } : undefined));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, showRecentItems: false }));
+        await vi.waitFor(() => expect(container.querySelectorAll(".explorerpicker-quick-item")).toHaveLength(1));
+
+        expect(container.querySelector(".explorerpicker-quick-item")!.textContent).toContain("Plan");
+        picker.destroy();
+    });
+
+    test("recent_NotRequestedWhenOff_AndA404WhenOnStillRendersTheTree", async () =>
+    {
+        const off = explorerApi();
+        const p1 = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: off.fetchFn,
+            ontologyFetchFn: off.fetchFn, showRecentItems: false }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+        expect(off.urls.some((u) => u.includes("/recent"))).toBe(false);
+        p1.destroy();
+        container.replaceChildren();
+
+        const onError = vi.fn();
+        const on = explorerApi();
+        const p2 = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: on.fetchFn,
+            ontologyFetchFn: on.fetchFn, showRecentItems: true, onError }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+        expect(on.urls.some((u) => u.includes("/recent"))).toBe(true);
+        expect(onError).not.toHaveBeenCalled();
+        p2.destroy();
+    });
+
+    test("aTreeAnswerWithoutNodes_ReachesOnErrorWithItsContext", async () =>
+    {
+        const onError = vi.fn();
+        const api = explorerApi((url) => (url.includes("/tree") ? { status: 200, body: [] } : undefined));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, onError }));
+        await vi.waitFor(() => expect(onError).toHaveBeenCalled());
+
+        expect(onError.mock.calls[0][1]).toBe("loadInitialData");
+        expect((onError.mock.calls[0][0] as Error).message).toMatch(/\/tree.*nodes/);
+        picker.destroy();
+    });
+
+    test("showFooter_False_RendersNoFooter_AndGetSelectionReturnsTheHighlightedContainer", async () =>
+    {
+        const api = explorerApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, showFooter: false, mode: "single", selectionTarget: "container" }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+
+        expect(container.querySelector(".explorerpicker-footer")).toBeNull();
+        [...container.querySelectorAll<HTMLElement>(".explorerpicker-node-row")]
+            .find((r) => r.dataset.nodeId === "ops")!.click();
+        expect(picker.getSelection().map((s) => s.nodeId)).toEqual(["ops"]);
+        picker.destroy();
+    });
+
+    test("showFooter_DefaultsToShowingIt", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts());
+
+        expect(container.querySelector(".explorerpicker-footer")).not.toBeNull();
+        picker.destroy();
+    });
 });
