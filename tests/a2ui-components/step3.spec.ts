@@ -166,7 +166,7 @@ test.describe("Step 3 components under @a2ui/lit", () =>
         await expect(page.locator("[data-item-id='launch']")).toHaveCount(1);
     });
 
-    test("PermissionMatrix: editing a cell sends onChange, and Reset sends onReset with the unsaved count",
+    test("PermissionMatrix: editing a cell sends onChange, and Reset reverts it and sends onReset with the count",
         async ({ page }) =>
         {
             await mount(page, "PermissionMatrix", { ...EV, roles: { path: "/g/roles" }, groups: { path: "/g/groups" },
@@ -178,6 +178,8 @@ test.describe("Step 3 components under @a2ui/lit", () =>
 
             await sent(page, [["edit", { roleId: "viewer", permissionId: "write", previousState: "none",
                 newState: "granted" }], ["discard", 1]]);
+            // Without onReset the matrix reverts the edit itself (#70).
+            await expect(page.locator(CELL("viewer", "write"))).toHaveClass(/permissionmatrix-cell-none/);
         });
 
     test("PermissionMatrix: the agent's rewrite of cells is a new baseline, updated in place", async ({ page }) =>

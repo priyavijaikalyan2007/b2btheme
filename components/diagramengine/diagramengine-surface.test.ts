@@ -103,3 +103,64 @@ describe("DiagramEngine surface contract (B9)", () =>
         expect(heard).toHaveBeenCalledTimes(1);
     });
 });
+
+// ============================================================================
+// A SELECTING CLICK IS NOT A MOVE (#72)
+// ============================================================================
+
+describe("a click that only selects (#72)", () =>
+{
+    let host: HTMLElement;
+
+    beforeEach(() =>
+    {
+        host = document.createElement("div");
+        host.id = "de-click-host";
+        document.body.appendChild(host);
+    });
+
+    afterEach(() => { host.remove(); });
+
+    /** Presses and releases the mouse on the canvas, moving from `from` to `to`. */
+    function drag(from: [number, number], to: [number, number]): void
+    {
+        const svg = host.querySelector("svg")!;
+        const at = (type: string, [x, y]: [number, number]) =>
+            svg.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0 }));
+
+        at("mousedown", from);
+        at("mousemove", to);
+        at("mouseup", to);
+    }
+
+    test("leavesTheUndoStackAndTheDirtyStateAlone_ButSelects", () =>
+    {
+        const engine = createDiagramEngine(host.id, {});
+        engine.addObject({ id: "box", presentation: { shape: "rectangle",
+            bounds: { x: 50, y: 50, width: 100, height: 60 } } });
+        engine.markClean();
+        const undoable = engine.canUndo();
+
+        drag([100, 80], [100, 80]);
+
+        expect(engine.getSelectedObjects().map((o) => o.id)).toEqual(["box"]);
+        expect(engine.isDirty()).toBe(false);
+        expect(engine.canUndo()).toBe(undoable);
+        engine.destroy();
+    });
+
+    test("aRealMove_StillRecordsAnUndoStep", () =>
+    {
+        const engine = createDiagramEngine(host.id, {});
+        engine.addObject({ id: "box", presentation: { shape: "rectangle",
+            bounds: { x: 50, y: 50, width: 100, height: 60 } } });
+        engine.markClean();
+
+        drag([100, 80], [140, 100]);
+
+        expect(engine.getObjectById("box")!.presentation.bounds.x).not.toBe(50);
+        expect(engine.isDirty()).toBe(true);
+        expect(engine.canUndo()).toBe(true);
+        engine.destroy();
+    });
+});

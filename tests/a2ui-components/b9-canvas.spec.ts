@@ -128,9 +128,9 @@ test.describe("B9 canvas components under @a2ui/lit", () =>
         await page.locator("[data-id='box']").click();
         await page.keyboard.press("Delete");
 
-        // The selecting click is itself reported (a move of zero marks the engine dirty); the delete comes last.
+        // Only the delete is an edit: the selecting click no longer counts as a move (#72).
         await expect.poll(async () => (await actions(page)).filter((a) => a.name === "edit")
-            .map((a) => (a.context as { p: { objects: unknown[] } }).p.objects.length).at(-1)).toBe(0);
+            .map((a) => (a.context as { p: { objects: unknown[] } }).p.objects.length)).toEqual([0]);
         expect(await errors(page)).toEqual([]);
     });
 

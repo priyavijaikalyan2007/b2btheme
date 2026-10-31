@@ -245,6 +245,12 @@ export class TenantSwitcher implements TenantSwitcherHandle
     // -- Data ----------------------------------------------------------------
     private tenants: Tenant[];
     private activeId: string;
+    /**
+     * The tenant picked from search results when it is not in `tenants`
+     * (#62): the trigger and getActiveTenant looked the active id up in
+     * `tenants` only, so they showed "Select tenant" and undefined.
+     */
+    private pickedTenant: Tenant | null = null;
 
     // -- DOM -----------------------------------------------------------------
     private rootEl: HTMLElement | null = null;
@@ -379,11 +385,13 @@ export class TenantSwitcher implements TenantSwitcherHandle
 
     getActiveTenant(): Tenant | undefined
     {
-        return this.tenants.find(w => w.id === this.activeId);
+        return this.tenants.find(w => w.id === this.activeId)
+            ?? (this.pickedTenant?.id === this.activeId ? this.pickedTenant : undefined);
     }
 
     setActiveTenant(id: string): void
     {
+        if (this.pickedTenant?.id !== id) { this.pickedTenant = null; }
         this.activeId = id;
         this.updateTriggerContent();
     }
@@ -992,6 +1000,7 @@ export class TenantSwitcher implements TenantSwitcherHandle
             return;
         }
 
+        this.pickedTenant = this.tenants.some(w => w.id === ws.id) ? null : ws;
         this.activeId = ws.id;
         this.updateTriggerContent();
         this.closePortal();
@@ -1090,7 +1099,7 @@ export class TenantSwitcher implements TenantSwitcherHandle
 
     private orderedTenants(): Tenant[]
     {
-        const active = this.tenants.find(w => w.id === this.activeId);
+        const active = this.getActiveTenant();
         const rest = this.tenants.filter(w => w.id !== this.activeId);
         return active ? [active, ...rest] : rest;
     }

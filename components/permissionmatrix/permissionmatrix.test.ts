@@ -612,3 +612,132 @@ describe("PermissionMatrix surface contract", () =>
         pm.destroy();
     });
 });
+
+// ============================================================================
+// THE SIX OPTIONS THAT WERE NEVER READ, AND RESET (#70)
+// ============================================================================
+
+describe("options that were declared but not read, and Reset (#70)", () =>
+{
+    function mount(overrides?: Partial<PermissionMatrixOptions>): PermissionMatrix
+    {
+        const pm = createPermissionMatrix(makeOptions(overrides)) as PermissionMatrix;
+        pm.show(container);
+        return pm;
+    }
+
+    const cell = (roleId: string, permId: string) => container.querySelector<HTMLElement>(
+        `.permissionmatrix-cell[data-role-id="${roleId}"][data-perm-id="${permId}"]`)!;
+
+    /** A child role inheriting from admin, with no explicit cells. */
+    const inheriting = (): Partial<PermissionMatrixOptions> => ({
+        roles: [...makeRoles(), { id: "child", name: "Child", inheritsFrom: "admin" }] });
+
+    test("showInheritance_DefaultResolvesInheritance_FalseDoesNot", () =>
+    {
+        const on = mount(inheriting());
+        expect(on.getEffectiveState("child", "docs.read")).toBe("inherited");
+        on.destroy();
+
+        const off = mount({ ...inheriting(), showInheritance: false });
+        expect(off.getEffectiveState("child", "docs.read")).toBe("none");
+        off.destroy();
+    });
+
+    test("showChangeHighlight_DefaultHighlightsAnEdit_FalseDoesNot", () =>
+    {
+        const on = mount();
+        cell("viewer", "docs.write").click();
+        expect(cell("viewer", "docs.write").classList.contains("permissionmatrix-cell-changed")).toBe(true);
+        on.destroy();
+
+        const off = mount({ showChangeHighlight: false });
+        cell("viewer", "docs.write").click();
+        expect(off.getChanges()).toHaveLength(1);
+        expect(cell("viewer", "docs.write").classList.contains("permissionmatrix-cell-changed")).toBe(false);
+        off.destroy();
+    });
+
+    test("stickyHeaderAndFirstColumn_DefaultSticky_FalseOptsOut", () =>
+    {
+        const on = mount();
+        expect(on.getElement()!.className).not.toMatch(/no-sticky/);
+        on.destroy();
+
+        const off = mount({ stickyHeader: false, stickyFirstColumn: false });
+        expect(off.getElement()!.classList.contains("permissionmatrix-no-sticky-header")).toBe(true);
+        expect(off.getElement()!.classList.contains("permissionmatrix-no-sticky-column")).toBe(true);
+        off.destroy();
+    });
+
+    test("roleAndPermissionBulk_OffByDefault", () =>
+    {
+        const pm = mount();
+        expect(container.querySelector("[data-bulk='role'], [data-bulk='permission']")).toBeNull();
+        pm.destroy();
+    });
+
+    test("enableRoleBulk_GrantsEveryPermissionForTheRole", () =>
+    {
+        const onBulkChange = vi.fn();
+        const heard = vi.fn();
+        const pm = mount({ enableRoleBulk: true, onBulkChange });
+        pm.on("bulkchange", heard);
+
+        container.querySelector<HTMLElement>("[data-bulk='role'][data-role-id='viewer']")!.click();
+
+        expect(["docs.read", "docs.write", "users.manage"].map((p) => pm.getCellState("viewer", p)))
+            .toEqual(["granted", "granted", "granted"]);
+        expect(onBulkChange).toHaveBeenCalledWith(expect.objectContaining({ type: "grant-all-for-role",
+            roleId: "viewer", changes: expect.arrayContaining([expect.objectContaining({ permissionId: "docs.write" })]) }));
+        expect(heard).toHaveBeenCalledTimes(1);
+        pm.destroy();
+    });
+
+    test("enablePermissionBulk_TogglesThePermissionForEveryEditableRole", () =>
+    {
+        const onBulkChange = vi.fn();
+        const pm = mount({ enablePermissionBulk: true, onBulkChange,
+            roles: [...makeRoles(), { id: "owner", name: "Owner", readonly: true }] });
+
+        container.querySelector<HTMLElement>("[data-bulk='permission'][data-perm-id='users.manage']")!.click();
+
+        expect(["admin", "editor", "viewer"].map((r) => pm.getCellState(r, "users.manage")))
+            .toEqual(["granted", "granted", "granted"]);
+        expect(pm.getCellState("owner", "users.manage")).toBe("none");
+        expect(onBulkChange.mock.calls[0][0]).toMatchObject({ type: "grant-all-for-permission",
+            permissionId: "users.manage" });
+
+        container.querySelector<HTMLElement>("[data-bulk='permission'][data-perm-id='users.manage']")!.click();
+        expect(onBulkChange.mock.calls[1][0]).toMatchObject({ type: "deny-all-for-permission" });
+        pm.destroy();
+    });
+
+    test("reset_WithoutOnReset_RevertsTheEdits", () =>
+    {
+        const heard = vi.fn();
+        const pm = mount();
+        pm.on("reset", heard);
+        cell("viewer", "docs.write").click();
+
+        container.querySelector<HTMLElement>(".permissionmatrix-reset-btn")!.click();
+
+        expect(pm.getChanges()).toEqual([]);
+        expect(pm.getCellState("viewer", "docs.write")).toBe("denied");
+        expect(heard).toHaveBeenCalledWith(1);
+        pm.destroy();
+    });
+
+    test("reset_WithOnReset_LeavesItToTheHost", () =>
+    {
+        const onReset = vi.fn();
+        const pm = mount({ onReset });
+        cell("viewer", "docs.write").click();
+
+        container.querySelector<HTMLElement>(".permissionmatrix-reset-btn")!.click();
+
+        expect(onReset).toHaveBeenCalledTimes(1);
+        expect(pm.getChanges()).toHaveLength(1);
+        pm.destroy();
+    });
+});
