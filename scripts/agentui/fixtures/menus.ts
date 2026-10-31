@@ -60,3 +60,13 @@ export function createMenuHost(options: MenuHostOptions): { destroy(): void }
     void options;
     return { destroy: () => undefined };
 }
+
+/** Synthetic overloaded factory: the classifier must refuse it (#29). */
+export function createOverloaded(options: MenuHostOptions): { destroy(): void };
+export function createOverloaded(id: string, options: MenuHostOptions): { destroy(): void };
+export function createOverloaded(a: MenuHostOptions | string, b?: MenuHostOptions): { destroy(): void }
+{
+    void a;
+    void b;
+    return { destroy: () => undefined };
+}

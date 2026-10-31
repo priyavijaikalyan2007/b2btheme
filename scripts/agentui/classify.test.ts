@@ -93,6 +93,18 @@ describe("classify — objects that need host code (readiness step 3)", () =>
     });
 });
 
+describe("classify — overloaded factories (#29)", () =>
+{
+    test("an overloaded factory is refused, naming it", () =>
+    {
+        const cache = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-classify-overload-"));
+        const ctx = createClassifier(path.join(FIXTURES, "tsconfig.json"), cache);
+
+        expect(() => factoryOptionsType(ctx, path.join(FIXTURES, "menus.ts"), "createOverloaded", 0))
+            .toThrow(/createOverloaded in .*menus\.ts is overloaded \(2 signatures\)/);
+    });
+});
+
 describe("classify — arity and JSDoc", () =>
 {
     test("a one-parameter provider has arity 1", () => { expect(widget.get("onSearch")!.arity).toBe(1); });

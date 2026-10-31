@@ -44,6 +44,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      # A published A2UI catalog baseline may grow but never be deleted or
+      # broken (#28). The generator and check [29] compare the build with
+      # whatever baseline is committed, so they cannot catch "delete it and
+      # write it again"; the base branch's copy is the anchor. The checkout
+      # is shallow, so fetch the one commit compared with.
+      - name: Published catalog baselines only grow
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags --depth=1 origin "$BASE_REF"
+            npm run check:baselines -- FETCH_HEAD
+          else
+            git fetch --no-tags --depth=1 origin "$BEFORE"
+            npm run check:baselines -- "$BEFORE"
+          fi
+
       # `npm audit --omit=dev` reports 0 for this repository and always
       # will: there are no runtime dependencies, because every library
       # it serves is vendored out of devDependencies into dist/lib. That

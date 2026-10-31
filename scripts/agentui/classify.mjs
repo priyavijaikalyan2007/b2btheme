@@ -123,7 +123,17 @@ export function factoryOptionsType(ctx, file, factoryName, paramIndex)
     }
 
     const factory = findExport(ctx, source, factoryName);
-    const signature = ctx.checker.getTypeOfSymbolAtLocation(factory, source).getCallSignatures()[0];
+    const signatures = ctx.checker.getTypeOfSymbolAtLocation(factory, source).getCallSignatures();
+
+    // Only one signature's options are read, so an overload's others would be invisible to the classifier (#29).
+    if (signatures.length > 1)
+    {
+        throw new Error(`${factoryName} in ${file} is overloaded (${signatures.length} signatures), and the agent-UI `
+            + "classifier reads one options type. Give the factory a single signature, with a union options type "
+            + "if it needs one.");
+    }
+
+    const signature = signatures[0];
     const parameter = signature?.parameters[paramIndex];
 
     if (!parameter)

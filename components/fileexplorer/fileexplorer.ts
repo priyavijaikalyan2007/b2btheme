@@ -142,6 +142,7 @@ export interface FileExplorerOptions
     onDelete?: (files: FileNode[]) => Promise<boolean>;
     onMove?: (files: FileNode[], targetFolder: FileNode) => Promise<boolean>;
     onCreateFolder?: (parent: FileNode, name: string) => Promise<FileNode | null>;
+    /** Loads the contents of a tree folder opened without `children`; called once per folder. */
     onLoadChildren?: (folder: FileNode) => Promise<FileNode[]>;
     onUpload?: (folder: FileNode, files: FileList) => Promise<void>;
     /** Fired when sort changes. */
@@ -439,6 +440,8 @@ export class FileExplorer implements FileExplorerHandle
     private flatItems: FileNode[] | null = null;
 
     // -- Surface channels (additive, readiness step 3) --
+    /** Folders whose onLoadChildren answer is pending (#69). */
+    private readonly loadingFolders = new Set<string>();
     private readonly handlers: Record<ExplorerChannel, Set<(payload: unknown) => void>> =
         { select: new Set(), open: new Set() };
     /** True while setState restores state, which fires no callback. */
@@ -627,7 +630,8 @@ export class FileExplorer implements FileExplorerHandle
         this.currentFolderId = folderId;
         this.selection.clear();
         this.lastClickedId = null;
-        this.renderContent();
+        if (this.needsChildren(folder)) { this.loadChildren(folder); }
+        else { this.renderContent(); }
         this.updateTreeSelection(folderId);
         const items = this.getCurrentChildren();
         this.announce("Navigated to " + folder.name +
@@ -1609,6 +1613,80 @@ export class FileExplorer implements FileExplorerHandle
         [...this.selection].filter((id) => !this.nodeMap.has(id)).forEach((id) => this.selection.delete(id));
         this.renderContent();
         this.updateTreeSelection(this.currentFolderId);
+    }
+
+    // ====================================================================
+    // LAZY FOLDERS (#69)
+    // ====================================================================
+
+    /** True for a tree folder whose children were never given, when onLoadChildren can supply them. */
+    private needsChildren(folder: FileNode): boolean
+    {
+        return !this.flatItems && folder.children === undefined && this.opts.onLoadChildren !== undefined;
+    }
+
+    /**
+     * Asks onLoadChildren for a folder's contents, shows them, and adds its
+     * subfolders to the tree. onLoadChildren was declared and documented as
+     * the lazy-load callback but never called (#69). A failure is shown in
+     * the listing; opening the folder again asks again.
+     */
+    private async loadChildren(folder: FileNode): Promise<void>
+    {
+        this.showLoading();
+
+        if (this.loadingFolders.has(folder.id)) { return; }
+
+        this.loadingFolders.add(folder.id);
+
+        try
+        {
+            const children = await this.opts.onLoadChildren!(folder);
+
+            if (this.destroyed) { return; }
+
+            folder.children = children;
+            children.forEach((child) => this.indexNodes(child, folder.id));
+            this.rebuildTree([folder.id]);
+            if (this.currentFolderId === folder.id) { this.renderContent(); }
+        }
+        catch (err)
+        {
+            logError("onLoadChildren failed for", folder.id, err);
+            if (!this.destroyed && this.currentFolderId === folder.id)
+            {
+                this.showEmpty({ icon: "bi-exclamation-triangle", title: "This folder could not be loaded",
+                    description: "Open it again to retry." });
+            }
+        }
+        finally
+        {
+            this.loadingFolders.delete(folder.id);
+        }
+    }
+
+    /** Rebuilds the tree pane, keeping the folders that were expanded and expanding `expand`. */
+    private rebuildTree(expand: string[]): void
+    {
+        if (!this.treeContainer) { return; }
+
+        const open = new Set(expand);
+
+        this.treeContainer.querySelectorAll<HTMLElement>(".fileexplorer-tree-children").forEach((sub) =>
+        {
+            const id = sub.previousElementSibling?.getAttribute("data-id");
+
+            if (id && sub.style.display !== "none") { open.add(id); }
+        });
+        this.treeContainer.replaceChildren();
+        this.buildTreeContent();
+        this.treeContainer.querySelectorAll<HTMLElement>(".fileexplorer-tree-item").forEach((row) =>
+        {
+            const node = this.nodeMap.get(row.getAttribute("data-id") ?? "");
+
+            if (node && open.has(node.id)) { this.toggleTreeExpand(row, node); }
+        });
+        this.highlightTreeItem(this.currentFolderId);
     }
 
     /** Rebuilds the lookup maps from the tree and the flat listing. */
