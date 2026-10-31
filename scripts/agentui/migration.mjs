@@ -50,6 +50,8 @@ export const PENDING_CLASSIFICATION = new Set([
     // 20 on 2026-10-30: timeline classified (readiness step 3, #25, ADR-237).
     // 19 on 2026-10-30: permissionmatrix classified (readiness step 3, #23, ADR-237).
     // 18 on 2026-10-30: fileexplorer classified (readiness step 3, #21, ADR-237).
+    // 17 on 2026-10-31: stacklayout classified, the first layout with A2UI children (readiness step 4 L0, #24,
+    // ADR-238).
     "anchorlayout",
     "borderlayout",
     "boxlayout",
@@ -66,7 +68,6 @@ export const PENDING_CLASSIFICATION = new Set([
     "navrail",
     "propertyinspector",
     "splitlayout",
-    "stacklayout",
     "tabbedpanel",
 ]);
 
@@ -82,5 +83,5 @@ export const BELOW_REQUIRED = new Set([
     // 2026-10-30: timeline raised to surface (readiness step 3, #25, ADR-237).
     // 2026-10-30: permissionmatrix raised to surface (readiness step 3, #23, ADR-237).
     // 2026-10-30: fileexplorer raised to surface (readiness step 3, #21, ADR-237).
-    "stacklayout",
+    // 2026-10-31: stacklayout raised to surface (readiness step 4 L0, #24, ADR-238).
 ]);

@@ -77,7 +77,7 @@ describe("createStackLayout", () =>
 
         expect(Object.keys(layout).sort()).toEqual([
             "collapsePanel", "destroy", "expandPanel", "getElement",
-            "getPanel", "setSizes",
+            "getPanel", "getState", "on", "setData", "setSizes", "setState",
         ]);
 
         layout.destroy();
@@ -666,6 +666,72 @@ describe("StackLayout horizontal orientation", () =>
         const dividers = container.querySelectorAll(".stacklayout-divider");
         expect(panels.length).toBe(3);
         expect(dividers.length).toBe(2);
+        layout.destroy();
+    });
+});
+
+// ============================================================================
+// SURFACE CONTRACT (additive, readiness step 4)
+// ============================================================================
+
+describe("StackLayout surface contract", () =>
+{
+    /** Clicks the header of the panel with `id`. */
+    function clickHeader(id: string): void
+    {
+        const wrapper = [...document.querySelectorAll<HTMLElement>(".stacklayout-panel")]
+            .find((w) => w.querySelector(".stacklayout-header")?.textContent?.includes(id));
+
+        wrapper!.querySelector<HTMLElement>(".stacklayout-header")!.click();
+    }
+
+    test("collapse_HeaderClick_EmitsAfterOnCollapse", () =>
+    {
+        const order: unknown[] = [];
+        const layout = createStackLayout(makeOptions({ onCollapse: (id, c) => order.push(`legacy:${id}:${c}`) }));
+        layout.on("collapse", (p) => order.push(p));
+        const first = makeOptions().panels[0];
+
+        clickHeader(first.title);
+
+        expect(order).toEqual([`legacy:${first.id}:true`, { panelId: first.id, collapsed: true }]);
+        layout.destroy();
+    });
+
+    test("on_UnknownChannel_Throws_AndSetDataHasNoSlots", () =>
+    {
+        const layout = createStackLayout(makeOptions());
+
+        expect(() => layout.on("select", () => undefined)).toThrow(/valid channels/);
+        expect(() => layout.setData("panels", [])).toThrow(/no data slots/);
+        layout.destroy();
+    });
+
+    test("getState_SetState_RoundTripsFiringNothing", () =>
+    {
+        const onCollapse = vi.fn();
+        const onResize = vi.fn();
+        const heard = vi.fn();
+        const layout = createStackLayout(makeOptions({ onCollapse, onResize }));
+        layout.on("collapse", heard);
+        layout.on("resize", heard);
+        const ids = makeOptions().panels.map((p) => p.id);
+
+        layout.collapsePanel(ids[0]);
+        const captured = layout.getState();
+        onCollapse.mockClear();
+        heard.mockClear();
+
+        layout.expandPanel(ids[0]);
+        onCollapse.mockClear();
+        heard.mockClear();
+        layout.setState(captured);
+
+        expect(layout.getState()).toEqual(captured);
+        expect(captured.collapsed).toEqual([ids[0]]);
+        expect(onCollapse).not.toHaveBeenCalled();
+        expect(onResize).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
         layout.destroy();
     });
 });

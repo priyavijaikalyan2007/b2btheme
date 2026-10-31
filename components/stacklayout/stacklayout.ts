@@ -155,6 +155,28 @@ export interface StackLayout
 
     /** Get the root DOM element. */
     getElement(): HTMLElement;
+
+    /** StackLayout has no data slots: its panels are an option (readiness step 4). */
+    setData(slot: string, value: unknown): void;
+
+    /** Subscribes to "resize" (the panel sizes) or "collapse" ({ panelId, collapsed }); returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+
+    /** The panel sizes, as percentages in panel order, and the ids of the collapsed panels. */
+    getState(): Record<string, unknown>;
+
+    /** Restores state captured by getState(), or any subset of it, firing no callback or channel. */
+    setState(state: Record<string, unknown>): void;
+}
+
+/** The surface channels (readiness step 4). */
+type StackChannel = "resize" | "collapse";
+
+/** What the surface methods share with the layout's own callbacks. */
+interface StackSurface
+{
+    readonly handlers: Record<StackChannel, Set<(payload: unknown) => void>>;
+    restoring: boolean;
 }
 
 // ============================================================================
@@ -238,13 +260,32 @@ export function createStackLayout(options: StackLayoutOptions): StackLayout
     const root = createElement("div", ["stacklayout"]);
     setAttr(root, "data-stacklayout-id", String(id));
 
+    // The layout calls these where it called onResize and onCollapse; each channel hears after its callback, and
+    // setState silences both (readiness step 4).
+    const surface: StackSurface = { handlers: { resize: new Set(), collapse: new Set() }, restoring: false };
+    const internal: StackLayoutOptions = {
+        ...options,
+        onResize: (sizes) =>
+        {
+            if (surface.restoring) { return; }
+            options.onResize?.(sizes);
+            emit(surface, "resize", [...sizes]);
+        },
+        onCollapse: (panelId, collapsed) =>
+        {
+            if (surface.restoring) { return; }
+            options.onCollapse?.(panelId, collapsed);
+            emit(surface, "collapse", { panelId, collapsed });
+        },
+    };
+
     if (isHorizontal)
     {
         root.classList.add("stacklayout--horizontal");
     }
 
     // -- Build panels and dividers ------------------------------------------
-    buildPanels(options, panels, dividers, root, resizable, isHorizontal);
+    buildPanels(internal, panels, dividers, root, resizable, isHorizontal);
 
     // -- Distribute initial sizes -------------------------------------------
     distributeInitialSizes(panels);
@@ -256,11 +297,11 @@ export function createStackLayout(options: StackLayoutOptions): StackLayout
     // -- Bind divider drag --------------------------------------------------
     if (resizable)
     {
-        bindDividerDrag(panels, dividers, root, options, isHorizontal);
+        bindDividerDrag(panels, dividers, root, internal, isHorizontal);
     }
 
     // -- Return public handle -----------------------------------------------
-    return createHandle(panels, root, options);
+    return createHandle(panels, root, internal, surface);
 }
 
 // ============================================================================
@@ -795,7 +836,8 @@ function bindHeaderEvents(
 function createHandle(
     panels: PanelState[],
     root: HTMLElement,
-    options: StackLayoutOptions): StackLayout
+    options: StackLayoutOptions,
+    surface: StackSurface): StackLayout
 {
     // Bind header toggle events
     bindHeaderEvents(panels, options);
@@ -826,6 +868,8 @@ function createHandle(
 
         destroy()
         {
+            surface.handlers.resize.clear();
+            surface.handlers.collapse.clear();
             destroyLayout(root);
         },
 
@@ -833,7 +877,87 @@ function createHandle(
         {
             return root;
         },
+
+        setData(slot: string)
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): StackLayout has no data slots. Its panels are an `
+                + "option.");
+        },
+
+        on(channel: string, handler: (payload: unknown) => void)
+        {
+            if (channel !== "resize" && channel !== "collapse")
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "resize" and "collapse".`);
+            }
+
+            surface.handlers[channel].add(handler);
+
+            return () => { surface.handlers[channel].delete(handler); };
+        },
+
+        getState()
+        {
+            return {
+                sizes: panels.map(p => p.sizePct),
+                collapsed: panels.filter(p => p.collapsed).map(p => p.config.id),
+            };
+        },
+
+        setState(state: Record<string, unknown>)
+        {
+            surface.restoring = true;
+
+            try
+            {
+                restoreState(panels, options, state);
+            }
+            finally
+            {
+                surface.restoring = false;
+            }
+        },
     };
+}
+
+/** Collapses and expands panels to match `state.collapsed`, then applies `state.sizes`. */
+function restoreState(panels: PanelState[], options: StackLayoutOptions, state: Record<string, unknown>): void
+{
+    if (Array.isArray(state.collapsed))
+    {
+        const collapsed = new Set(state.collapsed as string[]);
+
+        panels.forEach((p, i) =>
+        {
+            if (collapsed.has(p.config.id)) { collapseByIndex(panels, i, options); }
+            else { expandByIndex(panels, i, options); }
+        });
+    }
+
+    if (Array.isArray(state.sizes))
+    {
+        (state.sizes as number[]).forEach((pct, i) =>
+        {
+            if (panels[i] && typeof pct === "number") { panels[i].sizePct = pct; }
+        });
+        applyPanelStyles(panels, options.orientation === "horizontal");
+    }
+}
+
+/** Calls every handler on a channel, isolating each so one throw cannot starve the rest. */
+function emit(surface: StackSurface, channel: StackChannel, payload: unknown): void
+{
+    for (const handler of surface.handlers[channel])
+    {
+        try
+        {
+            handler(payload);
+        }
+        catch (err)
+        {
+            logError(`Channel "${channel}" handler threw:`, err);
+        }
+    }
 }
 
 /** Returns a panel sub-handle for a given panel ID. */

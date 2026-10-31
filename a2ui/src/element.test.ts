@@ -106,6 +106,15 @@ describe("binding and mounting", () =>
         expect(box.style.minHeight).toBe("300px");
     });
 
+    test("a layout mounts in a box as tall as --outcrop-layout-height, or its manifest height (ADR-238)", async () =>
+    {
+        const el = create(tagFor(fakeDescriptor({ fill: { height: 480 } })), realContext({ title: "t" }));
+        await loaded();
+
+        expect(el.querySelector<HTMLElement>(".outcrop-host")!.style.height)
+            .toBe("var(--outcrop-layout-height, 480px)");
+    });
+
     test("a bound provider reaches the factory as its option, and unmount releases it (ADR-225)", async () =>
     {
         const rc = realContext({ title: "t", onLoad: { event: { name: "load" } }, loadResult: { path: "/a" },

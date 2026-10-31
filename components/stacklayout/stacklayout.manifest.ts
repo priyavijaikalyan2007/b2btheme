@@ -19,13 +19,35 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down. Promotion to `field` or `surface` is a change to the
- * component's own public API, not to this file, and the conformance suite
- * proves the level rather than taking its word for it.
- *
- * `containerAs: "element"` because `StackLayoutOptions.container` is an
- * HTMLElement. The fleet varies on this and guessing wrong renders nothing.
+ * A panel as an agent writes it (readiness step 4): content is the id of the
+ * component it holds, which the generator puts at panels[].content as A2UI's
+ * ComponentId (protocol.children, ADR-238).
+ */
+const PANELS_SCHEMA = {
+    type: "array",
+    description: "The panels, in order.",
+    items: {
+        type: "object",
+        description: "A titled panel holding one component.",
+        properties: {
+            id: { type: "string", description: "Unique panel id." },
+            title: { type: "string", description: "Title shown in the panel header." },
+            icon: { type: "string", description: "Bootstrap Icons class for the header, such as \"bi-list\"." },
+            collapsed: { type: "boolean", description: "Whether the panel starts collapsed. Default: false." },
+            collapsible: { type: "boolean", description: "Whether the panel can be collapsed. Default: true." },
+            minHeight: { type: "number", description: "Minimum panel height in pixels. Default: 50." },
+        },
+        required: ["id", "title", "content"],
+        additionalProperties: false,
+    },
+};
+
+/**
+ * Declared at `surface` conformance (readiness step 4 L0, #24, ADR-238): each
+ * panel holds an A2UI component, its resizes and collapses emit through an
+ * additive on(), and its sizes and collapsed panels are its state, restored
+ * silently. `containerAs: "element"` because `StackLayoutOptions.container`
+ * is an HTMLElement.
  */
 export const STACKLAYOUT_MANIFEST: CapabilityManifest =
 {
@@ -38,9 +60,13 @@ export const STACKLAYOUT_MANIFEST: CapabilityManifest =
     icon: "bi-layout-three-columns",
     category: "layout",
 
-    // A layout affords no data shape of its own: it holds whatever panels the
-    // host puts in it. Declaring a shape here would make the resolver offer a
-    // container in answer to a question about content.
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Stack other components in titled panels the user can collapse and resize, one above another or "
+            + "side by side; give each panel's content as a component id.",
+        avoidWhen: "For panels the user switches between use Tabs; for one framed component use Card.",
+    },
+
     affords: [],
 
     emits: [
@@ -50,7 +76,13 @@ export const STACKLAYOUT_MANIFEST: CapabilityManifest =
 
     accepts: [],
     actions: [],
-    stateKeys: [],
+    stateKeys: ["sizes", "collapsed"],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, ADR-238).
+    protocol: {
+        children: { "panels[].content": "one" },
+        schemas: { panels: PANELS_SCHEMA },
+    },
 
     regions: ["stacklayout:content"],
 
@@ -60,6 +92,6 @@ export const STACKLAYOUT_MANIFEST: CapabilityManifest =
     defaultSize: { w: 360, h: 480 },
     defaultOptions: { panels: [] },
 
-    conformance: "display",
+    conformance: "surface",
     priority: 50,
 };

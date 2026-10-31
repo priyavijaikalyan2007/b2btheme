@@ -54,11 +54,19 @@ export function missingDescriptions(schema, members)
  * @param defaults - The manifest's defaultOptions.
  * @returns One message per error; empty when valid.
  */
-export function defaultOptionsErrors(schema, defaults)
+export function defaultOptionsErrors(schema, defaults, commonTypes = undefined)
 {
     const { required, ...relaxed } = schema;
     void required;
-    const validate = new Ajv2020({ strict: false, validateFormats: false, allErrors: true }).compile(relaxed);
+    const ajv = new Ajv2020({ strict: false, validateFormats: false, allErrors: true });
+
+    // A child slot refers to A2UI's ComponentId (ADR-238), so the common types must resolve.
+    if (commonTypes)
+    {
+        ajv.addSchema(commonTypes);
+    }
+
+    const validate = ajv.compile(relaxed);
 
     return validate(defaults) ? [] : validate.errors.map((e) => `${e.instancePath || "/"} ${e.message}`);
 }

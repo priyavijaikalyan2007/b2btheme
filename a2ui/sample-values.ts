@@ -82,6 +82,9 @@ export function sampleValue(schema: Schema, variant: Variant, root: Schema, poin
             + "rather than guessing a value.");
     }
 
+    // A child slot (ADR-238): an id the surface may not hold, which leaves the slot empty, as streaming does.
+    if (schema.$ref === COMPONENT_ID) { return ["sample-child-a", "sample-child-b"][variant]; }
+
     if (typeof schema.$ref === "string") { return sampleValue(resolve(schema.$ref, root), variant, root, schema.$ref); }
 
     if ("const" in schema) { return schema.const; }
@@ -90,6 +93,8 @@ export function sampleValue(schema: Schema, variant: Variant, root: Schema, poin
 
     return sampleTyped(schema, variant, root, pointer);
 }
+
+const COMPONENT_ID = "https://a2ui.org/specification/v0_9/common_types.json#/$defs/ComponentId";
 
 const HANDLED = new Set(["$ref", "const", "oneOf", "type", "items", "properties", "required", "format", "pattern"]);
 

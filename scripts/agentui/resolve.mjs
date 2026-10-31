@@ -71,6 +71,9 @@ export function actionPropFor(channel, legacyOption)
 export function resolveSurface(manifest, members)
 {
     const protocol = manifest.protocol ?? {};
+
+    members = members.map((m) => asChildHolder(m, protocol.children ?? {}));
+
     const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [], violated: new Set() };
     const change = protocol.change ?? null;
     const hasPair = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
@@ -90,7 +93,7 @@ export function resolveSurface(manifest, members)
 
     return { name: manifest.name, dataProps, twoWayValue, change: twoWayValue ? change : null, events, providers,
         actions: resolveActions(manifest, protocol), hostOnly: hostOnlyOf(protocol), fixed: fixedOf(ctx),
-        violations: ctx.violations };
+        children: childrenOf(ctx, members), violations: ctx.violations };
 }
 
 /** Records one violation, with the file the author has to edit. */
@@ -241,6 +244,12 @@ function resolveMember(ctx, m)
         return [];
     }
 
+    // A child slot (ADR-238): the generator publishes it as a ComponentId, whatever its element type.
+    if (ctx.protocol.children?.[m.name] !== undefined && takesElement(m))
+    {
+        return checkJsdoc(ctx, m) ? [m] : [];
+    }
+
     if (m.cls === MEMBER_CLASS.FUNCTION || m.cls === MEMBER_CLASS.ELEMENT)
     {
         violate(ctx, m.name, VIOLATION.UNCLASSIFIED, `is ${m.cls}-typed and unclassified. Over A2UI or MCP it `
@@ -270,19 +279,30 @@ function checkDataMember(ctx, m, declared)
             + "data arms cross the protocol; say so with a protocol.hostOnly entry for this member.");
     }
 
-    for (const h of m.hazards.filter((h) => !isCovered(h.path, ctx.protocol.hostOnly)))
+    const covering = { ...ctx.protocol.hostOnly, ...ctx.protocol.children };
+
+    for (const h of m.hazards.filter((h) => !isCovered(h.path, covering)))
     {
         violate(ctx, m.name, VIOLATION.UNDECLARED_HAZARD, `contains a ${h.cls} at ${h.path}. Every schema tool `
             + `drops such parts silently, so declare "${h.path}" (or a parent path) in protocol.hostOnly.`);
     }
 
+    checkJsdoc(ctx, m);
+
+    return ctx.violations.length === before;
+}
+
+/** A protocol-visible member needs JSDoc, because it is what the agent reads. True when it has some. */
+function checkJsdoc(ctx, m)
+{
     if (m.jsdoc === "")
     {
         violate(ctx, m.name, VIOLATION.MISSING_JSDOC, "has no JSDoc. Its description is what the agent reads; "
             + "add a /** … */ comment on its own line above the member in the options interface.");
+        return false;
     }
 
-    return ctx.violations.length === before;
+    return true;
 }
 
 /** True when a hostOnly key equals the path or is a parent of it. */
@@ -294,6 +314,12 @@ export function isCovered(path, hostOnly = {})
 /** A hostOnly entry that also names an event, provider, write-back or fixed member. */
 function checkDoubleClaims(ctx, claimed)
 {
+    for (const key of Object.keys(ctx.protocol.children ?? {}).filter((k) => ctx.protocol.hostOnly?.[k] !== undefined))
+    {
+        violate(ctx, key, VIOLATION.DOUBLE_CLASSIFIED, "is declared host-only and is also a child slot "
+            + "(protocol.children). Remove one of the two declarations.");
+    }
+
     for (const key of Object.keys(ctx.protocol.hostOnly ?? {}).filter((k) => claimed.has(k)))
     {
         violate(ctx, key, VIOLATION.DOUBLE_CLASSIFIED, "is declared host-only and is also an event, provider, "
@@ -316,6 +342,8 @@ function checkStaleDeclarations(ctx, members)
     staleKeys(ctx, protocol.schemas, isMember, "protocol.schemas");
     staleKeys(ctx, protocol.fixed, (k) => ctx.byName.get(k)?.cls === MEMBER_CLASS.DATA, "protocol.fixed",
         "the options type's data members");
+    staleKeys(ctx, protocol.children, (k) => isChildPath(ctx, members, k, protocol.children[k]), "protocol.children",
+        "the options type's members that take an element");
     staleKeys(ctx, protocol.hostOnlyActions, (k) => ctx.manifest.actions.some((a) => a.id === k),
         "protocol.hostOnlyActions", "the manifest's actions");
 
@@ -324,6 +352,57 @@ function checkStaleDeclarations(ctx, members)
         violate(ctx, key, VIOLATION.SHORT_REASON, `has the reason "${reason}". Write what the member needs that `
             + `JSON cannot carry, in at least ${MIN_REASON_LENGTH} characters.`);
     }
+}
+
+/**
+ * A member that is host code only because required elements sit at paths the
+ * manifest declares as child slots (StackLayout's panels[].content, ADR-238)
+ * is data: the generator publishes those paths as ComponentId.
+ */
+function asChildHolder(m, children)
+{
+    if (!m.hostCode || !m.hostCode.every((h) => isCovered(h.path, children))) { return m; }
+
+    return { ...m, cls: MEMBER_CLASS.DATA, arity: null, mixedArms: m.asData.mixedArms, hazards: m.asData.hazards };
+}
+
+/** True for a member that admits an element: an element or `any` arm, or no data arm at all. */
+function takesElement(m)
+{
+    return m.cls === MEMBER_CLASS.ELEMENT || m.cls === MEMBER_CLASS.TOO_BROAD
+        || m.mixedArms.includes(MEMBER_CLASS.ELEMENT) || m.mixedArms.includes(MEMBER_CLASS.TOO_BROAD);
+}
+
+/**
+ * True when a protocol.children key names a slot that takes an element. A
+ * "one" slot is a top-level member that admits one, or a nested path where
+ * one sits; a "many" slot is a list whose items take one (an element or `any`
+ * hazard at `<path>[]`).
+ */
+function isChildPath(ctx, members, key, cardinality)
+{
+    const elementAt = (path) => members.some((m) => m.hazards.some((h) => h.path === path
+        && (h.cls === MEMBER_CLASS.ELEMENT || h.cls === MEMBER_CLASS.TOO_BROAD)));
+
+    if (cardinality === "many")
+    {
+        return elementAt(`${key}[]`);
+    }
+
+    if (!/[.[]/.test(key))
+    {
+        const m = ctx.byName.get(key);
+        return m !== undefined && takesElement(m);
+    }
+
+    return elementAt(key);
+}
+
+/** The live child slots (ADR-238), as { path, cardinality }; the rest are reported as stale. */
+function childrenOf(ctx, members)
+{
+    return Object.entries(ctx.protocol.children ?? {}).filter(([k, n]) => isChildPath(ctx, members, k, n))
+        .map(([path, cardinality]) => ({ path, cardinality }));
 }
 
 /**

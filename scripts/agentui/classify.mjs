@@ -242,10 +242,15 @@ function classifyMember(ctx, symbol, location)
 {
     const type = ctx.checker.getNonNullableType(ctx.checker.getTypeOfSymbolAtLocation(symbol, location));
     const arms = unionArms(type);
-    const classes = arms.map((arm) => usableClass(ctx, arm));
+    const base = arms.map((arm) => armClass(ctx, arm));
+    const host = arms.map((arm, i) =>
+        (base[i] === MEMBER_CLASS.DATA ? hostPaths(ctx, arm, new Set(), symbol.name) : []));
+    const classes = base.map((c, i) => (host[i].length === 0 ? c : hostClass(host[i])));
     const dataArms = arms.filter((_, i) => classes[i] === MEMBER_CLASS.DATA);
     const cls = dataArms.length > 0 ? MEMBER_CLASS.DATA : STRENGTH.find((c) => classes.includes(c));
-    const hazards = dataArms.flatMap((arm) => childHazards(ctx, arm, symbol.name, new Set([arm])));
+    const hazardsOf = (dataOnly) => uniqueBy(
+        dataOnly.flatMap((arm) => childHazards(ctx, arm, symbol.name, new Set([arm]))), (h) => `${h.path}|${h.cls}`);
+    const hostCode = host.flat();
 
     return {
         name: symbol.name,
@@ -253,62 +258,57 @@ function classifyMember(ctx, symbol, location)
         optional: (symbol.flags & ts.SymbolFlags.Optional) !== 0,
         arity: cls === MEMBER_CLASS.FUNCTION ? arityOf(type) : null,
         mixedArms: cls === MEMBER_CLASS.DATA ? unique(classes.filter((c) => c !== MEMBER_CLASS.DATA)) : [],
-        hazards: uniqueBy(hazards, (h) => `${h.path}|${h.cls}`),
+        hazards: hazardsOf(dataArms),
         jsdoc: ts.displayPartsToString(symbol.getDocumentationComment(ctx.checker)).trim(),
+        // The required host code that made a data arm unusable (step 3), and the member as data, for a resolver
+        // whose manifest declares every such path a child slot (ADR-238).
+        ...(hostCode.length === 0 ? {} : { hostCode, asData: {
+            mixedArms: unique(base.filter((c) => c !== MEMBER_CLASS.DATA)),
+            hazards: hazardsOf(arms.filter((_, i) => base[i] === MEMBER_CLASS.DATA)),
+        } }),
     };
 }
 
-/**
- * The class of one member arm, where data that cannot be used without host
- * code takes the class of the host code it needs (readiness step 3):
- * FileExplorer's context menu items require an action, and a schema with
- * the action dropped describes items an agent could write but the component
- * could not run.
- */
-function usableClass(ctx, t)
+/** Element when any of the paths is an element, else function. */
+function hostClass(paths)
 {
-    const cls = armClass(ctx, t);
-
-    return cls === MEMBER_CLASS.DATA ? hostCodeIn(ctx, t, new Set()) ?? cls : cls;
+    return paths.some((p) => p.cls === MEMBER_CLASS.ELEMENT) ? MEMBER_CLASS.ELEMENT : MEMBER_CLASS.FUNCTION;
 }
 
 /**
- * The class (function or element) of a member that a data type reaches
- * through arrays and required members and that is only host code, or null.
+ * The required members that a data type reaches, through arrays and required
+ * members, whose every arm is only host code (a function or an element), as
+ * { path, cls }. Non-empty means no value of the type works without host code
+ * (readiness step 3): FileExplorer's context menu items require an action,
+ * and a schema with the action dropped describes items an agent could write
+ * but the component could not run.
  */
-function hostCodeIn(ctx, t, ancestors)
+function hostPaths(ctx, t, ancestors, at)
 {
-    if (ancestors.has(t) || (t.flags & ts.TypeFlags.Object) === 0 || isDate(ctx, t)) { return null; }
+    if (ancestors.has(t) || (t.flags & ts.TypeFlags.Object) === 0 || isDate(ctx, t)) { return []; }
 
     const next = new Set(ancestors).add(t);
     const required = ctx.checker.isArrayType(t) || ctx.checker.isTupleType(t)
-        ? ctx.checker.getTypeArguments(t)
+        ? ctx.checker.getTypeArguments(t).map((a) => [`${at}[]`, a])
         : ctx.checker.getPropertiesOfType(t).filter((p) => (p.flags & ts.SymbolFlags.Optional) === 0)
-            .map((p) => ctx.checker.getTypeOfSymbol(p));
+            .map((p) => [`${at}.${p.name}`, ctx.checker.getTypeOfSymbol(p)]);
 
-    for (const member of required)
-    {
-        const cls = onlyHostCode(ctx, ctx.checker.getNonNullableType(member), next);
-
-        if (cls) { return cls; }
-    }
-
-    return null;
+    return required.flatMap(([path, member]) => onlyHostCode(ctx, ctx.checker.getNonNullableType(member), next, path));
 }
 
-/** The host-code class when every arm of a type is a function, an element, or data that needs host code. */
-function onlyHostCode(ctx, t, ancestors)
+/** The host-code paths at `at` when every arm of a type is a function, an element, or data that needs host code. */
+function onlyHostCode(ctx, t, ancestors, at)
 {
-    const classes = unionArms(t).map((arm) =>
+    const perArm = unionArms(t).map((arm) =>
     {
         const cls = armClass(ctx, arm);
 
-        return cls === MEMBER_CLASS.DATA ? hostCodeIn(ctx, arm, ancestors) : cls;
+        if (cls === MEMBER_CLASS.FUNCTION || cls === MEMBER_CLASS.ELEMENT) { return [{ path: at, cls }]; }
+
+        return cls === MEMBER_CLASS.DATA ? hostPaths(ctx, arm, ancestors, at) : [];
     });
 
-    if (!classes.every((c) => c === MEMBER_CLASS.FUNCTION || c === MEMBER_CLASS.ELEMENT)) { return null; }
-
-    return classes.includes(MEMBER_CLASS.ELEMENT) ? MEMBER_CLASS.ELEMENT : MEMBER_CLASS.FUNCTION;
+    return perArm.every((paths) => paths.length > 0) ? perArm.flat() : [];
 }
 
 /** The class of one union arm. Order matters: Date before methods, methods before Node. */
