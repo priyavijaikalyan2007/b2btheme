@@ -124,10 +124,10 @@ function makeLink(
 }
 
 /** Build a small test tree with 3 roots and children. */
-/** Nodes as the Explorer API answers a list: { nodes }, each with childCount instead of hasChildren. */
+/** Nodes as the Explorer API answers a list: { nodes }, each with expandable instead of hasChildren. */
 function apiList(nodes: ExplorerNode[]): { nodes: Record<string, unknown>[] }
 {
-    return { nodes: nodes.map(({ hasChildren, ...n }) => ({ ...n, childCount: hasChildren ? 1 : 0 })) };
+    return { nodes: nodes.map(({ hasChildren, ...n }) => ({ ...n, expandable: hasChildren })) };
 }
 
 function buildMockTree(): ExplorerNode[]
@@ -2003,14 +2003,19 @@ describe("existing bugs found in B7 (#61)", () =>
 
 describe("the Explorer API as it is (specs/2026-10-31-explorerpicker-reads-the-explorer-api.md)", () =>
 {
-    /** A Node as the Explorer API returns it: camelCase, childCount instead of hasChildren. */
-    function apiNode(id: string, name: string, nodeType: string, parentId: string | null, childCount = 0)
+    /**
+     * A Node as the Explorer API returns it: camelCase, with expandable instead of hasChildren. The server sets
+     * expandable on an org unit, a folder (even an empty one) and a checklist template.
+     */
+    function apiNode(id: string, name: string, nodeType: string, parentId: string | null,
+        resourceType: string | null = nodeType === "ASSET_REF" ? "diagram" : null)
     {
+        const expandable = nodeType === "ORG_UNIT" || nodeType === "FOLDER" || resourceType === "checklists.template";
         return { id, name, nodeType, parentId, path: `/${id}`, isSystem: false, systemType: null,
-            resourceType: nodeType === "ASSET_REF" ? "diagram" : null, sourceId: null, childCount };
+            resourceType, sourceId: null, expandable };
     }
 
-    const TREE = { nodes: [apiNode("eng", "Engineering", "FOLDER", null, 2), apiNode("ops", "Ops", "FOLDER", null)] };
+    const TREE = { nodes: [apiNode("eng", "Engineering", "FOLDER", null), apiNode("ops", "Ops", "FOLDER", null)] };
     const CHILDREN = { nodes: [apiNode("plan", "Plan", "ASSET_REF", "eng"), apiNode("sub", "Sub", "FOLDER", "eng")] };
 
     type Route = (url: string) => { status: number; body?: unknown } | undefined;
@@ -2039,16 +2044,14 @@ describe("the Explorer API as it is (specs/2026-10-31-explorerpicker-reads-the-e
 
     beforeEach(() => { Element.prototype.scrollIntoView ??= () => undefined; });
 
-    test("theRoots_ComeFromNodes_AndChildCountGivesTheExpandToggle", async () =>
+    test("theRoots_ComeFromNodes_AndExpandableGivesTheExpandToggle", async () =>
     {
         const api = explorerApi();
         const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
             ontologyFetchFn: api.fetchFn }));
         await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
 
-        const toggles = container.querySelectorAll(
-            ".explorerpicker-node > .explorerpicker-node-row .explorerpicker-toggle");
-        expect(toggles.length).toBeGreaterThan(0);
+        expect(["eng", "ops"].map(showsToggle)).toEqual([true, true]);
 
         await picker.expandNode("eng");
         expect(labels()).toEqual(["Engineering", "Plan", "Sub", "Ops"]);
@@ -2145,6 +2148,88 @@ describe("the Explorer API as it is (specs/2026-10-31-explorerpicker-reads-the-e
         const picker = createExplorerPicker(defaultOpts());
 
         expect(container.querySelector(".explorerpicker-footer")).not.toBeNull();
+        picker.destroy();
+    });
+
+    // ── expandable (specs/2026-10-31-explorerpicker-childcount-answer.md) ──
+
+    /** Whether a node's row shows its expand toggle; a leaf's toggle is present but hidden. */
+    function showsToggle(id: string): boolean
+    {
+        const toggle = container.querySelector<HTMLElement>(
+            `.explorerpicker-node-row[data-node-id="${id}"] .explorerpicker-toggle`);
+        expect(toggle).not.toBeNull();
+        return toggle!.style.visibility !== "hidden";
+    }
+
+    const MIXED = { nodes: [
+        apiNode("eng", "Engineering", "FOLDER", null),
+        apiNode("empty", "Empty", "FOLDER", null),
+        apiNode("tpl", "Onboarding", "ASSET_REF", null, "checklists.template"),
+        apiNode("dia", "Plan", "ASSET_REF", null),
+        { ...apiNode("lnk", "Wiki", "LINK", null), url: "https://example.com" }] };
+    const INSTANCES = { nodes: [apiNode("run", "Onboarding: Sam", "ASSET_REF", "tpl", "checklists.instance")] };
+
+    /** The Explorer API answering MIXED as the roots, the template's instances, and an empty folder. */
+    const mixedApi = () => explorerApi((url) => (url.includes("/nodes/tpl/children")
+        ? { status: 200, body: INSTANCES }
+        : url.includes("/nodes/empty/children") ? { status: 200, body: { nodes: [] } }
+            : url.includes("/tree") ? { status: 200, body: MIXED } : undefined));
+
+    test("expandable_DecidesTheToggle_AndAnEmptyFolderOpensEmpty", async () =>
+    {
+        const api = mixedApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, selectionTarget: "resource" }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Empty", "Onboarding", "Plan", "Wiki"]));
+
+        expect(["eng", "empty", "tpl", "dia", "lnk"].map(showsToggle)).toEqual([true, true, true, false, false]);
+        await picker.expandNode("empty");
+        expect(labels()).toEqual(["Engineering", "Empty", "Onboarding", "Plan", "Wiki"]);
+        expect(api.urls.some((u) => u.includes("/nodes/empty/children"))).toBe(true);
+        picker.destroy();
+    });
+
+    test("aResourcePicker_OpensAChecklistTemplate_AndItsInstancesCanBePicked", async () =>
+    {
+        const api = mixedApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, selectionTarget: "resource", mode: "single" }));
+        await vi.waitFor(() => expect(labels()).toContain("Onboarding"));
+
+        await picker.expandNode("tpl");
+        expect(labels()).toContain("Onboarding: Sam");
+        container.querySelector<HTMLElement>('.explorerpicker-node-row[data-node-id="run"]')!.click();
+        expect(picker.getSelection().map((s) => s.nodeId)).toEqual(["run"]);
+        picker.destroy();
+    });
+
+    test("aContainerPicker_ShowsTogglesOnlyOnOrgUnitsAndFolders", async () =>
+    {
+        const api = mixedApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, selectionTarget: "container" }));
+        await vi.waitFor(() => expect(labels()).toContain("Onboarding"));
+
+        expect(["eng", "empty", "tpl", "dia", "lnk"].map(showsToggle)).toEqual([true, true, false, false, false]);
+        await picker.expandNode("tpl");
+        expect(api.urls.some((u) => u.includes("/nodes/tpl/children"))).toBe(false);
+        picker.destroy();
+    });
+
+    test("nodesWithoutExpandable_AreLeaves_AndEachResponseReportsThemOnce", async () =>
+    {
+        const onError = vi.fn();
+        const old = { nodes: TREE.nodes.map(({ expandable: _, ...n }) => n) };
+        const api = explorerApi((url) => (url.includes("/tree") ? { status: 200, body: old } : undefined));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, showRecentItems: false, onError }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+
+        expect(["eng", "ops"].map(showsToggle)).toEqual([false, false]);
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][1]).toBe("node.expandable missing");
+        expect((onError.mock.calls[0][0] as Error).message).toContain("GET /tree answered 2 node(s)");
         picker.destroy();
     });
 });
