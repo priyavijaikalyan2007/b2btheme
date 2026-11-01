@@ -539,6 +539,11 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   type rejects, and it cannot also be host-only (`double-classified`).
   Prefer an additive option with today's behaviour as its default, fixed to
   the contained behaviour over A2UI.
+- **`protocol.box: "drawer"`: a clipped, sized box** (ADR-242). A layout gets
+  a definite height from its category. A component that is not a layout but
+  is `height: 100%` of its container and slides in from outside it
+  (PropertyInspector) declares this, and the adapter gives it the same box
+  with `overflow: hidden`, as a host page does.
 - **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
   callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`), callbacks
   whose information `value` already carries, decisions (`onDragValidate`,

@@ -310,6 +310,15 @@ interface ProtocolSpec
      * the layout already takes an HTMLElement. Path syntax is hostOnly's.
      */
     readonly children?: Readonly<Record<string, ChildCardinality>>;
+
+    /**
+     * The box the A2UI adapter gives a component that is not a layout
+     * (ADR-242). "drawer": the component slides its content in from an edge
+     * of its container, height: 100% of it, so the container gets a definite
+     * height, as a layout's does (ADR-238), and hides what lies outside it,
+     * such as a closed drawer. Hosts give it such a box themselves.
+     */
+    readonly box?: "drawer";
 }
 
 /** How many children an option path holds (ADR-238). */
@@ -2919,11 +2928,17 @@ function validateProtocol(
     validateDependencies(p.dependencies, issues);
     validateFixed(p.fixed, issues);
     validateChildren(p.children, issues);
+
+    if (p.box !== undefined && p.box !== "drawer")
+    {
+        issues.push(enumIssue("protocol.box", p.box, ["drawer"]));
+    }
 }
 
 /** The keys `protocol` may carry. */
 const PROTOCOL_KEYS: readonly string[] =
-    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children"];
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children",
+        "box"];
 
 /**
  * True for a value JSON carries unchanged: null, a string, a finite number,

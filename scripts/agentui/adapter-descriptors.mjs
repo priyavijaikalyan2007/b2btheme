@@ -133,6 +133,8 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...(manifest.presentation === "overlay" ? { overlay: { height: manifest.defaultSize.h } } : {}),
         // A layout fills its container (height: 100%), and an A2UI host's container has no height (ADR-238).
         ...(manifest.category === "layout" ? { fill: { height: manifest.defaultSize.h } } : {}),
+        // A drawer is height: 100% of its container too, and slides in from outside it (ADR-242).
+        ...(manifest.protocol?.box === "drawer" ? { fill: { height: manifest.defaultSize.h, clip: true } } : {}),
         ...(Object.keys(surface.fixed ?? {}).length > 0 ? { fixed: surface.fixed } : {}),
         ...((surface.children ?? []).length > 0 ? { children: surface.children } : {}),
         // Only declared state is carried across a rebuild (ADR-240).

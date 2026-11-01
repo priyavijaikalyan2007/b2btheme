@@ -62,6 +62,8 @@ Non-modal right-side panel for viewing and editing entity details without naviga
 | `onAction` | `(actionId, data) => void` | — | Header action callback |
 | `onTabChange` | `(tabId) => void` | — | Tab change callback |
 | `onResize` | `(width) => void` | — | Resize callback |
+| `openWith` | `InspectorOpenOptions` | — | Opens the drawer with these at creation, as `open()` would |
+| `keyScope` | `"document" \| "inspector"` | `"document"` | Where Escape closes the drawer: anywhere on the page, or only while focus is inside it |
 
 ### InspectorOpenOptions
 
@@ -91,12 +93,20 @@ Non-modal right-side panel for viewing and editing entity details without naviga
 | `setFooter(el)` | `void` | Replace footer content |
 | `getElement()` | `HTMLElement` | Root drawer element |
 | `destroy()` | `void` | Tear down DOM and listeners |
+| `getState()` | `{ width }` | The drawer's width |
+| `setState(state)` | `void` | Restores a width from `getState()`, without `onResize` |
+| `on(channel, handler)` | `() => void` | Subscribes to `"action"` (`{ actionId }`) or `"close"` (`{}`), each after its callback; returns the unsubscribe |
+| `setData(slot, value)` | `void` | Throws: the inspector has no data slots |
+
+### Over A2UI
+
+PropertyInspector is in the A2UI catalog (ADR-242). The agent sets `openWith`: the drawer opens with it, and opens again whenever the agent changes it, as a fresh `open()` does. Its `content`, `footer` and each tab's `content` are ids of other A2UI components. A header action sends `onAction` with `{ actionId }`, and closing the drawer sends `onClose`. The width the user drags to is kept across a rebuild. Escape closes the drawer only while focus is inside it, and the adapter gives it a clipped box as tall as `--outcrop-layout-height` (default 400px).
 
 ## Keyboard
 
 | Key | Action |
 |-----|--------|
-| `Escape` | Close the drawer |
+| `Escape` | Close the drawer (with `keyScope: "inspector"`, only while focus is inside it) |
 | `Tab` | Navigate within drawer content |
 
 ## Accessibility

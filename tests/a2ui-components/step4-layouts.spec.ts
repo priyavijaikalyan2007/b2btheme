@@ -402,3 +402,69 @@ test.describe("Layouts with A2UI children, L3", () =>
         expect(await errors(page)).toEqual([]);
     });
 });
+
+// ============================================================================
+// PropertyInspector: openWith with A2UI children (ADR-242)
+// ============================================================================
+
+/** An inspector with a header action, a Text tab, a TextField tab and a footer, as an agent writes it. */
+const INSPECTOR = { id: "root", component: "PropertyInspector", openWith: {
+    title: "Order 42", actions: [{ id: "pin", label: "Pin", icon: "bi-pin" }],
+    tabs: [{ id: "notes", label: "Notes", content: "head" }, { id: "form", label: "Form", content: "field" }],
+    footer: "badge" } };
+
+/** Checks openWith's children render, then that an agent's change opens the closed drawer again. */
+async function inspectorShowsChildrenAndReopens(page: Page, renderer: "lit" | "react"): Promise<void>
+{
+    await mount(page, renderer, [INSPECTOR, HEADER, FIELD, BADGE], "outcrop-property-inspector");
+
+    const drawer = page.locator(".propertyinspector");
+    await expect(drawer).toHaveClass(/propertyinspector-open/);
+    await expect(drawer.locator(".propertyinspector-title")).toHaveText("Order 42");
+    await expect(drawer.getByText("A header child")).toBeVisible();
+    await expect(drawer.locator(".propertyinspector-footer").getByText("A pinned child")).toBeVisible();
+    await drawer.getByRole("tab", { name: "Form" }).click();
+    await expect(drawer.locator("a2ui-basic-textfield")).toBeVisible();
+
+    await drawer.locator(".propertyinspector-close-btn").click();
+    await expect(drawer).not.toHaveClass(/propertyinspector-open/);
+
+    await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [
+        { ...INSPECTOR, openWith: { ...INSPECTOR.openWith, title: "Order 43" } }] } }]);
+
+    await expect(page.locator(".propertyinspector")).toHaveClass(/propertyinspector-open/);
+    await expect(page.locator(".propertyinspector-title")).toHaveText("Order 43");
+    await expect(page.locator(".propertyinspector").getByText("A header child")).toBeVisible();
+    expect(await errors(page)).toEqual([]);
+}
+
+test.describe("PropertyInspector with A2UI children", () =>
+{
+    test("PropertyInspector: openWith renders its A2UI children, and an agent change reopens it (Lit)",
+        async ({ page }) => { await inspectorShowsChildrenAndReopens(page, "lit"); });
+
+    test("PropertyInspector: openWith renders its A2UI children, and an agent change reopens it (React)",
+        async ({ page }) => { await inspectorShowsChildrenAndReopens(page, "react"); });
+
+    test("PropertyInspector: a header action sends onAction, closing sends onClose, and Escape outside is the page's",
+        async ({ page }) =>
+        {
+            await mount(page, "lit", [{ ...INSPECTOR, eventData: { path: "/ev" },
+                onAction: { event: { name: "act", context: { p: { path: "/ev/action" } } } },
+                onClose: { event: { name: "shut", context: { p: { path: "/ev/close" } } } } }, HEADER, FIELD, BADGE],
+            "outcrop-property-inspector");
+
+            const drawer = page.locator(".propertyinspector");
+            await page.locator("body").press("Escape");
+            await expect(drawer).toHaveClass(/propertyinspector-open/);
+
+            await drawer.getByRole("button", { name: "Pin" }).click();
+            await expect.poll(() => sent(page)).toEqual([["act", { actionId: "pin" }]]);
+
+            await drawer.getByRole("button", { name: "Close" }).focus();
+            await page.keyboard.press("Escape");
+            await expect(drawer).not.toHaveClass(/propertyinspector-open/);
+            await expect.poll(async () => (await sent(page)).filter(([n]) => n === "shut")).toEqual([["shut", {}]]);
+            expect(await errors(page)).toEqual([]);
+        });
+});

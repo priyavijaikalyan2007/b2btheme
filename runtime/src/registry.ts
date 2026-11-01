@@ -468,11 +468,17 @@ function validateProtocol(
     validateDependencies(p.dependencies, issues);
     validateFixed(p.fixed, issues);
     validateChildren(p.children, issues);
+
+    if (p.box !== undefined && p.box !== "drawer")
+    {
+        issues.push(enumIssue("protocol.box", p.box, ["drawer"]));
+    }
 }
 
 /** The keys `protocol` may carry. */
 const PROTOCOL_KEYS: readonly string[] =
-    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children"];
+    ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children",
+        "box"];
 
 /**
  * True for a value JSON carries unchanged: null, a string, a finite number,
