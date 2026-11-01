@@ -55,6 +55,10 @@ beforeAll(async () =>
 {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), "check-a2ui-"));
     await writeMessageValidator(REPO);
+    // The first run() imports the generated validator and web_core, a one-time cost that took over 5s under the
+    // full suite's load and failed whichever test came first, in CI too. Paid here, under this hook's 60s, every
+    // test's own 5s limit still measures only its own work.
+    await cli([file("warm.json", JSON.stringify(VALID))]);
 }, 60_000);
 
 describe("check-a2ui", () =>
