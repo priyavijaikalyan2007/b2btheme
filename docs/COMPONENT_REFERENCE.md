@@ -5244,6 +5244,10 @@ Content placed in the center cell automatically fills it via CSS:
 
 Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in the center cell. For MarkdownEditor, pass `contained: true` to use `height: "100%"` instead of the default `"70vh"`.
 
+## Over A2UI
+
+DockLayout is in the A2UI catalog (ADR-241). Each slot (`toolbar`, `leftSidebar`, `rightSidebar`, `bottomPanel`, `statusBar`) and `content` is the id of another A2UI component, rendered as an element that sizes to its content. Over A2UI the layout fills its box rather than the window, and a slot's collapse and resize, which come from a docked component's handle, are the host's.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
@@ -7341,6 +7345,10 @@ direction: "horizontal", gap: 8
 | `getState()` | `FlowLayoutState` | Serialisable state snapshot |
 | `setState(state)` | `void` | Restore state (direction) |
 
+## Over A2UI
+
+FlowLayout is in the A2UI catalog (ADR-241). `children` is a list of A2UI component ids, rendered in order; a child that arrives later takes its place. A change to the options rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
@@ -9099,6 +9107,10 @@ var grid = createGridLayout({
 });
 grid.show(document.getElementById("dashboard"));
 ```
+
+## Over A2UI
+
+GridLayout is in the A2UI catalog (ADR-241). `children` is a list of A2UI component ids, one per cell, in order. A change to the options rebuilds the layout and keeps each child.
 
 ## Global Exports
 

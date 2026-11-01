@@ -83,8 +83,8 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 92 components that are. The 9 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
-- **Layouts with children:** StackLayout, BorderLayout, SplitLayout, TabbedPanel, AnchorLayout, BoxLayout, CardLayout, FlexGridLayout and LayerLayout (ADR-238 to ADR-240); DockLayout, FlowLayout and GridLayout follow in batch L3 (`specs/agentui-layouts.plan.md`).
+- **In the catalog:** the 95 components that are. The 6 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **Layouts with children:** all twelve layouts (ADR-238 to ADR-241, `specs/agentui-layouts.plan.md`).
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.
   - The A2UI v1.0 codec is later.
