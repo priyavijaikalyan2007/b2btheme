@@ -102,6 +102,28 @@ describe("loadAssets", () =>
             ["sha384-AAA", "anonymous"], ["sha384-BBB", "anonymous"], [null, null], [null, null]]);
     });
 
+    test("a shared library the page already has is not loaded again; without it, it is (ADR-245)", () =>
+    {
+        const deps = [{ path: "lib/bootstrap-5.3.8.js", integrity: "sha384-CCC", global: "bootstrapFixture" }];
+
+        void loadAssets(BASE, { js: "components/a/a.js", deps }, false);
+        expect(injected().map((e) => e.getAttribute("src"))).toEqual([
+            "https://cdn.test/lib/bootstrap-5.3.8.js", "https://cdn.test/components/a/a.js"]);
+
+        resetLoaderForTests();
+        document.head.replaceChildren();
+        (window as unknown as Record<string, unknown>).bootstrapFixture = {};
+        try
+        {
+            void loadAssets(BASE, { js: "components/a/a.js", deps }, false);
+            expect(injected().map((e) => e.getAttribute("src"))).toEqual(["https://cdn.test/components/a/a.js"]);
+        }
+        finally
+        {
+            delete (window as unknown as Record<string, unknown>).bootstrapFixture;
+        }
+    });
+
     test("a dependency two components share loads once, and its failure rejects both", async () =>
     {
         const dep = { path: "components/m/m.js" };

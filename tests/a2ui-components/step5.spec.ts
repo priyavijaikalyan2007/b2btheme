@@ -5,7 +5,8 @@
  */
 /**
  * E2E: the components readiness step 5 gives a manifest (specs/agentui-step5.prd.md),
- * under @a2ui/lit. S5-1: TypeBadge (ADR-243). S5-2: StatusBar and Sidebar (ADR-244).
+ * under @a2ui/lit. S5-1: TypeBadge (ADR-243). S5-2: StatusBar and Sidebar (ADR-244). S5-3: Toolbar and
+ * GraphToolbar (ADR-245).
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -110,6 +111,42 @@ test.describe("Step 5 components under @a2ui/lit", () =>
 
             await expect(page.locator(".sidebar-container[data-kept='yes']")).toHaveCount(1);
             await expect(page.locator(".sidebar-container").getByText("A sidebar child")).toBeVisible();
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("Toolbar: a tool click and a field change send onToolClick, it holds its A2UI child, and Alt is the page's",
+        async ({ page }) =>
+        {
+            const TOOLBAR = { id: "root", component: "Toolbar", label: "Editor tools", rightContent: "note", ...EV,
+                onToolClick: act("tool", "toolClick"), regions: [{ id: "fmt", items: [
+                    { id: "bold", tooltip: "Bold", icon: "bi-type-bold", toggle: true, keyTip: "B" },
+                    { type: "dropdown", id: "size", tooltip: "Size",
+                        options: [{ value: "12", label: "12" }, { value: "14", label: "14" }] }] }] };
+            await mountTree(page, [TOOLBAR, { id: "note", component: "Text", text: "A toolbar child" }]);
+
+            const bar = page.locator(".toolbar");
+            await expect(bar.first()).toBeVisible();
+            await expect(page.getByText("A toolbar child")).toBeVisible();
+
+            await page.locator("[data-tool-id='bold']").click();
+            await page.locator("select.toolbar-dropdown").selectOption("14");
+            await expect.poll(() => sent(page)).toEqual([["tool", { toolId: "bold", value: true }],
+                ["tool", { toolId: "size", value: "14" }]]);
+
+            // keyTips is off over A2UI, so Alt pressed on the page shows no badges.
+            await page.locator("body").press("Alt");
+            await expect(page.locator(".toolbar-keytips-active")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("GraphToolbar: clicking a tool sends onToolClick with its id",
+        async ({ page }) =>
+        {
+            await mount(page, "GraphToolbar", { ...EV, onToolClick: act("tool", "toolClick") });
+
+            await page.locator("[data-tool-id='gt-zoom-in']").click();
+            await expect.poll(() => sent(page)).toEqual([["tool", { toolId: "gt-zoom-in", value: null }]]);
+
             expect(await errors(page)).toEqual([]);
         });
 });

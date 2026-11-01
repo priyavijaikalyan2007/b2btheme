@@ -23,22 +23,39 @@ export interface GraphToolbarLayout
 
 export interface GraphToolbarOptions
 {
+    /** The layout algorithms the dropdown offers. Default: six standard layouts. */
     layouts?: GraphToolbarLayout[];
+    /** Id of the layout selected at first. Default: "hierarchical". */
     defaultLayout?: string;
+    /** Shows the Undo button (gt-undo). Default: true. */
     showUndo?: boolean;
+    /** Shows the Redo button (gt-redo). Default: true. */
     showRedo?: boolean;
+    /** Shows the Delete button (gt-delete). Default: true. */
     showDelete?: boolean;
+    /** Shows the layout dropdown and its Apply button. Default: true. */
     showLayoutSelector?: boolean;
+    /** Shows zoom in, zoom out, zoom to fit and the zoom label. Default: true. */
     showZoomControls?: boolean;
+    /** Shows the grid snap toggle (gt-grid-snap). Default: true. */
     showGridSnap?: boolean;
+    /** Shows the minimap toggle (gt-minimap). Default: true. */
     showMinimap?: boolean;
+    /** Shows the export menu (gt-export). Default: true. */
     showExport?: boolean;
+    /** Shows the node search box (gt-search). Default: true. */
     showSearch?: boolean;
+    /** The formats the export menu offers. Default: png, svg and json. */
     exportFormats?: Array<"png" | "svg" | "json" | "pdf">;
+    /** The zoom percentage the label shows at first. Default: 100. */
     initialZoom?: number;
+    /** Whether the grid snap toggle starts on. Default: false. */
     gridSnapEnabled?: boolean;
+    /** Whether the minimap toggle starts on. Default: false. */
     minimapEnabled?: boolean;
+    /** Registers document-wide shortcuts (Ctrl+Z, Delete, zoom keys). Default: true. */
     enableKeyboardShortcuts?: boolean;
+    /** Toolbar options passed through to the inner Toolbar. Default: {}. */
     toolbarOptions?: Record<string, unknown>;
     onUndo?: () => void;
     onRedo?: () => void;
@@ -70,6 +87,18 @@ export interface GraphToolbarHandle
     setDeleteEnabled(enabled: boolean): void;
     setLayout(layoutId: string): void;
     destroy(): void;
+    /**
+     * Subscribes to the inner Toolbar's "toolClick": { toolId, value } for
+     * each tool (gt-undo, gt-zoom-in, gt-layout-select, ...), after the
+     * GraphToolbar callback; returns the unsubscribe (readiness step 5, ADR-245).
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-245): always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-245): does nothing. */
+    setState(state: Record<string, unknown>): void;
+    /** GraphToolbar has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
 }
 
 // ============================================================================
@@ -664,6 +693,7 @@ function buildHandle(
         setToolState(id: string, state: Record<string, unknown>): void;
         destroy(): void;
         getElement(): HTMLElement | null;
+        on(channel: string, handler: (payload: unknown) => void): () => void;
     };
 
     let destroyed = false;
@@ -734,6 +764,27 @@ function buildHandle(
 
             tb.destroy();
             logInfo("Destroyed");
+        },
+        on(channel: string, handler: (payload: unknown) => void): () => void
+        {
+            if (channel !== "toolClick")
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "toolClick".`);
+            }
+            return tb.on("toolClick", handler);
+        },
+        getState(): Record<string, unknown>
+        {
+            return {};
+        },
+        setState(): void
+        {
+            // No state keys (ADR-245).
+        },
+        setData(slot: string): void
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): GraphToolbar has no data slots. Use setZoomLabel(), `
+                + "setLayout() and the other setters.");
         },
     };
 }

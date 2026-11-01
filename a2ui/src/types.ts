@@ -134,7 +134,8 @@ export interface AdapterDescriptor
     mountMethod: "auto" | "show" | "getElement";
     conformance: "display" | "field" | "surface";
     /** The component's own script and stylesheet, and what loads before them (ADR-230). */
-    assets: { js: string; css?: string; deps?: { path: string; integrity?: string }[] };
+    /** deps[].global is set for a shared library, which is not loaded when the page has that global (ADR-245). */
+    assets: { js: string; css?: string; deps?: { path: string; integrity?: string; global?: string }[] };
     props: Record<string, PropRoute>;
     twoWay: boolean;
     changeOption?: string;

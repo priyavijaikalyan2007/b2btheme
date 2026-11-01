@@ -704,6 +704,13 @@ export interface ToolbarRegion
     align?: ToolbarRegionAlign;
 }
 
+/** What a toolClick reports (readiness step 5, ADR-245): the tool, and its value after the interaction. */
+export interface ToolbarToolClick
+{
+    toolId: string;
+    value: string | number | boolean | null;
+}
+
 /** Configuration options for the Toolbar component. */
 export interface ToolbarOptions
 {
@@ -1128,6 +1135,21 @@ export interface ToolbarHandle
     getTitle(): string | ToolbarTitle | null;
     setRightContent(el: HTMLElement | null): void;
     getRightContent(): HTMLElement | null;
+    /**
+     * Subscribes to "toolClick": { toolId, value } after each tool
+     * interaction, value being a toggle's state (null for a plain button), a
+     * field's new value, the gallery option or split-menu item picked (with
+     * the gallery's or split button's id), or the text submitted with Enter.
+     * It fires after the tool's callbacks, even where none was passed
+     * (readiness step 5, ADR-245). Returns the unsubscribe.
+     */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore (ADR-245): always {}. Tool states are the options the agent writes. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore (ADR-245): does nothing. */
+    setState(state: Record<string, unknown>): void;
+    /** Toolbar has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
 }
 
 export class Toolbar implements ToolbarHandle
@@ -1184,6 +1206,9 @@ export class Toolbar implements ToolbarHandle
     private boundDragEnd: ((e: PointerEvent) => void) | null = null;
     private boundClickOutside: ((e: PointerEvent) => void) | null = null;
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
+
+    // Surface (readiness step 5, ADR-245): toolClick hears every tool interaction, after its callbacks.
+    private readonly toolClickHandlers = new Set<(payload: unknown) => void>();
     private boundWindowResize: (() => void) | null = null;
 
     // Dock zone elements (created lazily during drag)
@@ -1352,6 +1377,7 @@ export class Toolbar implements ToolbarHandle
      */
     public destroy(): void
     {
+        this.toolClickHandlers.clear();
         this.closeAllPopups();
         this.hideKeyTips();
         this.removeDockZones();
@@ -2262,6 +2288,56 @@ export class Toolbar implements ToolbarHandle
         return this.rightContentEl;
     }
 
+    /** Subscribes to "toolClick" (readiness step 5, ADR-245); returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "toolClick")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "toolClick".`);
+        }
+
+        this.toolClickHandlers.add(handler);
+
+        return () => { this.toolClickHandlers.delete(handler); };
+    }
+
+    /** Nothing to restore (ADR-245). */
+    public getState(): Record<string, unknown>
+    {
+        return {};
+    }
+
+    /** Nothing to restore (ADR-245). */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No state keys.
+    }
+
+    /** Toolbar has no data slots (ADR-245). */
+    public setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): Toolbar has no data slots. Its regions are an option; `
+            + "use addTool(), removeTool() or setToolState().");
+    }
+
+    /** Tells toolClick subscribers, isolating each so one throw cannot starve the rest (ADR-245). */
+    private reportTool(toolId: string, value: string | number | boolean | null): void
+    {
+        const payload: ToolbarToolClick = { toolId, value };
+
+        for (const handler of this.toolClickHandlers)
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError('Channel "toolClick" handler threw:', err);
+            }
+        }
+    }
+
     // ========================================================================
     // S6: PRIVATE — DOM BUILDING
     // ========================================================================
@@ -2704,7 +2780,7 @@ export class Toolbar implements ToolbarHandle
         const menu = createElement("div", ["toolbar-split-menu"]);
 
         setAttr(menu, { "role": "menu", "data-split-id": split.id });
-        this.buildSplitMenuItems(menu, split.menuItems);
+        this.buildSplitMenuItems(menu, split.id, split.menuItems);
         this.splitMenuEls.set(split.id, menu);
 
         this.applyToolStateToDOM(container, split);
@@ -2801,7 +2877,7 @@ export class Toolbar implements ToolbarHandle
      * Builds menu items for a split button dropdown.
      */
     private buildSplitMenuItems(
-        menu: HTMLElement, items: SplitMenuItem[]
+        menu: HTMLElement, splitId: string, items: SplitMenuItem[]
     ): void
     {
         menu.innerHTML = "";
@@ -2839,6 +2915,8 @@ export class Toolbar implements ToolbarHandle
                 {
                     item.onClick(item);
                 }
+
+                if (!item.disabled) { this.reportTool(splitId, item.id); }
 
                 this.closeAllPopups();
             });
@@ -3115,18 +3193,17 @@ export class Toolbar implements ToolbarHandle
                 handler(input.value);
             });
         }
-        if (item.onSubmit)
+        // Attached without onSubmit too, so toolClick hears the submit (ADR-245).
+        const handler = item.onSubmit;
+        input.addEventListener("keydown", (e: KeyboardEvent) =>
         {
-            const handler = item.onSubmit;
-            input.addEventListener("keydown", (e: KeyboardEvent) =>
+            logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
+            if (this.matchesKeyCombo(e, "inputSubmit"))
             {
-                logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
-                if (this.matchesKeyCombo(e, "inputSubmit"))
-                {
-                    handler(input.value);
-                }
-            });
-        }
+                if (handler) { handler(input.value); }
+                this.reportTool(item.id, input.value);
+            }
+        });
     }
 
     /** Builds an embedded text input (search, filter). */
@@ -3191,11 +3268,13 @@ export class Toolbar implements ToolbarHandle
         this.configureDropdown(select, item);
         if (item.disabled) { select.disabled = true; }
 
-        if (item.onChange)
+        // Attached without onChange too, so toolClick hears the change (ADR-245).
+        const handler = item.onChange;
+        select.addEventListener("change", () =>
         {
-            const handler = item.onChange;
-            select.addEventListener("change", () => handler(select.value));
-        }
+            if (handler) { handler(select.value); }
+            this.reportTool(item.id, select.value);
+        });
 
         this.registerToolItem(select, item.id, item, item.cssClass, item.hidden);
         return select;
@@ -3253,6 +3332,7 @@ export class Toolbar implements ToolbarHandle
         {
             item.checked = input.checked;
             if (handler) { handler(input.checked); }
+            this.reportTool(item.id, input.checked);
         });
     }
 
@@ -3355,6 +3435,7 @@ export class Toolbar implements ToolbarHandle
             const val = parseFloat(input.value) || 0;
             item.value = val;
             if (handler) { handler(val); }
+            this.reportTool(item.id, val);
         });
     }
 
@@ -3398,6 +3479,7 @@ export class Toolbar implements ToolbarHandle
         {
             item.value = input.value;
             if (onChange) { onChange(input.value); }
+            this.reportTool(item.id, input.value);
         });
 
         const onInput = item.onInput;
@@ -3530,6 +3612,8 @@ export class Toolbar implements ToolbarHandle
         {
             this.opts.onToolClick(tool, !!tool.active);
         }
+
+        this.reportTool(tool.id, tool.toggle ? !!tool.active : null);
     }
 
     /**
@@ -3557,6 +3641,8 @@ export class Toolbar implements ToolbarHandle
         {
             split.onClick(split, !!split.active);
         }
+
+        this.reportTool(split.id, split.toggle ? !!split.active : null);
     }
 
     /**
@@ -3740,6 +3826,8 @@ export class Toolbar implements ToolbarHandle
         {
             gallery.onSelect(option, gallery);
         }
+
+        this.reportTool(gallery.id, option.id);
     }
 
     /**
@@ -4650,7 +4738,7 @@ export class Toolbar implements ToolbarHandle
             return;
         }
 
-        this.buildSplitMenuItems(menu, config.menuItems);
+        this.buildSplitMenuItems(menu, splitId, config.menuItems);
     }
 
     /**
@@ -5158,6 +5246,8 @@ export class Toolbar implements ToolbarHandle
             {
                 (config.onChange as (checked: boolean) => void)(newChecked);
             }
+
+            this.reportTool(config.id, newChecked);
         }
     }
 

@@ -8961,6 +8961,13 @@ const handle = createGraphToolbar({
 | `setLayout(layoutId)` | Select a layout in the dropdown |
 | `destroy()` | Clean up toolbar and keyboard listeners |
 | `toolbar` | The underlying Toolbar instance |
+| `on("toolClick", handler)` | Subscribes to the inner Toolbar's `{ toolId, value }` for each tool (`gt-undo`, `gt-zoom-in`, `gt-layout-select`, ...), after the GraphToolbar callback. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the toolbar has no data slots |
+
+## Over A2UI
+
+GraphToolbar is in the A2UI catalog (ADR-245). The adapter passes it a container, so it is contained, and its document-wide keyboard shortcuts are off. Every tool sends `onToolClick` with its id, such as `gt-zoom-in`; the agent updates the graph in response. `toolbarOptions` and the per-tool callbacks are the host's.
 
 ## Keyboard Shortcuts
 
@@ -20168,6 +20175,13 @@ Creates the toolbar DOM but does not attach to the page.
 | `getDockPosition()` | Returns current dock position |
 | `isVisible()` | Returns visibility state |
 | `getElement()` | Returns the root DOM element |
+| `on("toolClick", handler)` | Subscribes to `{ toolId, value }` after every tool interaction, even where the tool has no callback: a toggle's state (`null` for a plain button), a field's new value, the gallery option or split-menu item picked (with the gallery's or split button's id), or the text submitted with Enter. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore: tool states are the options you pass |
+| `setData(slot, value)` | Throws: the toolbar has no data slots |
+
+### Over A2UI
+
+Toolbar is in the A2UI catalog (ADR-245). It is always contained and docked, cannot be dragged, keeps no layout in storage and shows no key tips, so it never takes the page's Alt key. Every tool interaction sends `onToolClick` with `{ toolId, value }`. Tools take no callbacks, `data` or HTML gallery previews; `rightContent` is the id of another A2UI component. The adapter loads Bootstrap's JS for the tooltips, unless the page already has it.
 
 ### Convenience Functions
 

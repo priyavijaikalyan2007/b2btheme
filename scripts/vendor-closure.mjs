@@ -233,6 +233,16 @@ const ASSETS = [
         note: "vditor's stylesheet, hashed, for MarkdownEditor over A2UI",
     },
     {
+        name: "bootstrap",
+        kind: "copy",
+        from: "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+        global: "bootstrap",
+        // Its bundle registers document-wide data-API listeners, so a second copy doubles every
+        // data-bs-toggle. The A2UI adapter uses the page's copy when it has one (ADR-245).
+        shared: true,
+        note: "Bootstrap's JS for components the A2UI adapter mounts: Toolbar's tooltips, the dialogs' modals",
+    },
+    {
         // MarkdownRenderer's parser (window.marked), so the A2UI adapter can
         // load it for DocViewer instead of the host fetching it from a public
         // CDN (#51, ADR-230). The UMD build is the one that assigns a global.
@@ -535,6 +545,7 @@ async function main()
             url: `/lib/${fileName}`,
             integrity: sriOf(bytes),
             ...(asset.global ? { global: asset.global } : {}),
+            ...(asset.shared ? { shared: true } : {}),
             packages,
             bytes: bytes.length,
             closure: "complete",

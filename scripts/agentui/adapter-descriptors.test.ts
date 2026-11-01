@@ -140,6 +140,19 @@ describe("buildDescriptors — dependencies (ADR-230, #51)", () =>
         ] });
     });
 
+    test("a shared library carries its global, so the adapter can use the page's copy (ADR-245)", () =>
+    {
+        const libs = { ...LIBS, bootstrap: { url: "/lib/bootstrap-5.3.8.js", integrity: "sha384-CCC",
+            global: "bootstrap", shared: true } };
+        const r = buildDescriptors(viewer({ libraries: ["bootstrap", "marked"] }), catalog([["Widget", {}]]), exists,
+            libs);
+
+        expect(r.descriptors[0].assets.deps).toEqual([
+            { path: "lib/bootstrap-5.3.8.js", integrity: "sha384-CCC", global: "bootstrap" },
+            { path: "lib/marked-18.0.12.js", integrity: "sha384-AAA" },
+        ]);
+    });
+
     test("a component without dependencies gets no deps key", () =>
     {
         expect(buildDescriptors(viewer(undefined), catalog([["Widget", {}]]), exists, LIBS).descriptors[0].assets)

@@ -67,6 +67,13 @@ const handle = createGraphToolbar({
 | `setLayout(layoutId)` | Select a layout in the dropdown |
 | `destroy()` | Clean up toolbar and keyboard listeners |
 | `toolbar` | The underlying Toolbar instance |
+| `on("toolClick", handler)` | Subscribes to the inner Toolbar's `{ toolId, value }` for each tool (`gt-undo`, `gt-zoom-in`, `gt-layout-select`, ...), after the GraphToolbar callback. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the toolbar has no data slots |
+
+## Over A2UI
+
+GraphToolbar is in the A2UI catalog (ADR-245). The adapter passes it a container, so it is contained, and its document-wide keyboard shortcuts are off. Every tool sends `onToolClick` with its id, such as `gt-zoom-in`; the agent updates the graph in response. `toolbarOptions` and the per-tool callbacks are the host's.
 
 ## Keyboard Shortcuts
 

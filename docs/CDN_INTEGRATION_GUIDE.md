@@ -121,6 +121,7 @@ Read `lib.assets` rather than this table — it is generated, this is not.
 | `cytoscape` | `window.cytoscape` | |
 | `chart.js` | `window.Chart` | Also at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | — (stylesheet) | `/lib/font-awesome-6.5.1/css/all.min.css`. See below. |
+| `bootstrap` | `window.bootstrap` | Bootstrap's JS bundle with an SRI hash. A page that already loads `/js/bootstrap.bundle.min.js` must not load it again; a second copy doubles every `data-bs-toggle`. |
 
 ### Markdown editing
 

@@ -242,7 +242,9 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         expect(s.errors).toEqual([]);
         expect(spies.get(name)!.builds).toBe(before + 1);
         expect(s.el.handle).toBeDefined();
-        const deps = (d.assets.deps ?? []).map((dep) => dep.path);
+        // A shared library the page already has is the page's, and is not loaded again (ADR-245).
+        const deps = (d.assets.deps ?? []).filter((dep) => dep.global === undefined || !(dep.global in window))
+            .map((dep) => dep.path);
         const own = [...deps, d.assets.js, ...(d.assets.css ? [d.assets.css] : [])].map((a) => `${BASE}/${a}`);
         expect(loadedUrls).toEqual(expect.arrayContaining(own));
     });

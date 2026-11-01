@@ -172,7 +172,9 @@ function dependencyAssets(manifest, assetExists, libraries)
 
     return [
         ...libs.filter((l) => libraries[l]).map((l) =>
-            ({ path: libraries[l].url.replace(/^\//, ""), integrity: libraries[l].integrity })),
+            ({ path: libraries[l].url.replace(/^\//, ""), integrity: libraries[l].integrity,
+                // A shared library is skipped when the page already has its global (ADR-245).
+                ...(libraries[l].shared ? { global: libraries[l].global } : {}) })),
         ...components.filter((c) => c !== manifest.name).flatMap((c) =>
         {
             const own = ownAssets(c, assetExists);

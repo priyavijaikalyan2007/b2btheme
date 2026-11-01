@@ -318,3 +318,36 @@ describe("GraphToolbar destroy", () =>
         expect(container.children.length).toBe(0);
     });
 });
+
+// ============================================================================
+// SURFACE — toolClick through the inner Toolbar (readiness step 5, ADR-245)
+// ============================================================================
+
+describe("toolClick (ADR-245)", () =>
+{
+    test("a tool reports its id after the GraphToolbar callback, until unsubscribed", () =>
+    {
+        const order: string[] = [];
+        const gt = createGraphToolbar({ onUndo: () => order.push("onUndo"), enableKeyboardShortcuts: false },
+            CONTAINER_ID);
+        const off = gt.on("toolClick", (p) => order.push(JSON.stringify(p)));
+        const undo = () => container.querySelector<HTMLElement>("[data-tool-id='gt-undo']")!.click();
+
+        undo();
+        off();
+        undo();
+
+        expect(order).toEqual(["onUndo", '{"toolId":"gt-undo","value":null}', "onUndo"]);
+        gt.destroy();
+    });
+
+    test("the surface contract: one channel, no state, no data slots", () =>
+    {
+        const gt = createGraphToolbar({ enableKeyboardShortcuts: false }, CONTAINER_ID);
+
+        expect(() => gt.on("undo", () => undefined)).toThrow(/only channel is "toolClick"/);
+        expect(gt.getState()).toEqual({});
+        expect(() => gt.setData("layouts", [])).toThrow(/no data slots/);
+        gt.destroy();
+    });
+});
