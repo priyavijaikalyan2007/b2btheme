@@ -44,6 +44,23 @@ Tasks:
 - [x] **T3 TabbedPanel:** additive `on()` (`tabClose`, `collapse`, `resize`), `getState`/`setState` (`activeTabId`, `collapsed`, `height`), `setData`; manifest with `fixed`, host-only and a closed `tabs` override; glue; tests.
 - [x] **T4 browser tests** (Lit and React) and **records**: ADR-239, A2UI.md, the integration guide, AGENTS.md if a rule changes, CHANGELOG, history, migration and audit pins, #64.
 
-## L2–L3
+## L2: AnchorLayout, BoxLayout, CardLayout, FlexGridLayout, LayerLayout (ADR-240), done 2026-10-31
 
-Not started. Each batch adds its section here, with the child paths confirmed against each layout's options type (spec §4).
+Child paths, checked against each options type: `children[].child` (AnchorLayout, BoxLayout), `cards[].child`, `cells[].child`, `layers[].child`, each "one", each beside its placement fields as ordinary data.
+
+Decisions:
+
+- **A rebuild carries only declared state** (a fix to ADR-238, found here). BoxLayout's, CardLayout's, FlexGridLayout's and LayerLayout's `getState()` report option values and their `setState()` applies them, so carrying the whole state undid an agent's change to `direction`, `activeKey`, `columns`, `rows` or `sizing`. The descriptor lists the manifest's `stateKeys`, and the adapter carries only those.
+- **AnchorLayout, BoxLayout, FlexGridLayout and LayerLayout are `display`**: no gesture changes them. `onLayoutChange` is host-only.
+- **CardLayout is `surface`, with `activeKey` (and `cardCount`, reported) as state**: its arrow keys switch cards. An agent's `activeKey` switches in place; a card switch is view state, as TabbedPanel's, so it emits no channel.
+- **No escape through offsets:** AnchorLayout and LayerLayout clip their positioned children (`overflow: hidden` on the root).
+
+Tasks:
+
+- [x] **T1 adapter:** descriptor `stateKeys`; `#captureState` keeps only those; tests.
+- [x] **T2 manifests:** the five, each with a closed override; CardLayout's additive `on()`, `setData()`, partial `setState()`; tests.
+- [x] **T3 browser tests and records.**
+
+## L3
+
+Not started: DockLayout, FlowLayout, GridLayout (spec §4).

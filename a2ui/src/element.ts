@@ -418,16 +418,24 @@ class Binding
         if (state !== undefined && this.#handle) { this.#restoreState(state); }
     }
 
-    /** The mounted component's state, or undefined when it has none to carry. */
+    /**
+     * The mounted component's declared state, or undefined when it has none to
+     * carry. Only the manifest's stateKeys are carried (ADR-240): a getState()
+     * that also reports an option's value (BoxLayout's direction) would
+     * otherwise restore the value the agent just changed.
+     */
     #captureState(): Record<string, unknown> | undefined
     {
         const getState = this.#handle?.getState;
+        const keys = this.#env.descriptor.stateKeys ?? [];
 
-        if (typeof getState !== "function") { return undefined; }
+        if (typeof getState !== "function" || keys.length === 0) { return undefined; }
 
         try
         {
-            return getState.call(this.#handle) as Record<string, unknown>;
+            const state = getState.call(this.#handle) as Record<string, unknown>;
+
+            return Object.fromEntries(keys.filter((k) => k in state).map((k) => [k, state[k]]));
         }
         catch (err)
         {

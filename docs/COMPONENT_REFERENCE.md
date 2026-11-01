@@ -628,6 +628,10 @@ var layout = createAnchorLayout({
 });
 ```
 
+## Over A2UI
+
+AnchorLayout is in the A2UI catalog (ADR-240). Each child's `child` is the id of another A2UI component, placed by its anchor fields, and clipped to the layout's box. A change to `children` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
@@ -1784,6 +1788,10 @@ var innerBox = createBoxLayout({
 borderLayout.setNorth(innerBox);
 ```
 
+## Over A2UI
+
+BoxLayout is in the A2UI catalog (ADR-240). Each child's `child` is the id of another A2UI component. A change to `direction` or `children` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
@@ -2102,6 +2110,10 @@ All transitions respect `prefers-reduced-motion: reduce` — when enabled, trans
 | `"fade"` | Outgoing card fades out, incoming fades in |
 | `"slide-left"` | Outgoing slides left, incoming slides in from right |
 | `"slide-up"` | Outgoing slides up, incoming slides in from bottom |
+
+## Over A2UI
+
+CardLayout is in the A2UI catalog (ADR-240). Each card's `child` is the id of another A2UI component. The shown card is its state: an agent's change to `activeKey` switches cards in place, and a change to `cards` rebuilds the layout, keeping each child and the card the user arrowed to. `on()` emits nothing, and `setData()` throws, because the cards are an option.
 
 ## Global Exports
 
@@ -7203,6 +7215,10 @@ var dashboard = createFlexGridLayout({
 });
 ```
 
+## Over A2UI
+
+FlexGridLayout is in the A2UI catalog (ADR-240). Each cell's `child` is the id of another A2UI component, placed at its `column` and `row`. A change to the tracks or `cells` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
@@ -10104,6 +10120,10 @@ var overlay = createLayerLayout({
 
 overlay.show(document.getElementById("main"));
 ```
+
+## Over A2UI
+
+LayerLayout is in the A2UI catalog (ADR-240). Each layer's `child` is the id of another A2UI component, clipped to the layout's box. A change to `layers` or `sizing` rebuilds the layout and keeps each child.
 
 ## Global Exports
 

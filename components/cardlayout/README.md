@@ -132,6 +132,10 @@ All transitions respect `prefers-reduced-motion: reduce` — when enabled, trans
 | `"slide-left"` | Outgoing slides left, incoming slides in from right |
 | `"slide-up"` | Outgoing slides up, incoming slides in from bottom |
 
+## Over A2UI
+
+CardLayout is in the A2UI catalog (ADR-240). Each card's `child` is the id of another A2UI component. The shown card is its state: an agent's change to `activeKey` switches cards in place, and a change to `cards` rebuilds the layout, keeping each child and the card the user arrowed to. `on()` emits nothing, and `setData()` throws, because the cards are an option.
+
 ## Global Exports
 
 When loaded via `<script>` tag:

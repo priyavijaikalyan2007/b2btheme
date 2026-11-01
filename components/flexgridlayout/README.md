@@ -146,6 +146,10 @@ var dashboard = createFlexGridLayout({
 });
 ```
 
+## Over A2UI
+
+FlexGridLayout is in the A2UI catalog (ADR-240). Each cell's `child` is the id of another A2UI component, placed at its `column` and `row`. A change to the tracks or `cells` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:

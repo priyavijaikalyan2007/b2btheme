@@ -189,6 +189,10 @@ var layout = createAnchorLayout({
 });
 ```
 
+## Over A2UI
+
+AnchorLayout is in the A2UI catalog (ADR-240). Each child's `child` is the id of another A2UI component, placed by its anchor fields, and clipped to the layout's box. A change to `children` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
