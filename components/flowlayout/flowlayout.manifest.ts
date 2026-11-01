@@ -19,10 +19,9 @@
 import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
- * Declared at `display` conformance: the canvas can mount and tear this
- * component down, but it is not yet wired. Promotion to `field` or `surface`
- * happens in plan phase 9, once the component satisfies the fuller contract
- * and the conformance suite proves it.
+ * Declared at `display` conformance (readiness step 4 L3, ADR-241): its
+ * children are A2UI components, in order, wrapping onto new lines. No gesture
+ * changes it, so it has no channel and no state.
  */
 export const FLOWLAYOUT_MANIFEST: CapabilityManifest =
 {
@@ -33,11 +32,29 @@ export const FLOWLAYOUT_MANIFEST: CapabilityManifest =
     icon: "bi-text-wrap",
     category: "layout",
 
+    // What an agent's model reads to choose this component (ADR-222).
+    agent: {
+        useWhen: "Lay out many components in order that wrap onto new lines as space runs out, such as a set of "
+            + "cards or chips, with gaps and alignment; give the children as a list of component ids.",
+        avoidWhen: "For one row or column that never wraps use Row, Column or BoxLayout; for equal cells in fixed "
+            + "columns use GridLayout.",
+    },
+
     affords: [],
     emits: [],
     accepts: [],
     actions: [],
     stateKeys: [],
+
+    // How this component appears to agent protocols (ADR-219, ADR-222, ADR-241).
+    protocol: {
+        children: { children: "many" },
+        hostOnly: {
+            id: "Every A2UI component already has an id of its own, so this option cannot be set separately.",
+            onLayoutChange: "Fires when the host adds or removes a child or changes the direction, which an agent's "
+                + "surface never does.",
+        },
+    },
 
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 5826, mountCost: "trivial", holdsResources: false },
