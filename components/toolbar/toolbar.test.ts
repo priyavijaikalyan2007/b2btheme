@@ -674,3 +674,89 @@ describe("Toolbar contained mode", () =>
         tb.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE — toolClick (readiness step 5, ADR-245)
+// ============================================================================
+
+describe("toolClick (ADR-245)", () =>
+{
+    function mountWith(items: ToolbarItem[], overrides?: Partial<ToolbarOptions>): Toolbar
+    {
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+        return createToolbar(makeOptions({ regions: [{ id: "r", items }], ...overrides }), host) as Toolbar;
+    }
+
+    const el = (tb: Toolbar, sel: string) => tb.getElement()!.querySelector<HTMLElement>(sel)!;
+
+    test("a button reports null after onClick and onToolClick; a toggle reports its new state", () =>
+    {
+        const order: string[] = [];
+        const tb = mountWith([
+            { id: "b", tooltip: "B", icon: "bi-type-bold", onClick: () => order.push("tool") } as ToolItem,
+            { id: "t", tooltip: "T", icon: "bi-pin", toggle: true } as ToolItem,
+        ], { onToolClick: () => order.push("toolbar") });
+        const off = tb.on("toolClick", (p) => order.push(JSON.stringify(p)));
+
+        el(tb, "[data-tool-id='b']").click();
+        el(tb, "[data-tool-id='t']").click();
+        off();
+        el(tb, "[data-tool-id='b']").click();
+
+        expect(order).toEqual(["tool", "toolbar", '{"toolId":"b","value":null}', "toolbar",
+            '{"toolId":"t","value":true}', "tool", "toolbar"]);
+        tb.destroy();
+    });
+
+    test("fields report their new values even without callbacks", () =>
+    {
+        const heard: unknown[] = [];
+        const tb = mountWith([
+            { type: "dropdown", id: "d", options: [{ value: "a", label: "A" }, { value: "b", label: "B" }] },
+            { type: "checkbox", id: "c", label: "C" },
+            { type: "number", id: "n", value: 1 },
+            { type: "input", id: "i" },
+        ]);
+        tb.on("toolClick", (p) => heard.push(p));
+
+        const select = el(tb, "select") as HTMLSelectElement;
+        select.value = "b";
+        select.dispatchEvent(new Event("change"));
+        const box = el(tb, "input[type='checkbox']") as HTMLInputElement;
+        box.checked = true;
+        box.dispatchEvent(new Event("change"));
+        const num = el(tb, "input[type='number']") as HTMLInputElement;
+        num.value = "7";
+        num.dispatchEvent(new Event("change"));
+        const text = el(tb, "input.toolbar-input") as HTMLInputElement;
+        text.value = "find me";
+        text.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+
+        expect(heard).toEqual([{ toolId: "d", value: "b" }, { toolId: "c", value: true }, { toolId: "n", value: 7 },
+            { toolId: "i", value: "find me" }]);
+        tb.destroy();
+    });
+
+    test("a split-menu pick reports the split button's id and the item's id", () =>
+    {
+        const heard: unknown[] = [];
+        const tb = mountWith(makeSplitButtonRegion().items);
+        tb.on("toolClick", (p) => heard.push(p));
+
+        tb.getElement()!.querySelector<HTMLElement>("[data-item-id='paste-plain']")!.click();
+
+        expect(heard).toEqual([{ toolId: "split-paste", value: "paste-plain" }]);
+        tb.destroy();
+    });
+
+    test("the surface contract: one channel, no state, no data slots", () =>
+    {
+        const tb = mountWith([{ id: "b", tooltip: "B" } as ToolItem]);
+
+        expect(() => tb.on("resize", () => undefined)).toThrow(/only channel is "toolClick"/);
+        expect(tb.getState()).toEqual({});
+        expect(() => tb.setData("regions", [])).toThrow(/no data slots/);
+        tb.destroy();
+    });
+});

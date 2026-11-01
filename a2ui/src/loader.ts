@@ -27,8 +27,11 @@ const BASE_THEME = "css/custom.css";
 /** One load per URL for the life of the page. */
 let loads = new Map<string, Promise<void>>();
 
-/** A script or stylesheet path relative to assetBaseUrl, with its SRI hash when it has one. */
-interface Asset { path: string; integrity?: string }
+/**
+ * A script or stylesheet path relative to assetBaseUrl, with its SRI hash when it has one, and, for a
+ * shared library, the global the page's own copy would define (ADR-245).
+ */
+interface Asset { path: string; integrity?: string; global?: string }
 
 /**
  * Loads a component's assets (and the base theme, when asked).
@@ -46,7 +49,9 @@ export function loadAssets(
 
     // Classic scripts with async = false run in insertion order, so a dependency
     // injected first has run before the component's own script does.
-    const all: Asset[] = [...(injectBaseTheme ? [{ path: BASE_THEME }] : []), ...(assets.deps ?? []),
+    // A shared library the page already has is the page's: a second Bootstrap would double its listeners.
+    const deps = (assets.deps ?? []).filter((a) => a.global === undefined || !(a.global in window));
+    const all: Asset[] = [...(injectBaseTheme ? [{ path: BASE_THEME }] : []), ...deps,
         { path: assets.js }, ...(assets.css ? [{ path: assets.css }] : [])];
 
     return Promise.all(all.map((a) => loadOnce(`${baseUrl}/${a.path}`, baseUrl, a.integrity))).then(() => undefined);

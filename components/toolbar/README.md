@@ -132,6 +132,13 @@ Creates the toolbar DOM but does not attach to the page.
 | `getDockPosition()` | Returns current dock position |
 | `isVisible()` | Returns visibility state |
 | `getElement()` | Returns the root DOM element |
+| `on("toolClick", handler)` | Subscribes to `{ toolId, value }` after every tool interaction, even where the tool has no callback: a toggle's state (`null` for a plain button), a field's new value, the gallery option or split-menu item picked (with the gallery's or split button's id), or the text submitted with Enter. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore: tool states are the options you pass |
+| `setData(slot, value)` | Throws: the toolbar has no data slots |
+
+### Over A2UI
+
+Toolbar is in the A2UI catalog (ADR-245). It is always contained and docked, cannot be dragged, keeps no layout in storage and shows no key tips, so it never takes the page's Alt key. Every tool interaction sends `onToolClick` with `{ toolId, value }`. Tools take no callbacks, `data` or HTML gallery previews; `rightContent` is the id of another A2UI component. The adapter loads Bootstrap's JS for the tooltips, unless the page already has it.
 
 ### Convenience Functions
 

@@ -104,7 +104,7 @@
     "@vitest/coverage-v8": "^4.1.12",
     "ajv": "8.20.0",
     "autoprefixer": "^10.4.27",
-    "bootstrap": "^5.3.8",
+    "bootstrap": "5.3.8",
     "bootstrap-icons": "^1.13.1",
     "chart.js": "4.5.1",
     "cssnano": "^9.9.0",
