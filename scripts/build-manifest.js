@@ -143,6 +143,13 @@ async function main()
         const problems = [];
         let missingBuild = 0;
 
+        // Every component has a manifest or a recorded reason for having none (readiness step 5, ADR-243).
+        const { manifestCoverageProblems } = await import(
+            pathToFileURL(path.join(__dirname, "agentui", "no-manifest.mjs")).href);
+        const withManifest = new Set(dirs.filter((d) => fs.existsSync(path.join(COMPONENTS, d, `${d}.manifest.ts`))));
+
+        problems.push(...manifestCoverageProblems(dirs, withManifest));
+
         for (const dir of dirs)
         {
             const file = path.join(COMPONENTS, dir, `${dir}.manifest.ts`);

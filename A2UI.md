@@ -83,7 +83,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 96 components that are. The 5 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **In the catalog:** the 97 components that are. The 5 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
 - **Layouts with children:** all twelve layouts (ADR-238 to ADR-241, `specs/agentui-layouts.plan.md`).
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.

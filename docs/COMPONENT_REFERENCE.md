@@ -21444,10 +21444,27 @@ document.getElementById("container").appendChild(badge);
 - **outlined** — Transparent background, colored border and text
 - **subtle** — 10% opacity background, colored text
 
+## Mounting with a handle
+
+`createTypeBadge` returns a bare element for you to place. `mountTypeBadge(containerId, options)` creates the same badge inside the element with that id and returns a handle:
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getElement()` | `HTMLElement` | The badge element |
+| `on(channel, handler)` | `() => void` | Subscribes to `"click"` (`{ typeKey }`), heard after `onClick`, even when no `onClick` was passed; returns the unsubscribe |
+| `getState()` / `setState(state)` | `{}` / `void` | Nothing to restore |
+| `setData(slot, value)` | `void` | Throws: the badge has no data slots |
+| `destroy()` | `void` | Removes the badge |
+
+## Over A2UI
+
+TypeBadge is in the A2UI catalog (ADR-243), mounted with `mountTypeBadge`. `color` must be hex and `icon` a Bootstrap icon name. Clicking a clickable badge, or pressing Enter or Space on it, sends `onClick` with `{ typeKey }`.
+
 ## Global
 
 ```javascript
 window.createTypeBadge(options)
+window.mountTypeBadge(containerId, options)
 ```
 
 

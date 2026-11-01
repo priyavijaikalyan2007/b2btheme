@@ -222,7 +222,7 @@ import type { Toolbar, createDockedToolbar, createFloatingToolbar, createToolbar
 import type { createToolColorPicker } from "./toolcolorpicker/toolcolorpicker";
 import type { TreeGrid, createTreeGrid } from "./treegrid/treegrid";
 import type { TreeView, createTreeView } from "./treeview/treeview";
-import type { createTypeBadge } from "./typebadge/typebadge";
+import type { createTypeBadge, mountTypeBadge } from "./typebadge/typebadge";
 import type { UserMenu, createUserMenu } from "./usermenu/usermenu";
 import type { createVisualTableEditor } from "./visualtableeditor/visualtableeditor";
 import type { createWorkspaceShell } from "./workspaceshell/workspaceshell";
@@ -782,6 +782,7 @@ declare global
 
         /** Published by the Typebadge component. */
         createTypeBadge?: typeof createTypeBadge;
+        mountTypeBadge?: typeof mountTypeBadge;
 
         /** Published by the Usermenu component. */
         createUserMenu?: typeof createUserMenu;
