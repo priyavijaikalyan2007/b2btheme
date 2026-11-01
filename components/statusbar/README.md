@@ -46,6 +46,8 @@ A fixed-to-bottom viewport status bar with configurable label/value regions sepa
 | `cssClass` | `string` | — | Additional CSS class(es) |
 | `showDividers` | `boolean` | `true` | Show pipe dividers |
 | `dividerChar` | `string` | `"\|"` | Divider character |
+| `contained` | `boolean` | `false` | Relative positioning inside a parent instead of fixed to the viewport |
+| `container` | `HTMLElement` | `document.body` | The element `createStatusBar` shows the bar in |
 
 ## Region Definition
 
@@ -72,6 +74,10 @@ A fixed-to-bottom viewport status bar with configurable label/value regions sepa
 | `removeRegion(id)` | Remove a region by ID |
 | `isVisible()` | Check visibility state |
 | `getElement()` | Returns the root DOM element (or `null`) |
+
+## Over A2UI
+
+StatusBar is in the A2UI catalog (ADR-244). It is always contained, so it sits in its surface rather than pinned to the bottom of the viewport. `regions` is the agent's to rewrite; there is nothing to report back.
 
 ## Size Variants
 

@@ -42,9 +42,6 @@ export const NO_MANIFEST = new Map([
  * component pass.
  */
 export const AWAITING_MANIFEST = new Set([
-    // S5-2.
-    "sidebar",
-    "statusbar",
     // S5-3.
     "graphtoolbar",
     "toolbar",

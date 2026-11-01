@@ -78,6 +78,8 @@ export interface StatusBarOptions
 
     /** Contained mode: relative positioning for embedding within a parent container. */
     contained?: boolean;
+    /** The element createStatusBar shows the bar in. Default: document.body (readiness step 5, ADR-244). */
+    container?: HTMLElement;
 }
 
 // ============================================================================
@@ -846,7 +848,7 @@ export function createStatusBar(
     }
 
     const bar = new StatusBar(options);
-    bar.show();
+    bar.show(options.container);
     return bar;
 }
 

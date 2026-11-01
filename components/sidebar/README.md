@@ -94,6 +94,7 @@ const sb = createDockedSidebar({
 | `onCollapseToggle` | `function` | — | Collapse toggle callback |
 | `onBeforeClose` | `function` | — | Before close callback (return false to cancel) |
 | `onClose` | `function` | — | After close callback |
+| `content` | `HTMLElement` | — | An element placed in the content area at creation |
 
 ## API
 
@@ -120,6 +121,10 @@ const sb = createDockedSidebar({
 | `getHeight()` | `number` | Current height |
 | `isVisible()` | `boolean` | Whether sidebar is in the DOM |
 | `isCollapsed()` | `boolean` | Whether sidebar is collapsed |
+| `getState()` | `{ width, collapsed }` | The expanded width and collapsed state |
+| `setState(state)` | `void` | Restores any part of `getState()`; callbacks fire, channels stay silent |
+| `on(channel, handler)` | `() => void` | Subscribes to `"resize"` (`{ width, height }`) or `"collapse"` (`{ collapsed }`), each after its callback; returns the unsubscribe |
+| `setData(slot, value)` | `void` | Throws: the sidebar has no data slots |
 
 ### SidebarManager
 
@@ -139,6 +144,10 @@ const sb = createDockedSidebar({
 | `createSidebar(options)` | Create and show a sidebar |
 | `createDockedSidebar(options)` | Create a docked sidebar (mode defaults to "docked") |
 | `createFloatingSidebar(options)` | Create a floating sidebar (mode defaults to "floating") |
+
+## Over A2UI
+
+Sidebar is in the A2UI catalog (ADR-244). It is always contained and docked, with no close button and no dragging, so it stays in its surface and never joins the page's SidebarManager. Its `content` is the id of another A2UI component. Resizing sends `onResize` and collapsing sends `onCollapse`. `width` and `collapsed` are its state: an agent's change applies in place, and a rebuild keeps what the user set.
 
 ## CSS Custom Properties
 
