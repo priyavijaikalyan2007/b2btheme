@@ -358,3 +358,12 @@ describe("container option (ADR-244)", () =>
         bar.destroy();
     });
 });
+
+describe("container option, missing (ADR-244)", () =>
+{
+    test("createStatusBar_ContainerPassedButNull_Throws", () =>
+    {
+        expect(() => createStatusBar(makeOptions({ container: null as unknown as HTMLElement })))
+            .toThrow(/options.container was not an element/);
+    });
+});

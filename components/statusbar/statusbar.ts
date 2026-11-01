@@ -847,6 +847,14 @@ export function createStatusBar(
             + "Pass it when creating the StatusBar.");
     }
 
+    // Absent means document.body, as before; a container passed but missing is the caller's mistake.
+    if (options.container !== undefined && !(options.container instanceof HTMLElement))
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.container was not an element. `
+            + "Pass the element to show the bar in, and check it for null before you do.");
+    }
+
     const bar = new StatusBar(options);
     bar.show(options.container);
     return bar;
