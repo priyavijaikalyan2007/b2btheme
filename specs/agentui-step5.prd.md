@@ -61,7 +61,7 @@ Each batch is one PR, with a manifest, glue, browser gesture tests and records. 
 | Batch | Components |
 |---|---|
 | S5-1 | `NO_MANIFEST` and its gate; typebadge (ADR-243) |
-| S5-2 | statusbar and sidebar |
+| S5-2 | statusbar and sidebar (ADR-244) |
 | S5-3 | toolbar and graphtoolbar |
 | S5-4 | confirmdialog, errordialog, formdialog, progressmodal and sharedialog, with the `contained` mode |
 

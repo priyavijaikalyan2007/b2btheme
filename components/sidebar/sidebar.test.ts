@@ -492,3 +492,73 @@ describe("Sidebar destroy", () =>
         expect(onClose).toHaveBeenCalledWith(sb);
     });
 });
+
+// ============================================================================
+// SURFACE — content, on(), state (readiness step 5, ADR-244)
+// ============================================================================
+
+describe("surface (ADR-244)", () =>
+{
+    test("content_IsPlacedInTheContentArea", () =>
+    {
+        const content = document.createElement("p");
+        content.textContent = "Filters";
+        const sidebar = createSidebar(makeOptions({ content }), container);
+
+        expect(sidebar.getContentElement()!.firstElementChild).toBe(content);
+        sidebar.destroy();
+    });
+
+    test("collapse_ChannelHearsAfterCallback_AndUnsubscribes", () =>
+    {
+        const order: string[] = [];
+        const sidebar = createSidebar(makeOptions({ onCollapseToggle: (c) => order.push(`callback:${c}`) }), container);
+        const off = sidebar.on("collapse", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        sidebar.collapse();
+        off();
+        sidebar.expand();
+
+        expect(order).toEqual(["callback:true", 'channel:{"collapsed":true}', "callback:false"]);
+        sidebar.destroy();
+    });
+
+    test("resize_KeyboardResizeReachesTheChannel", () =>
+    {
+        const heard = vi.fn();
+        const sidebar = createSidebar(makeOptions({ width: 280 }), container);
+        sidebar.on("resize", heard);
+
+        sidebar.getRootElement()!.querySelector(".sidebar-resize-handle-h")!
+            .dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+
+        expect(heard).toHaveBeenCalledWith({ width: sidebar.getWidth(), height: sidebar.getHeight() });
+        expect(sidebar.getWidth()).not.toBe(280);
+        sidebar.destroy();
+    });
+
+    test("setState_RestoresSilently_CallbacksStillFire", () =>
+    {
+        const onCollapseToggle = vi.fn();
+        const heard = vi.fn();
+        const sidebar = createSidebar(makeOptions({ width: 280, onCollapseToggle }), container);
+        sidebar.on("collapse", heard);
+        sidebar.on("resize", heard);
+
+        sidebar.setState({ width: 320, collapsed: true });
+
+        expect(sidebar.getState()).toEqual({ width: 320, collapsed: true });
+        expect(onCollapseToggle).toHaveBeenCalledWith(true, sidebar);
+        expect(heard).not.toHaveBeenCalled();
+        sidebar.destroy();
+    });
+
+    test("on_UnknownChannelThrows_AndSetDataThrows", () =>
+    {
+        const sidebar = createSidebar(makeOptions(), container);
+
+        expect(() => sidebar.on("close", () => undefined)).toThrow(/"resize" and "collapse"/);
+        expect(() => sidebar.setData("content", null)).toThrow(/no data slots/);
+        sidebar.destroy();
+    });
+});

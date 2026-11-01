@@ -130,7 +130,21 @@ export interface SidebarOptions
 
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
+    /** An element placed in the content area at creation, as getContentElement().appendChild() would. */
+    content?: HTMLElement;
 }
+
+/** What getState() reports and setState() restores (readiness step 5, ADR-244). */
+export interface SidebarState
+{
+    /** The expanded width in px, as the user resized it. */
+    width: number;
+    /** Whether the sidebar is collapsed to its icon strip. */
+    collapsed: boolean;
+}
+
+/** The surface channels (readiness step 5, ADR-244). */
+type SidebarChannel = "resize" | "collapse";
 
 // ============================================================================
 // CONSTANTS
@@ -319,6 +333,13 @@ export interface SidebarHandle
     getRootElement(): HTMLElement | null;
     getTitle(): string;
     getIcon(): string | undefined;
+    getState(): SidebarState;
+    /** Restores state captured by getState(), or any part of it; channels stay silent, callbacks fire as before. */
+    setState(state: Partial<SidebarState>): void;
+    /** Subscribes to "resize" ({ width, height }) or "collapse" ({ collapsed }); returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Sidebar has no data slots: its content is an element. */
+    setData(slot: string, value: unknown): void;
 }
 
 export class Sidebar implements SidebarHandle
@@ -351,6 +372,11 @@ export class Sidebar implements SidebarHandle
     private collapsed = false;
     private visible = false;
     private contained = false;
+
+    // Surface (readiness step 5, ADR-244): each channel hears after its callback, and setState silences them.
+    private readonly handlers: Record<SidebarChannel, Set<(payload: unknown) => void>> =
+        { resize: new Set(), collapse: new Set() };
+    private restoring = false;
 
     // External listeners (for DockLayout integration)
     private resizeListeners: Array<(w: number, h: number, s: Sidebar) => void> = [];
@@ -426,6 +452,11 @@ export class Sidebar implements SidebarHandle
         this.contained = this.options.contained || false;
 
         this.buildDOM();
+
+        if (this.options.content)
+        {
+            this.contentEl?.appendChild(this.options.content);
+        }
 
         // Start collapsed if requested
         if (this.options.collapsed)
@@ -650,6 +681,8 @@ export class Sidebar implements SidebarHandle
             fn(true, this);
         }
 
+        this.emit("collapse", { collapsed: true });
+
         logDebug("Collapsed:", this.instanceId);
     }
 
@@ -677,6 +710,8 @@ export class Sidebar implements SidebarHandle
         {
             fn(false, this);
         }
+
+        this.emit("collapse", { collapsed: false });
 
         logDebug("Expanded:", this.instanceId);
     }
@@ -754,6 +789,52 @@ export class Sidebar implements SidebarHandle
      *
      * @param w - Width in pixels
      */
+    public getState(): SidebarState
+    {
+        return { width: this.currentWidth, collapsed: this.collapsed };
+    }
+
+    /**
+     * Restores the width and collapsed state of a SidebarState, or any part
+     * of it. onCollapseToggle fires as collapse() and expand() fire it; the
+     * surface channels stay silent (readiness step 5, ADR-244).
+     */
+    public setState(state: Partial<SidebarState>): void
+    {
+        this.restoring = true;
+
+        try
+        {
+            if (state.width !== undefined) { this.setWidth(state.width); }
+            if (state.collapsed === true) { this.collapse(); }
+            if (state.collapsed === false) { this.expand(); }
+        }
+        finally
+        {
+            this.restoring = false;
+        }
+    }
+
+    /** Subscribes to "resize" ({ width, height }) or "collapse" ({ collapsed }); returns the unsubscribe. */
+    public on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "resize" && channel !== "collapse")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "resize" and "collapse".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    /** Sidebar has no data slots: its content is an element (readiness step 5, ADR-244). */
+    public setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): Sidebar has no data slots. Its content is an element; `
+            + "pass it as the content option or append it to getContentElement().");
+    }
+
     public setWidth(w: number): void
     {
         this.currentWidth = clamp(w, this.options.minWidth, this.options.maxWidth);
@@ -1727,6 +1808,27 @@ export class Sidebar implements SidebarHandle
         for (const fn of this.resizeListeners)
         {
             fn(this.currentWidth, this.currentHeight, this);
+        }
+
+        this.emit("resize", { width: this.currentWidth, height: this.currentHeight });
+    }
+
+    /** Calls every handler on a channel unless a restore is running, isolating each so one throw cannot starve
+     *  the rest. */
+    private emit(channel: SidebarChannel, payload: unknown): void
+    {
+        if (this.restoring) { return; }
+
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
         }
     }
 

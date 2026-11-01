@@ -335,3 +335,35 @@ describe("StatusBar destroy", () =>
         probe.restore();
     });
 });
+
+// ============================================================================
+// container option (readiness step 5, ADR-244)
+// ============================================================================
+
+describe("container option (ADR-244)", () =>
+{
+    test("createStatusBar_WithContainer_ShowsTheBarThere", () =>
+    {
+        const bar = createStatusBar(makeOptions({ container }));
+
+        expect(bar.getElement()!.parentElement).toBe(container);
+        bar.destroy();
+    });
+
+    test("createStatusBar_WithoutContainer_ShowsOnBodyAsBefore", () =>
+    {
+        const bar = createStatusBar(makeOptions());
+
+        expect(bar.getElement()!.parentElement).toBe(document.body);
+        bar.destroy();
+    });
+});
+
+describe("container option, missing (ADR-244)", () =>
+{
+    test("createStatusBar_ContainerPassedButNull_Throws", () =>
+    {
+        expect(() => createStatusBar(makeOptions({ container: null as unknown as HTMLElement })))
+            .toThrow(/options.container was not an element/);
+    });
+});

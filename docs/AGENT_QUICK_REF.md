@@ -1249,7 +1249,7 @@ $control-height-xl=46px
 - CSS: `components/sidebar/sidebar.css`
 - JS: `components/sidebar/sidebar.js`
 - Globals: `createDockedSidebar()`, `createFloatingSidebar()`, `createSidebar()`
-- Exports: `type SidebarDockPosition`, `type SidebarMode`, `interface SidebarOptions`, `interface SidebarHandle`, `class Sidebar`, `class SidebarManager`, `function createSidebar`, `function createDockedSidebar`, `function createFloatingSidebar`
+- Exports: `type SidebarDockPosition`, `type SidebarMode`, `interface SidebarOptions`, `interface SidebarState`, `interface SidebarHandle`, `class Sidebar`, `class SidebarManager`, `function createSidebar`, `function createDockedSidebar`, `function createFloatingSidebar`
 
 ### sitefooter
 
