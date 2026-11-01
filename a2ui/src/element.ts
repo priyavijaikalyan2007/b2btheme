@@ -492,6 +492,8 @@ class Binding
         {
             // A layout is height: 100% of this box, which an A2UI host leaves without a height (ADR-238).
             container.style.height = `var(--outcrop-layout-height, ${d.fill.height}px)`;
+            // A drawer slides in from outside its box (ADR-242); a host page clips it the same way.
+            if (d.fill.clip) { container.style.overflow = "hidden"; }
         }
 
         try

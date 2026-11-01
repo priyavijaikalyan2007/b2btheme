@@ -41,10 +41,8 @@ describe("manifest coverage (ADR-243)", () =>
 
     test("every reason is a sentence, and no name is on both lists", () =>
     {
-        for (const [name, reason] of NO_MANIFEST)
-        {
-            expect(reason, name).toMatch(/^[A-Z].{10,}\.$/);
-            expect(AWAITING_MANIFEST.has(name), name).toBe(false);
-        }
+        expect(NO_MANIFEST.size).toBe(14);
+        expect([...NO_MANIFEST].filter(([, reason]) => !/^[A-Z].{10,}\.$/.test(reason))).toEqual([]);
+        expect([...NO_MANIFEST.keys()].filter((name) => AWAITING_MANIFEST.has(name))).toEqual([]);
     });
 });

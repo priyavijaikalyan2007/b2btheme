@@ -71,3 +71,7 @@ Decisions:
 - **FlowLayout and GridLayout are `display`**, the first top-level "many" slots.
 
 All twelve layouts are in the catalog; step 4's layout work is done.
+
+## Follow-up: PropertyInspector (ADR-242), done 2026-11-01
+
+PropertyInspector was held from B5 for A2UI children. It joins with additive `openWith` and `keyScope` options, and child slots for its content, footer and tabs. An agent's change to `openWith` opens the drawer again (user, 2026-11-01). A new `protocol.box: "drawer"` gives it a sized, clipped box. CommentOverlay stays pending: it needs coordinate pins and a placement trigger, a larger design change.

@@ -537,6 +537,12 @@ describe("validateManifest — protocol field", () =>
         expect(paths({ children: ["panels[].content"] })).toEqual(["protocol.children"]);
         expect(paths({ children: { north: "single" } })).toEqual(["protocol.children.north"]);
     });
+
+    test("protocol.box is \"drawer\" (ADR-242)", () =>
+    {
+        expect(paths({ box: "drawer" })).toEqual([]);
+        expect(paths({ box: "fill" })).toEqual(["protocol.box"]);
+    });
 });
 
 describe("validateManifest — agent field (ADR-222)", () =>

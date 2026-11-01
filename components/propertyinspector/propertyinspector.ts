@@ -147,7 +147,27 @@ export interface PropertyInspectorOptions
     onTabChange?: (tabId: string) => void;
     /** Called when width changes via resize. */
     onResize?: (width: number) => void;
+    /**
+     * Opens the drawer with these at creation, as open() would; over A2UI a change to it opens the drawer again.
+     * Default: closed until open().
+     */
+    openWith?: InspectorOpenOptions;
+    /**
+     * Where Escape closes the drawer. "document" (default) handles it anywhere on the page;
+     * "inspector" only while focus is inside the drawer, leaving the rest of the page's Escape alone.
+     */
+    keyScope?: "document" | "inspector";
 }
+
+/** What getState() reports and setState() restores (readiness step 4, ADR-242). */
+export interface PropertyInspectorState
+{
+    /** The drawer's width in px, as the user resized it. */
+    width: number;
+}
+
+/** The surface channels (readiness step 4, ADR-242). */
+type InspectorChannel = "action" | "close";
 
 /** Public handle for controlling a PropertyInspector instance. */
 export interface PropertyInspectorHandle
@@ -162,6 +182,13 @@ export interface PropertyInspectorHandle
     setFooter(el: HTMLElement): void;
     getElement(): HTMLElement;
     destroy(): void;
+    getState(): PropertyInspectorState;
+    /** Restores state captured by getState(), or any part of it; onResize is not called. */
+    setState(state: Partial<PropertyInspectorState>): void;
+    /** Subscribes to "action" ({ actionId }) or "close" ({}), heard after its callback; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** PropertyInspector has no data slots: what it shows is open()'s options, or openWith. */
+    setData(slot: string, value: unknown): void;
 }
 
 // ============================================================================
@@ -212,6 +239,10 @@ class PropertyInspector implements PropertyInspectorHandle
 
     private boundKeyDown: (e: KeyboardEvent) => void;
 
+    // Surface (readiness step 4, ADR-242): each channel hears after its callback.
+    private readonly handlers: Record<InspectorChannel, Set<(payload: unknown) => void>> =
+        { action: new Set(), close: new Set() };
+
     constructor(options: PropertyInspectorOptions)
     {
         instanceCounter++;
@@ -227,6 +258,11 @@ class PropertyInspector implements PropertyInspectorHandle
 
         this.ensureContainerPositioned();
         this.buildDrawer();
+
+        if (options.openWith)
+        {
+            this.open(options.openWith);
+        }
 
         logInfo("Created", this.id);
     }
@@ -262,6 +298,7 @@ class PropertyInspector implements PropertyInspectorHandle
             this.backdropEl.style.display = "none";
         }
         if (this.options.onClose) { this.options.onClose(); }
+        this.emit("close", {});
     }
 
     isOpen(): boolean
@@ -336,6 +373,39 @@ class PropertyInspector implements PropertyInspectorHandle
         this.drawerEl?.parentNode?.removeChild(this.drawerEl);
         this.backdropEl?.parentNode?.removeChild(this.backdropEl);
         logInfo("Destroyed", this.id);
+    }
+
+    getState(): PropertyInspectorState
+    {
+        return { width: this.width };
+    }
+
+    setState(state: Partial<PropertyInspectorState>): void
+    {
+        if (state.width === undefined) { return; }
+        this.width = state.width;
+        if (this.drawerEl)
+        {
+            this.drawerEl.style.width = `${this.width}px`;
+        }
+    }
+
+    on(channel: string, handler: (payload: unknown) => void): () => void
+    {
+        if (channel !== "action" && channel !== "close")
+        {
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "action" and "close".`);
+        }
+
+        this.handlers[channel].add(handler);
+
+        return () => { this.handlers[channel].delete(handler); };
+    }
+
+    setData(slot: string): void
+    {
+        throw new Error(`${LOG_PREFIX} setData("${slot}"): PropertyInspector has no data slots. What it shows is `
+            + "open()'s options, or the openWith option.");
     }
 
     // ====================================================================
@@ -513,6 +583,7 @@ class PropertyInspector implements PropertyInspectorHandle
             {
                 this.options.onAction(action.id, data);
             }
+            this.emit("action", { actionId: action.id });
         });
         return btn;
     }
@@ -669,10 +740,29 @@ class PropertyInspector implements PropertyInspectorHandle
     private handleKeyDown(e: KeyboardEvent): void
     {
         logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
+        // keyScope "inspector" (ADR-242): an Escape pressed elsewhere on the page is the page's.
+        const outside = !(e.target instanceof Node && this.drawerEl?.contains(e.target));
+        if (this.options.keyScope === "inspector" && outside) { return; }
         if (e.key === "Escape" && this.open_)
         {
             e.preventDefault();
             this.close();
+        }
+    }
+
+    /** Calls every handler on a channel, isolating each so one throw cannot starve the rest. */
+    private emit(channel: InspectorChannel, payload: unknown): void
+    {
+        for (const handler of this.handlers[channel])
+        {
+            try
+            {
+                handler(payload);
+            }
+            catch (err)
+            {
+                logError(`Channel "${channel}" handler threw:`, err);
+            }
         }
     }
 }
@@ -706,7 +796,11 @@ export function createPropertyInspector(
         setActiveTab: (id) => inst.setActiveTab(id),
         setFooter: (el) => inst.setFooter(el),
         getElement: () => inst.getElement(),
-        destroy: () => inst.destroy()
+        destroy: () => inst.destroy(),
+        getState: () => inst.getState(),
+        setState: (st) => inst.setState(st),
+        on: (channel, handler) => inst.on(channel, handler),
+        setData: (slot) => inst.setData(slot)
     };
 }
 

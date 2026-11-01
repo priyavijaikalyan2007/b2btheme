@@ -334,3 +334,115 @@ describe("edge cases", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// SURFACE — openWith, keyScope, on(), state (readiness step 4, ADR-242)
+// ============================================================================
+
+describe("surface (ADR-242)", () =>
+{
+    function pressEscape(target: EventTarget): void
+    {
+        target.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    }
+
+    test("openWith_OpensAtCreation", () =>
+    {
+        const content = document.createElement("div");
+        content.textContent = "From openWith";
+        const handle = createPropertyInspector(makeOptions({ openWith: makeOpenOptions({ content }) }));
+
+        expect(handle.isOpen()).toBe(true);
+        expect(handle.getElement().querySelector(".propertyinspector-title")!.textContent).toBe("Inspector Title");
+        expect(handle.getElement().querySelector(".propertyinspector-body")!.textContent).toBe("From openWith");
+        handle.destroy();
+    });
+
+    test("withoutOpenWith_StartsClosed", () =>
+    {
+        const handle = createPropertyInspector(makeOptions());
+        expect(handle.isOpen()).toBe(false);
+        handle.destroy();
+    });
+
+    test("keyScopeDocument_EscapeAnywhereCloses", () =>
+    {
+        const handle = createPropertyInspector(makeOptions({ openWith: makeOpenOptions() }));
+        pressEscape(document.body);
+        expect(handle.isOpen()).toBe(false);
+        handle.destroy();
+    });
+
+    test("keyScopeInspector_EscapeOutsideIsThePages", () =>
+    {
+        const handle = createPropertyInspector(makeOptions({ keyScope: "inspector", openWith: makeOpenOptions() }));
+        const outside = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+        document.body.dispatchEvent(outside);
+
+        expect(handle.isOpen()).toBe(true);
+        expect(outside.defaultPrevented).toBe(false);
+
+        pressEscape(handle.getElement().querySelector(".propertyinspector-close-btn")!);
+        expect(handle.isOpen()).toBe(false);
+        handle.destroy();
+    });
+
+    test("onAction_ChannelHearsAfterCallback", () =>
+    {
+        const order: string[] = [];
+        const handle = createPropertyInspector(makeOptions({
+            onAction: (id) => order.push(`callback:${id}`),
+            openWith: makeOpenOptions({ actions: [{ id: "pin", label: "Pin", icon: "bi-pin" }], data: { x: 1 } }),
+        }));
+        const off = handle.on("action", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        (handle.getElement().querySelector(".propertyinspector-action-btn") as HTMLElement).click();
+        off();
+        (handle.getElement().querySelector(".propertyinspector-action-btn") as HTMLElement).click();
+
+        expect(order).toEqual(["callback:pin", 'channel:{"actionId":"pin"}', "callback:pin"]);
+        handle.destroy();
+    });
+
+    test("onClose_ChannelHearsAfterCallback", () =>
+    {
+        const order: string[] = [];
+        const handle = createPropertyInspector(makeOptions({
+            onClose: () => order.push("callback"), openWith: makeOpenOptions(),
+        }));
+        handle.on("close", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        (handle.getElement().querySelector(".propertyinspector-close-btn") as HTMLElement).click();
+
+        expect(order).toEqual(["callback", "channel:{}"]);
+        handle.destroy();
+    });
+
+    test("on_UnknownChannelThrows", () =>
+    {
+        const handle = createPropertyInspector(makeOptions());
+        expect(() => handle.on("tabChange", () => undefined)).toThrow(/"action" and "close"/);
+        handle.destroy();
+    });
+
+    test("state_RestoresWidthWithoutOnResize", () =>
+    {
+        const onResize = vi.fn();
+        const handle = createPropertyInspector(makeOptions({ width: 300, onResize }));
+        expect(handle.getState()).toEqual({ width: 300 });
+
+        handle.setState({ width: 450 });
+
+        expect(handle.getState()).toEqual({ width: 450 });
+        expect(handle.getElement().style.width).toBe("450px");
+        expect(onResize).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+
+    test("setData_Throws", () =>
+    {
+        const handle = createPropertyInspector(makeOptions());
+        expect(() => handle.setData("content", null)).toThrow(/no data slots/);
+        handle.destroy();
+    });
+});

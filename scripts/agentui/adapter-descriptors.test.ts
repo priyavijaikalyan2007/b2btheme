@@ -301,6 +301,15 @@ describe("buildDescriptors — fields", () =>
         expect(p).not.toHaveProperty("fill");
     });
 
+    test("a drawer box fills and clips at the default height (ADR-242)", () =>
+    {
+        const drawer = { ...picker, manifest: { ...picker.manifest, protocol: { box: "drawer" },
+            defaultSize: { w: 300, h: 400 } } };
+        const [d] = buildDescriptors([drawer], cat, css).descriptors;
+
+        expect(d.fill).toEqual({ height: 400, clip: true });
+    });
+
     test("a surface's child slots are carried for the adapter to mount; none adds no key (ADR-238)", () =>
     {
         const children = [{ path: "panels[].content", cardinality: "one" }];
