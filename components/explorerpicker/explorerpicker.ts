@@ -121,11 +121,20 @@ export interface ExplorerPickerOptions
     selectionTarget?: "resource" | "container" | "any";
     /** Resource type keys to show; other resources are hidden, containers always show. Child types match too. */
     resourceTypeFilter?: string[];
-    /** Node ids shown dimmed and not selectable, such as the resource being linked from. */
+    /**
+     * Node ids shown dimmed and not selectable, with everything below them, such as the item being moved
+     * (an excluded folder still expands, so the person sees where they are).
+     */
     excludeNodeIds?: string[];
+    /** The tooltip on an excluded node and the nodes below it. Default: "This item can't be chosen here." */
+    excludedReason?: string;
     /** Accepted for compatibility; nothing reads it. */
     hideSystemFolders?: boolean;
-    /** A node to reveal once the tree has loaded from apiBase; the staticNodes and onLoadChildren paths ignore it. */
+    /**
+     * A node to open once the tree has loaded from apiBase: its ancestors are loaded and opened, root first, as
+     * far as they connect to the tree, then the node itself, scrolled into view. The staticNodes and
+     * onLoadChildren paths ignore it.
+     */
     initialExpandedNodeId?: string;
     /** Node ids selected when the picker opens. */
     preSelectedNodeIds?: string[];
@@ -284,6 +293,9 @@ const DEFAULT_HEIGHT = "400px";
 const DEFAULT_QUICK_ACCESS_LIMIT = 5;
 const DEFAULT_SEARCH_DEBOUNCE = 300;
 const DEFAULT_SEARCH_PAGE_SIZE = 20;
+
+/** The tooltip on an excluded node; it names no flow, since linking and moving both exclude (apps, 2026-10-31). */
+const DEFAULT_EXCLUDED_REASON = "This item can't be chosen here.";
 const VIRTUAL_SCROLL_THRESHOLD = 200;
 const VIRTUAL_SCROLL_BUFFER = 20;
 const NODE_ROW_HEIGHT = 32;
@@ -402,6 +414,9 @@ interface ApiNodeList { nodes: ApiNode[] }
 /** GET /starred: an item's node is null when the caller can no longer see it. */
 interface ApiStarredList { items: { nodeId: string; node: ApiNode | null }[] }
 
+/** GET /nodes/{id}: the node, and its ancestors root first, leaving out any the caller cannot see. */
+interface ApiNodeRead { node: ApiNode; ancestors: ApiNode[] }
+
 /** GET /search: each hit with its ancestors, root first, and the next page's token. */
 interface ApiSearchPage
 {
@@ -475,8 +490,12 @@ function starredNodesOf(data: ApiStarredList, reading: NodeReading): ExplorerNod
     return readNodes(data.items.flatMap((item) => (item.node ? [item.node] : [])), "/starred", reading);
 }
 
-/** A search response as one page of results, each with its breadcrumb built root first. */
-function searchPageOf(data: ApiSearchPage, reading: NodeReading): ExplorerSearchPage
+/**
+ * A search response as one page of results, each with its breadcrumb built root first, and each hit's ancestor
+ * ids, which decide whether it sits below an excluded node without another request.
+ */
+function searchPageOf(data: ApiSearchPage, reading: NodeReading):
+    { page: ExplorerSearchPage; ancestorIds: Map<string, string[]> }
 {
     if (!Array.isArray(data?.hits))
     {
@@ -486,10 +505,25 @@ function searchPageOf(data: ApiSearchPage, reading: NodeReading): ExplorerSearch
 
     const nodes = readNodes(data.hits.map((h) => h.node), "/search", reading);
     return {
-        results: nodes.map((node, i) => ({ ...node,
-            breadcrumb: data.hits[i].breadcrumbs.map((b) => b.name).join(" > ") })),
-        cursor: data.nextPageToken ?? null,
+        page: {
+            results: nodes.map((node, i) => ({ ...node,
+                breadcrumb: data.hits[i].breadcrumbs.map((b) => b.name).join(" > ") })),
+            cursor: data.nextPageToken ?? null,
+        },
+        ancestorIds: new Map(data.hits.map((h) => [h.node.id, h.breadcrumbs.map((b) => b.id)])),
     };
+}
+
+/** A node read's node and ancestors; anything else is an error naming the endpoint. */
+function nodeReadOf(data: ApiNodeRead, endpoint: string): ApiNodeRead
+{
+    if (!data?.node || !Array.isArray(data.ancestors))
+    {
+        throw new Error(`${LOG_PREFIX} GET ${endpoint} answered without "node" and "ancestors"; the Explorer API `
+            + "returns { node, ancestors: [...] }.");
+    }
+
+    return data;
 }
 
 // ============================================================================
@@ -565,6 +599,8 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
     private selectedSet: Set<string> = new Set();
     private loadedSet: Set<string> = new Set();
     private excludeSet: Set<string> = new Set();
+    /** Each search hit's ancestor ids from its breadcrumbs, for exclusion of hits whose ancestors are not loaded. */
+    private hitAncestors: Map<string, string[]> = new Map();
     private rootNodeIds: string[] = [];
     private focusedNodeId: string | null = null;
     private searchQuery = "";
@@ -945,6 +981,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.selectedSet.clear();
         this.loadedSet.clear();
         this.excludeSet.clear();
+        this.hitAncestors.clear();
         this.ontologyTypes.clear();
         this.rootNodeIds = [];
         this.searchResults = [];
@@ -1268,9 +1305,24 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.announceSelection(nodeId);
     }
 
+    /**
+     * Whether a node is excluded: named in excludeNodeIds, or below one, through the loaded tree or a search
+     * hit's breadcrumbs (apps request, 2026-10-31: a folder being moved cannot go into its own subfolder).
+     */
+    private isExcluded(nodeId: string): boolean
+    {
+        if (this.excludeSet.size === 0)
+        {
+            return false;
+        }
+
+        return this.getAncestorChain(nodeId).some((id) => this.excludeSet.has(id))
+            || (this.hitAncestors.get(nodeId) ?? []).some((id) => this.excludeSet.has(id));
+    }
+
     private isNodeSelectable(nodeId: string): boolean
     {
-        if (this.excludeSet.has(nodeId))
+        if (this.isExcluded(nodeId))
         {
             return false;
         }
@@ -1306,7 +1358,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
      */
     private shouldDimNode(node: ExplorerNode): boolean
     {
-        if (this.excludeSet.has(node.id))
+        if (this.isExcluded(node.id))
         {
             return true;
         }
@@ -1498,8 +1550,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             this.renderQuickAccess();
             if (this.opts.initialExpandedNodeId)
             {
-                await this.expandToNode(
-                    this.opts.initialExpandedNodeId);
+                await this.revealInitialNode(this.opts.initialExpandedNodeId);
             }
             this.updateConfirmState();
         }
@@ -1915,9 +1966,9 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             row.classList.add("explorerpicker-node-row-dimmed");
         }
-        if (this.excludeSet.has(node.id))
+        if (this.isExcluded(node.id))
         {
-            setAttr(row, "title", "Cannot link to itself");
+            setAttr(row, "title", this.opts.excludedReason ?? DEFAULT_EXCLUDED_REASON);
         }
         if (this.focusedNodeId === node.id)
         {
@@ -2267,7 +2318,9 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         {
             throw new Error(`Search failed: ${resp.status}`);
         }
-        return searchPageOf(await resp.json() as ApiSearchPage, this.reading);
+        const { page, ancestorIds } = searchPageOf(await resp.json() as ApiSearchPage, this.reading);
+        ancestorIds.forEach((ids, id) => this.hitAncestors.set(id, ids));
+        return page;
     }
 
     private async loadMoreSearchResults(): Promise<void>
@@ -2410,6 +2463,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         if (!this.isNodeSelectable(node.id))
         {
             item.classList.add("explorerpicker-node-row-dimmed");
+        }
+        if (this.isExcluded(node.id))
+        {
+            setAttr(item, "title", this.opts.excludedReason ?? DEFAULT_EXCLUDED_REASON);
         }
 
         this.appendResultCheckbox(item, node);
@@ -2761,17 +2818,51 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.announce(`${node?.name ?? nodeId} collapsed.`);
     }
 
-    private async expandToNode(nodeId: string): Promise<void>
+    /**
+     * Opens initialExpandedNodeId's path (apps request, 2026-10-31). The node read gives its ancestors root first;
+     * each is opened, which loads its children, as long as it is in the loaded tree. The API leaves out an
+     * ancestor the caller cannot see, which is normal, so the walk stops there and reports nothing. A failed read
+     * reaches onError with the context "initialExpandedNodeId", and the top level stays as it is.
+     */
+    private async revealInitialNode(nodeId: string): Promise<void>
     {
-        const chain = this.getAncestorChain(nodeId);
-        for (const id of chain)
+        const endpoint = `/nodes/${encodeURIComponent(nodeId)}`;
+        let read: ApiNodeRead;
+
+        try
         {
-            if (id !== nodeId)
-            {
-                await this.expandNode(id);
-            }
+            const data = await this.apiFetch<ApiNodeRead>(`${this.opts.apiBase}${endpoint}`);
+            read = nodeReadOf(data as ApiNodeRead, endpoint);
         }
-        this.scrollToNode(nodeId);
+        catch (err)
+        {
+            if (this.isAbortError(err)) { return; }
+            logWarn("initialExpandedNodeId could not be read; showing the top level:", nodeId, err);
+            this.opts.onError?.(err instanceof Error ? err : new Error(String(err)), "initialExpandedNodeId");
+            return;
+        }
+
+        let opened = "";
+        for (const ancestor of read.ancestors)
+        {
+            if (!this.nodeMap.has(ancestor.id))
+            {
+                logDebug("initialExpandedNodeId: the path stops at a node outside the loaded tree:", ancestor.id);
+                break;
+            }
+            await this.expandNode(ancestor.id);
+            opened = ancestor.id;
+        }
+
+        if (this.nodeMap.has(nodeId))
+        {
+            await this.expandNode(nodeId);
+            opened = nodeId;
+        }
+        if (opened)
+        {
+            this.scrollToNode(opened);
+        }
     }
 
     private showNodeSpinner(

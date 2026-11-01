@@ -1006,8 +1006,9 @@ describe("excludeNodeIds", () =>
                 selectionTarget: "any",
             }));
         const row = queryNodeRow("eng");
+        // A neutral sentence since the Move dialog (apps request, 2026-10-31); excludedReason overrides it.
         expect(row?.getAttribute("title")).toBe(
-            "Cannot link to itself");
+            "This item can't be chosen here.");
         picker.destroy();
     });
 
@@ -2230,6 +2231,128 @@ describe("the Explorer API as it is (specs/2026-10-31-explorerpicker-reads-the-e
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError.mock.calls[0][1]).toBe("node.expandable missing");
         expect((onError.mock.calls[0][0] as Error).message).toContain("GET /tree answered 2 node(s)");
+        picker.destroy();
+    });
+
+    // ── The Move dialog's follow-ups (specs/2026-10-31-explorerpicker-move-dialog-follow-ups.md) ──
+
+    const SUB = { nodes: [apiNode("deep", "Deep", "FOLDER", "sub")] };
+
+    /** The tree eng > { plan, sub > deep }, ops, with each folder's children and a route of the test's own. */
+    const moveApi = (extra: Route = () => undefined) => explorerApi((url) => extra(url)
+        ?? (url.includes("/nodes/sub/children") ? { status: 200, body: SUB }
+            : url.includes("/nodes/deep/children") ? { status: 200, body: { nodes: [] } } : undefined));
+
+    const row = (id: string) => container.querySelector<HTMLElement>(`.explorerpicker-node-row[data-node-id="${id}"]`)!;
+
+    test("excludeNodeIds_ExcludesTheWholeSubtree_WhichStillExpands_AndASiblingStaysSelectable", async () =>
+    {
+        const api = moveApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, mode: "single", selectionTarget: "container", excludeNodeIds: ["eng"] }));
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Ops"]));
+
+        await picker.expandNode("eng");
+        expect(labels()).toContain("Sub");
+        row("sub").click();
+        row("eng").click();
+        expect(picker.getSelection()).toEqual([]);
+        expect(row("sub").classList.contains("explorerpicker-node-row-dimmed")).toBe(true);
+        expect([row("eng").title, row("sub").title]).toEqual(["This item can't be chosen here.",
+            "This item can't be chosen here."]);
+
+        row("ops").click();
+        expect(picker.getSelection().map((x) => x.nodeId)).toEqual(["ops"]);
+        expect(row("ops").title).toBe("");
+        picker.destroy();
+    });
+
+    test("excludedReason_IsTheTooltip", async () =>
+    {
+        const api = moveApi();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, excludeNodeIds: ["eng"],
+            excludedReason: "This is the item being moved, or is inside it." }));
+        await vi.waitFor(() => expect(labels()).toContain("Engineering"));
+
+        expect(row("eng").title).toBe("This is the item being moved, or is inside it.");
+        picker.destroy();
+    });
+
+    test("aSearchHitBelowAnExcludedNode_IsExcluded_ByItsBreadcrumbs", async () =>
+    {
+        const hits = { hits: [
+            { node: apiNode("far", "Far folder", "FOLDER", "sub"), breadcrumbs: [apiNode("eng", "Engineering",
+                "FOLDER", null), apiNode("sub", "Sub", "FOLDER", "eng")] },
+            { node: apiNode("near", "Near folder", "FOLDER", "ops"), breadcrumbs: [apiNode("ops", "Ops", "FOLDER",
+                null)] }], totalCount: 2, nextPageToken: null };
+        const api = moveApi((url) => (url.includes("/search") ? { status: 200, body: hits } : undefined));
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, mode: "single", selectionTarget: "container", excludeNodeIds: ["eng"] }));
+        await vi.waitFor(() => expect(labels().length).toBeGreaterThan(0));
+
+        picker.setSearchQuery("folder");
+        await vi.waitFor(() => expect(container.querySelectorAll(".explorerpicker-result-item")).toHaveLength(2));
+        const item = (id: string) =>
+            container.querySelector<HTMLElement>(`.explorerpicker-result-item[data-node-id="${id}"]`)!;
+
+        expect(item("far").classList.contains("explorerpicker-node-row-dimmed")).toBe(true);
+        expect(item("far").title).toBe("This item can't be chosen here.");
+        expect(item("near").classList.contains("explorerpicker-node-row-dimmed")).toBe(false);
+        picker.destroy();
+    });
+
+    test("initialExpandedNodeId_OpensThePathToAFolderThreeLevelsDown_AndScrollsToIt", async () =>
+    {
+        const read = { node: apiNode("deep", "Deep", "FOLDER", "sub"),
+            ancestors: [apiNode("eng", "Engineering", "FOLDER", null), apiNode("sub", "Sub", "FOLDER", "eng")] };
+        const api = moveApi((url) => (url.endsWith("/nodes/deep") ? { status: 200, body: read } : undefined));
+        const scrolled: string[] = [];
+        const spy = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(function (this: Element)
+        {
+            scrolled.push((this as HTMLElement).dataset.nodeId ?? "");
+        });
+        const onError = vi.fn();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, showRecentItems: false, initialExpandedNodeId: "deep", onError }));
+
+        await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Plan", "Sub", "Deep", "Ops"]));
+        await vi.waitFor(() => expect(scrolled).toContain("deep"));
+        expect(api.urls.some((u) => u.includes("/nodes/deep/children"))).toBe(true);
+        expect(onError).not.toHaveBeenCalled();
+        spy.mockRestore();
+        picker.destroy();
+    });
+
+    test("initialExpandedNodeId_ForACallerWhoCannotSeeTheMiddleAncestor_OpensAsFarAsItConnects_AndReportsNothing",
+        async () =>
+        {
+            // The API leaves out "sub", which this caller cannot see, and eng's children omit it too.
+            const read = { node: apiNode("deep", "Deep", "FOLDER", "sub"),
+                ancestors: [apiNode("eng", "Engineering", "FOLDER", null)] };
+            const api = moveApi((url) => (url.endsWith("/nodes/deep") ? { status: 200, body: read }
+                : url.includes("/nodes/eng/children") ? { status: 200, body: { nodes: [CHILDREN.nodes[0]] } }
+                    : undefined));
+            const onError = vi.fn();
+            const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+                ontologyFetchFn: api.fetchFn, showRecentItems: false, initialExpandedNodeId: "deep", onError }));
+
+            await vi.waitFor(() => expect(labels()).toEqual(["Engineering", "Plan", "Ops"]));
+            expect(onError).not.toHaveBeenCalled();
+            picker.destroy();
+        });
+
+    test("initialExpandedNodeId_ThatDoesNotExist_ReachesOnError_AndShowsTheTopLevel", async () =>
+    {
+        const api = moveApi((url) => (url.endsWith("/nodes/nope") ? { status: 404 } : undefined));
+        const onError = vi.fn();
+        const picker = createExplorerPicker(defaultOpts({ staticNodes: undefined, fetchFn: api.fetchFn,
+            ontologyFetchFn: api.fetchFn, showRecentItems: false, initialExpandedNodeId: "nope", onError }));
+
+        await vi.waitFor(() => expect(onError).toHaveBeenCalled());
+        expect(onError.mock.calls[0][1]).toBe("initialExpandedNodeId");
+        expect(labels()).toEqual(["Engineering", "Ops"]);
+        expect(container.querySelector(".explorerpicker-error")?.textContent ?? "").not.toContain("Unable to load");
         picker.destroy();
     });
 });
