@@ -57,12 +57,13 @@ export const PENDING_CLASSIFICATION = new Set([
     // step 4 L2, ADR-240).
     // 6 on 2026-10-31: docklayout, flowlayout and gridlayout classified, the last layouts (readiness step 4 L3,
     // ADR-241).
+    // 5 on 2026-11-01: propertyinspector classified; openWith takes what open() shows, with A2UI children
+    // (readiness step 4, ADR-242).
     "commentoverlay",
     "fileupload",
     "graphminimap",
     "helpdrawer",
     "navrail",
-    "propertyinspector",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */

@@ -288,6 +288,15 @@ export interface ProtocolSpec
      * the layout already takes an HTMLElement. Path syntax is hostOnly's.
      */
     readonly children?: Readonly<Record<string, ChildCardinality>>;
+
+    /**
+     * The box the A2UI adapter gives a component that is not a layout
+     * (ADR-242). "drawer": the component slides its content in from an edge
+     * of its container, height: 100% of it, so the container gets a definite
+     * height, as a layout's does (ADR-238), and hides what lies outside it,
+     * such as a closed drawer. Hosts give it such a box themselves.
+     */
+    readonly box?: "drawer";
 }
 
 /** How many children an option path holds (ADR-238). */

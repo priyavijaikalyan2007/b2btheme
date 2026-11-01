@@ -1186,7 +1186,7 @@ $control-height-xl=46px
 - CSS: `components/propertyinspector/propertyinspector.css`
 - JS: `components/propertyinspector/propertyinspector.js`
 - Globals: `createPropertyInspector()`
-- Exports: `interface InspectorTab`, `interface InspectorAction`, `interface InspectorOpenOptions`, `interface PropertyInspectorOptions`, `interface PropertyInspectorHandle`, `function createPropertyInspector`
+- Exports: `interface InspectorTab`, `interface InspectorAction`, `interface InspectorOpenOptions`, `interface PropertyInspectorOptions`, `interface PropertyInspectorState`, `interface PropertyInspectorHandle`, `function createPropertyInspector`
 
 ### reasoningaccordion
 

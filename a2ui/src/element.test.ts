@@ -115,6 +115,16 @@ describe("binding and mounting", () =>
             .toBe("var(--outcrop-layout-height, 480px)");
     });
 
+    test("a drawer's box also clips, and a layout's does not (ADR-242)", async () =>
+    {
+        const drawer = create(tagFor(fakeDescriptor({ fill: { height: 400, clip: true } })), realContext({ title: "t" }));
+        const layout = create(tagFor(fakeDescriptor({ fill: { height: 480 } })), realContext({ title: "t" }));
+        await loaded();
+
+        expect(drawer.querySelector<HTMLElement>(".outcrop-host")!.style.overflow).toBe("hidden");
+        expect(layout.querySelector<HTMLElement>(".outcrop-host")!.style.overflow).toBe("");
+    });
+
     test("a bound provider reaches the factory as its option, and unmount releases it (ADR-225)", async () =>
     {
         const rc = realContext({ title: "t", onLoad: { event: { name: "load" } }, loadResult: { path: "/a" },
