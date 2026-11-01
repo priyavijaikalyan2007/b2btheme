@@ -231,6 +231,10 @@ Every component folder carries `<name>.manifest.ts` exporting one
 `CapabilityManifest`. It is colocated deliberately — a central registry would
 become the merge-conflict hotspot for every parallel contributor (ADR-142).
 The build aggregates them into `dist/capability-manifest.json`.
+A component an agent would not sensibly render (page-level chrome, a
+library, behaviour without UI) has none, and its reason goes in `NO_MANIFEST`
+in `scripts/agentui/no-manifest.mjs`. The build fails on a component with
+neither (ADR-243).
 
 **`defaultOptions` is shipped data.** It is published to consumers and is what
 the canvas passes when a host supplies nothing. Never put test fixtures there —

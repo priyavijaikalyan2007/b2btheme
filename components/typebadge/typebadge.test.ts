@@ -9,7 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-import { createTypeBadge } from "./typebadge";
+import { createTypeBadge, mountTypeBadge } from "./typebadge";
 import type { TypeBadgeOptions } from "./typebadge";
 
 // ============================================================================
@@ -222,5 +222,77 @@ describe("TypeBadge ARIA", () =>
     {
         const el = createTypeBadge(makeOptions());
         expect(el.getAttribute("aria-label")).toContain("Type:");
+    });
+});
+
+// ============================================================================
+// mountTypeBadge: the handle-returning factory (readiness step 5, ADR-243)
+// ============================================================================
+
+describe("mountTypeBadge (ADR-243)", () =>
+{
+    let host: HTMLElement;
+
+    beforeEach(() =>
+    {
+        host = document.createElement("div");
+        host.id = "typebadge-host";
+        document.body.appendChild(host);
+    });
+
+    afterEach(() => { host.remove(); });
+
+    test("mounts createTypeBadge's badge in the container", () =>
+    {
+        const handle = mountTypeBadge("typebadge-host", { typeKey: "strategy.okr", icon: "crosshair" });
+
+        expect(host.firstElementChild).toBe(handle.getElement());
+        expect(handle.getElement().outerHTML)
+            .toBe(createTypeBadge({ typeKey: "strategy.okr", icon: "crosshair" }).outerHTML);
+        handle.destroy();
+        expect(host.childElementCount).toBe(0);
+    });
+
+    test("a click reaches onClick, then on(\"click\") subscribers, until they unsubscribe", () =>
+    {
+        const order: string[] = [];
+        const handle = mountTypeBadge("typebadge-host", { typeKey: "strategy.okr", clickable: true,
+            onClick: () => order.push("callback") });
+        const off = handle.on("click", (p) => order.push(`channel:${JSON.stringify(p)}`));
+
+        handle.getElement().click();
+        off();
+        handle.getElement().click();
+
+        expect(order).toEqual(["callback", 'channel:{"typeKey":"strategy.okr"}', "callback"]);
+        handle.destroy();
+    });
+
+    test("a clickable badge without onClick still tells subscribers, and is focusable", () =>
+    {
+        const heard = vi.fn();
+        const handle = mountTypeBadge("typebadge-host", { typeKey: "risk", clickable: true });
+        handle.on("click", heard);
+
+        handle.getElement().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+
+        expect(heard).toHaveBeenCalledWith({ typeKey: "risk" });
+        expect(handle.getElement().getAttribute("tabindex")).toBe("0");
+        handle.destroy();
+    });
+
+    test("the surface contract: no state, no data slots, one channel", () =>
+    {
+        const handle = mountTypeBadge("typebadge-host", { typeKey: "risk" });
+
+        expect(handle.getState()).toEqual({});
+        expect(() => handle.setData("typeKey", "x")).toThrow(/no data slots/);
+        expect(() => handle.on("hover", () => undefined)).toThrow(/only channel is "click"/);
+        handle.destroy();
+    });
+
+    test("a container id that names no element throws", () =>
+    {
+        expect(() => mountTypeBadge("nowhere", { typeKey: "risk" })).toThrow(/no element has the id "nowhere"/);
     });
 });

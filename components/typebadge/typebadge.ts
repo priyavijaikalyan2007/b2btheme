@@ -338,8 +338,81 @@ export function createTypeBadge(options: TypeBadgeOptions): HTMLElement
     return root;
 }
 
+/** A TypeBadge mounted in a container, with the surface contract (readiness step 5, ADR-243). */
+export interface TypeBadgeHandle
+{
+    /** The badge element. */
+    getElement(): HTMLElement;
+    /** Subscribes to "click" ({ typeKey }), heard after onClick; returns the unsubscribe. */
+    on(channel: string, handler: (payload: unknown) => void): () => void;
+    /** Nothing to restore: always {}. */
+    getState(): Record<string, unknown>;
+    /** Nothing to restore: does nothing. */
+    setState(state: Record<string, unknown>): void;
+    /** TypeBadge has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+    /** Removes the badge from its container. */
+    destroy(): void;
+}
+
+/**
+ * Creates a TypeBadge in the element `containerId` names and returns its handle (readiness step 5,
+ * ADR-243). The badge is createTypeBadge's; a clickable badge also tells
+ * on("click") subscribers, after onClick, even when no onClick was passed.
+ */
+// @entrypoint
+export function mountTypeBadge(containerId: string, options: TypeBadgeOptions): TypeBadgeHandle
+{
+    const container = document.getElementById(containerId);
+
+    if (!container)
+    {
+        throw new Error(`${LOG_PREFIX} mountTypeBadge: no element has the id "${containerId}". `
+            + "Pass the id of the element to mount into.");
+    }
+
+    const handlers = new Set<(payload: unknown) => void>();
+    const onClick = (): void =>
+    {
+        options.onClick?.();
+        for (const handler of handlers)
+        {
+            try { handler({ typeKey: options.typeKey }); }
+            catch (err) { logError('Channel "click" handler threw:', err); }
+        }
+    };
+    const el = createTypeBadge(options.clickable ? { ...options, onClick } : options);
+
+    container.appendChild(el);
+
+    return {
+        getElement: () => el,
+        on: (channel, handler) =>
+        {
+            if (channel !== "click")
+            {
+                throw new Error(`${LOG_PREFIX} on("${channel}"): the only channel is "click".`);
+            }
+            handlers.add(handler);
+            return () => { handlers.delete(handler); };
+        },
+        getState: () => ({}),
+        setState: () => undefined,
+        setData: (slot) =>
+        {
+            throw new Error(`${LOG_PREFIX} setData("${slot}"): TypeBadge has no data slots. Its options are its data.`);
+        },
+        destroy: () =>
+        {
+            handlers.clear();
+            el.remove();
+        },
+    };
+}
+
 // ============================================================================
 // GLOBAL EXPORTS
 // ============================================================================
 
 window.createTypeBadge = createTypeBadge;
+window.mountTypeBadge = mountTypeBadge;

@@ -1451,8 +1451,8 @@ $control-height-xl=46px
 
 - CSS: `components/typebadge/typebadge.css`
 - JS: `components/typebadge/typebadge.js`
-- Globals: `createTypeBadge()`
-- Exports: `type TypeBadgeSize`, `type TypeBadgeVariant`, `interface TypeBadgeOptions`, `function createTypeBadge`
+- Globals: `createTypeBadge()`, `mountTypeBadge()`
+- Exports: `type TypeBadgeSize`, `type TypeBadgeVariant`, `interface TypeBadgeOptions`, `function createTypeBadge`, `interface TypeBadgeHandle`, `function mountTypeBadge`
 
 ### usermenu
 
