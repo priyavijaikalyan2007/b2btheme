@@ -137,7 +137,7 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 - `processor.getRendererCapabilities({ versions: ["v0.9"] })` lists our catalog ID among `supportedCatalogIds`. Send it the way your transport sends A2UI client capabilities.
 - The adapter also exports `catalogJson`, the exact catalog it serves, for agents that take an inline catalog.
 - **For your agent's prompt, use `https://static.outcrop.us/a2ui/catalog/v1.agent.json`.**
-  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 77,821 against 148,345 in o200k_base tokens, measured on 2026-10-31.
+  - It has every component, prop, required flag, enum value and description of the full catalog in about half the tokens: 80,419 against 153,758 in o200k_base tokens, measured on 2026-10-31.
   - It leaves out the data-binding and function-call alternatives that every data prop repeats. It says once where they apply.
   - It lists the Google basic components and functions it re-exports by name only. Put Google's basic catalog in the prompt beside it, about 7,000 tokens more.
   - It's a prompt aid, not a schema. Its layout may change within v1, so paste it whole, and validate your agent's messages against the full catalog.
@@ -193,10 +193,10 @@ While a bound value has not arrived yet, the component waits, empty, with `aria-
 
 ## 8. Which components
 
-- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 87 today.
+- Every component in `/a2ui/catalog/v1.json` renders through the adapter: 92 today.
 - `/agentui-report.json` lists the components not yet in the catalog, and why.
 - More arrive as they are classified. A component in the catalog is guaranteed by the build to work through the adapter: gates G1–G3 in [`A2UI.md`](../A2UI.md).
-- Layouts hold other components (readiness step 4, ADR-238, ADR-239): StackLayout, BorderLayout, SplitLayout and TabbedPanel today, the other layouts as they are classified. A layout's slot takes a component id, as the basic `Card`'s `child` does, and renders that component, ours or the basic catalog's, inside it. A layout fills a box whose height is the element's `--outcrop-layout-height` (default: the manifest's height), so size it with CSS: `outcrop-stack-layout { --outcrop-layout-height: 60vh; }`. TabbedPanel is a panel, not a layout: it is as tall as its `height` prop, and over A2UI it stays inside the surface, with no float or close button.
+- Layouts hold other components (readiness step 4, ADR-238 to ADR-240): StackLayout, BorderLayout, SplitLayout, TabbedPanel, AnchorLayout, BoxLayout, CardLayout, FlexGridLayout and LayerLayout today, the other layouts as they are classified. A layout's slot takes a component id, as the basic `Card`'s `child` does, and renders that component, ours or the basic catalog's, inside it. A layout fills a box whose height is the element's `--outcrop-layout-height` (default: the manifest's height), so size it with CSS: `outcrop-stack-layout { --outcrop-layout-height: 60vh; }`. TabbedPanel is a panel, not a layout: it is as tall as its `height` prop, and over A2UI it stays inside the surface, with no float or close button.
 
 ## 9. Security notes
 

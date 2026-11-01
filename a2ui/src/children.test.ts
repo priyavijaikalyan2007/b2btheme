@@ -72,6 +72,7 @@ const DESCRIPTOR: AdapterDescriptor = {
     mountMethod: "auto", conformance: "surface", assets: { js: "components/frame/frame.js" },
     props: { panels: { route: "create" }, aside: { route: "create" } }, twoWay: false,
     children: [{ path: "panels[].content", cardinality: "one" }, { path: "aside", cardinality: "one" }],
+    stateKeys: ["open"],
     events: [], providers: [], dates: [],
 };
 
@@ -103,11 +104,11 @@ function installFrame(): void
     };
 }
 
-function mount(components: Record<string, unknown>[])
+function mount(components: Record<string, unknown>[], descriptor: AdapterDescriptor = DESCRIPTOR)
 {
     const s = surfaceWith(components);
     const tag = `outcrop-frame-${++count}`;
-    const env: ElementEnv = { descriptor: DESCRIPTOR, validators: {}, assetBaseUrl: () => "https://cdn.test",
+    const env: ElementEnv = { descriptor, validators: {}, assetBaseUrl: () => "https://cdn.test",
         injectBaseTheme: () => false, providerTimeoutMs: () => 30_000 };
 
     defineTestElement(tag, env);
@@ -169,6 +170,36 @@ describe("child slots (ADR-238)", () =>
             expect(builds[1].state).toEqual({ open: "b" });
             expect(s.errors).toEqual([]);
         });
+
+    test("a rebuild carries only the declared stateKeys, so an option getState reports keeps its new value (ADR-240)",
+        async () =>
+        {
+            const s = mount([{ id: "root", component: "Frame", panels: panels("a") }, leaf("a"), leaf("b")]);
+            fireAssetLoads();
+            await flush();
+            // As BoxLayout's getState reports its direction option beside its state.
+            builds[0].state = { open: "b", panels: "the old panels" };
+
+            s.update([{ id: "root", component: "Frame", panels: panels("a", "b") }]);
+            await flush();
+
+            expect(builds[1].state).toEqual({ open: "b" });
+        });
+
+    test("a component that declares no stateKeys carries nothing across a rebuild (ADR-240)", async () =>
+    {
+        const { stateKeys: _, ...stateless } = DESCRIPTOR;
+        const s = mount([{ id: "root", component: "Frame", panels: panels("a") }, leaf("a"), leaf("b")], stateless);
+        fireAssetLoads();
+        await flush();
+        builds[0].state = { open: "b" };
+
+        s.update([{ id: "root", component: "Frame", panels: panels("a", "b") }]);
+        await flush();
+
+        expect(builds[1].state).toEqual({ open: "a" });
+        expect(s.errors).toEqual([]);
+    });
 
     test("a child that arrives after the layout fills its slot", async () =>
     {

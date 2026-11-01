@@ -147,6 +147,10 @@ var overlay = createLayerLayout({
 overlay.show(document.getElementById("main"));
 ```
 
+## Over A2UI
+
+LayerLayout is in the A2UI catalog (ADR-240). Each layer's `child` is the id of another A2UI component, clipped to the layout's box. A change to `layers` or `sizing` rebuilds the layout and keeps each child.
+
 ## Global Exports
 
 When loaded via `<script>` tag:
