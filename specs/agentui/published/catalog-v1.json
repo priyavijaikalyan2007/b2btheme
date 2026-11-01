@@ -5654,13 +5654,27 @@
               ]
             },
             "excludeNodeIds": {
-              "description": "Node ids shown dimmed and not selectable, such as the resource being linked from.",
+              "description": "Node ids shown dimmed and not selectable, with everything below them, such as the item being moved\n(an excluded folder still expands, so the person sees where they are).",
               "anyOf": [
                 {
                   "type": "array",
                   "items": {
                     "type": "string"
                   }
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "excludedReason": {
+              "description": "The tooltip on an excluded node and the nodes below it. Default: \"This item can't be chosen here.\"",
+              "anyOf": [
+                {
+                  "type": "string"
                 },
                 {
                   "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"

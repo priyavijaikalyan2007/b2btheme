@@ -6296,8 +6296,9 @@ dialog.open();
 | `mode` | `"single" \| "multi"` | `"single"` | Selection mode |
 | `selectionTarget` | `"resource" \| "container" \| "any"` | `"resource"` | What types of nodes are selectable |
 | `resourceTypeFilter` | `string[]` | — | Only show matching resource types. Applied since 2026-10-21. Before then the option reached a field nothing read |
-| `excludeNodeIds` | `string[]` | — | IDs of nodes that cannot be selected (dimmed) |
-| `initialExpandedNodeId` | `string` | — | Auto-expand tree to this node on load |
+| `excludeNodeIds` | `string[]` | — | IDs of nodes that cannot be selected, with everything below them, in the tree and in search results (dimmed). An excluded folder still expands, so the person sees where they are |
+| `excludedReason` | `string` | `"This item can't be chosen here."` | The tooltip on an excluded node and the nodes below it, such as `"This is the item being moved, or is inside it."` |
+| `initialExpandedNodeId` | `string` | — | With `apiBase`: after the tree loads, reads `GET /nodes/{id}`, opens its ancestors root first as far as they connect to the tree (the API leaves out ones the caller can't see), then the node, scrolled into view. A failed read reaches `onError` with `"initialExpandedNodeId"` and the top level stays |
 | `preSelectedNodeIds` | `string[]` | — | Pre-selected nodes on render |
 | `apiBase` | `string` | `"/api/v1/explorer"` | Base URL for Explorer API |
 | `fetchFn` | `typeof fetch` | `window.fetch` | Custom fetch function |
@@ -6350,6 +6351,7 @@ The Explorer API's responses, as they are (2026-10-31): every list is an object.
 | `GET /tree`, `GET /nodes/{id}/children` | `{ nodes: [Node] }`; see **Which nodes expand** below |
 | `GET /search?q=&pageSize=&pageToken=` | `{ hits: [{ node, breadcrumbs: [Node] }], totalCount, nextPageToken }`; the breadcrumb is `breadcrumbs`' names, root first, joined with " > ", and `nextPageToken` is sent back as `pageToken` |
 | `GET /starred` | `{ items: [{ nodeId, starredAt, sortOrder, node }] }`; an item whose `node` is null is skipped |
+| `GET /nodes/{id}` | `{ node, ancestors: [Node] }`, ancestors root first; read only for `initialExpandedNodeId` |
 | `GET /recent` | Requested only with `showRecentItems: true`. The API has no such endpoint today: a 404 leaves the section hidden and the tree renders |
 
 A response of another shape is an error naming the endpoint, reported through `onError` with its context.
