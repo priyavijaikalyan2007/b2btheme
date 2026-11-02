@@ -508,11 +508,12 @@ export class ConfirmDialog implements ConfirmDialogHandle
             logError("Message is required");
         }
 
-        if (options.contained && !(options.container instanceof HTMLElement))
+        // Absent means document.body unless contained; a container passed but missing is the caller's mistake.
+        if ((options.contained || options.container !== undefined) && !(options.container instanceof HTMLElement))
         {
             throw new Error(
-                `${LOG_PREFIX} options.container must be an element when options.contained is true. `
-                + "Pass the element the dialog renders in.");
+                `${LOG_PREFIX} options.container must be an element when options.contained is true or a `
+                + "container is passed. Pass the element the dialog renders in.");
         }
 
         instanceCounter++;
@@ -933,6 +934,15 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
  */
 export function createConfirmDialog(options: ConfirmDialogOptions): ConfirmDialogHandle
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not get a silent
+    // default. showConfirmDialog keeps logging, as it always has.
+    if (options.message === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.message is required. `
+            + "Pass it when creating the ConfirmDialog.");
+    }
+
     const dialog = new ConfirmDialog(options);
 
     if (options.contained)

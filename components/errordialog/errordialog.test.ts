@@ -657,3 +657,14 @@ describe("createErrorDialog, contained (ADR-246)", () =>
         expect(onClose).not.toHaveBeenCalled();
     });
 });
+
+describe("createErrorDialog refuses a missing required option (ERR-2)", () =>
+{
+    test("title and message are each required", () =>
+    {
+        expect(() => createErrorDialog("test-error-container", { message: "m" } as never))
+            .toThrow(/options.title is required/);
+        expect(() => createErrorDialog("test-error-container", { title: "t" } as never))
+            .toThrow(/options.message is required/);
+    });
+});

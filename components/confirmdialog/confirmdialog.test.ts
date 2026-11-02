@@ -686,3 +686,13 @@ describe("createConfirmDialog, contained (ADR-246)", () =>
         dialog.destroy();
     });
 });
+
+describe("createConfirmDialog refuses bad options (ERR-1, ERR-2)", () =>
+{
+    test("a missing message, or a container that is not an element, throws", () =>
+    {
+        expect(() => createConfirmDialog({} as never)).toThrow(/options.message is required/);
+        expect(() => createConfirmDialog({ message: "m", container: null as never }))
+            .toThrow(/options.container must be an element/);
+    });
+});

@@ -91,11 +91,14 @@ type Row = {
 const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 0;
 
 /**
- * Factories whose option verdict a call cannot reach. One: DynamicCanvas
+ * Factory options whose verdict a call cannot reach. One: DynamicCanvas
  * refuses a missing window.EnterpriseRuntime before it reads an option,
- * which is the dependency rule doing its job one step earlier.
+ * which is the dependency rule doing its job one step earlier. Two:
+ * createErrorDialog's title and message (ADR-246). It refuses each one
+ * when it is missing, and the unit tests prove that, but its control call
+ * here throws on the missing window.bootstrap first, by the same rule.
  */
-const VERDICT_UNREACHABLE = 1;
+const VERDICT_UNREACHABLE = 3;
 
 /** Every required option the probe can supply a value for. */
 function requiredFields(r: Row): Field[]

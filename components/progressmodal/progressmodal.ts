@@ -410,11 +410,12 @@ export class ProgressModal implements ProgressModalHandle
 
     constructor(options: ProgressModalOptions)
     {
-        if (options.contained && !(options.container instanceof HTMLElement))
+        // Absent means document.body unless contained; a container passed but missing is the caller's mistake.
+        if ((options.contained || options.container !== undefined) && !(options.container instanceof HTMLElement))
         {
             throw new Error(
-                `${LOG_PREFIX} options.container must be an element when options.contained is true. `
-                + "Pass the element the modal renders in.");
+                `${LOG_PREFIX} options.container must be an element when options.contained is true or a `
+                + "container is passed. Pass the element the modal renders in.");
         }
 
         instanceCounter++;
@@ -1762,6 +1763,15 @@ class ProgressModalSurfaceImpl implements ProgressModalSurface
  */
 export function createProgressModal(options: ProgressModalSurfaceOptions): ProgressModalSurface
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not get a silent
+    // default. showProgressModal keeps its "Processing…" title, as it always has.
+    if (options.title === undefined)
+    {
+        throw new Error(
+            `${LOG_PREFIX} options.title is required. `
+            + "Pass it when creating the ProgressModal.");
+    }
+
     return new ProgressModalSurfaceImpl(options);
 }
 

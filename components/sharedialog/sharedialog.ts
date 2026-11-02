@@ -396,11 +396,12 @@ export class ShareDialog implements ShareDialogHandle
 
     constructor(options: ShareDialogOptions)
     {
-        if (options.contained && !(options.container instanceof HTMLElement))
+        // Absent means document.body unless contained; a container passed but missing is the caller's mistake.
+        if ((options.contained || options.container !== undefined) && !(options.container instanceof HTMLElement))
         {
             throw new Error(
-                `${LOG_PREFIX} options.container must be an element when options.contained is true. `
-                + "Pass the element the dialog renders in.");
+                `${LOG_PREFIX} options.container must be an element when options.contained is true or a `
+                + "container is passed. Pass the element the dialog renders in.");
         }
 
         instanceCounter++;

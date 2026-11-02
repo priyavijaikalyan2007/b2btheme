@@ -899,6 +899,18 @@ export function showErrorDialog(containerId: string, error: LiterateError): void
  */
 export function createErrorDialog(containerId: string, options: ErrorDialogOptions): ErrorDialogHandle
 {
+    // ERR-2. AGENTS.md: a missing option throws, it does not get a silent
+    // default. showErrorDialog keeps warning and showing nothing, as it always has.
+    for (const name of ["title", "message"] as const)
+    {
+        if (options[name] === undefined)
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.${name} is required. `
+                + "Pass it when creating the ErrorDialog.");
+        }
+    }
+
     const { showRetry, contained, ...error } = options;
     const dialog = new ErrorDialog(containerId, { showRetry, contained });
     dialog.show(error);
