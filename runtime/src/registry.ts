@@ -473,12 +473,17 @@ function validateProtocol(
     {
         issues.push(enumIssue("protocol.box", p.box, ["drawer"]));
     }
+
+    if (p.outOfCatalog !== undefined && !isNonEmptyString(p.outOfCatalog))
+    {
+        issues.push(typeIssue("protocol.outOfCatalog", "a reason string", p.outOfCatalog));
+    }
 }
 
 /** The keys `protocol` may carry. */
 const PROTOCOL_KEYS: readonly string[] =
     ["name", "providers", "hostOnly", "schemas", "change", "hostOnlyActions", "dependencies", "fixed", "children",
-        "box"];
+        "box", "outOfCatalog"];
 
 /**
  * True for a value JSON carries unchanged: null, a string, a finite number,

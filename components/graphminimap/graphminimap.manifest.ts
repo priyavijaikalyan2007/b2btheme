@@ -68,6 +68,12 @@ export const GRAPHMINIMAP_MANIFEST: CapabilityManifest =
 
     regions: ["graphminimap:svg"],
 
+    // Out of the agent catalog for good (readiness wrap-up, ADR-247).
+    protocol: {
+        outOfCatalog: "Its required graphCanvas option is a live GraphCanvas instance, which an agent cannot pass; "
+            + "GraphCanvas's own showMinimap covers the need.",
+    },
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 0, mountCost: "light", holdsResources: false },
 

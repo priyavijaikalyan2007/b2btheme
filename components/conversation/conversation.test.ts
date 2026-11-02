@@ -955,6 +955,30 @@ describe("Conversation surface contract (B7)", () =>
         conv.destroy();
     });
 
+    test("setDataSession_AtTheBottomWithAStaleScrollFlag_FollowsTheNewReply", () =>
+    {
+        (window as unknown as Record<string, unknown>)["Vditor"] = {
+            preview: (target: HTMLElement, md: string, opts: { after?: () => void }) =>
+            {
+                target.textContent = md;
+                opts.after?.();
+            },
+        };
+        const conv = createConversation(defaultOptions(), container);
+        const list = getMessageList()!;
+        Object.defineProperty(list, "scrollHeight", { configurable: true, value: 1000 });
+        Object.defineProperty(list, "clientHeight", { configurable: true, value: 200 });
+        // A scroll event read "not at bottom"; the list is at the bottom now, and no event said so.
+        list.scrollTop = 300;
+        list.dispatchEvent(new Event("scroll"));
+        list.scrollTop = 800;
+
+        conv.setData("session", session("s1", [...QA(), message("m3", "assistant", "More.")]));
+
+        expect(list.scrollTop).toBe(1000);
+        conv.destroy();
+    });
+
     test("setDataSession_AnOlderWritesLateReplies_DoNotMoveTheScroll", () =>
     {
         const queued: (() => void)[][] = [];

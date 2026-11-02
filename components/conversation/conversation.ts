@@ -662,6 +662,15 @@ function showCopyFeedback(btn: HTMLElement): void
  * that CSS cannot reliably override. Walk the rendered DOM and force
  * theme-aware colours directly on each element.
  */
+/** How far from the bottom, in pixels, still counts as at the bottom. */
+const SCROLL_BOTTOM_THRESHOLD = 5;
+
+/** True when the list shows its last pixels, within SCROLL_BOTTOM_THRESHOLD. */
+function isScrolledToBottom(list: HTMLElement): boolean
+{
+    return list.scrollHeight - list.scrollTop - list.clientHeight <= SCROLL_BOTTOM_THRESHOLD;
+}
+
 function fixRenderedTableStyles(container: HTMLElement): void
 {
     const isDark = document.documentElement
@@ -1747,9 +1756,16 @@ export class Conversation implements ConversationHandle
 
         const list = this.messageListEl;
         const scrollTop = list?.scrollTop ?? 0;
+        // The list's geometry decides too, not only autoScrollEnabled. That
+        // flag follows scroll events, which arrive a frame late: a stale one
+        // from the previous render can read "not at bottom" while the user is
+        // at the bottom, and scrolling there again fires no event to correct
+        // it, so the next reply stayed below the fold (the CI flake in
+        // b7-collab's "reply scrolls into view").
+        const atBottom = list !== null && isScrolledToBottom(list);
         // scrollToBottom, not autoScrollMessages: the clear's clamp queues a
         // scroll event that can read "not at bottom" before a late preview.
-        const settle = this.autoScrollEnabled
+        const settle = (this.autoScrollEnabled || atBottom)
             ? (): void => { this.scrollToBottom(); }
             : (): void => { if (list) { list.scrollTop = scrollTop; } };
 
@@ -3351,11 +3367,7 @@ export class Conversation implements ConversationHandle
     {
         logTrace("scroll handler");
         if (!this.messageListEl) { return; }
-        const threshold = 5;
-        const atBottom =
-            this.messageListEl.scrollHeight - this.messageListEl.scrollTop
-            - this.messageListEl.clientHeight <= threshold;
-        this.autoScrollEnabled = atBottom;
+        this.autoScrollEnabled = isScrolledToBottom(this.messageListEl);
     }
 
     // ========================================================================

@@ -42,6 +42,12 @@ export const NAVRAIL_MANIFEST: CapabilityManifest =
 
     regions: ["navrail:body"],
 
+    // Out of the agent catalog for good (readiness wrap-up, ADR-247).
+    protocol: {
+        outOfCatalog: "Page-level chrome: every rail registers with a page-wide manager that writes widths on <html> "
+            + "and hides a second rail at the same edge.",
+    },
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 17726, mountCost: "light", holdsResources: false },
 

@@ -297,6 +297,15 @@ export interface ProtocolSpec
      * such as a closed drawer. Hosts give it such a box themselves.
      */
     readonly box?: "drawer";
+
+    /**
+     * Keeps the component out of the agent catalog for good, with the reason
+     * (ADR-247): page-level chrome an agent's surface has no place for, or a
+     * need an agent cannot meet. The generator neither classifies nor
+     * publishes it; its manifest still serves the Dynamic UI canvas. A
+     * component still waiting for work goes on PENDING_CLASSIFICATION instead.
+     */
+    readonly outOfCatalog?: string;
 }
 
 /** How many children an option path holds (ADR-238). */

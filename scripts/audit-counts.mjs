@@ -930,7 +930,9 @@ export const BASELINES = {
     // ADR-241 (2026-10-31): 112 -> 31, DockLayout, FlowLayout and GridLayout classified (readiness step 4 L3); most
     // were the members of DockLayout's five slot handles, now child slots.
     // ADR-242 (2026-11-01): 31 -> 27, PropertyInspector classified (readiness step 4).
-    unclassifiedOptions: 27,
+    // ADR-247 (2026-11-02): 27 -> 13, FileUpload, GraphMinimap, HelpDrawer and NavRail declare protocol.outOfCatalog
+    // and are no longer classified.
+    unclassifiedOptions: 13,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -1009,7 +1011,8 @@ export const BASELINES = {
     // ADR-240 (2026-10-31): 14 -> 9, the five L2 layouts classified (readiness step 4 L2).
     // ADR-241 (2026-10-31): 9 -> 6, DockLayout, FlowLayout and GridLayout classified (readiness step 4 L3).
     // ADR-242 (2026-11-01): 6 -> 5, PropertyInspector classified (readiness step 4).
-    componentsPendingClassification: 5,
+    // ADR-247 (2026-11-02): 5 -> 1, four declare protocol.outOfCatalog; CommentOverlay remains.
+    componentsPendingClassification: 1,
 };
 
 /*
@@ -1127,11 +1130,12 @@ export const FLOORS = {
     // ADR-240 (2026-10-31): 112 and 9 once the five L2 layouts were classified (readiness step 4 L2).
     // ADR-241 (2026-10-31): 31 and 6 once DockLayout, FlowLayout and GridLayout were classified (step 4 L3).
     // ADR-242 (2026-11-01): 27 and 5 once PropertyInspector was classified (readiness step 4).
-    unclassifiedOptions: 27,
+    // ADR-247 (2026-11-02): 13 and 1 once four declared protocol.outOfCatalog.
+    unclassifiedOptions: 13,
     protocolPropsMissingJsdoc: 16,
     changeMismatches: 0,
     componentsBelowRequiredLevel: 0,
-    componentsPendingClassification: 5,
+    componentsPendingClassification: 1,
 };
 
 /**

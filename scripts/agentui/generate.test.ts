@@ -479,3 +479,25 @@ function renameFailing(target: string, times: number): typeof fs
         fs.renameSync(from, to);
     } } as unknown as typeof fs;
 }
+
+describe("runPipeline — protocol.outOfCatalog (ADR-247)", () =>
+{
+    const OUT = "Page-level chrome fixed to the viewport, which an agent's surface has no place for.";
+
+    test("a component out of the catalog is neither published nor counted, and the report gives its reason", () =>
+    {
+        const result = run([widget({ outOfCatalog: OUT })]);
+
+        expect(result.errors).toEqual([]);
+        expect(Object.keys((result.catalog as any).components)).not.toContain("Widget");
+        expect(result.outOfCatalog).toEqual([{ name: "widget", reason: OUT }]);
+        expect(result.counts).toMatchObject({ components: 0, excluded: 0, outOfCatalog: 1 });
+        expect((result.outputs.get("agentui-report.json") as any).outOfCatalog).toEqual(result.outOfCatalog);
+    });
+
+    test("one that is also on PENDING_CLASSIFICATION is an error", () =>
+    {
+        expect(run([widget({ outOfCatalog: OUT })], ["widget"]).errors)
+            .toContainEqual(expect.stringMatching(/widget declares protocol.outOfCatalog and is on PENDING/));
+    });
+});

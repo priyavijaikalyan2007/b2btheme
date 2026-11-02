@@ -43,6 +43,12 @@ export const HELPDRAWER_MANIFEST: CapabilityManifest =
 
     regions: ["helpdrawer:body"],
 
+    // Out of the agent catalog for good (readiness wrap-up, ADR-247).
+    protocol: {
+        outOfCatalog: "Page-level chrome: it appends itself to document.body, and its content arrives only through "
+            + "open(topic), which fetches the topic's URL from the user's browser.",
+    },
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 6694, mountCost: "trivial", holdsResources: false },
 
