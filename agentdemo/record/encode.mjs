@@ -8,7 +8,7 @@
  * 📜 PURPOSE: Turn each recorded scenario video into the README media (#30
  *    spec §7.4): an optimised GIF (800 px wide, 10 fps) and a PNG poster in
  *    docs/media/a2ui/, plus WebM and MP4 copies for posts in the gitignored
- *    agentdemo/.out/media/. A GIF over the 2 MB budget fails, so git history
+ *    agentdemo/.out/media/. A GIF over the 3 MB budget fails, so git history
  *    does not bloat. Never run in CI.
  * 🔗 RELATES: [[A2uiScenarioReplay]], [[A2uiPlayground]]
  * ⚡ FLOW: [agentdemo/.out/videos/<name>.webm] -> [ffmpeg] -> [docs/media/a2ui/<name>.gif|.png]
@@ -21,7 +21,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const BUDGET_BYTES = 2 * 1024 * 1024;
+// 3 MB since 2026-11-02 (user): the incident-triage showcase repaints the message
+// log, data model and surface on most steps, and is 2.6 MB at 800 px.
+export const BUDGET_BYTES = 3 * 1024 * 1024;
 export const FFMPEG_MISSING = "ffmpeg is not installed. Install it (macOS: brew install ffmpeg; Debian/Ubuntu: "
     + "sudo apt install ffmpeg) and run again.";
 

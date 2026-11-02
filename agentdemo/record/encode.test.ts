@@ -7,7 +7,7 @@
 /**
  * ⚓ TESTS: A2uiRecordingEncoder. ffmpeg is a local prerequisite named by
  *    its absence, GIFs are 800 px at 10 fps with a palette pass, and a GIF
- *    over the 2 MB budget fails (#30 spec §7.4). ffmpeg itself is stubbed.
+ *    over the 3 MB budget fails (#30 spec §7.4). ffmpeg itself is stubbed.
  */
 
 import fs from "node:fs";
@@ -45,8 +45,8 @@ describe("checkBudget", () =>
     test("passes at the budget and fails above it, naming the file and the size", () =>
     {
         expect(() => checkBudget("a", BUDGET_BYTES)).not.toThrow();
-        expect(() => checkBudget("a", 3 * 1024 * 1024))
-            .toThrow("a.gif is 3.0 MB, over the 2 MB budget; shorten the scenario or lower its pace.");
+        expect(() => checkBudget("a", 4 * 1024 * 1024))
+            .toThrow("a.gif is 4.0 MB, over the 3 MB budget; shorten the scenario or lower its pace.");
     });
 });
 
@@ -80,7 +80,7 @@ describe("encodeAll", () =>
         const videosDir = videos(["big"]);
 
         expect(() => encodeAll({ videosDir, outDir: path.join(videosDir, "o"), mediaDir: path.join(videosDir, "m"),
-            run: vi.fn(), size: () => BUDGET_BYTES + 1 })).toThrow("big.gif is 2.0 MB, over the 2 MB budget");
+            run: vi.fn(), size: () => BUDGET_BYTES + 1 })).toThrow("big.gif is 3.0 MB, over the 3 MB budget");
     });
 
     test("no videos is an error that says to record first", () =>
