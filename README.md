@@ -215,7 +215,13 @@ Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2
 
 *Scripted: the agent's side was written by hand, not recorded from a live model session.*
 
-There's no public live demo yet. A browser host has to serve Google's A2UI renderer, and its current release depends on a zod version that a security advisory flags, which our vendor audit rightly refuses to serve ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until that clears, the recording above stands in, and you can run the playground locally with `npm run demo:a2ui`.
+**The in-depth demo (80 seconds):** an agent runs an incident war room with about 20 components. It builds a live dashboard, then fills a timeline, logs and its reasoning for the incident you pick. It answers your search for an owner, rolls back the release you choose while the dashboard recovers, and drafts a postmortem that you share.
+
+[![Scripted: an agent runs an incident war room in four acts. Click to play the video.](docs/media/a2ui/war-room.png)](https://static.outcrop.us/demo/media/a2ui/war-room.mp4)
+
+▶ [Watch the war-room video (MP4, 2.3 MB)](https://static.outcrop.us/demo/media/a2ui/war-room.mp4). *Scripted, like the one above.*
+
+There's no public live demo yet. A browser host has to serve Google's A2UI renderer, and its current release depends on a zod version that a security advisory flags, which our vendor audit rightly refuses to serve ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until that clears, these recordings stand in, and you can run the playground locally with `npm run demo:a2ui`.
 
 The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
 
