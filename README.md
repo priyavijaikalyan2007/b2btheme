@@ -215,6 +215,8 @@ Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2
 
 *Scripted: the agent's side was written by hand, not recorded from a live model session.*
 
+There's no public live demo yet. A browser host has to serve Google's A2UI renderer, and its current release depends on a zod version that a security advisory flags, which our vendor audit rightly refuses to serve ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until that clears, the recording above stands in, and you can run the playground locally with `npm run demo:a2ui`.
+
 The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
 
 Support for MCP Apps hosts is in progress (#19).
