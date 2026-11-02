@@ -164,6 +164,27 @@ test.describe("Step 5 components under @a2ui/lit", () =>
         await expect(page.locator(".confirmdialog")).toHaveCount(0);
         expect(await errors(page)).toEqual([]);
     });
+
+    test("ErrorDialog: renders contained, opens its technical details, and Retry then Close send their actions",
+        async ({ page }) =>
+        {
+            await mountTree(page, [{ id: "root", component: "Column", children: ["err", "field"] },
+                { id: "err", component: "ErrorDialog", ...EV, title: "Sync failed", message: "The doc could not sync.",
+                    technicalDetail: "HTTP 503 from /sync", showRetry: true,
+                    onRetry: act("retry", "retry"), onClose: act("closed", "close") },
+                { id: "field", component: "TextField", label: "Name", value: "" }], "ErrorDialog");
+            await expectContained(page, ".modal.errordialog-contained", "outcrop-error-dialog");
+
+            // Bootstrap's Collapse, loaded as the manifest's library, opens the details.
+            await page.locator(".accordion-button").click();
+            await expect(page.getByText("HTTP 503 from /sync")).toBeVisible();
+
+            await page.getByRole("button", { name: "Retry" }).click();
+            await page.locator(".modal-footer").getByRole("button", { name: "Close" }).click();
+            await expect.poll(() => sent(page)).toEqual([["retry", {}], ["closed", {}]]);
+            await expect(page.locator(".errordialog-contained")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+        });
 });
 
 /**

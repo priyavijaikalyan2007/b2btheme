@@ -15,6 +15,15 @@
 // ERROR DIALOG COMPONENT STYLES
 // ============================================================================
 
+// Contained — shown in place inside its container, with no page backdrop (ADR-246)
+.modal.errordialog-contained {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    z-index: auto;
+}
+
 // Header — coloured strip matching severity (danger by default)
 .errordialog-header {
     background-color: var(--theme-danger);

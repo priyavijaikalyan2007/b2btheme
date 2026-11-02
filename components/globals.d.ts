@@ -97,7 +97,7 @@ import type
 } from "./dynamicformswitcher/dynamicformswitcher";
 import type { EditableComboBox, createEditableComboBox } from "./editablecombobox/editablecombobox";
 import type { EmptyState, createEmptyState } from "./emptystate/emptystate";
-import type { ErrorDialog, showErrorDialog } from "./errordialog/errordialog";
+import type { createErrorDialog, ErrorDialog, showErrorDialog } from "./errordialog/errordialog";
 import type { ExplorerPickerImpl, createExplorerPicker } from "./explorerpicker/explorerpicker";
 import type { FacetSearch, createFacetSearch, parseFacetQuery } from "./facetsearch/facetsearch";
 import type { FileExplorer, createFileExplorer } from "./fileexplorer/fileexplorer";
@@ -458,6 +458,7 @@ declare global
 
         /** Published by the Errordialog component. */
         showErrorDialog?: typeof showErrorDialog;
+        createErrorDialog?: typeof createErrorDialog;
 
         /** Published by the ExplorerPicker component. */
         createExplorerPicker?: typeof createExplorerPicker;
