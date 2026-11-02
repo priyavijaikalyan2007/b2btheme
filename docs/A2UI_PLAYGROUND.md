@@ -141,15 +141,20 @@ The page calls the provider **directly from your browser over HTTPS**. Nothing p
 
 - A recording must come from a **verbatim live session** and is labelled `Recorded from a live session with <model>, <date>`.
 - Trimming whole trailing turns is allowed. Editing an `a2ui`, `say` or `action` line is not.
-- A hand-written scenario has `"provenance": "scripted"` and is labelled **Scripted** everywhere. Both scenarios today are scripted:
+- A hand-written scenario has `"provenance": "scripted"` and is labelled **Scripted** everywhere. All three scenarios today are scripted:
   - `pick-orientation`: an OrientationPicker and a Done button.
   - `incident-triage`, the showcase:
     1. The user filters incidents in a contained FormDialog.
     2. The agent answers with a ChartPanel and a DataGrid.
     3. The user starts a restart, and the agent drives a ProgressModal through its `progress` data.
     4. The user cancels, and the agent takes the modal away.
+  - `war-room`, the in-depth demo, published as [a video](https://static.outcrop.us/demo/media/a2ui/war-room.mp4): an incident war room in four acts, built from about 20 components.
+    1. **Overview:** MetricCards, a Gauge, a StatusBadge and a ChartPanel.
+    2. **Drill-down:** the user selects a row in a DataGrid, and the agent fills a TabbedPanel with a Timeline, a LogConsole and a ReasoningAccordion. The user finds an owner in a PeoplePicker whose search the agent answers.
+    3. **Remediation:** the user picks a release in a TreeView and confirms in a ConfirmDialog. The agent drives a ProgressModal and updates the dashboard as pods come back.
+    4. **Wrap-up:** the agent drafts a postmortem in a MarkdownEditor, with a Tagger and an ActivityFeed beside it. The user shares it through a ShareDialog.
 
-  Both will be re-recorded from live sessions.
+  All three will be re-recorded from live sessions.
 
 ## 6. Recording demos
 
@@ -158,9 +163,16 @@ brew install ffmpeg                  # once (Debian/Ubuntu: sudo apt install ffm
 npm run demo:a2ui:record             # every scenario; SCENARIOS=a,b to choose
 ```
 
-1. Playwright replays each scenario at 1280×800 with video on, still asserting every recorded action.
-2. ffmpeg writes **`docs/media/a2ui/<name>.gif`** (800 px, 10 fps) and **`<name>.png`**, both committed. WebM and MP4 copies for posts go to the gitignored `agentdemo/.out/media/`.
-3. A GIF over **3 MB** fails the run.
+1. Playwright replays each scenario with video on, still asserting every recorded action.
+2. What ffmpeg writes depends on the scenario header's `media` field:
+
+   | `media` | Recorded at | Published |
+   |---|---|---|
+   | `"gif"` (the default) | 1280×800, 0.9 s a step | **`docs/media/a2ui/<name>.gif`** (800 px, 10 fps) and **`<name>.png`**, both committed. WebM and MP4 copies for posts go to the gitignored `agentdemo/.out/media/`. |
+   | `"video"` | 1920×1080, 1.6 s a step | **`demo/media/a2ui/<name>.mp4`** and a 1280 px poster **`docs/media/a2ui/<name>.png`**, both committed. The build copies `demo/media/` to the CDN, so the video is served at `https://static.outcrop.us/demo/media/a2ui/<name>.mp4`. |
+
+3. A GIF over **3 MB**, or a video over **20 MB**, fails the run. Cloudflare serves no file over 25 MiB.
+4. GitHub's README can't play a video from another site. The README shows the poster, linked to the video.
 
 Recording is never part of CI.
 

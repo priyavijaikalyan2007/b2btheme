@@ -74,3 +74,9 @@
 /mcp/*
   Cache-Control: public, max-age=300, stale-while-revalidate=86400
   Access-Control-Allow-Origin: *
+
+# Demo videos (#30 spec §7.4): an unversioned path whose content changes
+# when a scenario is re-recorded, so never immutable. A day's cache keeps a
+# long video off the origin; a re-recording shows within a day.
+/demo/media/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

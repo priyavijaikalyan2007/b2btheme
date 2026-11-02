@@ -233,6 +233,39 @@ describe("vditorCdn", () =>
         editor.destroy();
         delete (window as unknown as Record<string, unknown>).Vditor;
     });
+
+    /** Stubs Vditor.preview and returns the options of its last call. */
+    function capturePreview(): () => Record<string, unknown> | undefined
+    {
+        const preview = vi.fn();
+
+        (MockVditor as unknown as Record<string, unknown>).preview = preview;
+        return () => preview.mock.calls.at(-1)?.[2] as Record<string, unknown> | undefined;
+    }
+
+    afterEach(() => { delete (MockVditor as unknown as Record<string, unknown>).preview; });
+
+    test("DisplayMode_PreviewSetsCdnToThisOrigin_NotUnpkg", () =>
+    {
+        const lastOptions = capturePreview();
+        const editor = new MarkdownEditor(container, makeOptions({ mode: "display" }));
+
+        expect(String(lastOptions()?.cdn ?? "")).toContain("/lib/vditor-");
+        editor.destroy();
+    });
+
+    test("PreviewTab_PreviewSetsCdnToThisOrigin_NotUnpkg", () =>
+    {
+        const lastOptions = capturePreview();
+        const editor = new MarkdownEditor(container, makeOptions({ mode: "tabs" }));
+        const previewTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]'))
+            .find((t) => t.textContent?.includes("Preview"));
+
+        previewTab?.click();
+        expect(previewTab).toBeDefined();
+        expect(String(lastOptions()?.cdn ?? "")).toContain("/lib/vditor-");
+        editor.destroy();
+    });
 });
 
 // ============================================================================

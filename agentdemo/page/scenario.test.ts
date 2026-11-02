@@ -60,6 +60,12 @@ describe("parseScenario", () =>
             .toThrow('provenance must be "live" or "scripted"');
     });
 
+    test("media must be gif or video when given", () =>
+    {
+        expect(parseScenario(lines({ ...HEADER, media: "video" })).header.media).toBe("video");
+        expect(() => parseScenario(lines({ ...HEADER, media: "webm" }))).toThrow('media must be "gif" or "video"');
+    });
+
     test("serializeScenario round-trips", () =>
     {
         const text = lines({ ...HEADER, provenance: "live", provider: "openai", model: "m", date: "2026-10-27" },

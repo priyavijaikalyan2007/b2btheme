@@ -84,6 +84,16 @@ test.describe("A2UI playground", () =>
             .toEqual({ s: { orientation: "portrait" } });
         expect(await cspViolations(page)).toEqual([]);
     });
+
+    test("Save session after a replay says only a live conversation is saved", async ({ page }) =>
+    {
+        await openPlayground(page);
+        await page.locator(".a2ui-toolbar select").selectOption("pick-orientation");
+        await page.getByRole("button", { name: /^Play:/ }).click();
+        await page.getByRole("button", { name: "Save session" }).click();
+
+        await expect(page.locator(".a2ui-chat")).toContainText("Save session keeps a live conversation");
+    });
 });
 
 const SENTINEL = "sk-ant-SENTINEL-0123456789";

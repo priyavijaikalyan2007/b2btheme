@@ -122,6 +122,7 @@ Both recipes are what `tests/a2ui/harness-lit.ts` and `harness-react.ts` run in 
 
 ## 4a. Try it, and a reference agent
 
+- **Watch it:** [an 80-second video](https://static.outcrop.us/demo/media/a2ui/war-room.mp4) of an agent running an incident war room with about 20 of these components, scripted.
 - **Try it locally:** `npm run demo:a2ui` opens a playground that renders A2UI messages with these components through this exact recipe. See [`A2UI_PLAYGROUND.md`](A2UI_PLAYGROUND.md).
 - **Check what your agent writes:** `npm run check:a2ui -- messages.json` runs the A2UI schemas, a `web_core` dry run and a reference check, all against this catalog.
 - **Wire an agent:** `agentdemo/page/agent/core.ts` is a small, provider-neutral reference.

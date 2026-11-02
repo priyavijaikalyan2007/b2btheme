@@ -13,6 +13,8 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **The in-depth A2UI demo `war-room`** (scripted), published as an MP4: an agent runs an incident war room in four acts with about 20 components (MetricCard, Gauge, StatusBadge, ChartPanel, DataGrid, TabbedPanel, Timeline, LogConsole, ReasoningAccordion, PeoplePicker answered by the agent, TreeView, ConfirmDialog, ProgressModal, MarkdownEditor, Tagger, ActivityFeed, ShareDialog). It replays as a CI test. The README shows its poster linked to `https://static.outcrop.us/demo/media/a2ui/war-room.mp4`.
+- **Video scenarios for the recorder**: a scenario header's new `"media": "video"` records at 1920×1080 and publishes `demo/media/a2ui/<name>.mp4` (20 MB budget) and a poster instead of a GIF. The build now copies `demo/media/` to the CDN, where `/demo/media/*` is cached for a day.
 - **The A2UI showcase scenario `incident-triage`** (scripted): a contained FormDialog filter, then a ChartPanel and a DataGrid, then a cancellable ProgressModal driven by the agent's data. It replays as a CI test, and the README shows it as a GIF. The recorder's GIF budget is now 3 MB, up from 2 MB.
 - **ChartPanel `height`**: an optional CSS height. Without one, a chart in a container with no definite height, such as an A2UI surface, drew at its 80px minimum and an agent had no way to size it. The default is unchanged.
 - **`protocol.outOfCatalog`** (ADR-247): a manifest can keep its component out of the agent catalog for good, with a reason. FileUpload, GraphMinimap, HelpDrawer and NavRail declare it. That leaves CommentOverlay as the one component still pending.
@@ -51,6 +53,8 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **MarkdownEditor's preview no longer loads code from unpkg.com.** Display mode and the Preview tab render through `Vditor.preview()`, which wasn't given the self-hosted `cdn` the editor uses. So Vditor fetched its markdown engine, lute, as a script from `unpkg.com`, which the editor's own rule forbids and a strict CSP blocks. Both now use this library's mirror.
+- **Save session explains what it saves.** After a replayed scenario it said only "Nothing to save yet". It now says it keeps a live conversation with the agent, and that a replayed scenario is already a file.
 - **ChartPanel honours reduced motion**: with the system's reduced-motion setting on, the chart draws and redraws without Chart.js's animation. Its loading shimmer already stopped; the chart itself still animated. Nothing changes without the setting.
 - **FormDialog's labels now name their fields.** A native control is the label's `for`. A radio group, the rich text surface, a toggle and a custom field's wrapper are named by the label's id through `aria-labelledby`. Before this, screen readers and `getByLabel` found no name.
 - **Conversation follows a new reply when the list is already at the bottom.** `setData` now checks the list's geometry as well as its auto-scroll flag. A stale scroll event left over from the previous render could turn that flag off while the user was at the bottom, so a new reply stayed below the fold.

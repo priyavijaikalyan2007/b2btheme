@@ -658,6 +658,8 @@ export class MarkdownEditor implements MarkdownEditorHandle
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, this.displayValue, {
+                // As in the editor: preview() fetches lute and its renderers too.
+                cdn: VDITOR_CDN,
                 mode: isDark ? "dark" : "light",
                 hljs: {
                     enable: true,
@@ -1022,6 +1024,8 @@ export class MarkdownEditor implements MarkdownEditorHandle
         if (VditorClass && typeof VditorClass.preview === "function")
         {
             VditorClass.preview(this.previewArea, markdown, {
+                // As in the editor: preview() fetches lute and its renderers too.
+                cdn: VDITOR_CDN,
                 mode: isDark ? "dark" : "light",
                 hljs: {
                     enable: true,
