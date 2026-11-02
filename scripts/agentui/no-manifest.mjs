@@ -45,7 +45,6 @@ export const AWAITING_MANIFEST = new Set([
     // S5-4: the dialogs, with a contained mode (D1).
     "formdialog",
     "progressmodal",
-    "sharedialog",
 ]);
 
 /**

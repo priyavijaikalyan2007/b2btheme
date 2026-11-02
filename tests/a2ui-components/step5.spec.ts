@@ -185,6 +185,24 @@ test.describe("Step 5 components under @a2ui/lit", () =>
             await expect(page.locator(".errordialog-contained")).toHaveCount(0);
             expect(await errors(page)).toEqual([]);
         });
+
+    test("ShareDialog: renders contained, and removing a person then Done sends onShare with the diff",
+        async ({ page }) =>
+        {
+            await mountTree(page, [{ id: "root", component: "Column", children: ["share", "field"] },
+                { id: "share", component: "ShareDialog", ...EV, title: "Share Plan",
+                    accessLevels: [{ id: "viewer", label: "Viewer" }, { id: "editor", label: "Editor" }],
+                    existingAccess: [{ person: { id: "u1", name: "Alice Ng" }, accessLevelId: "editor" }],
+                    onShare: act("shared", "share"), onCancel: act("no", "cancel") },
+                { id: "field", component: "TextField", label: "Name", value: "" }], "ShareDialog");
+            await expectContained(page, ".sharedialog-overlay.sharedialog-contained", "outcrop-share-dialog");
+
+            await page.locator(".sharedialog-access-remove").click();
+            await page.getByRole("button", { name: "Done" }).click();
+            await expect.poll(() => sent(page)).toEqual([["shared", { added: [], changed: [], removed: ["u1"] }]]);
+            await expect(page.locator(".sharedialog-contained")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+        });
 });
 
 /**
