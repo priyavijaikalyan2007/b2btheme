@@ -114,7 +114,8 @@ test.describe("B5 editors and forms under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
-    test("DynamicFormSwitcher: typing leaves the variant and values under eventData for the agent's submit", async ({ page }) =>
+    test("DynamicFormSwitcher: typing leaves the variant and values under eventData for the agent's submit",
+        async ({ page }) =>
     {
         await mount(page, "DynamicFormSwitcher", { ...EV, initialVariant: "contact", variants: {
             contact: { label: "Contact", fields: [{ name: "email", label: "Email", type: "email" }] } } });

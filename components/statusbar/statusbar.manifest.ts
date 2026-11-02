@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Status Bar / CapabilityManifest
- * PURPOSE: Declares what Status Bar can render, so the Dynamic UI canvas can
+ * ⚓ COMPONENT: Status Bar / CapabilityManifest
+ * 📜 PURPOSE: Declares what Status Bar can render, so the Dynamic UI canvas can
  *    resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-244.
- * RELATES: [[Status Bar]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[Status Bar]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

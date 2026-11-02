@@ -190,6 +190,7 @@ function byScalarArm(a, b)
     return a.type < b.type ? -1 : (a.type > b.type ? 1 : 0);
 }
 
+/** Orders two const schemas: by type, then number or string order. */
 function byConst(a, b)
 {
     const [x, y] = [a.const, b.const];

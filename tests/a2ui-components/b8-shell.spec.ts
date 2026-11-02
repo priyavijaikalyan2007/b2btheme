@@ -55,12 +55,14 @@ const answerSearch = (page: Page, value: unknown[]) =>
 /** TenantSwitcher's tenants and its search provider, bound. */
 const TENANTS = { ...EV, tenants: [{ id: "t1", name: "Alpha Corp", role: "Admin" },
     { id: "t2", name: "Beta LLC", role: "Member" }], activeTenantId: "t1", showSearch: true,
-onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } }, searchResult: { path: "/answers/search" } };
+    onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } },
+    searchResult: { path: "/answers/search" } };
 
 /** AppLauncher rendered in place, with its search provider bound. */
 const LAUNCHER = { ...EV, mode: "fullpage", apps: [{ id: "a1", name: "Dashboard", icon: "bi-speedometer2" },
     { id: "a2", name: "Projects", icon: "bi-kanban" }],
-onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } }, searchResult: { path: "/answers/search" } };
+    onSearch: { event: { name: "find", context: { p: { path: "/ev/search" } } } },
+    searchResult: { path: "/answers/search" } };
 
 /** A ribbon tab with a button, a toggle, a dropdown and a gallery, as an agent writes it. */
 const RIBBON_TABS = [{ id: "home", label: "Home", groups: [{ id: "edit", label: "Edit", controls: [
@@ -205,12 +207,14 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
         await expect(page.locator(".ribbon")).toHaveCount(0);
 
         await send(page, surface("t", { id: "root", component: "Ribbon", tabs: { path: "/tabs" } }, { tabs: [{
-            id: "home", label: "Home", groups: [{ id: "g", label: "G", controls: [{ type: "custom", id: "x" }] }] }] }));
+            id: "home", label: "Home",
+            groups: [{ id: "g", label: "G", controls: [{ type: "custom", id: "x" }] }] }] }));
         await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
             path: "/tabs" })]);
     });
 
-    test("RibbonBuilder: adding a tab sends onChange with the config, and Export MD sends the Markdown", async ({ page }) =>
+    test("RibbonBuilder: adding a tab sends onChange with the config, and Export MD sends the Markdown",
+        async ({ page }) =>
     {
         await mount(page, "RibbonBuilder", { ...EV, onChange: act("change", "change"), onExport: act("md", "export") });
 

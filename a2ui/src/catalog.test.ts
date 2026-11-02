@@ -20,9 +20,11 @@ import { createOutcropCatalogFrom, resetCatalogStateForTests, type Embedded } fr
 import type { AdapterDescriptor } from "./types";
 import { tagFor } from "../../scripts/agentui/adapter-descriptors.mjs";
 
-const CATALOG_TEXT = fs.readFileSync(path.join(__dirname, "..", "..", "specs", "agentui", "published", "catalog-v1.json"), "utf8");
+const CATALOG_TEXT = fs.readFileSync(
+    path.join(__dirname, "..", "..", "specs", "agentui", "published", "catalog-v1.json"), "utf8");
 const CATALOG = JSON.parse(CATALOG_TEXT);
-const OURS = Object.keys(CATALOG.components).filter((n) => !(basicCatalog as unknown as { components: Map<string, unknown> }).components.has(n));
+const BASIC_COMPONENTS = (basicCatalog as unknown as { components: Map<string, unknown> }).components;
+const OURS = Object.keys(CATALOG.components).filter((n) => !BASIC_COMPONENTS.has(n));
 const WEB_CORE = { Catalog, basicCatalog, BASIC_FUNCTIONS };
 const OPTIONS = { assetBaseUrl: "https://cdn.test" };
 
@@ -31,7 +33,8 @@ type Any = any;
 
 function descriptor(name: string): AdapterDescriptor
 {
-    return { name, tagName: tagFor(name), factory: `create${name}`, factoryStyle: "container-first", mountMethod: "auto",
+    return { name, tagName: tagFor(name), factory: `create${name}`, factoryStyle: "container-first",
+        mountMethod: "auto",
         conformance: "display", assets: { js: "x.js" }, props: {}, twoWay: false, events: [], dates: [] };
 }
 
@@ -48,7 +51,8 @@ describe("createOutcropCatalog — webCore check", () =>
     test.each([
         ["Catalog", { ...WEB_CORE, Catalog: undefined }, /webCore\.Catalog is missing or not a class with fromJson/],
         ["basicCatalog", { ...WEB_CORE, basicCatalog: {} }, /webCore\.basicCatalog is missing or not a catalog/],
-        ["BASIC_FUNCTIONS", { ...WEB_CORE, BASIC_FUNCTIONS: "x" }, /webCore\.BASIC_FUNCTIONS is missing or not an array/],
+        ["BASIC_FUNCTIONS", { ...WEB_CORE, BASIC_FUNCTIONS: "x" },
+            /webCore\.BASIC_FUNCTIONS is missing or not an array/],
     ])("a missing %s is a literate error", (_n, webCore, message) =>
     {
         expect(() => createOutcropCatalogFrom(embedded(), webCore as Any, OPTIONS)).toThrow(message);
@@ -64,13 +68,15 @@ describe("createOutcropCatalog — webCore check", () =>
 
     test("a non-boolean injectBaseTheme is a literate error", () =>
     {
-        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any, { ...OPTIONS, injectBaseTheme: "yes" as Any }))
+        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any,
+            { ...OPTIONS, injectBaseTheme: "yes" as Any }))
             .toThrow(/injectBaseTheme must be a boolean/);
     });
 
     test.each([[0], [-1], [1.5], ["30000"]])("providerTimeoutMs %s is rejected", (bad) =>
     {
-        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any, { ...OPTIONS, providerTimeoutMs: bad as Any }))
+        expect(() => createOutcropCatalogFrom(embedded(), WEB_CORE as Any,
+            { ...OPTIONS, providerTimeoutMs: bad as Any }))
             .toThrow("providerTimeoutMs must be a positive integer");
     });
 
@@ -132,7 +138,8 @@ describe("createOutcropCatalog — in a real MessageProcessor", () =>
 {
     function processor(): Any
     {
-        return new (MessageProcessor as Any)([createOutcropCatalogFrom(embedded(), WEB_CORE as Any, OPTIONS)], () => undefined);
+        return new (MessageProcessor as Any)([createOutcropCatalogFrom(embedded(), WEB_CORE as Any, OPTIONS)],
+            () => undefined);
     }
 
     const create = { version: "v0.9.1", createSurface: { surfaceId: "s", catalogId: "https://static.outcrop.us/a2ui/catalog/v1.json" } };

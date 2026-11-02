@@ -446,7 +446,8 @@ describe("validateManifest — protocol field", () =>
     // every other gate silently; this validator is the one place left to say so.
     test("a provider's leftover params or response key is rejected", () =>
     {
-        const res = validateManifest(base({ providers: { onSearch: { request: "search", params: "q", response: "r" } } }));
+        const res = validateManifest(base({
+            providers: { onSearch: { request: "search", params: "q", response: "r" } } }));
 
         expect(res.ok).toBe(false);
         expect(res.issues.map((i) => i.path).sort())

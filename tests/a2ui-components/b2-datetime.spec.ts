@@ -67,7 +67,8 @@ test.describe("B2 date and time pickers under @a2ui/lit", () =>
         await page.locator("outcrop-date-picker .datepicker-input").blur();
         await expect.poll(() => dm(page, "s", "/v")).toBeUndefined();
 
-        await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/v", value: "2026-04-01T00:00:00.000Z" } }]);
+        await send(page,
+            [{ version: V, updateDataModel: { surfaceId: "s", path: "/v", value: "2026-04-01T00:00:00.000Z" } }]);
         await expect.poll(() => shown(page, "outcrop-date-picker")).not.toBeNull();
         await deletePath(page);
         await expect.poll(() => shown(page, "outcrop-date-picker")).toBeNull();
@@ -101,7 +102,8 @@ test.describe("B2 date and time pickers under @a2ui/lit", () =>
     test("TimePicker: choosing a timezone sends onTimezone with its IANA name", async ({ page }) =>
     {
         await mount(page, "TimePicker", { v: { hours: 9, minutes: 30, seconds: 0 } }, { showTimezone: true,
-            eventData: { path: "/ev" }, onTimezone: { event: { name: "tz", context: { zone: { path: "/ev/timezone" } } } } });
+            eventData: { path: "/ev" },
+            onTimezone: { event: { name: "tz", context: { zone: { path: "/ev/timezone" } } } } });
 
         await page.locator("outcrop-time-picker .timepicker-tz-input").click();
         await page.locator(".timepicker-tz-option").nth(1).dispatchEvent("pointerdown");
@@ -113,7 +115,8 @@ test.describe("B2 date and time pickers under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
-    test("PeriodPicker: mounts empty; a picked period writes it; the agent deleting the path clears", async ({ page }) =>
+    test("PeriodPicker: mounts empty; a picked period writes it; the agent deleting the path clears",
+        async ({ page }) =>
     {
         await mount(page, "PeriodPicker", {});
         expect(await shown(page, "outcrop-period-picker")).toBeNull();
@@ -130,7 +133,8 @@ test.describe("B2 date and time pickers under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
-    test("SprintPicker: mounts empty; a picked sprint writes it; the agent deleting the path clears", async ({ page }) =>
+    test("SprintPicker: mounts empty; a picked sprint writes it; the agent deleting the path clears",
+        async ({ page }) =>
     {
         await mount(page, "SprintPicker", {}, { anchorDate: "2026-01-05" });
         expect(await shown(page, "outcrop-sprint-picker")).toBeNull();
@@ -138,7 +142,8 @@ test.describe("B2 date and time pickers under @a2ui/lit", () =>
         await page.locator("outcrop-sprint-picker input").click();
         await page.locator(".sprintpicker-list-item").nth(1).click();
 
-        await expect.poll(() => dm(page, "s", "/v")).toEqual(expect.objectContaining({ sprintIndex: expect.any(Number) }));
+        await expect.poll(() => dm(page, "s", "/v"))
+            .toEqual(expect.objectContaining({ sprintIndex: expect.any(Number) }));
         expect(await dm(page, "s", "/v")).toEqual(await shown(page, "outcrop-sprint-picker"));
         await expectCatalogValid("SprintPicker", "value", await dm(page, "s", "/v"));
 

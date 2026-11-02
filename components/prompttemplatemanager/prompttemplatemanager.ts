@@ -2117,31 +2117,13 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
      */
     public setData(slot: string, value: unknown): void
     {
-        if (slot !== "templates")
-        {
-            throw new Error(
-                `${LOG_PREFIX} setData: unknown slot "${slot}". `
-                + 'This component declares one slot, "templates".');
-        }
-        if (!Array.isArray(value))
-        {
-            throw new Error(
-                `${LOG_PREFIX} setData("templates"): expected an array of templates, got `
-                + `${value === null ? "null" : typeof value}. Pass the whole list, as getTemplates() returns it.`);
-        }
+        this.assertTemplatesSlot(slot, value);
 
         const previous = this.selectedId;
         const previewOpen = this.previewVisible;
         const scrollTop = this.listEl ? this.listEl.scrollTop : 0;
 
-        const drafts = new Map(this.templates.filter((t) => this.dirtyIds.has(t.id)).map((t) => [t.id, t]));
-
-        this.templates = (value as PromptTemplate[]).map(function(t)
-        {
-            const draft = drafts.get(t.id);
-            return draft !== undefined ? draft : { ...t };
-        });
-        this.dirtyIds = new Set(this.templates.filter((t) => drafts.has(t.id)).map((t) => t.id));
+        this.mergeTemplates(value);
 
         const kept = previous !== null && this.templates.some((t) => t.id === previous);
         this.selectedId = kept ? previous
@@ -2160,6 +2142,36 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         }
 
         logDebug("setData(templates):", this.templates.length, "templates; selected:", this.selectedId);
+    }
+
+    /** Throws unless `slot` is "templates" and `value` is a list. */
+    private assertTemplatesSlot(slot: string, value: unknown): asserts value is PromptTemplate[]
+    {
+        if (slot !== "templates")
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData: unknown slot "${slot}". `
+                + 'This component declares one slot, "templates".');
+        }
+        if (!Array.isArray(value))
+        {
+            throw new Error(
+                `${LOG_PREFIX} setData("templates"): expected an array of templates, got `
+                + `${value === null ? "null" : typeof value}. Pass the whole list, as getTemplates() returns it.`);
+        }
+    }
+
+    /** Takes the agent's rows, keeping the local copy and dirty marker of each draft the list still holds. */
+    private mergeTemplates(rows: PromptTemplate[]): void
+    {
+        const drafts = new Map(this.templates.filter((t) => this.dirtyIds.has(t.id)).map((t) => [t.id, t]));
+
+        this.templates = rows.map(function(t)
+        {
+            const draft = drafts.get(t.id);
+            return draft !== undefined ? draft : { ...t };
+        });
+        this.dirtyIds = new Set(this.templates.filter((t) => drafts.has(t.id)).map((t) => t.id));
     }
 
     /** Subscribes to a declared channel; returns the unsubscribe. */
@@ -2194,6 +2206,31 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
      */
     public setState(state: Record<string, unknown>): void
     {
+        this.assertState(state);
+
+        const { selected, variables, preview } = state;
+
+        if (selected !== undefined)
+        {
+            this.selectedId = selected as string | null;
+            this.updateListSelection();
+            this.renderDetail();
+        }
+
+        if (variables !== undefined)
+        {
+            const entries = Object.entries(variables as Record<string, Record<string, string>>);
+            this.variableValues = new Map(entries.map(([id, values]) => [id, { ...values }]));
+            this.renderVariables();
+            if (this.previewVisible) { this.renderPreview(); }
+        }
+
+        if (preview !== undefined && preview !== this.previewVisible) { this.togglePreview(); }
+    }
+
+    /** Throws, naming the key, unless every key setState() reads is valid; an unknown template id throws too. */
+    private assertState(state: Record<string, unknown>): void
+    {
         const { selected, variables, preview } = state;
 
         if (selected !== undefined && selected !== null && typeof selected !== "string")
@@ -2217,23 +2254,6 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         {
             throw new Error(`${LOG_PREFIX} setState: preview must be true or false, got ${typeof preview}.`);
         }
-
-        if (selected !== undefined)
-        {
-            this.selectedId = selected as string | null;
-            this.updateListSelection();
-            this.renderDetail();
-        }
-
-        if (variables !== undefined)
-        {
-            const entries = Object.entries(variables as Record<string, Record<string, string>>);
-            this.variableValues = new Map(entries.map(([id, values]) => [id, { ...values }]));
-            this.renderVariables();
-            if (this.previewVisible) { this.renderPreview(); }
-        }
-
-        if (preview !== undefined && preview !== this.previewVisible) { this.togglePreview(); }
     }
 
     /**

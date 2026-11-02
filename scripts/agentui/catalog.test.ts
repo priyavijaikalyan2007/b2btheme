@@ -66,7 +66,10 @@ describe("catalog — identity and layout", () =>
         expect(Object.keys(build().catalog).sort()).toEqual(Object.keys(basic).sort());
     });
     test("the name drops create", () => { expect(catalogName(MANIFEST)).toBe("Widget"); });
-    test("protocol.name overrides", () => { expect(catalogName({ ...MANIFEST, protocol: { name: "Grid" } })).toBe("Grid"); });
+    test("protocol.name overrides", () =>
+    {
+        expect(catalogName({ ...MANIFEST, protocol: { name: "Grid" } })).toBe("Grid");
+    });
 });
 
 describe("catalog — basic re-exports", () =>
@@ -95,7 +98,8 @@ describe("catalog — component entry", () =>
 {
     test("starts with ComponentCommon", () =>
     {
-        expect(build().catalog.components.Widget.allOf[0]).toEqual({ $ref: `${COMMON_TYPES_ID}#/$defs/ComponentCommon` });
+        expect(build().catalog.components.Widget.allOf[0])
+            .toEqual({ $ref: `${COMMON_TYPES_ID}#/$defs/ComponentCommon` });
     });
     test("a data prop accepts a literal, a binding or a function call, with its description outside", () =>
     {
@@ -133,25 +137,29 @@ describe("catalog — component entry", () =>
 
         expect(onSelection.$ref).toBe(`${COMMON_TYPES_ID}#/$defs/Action`);
         expect(onSelection.description)
-            .toBe("Sent when \"selection\" emits. Its payload (one or more collections) is at <eventData path>/selection.");
+            .toBe("Sent when \"selection\" emits. Its payload (one or more collections) is at "
+                + "<eventData path>/selection.");
     });
     test("a single-item channel's description names one payload of its shape", () =>
     {
         const s = { ...SURFACE, events: [{ ...SURFACE.events[0], channel: "anchor", actionProp: "onAnchor",
             payload: "record", multi: false }] };
-        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget").onAnchor.description)
+        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget")
+            .onAnchor.description)
             .toBe("Sent when \"anchor\" emits. Its payload (a record) is at <eventData path>/anchor.");
     });
     test("a multi-item channel uses the shape's English plural", () =>
     {
         const s = { ...SURFACE, events: [{ ...SURFACE.events[0], payload: "hierarchy" }] };
-        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget").onSelection.description)
+        expect(ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget")
+            .onSelection.description)
             .toContain("(one or more hierarchies)");
     });
     test("every DataShape has a payload phrase, so the closed set and the plurals cannot drift", () =>
     {
         const phrase = (payload: string) => ownProps(build([{ manifest: MANIFEST, schema: SCHEMA,
-            surface: { ...SURFACE, events: [{ ...SURFACE.events[0], payload }] } }]).catalog, "Widget").onSelection.description;
+            surface: { ...SURFACE, events: [{ ...SURFACE.events[0], payload }] } }]).catalog, "Widget")
+            .onSelection.description;
 
         expect(DATA_SHAPES.filter((shape) => !/\(one or more \w+\)/.test(phrase(shape)))).toEqual([]);
     });
@@ -186,18 +194,21 @@ describe("catalog — component entry", () =>
     });
     test("cleared: null keeps value's literal arm and says that cleared is an absent path (ADR-222)", () =>
     {
-        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Day." } } };
+        const schema = { ...SCHEMA,
+            properties: { ...SCHEMA.properties, value: { type: "string", description: "Day." } } };
         const s = { ...SURFACE, twoWayValue: true, change: { cleared: null },
             dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Day." }] };
         const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
 
         expect(props.value.anyOf[0]).toEqual({ type: "string" });
-        expect(props.value.description).toContain("the path is deleted; delete the path to clear it, or leave it absent "
+        expect(props.value.description)
+            .toContain("the path is deleted; delete the path to clear it, or leave it absent "
             + "to start empty.");
     });
     test("valueFrom leaves value's literal arm as generated", () =>
     {
-        const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, value: { type: "string", description: "Hex." } } };
+        const schema = { ...SCHEMA,
+            properties: { ...SCHEMA.properties, value: { type: "string", description: "Hex." } } };
         const s = { ...SURFACE, twoWayValue: true, change: { valueFrom: "hex" },
             dataProps: [...SURFACE.dataProps, { name: "value", jsdoc: "Hex." }] };
         const props = ownProps(build([{ manifest: MANIFEST, surface: s, schema }]).catalog, "Widget");
@@ -207,9 +218,13 @@ describe("catalog — component entry", () =>
     test("eventData is absent for a component with no events or providers", () =>
     {
         const s = { ...SURFACE, events: [], providers: [] };
-        expect("eventData" in ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget")).toBe(false);
+        expect("eventData" in ownProps(build([{ manifest: MANIFEST, surface: s, schema: SCHEMA }]).catalog, "Widget"))
+            .toBe(false);
     });
-    test("a manifest action gets an on<Id> Action", () => { expect("onExport" in ownProps(build().catalog, "Widget")).toBe(true); });
+    test("a manifest action gets an on<Id> Action", () =>
+    {
+        expect("onExport" in ownProps(build().catalog, "Widget")).toBe(true);
+    });
     test("a required provider requires its action, its result binding and eventData (ADR-234)", () =>
     {
         const s = { ...SURFACE, providers: [{ ...SURFACE.providers[0], required: true }] };
@@ -236,7 +251,8 @@ describe("catalog — guidance", () =>
 {
     test("describes affordances in words", () =>
     {
-        expect(describeComponent(MANIFEST)).toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
+        expect(describeComponent(MANIFEST))
+            .toBe("Widget. Use it to browse, compare a collection of 2 to 500 items. Actions: Export CSV.");
     });
     test("useWhen and avoidWhen follow the label, before the affordances (ADR-222)", () =>
     {
@@ -251,12 +267,14 @@ describe("catalog — guidance", () =>
     });
     test("a cardinality whose min equals its max reads exactly 1 item", () =>
     {
-        const m = { ...MANIFEST, actions: [], affords: [{ shape: "document", intents: ["author"], cardinality: { min: 1, max: 1 } }] };
+        const m = { ...MANIFEST, actions: [],
+            affords: [{ shape: "document", intents: ["author"], cardinality: { min: 1, max: 1 } }] };
         expect(describeComponent(m)).toBe("Widget. Use it to author a document of exactly 1 item.");
     });
     test("exactly N items is plural above 1", () =>
     {
-        const m = { ...MANIFEST, actions: [], affords: [{ shape: "collection", intents: ["compare"], cardinality: { min: 2, max: 2 } }] };
+        const m = { ...MANIFEST, actions: [],
+            affords: [{ shape: "collection", intents: ["compare"], cardinality: { min: 2, max: 2 } }] };
         expect(describeComponent(m)).toBe("Widget. Use it to compare a collection of exactly 2 items.");
     });
     test("the preamble describes the single eventData pattern", () =>
@@ -265,13 +283,17 @@ describe("catalog — guidance", () =>
     });
     test("the preamble says a data property takes a literal, a binding or a function call", () =>
     {
-        expect(build().catalog.description).toContain("a literal, a {\"path\": …} binding or a {\"call\": …} function call");
+        expect(build().catalog.description)
+            .toContain("a literal, a {\"path\": …} binding or a {\"call\": …} function call");
     });
     test("the preamble never promises an onChange action, which some two-way components lack", () =>
     {
         expect(build().catalog.description).not.toMatch(/onChange/);
     });
-    test("the catalog description lists the component", () => { expect(build().catalog.description).toContain("- Widget: Widget."); });
+    test("the catalog description lists the component", () =>
+    {
+        expect(build().catalog.description).toContain("- Widget: Widget.");
+    });
 });
 
 describe("catalog — violations", () =>
@@ -279,12 +301,14 @@ describe("catalog — violations", () =>
     test("a name colliding with the basic catalog fails", () =>
     {
         const m = { ...MANIFEST, protocol: { name: "Text" } };
-        expect(build([{ manifest: m, surface: SURFACE, schema: SCHEMA }]).violations[0].code).toBe(VIOLATION.NAME_COLLISION);
+        expect(build([{ manifest: m, surface: SURFACE, schema: SCHEMA }]).violations[0].code)
+            .toBe(VIOLATION.NAME_COLLISION);
     });
     test("a non-UAX31 name fails", () =>
     {
         const m = { ...MANIFEST, protocol: { name: "my-widget" } };
-        expect(build([{ manifest: m, surface: SURFACE, schema: SCHEMA }]).violations[0].code).toBe(VIOLATION.NAME_INVALID);
+        expect(build([{ manifest: m, surface: SURFACE, schema: SCHEMA }]).violations[0].code)
+            .toBe(VIOLATION.NAME_INVALID);
     });
     test("eventData colliding with a data prop fails", () =>
     {
@@ -301,7 +325,8 @@ describe("catalog — violations", () =>
 
         expect(violations.map((v: any) => [v.code, v.member])).toEqual([[VIOLATION.PROP_COLLISION, "searchResult"]]);
     });
-    test.each(["id", "accessibility", "weight"])("a data prop named %s, which A2UI gives every component, fails (B4)", (n) =>
+    test.each(["id", "accessibility", "weight"])(
+        "a data prop named %s, which A2UI gives every component, fails (B4)", (n) =>
     {
         const s = { ...SURFACE, dataProps: [...SURFACE.dataProps, { name: n, jsdoc: "Data." }] };
         const schema = { ...SCHEMA, properties: { ...SCHEMA.properties, [n]: { type: "string" } } };
@@ -324,7 +349,8 @@ describe("catalog — fix round 1", () =>
     const withDef = (name: string, def: string) => ({
         manifest: { ...MANIFEST, name: name.toLowerCase(), factory: `create${name}` },
         surface: { ...SURFACE, name: name.toLowerCase() },
-        schema: { ...SCHEMA, $defs: { [def]: SCHEMA.$defs.Col }, properties: { ...SCHEMA.properties, columns: { type: "array", items: { $ref: `#/$defs/${def}` } } } },
+        schema: { ...SCHEMA, $defs: { [def]: SCHEMA.$defs.Col },
+            properties: { ...SCHEMA.properties, columns: { type: "array", items: { $ref: `#/$defs/${def}` } } } },
     });
 
     test("two components relocating to the same def key fail instead of overwriting", () =>

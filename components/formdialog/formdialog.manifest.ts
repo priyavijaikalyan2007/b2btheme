@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Form Dialog / CapabilityManifest
- * PURPOSE: Declares what Form Dialog can render, so the Dynamic UI canvas
+ * ⚓ COMPONENT: Form Dialog / CapabilityManifest
+ * 📜 PURPOSE: Declares what Form Dialog can render, so the Dynamic UI canvas
  *    can resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-246.
- * RELATES: [[FormDialog]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[FormDialog]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

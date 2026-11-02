@@ -59,7 +59,8 @@ describe("resolve — classes", () =>
     });
     test("a legacyOption callback is an event", () =>
     {
-        const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
+        const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true,
+            legacyOption: "onSelect" }] });
         expect(codes(m, [member("onSelect", "function")])).toEqual([]);
     });
     test("a data member named as legacyOption fails", () =>
@@ -74,7 +75,8 @@ describe("resolve — classes", () =>
     });
     test("an event is its channel, option, action prop and payload, and nothing to bind", () =>
     {
-        const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true, legacyOption: "onSelect" }] });
+        const m = manifest({ emits: [{ name: "selection", payload: "collection", multi: true,
+            legacyOption: "onSelect" }] });
         expect(resolveSurface(m, [member("onSelect", "function")]).events[0]).toEqual({ channel: "selection",
             option: "onSelect", actionProp: "onSelection", payload: "collection", multi: true, payloadInValue: false });
     });
@@ -133,7 +135,8 @@ describe("resolve — declarations", () =>
 {
     test("a stale hostOnly key fails", () =>
     {
-        expect(codes(manifest({ protocol: { hostOnly: { gone: REASON } } }), [])).toEqual([VIOLATION.STALE_DECLARATION]);
+        expect(codes(manifest({ protocol: { hostOnly: { gone: REASON } } }), []))
+            .toEqual([VIOLATION.STALE_DECLARATION]);
     });
     test("a nested path into a data member is left to the schema step, which removes it (ADR-230)", () =>
     {
@@ -294,7 +297,8 @@ describe("resolve — naming rule (user decision, 2026-10-25)", () =>
     });
     test("a two-way field's change channel carries its payload in value", () =>
     {
-        const m = manifest({ conformance: "field", emits: [{ name: "change", payload: "scalar", multi: false, legacyOption: "onChange" }] });
+        const m = manifest({ conformance: "field",
+            emits: [{ name: "change", payload: "scalar", multi: false, legacyOption: "onChange" }] });
         const surface = resolveSurface(m, [member("value", "data"), onChange()]);
 
         expect(surface.violations).toEqual([]);
@@ -347,7 +351,8 @@ describe("resolve — protocol.hostOnlyActions (ADR-222, #31)", () =>
 
 describe("resolve — protocol.change (ADR-222, #39)", () =>
 {
-    const field = (protocol?: M, over: M = {}) => manifest({ conformance: "field", ...(protocol ? { protocol } : {}), ...over });
+    const field = (protocol?: M, over: M = {}) =>
+        manifest({ conformance: "field", ...(protocol ? { protocol } : {}), ...over });
     const messages = (m: M, members: M[]) =>
         resolveSurface(m, members).violations.map((v: { message: string }) => v.message).join("\n");
 
@@ -394,7 +399,8 @@ describe("resolve — protocol.change (ADR-222, #39)", () =>
     {
         const m = field({ change: { cleared: null } });
 
-        const members = [member("value", "data"), onChange({ direct: false, withoutNull: false, setValueAcceptsNull: true })];
+        const members = [member("value", "data"),
+            onChange({ direct: false, withoutNull: false, setValueAcceptsNull: true })];
 
         expect(codes(m, members)).toEqual([VIOLATION.CHANGE_MISMATCH]);
     });

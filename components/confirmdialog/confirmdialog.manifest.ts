@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Confirm Dialog / CapabilityManifest
- * PURPOSE: Declares what Confirm Dialog can render, so the Dynamic UI canvas
+ * ⚓ COMPONENT: Confirm Dialog / CapabilityManifest
+ * 📜 PURPOSE: Declares what Confirm Dialog can render, so the Dynamic UI canvas
  *    can resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-246.
- * RELATES: [[ConfirmDialog]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[ConfirmDialog]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

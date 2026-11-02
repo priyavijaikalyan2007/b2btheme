@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Sidebar / CapabilityManifest
- * PURPOSE: Declares what Sidebar can render, so the Dynamic UI canvas can
+ * ⚓ COMPONENT: Sidebar / CapabilityManifest
+ * 📜 PURPOSE: Declares what Sidebar can render, so the Dynamic UI canvas can
  *    resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-244.
- * RELATES: [[Sidebar]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[Sidebar]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

@@ -107,7 +107,8 @@ describe("compileValidators — provider results", () =>
 
     test("a provider with no $defs entry is a literate build error", () =>
     {
-        expect(() => compileValidators({ catalog, basic, commonTypes, descriptors: [{ ...STICKY, providers: [LOOKUP] }] }))
+        expect(() => compileValidators({ catalog, basic, commonTypes,
+            descriptors: [{ ...STICKY, providers: [LOOKUP] }] }))
             .toThrow("StickyNote.lookupResult");
     });
 });
@@ -123,7 +124,8 @@ describe("compileValidators", () =>
 
     test("exports one validator per descriptor prop, keyed <Name>.<prop>", () =>
     {
-        expect(Object.keys(validators).sort()).toEqual(["StickyNote.anchor", "StickyNote.collapsed", "StickyNote.text"]);
+        expect(Object.keys(validators).sort())
+            .toEqual(["StickyNote.anchor", "StickyNote.collapsed", "StickyNote.text"]);
     });
 
     test("a string prop accepts strings and rejects numbers", () =>

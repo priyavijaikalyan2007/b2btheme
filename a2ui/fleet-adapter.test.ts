@@ -28,7 +28,8 @@ import { sampleProp, sampleValue } from "./sample-values";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
-type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string; twoWay: boolean;
+type Descriptor = { name: string; tagName: string; factory: string; factoryStyle: string; changeOption?: string;
+    twoWay: boolean;
     change?: { valueFrom: string } | { cleared: null };
     assets: { js: string; css?: string; deps?: { path: string; integrity?: string }[] };
     props: Record<string, { route: string }>;
@@ -288,7 +289,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
     test.skipIf(d.events.length === 0)("each event writes its payload, then dispatches its action", async () =>
     {
-        const glue = (await GLUE[`../components/${d.assets.js.split("/")[1]}/${d.assets.js.split("/")[1]}.conformance.ts`]?.())
+        const glueKey = `../components/${d.assets.js.split("/")[1]}/${d.assets.js.split("/")[1]}.conformance.ts`;
+        const glue = (await GLUE[glueKey]?.())
             ?.CONFORMANCE_GLUE;
         const { props, data } = await initial();
         const actionProps = Object.fromEntries(d.events.map((e) => [e.actionProp, { event: { name: e.actionProp } }]));
@@ -301,7 +303,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
 
         for (const e of d.events)
         {
-            expect(glue?.trigger, `add a trigger for "${e.channel}" to the ${name} conformance glue`).toBeTypeOf("function");
+            expect(glue?.trigger, `add a trigger for "${e.channel}" to the ${name} conformance glue`)
+                .toBeTypeOf("function");
             s.actions.length = 0;
             writes.mockClear();
             // "async": the gesture reaches the channel after a promise settles (Stepper's finish), so wait twice.
@@ -318,12 +321,14 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
         expect(s.errors).toEqual([]);
     });
 
-    test.skipIf(d.providers.length === 0)("each provider clears its answer, writes its request, dispatches, and takes the answer", async () =>
+    test.skipIf(d.providers.length === 0)(
+        "each provider clears its answer, writes its request, dispatches, and takes the answer", async () =>
     {
         const dir = d.assets.js.split("/")[1];
         const glue = (await GLUE[`../components/${dir}/${dir}.conformance.ts`]?.())?.CONFORMANCE_GLUE;
         const { props, data } = await initial();
-        const bindings = Object.fromEntries(d.providers.flatMap((p) => [[p.actionProp, { event: { name: p.actionProp } }],
+        const bindings = Object.fromEntries(d.providers.flatMap((p) =>
+            [[p.actionProp, { event: { name: p.actionProp } }],
             [p.resultProp, { path: `/answers/${p.request}` }]]));
         const s = await stage(d, { ...props, ...glue?.requestProps, ...bindings, eventData: { path: "/ev" } }, data);
         const writes = vi.spyOn(s.surface.dataModel, "set");
@@ -335,7 +340,8 @@ describe.each(DESCRIPTORS.map((d) => [d.name, d] as const))("G3 — %s", (name, 
             s.actions.length = 0;
             writes.mockClear();
             expect(glue.request(p.request, s.el.handle), `${name} glue cannot request "${p.request}"`).toBe(true);
-            await vi.waitFor(() => expect(s.actions.map((a: Any) => a.name)).toContain(p.actionProp), { timeout: 2000 });
+            await vi.waitFor(() => expect(s.actions.map((a: Any) => a.name)).toContain(p.actionProp),
+                { timeout: 2000 });
 
             const paths = writes.mock.calls.map((c) => c[0]);
             expect(paths.indexOf(`/answers/${p.request}`), `${name}.${p.request} clears its answer before the request`)

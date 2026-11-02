@@ -3,12 +3,18 @@
  * SPDX-FileCopyrightText: 2026 Outcrop Inc
  * SPDX-License-Identifier: MIT
  */
-/**
- * E2E harness core: a host page exactly as the integration guide tells a host
- * to write one. It imports the BUILT adapter from the served dist tree, builds
- * the catalog with the host's own @a2ui/web_core, and exposes send() and dm()
- * to the Playwright spec. Query parameters: base (assetBaseUrl), inject
- * (injectBaseTheme=1), providerTimeoutMs (milliseconds).
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: A2uiHarnessHost
+ * 📜 PURPOSE: E2E harness core: a host page exactly as the integration guide tells a
+ *    host to write one. It imports the BUILT adapter from the served dist
+ *    tree, builds the catalog with the host's own @a2ui/web_core, and exposes
+ *    send() and dm() to the Playwright spec. Query parameters: base
+ *    (assetBaseUrl), inject (injectBaseTheme=1), providerTimeoutMs
+ *    (milliseconds).
+ * 🔗 RELATES: [[A2uiHarness]], [[A2uiAdapter]]
+ * ⚡ FLOW: [Playwright spec] -> [send()/dm()] -> [MessageProcessor] -> [built adapter]
+ * ----------------------------------------------------------------------------
  */
 
 import { Catalog, MessageProcessor } from "@a2ui/web_core/v0_9";

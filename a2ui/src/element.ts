@@ -107,6 +107,11 @@ function clearsWhenAbsent(descriptor: AdapterDescriptor): boolean
     return descriptor.change !== undefined && "cleared" in descriptor.change;
 }
 
+/**
+ * The shared base class every component's custom element extends: it owns
+ * the A2UI component context and creates or disposes the Binding as the
+ * renderer sets the context and moves the element.
+ */
 function createBase(): ElementClass
 {
     return class OutcropComponentElementImpl extends HTMLElement implements OutcropComponentElement
@@ -139,11 +144,13 @@ function createBase(): ElementClass
 
         get handle(): Record<string, unknown> | undefined { return this.#binding?.handle; }
 
+        /** Mounts the component once it is in the document and its context and assets are ready. */
         connectedCallback(): void
         {
             this.#binding?.tryMount();
         }
 
+        /** Disposes the binding when the element has really left the document, not only moved. */
         disconnectedCallback(): void
         {
             // Lit and React re-parent elements; only a disconnect that outlives the task is real.
@@ -255,6 +262,7 @@ class Binding
         logInfo("teardown", this.#where());
     }
 
+    /** Loads the component's script and stylesheets, then mounts; a failed load is reported on the surface. */
     #loadAssets(): void
     {
         const env = this.#env;
@@ -269,6 +277,10 @@ class Binding
             });
     }
 
+    /**
+     * Takes a new resolved prop value: mounts if nothing is mounted yet,
+     * skips the echo of a user edit, else routes it.
+     */
     #onValue(name: string, value: unknown, delivery: Delivery): void
     {
         if (this.#disposed || !this.#accept(name, value, delivery)) { return; }
@@ -366,6 +378,7 @@ class Binding
         return wire.ok ? undefined : `${d.name}.${name}: ${wire.reason}.`;
     }
 
+    /** Reports a bound prop whose value became undefined; the component keeps its last value. */
     #lost(name: string): void
     {
         if (!this.#handle) { return; }
@@ -376,6 +389,7 @@ class Binding
         reportError(this.#ctx, ERROR_CODES.BINDING_LOST, message, this.#pathOf(name));
     }
 
+    /** Delivers a prop to the mounted component: a rebuild, setData or its setter, setState or setValue. */
     #route(name: string, value: unknown): void
     {
         const route = this.#env.descriptor.props[name];
@@ -463,6 +477,7 @@ class Binding
         finally { this.#applying = false; }
     }
 
+    /** Loads nothing itself: finds the factory the component script defined and builds into a new box. */
     #mount(): void
     {
         const d = this.#env.descriptor;
@@ -476,6 +491,27 @@ class Binding
             return;
         }
 
+        const container = this.#createContainer(d);
+
+        try
+        {
+            this.#handle = this.#construct(factory, container);
+            this.#container = container;
+        }
+        catch (err)
+        {
+            container.remove();
+            this.#fail(`${d.factory} failed: ${err instanceof Error ? err.message : String(err)}`);
+            return;
+        }
+
+        this.#host.removeAttribute("aria-busy");
+        logInfo("mount", this.#where());
+    }
+
+    /** The component's box, appended to the host and sized for an overlay or a layout. */
+    #createContainer(d: AdapterDescriptor): HTMLDivElement
+    {
         const container = this.#host.appendChild(document.createElement("div"));
         container.className = "outcrop-host";
         container.id = `outcrop-${++containerCount}`;
@@ -496,20 +532,7 @@ class Binding
             if (d.fill.clip) { container.style.overflow = "hidden"; }
         }
 
-        try
-        {
-            this.#handle = this.#construct(factory, container);
-            this.#container = container;
-        }
-        catch (err)
-        {
-            container.remove();
-            this.#fail(`${d.factory} failed: ${err instanceof Error ? err.message : String(err)}`);
-            return;
-        }
-
-        this.#host.removeAttribute("aria-busy");
-        logInfo("mount", this.#where());
+        return container;
     }
 
     /** Builds the component with its provider callbacks, releasing them if the build fails (ADR-225). */
@@ -531,6 +554,7 @@ class Binding
         }
     }
 
+    /** Calls the factory with the props, change and provider options, fixed options and child elements. */
     #build(factory: unknown, container: HTMLElement, providers: WiredProviders): Record<string, unknown>
     {
         const d = this.#env.descriptor;
@@ -587,6 +611,7 @@ class Binding
         finally { this.#applying = false; }
     }
 
+    /** Destroys the component and releases its listeners, providers and box. */
     #unmount(): void
     {
         const handle = this.#handle;
@@ -610,6 +635,7 @@ class Binding
         (handle.destroy as () => void).call(handle);
     }
 
+    /** Reports a mount failure on the surface and stops showing the element as busy. */
     #fail(message: string): void
     {
         this.#host.removeAttribute("aria-busy");

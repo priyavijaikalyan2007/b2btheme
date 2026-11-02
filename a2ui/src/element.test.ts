@@ -32,7 +32,8 @@ let record: FakeRecord;
 function tagFor(descriptor: AdapterDescriptor = fakeDescriptor()): string
 {
     const tag = `outcrop-fake-${++tagCount}`;
-    const env: ElementEnv = { descriptor, validators: { "Fake.items": (v) => Array.isArray(v), "Fake.title": (v) => typeof v === "string" },
+    const env: ElementEnv = { descriptor,
+        validators: { "Fake.items": (v) => Array.isArray(v), "Fake.title": (v) => typeof v === "string" },
         assetBaseUrl: () => BASE, injectBaseTheme: () => false, providerTimeoutMs: () => 30_000 };
 
     defineTestElement(tag, env);
@@ -117,7 +118,8 @@ describe("binding and mounting", () =>
 
     test("a drawer's box also clips, and a layout's does not (ADR-242)", async () =>
     {
-        const drawer = create(tagFor(fakeDescriptor({ fill: { height: 400, clip: true } })), realContext({ title: "t" }));
+        const drawer = create(tagFor(fakeDescriptor({ fill: { height: 400, clip: true } })),
+            realContext({ title: "t" }));
         const layout = create(tagFor(fakeDescriptor({ fill: { height: 480 } })), realContext({ title: "t" }));
         await loaded();
 

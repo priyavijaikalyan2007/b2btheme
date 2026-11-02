@@ -128,6 +128,7 @@ export function resetCatalogStateForTests(): void
     classes = new Map();
 }
 
+/** A catalog entry with its element class and tag; throws when the bundle has no descriptor for it. */
 function ourEntry(api: Entry, descriptor: AdapterDescriptor | undefined, validators: Validators): Entry
 {
     if (!descriptor)
@@ -139,6 +140,7 @@ function ourEntry(api: Entry, descriptor: AdapterDescriptor | undefined, validat
     return { ...api, tagName: descriptor.tagName, element: elementClassFor(descriptor, validators) };
 }
 
+/** Checks the host passed web_core's Catalog class and basic catalog; returns them typed, or throws with how to. */
 function checkWebCore(webCore: OutcropWebCore): { Catalog: CatalogClass; basicCatalog: BasicCatalog }
 {
     const hint = "Pass { Catalog } from '@a2ui/web_core/v0_9' and { basicCatalog, BASIC_FUNCTIONS } from "
@@ -204,6 +206,7 @@ function checkTimeout(ms: unknown): void
     }
 }
 
+/** The configuration createOutcropCatalog stored; throws when an element is used before it was called. */
 function current(): Config
 {
     if (!config)

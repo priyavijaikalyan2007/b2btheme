@@ -95,6 +95,7 @@ export class PropTracker
         this.#resolved.clear();
     }
 
+    /** Records a prop's raw value; a changed binding drops the old subscription and subscribes to the new path. */
     #track(name: string, raw: unknown): void
     {
         const json = JSON.stringify(raw);
@@ -118,6 +119,7 @@ export class PropTracker
         this.#deliver(name, sub.value);
     }
 
+    /** Passes a resolved bound value on, noting whether it currently resolves. */
     #deliver(name: string, value: unknown): void
     {
         if (value === undefined) { this.#resolved.delete(name); }
@@ -126,6 +128,7 @@ export class PropTracker
         this.#onValue(name, value, { bound: true, removed: false });
     }
 
+    /** Forgets a prop removed from the component and tells the element it is gone. */
     #drop(name: string): void
     {
         this.#release(name);
@@ -135,6 +138,7 @@ export class PropTracker
         this.#onValue(name, undefined, { bound: false, removed: true });
     }
 
+    /** Unsubscribes the prop's data binding, if it has one. */
     #release(name: string): void
     {
         this.#subs.get(name)?.unsubscribe();

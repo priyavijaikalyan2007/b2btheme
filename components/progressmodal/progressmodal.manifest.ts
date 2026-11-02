@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Progress Modal / CapabilityManifest
- * PURPOSE: Declares what Progress Modal can render, so the Dynamic UI canvas
+ * ⚓ COMPONENT: Progress Modal / CapabilityManifest
+ * 📜 PURPOSE: Declares what Progress Modal can render, so the Dynamic UI canvas
  *    can resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-246.
- * RELATES: [[ProgressModal]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[ProgressModal]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

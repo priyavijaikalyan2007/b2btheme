@@ -33,21 +33,17 @@ const NOTATION = "This is a rendering of the catalog for prompts; validate messa
     + "the properties under componentCommon, and id is required. The components and functions under "
     + "reexports are defined in the catalog reexports.catalogId names, which you need alongside this one.";
 
-/**
- * Builds the lean rendering of a catalog.
- *
- * @param input - { catalog, basic, commonTypes }: the built catalog, the
- *     vendored basic catalog and the vendored A2UI common types.
- * @returns The lean document, serialisable as JSON.
- */
-// @entrypoint
-export function leanCatalog({ catalog, basic, commonTypes })
+/** True for a catalog entry that only re-exports the basic catalog's definition. */
+function isReexport(entry)
 {
-    const reexported = (entry) => entry.allOf?.length === 1 && entry.allOf[0].$ref?.startsWith(BASIC_REF);
-    const entries = Object.entries(catalog.components);
-    const common = commonDefs(commonTypes);
+    return entry.allOf?.length === 1 && entry.allOf[0].$ref?.startsWith(BASIC_REF);
+}
+
+/** Throws when the lean rendering would lose something: a native function, or a $defs name clash. */
+function assertRenderable(catalog, common)
+{
+    const native = Object.entries(catalog.functions).find(([, f]) => !isReexport(f));
     const clash = Object.keys(catalog.$defs).find((k) => k in common);
-    const native = Object.entries(catalog.functions).find(([, f]) => !reexported(f));
 
     if (native)
     {
@@ -60,6 +56,22 @@ export function leanCatalog({ catalog, basic, commonTypes })
         throw new Error(`The catalog's $defs/${clash} has the name of an A2UI common type; the lean catalog would `
             + "lose one of them. Rename the catalog's definition.");
     }
+}
+
+/**
+ * Builds the lean rendering of a catalog.
+ *
+ * @param input - { catalog, basic, commonTypes }: the built catalog, the
+ *     vendored basic catalog and the vendored A2UI common types.
+ * @returns The lean document, serialisable as JSON.
+ */
+// @entrypoint
+export function leanCatalog({ catalog, basic, commonTypes })
+{
+    const entries = Object.entries(catalog.components);
+    const common = commonDefs(commonTypes);
+
+    assertRenderable(catalog, common);
 
     // Unreferenced defs drop out: the re-export wrappers, the anyComponent and anyFunction unions, unused common types.
     return pruneDefs({
@@ -68,11 +80,11 @@ export function leanCatalog({ catalog, basic, commonTypes })
         notation: NOTATION,
         reexports: {
             catalogId: basic.catalogId,
-            components: entries.filter(([, e]) => reexported(e)).map(([n]) => n),
+            components: entries.filter(([, e]) => isReexport(e)).map(([n]) => n),
             functions: Object.keys(catalog.functions),
         },
         componentCommon: componentCommon(commonTypes, basic),
-        components: Object.fromEntries(entries.filter(([, e]) => !reexported(e))
+        components: Object.fromEntries(entries.filter(([, e]) => !isReexport(e))
             .map(([n, e]) => [n, leanComponent(n, e)])),
         $defs: { ...common, ...collapseConsts(catalog.$defs) },
     });
@@ -133,6 +145,7 @@ function commonDefs(commonTypes)
     return { ...commonTypes.$defs, FunctionCall: functionCall };
 }
 
+/** A common-types $ref rewritten to the lean catalog's own $defs; an unknown external $ref throws. */
 function localCommonRef(ref)
 {
     if (ref === ACTION_REF || ref === BINDING_REF || ref === COMPONENT_ID_REF)

@@ -125,6 +125,7 @@ class ProviderChannel
         this.#waiting = [];
     }
 
+    /** Writes the request to the data model, dispatches the action, and starts the answer timer. */
     #send(pending: Pending): void
     {
         this.#outstanding = pending;
@@ -135,6 +136,7 @@ class ProviderChannel
         this.#timer = setTimeout(() => this.#onTimeout(), this.#timeoutMs);
     }
 
+    /** Settles the outstanding request with the agent's answer, or reports an answer the catalog rejects. */
     #onResult(value: unknown): void
     {
         if (!this.#outstanding || value === undefined)
@@ -158,6 +160,7 @@ class ProviderChannel
         this.#next();
     }
 
+    /** Why `value` is not a valid answer, or undefined when it is. */
     #problem(value: unknown): string | undefined
     {
         if (!this.#validate)
@@ -169,6 +172,7 @@ class ProviderChannel
             + `match #/$defs/${this.#key.replace(".", "__")} in the catalog.`;
     }
 
+    /** Rejects the outstanding request when the agent did not answer in time, then sends the next. */
     #onTimeout(): void
     {
         const done = this.#finish();
@@ -180,6 +184,7 @@ class ProviderChannel
         this.#next();
     }
 
+    /** Clears the outstanding request and its timer; returns it. */
     #finish(): Pending
     {
         const done = this.#outstanding as Pending;
@@ -190,6 +195,7 @@ class ProviderChannel
         return done;
     }
 
+    /** Sends the next queued request, if any. */
     #next(): void
     {
         const next = this.#waiting.shift();

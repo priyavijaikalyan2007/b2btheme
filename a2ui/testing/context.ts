@@ -107,6 +107,7 @@ export function installFakeFactory(): FakeRecord
     return record;
 }
 
+/** A stand-in component handle that records each call, for adapter unit tests. */
 function fakeHandle(record: FakeRecord, id: string): Record<string, unknown>
 {
     const listeners = record.listeners;

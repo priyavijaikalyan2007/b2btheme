@@ -1634,6 +1634,7 @@ class ProgressModalSurfaceImpl implements ProgressModalSurface
         }
     }
 
+    /** Subscribes to cancel, retry or close; returns the unsubscribe. */
     public on(channel: ProgressModalChannel, handler: (payload: Record<string, never>) => void): () => void
     {
         if (!SURFACE_CHANNELS.includes(channel))
@@ -1652,6 +1653,7 @@ class ProgressModalSurfaceImpl implements ProgressModalSurface
         return () => { this.handlers.get(channel)?.delete(handler); };
     }
 
+    /** Applies a progress update from the "progress" slot. */
     public setData(slot: string, value: unknown): void
     {
         if (slot !== "progress")
@@ -1662,21 +1664,25 @@ class ProgressModalSurfaceImpl implements ProgressModalSurface
         this.apply((value ?? {}) as ProgressUpdate);
     }
 
+    /** ProgressModal has no view state. */
     public getState(): Record<string, never>
     {
         return {};
     }
 
+    /** ProgressModal has no view state to restore. */
     public setState(_state: Record<string, unknown>): void
     {
         // No view state.
     }
 
+    /** The modal's root element, or null before it is built. */
     public getElement(): HTMLElement | null
     {
         return this.modal.getElement();
     }
 
+    /** Closes and removes the modal and drops every subscriber; later calls do nothing. */
     public destroy(): void
     {
         if (this.destroyed)
@@ -1737,6 +1743,7 @@ class ProgressModalSurfaceImpl implements ProgressModalSurface
         }
     }
 
+    /** Calls each subscriber of `channel`. */
     private emit(channel: ProgressModalChannel): void
     {
         for (const handler of [...(this.handlers.get(channel) ?? [])])

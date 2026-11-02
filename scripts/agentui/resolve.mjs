@@ -74,7 +74,8 @@ export function resolveSurface(manifest, members)
 
     members = members.map((m) => asChildHolder(m, protocol.children ?? {}));
 
-    const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [], violated: new Set() };
+    const ctx = { manifest, protocol, byName: new Map(members.map((m) => [m.name, m])), violations: [],
+        violated: new Set() };
     const change = protocol.change ?? null;
     const hasPair = ctx.byName.has("value") && ctx.byName.get("onChange")?.cls === MEMBER_CLASS.FUNCTION;
     const twoWayValue = hasPair && change !== "event";
@@ -123,7 +124,8 @@ function resolveEvents(ctx, twoWayValue)
             if (m.cls !== MEMBER_CLASS.FUNCTION)
             {
                 violate(ctx, c.legacyOption, VIOLATION.DOUBLE_CLASSIFIED,
-                    `is named by emits[${c.name}].legacyOption but is ${m.cls}-typed; only a function can be an event. Correct the legacyOption, or the member's type.`);
+                    `is named by emits[${c.name}].legacyOption but is ${m.cls}-typed; only a function can be an event. `
+                    + "Correct the legacyOption, or the member's type.");
                 ctx.violated.add(c.legacyOption);
             }
             else
@@ -195,20 +197,25 @@ function claimedNames(ctx, events, twoWayValue)
 /** Detects a name claimed by multiple categories. Spec §3.1: every option in exactly one. */
 function checkMultipleClaims(ctx, events, providers, twoWayValue)
 {
-    const { manifest } = ctx;
+    for (const [name, count] of countClaims(ctx.manifest, events, providers, twoWayValue))
+    {
+        if (count > 1)
+        {
+            violate(ctx, name, VIOLATION.DOUBLE_CLASSIFIED,
+                `is claimed by ${count} different sources (events, providers, two-way value, or implicit). `
+                + "Each option must belong to exactly one category.");
+        }
+    }
+}
+
+/** How many roles claim each option: events, providers, the two-way value and an options-only container. */
+function countClaims(manifest, events, providers, twoWayValue)
+{
     const claims = new Map();
+    const claim = (key) => { claims.set(key, (claims.get(key) ?? 0) + 1); };
 
-    for (const e of events.filter((e) => e.option))
-    {
-        const key = e.option;
-        claims.set(key, (claims.get(key) ?? 0) + 1);
-    }
-
-    for (const p of providers)
-    {
-        const key = p.option;
-        claims.set(key, (claims.get(key) ?? 0) + 1);
-    }
+    events.filter((e) => e.option).forEach((e) => claim(e.option));
+    providers.forEach((p) => claim(p.option));
 
     // One callback in two roles (user decision, 2026-10-25): an onChange that
     // an emits channel already names IS the write-back, so its event claim
@@ -220,18 +227,10 @@ function checkMultipleClaims(ctx, events, providers, twoWayValue)
 
     if (manifest.factoryStyle === "options-only")
     {
-        const containerName = manifest.containerOption ?? "container";
-        claims.set(containerName, (claims.get(containerName) ?? 0) + 1);
+        claim(manifest.containerOption ?? "container");
     }
 
-    for (const [name, count] of claims)
-    {
-        if (count > 1)
-        {
-            violate(ctx, name, VIOLATION.DOUBLE_CLASSIFIED,
-                `is claimed by ${count} different sources (events, providers, two-way value, or implicit). Each option must belong to exactly one category.`);
-        }
-    }
+    return claims;
 }
 
 /** Resolves an unclaimed member: data prop, host-only, or a violation. */

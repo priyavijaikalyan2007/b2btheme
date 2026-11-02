@@ -72,6 +72,7 @@ export function serializeScenario(scenario: Scenario): string
     return `${[scenario.header, ...scenario.lines].map((l) => JSON.stringify(l)).join("\n")}\n`;
 }
 
+/** One scenario line parsed as a JSON object; throws naming the line when it is not one. */
 function parseLine(line: string, n: number): Record<string, unknown>
 {
     let value: unknown;
@@ -91,6 +92,7 @@ function parseLine(line: string, n: number): Record<string, unknown>
     return value as Record<string, unknown>;
 }
 
+/** Throws unless the header has a title and provenance, a live one a provider, model and date, and a valid media. */
 function checkHeader(h: Record<string, unknown>): void
 {
     if (h.kind !== "header" || typeof h.title !== "string") { throw new Error(headerRule()); }
@@ -113,6 +115,7 @@ function checkHeader(h: Record<string, unknown>): void
     }
 }
 
+/** The message describing the header line a scenario must start with. */
 function headerRule(): string
 {
     return 'line 1 must be a header line: {"kind":"header","title":…,"provenance":"live"|"scripted",…}.';

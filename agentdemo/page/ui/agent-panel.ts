@@ -82,6 +82,7 @@ export function buildAgentPanel(d: AgentPanelDeps): AgentPanel
     return { chat, reset: () => { state.session?.reset(); state.session = null; } };
 }
 
+/** A live agent session wired to the bar, key store, playground and chat. */
 function newSession(d: AgentPanelDeps, bar: AgentBar, keys: KeyStore, chat: Chat): Session
 {
     return new Session({ provider: PROVIDERS[bar.provider()], model: () => bar.model(), key: () => keys.get(),
@@ -109,6 +110,7 @@ function wireSurfaceTurns(host: Host, state: { session: Session | null; autoErro
     });
 }
 
+/** Shows a session event in the chat, the bar and the inspector. */
 function onEvent(e: SessionEvent, chat: Chat, bar: AgentBar, d: AgentPanelDeps): void
 {
     switch (e.kind)

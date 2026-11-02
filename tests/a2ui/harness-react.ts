@@ -3,9 +3,14 @@
  * SPDX-FileCopyrightText: 2026 Outcrop Inc
  * SPDX-License-Identifier: MIT
  */
-/**
- * E2E harness: Google's React renderer (@a2ui/react 0.14.0) hosting outcrop
- * components through the built adapter.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: A2uiHarnessReact
+ * 📜 PURPOSE: E2E harness: Google's React renderer (@a2ui/react 0.14.0) hosting
+ *    outcrop components through the built adapter.
+ * 🔗 RELATES: [[A2uiHarness]], [[A2uiAdapter]]
+ * ⚡ FLOW: [harness page] -> [startHost()] -> [A2uiSurface (React)]
+ * ----------------------------------------------------------------------------
  */
 
 import { createElement } from "react";

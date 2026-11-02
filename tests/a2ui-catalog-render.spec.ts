@@ -75,7 +75,8 @@ function sampleProps(name: string): Record<string, unknown>
     const own: Record<string, Any> = CATALOG.components[name].allOf[2].properties;
 
     return Object.fromEntries(Object.entries(own).filter(([, schema]) => Array.isArray(schema.anyOf))
-        .map(([prop, schema]) => [prop, sampleProp(prop, schema.anyOf[0], 0, CATALOG, `#/components/${name}/${prop}`)]));
+        .map(([prop, schema]) =>
+            [prop, sampleProp(prop, schema.anyOf[0], 0, CATALOG, `#/components/${name}/${prop}`)]));
 }
 
 useHarness();

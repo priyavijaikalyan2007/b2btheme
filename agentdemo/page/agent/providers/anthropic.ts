@@ -37,6 +37,7 @@ export const anthropicProvider: Provider = {
     complete,
 };
 
+/** Sends the conversation to the Messages API from the browser with the user's key. */
 async function complete(r: CompleteRequest): Promise<CompleteResult>
 {
     let res: Response;
@@ -68,6 +69,7 @@ function body(r: CompleteRequest): Record<string, unknown>
         messages: r.turns.map((t) => ({ role: t.role, content: t.text })) };
 }
 
+/** The reply's text and token usage. */
 function read(json: MessagesResponse): CompleteResult
 {
     const text = (json.content ?? []).filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
@@ -80,6 +82,7 @@ function read(json: MessagesResponse): CompleteResult
         cached: u.cache_read_input_tokens ?? 0 } };
 }
 
+/** A readable message for a failed call, with the key redacted from anything the API echoes. */
 function failure(status: number, json: MessagesResponse, key: string): string
 {
     if (status === 401)

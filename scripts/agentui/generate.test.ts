@@ -35,7 +35,8 @@ function widget(protocolOver: Record<string, unknown> = {})
         protocol: {
             hostOnly: {
                 "columns[].renderer": REASON, title: REASON, container: "Needs a DOM node, which JSON cannot carry.",
-                slot: "A live component instance with methods.", onLookup: "Two-parameter lookup with no single-object form.",
+                slot: "A live component instance with methods.",
+                onLookup: "Two-parameter lookup with no single-object form.",
                 onSearch: REASON,
             },
             schemas: { extra: { type: "object", additionalProperties: { type: "string" } } },
@@ -61,7 +62,8 @@ function run(manifests: unknown[], pending: string[] = [], version: Version = {}
         manifests, componentFile: (n: string) => path.join(FIXTURES, `${n}.ts`),
         tsconfigPath: path.join(FIXTURES, "tsconfig.json"), cacheDir: CACHE,
         pending: new Set(pending), belowRequired: new Set(version.belowRequired ?? []), basic, commonTypes,
-        baselines: version.baselines ?? new Map(), major: version.major ?? 1, writeBaseline: version.writeBaseline ?? true,
+        baselines: version.baselines ?? new Map(), major: version.major ?? 1,
+        writeBaseline: version.writeBaseline ?? true,
         assetExists: () => true,
     });
 }
@@ -94,7 +96,8 @@ describe("runPipeline — child slots (ADR-238)", () =>
         const props = (result.catalog as any).components.Frame.allOf[2].properties;
 
         expect(result.errors).toEqual([]);
-        expect(props.aside).toEqual({ description: "The region beside the panels. The id of a component, rendered here.",
+        expect(props.aside).toEqual({
+            description: "The region beside the panels. The id of a component, rendered here.",
             ...COMPONENT_ID });
         expect(props.footer).toMatchObject({ type: "array", items: COMPONENT_ID });
         expect(props.panels.anyOf[0].items.properties.content).toMatchObject(COMPONENT_ID);
@@ -107,7 +110,8 @@ describe("runPipeline — child slots (ADR-238)", () =>
     test("a nested child slot without an override for its option fails, naming it", () =>
     {
         expect(run([frame({ schemas: undefined })]).errors).toContainEqual(
-            expect.stringMatching(/^frame\.panels\[\]\.content: a nested child slot needs a closed protocol\.schemas override for "panels"/));
+            expect.stringMatching(
+            /^frame\.panels\[\]\.content: a nested child slot needs a closed protocol\.schemas override for "panels"/));
     }, 60_000);
 
     test("a child slot that names nothing, or no element, is stale", () =>
@@ -130,9 +134,18 @@ describe("runPipeline — child slots (ADR-238)", () =>
 
 describe("runPipeline — fixture widget", () =>
 {
-    test("a fully declared component produces no errors", () => { expect(run([widget()]).errors).toEqual([]); }, 60_000);
-    test("it emits its options schema", () => { expect(run([widget()]).outputs.has("schemas/widget.options.json")).toBe(true); }, 60_000);
-    test("it appears in the catalog", () => { expect("Widget" in run([widget()]).catalog.components).toBe(true); }, 60_000);
+    test("a fully declared component produces no errors", () =>
+    {
+        expect(run([widget()]).errors).toEqual([]);
+    }, 60_000);
+    test("it emits its options schema", () =>
+    {
+        expect(run([widget()]).outputs.has("schemas/widget.options.json")).toBe(true);
+    }, 60_000);
+    test("it appears in the catalog", () =>
+    {
+        expect("Widget" in run([widget()]).catalog.components).toBe(true);
+    }, 60_000);
     test("the lean agent catalog is written beside the catalog and renders it (#49)", () =>
     {
         const lean = run([widget()]).outputs.get("a2ui/catalog/v1.agent.json") as any;
@@ -151,7 +164,8 @@ describe("runPipeline — fixture widget", () =>
 
         expect(derived.sort()).toEqual(["eventData", "onSearch", "onSelection", "searchResult"]);
         expect(props.searchResult.$ref).toContain("#/$defs/DataBinding");
-        expect((result.catalog as any).$defs.Widget__searchResult).toMatchObject({ type: "array", items: { type: "string" } });
+        expect((result.catalog as any).$defs.Widget__searchResult)
+            .toMatchObject({ type: "array", items: { type: "string" } });
     }, 60_000);
     test("the override replaces the too-broad schema", () =>
     {
@@ -173,7 +187,8 @@ describe("runPipeline — fixture widget", () =>
         expect((run([widget()]).outputs.get("schemas/widget.options.json") as any).properties.extra.description)
             .toBe("Extra bag.");
     }, 60_000);
-    test("an unconstrained or open protocol.schemas override fails the build, naming the component and option (#27)", () =>
+    test("an unconstrained or open protocol.schemas override fails the build, naming the component and option "
+        + "(#27)", () =>
     {
         const errors = (schemas: Record<string, unknown>) => run([widget({ schemas })]).errors as string[];
 
@@ -200,11 +215,13 @@ describe("runPipeline — fixture widget", () =>
     test("a fixed value its option's type rejects is an error (ADR-235)", () =>
     {
         expect(run([widget({ fixed: { pageSize: "ten" } })]).errors)
-            .toEqual([expect.stringMatching(/widget\.pageSize: protocol\.fixed gives it "ten", which its type rejects/)]);
+            .toEqual([expect.stringMatching(
+                /widget\.pageSize: protocol\.fixed gives it "ten", which its type rejects/)]);
     }, 60_000);
     test("a nested hostOnly path on a plain field leaves the schema, required included (ADR-230)", () =>
     {
-        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].id": "A link the agent must not choose." };
+        const hostOnly = { ...(widget().protocol.hostOnly as object),
+            "columns[].id": "A link the agent must not choose." };
         const result = run([widget({ hostOnly })]);
         const column = (result.catalog as any).$defs.Widget__Column;
 
@@ -214,9 +231,11 @@ describe("runPipeline — fixture widget", () =>
     }, 60_000);
     test("a nested hostOnly path that names nothing in the schema is an error", () =>
     {
-        const hostOnly = { ...(widget().protocol.hostOnly as object), "columns[].nosuch": "A link the agent must not choose." };
+        const hostOnly = { ...(widget().protocol.hostOnly as object),
+            "columns[].nosuch": "A link the agent must not choose." };
 
-        expect(run([widget({ hostOnly })]).errors).toEqual([expect.stringMatching(/widget\.columns\[\]\.nosuch.*names nothing/)]);
+        expect(run([widget({ hostOnly })]).errors)
+            .toEqual([expect.stringMatching(/widget\.columns\[\]\.nosuch.*names nothing/)]);
     }, 60_000);
     test("a def that only the overridden prop used is dropped, so the catalog carries no orphan (B4)", () =>
     {
@@ -251,11 +270,13 @@ describe("runPipeline — fixture widget", () =>
     }, 60_000);
     test("it gets an adapter descriptor", () =>
     {
-        expect(run([widget()]).descriptors).toMatchObject([{ name: "Widget", tagName: "outcrop-widget", factory: "createWidget" }]);
+        expect(run([widget()]).descriptors)
+            .toMatchObject([{ name: "Widget", tagName: "outcrop-widget", factory: "createWidget" }]);
     }, 60_000);
     test("G1: a catalog component with a manifest action fails the pipeline", () =>
     {
-        const errors = run([{ ...widget(), actions: [{ id: "export", label: "Export", destructive: false, requires: [] }] }]).errors;
+        const errors = run([{ ...widget(),
+            actions: [{ id: "export", label: "Export", destructive: false, requires: [] }] }]).errors;
 
         expect(errors.join("\n")).toMatch(/Widget declares actions \[export\].*#45/);
     }, 60_000);
@@ -343,12 +364,14 @@ describe("runPipeline — the committed baseline (spec §5.3)", () =>
         expect(errors).toHaveLength(1);
         expect(errors[0]).toMatch(/Widget changed[\s\S]*Increment CATALOG_MAJOR/);
     }, 60_000);
-    test("an additive change without --write-baseline asks for the baseline to be rewritten, listing only what changed", () =>
+    test("an additive change without --write-baseline asks for the baseline to be rewritten, listing only what "
+        + "changed", () =>
     {
         const baselines = edited((b) => { delete widgetProps(b).onSelection; });
 
         expect(run([widget()], [], { baselines, writeBaseline: false }).errors).toEqual([
-            "The catalog changed (Widget.onSelection added). Run `npm run build:agentui -- --write-baseline` and commit "
+            "The catalog changed (Widget.onSelection added). "
+            + "Run `npm run build:agentui -- --write-baseline` and commit "
             + "specs/agentui/published/catalog-v1.json in the same change."]);
     }, 60_000);
     test("a description-only change without --write-baseline says description text", () =>
@@ -395,7 +418,8 @@ describe("writeOutputs", () =>
     {
         const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
 
-        writeOutputs(new Map<string, unknown>([["a2ui/adapter/v1.js", "export{};"], ["a2ui/catalog/v1.json", { a: 1 }]]), dist);
+        writeOutputs(new Map<string, unknown>([["a2ui/adapter/v1.js", "export{};"],
+            ["a2ui/catalog/v1.json", { a: 1 }]]), dist);
 
         expect(fs.readFileSync(path.join(dist, "a2ui", "adapter", "v1.js"), "utf8")).toBe("export{};");
         expect(fs.readFileSync(path.join(dist, "a2ui", "catalog", "v1.json"), "utf8")).toBe('{\n  "a": 1\n}\n');
@@ -414,7 +438,8 @@ describe("writeOutputs", () =>
     test("success replaces generated roots wholesale and touches nothing else", () =>
     {
         const dist = populatedDist();
-        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }],
+            ["mcp/renderer.meta.json", { n: 3 }]]);
 
         writeOutputs(outputs, dist);
 
@@ -430,7 +455,8 @@ describe("writeOutputs", () =>
         const dist = populatedDist();
         const before = snapshot(dist);
         const failing = renameFailing(path.join(dist, "mcp"), 1);
-        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }],
+            ["mcp/renderer.meta.json", { n: 3 }]]);
 
         expect(() => writeOutputs(outputs, dist, failing)).toThrow(/Could not replace dist\/mcp.*EPERM injected/);
         expect(snapshot(dist)).toEqual(before);
@@ -439,9 +465,11 @@ describe("writeOutputs", () =>
     test("a rollback that also fails keeps the parked roots and says where they are", () =>
     {
         const dist = populatedDist();
-        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }], ["mcp/renderer.meta.json", { n: 3 }]]);
+        const outputs = new Map<string, unknown>([["schemas/new.options.json", { n: 2 }],
+            ["mcp/renderer.meta.json", { n: 3 }]]);
 
-        expect(() => writeOutputs(outputs, dist, renameFailing(path.join(dist, "mcp"), Infinity))).toThrow(/Rollback of dist\/ failed.*\.old/);
+        expect(() => writeOutputs(outputs, dist, renameFailing(path.join(dist, "mcp"), Infinity)))
+            .toThrow(/Rollback of dist\/ failed.*\.old/);
 
         const staging = fs.readdirSync(dist).find((f) => f.startsWith(".agentui-staging-")) as string;
         expect(fs.readFileSync(path.join(dist, staging, ".old", "mcp", "renderer.meta.json"), "utf8")).toBe("OLD");
@@ -452,7 +480,8 @@ function populatedDist(): string
 {
     const dist = fs.mkdtempSync(path.join(os.tmpdir(), "agentui-dist-"));
 
-    for (const [rel, text] of [["schemas/stale.options.json", "STALE"], ["mcp/renderer.meta.json", "OLD"], ["css/x.css", "KEEP"]])
+    for (const [rel, text] of
+        [["schemas/stale.options.json", "STALE"], ["mcp/renderer.meta.json", "OLD"], ["css/x.css", "KEEP"]])
     {
         fs.mkdirSync(path.dirname(path.join(dist, rel)), { recursive: true });
         fs.writeFileSync(path.join(dist, rel), text);

@@ -56,14 +56,23 @@ describe("classify — member classes", () =>
     test("a Date is data", () => { expect(widget.get("value")!.cls).toBe(MEMBER_CLASS.DATA); });
     test("a callback is a function", () => { expect(widget.get("onSelect")!.cls).toBe(MEMBER_CLASS.FUNCTION); });
     test("an HTMLElement is an element", () => { expect(widget.get("container")!.cls).toBe(MEMBER_CLASS.ELEMENT); });
-    test("Record<string, unknown> is too broad", () => { expect(widget.get("extra")!.cls).toBe(MEMBER_CLASS.TOO_BROAD); });
-    test("an all-method instance is a function", () => { expect(widget.get("slot")!.cls).toBe(MEMBER_CLASS.FUNCTION); });
+    test("Record<string, unknown> is too broad", () =>
+    {
+        expect(widget.get("extra")!.cls).toBe(MEMBER_CLASS.TOO_BROAD);
+    });
+    test("an all-method instance is a function", () =>
+    {
+        expect(widget.get("slot")!.cls).toBe(MEMBER_CLASS.FUNCTION);
+    });
 });
 
 describe("classify — mixed members and hazards", () =>
 {
     test("a data|function union is data", () => { expect(widget.get("title")!.cls).toBe(MEMBER_CLASS.DATA); });
-    test("its function arm is recorded", () => { expect(widget.get("title")!.mixedArms).toEqual([MEMBER_CLASS.FUNCTION]); });
+    test("its function arm is recorded", () =>
+    {
+        expect(widget.get("title")!.mixedArms).toEqual([MEMBER_CLASS.FUNCTION]);
+    });
     test("a nested callback is a hazard at its path", () =>
     {
         expect(widget.get("columns")!.hazards).toEqual([{ path: "columns[].renderer", cls: MEMBER_CLASS.FUNCTION }]);

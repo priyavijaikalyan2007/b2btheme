@@ -74,37 +74,43 @@ export async function checkDist(root)
 function agentCatalogProblems(catalog, lean, major)
 {
     const rel = `dist/a2ui/catalog/v${major}.agent.json`;
-    const fields = (entry) =>
-    {
-        const own = entry.allOf?.find((arm) => arm.properties) ?? { properties: {} };
-        const props = Object.keys(own.properties).filter((p) => p !== "component").sort().join(",");
-        const required = (own.required ?? []).filter((p) => p !== "component").sort().join(",");
-
-        return { props, required };
-    };
     const identity = lean.catalogId === catalog.catalogId ? []
         : [`${rel} names ${lean.catalogId}, not the catalog's ${catalog.catalogId}.`];
     const entries = Object.entries(catalog.components).flatMap(([name, entry]) =>
-    {
-        if (entry.allOf?.[0]?.$ref?.startsWith(BASIC_PREFIX))
-        {
-            return lean.reexports?.components?.includes(name) ? [] : [`${rel} does not list the re-exported ${name}.`];
-        }
-
-        const mine = lean.components?.[name];
-
-        if (!mine) { return [`${rel} does not render ${name}.`]; }
-
-        const want = fields(entry);
-        const got = { props: Object.keys(mine.properties).sort().join(","),
-            required: [...(mine.required ?? [])].sort().join(",") };
-
-        return want.props === got.props && want.required === got.required ? []
-            : [`${rel} renders ${name} with props [${got.props}] required [${got.required}]; the catalog has `
-                + `[${want.props}] required [${want.required}].`];
-    });
+        leanEntryProblems(rel, lean, name, entry));
 
     return [...identity, ...entries];
+}
+
+/** How the agent rendering of one catalog component differs from the catalog. */
+function leanEntryProblems(rel, lean, name, entry)
+{
+    if (entry.allOf?.[0]?.$ref?.startsWith(BASIC_PREFIX))
+    {
+        return lean.reexports?.components?.includes(name) ? [] : [`${rel} does not list the re-exported ${name}.`];
+    }
+
+    const mine = lean.components?.[name];
+
+    if (!mine) { return [`${rel} does not render ${name}.`]; }
+
+    const want = catalogFields(entry);
+    const got = { props: Object.keys(mine.properties).sort().join(","),
+        required: [...(mine.required ?? [])].sort().join(",") };
+
+    return want.props === got.props && want.required === got.required ? []
+        : [`${rel} renders ${name} with props [${got.props}] required [${got.required}]; the catalog has `
+            + `[${want.props}] required [${want.required}].`];
+}
+
+/** A catalog entry's own props and required props, sorted and comma-joined, without `component`. */
+function catalogFields(entry)
+{
+    const own = entry.allOf?.find((arm) => arm.properties) ?? { properties: {} };
+    const props = Object.keys(own.properties).filter((p) => p !== "component").sort().join(",");
+    const required = (own.required ?? []).filter((p) => p !== "component").sort().join(",");
+
+    return { props, required };
 }
 
 /**
@@ -154,7 +160,8 @@ function bundleProblems(root, rel, major)
     const published = fs.readFileSync(path.join(root, "dist", "a2ui", "catalog", `v${major}.json`), "utf8");
 
     return [
-        ...(seen.catalogText === published ? [] : [`${rel}.js embeds a catalog that differs from dist/a2ui/catalog/v${major}.json; `
+        ...(seen.catalogText === published ? []
+            : [`${rel}.js embeds a catalog that differs from dist/a2ui/catalog/v${major}.json; `
             + "the adapter and the catalog must be built together by `npm run build:agentui`."]),
         ...(seen.create === "function" ? [] : [`${rel}.js does not export createOutcropCatalog.`]),
     ];
@@ -175,7 +182,10 @@ function routeProblems(catalog, descriptors)
         {
             const d = byName.get(name);
 
-            if (!d) { return [`${name} has no adapter descriptor in dist/agentui-report.json, so it could never render.`]; }
+            if (!d)
+            {
+                return [`${name} has no adapter descriptor in dist/agentui-report.json, so it could never render.`];
+            }
 
             const own = entry.allOf?.find((arm) => arm.properties)?.properties;
 
@@ -188,6 +198,7 @@ function routeProblems(catalog, descriptors)
         });
 }
 
+/** A JSON file under `root`; throws naming the build to run when it is missing or invalid. */
 function readJson(root, rel)
 {
     try
@@ -196,10 +207,12 @@ function readJson(root, rel)
     }
     catch (err)
     {
-        throw new Error(`[29] Cannot read ${rel} under ${root}: ${err.message}. Run \`npm run build:agentui\` first, and make sure the file is valid JSON.`);
+        throw new Error(`[29] Cannot read ${rel} under ${root}: ${err.message}. Run \`npm run build:agentui\` first, `
+            + "and make sure the file is valid JSON.");
     }
 }
 
+/** The highest catalog major with a committed baseline. */
 function highestBaseline(root)
 {
     return Math.max(...committedMajors(root));
@@ -212,7 +225,11 @@ function committedMajors(root)
 
     if (!fs.existsSync(dir)) { throw new Error(`[29] ${dir} does not exist; the catalog has never been published.`); }
 
-    const majors = fs.readdirSync(dir).flatMap((f) => { const m = /^catalog-v(\d+)\.json$/.exec(f); return m ? [Number(m[1])] : []; });
+    const majors = fs.readdirSync(dir).flatMap((f) =>
+    {
+        const m = /^catalog-v(\d+)\.json$/.exec(f);
+        return m ? [Number(m[1])] : [];
+    });
 
     if (majors.length === 0) { throw new Error(`[29] No baseline in ${dir}; the catalog has never been published.`); }
 
@@ -247,14 +264,17 @@ function baselineProblems(root, major)
     const problems = built.flatMap((f) =>
     {
         const twin = path.join(root, "specs", "agentui", "published", `catalog-${f}`);
-        const same = fs.existsSync(twin) && fs.readFileSync(path.join(dir, f), "utf8") === fs.readFileSync(twin, "utf8");
+        const same = fs.existsSync(twin)
+            && fs.readFileSync(path.join(dir, f), "utf8") === fs.readFileSync(twin, "utf8");
 
-        return same ? [] : [`dist/a2ui/catalog/${f} has no byte-identical committed baseline at specs/agentui/published/catalog-${f}. `
+        return same ? [] : [`dist/a2ui/catalog/${f} has no byte-identical committed baseline at `
+            + `specs/agentui/published/catalog-${f}. `
             + "Run `npm run build:agentui -- --write-baseline` and commit it."];
     });
     const highestBuilt = Math.max(0, ...built.map((f) => Number(f.slice(1, -5))));
 
-    return highestBuilt === major ? problems : [...problems, `dist/ ships catalog v${highestBuilt} but the highest committed baseline is v${major}.`];
+    return highestBuilt === major ? problems
+        : [...problems, `dist/ ships catalog v${highestBuilt} but the highest committed baseline is v${major}.`];
 }
 
 /** Top-level keys must equal the vendored basic catalog file's. */
@@ -310,7 +330,8 @@ function coverageProblems(manifests, catalog, report)
         .filter((m) => !excluded.has(m.name))
         .map((m) => ({ m, name: m.protocol?.name ?? m.factory.replace(/^create/, "") }))
         .filter(({ name }) => !(name in catalog.components))
-        .map(({ m, name }) => `${m.name}: neither in the catalog (as ${name}) nor in dist/agentui-report.json's excluded or outOfCatalog list.`);
+        .map(({ m, name }) => `${m.name}: neither in the catalog (as ${name}) nor in dist/agentui-report.json's `
+            + "excluded or outOfCatalog list.");
 }
 
 /**
@@ -332,12 +353,17 @@ function textProblems(root)
     });
 }
 
+/** A problem for each fixture literal in an emitted file's data values. */
 function fixtureProblems(name, raw)
 {
     let json;
 
     try { json = JSON.parse(raw); }
-    catch (err) { throw new Error(`[29] Cannot parse ${name}: ${err.message}. Every emitted file under dist/ is JSON; rebuild with \`npm run build:agentui\`.`); }
+    catch (err)
+    {
+        throw new Error(`[29] Cannot parse ${name}: ${err.message}. Every emitted file under dist/ is JSON; `
+            + "rebuild with `npm run build:agentui`.");
+    }
 
     return dataStrings(json, false).flatMap((value) => FIXTURE_WORDS
         .filter((w) => value.toLowerCase().includes(w))
@@ -356,6 +382,7 @@ function dataStrings(node, inData)
     return Object.entries(node).flatMap(([k, v]) => dataStrings(v, inData || DATA_KEYS.has(k)));
 }
 
+/** Every file at or under `p`. */
 function filesUnder(p)
 {
     if (!fs.existsSync(p)) { return []; }
@@ -368,7 +395,8 @@ function filesUnder(p)
 /** The CSP names the host-neutral origin first. */
 function cspProblems(meta)
 {
-    return meta.csp?.resourceDomains?.[0] === ORIGIN ? [] : [`dist/mcp/renderer.meta.json must name ${ORIGIN} first in csp.resourceDomains.`];
+    return meta.csp?.resourceDomains?.[0] === ORIGIN ? []
+        : [`dist/mcp/renderer.meta.json must name ${ORIGIN} first in csp.resourceDomains.`];
 }
 
 /**

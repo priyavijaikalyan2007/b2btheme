@@ -696,6 +696,12 @@ class Stepper implements StepperHandle
 
 // @entrypoint
 
+/**
+ * Creates a Stepper in options.container and returns its handle; no container or no steps throws.
+ *
+ * @param options - The container, the steps and the callbacks.
+ * @returns The stepper's handle
+ */
 export function createStepper(options: StepperOptions): StepperHandle
 {
     if (!options.container)

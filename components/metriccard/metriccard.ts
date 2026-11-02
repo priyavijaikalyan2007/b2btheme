@@ -644,6 +644,7 @@ export class MetricCard implements MetricCardHandle
     // PRIVATE -- CLICK
     // ------------------------------------------------------------------------
 
+    /** Makes the card clickable when onClick or clickable is set: the callback, then the click channel. */
     private applyClickBehaviour(): void
     {
         if (!(this.opts.onClick || this.opts.clickable) || !this.rootEl)

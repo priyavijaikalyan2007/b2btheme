@@ -34,6 +34,7 @@ export const MESSAGE_TYPES = ["createSurface", "updateComponents", "updateDataMo
 const SCHEMA_ONLY = "schema rejects, web_core accepts: it would render but breaks the catalog contract";
 const CORE_ONLY = "web_core rejects, schema accepts: the schema cannot see surface state or ordering";
 
+/** A finding: which message, where in it, which layer found it, and what is wrong. */
 function finding(index, path, layer, message)
 {
     return { index, path, layer, message };
@@ -55,6 +56,7 @@ export function checkSchema(messages, validators)
     return messages.flatMap((message, index) => schemaFindings(message, index, validators));
 }
 
+/** Schema findings for one message: its single update key, then each component against its own validator. */
 function schemaFindings(message, index, validators)
 {
     const keys = MESSAGE_TYPES.filter((t) => message !== null && typeof message === "object" && t in message);
@@ -90,6 +92,7 @@ function componentFindings(message, index, validators)
     return out;
 }
 
+/** Schema findings for one component, by its catalog validator; an unknown component is one finding. */
 function oneComponent(component, index, i, validators)
 {
     const at = `updateComponents.components[${i}]`;
@@ -124,16 +127,19 @@ function ajvFindings(errors, index, prefix, data, validators)
         unions.includes(p) ? describeUnion(p, groups, valueAt(data, p), validators) : groups.get(p)[0].message));
 }
 
+/** True for an anyOf or oneOf error. */
 function isUnion(e)
 {
     return e.keyword === "anyOf" || e.keyword === "oneOf";
 }
 
+/** True for a non-array object. */
 function isObject(v)
 {
     return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
+/** One readable message for a union mismatch: the function call, binding or literal the value was meant as. */
 function describeUnion(p, groups, value, validators)
 {
     if (isObject(value) && "call" in value) { return describeCall(value, validators); }
@@ -151,6 +157,7 @@ function describeUnion(p, groups, value, validators)
         + `{"call": "<name>", "args": {…}}; got ${preview(value)}`;
 }
 
+/** What a literal must be, from the union's const, enum and type errors. */
 function literalHint(own)
 {
     const consts = own.filter((e) => e.keyword === "const").map((e) => JSON.stringify(e.params.allowedValue));
@@ -165,6 +172,7 @@ function literalHint(own)
     return types.length > 0 ? `a literal ${types.join(" or ")}, ` : "";
 }
 
+/** What is wrong with a function call: an unknown function or its arguments. */
 function describeCall(value, validators)
 {
     const validate = validators.functions?.[value.call];
@@ -183,12 +191,14 @@ function describeCall(value, validators)
     return `function "${value.call}": ${unique(errors).slice(0, 6).join("; ")}`;
 }
 
+/** The value a JSON Pointer names in `data`, or undefined. */
 function valueAt(data, pointer)
 {
     return pointer.split("/").slice(1).map((s) => s.replace(/~1/g, "/").replace(/~0/g, "~"))
         .reduce((node, key) => (node !== null && typeof node === "object" ? node[key] : undefined), data);
 }
 
+/** A value as JSON, shortened to 60 characters. */
 function preview(value)
 {
     const text = JSON.stringify(value) ?? String(value);
@@ -196,6 +206,7 @@ function preview(value)
     return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
 
+/** The list without repeats, in first-seen order. */
 function unique(list)
 {
     return [...new Set(list)];
@@ -208,6 +219,7 @@ function dotted(pointer)
         .reduce((acc, s) => (/^\d+$/.test(s) ? `${acc}[${s}]` : acc ? `${acc}.${s}` : s), "");
 }
 
+/** Joins two dotted path parts, either of which may be empty. */
 function joinPath(prefix, rest)
 {
     if (!prefix) { return rest; }
@@ -293,6 +305,7 @@ export function referenceProps(catalogs)
     return sites;
 }
 
+/** Collects each place a schema takes a component id or a child list, as a path of property keys. */
 function walk(node, path, found)
 {
     if (!node || typeof node !== "object") { return; }
@@ -334,6 +347,7 @@ export function checkReferences(messages, catalogs)
     return out;
 }
 
+/** Each live surface's components by id, after applying the messages' creates, deletes and updates. */
 function collectSurfaces(messages)
 {
     const surfaces = new Map();
@@ -355,6 +369,7 @@ function collectSurfaces(messages)
     return surfaces;
 }
 
+/** A finding for each component id `component` references that its surface never defines. */
 function dangling(id, component, byId, surfaceId, sites)
 {
     const referenced = (sites.get(component.component) ?? []).flatMap((site) => idsAt(component, site));
@@ -363,6 +378,7 @@ function dangling(id, component, byId, surfaceId, sites)
         `component "${id}" references "${ref}", which surface "${surfaceId}" never defines`));
 }
 
+/** The component ids at one reference site of a component. */
 function idsAt(component, site)
 {
     const values = site.path.reduce((nodes, key) => nodes.flatMap((n) =>

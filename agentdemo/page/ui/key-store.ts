@@ -72,6 +72,7 @@ export class KeyStore
     }
 }
 
+/** The key kept for this tab, or null when there is none or storage is blocked. */
 function read(): string | null
 {
     try { return sessionStorage.getItem(KEY_STORAGE_NAME); }

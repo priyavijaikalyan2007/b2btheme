@@ -552,7 +552,8 @@ describe("ProgressModal contained, and createProgressModal (ADR-246)", () =>
 
     test("throws when contained has no container element", () =>
     {
-        expect(() => new ProgressModal(makeOptions({ contained: true }))).toThrow(/options.container must be an element/);
+        expect(() => new ProgressModal(makeOptions({ contained: true })))
+            .toThrow(/options.container must be an element/);
     });
 
     test("takes no focus on open or on completion", () =>

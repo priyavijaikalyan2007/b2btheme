@@ -2384,6 +2384,12 @@ function buildRichTextMirror(field: FormFieldDef): HTMLInputElement
     return mirror;
 }
 
+/**
+ * Creates a FormDialog and returns its handle; a missing required option throws.
+ *
+ * @param options - The title, fields and callbacks.
+ * @returns The dialog's handle
+ */
 export function createFormDialog(options: FormDialogOptions): FormDialog
 {
     // ERR-2. AGENTS.md: a missing option throws, it does not

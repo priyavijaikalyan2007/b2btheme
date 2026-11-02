@@ -21,7 +21,10 @@ const SPECS = path.join(ROOT, "tests", "a2ui-components");
 
 type Descriptor = { name: string; twoWay: boolean; events: unknown[] };
 
-/** A test title that starts with a catalog name and a colon; \x22 is a double quote (the [20] parser misreads them in patterns). */
+/**
+ * A test title that starts with a catalog name and a colon; \x22 is a double
+ * quote (the [20] parser misreads them in patterns).
+ */
 const TITLE = new RegExp("\\btest\\(\\x22([A-Za-z0-9]+): ", "g");
 
 function descriptors(): Descriptor[]

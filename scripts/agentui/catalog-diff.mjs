@@ -136,6 +136,7 @@ export function descriptionsDiffer(a, b, parentKey = "")
         : (k in a && k in b && descriptionsDiffer(a[k], b[k], k))));
 }
 
+/** True for an object or array. */
 function isNode(value)
 {
     return value !== null && typeof value === "object";
@@ -147,6 +148,7 @@ function sameish(a, b)
     return canonical(a) === canonical(b);
 }
 
+/** A schema as a string with descriptions dropped, keys sorted and unordered sets sorted, for comparison. */
 function canonical(node, parentKey = "")
 {
     if (Array.isArray(node))

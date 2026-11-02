@@ -34,6 +34,7 @@ export function redactKey(text: string, key: string): string
     return key.length > 12 ? out.replace(new RegExp(`\\*+${escape(key.slice(-4))}`, "g"), MASKED) : out;
 }
 
+/** `s` with regular-expression metacharacters escaped. */
 function escape(s: string): string
 {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

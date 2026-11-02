@@ -54,6 +54,7 @@ export function posterArgs(input, output, width = 800)
     return ["-y", "-sseof", "-1", "-i", input, "-frames:v", "1", "-vf", `scale=${width}:-1`, output];
 }
 
+/** ffmpeg arguments for a GIF scenario's 1280-wide MP4 copy, playable while it downloads. */
 export function mp4Args(input, output)
 {
     return ["-y", "-i", input, "-vf", "scale=1280:-2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", output];
@@ -112,6 +113,7 @@ export function encodeAll({ videosDir, outDir, mediaDir, cdnDir, mediaOf, run = 
     });
 }
 
+/** Encodes a video scenario: the MP4 for the CDN and a 1280-wide poster; throws over the video budget. */
 function encodeVideo(name, input, { outDir, cdnDir, run, size })
 {
     const mp4 = path.join(cdnDir, `${name}.mp4`);
@@ -124,6 +126,7 @@ function encodeVideo(name, input, { outDir, cdnDir, run, size })
     return { name, file: mp4, bytes: size(mp4) };
 }
 
+/** Encodes a GIF scenario: the GIF and poster for docs, an MP4 and WebM copy; throws over the GIF budget. */
 function encodeGif(name, input, { outDir, mediaDir, run, size })
 {
     const gif = path.join(outDir, `${name}.gif`);

@@ -51,6 +51,7 @@ interface AdapterModule
     createOutcropCatalog(webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown;
 }
 
+/** Builds the playground: loads the adapter and agent catalog, then mounts the layout, panels and toolbar. */
 async function start(): Promise<void>
 {
     if (customElements.get("a2ui-surface") !== A2uiSurface)
@@ -81,6 +82,7 @@ async function start(): Promise<void>
     logInfo("playground ready", { adapter: ADAPTER_URL });
 }
 
+/** Builds the toolbar with the scenario menu and keeps its controls in step with the playground. */
 async function mountToolbar(el: HTMLElement, playground: Playground, inspect: Inspect, deps: CheckDeps,
     takeover: () => void): Promise<void>
 {
@@ -100,6 +102,7 @@ function checkDeps(adapter: AdapterModule): CheckDeps
         catalogs: { ours: adapter.catalogJson, basic: basicJson, commonTypes } };
 }
 
+/** The paste editor's Check and Apply actions. */
 function pasteHandlers(playground: () => Playground, deps: CheckDeps, inspect: () => Inspect)
 {
     return {
@@ -200,6 +203,7 @@ function loadFile(text: string, playground: Playground, inspect: Inspect): void
     inspect.select("paste");
 }
 
+/** The scenario menu's entries, from the index the build writes. */
 async function scenarioIndex(): Promise<ScenarioEntry[]>
 {
     return JSON.parse(await fetchText("scenarios/index.json", "npm run build:demo:a2ui")) as ScenarioEntry[];

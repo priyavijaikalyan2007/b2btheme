@@ -181,6 +181,7 @@ function safeCallback<T extends unknown[]>(
 const CHANNELS = ["eventClick", "actorClick", "targetClick"] as const;
 type ActivityFeedChannel = typeof CHANNELS[number];
 
+/** True for a channel ActivityFeed emits. */
 function isChannel(channel: string): channel is ActivityFeedChannel
 {
     return (CHANNELS as readonly string[]).includes(channel);
@@ -755,6 +756,7 @@ export class ActivityFeed implements ActivityFeedHandle
         return line;
     }
 
+    /** The actor's name, which tells onActorClick and the channel when clicked. */
     private buildActorEl(actor: ActivityActor): HTMLElement
     {
         const el = createElement("span", `${CLS}-actor`);

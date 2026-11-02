@@ -43,6 +43,7 @@ export const openaiProvider: Provider = {
     complete,
 };
 
+/** Sends the conversation to the Chat Completions API from the browser with the user's key. */
 async function complete(r: CompleteRequest): Promise<CompleteResult>
 {
     if (r.model.trim() === "") { throw new Error("Enter an OpenAI model ID; there is no default."); }
@@ -72,6 +73,7 @@ async function complete(r: CompleteRequest): Promise<CompleteResult>
     return read(json);
 }
 
+/** The request body: the model, JSON mode, the system prompt and the turns. */
 function body(r: CompleteRequest): Record<string, unknown>
 {
     const turns = r.turns.map((t) => ({ role: t.role, content: t.text }));
@@ -80,6 +82,7 @@ function body(r: CompleteRequest): Record<string, unknown>
         messages: [{ role: "system", content: r.system }, ...turns] };
 }
 
+/** The reply's text and token usage. */
 function read(json: ChatResponse): CompleteResult
 {
     const text = json.choices?.[0]?.message?.content ?? "";

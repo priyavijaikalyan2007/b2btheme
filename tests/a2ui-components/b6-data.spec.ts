@@ -156,13 +156,15 @@ test.describe("B6 data views under @a2ui/lit", () =>
             series: [{ id: "s", label: "Sales", data: [3, 5] }] });
 
         await expect(page.locator(`${tagOf("ChartPanel")} canvas`)).toBeVisible();
-        await expect(page.locator('head script[src$="/lib/chart.js-4.5.1.js"]')).toHaveAttribute("integrity", /^sha384-/);
+        await expect(page.locator('head script[src$="/lib/chart.js-4.5.1.js"]'))
+            .toHaveAttribute("integrity", /^sha384-/);
         expect(await errors(page)).toEqual([]);
     });
 
     test("LogConsole: shows the entries the agent supplies", async ({ page }) =>
     {
-        await mount(page, "LogConsole", { entries: [{ timestamp: "10:00:00.000", level: "INFO", message: "Build started" },
+        await mount(page, "LogConsole", {
+            entries: [{ timestamp: "10:00:00.000", level: "INFO", message: "Build started" },
             { timestamp: "10:00:02.000", level: "ERROR", message: "Build failed" }] });
 
         await expect(page.locator(".logconsole-entry")).toHaveCount(2);

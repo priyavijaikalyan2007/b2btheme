@@ -86,6 +86,7 @@ export function checkBase(baseUrl: string): void
     }
 }
 
+/** Loads a URL once per page; later callers share the first load's promise. */
 function loadOnce(url: string, baseUrl: string, integrity: string | undefined): Promise<void>
 {
     const existing = loads.get(url);
@@ -98,6 +99,7 @@ function loadOnce(url: string, baseUrl: string, integrity: string | undefined): 
     return load;
 }
 
+/** Appends a script or stylesheet element for `url`, with its SRI hash when it has one; settles on load or error. */
 function inject(url: string, baseUrl: string, integrity: string | undefined): Promise<void>
 {
     return new Promise((resolve, reject) =>
@@ -121,6 +123,7 @@ function inject(url: string, baseUrl: string, integrity: string | undefined): Pr
     });
 }
 
+/** A classic script element that runs in insertion order. */
 function scriptFor(url: string): HTMLScriptElement
 {
     const script = document.createElement("script");
@@ -132,6 +135,7 @@ function scriptFor(url: string): HTMLScriptElement
     return script;
 }
 
+/** A stylesheet link element. */
 function stylesheetFor(url: string): HTMLLinkElement
 {
     const link = document.createElement("link");

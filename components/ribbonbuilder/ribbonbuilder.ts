@@ -3312,6 +3312,13 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
 // S17: FACTORY & WINDOW EXPORTS
 // ============================================================================
 
+/**
+ * Creates a RibbonBuilder and returns its handle.
+ *
+ * @param options - The initial ribbon and the callbacks.
+ * @param containerId - Where show() mounts when it is given no container.
+ * @returns The builder's handle
+ */
 // @entrypoint
 export function createRibbonBuilder(
     options: RibbonBuilderOptions, containerId?: string

@@ -2923,12 +2923,8 @@ function validateProtocol(
 
     const p = m.protocol;
 
-    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
-    {
-        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
-    }
-
     unknownKeys("protocol", p, PROTOCOL_KEYS, issues);
+    validateProtocolScalars(p, issues);
     validateProviderMap(p.providers, issues);
     validateStringMap("protocol.hostOnly", p.hostOnly, "a reason string", issues);
     validateSchemaMap(p.schemas, issues);
@@ -2937,6 +2933,15 @@ function validateProtocol(
     validateDependencies(p.dependencies, issues);
     validateFixed(p.fixed, issues);
     validateChildren(p.children, issues);
+}
+
+/** Validates the single-value protocol keys: name, box and outOfCatalog. */
+function validateProtocolScalars(p: Record<string, unknown>, issues: ValidationIssue[]): void
+{
+    if (p.name !== undefined && !(isNonEmptyString(p.name) && UAX31.test(p.name)))
+    {
+        issues.push(typeIssue("protocol.name", "a UAX #31 identifier such as \"DataGrid\"", p.name));
+    }
 
     if (p.box !== undefined && p.box !== "drawer")
     {
@@ -3043,21 +3048,24 @@ function validateDependencies(v: unknown, issues: ValidationIssue[]): void
 
     for (const key of DEPENDENCY_KEYS.filter((k) => v[k] !== undefined))
     {
-        const list = v[key];
-        const path = `protocol.dependencies.${key}`;
+        validateDependencyList(`protocol.dependencies.${key}`, v[key], issues);
+    }
+}
 
-        if (!Array.isArray(list))
-        {
-            issues.push(typeIssue(path, "a list of names", list));
-            continue;
-        }
+/** Validates one dependency list: an array of lowercase library or component names. */
+function validateDependencyList(path: string, list: unknown, issues: ValidationIssue[]): void
+{
+    if (!Array.isArray(list))
+    {
+        issues.push(typeIssue(path, "a list of names", list));
+        return;
+    }
 
-        for (const [i, name] of list.entries())
+    for (const [i, name] of list.entries())
+    {
+        if (typeof name !== "string" || !DEPENDENCY_NAME.test(name))
         {
-            if (typeof name !== "string" || !DEPENDENCY_NAME.test(name))
-            {
-                issues.push(typeIssue(`${path}[${i}]`, "a lowercase name such as \"marked\" or \"personchip\"", name));
-            }
+            issues.push(typeIssue(`${path}[${i}]`, "a lowercase name such as \"marked\" or \"personchip\"", name));
         }
     }
 }
@@ -3182,20 +3190,25 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
 
         if (isObject(spec))
         {
-            if (spec.concurrency !== undefined && !PROVIDER_CONCURRENCY.includes(spec.concurrency as string))
-            {
-                issues.push(enumIssue(`protocol.providers.${option}.concurrency`, spec.concurrency,
-                    PROVIDER_CONCURRENCY));
-            }
-
-            if (spec.required !== undefined && typeof spec.required !== "boolean")
-            {
-                issues.push(typeIssue(`protocol.providers.${option}.required`, "a boolean", spec.required));
-            }
-
-            unknownKeys(`protocol.providers.${option}`, spec, PROVIDER_KEYS, issues);
+            validateProviderSpec(`protocol.providers.${option}`, spec, issues);
         }
     }
+}
+
+/** Validates a provider spec's concurrency, required flag and keys; `request` is checked by the caller. */
+function validateProviderSpec(path: string, spec: Record<string, unknown>, issues: ValidationIssue[]): void
+{
+    if (spec.concurrency !== undefined && !PROVIDER_CONCURRENCY.includes(spec.concurrency as string))
+    {
+        issues.push(enumIssue(`${path}.concurrency`, spec.concurrency, PROVIDER_CONCURRENCY));
+    }
+
+    if (spec.required !== undefined && typeof spec.required !== "boolean")
+    {
+        issues.push(typeIssue(`${path}.required`, "a boolean", spec.required));
+    }
+
+    unknownKeys(path, spec, PROVIDER_KEYS, issues);
 }
 
 /** Validates a map whose values must be non-empty strings. */
@@ -5888,12 +5901,15 @@ const CONFORMANCE_CHECKS: readonly CheckDeclaration[] =
     { id: "field-methods", minLevel: "field", description: "Handle exposes getValue/setValue/destroy." },
     { id: "surface-methods", minLevel: "surface", description: "Handle exposes setData/on/getState/setState/destroy." },
     { id: "on-returns-unsubscribe", minLevel: "surface", description: "on() returns a working unsubscribe function." },
-    { id: "slots-accept-data", minLevel: "surface", description: "Every declared slot accepts a sample of its payload shape." },
+    { id: "slots-accept-data", minLevel: "surface",
+        description: "Every declared slot accepts a sample of its payload shape." },
     { id: "state-keys-declared", minLevel: "surface", description: "getState() returns only declared stateKeys." },
     { id: "state-serialisable", minLevel: "surface", description: "getState() is JSON-serialisable." },
     { id: "state-round-trips", minLevel: "surface", description: "setState(getState()) restores the captured state." },
-    { id: "channel-observable", minLevel: "surface", description: "Every declared channel reaches an on() subscriber." },
-    { id: "legacy-callback-fires", minLevel: "surface", description: "The pre-existing constructor callback still fires, and fires first." },
+    { id: "channel-observable", minLevel: "surface",
+        description: "Every declared channel reaches an on() subscriber." },
+    { id: "legacy-callback-fires", minLevel: "surface",
+        description: "The pre-existing constructor callback still fires, and fires first." },
     { id: "renders-content", minLevel: "display", description: "Mounting puts something in the host." },
     { id: "data-changes-render", minLevel: "display", description: "Fixture data changes what the host contains." },
     { id: "destroy-clears-dom", minLevel: "display", description: "destroy() removes everything the component added." },

@@ -62,7 +62,8 @@ describe("routesFor", () =>
 {
     test("applies accepts, then stateKeys, then value, then create, in that order", () =>
     {
-        const m = manifest({ accepts: [{ name: "text" }, { name: "rows", setter: "setRows" }], stateKeys: ["text", "color"] });
+        const m = manifest({ accepts: [{ name: "text" }, { name: "rows", setter: "setRows" }],
+            stateKeys: ["text", "color"] });
         const s = surface({ dataProps: ["text", "rows", "color", "value", "readOnly"], twoWayValue: true });
 
         expect(routesFor(m, s)).toEqual({
@@ -103,13 +104,15 @@ describe("buildDescriptors — gate G1", () =>
         const ready = [{ manifest: manifest({ actions: [{ id: "export", label: "Export" }] }),
             surface: surface({ actions: [{ id: "export", label: "Export", actionProp: "onExport" }] }) }];
 
-        expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0]).toContain("protocol.hostOnlyActions");
+        expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems[0])
+            .toContain("protocol.hostOnlyActions");
     });
 
     test("providers pass G1; only undeclared actions fail it (ADR-225)", () =>
     {
         const ready = [{ manifest: manifest(), surface: surface({
-            providers: [{ option: "onSearch", request: "search", actionProp: "onSearch", response: "searchResult" }] }) }];
+            providers: [{ option: "onSearch", request: "search", actionProp: "onSearch",
+                response: "searchResult" }] }) }];
 
         expect(buildDescriptors(ready, catalog([["Widget", {}]]), () => true).problems).toEqual([]);
     });
@@ -176,7 +179,8 @@ describe("buildDescriptors — tags", () =>
 {
     test("two catalog names mapping to one tag are a problem naming both", () =>
     {
-        const r = buildDescriptors([entry("AB", "ab"), entry("Ab", "ab2")], catalog([["AB", {}], ["Ab", {}]]), () => true);
+        const r = buildDescriptors([entry("AB", "ab"), entry("Ab", "ab2")], catalog([["AB", {}], ["Ab", {}]]),
+            () => true);
 
         expect(r.problems).toHaveLength(1);
         expect(r.problems[0]).toMatch(/outcrop-ab/);
@@ -191,10 +195,12 @@ describe("buildDescriptors — fields", () =>
         manifest: manifest({ name: "stickynote", factory: "createStickyNote", accepts: [{ name: "text" }],
             stateKeys: ["text", "color"], emits: [{ name: "change", legacyOption: "onChange" }] }),
         surface: surface({ name: "stickynote", dataProps: ["text", "value", "color", "due"], twoWayValue: true,
-            events: [{ channel: "change", option: "onChange", actionProp: "onChange", payload: "value", multi: false, payloadInValue: true }] }),
+            events: [{ channel: "change", option: "onChange", actionProp: "onChange", payload: "value", multi: false,
+                payloadInValue: true }] }),
     };
     const picker = {
-        manifest: manifest({ name: "orientationpicker", factory: "createOrientationPicker", factoryStyle: "options-only",
+        manifest: manifest({ name: "orientationpicker", factory: "createOrientationPicker",
+            factoryStyle: "options-only",
             containerOption: "container", conformance: "field" }),
         surface: surface({ name: "orientationpicker", dataProps: ["value"], twoWayValue: true }),
     };
@@ -254,7 +260,8 @@ describe("buildDescriptors — fields", () =>
 
         expect(d.providers).toEqual([
             { option: "onLoad", request: "load", actionProp: "onLoad", resultProp: "loadResult", concurrency: "queue" },
-            { option: "onFind", request: "find", actionProp: "onFind", resultProp: "findResult", concurrency: "latest" },
+            { option: "onFind", request: "find", actionProp: "onFind", resultProp: "findResult",
+                concurrency: "latest" },
         ]);
         expect(p.providers).toEqual([]);
     });
@@ -281,7 +288,8 @@ describe("buildDescriptors — fields", () =>
     test("a recursive type that holds a date is a literate build error, not a silently unrevived date", () =>
     {
         const recursive = catalog([["OrientationPicker", { tree: { $ref: "#/$defs/Node" } }]]);
-        (recursive as Record<string, unknown>).$defs = { Node: { type: "object", properties: { at: { type: "string", format: "date-time" },
+        (recursive as Record<string, unknown>).$defs = { Node: { type: "object",
+            properties: { at: { type: "string", format: "date-time" },
             children: { type: "array", items: { $ref: "#/$defs/Node" } } } } };
 
         expect(() => buildDescriptors([withProps(["tree"])], recursive, css)).toThrow("tree.children[]");
@@ -289,7 +297,8 @@ describe("buildDescriptors — fields", () =>
 
     test("an overlay manifest carries its default height; a framed one adds no key (#41)", () =>
     {
-        const legend = { ...picker, manifest: { ...picker.manifest, presentation: "overlay", defaultSize: { w: 240, h: 300 } } };
+        const legend = { ...picker,
+            manifest: { ...picker.manifest, presentation: "overlay", defaultSize: { w: 240, h: 300 } } };
         const [d] = buildDescriptors([legend], cat, css).descriptors;
 
         expect(d.overlay).toEqual({ height: 300 });
@@ -307,7 +316,8 @@ describe("buildDescriptors — fields", () =>
 
     test("a layout carries its default height to fill; any other category adds no key (ADR-238)", () =>
     {
-        const stack = { ...picker, manifest: { ...picker.manifest, category: "layout", defaultSize: { w: 360, h: 480 } } };
+        const stack = { ...picker,
+            manifest: { ...picker.manifest, category: "layout", defaultSize: { w: 360, h: 480 } } };
         const [d] = buildDescriptors([stack], cat, css).descriptors;
 
         expect(d.fill).toEqual({ height: 480 });

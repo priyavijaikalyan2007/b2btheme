@@ -134,6 +134,7 @@ export class Session
         return [...this.#transcript];
     }
 
+    /** Runs `work` after every earlier turn, so turns never overlap. */
     #enqueue(work: () => Promise<TurnOutcome>): Promise<TurnOutcome>
     {
         const next = this.#queue.then(work, work);
@@ -143,6 +144,7 @@ export class Session
         return next;
     }
 
+    /** Adds the user's message to the conversation and runs a turn. */
     #turn(userText: string): Promise<TurnOutcome>
     {
         this.#turns.push({ role: "user", text: userText });
@@ -150,6 +152,7 @@ export class Session
         return this.#run();
     }
 
+    /** Runs a turn's attempts, showing the session as busy while it does. */
     async #run(): Promise<TurnOutcome>
     {
         this.#appliedThisTurn = false;
@@ -159,6 +162,7 @@ export class Session
         finally { this.#d.onEvent({ kind: "busy", on: false }); }
     }
 
+    /** Calls the model, checks and applies its reply, and sends findings back for up to two repairs. */
     async #attempts(): Promise<TurnOutcome>
     {
         for (let attempt = 0; ; attempt++)
@@ -228,6 +232,7 @@ export class Session
         return result.errors.length > 0 ? result.errors.map((e) => JSON.stringify(e)).join("\n") : null;
     }
 
+    /** Ends a turn whose reply still fails after the repairs, telling the panel. */
     #fail(feedback: string): TurnOutcome
     {
         const message = this.#appliedThisTurn ? FAILED_WITH_ERRORS : FAILED_UNAPPLIED;
@@ -267,6 +272,7 @@ export function parseReply(text: string): Reply
     return { say: reply.say, messages: reply.messages };
 }
 
+/** The user message that sends a reply's findings back to the agent. */
 function repairPrompt(feedback: string): string
 {
     return "Your last reply was not applied, or rendered with errors. Fix exactly these problems and reply again "

@@ -3,11 +3,16 @@
  * SPDX-FileCopyrightText: 2026 Outcrop Inc
  * SPDX-License-Identifier: MIT
  */
-/**
- * E2E helper: build the A2UI playground once and serve /playground/* from
- * agentdemo/.out by route, next to the dist/ tree the Playwright web server
- * already serves at :8000. The page then loads the adapter and components
- * from dist/ exactly as it does under `npm run demo:a2ui`.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: A2uiPlaygroundRoute
+ * 📜 PURPOSE: E2E helper: build the A2UI playground once and serve /playground/* from
+ *    agentdemo/.out by route, next to the dist/ tree the Playwright web
+ *    server already serves at :8000. The page then loads the adapter and
+ *    components from dist/ exactly as it does under `npm run demo:a2ui`.
+ * 🔗 RELATES: [[A2uiPlayground]], [[A2uiHarness]]
+ * ⚡ FLOW: [Playwright spec] -> [route /playground/*] -> [agentdemo/.out]
+ * ----------------------------------------------------------------------------
  */
 
 import fs from "node:fs";

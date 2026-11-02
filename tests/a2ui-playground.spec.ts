@@ -171,7 +171,8 @@ test.describe("A2UI playground agent (mocked provider)", () =>
 
             const system = sent[0].body.system[0].text;
             expect(system).toContain(JSON.stringify(read("dist/a2ui/catalog/v1.agent.json")));
-            expect(system).toContain(JSON.stringify(read("scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json")));
+            expect(system)
+                .toContain(JSON.stringify(read("scripts/agentui/vendor/a2ui-v0_9_1/catalogs/basic/catalog.json")));
             expect(system).not.toContain(JSON.stringify(read("dist/a2ui/catalog/v1.json").components.StatusBadge));
         });
 

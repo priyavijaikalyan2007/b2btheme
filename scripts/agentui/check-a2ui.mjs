@@ -70,9 +70,11 @@ function readMessages(file)
     if (ext === ".json") { return jsonArray(text, file); }
     if (ext === ".jsonl") { return jsonLines(text); }
 
-    throw new InputError(`unknown extension ${ext || "(none)"}; use .json (an array) or .jsonl (one message per line).`);
+    throw new InputError(`unknown extension ${ext || "(none)"}; use .json (an array) or .jsonl `
+        + "(one message per line).");
 }
 
+/** The file's messages; throws when it is not a JSON array. */
 function jsonArray(text, file)
 {
     const value = parse(text, file);
@@ -97,6 +99,7 @@ function jsonLines(text)
     return lines.filter((l) => l.kind === "a2ui").map((l) => l.message);
 }
 
+/** `text` parsed as JSON; throws an InputError naming `where` when it is not valid. */
 function parse(text, where)
 {
     try { return JSON.parse(text); }
@@ -109,7 +112,10 @@ async function loadDeps(root)
     const validatorPath = path.join(root, MESSAGE_VALIDATOR_OUT);
     const catalogPath = path.join(root, "dist", "a2ui", "catalog", "v1.json");
 
-    if (!fs.existsSync(catalogPath)) { throw new InputError(`${catalogPath} is absent. Run \`npm run build:agentui\`.`); }
+    if (!fs.existsSync(catalogPath))
+    {
+        throw new InputError(`${catalogPath} is absent. Run \`npm run build:agentui\`.`);
+    }
     if (!fs.existsSync(validatorPath))
     {
         throw new InputError(`${validatorPath} is absent. Run \`npm run build:demo:a2ui\` to generate it.`);
@@ -127,6 +133,7 @@ async function loadDeps(root)
             commonTypes: read(path.join(root, VENDOR, "common_types.json")) } };
 }
 
+/** Prints the result and returns the exit code: 0 with no findings, else 1. */
 function report(result, count, io)
 {
     if (result.ok)

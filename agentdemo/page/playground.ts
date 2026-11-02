@@ -131,6 +131,7 @@ export class Playground
         return Object.fromEntries(this.#d.host.surfaces().map((id) => [id, this.#d.host.dataModel(id)]));
     }
 
+    /** Applies one scenario line: a message, a chat line, a finding, an action or an error. */
     #play(line: ScenarioLine): void
     {
         switch (line.kind)
@@ -144,6 +145,7 @@ export class Playground
         }
     }
 
+    /** Empties the surfaces, log, inspector and chat. */
     #clear(): void
     {
         this.#d.host.reset();
@@ -153,6 +155,7 @@ export class Playground
         this.#liveActions.length = 0;
     }
 
+    /** The loaded scenario's stepper; throws when no scenario is loaded. */
     #requireStepper(): Stepper
     {
         if (!this.#stepper) { throw new Error("No scenario is loaded. Choose one from the Scenario menu first."); }

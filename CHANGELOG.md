@@ -53,6 +53,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **CI check [29] accepts components out of the catalog.** It read only the report's `excluded` list, so the four components ADR-247 keeps out of the catalog failed it, and CI stopped at the structure checks from #90 to #93 (#94).
 - **MarkdownEditor's preview no longer loads code from unpkg.com.** Display mode and the Preview tab render through `Vditor.preview()`, which wasn't given the self-hosted `cdn` the editor uses. So Vditor fetched its markdown engine, lute, as a script from `unpkg.com`, which the editor's own rule forbids and a strict CSP blocks. Both now use this library's mirror.
 - **Save session explains what it saves.** After a replayed scenario it said only "Nothing to save yet". It now says it keeps a live conversation with the agent, and that a replayed scenario is already a file.
 - **ChartPanel honours reduced motion**: with the system's reduced-motion setting on, the chart draws and redraws without Chart.js's animation. Its loading shimmer already stopped; the chart itself still animated. Nothing changes without the setting.

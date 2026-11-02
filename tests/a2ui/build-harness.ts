@@ -3,10 +3,16 @@
  * SPDX-FileCopyrightText: 2026 Outcrop Inc
  * SPDX-License-Identifier: MIT
  */
-/**
- * E2E harness build: bundles the Lit and React host pages with esbuild into
- * test-results/a2ui-harness/. The adapter is NOT bundled: the harness imports
- * the built /a2ui/adapter/v1.js from the served dist tree, as a host would.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: A2uiHarnessBuild
+ * 📜 PURPOSE: E2E harness build: bundles the Lit and React host pages with esbuild
+ *    into test-results/a2ui-harness/. The adapter is NOT bundled: the harness
+ *    imports the built /a2ui/adapter/v1.js from the served dist tree, as a
+ *    host would.
+ * 🔗 RELATES: [[A2uiHarness]], [[A2uiAdapter]]
+ * ⚡ FLOW: [Playwright globalSetup] -> [esbuild] -> [test-results/a2ui-harness/]
+ * ----------------------------------------------------------------------------
  */
 
 import fs from "node:fs";

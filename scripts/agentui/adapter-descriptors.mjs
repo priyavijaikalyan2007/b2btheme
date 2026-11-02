@@ -46,9 +46,11 @@ export function routesFor(manifest, surface)
     const slots = new Map(manifest.accepts.map((a) => [a.name, a]));
     const stateKeys = new Set(manifest.stateKeys ?? []);
 
-    return Object.fromEntries(surface.dataProps.map(({ name }) => [name, routeFor(name, slots, stateKeys, surface.twoWayValue)]));
+    return Object.fromEntries(surface.dataProps.map(({ name }) =>
+        [name, routeFor(name, slots, stateKeys, surface.twoWayValue)]));
 }
 
+/** How the adapter delivers a prop: a data slot, a state key, the two-way value, or a rebuild. */
 function routeFor(name, slots, stateKeys, twoWay)
 {
     if (slots.has(name))
@@ -113,6 +115,7 @@ function unsupported(name, surface)
         + "act on, declare it in protocol.hostOnlyActions with a reason."];
 }
 
+/** The adapter descriptor for one catalog component: tag, factory, assets, routes, events and providers. */
 function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
 {
     const name = catalogName(manifest);
@@ -139,13 +142,15 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...((surface.children ?? []).length > 0 ? { children: surface.children } : {}),
         // Only declared state is carried across a rebuild (ADR-240).
         ...((manifest.stateKeys ?? []).length > 0 ? { stateKeys: [...manifest.stateKeys] } : {}),
-        events: surface.events.map(({ channel, option, actionProp, payloadInValue }) => ({ channel, option, actionProp, payloadInValue })),
+        events: surface.events.map(({ channel, option, actionProp, payloadInValue }) =>
+            ({ channel, option, actionProp, payloadInValue })),
         providers: surface.providers.map(({ option, request, actionProp, response }) => ({ option, request, actionProp,
             resultProp: response, concurrency: manifest.protocol?.providers?.[option]?.concurrency ?? "latest" })),
         dates: datesFor(catalog, name, surface),
     };
 }
 
+/** The component's own script and stylesheet, and its dependencies' assets. */
 function assetsFor(manifest, assetExists, libraries)
 {
     const deps = dependencyAssets(manifest, assetExists, libraries);
@@ -153,6 +158,7 @@ function assetsFor(manifest, assetExists, libraries)
     return { ...ownAssets(manifest.name, assetExists), ...(deps.length > 0 ? { deps } : {}) };
 }
 
+/** A component's script, and its stylesheet when it has one. */
 function ownAssets(dir, assetExists)
 {
     const css = `components/${dir}/${dir}.css`;
@@ -218,6 +224,7 @@ function datePaths(schema, at, catalog, seen)
     return Object.entries(schema.properties ?? {}).flatMap(([k, v]) => datePaths(v, `${at}.${k}`, catalog, seen));
 }
 
+/** The date paths under a $ref; a recursive definition that holds a date throws, since its depth is unbounded. */
 function refDatePaths(ref, at, catalog, seen)
 {
     if (!ref.startsWith("#/$defs/")) { return []; }
@@ -253,6 +260,7 @@ function containsDate(schema, catalog, seen)
         .some((s) => containsDate(s, catalog, seen));
 }
 
+/** A problem for each tag two catalog names map to. */
 function tagCollisions(descriptors)
 {
     const byTag = new Map();

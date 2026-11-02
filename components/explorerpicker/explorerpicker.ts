@@ -2842,6 +2842,22 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             return;
         }
 
+        let opened = await this.openAncestors(read);
+
+        if (this.nodeMap.has(nodeId))
+        {
+            await this.expandNode(nodeId);
+            opened = nodeId;
+        }
+        if (opened)
+        {
+            this.scrollToNode(opened);
+        }
+    }
+
+    /** Opens each ancestor, root first, while it is in the loaded tree; returns the last one opened, or "". */
+    private async openAncestors(read: ApiNodeRead): Promise<string>
+    {
         let opened = "";
         for (const ancestor of read.ancestors)
         {
@@ -2853,16 +2869,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             await this.expandNode(ancestor.id);
             opened = ancestor.id;
         }
-
-        if (this.nodeMap.has(nodeId))
-        {
-            await this.expandNode(nodeId);
-            opened = nodeId;
-        }
-        if (opened)
-        {
-            this.scrollToNode(opened);
-        }
+        return opened;
     }
 
     private showNodeSpinner(
@@ -3377,6 +3384,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         this.emitChannel("confirm", () => this.getSelection());
     }
 
+    /** Tells onSelectionChange and the selection channel the selection changed. */
     private fireSelectionChange(): void
     {
         if (this.opts.onSelectionChange)

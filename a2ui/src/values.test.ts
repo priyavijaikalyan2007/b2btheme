@@ -78,7 +78,8 @@ describe("fromWire and toWire", () =>
 
     test("a date prop rejects a non-date value with a reason", () =>
     {
-        expect(fromWire("not a date", [""])).toEqual({ ok: false, reason: 'expected an ISO 8601 date-time string, got "not a date"' });
+        expect(fromWire("not a date", [""]))
+            .toEqual({ ok: false, reason: 'expected an ISO 8601 date-time string, got "not a date"' });
         expect(fromWire(5, [""])).toEqual({ ok: false, reason: "expected an ISO 8601 date-time string, got 5" });
     });
 

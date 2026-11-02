@@ -353,6 +353,7 @@ export class ThemeToggle implements ThemeToggleHandle
     // PRIVATE — Callback
     // ========================================================================
 
+    /** Tells onChange and each change subscriber the theme changed; one failing subscriber does not stop the rest. */
     private fireChange(): void
     {
         if (this.onChange)
@@ -378,6 +379,12 @@ export class ThemeToggle implements ThemeToggleHandle
 // FACTORY
 // ============================================================================
 
+/**
+ * Creates a ThemeToggle in options.container and returns its handle.
+ *
+ * @param options - The container, the mode and the callback.
+ * @returns The toggle's handle
+ */
 export function createThemeToggle(options: ThemeToggleOptions): ThemeToggleHandle
 {
     if (!options || !options.container)

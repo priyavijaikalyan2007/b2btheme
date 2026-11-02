@@ -105,7 +105,8 @@ describe("normaliseTypiaUnit", () =>
     test("a null type is emitted as { const: null }, keeping its description", () =>
     {
         const unit = { version: "3.1", components: { schemas: {} }, schema: { type: "object", properties: {
-            kids: { oneOf: [{ type: "null", description: "Lazy." }, { type: "array", items: { type: "string" } }] } } } };
+            kids: { oneOf: [{ type: "null", description: "Lazy." },
+                { type: "array", items: { type: "string" } }] } } } };
 
         expect(normaliseTypiaUnit(unit).properties.kids.oneOf)
             .toEqual([{ const: null, description: "Lazy." }, { type: "array", items: { type: "string" } }]);

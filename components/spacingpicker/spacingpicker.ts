@@ -301,6 +301,12 @@ function createCustomChannel(): {
     };
 }
 
+/**
+ * Creates a SpacingPicker and returns its handle.
+ *
+ * @param options - The presets, the selected value and the callbacks.
+ * @returns The picker's handle; its element is not yet in the page
+ */
 export function createSpacingPicker(
     options: SpacingPickerOptions
 ): SpacingPicker
