@@ -203,6 +203,28 @@ test.describe("Step 5 components under @a2ui/lit", () =>
             await expect(page.locator(".sharedialog-contained")).toHaveCount(0);
             expect(await errors(page)).toEqual([]);
         });
+
+    test("FormDialog: renders contained, and filling and submitting sends onSubmit with the values",
+        async ({ page }) =>
+        {
+            await mountTree(page, [{ id: "root", component: "Column", children: ["form", "field"] },
+                { id: "form", component: "FormDialog", ...EV, title: "Invite",
+                    fields: [{ name: "email", label: "Email", type: "email", required: true },
+                        { name: "role", label: "Role", type: "select", value: "viewer",
+                            options: [{ value: "viewer", label: "Viewer" }, { value: "editor", label: "Editor" }] }],
+                    onSubmit: act("invite", "submit"), onCancel: act("no", "cancel") },
+                { id: "field", component: "TextField", label: "Name", value: "" }], "FormDialog");
+            await expectContained(page, ".formdialog-overlay.formdialog-contained", "outcrop-form-dialog");
+
+            const form = page.locator(".formdialog-contained");
+            await form.locator("[name='email']").fill("dana@example.com");
+            await form.locator("[name='role']").selectOption("editor");
+            await form.getByRole("button", { name: "Submit" }).click();
+            await expect.poll(() => sent(page)).toEqual([["invite",
+                { values: { email: "dana@example.com", role: "editor" } }]]);
+            await expect(page.locator(".formdialog-contained")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+        });
 });
 
 /**

@@ -826,3 +826,134 @@ describe("expandedFieldTypes", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// CONTAINED MODE AND HANDLE (ADR-246)
+// ============================================================================
+
+describe("createFormDialog, contained (ADR-246)", () =>
+{
+    test("shows at once inside its container, with no backdrop, and is not modal", () =>
+    {
+        const dialog = createFormDialog(defaultOptions({ contained: true, container }));
+
+        expect(container.querySelector(".formdialog-overlay.formdialog-contained")).toBe(dialog.getElement());
+        expect(getBackdrop()).toBeNull();
+        expect(container.querySelector("[role='dialog']")?.getAttribute("aria-modal")).toBe("false");
+        dialog.destroy();
+    });
+
+    test("a page modal from createFormDialog waits for show() and mounts on the body, as before", () =>
+    {
+        const dialog = createFormDialog(defaultOptions());
+
+        expect(document.querySelector(".formdialog-overlay")).toBeNull();
+        dialog.show();
+        expect(dialog.getElement().parentElement).toBe(document.body);
+        expect(getBackdrop()).not.toBeNull();
+        dialog.destroy();
+    });
+
+    test("throws when contained has no container element", () =>
+    {
+        expect(() => createFormDialog(defaultOptions({ contained: true })))
+            .toThrow(/options.container must be an element/);
+    });
+
+    test("takes no focus on open", () =>
+    {
+        const outside = document.createElement("input");
+        document.body.appendChild(outside);
+        outside.focus();
+
+        const dialog = createFormDialog(defaultOptions({ contained: true, container }));
+        vi.runAllTimers();
+
+        expect(document.activeElement).toBe(outside);
+        dialog.destroy();
+        outside.remove();
+    });
+
+    test("an Escape on the page does not cancel it; inside it does, then the cancel channel fires", () =>
+    {
+        const order: string[] = [];
+        const dialog = createFormDialog(defaultOptions({ contained: true, container,
+            onCancel: () => order.push("callback") }));
+        dialog.on("cancel", (payload) => order.push(`channel ${JSON.stringify(payload)}`));
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(order).toEqual([]);
+
+        getInput(dialog.getElement(), "username")!
+            .dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(order).toEqual(["callback", "channel {}"]);
+        expect(container.children.length).toBe(0);
+    });
+
+    test("Submit without onSubmit fires the submit channel with every value", () =>
+    {
+        const onSubmitChannel = vi.fn();
+        const dialog = createFormDialog({ title: "Invite", contained: true, container,
+            fields: [{ name: "email", label: "Email", type: "email", value: "a@example.com" }] });
+        dialog.on("submit", onSubmitChannel);
+
+        getSubmitBtn(dialog.getElement())!.click();
+
+        expect(onSubmitChannel).toHaveBeenCalledWith({ values: { email: "a@example.com" } });
+        expect(container.children.length).toBe(0);
+    });
+
+    test("an async onSubmit settles before the submit channel fires; a rejection fires nothing", async () =>
+    {
+        const order: string[] = [];
+        let settle!: () => void;
+        const dialog = createFormDialog(defaultOptions({ contained: true, container,
+            onSubmit: () => { order.push("callback"); return new Promise<void>((r) => { settle = r; }); } }));
+        dialog.on("submit", () => order.push("channel"));
+
+        getSubmitBtn(dialog.getElement())!.click();
+        expect(order).toEqual(["callback"]);
+        settle();
+        await vi.runAllTimersAsync();
+        expect(order).toEqual(["callback", "channel"]);
+
+        const failing = createFormDialog(defaultOptions({ contained: true, container,
+            onSubmit: () => Promise.reject(new Error("no")) }));
+        const heard = vi.fn();
+        failing.on("submit", heard);
+        getSubmitBtn(failing.getElement())!.click();
+        await vi.runAllTimersAsync();
+        expect(heard).not.toHaveBeenCalled();
+        failing.destroy();
+    });
+
+    test("an invalid required field blocks submit and fires nothing", () =>
+    {
+        const heard = vi.fn();
+        const dialog = createFormDialog({ title: "Invite", contained: true, container,
+            fields: [{ name: "email", label: "Email", type: "email", required: true }] });
+        dialog.on("submit", heard);
+
+        getSubmitBtn(dialog.getElement())!.click();
+
+        expect(heard).not.toHaveBeenCalled();
+        dialog.destroy();
+    });
+
+    test("the handle has no state or slots; an unknown channel throws; destroy is idempotent and silent", () =>
+    {
+        const onCancel = vi.fn();
+        const dialog = createFormDialog(defaultOptions({ contained: true, container }));
+        dialog.on("cancel", onCancel);
+
+        dialog.setState(dialog.getState());
+        expect(dialog.getState()).toEqual({});
+        expect(() => dialog.setData("fields", [])).toThrow(/no data slots/);
+        expect(() => dialog.on("close" as "submit", () => undefined)).toThrow(/unknown channel "close"/);
+
+        dialog.destroy();
+        dialog.destroy();
+        expect(container.children.length).toBe(0);
+        expect(onCancel).not.toHaveBeenCalled();
+    });
+});
