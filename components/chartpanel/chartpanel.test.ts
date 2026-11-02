@@ -448,6 +448,54 @@ describe("ChartPanel setData", () =>
 // THEME OBSERVER
 // ============================================================================
 
+describe("ChartPanel reduced motion", () =>
+{
+    function stubReducedMotion(reduce: boolean): () => void
+    {
+        const original = window.matchMedia;
+        window.matchMedia = ((q: string) => ({
+            matches: reduce && q === "(prefers-reduced-motion: reduce)",
+            media: q,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+        })) as unknown as typeof window.matchMedia;
+        return () => { window.matchMedia = original; };
+    }
+
+    async function firstChartAnimation(reduce: boolean): Promise<unknown>
+    {
+        const restore = stubReducedMotion(reduce);
+        try
+        {
+            const { createChartPanel } = await loadModule();
+            const handle = createChartPanel({
+                container,
+                kind: "line",
+                ariaLabel: "demo",
+                categories: ["A"],
+                series: [{ id: "v", label: "V", data: [1] }],
+            });
+            const animation = MockChart.instances[0].config.options.animation;
+            handle.destroy();
+            return animation;
+        }
+        finally
+        {
+            restore();
+        }
+    }
+
+    test("Build_ReducedMotion_DisablesAnimation", async () =>
+    {
+        expect(await firstChartAnimation(true)).toBe(false);
+    });
+
+    test("Build_NoPreference_KeepsChartJsDefaultAnimation", async () =>
+    {
+        expect(await firstChartAnimation(false)).toBeUndefined();
+    });
+});
+
 describe("ChartPanel theme observer", () =>
 {
     test("DataBsThemeChange_TriggersChartUpdate", async () =>
