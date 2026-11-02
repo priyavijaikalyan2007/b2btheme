@@ -1,0 +1,29 @@
+{
+  "4": [
+    {
+      "type": "select",
+      "target": "[data-surface=\"s\"] .formdialog-contained select[name=\"service\"]",
+      "value": "payments"
+    },
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] .formdialog-contained input[name=\"severity\"][value=\"sev2\"]"
+    },
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] .formdialog-btn-submit"
+    }
+  ],
+  "7": [
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] button:has-text(\"Restart the payments pods\")"
+    }
+  ],
+  "11": [
+    {
+      "type": "click",
+      "target": "[data-surface=\"s\"] .progressmodal-cancel-btn"
+    }
+  ]
+}

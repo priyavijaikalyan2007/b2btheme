@@ -203,6 +203,20 @@ build to work this way, and new components join as they are classified.
 | Rules for contributors | [`A2UI.md`](A2UI.md) |
 | Try it locally, check agent output, bring-your-own-key agent | [`docs/A2UI_PLAYGROUND.md`](docs/A2UI_PLAYGROUND.md) (`npm run demo:a2ui`, `npm run check:a2ui`) |
 
+Here, an agent triages tonight's incidents in the playground. The agent's A2UI messages are on the left and the surface it builds is in the middle:
+1. You pick a service and a severity in a FormDialog.
+2. The agent answers with an error chart and an incident grid.
+3. You start a restart, and the agent reports progress in a ProgressModal.
+4. You cancel, and that reaches the agent as an action.
+
+Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2ui`).
+
+![Scripted: an agent triages incidents with FormDialog, ChartPanel, DataGrid and ProgressModal](docs/media/a2ui/incident-triage.gif)
+
+*Scripted: the agent's side was written by hand, not recorded from a live model session.*
+
+The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
+
 Support for MCP Apps hosts is in progress (#19).
 
 ## CDN & Agent Discovery

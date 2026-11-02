@@ -171,6 +171,21 @@ describe("ChartPanel factory", () =>
         handle.destroy();
     });
 
+    test("CreateChartPanel_Height_SetsTheRootHeight_AndAbsentLeavesItToCss", async () =>
+    {
+        const { createChartPanel } = await loadModule();
+        const base = { kind: "bar" as const, ariaLabel: "Bar demo", categories: ["Mon"],
+            series: [{ id: "v", label: "Visits", data: [10] }] };
+        const sized = createChartPanel({ ...base, container, height: "240px" });
+
+        expect(container.querySelector<HTMLElement>(".chartpanel")!.style.height).toBe("240px");
+        sized.destroy();
+
+        const plain = createChartPanel({ ...base, container });
+        expect(container.querySelector<HTMLElement>(".chartpanel")!.style.height).toBe("");
+        plain.destroy();
+    });
+
     test("CreateChartPanel_LineKind_MapsToLineType", async () =>
     {
         const { createChartPanel } = await loadModule();

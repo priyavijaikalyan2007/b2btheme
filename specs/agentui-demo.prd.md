@@ -353,7 +353,7 @@ complete(req: { system: string; turns: Turn[]; model: string; key: string; signa
 - **`ffmpeg`** (a documented local prerequisite) converts each video into an optimised GIF (800 px wide, 10 fps) and a PNG poster.
 - If `ffmpeg` is missing, the script stops with a literate error naming `brew install ffmpeg` and the equivalent for Linux.
 - **Output:** `docs/media/a2ui/<name>.gif` and `<name>.png`, committed. GIFs play inline from a repository path on GitHub.
-- **Size budget:** 2 MB per GIF. The script fails if a GIF is larger, which keeps git history from bloating.
+- **Size budget:** 3 MB per GIF; it was 2 MB until 2026-11-02, when the user raised it for the incident-triage showcase. The script fails if a GIF is larger, which keeps git history from bloating.
 - WebM and MP4 copies for posts go to `agentdemo/.out/media/`, which is gitignored.
 - Recording is never run in CI. Media is regenerated only when its scenario changes.
 
