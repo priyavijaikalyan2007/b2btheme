@@ -356,6 +356,7 @@ complete(req: { system: string; turns: Turn[]; model: string; key: string; signa
 - **Size budget:** 3 MB per GIF; it was 2 MB until 2026-11-02, when the user raised it for the incident-triage showcase. The script fails if a GIF is larger, which keeps git history from bloating.
 - WebM and MP4 copies for posts go to `agentdemo/.out/media/`, which is gitignored.
 - Recording is never run in CI. Media is regenerated only when its scenario changes.
+- **Video scenarios** (added 2026-11-02, user): a scenario whose header has `"media": "video"` is too long for a GIF. It records at 1920×1080, 1.6 s a step. It is published as `demo/media/a2ui/<name>.mp4` (H.264, no audio, faststart), which the build copies to the CDN at `/demo/media/a2ui/`, and a 1280 px poster at `docs/media/a2ui/<name>.png`. It gets no GIF. The video budget is 20 MB, under Cloudflare's 25 MiB per-file ceiling. GitHub's README can't play a video from another origin, so the README shows the poster linked to the video.
 
 ### 7.5 The advertising set (developer audience, messages always visible)
 

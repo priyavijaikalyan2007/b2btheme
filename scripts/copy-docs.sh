@@ -142,6 +142,13 @@ if [ -d "$DEMO_SRC" ]; then
             fi
         done
     fi
+
+    # Copy demo media (the A2UI recordings published as MP4, #30 spec §7.4)
+    if [ -d "$DEMO_SRC/media" ]; then
+        mkdir -p "$DIST_DEMO/media"
+        cp -R "$DEMO_SRC/media/." "$DIST_DEMO/media/"
+        echo "[CopyDocs] copied demo/media/"
+    fi
 fi
 
 echo "[CopyDocs] done."

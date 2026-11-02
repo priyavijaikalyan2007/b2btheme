@@ -22,6 +22,8 @@ export interface ScenarioHeader
     readonly provider?: string;
     readonly model?: string;
     readonly date?: string;
+    /** How the recorder publishes it (§7.4): "gif" (default) for the README, "video" for an MP4 on the CDN. */
+    readonly media?: "gif" | "video";
 }
 
 export type ScenarioLine =
@@ -103,6 +105,11 @@ function checkHeader(h: Record<string, unknown>): void
     if (h.provenance === "live" && (typeof h.provider !== "string" || typeof h.model !== "string" || !dated))
     {
         throw new Error("line 1: a live scenario's header needs provider, model and date (YYYY-MM-DD).");
+    }
+
+    if (h.media !== undefined && h.media !== "gif" && h.media !== "video")
+    {
+        throw new Error('line 1: media must be "gif" or "video".');
     }
 }
 
