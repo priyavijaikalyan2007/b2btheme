@@ -50,6 +50,7 @@ export function buildMessagesView(el: HTMLElement, log: LogModel): void
     });
 }
 
+/** A message-log row showing the message's index, type and source. */
 function item(entry: LogEntry, onClick: () => void): HTMLLIElement
 {
     const li = document.createElement("li");
@@ -62,6 +63,7 @@ function item(entry: LogEntry, onClick: () => void): HTMLLIElement
     return li;
 }
 
+/** Marks `entry`'s row as current and shows the entry. */
 function select(list: HTMLElement, entry: LogEntry, show: (e: LogEntry) => void): void
 {
     for (const li of list.children)
@@ -71,6 +73,7 @@ function select(list: HTMLElement, entry: LogEntry, show: (e: LogEntry) => void)
     show(entry);
 }
 
+/** The A2UI message type a message carries, by its update key. */
 function typeOf(message: unknown): string
 {
     const keys = message !== null && typeof message === "object" ? Object.keys(message) : [];

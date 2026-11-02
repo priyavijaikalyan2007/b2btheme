@@ -730,7 +730,8 @@ describe("typed input", () =>
         ["H.mm", "7.05", { hours: 7, minutes: 5 }],
     ])("format %s accepts typed %s", (format, typed, expected) =>
     {
-        const picker = createTimePicker("test-time-container", defaultOpts({ format, showSeconds: format.includes("ss") }));
+        const picker = createTimePicker("test-time-container",
+            defaultOpts({ format, showSeconds: format.includes("ss") }));
         const input = getInput() as HTMLInputElement;
 
         input.value = typed;

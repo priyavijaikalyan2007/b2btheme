@@ -32,11 +32,13 @@ test.describe("catalog v1 under @a2ui/lit", () =>
     test("OrientationPicker: follows its binding, and the user's choice is written back", async ({ page }) =>
     {
         await open(page, "lit");
-        await send(page, surface("s", { id: "root", component: "OrientationPicker", value: { path: "/o" } }, { o: "portrait" }));
+        await send(page, surface("s", { id: "root", component: "OrientationPicker", value: { path: "/o" } },
+            { o: "portrait" }));
         await expect(page.locator("outcrop-orientation-picker .orientationpicker-trigger")).toBeVisible();
 
         await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/o", value: "landscape" } }]);
-        await expect.poll(() => page.evaluate(() => (window as unknown as { handleOf(t: string): { getValue(): unknown } })
+        await expect.poll(() => page.evaluate(() =>
+            (window as unknown as { handleOf(t: string): { getValue(): unknown } })
             .handleOf("outcrop-orientation-picker").getValue())).toBe("landscape");
 
         await page.locator("outcrop-orientation-picker .orientationpicker-trigger").click();
@@ -63,8 +65,10 @@ test.describe("catalog v1 under @a2ui/lit", () =>
 
         await page.evaluate(() => { (window as unknown as Record<string, unknown>).__first =
             (window as unknown as { handleOf(t: string): unknown }).handleOf("outcrop-sticky-note"); });
-        await send(page, [{ version: V, updateComponents: { surfaceId: "s", components: [{ ...note, readOnly: true }] } }]);
-        await expect.poll(() => page.evaluate(() => (window as unknown as { handleOf(t: string): unknown; __first: unknown })
+        await send(page,
+            [{ version: V, updateComponents: { surfaceId: "s", components: [{ ...note, readOnly: true }] } }]);
+        await expect.poll(() => page.evaluate(() =>
+            (window as unknown as { handleOf(t: string): unknown; __first: unknown })
             .handleOf("outcrop-sticky-note") !== (window as unknown as { __first: unknown }).__first)).toBe(true);
         expect(await errors(page)).toEqual([]);
     });
@@ -87,7 +91,8 @@ test.describe("catalog v1 under @a2ui/lit", () =>
     test("SkeletonLoader: renders the table preset at the agent's size", async ({ page }) =>
     {
         await open(page, "lit");
-        await send(page, surface("s", { id: "root", component: "SkeletonLoader", preset: "table", rows: 2, columns: 3 }));
+        await send(page,
+            surface("s", { id: "root", component: "SkeletonLoader", preset: "table", rows: 2, columns: 3 }));
 
         await expect(page.locator("outcrop-skeleton-loader .skeleton-loader-table")).toBeVisible();
         await expect(page.locator("outcrop-skeleton-loader .skeleton-cell")).toHaveCount(6);
@@ -151,7 +156,8 @@ test.describe("catalog v1 under @a2ui/lit", () =>
         await page.locator('outcrop-workspace-shell [data-canvas-id="b"] .workspaceshell-tab-title').click();
         await expect.poll(async () => (await actions(page)).at(-1)).toMatchObject(
             { name: "opened", context: { canvas: "b" } });
-        await expect(page.locator('outcrop-workspace-shell [data-canvas-id="b"]')).toHaveAttribute("aria-selected", "true");
+        await expect(page.locator('outcrop-workspace-shell [data-canvas-id="b"]'))
+            .toHaveAttribute("aria-selected", "true");
         expect(await errors(page)).toEqual([]);
     });
 });
@@ -161,11 +167,13 @@ test.describe("catalog v1 under @a2ui/react", () =>
     test("OrientationPicker: round-trips under React", async ({ page }) =>
     {
         await open(page, "react");
-        await send(page, surface("s", { id: "root", component: "OrientationPicker", value: { path: "/o" } }, { o: "portrait" }));
+        await send(page, surface("s", { id: "root", component: "OrientationPicker", value: { path: "/o" } },
+            { o: "portrait" }));
         await expect(page.locator("outcrop-orientation-picker .orientationpicker-trigger")).toBeVisible();
 
         await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/o", value: "landscape" } }]);
-        await expect.poll(() => page.evaluate(() => (window as unknown as { handleOf(t: string): { getValue(): unknown } })
+        await expect.poll(() => page.evaluate(() =>
+            (window as unknown as { handleOf(t: string): { getValue(): unknown } })
             .handleOf("outcrop-orientation-picker").getValue())).toBe("landscape");
 
         await page.locator("outcrop-orientation-picker .orientationpicker-trigger").click();

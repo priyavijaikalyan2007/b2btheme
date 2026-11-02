@@ -67,6 +67,7 @@ export function buildAgentBar(el: HTMLElement, keys: KeyStore, on: AgentBarActio
     return api(provider, model, key, stop, retry, usage);
 }
 
+/** Stores the key as it is typed or the Remember box changes, and shows any storage warning. */
 function wireKey(key: HTMLInputElement, box: HTMLInputElement, keys: KeyStore, on: AgentBarActions,
     provider: HTMLSelectElement, model: HTMLInputElement): void
 {
@@ -86,6 +87,7 @@ function wireKey(key: HTMLInputElement, box: HTMLInputElement, keys: KeyStore, o
     });
 }
 
+/** The bar's handle over its provider, model, key, Stop, Retry and usage controls. */
 function api(provider: HTMLSelectElement, model: HTMLInputElement, key: HTMLInputElement, stop: HTMLButtonElement,
     retry: HTMLButtonElement, usage: HTMLElement): AgentBar
 {
@@ -101,6 +103,7 @@ function api(provider: HTMLSelectElement, model: HTMLInputElement, key: HTMLInpu
     };
 }
 
+/** An element with a class. */
 function node(tag: string, className: string): HTMLElement
 {
     const el = document.createElement(tag);
@@ -110,6 +113,7 @@ function node(tag: string, className: string): HTMLElement
     return el;
 }
 
+/** The provider menu. */
 function select(): HTMLSelectElement
 {
     const el = document.createElement("select");
@@ -121,6 +125,7 @@ function select(): HTMLSelectElement
     return el;
 }
 
+/** A small text or password input that browsers neither autofill nor spellcheck. */
 function input(type: "password" | "text", label: string, id: string): HTMLInputElement
 {
     const el = document.createElement("input");
@@ -136,6 +141,7 @@ function input(type: "password" | "text", label: string, id: string): HTMLInputE
     return el;
 }
 
+/** The "Remember for this tab" checkbox and its label. */
 function checkbox(): { label: HTMLLabelElement; box: HTMLInputElement }
 {
     const label = document.createElement("label");
@@ -149,6 +155,7 @@ function checkbox(): { label: HTMLLabelElement; box: HTMLInputElement }
     return { label, box };
 }
 
+/** A small outline button. */
 function btn(text: string, act: () => void): HTMLButtonElement
 {
     const b = document.createElement("button");

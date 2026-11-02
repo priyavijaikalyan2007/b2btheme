@@ -1305,6 +1305,7 @@ export class MultiselectCombo implements MultiselectComboHandle
     // UPDATING — AFTER SELECTION CHANGES
     // ========================================================================
 
+    /** Re-renders after a selection change and, unless state is being restored, tells onChange and the channel. */
     private afterSelectionChange(): void
     {
         this.renderInputContents();

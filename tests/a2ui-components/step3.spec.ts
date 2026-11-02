@@ -61,7 +61,8 @@ const SPRINT = { id: "sprint", type: "span", start: "2026-01-03T00:00:00.000Z", 
 /** A small permission grid, as an agent writes it. */
 const GRID = {
     roles: [{ id: "admin", name: "Admin" }, { id: "viewer", name: "Viewer" }],
-    groups: [{ id: "docs", name: "Documents", permissions: [{ id: "read", name: "Read" }, { id: "write", name: "Write" }] }],
+    groups: [{ id: "docs", name: "Documents",
+        permissions: [{ id: "read", name: "Read" }, { id: "write", name: "Write" }] }],
     cells: [{ roleId: "admin", permissionId: "read", state: "granted" }, { roleId: "admin", permissionId: "write",
         state: "granted" }, { roleId: "viewer", permissionId: "read", state: "granted" }],
 };

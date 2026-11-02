@@ -114,6 +114,7 @@ function sampleOneOf(arms: Schema[], variant: Variant, root: Schema, pointer: st
     return sampleValue(pick.arm, inner, root, `${pointer}/oneOf/${pick.i}`);
 }
 
+/** A sample for a schema with a type: by format, pattern, scalar type, or object and array structure. */
 function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: string): unknown
 {
     const type = schema.type as string;
@@ -138,6 +139,7 @@ function sampleTyped(schema: Schema, variant: Variant, root: Schema, pointer: st
     throw new Error(`sampleValue: no type, const, oneOf or $ref at ${pointer}; extend a2ui/sample-values.ts.`);
 }
 
+/** The sample for a string format; an unknown format throws so FORMATS is extended rather than guessed. */
 function sampleFormat(type: string, format: string, variant: Variant, pointer: string): string
 {
     if (type !== "string" || !(format in FORMATS))
@@ -168,6 +170,7 @@ function samplePattern(type: string, pattern: string, variant: Variant, pointer:
     return sample;
 }
 
+/** The $defs entry a local $ref names; throws when the catalog does not define it. */
 function resolve(ref: string, root: Schema): Schema
 {
     const m = /^#\/\$defs\/(.+)$/.exec(ref);

@@ -18,7 +18,9 @@ function cat(props: Record<string, unknown>, required: string[] = ["component"],
     return {
         components: {
             Text: { type: "object", allOf: [{ $ref: "basic#/components/Text" }] },
-            Widget: { type: "object", allOf: [{}, {}, { type: "object", properties: { component: { const: "Widget" }, ...props }, required }] },
+            Widget: { type: "object",
+                allOf: [{}, {},
+                    { type: "object", properties: { component: { const: "Widget" }, ...props }, required }] },
             ...extra,
         },
         functions: {},
@@ -30,7 +32,10 @@ const BASE = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }]
 
 describe("diffCatalogs", () =>
 {
-    test("an identical catalog has no changes", () => { expect(diffCatalogs(BASE, BASE)).toEqual({ breaking: [], additive: [] }); });
+    test("an identical catalog has no changes", () =>
+    {
+        expect(diffCatalogs(BASE, BASE)).toEqual({ breaking: [], additive: [] });
+    });
     test("a removed component is breaking", () =>
     {
         const next = { ...BASE, components: { Text: BASE.components.Text } };
@@ -38,10 +43,14 @@ describe("diffCatalogs", () =>
     });
     test("an added component is additive", () =>
     {
-        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } }, ["component"], { New: { type: "object" } });
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } }, ["component"],
+            { New: { type: "object" } });
         expect(diffCatalogs(BASE, next).additive).toEqual(["component New added"]);
     });
-    test("a removed prop is breaking", () => { expect(diffCatalogs(BASE, cat({})).breaking).toEqual(["Widget.pageSize removed"]); });
+    test("a removed prop is breaking", () =>
+    {
+        expect(diffCatalogs(BASE, cat({})).breaking).toEqual(["Widget.pageSize removed"]);
+    });
     test("a retyped prop is breaking", () =>
     {
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows.", oneOf: [{ type: "string" }] } })).breaking)
@@ -90,12 +99,14 @@ describe("diffCatalogs", () =>
     });
     test("a description-only change is not breaking", () =>
     {
-        expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })).breaking)
+        expect(diffCatalogs(BASE,
+            cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })).breaking)
             .toEqual([]);
     });
     test("a newly required prop is breaking", () =>
     {
-        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } }, ["component", "pageSize"]);
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] } },
+            ["component", "pageSize"]);
         expect(diffCatalogs(BASE, next).breaking).toEqual(["Widget.pageSize became required"]);
     });
     test("an added optional prop is additive", () =>
@@ -156,10 +167,14 @@ describe("diffCatalogs", () =>
 
 describe("descriptionsDiffer", () =>
 {
-    test("an identical catalog has no description change", () => { expect(descriptionsDiffer(BASE, BASE)).toBe(false); });
+    test("an identical catalog has no description change", () =>
+    {
+        expect(descriptionsDiffer(BASE, BASE)).toBe(false);
+    });
     test("an edited prop description is a description change", () =>
     {
-        expect(descriptionsDiffer(BASE, cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })))
+        expect(descriptionsDiffer(BASE,
+            cat({ pageSize: { description: "Rows per page.", oneOf: [{ type: "number" }] } })))
             .toBe(true);
     });
     test("an edited top-level description is a description change", () =>
@@ -168,7 +183,8 @@ describe("descriptionsDiffer", () =>
     });
     test("a description arriving with an added prop is not a description change", () =>
     {
-        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] }, height: { description: "H.", oneOf: [] } });
+        const next = cat({ pageSize: { description: "Rows.", oneOf: [{ type: "number" }] },
+            height: { description: "H.", oneOf: [] } });
         expect(descriptionsDiffer(BASE, next)).toBe(false);
     });
     test("a description added to an existing node is a description change", () =>
@@ -187,9 +203,15 @@ describe("versionProblem", () =>
 {
     const breaking = { breaking: ["Widget.pageSize removed"], additive: [] };
 
-    test("breaking without a bump is a problem", () => { expect(versionProblem(breaking, 1, 1)).toMatch(/CATALOG_MAJOR/); });
+    test("breaking without a bump is a problem", () =>
+    {
+        expect(versionProblem(breaking, 1, 1)).toMatch(/CATALOG_MAJOR/);
+    });
     test("breaking with a bump is fine", () => { expect(versionProblem(breaking, 1, 2)).toBeNull(); });
-    test("additive without a bump is fine", () => { expect(versionProblem({ breaking: [], additive: ["x"] }, 1, 1)).toBeNull(); });
+    test("additive without a bump is fine", () =>
+    {
+        expect(versionProblem({ breaking: [], additive: ["x"] }, 1, 1)).toBeNull();
+    });
     test("skipping a major is a problem", () => { expect(versionProblem(breaking, 1, 3)).toMatch(/one step/); });
     test("going back is a problem", () => { expect(versionProblem(breaking, 2, 1)).toMatch(/one step/); });
 });

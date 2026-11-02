@@ -42,9 +42,11 @@ test.describe("A2UI adapter under @a2ui/lit", () =>
     test("errors: a bound value that fails its schema is VALIDATION_FAILED with its path", async ({ page }) =>
     {
         await open(page, "lit");
-        await send(page, surface("s", { id: "root", component: "StickyNote", collapsed: { path: "/c" } }, { c: "yes" }));
+        await send(page, surface("s", { id: "root", component: "StickyNote", collapsed: { path: "/c" } },
+            { c: "yes" }));
 
-        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED", path: "/c" })]);
+        await expect.poll(() => errors(page))
+            .toEqual([expect.objectContaining({ code: "VALIDATION_FAILED", path: "/c" })]);
     });
 
     test("errors: an assetBaseUrl that serves nothing is OUTCROP_ASSET_LOAD_FAILED", async ({ page }) =>

@@ -92,6 +92,7 @@ export function dispatchActionProp(ctx: ComponentContextLike, actionProp: string
         .catch((err: unknown) => logError(`Dispatching ${actionProp} failed:`, err));
 }
 
+/** Subscribes to a component channel; throws when on() does not return an unsubscribe function. */
 function subscribe(handle: Record<string, unknown>, e: AdapterEvent, handler: (payload: unknown) => void): () => void
 {
     const off = (handle.on as On).call(handle, e.channel, handler);
@@ -105,6 +106,7 @@ function subscribe(handle: Record<string, unknown>, e: AdapterEvent, handler: (p
     return off as () => void;
 }
 
+/** Turns a component event into the user's value write-back or an A2UI action, unless the adapter is applying state. */
 function onEvent(ctx: ComponentContextLike, e: AdapterEvent, payload: unknown, hooks: RoundTripHooks): void
 {
     if (hooks.isApplying()) { return; }

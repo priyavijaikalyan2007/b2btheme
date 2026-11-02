@@ -355,6 +355,20 @@ export interface TypeBadgeHandle
     destroy(): void;
 }
 
+/** The badge's click: the caller's onClick, then each on("click") subscriber, one failure not stopping the rest. */
+function clickNotifier(options: TypeBadgeOptions, handlers: Set<(payload: unknown) => void>): () => void
+{
+    return (): void =>
+    {
+        options.onClick?.();
+        for (const handler of handlers)
+        {
+            try { handler({ typeKey: options.typeKey }); }
+            catch (err) { logError('Channel "click" handler threw:', err); }
+        }
+    };
+}
+
 /**
  * Creates a TypeBadge in the element `containerId` names and returns its handle (readiness step 5,
  * ADR-243). The badge is createTypeBadge's; a clickable badge also tells
@@ -372,15 +386,7 @@ export function mountTypeBadge(containerId: string, options: TypeBadgeOptions): 
     }
 
     const handlers = new Set<(payload: unknown) => void>();
-    const onClick = (): void =>
-    {
-        options.onClick?.();
-        for (const handler of handlers)
-        {
-            try { handler({ typeKey: options.typeKey }); }
-            catch (err) { logError('Channel "click" handler threw:', err); }
-        }
-    };
+    const onClick = clickNotifier(options, handlers);
     const el = createTypeBadge(options.clickable ? { ...options, onClick } : options);
 
     container.appendChild(el);

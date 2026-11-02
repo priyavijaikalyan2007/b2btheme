@@ -75,6 +75,7 @@ function fitHeight(outer: SplitLayoutHandle, main: HTMLElement): void
     root.scrollTop = 0;
 }
 
+/** A layout region element with a class. */
 function region(tag: string, className: string): HTMLElement
 {
     const el = document.createElement(tag);

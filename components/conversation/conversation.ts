@@ -1754,6 +1754,22 @@ export class Conversation implements ConversationHandle
 
         this.assertSession(value);
 
+        const settle = this.scrollSettle();
+
+        this.latestScrollSettle = settle;
+        this.settlingScroll = settle;
+
+        try { this.loadSession(value); }
+        finally { this.settlingScroll = null; }
+
+        settle();
+
+        logDebug("setData(session):", value.id, value.messages.length, "messages");
+    }
+
+    /** What restores the user's place after a re-render: the bottom if they were there, else their scrollTop. */
+    private scrollSettle(): () => void
+    {
         const list = this.messageListEl;
         const scrollTop = list?.scrollTop ?? 0;
         // The list's geometry decides too, not only autoScrollEnabled. That
@@ -1765,19 +1781,9 @@ export class Conversation implements ConversationHandle
         const atBottom = list !== null && isScrolledToBottom(list);
         // scrollToBottom, not autoScrollMessages: the clear's clamp queues a
         // scroll event that can read "not at bottom" before a late preview.
-        const settle = (this.autoScrollEnabled || atBottom)
+        return (this.autoScrollEnabled || atBottom)
             ? (): void => { this.scrollToBottom(); }
             : (): void => { if (list) { list.scrollTop = scrollTop; } };
-
-        this.latestScrollSettle = settle;
-        this.settlingScroll = settle;
-
-        try { this.loadSession(value); }
-        finally { this.settlingScroll = null; }
-
-        settle();
-
-        logDebug("setData(session):", value.id, value.messages.length, "messages");
     }
 
     /**

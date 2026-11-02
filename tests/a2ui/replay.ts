@@ -3,12 +3,17 @@
  * SPDX-FileCopyrightText: 2026 Outcrop Inc
  * SPDX-License-Identifier: MIT
  */
-/**
- * Scenario replay (#30 spec §7.3), shared by the regression tests and the
- * recording script. Each a2ui line is applied through the playground; at
- * each action line the director's gestures are performed on the real
- * components, and the action they emit must equal the transcript's: same
- * name, source component and resolved context. No key and no LLM.
+/*
+ * ----------------------------------------------------------------------------
+ * ⚓ COMPONENT: ScenarioReplay
+ * 📜 PURPOSE: Scenario replay (#30 spec §7.3), shared by the regression tests and the
+ *    recording script. Each a2ui line is applied through the playground; at
+ *    each action line the director's gestures are performed on the real
+ *    components, and the action they emit must equal the transcript's: same
+ *    name, source component and resolved context. No key and no LLM.
+ * 🔗 RELATES: [[A2uiPlayground]], [[PlaygroundScenario]]
+ * ⚡ FLOW: [replay spec / recorder] -> [replayScenario()] -> [playground page]
+ * ----------------------------------------------------------------------------
  */
 
 import { expect, type Page } from "@playwright/test";

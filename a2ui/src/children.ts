@@ -103,22 +103,7 @@ export class ChildElements
 
         this.#wanted.add(id);
 
-        if (this.#lineage.has(id))
-        {
-            const what = id === this.#ctx.componentModel.id ? "itself" : `"${id}", which contains it,`;
-
-            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: it lists ${what} as a child at `
-                + `${slot.path}, which would place it inside itself forever.`);
-            return null;
-        }
-
-        if (seen.has(id))
-        {
-            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: the child "${id}" is referenced more `
-                + `than once (again at ${slot.path}); one element cannot be in two places. Give each slot its own `
-                + "component.");
-            return null;
-        }
+        if (this.#refuses(id, seen, slot)) { return null; }
 
         seen.add(id);
 
@@ -130,6 +115,29 @@ export class ChildElements
         }
 
         return this.#byId.get(id) ?? this.#create(id);
+    }
+
+    /** True, with the reason reported, when placing `id` here would nest it in itself or place it twice. */
+    #refuses(id: string, seen: Set<string>, slot: ChildSlot): boolean
+    {
+        if (this.#lineage.has(id))
+        {
+            const what = id === this.#ctx.componentModel.id ? "itself" : `"${id}", which contains it,`;
+
+            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: it lists ${what} as a child at `
+                + `${slot.path}, which would place it inside itself forever.`);
+            return true;
+        }
+
+        if (seen.has(id))
+        {
+            this.#report(ERROR_CODES.VALIDATION_FAILED, `${this.#where()}: the child "${id}" is referenced more `
+                + `than once (again at ${slot.path}); one element cannot be in two places. Give each slot its own `
+                + "component.");
+            return true;
+        }
+
+        return false;
     }
 
     /** The surface's components. */
@@ -169,6 +177,7 @@ export class ChildElements
         return el;
     }
 
+    /** The component's type and id, for messages. */
     #where(): string
     {
         return `${this.#ctx.componentModel.type} ${this.#ctx.componentModel.id}`;
@@ -187,6 +196,7 @@ function mapAtPath(value: unknown, segments: readonly string[], fn: (node: unkno
     return mapNode(value, segments, fn) as Record<string, unknown>;
 }
 
+/** Applies `fn` to the value at `segments` in `value`, through arrays, returning a copy; other values are kept. */
 function mapNode(value: unknown, segments: readonly string[], fn: (node: unknown) => unknown): unknown
 {
     if (segments.length === 0) { return fn(value); }

@@ -1810,3 +1810,11 @@
   definition: "protocol.children (ADR-238): an option path of a layout that holds another A2UI component, \"one\" or \"many\". The catalog publishes it as A2UI's ComponentId, so an agent writes a component id, as for the basic Card's child; the A2UI adapter creates that component's element from the host's catalog and passes it where the layout takes an HTMLElement, keeping it by id across rebuilds so the child keeps its state."
   anchor_file: "AGENTS.md"
   related: ["SlotUpdatedInPlace", "RequiredHostCode", "A2uiAdapter"]
+- name: "A2uiHarness"
+  definition: "The real-browser A2UI host the adapter and component e2e specs share (tests/a2ui/): build-harness.ts bundles a Lit and a React host page with esbuild, harness-shared.ts writes the host exactly as the integration guide tells a host to (the built /a2ui/adapter/v1.js from dist, the host's own @a2ui/web_core), and adapter-page.ts serves it under /__a2ui/ with send(), dm() and errors() helpers for the specs."
+  anchor_file: "tests/a2ui/harness-shared.ts"
+  related: ["A2uiAdapter", "A2uiPlayground"]
+- name: "PlaygroundScenario"
+  definition: "A saved or scripted playground session (agentdemo/scenarios/<name>.jsonl, ADR-221): a header line with provenance live or scripted (a live one names provider, model and date) and media gif or video, then a2ui, user, say, finding, action and error lines. <name>.director.json holds the click, fill and select gestures for each action line. tests/a2ui/replay.ts replays it in CI and asserts every emitted action equals the recorded one; agentdemo/record/ records it and encodes a GIF for docs or an MP4 for the CDN (20 MB budget)."
+  anchor_file: "tests/a2ui/replay.ts"
+  related: ["A2uiPlayground", "A2uiHarness"]

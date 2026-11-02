@@ -207,7 +207,8 @@ describe("two-way value", () =>
 
     test("a surface's change channel writes the bound path, then dispatches onChange", async () =>
     {
-        const rc = realContext({ value: { path: "/v" }, onChange: { event: { name: "changed", context: { v: { path: "/v" } } } } }, { v: "a" });
+        const rc = realContext({ value: { path: "/v" },
+            onChange: { event: { name: "changed", context: { v: { path: "/v" } } } } }, { v: "a" });
         const handle = await mounted(SURFACE, rc);
 
         handle.emit("change", "y");
@@ -303,7 +304,8 @@ describe("events", () =>
         expect(rc.getData("/ev/submit")).toBeUndefined();
     });
 
-    test("a descriptor with channels whose handle has no on() is OUTCROP_MOUNT_FAILED, and the handle is destroyed", async () =>
+    test("a descriptor with channels whose handle has no on() is OUTCROP_MOUNT_FAILED, and the handle is "
+        + "destroyed", async () =>
     {
         const install = (window as unknown as Record<string, (id: string, o: unknown) => unknown>).createFake;
         (window as unknown as Record<string, unknown>).createFake = (id: string, o: unknown) =>

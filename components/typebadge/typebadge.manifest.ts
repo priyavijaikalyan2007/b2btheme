@@ -6,12 +6,12 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: Type Badge / CapabilityManifest
- * PURPOSE: Declares what Type Badge can render, so the Dynamic UI canvas can
+ * ⚓ COMPONENT: Type Badge / CapabilityManifest
+ * 📜 PURPOSE: Declares what Type Badge can render, so the Dynamic UI canvas can
  *    resolve, mount, and budget it, and the A2UI catalog can publish it.
  *    See ADR-142, ADR-243.
- * RELATES: [[Type Badge]], [[DynamicUIRuntime]]
- * FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
+ * 🔗 RELATES: [[Type Badge]], [[DynamicUIRuntime]]
+ * ⚡ FLOW: [build aggregation] -> [capability-manifest.json] -> [registry]
  * ----------------------------------------------------------------------------
  */
 

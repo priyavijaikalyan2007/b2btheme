@@ -135,7 +135,8 @@ describe("leanCatalog refuses what it cannot render", () =>
     {
         const odd = { ...catalog, functions: { ...catalog.functions, shout: { type: "object" } } };
 
-        expect(() => leanCatalog({ catalog: odd, basic, commonTypes })).toThrow(/function shout is not a basic re-export/);
+        expect(() => leanCatalog({ catalog: odd, basic, commonTypes }))
+            .toThrow(/function shout is not a basic re-export/);
     });
     test("a common type it has no rule for", () =>
     {

@@ -931,6 +931,12 @@ class NotificationCenter implements NotificationCenterHandle
 
 // @entrypoint
 
+/**
+ * Creates a NotificationCenter in options.container and returns its handle.
+ *
+ * @param options - The container, the notifications and the callbacks.
+ * @returns The notification center's handle
+ */
 export function createNotificationCenter(
     options: NotificationCenterOptions
 ): NotificationCenterHandle

@@ -1324,6 +1324,7 @@ class RelationshipManagerImpl implements RelationshipManager
         input.focus();
     }
 
+    /** Searches for targets after a pause in typing, through onSearchResources or else onSearchTargets. */
     private runSearch(query: string): void
     {
         if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
@@ -1516,6 +1517,7 @@ class RelationshipManagerImpl implements RelationshipManager
         this.submitRelationship(props);
     }
 
+    /** Creates the relationship to the selected target: through onCreateRelationship, else straight to the channel. */
     private submitRelationship(properties: Record<string, unknown>): void
     {
         if (!this.selectedRelDef || !this.selectedTarget) { return; }

@@ -16,7 +16,8 @@ import type { ComponentContextLike } from "./types";
 
 function ctx(surface: unknown): ComponentContextLike
 {
-    return { componentModel: { id: "c1", type: "StickyNote" }, dataContext: { surface } } as unknown as ComponentContextLike;
+    return { componentModel: { id: "c1", type: "StickyNote" }, dataContext: { surface } } as unknown as
+        ComponentContextLike;
 }
 
 describe("reportError", () =>

@@ -117,6 +117,7 @@ function resultKeys(catalog, descriptors)
         check: () => checkDef(catalog, `${d.name}.${p.resultProp}`, `${d.name}__${p.resultProp}`) })));
 }
 
+/** Throws when the catalog has no $defs entry `def`. */
 function checkDef(catalog, key, def)
 {
     if (catalog.$defs?.[def] === undefined)
@@ -126,6 +127,7 @@ function checkDef(catalog, key, def)
     }
 }
 
+/** Throws when the catalog has no schema at `pointer`. */
 function checkArm(catalog, key, pointer, arm)
 {
     if (arm === undefined || arm === null || typeof arm !== "object")

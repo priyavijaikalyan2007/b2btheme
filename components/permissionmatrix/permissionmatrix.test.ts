@@ -689,7 +689,8 @@ describe("options that were declared but not read, and Reset (#70)", () =>
         expect(["docs.read", "docs.write", "users.manage"].map((p) => pm.getCellState("viewer", p)))
             .toEqual(["granted", "granted", "granted"]);
         expect(onBulkChange).toHaveBeenCalledWith(expect.objectContaining({ type: "grant-all-for-role",
-            roleId: "viewer", changes: expect.arrayContaining([expect.objectContaining({ permissionId: "docs.write" })]) }));
+            roleId: "viewer",
+            changes: expect.arrayContaining([expect.objectContaining({ permissionId: "docs.write" })]) }));
         expect(heard).toHaveBeenCalledTimes(1);
         pm.destroy();
     });

@@ -6,11 +6,11 @@
  */
 /*
  * ----------------------------------------------------------------------------
- * COMPONENT: TabbedPanel / Conformance glue
- * PURPOSE: Mount fixtures and channel triggers for the fleet conformance and
+ * ⚓ COMPONENT: TabbedPanel / Conformance glue
+ * 📜 PURPOSE: Mount fixtures and channel triggers for the fleet conformance and
  *    adapter gates (readiness step 4 L1, ADR-239).
- * RELATES: [[TabbedPanel]], [[CapabilityManifest]]
- * FLOW: [fleet gate] -> [CONFORMANCE_GLUE] -> [trigger] -> [on() channel]
+ * 🔗 RELATES: [[TabbedPanel]], [[CapabilityManifest]]
+ * ⚡ FLOW: [fleet gate] -> [CONFORMANCE_GLUE] -> [trigger] -> [on() channel]
  * ----------------------------------------------------------------------------
  */
 

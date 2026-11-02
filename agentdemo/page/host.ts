@@ -125,6 +125,7 @@ export class Host
         }
     }
 
+    /** Processes one message; a rejected message is reported as an error rather than stopping the batch. */
     #processOne(message: unknown): void
     {
         try
@@ -137,6 +138,7 @@ export class Host
         }
     }
 
+    /** Shows a new surface in a captioned frame. */
     #mount(surface: SurfaceModel): void
     {
         const frame = document.createElement("section");
@@ -153,12 +155,14 @@ export class Host
         surface.onError.subscribe((e: A2uiErrorPayload) => this.#error({ surfaceId: surface.id, ...e }));
     }
 
+    /** Removes a deleted surface's frame. */
     #unmount(surfaceId: string): void
     {
         this.#frames.get(surfaceId)?.remove();
         this.#frames.delete(surfaceId);
     }
 
+    /** Wraps a surface action as an A2UI action message and tells the listeners. */
     #action(action: ActionPayload): void
     {
         const message: A2uiActionMessage = { version: A2UI_VERSION, action };
@@ -166,6 +170,7 @@ export class Host
         for (const listener of this.#actionListeners) { listener(message); }
     }
 
+    /** Wraps an error as an A2UI error message, adds it to the open batch, and tells the listeners. */
     #error(error: Record<string, unknown>): void
     {
         const message: A2uiErrorMessage = { version: A2UI_VERSION, error };

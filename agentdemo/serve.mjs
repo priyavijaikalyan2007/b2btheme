@@ -84,6 +84,7 @@ export function createServer(roots)
     });
 }
 
+/** Serves the built playground and dist/ on PORT (8124); exits when either is missing. */
 function main()
 {
     const here = path.dirname(fileURLToPath(import.meta.url));
@@ -104,6 +105,7 @@ function main()
     server.listen(port, "127.0.0.1", () => console.log(`A2UI playground: http://127.0.0.1:${port}${PREFIX}`));
 }
 
+/** Prints the message and exits with status 1. */
 function fail(message)
 {
     console.error(`[playground] ${message}`);

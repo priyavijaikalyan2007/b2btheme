@@ -53,7 +53,8 @@ export async function open(page: Page, renderer: "lit" | "react", query: Record<
             return;
         }
 
-        await route.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(harnessDir, name), "utf8") });
+        await route.fulfill({ contentType: "text/javascript",
+            body: fs.readFileSync(path.join(harnessDir, name), "utf8") });
     });
     await page.goto(`${ORIGIN}/__a2ui/${renderer}.html?${qs}`);
     await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
@@ -66,7 +67,8 @@ export function send(page: Page, messages: Record<string, unknown>[]): Promise<v
 }
 
 /** createSurface, one root component, and a data model. */
-export function surface(id: string, root: Record<string, unknown>, data: Record<string, unknown> = {}): Record<string, unknown>[]
+export function surface(id: string, root: Record<string, unknown>,
+    data: Record<string, unknown> = {}): Record<string, unknown>[]
 {
     return [
         { version: V, createSurface: { surfaceId: id, catalogId: CATALOG } },

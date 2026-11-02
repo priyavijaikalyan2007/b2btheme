@@ -487,6 +487,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
      */
     setData(roles: Role[], groups: PermissionGroup[], cells: MatrixCell[]): void;
     setData(slot: string, value: unknown): void;
+    /** Replaces the matrix from (roles, groups, cells), or one Surface data slot from (slot, value). */
     setData(
         first: Role[] | string,
         second: PermissionGroup[] | unknown,
@@ -1543,6 +1544,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
     // BULK OPERATIONS
     // ========================================================================
 
+    /** Toggles every permission in a group for a role, then reports the changes. */
     private bulkToggleGroup(groupId: string, roleId: string): void
     {
         const group = this.groups.find(g => g.id === groupId);
@@ -1626,6 +1628,7 @@ export class PermissionMatrix implements PermissionMatrixHandle
         this.announce(message);
     }
 
+    /** aggregateState of a role over every permission in a group. */
     private aggregateGroupState(
         group: PermissionGroup,
         roleId: string

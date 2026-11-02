@@ -1256,6 +1256,7 @@ class GraphCanvasImpl implements GraphCanvas
     /** Replace all nodes and edges, recompute layout, and re-render. */
     public setData(nodes: GraphNode[], edges: GraphEdge[]): void;
     public setData(slot: string, value: unknown): void;
+    /** Replaces the graph from (nodes, edges), or one Surface data slot from (slot, value). */
     public setData(first: GraphNode[] | string, second: unknown): void
     {
         if (typeof first === "string")

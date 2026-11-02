@@ -108,6 +108,7 @@ export function datePathsFor(dates: readonly string[], prop: string): string[]
         .map((p) => p.slice(prop.length));
 }
 
+/** Converts the date-time strings at `segments` in `value` to Dates, through arrays and objects. */
 function revive(value: unknown, segments: string[], where: string): WireResult
 {
     if (segments.length === 0) { return toDate(value, where); }
@@ -133,6 +134,7 @@ function revive(value: unknown, segments: string[], where: string): WireResult
     return r.ok ? { ok: true, value: { ...value, [key]: r.value } } : r;
 }
 
+/** An ISO 8601 string as a Date, null as null; anything else is a failure naming where. */
 function toDate(value: unknown, where: string): WireResult
 {
     if (value === null) { return { ok: true, value }; }
@@ -175,6 +177,7 @@ export function sameValue(a: unknown, b: unknown): boolean
     return JSON.stringify(toWire(a)) === JSON.stringify(toWire(b));
 }
 
+/** True for an object literal or a null-prototype object. */
 function isPlainObject(value: unknown): value is Record<string, unknown>
 {
     if (typeof value !== "object" || value === null) { return false; }

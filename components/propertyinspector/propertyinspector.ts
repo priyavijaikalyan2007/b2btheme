@@ -375,11 +375,13 @@ class PropertyInspector implements PropertyInspectorHandle
         logInfo("Destroyed", this.id);
     }
 
+    /** The drawer's width. */
     getState(): PropertyInspectorState
     {
         return { width: this.width };
     }
 
+    /** Restores the drawer's width. */
     setState(state: Partial<PropertyInspectorState>): void
     {
         if (state.width === undefined) { return; }
@@ -390,6 +392,7 @@ class PropertyInspector implements PropertyInspectorHandle
         }
     }
 
+    /** Subscribes to action or close; returns the unsubscribe. */
     on(channel: string, handler: (payload: unknown) => void): () => void
     {
         if (channel !== "action" && channel !== "close")
@@ -402,6 +405,7 @@ class PropertyInspector implements PropertyInspectorHandle
         return () => { this.handlers[channel].delete(handler); };
     }
 
+    /** Throws: PropertyInspector has no data slots. */
     setData(slot: string): void
     {
         throw new Error(`${LOG_PREFIX} setData("${slot}"): PropertyInspector has no data slots. What it shows is `
@@ -773,6 +777,12 @@ class PropertyInspector implements PropertyInspectorHandle
 
 // @entrypoint
 
+/**
+ * Creates a PropertyInspector in options.container and returns its handle.
+ *
+ * @param options - The container, the drawer settings and the callbacks.
+ * @returns The inspector's handle
+ */
 export function createPropertyInspector(
     options: PropertyInspectorOptions
 ): PropertyInspectorHandle

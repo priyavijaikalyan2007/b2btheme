@@ -41,11 +41,57 @@ const GRAPH = { nodes: [{ id: "a", label: "Alpha", type: "service" }, { id: "b",
     edges: [{ id: "ab", sourceId: "a", targetId: "b", type: "calls" }] };
 
 /** A small roadmap, as an agent writes it. */
-const SPINE = { hubs: [{ id: "now", label: "Now", status: "in-progress", branches: [{ id: "search", label: "Search" }] },
+const SPINE = { hubs: [
+    { id: "now", label: "Now", status: "in-progress", branches: [{ id: "search", label: "Search" }] },
     { id: "next", label: "Next", status: "planned", branches: [] }] };
 
 /** A one-box diagram, as the engine writes one (getDocument()). */
-const DIAGRAM = {"version": "1.0", "metadata": {"title": "Untitled Diagram", "created": "2026-10-30T07:41:06.801Z", "modified": "2026-10-30T07:41:06.801Z"}, "layers": [{"id": "default", "name": "Default", "visible": true, "locked": false, "printable": true, "opacity": 1, "order": 0}], "objects": [{"id": "box", "semantic": {"type": "generic", "data": {}}, "presentation": {"shape": "rectangle", "bounds": {"x": 100, "y": 100, "width": 120, "height": 60}, "rotation": 0, "flipX": false, "flipY": false, "style": {"fill": {"type": "solid", "color": "var(--theme-surface-raised-bg)"}, "stroke": {"color": "var(--theme-border-color)", "width": 1.5}}, "layer": "default", "zIndex": 0, "locked": false, "visible": true, "renderStyle": "clean"}}], "connectors": [], "comments": [], "pageFrames": [], "guides": [], "grid": {"size": 20, "style": "dots", "visible": true}};
+const DIAGRAM = {
+    "version": "1.0",
+    "metadata": {
+        "title": "Untitled Diagram",
+        "created": "2026-10-30T07:41:06.801Z",
+        "modified": "2026-10-30T07:41:06.801Z"
+    },
+    "layers": [
+        {
+            "id": "default",
+            "name": "Default",
+            "visible": true,
+            "locked": false,
+            "printable": true,
+            "opacity": 1,
+            "order": 0
+        }
+    ],
+    "objects": [
+        {
+            "id": "box",
+            "semantic": {"type": "generic", "data": {}},
+            "presentation": {
+                "shape": "rectangle",
+                "bounds": {"x": 100, "y": 100, "width": 120, "height": 60},
+                "rotation": 0,
+                "flipX": false,
+                "flipY": false,
+                "style": {
+                    "fill": {"type": "solid", "color": "var(--theme-surface-raised-bg)"},
+                    "stroke": {"color": "var(--theme-border-color)", "width": 1.5}
+                },
+                "layer": "default",
+                "zIndex": 0,
+                "locked": false,
+                "visible": true,
+                "renderStyle": "clean"
+            }
+        }
+    ],
+    "connectors": [],
+    "comments": [],
+    "pageFrames": [],
+    "guides": [],
+    "grid": {"size": 20, "style": "dots", "visible": true}
+};
 
 test.describe("B9 canvas components under @a2ui/lit", () =>
 {

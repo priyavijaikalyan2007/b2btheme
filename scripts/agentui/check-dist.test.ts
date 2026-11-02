@@ -22,7 +22,8 @@ const ID = "https://static.outcrop.us/a2ui/catalog/v1.json";
 /** A stand-in adapter bundle embedding `catalog`, as the generator would. */
 function bundleFor(catalog: unknown): string
 {
-    return `export const catalogJson = ${JSON.stringify(catalog)};\nexport function createOutcropCatalog() { return null; }\n`;
+    return `export const catalogJson = ${JSON.stringify(catalog)};\n`
+        + "export function createOutcropCatalog() { return null; }\n";
 }
 
 function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undefined): string
@@ -32,17 +33,21 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
         $schema: "https://json-schema.org/draft/2020-12/schema", $id: ID, title: "T", description: "D", catalogId: ID,
         components: { Text: { type: "object", allOf: [{ $ref: `${basic.catalogId}#/components/Text` }] },
             Widget: { type: "object", allOf: [{ type: "object", properties: { component: { const: "Widget" } } }] } },
-        functions: {}, $defs: { anyComponent: { oneOf: [{ $ref: "#/components/Text" }, { $ref: "#/components/Widget" }] },
-            anyFunction: { oneOf: [{ type: "object" }] }, CatalogComponentCommon: { type: "object" }, theme: { type: "object" } },
+        functions: {},
+        $defs: { anyComponent: { oneOf: [{ $ref: "#/components/Text" }, { $ref: "#/components/Widget" }] },
+            anyFunction: { oneOf: [{ type: "object" }] }, CatalogComponentCommon: { type: "object" },
+            theme: { type: "object" } },
     };
     const files: Record<string, unknown> = {
-        "dist/capability-manifest.json": { schemaVersion: 1, components: [{ name: "widget", factory: "createWidget" }, { name: "panel", factory: "createPanel" }] },
+        "dist/capability-manifest.json": { schemaVersion: 1,
+            components: [{ name: "widget", factory: "createWidget" }, { name: "panel", factory: "createPanel" }] },
         "dist/a2ui/catalog/v1.json": catalog,
         "dist/a2ui/catalog/v1.agent.json": { catalogId: ID, reexports: { components: ["Text"] },
             components: { Widget: { properties: {} } } },
         "specs/agentui/published/catalog-v1.json": structuredClone(catalog),
         "dist/mcp/renderer.meta.json": { csp: { resourceDomains: ["https://static.outcrop.us", "https://fonts.googleapis.com", "https://fonts.gstatic.com"] } },
-        "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }], outOfCatalog: [], hostOnly: {} },
+        "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }],
+            outOfCatalog: [], hostOnly: {} },
     };
     files["dist/a2ui/adapter/v1.d.ts"] = "export {};\n";
     files["dist/agentui-report.json"] = { ...(files["dist/agentui-report.json"] as object), adapter: { packages: [],
@@ -53,7 +58,8 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
     for (const [rel, value] of Object.entries(files))
     {
         fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
-        fs.writeFileSync(path.join(root, rel), typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
+        fs.writeFileSync(path.join(root, rel),
+            typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
     }
     fs.cpSync(VENDOR, path.join(root, "scripts", "agentui", "vendor", "a2ui-v0_9_1"), { recursive: true });
     return root;
@@ -64,14 +70,19 @@ describe("checkDist ([29])", () =>
     test("a consistent dist passes", async () => { expect(await checkDist(fakeRepo())).toEqual([]); });
     test("a catalog differing from the committed baseline fails", async () =>
     {
-        expect((await checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; }))).join()).toMatch(/baseline/);
+        expect((await checkDist(fakeRepo((f) => { (f["dist/a2ui/catalog/v1.json"] as any).title = "X"; }))).join())
+            .toMatch(/baseline/);
     });
-    test("a gap in the committed majors fails, so an older major cannot be unpublished by deleting it (#28)", async () =>
+    test("a gap in the committed majors fails, so an older major cannot be unpublished by deleting it (#28)",
+        async () =>
     {
         // v2 is built and committed, and v1's baseline was deleted.
         const problems = await checkDist(fakeRepo((f) =>
         {
-            for (const ext of ["json", "agent.json"]) { f[`dist/a2ui/catalog/v2.${ext}`] = f[`dist/a2ui/catalog/v1.${ext}`]; }
+            for (const ext of ["json", "agent.json"])
+            {
+                f[`dist/a2ui/catalog/v2.${ext}`] = f[`dist/a2ui/catalog/v1.${ext}`];
+            }
             f["dist/a2ui/adapter/v2.d.ts"] = "export {};\n";
             f["dist/a2ui/adapter/v2.js"] = bundleFor(f["dist/a2ui/catalog/v2.json"]);
             f["specs/agentui/published/catalog-v2.json"] = f["specs/agentui/published/catalog-v1.json"];
@@ -83,7 +94,10 @@ describe("checkDist ([29])", () =>
     });
     test("a built major with no committed baseline fails", async () =>
     {
-        expect((await checkDist(fakeRepo((f) => { f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"]; }))).join())
+        expect((await checkDist(fakeRepo((f) =>
+        {
+            f["dist/a2ui/catalog/v2.json"] = f["dist/a2ui/catalog/v1.json"];
+        }))).join())
             .toMatch(/v2/);
     });
     test("a lean agent catalog that drops a component, a re-export or a prop fails (#49)", async () =>
@@ -121,7 +135,10 @@ describe("checkDist ([29])", () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
-            for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"]) { (f[k] as any).instructions = "x"; }
+            for (const k of ["dist/a2ui/catalog/v1.json", "specs/agentui/published/catalog-v1.json"])
+            {
+                (f[k] as any).instructions = "x";
+            }
         };
         expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/layout/);
     });
@@ -140,7 +157,8 @@ describe("checkDist ([29])", () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
-            (f["dist/schemas/widget.options.json"] as any) = { type: "object", properties: { placeholder: { type: "string", description: "Input placeholder." } } };
+            (f["dist/schemas/widget.options.json"] as any) = { type: "object",
+                properties: { placeholder: { type: "string", description: "Input placeholder." } } };
             (f["dist/agentui-report.json"] as any).excluded[0].violations = ["placeholder is a sample"];
         };
         expect(await checkDist(fakeRepo(mutate))).toEqual([]);
@@ -212,7 +230,8 @@ describe("checkDist ([29]) — the A2UI adapter (G2)", () =>
     {
         const mutate = (f: Record<string, unknown>) =>
         {
-            f["dist/a2ui/adapter/v1.js"] = `export const catalogJson = ${JSON.stringify(f["dist/a2ui/catalog/v1.json"])};\n`;
+            f["dist/a2ui/adapter/v1.js"] =
+                `export const catalogJson = ${JSON.stringify(f["dist/a2ui/catalog/v1.json"])};\n`;
         };
 
         expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/does not export createOutcropCatalog/);
@@ -220,7 +239,10 @@ describe("checkDist ([29]) — the A2UI adapter (G2)", () =>
 
     test("a served package outside the allowed set fails", async () =>
     {
-        const mutate = (f: Record<string, unknown>) => { (f["dist/agentui-report.json"] as any).adapter.packages = ["zod"]; };
+        const mutate = (f: Record<string, unknown>) =>
+        {
+            (f["dist/agentui-report.json"] as any).adapter.packages = ["zod"];
+        };
 
         expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/serves zod/);
     });
@@ -236,7 +258,8 @@ describe("checkDist ([29]) — the A2UI adapter (G2)", () =>
             }
         };
 
-        expect((await checkDist(fakeRepo(mutate))).join()).toMatch(/Widget\.online is a data prop with no adapter route/);
+        expect((await checkDist(fakeRepo(mutate))).join())
+            .toMatch(/Widget\.online is a data prop with no adapter route/);
     });
 
     test("a JavaScript file under dist/a2ui is scanned for host names but not parsed as JSON", async () =>

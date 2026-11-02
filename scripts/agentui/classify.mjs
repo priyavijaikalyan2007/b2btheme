@@ -122,18 +122,7 @@ export function factoryOptionsType(ctx, file, factoryName, paramIndex)
             + "cannot be read. Add the file to the tsconfig \"include\".");
     }
 
-    const factory = findExport(ctx, source, factoryName);
-    const signatures = ctx.checker.getTypeOfSymbolAtLocation(factory, source).getCallSignatures();
-
-    // Only one signature's options are read, so an overload's others would be invisible to the classifier (#29).
-    if (signatures.length > 1)
-    {
-        throw new Error(`${factoryName} in ${file} is overloaded (${signatures.length} signatures), and the agent-UI `
-            + "classifier reads one options type. Give the factory a single signature, with a union options type "
-            + "if it needs one.");
-    }
-
-    const signature = signatures[0];
+    const signature = soleSignature(ctx, source, file, factoryName);
     const parameter = signature?.parameters[paramIndex];
 
     if (!parameter)
@@ -145,6 +134,22 @@ export function factoryOptionsType(ctx, file, factoryName, paramIndex)
     const type = ctx.checker.getTypeOfSymbolAtLocation(parameter, source);
 
     return { type: ctx.checker.getNonNullableType(type), location: source, handleType: signature.getReturnType() };
+}
+
+/** The factory's call signature; an overloaded factory throws, since only one options type is read (#29). */
+function soleSignature(ctx, source, file, factoryName)
+{
+    const factory = findExport(ctx, source, factoryName);
+    const signatures = ctx.checker.getTypeOfSymbolAtLocation(factory, source).getCallSignatures();
+
+    if (signatures.length > 1)
+    {
+        throw new Error(`${factoryName} in ${file} is overloaded (${signatures.length} signatures), and the agent-UI `
+            + "classifier reads one options type. Give the factory a single signature, with a union options type "
+            + "if it needs one.");
+    }
+
+    return signatures[0];
 }
 
 /** Finds an exported symbol by name, resolving re-export aliases. */
@@ -415,6 +420,7 @@ function unionArms(t)
     return t.isUnion() ? t.types : [t];
 }
 
+/** The values without repeats, in first-seen order. */
 function unique(values)
 {
     return [...new Set(values)];

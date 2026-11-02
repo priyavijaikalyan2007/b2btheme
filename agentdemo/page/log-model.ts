@@ -73,6 +73,7 @@ export class LogModel
         return () => this.#listeners.delete(listener);
     }
 
+    /** Tells every listener the log changed. */
     #emit(): void
     {
         for (const listener of this.#listeners) { listener(); }

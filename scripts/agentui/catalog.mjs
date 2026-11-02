@@ -71,7 +71,8 @@ export function buildCatalog({ basic, components, major })
     const violations = nameViolations(basic, components);
     const ours = components.map(entryFor);
     const id = catalogId(major);
-    const all = sortKeys({ ...reexport(basic.components, "components"), ...Object.fromEntries(ours.map((o) => [o.name, o.entry])) });
+    const all = sortKeys({ ...reexport(basic.components, "components"),
+        ...Object.fromEntries(ours.map((o) => [o.name, o.entry])) });
     const functions = sortKeys(reexportFunctions(basic.functions));
 
     return {
@@ -90,16 +91,19 @@ function reexport(map, section)
         [n, { type: "object", allOf: [{ $ref: `${BASIC_CATALOG_ID}#/${section}/${n}` }] }]));
 }
 
+/** Each basic catalog function as a re-export. */
 function reexportFunctions(map)
 {
-    return Object.fromEntries(Object.keys(map).map((n) => [n, { allOf: [{ $ref: `${BASIC_CATALOG_ID}#/functions/${n}` }] }]));
+    return Object.fromEntries(Object.keys(map).map((n) =>
+        [n, { allOf: [{ $ref: `${BASIC_CATALOG_ID}#/functions/${n}` }] }]));
 }
 
 /** The catalog's $defs: basic common defs, the any* unions, and relocated component defs. */
 function rootDefs(components, functions, ours)
 {
     return {
-        CatalogComponentCommon: { type: "object", allOf: [{ $ref: `${BASIC_CATALOG_ID}#/$defs/CatalogComponentCommon` }] },
+        CatalogComponentCommon: { type: "object",
+            allOf: [{ $ref: `${BASIC_CATALOG_ID}#/$defs/CatalogComponentCommon` }] },
         theme: { type: "object", allOf: [{ $ref: `${BASIC_CATALOG_ID}#/$defs/theme` }] },
         anyComponent: { oneOf: Object.keys(components).map((n) => ({ $ref: `#/components/${n}` })) },
         anyFunction: { oneOf: Object.keys(functions).map((n) => ({ $ref: `#/functions/${n}` })) },
@@ -170,7 +174,8 @@ export function relocateDefs(schema, prefix)
     const rewrite = (node) => mapRefs(node, (ref) =>
         (ref.startsWith("#/$defs/") ? `#/$defs/${prefix}__${ref.slice("#/$defs/".length)}` : ref));
 
-    return { root: rewrite(root), defs: Object.fromEntries(Object.entries($defs).map(([k, v]) => [`${prefix}__${k}`, rewrite(v)])) };
+    return { root: rewrite(root),
+        defs: Object.fromEntries(Object.entries($defs).map(([k, v]) => [`${prefix}__${k}`, rewrite(v)])) };
 }
 
 /** A schema property the surface lists; absent means surface and schema disagree. */
@@ -213,7 +218,8 @@ function dataProps(surface, root, component)
             return [d.name, { description, ...schema }];
         }
         const twoWay = d.name === "value" && surface.twoWayValue
-            ? ` Two-way: when bound to a path, the component writes the user's changes there.${clearText(surface)}` : "";
+            ? ` Two-way: when bound to a path, the component writes the user's changes there.${clearText(surface)}`
+            : "";
 
         return [d.name, { description: `${description ?? d.jsdoc}${twoWay}`, ...literalBindingOrCall(schema) }];
     });
@@ -369,13 +375,15 @@ function nameViolations(basic, components)
         if (!UAX31.test(name))
         {
             return [{ component: manifest.name, member: "protocol.name", code: VIOLATION.NAME_INVALID,
-                message: `${manifest.name}: catalog name "${name}" is not a UAX #31 identifier. Set protocol.name in ${where}` }];
+                message: `${manifest.name}: catalog name "${name}" is not a UAX #31 identifier. `
+                    + `Set protocol.name in ${where}` }];
         }
 
         if (seen.has(name))
         {
             return [{ component: manifest.name, member: "protocol.name", code: VIOLATION.NAME_COLLISION,
-                message: `${manifest.name}: catalog name "${name}" is already taken. Set a distinct protocol.name in ${where}` }];
+                message: `${manifest.name}: catalog name "${name}" is already taken. `
+                    + `Set a distinct protocol.name in ${where}` }];
         }
 
         seen.add(name);
@@ -411,6 +419,7 @@ function guidance(components)
     return [PREAMBLE, "", ...lines.sort()].join("\n");
 }
 
+/** A copy of `obj` with its keys in code-point order. */
 function sortKeys(obj)
 {
     return Object.fromEntries(Object.entries(obj).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));

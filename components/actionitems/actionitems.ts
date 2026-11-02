@@ -6133,6 +6133,24 @@ export class ActionItems implements ActionItemsHandle
      */
     public setData(slot: string, value: unknown): void
     {
+        this.assertItemsSlot(slot, value);
+
+        const editing = new Map(
+            this.items.filter((i) => this.editingItems.has(i.id)).map((i) => [i.id, i]));
+
+        this.renderKeepingWork(() =>
+        {
+            this.items = value.map((row) => editing.get(row.id) ?? copySuppliedItem(row));
+            this.pruneMissingIds();
+            this.updateGlobalIndex();
+        });
+
+        logDebug("setData(items):", this.items.length, "items;", this.editingItems.size, "still being edited");
+    }
+
+    /** Throws unless `slot` is "items" and `value` is a list of records with string ids. */
+    private assertItemsSlot(slot: string, value: unknown): asserts value is ActionItem[]
+    {
         if (slot !== "items")
         {
             throw new Error(
@@ -6155,19 +6173,6 @@ export class ActionItems implements ActionItemsHandle
                 `${LOG_PREFIX} setData("items"): item ${missing} is not an item with a string id. `
                 + "Each entry is an ActionItem.");
         }
-
-        const editing = new Map(
-            this.items.filter((i) => this.editingItems.has(i.id)).map((i) => [i.id, i]));
-        const rows = value as ActionItem[];
-
-        this.renderKeepingWork(() =>
-        {
-            this.items = rows.map((row) => editing.get(row.id) ?? copySuppliedItem(row));
-            this.pruneMissingIds();
-            this.updateGlobalIndex();
-        });
-
-        logDebug("setData(items):", this.items.length, "items;", this.editingItems.size, "still being edited");
     }
 
     /**
@@ -6220,6 +6225,28 @@ export class ActionItems implements ActionItemsHandle
      */
     public setState(state: Record<string, unknown>): void
     {
+        this.assertState(state);
+
+        const { selection, collapsed, sort, filter, showArchived } = state;
+
+        this.renderKeepingWork(() =>
+        {
+            if (selection !== undefined)
+            {
+                const known = new Set(this.items.map((i) => i.id));
+                this.selectedIds = new Set((selection as string[]).filter((id) => known.has(id)));
+            }
+
+            if (collapsed !== undefined) { this.collapsedSections = new Set(collapsed as ActionItemStatus[]); }
+            if (sort !== undefined) { this.currentSort = sort as SortOption; }
+            if (filter !== undefined) { this.activeFilter = filter === null ? null : toJsonCopy(filter); }
+            if (showArchived !== undefined) { this.showArchived = showArchived as boolean; }
+        });
+    }
+
+    /** Throws, naming the key, unless every key setState() reads has the type getState() returns. */
+    private assertState(state: Record<string, unknown>): void
+    {
         const { selection, collapsed, sort, filter, showArchived } = state;
 
         if (selection !== undefined
@@ -6256,20 +6283,6 @@ export class ActionItems implements ActionItemsHandle
             throw new Error(
                 `${LOG_PREFIX} setState: showArchived must be true or false, got ${typeof showArchived}.`);
         }
-
-        this.renderKeepingWork(() =>
-        {
-            if (selection !== undefined)
-            {
-                const known = new Set(this.items.map((i) => i.id));
-                this.selectedIds = new Set((selection as string[]).filter((id) => known.has(id)));
-            }
-
-            if (collapsed !== undefined) { this.collapsedSections = new Set(collapsed as ActionItemStatus[]); }
-            if (sort !== undefined) { this.currentSort = sort as SortOption; }
-            if (filter !== undefined) { this.activeFilter = filter === null ? null : toJsonCopy(filter); }
-            if (showArchived !== undefined) { this.showArchived = showArchived; }
-        });
     }
 
     /**

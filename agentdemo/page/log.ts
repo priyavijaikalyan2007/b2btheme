@@ -22,6 +22,7 @@ type Logger = ReturnType<ReturnType<NonNullable<Window["createLogUtility"]>>["ge
 
 let resolved: Logger | null | undefined;
 
+/** The library's logger for the playground, or null when LogUtility is not on the page. */
 function logUtility(): Logger | null
 {
     if (resolved === undefined)

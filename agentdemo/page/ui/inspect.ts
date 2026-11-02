@@ -71,6 +71,7 @@ export function buildInspect(el: HTMLElement, on: InspectHandlers): Inspect
         clear: () => { actions.clear(); errors.clear(); findings.textContent = ""; data.setValue("{}"); } };
 }
 
+/** A pane element for a tab's content. */
 function host(id?: string): HTMLElement
 {
     const el = document.createElement("div");
@@ -81,11 +82,13 @@ function host(id?: string): HTMLElement
     return el;
 }
 
+/** A TabbedPanel tab definition. */
 function tab(id: InspectTab, title: string, content: HTMLElement): Record<string, unknown>
 {
     return { id, title, content };
 }
 
+/** A contained LogConsole in `el`. */
 function logConsole(el: HTMLElement): LogConsoleHandle
 {
     const log = factory<CreateLogConsole>("createLogConsole")({ contained: true, height: "100%", showHeader: false });
@@ -119,6 +122,7 @@ function buildPaste(el: HTMLElement, on: InspectHandlers): CodeEditorHandle
     return editor;
 }
 
+/** A small button. */
 function button(label: string, cls: string, act: () => void): HTMLButtonElement
 {
     const b = document.createElement("button");

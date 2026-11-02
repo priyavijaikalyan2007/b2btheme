@@ -109,7 +109,6 @@ function leanFor(catalog, input, errors)
     }
 }
 
-/** Classifies and resolves every manifest; a thrown literate error is collected. */
 /**
  * Sets aside the manifests whose protocol.outOfCatalog gives a reason
  * (ADR-247): they are neither classified nor published. One that is also on
@@ -132,6 +131,7 @@ function splitOutOfCatalog(input, errors)
     };
 }
 
+/** Classifies and resolves every manifest; a thrown literate error is collected. */
 function classifyFleet(input, errors)
 {
     const ctx = createClassifier(input.tsconfigPath, input.cacheDir);
@@ -272,7 +272,8 @@ function schemaFor(c, result, errors, commonTypes)
             `${name}.${m}: has JSDoc but the schema lost it; typia ignores a comment on the member's own line. `
             + "Move the /** … */ onto the line above."),
         ...defaultOptionsErrors(schema, c.manifest.defaultOptions ?? {}, commonTypes).map((e) =>
-            `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or the options type.`),
+            `${name}: defaultOptions ${e} against the generated schema. One of them is wrong; fix the manifest or `
+            + "the options type."),
         ...fixedProblems(schema, c, commonTypes),
         ...overrideProblems(c),
     ];
@@ -302,41 +303,39 @@ function insertChildren(schema, c)
 
     const out = structuredClone(schema);
     const jsdoc = new Map(c.surface.dataProps.map((d) => [d.name, d]));
-    const problems = [];
-
-    for (const { path, cardinality } of slots)
-    {
-        const child = cardinality === "many" ? { type: "array", items: COMPONENT_ID } : COMPONENT_ID;
-        const what = cardinality === "many" ? "The ids of components, rendered here in order."
-            : "The id of a component, rendered here.";
-
-        if (!/[.[]/.test(path))
-        {
-            out.properties[path] = { ...child, description: `${jsdoc.get(path)?.jsdoc ?? ""} ${what}`.trim() };
-            out.required = jsdoc.get(path)?.optional === false
-                ? [...new Set([...(out.required ?? []), path])] : out.required;
-            continue;
-        }
-
-        const root = path.split(/[.[]/)[0];
-
-        if (c.manifest.protocol?.schemas?.[root] === undefined)
-        {
-            problems.push(`${c.manifest.name}.${path}: a nested child slot needs a closed protocol.schemas override `
-                + `for "${root}", because typia cannot describe an element; the generator then puts ComponentId at `
-                + `the path. Add it in components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`);
-            continue;
-        }
-
-        if (!setPath(out, path, { ...child, description: what }))
-        {
-            problems.push(`${c.manifest.name}.${path}: the protocol.schemas override for "${root}" has no object `
-                + "at that path to put the child slot in. Give the item an object schema with "
-                + "additionalProperties: false.");
-        }
-    }
+    const problems = slots.map((slot) => insertChildSlot(out, slot, c, jsdoc)).filter((p) => p !== null);
 
     return { schema: pruneDefs(out), problems };
+}
+
+/** Puts one child slot into `out` in place; the problem that prevents it, or null. */
+function insertChildSlot(out, { path, cardinality }, c, jsdoc)
+{
+    const child = cardinality === "many" ? { type: "array", items: COMPONENT_ID } : COMPONENT_ID;
+    const what = cardinality === "many" ? "The ids of components, rendered here in order."
+        : "The id of a component, rendered here.";
+
+    if (!/[.[]/.test(path))
+    {
+        out.properties[path] = { ...child, description: `${jsdoc.get(path)?.jsdoc ?? ""} ${what}`.trim() };
+        out.required = jsdoc.get(path)?.optional === false
+            ? [...new Set([...(out.required ?? []), path])] : out.required;
+        return null;
+    }
+
+    const root = path.split(/[.[]/)[0];
+
+    if (c.manifest.protocol?.schemas?.[root] === undefined)
+    {
+        return `${c.manifest.name}.${path}: a nested child slot needs a closed protocol.schemas override `
+            + `for "${root}", because typia cannot describe an element; the generator then puts ComponentId at `
+            + `the path. Add it in components/${c.manifest.name}/${c.manifest.name}.manifest.ts.`;
+    }
+
+    return setPath(out, path, { ...child, description: what }) ? null
+        : `${c.manifest.name}.${path}: the protocol.schemas override for "${root}" has no object `
+            + "at that path to put the child slot in. Give the item an object schema with "
+            + "additionalProperties: false.";
 }
 
 /** Sets the field `path` names ("panels[].content") to `value` in every owning object; false when none. */
@@ -388,6 +387,12 @@ function openPlaces(node, at)
         return [`has a non-schema value at ${at}`];
     }
 
+    return [...ownOpenPlaces(node, at), ...childOpenPlaces(node, at)];
+}
+
+/** The ways `node` itself is unconstrained or open, without looking inside it. */
+function ownOpenPlaces(node, at)
+{
     const places = [];
 
     if (!CONSTRAINING.some((k) => k in node))
@@ -406,6 +411,14 @@ function openPlaces(node, at)
     {
         places.push(`leaves the items of the array at ${at} unconstrained`);
     }
+
+    return places;
+}
+
+/** openPlaces of every schema nested in `node`: properties, record values, items and union arms. */
+function childOpenPlaces(node, at)
+{
+    const places = [];
 
     for (const [key, child] of Object.entries(node.properties ?? {}))
     {
@@ -445,7 +458,8 @@ function fixedProblems(schema, c, commonTypes)
     {
         const validate = ajv.compile({ ...schema.properties[option], $defs: schema.$defs ?? {} });
 
-        return validate(value) ? [] : [`${c.manifest.name}.${option}: protocol.fixed gives it ${JSON.stringify(value)}, `
+        return validate(value) ? []
+            : [`${c.manifest.name}.${option}: protocol.fixed gives it ${JSON.stringify(value)}, `
             + `which its type rejects (${ajv.errorsText(validate.errors)}). The adapter passes this value on every `
             + "mount; give one the option accepts."];
     });
@@ -569,14 +583,16 @@ function checkBaseline(catalog, input, errors)
     {
         if (!input.writeBaseline)
         {
-            errors.push("No published catalog baseline exists in specs/agentui/published/. Run `npm run build:agentui -- --write-baseline` and commit it.");
+            errors.push("No published catalog baseline exists in specs/agentui/published/. Run "
+                + "`npm run build:agentui -- --write-baseline` and commit it.");
         }
         return;
     }
 
     const previousMajor = Math.max(...majors);
     const diff = diffCatalogs(input.baselines.get(previousMajor), catalog);
-    const unwritten = versionProblem(diff, previousMajor, input.major) ?? unwrittenBaselineProblem(catalog, input, previousMajor, diff);
+    const unwritten = versionProblem(diff, previousMajor, input.major)
+        ?? unwrittenBaselineProblem(catalog, input, previousMajor, diff);
 
     if (unwritten)
     {
@@ -626,7 +642,8 @@ function changeSummary(baseline, catalog, diff)
 /** Every file to write, keyed by path relative to dist/. */
 function outputsFor(ready, schemas, { catalog, lean }, { excluded, outOfCatalog }, input)
 {
-    const outputs = new Map(ready.map((c) => [`schemas/${c.manifest.name}.options.json`, schemas.get(c.manifest.name)]));
+    const outputs = new Map(ready.map((c) =>
+        [`schemas/${c.manifest.name}.options.json`, schemas.get(c.manifest.name)]));
 
     outputs.set(`a2ui/catalog/v${input.major}.json`, catalog);
     outputs.set(`a2ui/catalog/v${input.major}.agent.json`, lean);
@@ -660,14 +677,17 @@ export async function addAdapter(result, input, bundle = bundleAdapter)
     const catalogText = `${JSON.stringify(result.catalog, null, 2)}\n`;
     const validatorsSource = compileValidators({ catalog: result.catalog, basic: input.basic,
         commonTypes: input.commonTypes, descriptors: result.descriptors });
-    const out = await bundle({ catalogText, descriptors: result.descriptors, validatorsSource, repoRoot: input.repoRoot });
+    const out = await bundle({ catalogText, descriptors: result.descriptors, validatorsSource,
+        repoRoot: input.repoRoot });
     const report = result.outputs.get("agentui-report.json");
 
     result.outputs.set(`a2ui/adapter/v${input.major}.js`, out.js);
     result.outputs.set(`a2ui/adapter/v${input.major}.d.ts`, out.dts);
-    result.outputs.set("agentui-report.json", { ...report, adapter: { descriptors: result.descriptors, packages: out.packages } });
+    result.outputs.set("agentui-report.json",
+        { ...report, adapter: { descriptors: result.descriptors, packages: out.packages } });
 }
 
+/** The generator's counts: components, exclusions, props, events, providers, host-only members, violations. */
 function countsFor(classified, ready, excluded)
 {
     const all = classified.flatMap((c) => c.surface.violations);
@@ -746,7 +766,8 @@ function swapRoots(staging, distDir, fsImpl)
     {
         rollback(state);
         throw new Error(`Could not replace dist/${state.current}: ${err.message}. dist/ was restored to its previous `
-            + "state and nothing was written. Check the permissions on dist/ and that no process holds it open, then rerun.",
+            + "state and nothing was written. Check the permissions on dist/ and that no process holds it open, "
+            + "then rerun.",
         { cause: err });
     }
 }
@@ -785,12 +806,20 @@ function rollback({ staging, distDir, parked, placed, fsImpl })
     }
     catch (err)
     {
-        const stranded = new Error(`Rollback of dist/ failed: ${err.message}. The previous generated roots (${parked.join(", ")}) `
+        const stranded = new Error(`Rollback of dist/ failed: ${err.message}. `
+            + `The previous generated roots (${parked.join(", ")}) `
             + `are in ${path.join(staging, ".old")}; move them back into ${distDir} by hand.`, { cause: err });
 
         stranded.stranded = true;
         throw stranded;
     }
+}
+
+/** A JSON file from the vendored A2UI v0.9.1 specification, by its path under that directory. */
+function readVendored(repoRoot, ...segments)
+{
+    return JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", ...segments),
+        "utf8"));
 }
 
 /** Repo-level inputs: built manifests, vendored basic catalog, committed baselines. */
@@ -800,7 +829,8 @@ function repoInputs(repoRoot, writeBaseline)
 
     if (!fs.existsSync(manifestPath))
     {
-        throw new Error(`${manifestPath} does not exist. The generator reads the built manifests; run \`npm run build\` first.`);
+        throw new Error(`${manifestPath} does not exist. The generator reads the built manifests; `
+            + "run `npm run build` first.");
     }
 
     return {
@@ -809,8 +839,8 @@ function repoInputs(repoRoot, writeBaseline)
         tsconfigPath: path.join(repoRoot, "tsconfig.json"),
         cacheDir: path.join(repoRoot, "node_modules", ".cache", "agentui"),
         pending: PENDING_CLASSIFICATION, belowRequired: BELOW_REQUIRED,
-        basic: JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", "catalogs", "basic", "catalog.json"), "utf8")),
-        commonTypes: JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "agentui", "vendor", "a2ui-v0_9_1", "common_types.json"), "utf8")),
+        basic: readVendored(repoRoot, "catalogs", "basic", "catalog.json"),
+        commonTypes: readVendored(repoRoot, "common_types.json"),
         repoRoot,
         baselines: loadBaselines(), major: CATALOG_MAJOR, writeBaseline,
         assetExists: (rel) => fs.existsSync(path.join(repoRoot, "dist", rel)),
@@ -866,8 +896,8 @@ export function measureClassification(repoRoot = REPO)
 
     const counts = countsFor(classified, [], []);
 
-    return { unclassifiedOptions: counts.unclassifiedOptions, protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc,
-        changeMismatches: counts.changeMismatches };
+    return { unclassifiedOptions: counts.unclassifiedOptions,
+        protocolPropsMissingJsdoc: counts.protocolPropsMissingJsdoc, changeMismatches: counts.changeMismatches };
 }
 
 /** CLI. */
@@ -895,6 +925,23 @@ async function main(argv)
         process.exit(1);
     }
 
+    await addAdapterOrExit(result, input);
+
+    if (writeBaseline)
+    {
+        fs.mkdirSync(PUBLISHED, { recursive: true });
+        fs.writeFileSync(path.join(PUBLISHED, `catalog-v${input.major}.json`),
+            `${JSON.stringify(result.catalog, null, 2)}\n`);
+    }
+
+    const prompt = addPromptSizes(result, input);
+    writeOutputs(result.outputs, path.join(REPO, "dist"));
+    printSummary(result.counts, prompt);
+}
+
+/** Builds the adapter into `result`, or exits 1 before anything is written to dist/. */
+async function addAdapterOrExit(result, input)
+{
     try
     {
         await addAdapter(result, input);
@@ -905,16 +952,11 @@ async function main(argv)
         console.error("[agentui] The A2UI adapter could not be built; nothing was written to dist/.");
         process.exit(1);
     }
+}
 
-    if (writeBaseline)
-    {
-        fs.mkdirSync(PUBLISHED, { recursive: true });
-        fs.writeFileSync(path.join(PUBLISHED, `catalog-v${input.major}.json`), `${JSON.stringify(result.catalog, null, 2)}\n`);
-    }
-
-    const prompt = addPromptSizes(result, input);
-    writeOutputs(result.outputs, path.join(REPO, "dist"));
-    const c = result.counts;
+/** Prints the catalog's counts and its size in a prompt. */
+function printSummary(c, prompt)
+{
     console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification, `
         + `${c.outOfCatalog} out of the catalog by protocol.outOfCatalog), `
         + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members, `

@@ -26,7 +26,8 @@ import { addAdapter } from "./generate.mjs";
 
 const REPO = path.resolve(__dirname, "..", "..");
 const DESCRIPTORS = [{ name: "StickyNote", tagName: "outcrop-sticky-note", factory: "createStickyNote",
-    factoryStyle: "container-first", mountMethod: "auto", conformance: "surface", assets: { js: "components/stickynote/stickynote.js" },
+    factoryStyle: "container-first", mountMethod: "auto", conformance: "surface",
+    assets: { js: "components/stickynote/stickynote.js" },
     props: { text: { route: "slot", slot: "text" } }, twoWay: false, events: [], dates: [] }];
 const CATALOG_TEXT = `${JSON.stringify(catalog, null, 2)}\n`;
 
@@ -67,13 +68,19 @@ describe("addAdapter", () =>
     {
         const outputs = new Map<string, unknown>([["agentui-report.json", { catalogId: "x" }]]);
         const seen: Record<string, unknown>[] = [];
-        const stub = async (arg: Record<string, unknown>) => { seen.push(arg); return { js: "JS", dts: "DTS", packages: ["ajv"] }; };
+        const stub = async (arg: Record<string, unknown>) =>
+        {
+            seen.push(arg);
+            return { js: "JS", dts: "DTS", packages: ["ajv"] };
+        };
 
-        await addAdapter({ catalog, descriptors: DESCRIPTORS, outputs }, { basic, commonTypes, major: 1, repoRoot: REPO }, stub);
+        await addAdapter({ catalog, descriptors: DESCRIPTORS, outputs },
+            { basic, commonTypes, major: 1, repoRoot: REPO }, stub);
 
         expect(outputs.get("a2ui/adapter/v1.js")).toBe("JS");
         expect(outputs.get("a2ui/adapter/v1.d.ts")).toBe("DTS");
-        expect(outputs.get("agentui-report.json")).toEqual({ catalogId: "x", adapter: { descriptors: DESCRIPTORS, packages: ["ajv"] } });
+        expect(outputs.get("agentui-report.json"))
+            .toEqual({ catalogId: "x", adapter: { descriptors: DESCRIPTORS, packages: ["ajv"] } });
         expect(seen[0].catalogText).toBe(CATALOG_TEXT);
         expect(String(seen[0].validatorsSource)).toContain('"StickyNote.text"');
     });
