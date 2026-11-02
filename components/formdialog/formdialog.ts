@@ -78,24 +78,47 @@ export interface FormDialogPanel
 
 export interface FormDialogOptions
 {
+    /** Dialog title, shown in the header. Required. */
     title: string;
+
+    /** A sentence under the title saying what the form is for. */
     description?: string;
+
+    /** Dialog width. Default: "md". */
     size?: "sm" | "md" | "lg" | "xl";
 
+    /** The fields of a single-page form, in order. Ignored when steps is given. */
     fields?: FormFieldDef[];
+
+    /** Collapsible groups; a field joins one by naming its id in its section. */
     sections?: FormSection[];
 
+    /** Wizard steps, each with its own fields; given, the dialog is a wizard. */
     steps?: FormStep[];
+
+    /** Animation between wizard steps. Default: "slide". */
     stepTransition?: "slide" | "fade" | "none";
 
     panel?: FormDialogPanel;
 
+    /** Text of the Submit button. Default: "Submit". */
     submitLabel?: string;
+
+    /** Text of the Cancel button. Default: "Cancel". */
     cancelLabel?: string;
+
+    /** Text of a wizard's Next button. Default: "Next". */
     nextLabel?: string;
+
+    /** Text of a wizard's Back button. Default: "Back". */
     backLabel?: string;
 
-    onSubmit: (values: Record<string, string>) => Promise<void> | void;
+    /**
+     * Called with the values on Submit; a returned promise holds the dialog
+     * open, loading, until it settles. Optional since ADR-246, for a caller
+     * that hears the "submit" channel instead.
+     */
+    onSubmit?: (values: Record<string, string>) => Promise<void> | void;
     onCancel?: () => void;
     onStepChange?: (stepIndex: number, stepId: string) => void;
     onFieldChange?: (name: string, value: string) => void;
@@ -103,13 +126,37 @@ export interface FormDialogOptions
     customContent?: HTMLElement;
     /** Whether to show the footer with Submit/Cancel buttons. Default: true. */
     showFooter?: boolean;
+    /** Close after a successful submit. Default: true. */
     autoClose?: boolean;
     closeOnBackdrop?: boolean;
+
+    /** Cancel when the user presses Escape. Default: true. */
     closeOnEscape?: boolean;
     warnOnDirty?: boolean;
 
+    /** Additional CSS class on the dialog's root. */
     cssClass?: string;
     keyBindings?: Partial<Record<string, string>>;
+
+    /**
+     * Contained mode (ADR-246). Default: false, a page modal as before. When
+     * true the dialog renders inside `container` with no page backdrop: its
+     * keys work only while focus is inside it, it takes no focus on open and
+     * traps none, and it shows as soon as createFormDialog creates it.
+     */
+    contained?: boolean;
+
+    /** Where a contained dialog renders. Required when `contained` is true. */
+    container?: HTMLElement;
+}
+
+/** The FormDialog channels: the user submitted valid values, or cancelled. */
+export type FormDialogChannel = "submit" | "cancel";
+
+/** The "submit" channel's payload: every field's value by name. */
+export interface FormDialogSubmit
+{
+    values: Record<string, string>;
 }
 
 export interface FormDialog
@@ -140,7 +187,25 @@ export interface FormDialog
 
     getElement(): HTMLElement;
     getContentElement(): HTMLElement;
+
+    /**
+     * Subscribes to "submit", with the values once onSubmit settles, or
+     * "cancel", with an empty payload after onCancel (ADR-246). Returns an
+     * unsubscribe.
+     */
+    on(channel: FormDialogChannel, handler: (payload: FormDialogSubmit | Record<string, never>) => void): () => void;
+
+    /** A form dialog's values travel in the submit event, so it has no view state to carry. */
+    getState(): Record<string, never>;
+
+    /** Nothing to restore, see getState. */
+    setState(state: Record<string, unknown>): void;
+
+    /** A form dialog has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
 }
+
+const CHANNELS: readonly string[] = ["submit", "cancel"];
 
 // ============================================================================
 // 2. CONSTANTS
@@ -345,9 +410,20 @@ class FormDialogImpl implements FormDialog
 
     // Bound handlers
     private boundOnKeydown: (e: KeyboardEvent) => void;
+    private keyTargetEl: HTMLElement | Document | null = null;
+    private readonly handlers =
+        new Map<string, Set<(payload: FormDialogSubmit | Record<string, never>) => void>>();
 
     constructor(options: FormDialogOptions)
     {
+        // Absent means document.body unless contained; a container passed but missing is the caller's mistake.
+        if ((options.contained || options.container !== undefined) && !(options.container instanceof HTMLElement))
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.container must be an element when options.contained is true or a `
+                + "container is passed. Pass the element the dialog renders in.");
+        }
+
         this.id = `${CLS}-${++instanceCounter}`;
         this.opts = options;
         this.isWizard = Array.isArray(options.steps) && options.steps.length > 0;
@@ -401,9 +477,10 @@ class FormDialogImpl implements FormDialog
         if (this.destroyed) { return; }
         if (this.mounted) { return; }
 
-        this.previousFocusEl = document.activeElement as HTMLElement | null;
+        // A contained dialog takes no focus, so it gives none back (ADR-246).
+        this.previousFocusEl = this.opts.contained ? null : document.activeElement as HTMLElement | null;
         this.buildDOM();
-        document.body.appendChild(this.overlayEl!);
+        (this.opts.contained ? this.opts.container! : document.body).appendChild(this.overlayEl!);
         this.mounted = true;
 
         // Snapshot initial values for dirty tracking
@@ -417,8 +494,14 @@ class FormDialogImpl implements FormDialog
             this.promoteToEntered();
         });
 
-        document.addEventListener("keydown", this.boundOnKeydown);
-        this.focusFirstField();
+        // Keys on the document for a page modal, on the dialog itself when contained (ADR-246).
+        this.keyTargetEl = this.opts.contained ? this.overlayEl! : document;
+        this.keyTargetEl.addEventListener("keydown", this.boundOnKeydown as EventListener);
+
+        if (!this.opts.contained)
+        {
+            this.focusFirstField();
+        }
     }
 
     public close(): void
@@ -437,7 +520,55 @@ class FormDialogImpl implements FormDialog
     private doClose(): void
     {
         safeCallback(this.opts.onCancel);
+        this.emit("cancel", {});
         this.teardown();
+    }
+
+    /** Subscribes to "submit" or "cancel" (ADR-246). */
+    public on(channel: FormDialogChannel,
+        handler: (payload: FormDialogSubmit | Record<string, never>) => void): () => void
+    {
+        if (!CHANNELS.includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on(): unknown channel "${channel}". Use "submit" or "cancel".`);
+        }
+
+        let set = this.handlers.get(channel);
+        if (!set)
+        {
+            set = new Set();
+            this.handlers.set(channel, set);
+        }
+        set.add(handler);
+
+        return () => { this.handlers.get(channel)?.delete(handler); };
+    }
+
+    /** A form dialog has no view state (ADR-246). */
+    public getState(): Record<string, never>
+    {
+        return {};
+    }
+
+    /** Nothing to restore, see getState. */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No view state.
+    }
+
+    /** A form dialog has no data slots. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData(): FormDialog has no data slots, so "${slot}" is unknown.`);
+    }
+
+    /** Fires a channel's subscribers after the legacy callback (ADR-246). */
+    private emit(channel: FormDialogChannel, payload: FormDialogSubmit | Record<string, never>): void
+    {
+        for (const handler of [...(this.handlers.get(channel) ?? [])])
+        {
+            handler(payload);
+        }
     }
 
     /**
@@ -474,12 +605,14 @@ class FormDialogImpl implements FormDialog
     {
         if (this.destroyed) { return; }
         this.teardown();
+        this.handlers.clear();
         this.destroyed = true;
     }
 
     private teardown(): void
     {
-        document.removeEventListener("keydown", this.boundOnKeydown);
+        this.keyTargetEl?.removeEventListener("keydown", this.boundOnKeydown as EventListener);
+        this.keyTargetEl = null;
 
         if (this.overlayEl && this.overlayEl.parentNode)
         {
@@ -518,9 +651,17 @@ class FormDialogImpl implements FormDialog
         this.overlayEl = createElement("div", [`${CLS}-overlay`]);
         if (this.opts.cssClass) { this.overlayEl.classList.add(this.opts.cssClass); }
 
-        this.backdropEl = createElement("div", [`${CLS}-backdrop`]);
-        this.backdropEl.addEventListener("click", (e) => this.onBackdropClick(e));
-        this.overlayEl.appendChild(this.backdropEl);
+        // Contained, the overlay fills its container and has no backdrop (ADR-246).
+        if (this.opts.contained)
+        {
+            this.overlayEl.classList.add(`${CLS}-contained`);
+        }
+        else
+        {
+            this.backdropEl = createElement("div", [`${CLS}-backdrop`]);
+            this.backdropEl.addEventListener("click", (e) => this.onBackdropClick(e));
+            this.overlayEl.appendChild(this.backdropEl);
+        }
 
         this.dialogEl = this.buildDialog();
         this.overlayEl.appendChild(this.dialogEl);
@@ -536,7 +677,8 @@ class FormDialogImpl implements FormDialog
         const size = this.opts.size || DEFAULT_SIZE;
         const dialog = createElement("div", [`${CLS}-dialog`, `${CLS}-dialog-${size}`]);
         setAttr(dialog, "role", "dialog");
-        setAttr(dialog, "aria-modal", "true");
+        // A contained dialog blocks nothing outside its box, so it is not modal.
+        setAttr(dialog, "aria-modal", this.opts.contained ? "false" : "true");
         setAttr(dialog, "aria-labelledby", `${this.id}-title`);
         dialog.style.maxWidth = SIZE_MAP[size] || SIZE_MAP[DEFAULT_SIZE];
 
@@ -1494,7 +1636,7 @@ class FormDialogImpl implements FormDialog
 
         try
         {
-            result = this.opts.onSubmit(values);
+            result = this.opts.onSubmit?.(values);
         }
         catch (err)
         {
@@ -1509,6 +1651,7 @@ class FormDialogImpl implements FormDialog
                 .then(() =>
                 {
                     this.setLoading(false);
+                    this.emit("submit", { values });
                     if (this.opts.autoClose !== false)
                     {
                         this.teardown();
@@ -1520,9 +1663,14 @@ class FormDialogImpl implements FormDialog
                     this.handleSubmitError(err);
                 });
         }
-        else if (this.opts.autoClose !== false)
+        else
         {
-            this.teardown();
+            this.emit("submit", { values });
+
+            if (this.opts.autoClose !== false)
+            {
+                this.teardown();
+            }
         }
     }
 
@@ -2013,8 +2161,8 @@ class FormDialogImpl implements FormDialog
             return;
         }
 
-        // Tab focus trap
-        if (e.key === "Tab")
+        // Tab focus trap; a contained dialog traps none (ADR-246)
+        if (e.key === "Tab" && !this.opts.contained)
         {
             this.handleFocusTrap(e);
             return;
@@ -2212,7 +2360,15 @@ export function createFormDialog(options: FormDialogOptions): FormDialog
             + "Pass it when creating the FormDialog.");
     }
 
-    return new FormDialogImpl(options);
+    const dialog = new FormDialogImpl(options);
+
+    // A contained dialog shows at once, in its container (ADR-246).
+    if (options.contained)
+    {
+        dialog.show();
+    }
+
+    return dialog;
 }
 
 // ============================================================================

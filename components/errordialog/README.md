@@ -69,6 +69,27 @@ dialog.destroy();
 
 One-liner convenience function. Creates an `ErrorDialog` instance and immediately shows it.
 
+### Function: `createErrorDialog(containerId, options)` (ADR-246)
+
+Shows the error at once and returns a handle. `options` is the `LiterateError` plus two additive fields:
+
+| Option | Default | Description |
+|---|---|---|
+| `showRetry` | `false` | Show Retry without `onRetry`, for a `retry` subscriber |
+| `contained` | `false` | Show the dialog in place inside the container, with no Bootstrap Modal and no page backdrop. Its Close buttons and Escape close it; Escape and Ctrl+C work only while focus is inside it |
+
+| Member | Description |
+|---|---|
+| `on("close" \| "retry", handler)` | Subscribes with `{}`. `retry` fires after `onRetry`; `close` fires when the dialog closes. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+| `getElement()` | The dialog's root while it is open, or `null` |
+| `hide()` / `destroy()` | Close the dialog / remove it without a `close` event. `destroy` is idempotent |
+
+### Over A2UI
+
+ErrorDialog is in the A2UI catalog. It is always contained, so it shows no Bootstrap Modal and no page backdrop. Retry sends `onRetry` (set `showRetry: true` to offer it), and closing sends `onClose`. The adapter loads Bootstrap's JS for the technical-details toggle, unless the page already has it.
+
 ## Features
 
 - **Danger header** — Red header strip with exclamation icon

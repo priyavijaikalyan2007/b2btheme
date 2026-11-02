@@ -74,7 +74,9 @@ import type
     registerCommands,
 } from "./commandpalette/commandpalette";
 import type { CommentOverlay, createCommentOverlay } from "./commentoverlay/commentoverlay";
-import type { ConfirmDialog, showConfirmDialog, showDangerConfirmDialog } from "./confirmdialog/confirmdialog";
+import type {
+    ConfirmDialog, createConfirmDialog, showConfirmDialog, showDangerConfirmDialog,
+} from "./confirmdialog/confirmdialog";
 import type { attachLongPress, createContextMenu } from "./contextmenu/contextmenu";
 import type { Conversation, createConversation } from "./conversation/conversation";
 import type { CronPicker, createCronPicker } from "./cronpicker/cronpicker";
@@ -95,7 +97,7 @@ import type
 } from "./dynamicformswitcher/dynamicformswitcher";
 import type { EditableComboBox, createEditableComboBox } from "./editablecombobox/editablecombobox";
 import type { EmptyState, createEmptyState } from "./emptystate/emptystate";
-import type { ErrorDialog, showErrorDialog } from "./errordialog/errordialog";
+import type { createErrorDialog, ErrorDialog, showErrorDialog } from "./errordialog/errordialog";
 import type { ExplorerPickerImpl, createExplorerPicker } from "./explorerpicker/explorerpicker";
 import type { FacetSearch, createFacetSearch, parseFacetQuery } from "./facetsearch/facetsearch";
 import type { FileExplorer, createFileExplorer } from "./fileexplorer/fileexplorer";
@@ -155,7 +157,9 @@ import type { PermissionMatrix, createPermissionMatrix } from "./permissionmatri
 import type { PersonChip, createPersonChip } from "./personchip/personchip";
 import type { Pill, createPill } from "./pill/pill";
 import type { PresenceIndicator, createPresenceIndicator } from "./presenceindicator/presenceindicator";
-import type { ProgressModal, showProgressModal, showSteppedProgressModal } from "./progressmodal/progressmodal";
+import type {
+    createProgressModal, ProgressModal, showProgressModal, showSteppedProgressModal,
+} from "./progressmodal/progressmodal";
 import type { PromptTemplateManager, createPromptTemplateManager } from "./prompttemplatemanager/prompttemplatemanager";
 import type { createPropertyInspector } from "./propertyinspector/propertyinspector";
 import type { ReasoningAccordion, createReasoningAccordion } from "./reasoningaccordion/reasoningaccordion";
@@ -393,6 +397,7 @@ declare global
         /** Published by the Confirmdialog component. */
         showConfirmDialog?: typeof showConfirmDialog;
         showDangerConfirmDialog?: typeof showDangerConfirmDialog;
+        createConfirmDialog?: typeof createConfirmDialog;
 
         /** Published by the Contextmenu component. */
         attachLongPress?: typeof attachLongPress;
@@ -455,6 +460,7 @@ declare global
 
         /** Published by the Errordialog component. */
         showErrorDialog?: typeof showErrorDialog;
+        createErrorDialog?: typeof createErrorDialog;
 
         /** Published by the ExplorerPicker component. */
         createExplorerPicker?: typeof createExplorerPicker;
@@ -623,6 +629,7 @@ declare global
         /** Published by the ProgressModal component. */
         showProgressModal?: typeof showProgressModal;
         showSteppedProgressModal?: typeof showSteppedProgressModal;
+        createProgressModal?: typeof createProgressModal;
 
         /** Published by the Prompttemplatemanager component. */
         createPromptTemplateManager?: typeof createPromptTemplateManager;

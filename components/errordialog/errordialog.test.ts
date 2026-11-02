@@ -13,7 +13,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
-import { ErrorDialog, showErrorDialog, LiterateError } from "./errordialog";
+import { createErrorDialog, ErrorDialog, showErrorDialog, LiterateError } from "./errordialog";
 
 // ============================================================================
 // HELPERS
@@ -556,5 +556,115 @@ describe("instance methods", () =>
         dialog.hide();
 
         expect(document.querySelector(".modal.show")).toBeNull();
+    });
+});
+
+// ============================================================================
+// CONTAINED MODE AND HANDLE (ADR-246)
+// ============================================================================
+
+describe("createErrorDialog, contained (ADR-246)", () =>
+{
+    const ERROR = { title: "Sync failed", message: "The document could not sync.", technicalDetail: "HTTP 503" };
+
+    test("shows in place in its container with no Bootstrap Modal and no dismiss attribute", () =>
+    {
+        const modalSpy = vi.fn();
+        (window as unknown as Record<string, unknown>)["bootstrap"] = { Modal: modalSpy };
+
+        const dialog = createErrorDialog("test-error-container", { ...ERROR, contained: true });
+
+        expect(getModalEl()).toBe(dialog.getElement());
+        expect(getModalEl()?.classList.contains("errordialog-contained")).toBe(true);
+        expect(getModalEl()?.classList.contains("fade")).toBe(false);
+        expect(getModalEl()?.getAttribute("aria-modal")).toBe("false");
+        expect(container.querySelectorAll("[data-bs-dismiss]").length).toBe(0);
+        expect(modalSpy).not.toHaveBeenCalled();
+        dialog.destroy();
+    });
+
+    test("a page dialog from createErrorDialog is a Bootstrap Modal, as before", () =>
+    {
+        const dialog = createErrorDialog("test-error-container", ERROR);
+
+        expect(getModalEl()?.classList.contains("fade")).toBe(true);
+        expect(container.querySelectorAll("[data-bs-dismiss='modal']").length).toBe(2);
+        dialog.destroy();
+    });
+
+    test("Close fires the close channel and removes the dialog", () =>
+    {
+        const onClose = vi.fn();
+        const dialog = createErrorDialog("test-error-container", { ...ERROR, contained: true });
+        dialog.on("close", onClose);
+
+        getCloseButton()!.click();
+
+        expect(onClose).toHaveBeenCalledWith({});
+        expect(getModalEl()).toBeNull();
+    });
+
+    test("Escape inside closes it; an Escape on the page does not", () =>
+    {
+        const onClose = vi.fn();
+        const dialog = createErrorDialog("test-error-container", { ...ERROR, contained: true });
+        dialog.on("close", onClose);
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onClose).not.toHaveBeenCalled();
+
+        dialog.getElement()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    test("showRetry puts up Retry without onRetry; onRetry fires before the retry channel", () =>
+    {
+        const order: string[] = [];
+        const dialog = createErrorDialog("test-error-container", { ...ERROR, contained: true,
+            onRetry: () => order.push("callback") });
+        dialog.on("retry", () => order.push("channel"));
+
+        container.querySelector<HTMLElement>(".errordialog-retry")!.click();
+        expect(order).toEqual(["callback", "channel"]);
+        expect(getModalEl()).not.toBeNull();
+        dialog.destroy();
+
+        createErrorDialog("test-error-container", { ...ERROR, contained: true, showRetry: true });
+        expect(container.querySelector(".errordialog-retry")).not.toBeNull();
+    });
+
+    test("without onRetry or showRetry there is no Retry button, as before", () =>
+    {
+        createErrorDialog("test-error-container", { ...ERROR, contained: true });
+
+        expect(container.querySelector(".errordialog-retry")).toBeNull();
+    });
+
+    test("the handle has no state or slots, and destroy is idempotent without a close event", () =>
+    {
+        const onClose = vi.fn();
+        const dialog = createErrorDialog("test-error-container", { ...ERROR, contained: true });
+        dialog.on("close", onClose);
+
+        dialog.setState(dialog.getState());
+        expect(dialog.getState()).toEqual({});
+        expect(() => dialog.setData("rows", [])).toThrow(/no data slots/);
+        expect(() => dialog.on("submit" as "close", () => undefined)).toThrow(/unknown channel "submit"/);
+
+        dialog.destroy();
+        dialog.destroy();
+        expect(getModalEl()).toBeNull();
+        expect(onClose).not.toHaveBeenCalled();
+    });
+});
+
+describe("createErrorDialog refuses a missing required option (ERR-2)", () =>
+{
+    test("title and message are each required", () =>
+    {
+        expect(() => createErrorDialog("test-error-container", { message: "m" } as never))
+            .toThrow(/options.title is required/);
+        expect(() => createErrorDialog("test-error-container", { title: "t" } as never))
+            .toThrow(/options.message is required/);
     });
 });

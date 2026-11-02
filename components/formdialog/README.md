@@ -284,6 +284,23 @@ createFormDialog({
 });
 ```
 
+## Contained mode and channels (ADR-246)
+
+Pass `contained: true` with a `container` element and `createFormDialog` shows the dialog at once inside that element, with no backdrop. It takes no focus on open and traps none, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal, which waits for `show()`.
+
+| Member | Description |
+|---|---|
+| `on("submit", handler)` | Subscribes to `{ values }`, every field's value, once `onSubmit` settles. Nothing fires when validation or `onSubmit` fails. Returns the unsubscribe |
+| `on("cancel", handler)` | Subscribes to `{}`, after `onCancel` |
+| `getState()` / `setState(state)` | Nothing to restore: the values travel in the submit event |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+
+`onSubmit` is optional, for a caller that listens on `submit` instead.
+
+### Over A2UI
+
+FormDialog is in the A2UI catalog. It is always contained, so it renders in its surface and blocks nothing outside it. Submit sends `onSubmit` with `{ values }`, and cancelling sends `onCancel`. Fields, sections and steps take no `validate`, `customElement` or `"custom"` type; `panel`, `customContent` and `warnOnDirty` are the host's.
+
 ## Keyboard
 
 | Key | Context | Action |

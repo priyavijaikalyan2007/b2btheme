@@ -11,7 +11,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import { AWAITING_MANIFEST, NO_MANIFEST, manifestCoverageProblems } from "./no-manifest.mjs";
+import { NO_MANIFEST, manifestCoverageProblems } from "./no-manifest.mjs";
 
 const COMPONENTS = join(__dirname, "..", "..", "components");
 
@@ -39,10 +39,9 @@ describe("manifest coverage (ADR-243)", () =>
             .toContainEqual(expect.stringMatching(/toast is listed .* does not exist/));
     });
 
-    test("every reason is a sentence, and no name is on both lists", () =>
+    test("every reason is a sentence", () =>
     {
         expect(NO_MANIFEST.size).toBe(14);
         expect([...NO_MANIFEST].filter(([, reason]) => !/^[A-Z].{10,}\.$/.test(reason))).toEqual([]);
-        expect([...NO_MANIFEST.keys()].filter((name) => AWAITING_MANIFEST.has(name))).toEqual([]);
     });
 });

@@ -14,6 +14,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
 import
 {
+    createProgressModal,
     ProgressModal,
     showProgressModal,
     showSteppedProgressModal,
@@ -508,5 +509,175 @@ describe("ProgressModal auto-close", () =>
         modal.complete();
         vi.advanceTimersByTime(1100);
         expect(modal.getState()).toBe("closed");
+    });
+});
+
+// ============================================================================
+// CONTAINED MODE AND SURFACE (ADR-246)
+// ============================================================================
+
+describe("ProgressModal contained, and createProgressModal (ADR-246)", () =>
+{
+    let host: HTMLElement;
+
+    beforeEach(() =>
+    {
+        host = document.createElement("div");
+        document.body.appendChild(host);
+    });
+
+    afterEach(() =>
+    {
+        host.remove();
+    });
+
+    test("a contained modal renders in its container with no backdrop and is not modal", () =>
+    {
+        const modal = showProgressModal(makeOptions({ contained: true, container: host }));
+
+        expect(host.querySelector(".progressmodal.progressmodal-contained")).not.toBeNull();
+        expect(getBackdrop()).toBeNull();
+        expect(getModal()?.getAttribute("aria-modal")).toBe("false");
+        modal.destroy();
+    });
+
+    test("a page modal still mounts on the body with its backdrop, as before", () =>
+    {
+        const modal = showProgressModal(makeOptions());
+
+        expect(getModal()?.parentElement).toBe(document.body);
+        expect(getBackdrop()).not.toBeNull();
+        modal.destroy();
+    });
+
+    test("throws when contained has no container element", () =>
+    {
+        expect(() => new ProgressModal(makeOptions({ contained: true }))).toThrow(/options.container must be an element/);
+    });
+
+    test("takes no focus on open or on completion", () =>
+    {
+        const outside = document.createElement("input");
+        document.body.appendChild(outside);
+        outside.focus();
+
+        const modal = showProgressModal(makeOptions({ contained: true, container: host }));
+        vi.runAllTimers();
+        modal.complete();
+        vi.runAllTimers();
+
+        expect(document.activeElement).toBe(outside);
+        modal.destroy();
+        outside.remove();
+    });
+
+    test("an Escape on the page does not close a finished contained modal; inside it does", () =>
+    {
+        const onClose = vi.fn();
+        const modal = showProgressModal(makeOptions({ contained: true, container: host, onClose }));
+        modal.complete();
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onClose).not.toHaveBeenCalled();
+
+        getModal()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    test("the progress slot sets the status, bar and step while running", () =>
+    {
+        const surface = createProgressModal(makeOptions({ contained: true, container: host, totalSteps: 4 }));
+
+        surface.setData("progress", { status: "Reading rows", fraction: 0.5, step: 2 });
+
+        expect(getStatusEl()?.textContent).toBe("Reading rows");
+        expect(getProgressBar()?.style.width).toBe("50%");
+        expect(host.querySelector(".progressmodal-current-step")?.textContent).toBe("2");
+        surface.destroy();
+    });
+
+    test("an outcome finishes the run once, with its status", () =>
+    {
+        const surface = createProgressModal(makeOptions({ contained: true, container: host }));
+
+        surface.setData("progress", { outcome: "failed", status: "Server refused" });
+        surface.setData("progress", { outcome: "completed", status: "Done" });
+
+        expect(surface.modal.getState()).toBe("failed");
+        expect(getStatusEl()?.textContent).toBe("Server refused");
+        surface.destroy();
+    });
+
+    test("the log appends the entries past those shown, and a shorter list starts again", () =>
+    {
+        const surface = createProgressModal(makeOptions({ contained: true, container: host,
+            progress: { log: [{ message: "one" }] } }));
+
+        surface.setData("progress", { log: [{ message: "one" }, { message: "two", level: "warning" }] });
+        expect(surface.modal.getLog().map((e) => [e.message, e.level])).toEqual([["one", "info"], ["two", "warning"]]);
+
+        surface.setData("progress", { log: [{ message: "fresh" }] });
+        expect(surface.modal.getLog().map((e) => e.message)).toEqual(["fresh"]);
+        expect(host.querySelectorAll(".progressmodal-log-entry").length).toBe(1);
+        surface.destroy();
+    });
+
+    test("showCancel offers Cancel without onCancel; onCancel fires before the cancel channel", () =>
+    {
+        const order: string[] = [];
+        const surface = createProgressModal(makeOptions({ contained: true, container: host,
+            onCancel: () => order.push("callback") }));
+        surface.on("cancel", () => order.push("channel"));
+
+        host.querySelector<HTMLElement>(".progressmodal-cancel-btn")!.click();
+        expect(order).toEqual(["callback", "channel"]);
+        surface.destroy();
+
+        const offered = createProgressModal(makeOptions({ contained: true, container: host, showCancel: true }));
+        expect(host.querySelector<HTMLElement>(".progressmodal-cancel-btn")!.style.display).toBe("");
+        offered.destroy();
+    });
+
+    test("without onCancel or showCancel there is no Cancel, as before", () =>
+    {
+        const surface = createProgressModal(makeOptions({ contained: true, container: host }));
+
+        expect(host.querySelector<HTMLElement>(".progressmodal-cancel-btn")!.style.display).toBe("none");
+        surface.destroy();
+    });
+
+    test("Retry after a failure fires the retry channel and runs again; Done fires close", () =>
+    {
+        const heard: string[] = [];
+        const surface = createProgressModal(makeOptions({ contained: true, container: host, showRetry: true }));
+        surface.on("retry", () => heard.push("retry"));
+        surface.on("close", () => heard.push("close"));
+
+        surface.setData("progress", { outcome: "failed" });
+        host.querySelector<HTMLElement>(".progressmodal-retry-btn")!.click();
+        expect(surface.modal.getState()).toBe("running");
+
+        surface.setData("progress", { outcome: "completed" });
+        host.querySelector<HTMLElement>(".progressmodal-done-btn")!.click();
+
+        expect(heard).toEqual(["retry", "close"]);
+        expect(surface.getElement()).toBeNull();
+    });
+
+    test("an unknown slot or channel throws; state is empty; destroy is idempotent and silent", () =>
+    {
+        const onClose = vi.fn();
+        const surface = createProgressModal(makeOptions({ contained: true, container: host }));
+        surface.on("close", onClose);
+
+        expect(() => surface.setData("rows", [])).toThrow(/unknown slot "rows"/);
+        expect(() => surface.on("submit" as "close", () => undefined)).toThrow(/unknown channel "submit"/);
+        surface.setState(surface.getState());
+        expect(surface.getState()).toEqual({});
+
+        surface.destroy();
+        surface.destroy();
+        expect(host.children.length).toBe(0);
+        expect(onClose).not.toHaveBeenCalled();
     });
 });

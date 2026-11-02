@@ -33,7 +33,7 @@ The user asked for every remaining component to be made A2UI-ready. On 2026-10-2
 | …with a manifest action (#31, gate G1) | 1 | DataGrid's `export` |
 | …whose `onChange` is not the value (#39) | 18 | no way to declare the mapping |
 | …layouts that host child elements | 11 | A2UI children cannot reach them |
-| Components with no manifest | 24 | no manifest |
+| Components with no manifest | 24 | no manifest (step 5 done 2026-11-02: 0 remain; 10 joined, 14 out of scope with reasons in `NO_MANIFEST`) |
 | Thin catalog descriptions (#37) | all | descriptions are built from the label |
 
 The user approved five steps, in this order. Each step gets its own spec, plan and PRs:

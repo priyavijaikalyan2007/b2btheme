@@ -28,6 +28,16 @@
     justify-content: center;
 }
 
+// Contained — fills its container and dims nothing outside it (ADR-246)
+.formdialog-overlay.formdialog-contained
+{
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    z-index: auto;
+}
+
 .formdialog-backdrop
 {
     position: absolute;

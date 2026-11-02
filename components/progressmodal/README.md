@@ -70,6 +70,31 @@ A modal dialog for displaying progress of long-running operations.
 | `isVisible()` | Check visibility |
 | `destroy()` | Remove from DOM |
 
+## Contained mode (ADR-246)
+
+Pass `contained: true` with a `container` element and the modal renders inside that element, with no backdrop. It takes, traps and gives back no focus, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal. The instance also gains `getElement()` and `clearLog()`.
+
+## `createProgressModal(options)` (ADR-246)
+
+This shows a modal driven by data, and returns a surface. The surface wraps a `ProgressModal`, available as `.modal`, because that class's `getState()` already reports the run state as a string. It takes the options above, plus these:
+
+| Option | Default | Description |
+|---|---|---|
+| `showCancel` | `false` | Offer Cancel while running without `onCancel`, for a `cancel` subscriber |
+| `showRetry` | `false` | Offer Retry after a failure without `onRetry`, for a `retry` subscriber |
+| `progress` | none | A `ProgressUpdate`: `status`, `fraction` (0 to 1), `step`, `outcome` (`"running"`, `"completed"` or `"failed"`) and `log` (the whole log so far, as `{ message, level }`) |
+
+| Member | Description |
+|---|---|
+| `setData("progress", update)` | Applies a `ProgressUpdate`. An outcome finishes the run once, and Retry returns it to running. Log entries past those shown are appended, and a shorter list starts the log again |
+| `on("cancel" \| "retry" \| "close", handler)` | Subscribes with `{}`, after the matching callback. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `getElement()` / `destroy()` | The modal's root, or `null` / removes the modal; idempotent |
+
+### Over A2UI
+
+ProgressModal is in the A2UI catalog through `createProgressModal`. It is always contained. The agent rewrites `progress` as the work goes on. Cancel, Retry and Done send `onCancel`, `onRetry` and `onClose`; set `showCancel` and `showRetry` to offer the first two.
+
 ## Log Entry Levels
 
 | Level | Icon | Colour |

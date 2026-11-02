@@ -130,6 +130,22 @@ const result = await dialog.show();
 }
 ```
 
+## Contained mode and channels (ADR-246)
+
+Pass `contained: true` with a `container` element and `createShareDialog` shows the dialog at once inside that element, with no backdrop. It traps no focus and gives none back, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal, which waits for `show()`.
+
+| Member | Description |
+|---|---|
+| `show()` | While the dialog is open, a second call returns the same promise; after an answer it opens again |
+| `on("share", handler)` | Subscribes to the `ShareDialogResult` once `onShare` settles. Returns the unsubscribe |
+| `on("cancel", handler)` | Subscribes to `{}`, after `onCancel` |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+
+### Over A2UI
+
+ShareDialog is in the A2UI catalog. It is always contained. Done sends `onShare` with `{ added, changed, removed }`, and cancelling sends `onCancel`. People searches go to the agent, as PeoplePicker's do (`onSearch` with `searchResult`). `searchUrl` and `onRemoveConfirm` are the host's.
+
 ## Keyboard
 
 | Key | Action |

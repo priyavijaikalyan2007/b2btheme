@@ -367,3 +367,101 @@ describe("ShareDialog edge cases", () =>
         dialog.close();
     });
 });
+
+// ============================================================================
+// CONTAINED MODE AND HANDLE (ADR-246)
+// ============================================================================
+
+describe("createShareDialog, contained (ADR-246)", () =>
+{
+    const EXISTING = [{ person: { id: "1", name: "Alice" }, accessLevelId: "viewer" }];
+
+    test("shows at once inside its container, with no backdrop, and is not modal", () =>
+    {
+        const dialog = createShareDialog(defaultOptions({ contained: true, container }));
+
+        expect(container.querySelector(".sharedialog-overlay.sharedialog-contained")).toBe(dialog.getElement());
+        expect(getBackdrop()).toBeNull();
+        expect(getDialog()?.getAttribute("aria-modal")).toBe("false");
+        dialog.destroy();
+    });
+
+    test("a page modal from createShareDialog waits for show() and mounts on the body, as before", () =>
+    {
+        const dialog = createShareDialog(defaultOptions());
+
+        expect(getOverlay()).toBeNull();
+        void dialog.show();
+        expect(getOverlay()?.parentElement).toBe(document.body);
+        expect(getBackdrop()).not.toBeNull();
+        dialog.destroy();
+    });
+
+    test("throws when contained has no container element", () =>
+    {
+        expect(() => createShareDialog(defaultOptions({ contained: true })))
+            .toThrow(/options.container must be an element/);
+    });
+
+    test("an Escape on the page does not cancel it; inside it does, then the cancel channel fires", () =>
+    {
+        const order: string[] = [];
+        const dialog = createShareDialog(defaultOptions({ contained: true, container,
+            onCancel: () => order.push("callback") }));
+        dialog.on("cancel", (payload) => order.push(`channel ${JSON.stringify(payload)}`));
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(order).toEqual([]);
+
+        getDialog()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(order).toEqual(["callback", "channel {}"]);
+        expect(container.children.length).toBe(0);
+    });
+
+    test("Done fires onShare, then the share channel with the diff, and resolves show()", async () =>
+    {
+        const order: string[] = [];
+        const onShare = vi.fn(() => { order.push("callback"); });
+        const dialog = createShareDialog(defaultOptions({ contained: true, container, existingAccess: EXISTING,
+            onShare }));
+        dialog.on("share", (payload) => order.push(`channel ${JSON.stringify(payload)}`));
+        const answer = dialog.show();
+
+        container.querySelector<HTMLElement>(".sharedialog-access-remove")!.click();
+        getDoneBtn()!.click();
+
+        await expect(answer).resolves.toEqual({ added: [], changed: [], removed: ["1"] });
+        expect(order).toEqual(["callback", `channel ${JSON.stringify({ added: [], changed: [], removed: ["1"] })}`]);
+    });
+
+    test("show() while open returns the same promise; after an answer it opens again", async () =>
+    {
+        const dialog = createShareDialog(defaultOptions());
+        const first = dialog.show();
+
+        expect(dialog.show()).toBe(first);
+        getCancelBtn()!.click();
+        await expect(first).resolves.toBeNull();
+
+        expect(dialog.show()).not.toBe(first);
+        expect(getOverlay()).not.toBeNull();
+        dialog.destroy();
+    });
+
+    test("the handle has no state or slots; an unknown channel throws; destroy is idempotent and silent", () =>
+    {
+        const onCancel = vi.fn();
+        const dialog = createShareDialog(defaultOptions({ contained: true, container }));
+        dialog.on("cancel", onCancel);
+
+        dialog.setState(dialog.getState());
+        expect(dialog.getState()).toEqual({});
+        expect(() => dialog.setData("people", [])).toThrow(/no data slots/);
+        expect(() => dialog.on("close" as "share", () => undefined)).toThrow(/unknown channel "close"/);
+
+        dialog.destroy();
+        dialog.destroy();
+        expect(container.children.length).toBe(0);
+        expect(onCancel).not.toHaveBeenCalled();
+    });
+});

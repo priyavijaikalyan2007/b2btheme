@@ -103,7 +103,21 @@ export interface ShareDialogOptions
     /** Called before removing a person's access. Return true to proceed,
      *  false to cancel. If not provided, removal is immediate. */
     onRemoveConfirm?: (person: { id: string; name: string }) => Promise<boolean>;
+
+    /**
+     * Contained mode (ADR-246). Default: false, a page modal as before. When
+     * true the dialog renders inside `container` with no page backdrop: its
+     * keys work only while focus is inside it, it traps no focus, and it
+     * shows as soon as createShareDialog creates it.
+     */
+    contained?: boolean;
+
+    /** Where a contained dialog renders. Required when `contained` is true. */
+    container?: HTMLElement;
 }
+
+/** The ShareDialog channels: the user clicked Done, or cancelled. */
+export type ShareDialogChannel = "share" | "cancel";
 
 // ============================================================================
 // CONSTANTS
@@ -316,12 +330,30 @@ function resolvePersonChip(): ((opts: unknown) => { getElement(): HTMLElement; d
  */
 export interface ShareDialogHandle
 {
+    /** Shows the dialog; a second call while it is open returns the same promise. */
     show(): Promise<ShareDialogResult | null>;
     close(): void;
     destroy(): void;
     getElement(): HTMLElement | null;
     setLoading(loading: boolean): void;
+
+    /**
+     * Subscribes to "share", with the ShareDialogResult once onShare settles,
+     * or "cancel", with an empty payload after onCancel (ADR-246).
+     */
+    on(channel: ShareDialogChannel, handler: (payload: ShareDialogResult | Record<string, never>) => void): () => void;
+
+    /** A share dialog has no view state to carry across a rebuild. */
+    getState(): Record<string, never>;
+
+    /** Nothing to restore, see getState. */
+    setState(state: Record<string, unknown>): void;
+
+    /** A share dialog has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
 }
+
+const CHANNELS: readonly string[] = ["share", "cancel"];
 
 export class ShareDialog implements ShareDialogHandle
 {
@@ -358,9 +390,20 @@ export class ShareDialog implements ShareDialogHandle
     private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
     private loading = false;
     private destroyed = false;
+    private pending: Promise<ShareDialogResult | null> | null = null;
+    private readonly handlers =
+        new Map<string, Set<(payload: ShareDialogResult | Record<string, never>) => void>>();
 
     constructor(options: ShareDialogOptions)
     {
+        // Absent means document.body unless contained; a container passed but missing is the caller's mistake.
+        if ((options.contained || options.container !== undefined) && !(options.container instanceof HTMLElement))
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.container must be an element when options.contained is true or a `
+                + "container is passed. Pass the element the dialog renders in.");
+        }
+
         instanceCounter++;
         this.instanceId = `${CLS}-${instanceCounter}`;
         this.opts = options;
@@ -401,10 +444,16 @@ export class ShareDialog implements ShareDialogHandle
      */
     public show(): Promise<ShareDialogResult | null>
     {
-        return new Promise<ShareDialogResult | null>((resolve) =>
+        if (this.pending)
+        {
+            return this.pending;
+        }
+
+        this.pending = new Promise<ShareDialogResult | null>((resolve) =>
         {
             this.resolvePromise = resolve;
-            this.previousFocusEl = document.activeElement as HTMLElement;
+            // A contained dialog never took focus, so it gives none back (ADR-246).
+            this.previousFocusEl = this.opts.contained ? null : document.activeElement as HTMLElement;
             this.buildDOM();
             this.mountAndAnimate();
             this.bindEvents();
@@ -414,6 +463,46 @@ export class ShareDialog implements ShareDialogHandle
 
             logInfo("Showing dialog:", this.opts.title);
         });
+
+        return this.pending;
+    }
+
+    /** Subscribes to "share" or "cancel" (ADR-246). */
+    public on(channel: ShareDialogChannel,
+        handler: (payload: ShareDialogResult | Record<string, never>) => void): () => void
+    {
+        if (!CHANNELS.includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on(): unknown channel "${channel}". Use "share" or "cancel".`);
+        }
+
+        let set = this.handlers.get(channel);
+        if (!set)
+        {
+            set = new Set();
+            this.handlers.set(channel, set);
+        }
+        set.add(handler);
+
+        return () => { this.handlers.get(channel)?.delete(handler); };
+    }
+
+    /** A share dialog has no view state (ADR-246). */
+    public getState(): Record<string, never>
+    {
+        return {};
+    }
+
+    /** Nothing to restore, see getState. */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No view state.
+    }
+
+    /** A share dialog has no data slots. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData(): ShareDialog has no data slots, so "${slot}" is unknown.`);
     }
 
     /** Close the dialog (cancel). */
@@ -427,6 +516,7 @@ export class ShareDialog implements ShareDialogHandle
     {
         if (this.destroyed) { return; }
         this.teardown();
+        this.handlers.clear();
         this.destroyed = true;
     }
 
@@ -454,9 +544,17 @@ export class ShareDialog implements ShareDialogHandle
     /** Construct the complete DOM tree. */
     private buildDOM(): void
     {
-        this.overlayEl = createElement("div", [`${CLS}-overlay`]);
-        this.backdropEl = createElement("div", [`${CLS}-backdrop`]);
-        this.overlayEl.appendChild(this.backdropEl);
+        // Contained, the overlay fills its container and has no backdrop (ADR-246).
+        if (this.opts.contained)
+        {
+            this.overlayEl = createElement("div", [`${CLS}-overlay`, `${CLS}-contained`]);
+        }
+        else
+        {
+            this.overlayEl = createElement("div", [`${CLS}-overlay`]);
+            this.backdropEl = createElement("div", [`${CLS}-backdrop`]);
+            this.overlayEl.appendChild(this.backdropEl);
+        }
 
         this.dialogEl = this.buildDialog();
         this.overlayEl.appendChild(this.dialogEl);
@@ -471,7 +569,8 @@ export class ShareDialog implements ShareDialogHandle
 
         const dialog = createElement("div", classes);
         setAttr(dialog, "role", "dialog");
-        setAttr(dialog, "aria-modal", "true");
+        // A contained dialog blocks nothing outside its box, so it is not modal.
+        setAttr(dialog, "aria-modal", this.opts.contained ? "false" : "true");
         setAttr(dialog, "aria-labelledby", `${this.instanceId}-title`);
 
         dialog.appendChild(this.buildHeader());
@@ -859,14 +958,23 @@ export class ShareDialog implements ShareDialogHandle
         });
     }
 
-    /** Attach document-level keydown handler for Escape and focus trap. */
+    /**
+     * Attach the keydown handler for Escape and the focus trap: on the
+     * document for a page modal, on the dialog itself when contained (ADR-246).
+     */
     private bindKeyboard(): void
     {
         this.boundKeyHandler = (e: KeyboardEvent) =>
         {
             this.handleKeydown(e);
         };
-        document.addEventListener("keydown", this.boundKeyHandler);
+        this.keyTarget().addEventListener("keydown", this.boundKeyHandler as EventListener);
+    }
+
+    /** Where the keydown handler listens. */
+    private keyTarget(): HTMLElement | Document
+    {
+        return (this.opts.contained && this.overlayEl) ? this.overlayEl : document;
     }
 
     /** Bind the Add button click handler. */
@@ -943,7 +1051,8 @@ export class ShareDialog implements ShareDialogHandle
             return;
         }
 
-        if (e.key === "Tab" && this.dialogEl)
+        // A contained dialog traps no focus (ADR-246).
+        if (e.key === "Tab" && this.dialogEl && !this.opts.contained)
         {
             this.handleFocusTrap(e);
         }
@@ -1200,6 +1309,8 @@ export class ShareDialog implements ShareDialogHandle
             this.resolvePromise = null;
         }
 
+        this.pending = null;
+        this.emit("share", result);
         this.teardown();
         this.restoreFocus();
 
@@ -1220,6 +1331,8 @@ export class ShareDialog implements ShareDialogHandle
             this.opts.onCancel();
         }
 
+        this.pending = null;
+        this.emit("cancel", {});
         this.teardown();
         this.restoreFocus();
 
@@ -1229,9 +1342,9 @@ export class ShareDialog implements ShareDialogHandle
     /** Mount overlay into the document and trigger enter animation. */
     private mountAndAnimate(): void
     {
-        if (!this.overlayEl || !this.backdropEl || !this.dialogEl) { return; }
+        if (!this.overlayEl || !this.dialogEl) { return; }
 
-        document.body.appendChild(this.overlayEl);
+        (this.opts.contained ? this.opts.container! : document.body).appendChild(this.overlayEl);
 
         // Trigger enter animation on next frame
         requestAnimationFrame(() =>
@@ -1252,7 +1365,7 @@ export class ShareDialog implements ShareDialogHandle
     {
         if (this.boundKeyHandler)
         {
-            document.removeEventListener("keydown", this.boundKeyHandler);
+            this.keyTarget().removeEventListener("keydown", this.boundKeyHandler as EventListener);
             this.boundKeyHandler = null;
         }
 
@@ -1298,6 +1411,15 @@ export class ShareDialog implements ShareDialogHandle
         this.statusEl = null;
         this.doneBtnEl = null;
         this.liveRegionEl = null;
+    }
+
+    /** Fires a channel's subscribers after the legacy callback (ADR-246). */
+    private emit(channel: ShareDialogChannel, payload: ShareDialogResult | Record<string, never>): void
+    {
+        for (const handler of [...(this.handlers.get(channel) ?? [])])
+        {
+            handler(payload);
+        }
     }
 
     /** Restore focus to the element that was active before the dialog. */
@@ -1367,7 +1489,15 @@ export function createShareDialog(
             + "Pass it when creating the ShareDialog.");
     }
 
-    return new ShareDialog(options);
+    const dialog = new ShareDialog(options);
+
+    // A contained dialog shows at once, in its container (ADR-246).
+    if (options.contained)
+    {
+        void dialog.show();
+    }
+
+    return dialog;
 }
 
 // ============================================================================

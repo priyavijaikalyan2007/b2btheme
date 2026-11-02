@@ -126,6 +126,57 @@ export interface LiterateError
     onRetry?: () => void;
 }
 
+/**
+ * Options for createErrorDialog (ADR-246): the literate error, and how the
+ * dialog shows it.
+ */
+export interface ErrorDialogOptions extends LiterateError
+{
+    /** Show the Retry button without onRetry, for a "retry" subscriber. Default: false. */
+    showRetry?: boolean;
+
+    /**
+     * Contained mode. Default: false, a Bootstrap page modal as before. When
+     * true the dialog renders inside its container with no page backdrop,
+     * takes no focus, and listens for Escape and Ctrl+C on itself only.
+     */
+    contained?: boolean;
+}
+
+/** The ErrorDialog channels: the user closed the dialog, or clicked Retry. */
+export type ErrorDialogChannel = "close" | "retry";
+
+/**
+ * The ErrorDialog surface createErrorDialog returns (ADR-246).
+ *
+ * PAT-1. `implements` below is what keeps this in step with the class.
+ */
+export interface ErrorDialogHandle
+{
+    /** Subscribes to "close" or "retry", which fire with an empty payload. Returns an unsubscribe. */
+    on(channel: ErrorDialogChannel, handler: (payload: Record<string, never>) => void): () => void;
+
+    /** An error dialog has no view state to carry across a rebuild. */
+    getState(): Record<string, never>;
+
+    /** Nothing to restore, see getState. */
+    setState(state: Record<string, unknown>): void;
+
+    /** An error dialog has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+
+    /** The dialog's root element while it is open, or null. */
+    getElement(): HTMLElement | null;
+
+    /** Closes the dialog, as its Close button does. */
+    hide(): void;
+
+    /** Removes the dialog. Idempotent. */
+    destroy(): void;
+}
+
+const CHANNELS: readonly string[] = ["close", "retry"];
+
 // ============================================================================
 // PRIVATE HELPERS
 // ============================================================================
@@ -213,14 +264,23 @@ function hasTechnicalDetails(error: LiterateError): boolean
  * Builds the complete modal DOM structure for an error dialog.
  * All content is set via textContent for XSS safety.
  */
-function buildModalElement(id: string, error: LiterateError): HTMLElement
+function buildModalElement(id: string, error: LiterateError, showRetry: boolean, contained: boolean): HTMLElement
 {
-    // -- Outer modal wrapper
-    const modal = createElement("div", ["modal", "fade"]);
+    // -- Outer modal wrapper. Contained, it is shown in place, with no
+    //    Bootstrap Modal and so no fade or page backdrop (ADR-246).
+    const modal = createElement("div", contained ? ["modal", "errordialog-contained"] : ["modal", "fade"]);
     setAttr(modal, "id", id);
     setAttr(modal, "tabindex", "-1");
     setAttr(modal, "aria-labelledby", `${id}-title`);
-    setAttr(modal, "aria-hidden", "true");
+    if (contained)
+    {
+        setAttr(modal, "role", "dialog");
+        setAttr(modal, "aria-modal", "false");
+    }
+    else
+    {
+        setAttr(modal, "aria-hidden", "true");
+    }
 
     const dialog = createElement("div", ["modal-dialog", "modal-dialog-centered"]);
     const content = createElement("div", ["modal-content", "border-0", "shadow-lg"]);
@@ -234,7 +294,7 @@ function buildModalElement(id: string, error: LiterateError): HTMLElement
     content.appendChild(body);
 
     // -- Footer
-    const footer = buildFooter(id, error);
+    const footer = buildFooter(id, error, showRetry);
     content.appendChild(footer);
 
     dialog.appendChild(content);
@@ -477,7 +537,7 @@ function showCopyFeedback(btn: HTMLElement): void
 /**
  * Builds the modal footer with Close and optional Retry buttons.
  */
-function buildFooter(_id: string, error: LiterateError): HTMLElement
+function buildFooter(_id: string, error: LiterateError, showRetry: boolean): HTMLElement
 {
     const footer = createElement("div", [
         "modal-footer", "border-top-0", "pt-0"
@@ -489,9 +549,9 @@ function buildFooter(_id: string, error: LiterateError): HTMLElement
     closeBtn.textContent = "Close";
     footer.appendChild(closeBtn);
 
-    if (error.onRetry)
+    if (error.onRetry || showRetry)
     {
-        const retryBtn = createElement("button", ["btn", "btn-primary"]);
+        const retryBtn = createElement("button", ["btn", "btn-primary", "errordialog-retry"]);
         setAttr(retryBtn, "type", "button");
         retryBtn.textContent = "Retry";
 
@@ -499,7 +559,7 @@ function buildFooter(_id: string, error: LiterateError): HTMLElement
         retryBtn.addEventListener("click", () =>
         {
             logInfo("Retry button clicked");
-            retryCallback();
+            retryCallback?.();
         });
 
         footer.appendChild(retryBtn);
@@ -521,7 +581,7 @@ function buildFooter(_id: string, error: LiterateError): HTMLElement
  * const dialog = new ErrorDialog("app-container");
  * dialog.show({ title: "Save Failed", message: "Could not save document." });
  */
-export class ErrorDialog
+export class ErrorDialog implements ErrorDialogHandle
 {
     private readonly containerId: string;
     private modalElement: HTMLElement | null = null;
@@ -529,10 +589,19 @@ export class ErrorDialog
     private readonly instanceId: string;
     private boundCopyHandler: ((e: KeyboardEvent) => void) | null = null;
     private currentError: LiterateError | null = null;
+    private readonly contained: boolean;
+    private readonly showRetry: boolean;
+    private readonly handlers = new Map<string, Set<(payload: Record<string, never>) => void>>();
 
-    constructor(containerId: string)
+    /**
+     * @param containerId - The element the dialog is injected into.
+     * @param settings - contained and showRetry, as in ErrorDialogOptions (ADR-246). Default: neither.
+     */
+    constructor(containerId: string, settings: { contained?: boolean; showRetry?: boolean } = {})
     {
         this.containerId = containerId;
+        this.contained = settings.contained ?? false;
+        this.showRetry = settings.showRetry ?? false;
         instanceCounter++;
         this.instanceId = `errordialog-${instanceCounter}`;
 
@@ -562,8 +631,9 @@ export class ErrorDialog
 
         // Build and inject the modal
         this.currentError = error;
-        this.modalElement = buildModalElement(this.instanceId, error);
+        this.modalElement = buildModalElement(this.instanceId, error, this.showRetry, this.contained);
         container.appendChild(this.modalElement);
+        this.modalElement.querySelector(".errordialog-retry")?.addEventListener("click", () => this.emit("retry"));
 
         logInfo("Showing error dialog:", error.title);
         logDebug("Error details:", error);
@@ -587,14 +657,21 @@ export class ErrorDialog
                 + "Load dist/js/bootstrap.bundle.min.js before showing a dialog.");
         }
 
-        this.bootstrapModal = new bootstrap.Modal(this.modalElement);
-
         // Attach Ctrl+C copy handler (mirrors Windows native dialog behaviour)
         this.bindCopyHandler();
+
+        if (this.contained)
+        {
+            this.wireContainedClose(this.modalElement);
+            return;
+        }
+
+        this.bootstrapModal = new bootstrap.Modal(this.modalElement);
 
         // Clean up DOM when modal is hidden
         this.modalElement.addEventListener("hidden.bs.modal", () =>
         {
+            this.emit("close");
             this.destroy();
         });
 
@@ -610,7 +687,88 @@ export class ErrorDialog
         {
             this.handleDialogCopy(e);
         };
-        document.addEventListener("keydown", this.boundCopyHandler);
+        this.keyTarget().addEventListener("keydown", this.boundCopyHandler as EventListener);
+    }
+
+    /** Where the keydown handlers listen: the dialog itself when contained (ADR-246). */
+    private keyTarget(): HTMLElement | Document
+    {
+        return (this.contained && this.modalElement) ? this.modalElement : document;
+    }
+
+    /**
+     * Contained, there is no Bootstrap Modal to dismiss the dialog, and its
+     * dismiss attribute would make one on click, so the Close buttons and
+     * Escape close it directly (ADR-246).
+     */
+    private wireContainedClose(modal: HTMLElement): void
+    {
+        for (const btn of Array.from(modal.querySelectorAll<HTMLElement>("[data-bs-dismiss='modal']")))
+        {
+            btn.removeAttribute("data-bs-dismiss");
+            btn.addEventListener("click", () => this.hide());
+        }
+
+        modal.addEventListener("keydown", (e) =>
+        {
+            if (e.key === "Escape")
+            {
+                e.preventDefault();
+                this.hide();
+            }
+        });
+    }
+
+    /** Subscribes to "close" or "retry" (ADR-246). */
+    public on(channel: ErrorDialogChannel, handler: (payload: Record<string, never>) => void): () => void
+    {
+        if (!CHANNELS.includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on(): unknown channel "${channel}". Use "close" or "retry".`);
+        }
+
+        let set = this.handlers.get(channel);
+        if (!set)
+        {
+            set = new Set();
+            this.handlers.set(channel, set);
+        }
+        set.add(handler);
+
+        return () => { this.handlers.get(channel)?.delete(handler); };
+    }
+
+    /** An error dialog has no view state (ADR-246). */
+    public getState(): Record<string, never>
+    {
+        return {};
+    }
+
+    /** Nothing to restore, see getState. */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No view state.
+    }
+
+    /** An error dialog has no data slots. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData(): ErrorDialog has no data slots, so "${slot}" is unknown.`);
+    }
+
+    /** The dialog's root element while it is open, or null. */
+    public getElement(): HTMLElement | null
+    {
+        return this.modalElement;
+    }
+
+    /** Fires a channel's subscribers; onRetry has already run for "retry". */
+    private emit(channel: ErrorDialogChannel): void
+    {
+        for (const handler of [...(this.handlers.get(channel) ?? [])])
+        {
+            handler({});
+        }
     }
 
     /**
@@ -620,7 +778,7 @@ export class ErrorDialog
     {
         if (this.boundCopyHandler)
         {
-            document.removeEventListener("keydown", this.boundCopyHandler);
+            this.keyTarget().removeEventListener("keydown", this.boundCopyHandler as EventListener);
             this.boundCopyHandler = null;
         }
     }
@@ -669,6 +827,13 @@ export class ErrorDialog
         {
             (this.bootstrapModal as { hide(): void }).hide();
             logDebug("Modal hidden");
+        }
+        else if (this.contained && this.modalElement)
+        {
+            // No Bootstrap Modal fires hidden.bs.modal, so close it here (ADR-246).
+            this.emit("close");
+            this.destroy();
+            logDebug("Contained dialog closed");
         }
     }
 
@@ -719,6 +884,39 @@ export function showErrorDialog(containerId: string, error: LiterateError): void
     dialog.show(error);
 }
 
+/**
+ * Shows an error dialog in the given container and returns its handle
+ * (ADR-246). Contained, it renders in place with no page backdrop; the
+ * user's Close and Retry reach "close" and "retry" subscribers.
+ *
+ * @param containerId - The DOM element ID where the dialog is injected
+ * @param options - The literate error, with showRetry and contained
+ *
+ * @example
+ * const dialog = createErrorDialog("panel", { title: "Sync Failed", message: "...", showRetry: true,
+ *     contained: true });
+ * dialog.on("retry", () => sync());
+ */
+export function createErrorDialog(containerId: string, options: ErrorDialogOptions): ErrorDialogHandle
+{
+    // ERR-2. AGENTS.md: a missing option throws, it does not get a silent
+    // default. showErrorDialog keeps warning and showing nothing, as it always has.
+    for (const name of ["title", "message"] as const)
+    {
+        if (options[name] === undefined)
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.${name} is required. `
+                + "Pass it when creating the ErrorDialog.");
+        }
+    }
+
+    const { showRetry, contained, ...error } = options;
+    const dialog = new ErrorDialog(containerId, { showRetry, contained });
+    dialog.show(error);
+    return dialog;
+}
+
 // ============================================================================
 // GLOBAL EXPORTS (for <script> tag usage)
 // ============================================================================
@@ -727,4 +925,5 @@ export function showErrorDialog(containerId: string, error: LiterateError): void
 if (typeof window !== "undefined")
 {
     window["showErrorDialog"] = showErrorDialog;
+    window["createErrorDialog"] = createErrorDialog;
 }
