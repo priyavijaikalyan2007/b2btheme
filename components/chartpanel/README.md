@@ -84,6 +84,7 @@ Factory: constructs a panel and mounts it into `options.container`.
 | `emptyText`         | `string`                                                  | `"No data"`    | Shown when `state === "empty"`. |
 | `ariaLabel`         | `string`                                                  | **required**   | TS-enforced. The chart is not decorative. |
 | `fallbackTable`     | `boolean`                                                 | `true`         | Renders a visually-hidden `<table>` with the same data, for screen readers. |
+| `height`            | `string`                                                  | 100% of the container, at least 80px | CSS height, such as `"240px"`. Give one where the container has no definite height, such as an A2UI surface. |
 | `cssClass`          | `string`                                                  | —              | Extra CSS class(es). |
 | `id`                | `string`                                                  | —              | DOM id on the root. |
 

@@ -92,6 +92,13 @@ export interface ChartPanelOptions
     /** Default true. Renders a visually-hidden <table> for SR users. */
     fallbackTable?: boolean;
 
+    /**
+     * CSS height of the chart, such as "240px" or "30vh". Default: 100% of
+     * its container, at least 80px. Give one where the container has no
+     * definite height, such as an A2UI surface.
+     */
+    height?: string;
+
     /** Extra CSS classes on the root element. */
     cssClass?: string;
     /** The root element's id. */
@@ -594,6 +601,10 @@ export class ChartPanel implements ChartPanelHandle
         if (this.opts.id)
         {
             root.id = this.opts.id;
+        }
+        if (this.opts.height !== undefined)
+        {
+            root.style.height = this.opts.height;
         }
         setAttr(root, "aria-label", this.opts.ariaLabel);
         setAttr(root, "role", "img");

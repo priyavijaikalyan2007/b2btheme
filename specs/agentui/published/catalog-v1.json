@@ -2705,6 +2705,20 @@
                 }
               ]
             },
+            "height": {
+              "description": "CSS height of the chart, such as \"240px\" or \"30vh\". Default: 100% of\nits container, at least 80px. Give one where the container has no\ndefinite height, such as an A2UI surface.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
             "cssClass": {
               "description": "Extra CSS classes on the root element.",
               "anyOf": [
