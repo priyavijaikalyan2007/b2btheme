@@ -157,7 +157,9 @@ import type { PermissionMatrix, createPermissionMatrix } from "./permissionmatri
 import type { PersonChip, createPersonChip } from "./personchip/personchip";
 import type { Pill, createPill } from "./pill/pill";
 import type { PresenceIndicator, createPresenceIndicator } from "./presenceindicator/presenceindicator";
-import type { ProgressModal, showProgressModal, showSteppedProgressModal } from "./progressmodal/progressmodal";
+import type {
+    createProgressModal, ProgressModal, showProgressModal, showSteppedProgressModal,
+} from "./progressmodal/progressmodal";
 import type { PromptTemplateManager, createPromptTemplateManager } from "./prompttemplatemanager/prompttemplatemanager";
 import type { createPropertyInspector } from "./propertyinspector/propertyinspector";
 import type { ReasoningAccordion, createReasoningAccordion } from "./reasoningaccordion/reasoningaccordion";
@@ -627,6 +629,7 @@ declare global
         /** Published by the ProgressModal component. */
         showProgressModal?: typeof showProgressModal;
         showSteppedProgressModal?: typeof showSteppedProgressModal;
+        createProgressModal?: typeof createProgressModal;
 
         /** Published by the Prompttemplatemanager component. */
         createPromptTemplateManager?: typeof createPromptTemplateManager;

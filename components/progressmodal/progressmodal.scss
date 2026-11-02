@@ -68,6 +68,12 @@
 // DIALOG & CONTENT
 // ============================================================================
 
+// Contained — fills its container and dims nothing outside it (ADR-246)
+.progressmodal.progressmodal-contained {
+    position: relative;
+    z-index: auto;
+}
+
 .progressmodal-dialog {
     width: 100%;
     max-width: 500px;

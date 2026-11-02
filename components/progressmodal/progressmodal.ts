@@ -81,6 +81,97 @@ export interface ProgressModalOptions
 
     /** Callback fired when the modal is closed (after completion). */
     onClose?: () => void;
+
+    /**
+     * Contained mode (ADR-246). Default: false, a page modal as before. When
+     * true the modal renders inside `container` with no page backdrop: its
+     * keys work only while focus is inside it, and it takes, traps and gives
+     * back no focus.
+     */
+    contained?: boolean;
+
+    /** Where a contained modal renders. Required when `contained` is true. */
+    container?: HTMLElement;
+}
+
+/** One log line an agent writes: JSON, so the time it is shown is its timestamp. */
+export interface ProgressUpdateLogEntry
+{
+    /** The message text. */
+    message: string;
+
+    /** Log level determining the icon and colour. Default: "info". */
+    level?: "info" | "success" | "error" | "warning" | "progress";
+}
+
+/** Where the work stands, as the agent reports it through the "progress" slot (ADR-246). */
+export interface ProgressUpdate
+{
+    /** Status text under the spinner or bar. */
+    status?: string;
+
+    /** Fraction done, 0 to 1; giving it switches the modal to a progress bar. */
+    fraction?: number;
+
+    /** The current step, of totalSteps. */
+    step?: number;
+
+    /**
+     * "completed" or "failed" finishes the run, once; "running" is the
+     * default. Retry returns the modal to running for a new run.
+     */
+    outcome?: "running" | "completed" | "failed";
+
+    /**
+     * The whole log so far. Entries past those shown are appended; a shorter
+     * list starts the log again.
+     */
+    log?: ProgressUpdateLogEntry[];
+}
+
+/** Options for createProgressModal (ADR-246). */
+export interface ProgressModalSurfaceOptions extends ProgressModalOptions
+{
+    /** Offer Cancel while running without onCancel, for a "cancel" subscriber. Default: false. */
+    showCancel?: boolean;
+
+    /** Offer Retry on failure without onRetry, for a "retry" subscriber. Default: false. */
+    showRetry?: boolean;
+
+    /** Where the work stands; the agent rewrites it as the work goes on. */
+    progress?: ProgressUpdate;
+}
+
+/** The createProgressModal channels: the user asked to cancel, to retry, or closed the finished modal. */
+export type ProgressModalChannel = "cancel" | "retry" | "close";
+
+/**
+ * The surface createProgressModal returns (ADR-246). It wraps a
+ * ProgressModal, whose own getState() reports the run's state as a string
+ * and stays as it is.
+ */
+export interface ProgressModalSurface
+{
+    /** The ProgressModal it drives, for the full imperative API. */
+    readonly modal: ProgressModalHandle;
+
+    /** Subscribes to "cancel", "retry" or "close", which fire after the callbacks with an empty payload. */
+    on(channel: ProgressModalChannel, handler: (payload: Record<string, never>) => void): () => void;
+
+    /** Applies a ProgressUpdate to the "progress" slot. */
+    setData(slot: string, value: unknown): void;
+
+    /** The view state is the agent's progress, so there is none to carry. */
+    getState(): Record<string, never>;
+
+    /** Nothing to restore, see getState. */
+    setState(state: Record<string, unknown>): void;
+
+    /** The modal's root element while it is shown, or null. */
+    getElement(): HTMLElement | null;
+
+    /** Removes the modal. Idempotent. */
+    destroy(): void;
 }
 
 // ============================================================================
@@ -319,6 +410,13 @@ export class ProgressModal implements ProgressModalHandle
 
     constructor(options: ProgressModalOptions)
     {
+        if (options.contained && !(options.container instanceof HTMLElement))
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.container must be an element when options.contained is true. `
+                + "Pass the element the modal renders in.");
+        }
+
         instanceCounter++;
         this.instanceId = `progressmodal-${instanceCounter}`;
 
@@ -359,8 +457,9 @@ export class ProgressModal implements ProgressModalHandle
             return;
         }
 
-        this.previouslyFocusedEl =
-            document.activeElement as HTMLElement | null;
+        // A contained modal takes no focus, so it gives none back (ADR-246).
+        this.previouslyFocusedEl = this.options.contained
+            ? null : document.activeElement as HTMLElement | null;
         this.state = "running";
         this.buildDOM();
         this.attachToBody();
@@ -372,12 +471,15 @@ export class ProgressModal implements ProgressModalHandle
             this.log(initialEntries);
         }
 
-        document.addEventListener("keydown", this.boundOnKeydown);
+        this.keyTarget().addEventListener("keydown", this.boundOnKeydown as EventListener);
 
-        requestAnimationFrame(() =>
+        if (!this.options.contained)
         {
-            this.modalEl?.focus();
-        });
+            requestAnimationFrame(() =>
+            {
+                this.modalEl?.focus();
+            });
+        }
 
         logDebug("Shown:", this.instanceId);
     }
@@ -524,8 +626,8 @@ export class ProgressModal implements ProgressModalHandle
 
         this.clearAutoCloseTimer();
         this.state = "closed";
+        this.keyTarget().removeEventListener("keydown", this.boundOnKeydown as EventListener);
         this.removeFromDOM();
-        document.removeEventListener("keydown", this.boundOnKeydown);
 
         if (this.previouslyFocusedEl)
         {
@@ -580,10 +682,29 @@ export class ProgressModal implements ProgressModalHandle
         this.destroyed = true;
 
         this.clearAutoCloseTimer();
+        this.keyTarget().removeEventListener("keydown", this.boundOnKeydown as EventListener);
         this.removeFromDOM();
-        document.removeEventListener("keydown", this.boundOnKeydown);
         this.state = "closed";
         logDebug("Destroyed:", this.instanceId);
+    }
+
+    /** The modal's root element while it is shown, or null (ADR-246). */
+    public getElement(): HTMLElement | null
+    {
+        return this.modalEl;
+    }
+
+    /** Empties the detail log (ADR-246). */
+    public clearLog(): void
+    {
+        this.logEntries = [];
+        this.logEl?.replaceChildren();
+    }
+
+    /** Where the keydown handler listens: the modal itself when contained (ADR-246). */
+    private keyTarget(): HTMLElement | Document
+    {
+        return (this.options.contained && this.modalEl) ? this.modalEl : document;
     }
 
     // ========================================================================
@@ -592,7 +713,8 @@ export class ProgressModal implements ProgressModalHandle
 
     private buildDOM(): void
     {
-        this.backdropEl = this.buildBackdrop();
+        // Contained, there is no backdrop (ADR-246).
+        this.backdropEl = this.options.contained ? null : this.buildBackdrop();
         this.modalEl = this.buildModal();
     }
 
@@ -612,7 +734,8 @@ export class ProgressModal implements ProgressModalHandle
         const modal = createElement("div", ["progressmodal"]);
         setAttr(modal, "id", this.instanceId);
         setAttr(modal, "role", "dialog");
-        setAttr(modal, "aria-modal", "true");
+        // A contained modal blocks nothing outside its box, so it is not modal.
+        setAttr(modal, "aria-modal", this.options.contained ? "false" : "true");
         setAttr(modal, "aria-labelledby", `${this.instanceId}-title`);
         setAttr(modal, "aria-describedby", `${this.instanceId}-status`);
         setAttr(modal, "tabindex", "-1");
@@ -620,6 +743,11 @@ export class ProgressModal implements ProgressModalHandle
         if (this.options.wide)
         {
             modal.classList.add("progressmodal-wide");
+        }
+
+        if (this.options.contained)
+        {
+            modal.classList.add("progressmodal-contained");
         }
 
         const dialog = createElement("div", ["progressmodal-dialog"]);
@@ -902,7 +1030,7 @@ export class ProgressModal implements ProgressModalHandle
         }
         if (this.modalEl)
         {
-            document.body.appendChild(this.modalEl);
+            (this.options.contained ? this.options.container! : document.body).appendChild(this.modalEl);
         }
     }
 
@@ -1087,6 +1215,12 @@ export class ProgressModal implements ProgressModalHandle
 
     private focusCloseButton(): void
     {
+        // A contained modal takes no focus (ADR-246).
+        if (this.options.contained)
+        {
+            return;
+        }
+
         requestAnimationFrame(() =>
         {
             this.doneBtnEl?.focus();
@@ -1250,7 +1384,8 @@ export class ProgressModal implements ProgressModalHandle
             this.handleEscape(e);
             return;
         }
-        if (this.matchesKeyCombo(e, "focusTrap"))
+        // A contained modal traps no focus (ADR-246).
+        if (this.matchesKeyCombo(e, "focusTrap") && !this.options.contained)
         {
             this.handleFocusTrap(e);
             return;
@@ -1461,8 +1596,174 @@ export class ProgressModal implements ProgressModalHandle
 }
 
 // ============================================================================
+// SURFACE (ADR-246)
+// ============================================================================
+
+const SURFACE_CHANNELS: readonly string[] = ["cancel", "retry", "close"];
+
+/**
+ * Drives a ProgressModal from agent data and reports the user's Cancel,
+ * Retry and Close as channels (ADR-246). It wraps rather than extends the
+ * modal because ProgressModalHandle.getState() already means the run state.
+ */
+class ProgressModalSurfaceImpl implements ProgressModalSurface
+{
+    public readonly modal: ProgressModal;
+    private readonly handlers = new Map<string, Set<(payload: Record<string, never>) => void>>();
+    private logShown = 0;
+    private destroyed = false;
+
+    constructor(options: ProgressModalSurfaceOptions)
+    {
+        const { showCancel, showRetry, progress, onCancel, onRetry, onClose, ...rest } = options;
+
+        // A button shows when its callback exists, so one is passed exactly
+        // when the caller offers it; the caller's callback runs first.
+        this.modal = new ProgressModal({
+            ...rest,
+            onCancel: (onCancel || showCancel) ? () => { onCancel?.(); this.emit("cancel"); } : undefined,
+            onRetry: (onRetry || showRetry) ? () => { onRetry?.(); this.emit("retry"); } : undefined,
+            onClose: () => { onClose?.(); this.emit("close"); },
+        });
+        this.modal.show();
+
+        if (progress)
+        {
+            this.apply(progress);
+        }
+    }
+
+    public on(channel: ProgressModalChannel, handler: (payload: Record<string, never>) => void): () => void
+    {
+        if (!SURFACE_CHANNELS.includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on(): unknown channel "${channel}". Use "cancel", "retry" or "close".`);
+        }
+
+        let set = this.handlers.get(channel);
+        if (!set)
+        {
+            set = new Set();
+            this.handlers.set(channel, set);
+        }
+        set.add(handler);
+
+        return () => { this.handlers.get(channel)?.delete(handler); };
+    }
+
+    public setData(slot: string, value: unknown): void
+    {
+        if (slot !== "progress")
+        {
+            throw new Error(`${LOG_PREFIX} setData(): unknown slot "${slot}". The only slot is "progress".`);
+        }
+
+        this.apply((value ?? {}) as ProgressUpdate);
+    }
+
+    public getState(): Record<string, never>
+    {
+        return {};
+    }
+
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No view state.
+    }
+
+    public getElement(): HTMLElement | null
+    {
+        return this.modal.getElement();
+    }
+
+    public destroy(): void
+    {
+        if (this.destroyed)
+        {
+            return;
+        }
+
+        this.destroyed = true;
+        this.modal.destroy();
+        this.handlers.clear();
+    }
+
+    /** Applies an update: the log first, then the outcome, then the running figures. */
+    private apply(update: ProgressUpdate): void
+    {
+        if (update.log)
+        {
+            this.syncLog(update.log);
+        }
+
+        const state = this.modal.getState();
+
+        if (update.outcome === "completed" && state === "running")
+        {
+            this.modal.complete(update.status);
+            return;
+        }
+
+        if (update.outcome === "failed" && state === "running")
+        {
+            this.modal.fail(update.status);
+            return;
+        }
+
+        if (state !== "running")
+        {
+            return;
+        }
+
+        if (update.fraction !== undefined) { this.modal.setProgress(update.fraction); }
+        if (update.step !== undefined) { this.modal.setStep(update.step); }
+        if (update.status !== undefined) { this.modal.setStatus(update.status); }
+    }
+
+    /** Appends the entries past those shown; a shorter list starts the log again. */
+    private syncLog(entries: ProgressUpdateLogEntry[]): void
+    {
+        if (entries.length < this.logShown)
+        {
+            this.modal.clearLog();
+            this.logShown = 0;
+        }
+
+        if (entries.length > this.logShown)
+        {
+            this.modal.log(entries.slice(this.logShown).map((e) => ({ message: e.message, level: e.level })));
+            this.logShown = entries.length;
+        }
+    }
+
+    private emit(channel: ProgressModalChannel): void
+    {
+        for (const handler of [...(this.handlers.get(channel) ?? [])])
+        {
+            handler({});
+        }
+    }
+}
+
+// ============================================================================
 // CONVENIENCE FUNCTIONS
 // ============================================================================
+
+/**
+ * Shows a progress modal driven by data and returns its surface (ADR-246).
+ * The work's progress arrives as a ProgressUpdate, at creation or through
+ * setData("progress", …); the user's Cancel, Retry and Close reach "cancel",
+ * "retry" and "close" subscribers. The full imperative API stays on `.modal`.
+ *
+ * @example
+ * const p = createProgressModal({ title: "Importing", showCancel: true, contained: true, container: panel });
+ * p.on("cancel", () => abort());
+ * p.setData("progress", { fraction: 0.4, status: "Reading rows" });
+ */
+export function createProgressModal(options: ProgressModalSurfaceOptions): ProgressModalSurface
+{
+    return new ProgressModalSurfaceImpl(options);
+}
 
 /**
  * Shows an indeterminate progress modal in a single call.
@@ -1506,4 +1807,5 @@ if (typeof window !== "undefined")
     window["showProgressModal"] = showProgressModal;
     window["showSteppedProgressModal"] =
         showSteppedProgressModal;
+    window["createProgressModal"] = createProgressModal;
 }

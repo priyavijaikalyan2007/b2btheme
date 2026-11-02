@@ -26,15 +26,18 @@ async function mount(page: Page, name: string, props: Record<string, unknown>): 
         tagOf(name));
 }
 
-/** Mounts a tree of components (the first is the root), and waits for the handle of `waitFor`, the root by default. */
+/**
+ * Mounts a tree of components (the first is the root) over `data`, and waits for the handle of `waitFor`, the root by
+ * default.
+ */
 async function mountTree(page: Page, components: Record<string, unknown>[],
-    waitFor = String(components[0].component)): Promise<void>
+    waitFor = String(components[0].component), data: Record<string, unknown> = {}): Promise<void>
 {
     await open(page, "lit");
     await send(page, [
         { version: V, createSurface: { surfaceId: "s", catalogId: "https://static.outcrop.us/a2ui/catalog/v1.json" } },
         { version: V, updateComponents: { surfaceId: "s", components } },
-        { version: V, updateDataModel: { surfaceId: "s", path: "/", value: {} } },
+        { version: V, updateDataModel: { surfaceId: "s", path: "/", value: data } },
     ]);
     await page.waitForFunction((t) => (window as unknown as { handleOf(x: string): unknown }).handleOf(t) !== undefined,
         tagOf(waitFor));
@@ -223,6 +226,28 @@ test.describe("Step 5 components under @a2ui/lit", () =>
             await expect.poll(() => sent(page)).toEqual([["invite",
                 { values: { email: "dana@example.com", role: "editor" } }]]);
             await expect(page.locator(".formdialog-contained")).toHaveCount(0);
+            expect(await errors(page)).toEqual([]);
+        });
+
+    test("ProgressModal: renders contained, follows the agent's progress, and Cancel sends onCancel",
+        async ({ page }) =>
+        {
+            await mountTree(page, [{ id: "root", component: "Column", children: ["work", "field"] },
+                { id: "work", component: "ProgressModal", ...EV, title: "Importing", totalSteps: 3, showCancel: true,
+                    progress: { path: "/progress" }, onCancel: act("stop", "cancel") },
+                { id: "field", component: "TextField", label: "Name", value: "" }], "ProgressModal",
+            { progress: { status: "Starting" } });
+            await expectContained(page, ".progressmodal.progressmodal-contained", "outcrop-progress-modal");
+
+            await send(page, [{ version: V, updateDataModel: { surfaceId: "s", path: "/progress",
+                value: { status: "Reading rows", fraction: 0.5, step: 2, log: [{ message: "Opened file" }] } } }]);
+            const modal = page.locator(".progressmodal-contained");
+            await expect(modal.locator(".progressmodal-status")).toHaveText("Reading rows");
+            await expect(modal.locator(".progressmodal-current-step")).toHaveText("2");
+            await expect(modal.getByText("Opened file")).toBeVisible();
+
+            await modal.getByRole("button", { name: "Cancel" }).click();
+            await expect.poll(() => sent(page)).toEqual([["stop", {}]]);
             expect(await errors(page)).toEqual([]);
         });
 });

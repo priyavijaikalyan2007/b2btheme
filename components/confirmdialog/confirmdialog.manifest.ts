@@ -59,7 +59,8 @@ export const CONFIRMDIALOG_MANIFEST: CapabilityManifest =
         // The icon becomes part of a class attribute.
         schemas: {
             icon: { type: "string", pattern: "^[A-Za-z0-9 _-]+$",
-                description: "Bootstrap icon class for the header, such as \"bi-trash\". Default: the variant's icon." },
+                description: "Bootstrap icon class for the header, such as \"bi-trash\". Default: the "
+                    + "variant's icon." },
         },
         hostOnly: {
             keyBindings: "Over A2UI the dialog's keys work only inside its box, where the defaults Escape and "
