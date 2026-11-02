@@ -42,7 +42,7 @@ function fakeRepo(mutate: (files: Record<string, unknown>) => void = () => undef
             components: { Widget: { properties: {} } } },
         "specs/agentui/published/catalog-v1.json": structuredClone(catalog),
         "dist/mcp/renderer.meta.json": { csp: { resourceDomains: ["https://static.outcrop.us", "https://fonts.googleapis.com", "https://fonts.gstatic.com"] } },
-        "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }], hostOnly: {} },
+        "dist/agentui-report.json": { catalogId: ID, excluded: [{ name: "panel", violations: ["x"] }], outOfCatalog: [], hostOnly: {} },
     };
     files["dist/a2ui/adapter/v1.d.ts"] = "export {};\n";
     files["dist/agentui-report.json"] = { ...(files["dist/agentui-report.json"] as object), adapter: { packages: [],
@@ -101,6 +101,16 @@ describe("checkDist ([29])", () =>
     {
         const root = fakeRepo((f) => { (f["dist/agentui-report.json"] as any).excluded = []; });
         expect((await checkDist(root)).join()).toMatch(/Panel/);
+    });
+    test("a component out of the catalog by protocol.outOfCatalog is covered (ADR-247)", async () =>
+    {
+        const root = fakeRepo((f) =>
+        {
+            const report = f["dist/agentui-report.json"] as any;
+            report.excluded = [];
+            report.outOfCatalog = [{ name: "panel", reason: "Page-level chrome." }];
+        });
+        expect(await checkDist(root)).toEqual([]);
     });
     test("knobby in an emitted file fails", async () =>
     {

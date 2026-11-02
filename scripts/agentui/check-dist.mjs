@@ -301,16 +301,16 @@ function catalogPointers(catalog)
         Object.keys(catalog[section]).map((name) => `#/${section}/${name}`));
 }
 
-/** Every built manifest is in the catalog or listed as excluded. */
+/** Every built manifest is in the catalog, listed as excluded, or out of the catalog (ADR-247). */
 function coverageProblems(manifests, catalog, report)
 {
-    const excluded = new Set(report.excluded.map((e) => e.name));
+    const excluded = new Set([...report.excluded, ...report.outOfCatalog].map((e) => e.name));
 
     return manifests.components
         .filter((m) => !excluded.has(m.name))
         .map((m) => ({ m, name: m.protocol?.name ?? m.factory.replace(/^create/, "") }))
         .filter(({ name }) => !(name in catalog.components))
-        .map(({ m, name }) => `${m.name}: neither in the catalog (as ${name}) nor in dist/agentui-report.json's excluded list.`);
+        .map(({ m, name }) => `${m.name}: neither in the catalog (as ${name}) nor in dist/agentui-report.json's excluded or outOfCatalog list.`);
 }
 
 /**
