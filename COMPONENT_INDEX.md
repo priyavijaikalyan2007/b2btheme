@@ -81,9 +81,9 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 
 | Component | Description | Factory | Docs |
 |-----------|-------------|---------|------|
-| confirmdialog | A general-purpose confirmation modal with customizable title, message, icon, buttons, and a promise-based API. | `showConfirmDialog()`, `showDangerConfirmDialog()` | [README](components/confirmdialog/README.md) |
-| errordialog | A Bootstrap 5 modal that displays literate error messages with user-friendly narrative and collapsible technical deta... | `showErrorDialog()` | [README](components/errordialog/README.md) |
-| progressmodal | A modal dialog for displaying progress of long-running operations. | `showProgressModal()`, `showSteppedProgressModal()` | [README](components/progressmodal/README.md) |
+| confirmdialog | A general-purpose confirmation modal with customizable title, message, icon, buttons, and a promise-based API. | `createConfirmDialog()`, `showConfirmDialog()`, `showDangerConfirmDialog()` | [README](components/confirmdialog/README.md) |
+| errordialog | A Bootstrap 5 modal that displays literate error messages with user-friendly narrative and collapsible technical deta... | `createErrorDialog()`, `showErrorDialog()` | [README](components/errordialog/README.md) |
+| progressmodal | A modal dialog for displaying progress of long-running operations. | `createProgressModal()`, `showProgressModal()`, `showSteppedProgressModal()` | [README](components/progressmodal/README.md) |
 
 ## Feedback & Status
 

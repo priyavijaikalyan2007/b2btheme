@@ -3,7 +3,7 @@
 > **Date:** 2026-11-01
 > **Epic:** #16. Steps 1–4 are on main. #85 adds PropertyInspector: 96 in catalog v1, 5 pending (#64).
 > **Source:** `specs/agentui-readiness.prd.md` §4, step 5: "manifests for those an agent would sensibly render; the page-level ones are recorded as out of scope, with reasons."
-> **Status:** decisions D1–D3 made by the user on 2026-11-01; ready for a plan.
+> **Status:** done on 2026-11-02. Decisions D1–D3 were made by the user on 2026-11-01; S5-1 to S5-4 were delivered in ADR-243 to ADR-246.
 
 ## 1. Goal
 
@@ -46,7 +46,7 @@ Every component directory either has a manifest or a recorded reason for having 
 | markdownrenderer | A library with no element of its own: `createMarkdownRenderer` returns `render(md, target)` and `toHtml(md)`. An agent renders markdown with DocViewer, which is in the catalog and renders through it. This was triaged to join, and moved out in S5-1 (ADR-243). |
 | dynamiccanvas | The Dynamic UI runtime's own canvas, which hosts components itself. It is a peer of an A2UI surface, not something inside one. |
 
-The list lives in `scripts/agentui/no-manifest.mjs` as `NO_MANIFEST`, mapping each name to its reason. The components later batches will give a manifest are in `AWAITING_MANIFEST` there, a list that may only shrink. `scripts/build-manifest.js` fails when a component has neither a manifest nor an entry, has both, or when an entry names no directory.
+The list lives in `scripts/agentui/no-manifest.mjs` as `NO_MANIFEST`, mapping each name to its reason. Until S5-4, the components that later batches would give a manifest were listed in `AWAITING_MANIFEST`, a list that could only shrink. S5-4 emptied it and removed it (ADR-246). `scripts/build-manifest.js` fails when a component has neither a manifest nor an entry, has both, or when an entry names no directory.
 
 ## 4. Decisions (user, 2026-11-01)
 
@@ -63,7 +63,13 @@ Each batch is one PR, with a manifest, glue, browser gesture tests and records. 
 | S5-1 | `NO_MANIFEST` and its gate; typebadge (ADR-243) |
 | S5-2 | statusbar and sidebar (ADR-244) |
 | S5-3 | toolbar and graphtoolbar (ADR-245) |
-| S5-4 | confirmdialog, errordialog, formdialog, progressmodal and sharedialog, with the `contained` mode |
+| S5-4 | confirmdialog, errordialog, formdialog, progressmodal and sharedialog, with the `contained` mode (ADR-246) |
+
+S5-4 notes:
+- §3.1 says each dialog "appends a Bootstrap modal". In fact only ErrorDialog uses Bootstrap's Modal. The other four build their own overlay and use Bootstrap only for button classes. So ErrorDialog is the only dialog that declares the `bootstrap` library, for its technical-details Collapse.
+- A contained dialog opens when it is created, because the adapter never calls `show()`. An answered dialog closes, as today.
+- ProgressModal joins through a wrapper, `createProgressModal`. `ProgressModalHandle.getState()` already returns the run state as a string, and changing that would break its users.
+- ShareDialog's `onSearch` is the same provider as PeoplePicker's, so the agent answers people searches.
 
 ## 6. Done when
 

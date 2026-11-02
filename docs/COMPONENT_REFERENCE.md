@@ -3393,6 +3393,23 @@ const confirmed = await dialog.show();
 | `cssClass` | `string` | -- | Additional CSS class on the dialog root |
 | `keyBindings` | `Partial<Record<string, string>>` | -- | Override default key combos |
 
+## Contained mode and the handle (ADR-246)
+
+`createConfirmDialog(options)` returns a handle. A page modal from it waits for `show()`, as `new ConfirmDialog(...)` does. Pass `contained: true` with a `container` element and the dialog shows at once inside that element, with no backdrop. It takes no focus on open and traps none, and Escape and Enter work only while focus is inside it. `contained` defaults to `false`, today's page modal.
+
+| Member | Description |
+|---|---|
+| `show()` | Shows the dialog. While it is open, a second call returns the same promise; after an answer it opens again |
+| `on("confirm" \| "cancel", handler)` | Subscribes to the answer, which fires after `onConfirm` or `onCancel` with `{}`. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+| `getElement()` | The dialog's root while it is open, or `null` |
+| `destroy()` | Removes the dialog without answering it. Idempotent |
+
+### Over A2UI
+
+ConfirmDialog is in the A2UI catalog. It is always contained, so it renders in its surface and blocks nothing outside it. Confirm sends `onConfirm` and cancel sends `onCancel`. The answered dialog closes.
+
 ## Variants
 
 | Variant | Icon | Button Class | Use Case |
@@ -6219,6 +6236,27 @@ dialog.destroy();
 
 One-liner convenience function. Creates an `ErrorDialog` instance and immediately shows it.
 
+### Function: `createErrorDialog(containerId, options)` (ADR-246)
+
+Shows the error at once and returns a handle. `options` is the `LiterateError` plus two additive fields:
+
+| Option | Default | Description |
+|---|---|---|
+| `showRetry` | `false` | Show Retry without `onRetry`, for a `retry` subscriber |
+| `contained` | `false` | Show the dialog in place inside the container, with no Bootstrap Modal and no page backdrop. Its Close buttons and Escape close it; Escape and Ctrl+C work only while focus is inside it |
+
+| Member | Description |
+|---|---|
+| `on("close" \| "retry", handler)` | Subscribes with `{}`. `retry` fires after `onRetry`; `close` fires when the dialog closes. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+| `getElement()` | The dialog's root while it is open, or `null` |
+| `hide()` / `destroy()` | Close the dialog / remove it without a `close` event. `destroy` is idempotent |
+
+### Over A2UI
+
+ErrorDialog is in the A2UI catalog. It is always contained, so it shows no Bootstrap Modal and no page backdrop. Retry sends `onRetry` (set `showRetry: true` to offer it), and closing sends `onClose`. The adapter loads Bootstrap's JS for the technical-details toggle, unless the page already has it.
+
 ## Features
 
 - **Danger header** — Red header strip with exclamation icon
@@ -7836,6 +7874,23 @@ createFormDialog({
     onSubmit: async (values) => { /* save */ }
 });
 ```
+
+## Contained mode and channels (ADR-246)
+
+Pass `contained: true` with a `container` element and `createFormDialog` shows the dialog at once inside that element, with no backdrop. It takes no focus on open and traps none, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal, which waits for `show()`.
+
+| Member | Description |
+|---|---|
+| `on("submit", handler)` | Subscribes to `{ values }`, every field's value, once `onSubmit` settles. Nothing fires when validation or `onSubmit` fails. Returns the unsubscribe |
+| `on("cancel", handler)` | Subscribes to `{}`, after `onCancel` |
+| `getState()` / `setState(state)` | Nothing to restore: the values travel in the submit event |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+
+`onSubmit` is optional, for a caller that listens on `submit` instead.
+
+### Over A2UI
+
+FormDialog is in the A2UI catalog. It is always contained, so it renders in its surface and blocks nothing outside it. Submit sends `onSubmit` with `{ values }`, and cancelling sends `onCancel`. Fields, sections and steps take no `validate`, `customElement` or `"custom"` type; `panel`, `customContent` and `warnOnDirty` are the host's.
 
 ## Keyboard
 
@@ -14013,6 +14068,31 @@ A modal dialog for displaying progress of long-running operations.
 | `isVisible()` | Check visibility |
 | `destroy()` | Remove from DOM |
 
+## Contained mode (ADR-246)
+
+Pass `contained: true` with a `container` element and the modal renders inside that element, with no backdrop. It takes, traps and gives back no focus, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal. The instance also gains `getElement()` and `clearLog()`.
+
+## `createProgressModal(options)` (ADR-246)
+
+This shows a modal driven by data, and returns a surface. The surface wraps a `ProgressModal`, available as `.modal`, because that class's `getState()` already reports the run state as a string. It takes the options above, plus these:
+
+| Option | Default | Description |
+|---|---|---|
+| `showCancel` | `false` | Offer Cancel while running without `onCancel`, for a `cancel` subscriber |
+| `showRetry` | `false` | Offer Retry after a failure without `onRetry`, for a `retry` subscriber |
+| `progress` | none | A `ProgressUpdate`: `status`, `fraction` (0 to 1), `step`, `outcome` (`"running"`, `"completed"` or `"failed"`) and `log` (the whole log so far, as `{ message, level }`) |
+
+| Member | Description |
+|---|---|
+| `setData("progress", update)` | Applies a `ProgressUpdate`. An outcome finishes the run once, and Retry returns it to running. Log entries past those shown are appended, and a shorter list starts the log again |
+| `on("cancel" \| "retry" \| "close", handler)` | Subscribes with `{}`, after the matching callback. Returns the unsubscribe |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `getElement()` / `destroy()` | The modal's root, or `null` / removes the modal; idempotent |
+
+### Over A2UI
+
+ProgressModal is in the A2UI catalog through `createProgressModal`. It is always contained. The agent rewrites `progress` as the work goes on. Cancel, Retry and Done send `onCancel`, `onRetry` and `onClose`; set `showCancel` and `showRetry` to offer the first two.
+
 ## Log Entry Levels
 
 | Level | Icon | Colour |
@@ -15893,6 +15973,22 @@ const result = await dialog.show();
     removed: string[];        // IDs of removed people
 }
 ```
+
+## Contained mode and channels (ADR-246)
+
+Pass `contained: true` with a `container` element and `createShareDialog` shows the dialog at once inside that element, with no backdrop. It traps no focus and gives none back, and its keys work only while focus is inside it. `contained` defaults to `false`, today's page modal, which waits for `show()`.
+
+| Member | Description |
+|---|---|
+| `show()` | While the dialog is open, a second call returns the same promise; after an answer it opens again |
+| `on("share", handler)` | Subscribes to the `ShareDialogResult` once `onShare` settles. Returns the unsubscribe |
+| `on("cancel", handler)` | Subscribes to `{}`, after `onCancel` |
+| `getState()` / `setState(state)` | Nothing to restore |
+| `setData(slot, value)` | Throws: the dialog has no data slots |
+
+### Over A2UI
+
+ShareDialog is in the A2UI catalog. It is always contained. Done sends `onShare` with `{ added, changed, removed }`, and cancelling sends `onCancel`. People searches go to the agent, as PeoplePicker's do (`onSearch` with `searchResult`). `searchUrl` and `onRemoveConfirm` are the host's.
 
 ## Keyboard
 

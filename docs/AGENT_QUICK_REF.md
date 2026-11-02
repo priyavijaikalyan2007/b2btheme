@@ -744,8 +744,8 @@ $control-height-xl=46px
 
 - CSS: `components/confirmdialog/confirmdialog.css`
 - JS: `components/confirmdialog/confirmdialog.js`
-- Globals: `showConfirmDialog()`, `showDangerConfirmDialog()`
-- Exports: `interface ConfirmDialogOptions`, `class ConfirmDialog`, `function showConfirmDialog`, `function showDangerConfirmDialog`
+- Globals: `createConfirmDialog()`, `showConfirmDialog()`, `showDangerConfirmDialog()`
+- Exports: `interface ConfirmDialogOptions`, `type ConfirmDialogChannel`, `interface ConfirmDialogHandle`, `class ConfirmDialog`, `function showConfirmDialog`, `function createConfirmDialog`, `function showDangerConfirmDialog`
 
 ### contextmenu
 
@@ -842,8 +842,8 @@ $control-height-xl=46px
 
 - CSS: `components/errordialog/errordialog.css`
 - JS: `components/errordialog/errordialog.js`
-- Globals: `showErrorDialog()`
-- Exports: `interface LiterateError`, `class ErrorDialog`, `function showErrorDialog`
+- Globals: `createErrorDialog()`, `showErrorDialog()`
+- Exports: `interface LiterateError`, `interface ErrorDialogOptions`, `type ErrorDialogChannel`, `interface ErrorDialogHandle`, `class ErrorDialog`, `function showErrorDialog`, `function createErrorDialog`
 
 ### explorerpicker
 
@@ -899,7 +899,7 @@ $control-height-xl=46px
 - CSS: `components/formdialog/formdialog.css`
 - JS: `components/formdialog/formdialog.js`
 - Globals: `FormDialog()`, `createFormDialog()`
-- Exports: `type FormFieldType`, `interface FormFieldDef`, `interface FormSection`, `interface FormStep`, `interface FormDialogPanel`, `interface FormDialogOptions`, `interface FormDialog`, `function createFormDialog`
+- Exports: `type FormFieldType`, `interface FormFieldDef`, `interface FormSection`, `interface FormStep`, `interface FormDialogPanel`, `interface FormDialogOptions`, `type FormDialogChannel`, `interface FormDialogSubmit`, `interface FormDialog`, `function createFormDialog`
 
 ### gauge
 
@@ -1171,8 +1171,8 @@ $control-height-xl=46px
 
 - CSS: `components/progressmodal/progressmodal.css`
 - JS: `components/progressmodal/progressmodal.js`
-- Globals: `showProgressModal()`, `showSteppedProgressModal()`
-- Exports: `interface ProgressLogEntry`, `interface ProgressModalOptions`, `interface ProgressModalHandle`, `class ProgressModal`, `function showProgressModal`, `function showSteppedProgressModal`
+- Globals: `createProgressModal()`, `showProgressModal()`, `showSteppedProgressModal()`
+- Exports: `interface ProgressLogEntry`, `interface ProgressModalOptions`, `interface ProgressUpdateLogEntry`, `interface ProgressUpdate`, `interface ProgressModalSurfaceOptions`, `type ProgressModalChannel`, `interface ProgressModalSurface`, `interface ProgressModalHandle`, `class ProgressModal`, `function createProgressModal`, `function showProgressModal`, `function showSteppedProgressModal`
 
 ### prompttemplatemanager
 
@@ -1242,7 +1242,7 @@ $control-height-xl=46px
 - CSS: `components/sharedialog/sharedialog.css`
 - JS: `components/sharedialog/sharedialog.js`
 - Globals: `createShareDialog()`, `showShareDialog()`
-- Exports: `interface PersonData`, `interface AccessLevel`, `interface SharedPerson`, `interface ShareDialogResult`, `interface ShareDialogOptions`, `interface ShareDialogHandle`, `class ShareDialog`, `function showShareDialog`, `function createShareDialog`
+- Exports: `interface PersonData`, `interface AccessLevel`, `interface SharedPerson`, `interface ShareDialogResult`, `interface ShareDialogOptions`, `type ShareDialogChannel`, `interface ShareDialogHandle`, `class ShareDialog`, `function showShareDialog`, `function createShareDialog`
 
 ### sidebar
 
