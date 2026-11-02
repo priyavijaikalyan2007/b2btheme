@@ -51,6 +51,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **ChartPanel honours reduced motion**: with the system's reduced-motion setting on, the chart draws and redraws without Chart.js's animation. Its loading shimmer already stopped; the chart itself still animated. Nothing changes without the setting.
 - **FormDialog's labels now name their fields.** A native control is the label's `for`. A radio group, the rich text surface, a toggle and a custom field's wrapper are named by the label's id through `aria-labelledby`. Before this, screen readers and `getByLabel` found no name.
 - **Conversation follows a new reply when the list is already at the bottom.** `setData` now checks the list's geometry as well as its auto-scroll flag. A stale scroll event left over from the previous render could turn that flag off while the user was at the bottom, so a new reply stayed below the fold.
 - **An agent's change to a layout option that `getState()` also reports now sticks** (ADR-240): since ADR-238 the A2UI adapter carried the whole `getState()` across a rebuild, so a changed BoxLayout `direction` was put back. It now carries only the manifest's `stateKeys`.

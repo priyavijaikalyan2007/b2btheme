@@ -289,6 +289,12 @@ interface ThemeColours
     surfaceRaised: string;
 }
 
+/** True when the user asked the system for reduced motion. */
+function prefersReducedMotion(): boolean
+{
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function readThemeColours(): ThemeColours
 {
     return {
@@ -831,7 +837,7 @@ export class ChartPanel implements ChartPanelHandle
         try
         {
             const cfg = buildChartConfig(this.opts,
-                readThemeColours(), animate);
+                readThemeColours(), animate && !prefersReducedMotion());
             this.chart = new Ctor(this.canvasEl, cfg);
         }
         catch (e)

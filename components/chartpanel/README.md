@@ -139,6 +139,7 @@ Transitioning back to `ready` recreates the Chart.js instance from the current `
 - `ariaLabel` is **required** by the TS type — the chart announces itself.
 - `role="img"` on the root.
 - A visually-hidden `<table>` (`fallbackTable: true`, default) renders the same data for screen-reader users. Disable only if the data is also presented elsewhere on the page.
+- With the system's reduced-motion setting on, the chart draws and redraws without animation.
 - Tooltips are themed (`--theme-surface-raised-bg` / `--theme-border-color` / `--theme-text-primary`).
 
 ## Limitations
