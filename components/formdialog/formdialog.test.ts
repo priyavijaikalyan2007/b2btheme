@@ -957,3 +957,39 @@ describe("createFormDialog, contained (ADR-246)", () =>
         expect(onCancel).not.toHaveBeenCalled();
     });
 });
+
+// ============================================================================
+// LABELS NAME THEIR CONTROLS
+// ============================================================================
+
+describe("each field's label names its control", () =>
+{
+    function nameOf(el: Element | null): string
+    {
+        const by = el?.getAttribute("aria-labelledby");
+        if (by) { return document.getElementById(by)?.textContent ?? ""; }
+        return el?.id ? document.querySelector(`label[for="${el.id}"]`)?.textContent ?? "" : "";
+    }
+
+    test("native controls by for/id; radio groups, rich text and toggles by aria-labelledby", () =>
+    {
+        const dialog = createFormDialog(defaultOptions({ fields: [
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "role", label: "Role", type: "select", options: [{ value: "a", label: "A" }] },
+            { name: "notes", label: "Notes", type: "textarea" },
+            { name: "size", label: "Size", type: "radio", options: [{ value: "s", label: "Small" }] },
+            { name: "bio", label: "Bio", type: "richtext" },
+            { name: "on", label: "Enabled", type: "toggle" },
+        ] }));
+        dialog.show();
+        const el = dialog.getElement();
+
+        expect(nameOf(el.querySelector("[name='email']"))).toBe("Email *");
+        expect(nameOf(el.querySelector("select[name='role']"))).toBe("Role");
+        expect(nameOf(el.querySelector("textarea[name='notes']"))).toBe("Notes");
+        expect(nameOf(el.querySelector("[role='radiogroup']"))).toBe("Size");
+        expect(nameOf(el.querySelector("[role='textbox']"))).toBe("Bio");
+        expect(nameOf(el.querySelector("[role='switch']"))).toBe("Enabled");
+        dialog.destroy();
+    });
+});

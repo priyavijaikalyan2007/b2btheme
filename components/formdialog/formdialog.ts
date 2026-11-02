@@ -1007,11 +1007,15 @@ class FormDialogImpl implements FormDialog
         this.fieldMap.set(field.name, input);
         this.applyCachedValue(field.name, input);
 
+        const labelId = `${this.id}-label-${field.name}`;
+
         if (field.type === "checkbox" || field.type === "toggle")
         {
             const wrap = createElement("div", [`${CLS}-check-wrap`]);
             wrap.appendChild(input);
             const labelText = createElement("span", [`${CLS}-check-label`], field.label);
+            setAttr(labelText, "id", labelId);
+            setAttr(input, "aria-labelledby", labelId);
             wrap.appendChild(labelText);
             // Replace the block label with inline
             group.removeChild(label);
@@ -1019,6 +1023,8 @@ class FormDialogImpl implements FormDialog
         }
         else
         {
+            setAttr(label, "id", labelId);
+            this.nameControl(field, input, label, labelId);
             group.appendChild(input);
         }
 
@@ -1041,6 +1047,36 @@ class FormDialogImpl implements FormDialog
         group.appendChild(error);
 
         return group;
+    }
+
+    /**
+     * Gives a field's control its label's name, so assistive technology and
+     * getByLabel find it. Before this the label was tied to nothing. A native
+     * control is the label's `for`; a radio group, the rich text surface and a
+     * custom field's wrapper are labelled by the label's id.
+     */
+    private nameControl(field: FormFieldDef, input: HTMLElement, label: HTMLElement, labelId: string): void
+    {
+        if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement
+            || input instanceof HTMLTextAreaElement)
+        {
+            const controlId = `${this.id}-field-${field.name}`;
+            setAttr(input, "id", controlId);
+            setAttr(label, "for", controlId);
+            return;
+        }
+
+        if (field.type === "radio")
+        {
+            setAttr(input, "role", "radiogroup");
+        }
+        else if (field.type === "custom")
+        {
+            setAttr(input, "role", "group");
+        }
+
+        const target = field.type === "richtext" ? input.querySelector<HTMLElement>("[role='textbox']") : input;
+        target?.setAttribute("aria-labelledby", labelId);
     }
 
     private buildLabel(field: FormFieldDef): HTMLElement

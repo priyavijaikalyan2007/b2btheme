@@ -220,8 +220,8 @@ test.describe("Step 5 components under @a2ui/lit", () =>
             await expectContained(page, ".formdialog-overlay.formdialog-contained", "outcrop-form-dialog");
 
             const form = page.locator(".formdialog-contained");
-            await form.locator("[name='email']").fill("dana@example.com");
-            await form.locator("[name='role']").selectOption("editor");
+            await form.getByLabel("Email").fill("dana@example.com");
+            await form.getByLabel("Role").selectOption("editor");
             await form.getByRole("button", { name: "Submit" }).click();
             await expect.poll(() => sent(page)).toEqual([["invite",
                 { values: { email: "dana@example.com", role: "editor" } }]]);
