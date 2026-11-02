@@ -123,10 +123,15 @@ function onEvent(e: SessionEvent, chat: Chat, bar: AgentBar, d: AgentPanelDeps):
     }
 }
 
+/** Replaying a scenario is not a session: it ends one (main.ts takeover) and is already a file. */
+export const NOTHING_TO_SAVE = "Save session keeps a live conversation with the agent, and there isn't one yet. "
+    + "Choose a provider, paste your key and ask the agent for something. A scenario you replayed is already a "
+    + "file, in agentdemo/scenarios/, and loading one ends the live conversation.";
+
 /** Downloads the session as a scenario file; the key is never in it. */
 function save(session: Session | null, bar: AgentBar, chat: Chat): void
 {
-    if (!session || session.transcript().length === 0) { chat.notice("Nothing to save yet."); return; }
+    if (!session || session.transcript().length === 0) { chat.notice(NOTHING_TO_SAVE); return; }
 
     const date = new Date().toISOString().slice(0, 10);
     const text = serializeScenario({ header: { kind: "header", title: "Saved session", provenance: "live",
