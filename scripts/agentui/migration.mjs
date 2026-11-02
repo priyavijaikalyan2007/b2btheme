@@ -59,11 +59,9 @@ export const PENDING_CLASSIFICATION = new Set([
     // ADR-241).
     // 5 on 2026-11-01: propertyinspector classified; openWith takes what open() shows, with A2UI children
     // (readiness step 4, ADR-242).
+    // 1 on 2026-11-02: fileupload, graphminimap, helpdrawer and navrail declare protocol.outOfCatalog with their
+    // reasons instead (ADR-247); commentoverlay still needs coordinate-only pins and a placement trigger.
     "commentoverlay",
-    "fileupload",
-    "graphminimap",
-    "helpdrawer",
-    "navrail",
 ]);
 
 /** Components whose declared conformance is below the computed required level (§7). */

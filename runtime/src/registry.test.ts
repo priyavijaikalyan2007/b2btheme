@@ -543,6 +543,13 @@ describe("validateManifest — protocol field", () =>
         expect(paths({ box: "drawer" })).toEqual([]);
         expect(paths({ box: "fill" })).toEqual(["protocol.box"]);
     });
+
+    test("protocol.outOfCatalog is a reason string (ADR-247)", () =>
+    {
+        expect(paths({ outOfCatalog: "Page-level chrome fixed to the viewport." })).toEqual([]);
+        expect(paths({ outOfCatalog: "" })).toEqual(["protocol.outOfCatalog"]);
+        expect(paths({ outOfCatalog: true })).toEqual(["protocol.outOfCatalog"]);
+    });
 });
 
 describe("validateManifest — agent field (ADR-222)", () =>

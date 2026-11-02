@@ -38,6 +38,12 @@ export const FILEUPLOAD_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    // Out of the agent catalog for good (readiness wrap-up, ADR-247).
+    protocol: {
+        outOfCatalog: "The files a user picks cannot reach an agent, and an upload needs a host handler that sends "
+            + "them to the host's storage.",
+    },
+
     // weight.js is overwritten by the build from the compiled bundle size.
     weight: { js: 15414, mountCost: "light", holdsResources: false },
 

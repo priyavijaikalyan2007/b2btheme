@@ -64,13 +64,14 @@ export const PENDING_EXCUSABLE_CODES = new Set(Object.values(BACKLOG_COUNTS).fla
  * The whole generator, without touching dist (spec §§3–6, §8).
  *
  * @param input - See the Task 8 interface block.
- * @returns { errors, excluded, outputs, catalog, descriptors, counts }.
+ * @returns { errors, excluded, outOfCatalog, outputs, catalog, descriptors, counts }.
  */
 // @entrypoint
 export function runPipeline(input)
 {
     const errors = [];
-    const classified = classifyFleet(input, errors);
+    const { inCatalog, outOfCatalog } = splitOutOfCatalog(input, errors);
+    const classified = classifyFleet({ ...input, manifests: inCatalog }, errors);
     const { included, excluded } = partition(classified, input, errors);
     const schemas = emitAndCheck(included, input, errors);
     const ready = included.filter((c) => schemas.has(c.manifest.name));
@@ -85,9 +86,10 @@ export function runPipeline(input)
     const adapter = buildDescriptors(ready, catalog, input.assetExists, input.libraries);
     errors.push(...adapter.problems);
 
-    return { errors, excluded, catalog, descriptors: adapter.descriptors,
-        outputs: outputsFor(ready, schemas, { catalog, lean }, excluded, input),
-        counts: { ...countsFor(classified, ready, excluded), belowRequired: input.belowRequired.size } };
+    return { errors, excluded, outOfCatalog, catalog, descriptors: adapter.descriptors,
+        outputs: outputsFor(ready, schemas, { catalog, lean }, { excluded, outOfCatalog }, input),
+        counts: { ...countsFor(classified, ready, excluded), outOfCatalog: outOfCatalog.length,
+            belowRequired: input.belowRequired.size } };
 }
 
 /** The agent-facing rendering (#49, ADR-233), with the problems that would make it lossy collected. */
@@ -108,6 +110,28 @@ function leanFor(catalog, input, errors)
 }
 
 /** Classifies and resolves every manifest; a thrown literate error is collected. */
+/**
+ * Sets aside the manifests whose protocol.outOfCatalog gives a reason
+ * (ADR-247): they are neither classified nor published. One that is also on
+ * PENDING_CLASSIFICATION is an error, since it cannot be both waiting to join
+ * and out for good.
+ */
+function splitOutOfCatalog(input, errors)
+{
+    const out = input.manifests.filter((m) => m.protocol?.outOfCatalog !== undefined);
+
+    for (const m of out.filter((x) => input.pending.has(x.name)))
+    {
+        errors.push(`${m.name} declares protocol.outOfCatalog and is on PENDING_CLASSIFICATION. Remove it from `
+            + "scripts/agentui/migration.mjs, or drop the declaration if it is still meant to join.");
+    }
+
+    return {
+        inCatalog: input.manifests.filter((m) => m.protocol?.outOfCatalog === undefined),
+        outOfCatalog: out.map((m) => ({ name: m.name, reason: m.protocol.outOfCatalog })),
+    };
+}
+
 function classifyFleet(input, errors)
 {
     const ctx = createClassifier(input.tsconfigPath, input.cacheDir);
@@ -600,7 +624,7 @@ function changeSummary(baseline, catalog, diff)
 }
 
 /** Every file to write, keyed by path relative to dist/. */
-function outputsFor(ready, schemas, { catalog, lean }, excluded, input)
+function outputsFor(ready, schemas, { catalog, lean }, { excluded, outOfCatalog }, input)
 {
     const outputs = new Map(ready.map((c) => [`schemas/${c.manifest.name}.options.json`, schemas.get(c.manifest.name)]));
 
@@ -616,7 +640,7 @@ function outputsFor(ready, schemas, { catalog, lean }, excluded, input)
     }
 
     outputs.set("mcp/renderer.meta.json", rendererMeta());
-    outputs.set("agentui-report.json", { catalogId: catalogId(input.major), excluded,
+    outputs.set("agentui-report.json", { catalogId: catalogId(input.major), excluded, outOfCatalog,
         hostOnly: Object.fromEntries(ready.map((c) => [c.manifest.name, c.surface.hostOnly])) });
 
     return outputs;
@@ -833,7 +857,7 @@ export function measureClassification(repoRoot = REPO)
 {
     const input = repoInputs(repoRoot, true);
     const errors = [];
-    const classified = classifyFleet(input, errors);
+    const classified = classifyFleet({ ...input, manifests: splitOutOfCatalog(input, errors).inCatalog }, errors);
 
     if (errors.length > 0)
     {
@@ -891,7 +915,8 @@ async function main(argv)
     const prompt = addPromptSizes(result, input);
     writeOutputs(result.outputs, path.join(REPO, "dist"));
     const c = result.counts;
-    console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification), `
+    console.log(`[agentui] ${c.components} components in the catalog (${c.excluded} pending classification, `
+        + `${c.outOfCatalog} out of the catalog by protocol.outOfCatalog), `
         + `${c.dataProps} data props, ${c.events} events, ${c.providers} providers, ${c.hostOnly} host-only members, `
         + `${c.belowRequired} below their required level (BELOW_REQUIRED)`);
     console.log(`[agentui] In a prompt (${prompt.tokenizer} tokens): `
@@ -925,7 +950,7 @@ function addPromptSizes(result, input)
 function measure(input)
 {
     const errors = [];
-    const classified = classifyFleet(input, errors);
+    const classified = classifyFleet({ ...input, manifests: splitOutOfCatalog(input, errors).inCatalog }, errors);
     const blocking = classified.map((c) => ({ name: c.manifest.name, violations: blockingViolations(c, input) }));
     const failing = blocking.filter((b) => b.violations.some((v) => PENDING_EXCUSABLE_CODES.has(v.code)))
         .map((b) => b.name).sort();
