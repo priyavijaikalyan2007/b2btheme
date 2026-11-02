@@ -74,7 +74,9 @@ import type
     registerCommands,
 } from "./commandpalette/commandpalette";
 import type { CommentOverlay, createCommentOverlay } from "./commentoverlay/commentoverlay";
-import type { ConfirmDialog, showConfirmDialog, showDangerConfirmDialog } from "./confirmdialog/confirmdialog";
+import type {
+    ConfirmDialog, createConfirmDialog, showConfirmDialog, showDangerConfirmDialog,
+} from "./confirmdialog/confirmdialog";
 import type { attachLongPress, createContextMenu } from "./contextmenu/contextmenu";
 import type { Conversation, createConversation } from "./conversation/conversation";
 import type { CronPicker, createCronPicker } from "./cronpicker/cronpicker";
@@ -393,6 +395,7 @@ declare global
         /** Published by the Confirmdialog component. */
         showConfirmDialog?: typeof showConfirmDialog;
         showDangerConfirmDialog?: typeof showDangerConfirmDialog;
+        createConfirmDialog?: typeof createConfirmDialog;
 
         /** Published by the Contextmenu component. */
         attachLongPress?: typeof attachLongPress;

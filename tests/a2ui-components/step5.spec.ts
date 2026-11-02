@@ -6,7 +6,7 @@
 /**
  * E2E: the components readiness step 5 gives a manifest (specs/agentui-step5.prd.md),
  * under @a2ui/lit. S5-1: TypeBadge (ADR-243). S5-2: StatusBar and Sidebar (ADR-244). S5-3: Toolbar and
- * GraphToolbar (ADR-245).
+ * GraphToolbar (ADR-245). S5-4: the dialogs, contained (ADR-246).
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -26,8 +26,9 @@ async function mount(page: Page, name: string, props: Record<string, unknown>): 
         tagOf(name));
 }
 
-/** Mounts a tree of components (the first is the root), and waits for the root's handle. */
-async function mountTree(page: Page, components: Record<string, unknown>[]): Promise<void>
+/** Mounts a tree of components (the first is the root), and waits for the handle of `waitFor`, the root by default. */
+async function mountTree(page: Page, components: Record<string, unknown>[],
+    waitFor = String(components[0].component)): Promise<void>
 {
     await open(page, "lit");
     await send(page, [
@@ -36,7 +37,7 @@ async function mountTree(page: Page, components: Record<string, unknown>[]): Pro
         { version: V, updateDataModel: { surfaceId: "s", path: "/", value: {} } },
     ]);
     await page.waitForFunction((t) => (window as unknown as { handleOf(x: string): unknown }).handleOf(t) !== undefined,
-        tagOf(String(components[0].component)));
+        tagOf(waitFor));
 }
 
 /** The actions sent so far, as [name, context.p]. */
@@ -149,4 +150,36 @@ test.describe("Step 5 components under @a2ui/lit", () =>
 
             expect(await errors(page)).toEqual([]);
         });
+
+    test("ConfirmDialog: renders contained beside a sibling, and confirming sends onConfirm", async ({ page }) =>
+    {
+        await mountTree(page, [{ id: "root", component: "Column", children: ["ask", "field"] },
+            { id: "ask", component: "ConfirmDialog", ...EV, message: "Delete 3 files?", variant: "danger",
+                onConfirm: act("yes", "confirm"), onCancel: act("no", "cancel") },
+            { id: "field", component: "TextField", label: "Name", value: "" }], "ConfirmDialog");
+        await expectContained(page, ".confirmdialog-backdrop", "outcrop-confirm-dialog");
+
+        await page.getByRole("button", { name: "Confirm" }).click();
+        await expect.poll(() => sent(page)).toEqual([["yes", {}]]);
+        await expect(page.locator(".confirmdialog")).toHaveCount(0);
+        expect(await errors(page)).toEqual([]);
+    });
 });
+
+/**
+ * Asserts a dialog root sits in its surface element, dims nothing, and leaves
+ * the sibling TextField usable (ADR-246).
+ */
+async function expectContained(page: Page, root: string, tag: string): Promise<void>
+{
+    const el = page.locator(root);
+    await expect(el).toBeVisible();
+    expect(await el.evaluate((e, t) => e.closest(t) !== null, tag)).toBe(true);
+    expect(await el.evaluate((e) => getComputedStyle(e).position)).not.toBe("fixed");
+    expect(await page.evaluate(() => document.querySelectorAll("body > .modal-backdrop, body.modal-open").length))
+        .toBe(0);
+
+    const field = page.locator("a2ui-basic-textfield input");
+    await field.fill("still usable");
+    await expect(field).toHaveValue("still usable");
+}

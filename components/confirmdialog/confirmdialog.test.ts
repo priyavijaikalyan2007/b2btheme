@@ -15,6 +15,7 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import {
     ConfirmDialog,
+    createConfirmDialog,
     showConfirmDialog,
     showDangerConfirmDialog,
     ConfirmDialogOptions,
@@ -525,5 +526,163 @@ describe("backdrop click", () =>
         backdrop.click();
         const result = await promise;
         expect(result).toBe(false);
+    });
+});
+
+// ============================================================================
+// CONTAINED MODE AND HANDLE (ADR-246)
+// ============================================================================
+
+describe("createConfirmDialog, contained (ADR-246)", () =>
+{
+    let host: HTMLElement;
+
+    beforeEach(() =>
+    {
+        host = document.createElement("div");
+        document.body.appendChild(host);
+    });
+
+    afterEach(() =>
+    {
+        document.body.innerHTML = "";
+    });
+
+    test("shows at once inside its container, not on the body, and is not modal", () =>
+    {
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host });
+
+        expect(host.querySelector(".confirmdialog-backdrop.confirmdialog-contained")).toBe(dialog.getElement());
+        expect(host.querySelector(".confirmdialog")?.getAttribute("aria-modal")).toBe("false");
+        dialog.destroy();
+    });
+
+    test("a page modal from createConfirmDialog waits for show(), as before", () =>
+    {
+        const dialog = createConfirmDialog({ message: "Publish?" });
+
+        expect(getBackdrop()).toBeNull();
+        void dialog.show();
+        expect(getBackdrop()?.parentElement).toBe(document.body);
+        expect(getBackdrop()?.classList.contains("confirmdialog-contained")).toBe(false);
+        dialog.destroy();
+    });
+
+    test("throws when contained has no container element", () =>
+    {
+        expect(() => createConfirmDialog({ message: "Publish?", contained: true }))
+            .toThrow(/options.container must be an element/);
+    });
+
+    test("takes no focus on open", () =>
+    {
+        const outside = document.createElement("input");
+        document.body.appendChild(outside);
+        outside.focus();
+
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host });
+
+        expect(document.activeElement).toBe(outside);
+        dialog.destroy();
+    });
+
+    test("an Escape outside the dialog does not cancel it; inside it does", () =>
+    {
+        const onCancel = vi.fn();
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host, onCancel });
+
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onCancel).not.toHaveBeenCalled();
+
+        dialog.getElement()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        expect(host.children.length).toBe(0);
+    });
+
+    test("clicking the contained root does not cancel, whatever closeOnBackdrop says", () =>
+    {
+        const onCancel = vi.fn();
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host, onCancel,
+            closeOnBackdrop: true });
+
+        dialog.getElement()!.click();
+
+        expect(onCancel).not.toHaveBeenCalled();
+        dialog.destroy();
+    });
+
+    test("confirm fires onConfirm, then the confirm channel, and resolves show()'s promise", async () =>
+    {
+        const order: string[] = [];
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host,
+            onConfirm: () => order.push("callback") });
+        dialog.on("confirm", (payload) => order.push(`channel ${JSON.stringify(payload)}`));
+        const answer = dialog.show();
+
+        host.querySelector<HTMLElement>(".confirmdialog-confirm")!.click();
+
+        expect(order).toEqual(["callback", "channel {}"]);
+        await expect(answer).resolves.toBe(true);
+    });
+
+    test("cancel fires the cancel channel; an unsubscribed handler does not fire", () =>
+    {
+        const kept = vi.fn();
+        const dropped = vi.fn();
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host });
+        dialog.on("cancel", kept);
+        dialog.on("cancel", dropped)();
+
+        host.querySelector<HTMLElement>(".confirmdialog-cancel")!.click();
+
+        expect(kept).toHaveBeenCalledWith({});
+        expect(dropped).not.toHaveBeenCalled();
+    });
+
+    test("on() rejects an unknown channel, and setData throws", () =>
+    {
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host });
+
+        expect(() => dialog.on("submit" as "confirm", () => undefined)).toThrow(/unknown channel "submit"/);
+        expect(() => dialog.setData("rows", [])).toThrow(/no data slots/);
+        dialog.destroy();
+    });
+
+    test("getState is empty and setState(getState()) changes nothing", () =>
+    {
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host });
+
+        dialog.setState(dialog.getState());
+
+        expect(dialog.getState()).toEqual({});
+        expect(host.querySelector(".confirmdialog")).not.toBeNull();
+        dialog.destroy();
+    });
+
+    test("destroy removes the dialog without answering, and is idempotent", () =>
+    {
+        const onCancel = vi.fn();
+        const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: host, onCancel });
+
+        dialog.destroy();
+        dialog.destroy();
+
+        expect(host.children.length).toBe(0);
+        expect(onCancel).not.toHaveBeenCalled();
+    });
+
+    test("show() while open returns the same promise; after an answer it opens again", async () =>
+    {
+        const dialog = new ConfirmDialog({ message: "Publish?" });
+        const first = dialog.show();
+
+        expect(dialog.show()).toBe(first);
+        getConfirmButton()!.click();
+        await expect(first).resolves.toBe(true);
+
+        const second = dialog.show();
+        expect(second).not.toBe(first);
+        expect(getBackdrop()).not.toBeNull();
+        dialog.destroy();
     });
 });

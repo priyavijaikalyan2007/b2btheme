@@ -60,6 +60,52 @@ export interface ConfirmDialogOptions
 
     /** Override default key combos. */
     keyBindings?: Partial<Record<string, string>>;
+
+    /**
+     * Contained mode (ADR-246). Default: false, a page modal as before. When
+     * true the dialog renders inside `container` with no page backdrop: its
+     * keys work only while focus is inside it, it takes no focus on open and
+     * traps none, and it shows as soon as createConfirmDialog creates it.
+     */
+    contained?: boolean;
+
+    /** Where a contained dialog renders. Required when `contained` is true. */
+    container?: HTMLElement;
+}
+
+/** The answer an agent surface receives on the "confirm" and "cancel" channels. */
+export type ConfirmDialogChannel = "confirm" | "cancel";
+
+/**
+ * The ConfirmDialog surface a factory caller receives (ADR-246).
+ *
+ * PAT-1. `implements` below is what keeps this in step with the class.
+ */
+export interface ConfirmDialogHandle
+{
+    /** Shows the dialog; a second call while it is open returns the same promise. */
+    show(): Promise<boolean>;
+
+    /**
+     * Subscribes to "confirm" or "cancel", which fire after onConfirm and
+     * onCancel with an empty payload. Returns an unsubscribe.
+     */
+    on(channel: ConfirmDialogChannel, handler: (payload: Record<string, never>) => void): () => void;
+
+    /** A confirm dialog has no view state to carry across a rebuild. */
+    getState(): Record<string, never>;
+
+    /** Nothing to restore, see getState. */
+    setState(state: Record<string, unknown>): void;
+
+    /** A confirm dialog has no data slots, so this throws. */
+    setData(slot: string, value: unknown): void;
+
+    /** The dialog's root element while it is open, or null. */
+    getElement(): HTMLElement | null;
+
+    /** Removes the dialog without answering it. Idempotent. */
+    destroy(): void;
 }
 
 // ============================================================================
@@ -120,6 +166,8 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> = {
     cancel: "Escape",
     confirm: "Enter",
 };
+
+const CHANNELS: readonly string[] = ["confirm", "cancel"];
 
 /** Maps variant to default Bootstrap icon class. */
 const VARIANT_ICONS: Record<string, string> = {
@@ -222,7 +270,9 @@ function matchesKeyCombo(
 /**
  * Merges user-supplied options with sensible defaults.
  */
-function mergeOptions(options: ConfirmDialogOptions): Required<ConfirmDialogOptions>
+type MergedOptions = Required<Omit<ConfirmDialogOptions, "container">> & { container: HTMLElement | null };
+
+function mergeOptions(options: ConfirmDialogOptions): MergedOptions
 {
     const variant = options.variant ?? "default";
 
@@ -239,6 +289,8 @@ function mergeOptions(options: ConfirmDialogOptions): Required<ConfirmDialogOpti
         closeOnBackdrop: options.closeOnBackdrop ?? true,
         cssClass: options.cssClass ?? "",
         keyBindings: options.keyBindings ?? {},
+        contained: options.contained ?? false,
+        container: options.container ?? null,
     };
 }
 
@@ -251,7 +303,7 @@ function mergeOptions(options: ConfirmDialogOptions): Required<ConfirmDialogOpti
  */
 function buildHeader(
     id: string,
-    opts: Required<ConfirmDialogOptions>): HTMLElement
+    opts: MergedOptions): HTMLElement
 {
     const header = createElement("div", ["confirmdialog-header"]);
 
@@ -281,7 +333,7 @@ function buildHeader(
  */
 function buildBody(
     id: string,
-    opts: Required<ConfirmDialogOptions>): HTMLElement
+    opts: MergedOptions): HTMLElement
 {
     const body = createElement("div", ["confirmdialog-body"]);
 
@@ -295,7 +347,7 @@ function buildBody(
 /**
  * Builds the footer with cancel and confirm buttons.
  */
-function buildFooter(opts: Required<ConfirmDialogOptions>): HTMLElement
+function buildFooter(opts: MergedOptions): HTMLElement
 {
     const footer = createElement("div", ["confirmdialog-footer"]);
 
@@ -329,7 +381,7 @@ function buildFooter(opts: Required<ConfirmDialogOptions>): HTMLElement
  */
 function buildDialogElement(
     id: string,
-    opts: Required<ConfirmDialogOptions>): HTMLElement
+    opts: MergedOptions): HTMLElement
 {
     const variantClass = `confirmdialog-${opts.variant}`;
     const dialogClasses = ["confirmdialog", variantClass];
@@ -341,7 +393,8 @@ function buildDialogElement(
 
     const dialog = createElement("div", dialogClasses);
     setAttr(dialog, "role", "alertdialog");
-    setAttr(dialog, "aria-modal", "true");
+    // A contained dialog blocks nothing outside its box, so it is not modal.
+    setAttr(dialog, "aria-modal", opts.contained ? "false" : "true");
     setAttr(dialog, "aria-labelledby", `${id}-title`);
     setAttr(dialog, "aria-describedby", `${id}-message`);
 
@@ -353,9 +406,11 @@ function buildDialogElement(
  */
 function buildDialogDOM(
     id: string,
-    opts: Required<ConfirmDialogOptions>): HTMLElement
+    opts: MergedOptions): HTMLElement
 {
-    const backdrop = createElement("div", ["confirmdialog-backdrop"]);
+    // Contained, the root fills its container and dims nothing (ADR-246).
+    const backdrop = createElement("div",
+        opts.contained ? ["confirmdialog-backdrop", "confirmdialog-contained"] : ["confirmdialog-backdrop"]);
     const dialog = buildDialogElement(id, opts);
 
     dialog.appendChild(buildHeader(id, opts));
@@ -431,9 +486,9 @@ function handleFocusTrap(e: KeyboardEvent, dialogEl: HTMLElement): void
  * const confirmed = await dialog.show();
  * if (confirmed) { deleteItem(); }
  */
-export class ConfirmDialog
+export class ConfirmDialog implements ConfirmDialogHandle
 {
-    private options: Required<ConfirmDialogOptions>;
+    private options: MergedOptions;
     private backdropEl: HTMLElement | null = null;
     private dialogEl: HTMLElement | null = null;
     private confirmBtnEl: HTMLElement | null = null;
@@ -442,12 +497,22 @@ export class ConfirmDialog
     private previousFocusEl: HTMLElement | null = null;
     private boundKeyHandler: ((e: KeyboardEvent) => void) | null = null;
     private readonly instanceId: string;
+    private pending: Promise<boolean> | null = null;
+    private readonly handlers = new Map<string, Set<(payload: Record<string, never>) => void>>();
+    private destroyed = false;
 
     constructor(options: ConfirmDialogOptions)
     {
         if (!options.message)
         {
             logError("Message is required");
+        }
+
+        if (options.contained && !(options.container instanceof HTMLElement))
+        {
+            throw new Error(
+                `${LOG_PREFIX} options.container must be an element when options.contained is true. `
+                + "Pass the element the dialog renders in.");
         }
 
         instanceCounter++;
@@ -466,15 +531,83 @@ export class ConfirmDialog
      */
     public show(): Promise<boolean>
     {
-        return new Promise<boolean>((resolve) =>
+        if (this.pending)
+        {
+            return this.pending;
+        }
+
+        this.pending = new Promise<boolean>((resolve) =>
         {
             this.resolvePromise = resolve;
-            this.previousFocusEl = document.activeElement as HTMLElement;
             this.buildAndMount();
-            this.focusConfirmButton();
+
+            // A contained dialog takes no focus on open (ADR-246).
+            if (!this.options.contained)
+            {
+                this.previousFocusEl = document.activeElement as HTMLElement;
+                this.focusConfirmButton();
+            }
 
             logInfo("Showing dialog:", this.options.title);
         });
+
+        return this.pending;
+    }
+
+    /** Subscribes to "confirm" or "cancel" (ADR-246). */
+    public on(channel: ConfirmDialogChannel, handler: (payload: Record<string, never>) => void): () => void
+    {
+        if (!CHANNELS.includes(channel))
+        {
+            throw new Error(`${LOG_PREFIX} on(): unknown channel "${channel}". Use "confirm" or "cancel".`);
+        }
+
+        let set = this.handlers.get(channel);
+        if (!set)
+        {
+            set = new Set();
+            this.handlers.set(channel, set);
+        }
+        set.add(handler);
+
+        return () => { this.handlers.get(channel)?.delete(handler); };
+    }
+
+    /** A confirm dialog has no view state (ADR-246). */
+    public getState(): Record<string, never>
+    {
+        return {};
+    }
+
+    /** Nothing to restore, see getState. */
+    public setState(_state: Record<string, unknown>): void
+    {
+        // No view state.
+    }
+
+    /** A confirm dialog has no data slots. */
+    public setData(slot: string, _value: unknown): void
+    {
+        throw new Error(`${LOG_PREFIX} setData(): ConfirmDialog has no data slots, so "${slot}" is unknown.`);
+    }
+
+    /** The dialog's root element while it is open, or null. */
+    public getElement(): HTMLElement | null
+    {
+        return this.backdropEl;
+    }
+
+    /** Removes the dialog without answering it. Idempotent. */
+    public destroy(): void
+    {
+        if (this.destroyed)
+        {
+            return;
+        }
+
+        this.destroyed = true;
+        this.teardown();
+        this.handlers.clear();
     }
 
     // ====================================================================
@@ -491,7 +624,7 @@ export class ConfirmDialog
         this.confirmBtnEl = this.backdropEl.querySelector(".confirmdialog-confirm") as HTMLElement;
         this.cancelBtnEl = this.backdropEl.querySelector(".confirmdialog-cancel") as HTMLElement;
 
-        document.body.appendChild(this.backdropEl);
+        (this.options.container ?? document.body).appendChild(this.backdropEl);
 
         this.bindEvents();
     }
@@ -569,7 +702,8 @@ export class ConfirmDialog
      */
     private bindBackdropClick(): void
     {
-        if (!this.options.closeOnBackdrop || !this.backdropEl)
+        // Contained, there is no backdrop to click (ADR-246).
+        if (!this.options.closeOnBackdrop || this.options.contained || !this.backdropEl)
         {
             return;
         }
@@ -585,7 +719,8 @@ export class ConfirmDialog
     }
 
     /**
-     * Attaches a document-level keydown handler for Escape, Enter, and Tab.
+     * Attaches a keydown handler for Escape, Enter, and Tab: on the document
+     * for a page modal, and on the dialog itself when contained (ADR-246).
      */
     private bindKeyboard(): void
     {
@@ -594,7 +729,13 @@ export class ConfirmDialog
             this.handleKeydown(e);
         };
 
-        document.addEventListener("keydown", this.boundKeyHandler);
+        this.keyTarget().addEventListener("keydown", this.boundKeyHandler as EventListener);
+    }
+
+    /** Where the keydown handler listens. */
+    private keyTarget(): HTMLElement | Document
+    {
+        return (this.options.contained && this.backdropEl) ? this.backdropEl : document;
     }
 
     // ====================================================================
@@ -636,8 +777,8 @@ export class ConfirmDialog
             return;
         }
 
-        // Tab — focus trap within the dialog
-        if (this.dialogEl)
+        // Tab — focus trap within the dialog; a contained dialog traps none (ADR-246)
+        if (this.dialogEl && !this.options.contained)
         {
             handleFocusTrap(e, this.dialogEl);
         }
@@ -693,6 +834,9 @@ export class ConfirmDialog
             this.resolvePromise = null;
         }
 
+        // Answered, so a later show() opens it again, as before.
+        this.pending = null;
+
         if (confirmed && this.options.onConfirm)
         {
             this.options.onConfirm();
@@ -703,10 +847,20 @@ export class ConfirmDialog
             this.options.onCancel();
         }
 
+        this.emit(confirmed ? "confirm" : "cancel");
         this.teardown();
         this.restoreFocus();
 
         logInfo("Dialog resolved:", confirmed ? "confirmed" : "cancelled");
+    }
+
+    /** Fires a channel's subscribers after the legacy callback (ADR-246). */
+    private emit(channel: ConfirmDialogChannel): void
+    {
+        for (const handler of [...(this.handlers.get(channel) ?? [])])
+        {
+            handler({});
+        }
     }
 
     /**
@@ -716,7 +870,7 @@ export class ConfirmDialog
     {
         if (this.boundKeyHandler)
         {
-            document.removeEventListener("keydown", this.boundKeyHandler);
+            this.keyTarget().removeEventListener("keydown", this.boundKeyHandler as EventListener);
             this.boundKeyHandler = null;
         }
 
@@ -768,6 +922,28 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
 }
 
 /**
+ * Creates a confirm dialog and returns its handle (ADR-246). A page modal
+ * waits for show(); a contained dialog shows at once, in its container.
+ * The answer arrives through show()'s promise, the callbacks, and the
+ * "confirm" and "cancel" channels.
+ *
+ * @example
+ * const dialog = createConfirmDialog({ message: "Publish?", contained: true, container: panel });
+ * dialog.on("confirm", () => publish());
+ */
+export function createConfirmDialog(options: ConfirmDialogOptions): ConfirmDialogHandle
+{
+    const dialog = new ConfirmDialog(options);
+
+    if (options.contained)
+    {
+        void dialog.show();
+    }
+
+    return dialog;
+}
+
+/**
  * Shortcut for danger/destructive confirmation dialogs.
  * Pre-configures the danger variant with a "Delete" confirm label.
  *
@@ -797,4 +973,5 @@ if (typeof window !== "undefined")
 {
     window["showConfirmDialog"] = showConfirmDialog;
     window["showDangerConfirmDialog"] = showDangerConfirmDialog;
+    window["createConfirmDialog"] = createConfirmDialog;
 }

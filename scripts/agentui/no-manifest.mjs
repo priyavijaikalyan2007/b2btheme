@@ -43,7 +43,6 @@ export const NO_MANIFEST = new Map([
  */
 export const AWAITING_MANIFEST = new Set([
     // S5-4: the dialogs, with a contained mode (D1).
-    "confirmdialog",
     "errordialog",
     "formdialog",
     "progressmodal",

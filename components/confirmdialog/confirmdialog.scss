@@ -32,6 +32,15 @@
     animation: confirmdialog-fade-in 150ms ease;
 }
 
+// Contained — fills its container and dims nothing outside it (ADR-246)
+.confirmdialog-backdrop.confirmdialog-contained {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    z-index: auto;
+}
+
 // Dialog container — centred card with shadow
 .confirmdialog {
     background-color: var(--theme-surface-bg);
