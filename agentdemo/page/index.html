@@ -4,12 +4,12 @@
   SPDX-License-Identifier: MIT
 -->
 <!--
-  COMPONENT: A2uiPlayground
-  PURPOSE: Local A2UI playground and bring-your-own-key reference agent (#30).
+  ⚓ COMPONENT: A2uiPlayground
+  📜 PURPOSE: Local A2UI playground and bring-your-own-key reference agent (#30).
      Loads this library from dist/ exactly as a third-party host would, and
      renders agent messages with Google's Lit renderer through the adapter.
      Dev tooling: never copied into dist/ or deployed (spec §4.1).
-  RELATES: [[A2uiPlaygroundHost]], [[A2uiAdapter]], [[AgentUiMessageChecker]]
+  🔗 RELATES: [[A2uiPlayground]], [[A2uiAdapter]], [[AgentUiMessageChecker]]
   CSP: connect-src is the key guarantee. A pasted API key can only ever be
      sent to this origin and the two provider APIs (spec §5.6). There is no
      inline script anywhere on this page.
