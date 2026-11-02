@@ -548,6 +548,14 @@ through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`
   is `height: 100%` of its container and slides in from outside it
   (PropertyInspector) declares this, and the adapter gives it the same box
   with `overflow: hidden`, as a host page does.
+- **`protocol.outOfCatalog: "<reason>"`: out of the agent catalog for good**
+  (ADR-247). Some components have a manifest for the Dynamic UI canvas but
+  should never reach an agent: page-level chrome, or a need an agent cannot
+  meet, such as files on the user's disk. They declare this with a reason
+  sentence. The generator then neither classifies nor publishes them, and
+  `agentui-report.json` lists their reasons. A component that should join
+  later goes on `PENDING_CLASSIFICATION` instead. Declaring both fails the
+  build.
 - **Only meaningful callbacks become events** (readiness step 2, S6). Lifecycle
   callbacks (`onOpen`, `onClose`, `onFocus`, `onBlur`, `onHover`), callbacks
   whose information `value` already carries, decisions (`onDragValidate`,

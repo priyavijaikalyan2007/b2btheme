@@ -83,7 +83,10 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 106 components that are. The 5 components on `PENDING_CLASSIFICATION` are tracked in #64, each with its reason.
+- **In the catalog:** the 106 components that are. CommentOverlay, the one component left on `PENDING_CLASSIFICATION`, is tracked in #64.
+- **Never in the catalog, by design:**
+  - Four components declare `protocol.outOfCatalog` with a reason (ADR-247): FileUpload, GraphMinimap, HelpDrawer and NavRail.
+  - Fourteen have no manifest, each with its reason in `NO_MANIFEST` (ADR-243).
 - **Layouts with children:** all twelve layouts (ADR-238 to ADR-241, `specs/agentui-layouts.plan.md`).
 - **Deferred:**
   - Manifest actions an agent could use are #45. Actions it can't use are declared in `protocol.hostOnlyActions`.
