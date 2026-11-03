@@ -15119,8 +15119,9 @@ The `icon` property on controls accepts any space-separated CSS class string. Th
 - **Font Awesome (Solid):** `"fa-solid fa-home"`, `"fa-solid fa-pen"`
 - **Font Awesome (Regular):** `"fa-regular fa-heart"`
 - **Font Awesome (Brands):** `"fa-brands fa-github"`
+- **CDN icon packs, including colour icons:** `"fluent-ui-table-24-color"`, `"fluent-ui-cut-16-regular"`. Load the pack's stylesheet, such as `/icons/fluent-ui/fluent-ui-color.css`; see [Icon packs](../../docs/ICON_PACKS.md#in-components-ribbon-symbolpicker-toolbar). Use `24-` classes on large buttons and `16-` classes on small and mini ones.
 
-Ensure the corresponding icon library CSS is loaded in the page.
+Ensure the corresponding icon library CSS is loaded in the page. Colour icons keep their palette in both themes; a disabled control shows its icon in grey.
 
 ## DOM Structure
 
@@ -18603,7 +18604,7 @@ const picker = createSymbolPicker("my-symbols", {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `char` | `string` | The character (`"α"`) or icon class (`"bi-house"`) |
+| `char` | `string` | The character (`"α"`) or icon class (`"bi-house"`, or an icon-pack class such as `"fluent-ui-table-24-color"` when that pack's stylesheet is loaded) |
 | `name` | `string` | Human-readable name (`"Greek Small Letter Alpha"`) |
 | `code` | `string` | Unicode point (`"U+03B1"`) or icon class (`"bi-house"`) |
 | `category` | `string` | Category id this item belongs to (`"greek"`, `"common"`) |
@@ -18666,7 +18667,7 @@ const picker = createSymbolPicker("my-symbols", {
 
 ## Icon Auto-Discovery
 
-The SymbolPicker automatically scans all loaded CSS stylesheets at initialization to discover available icons. This works for both **Bootstrap Icons** and **Font Awesome** icons.
+The SymbolPicker automatically scans all loaded CSS stylesheets at initialization to discover available icons. This works for **Bootstrap Icons**, **Font Awesome** and the CDN **icon packs** ([Icon packs](../../docs/ICON_PACKS.md#in-components-ribbon-symbolpicker-toolbar)). Icon-pack icons are filed by their pack folder, for example "Data Charts (fluent-ui)", and the selected item's `code` is the class to use as a Ribbon `icon`. Load a cross-origin pack stylesheet with `crossorigin="anonymous"` so the picker can read it, and don't load `fluent-emoji.css` beside a picker: its "All" view would draw every emoji.
 
 ### How It Works
 
