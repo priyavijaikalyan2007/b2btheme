@@ -28,8 +28,8 @@ Created: 2026
 - **Packs and subsets:**
   - `fluent-ui`: regular and filled at sizes 16 and 24, plus every colour icon at every size it comes in.
   - `fluent-emoji`: the Color style only, with all six skin tones. No 3D, flat or high-contrast.
-  - `aws`, `azure`, `gcp`: every icon in `cloud-icons/` as of `29cae6a1`, with duplicates merged (one file per name and size).
-- **Expected counts:** `fluent-ui` about 9,870, the cloud packs about 1,720, `fluent-emoji` about 3,145. That's about 14,750 files in `icon-packs/` and about 17,900 in `dist/`.
+  - `aws`, `azure`, `gcp`: every one of the 1,790 icons in `cloud-icons/` as of `29cae6a1`, with nothing merged or dropped.
+- **Expected counts:** `fluent-ui` about 9,870, the cloud packs 1,790 plus support files, `fluent-emoji` about 3,145. That's about 14,820 files in `icon-packs/`. A clean `dist/` holds about 1,325 files today, so the total is about 16,150. Measure from a clean `rm -rf dist && npm run build`, because a stale local `dist/` can still hold an old `cloud-icons/` copy.
 - **Pinned sources:**
   - Fluent UI SVGs: `@fluentui/svg-icons@1.1.345`, integrity `sha512-Mz5e5BFKtvRN5Yiwrs5JqZRKgd8Rt8S3YiCAuwOWudmm7NA14Y8Ijr8QzMrE6gtNdoUP6/om7ue0lBQJLL57Mw==`.
   - Fluent UI metadata and LICENSE: `microsoft/fluentui-system-icons` at `73ec879377b1f412f33aca4a128aa967e6c238f0`, the npm `gitHead`.
@@ -41,12 +41,12 @@ Created: 2026
 - **Path:** `/icons/<pack>/<category>/<name>-<size>-<variant>.svg`.
 - **Naming:**
   - `<name>` and `<category>` are lowercase ASCII kebab-case, `[a-z0-9]+(-[a-z0-9]+)*`, with no spaces.
-  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height. Packs marked `"square": false` (the cloud packs) instead use the larger viewBox side, rounded. `width` and `height` may carry a `px` suffix.
+  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height. Packs marked `"square": false` (the cloud packs) instead use the larger viewBox side, rounded. Any `width` or `height` attribute must equal the matching viewBox side once compared with `parseFloat`, so a `px` suffix is allowed.
   - `<variant>` comes from the pack's fixed list.
 - **Variants:**
   - `fluent-ui`: `regular`, `filled` or `color`.
   - `fluent-emoji`: `color`, or `color-tone-light`, `color-tone-medium-light`, `color-tone-medium`, `color-tone-medium-dark`, `color-tone-dark`.
-  - `aws`, `azure`, `gcp`: `color`.
+  - `aws`: `service`, `resource` or `category`. `azure` and `gcp`: `color`.
 - **SVG safety:** every file must pass `validateSvg`, which allows:
   - no `<script>`, `<foreignObject>`, `<iframe>`, `<embed>`, `<object>` or SMIL animation elements;
   - no `on*` attributes;
@@ -76,8 +76,8 @@ Created: 2026
 | `scripts/icons/fluent-ui.mjs` | Adapter: select subset, map npm filenames to metadata, categorise |
 | `scripts/icons/fluent-ui.categories.json` | Ordered category rules plus per-icon overrides for Fluent UI |
 | `scripts/icons/fluent-emoji.mjs` | Adapter: walk Color assets, map Unicode groups to categories, name skin-tone variants |
-| `scripts/icons/cloud.mjs` | Adapter for `aws`, `azure` and `gcp`: walks the `cloud-icons/` layout, merges duplicates, records each icon's `legacyPath` |
-| `scripts/icons/cloud.categories.json` | Category rules for GCP (whose source has no categories), plus the primary category for every name that appears in more than one category |
+| `scripts/icons/cloud.mjs` | Adapter for `aws`, `azure` and `gcp`: walks the `cloud-icons/` layout and records each file's `legacyPath` |
+| `scripts/icons/cloud.categories.json` | Category rules for GCP (whose source has no categories) and the AWS category aliases |
 | `scripts/icons/repack.mjs` | CLI entry: `node scripts/icons/repack.mjs <pack> [sourceDir]` |
 | `scripts/icons/check-packs.mjs` | Check [30]: re-validate committed packs and enforce the budget; exports `checkPack` for tests |
 | `scripts/icons/*.test.ts` | vitest unit tests (node environment) |
@@ -426,12 +426,12 @@ There are cross-category duplicates: 7 names in AWS and 60 in Azure (for example
 - Delete: `cloud-icons/`, and line 16 of `build.sh` (`cp -R ./cloud-icons/ ./dist/`)
 
 **Interfaces:**
-- `validateSvg(text, size, { square = true } = {})`. When `square` is false the viewBox may be non-square, and `Math.round(Math.max(w, h))` must equal `size`. `width` and `height` are compared after `parseFloat`, so a `px` suffix is allowed. Add these tests to `lib.test.ts`:
+- `validateSvg(text, size, { square = true } = {})`. When `square` is false the viewBox may be non-square, and `Math.round(Math.max(w, h))` must equal `size`. In both modes, any `width` or `height` attribute must equal the matching viewBox side once compared with `parseFloat`. Add these tests to `lib.test.ts`:
   - accepts `width="48px"` with `viewBox="0 0 48.0 48.0"` at size 48;
-  - accepts `0 0 18 20` at size 20 with `{ square: false }`;
+  - accepts `0 0 18 20` at size 20 with `{ square: false }`, and `width="52.497"` with viewBox `0 0 52.497 52.434` at size 52;
   - rejects `0 0 18 20` at size 20 by default.
 - `cloud.mjs` exports:
-  - `collect(provider, sourceDir, rules)`: returns `Icon[]`. Each icon also carries `kind` (`"service"`, `"resource"` or `"category"`, AWS only), `legacyPaths` (every original `cloud-icons/` path) and `alsoIn` (the other categories it appeared in).
+  - `collect(provider, sourceDir, rules)`: returns `Icon[]`. Each icon also carries `legacyPaths` (its original `cloud-icons/` path per file) and `alsoIn`.
   - `legacyMap(icons)`: returns `{ "<old path>": "<new path>" }`.
 - Each pack's `sources.json` entry:
 ```json
@@ -450,35 +450,43 @@ There are cross-category duplicates: 7 names in AWS and 60 in Azure (for example
   - In all three the copyright and trademark lines are copied from `NOTICE.md`.
 
 **Rules (one derivation, no exceptions):**
+- **Variant:** AWS takes it from the top-level source folder: `Services` → `service`, `Resources` → `resource`, `Categories` → `category`. They're different artwork, not sizes of one icon. Azure and GCP use `color`.
 - **Name:** `slugify(<file stem>)`. AWS keeps "AWS" and "Amazon" as words, so `AWS Fargate` becomes `aws-fargate`.
-- **Size:** `Math.round(Math.max(viewBox w, h))`. The variant is always `color`.
+- **Size:** `Math.round(Math.max(viewBox w, h))`.
 - **Category:**
-  - AWS and Azure use `slugify(<category folder>)`. AWS `Categories/*` files go to category `categories`.
+  - AWS and Azure use `slugify(<category folder>)`, passed through the explicit `rules.<provider>.aliases` table. An AWS `Categories/<X>.svg` file goes in category `alias(slugify(X))`.
+  - The AWS aliases fix the source's inconsistent folder names:
+    - `app-integration` → `application-integration`
+    - `lot` → `internet-of-things` (a typo for "IoT" in the source)
+    - `migration-transfer` → `migration-and-transfer`
+    - `networking-content-delivery` → `networking-and-content-delivery`
+    - `security-identity-compliance` → `security-identity-and-compliance`
+    - `vr-ar` → `vr-and-ar`
   - GCP runs `categorize(name, name, rules.gcp.rules, rules.gcp.overrides)`. Allowed: `ai-ml`, `compute`, `containers`, `databases`, `storage`, `networking`, `data-analytics`, `security-identity`, `management-operations`, `developer-tools`, `api-management`, `hybrid-multicloud`, `serverless`, `migration`, `general`. At most 5% may land in `general`.
-- **Duplicates** (same name in more than one category):
-  - `rules.<provider>.primary[name]` names the category the file lives in, and the others go into `alsoIn`.
-  - A name with no `primary` entry is an error.
-  - If two copies at the same size differ by even one byte, it's an error.
-  - Copies at different sizes (an AWS resource at 48 and a service at 64) become two files of one icon. They must resolve to the same category, through `primary` when needed.
+- **Duplicates are kept, never merged.** A manifest icon's id is `<category>/<name>`, unique per pack. The same name in two categories becomes two icons, because that's how the providers publish them.
+  - The 60 Azure duplicates are byte-identical.
+  - The 5 AWS service duplicates differ, because AWS colours an icon by its category.
+  - Each icon's `alsoIn` lists the other categories that hold an icon of the same name, for search.
+  - Two source files mapping to the same path is an error.
 - **Licence file:** `writePack` copies no `LICENSE` for these packs. It writes `TERMS.md` from `sources.json` instead: provider, homepage, terms link, the trademark line, and "Use only to depict the provider's services in architecture and infrastructure diagrams; inclusion implies no endorsement."
 
 - [ ] **Step 1:** Write the failing tests in `cloud.test.ts`. Use a fixture tree in `os.tmpdir()` that mirrors the real layout:
   - one AWS service at 64 and the same name as a resource at 48;
-  - one Azure name in two categories with identical bytes, plus a `primary` entry;
+  - one Azure name in two categories;
   - one Azure non-square file;
   - two GCP product folders.
 
-  Assert names, sizes, categories, `alsoIn`, `kind`, `legacyPaths` and `legacyMap`. Add throws for:
-  - a duplicate with no `primary` entry;
-  - a byte-different duplicate at the same size;
-  - an unknown GCP category in an override.
+  Assert names, sizes, variants, categories (including an alias), `alsoIn`, `legacyPaths` and `legacyMap`. Add throws for:
+  - two source files mapping to the same path;
+  - an unknown GCP category in an override;
+  - an unknown top-level AWS folder.
 - [ ] **Step 2:** Run `npx vitest run scripts/icons/cloud.test.ts` and confirm it fails.
-- [ ] **Step 3:** Implement the `validateSvg` option and `cloud.mjs`. Wire `aws`, `azure` and `gcp` into `repack.mjs`, with `sourceDir` defaulting to the `local.dir` in `sources.json`. Write the GCP rules and the `primary` map for all 67 duplicate names. Pick the category a diagram author would look in first, for example `application-insights` → `monitor` and `log-analytics-workspaces` → `monitor`.
-- [ ] **Step 4:** Run the tests and confirm they pass. Then run `npm run icons:repack -- aws`, then `azure`, then `gcp`. Expect about 1,720 SVGs plus 3 support files per pack.
-- [ ] **Step 5: Prove nothing was lost.** Every one of the 1,790 files in `cloud-icons/` must appear in exactly one manifest `legacyPaths`, and every merged duplicate must be byte-identical to the copy kept. Do it with a one-off check script in the scratchpad, and paste the counts into the commit body.
+- [ ] **Step 3:** Implement the `validateSvg` option and `cloud.mjs`. Wire `aws`, `azure` and `gcp` into `repack.mjs`, with `sourceDir` defaulting to the `local.dir` in `sources.json`. Write the GCP rules and the AWS aliases.
+- [ ] **Step 4:** Run the tests and confirm they pass. Then run `npm run icons:repack -- aws`, then `azure`, then `gcp`. Expect 898, 676 and 216 SVGs, plus 4 support files per pack.
+- [ ] **Step 5: Prove nothing was lost.** Every one of the 1,790 files in `cloud-icons/` must appear in exactly one manifest `legacyPaths`, with bytes identical to its new file. Do it with a one-off check script in the scratchpad, and paste the counts into the commit body.
 - [ ] **Step 6:** Delete `cloud-icons/` and the `build.sh` copy line. Then update every reference to point at `icon-packs/` and the new URLs, found with `grep -rn cloud-icons --exclude-dir={node_modules,dist,coverage}`. That covers `README.md`, `NOTICE.md`, `FRONTEND.md` and `KNOWLEDGE_ARCHITECTURE.md`. `TIPS_N_TRICKS.md` is history, so it gets a one-line "since moved to `icon-packs/aws|azure|gcp`" note.
 - [ ] **Step 7: Commit as two commits.**
-  1. `feat(icons): cloud adapter (aws/azure/gcp) with duplicate merge and legacy map`
+  1. `feat(icons): cloud adapter (aws/azure/gcp) with category aliases and legacy map`
   2. `feat(icons): migrate cloud-icons/ to icon-packs/aws|azure|gcp, served at /icons/<provider>/` (generated pack, deletion and reference updates)
 
 ### Task 3: Serving, budget check [30]
@@ -567,7 +575,7 @@ echo ""
 
 - [ ] **Step 8: Verify.**
   - Run `npm run build`, then `find dist -type f | wc -l`. Expect about 13,000 files, under 18,000.
-  - `diff -r node_modules/bootstrap-icons/font dist/icons --exclude=fluent-ui --exclude=fluent-emoji` reports only the build's existing `font-display` change to `bootstrap-icons.css` and `.min.css`, which is unchanged behaviour.
+  - `diff -r node_modules/bootstrap-icons/font dist/icons --exclude=fluent-ui --exclude=fluent-emoji --exclude=aws --exclude=azure --exclude=gcp` reports only the build's existing `font-display` change to `bootstrap-icons.css` and `.min.css`, which is unchanged behaviour.
   - Run `npm run test:structure` and confirm [30] passes.
 
 - [ ] **Step 9: Commit.** Message: `feat(icons): serve icon packs at /icons/<pack>/ with headers and check [30]`.
@@ -602,7 +610,7 @@ echo ""
      - **Stability promise:** paths never move or disappear without a deprecation (`CDN_CONTRACT.md`). New icons may appear at any time.
   6. **What we changed.** Files are renamed and regrouped into categories, and the subset is as stated. The artwork bytes are unchanged.
   7. **Trademarks.** "Microsoft" and "Fluent" are trademarks of Microsoft Corporation. The MIT licence grants no trademark rights, and nothing here implies endorsement by or affiliation with Microsoft. Add the AWS, Azure and Google trademark lines from `NOTICE.md` for the cloud packs.
-  8. **Updating a pack.** Bump `scripts/icons/sources.json`, run `npm run icons:repack -- <pack>`, review the diff, and run the tests.
+  8. **Updating a pack.** Bump `scripts/icons/sources.json`, run `npm run icons:repack -- <pack>`, review the diff, and run the tests. The cloud adapter is one-shot migration tooling for the `cloud-icons/` layout. To re-run it, `git worktree add <tmp> 29cae6a1` and pass `<tmp>/cloud-icons/<Provider>` as `[sourceDir]`. A new provider download needs its own adapter.
 
 - [ ] **Step 3: Write the ATTRIBUTION.md template** in `write-pack.mjs`. All values come from `sources.json` and the run:
 ```md
