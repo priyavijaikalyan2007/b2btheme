@@ -15,7 +15,8 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { parseNpmName, keep, collect } from "./fluent-ui.mjs";
 
-const SVG16 = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path d="M0 0h1v1z"/></svg>';
+const SVG16 = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">'
+    + '<path d="M0 0h1v1z"/></svg>';
 const SVG24 = SVG16.replace(/16/g, "24");
 
 describe("parseNpmName", () =>
@@ -36,7 +37,10 @@ describe("keep", () =>
     test.each([
         [16, "regular", true], [24, "filled", true], [20, "regular", false], [32, "filled", false],
         [48, "color", true], [32, "light", false], [12, "color", true],
-    ])("%i %s -> %s", (size, style, out) => expect(keep({ size, style })).toBe(out));
+    ])("%i %s -> %s", (size, style, out) =>
+    {
+        expect(keep({ size, style })).toBe(out);
+    });
 });
 
 describe("collect", () =>

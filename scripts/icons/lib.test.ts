@@ -42,8 +42,10 @@ describe("file names", () =>
     });
 
     test("a name may itself end in digits", () =>
+    {
         expect(parseIconFileName("number-1-16-filled.svg", V))
-            .toEqual({ name: "number-1", size: 16, variant: "filled" }));
+            .toEqual({ name: "number-1", size: 16, variant: "filled" });
+    });
 
     test.each([
         "Table-24-regular.svg", "table 24 regular.svg", "table-24-bold.svg",
@@ -51,9 +53,11 @@ describe("file names", () =>
     ])("rejects %s", (f) => expect(parseIconFileName(f, V)).toBeNull());
 
     test("multi-part variants match longest first", () =>
+    {
         expect(parseIconFileName("artist-32-color-tone-medium-dark.svg",
             ["color", "color-tone-medium", "color-tone-medium-dark"]))
-            .toEqual({ name: "artist", size: 32, variant: "color-tone-medium-dark" }));
+            .toEqual({ name: "artist", size: 32, variant: "color-tone-medium-dark" });
+    });
 });
 
 describe("validateSvg", () =>
@@ -105,8 +109,17 @@ describe("categorize", () =>
     ];
 
     test("first matching rule wins", () =>
-        expect(categorize("video-table", "video table", rules, {})).toBe("media"));
+    {
+        expect(categorize("video-table", "video table", rules, {})).toBe("media");
+    });
+
     test("override beats rules", () =>
-        expect(categorize("table", "table", rules, { table: "documents-files" })).toBe("documents-files"));
-    test("no match is general", () => expect(categorize("zz", "zz", rules, {})).toBe("general"));
+    {
+        expect(categorize("table", "table", rules, { table: "documents-files" })).toBe("documents-files");
+    });
+
+    test("no match is general", () =>
+    {
+        expect(categorize("zz", "zz", rules, {})).toBe("general");
+    });
 });

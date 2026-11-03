@@ -81,7 +81,10 @@ describe("azure", () =>
             ["web/app-space", undefined],
         ]);
         expect(icons[2].files["20-color"].rel).toBe("web/app-space-20-color.svg");
-        expect(legacyMap(icons.map((i) => ({ ...i, files: { [Object.keys(i.files)[0]]: Object.values(i.files)[0].rel } }))))
+        const written = icons.map((i) => ({
+            ...i, files: Object.fromEntries(Object.entries(i.files).map(([k, f]) => [k, f.rel])),
+        }));
+        expect(legacyMap(written))
             .toEqual({
                 "Azure/DevOps/Application Insights.svg": "devops/application-insights-18-color.svg",
                 "Azure/Monitor/Application Insights.svg": "monitor/application-insights-18-color.svg",
@@ -91,7 +94,8 @@ describe("azure", () =>
 
     test("two source files mapping to one path throws", () =>
     {
-        const dir = path.join(tree({ "Azure/Web/App-Space.svg": svg(18), "Azure/Web/App Space.svg": svg(18) }), "Azure");
+        const files = { "Azure/Web/App-Space.svg": svg(18), "Azure/Web/App Space.svg": svg(18) };
+        const dir = path.join(tree(files), "Azure");
         expect(() => collect("azure", dir, { aliases: {} })).toThrow(/both map to web\/app-space/);
     });
 });
@@ -99,7 +103,10 @@ describe("azure", () =>
 describe("gcp", () =>
 {
     const rules = {
-        rules: [{ category: "databases", pattern: "\\b(sql|spanner)\\b" }, { category: "storage", pattern: "\\bstorage\\b" }],
+        rules: [
+            { category: "databases", pattern: "\\b(sql|spanner)\\b" },
+            { category: "storage", pattern: "\\bstorage\\b" },
+        ],
         overrides: {},
     };
 

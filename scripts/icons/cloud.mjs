@@ -78,7 +78,8 @@ function placeGcp(parts, rules)
     }
     const stem = parts[1].replace(/\.svg$/, "");
     const name = slugify(stem);
-    return { stem, category: categorize(name, name.replace(/-/g, " "), rules.rules, rules.overrides), variant: "color" };
+    const category = categorize(name, name.replace(/-/g, " "), rules.rules, rules.overrides);
+    return { stem, category, variant: "color" };
 }
 
 const PLACERS = { aws: placeAws, azure: placeAzure, gcp: placeGcp };
