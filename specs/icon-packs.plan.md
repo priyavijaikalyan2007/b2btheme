@@ -52,6 +52,7 @@ Created: 2026
   - no `on*` attributes;
   - no `href` other than `#fragment`;
   - no `url(` other than `url(#`, and no `@import`, `javascript:`, `<!DOCTYPE` or `<!ENTITY`.
+- **Host-neutral origin:** generated files and docs name `https://static.outcrop.us`, the host-neutral name for the CDN origin (`CDN_CONTRACT.md` D13), never `static.knobby.io`. Check [30] fails if a pack file contains `knobby`.
 - **Non-breaking:** nothing that is served today changes. `/icons/bootstrap-icons.css` and `/icons/fonts/*` stay byte-identical.
 - **No fallback code.** An unknown category, an unmatched metadata entry or a name collision is an error, unless it is listed in an explicit overrides file with a reason.
 - **Owner's working rules:**
@@ -598,13 +599,13 @@ echo ""
 
 - [ ] **Step 2: Write `docs/ICON_PACKS.md`,** with the repo's SPDX/GUID header and an AGENT comment. The sections:
   1. **What's served.** A table with pack, title, subset, file count, URL root, licence, and links to the upstream site and source.
-  2. **URL scheme.** `https://static.knobby.io/icons/<pack>/<category>/<name>-<size>-<variant>.svg`, plus each pack's variant list and category list. Give an example for each pack.
+  2. **URL scheme.** `https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg`, plus each pack's variant list and category list. Give an example for each pack.
   3. **Manifest.** `/icons/<pack>/manifest.json`: its fields and how to search by keyword.
   4. **Using the icons.** `<img src>`, CSS `background-image`, and `fetch()` then inline. Note that inlined SVGs from `fluent-emoji` share gradient ids. Note that `fluent-ui` regular and filled icons have no fill attribute, so CSS `fill` or `mask-image` recolours them. Cover the caching and CORS policy.
   5. **Licences and attribution.** For each pack: the copyright line, the licence (MIT, or the provider's terms for the cloud packs), links to `/icons/<pack>/LICENSE` (or `TERMS.md`) and `ATTRIBUTION.md`, the upstream homepage, and the exact version or commit. Also state what an app must do: MIT packs need the copyright line in the app's third-party notices, and cloud packs may only depict that provider's services in diagrams.
   5a. **For the Apps team: switching to CDN-hosted icons.**
-     - **Prerequisites:** allow `https://static.knobby.io` in the app's CSP `img-src`, and in `connect-src` too if the app fetches manifests.
-     - **Lookup:** fetch `/icons/<pack>/manifest.json` once. Index by `name` (and `alsoIn`/`keywords` for search). Build the URL as `https://static.knobby.io/icons/<pack>/<files["<size>-<variant>"]>`. Give a 15-line JS example.
+     - **Prerequisites:** allow `https://static.outcrop.us` in the app's CSP `img-src`, and in `connect-src` too if the app fetches manifests.
+     - **Lookup:** fetch `/icons/<pack>/manifest.json` once. Index by `name` (and `alsoIn`/`keywords` for search). Build the URL as `https://static.outcrop.us/icons/<pack>/<files["<size>-<variant>"]>`. Give a 15-line JS example.
      - **Migrating from the old cloud-icons layout:** each cloud icon's `legacyPaths` maps its old `AWS/Services/Compute/AWS Fargate.svg`-style path to the new one. `/icons/<provider>/legacy-map.json` (written by `writePack` from `legacyMap`) gives the whole mapping in one file, so a bundled-icon app can switch with a single lookup table. Give a worked example.
      - **DiagramEngine and maxGraph:** use the URL as the image style value. Note that cross-origin images draw fine but are not readable by `canvas.toDataURL`. CORS is open, so `fetch()` plus a data URL works for exports.
      - **Stability promise:** paths never move or disappear without a deprecation (`CDN_CONTRACT.md`). New icons may appear at any time.
@@ -616,7 +617,7 @@ echo ""
 ```md
 # <title>
 
-Redistributed by static.knobby.io under the <license> licence. See LICENSE in this folder.
+Redistributed by static.outcrop.us under the <license> licence. See LICENSE in this folder.
 
 - Copyright: <copyright>
 - Upstream: <homepage>
@@ -626,7 +627,7 @@ Redistributed by static.knobby.io under the <license> licence. See LICENSE in th
 
 Changes: files were renamed to `<name>-<size>-<variant>.svg` and grouped into
 category folders. The SVG files are otherwise byte-for-byte identical to the
-upstream release. Docs: https://static.knobby.io/docs/ICON_PACKS.html
+upstream release. Docs: https://static.outcrop.us/docs/ICON_PACKS.html
 ```
 Re-run `npm run icons:repack -- fluent-ui`. The diff should touch only `ATTRIBUTION.md`.
 
