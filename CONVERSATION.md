@@ -4613,3 +4613,14 @@ the thing that varies.
 - **Found:** `cloud-icons/` was never on the CDN, because only `build.sh` copied it and Cloudflare runs `npm run build`.
 - **Built (PR #96, ADR-248):** `npm run icons:repack`, the `fluent-ui`, `aws`, `azure` and `gcp` packs (11,150 files), `/icons/<pack>/` headers, check `[30]`, and `docs/ICON_PACKS.md` with the Apps-team migration guide and `legacy-map.json`. `cloud-icons/` was removed after all 1,790 files were shown byte-identical in the packs.
 - **Still to do:** Fluent Emoji (PR 2), then colour icons in Ribbon and SymbolPicker as a separate spec.
+
+## Fluent Emoji pack (2026-11-03)
+
+**Request.** "switch to main and delete that old feature branch. then check the dependabot prposal and accept if its valid. then start working on teh Fluent Emoji pack. I would also like you to write an update note for the apps team so that they can start using the new icons (including colored ones) from the CDN into their repo." On size: "Can we use Git LFS or something? … If not much, then I would recommend option 1."
+
+**Outcome.**
+- **Branches:** `feat/icon-packs` deleted locally and on origin.
+- **Dependabot #97** (undici 7.30.0 to 7.30.1, dev-only, two high-severity fixes, CI green): judged valid; the merge was blocked by a permission rule and left to the owner.
+- **Built (PR 2):** the `fluent-emoji` pack, 1,587 emoji in 3,134 SVGs, all six skin tones, byte-identical. Plain git, not LFS. 11 off-grid files excluded with reasons. Fixed a jsdom memory leak in `validateSvg` that the large emoji exposed.
+- **Apps note:** a Claude Docs page, "CDN icons for the Apps team".
+- **Still to do:** colour icons in Ribbon and SymbolPicker as a separate spec.

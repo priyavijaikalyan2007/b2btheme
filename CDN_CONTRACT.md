@@ -123,9 +123,10 @@ file contains `knobby`.
 
 ## 2d. Icon packs (additive, not parity-frozen)
 
-`/icons/fluent-ui/*`, `/icons/aws/*`, `/icons/azure/*` and `/icons/gcp/*` serve
-the SVG icon packs described in [docs/ICON_PACKS.md](docs/ICON_PACKS.md), built
-from the committed `icon-packs/` folder. They are not part of the Keycloak
+`/icons/fluent-ui/*`, `/icons/fluent-emoji/*`, `/icons/aws/*`, `/icons/azure/*`
+and `/icons/gcp/*` serve the SVG icon packs described in
+[docs/ICON_PACKS.md](docs/ICON_PACKS.md), built from the committed
+`icon-packs/` folder. They are not part of the Keycloak
 parity surface, and Bootstrap Icons at `/icons/bootstrap-icons.css` and
 `/icons/fonts/*` are untouched.
 
@@ -149,7 +150,7 @@ rule.
 | `/css/*`, `/js/*`, `/components/*` | `max-age=300, stale-while-revalidate=86400` | Parity-critical "latest": fixes reach auth.knobby.io within ~5 min, SWR keeps loads fast. |
 | `/build.json` | `no-cache` | Deploy introspection must always be fresh. |
 | `/a2ui/*`, `/schemas/*`, `/mcp/*` | `max-age=300, stale-while-revalidate=86400` + CORS `*` | Agent-protocol artefacts (§2c). Third-party tools fetch the catalog cross-origin, so CORS is open. |
-| `/icons/fluent-ui/*`, `/icons/aws/*`, `/icons/azure/*`, `/icons/gcp/*` | `max-age=86400, stale-while-revalidate=604800` + CORS `*`, `nosniff`, a `default-src 'none'` CSP | Icon packs (§2d). Unversioned paths, so never immutable; the CSP stops an SVG opened directly from running anything. |
+| `/icons/fluent-ui/*`, `/icons/fluent-emoji/*`, `/icons/aws/*`, `/icons/azure/*`, `/icons/gcp/*` | `max-age=86400, stale-while-revalidate=604800` + CORS `*`, `nosniff`, a `default-src 'none'` CSP | Icon packs (§2d). Unversioned paths, so never immutable; the CSP stops an SVG opened directly from running anything. |
 
 ## 4. Change protocol for the parity asset set
 

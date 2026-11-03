@@ -197,7 +197,7 @@ export function checkPack(packDir, packId, spec, allowedCategories, capGeneral)
     return problems.map((p) => `${packId}: ${p}`);
 }
 
-/** Category rules for the rule-categorised packs; the others use their upstream folders. */
+/** Allowed categories for packs filed by rules or a fixed map; the others use their upstream folders. */
 function ruleCategories(scriptsDir)
 {
     const read = (f) => JSON.parse(fs.readFileSync(path.join(scriptsDir, f), "utf8"));
@@ -205,6 +205,7 @@ function ruleCategories(scriptsDir)
     return {
         "fluent-ui": toSet(read("fluent-ui.categories.json").rules),
         gcp: toSet(read("cloud.categories.json").gcp.rules),
+        "fluent-emoji": new Set(Object.values(read("fluent-emoji.categories.json").groups)),
     };
 }
 

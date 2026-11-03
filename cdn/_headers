@@ -92,6 +92,12 @@
   X-Content-Type-Options: nosniff
   Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
 
+/icons/fluent-emoji/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
+
 /icons/aws/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
   Access-Control-Allow-Origin: *

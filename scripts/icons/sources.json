@@ -33,7 +33,7 @@
     },
     "variants": ["color", "color-tone-light", "color-tone-medium-light", "color-tone-medium", "color-tone-medium-dark", "color-tone-dark"],
     "square": true,
-    "subset": "Color style, 32 px, all six skin tones; 3D, Flat and High Contrast are not included",
+    "subset": "Color style, 32 px, all six skin tones. Not included: the 3D, Flat and High Contrast styles, and 11 files whose artwork is off the 32 px grid (scripts/icons/fluent-emoji.categories.json)",
     "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
   },
   "aws": {
