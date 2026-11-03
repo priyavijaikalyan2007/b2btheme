@@ -877,6 +877,7 @@ const HAND_WRITTEN_DOCS = {
     "APPS_TEAM_USAGE_GUIDE.md": "Apps Team Usage Guide",
     "BEGINNERS_GUIDE.md": "Beginners Guide",
     "FONT_GUIDE.md": "Font Guide",
+    "ICON_PACKS.md": "Icon Packs",
     "CUSTOM_CLASSES.md": "Custom CSS Classes",
     "CUSTOMIZATION_GUIDE.md": "Customization Guide",
     "CAPABILITY_MANIFEST.md": "Capability Manifest",

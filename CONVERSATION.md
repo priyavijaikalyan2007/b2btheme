@@ -4603,3 +4603,13 @@ the thing that varies.
 - **One accessibility defect fixed:** toolbar accessible names lacked their visible labels (WCAG 2.5.3).
 - **Not breaking:** nothing lands in `dist/`.
 - **Still to do:** #37, then live sessions recorded with the user's keys for the advertising set.
+
+## Icon packs on the CDN, and the cloud icons served at last (2026-11-03)
+
+**Request.** "In places where we can use icons such as Ribbon (primarily) and then Symbol picker, we seem to support only monochrome Bootstrap icons … Can we make sure to support icons like that? I would also like to find icon sets (public domain, creative commons, MIT licensed etc.) which I can freely include … We might want to vendor, package and distribute those via the CDN." Then: restructure them like the cloud icons ("no spaces, clear name, size in the filename, correct format"), "call out the license and attribution on the CDN itself (in Docs)", "make a plan for that". The owner chose the Free Cloudflare plan with about 15,000 files for this effort, Fluent UI at 16 and 24 px, Fluent Emoji without 3D, and committed output. Later: "fix the icon hosting issue for both cloud icons and the regular icons cleanly", repacking the cloud icons under /icons/ and documenting how the Apps team switches.
+
+**Outcome.**
+- **Research:** Fluent UI System Icons (MIT) has about 3,000 icons but only about 200 in colour; IconPark and Icons8 Flat Color were deferred because their styles clash with Fluent. Plan: `specs/icon-packs.plan.md`.
+- **Found:** `cloud-icons/` was never on the CDN, because only `build.sh` copied it and Cloudflare runs `npm run build`.
+- **Built (PR #96, ADR-248):** `npm run icons:repack`, the `fluent-ui`, `aws`, `azure` and `gcp` packs (11,150 files), `/icons/<pack>/` headers, check `[30]`, and `docs/ICON_PACKS.md` with the Apps-team migration guide and `legacy-map.json`. `cloud-icons/` was removed after all 1,790 files were shown byte-identical in the packs.
+- **Still to do:** Fluent Emoji (PR 2), then colour icons in Ribbon and SymbolPicker as a separate spec.

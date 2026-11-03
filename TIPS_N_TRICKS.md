@@ -69,3 +69,7 @@ The `./cloud-icons/` folder contains a number of icons for cloud services from t
 
 With multiple instructions of the above sort, a tedious, days long reorganization exercise took only about an hour.
 
+> **Since moved:** the cloud icons now live in `icon-packs/aws`, `icon-packs/azure` and
+> `icon-packs/gcp` with lowercase, size-bearing names, served at `/icons/<provider>/`.
+> `scripts/icons/` did that second reorganisation; see docs/ICON_PACKS.md.
+

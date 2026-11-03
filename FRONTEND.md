@@ -372,7 +372,7 @@ dist/
 │   └── errordialog/
 │       ├── errordialog.css     # Component CSS
 │       └── errordialog.js      # Component JS (compiled from TS)
-└── cloud-icons/                # SVG icon sets (AWS, Azure, GCP)
+└── icons/<pack>/               # Icon packs (Fluent UI, AWS, Azure, GCP); docs/ICON_PACKS.md
 ```
 
 ## 5.2. Integration by Consumers

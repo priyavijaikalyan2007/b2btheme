@@ -12,6 +12,7 @@
     "build:css": "npm-run-all scss css",
     "watch:scss": "sass --watch --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --silence-deprecation=if-function src/scss:dist/css",
     "build:ts": "bash scripts/bundle-diagramengine.sh && bash scripts/bundle-runtime.sh && tsc && tsc -p tsconfig.runtime.build.json && bash scripts/wrap-iife.sh && bash scripts/minify-js.sh",
+    "build:iconpacks": "mkdir -p dist/icons && cp -R icon-packs/. dist/icons/",
     "build:icons": "mkdir -p dist/icons && cp -R node_modules/bootstrap-icons/font/* dist/icons/ && sed -i.bak 's/font-display: block/font-display: swap/' dist/icons/bootstrap-icons.css && rm -f dist/icons/bootstrap-icons.css.bak",
     "build:components:css": "sass --no-source-map --quiet-deps --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions --silence-deprecation=if-function components/:dist/components/ && bash scripts/minify-component-css.sh",
     "generate:docs": "node scripts/generate-docs.js",
@@ -20,7 +21,7 @@
     "build:info": "bash scripts/build-info.sh",
     "build:manifest": "node scripts/build-manifest.js",
     "build:agentui": "node scripts/agentui/generate.mjs",
-    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:manifest && npm run build:vendor && npm run build:agentui && npm run copy:js && npm run build:sri && npm run copy:cdn && npm run build:docs && npm run build:info",
+    "build": "npm run build:css && npm run build:ts && npm run build:components:css && npm run build:icons && npm run build:iconpacks && npm run build:manifest && npm run build:vendor && npm run build:agentui && npm run copy:js && npm run build:sri && npm run copy:cdn && npm run build:docs && npm run build:info",
     "copy:cdn": "cp cdn/_headers dist/_headers",
     "copy:js": "mkdir -p dist/js && cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js* dist/js/ && cp dist/components/themeinit/themeinit.js dist/js/theme-init.js && mkdir -p dist/vendor/chart.js && cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/chart.js/chart.umd.min.js && cp node_modules/chart.js/dist/chart.umd.js dist/vendor/chart.js/chart.umd.js",
     "watch": "npm run watch:scss",
@@ -50,7 +51,8 @@
     "build:vendor": "node scripts/vendor-closure.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",
     "sri:verify": "node scripts/sri-manifest.mjs --verify",
-    "audit:vendor": "node scripts/vendor-audit.mjs"
+    "audit:vendor": "node scripts/vendor-audit.mjs",
+    "icons:repack": "node scripts/icons/repack.mjs"
   },
   "keywords": [
     "bootstrap",

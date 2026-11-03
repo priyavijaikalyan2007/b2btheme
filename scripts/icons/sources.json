@@ -1,0 +1,75 @@
+{
+  "fluent-ui": {
+    "title": "Fluent UI System Icons",
+    "license": "MIT",
+    "licenseFile": "LICENSE",
+    "copyright": "Copyright (c) 2020 Microsoft Corporation",
+    "homepage": "https://github.com/microsoft/fluentui-system-icons",
+    "svg": {
+      "npm": "@fluentui/svg-icons",
+      "version": "1.1.345",
+      "integrity": "sha512-Mz5e5BFKtvRN5Yiwrs5JqZRKgd8Rt8S3YiCAuwOWudmm7NA14Y8Ijr8QzMrE6gtNdoUP6/om7ue0lBQJLL57Mw=="
+    },
+    "git": {
+      "repo": "https://github.com/microsoft/fluentui-system-icons.git",
+      "commit": "73ec879377b1f412f33aca4a128aa967e6c238f0",
+      "paths": ["/LICENSE", "/assets/*/metadata.json"]
+    },
+    "variants": ["regular", "filled", "color"],
+    "square": true,
+    "subset": "regular and filled at 16 and 24 px; color at every size. Not included: the package's RTL/, LTR/ and per-language folders, and 7 files whose artwork is off its size's grid (scripts/icons/fluent-ui.categories.json)",
+    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
+  },
+  "fluent-emoji": {
+    "title": "Fluent Emoji",
+    "license": "MIT",
+    "licenseFile": "LICENSE",
+    "copyright": "Copyright (c) Microsoft Corporation.",
+    "homepage": "https://github.com/microsoft/fluentui-emoji",
+    "git": {
+      "repo": "https://github.com/microsoft/fluentui-emoji.git",
+      "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc",
+      "paths": ["/LICENSE", "/assets/*/metadata.json", "/assets/*/Color/*.svg", "/assets/*/*/Color/*.svg"]
+    },
+    "variants": ["color", "color-tone-light", "color-tone-medium-light", "color-tone-medium", "color-tone-medium-dark", "color-tone-dark"],
+    "square": true,
+    "subset": "Color style, 32 px, all six skin tones; 3D, Flat and High Contrast are not included",
+    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
+  },
+  "aws": {
+    "title": "AWS Architecture Icons",
+    "license": "AWS terms (architecture diagrams only)",
+    "licenseFile": "TERMS.md",
+    "copyright": "Amazon Web Services, AWS, and all related service names and logos are trademarks of Amazon.com, Inc. or its affiliates.",
+    "homepage": "https://aws.amazon.com/architecture/icons/",
+    "terms": "https://aws.amazon.com/trademark-guidelines/",
+    "local": { "dir": "cloud-icons/AWS", "commit": "29cae6a1" },
+    "variants": ["service", "resource", "category"],
+    "square": false,
+    "subset": "the curated set first published in cloud-icons/ (2026-02-09)"
+  },
+  "azure": {
+    "title": "Microsoft Azure Architecture Icons",
+    "license": "Microsoft terms (architecture diagrams only)",
+    "licenseFile": "TERMS.md",
+    "copyright": "Microsoft, Azure, and all related service names and logos are trademarks of Microsoft Corporation.",
+    "homepage": "https://learn.microsoft.com/en-us/azure/architecture/icons/",
+    "terms": "https://learn.microsoft.com/en-us/legal/termsofuse",
+    "local": { "dir": "cloud-icons/Azure", "commit": "29cae6a1" },
+    "variants": ["color"],
+    "square": false,
+    "subset": "the curated set first published in cloud-icons/ (2026-02-09)"
+  },
+  "gcp": {
+    "title": "Google Cloud Icons",
+    "license": "Google brand permissions (architecture diagrams only)",
+    "licenseFile": "TERMS.md",
+    "copyright": "Google, Google Cloud, and all related service names and logos are trademarks of Google LLC.",
+    "homepage": "https://cloud.google.com/icons",
+    "terms": "https://about.google/brand-resource-center/",
+    "local": { "dir": "cloud-icons/GCP", "commit": "29cae6a1" },
+    "variants": ["color"],
+    "square": false,
+    "subset": "the curated set first published in cloud-icons/ (2026-02-09)"
+  }
+}

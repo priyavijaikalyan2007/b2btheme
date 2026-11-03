@@ -156,6 +156,12 @@ CSS has no way to express integrity for them. Acceptable here where it would
 not be for executable code: a substituted font renders wrong glyphs, it does
 not run.
 
+### Icon packs
+
+SVG icon packs are served at `/icons/<pack>/`: Fluent UI System Icons and the
+AWS, Azure and Google Cloud architecture icons, each with a manifest, its
+licence and attribution. See the [Icon Packs guide](ICON_PACKS.md).
+
 **Bootstrap and bootstrap-icons are NOT under `/lib/`.** They are already
 served, and have been for longer:
 

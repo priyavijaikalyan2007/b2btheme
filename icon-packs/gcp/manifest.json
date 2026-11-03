@@ -1,0 +1,3296 @@
+{
+  "pack": "gcp",
+  "title": "Google Cloud Icons",
+  "license": "Google brand permissions (architecture diagrams only)",
+  "copyright": "Google, Google Cloud, and all related service names and logos are trademarks of Google LLC.",
+  "homepage": "https://cloud.google.com/icons",
+  "source": "cloud-icons/GCP/ at 29cae6a1 (this repository)",
+  "subset": "the curated set first published in cloud-icons/ (2026-02-09)",
+  "variants": [
+    "color"
+  ],
+  "fileCount": 216,
+  "icons": [
+    {
+      "id": "ai-ml/advanced-agent-modeling",
+      "name": "advanced-agent-modeling",
+      "category": "ai-ml",
+      "keywords": [
+        "advanced",
+        "agent",
+        "modeling"
+      ],
+      "files": {
+        "24-color": "ai-ml/advanced-agent-modeling-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Advanced Agent Modeling/Advanced Agent Modeling.svg"
+      }
+    },
+    {
+      "id": "ai-ml/agent-assist",
+      "name": "agent-assist",
+      "category": "ai-ml",
+      "keywords": [
+        "agent",
+        "assist"
+      ],
+      "files": {
+        "24-color": "ai-ml/agent-assist-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Agent Assist/Agent Assist.svg"
+      }
+    },
+    {
+      "id": "ai-ml/ai-hub",
+      "name": "ai-hub",
+      "category": "ai-ml",
+      "keywords": [
+        "ai",
+        "hub"
+      ],
+      "files": {
+        "24-color": "ai-ml/ai-hub-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AI Hub/AI Hub.svg"
+      }
+    },
+    {
+      "id": "ai-ml/ai-platform",
+      "name": "ai-platform",
+      "category": "ai-ml",
+      "keywords": [
+        "ai",
+        "platform"
+      ],
+      "files": {
+        "24-color": "ai-ml/ai-platform-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AI Platform/AI Platform.svg"
+      }
+    },
+    {
+      "id": "ai-ml/ai-platform-unified",
+      "name": "ai-platform-unified",
+      "category": "ai-ml",
+      "keywords": [
+        "ai",
+        "platform",
+        "unified"
+      ],
+      "files": {
+        "24-color": "ai-ml/ai-platform-unified-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AI Platform Unified/AI Platform Unified.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl",
+      "name": "automl",
+      "category": "ai-ml",
+      "keywords": [
+        "automl"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML/AutoML.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl-natural-language",
+      "name": "automl-natural-language",
+      "category": "ai-ml",
+      "keywords": [
+        "automl",
+        "natural",
+        "language"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-natural-language-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML Natural Language/AutoML Natural Language.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl-tables",
+      "name": "automl-tables",
+      "category": "ai-ml",
+      "keywords": [
+        "automl",
+        "tables"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-tables-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML Tables/AutoML Tables.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl-translation",
+      "name": "automl-translation",
+      "category": "ai-ml",
+      "keywords": [
+        "automl",
+        "translation"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-translation-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML Translation/AutoML Translation.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl-video-intelligence",
+      "name": "automl-video-intelligence",
+      "category": "ai-ml",
+      "keywords": [
+        "automl",
+        "video",
+        "intelligence"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-video-intelligence-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML Video Intelligence/AutoML Video Intelligence.svg"
+      }
+    },
+    {
+      "id": "ai-ml/automl-vision",
+      "name": "automl-vision",
+      "category": "ai-ml",
+      "keywords": [
+        "automl",
+        "vision"
+      ],
+      "files": {
+        "24-color": "ai-ml/automl-vision-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/AutoML Vision/AutoML Vision.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-inference-api",
+      "name": "cloud-inference-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "inference",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-inference-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Inference API/Cloud Inference API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-jobs-api",
+      "name": "cloud-jobs-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "jobs",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-jobs-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Jobs API/Cloud Jobs API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-natural-language-api",
+      "name": "cloud-natural-language-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "natural",
+        "language",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-natural-language-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Natural Language API/Cloud Natural Language API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-optimization-ai",
+      "name": "cloud-optimization-ai",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "optimization",
+        "ai"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-optimization-ai-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Optimization AI/Cloud Optimization AI.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-optimization-ai-fleet-routing-api",
+      "name": "cloud-optimization-ai-fleet-routing-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "optimization",
+        "ai",
+        "fleet",
+        "routing",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-optimization-ai-fleet-routing-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Optimization AI Fleet Routing API/Cloud Optimization AI Fleet Routing API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-tpu",
+      "name": "cloud-tpu",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "tpu"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-tpu-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud TPU/Cloud TPU.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-translation-api",
+      "name": "cloud-translation-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "translation",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-translation-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Translation API/Cloud Translation API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/cloud-vision-api",
+      "name": "cloud-vision-api",
+      "category": "ai-ml",
+      "keywords": [
+        "cloud",
+        "vision",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/cloud-vision-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Vision API/Cloud Vision API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/contact-center-ai",
+      "name": "contact-center-ai",
+      "category": "ai-ml",
+      "keywords": [
+        "contact",
+        "center",
+        "ai"
+      ],
+      "files": {
+        "24-color": "ai-ml/contact-center-ai-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Contact Center AI/Contact Center AI.svg"
+      }
+    },
+    {
+      "id": "ai-ml/data-labeling",
+      "name": "data-labeling",
+      "category": "ai-ml",
+      "keywords": [
+        "data",
+        "labeling"
+      ],
+      "files": {
+        "24-color": "ai-ml/data-labeling-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Labeling/Data Labeling.svg"
+      }
+    },
+    {
+      "id": "ai-ml/dialogflow",
+      "name": "dialogflow",
+      "category": "ai-ml",
+      "keywords": [
+        "dialogflow"
+      ],
+      "files": {
+        "24-color": "ai-ml/dialogflow-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dialogflow/Dialogflow.svg"
+      }
+    },
+    {
+      "id": "ai-ml/dialogflow-cx",
+      "name": "dialogflow-cx",
+      "category": "ai-ml",
+      "keywords": [
+        "dialogflow",
+        "cx"
+      ],
+      "files": {
+        "24-color": "ai-ml/dialogflow-cx-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dialogflow Cx/Dialogflow Cx.svg"
+      }
+    },
+    {
+      "id": "ai-ml/dialogflow-insights",
+      "name": "dialogflow-insights",
+      "category": "ai-ml",
+      "keywords": [
+        "dialogflow",
+        "insights"
+      ],
+      "files": {
+        "24-color": "ai-ml/dialogflow-insights-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dialogflow Insights/Dialogflow Insights.svg"
+      }
+    },
+    {
+      "id": "ai-ml/document-ai",
+      "name": "document-ai",
+      "category": "ai-ml",
+      "keywords": [
+        "document",
+        "ai"
+      ],
+      "files": {
+        "24-color": "ai-ml/document-ai-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Document AI/Document AI.svg"
+      }
+    },
+    {
+      "id": "ai-ml/healthcare-nlp-api",
+      "name": "healthcare-nlp-api",
+      "category": "ai-ml",
+      "keywords": [
+        "healthcare",
+        "nlp",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/healthcare-nlp-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Healthcare NLP API/Healthcare NLP API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/media-translation-api",
+      "name": "media-translation-api",
+      "category": "ai-ml",
+      "keywords": [
+        "media",
+        "translation",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/media-translation-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Media Translation API/Media Translation API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/recommendations-ai",
+      "name": "recommendations-ai",
+      "category": "ai-ml",
+      "keywords": [
+        "recommendations",
+        "ai"
+      ],
+      "files": {
+        "24-color": "ai-ml/recommendations-ai-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Recommendations AI/Recommendations AI.svg"
+      }
+    },
+    {
+      "id": "ai-ml/speech-to-text",
+      "name": "speech-to-text",
+      "category": "ai-ml",
+      "keywords": [
+        "speech",
+        "to",
+        "text"
+      ],
+      "files": {
+        "24-color": "ai-ml/speech-to-text-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Speech to Text/Speech to Text.svg"
+      }
+    },
+    {
+      "id": "ai-ml/tensorflow-enterprise",
+      "name": "tensorflow-enterprise",
+      "category": "ai-ml",
+      "keywords": [
+        "tensorflow",
+        "enterprise"
+      ],
+      "files": {
+        "24-color": "ai-ml/tensorflow-enterprise-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Tensorflow Enterprise/Tensorflow Enterprise.svg"
+      }
+    },
+    {
+      "id": "ai-ml/text-to-speech",
+      "name": "text-to-speech",
+      "category": "ai-ml",
+      "keywords": [
+        "text",
+        "to",
+        "speech"
+      ],
+      "files": {
+        "24-color": "ai-ml/text-to-speech-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Text to Speech/Text to Speech.svg"
+      }
+    },
+    {
+      "id": "ai-ml/vertex-ai",
+      "name": "vertex-ai",
+      "category": "ai-ml",
+      "keywords": [
+        "vertex",
+        "ai"
+      ],
+      "files": {
+        "24-color": "ai-ml/vertex-ai-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Vertex AI/Vertex AI.svg"
+      }
+    },
+    {
+      "id": "ai-ml/video-intelligence-api",
+      "name": "video-intelligence-api",
+      "category": "ai-ml",
+      "keywords": [
+        "video",
+        "intelligence",
+        "api"
+      ],
+      "files": {
+        "24-color": "ai-ml/video-intelligence-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Video Intelligence API/Video Intelligence API.svg"
+      }
+    },
+    {
+      "id": "ai-ml/visual-inspection",
+      "name": "visual-inspection",
+      "category": "ai-ml",
+      "keywords": [
+        "visual",
+        "inspection"
+      ],
+      "files": {
+        "24-color": "ai-ml/visual-inspection-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Visual Inspection/Visual Inspection.svg"
+      }
+    },
+    {
+      "id": "api-management/api",
+      "name": "api",
+      "category": "api-management",
+      "keywords": [
+        "api"
+      ],
+      "files": {
+        "24-color": "api-management/api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/API/API.svg"
+      }
+    },
+    {
+      "id": "api-management/api-monetization",
+      "name": "api-monetization",
+      "category": "api-management",
+      "keywords": [
+        "api",
+        "monetization"
+      ],
+      "files": {
+        "24-color": "api-management/api-monetization-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/API Monetization/API Monetization.svg"
+      }
+    },
+    {
+      "id": "api-management/apigee-api-platform",
+      "name": "apigee-api-platform",
+      "category": "api-management",
+      "keywords": [
+        "apigee",
+        "api",
+        "platform"
+      ],
+      "files": {
+        "24-color": "api-management/apigee-api-platform-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Apigee API Platform/Apigee API Platform.svg"
+      }
+    },
+    {
+      "id": "api-management/apigee-sense",
+      "name": "apigee-sense",
+      "category": "api-management",
+      "keywords": [
+        "apigee",
+        "sense"
+      ],
+      "files": {
+        "24-color": "api-management/apigee-sense-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Apigee Sense/Apigee Sense.svg"
+      }
+    },
+    {
+      "id": "api-management/cloud-api-gateway",
+      "name": "cloud-api-gateway",
+      "category": "api-management",
+      "keywords": [
+        "cloud",
+        "api",
+        "gateway"
+      ],
+      "files": {
+        "24-color": "api-management/cloud-api-gateway-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud API Gateway/Cloud API Gateway.svg"
+      }
+    },
+    {
+      "id": "api-management/cloud-apis",
+      "name": "cloud-apis",
+      "category": "api-management",
+      "keywords": [
+        "cloud",
+        "apis"
+      ],
+      "files": {
+        "24-color": "api-management/cloud-apis-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Apis/Cloud Apis.svg"
+      }
+    },
+    {
+      "id": "api-management/cloud-endpoints",
+      "name": "cloud-endpoints",
+      "category": "api-management",
+      "keywords": [
+        "cloud",
+        "endpoints"
+      ],
+      "files": {
+        "24-color": "api-management/cloud-endpoints-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Endpoints/Cloud Endpoints.svg"
+      }
+    },
+    {
+      "id": "api-management/connectors",
+      "name": "connectors",
+      "category": "api-management",
+      "keywords": [
+        "connectors"
+      ],
+      "files": {
+        "24-color": "api-management/connectors-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Connectors/Connectors.svg"
+      }
+    },
+    {
+      "id": "api-management/developer-portal",
+      "name": "developer-portal",
+      "category": "api-management",
+      "keywords": [
+        "developer",
+        "portal"
+      ],
+      "files": {
+        "24-color": "api-management/developer-portal-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Developer Portal/Developer Portal.svg"
+      }
+    },
+    {
+      "id": "compute/bare-metal-solutions",
+      "name": "bare-metal-solutions",
+      "category": "compute",
+      "keywords": [
+        "bare",
+        "metal",
+        "solutions"
+      ],
+      "files": {
+        "24-color": "compute/bare-metal-solutions-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Bare Metal Solutions/Bare Metal Solutions.svg"
+      }
+    },
+    {
+      "id": "compute/batch",
+      "name": "batch",
+      "category": "compute",
+      "keywords": [
+        "batch"
+      ],
+      "files": {
+        "24-color": "compute/batch-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Batch/Batch.svg"
+      }
+    },
+    {
+      "id": "compute/cloud-gpu",
+      "name": "cloud-gpu",
+      "category": "compute",
+      "keywords": [
+        "cloud",
+        "gpu"
+      ],
+      "files": {
+        "24-color": "compute/cloud-gpu-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud GPU/Cloud GPU.svg"
+      }
+    },
+    {
+      "id": "compute/compute-engine",
+      "name": "compute-engine",
+      "category": "compute",
+      "keywords": [
+        "compute",
+        "engine"
+      ],
+      "files": {
+        "24-color": "compute/compute-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Compute Engine/Compute Engine.svg"
+      }
+    },
+    {
+      "id": "compute/game-servers",
+      "name": "game-servers",
+      "category": "compute",
+      "keywords": [
+        "game",
+        "servers"
+      ],
+      "files": {
+        "24-color": "compute/game-servers-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Game Servers/Game Servers.svg"
+      }
+    },
+    {
+      "id": "compute/gce-systems-management",
+      "name": "gce-systems-management",
+      "category": "compute",
+      "keywords": [
+        "gce",
+        "systems",
+        "management"
+      ],
+      "files": {
+        "24-color": "compute/gce-systems-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/GCE Systems Management/GCE Systems Management.svg"
+      }
+    },
+    {
+      "id": "compute/quantum-engine",
+      "name": "quantum-engine",
+      "category": "compute",
+      "keywords": [
+        "quantum",
+        "engine"
+      ],
+      "files": {
+        "24-color": "compute/quantum-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Quantum Engine/Quantum Engine.svg"
+      }
+    },
+    {
+      "id": "compute/vmware-engine",
+      "name": "vmware-engine",
+      "category": "compute",
+      "keywords": [
+        "vmware",
+        "engine"
+      ],
+      "files": {
+        "24-color": "compute/vmware-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/VMware Engine/VMware Engine.svg"
+      }
+    },
+    {
+      "id": "containers/container-optimized-os",
+      "name": "container-optimized-os",
+      "category": "containers",
+      "keywords": [
+        "container",
+        "optimized",
+        "os"
+      ],
+      "files": {
+        "24-color": "containers/container-optimized-os-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Container Optimized OS/Container Optimized OS.svg"
+      }
+    },
+    {
+      "id": "containers/container-registry",
+      "name": "container-registry",
+      "category": "containers",
+      "keywords": [
+        "container",
+        "registry"
+      ],
+      "files": {
+        "24-color": "containers/container-registry-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Container Registry/Container Registry.svg"
+      }
+    },
+    {
+      "id": "containers/google-kubernetes-engine",
+      "name": "google-kubernetes-engine",
+      "category": "containers",
+      "keywords": [
+        "google",
+        "kubernetes",
+        "engine"
+      ],
+      "files": {
+        "24-color": "containers/google-kubernetes-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Google Kubernetes Engine/Google Kubernetes Engine.svg"
+      }
+    },
+    {
+      "id": "containers/kuberun",
+      "name": "kuberun",
+      "category": "containers",
+      "keywords": [
+        "kuberun"
+      ],
+      "files": {
+        "24-color": "containers/kuberun-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Kuberun/Kuberun.svg"
+      }
+    },
+    {
+      "id": "data-analytics/analytics-hub",
+      "name": "analytics-hub",
+      "category": "data-analytics",
+      "keywords": [
+        "analytics",
+        "hub"
+      ],
+      "files": {
+        "24-color": "data-analytics/analytics-hub-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Analytics Hub/Analytics Hub.svg"
+      }
+    },
+    {
+      "id": "data-analytics/api-analytics",
+      "name": "api-analytics",
+      "category": "data-analytics",
+      "keywords": [
+        "api",
+        "analytics"
+      ],
+      "files": {
+        "24-color": "data-analytics/api-analytics-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/API Analytics/API Analytics.svg"
+      }
+    },
+    {
+      "id": "data-analytics/bigquery",
+      "name": "bigquery",
+      "category": "data-analytics",
+      "keywords": [
+        "bigquery"
+      ],
+      "files": {
+        "24-color": "data-analytics/bigquery-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/BigQuery/BigQuery.svg"
+      }
+    },
+    {
+      "id": "data-analytics/catalog",
+      "name": "catalog",
+      "category": "data-analytics",
+      "keywords": [
+        "catalog"
+      ],
+      "files": {
+        "24-color": "data-analytics/catalog-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Catalog/Catalog.svg"
+      }
+    },
+    {
+      "id": "data-analytics/cloud-composer",
+      "name": "cloud-composer",
+      "category": "data-analytics",
+      "keywords": [
+        "cloud",
+        "composer"
+      ],
+      "files": {
+        "24-color": "data-analytics/cloud-composer-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Composer/Cloud Composer.svg"
+      }
+    },
+    {
+      "id": "data-analytics/cloud-data-fusion",
+      "name": "cloud-data-fusion",
+      "category": "data-analytics",
+      "keywords": [
+        "cloud",
+        "data",
+        "fusion"
+      ],
+      "files": {
+        "24-color": "data-analytics/cloud-data-fusion-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Data Fusion/Cloud Data Fusion.svg"
+      }
+    },
+    {
+      "id": "data-analytics/data-catalog",
+      "name": "data-catalog",
+      "category": "data-analytics",
+      "keywords": [
+        "data",
+        "catalog"
+      ],
+      "files": {
+        "24-color": "data-analytics/data-catalog-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Catalog/Data Catalog.svg"
+      }
+    },
+    {
+      "id": "data-analytics/data-layers",
+      "name": "data-layers",
+      "category": "data-analytics",
+      "keywords": [
+        "data",
+        "layers"
+      ],
+      "files": {
+        "24-color": "data-analytics/data-layers-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Layers/Data Layers.svg"
+      }
+    },
+    {
+      "id": "data-analytics/data-qna",
+      "name": "data-qna",
+      "category": "data-analytics",
+      "keywords": [
+        "data",
+        "qna"
+      ],
+      "files": {
+        "24-color": "data-analytics/data-qna-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Qna/Data Qna.svg"
+      }
+    },
+    {
+      "id": "data-analytics/data-studio",
+      "name": "data-studio",
+      "category": "data-analytics",
+      "keywords": [
+        "data",
+        "studio"
+      ],
+      "files": {
+        "24-color": "data-analytics/data-studio-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Studio/Data Studio.svg"
+      }
+    },
+    {
+      "id": "data-analytics/dataflow",
+      "name": "dataflow",
+      "category": "data-analytics",
+      "keywords": [
+        "dataflow"
+      ],
+      "files": {
+        "24-color": "data-analytics/dataflow-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dataflow/Dataflow.svg"
+      }
+    },
+    {
+      "id": "data-analytics/datalab",
+      "name": "datalab",
+      "category": "data-analytics",
+      "keywords": [
+        "datalab"
+      ],
+      "files": {
+        "24-color": "data-analytics/datalab-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Datalab/Datalab.svg"
+      }
+    },
+    {
+      "id": "data-analytics/dataplex",
+      "name": "dataplex",
+      "category": "data-analytics",
+      "keywords": [
+        "dataplex"
+      ],
+      "files": {
+        "24-color": "data-analytics/dataplex-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dataplex/Dataplex.svg"
+      }
+    },
+    {
+      "id": "data-analytics/datapol",
+      "name": "datapol",
+      "category": "data-analytics",
+      "keywords": [
+        "datapol"
+      ],
+      "files": {
+        "24-color": "data-analytics/datapol-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Datapol/Datapol.svg"
+      }
+    },
+    {
+      "id": "data-analytics/dataprep",
+      "name": "dataprep",
+      "category": "data-analytics",
+      "keywords": [
+        "dataprep"
+      ],
+      "files": {
+        "24-color": "data-analytics/dataprep-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dataprep/Dataprep.svg"
+      }
+    },
+    {
+      "id": "data-analytics/dataproc",
+      "name": "dataproc",
+      "category": "data-analytics",
+      "keywords": [
+        "dataproc"
+      ],
+      "files": {
+        "24-color": "data-analytics/dataproc-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dataproc/Dataproc.svg"
+      }
+    },
+    {
+      "id": "data-analytics/dataproc-metastore",
+      "name": "dataproc-metastore",
+      "category": "data-analytics",
+      "keywords": [
+        "dataproc",
+        "metastore"
+      ],
+      "files": {
+        "24-color": "data-analytics/dataproc-metastore-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Dataproc Metastore/Dataproc Metastore.svg"
+      }
+    },
+    {
+      "id": "data-analytics/datashare",
+      "name": "datashare",
+      "category": "data-analytics",
+      "keywords": [
+        "datashare"
+      ],
+      "files": {
+        "24-color": "data-analytics/datashare-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Datashare/Datashare.svg"
+      }
+    },
+    {
+      "id": "data-analytics/datastream",
+      "name": "datastream",
+      "category": "data-analytics",
+      "keywords": [
+        "datastream"
+      ],
+      "files": {
+        "24-color": "data-analytics/datastream-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Datastream/Datastream.svg"
+      }
+    },
+    {
+      "id": "data-analytics/looker",
+      "name": "looker",
+      "category": "data-analytics",
+      "keywords": [
+        "looker"
+      ],
+      "files": {
+        "24-color": "data-analytics/looker-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Looker/Looker.svg"
+      }
+    },
+    {
+      "id": "data-analytics/pubsub",
+      "name": "pubsub",
+      "category": "data-analytics",
+      "keywords": [
+        "pubsub"
+      ],
+      "files": {
+        "24-color": "data-analytics/pubsub-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/PubSub/PubSub.svg"
+      }
+    },
+    {
+      "id": "data-analytics/stream-suite",
+      "name": "stream-suite",
+      "category": "data-analytics",
+      "keywords": [
+        "stream",
+        "suite"
+      ],
+      "files": {
+        "24-color": "data-analytics/stream-suite-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Stream Suite/Stream Suite.svg"
+      }
+    },
+    {
+      "id": "databases/bigtable",
+      "name": "bigtable",
+      "category": "databases",
+      "keywords": [
+        "bigtable"
+      ],
+      "files": {
+        "24-color": "databases/bigtable-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Bigtable/Bigtable.svg"
+      }
+    },
+    {
+      "id": "databases/cloud-spanner",
+      "name": "cloud-spanner",
+      "category": "databases",
+      "keywords": [
+        "cloud",
+        "spanner"
+      ],
+      "files": {
+        "24-color": "databases/cloud-spanner-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Spanner/Cloud Spanner.svg"
+      }
+    },
+    {
+      "id": "databases/cloud-sql",
+      "name": "cloud-sql",
+      "category": "databases",
+      "keywords": [
+        "cloud",
+        "sql"
+      ],
+      "files": {
+        "24-color": "databases/cloud-sql-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud SQL/Cloud SQL.svg"
+      }
+    },
+    {
+      "id": "databases/datastore",
+      "name": "datastore",
+      "category": "databases",
+      "keywords": [
+        "datastore"
+      ],
+      "files": {
+        "24-color": "databases/datastore-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Datastore/Datastore.svg"
+      }
+    },
+    {
+      "id": "databases/firestore",
+      "name": "firestore",
+      "category": "databases",
+      "keywords": [
+        "firestore"
+      ],
+      "files": {
+        "24-color": "databases/firestore-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Firestore/Firestore.svg"
+      }
+    },
+    {
+      "id": "databases/memorystore",
+      "name": "memorystore",
+      "category": "databases",
+      "keywords": [
+        "memorystore"
+      ],
+      "files": {
+        "24-color": "databases/memorystore-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Memorystore/Memorystore.svg"
+      }
+    },
+    {
+      "id": "developer-tools/artifact-registry",
+      "name": "artifact-registry",
+      "category": "developer-tools",
+      "keywords": [
+        "artifact",
+        "registry"
+      ],
+      "files": {
+        "24-color": "developer-tools/artifact-registry-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Artifact Registry/Artifact Registry.svg"
+      }
+    },
+    {
+      "id": "developer-tools/cloud-build",
+      "name": "cloud-build",
+      "category": "developer-tools",
+      "keywords": [
+        "cloud",
+        "build"
+      ],
+      "files": {
+        "24-color": "developer-tools/cloud-build-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Build/Cloud Build.svg"
+      }
+    },
+    {
+      "id": "developer-tools/cloud-code",
+      "name": "cloud-code",
+      "category": "developer-tools",
+      "keywords": [
+        "cloud",
+        "code"
+      ],
+      "files": {
+        "24-color": "developer-tools/cloud-code-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Code/Cloud Code.svg"
+      }
+    },
+    {
+      "id": "developer-tools/cloud-deploy",
+      "name": "cloud-deploy",
+      "category": "developer-tools",
+      "keywords": [
+        "cloud",
+        "deploy"
+      ],
+      "files": {
+        "24-color": "developer-tools/cloud-deploy-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Deploy/Cloud Deploy.svg"
+      }
+    },
+    {
+      "id": "developer-tools/cloud-shell",
+      "name": "cloud-shell",
+      "category": "developer-tools",
+      "keywords": [
+        "cloud",
+        "shell"
+      ],
+      "files": {
+        "24-color": "developer-tools/cloud-shell-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Shell/Cloud Shell.svg"
+      }
+    },
+    {
+      "id": "developer-tools/cloud-test-lab",
+      "name": "cloud-test-lab",
+      "category": "developer-tools",
+      "keywords": [
+        "cloud",
+        "test",
+        "lab"
+      ],
+      "files": {
+        "24-color": "developer-tools/cloud-test-lab-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Test Lab/Cloud Test Lab.svg"
+      }
+    },
+    {
+      "id": "developer-tools/debugger",
+      "name": "debugger",
+      "category": "developer-tools",
+      "keywords": [
+        "debugger"
+      ],
+      "files": {
+        "24-color": "developer-tools/debugger-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Debugger/Debugger.svg"
+      }
+    },
+    {
+      "id": "developer-tools/profiler",
+      "name": "profiler",
+      "category": "developer-tools",
+      "keywords": [
+        "profiler"
+      ],
+      "files": {
+        "24-color": "developer-tools/profiler-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Profiler/Profiler.svg"
+      }
+    },
+    {
+      "id": "developer-tools/runtime-config",
+      "name": "runtime-config",
+      "category": "developer-tools",
+      "keywords": [
+        "runtime",
+        "config"
+      ],
+      "files": {
+        "24-color": "developer-tools/runtime-config-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Runtime Config/Runtime Config.svg"
+      }
+    },
+    {
+      "id": "developer-tools/tools-for-powershell",
+      "name": "tools-for-powershell",
+      "category": "developer-tools",
+      "keywords": [
+        "tools",
+        "for",
+        "powershell"
+      ],
+      "files": {
+        "24-color": "developer-tools/tools-for-powershell-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Tools for PowerShell/Tools for PowerShell.svg"
+      }
+    },
+    {
+      "id": "general/advanced-solutions-lab",
+      "name": "advanced-solutions-lab",
+      "category": "general",
+      "keywords": [
+        "advanced",
+        "solutions",
+        "lab"
+      ],
+      "files": {
+        "24-color": "general/advanced-solutions-lab-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Advanced Solutions Lab/Advanced Solutions Lab.svg"
+      }
+    },
+    {
+      "id": "general/cloud-generic",
+      "name": "cloud-generic",
+      "category": "general",
+      "keywords": [
+        "cloud",
+        "generic"
+      ],
+      "files": {
+        "24-color": "general/cloud-generic-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Generic/Cloud Generic.svg"
+      }
+    },
+    {
+      "id": "general/support",
+      "name": "support",
+      "category": "general",
+      "keywords": [
+        "support"
+      ],
+      "files": {
+        "24-color": "general/support-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Other/Support.svg"
+      }
+    },
+    {
+      "id": "general/trace",
+      "name": "trace",
+      "category": "general",
+      "keywords": [
+        "trace"
+      ],
+      "files": {
+        "24-color": "general/trace-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Other/Trace.svg"
+      }
+    },
+    {
+      "id": "hybrid-multicloud/anthos",
+      "name": "anthos",
+      "category": "hybrid-multicloud",
+      "keywords": [
+        "anthos"
+      ],
+      "files": {
+        "24-color": "hybrid-multicloud/anthos-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Anthos/Anthos.svg"
+      }
+    },
+    {
+      "id": "hybrid-multicloud/anthos-config-management",
+      "name": "anthos-config-management",
+      "category": "hybrid-multicloud",
+      "keywords": [
+        "anthos",
+        "config",
+        "management"
+      ],
+      "files": {
+        "24-color": "hybrid-multicloud/anthos-config-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Anthos Config Management/Anthos Config Management.svg"
+      }
+    },
+    {
+      "id": "hybrid-multicloud/anthos-service-mesh",
+      "name": "anthos-service-mesh",
+      "category": "hybrid-multicloud",
+      "keywords": [
+        "anthos",
+        "service",
+        "mesh"
+      ],
+      "files": {
+        "24-color": "hybrid-multicloud/anthos-service-mesh-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Anthos Service Mesh/Anthos Service Mesh.svg"
+      }
+    },
+    {
+      "id": "hybrid-multicloud/gke-on-prem",
+      "name": "gke-on-prem",
+      "category": "hybrid-multicloud",
+      "keywords": [
+        "gke",
+        "on",
+        "prem"
+      ],
+      "files": {
+        "24-color": "hybrid-multicloud/gke-on-prem-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/GKE on Prem/GKE on Prem.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/cloud-for-marketing",
+      "name": "cloud-for-marketing",
+      "category": "industry-solutions",
+      "keywords": [
+        "cloud",
+        "for",
+        "marketing"
+      ],
+      "files": {
+        "24-color": "industry-solutions/cloud-for-marketing-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud for Marketing/Cloud for Marketing.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/cloud-healthcare-api",
+      "name": "cloud-healthcare-api",
+      "category": "industry-solutions",
+      "keywords": [
+        "cloud",
+        "healthcare",
+        "api"
+      ],
+      "files": {
+        "24-color": "industry-solutions/cloud-healthcare-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Healthcare API/Cloud Healthcare API.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/cloud-healthcare-marketplace",
+      "name": "cloud-healthcare-marketplace",
+      "category": "industry-solutions",
+      "keywords": [
+        "cloud",
+        "healthcare",
+        "marketplace"
+      ],
+      "files": {
+        "24-color": "industry-solutions/cloud-healthcare-marketplace-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Healthcare Marketplace/Cloud Healthcare Marketplace.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/financial-services-marketplace",
+      "name": "financial-services-marketplace",
+      "category": "industry-solutions",
+      "keywords": [
+        "financial",
+        "services",
+        "marketplace"
+      ],
+      "files": {
+        "24-color": "industry-solutions/financial-services-marketplace-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Financial Services Marketplace/Financial Services Marketplace.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/genomics",
+      "name": "genomics",
+      "category": "industry-solutions",
+      "keywords": [
+        "genomics"
+      ],
+      "files": {
+        "24-color": "industry-solutions/genomics-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Genomics/Genomics.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/real-world-insights",
+      "name": "real-world-insights",
+      "category": "industry-solutions",
+      "keywords": [
+        "real",
+        "world",
+        "insights"
+      ],
+      "files": {
+        "24-color": "industry-solutions/real-world-insights-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Real World Insights/Real World Insights.svg"
+      }
+    },
+    {
+      "id": "industry-solutions/retail-api",
+      "name": "retail-api",
+      "category": "industry-solutions",
+      "keywords": [
+        "retail",
+        "api"
+      ],
+      "files": {
+        "24-color": "industry-solutions/retail-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Retail API/Retail API.svg"
+      }
+    },
+    {
+      "id": "iot/iot-core",
+      "name": "iot-core",
+      "category": "iot",
+      "keywords": [
+        "iot",
+        "core"
+      ],
+      "files": {
+        "24-color": "iot/iot-core-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/IoT Core/IoT Core.svg"
+      }
+    },
+    {
+      "id": "iot/iot-edge",
+      "name": "iot-edge",
+      "category": "iot",
+      "keywords": [
+        "iot",
+        "edge"
+      ],
+      "files": {
+        "24-color": "iot/iot-edge-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/IoT Edge/IoT Edge.svg"
+      }
+    },
+    {
+      "id": "management-operations/administration",
+      "name": "administration",
+      "category": "management-operations",
+      "keywords": [
+        "administration"
+      ],
+      "files": {
+        "24-color": "management-operations/administration-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Administration/Administration.svg"
+      }
+    },
+    {
+      "id": "management-operations/asset-inventory",
+      "name": "asset-inventory",
+      "category": "management-operations",
+      "keywords": [
+        "asset",
+        "inventory"
+      ],
+      "files": {
+        "24-color": "management-operations/asset-inventory-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Asset Inventory/Asset Inventory.svg"
+      }
+    },
+    {
+      "id": "management-operations/billing",
+      "name": "billing",
+      "category": "management-operations",
+      "keywords": [
+        "billing"
+      ],
+      "files": {
+        "24-color": "management-operations/billing-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Billing/Billing.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-asset-inventory",
+      "name": "cloud-asset-inventory",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "asset",
+        "inventory"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-asset-inventory-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Asset Inventory/Cloud Asset Inventory.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-audit-logs",
+      "name": "cloud-audit-logs",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "audit",
+        "logs"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-audit-logs-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Audit Logs/Cloud Audit Logs.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-deployment-manager",
+      "name": "cloud-deployment-manager",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "deployment",
+        "manager"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-deployment-manager-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Deployment Manager/Cloud Deployment Manager.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-logging",
+      "name": "cloud-logging",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "logging"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-logging-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Logging/Cloud Logging.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-monitoring",
+      "name": "cloud-monitoring",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "monitoring"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-monitoring-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Monitoring/Cloud Monitoring.svg"
+      }
+    },
+    {
+      "id": "management-operations/cloud-ops",
+      "name": "cloud-ops",
+      "category": "management-operations",
+      "keywords": [
+        "cloud",
+        "ops"
+      ],
+      "files": {
+        "24-color": "management-operations/cloud-ops-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Ops/Cloud Ops.svg"
+      }
+    },
+    {
+      "id": "management-operations/configuration-management",
+      "name": "configuration-management",
+      "category": "management-operations",
+      "keywords": [
+        "configuration",
+        "management"
+      ],
+      "files": {
+        "24-color": "management-operations/configuration-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Configuration Management/Configuration Management.svg"
+      }
+    },
+    {
+      "id": "management-operations/error-reporting",
+      "name": "error-reporting",
+      "category": "management-operations",
+      "keywords": [
+        "error",
+        "reporting"
+      ],
+      "files": {
+        "24-color": "management-operations/error-reporting-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Error Reporting/Error Reporting.svg"
+      }
+    },
+    {
+      "id": "management-operations/free-trial",
+      "name": "free-trial",
+      "category": "management-operations",
+      "keywords": [
+        "free",
+        "trial"
+      ],
+      "files": {
+        "24-color": "management-operations/free-trial-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Free Trial/Free Trial.svg"
+      }
+    },
+    {
+      "id": "management-operations/google-cloud-marketplace",
+      "name": "google-cloud-marketplace",
+      "category": "management-operations",
+      "keywords": [
+        "google",
+        "cloud",
+        "marketplace"
+      ],
+      "files": {
+        "24-color": "management-operations/google-cloud-marketplace-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Google Cloud Marketplace/Google Cloud Marketplace.svg"
+      }
+    },
+    {
+      "id": "management-operations/home",
+      "name": "home",
+      "category": "management-operations",
+      "keywords": [
+        "home"
+      ],
+      "files": {
+        "24-color": "management-operations/home-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Home/Home.svg"
+      }
+    },
+    {
+      "id": "management-operations/launcher",
+      "name": "launcher",
+      "category": "management-operations",
+      "keywords": [
+        "launcher"
+      ],
+      "files": {
+        "24-color": "management-operations/launcher-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Launcher/Launcher.svg"
+      }
+    },
+    {
+      "id": "management-operations/my-cloud",
+      "name": "my-cloud",
+      "category": "management-operations",
+      "keywords": [
+        "my",
+        "cloud"
+      ],
+      "files": {
+        "24-color": "management-operations/my-cloud-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/My Cloud/My Cloud.svg"
+      }
+    },
+    {
+      "id": "management-operations/onboarding",
+      "name": "onboarding",
+      "category": "management-operations",
+      "keywords": [
+        "onboarding"
+      ],
+      "files": {
+        "24-color": "management-operations/onboarding-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Onboarding/Onboarding.svg"
+      }
+    },
+    {
+      "id": "management-operations/os-configuration-management",
+      "name": "os-configuration-management",
+      "category": "management-operations",
+      "keywords": [
+        "os",
+        "configuration",
+        "management"
+      ],
+      "files": {
+        "24-color": "management-operations/os-configuration-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/OS Configuration Management/OS Configuration Management.svg"
+      }
+    },
+    {
+      "id": "management-operations/os-inventory-management",
+      "name": "os-inventory-management",
+      "category": "management-operations",
+      "keywords": [
+        "os",
+        "inventory",
+        "management"
+      ],
+      "files": {
+        "24-color": "management-operations/os-inventory-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/OS Inventory Management/OS Inventory Management.svg"
+      }
+    },
+    {
+      "id": "management-operations/os-patch-management",
+      "name": "os-patch-management",
+      "category": "management-operations",
+      "keywords": [
+        "os",
+        "patch",
+        "management"
+      ],
+      "files": {
+        "24-color": "management-operations/os-patch-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/OS Patch Management/OS Patch Management.svg"
+      }
+    },
+    {
+      "id": "management-operations/partner-portal",
+      "name": "partner-portal",
+      "category": "management-operations",
+      "keywords": [
+        "partner",
+        "portal"
+      ],
+      "files": {
+        "24-color": "management-operations/partner-portal-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Partner Portal/Partner Portal.svg"
+      }
+    },
+    {
+      "id": "management-operations/performance-dashboard",
+      "name": "performance-dashboard",
+      "category": "management-operations",
+      "keywords": [
+        "performance",
+        "dashboard"
+      ],
+      "files": {
+        "24-color": "management-operations/performance-dashboard-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Performance Dashboard/Performance Dashboard.svg"
+      }
+    },
+    {
+      "id": "management-operations/producer-portal",
+      "name": "producer-portal",
+      "category": "management-operations",
+      "keywords": [
+        "producer",
+        "portal"
+      ],
+      "files": {
+        "24-color": "management-operations/producer-portal-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Producer Portal/Producer Portal.svg"
+      }
+    },
+    {
+      "id": "management-operations/project",
+      "name": "project",
+      "category": "management-operations",
+      "keywords": [
+        "project"
+      ],
+      "files": {
+        "24-color": "management-operations/project-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Project/Project.svg"
+      }
+    },
+    {
+      "id": "management-operations/quotas",
+      "name": "quotas",
+      "category": "management-operations",
+      "keywords": [
+        "quotas"
+      ],
+      "files": {
+        "24-color": "management-operations/quotas-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Quotas/Quotas.svg"
+      }
+    },
+    {
+      "id": "management-operations/release-notes",
+      "name": "release-notes",
+      "category": "management-operations",
+      "keywords": [
+        "release",
+        "notes"
+      ],
+      "files": {
+        "24-color": "management-operations/release-notes-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Release Notes/Release Notes.svg"
+      }
+    },
+    {
+      "id": "management-operations/stackdriver",
+      "name": "stackdriver",
+      "category": "management-operations",
+      "keywords": [
+        "stackdriver"
+      ],
+      "files": {
+        "24-color": "management-operations/stackdriver-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Stackdriver/Stackdriver.svg"
+      }
+    },
+    {
+      "id": "management-operations/user-preferences",
+      "name": "user-preferences",
+      "category": "management-operations",
+      "keywords": [
+        "user",
+        "preferences"
+      ],
+      "files": {
+        "24-color": "management-operations/user-preferences-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/User Preferences/User Preferences.svg"
+      }
+    },
+    {
+      "id": "maps/fleet-engine",
+      "name": "fleet-engine",
+      "category": "maps",
+      "keywords": [
+        "fleet",
+        "engine"
+      ],
+      "files": {
+        "24-color": "maps/fleet-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Fleet Engine/Fleet Engine.svg"
+      }
+    },
+    {
+      "id": "maps/google-maps-platform",
+      "name": "google-maps-platform",
+      "category": "maps",
+      "keywords": [
+        "google",
+        "maps",
+        "platform"
+      ],
+      "files": {
+        "24-color": "maps/google-maps-platform-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Google Maps Platform/Google Maps Platform.svg"
+      }
+    },
+    {
+      "id": "migration/data-transfer",
+      "name": "data-transfer",
+      "category": "migration",
+      "keywords": [
+        "data",
+        "transfer"
+      ],
+      "files": {
+        "24-color": "migration/data-transfer-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Transfer/Data Transfer.svg"
+      }
+    },
+    {
+      "id": "migration/database-migration-service",
+      "name": "database-migration-service",
+      "category": "migration",
+      "keywords": [
+        "database",
+        "migration",
+        "service"
+      ],
+      "files": {
+        "24-color": "migration/database-migration-service-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Database Migration Service/Database Migration Service.svg"
+      }
+    },
+    {
+      "id": "migration/migrate-for-anthos",
+      "name": "migrate-for-anthos",
+      "category": "migration",
+      "keywords": [
+        "migrate",
+        "for",
+        "anthos"
+      ],
+      "files": {
+        "24-color": "migration/migrate-for-anthos-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Migrate for Anthos/Migrate for Anthos.svg"
+      }
+    },
+    {
+      "id": "migration/migrate-for-compute-engine",
+      "name": "migrate-for-compute-engine",
+      "category": "migration",
+      "keywords": [
+        "migrate",
+        "for",
+        "compute",
+        "engine"
+      ],
+      "files": {
+        "24-color": "migration/migrate-for-compute-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Migrate for Compute Engine/Migrate for Compute Engine.svg"
+      }
+    },
+    {
+      "id": "migration/transfer",
+      "name": "transfer",
+      "category": "migration",
+      "keywords": [
+        "transfer"
+      ],
+      "files": {
+        "24-color": "migration/transfer-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Transfer/Transfer.svg"
+      }
+    },
+    {
+      "id": "migration/transfer-appliance",
+      "name": "transfer-appliance",
+      "category": "migration",
+      "keywords": [
+        "transfer",
+        "appliance"
+      ],
+      "files": {
+        "24-color": "migration/transfer-appliance-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Transfer Appliance/Transfer Appliance.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-cdn",
+      "name": "cloud-cdn",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "cdn"
+      ],
+      "files": {
+        "24-color": "networking/cloud-cdn-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud CDN/Cloud CDN.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-dns",
+      "name": "cloud-dns",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "dns"
+      ],
+      "files": {
+        "24-color": "networking/cloud-dns-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud DNS/Cloud DNS.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-domains",
+      "name": "cloud-domains",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "domains"
+      ],
+      "files": {
+        "24-color": "networking/cloud-domains-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Domains/Cloud Domains.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-external-ip-addresses",
+      "name": "cloud-external-ip-addresses",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "external",
+        "ip",
+        "addresses"
+      ],
+      "files": {
+        "24-color": "networking/cloud-external-ip-addresses-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud External IP Addresses/Cloud External IP Addresses.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-firewall-rules",
+      "name": "cloud-firewall-rules",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "firewall",
+        "rules"
+      ],
+      "files": {
+        "24-color": "networking/cloud-firewall-rules-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Firewall Rules/Cloud Firewall Rules.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-interconnect",
+      "name": "cloud-interconnect",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "interconnect"
+      ],
+      "files": {
+        "24-color": "networking/cloud-interconnect-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Interconnect/Cloud Interconnect.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-load-balancing",
+      "name": "cloud-load-balancing",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "load",
+        "balancing"
+      ],
+      "files": {
+        "24-color": "networking/cloud-load-balancing-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Load Balancing/Cloud Load Balancing.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-media-edge",
+      "name": "cloud-media-edge",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "media",
+        "edge"
+      ],
+      "files": {
+        "24-color": "networking/cloud-media-edge-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Media Edge/Cloud Media Edge.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-nat",
+      "name": "cloud-nat",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "nat"
+      ],
+      "files": {
+        "24-color": "networking/cloud-nat-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud NAT/Cloud NAT.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-network",
+      "name": "cloud-network",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "network"
+      ],
+      "files": {
+        "24-color": "networking/cloud-network-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Network/Cloud Network.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-router",
+      "name": "cloud-router",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "router"
+      ],
+      "files": {
+        "24-color": "networking/cloud-router-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Router/Cloud Router.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-routes",
+      "name": "cloud-routes",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "routes"
+      ],
+      "files": {
+        "24-color": "networking/cloud-routes-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Routes/Cloud Routes.svg"
+      }
+    },
+    {
+      "id": "networking/cloud-vpn",
+      "name": "cloud-vpn",
+      "category": "networking",
+      "keywords": [
+        "cloud",
+        "vpn"
+      ],
+      "files": {
+        "24-color": "networking/cloud-vpn-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud VPN/Cloud VPN.svg"
+      }
+    },
+    {
+      "id": "networking/connectivity-test",
+      "name": "connectivity-test",
+      "category": "networking",
+      "keywords": [
+        "connectivity",
+        "test"
+      ],
+      "files": {
+        "24-color": "networking/connectivity-test-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Connectivity Test/Connectivity Test.svg"
+      }
+    },
+    {
+      "id": "networking/network-connectivity-center",
+      "name": "network-connectivity-center",
+      "category": "networking",
+      "keywords": [
+        "network",
+        "connectivity",
+        "center"
+      ],
+      "files": {
+        "24-color": "networking/network-connectivity-center-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Network Connectivity Center/Network Connectivity Center.svg"
+      }
+    },
+    {
+      "id": "networking/network-intelligence-center",
+      "name": "network-intelligence-center",
+      "category": "networking",
+      "keywords": [
+        "network",
+        "intelligence",
+        "center"
+      ],
+      "files": {
+        "24-color": "networking/network-intelligence-center-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Network Intelligence Center/Network Intelligence Center.svg"
+      }
+    },
+    {
+      "id": "networking/network-tiers",
+      "name": "network-tiers",
+      "category": "networking",
+      "keywords": [
+        "network",
+        "tiers"
+      ],
+      "files": {
+        "24-color": "networking/network-tiers-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Network Tiers/Network Tiers.svg"
+      }
+    },
+    {
+      "id": "networking/network-topology",
+      "name": "network-topology",
+      "category": "networking",
+      "keywords": [
+        "network",
+        "topology"
+      ],
+      "files": {
+        "24-color": "networking/network-topology-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Network Topology/Network Topology.svg"
+      }
+    },
+    {
+      "id": "networking/partner-interconnect",
+      "name": "partner-interconnect",
+      "category": "networking",
+      "keywords": [
+        "partner",
+        "interconnect"
+      ],
+      "files": {
+        "24-color": "networking/partner-interconnect-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Partner Interconnect/Partner Interconnect.svg"
+      }
+    },
+    {
+      "id": "networking/premium-network-tier",
+      "name": "premium-network-tier",
+      "category": "networking",
+      "keywords": [
+        "premium",
+        "network",
+        "tier"
+      ],
+      "files": {
+        "24-color": "networking/premium-network-tier-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Premium Network Tier/Premium Network Tier.svg"
+      }
+    },
+    {
+      "id": "networking/private-connectivity",
+      "name": "private-connectivity",
+      "category": "networking",
+      "keywords": [
+        "private",
+        "connectivity"
+      ],
+      "files": {
+        "24-color": "networking/private-connectivity-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Private Connectivity/Private Connectivity.svg"
+      }
+    },
+    {
+      "id": "networking/private-service-connect",
+      "name": "private-service-connect",
+      "category": "networking",
+      "keywords": [
+        "private",
+        "service",
+        "connect"
+      ],
+      "files": {
+        "24-color": "networking/private-service-connect-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Private Service Connect/Private Service Connect.svg"
+      }
+    },
+    {
+      "id": "networking/service-discovery",
+      "name": "service-discovery",
+      "category": "networking",
+      "keywords": [
+        "service",
+        "discovery"
+      ],
+      "files": {
+        "24-color": "networking/service-discovery-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Service Discovery/Service Discovery.svg"
+      }
+    },
+    {
+      "id": "networking/standard-network-tier",
+      "name": "standard-network-tier",
+      "category": "networking",
+      "keywords": [
+        "standard",
+        "network",
+        "tier"
+      ],
+      "files": {
+        "24-color": "networking/standard-network-tier-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Standard Network Tier/Standard Network Tier.svg"
+      }
+    },
+    {
+      "id": "networking/traffic-director",
+      "name": "traffic-director",
+      "category": "networking",
+      "keywords": [
+        "traffic",
+        "director"
+      ],
+      "files": {
+        "24-color": "networking/traffic-director-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Traffic Director/Traffic Director.svg"
+      }
+    },
+    {
+      "id": "networking/virtual-private-cloud",
+      "name": "virtual-private-cloud",
+      "category": "networking",
+      "keywords": [
+        "virtual",
+        "private",
+        "cloud"
+      ],
+      "files": {
+        "24-color": "networking/virtual-private-cloud-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Virtual Private Cloud/Virtual Private Cloud.svg"
+      }
+    },
+    {
+      "id": "security-identity/access-context-manager",
+      "name": "access-context-manager",
+      "category": "security-identity",
+      "keywords": [
+        "access",
+        "context",
+        "manager"
+      ],
+      "files": {
+        "24-color": "security-identity/access-context-manager-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Access Context Manager/Access Context Manager.svg"
+      }
+    },
+    {
+      "id": "security-identity/assured-workloads",
+      "name": "assured-workloads",
+      "category": "security-identity",
+      "keywords": [
+        "assured",
+        "workloads"
+      ],
+      "files": {
+        "24-color": "security-identity/assured-workloads-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Assured Workloads/Assured Workloads.svg"
+      }
+    },
+    {
+      "id": "security-identity/beyondcorp",
+      "name": "beyondcorp",
+      "category": "security-identity",
+      "keywords": [
+        "beyondcorp"
+      ],
+      "files": {
+        "24-color": "security-identity/beyondcorp-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Beyondcorp/Beyondcorp.svg"
+      }
+    },
+    {
+      "id": "security-identity/binary-authorization",
+      "name": "binary-authorization",
+      "category": "security-identity",
+      "keywords": [
+        "binary",
+        "authorization"
+      ],
+      "files": {
+        "24-color": "security-identity/binary-authorization-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Binary Authorization/Binary Authorization.svg"
+      }
+    },
+    {
+      "id": "security-identity/certificate-authority-service",
+      "name": "certificate-authority-service",
+      "category": "security-identity",
+      "keywords": [
+        "certificate",
+        "authority",
+        "service"
+      ],
+      "files": {
+        "24-color": "security-identity/certificate-authority-service-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Certificate Authority Service/Certificate Authority Service.svg"
+      }
+    },
+    {
+      "id": "security-identity/certificate-manager",
+      "name": "certificate-manager",
+      "category": "security-identity",
+      "keywords": [
+        "certificate",
+        "manager"
+      ],
+      "files": {
+        "24-color": "security-identity/certificate-manager-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Certificate Manager/Certificate Manager.svg"
+      }
+    },
+    {
+      "id": "security-identity/cloud-armor",
+      "name": "cloud-armor",
+      "category": "security-identity",
+      "keywords": [
+        "cloud",
+        "armor"
+      ],
+      "files": {
+        "24-color": "security-identity/cloud-armor-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Armor/Cloud Armor.svg"
+      }
+    },
+    {
+      "id": "security-identity/cloud-ekm",
+      "name": "cloud-ekm",
+      "category": "security-identity",
+      "keywords": [
+        "cloud",
+        "ekm"
+      ],
+      "files": {
+        "24-color": "security-identity/cloud-ekm-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud EKM/Cloud EKM.svg"
+      }
+    },
+    {
+      "id": "security-identity/cloud-hsm",
+      "name": "cloud-hsm",
+      "category": "security-identity",
+      "keywords": [
+        "cloud",
+        "hsm"
+      ],
+      "files": {
+        "24-color": "security-identity/cloud-hsm-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud HSM/Cloud HSM.svg"
+      }
+    },
+    {
+      "id": "security-identity/cloud-ids",
+      "name": "cloud-ids",
+      "category": "security-identity",
+      "keywords": [
+        "cloud",
+        "ids"
+      ],
+      "files": {
+        "24-color": "security-identity/cloud-ids-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud IDS/Cloud IDS.svg"
+      }
+    },
+    {
+      "id": "security-identity/cloud-security-scanner",
+      "name": "cloud-security-scanner",
+      "category": "security-identity",
+      "keywords": [
+        "cloud",
+        "security",
+        "scanner"
+      ],
+      "files": {
+        "24-color": "security-identity/cloud-security-scanner-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Security Scanner/Cloud Security Scanner.svg"
+      }
+    },
+    {
+      "id": "security-identity/data-loss-prevention-api",
+      "name": "data-loss-prevention-api",
+      "category": "security-identity",
+      "keywords": [
+        "data",
+        "loss",
+        "prevention",
+        "api"
+      ],
+      "files": {
+        "24-color": "security-identity/data-loss-prevention-api-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Data Loss Prevention API/Data Loss Prevention API.svg"
+      }
+    },
+    {
+      "id": "security-identity/early-access-center",
+      "name": "early-access-center",
+      "category": "security-identity",
+      "keywords": [
+        "early",
+        "access",
+        "center"
+      ],
+      "files": {
+        "24-color": "security-identity/early-access-center-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Early Access Center/Early Access Center.svg"
+      }
+    },
+    {
+      "id": "security-identity/identity-and-access-management",
+      "name": "identity-and-access-management",
+      "category": "security-identity",
+      "keywords": [
+        "identity",
+        "and",
+        "access",
+        "management"
+      ],
+      "files": {
+        "24-color": "security-identity/identity-and-access-management-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Identity and Access Management/Identity and Access Management.svg"
+      }
+    },
+    {
+      "id": "security-identity/identity-aware-proxy",
+      "name": "identity-aware-proxy",
+      "category": "security-identity",
+      "keywords": [
+        "identity",
+        "aware",
+        "proxy"
+      ],
+      "files": {
+        "24-color": "security-identity/identity-aware-proxy-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Identity Aware Proxy/Identity Aware Proxy.svg"
+      }
+    },
+    {
+      "id": "security-identity/identity-platform",
+      "name": "identity-platform",
+      "category": "security-identity",
+      "keywords": [
+        "identity",
+        "platform"
+      ],
+      "files": {
+        "24-color": "security-identity/identity-platform-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Identity Platform/Identity Platform.svg"
+      }
+    },
+    {
+      "id": "security-identity/key-access-justifications",
+      "name": "key-access-justifications",
+      "category": "security-identity",
+      "keywords": [
+        "key",
+        "access",
+        "justifications"
+      ],
+      "files": {
+        "24-color": "security-identity/key-access-justifications-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Key Access Justifications/Key Access Justifications.svg"
+      }
+    },
+    {
+      "id": "security-identity/key-management-service",
+      "name": "key-management-service",
+      "category": "security-identity",
+      "keywords": [
+        "key",
+        "management",
+        "service"
+      ],
+      "files": {
+        "24-color": "security-identity/key-management-service-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Key Management Service/Key Management Service.svg"
+      }
+    },
+    {
+      "id": "security-identity/managed-service-for-microsoft-active-directory",
+      "name": "managed-service-for-microsoft-active-directory",
+      "category": "security-identity",
+      "keywords": [
+        "managed",
+        "service",
+        "for",
+        "microsoft",
+        "active",
+        "directory"
+      ],
+      "files": {
+        "24-color": "security-identity/managed-service-for-microsoft-active-directory-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Managed Service for Microsoft Active Directory/Managed Service for Microsoft Active Directory.svg"
+      }
+    },
+    {
+      "id": "security-identity/network-security",
+      "name": "network-security",
+      "category": "security-identity",
+      "keywords": [
+        "network",
+        "security"
+      ],
+      "files": {
+        "24-color": "security-identity/network-security-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Network Security/Network Security.svg"
+      }
+    },
+    {
+      "id": "security-identity/permissions",
+      "name": "permissions",
+      "category": "security-identity",
+      "keywords": [
+        "permissions"
+      ],
+      "files": {
+        "24-color": "security-identity/permissions-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Permissions/Permissions.svg"
+      }
+    },
+    {
+      "id": "security-identity/phishing-protection",
+      "name": "phishing-protection",
+      "category": "security-identity",
+      "keywords": [
+        "phishing",
+        "protection"
+      ],
+      "files": {
+        "24-color": "security-identity/phishing-protection-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Phishing Protection/Phishing Protection.svg"
+      }
+    },
+    {
+      "id": "security-identity/policy-analyzer",
+      "name": "policy-analyzer",
+      "category": "security-identity",
+      "keywords": [
+        "policy",
+        "analyzer"
+      ],
+      "files": {
+        "24-color": "security-identity/policy-analyzer-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Policy Analyzer/Policy Analyzer.svg"
+      }
+    },
+    {
+      "id": "security-identity/risk-manager",
+      "name": "risk-manager",
+      "category": "security-identity",
+      "keywords": [
+        "risk",
+        "manager"
+      ],
+      "files": {
+        "24-color": "security-identity/risk-manager-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Risk Manager/Risk Manager.svg"
+      }
+    },
+    {
+      "id": "security-identity/secret-manager",
+      "name": "secret-manager",
+      "category": "security-identity",
+      "keywords": [
+        "secret",
+        "manager"
+      ],
+      "files": {
+        "24-color": "security-identity/secret-manager-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Secret Manager/Secret Manager.svg"
+      }
+    },
+    {
+      "id": "security-identity/security",
+      "name": "security",
+      "category": "security-identity",
+      "keywords": [
+        "security"
+      ],
+      "files": {
+        "24-color": "security-identity/security-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Security/Security.svg"
+      }
+    },
+    {
+      "id": "security-identity/security-command-center",
+      "name": "security-command-center",
+      "category": "security-identity",
+      "keywords": [
+        "security",
+        "command",
+        "center"
+      ],
+      "files": {
+        "24-color": "security-identity/security-command-center-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Security Command Center/Security Command Center.svg"
+      }
+    },
+    {
+      "id": "security-identity/security-health-advisor",
+      "name": "security-health-advisor",
+      "category": "security-identity",
+      "keywords": [
+        "security",
+        "health",
+        "advisor"
+      ],
+      "files": {
+        "24-color": "security-identity/security-health-advisor-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Security Health Advisor/Security Health Advisor.svg"
+      }
+    },
+    {
+      "id": "security-identity/security-key-enforcement",
+      "name": "security-key-enforcement",
+      "category": "security-identity",
+      "keywords": [
+        "security",
+        "key",
+        "enforcement"
+      ],
+      "files": {
+        "24-color": "security-identity/security-key-enforcement-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Security Key Enforcement/Security Key Enforcement.svg"
+      }
+    },
+    {
+      "id": "security-identity/web-risk",
+      "name": "web-risk",
+      "category": "security-identity",
+      "keywords": [
+        "web",
+        "risk"
+      ],
+      "files": {
+        "24-color": "security-identity/web-risk-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Web Risk/Web Risk.svg"
+      }
+    },
+    {
+      "id": "security-identity/web-security-scanner",
+      "name": "web-security-scanner",
+      "category": "security-identity",
+      "keywords": [
+        "web",
+        "security",
+        "scanner"
+      ],
+      "files": {
+        "24-color": "security-identity/web-security-scanner-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Web Security Scanner/Web Security Scanner.svg"
+      }
+    },
+    {
+      "id": "security-identity/workload-identity-pool",
+      "name": "workload-identity-pool",
+      "category": "security-identity",
+      "keywords": [
+        "workload",
+        "identity",
+        "pool"
+      ],
+      "files": {
+        "24-color": "security-identity/workload-identity-pool-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Workload Identity Pool/Workload Identity Pool.svg"
+      }
+    },
+    {
+      "id": "serverless/app-engine",
+      "name": "app-engine",
+      "category": "serverless",
+      "keywords": [
+        "app",
+        "engine"
+      ],
+      "files": {
+        "24-color": "serverless/app-engine-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/App Engine/App Engine.svg"
+      }
+    },
+    {
+      "id": "serverless/cloud-functions",
+      "name": "cloud-functions",
+      "category": "serverless",
+      "keywords": [
+        "cloud",
+        "functions"
+      ],
+      "files": {
+        "24-color": "serverless/cloud-functions-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Functions/Cloud Functions.svg"
+      }
+    },
+    {
+      "id": "serverless/cloud-run",
+      "name": "cloud-run",
+      "category": "serverless",
+      "keywords": [
+        "cloud",
+        "run"
+      ],
+      "files": {
+        "24-color": "serverless/cloud-run-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Run/Cloud Run.svg"
+      }
+    },
+    {
+      "id": "serverless/cloud-run-for-anthos",
+      "name": "cloud-run-for-anthos",
+      "category": "serverless",
+      "keywords": [
+        "cloud",
+        "run",
+        "for",
+        "anthos"
+      ],
+      "files": {
+        "24-color": "serverless/cloud-run-for-anthos-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Run for Anthos/Cloud Run for Anthos.svg"
+      }
+    },
+    {
+      "id": "serverless/cloud-scheduler",
+      "name": "cloud-scheduler",
+      "category": "serverless",
+      "keywords": [
+        "cloud",
+        "scheduler"
+      ],
+      "files": {
+        "24-color": "serverless/cloud-scheduler-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Scheduler/Cloud Scheduler.svg"
+      }
+    },
+    {
+      "id": "serverless/cloud-tasks",
+      "name": "cloud-tasks",
+      "category": "serverless",
+      "keywords": [
+        "cloud",
+        "tasks"
+      ],
+      "files": {
+        "24-color": "serverless/cloud-tasks-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Tasks/Cloud Tasks.svg"
+      }
+    },
+    {
+      "id": "serverless/eventarc",
+      "name": "eventarc",
+      "category": "serverless",
+      "keywords": [
+        "eventarc"
+      ],
+      "files": {
+        "24-color": "serverless/eventarc-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Eventarc/Eventarc.svg"
+      }
+    },
+    {
+      "id": "serverless/workflows",
+      "name": "workflows",
+      "category": "serverless",
+      "keywords": [
+        "workflows"
+      ],
+      "files": {
+        "24-color": "serverless/workflows-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Workflows/Workflows.svg"
+      }
+    },
+    {
+      "id": "storage/cloud-storage",
+      "name": "cloud-storage",
+      "category": "storage",
+      "keywords": [
+        "cloud",
+        "storage"
+      ],
+      "files": {
+        "24-color": "storage/cloud-storage-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Cloud Storage/Cloud Storage.svg"
+      }
+    },
+    {
+      "id": "storage/filestore",
+      "name": "filestore",
+      "category": "storage",
+      "keywords": [
+        "filestore"
+      ],
+      "files": {
+        "24-color": "storage/filestore-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Filestore/Filestore.svg"
+      }
+    },
+    {
+      "id": "storage/local-ssd",
+      "name": "local-ssd",
+      "category": "storage",
+      "keywords": [
+        "local",
+        "ssd"
+      ],
+      "files": {
+        "24-color": "storage/local-ssd-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Local SSD/Local SSD.svg"
+      }
+    },
+    {
+      "id": "storage/persistent-disk",
+      "name": "persistent-disk",
+      "category": "storage",
+      "keywords": [
+        "persistent",
+        "disk"
+      ],
+      "files": {
+        "24-color": "storage/persistent-disk-24-color.svg"
+      },
+      "legacyPaths": {
+        "24-color": "GCP/Persistent Disk/Persistent Disk.svg"
+      }
+    }
+  ]
+}

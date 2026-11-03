@@ -93,9 +93,14 @@
   related: ["EditableComboBox", "EnterpriseTheme"]
 
 - name: "CloudIcons"
-  definition: "SVG icon sets for AWS, Azure, and GCP cloud services."
-  anchor_file: "cloud-icons/"
-  related: []
+  definition: "SVG icon packs for AWS, Azure, and GCP cloud services, served at /icons/<provider>/."
+  anchor_file: "icon-packs/aws/"
+  related: ["IconPacks"]
+
+- name: "IconPacks"
+  definition: "Committed SVG icon packs (Fluent UI, AWS, Azure, GCP) in icon-packs/, repacked from pinned sources by npm run icons:repack, copied to dist/icons/ by npm run build, served at /icons/<pack>/ with a manifest, licence and attribution each, and checked by structure check [30]."
+  anchor_file: "scripts/icons/repack.mjs"
+  related: ["CloudIcons"]
 
 - name: "DatePicker"
   definition: "Vanilla TypeScript calendar date picker with day, month, and year navigation views. Supports configurable format, manual input parsing, week numbers, locale-aware first day of week, min/max constraints, and format hint with help tooltip."

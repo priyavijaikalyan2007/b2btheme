@@ -1,0 +1,86 @@
+{
+  "rules": [
+    {
+      "category": "ai",
+      "pattern": "\\b(sparkle|bot|agents?|brain|copilot|wand|autopilot)\\b"
+    },
+    {
+      "category": "arrows",
+      "pattern": "\\b(arrow|arrows|chevron|caret|expand|collapse|undo|redo|swipe)"
+    },
+    {
+      "category": "text-editing",
+      "pattern": "\\b(text|font|paragraph|align|bold|italic|underline|strikethrough|highlight|subscript|superscript|indent|bullet|clipboard|cut|copy|paste|eraser|pen|pencil|edit|ink|ruler|spell|format)"
+    },
+    {
+      "category": "documents-files",
+      "pattern": "\\b(document|folder|file|page|notebook|book|archive|attach|draft|save|print|library|note|form|slide)"
+    },
+    {
+      "category": "data-charts",
+      "pattern": "\\b(data|chart|table|poll|gauge|database|filter|sort|math|calculator|number|sum|excel)"
+    },
+    {
+      "category": "communication",
+      "pattern": "\\b(mail|chat|comment|call|send|share|megaphone|mention|voicemail|inbox|rss|conversation)"
+    },
+    {
+      "category": "people",
+      "pattern": "\\b(person|people|contact|guest|accessibility|emoji|hand|team)"
+    },
+    {
+      "category": "calendar-time",
+      "pattern": "\\b(calendar|clock|timer|time|hourglass|history|alarm|stopwatch|shifts|date)"
+    },
+    {
+      "category": "media",
+      "pattern": "\\b(image|video|camera|mic|speaker|music|play|pause|record|headphones|headset|movie|film|album|gif|sound|volume)"
+    },
+    {
+      "category": "devices",
+      "pattern": "\\b(laptop|desktop|phone|tablet|keyboard|mouse|printer|device|tv|watch|usb|battery|plug|cpu|server|drive|wifi|bluetooth|router|cellular|scan)"
+    },
+    {
+      "category": "security",
+      "pattern": "\\b(lock|shield|key|password|fingerprint|vault|certificate|eye|privacy|guardian)"
+    },
+    {
+      "category": "status-alerts",
+      "pattern": "\\b(alert|warning|error|info|question|checkmark|dismiss|block|prohibited|badge|important|flag)"
+    },
+    {
+      "category": "layout-shapes",
+      "pattern": "\\b(layout|panel|window|tab|square|circle|rectangle|shape|grid|column|row|border|resize|maximize|minimize|full screen|split|layer|frame|position)"
+    },
+    {
+      "category": "maps-places",
+      "pattern": "\\b(location|map|globe|building|home|earth|compass|airplane|vehicle|car|bus|train|road|pin|navigation)"
+    },
+    {
+      "category": "commerce",
+      "pattern": "\\b(money|coin|cart|payment|wallet|savings|receipt|gift|tag|premium|currency|bank|store|shopping)"
+    },
+    {
+      "category": "weather-nature",
+      "pattern": "\\b(weather|sun|moon|cloud|leaf|tree|animal|paw|drop|fire|flash|snowflake|planet)"
+    },
+    {
+      "category": "settings-tools",
+      "pattern": "\\b(settings|options|wrench|toolbox|developer|code|bug|braces|terminal|beaker|puzzle|apps)"
+    },
+    {
+      "category": "objects",
+      "pattern": "\\b(food|drink|sport|trophy|ribbon|star|heart|lightbulb|game|briefcase)"
+    }
+  ],
+  "overrides": {},
+  "exclude": {
+    "mail_rewind_24_filled.svg": "upstream artwork is 25x24, off its size's grid",
+    "mail_rewind_24_regular.svg": "upstream artwork is 25x24, off its size's grid",
+    "document_table_search_24_filled.svg": "upstream artwork is 24x25, off its size's grid",
+    "comment_edit_16_filled.svg": "upstream artwork is 17x16, off its size's grid",
+    "comment_edit_16_regular.svg": "upstream artwork is 17x16, off its size's grid",
+    "document_bullet_list_cube_16_filled.svg": "upstream artwork is 16x17, off its size's grid",
+    "document_bullet_list_cube_16_regular.svg": "upstream artwork is 16x17, off its size's grid"
+  }
+}

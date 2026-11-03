@@ -13,6 +13,8 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Icon packs on the CDN** (ADR-248): SVG icons at `/icons/<pack>/<category>/<name>-<size>-<variant>.svg`, each pack with `manifest.json`, `ATTRIBUTION.md` and its licence or terms. `fluent-ui` is Microsoft's Fluent UI System Icons (MIT): regular and filled at 16 and 24 px plus every colour icon, 9,345 files. `aws`, `azure` and `gcp` are the architecture icons, for diagrams only. `docs/ICON_PACKS.md` covers usage, licences and how apps switch to the CDN-hosted icons; check `[30]` keeps every pack valid and within the file budget.
+
 - **The in-depth A2UI demo `war-room`** (scripted), published as an MP4: an agent runs an incident war room in four acts with about 20 components (MetricCard, Gauge, StatusBadge, ChartPanel, DataGrid, TabbedPanel, Timeline, LogConsole, ReasoningAccordion, PeoplePicker answered by the agent, TreeView, ConfirmDialog, ProgressModal, MarkdownEditor, Tagger, ActivityFeed, ShareDialog). It replays as a CI test. The README shows its poster linked to `https://static.outcrop.us/demo/media/a2ui/war-room.mp4`.
 - **Video scenarios for the recorder**: a scenario header's new `"media": "video"` records at 1920×1080 and publishes `demo/media/a2ui/<name>.mp4` (20 MB budget) and a poster instead of a GIF. The build now copies `demo/media/` to the CDN, where `/demo/media/*` is cached for a day.
 - **The A2UI showcase scenario `incident-triage`** (scripted): a contained FormDialog filter, then a ChartPanel and a DataGrid, then a cancellable ProgressModal driven by the agent's data. It replays as a CI test, and the README shows it as a GIF. The recorder's GIF budget is now 3 MB, up from 2 MB.
@@ -53,6 +55,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **The cloud icons are served** (ADR-248). `cloud-icons/` was copied only by `build.sh`, which the CDN build does not run, so its files returned 404. They now live in `icon-packs/aws|azure|gcp` with clean names and a `legacy-map.json` from old paths to new; `cloud-icons/` is removed.
 - **CI check [29] accepts components out of the catalog.** It read only the report's `excluded` list, so the four components ADR-247 keeps out of the catalog failed it, and CI stopped at the structure checks from #90 to #93 (#94).
 - **MarkdownEditor's preview no longer loads code from unpkg.com.** Display mode and the Preview tab render through `Vditor.preview()`, which wasn't given the self-hosted `cdn` the editor uses. So Vditor fetched its markdown engine, lute, as a script from `unpkg.com`, which the editor's own rule forbids and a strict CSP blocks. Both now use this library's mirror.
 - **Save session explains what it saves.** After a replayed scenario it said only "Nothing to save yet". It now says it keeps a live conversation with the agent, and that a replayed scenario is already a file.

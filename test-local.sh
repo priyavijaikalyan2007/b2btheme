@@ -741,6 +741,14 @@ else
 fi
 echo ""
 
+echo "[30] Icon packs are well-formed, safe, attributed and within the file budget (specs/icon-packs.plan.md)"
+if node scripts/icons/check-packs.mjs; then
+    pass "Every icon pack matches its manifest, naming scheme and SVG safety rules; budgets hold"
+else
+    fail "an icon pack is malformed or over budget (see above)"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

@@ -72,8 +72,8 @@ Maps theme concepts and components to their primary files.
   related: ["EnterpriseTheme"]
 
 - name: "CloudIcons"
-  definition: "SVG icon sets for AWS, Azure, and GCP cloud services."
-  anchor_file: "cloud-icons/"
+  definition: "SVG icon packs for AWS, Azure, and GCP cloud services, served at /icons/<provider>/."
+  anchor_file: "icon-packs/aws/"
   related: []
 ```
 

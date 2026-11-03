@@ -95,7 +95,7 @@ Open `demo/index.html` in your browser, or visit the [live demo](https://theme.p
 │   ├── AGENT_QUICK_REF.md       # Machine-parseable reference for agents
 │   ├── DESIGN_TOKENS.md         # All SCSS variables and resolved values
 │   └── CUSTOM_CLASSES.md        # All custom CSS classes
-├── cloud-icons/                 # AWS, Azure, GCP architecture icons
+├── icon-packs/                  # Icon packs served at /icons/<pack>/ (see docs/ICON_PACKS.md)
 ├── agentknowledge/              # Structured knowledge base (YAML/JSONL)
 ├── specs/                       # PRD and plan files for components
 ├── dist/                        # Build output (generated, gitignored)
@@ -324,12 +324,14 @@ Built on top of these open-source projects:
 | [@viz-js/viz](https://viz-js.com/) | Client-side Graphviz/dot rendering (WASM) | MIT |
 | [Inter](https://rsms.me/inter/) | Primary UI typeface | OFL-1.1 |
 | [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Monospace typeface for code | OFL-1.1 |
+| [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) | SVG icon pack served at `/icons/fluent-ui/` (see [docs/ICON_PACKS.md](docs/ICON_PACKS.md)) | MIT |
 
 ### Cloud Provider Icons
 
-The `cloud-icons/` directory contains a curated subset of architecture icons from
-AWS, Microsoft Azure, and Google Cloud, redistributed on this CDN strictly for
-use as diagram stencils in the DiagramEngine component. The icons have been
-reorganised into a subset relevant to diagramming but are otherwise faithfully
-reproduced with no modifications. See [NOTICE.md](NOTICE.md) for full attribution
-and terms.
+The `icon-packs/aws`, `icon-packs/azure` and `icon-packs/gcp` packs contain a
+curated subset of architecture icons from AWS, Microsoft Azure and Google Cloud.
+They are served at `/icons/<provider>/` strictly for depicting those providers'
+services in architecture and infrastructure diagrams. The files have been
+renamed and regrouped, and the artwork is otherwise reproduced byte for byte.
+See [NOTICE.md](NOTICE.md) for attribution and terms, and
+[docs/ICON_PACKS.md](docs/ICON_PACKS.md) for URLs and usage.
