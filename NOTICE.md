@@ -4,11 +4,12 @@ This project includes third-party materials subject to their respective terms.
 
 ## Cloud Provider Architecture Icons
 
-The `cloud-icons/` directory contains a curated subset of architecture icons from
-the following cloud providers. These icons are redistributed on this CDN after
-reorganisation to use only a specific subset for diagramming purposes in the
-DiagramEngine component. The icons are faithfully reproduced with no
-modifications to the icon artwork itself.
+The `icon-packs/aws`, `icon-packs/azure` and `icon-packs/gcp` packs contain a
+curated subset of architecture icons from the following cloud providers. They
+are served on this CDN at `/icons/aws/`, `/icons/azure/` and `/icons/gcp/`.
+The files have been renamed and grouped into category folders; the icon
+artwork itself is reproduced byte for byte. Each pack's `TERMS.md` repeats the
+terms below.
 
 ### Amazon Web Services (AWS)
 
@@ -36,6 +37,6 @@ Google Cloud, and all related service names and logos are trademarks of Google L
 ---
 
 All cloud provider icons are included in this project strictly for the purposes
-of architectural and infrastructure diagramming within the DiagramEngine
+of architectural and infrastructure diagramming, such as in the DiagramEngine
 component. Their inclusion does not imply endorsement, sponsorship, or
 affiliation by or with any of the above cloud providers.
