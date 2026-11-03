@@ -14,7 +14,7 @@
 
 import { JSDOM } from "jsdom";
 
-const { DOMParser } = new JSDOM("").window;
+const { DOMParser, NodeFilter } = new JSDOM("").window;
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 // Elements that can run code, pull in other documents or rewrite attributes
@@ -98,7 +98,11 @@ export function validateSvg(text, size, { square = true } = {})
         return [...problems, "not a well-formed <svg> document"];
     }
     problems.push(...checkSize(root, size, square));
-    for (const el of [root, ...root.querySelectorAll("*")])
+    // A TreeWalker, not querySelectorAll: jsdom's selector engine keeps every
+    // document it has queried alive, about 4 MB per large emoji, and a pack
+    // of 3,000 of them runs out of heap.
+    const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    for (let el = root; el; el = walker.nextNode())
     {
         problems.push(...checkElement(el));
     }

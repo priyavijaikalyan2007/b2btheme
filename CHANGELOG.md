@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Fluent Emoji on the CDN**: Microsoft's Fluent Emoji (MIT), Color style at 32 px with all six skin tones, at `/icons/fluent-emoji/<category>/<name>-32-<variant>.svg`. 1,587 emoji in 3,134 files, filed by Unicode group; each manifest entry carries the emoji's `glyph` and `unicode`. See `docs/ICON_PACKS.md`.
 - **Icon packs on the CDN** (ADR-248): SVG icons at `/icons/<pack>/<category>/<name>-<size>-<variant>.svg`, each pack with `manifest.json`, `ATTRIBUTION.md` and its licence or terms. `fluent-ui` is Microsoft's Fluent UI System Icons (MIT): regular and filled at 16 and 24 px plus every colour icon, 9,345 files. `aws`, `azure` and `gcp` are the architecture icons, for diagrams only. `docs/ICON_PACKS.md` covers usage, licences and how apps switch to the CDN-hosted icons; check `[30]` keeps every pack valid and within the file budget.
 
 - **The in-depth A2UI demo `war-room`** (scripted), published as an MP4: an agent runs an incident war room in four acts with about 20 components (MetricCard, Gauge, StatusBadge, ChartPanel, DataGrid, TabbedPanel, Timeline, LogConsole, ReasoningAccordion, PeoplePicker answered by the agent, TreeView, ConfirmDialog, ProgressModal, MarkdownEditor, Tagger, ActivityFeed, ShareDialog). It replays as a CI test. The README shows its poster linked to `https://static.outcrop.us/demo/media/a2ui/war-room.mp4`.

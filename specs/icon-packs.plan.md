@@ -689,6 +689,8 @@ Re-run `npm run icons:repack -- fluent-ui`. The diff should touch only `ATTRIBUT
 
 - [ ] **Step 7: Add the docs.** Add the Fluent Emoji rows and sections to `docs/ICON_PACKS.md`, `NOTICE.md` and `README.md`, in the same shape as Task 4.
 
+- **As built (2026-11-03):** the Color assets are 125.5 MB raw (about 19 MB gzipped), so Step 5's stop-and-ask fired. The owner chose all six tones as-is, in plain git (LFS bandwidth would run out on CI and Cloudflare builds). 11 files have a 32x33 or 33x32 viewBox and are excluded with reasons in `scripts/icons/fluent-emoji.categories.json`, which also holds the group map that check [30] reads. Result: 1,587 emoji, 3,134 SVGs. The large files exposed a jsdom leak (`querySelectorAll` keeps each parsed document alive), so `validateSvg` walks elements with a TreeWalker.
+
 - [ ] **Step 8: Commit as two commits** (adapter and docs, then the generated pack). Run the full suite. Push, verify the remote matches, open PR 2 and wait for CI.
 
 ---

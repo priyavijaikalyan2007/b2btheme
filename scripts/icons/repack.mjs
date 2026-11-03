@@ -9,7 +9,8 @@
  *    pack's pinned source (or reads a local one), runs its adapter and
  *    rewrites icon-packs/<pack>/. Run deliberately when a pin moves; the
  *    output is committed and reviewed. specs/icon-packs.plan.md.
- * 🔗 RELATES: [[IconPackFetch]], [[IconPackWriter]], [[FluentUiAdapter]], [[CloudIconAdapter]]
+ * 🔗 RELATES: [[IconPackFetch]], [[IconPackWriter]], [[FluentUiAdapter]], [[FluentEmojiAdapter]],
+ *    [[CloudIconAdapter]]
  * ⚡ FLOW: [sources.json pin] -> [fetch] -> [adapter] -> [writePack] -> [summary]
  */
 
@@ -19,6 +20,7 @@ import path from "node:path";
 import { fetchNpmTarball, sparseCheckout } from "./fetch.mjs";
 import { writePack } from "./write-pack.mjs";
 import * as fluentUi from "./fluent-ui.mjs";
+import * as fluentEmoji from "./fluent-emoji.mjs";
 import * as cloud from "./cloud.mjs";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -42,6 +44,11 @@ const ADAPTERS = {
         const icons = fluentUi.collect(path.join(pkg, "icons"), path.join(git, "assets"),
             readJson("fluent-ui.categories.json"));
         return { icons, licenseSrc: path.join(git, "LICENSE") };
+    },
+    "fluent-emoji": (source) =>
+    {
+        const git = sparseCheckout(source.git, path.join(workDir("fluent-emoji"), "git"));
+        return { icons: fluentEmoji.collect(path.join(git, "assets")), licenseSrc: path.join(git, "LICENSE") };
     },
     aws: (source, sourceDir) => cloudPack("aws", source, sourceDir),
     azure: (source, sourceDir) => cloudPack("azure", source, sourceDir),

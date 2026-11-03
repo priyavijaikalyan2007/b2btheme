@@ -21,6 +21,25 @@ trademark rights, and inclusion implies no endorsement.
 
 ---
 
+## Fluent Emoji
+
+The `icon-packs/fluent-emoji` pack, served at `/icons/fluent-emoji/`, contains
+the Color style of Microsoft's Fluent Emoji from
+<https://github.com/microsoft/fluentui-emoji> (commit
+`1ffb34c752ecf5d402f04cfb4b392c77f57c54bc`) at 32 px, with all six skin
+tones. The files have been renamed and grouped into category folders; the SVG
+files are otherwise byte-for-byte identical.
+
+    MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+The full licence text ships beside the emoji as `LICENSE`. Microsoft and
+Fluent are trademarks of Microsoft Corporation; the MIT licence grants no
+trademark rights, and inclusion implies no endorsement.
+
+---
+
 ## Cloud Provider Architecture Icons
 
 The `icon-packs/aws`, `icon-packs/azure` and `icon-packs/gcp` packs contain a

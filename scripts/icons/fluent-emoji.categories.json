@@ -1,0 +1,26 @@
+{
+  "groups": {
+    "Smileys & Emotion": "smileys-emotion",
+    "People & Body": "people-body",
+    "Animals & Nature": "animals-nature",
+    "Food & Drink": "food-drink",
+    "Travel & Places": "travel-places",
+    "Activities": "activities",
+    "Objects": "objects",
+    "Symbols": "symbols",
+    "Flags": "flags"
+  },
+  "exclude": {
+    "Black heart/Color/black_heart_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Bomb/Color/bomb_color.svg": "viewBox 33x32, off the 32 px grid",
+    "Elephant/Color/elephant_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Eye in speech bubble/Color/eye_in_speech_bubble_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Growing heart/Color/growing_heart_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Hamster/Color/hamster_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Person feeding baby/Dark/Color/person_feeding_baby_color_dark.svg": "viewBox 32x33, off the 32 px grid",
+    "Pig nose/Color/pig_nose_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Raising hands/Default/Color/raising_hands_color_default.svg": "viewBox 32x33, off the 32 px grid",
+    "Rhinoceros/Color/rhinoceros_color.svg": "viewBox 32x33, off the 32 px grid",
+    "Rightwards pushing hand/Medium-Dark/Color/rightwards_pushing_hand_color_medium-dark.svg": "viewBox 33x32, off the 32 px grid"
+  }
+}

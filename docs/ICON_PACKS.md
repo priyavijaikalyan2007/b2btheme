@@ -7,7 +7,7 @@ File GUID: 0328ccda-891a-45a8-adcd-e9cc18b945a1
 Created: 2026
 -->
 
-<!-- AGENT: The icon packs served at /icons/<pack>/: what is served, the URL scheme, manifests, usage, licences and attribution, what was changed, and how the Apps team switches to the CDN-hosted icons. Source of truth for the packs is icon-packs/ and scripts/icons/sources.json. -->
+<!-- AGENT: The icon packs served at /icons/<pack>/ (Fluent UI, Fluent Emoji, AWS, Azure, GCP): what is served, the URL scheme, manifests, usage, licences and attribution, what was changed, and how the Apps team switches to the CDN-hosted icons. Source of truth for the packs is icon-packs/ and scripts/icons/sources.json. -->
 <!-- ⚓ DOC: IconPacksGuide -->
 
 # Icon packs
@@ -25,6 +25,7 @@ and `/icons/fonts/*` is unchanged.
 | Pack | Contents | Icons | SVGs | Licence | Upstream |
 |---|---|---|---|---|---|
 | `fluent-ui` | Microsoft Fluent UI System Icons: regular and filled at 16 and 24 px, and every colour icon at every size it comes in | 2,718 | 9,345 | MIT | [GitHub](https://github.com/microsoft/fluentui-system-icons), [npm](https://www.npmjs.com/package/@fluentui/svg-icons), [design guidance](https://fluent2.microsoft.design/iconography) |
+| `fluent-emoji` | Microsoft Fluent Emoji: the Color style at 32 px, with all six skin tones for every emoji that has them | 1,587 | 3,134 | MIT | [GitHub](https://github.com/microsoft/fluentui-emoji) |
 | `aws` | AWS Architecture Icons: services (64 px), resources (48 px) and category icons | 897 | 898 | AWS terms, diagrams only | [aws.amazon.com/architecture/icons](https://aws.amazon.com/architecture/icons/) |
 | `azure` | Microsoft Azure architecture icons | 676 | 676 | Microsoft terms, diagrams only | [learn.microsoft.com](https://learn.microsoft.com/en-us/azure/architecture/icons/) |
 | `gcp` | Google Cloud product icons | 216 | 216 | Google brand permissions, diagrams only | [cloud.google.com/icons](https://cloud.google.com/icons) |
@@ -48,12 +49,14 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 | Pack | Variants | Example |
 |---|---|---|
 | `fluent-ui` | `regular`, `filled`, `color` | `/icons/fluent-ui/data-charts/table-24-color.svg` |
+| `fluent-emoji` | `color` (the default tone), `color-tone-light`, `color-tone-medium-light`, `color-tone-medium`, `color-tone-medium-dark`, `color-tone-dark` | `/icons/fluent-emoji/people-body/artist-32-color-tone-medium.svg` |
 | `aws` | `service`, `resource`, `category` | `/icons/aws/compute/aws-fargate-64-service.svg` |
 | `azure` | `color` | `/icons/azure/monitor/application-insights-18-color.svg` |
 | `gcp` | `color` | `/icons/gcp/databases/cloud-sql-24-color.svg` |
 
 **Categories:**
 - **Fluent UI:** derived from each icon's name. The first word that names a topic decides, so `document-edit` goes in `documents-files` and `calendar-clock` in `calendar-time`. The topics are `ai`, `arrows`, `calendar-time`, `commerce`, `communication`, `data-charts`, `devices`, `documents-files`, `layout-shapes`, `maps-places`, `media`, `objects`, `people`, `security`, `settings-tools`, `status-alerts`, `text-editing`, `weather-nature` and `general`.
+- **Fluent Emoji:** the emoji's Unicode group: `smileys-emotion`, `people-body`, `animals-nature`, `food-drink`, `travel-places`, `activities`, `objects`, `symbols` and `flags`. Names are the Unicode CLDR short names, so 😀 is `grinning-face` and 🥇 is `1st-place-medal`.
 - **AWS and Azure:** the providers' own categories.
 - **GCP:** rule-based, because the source has no categories.
 - **Icons in more than one category:** when a provider files an icon in several categories, it appears in each of them, and its manifest entry lists the others in `alsoIn`.
@@ -86,6 +89,7 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 - **`id`** is `<category>/<name>` and is unique within a pack. A `name` can repeat across categories in the cloud packs.
 - **`files`** keys are `<size>-<variant>`, and each value is relative to the pack folder.
 - **Search:** match on `name`, `keywords` and, for the cloud packs, `alsoIn`.
+- **Fluent Emoji entries** also carry `glyph` (the emoji character, such as `"🧑‍🎨"`) and `unicode` (its code points, such as `"1f9d1 200d 1f3a8"`), so an app can map a typed emoji to its picture.
 
 ## Using the icons
 
@@ -96,7 +100,9 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 
 - **`<img>` and CSS `background-image`:** work for every icon.
 - **Recolouring monochrome Fluent icons:** Fluent UI `regular` and `filled` icons carry no fill. Inline them and set `fill`, or use them as a CSS `mask-image` over `background-color: currentColor` so they follow the text colour.
-- **Colour icons:** `color` icons keep their own palette.
+- **Colour icons:** `color` icons keep their own palette. Fluent UI colour icons suit toolbars and ribbons; Fluent Emoji suit reactions, status and empty states.
+- **Skin tones:** an emoji that has tones has one file per tone; `color` is the default (yellow) tone. Pick the user's preferred tone from the manifest's `files` keys. Three emoji lack one tone (see What was changed), and `raising-hands` lacks `32-color`, so choose another key from `files` when the one you want is missing.
+- **File size:** Fluent UI SVGs are about 1 KB. Fluent Emoji are detailed artwork: about 36 KB on average and up to 560 KB, roughly a sixth of that on the wire with compression. Load emoji on demand, not hundreds at once.
 - **Inlining with `fetch()`:** CORS is open. Every SVG here passes a safety check (no scripts, event handlers, `foreignObject` or external references), but treat inlined markup as you would any other HTML you insert.
 - **Caching:** a day, then stale-while-revalidate for a week. The paths carry no version, so a repack reaches browsers within a day.
 
@@ -157,12 +163,14 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 | Pack | Copyright and trademarks | Licence | What your app must do |
 |---|---|---|---|
 | `fluent-ui` | Copyright (c) 2020 Microsoft Corporation | [MIT](https://opensource.org/license/mit), full text at `/icons/fluent-ui/LICENSE` | Include the copyright line and MIT permission notice in your app's third-party notices |
+| `fluent-emoji` | Copyright (c) Microsoft Corporation | [MIT](https://opensource.org/license/mit), full text at `/icons/fluent-emoji/LICENSE` | Include the copyright line and MIT permission notice in your app's third-party notices |
 | `aws` | Amazon Web Services, AWS and all related names and logos are trademarks of Amazon.com, Inc. or its affiliates | [AWS trademark guidelines](https://aws.amazon.com/trademark-guidelines/) | Use only to depict AWS services in architecture and infrastructure diagrams |
 | `azure` | Microsoft, Azure and all related names and logos are trademarks of Microsoft Corporation | [Microsoft terms of use](https://learn.microsoft.com/en-us/legal/termsofuse) | Use only to depict Azure services in architecture and infrastructure diagrams |
 | `gcp` | Google, Google Cloud and all related names and logos are trademarks of Google LLC | [Google brand permissions](https://about.google/brand-resource-center/) | Use only to depict Google Cloud services in architecture and infrastructure diagrams |
 
 **Exact sources:**
 - `fluent-ui`: npm `@fluentui/svg-icons@1.1.345`, verified against its published integrity hash. Metadata and LICENSE come from [microsoft/fluentui-system-icons](https://github.com/microsoft/fluentui-system-icons) at commit `73ec879377b1f412f33aca4a128aa967e6c238f0`, the commit that release was built from.
+- `fluent-emoji`: [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji) at commit `1ffb34c752ecf5d402f04cfb4b392c77f57c54bc`.
 - `aws`, `azure` and `gcp`: the curated set first published in this repository's `cloud-icons/` folder (commit `29cae6a1`, 2026-02-09), which was downloaded from each provider's icon page above.
 
 ## What was changed
@@ -170,6 +178,7 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 - **Renamed** to `<name>-<size>-<variant>.svg` and **regrouped** into category folders.
 - **Subsets:**
   - Fluent UI leaves out sizes other than 16 and 24 for regular and filled, the `light` style, the npm package's `RTL/`, `LTR/` and per-language folders, and 7 files whose artwork is off its size's grid. Each exclusion is listed with its reason in `scripts/icons/fluent-ui.categories.json`.
+  - Fluent Emoji keeps only the Color style (no 3D, Flat or High Contrast), and leaves out 11 files whose artboard is 32×33 or 33×32 rather than 32×32. Eight emoji (black heart, bomb, elephant, eye in speech bubble, growing heart, hamster, pig nose, rhinoceros) are therefore missing, and three toned emoji lack one tone each. Each exclusion is listed with its reason in `scripts/icons/fluent-emoji.categories.json`.
   - The cloud packs are complete copies of the earlier set.
 - **Nothing else.** Every SVG is byte-for-byte identical to its source.
 

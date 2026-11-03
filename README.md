@@ -325,6 +325,7 @@ Built on top of these open-source projects:
 | [Inter](https://rsms.me/inter/) | Primary UI typeface | OFL-1.1 |
 | [JetBrains Mono](https://www.jetbrains.com/lp/mono/) | Monospace typeface for code | OFL-1.1 |
 | [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) | SVG icon pack served at `/icons/fluent-ui/` (see [docs/ICON_PACKS.md](docs/ICON_PACKS.md)) | MIT |
+| [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) | Colour emoji pack served at `/icons/fluent-emoji/` (see [docs/ICON_PACKS.md](docs/ICON_PACKS.md)) | MIT |
 
 ### Cloud Provider Icons
 
