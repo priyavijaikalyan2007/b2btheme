@@ -7,17 +7,17 @@ File GUID: 732725ca-936e-40cb-ae36-6325bd09d082
 Created: 2026
 -->
 
-<!-- AGENT: Implementation plan for repackaging Fluent UI System Icons and Fluent Emoji into icon-packs/ and serving them from the CDN at /icons/<pack>/ with licences and attribution. Colour-icon support in Ribbon and SymbolPicker is a later, separate spec. -->
+<!-- AGENT: Implementation plan for repackaging Fluent UI System Icons, Fluent Emoji and the AWS/Azure/GCP cloud icons (migrated out of cloud-icons/) into icon-packs/ and serving them from the CDN at /icons/<pack>/ with licences and attribution. Colour-icon support in Ribbon and SymbolPicker is a later, separate spec. -->
 
 # Icon packs: implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task (the owner has said no subagents). Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** repackage two Microsoft icon sets into a clean, categorised, consistently named hierarchy in `icon-packs/`. Serve them from the CDN at `/icons/<pack>/`, with each licence, the attribution and links to the upstream sites published both beside the files and in the CDN docs.
+**Goal:** repackage two Microsoft icon sets, and migrate the AWS, Azure and GCP architecture icons out of `cloud-icons/`, into a clean, categorised, consistently named hierarchy in `icon-packs/`. Today the cloud icons never reach the CDN: only `build.sh` copies them, and Cloudflare runs `npm run build`, so they 404. Serve them from the CDN at `/icons/<pack>/`, with each licence, the attribution and links to the upstream sites published both beside the files and in the CDN docs.
 
 **Architecture:**
-- **Repack tool (dev-only).** `npm run icons:repack -- <pack>` fetches one pinned upstream source and runs that pack's adapter, which picks the subset, names each file and assigns its category. The shared writer then copies the SVGs byte for byte, validates every file, and writes `manifest.json`, `LICENSE` and `ATTRIBUTION.md`.
-- **Committed output.** The output is committed under `icon-packs/<pack>/`, like `cloud-icons/`. A version bump is a reviewable, revertable commit, and the build never touches the network.
+- **Repack tool (dev-only).** `npm run icons:repack -- <pack> [sourceDir]` fetches one pinned upstream source (the cloud packs read a local directory instead) and runs that pack's adapter, which picks the subset, names each file and assigns its category. The shared writer then copies the SVGs byte for byte, validates every file, and writes `manifest.json`, the licence file (`LICENSE`, or `TERMS.md` for the cloud packs) and `ATTRIBUTION.md`.
+- **Committed output.** The output is committed under `icon-packs/<pack>/`. `cloud-icons/` is deleted once it has been migrated, since git history keeps it. A version bump is a reviewable, revertable commit, and the build never touches the network.
 - **Build and checks.** `npm run build` copies `icon-packs/` into `dist/icons/`. Check [30] in `test-local.sh` re-validates the committed files and enforces the file budget.
 
 **Tech Stack:** Node 24 ESM scripts (`.mjs`), jsdom's `DOMParser` (already a devDependency) for SVG validation, vitest, bash (`test-local.sh`), Cloudflare Workers static assets (`cdn/_headers`).
@@ -28,20 +28,25 @@ Created: 2026
 - **Packs and subsets:**
   - `fluent-ui`: regular and filled at sizes 16 and 24, plus every colour icon at every size it comes in.
   - `fluent-emoji`: the Color style only, with all six skin tones. No 3D, flat or high-contrast.
+  - `aws`, `azure`, `gcp`: every icon in `cloud-icons/` as of `29cae6a1`, with duplicates merged (one file per name and size).
+- **Expected counts:** `fluent-ui` about 9,870, the cloud packs about 1,720, `fluent-emoji` about 3,145. That's about 14,750 files in `icon-packs/` and about 17,900 in `dist/`.
 - **Pinned sources:**
   - Fluent UI SVGs: `@fluentui/svg-icons@1.1.345`, integrity `sha512-Mz5e5BFKtvRN5Yiwrs5JqZRKgd8Rt8S3YiCAuwOWudmm7NA14Y8Ijr8QzMrE6gtNdoUP6/om7ue0lBQJLL57Mw==`.
   - Fluent UI metadata and LICENSE: `microsoft/fluentui-system-icons` at `73ec879377b1f412f33aca4a128aa967e6c238f0`, the npm `gitHead`.
   - Fluent Emoji: `microsoft/fluentui-emoji` at `1ffb34c752ecf5d402f04cfb4b392c77f57c54bc`.
-- **Licences:** both packs are MIT, © Microsoft Corporation. Each pack ships its upstream `LICENSE` verbatim.
+- **Licences:**
+  - Both Fluent packs are MIT, © Microsoft Corporation, and each ships its upstream `LICENSE` verbatim.
+  - The cloud packs carry no open licence. Each ships a `TERMS.md` that links the provider's usage terms and states the restriction to architecture and infrastructure diagrams, as `NOTICE.md` does today.
 - **Artwork:** never modified. SVGs are copied byte for byte, and only names and folders change.
 - **Path:** `/icons/<pack>/<category>/<name>-<size>-<variant>.svg`.
 - **Naming:**
   - `<name>` and `<category>` are lowercase ASCII kebab-case, `[a-z0-9]+(-[a-z0-9]+)*`, with no spaces.
-  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height.
+  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height. Packs marked `"square": false` (the cloud packs) instead use the larger viewBox side, rounded. `width` and `height` may carry a `px` suffix.
   - `<variant>` comes from the pack's fixed list.
 - **Variants:**
   - `fluent-ui`: `regular`, `filled` or `color`.
   - `fluent-emoji`: `color`, or `color-tone-light`, `color-tone-medium-light`, `color-tone-medium`, `color-tone-medium-dark`, `color-tone-dark`.
+  - `aws`, `azure`, `gcp`: `color`.
 - **SVG safety:** every file must pass `validateSvg`, which allows:
   - no `<script>`, `<foreignObject>`, `<iframe>`, `<embed>`, `<object>` or SMIL animation elements;
   - no `on*` attributes;
@@ -55,7 +60,7 @@ Created: 2026
   - run `gh` as `GH_TOKEN="$(gh auth token --user priyavijaikalyan2007)" gh …`;
   - never push to or merge main without approval, because a merge deploys.
 - **Delivery:** two sequential PRs, never stacked.
-  - **PR 1** covers Tasks 1–4: the pipeline, `fluent-ui`, serving, the check and the docs.
+  - **PR 1** covers Tasks 1–4 and 2b: the pipeline, `fluent-ui`, the cloud packs, serving, the check and the docs (including the Apps-team migration guide).
   - **PR 2** covers Task 5, `fluent-emoji`, and opens only after PR 1 is merged.
 
 ---
@@ -71,7 +76,9 @@ Created: 2026
 | `scripts/icons/fluent-ui.mjs` | Adapter: select subset, map npm filenames to metadata, categorise |
 | `scripts/icons/fluent-ui.categories.json` | Ordered category rules plus per-icon overrides for Fluent UI |
 | `scripts/icons/fluent-emoji.mjs` | Adapter: walk Color assets, map Unicode groups to categories, name skin-tone variants |
-| `scripts/icons/repack.mjs` | CLI entry: `node scripts/icons/repack.mjs <pack>` |
+| `scripts/icons/cloud.mjs` | Adapter for `aws`, `azure` and `gcp`: walks the `cloud-icons/` layout, merges duplicates, records each icon's `legacyPath` |
+| `scripts/icons/cloud.categories.json` | Category rules for GCP (whose source has no categories), plus the primary category for every name that appears in more than one category |
+| `scripts/icons/repack.mjs` | CLI entry: `node scripts/icons/repack.mjs <pack> [sourceDir]` |
 | `scripts/icons/check-packs.mjs` | Check [30]: re-validate committed packs and enforce the budget; exports `checkPack` for tests |
 | `scripts/icons/*.test.ts` | vitest unit tests (node environment) |
 | `icon-packs/<pack>/…` | Committed, generated output |
@@ -399,6 +406,81 @@ The allowed categories are the rule categories plus `general`. Check [30] reads 
   1. `feat(icons): Fluent UI adapter, pack writer and repack CLI`
   2. `feat(icons): fluent-ui pack (16/24 regular+filled, all colour), generated`, with the summary numbers in the body.
 
+### Task 2b: Cloud packs (aws, azure, gcp), migrated out of `cloud-icons/`
+
+**What the source looks like** (surveyed 2026-11-03):
+
+| Provider | Files | Layout | viewBox |
+|---|---|---|---|
+| AWS | 898 | `Categories/<Name>.svg` (category-level icons), `Services/<Category>/<Name>.svg`, `Resources/<Category>/<Name>.svg` | 64 for services and categories, 48 for resources, plus 26 at 74, 2 at 40 and some `48.0` spellings |
+| Azure | 676 | `<Category>/<Name>.svg` | 667 at 18, plus 9 odd or non-square files (18×20, 52.497×52.434, 100, 36 …) |
+| GCP | 216 | `<Product>/<Product>.svg`, one folder per icon with **no categories** | 24 |
+
+There are cross-category duplicates: 7 names in AWS and 60 in Azure (for example, "Application Insights" sits in DevOps, Monitor, and Management and Governance). GCP has `<style>`/`class` in 113 files and AWS has an XML declaration in every file. All of these pass `validateSvg`.
+
+**Files:**
+- Create: `scripts/icons/cloud.mjs`, `scripts/icons/cloud.categories.json`
+- Test: `scripts/icons/cloud.test.ts`
+- Modify: `scripts/icons/lib.mjs` (`validateSvg` option), `scripts/icons/lib.test.ts`, `scripts/icons/sources.json`, `scripts/icons/repack.mjs`
+- Generate: `icon-packs/{aws,azure,gcp}/**`
+- Delete: `cloud-icons/`, and line 16 of `build.sh` (`cp -R ./cloud-icons/ ./dist/`)
+
+**Interfaces:**
+- `validateSvg(text, size, { square = true } = {})`. When `square` is false the viewBox may be non-square, and `Math.round(Math.max(w, h))` must equal `size`. `width` and `height` are compared after `parseFloat`, so a `px` suffix is allowed. Add these tests to `lib.test.ts`:
+  - accepts `width="48px"` with `viewBox="0 0 48.0 48.0"` at size 48;
+  - accepts `0 0 18 20` at size 20 with `{ square: false }`;
+  - rejects `0 0 18 20` at size 20 by default.
+- `cloud.mjs` exports:
+  - `collect(provider, sourceDir, rules)`: returns `Icon[]`. Each icon also carries `kind` (`"service"`, `"resource"` or `"category"`, AWS only), `legacyPaths` (every original `cloud-icons/` path) and `alsoIn` (the other categories it appeared in).
+  - `legacyMap(icons)`: returns `{ "<old path>": "<new path>" }`.
+- Each pack's `sources.json` entry:
+```json
+"aws": {
+  "title": "AWS Architecture Icons", "license": "AWS terms (architecture diagrams)",
+  "copyright": "Amazon Web Services, AWS and all related names and logos are trademarks of Amazon.com, Inc. or its affiliates.",
+  "homepage": "https://aws.amazon.com/architecture/icons/",
+  "terms": "https://aws.amazon.com/trademark-guidelines/",
+  "local": { "dir": "cloud-icons/AWS", "commit": "29cae6a1" },
+  "variants": ["color"], "square": false,
+  "subset": "the curated set first published in cloud-icons/ (2026-02-09)"
+}
+```
+  - Azure: homepage `https://learn.microsoft.com/en-us/azure/architecture/icons/`, terms `https://learn.microsoft.com/en-us/legal/termsofuse`.
+  - GCP: homepage `https://cloud.google.com/icons`, terms `https://about.google/brand-resource-center/`.
+  - In all three the copyright and trademark lines are copied from `NOTICE.md`.
+
+**Rules (one derivation, no exceptions):**
+- **Name:** `slugify(<file stem>)`. AWS keeps "AWS" and "Amazon" as words, so `AWS Fargate` becomes `aws-fargate`.
+- **Size:** `Math.round(Math.max(viewBox w, h))`. The variant is always `color`.
+- **Category:**
+  - AWS and Azure use `slugify(<category folder>)`. AWS `Categories/*` files go to category `categories`.
+  - GCP runs `categorize(name, name, rules.gcp.rules, rules.gcp.overrides)`. Allowed: `ai-ml`, `compute`, `containers`, `databases`, `storage`, `networking`, `data-analytics`, `security-identity`, `management-operations`, `developer-tools`, `api-management`, `hybrid-multicloud`, `serverless`, `migration`, `general`. At most 5% may land in `general`.
+- **Duplicates** (same name in more than one category):
+  - `rules.<provider>.primary[name]` names the category the file lives in, and the others go into `alsoIn`.
+  - A name with no `primary` entry is an error.
+  - If two copies at the same size differ by even one byte, it's an error.
+  - Copies at different sizes (an AWS resource at 48 and a service at 64) become two files of one icon. They must resolve to the same category, through `primary` when needed.
+- **Licence file:** `writePack` copies no `LICENSE` for these packs. It writes `TERMS.md` from `sources.json` instead: provider, homepage, terms link, the trademark line, and "Use only to depict the provider's services in architecture and infrastructure diagrams; inclusion implies no endorsement."
+
+- [ ] **Step 1:** Write the failing tests in `cloud.test.ts`. Use a fixture tree in `os.tmpdir()` that mirrors the real layout:
+  - one AWS service at 64 and the same name as a resource at 48;
+  - one Azure name in two categories with identical bytes, plus a `primary` entry;
+  - one Azure non-square file;
+  - two GCP product folders.
+
+  Assert names, sizes, categories, `alsoIn`, `kind`, `legacyPaths` and `legacyMap`. Add throws for:
+  - a duplicate with no `primary` entry;
+  - a byte-different duplicate at the same size;
+  - an unknown GCP category in an override.
+- [ ] **Step 2:** Run `npx vitest run scripts/icons/cloud.test.ts` and confirm it fails.
+- [ ] **Step 3:** Implement the `validateSvg` option and `cloud.mjs`. Wire `aws`, `azure` and `gcp` into `repack.mjs`, with `sourceDir` defaulting to the `local.dir` in `sources.json`. Write the GCP rules and the `primary` map for all 67 duplicate names. Pick the category a diagram author would look in first, for example `application-insights` → `monitor` and `log-analytics-workspaces` → `monitor`.
+- [ ] **Step 4:** Run the tests and confirm they pass. Then run `npm run icons:repack -- aws`, then `azure`, then `gcp`. Expect about 1,720 SVGs plus 3 support files per pack.
+- [ ] **Step 5: Prove nothing was lost.** Every one of the 1,790 files in `cloud-icons/` must appear in exactly one manifest `legacyPaths`, and every merged duplicate must be byte-identical to the copy kept. Do it with a one-off check script in the scratchpad, and paste the counts into the commit body.
+- [ ] **Step 6:** Delete `cloud-icons/` and the `build.sh` copy line. Then update every reference to point at `icon-packs/` and the new URLs, found with `grep -rn cloud-icons --exclude-dir={node_modules,dist,coverage}`. That covers `README.md`, `NOTICE.md`, `FRONTEND.md` and `KNOWLEDGE_ARCHITECTURE.md`. `TIPS_N_TRICKS.md` is history, so it gets a one-line "since moved to `icon-packs/aws|azure|gcp`" note.
+- [ ] **Step 7: Commit as two commits.**
+  1. `feat(icons): cloud adapter (aws/azure/gcp) with duplicate merge and legacy map`
+  2. `feat(icons): migrate cloud-icons/ to icon-packs/aws|azure|gcp, served at /icons/<provider>/` (generated pack, deletion and reference updates)
+
 ### Task 3: Serving, budget check [30]
 
 **Files:**
@@ -423,7 +505,7 @@ The allowed categories are the rule categories plus `general`. Check [30] reads 
 - [ ] **Step 2: Run the tests and watch them fail.** Run `npx vitest run scripts/icons/check-packs.test.ts`.
 
 - [ ] **Step 3: Implement `check-packs.mjs`.**
-  - Walk each pack directory. Only `LICENSE`, `ATTRIBUTION.md` and `manifest.json` may sit at the top level, and everything else must be `<category>/<file>.svg`.
+  - Walk each pack directory. Only `ATTRIBUTION.md`, `manifest.json` and the licence file may sit at the top level: `LICENSE` for the Fluent packs; `TERMS.md` plus `legacy-map.json` for the cloud packs. Everything else must be `<category>/<file>.svg`. For the cloud packs, `legacy-map.json` must equal `legacyMap(manifest.icons)`.
   - Check each file with `parseIconFileName`, then `validateSvg`, using the size from the name.
   - Compare the manifest's file set with the files on disk, in both directions.
   - Check the share in `general`.
@@ -448,6 +530,24 @@ The allowed categories are the rule categories plus `general`. Check [30] reads 
   Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
 
 /icons/fluent-emoji/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
+
+/icons/aws/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
+
+/icons/azure/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:
+
+/icons/gcp/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
   Access-Control-Allow-Origin: *
   X-Content-Type-Options: nosniff
@@ -493,9 +593,15 @@ echo ""
   2. **URL scheme.** `https://static.knobby.io/icons/<pack>/<category>/<name>-<size>-<variant>.svg`, plus each pack's variant list and category list. Give an example for each pack.
   3. **Manifest.** `/icons/<pack>/manifest.json`: its fields and how to search by keyword.
   4. **Using the icons.** `<img src>`, CSS `background-image`, and `fetch()` then inline. Note that inlined SVGs from `fluent-emoji` share gradient ids. Note that `fluent-ui` regular and filled icons have no fill attribute, so CSS `fill` or `mask-image` recolours them. Cover the caching and CORS policy.
-  5. **Licences and attribution.** For each pack: the copyright line, MIT, links to `/icons/<pack>/LICENSE` and `ATTRIBUTION.md`, the upstream homepage, and the exact version or commit.
+  5. **Licences and attribution.** For each pack: the copyright line, the licence (MIT, or the provider's terms for the cloud packs), links to `/icons/<pack>/LICENSE` (or `TERMS.md`) and `ATTRIBUTION.md`, the upstream homepage, and the exact version or commit. Also state what an app must do: MIT packs need the copyright line in the app's third-party notices, and cloud packs may only depict that provider's services in diagrams.
+  5a. **For the Apps team: switching to CDN-hosted icons.**
+     - **Prerequisites:** allow `https://static.knobby.io` in the app's CSP `img-src`, and in `connect-src` too if the app fetches manifests.
+     - **Lookup:** fetch `/icons/<pack>/manifest.json` once. Index by `name` (and `alsoIn`/`keywords` for search). Build the URL as `https://static.knobby.io/icons/<pack>/<files["<size>-<variant>"]>`. Give a 15-line JS example.
+     - **Migrating from the old cloud-icons layout:** each cloud icon's `legacyPaths` maps its old `AWS/Services/Compute/AWS Fargate.svg`-style path to the new one. `/icons/<provider>/legacy-map.json` (written by `writePack` from `legacyMap`) gives the whole mapping in one file, so a bundled-icon app can switch with a single lookup table. Give a worked example.
+     - **DiagramEngine and maxGraph:** use the URL as the image style value. Note that cross-origin images draw fine but are not readable by `canvas.toDataURL`. CORS is open, so `fetch()` plus a data URL works for exports.
+     - **Stability promise:** paths never move or disappear without a deprecation (`CDN_CONTRACT.md`). New icons may appear at any time.
   6. **What we changed.** Files are renamed and regrouped into categories, and the subset is as stated. The artwork bytes are unchanged.
-  7. **Trademarks.** "Microsoft" and "Fluent" are trademarks of Microsoft Corporation. The MIT licence grants no trademark rights, and nothing here implies endorsement by or affiliation with Microsoft.
+  7. **Trademarks.** "Microsoft" and "Fluent" are trademarks of Microsoft Corporation. The MIT licence grants no trademark rights, and nothing here implies endorsement by or affiliation with Microsoft. Add the AWS, Azure and Google trademark lines from `NOTICE.md` for the cloud packs.
   8. **Updating a pack.** Bump `scripts/icons/sources.json`, run `npm run icons:repack -- <pack>`, review the diff, and run the tests.
 
 - [ ] **Step 3: Write the ATTRIBUTION.md template** in `write-pack.mjs`. All values come from `sources.json` and the run:
@@ -520,7 +626,7 @@ Re-run `npm run icons:repack -- fluent-ui`. The diff should touch only `ATTRIBUT
   - **`HAND_WRITTEN_DOCS`:** add `"ICON_PACKS.md": "Icon Packs"`.
   - **`docs/INDEX.md`:** link the new page.
   - **`docs/CDN_INTEGRATION_GUIDE.md`:** add a short "Icon packs" pointer under the existing icons section.
-  - **`NOTICE.md`:** add a "Fluent UI System Icons" section with the copyright, MIT, the upstream link, the subset, "artwork unmodified" and the trademark line, in the style of the cloud-icons section.
+  - **`NOTICE.md`:** add a "Fluent UI System Icons" section with the copyright, MIT, the upstream link, the subset, "artwork unmodified" and the trademark line. Reword the cloud section from `cloud-icons/` and DiagramEngine-only to `/icons/aws|azure|gcp/`, keeping the same diagram-only restriction.
   - **`README.md`:** add a row to the third-party table.
   - **`CDN_CONTRACT.md`:** add an `/icons/fluent-ui/*` and `/icons/fluent-emoji/*` row to the headers table, and an additive-assets note saying these paths may grow but existing file paths never move or disappear without a deprecation.
 
