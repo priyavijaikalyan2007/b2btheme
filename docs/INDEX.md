@@ -54,17 +54,17 @@ renderers (Lit, React): the `/a2ui/adapter/v1.js` bundle,
 `createOutcropCatalog`, the base-theme requirement, error codes, and a worked
 round trip.
 
-### 2c. **[Icon Packs](ICON_PACKS.md)**
-Ready-to-use SVG icons at `/icons/<pack>/`: Fluent UI System Icons (with
-colour icons) and the AWS, Azure and Google Cloud architecture icons. URL
-scheme, manifests, licences and attribution, and how to switch an app to the
-CDN-hosted icons.
-
 ### 2b. **[A2UI Playground](A2UI_PLAYGROUND.md)**
 Watch an agent build UI from these components on your own machine: the local
 playground, the `check:a2ui` message checker, the bring-your-own-key reference
 agent (Claude, OpenAI), saved scenarios that replay as tests, and recording
 demos.
+
+### 2c. **[Icon Packs](ICON_PACKS.md)**
+Ready-to-use SVG icons at `/icons/<pack>/`: Fluent UI System Icons (with
+colour icons) and the AWS, Azure and Google Cloud architecture icons. URL
+scheme, manifests, licences and attribution, and how to switch an app to the
+CDN-hosted icons.
 
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
