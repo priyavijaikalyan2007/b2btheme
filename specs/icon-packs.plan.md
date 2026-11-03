@@ -549,6 +549,7 @@ Re-run `npm run icons:repack -- fluent-ui`. The diff should touch only `ATTRIBUT
 - `toneVariant(folder)` maps `"Default"` to `"color"`, `"Light"` to `"color-tone-light"`, `"Medium-Light"` to `"color-tone-medium-light"`, `"Medium"` to `"color-tone-medium"`, `"Medium-Dark"` to `"color-tone-medium-dark"` and `"Dark"` to `"color-tone-dark"`. Anything else throws.
 - `groupCategory(group)` maps `"Smileys & Emotion"` to `smileys-emotion`, `"People & Body"` to `people-body`, `"Animals & Nature"` to `animals-nature`, `"Food & Drink"` to `food-drink`, `"Travel & Places"` to `travel-places`, `"Activities"` to `activities`, `"Objects"` to `objects`, `"Symbols"` to `symbols` and `"Flags"` to `flags`. Anything else throws.
 - `collect(repoDir)` returns `Icon[]`, each with `glyph` and `unicode` from the metadata.
+- `CATEGORIES` is exported and lists the nine category slugs. Check [30] takes this pack's allowed categories from it. For `fluent-ui` the allowed categories are the rules' categories in `fluent-ui.categories.json` plus `general`.
 
 - [ ] **Step 1: Branch.** `git switch main && git pull && git switch -c feat/icon-packs-emoji`
 
