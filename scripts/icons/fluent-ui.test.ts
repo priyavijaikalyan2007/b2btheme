@@ -28,8 +28,10 @@ describe("parseNpmName", () =>
             .toEqual({ stem: "text_align_left_rtl", size: 16, style: "regular" });
     });
 
-    test.each(["README.md", "access_time.svg", "access_time_20_bold.svg", "RTL"])(
-        "rejects %s", (f) => expect(parseNpmName(f)).toBeNull());
+    test.each(["README.md", "access_time.svg", "access_time_20_bold.svg", "RTL"])("rejects %s", (f) =>
+    {
+        expect(parseNpmName(f)).toBeNull();
+    });
 });
 
 describe("keep", () =>

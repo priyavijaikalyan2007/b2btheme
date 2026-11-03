@@ -25,9 +25,15 @@ describe("slugify", () =>
         ["keycap: #", "keycap-hash"], ["keycap: *", "keycap-asterisk"],
         ["Rock & Roll", "rock-and-roll"], ["1st place medal", "1st-place-medal"],
         ["AWS Fargate", "aws-fargate"],
-    ])("%s -> %s", (input, out) => expect(slugify(input)).toBe(out));
+    ])("%s -> %s", (input, out) =>
+    {
+        expect(slugify(input)).toBe(out);
+    });
 
-    test("throws when nothing is left", () => expect(() => slugify("!!!")).toThrow());
+    test("throws when nothing is left", () =>
+    {
+        expect(() => slugify("!!!")).toThrow();
+    });
 });
 
 describe("file names", () =>
@@ -50,7 +56,10 @@ describe("file names", () =>
     test.each([
         "Table-24-regular.svg", "table 24 regular.svg", "table-24-bold.svg",
         "table-regular.svg", "table-24-regular.png",
-    ])("rejects %s", (f) => expect(parseIconFileName(f, V)).toBeNull());
+    ])("rejects %s", (f) =>
+    {
+        expect(parseIconFileName(f, V)).toBeNull();
+    });
 
     test("multi-part variants match longest first", () =>
     {
@@ -69,12 +78,17 @@ describe("validateSvg", () =>
         expect(validateSvg(svg(grad), 24)).toEqual([]);
     });
 
-    test("sizes by the viewBox; width and height are the upstream's display hint", () =>
-        expect(validateSvg(svg("<path/>", ' width="0.25in" height="18"', "0 0 24 24"), 24)).toEqual([]));
+    test("sizes by the viewBox; width and height are only a display hint", () =>
+    {
+        expect(validateSvg(svg("<path/>", ' width="0.25in" height="18"', "0 0 24 24"), 24)).toEqual([]);
+    });
 
     test("accepts px dimensions, decimal viewBoxes and an XML declaration", () =>
-        expect(validateSvg('<?xml version="1.0" encoding="UTF-8"?>'
-            + svg("<path/>", ' width="48px" height="48px"', "0 0 48.0 48.0"), 48)).toEqual([]));
+    {
+        const text = '<?xml version="1.0" encoding="UTF-8"?>'
+            + svg("<path/>", ' width="48px" height="48px"', "0 0 48.0 48.0");
+        expect(validateSvg(text, 48)).toEqual([]);
+    });
 
     test("non-square artwork needs { square: false } and is sized by its longer side", () =>
     {
@@ -98,7 +112,10 @@ describe("validateSvg", () =>
         ["not square", svg("<path/>", "", "0 0 24 20")],
         ["not svg", "<html/>"],
         ["malformed", "<svg"],
-    ])("rejects %s", (_label, text) => expect(validateSvg(text, 24).length).toBeGreaterThan(0));
+    ])("rejects %s", (_label, text) =>
+    {
+        expect(validateSvg(text, 24).length).toBeGreaterThan(0);
+    });
 });
 
 describe("categorize", () =>
