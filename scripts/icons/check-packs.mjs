@@ -19,7 +19,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseIconFileName, validateSvg } from "./lib.mjs";
+import { buildPackCss, parseIconFileName, validateSvg } from "./lib.mjs";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const BUDGET = { packs: 15000, distFail: 19500, distWarn: 18000 };
@@ -39,6 +39,7 @@ function topLevelProblems(packDir, spec, allowedCategories)
 {
     const problems = [];
     const required = ["ATTRIBUTION.md", "manifest.json", spec.licenseFile];
+    required.push(...(spec.css ?? []).map((g) => g.file));
     if (spec.licenseFile === "TERMS.md")
     {
         required.push("legacy-map.json");
@@ -146,6 +147,7 @@ function manifestProblems(packDir, packId, spec, files)
     {
         problems.push(`manifest.fileCount ${manifest.fileCount} != ${files.size} files`);
     }
+    problems.push(...cssProblems(packDir, packId, spec, manifest.icons));
     if (spec.licenseFile === "TERMS.md")
     {
         const onDisk = JSON.parse(fs.readFileSync(path.join(packDir, "legacy-map.json"), "utf8"));
@@ -155,6 +157,29 @@ function manifestProblems(packDir, packId, spec, files)
         }
     }
     return problems;
+}
+
+/** Each stylesheet must be exactly what buildPackCss makes from the manifest. */
+function cssProblems(packDir, packId, spec, icons)
+{
+    if (!spec.css)
+    {
+        return [];
+    }
+    let sheets;
+    try
+    {
+        sheets = buildPackCss(packId, spec, icons);
+    }
+    catch (e)
+    {
+        return [e.message];
+    }
+    return Object.entries(sheets).filter(([file, text]) =>
+    {
+        const onDisk = path.join(packDir, file);
+        return !fs.existsSync(onDisk) || fs.readFileSync(onDisk, "utf8") !== text;
+    }).map(([file]) => `${file} is not what the manifest generates; run npm run icons:repack -- ${packId}`);
 }
 
 function sortKeys(o)

@@ -6,7 +6,8 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: SymbolPicker
  * 📜 PURPOSE: Grid-based symbol/icon picker for inserting Unicode characters
- *             and Bootstrap Icons, with search, categories, and recent items.
+ *             and icons (Bootstrap Icons, Font Awesome, CDN icon packs), with
+ *             search, categories, and recent items.
  * 🔗 RELATES: [[EnterpriseTheme]], [[ColorPicker]], [[FontDropdown]]
  * ⚡ FLOW: [Consumer App] -> [createSymbolPicker()] -> [DOM Grid + Popup]
  * ----------------------------------------------------------------------------
@@ -1013,18 +1014,141 @@ const ICON_CATEGORY_MAP: IconCategoryRule[] =
     { id: "ico-general",  label: "General",            icon: "bi-grid-3x3-gap",         pattern: /.*/ },
 ];
 
-/** Scan all loaded stylesheets for Bootstrap Icon and Font Awesome class names. */
-function discoverIcons(): { bi: string[]; fa: string[] }
+/** One icon from a CDN icon-pack stylesheet (docs/ICON_PACKS.md). */
+interface PackIcon
+{
+    /** The pack id, which is also the class prefix ("fluent-ui"). */
+    pack: string;
+    /** The icon's class ("fluent-ui-table-24-color"). */
+    cls: string;
+    /** The pack category, from the icon's folder ("data-charts"). */
+    category: string;
+}
+
+/** Scan all loaded stylesheets for Bootstrap Icon, Font Awesome and icon-pack class names. */
+function discoverIcons(): { bi: string[]; fa: string[]; packs: PackIcon[] }
 {
     const bi: string[] = [];
     const fa: string[] = [];
+    const packs: PackIcon[] = [];
 
     for (let i = 0; i < document.styleSheets.length; i++)
     {
         extractIconsFromSheet(document.styleSheets[i], bi, fa);
+        extractPackIconsFromSheet(document.styleSheets[i], packs);
     }
 
-    return { bi, fa };
+    return { bi, fa, packs };
+}
+
+/** The base rule every icon-pack stylesheet opens with: [class^="<pack>-"],[class*=" <pack>-"]. */
+const PACK_BASE_RULE = /^\[class\^="([a-z0-9-]+)-"\]/;
+
+/** Class prefixes ("fluent-ui-") of the icon-pack stylesheets on the page; see refreshPackPrefixes. */
+let packPrefixes: string[] = [];
+
+/**
+ * Re-read which icon-pack stylesheets the page has loaded. Each new picker
+ * calls it once, so a stylesheet added after an earlier picker still counts.
+ */
+function refreshPackPrefixes(): void
+{
+    const found: string[] = [];
+    for (let i = 0; i < document.styleSheets.length; i++)
+    {
+        let rules: CSSRuleList;
+        try { rules = document.styleSheets[i].cssRules; }
+        catch { continue; }
+        for (let j = 0; j < rules.length; j++)
+        {
+            const rule = rules[j];
+            const base = rule instanceof CSSStyleRule ? PACK_BASE_RULE.exec(rule.selectorText) : null;
+            if (base) { found.push(`${base[1]}-`); }
+        }
+    }
+    packPrefixes = found;
+}
+
+/**
+ * Whether a symbol is an icon-pack class ("fluent-ui-table-24-color"): it
+ * starts with the prefix of a pack stylesheet loaded on the page. A pack icon
+ * draws only when its stylesheet is loaded, so the stylesheet is what marks it.
+ */
+function isPackIcon(char: string): boolean
+{
+    return packPrefixes.some((prefix) => char.startsWith(prefix));
+}
+/** An icon-pack icon rule's image or mask URL: "<category>/<file>.svg". */
+const PACK_ICON_URL = /url\("?([a-z0-9-]+)\/[a-z0-9-]+\.svg"?\)/;
+
+/**
+ * Collect icon-pack icons from one stylesheet. A pack stylesheet declares
+ * its pack in its base rule; each later rule is one class whose URL's folder
+ * is its category. Cross-origin sheets are readable only when loaded with
+ * crossorigin="anonymous" (the CDN sends CORS headers).
+ */
+function extractPackIconsFromSheet(sheet: CSSStyleSheet, out: PackIcon[]): void
+{
+    let rules: CSSRuleList;
+    try
+    {
+        rules = sheet.cssRules;
+    }
+    catch
+    {
+        return;
+    }
+    let pack: string | null = null;
+    for (let i = 0; i < rules.length; i++)
+    {
+        const rule = rules[i];
+        if (!(rule instanceof CSSStyleRule)) { continue; }
+        const base = PACK_BASE_RULE.exec(rule.selectorText);
+        if (base) { pack = base[1]; continue; }
+        if (!pack || !rule.selectorText.startsWith(`.${pack}-`)) { continue; }
+        const url = PACK_ICON_URL.exec(rule.cssText);
+        if (url)
+        {
+            out.push({ pack, cls: rule.selectorText.slice(1), category: url[1] });
+        }
+    }
+}
+
+/** "data-charts" -> "Data Charts". */
+function titleCase(slug: string): string
+{
+    return slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+/** "fluent-ui-table-24-color" -> "Table (24 color)". */
+function humanizePackIcon(icon: PackIcon): string
+{
+    const rest = icon.cls.slice(icon.pack.length + 1);
+    const m = /^(.*)-(\d+)-([a-z-]+)$/.exec(rest);
+    return m ? `${titleCase(m[1])} (${m[2]} ${m[3].replace(/-/g, " ")})` : titleCase(rest);
+}
+
+/** Group icon-pack icons into one category per pack folder, in stylesheet order. */
+function buildPackCategories(icons: PackIcon[]): SymbolCategory[]
+{
+    const byId = new Map<string, SymbolCategory>();
+    for (const icon of icons)
+    {
+        const id = `ico-${icon.pack}-${icon.category}`;
+        let cat = byId.get(id);
+        if (!cat)
+        {
+            const label = `${titleCase(icon.category)} (${icon.pack})`;
+            cat = { id, label, icon: "bi-grid-3x3-gap", items: [] };
+            byId.set(id, cat);
+        }
+        if (!cat.items.some((it) => it.code === icon.cls))
+        {
+            const name = humanizePackIcon(icon);
+            cat.items.push({ char: icon.cls, name, code: icon.cls, category: id });
+        }
+    }
+    return [...byId.values()];
 }
 
 /** Extract icon class names from a single stylesheet's CSS rules. */
@@ -1155,7 +1279,7 @@ function discoverAndCacheIcons(): SymbolCategory[]
         return discoveredIconCache;
     }
 
-    const { bi, fa } = discoverIcons();
+    const { bi, fa, packs } = discoverIcons();
     const categories: SymbolCategory[] = [];
 
     if (bi.length > 0)
@@ -1170,6 +1294,12 @@ function discoverAndCacheIcons(): SymbolCategory[]
         const faCats = buildDiscoveredCategories(fa, "FA");
         categories.push(...faCats);
         logInfo("discovered", fa.length, "Font Awesome icons");
+    }
+
+    if (packs.length > 0)
+    {
+        categories.push(...buildPackCategories(packs));
+        logInfo("discovered", packs.length, "icon-pack icons");
     }
 
     if (categories.length > 0)
@@ -1216,9 +1346,14 @@ function getFaStyle(): string
     return cachedFaStyle;
 }
 
-/** Create an <i> element for an icon item (BI or FA). */
+/** Create an <i> element for an icon item (icon pack, BI or FA). */
 function createIconElement(item: SymbolItem): HTMLElement
 {
+    if (isPackIcon(item.char))
+    {
+        return createElement("i", [item.char]);
+    }
+
     if (item.char.startsWith(ICON_PREFIX_FA))
     {
         return createElement("i", [getFaStyle(), item.char]);
@@ -1310,6 +1445,7 @@ export class SymbolPicker implements SymbolPickerHandle
         this.instanceId = `${CLS}-${instanceCounter}`;
         this.opts = options ?? {};
         this.isDisabled = this.opts.disabled ?? false;
+        refreshPackPrefixes();
         this.activeMode = this.resolveInitialMode();
         this.unicodeCategories = this.resolveUnicodeCategories();
         this.iconCategories = this.resolveIconCategories();
@@ -1939,10 +2075,11 @@ export class SymbolPicker implements SymbolPickerHandle
         }
     }
 
-    /** Determine if an item is an icon (Bootstrap Icons or Font Awesome). */
+    /** Determine if an item is an icon (icon pack, Bootstrap Icons or Font Awesome). */
     private isIconItem(item: SymbolItem): boolean
     {
-        return item.char.startsWith(ICON_PREFIX_BI)
+        return isPackIcon(item.char)
+            || item.char.startsWith(ICON_PREFIX_BI)
             || item.char.startsWith(ICON_PREFIX_FA);
     }
 

@@ -630,6 +630,16 @@ $ribbon-ctrl-border-radius: $border-radius;
     pointer-events: none;
 }
 
+// Icon-pack colour icons keep their own palette (docs/ICON_PACKS.md). A
+// disabled control shows its icon in grey, as Office does; a monochrome icon
+// is already grey, so only colour icons change. Menus and galleries can sit
+// outside the ribbon root, so this keys on the ribbon- class prefix.
+.ribbon-control-disabled i,
+button[class*="ribbon-"]:disabled i
+{
+    filter: grayscale(1);
+}
+
 // ============================================================================
 // 10. SPLIT BUTTON
 // ============================================================================

@@ -31,6 +31,8 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/ribbon/ribbon.css">
     <link rel="stylesheet" href="../../dist/components/presenceindicator/presenceindicator.css">
@@ -64,6 +66,10 @@
             <h6>Rich Text Editor Ribbon</h6>
             <div id="ribbon-demo-1" style="border: 1px solid var(--bs-border-color); margin-bottom: 16px;"></div>
 
+            <h6>Colour Icons (Fluent UI icon pack)</h6>
+            <p class="text-muted small mb-2">The same <code>icon</code> option, given icon-pack classes such as <code>fluent-ui-table-24-color</code>. Colour icons keep their palette; monochrome ones (Cut, Copy, Bold) follow the text colour; the disabled Link button turns grey.</p>
+            <div id="ribbon-demo-colour" style="border: 1px solid var(--bs-border-color); margin-bottom: 16px;"></div>
+
             <h6>Contextual Tab & Backstage</h6>
             <div class="mb-2">
                 <button class="btn btn-outline-primary btn-sm" id="ribbon-demo-show-ctx">Show "Table Design" Tab</button>
@@ -89,6 +95,75 @@
     <script src="../../dist/components/ribbon/ribbon.js"></script>
 
     <script>
+
+    // ── Colour icon Ribbon Demo (icon packs, docs/ICON_PACKS.md) ──
+    (function()
+    {
+        var outputEl = document.getElementById("ribbon-demo-output");
+        function log(msg) { if (outputEl) { outputEl.textContent = msg; } }
+        function btn(id, label, icon, size, extra)
+        {
+            var b = { type: "button", id: id, label: label, icon: icon, size: size,
+                onClick: function() { log(label + " clicked"); } };
+            return Object.assign(b, extra || {});
+        }
+
+        createRibbon({
+            tabs: [
+                {
+                    id: "c-home", label: "Home",
+                    groups: [
+                        { id: "c-clipboard", label: "Clipboard", controls: [
+                            btn("c-paste", "Paste", "fluent-ui-clipboard-24-color", "large"),
+                            btn("c-cut", "Cut", "fluent-ui-cut-16-regular", "small"),
+                            btn("c-copy", "Copy", "fluent-ui-copy-16-regular", "small"),
+                            btn("c-painter", "Format Painter", "fluent-ui-paint-brush-16-color", "small")
+                        ] },
+                        { id: "c-font", label: "Font", controls: [
+                            btn("c-bold", "Bold", "fluent-ui-text-bold-16-regular", "mini", { toggle: true }),
+                            btn("c-italic", "Italic", "fluent-ui-text-italic-16-regular", "mini", { toggle: true }),
+                            btn("c-underline", "Underline", "fluent-ui-text-underline-16-regular", "mini", { toggle: true })
+                        ] },
+                        { id: "c-ideas", label: "Designer", controls: [
+                            btn("c-design", "Design Ideas", "fluent-ui-design-ideas-24-color", "large")
+                        ] }
+                    ]
+                },
+                {
+                    id: "c-insert", label: "Insert",
+                    groups: [
+                        { id: "c-tables", label: "Tables", controls: [
+                            btn("c-table", "Table", "fluent-ui-table-24-color", "large")
+                        ] },
+                        { id: "c-images", label: "Images", controls: [
+                            btn("c-pictures", "Pictures", "fluent-ui-image-24-color", "large"),
+                            btn("c-camera", "Camera", "fluent-ui-camera-24-color", "large")
+                        ] },
+                        { id: "c-illustrations", label: "Illustrations", controls: [
+                            btn("c-chart", "Chart", "fluent-ui-data-pie-24-color", "large"),
+                            btn("c-org", "Org Chart", "fluent-ui-org-24-color", "large")
+                        ] },
+                        { id: "c-links", label: "Links", controls: [
+                            btn("c-link", "Link", "fluent-ui-link-24-color", "large", { disabled: true })
+                        ] },
+                        { id: "c-comments", label: "Comments", controls: [
+                            btn("c-comment", "Comment", "fluent-ui-comment-24-color", "large")
+                        ] },
+                        { id: "c-text", label: "Text", controls: [
+                            btn("c-textbox", "Text Box", "fluent-ui-document-text-24-color", "large"),
+                            btn("c-date", "Date & Time", "fluent-ui-calendar-24-color", "large"),
+                            btn("c-number", "Slide Number", "fluent-ui-number-symbol-square-24-color", "large")
+                        ] },
+                        { id: "c-media", label: "Media", controls: [
+                            btn("c-video", "Video", "fluent-ui-video-24-color", "large"),
+                            btn("c-audio", "Audio", "fluent-ui-mic-24-color", "large")
+                        ] }
+                    ]
+                }
+            ],
+            activeTabId: "c-insert"
+        }, "ribbon-demo-colour");
+    })();
 
     // ── Ribbon Demo ──
     (function()

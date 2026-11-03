@@ -438,8 +438,9 @@ The `icon` property on controls accepts any space-separated CSS class string. Th
 - **Font Awesome (Solid):** `"fa-solid fa-home"`, `"fa-solid fa-pen"`
 - **Font Awesome (Regular):** `"fa-regular fa-heart"`
 - **Font Awesome (Brands):** `"fa-brands fa-github"`
+- **CDN icon packs, including colour icons:** `"fluent-ui-table-24-color"`, `"fluent-ui-cut-16-regular"`. Load the pack's stylesheet, such as `/icons/fluent-ui/fluent-ui-color.css`; see [Icon packs](../../docs/ICON_PACKS.md#in-components-ribbon-symbolpicker-toolbar). Use `24-` classes on large buttons and `16-` classes on small and mini ones.
 
-Ensure the corresponding icon library CSS is loaded in the page.
+Ensure the corresponding icon library CSS is loaded in the page. Colour icons keep their palette in both themes; a disabled control shows its icon in grey.
 
 ## DOM Structure
 

@@ -697,6 +697,6 @@ Re-run `npm run icons:repack -- fluent-ui`. The diff should touch only `ATTRIBUT
 
 ## Out of scope (later specs)
 
-- Colour icons in Ribbon and SymbolPicker: CSS icon classes, greyscale for the disabled state, discovery in SymbolPicker.
+- ~~Colour icons in Ribbon and SymbolPicker: CSS icon classes, greyscale for the disabled state, discovery in SymbolPicker.~~ Done 2026-11-03 (ADR-249).
 - IconPark, Icons8 Flat Color, the 3D, Flat and High Contrast emoji styles, and other Fluent sizes.
 - `cloud-icons/` is copied by `build.sh` only, and Cloudflare runs `npm run build`, so the cloud icons aren't on the CDN today (`/Azure/General/Workbooks.svg` returns 404). This plan doesn't change that. It's noted for the owner.

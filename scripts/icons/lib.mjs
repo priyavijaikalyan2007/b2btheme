@@ -234,3 +234,70 @@ export function buildManifest(packId, source, icons)
         icons: [...icons].sort((a, b) => a.id.localeCompare(b.id)),
     };
 }
+
+/**
+ * @param {string} packId
+ * @param {string} name
+ * @param {string} key "<size>-<variant>"
+ * @returns {string} The icon's CSS class: "<packId>-<name>-<size>-<variant>".
+ */
+export function iconClass(packId, name, key)
+{
+    return `${packId}-${name}-${key}`;
+}
+
+/**
+ * Builds a pack's icon stylesheets, so a component that takes icon classes
+ * (Ribbon, Toolbar, SymbolPicker) can show a pack icon as
+ * <i class="fluent-ui-table-24-color">. Colour icons are background images;
+ * monochrome icons are masks over currentColor, so they follow the text
+ * colour as Bootstrap Icons do. URLs are relative to the stylesheet, so the
+ * CSS works on any host that serves the pack.
+ * @param {string} packId
+ * @param {object} source The pack's sources.json entry; source.css lists
+ *    { file, match, mask } groups: match is a regex on the files key.
+ * @param {{ name: string, files: Record<string, string> }[]} icons Manifest icons.
+ * @returns {Record<string, string>} file name -> stylesheet text, icons sorted by class.
+ */
+export function buildPackCss(packId, source, icons)
+{
+    for (const icon of icons)
+    {
+        for (const key of Object.keys(icon.files))
+        {
+            const n = source.css.filter((g) => new RegExp(g.match).test(key)).length;
+            if (n !== 1)
+            {
+                throw new Error(`${packId}: ${icon.name} ${key} matches ${n} stylesheets, expected exactly 1`);
+            }
+        }
+    }
+    const sheets = {};
+    for (const group of source.css)
+    {
+        const match = new RegExp(group.match);
+        const rules = [];
+        for (const icon of icons)
+        {
+            for (const [key, rel] of Object.entries(icon.files))
+            {
+                if (match.test(key))
+                {
+                    const url = `url("${rel}")`;
+                    const body = group.mask
+                        ? `background-color:currentColor;mask:${url} center/contain no-repeat`
+                        : `background-image:${url}`;
+                    rules.push(`.${iconClass(packId, icon.name, key)}{${body}}`);
+                }
+            }
+        }
+        rules.sort();
+        const copyright = source.copyright.replace(/\.?$/, ".");
+        sheets[group.file] = `/* ${source.title}: ${group.file}. ${source.license}, ${copyright} `
+            + `See LICENSE and ATTRIBUTION.md beside this file. */\n`
+            + `[class^="${packId}-"],[class*=" ${packId}-"]{display:inline-block;width:1em;height:1em;`
+            + `vertical-align:-.125em;background-repeat:no-repeat;background-position:center;background-size:contain}\n`
+            + rules.join("\n") + "\n";
+    }
+    return sheets;
+}

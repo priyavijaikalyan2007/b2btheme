@@ -18,7 +18,14 @@
     "variants": ["regular", "filled", "color"],
     "square": true,
     "subset": "regular and filled at 16 and 24 px; color at every size. Not included: the package's RTL/, LTR/ and per-language folders, and 7 files whose artwork is off its size's grid (scripts/icons/fluent-ui.categories.json)",
-    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
+    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation.",
+    "css": [
+      { "file": "fluent-ui-color.css", "match": "-color$", "mask": false },
+      { "file": "fluent-ui-16-regular.css", "match": "^16-regular$", "mask": true },
+      { "file": "fluent-ui-16-filled.css", "match": "^16-filled$", "mask": true },
+      { "file": "fluent-ui-24-regular.css", "match": "^24-regular$", "mask": true },
+      { "file": "fluent-ui-24-filled.css", "match": "^24-filled$", "mask": true }
+    ]
   },
   "fluent-emoji": {
     "title": "Fluent Emoji",
@@ -34,7 +41,11 @@
     "variants": ["color", "color-tone-light", "color-tone-medium-light", "color-tone-medium", "color-tone-medium-dark", "color-tone-dark"],
     "square": true,
     "subset": "Color style, 32 px, all six skin tones. Not included: the 3D, Flat and High Contrast styles, and 11 files whose artwork is off the 32 px grid (scripts/icons/fluent-emoji.categories.json)",
-    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
+    "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation.",
+    "css": [
+      { "file": "fluent-emoji.css", "match": "^32-color$", "mask": false },
+      { "file": "fluent-emoji-tones.css", "match": "-tone-", "mask": false }
+    ]
   },
   "aws": {
     "title": "AWS Architecture Icons",
