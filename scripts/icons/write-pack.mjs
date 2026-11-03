@@ -55,18 +55,21 @@ source. Docs: ${DOCS_URL}
 
 function terms(source)
 {
+    const provider = source.title.replace(/ (Architecture )?Icons$/, "");
     return `# ${source.title}: terms of use
 
-These icons are not under an open licence. They are redistributed here so that
-apps can depict ${source.title.replace(/ (Architecture )?Icons$/, "")} services in
-architecture and infrastructure diagrams, as the provider permits.
+These icons are not under an open licence. They are redistributed here so
+that apps can depict ${provider} services in architecture and infrastructure
+diagrams, as the provider permits.
 
-- Provider's icon page: ${source.homepage}
-- Provider's terms: ${source.terms}
+- Icon page: ${source.homepage}
+- Terms: ${source.terms}
 
-Use these icons only to depict the provider's services in architecture and
-infrastructure diagrams. ${source.copyright} Their inclusion implies no
-endorsement by, sponsorship by or affiliation with the provider.
+Use these icons only to depict ${provider} services in architecture and
+infrastructure diagrams. Their inclusion implies no endorsement by,
+sponsorship by or affiliation with the provider.
+
+${source.copyright}
 `;
 }
 

@@ -65,6 +65,9 @@ describe("validateSvg", () =>
         expect(validateSvg(svg(grad), 24)).toEqual([]);
     });
 
+    test("sizes by the viewBox; width and height are the upstream's display hint", () =>
+        expect(validateSvg(svg("<path/>", ' width="0.25in" height="18"', "0 0 24 24"), 24)).toEqual([]));
+
     test("accepts px dimensions, decimal viewBoxes and an XML declaration", () =>
         expect(validateSvg('<?xml version="1.0" encoding="UTF-8"?>'
             + svg("<path/>", ' width="48px" height="48px"', "0 0 48.0 48.0"), 48)).toEqual([]));
@@ -88,7 +91,6 @@ describe("validateSvg", () =>
         ["@import", svg("<style>@import url(x.css);</style>")],
         ["doctype", '<!DOCTYPE svg [<!ENTITY x "y">]>' + OK],
         ["wrong size", OK.replace(/24/g, "20")],
-        ["width disagrees with viewBox", svg("<path/>", ' width="20"')],
         ["not square", svg("<path/>", "", "0 0 24 20")],
         ["not svg", "<html/>"],
         ["malformed", "<svg"],

@@ -9,7 +9,7 @@
  *    pack's pinned source (or reads a local one), runs its adapter and
  *    rewrites icon-packs/<pack>/. Run deliberately when a pin moves; the
  *    output is committed and reviewed. specs/icon-packs.plan.md.
- * 🔗 RELATES: [[IconPackFetch]], [[IconPackWriter]], [[FluentUiAdapter]]
+ * 🔗 RELATES: [[IconPackFetch]], [[IconPackWriter]], [[FluentUiAdapter]], [[CloudIconAdapter]]
  * ⚡ FLOW: [sources.json pin] -> [fetch] -> [adapter] -> [writePack] -> [summary]
  */
 
@@ -19,6 +19,7 @@ import path from "node:path";
 import { fetchNpmTarball, sparseCheckout } from "./fetch.mjs";
 import { writePack } from "./write-pack.mjs";
 import * as fluentUi from "./fluent-ui.mjs";
+import * as cloud from "./cloud.mjs";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const SOURCES = JSON.parse(fs.readFileSync(path.join(HERE, "sources.json"), "utf8"));
@@ -42,7 +43,21 @@ const ADAPTERS = {
             readJson("fluent-ui.categories.json"));
         return { icons, licenseSrc: path.join(git, "LICENSE") };
     },
+    aws: (source, sourceDir) => cloudPack("aws", source, sourceDir),
+    azure: (source, sourceDir) => cloudPack("azure", source, sourceDir),
+    gcp: (source, sourceDir) => cloudPack("gcp", source, sourceDir),
 };
+
+/** The cloud packs read a local directory: cloud-icons/<Provider> unless another is given. */
+function cloudPack(packId, source, sourceDir = source.local.dir)
+{
+    if (!fs.existsSync(sourceDir))
+    {
+        throw new Error(`${packId}: ${sourceDir} does not exist. cloud-icons/ was removed after the migration; `
+            + `run git worktree add <tmp> ${source.local.commit} and pass <tmp>/${source.local.dir}`);
+    }
+    return { icons: cloud.collect(packId, sourceDir, readJson("cloud.categories.json")[packId]), licenseSrc: null };
+}
 
 function main()
 {

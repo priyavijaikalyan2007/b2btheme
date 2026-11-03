@@ -1,0 +1,88 @@
+{
+  "aws": {
+    "aliases": {
+      "app-integration": "application-integration",
+      "lot": "internet-of-things",
+      "migration-transfer": "migration-and-transfer",
+      "networking-content-delivery": "networking-and-content-delivery",
+      "security-identity-compliance": "security-identity-and-compliance",
+      "vr-ar": "vr-and-ar"
+    }
+  },
+  "azure": {
+    "aliases": {}
+  },
+  "gcp": {
+    "rules": [
+      {
+        "category": "migration",
+        "pattern": "\\b(migrat\\w*|transfer)\\b"
+      },
+      {
+        "category": "serverless",
+        "pattern": "\\b(cloud run|functions|app engine|eventarc|workflows|cloud tasks|cloud scheduler)\\b"
+      },
+      {
+        "category": "hybrid-multicloud",
+        "pattern": "\\b(anthos|on prem)\\b"
+      },
+      {
+        "category": "ai-ml",
+        "pattern": "\\b(ai|automl|dialogflow|vision|natural language|translation|speech|tensorflow|tpu|inference|recommendations|contact center|data labeling|video intelligence|visual inspection|nlp|agent|vertex|optimization|jobs api)\\b"
+      },
+      {
+        "category": "industry-solutions",
+        "pattern": "\\b(healthcare|retail|financial|marketing|genomics|real world insights)\\b"
+      },
+      {
+        "category": "containers",
+        "pattern": "\\b(kubernetes|kuberun|container)\\b"
+      },
+      {
+        "category": "databases",
+        "pattern": "\\b(sql|spanner|bigtable|firestore|datastore|memorystore)\\b"
+      },
+      {
+        "category": "storage",
+        "pattern": "\\b(storage|filestore|persistent disk|local ssd)\\b"
+      },
+      {
+        "category": "data-analytics",
+        "pattern": "\\b(bigquery|dataflow|dataproc|datalab|dataplex|dataprep|datashare|datastream|data catalog|data fusion|composer|pubsub|looker|data studio|analytics|catalog|data qna|data layers|datapol|stream suite)\\b"
+      },
+      {
+        "category": "security-identity",
+        "pattern": "\\b(security|identity|access|armor|beyondcorp|binary authorization|certificate|ekm|hsm|key|secret|ids|phishing|web risk|risk manager|data loss prevention|assured workloads|permissions|policy analyzer|active directory|scanner)\\b"
+      },
+      {
+        "category": "networking",
+        "pattern": "\\b(network|virtual private cloud|dns|cdn|load balancing|nat|router|routes|vpn|interconnect|firewall|external ip|traffic director|private connectivity|private service connect|service discovery|connectivity|domains|media edge|tier)\\b"
+      },
+      {
+        "category": "api-management",
+        "pattern": "\\b(api|apis|apigee|endpoints|developer portal|connectors)\\b"
+      },
+      {
+        "category": "developer-tools",
+        "pattern": "\\b(build|deploy|code|shell|artifact|debugger|profiler|test lab|powershell|runtime config)\\b"
+      },
+      {
+        "category": "iot",
+        "pattern": "\\b(iot)\\b"
+      },
+      {
+        "category": "maps",
+        "pattern": "\\b(maps|fleet engine)\\b"
+      },
+      {
+        "category": "compute",
+        "pattern": "\\b(compute|gpu|bare metal|batch|vmware|gce|quantum|game servers)\\b"
+      },
+      {
+        "category": "management-operations",
+        "pattern": "\\b(logging|monitoring|ops|stackdriver|audit|error reporting|billing|quotas|project|administration|asset inventory|configuration management|deployment manager|os|performance dashboard|launcher|marketplace|my cloud|user preferences|release notes|onboarding|free trial|early access|partner portal|producer portal|home)\\b"
+      }
+    ],
+    "overrides": {}
+  }
+}

@@ -41,7 +41,7 @@ Created: 2026
 - **Path:** `/icons/<pack>/<category>/<name>-<size>-<variant>.svg`.
 - **Naming:**
   - `<name>` and `<category>` are lowercase ASCII kebab-case, `[a-z0-9]+(-[a-z0-9]+)*`, with no spaces.
-  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height. Packs marked `"square": false` (the cloud packs) instead use the larger viewBox side, rounded. Any `width` or `height` attribute must equal the matching viewBox side once compared with `parseFloat`, so a `px` suffix is allowed.
+  - `<size>` is the SVG's design-grid size in pixels and must equal its `viewBox` width and height. Packs marked `"square": false` (the cloud packs) instead use the larger viewBox side, rounded. `width` and `height` attributes are not checked: they are the upstream's suggested display size (Azure ships `0.25in`, and `18` on a 100-unit viewBox), and CSS overrides them.
   - `<variant>` comes from the pack's fixed list.
 - **Variants:**
   - `fluent-ui`: `regular`, `filled` or `color`.
@@ -427,7 +427,7 @@ There are cross-category duplicates: 7 names in AWS and 60 in Azure (for example
 - Delete: `cloud-icons/`, and line 16 of `build.sh` (`cp -R ./cloud-icons/ ./dist/`)
 
 **Interfaces:**
-- `validateSvg(text, size, { square = true } = {})`. When `square` is false the viewBox may be non-square, and `Math.round(Math.max(w, h))` must equal `size`. In both modes, any `width` or `height` attribute must equal the matching viewBox side once compared with `parseFloat`. Add these tests to `lib.test.ts`:
+- `validateSvg(text, size, { square = true } = {})`. When `square` is false the viewBox may be non-square, and `Math.round(Math.max(w, h))` must equal `size`. `width` and `height` are never checked. Add these tests to `lib.test.ts`:
   - accepts `width="48px"` with `viewBox="0 0 48.0 48.0"` at size 48;
   - accepts `0 0 18 20` at size 20 with `{ square: false }`, and `width="52.497"` with viewBox `0 0 52.497 52.434` at size 52;
   - rejects `0 0 18 20` at size 20 by default.

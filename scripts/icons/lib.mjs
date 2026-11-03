@@ -138,14 +138,9 @@ function checkSize(root, size, square)
         problems.push(square ? `viewBox must be "0 0 ${size} ${size}"`
             : `viewBox ${w}x${h} does not round to size ${size}`);
     }
-    for (const [dim, side] of [["width", w], ["height", h]])
-    {
-        const v = root.getAttribute(dim);
-        if (v !== null && parseFloat(v) !== side)
-        {
-            problems.push(`${dim}="${v}" disagrees with the viewBox (${side})`);
-        }
-    }
+    // width and height are not checked: they are the upstream's suggested
+    // display size (Azure ships "0.25in", and "18" on a 100-unit viewBox),
+    // and any CSS size overrides them. The viewBox is the design grid.
     return problems;
 }
 
