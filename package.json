@@ -50,7 +50,8 @@
     "build:vendor": "node scripts/vendor-closure.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",
     "sri:verify": "node scripts/sri-manifest.mjs --verify",
-    "audit:vendor": "node scripts/vendor-audit.mjs"
+    "audit:vendor": "node scripts/vendor-audit.mjs",
+    "icons:repack": "node scripts/icons/repack.mjs"
   },
   "keywords": [
     "bootstrap",

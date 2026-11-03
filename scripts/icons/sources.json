@@ -17,7 +17,7 @@
     },
     "variants": ["regular", "filled", "color"],
     "square": true,
-    "subset": "regular and filled at 16 and 24 px; color at every size",
+    "subset": "regular and filled at 16 and 24 px; color at every size. Not included: the package's RTL/, LTR/ and per-language folders, and 7 files whose artwork is off its size's grid (scripts/icons/fluent-ui.categories.json)",
     "trademark": "Microsoft and Fluent are trademarks of Microsoft Corporation."
   },
   "fluent-emoji": {

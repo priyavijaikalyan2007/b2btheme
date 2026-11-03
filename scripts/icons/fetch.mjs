@@ -19,7 +19,9 @@ import path from "node:path";
 /** Runs a command without a shell; returns trimmed stdout. */
 function run(cmd, args, cwd)
 {
-    return execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }).trim();
+    // npm pack --json lists every file in the tarball: about 1 MB for @fluentui/svg-icons.
+    const options = { cwd, encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "inherit"] };
+    return execFileSync(cmd, args, options).trim();
 }
 
 /**
