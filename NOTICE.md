@@ -2,6 +2,25 @@
 
 This project includes third-party materials subject to their respective terms.
 
+## Fluent UI System Icons
+
+The `icon-packs/fluent-ui` pack, served at `/icons/fluent-ui/`, contains a
+subset of Microsoft's Fluent UI System Icons from
+<https://github.com/microsoft/fluentui-system-icons> (npm
+`@fluentui/svg-icons` 1.1.345): regular and filled at 16 and 24 px and every
+colour icon. The files have been renamed and grouped into category folders;
+the SVG files are otherwise byte-for-byte identical.
+
+    MIT License
+
+    Copyright (c) 2020 Microsoft Corporation
+
+The full licence text ships beside the icons as `LICENSE`. Microsoft and
+Fluent are trademarks of Microsoft Corporation; the MIT licence grants no
+trademark rights, and inclusion implies no endorsement.
+
+---
+
 ## Cloud Provider Architecture Icons
 
 The `icon-packs/aws`, `icon-packs/azure` and `icon-packs/gcp` packs contain a

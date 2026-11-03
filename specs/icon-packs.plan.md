@@ -52,7 +52,7 @@ Created: 2026
   - no `on*` attributes;
   - no `href` other than `#fragment`;
   - no `url(` other than `url(#`, and no `@import`, `javascript:`, `<!DOCTYPE` or `<!ENTITY`.
-- **Host-neutral origin:** generated files and docs name `https://static.outcrop.us`, the host-neutral name for the CDN origin (`CDN_CONTRACT.md` D13), never `static.knobby.io`. Check [30] fails if a pack file contains `knobby`.
+- **Host-neutral origin:** generated pack files name `https://static.outcrop.us`, the host-neutral name for the CDN origin (`CDN_CONTRACT.md` D13), never `static.knobby.io`, and check [30] fails if a pack file contains `knobby`. The docs use the host-neutral name in examples and say once that both names are the same origin.
 - **Non-breaking:** nothing that is served today changes. `/icons/bootstrap-icons.css` and `/icons/fonts/*` stay byte-identical.
 - **No fallback code.** An unknown category, an unmatched metadata entry or a name collision is an error, unless it is listed in an explicit overrides file with a reason.
 - **Owner's working rules:**
