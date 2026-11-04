@@ -130,9 +130,9 @@ and `/icons/gcp/*` serve the SVG icon packs described in
 parity surface, and Bootstrap Icons at `/icons/bootstrap-icons.css` and
 `/icons/fonts/*` are untouched.
 
-**What consumers may rely on:** a published icon path, `manifest.json`,
-`legacy-map.json` entry or manifest field is never renamed or removed without
-§4 treatment. New icons, categories and packs may appear at any time. Check
+**What consumers may rely on:** a published icon path, icon stylesheet class,
+`manifest.json`, `legacy-map.json` entry or manifest field is never renamed or
+removed without §4 treatment. New icons, categories and packs may appear at any time. Check
 `[30]` keeps every pack consistent with its manifest and within the file
 budget.
 

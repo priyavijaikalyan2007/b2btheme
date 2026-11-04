@@ -34,7 +34,8 @@ Every pack folder also serves:
 - `manifest.json`: every icon with its files, keywords and category;
 - `ATTRIBUTION.md`: the source, the exact version, the subset and what was changed;
 - the licence: `LICENSE` for Fluent UI, `TERMS.md` for the cloud packs;
-- for the cloud packs only, `legacy-map.json`, which maps each old path to its new one (see below).
+- for the cloud packs only, `legacy-map.json`, which maps each old path to its new one (see below);
+- for the two Fluent packs, icon stylesheets that give every icon a CSS class (see "In components").
 
 ## URL scheme
 
@@ -105,6 +106,38 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 - **File size:** Fluent UI SVGs are about 1 KB. Fluent Emoji are detailed artwork: about 36 KB on average and up to 560 KB, roughly a sixth of that on the wire with compression. Load emoji on demand, not hundreds at once.
 - **Inlining with `fetch()`:** CORS is open. Every SVG here passes a safety check (no scripts, event handlers, `foreignObject` or external references), but treat inlined markup as you would any other HTML you insert.
 - **Caching:** a day, then stale-while-revalidate for a week. The paths carry no version, so a repack reaches browsers within a day.
+
+### In components: Ribbon, SymbolPicker, Toolbar
+
+Any component whose `icon` option takes CSS classes (Ribbon, Toolbar, Sidebar
+and others) shows a pack icon once the page loads that pack's stylesheet. The
+class is `<pack>-<name>-<size>-<variant>`, the icon's file name with the pack
+in front:
+
+```html
+<link rel="stylesheet" href="https://static.outcrop.us/icons/fluent-ui/fluent-ui-color.css" crossorigin="anonymous">
+<link rel="stylesheet" href="https://static.outcrop.us/icons/fluent-ui/fluent-ui-16-regular.css" crossorigin="anonymous">
+```
+
+```js
+{ type: "button", id: "table", label: "Table", icon: "fluent-ui-table-24-color", size: "large" }
+{ type: "button", id: "cut", label: "Cut", icon: "fluent-ui-cut-16-regular", size: "small" }
+```
+
+| Stylesheet | Classes | Size |
+|---|---|---|
+| `/icons/fluent-ui/fluent-ui-color.css` | every colour icon, at every size it comes in | 82 KB, 7 KB compressed |
+| `/icons/fluent-ui/fluent-ui-16-regular.css`, `-16-filled.css` | 16 px monochrome | about 250 KB each |
+| `/icons/fluent-ui/fluent-ui-24-regular.css`, `-24-filled.css` | 24 px monochrome | about 365 KB each |
+| `/icons/fluent-emoji/fluent-emoji.css` | every emoji in the default tone | 158 KB |
+| `/icons/fluent-emoji/fluent-emoji-tones.css` | the five other skin tones | 206 KB |
+
+- **Sizing:** an icon is a `1em` square, so it takes the size of the text around it. The Ribbon draws large-button icons at 24 px and small and mini ones at 15 px, so use the `24-` and `16-` classes there.
+- **Colour and theme:** colour icons keep their palette in light and dark themes. Monochrome icons are masks over `currentColor`, so they follow the text colour as Bootstrap Icons do.
+- **Disabled:** a disabled Ribbon control shows its icon in grey, as Office does.
+- **SymbolPicker:** it finds the icons in any loaded pack stylesheet and files them by pack folder, for example "Data Charts (fluent-ui)". The selected item's `code` is the class to use. Don't load `fluent-emoji.css` on a page with a SymbolPicker: its "All" view draws every icon, about 57 MB of emoji artwork.
+- **`crossorigin="anonymous"`:** the icons show without it, but SymbolPicker can read a cross-origin stylesheet's classes only when the `<link>` carries it. The CDN sends the CORS headers.
+- **Coverage:** about 200 Fluent UI icons come in colour. Mix them with monochrome ones where no colour version exists, as the Ribbon demo does.
 
 ### For the Apps team: switching to CDN-hosted icons
 

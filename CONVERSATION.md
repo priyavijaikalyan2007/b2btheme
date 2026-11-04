@@ -4624,3 +4624,13 @@ the thing that varies.
 - **Built (PR 2):** the `fluent-emoji` pack, 1,587 emoji in 3,134 SVGs, all six skin tones, byte-identical. Plain git, not LFS. 11 off-grid files excluded with reasons. Fixed a jsdom memory leak in `validateSvg` that the large emoji exposed.
 - **Apps note:** a Claude Docs page, "CDN icons for the Apps team".
 - **Still to do:** colour icons in Ribbon and SymbolPicker as a separate spec.
+
+## Colour icons in Ribbon and SymbolPicker (2026-11-03)
+
+**Request.** "the apps team note should be in their repo as a markdown file (~/Work/knobby/apps/specs/bugreports/), not hosted online. Why don't Ribbon and SympbolPicker support colour icons yet? That was kind of the point of this arc of work."
+
+**Outcome.**
+- **Why:** the icon-packs plan had put component support out of scope as a later spec, and the CDN hosting shipped first. That left the arc without its visible payoff.
+- **Apps note:** written to `~/Work/knobby/apps/specs/bugreports/2026-11-03-cdn-icon-packs.md` (not committed there); the hosted Claude Docs copy was deleted.
+- **Deploy:** the production Cloudflare build of #98 failed while its PR preview passed. The build log was not readable from here, so Fluent Emoji is not live yet; the owner is asked to check or retry.
+- **Built (ADR-249):** icon-pack stylesheets with one class per icon; Ribbon takes `icon: "fluent-ui-table-24-color"` unchanged and greys disabled icons; SymbolPicker discovers pack icons. Demos and an e2e spec added.

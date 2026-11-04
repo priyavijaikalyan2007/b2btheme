@@ -7,7 +7,8 @@
  * 📜 PURPOSE: Rewrites icon-packs/<pack>/ from an adapter's icons: copies
  *    every SVG byte for byte, validates each copy, and writes manifest.json,
  *    the licence file (upstream LICENSE, or TERMS.md for the cloud packs),
- *    ATTRIBUTION.md and, for icons with legacy paths, legacy-map.json.
+ *    ATTRIBUTION.md, the icon stylesheets for packs that list css groups,
+ *    and, for icons with legacy paths, legacy-map.json.
  *    specs/icon-packs.plan.md.
  * 🔗 RELATES: [[IconPackLib]], [[IconPackRepack]], [[IconPackCheck]]
  * ⚡ FLOW: [Icon[] + sources.json entry] -> [writePack] -> [icon-packs/<pack>/]
@@ -15,7 +16,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { buildManifest, sourceLabel, validateSvg, parseIconFileName } from "./lib.mjs";
+import { buildManifest, buildPackCss, sourceLabel, validateSvg, parseIconFileName } from "./lib.mjs";
 
 export const PACKS_ROOT = "icon-packs";
 const DOCS_URL = "https://static.outcrop.us/docs/ICON_PACKS.html";
@@ -113,6 +114,10 @@ export function writePack(packId, icons, source, licenseSrc)
     }
     const manifest = buildManifest(packId, source, manifestIcons);
     fs.writeFileSync(path.join(dir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+    for (const [file, text] of Object.entries(source.css ? buildPackCss(packId, source, manifest.icons) : {}))
+    {
+        fs.writeFileSync(path.join(dir, file), text);
+    }
     fs.writeFileSync(path.join(dir, "ATTRIBUTION.md"),
         attribution(source, manifest, Object.keys(perCategory).length));
     if (source.licenseFile === "LICENSE")

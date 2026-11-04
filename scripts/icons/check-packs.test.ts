@@ -87,6 +87,16 @@ describe("checkPack", () =>
         expect(check(pack(10, 2, CLOUD), CLOUD, null)).toEqual([]);
     });
 
+    test("a stylesheet that differs from what the manifest generates fails", () =>
+    {
+        const spec = { ...SPEC, title: "P", license: "MIT", copyright: "(c) P.",
+            css: [{ file: "p.css", match: "-regular$", mask: true }] };
+        const dir = pack();
+        expect(check(dir, spec).join("\n")).toMatch(/missing p\.css/);
+        fs.writeFileSync(path.join(dir, "p.css"), "/* stale */\n");
+        expect(check(dir, spec).join("\n")).toMatch(/p\.css is not what the manifest generates/);
+    });
+
     test("a legacy map that disagrees with the manifest fails", () =>
     {
         const dir = pack(3, 0, CLOUD);

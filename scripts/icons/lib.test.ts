@@ -10,7 +10,7 @@
  */
 
 import { describe, expect, test } from "vitest";
-import { slugify, iconFileName, parseIconFileName, validateSvg, categorize } from "./lib.mjs";
+import { slugify, iconFileName, parseIconFileName, validateSvg, categorize, iconClass, buildPackCss } from "./lib.mjs";
 
 const OK = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">'
     + '<path d="M0 0h24v24H0z"/></svg>';
@@ -138,5 +138,47 @@ describe("categorize", () =>
     test("no match is general", () =>
     {
         expect(categorize("zz", "zz", rules, {})).toBe("general");
+    });
+});
+
+describe("buildPackCss", () =>
+{
+    const source = {
+        title: "P", license: "MIT", copyright: "(c) P.",
+        css: [
+            { file: "p-color.css", match: "-color$", mask: false },
+            { file: "p-16-regular.css", match: "^16-regular$", mask: true },
+        ],
+    };
+    const icons = [
+        { name: "table", files: { "16-regular": "data/table-16-regular.svg", "24-color": "data/table-24-color.svg" } },
+        { name: "add", files: { "24-color": "general/add-24-color.svg" } },
+    ];
+
+    test("names a class per file", () =>
+    {
+        expect(iconClass("fluent-ui", "table", "24-color")).toBe("fluent-ui-table-24-color");
+    });
+
+    test("colour icons are background images and mono icons masks over currentColor", () =>
+    {
+        const sheets = buildPackCss("p", source, icons);
+        expect(Object.keys(sheets)).toEqual(["p-color.css", "p-16-regular.css"]);
+        const color = sheets["p-color.css"].split("\n");
+        expect(color[1]).toMatch(/^\[class\^="p-"\],\[class\*=" p-"\]\{display:inline-block;width:1em;height:1em;/);
+        expect(color.slice(2, 4)).toEqual([
+            '.p-add-24-color{background-image:url("general/add-24-color.svg")}',
+            '.p-table-24-color{background-image:url("data/table-24-color.svg")}',
+        ]);
+        expect(sheets["p-16-regular.css"]).toContain('.p-table-16-regular{background-color:currentColor;'
+            + 'mask:url("data/table-16-regular.svg") center/contain no-repeat}');
+    });
+
+    test("a file in no stylesheet, or in two, throws", () =>
+    {
+        const uncovered = [{ name: "x", files: { "20-filled": "g/x-20-filled.svg" } }];
+        expect(() => buildPackCss("p", source, uncovered)).toThrow(/matches 0 stylesheets/);
+        const twice = { ...source, css: [...source.css, { file: "all.css", match: ".", mask: false }] };
+        expect(() => buildPackCss("p", twice, icons)).toThrow(/matches 2 stylesheets/);
     });
 });

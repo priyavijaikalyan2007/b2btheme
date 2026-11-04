@@ -31,6 +31,7 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/symbolpicker/symbolpicker.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
@@ -54,7 +55,7 @@
 
         <div class="demo-section" id="symbolpicker-section">
             <h2><i class="bi bi-grid-3x3"></i> SymbolPicker</h2>
-            <p class="text-muted mb-3">Grid-based symbol and icon picker with Unicode characters and Bootstrap Icons, category tabs, search, and preview.</p>
+            <p class="text-muted mb-3">Grid-based symbol and icon picker with Unicode characters, Bootstrap Icons and CDN icon packs, category tabs, search, and preview.</p>
 
             <div class="row g-4">
                 <div class="col-md-6">
@@ -66,6 +67,11 @@
                     <h3 class="h5">Inline Mode (Unicode Only)</h3>
                     <p class="text-muted small">Always visible, showing only Unicode symbols.</p>
                     <div id="symbolpicker-demo-inline"></div>
+                </div>
+                <div class="col-md-6">
+                    <h3 class="h5">Inline Mode (Icons, with a colour icon pack)</h3>
+                    <p class="text-muted small">This page loads <code>fluent-ui-color.css</code>; the picker finds its icons and files them by pack folder (for example "Data Charts (fluent-ui)"). Pick one and use its class as a Ribbon <code>icon</code>.</p>
+                    <div id="symbolpicker-demo-icons"></div>
                 </div>
             </div>
             <pre class="mt-3 p-2 demo-output" id="symbolpicker-demo-output" style="font-size: 12px; min-height: 32px;"></pre>
@@ -91,6 +97,14 @@
             mode: "both",
             onSelect: function(sym) { logEvent("Selected: " + sym.char + " — " + sym.name); },
             onInsert: function(sym) { logEvent("Inserted: " + sym.char + " (" + sym.code + ")"); }
+        });
+
+        // Inline mode (icons, including the loaded Fluent UI colour pack)
+        createSymbolPicker("symbolpicker-demo-icons", {
+            mode: "icons",
+            inline: true,
+            columns: 14,
+            onSelect: function(sym) { logEvent("Selected icon class: " + sym.code); }
         });
 
         // Inline mode (Unicode only)
