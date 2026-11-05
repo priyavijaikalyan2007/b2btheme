@@ -121,6 +121,7 @@ Status colours, type sizes, weights, line heights and shadows stay unmapped in v
 | action with no route | `OUTCROP_MCP_NO_ROUTE` | on the surface |
 | routed tool returns `isError` or throws | `OUTCROP_MCP_TOOL_ERROR` | on the surface, with the tool's text |
 | host connection fails | `OUTCROP_MCP_NOT_CONNECTED` | the view's only content |
+| the host rejects or fails a message route's `ui/message` | `OUTCROP_MCP_MESSAGE_FAILED` | on the surface |
 | adapter errors | as today (`OUTCROP_MOUNT_FAILED`, …) | as today |
 
 Every error goes to `console` with the prefix `[outcrop-mcp]` and to the host log through `app.sendLog`, so a server developer sees it in their MCP client. The view sends no analytics: it runs in someone else's app and has no `connectDomains`.

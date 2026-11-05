@@ -22,6 +22,7 @@ export type McpViewCode =
     | "OUTCROP_MCP_BAD_RESULT"
     | "OUTCROP_MCP_NO_ROUTE"
     | "OUTCROP_MCP_TOOL_ERROR"
+    | "OUTCROP_MCP_MESSAGE_FAILED"
     | "OUTCROP_MCP_NOT_CONNECTED";
 
 /** An error the view shows and logs, with its public code. */
