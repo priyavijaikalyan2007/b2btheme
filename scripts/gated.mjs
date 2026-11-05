@@ -20,29 +20,31 @@
 /** Where gated files are built. Paths inside mirror dist/. */
 export const GATED_DIR = "gated";
 
-/** Each gate: the issue that holds files back, and why. */
-export const GATES = {
-    "#36": "@a2ui/web_core 0.14.0 and 0.15.0 require zod 3, and every zod 3 release is inside "
-        + "GHSA-mrhx-c7xc-m3w5 (<4.6.6). The MCP Apps view serves web_core, so it waits for "
-        + "web_core on zod 4 or the advisory's withdrawal (advisory-database#10750).",
-};
+/**
+ * Each gate: the issue that holds files back, and why. Empty since gate #36
+ * lifted (ADR-252); the mechanism stays for the next advisory that has no
+ * exception (scripts/audit-exceptions.mjs).
+ *
+ * @type {Record<string, string>}
+ */
+export const GATES = {};
 
-/** dist-relative path prefixes that a gate holds back. */
-export const GATED = [
-    { prefix: "lib/a2ui-runtime-", gate: "#36" },
-    { prefix: "lib/mcp-ext-apps-", gate: "#36" },
-    { prefix: "mcp/renderer.html", gate: "#36" },
-    { prefix: "mcp/view/", gate: "#36" },
-];
+/**
+ * dist-relative path prefixes that a gate holds back.
+ *
+ * @type {Array<{prefix: string, gate: string}>}
+ */
+export const GATED = [];
 
 /**
  * The paths a gate holds back.
  *
  * @param {string[]} paths dist-relative paths, no leading slash.
+ * @param {Array<{prefix: string, gate: string}>} gated The gated prefixes.
  * @returns {Array<{path: string, gate: string}>} One entry per match.
  */
-export function gatedLeaks(paths)
+export function gatedLeaks(paths, gated = GATED)
 {
     return paths.flatMap((path) =>
-        GATED.filter(({ prefix }) => path.startsWith(prefix)).map(({ gate }) => ({ path, gate })));
+        gated.filter(({ prefix }) => path.startsWith(prefix)).map(({ gate }) => ({ path, gate })));
 }
