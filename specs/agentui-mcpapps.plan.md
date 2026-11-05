@@ -153,3 +153,59 @@ export function gatedLeaks(paths)
 - [ ] **ADR-250** in `agentknowledge/decisions.yaml`: M1 and the gate mechanism, with the zod `v3` finding. **ADR-251:** M2 to M4 and the server contract, recorded in M3 once the names are final.
 - [ ] A history entry, a `CHANGELOG.md` line, and a `CDN_CONTRACT.md` note that `/lib/a2ui-runtime-*` and `/lib/mcp-ext-apps-*` are reserved until #36.
 - [ ] Run `npm test`, `npm run test:e2e` and `npm run test:structure`; push; check that origin matches HEAD; open the PR "Closes #104"; wait for CI.
+
+---
+
+## M2 (#105): the view
+
+Built on what M1 produced. The pinned runtime arrives as two IIFE globals, `McpExtApps` and `A2uiRuntime`, and gated paths mirror `dist/` under `gated/`.
+
+### Decisions made while planning
+
+- **Where the view lives.** Sources go in `mcp/src/`. `mcp/build.mjs` bundles `mcp/src/view.ts` with esbuild into `gated/mcp/view/v1.js` (ESM). It reads the runtime from the two globals and never bundles it. It imports the adapter at run time from `/a2ui/adapter/v1.js`, resolved against its own `import.meta.url`, and that URL's origin becomes `assetBaseUrl`. The view therefore loads from wherever it was served, with no origin written into its code.
+- **The page.** `mcp/build.mjs` also writes `gated/mcp/renderer.html`. It references `https://static.outcrop.us` and carries SRI hashes for the two runtime files, taken from `gated/lib-manifest.json`. `renderer.meta.json` needs no change: the view loads from `static.outcrop.us` and Google Fonts and fetches nothing.
+- **The gate.** `GATED` gains `mcp/renderer.html` and `mcp/view/`, so check `[31]` covers them.
+- **No schema layer in the view.** web_core rejects a malformed A2UI message, and that rejection becomes an error shown on the surface. The view does not ship ajv.
+- **The e2e host.** `tests/mcp-host/host.ts` is bundled with esbuild in the spec's `beforeAll`. It is served at the virtual origin `https://host.test`, and `https://static.outcrop.us/**` is served from the local tree (`gated/` for gated paths, `dist/` otherwise) with `Access-Control-Allow-Origin: *`, as the CDN does. Google Fonts requests are aborted. The tests therefore run against the real page bytes, unchanged, in an `<iframe sandbox="allow-scripts">` with an opaque origin, as hosts run it. The host answers tool calls with fixtures; M3 replaces them with the example server's handlers.
+- **CI.** It adds `npm run build:gated` and `npm run test:e2e:mcp`. `npm run build` (Cloudflare) does not change.
+
+### Files
+
+| File | Responsibility |
+|---|---|
+| `mcp/src/errors.ts` | `McpViewCode` codes, `McpViewError`, `LOG_PREFIX = "[outcrop-mcp]"` |
+| `mcp/src/result.ts` | `parseResult(result)` returns `{ messages, routes, surfaceIds }`, or throws `BAD_RESULT` or `TOOL_ERROR` |
+| `mcp/src/router.ts` | `resolveRoute(routes, name)`, `toolArguments(action)` and `messageText(action)` |
+| `mcp/src/theme.ts` | `THEME_MAP`, `themeDeclarations(vars)` and `applyHostContext(root, ctx)` (theme, variables, fonts, layout height) |
+| `mcp/src/view.ts` | Wiring: `App`, `MessageProcessor`, surface frames, the route map per surface, and the error display |
+| `mcp/build.mjs` | `rendererHtml(origin, libs)` and the bundle; `build:gated` runs it after the vendor step |
+| `mcp/tsconfig.json` | `typecheck:mcp`, added to `npm test` |
+| `tests/mcp-host/host.ts`, `tests/mcp-view.spec.ts` | e2e (`test:e2e:mcp`) |
+
+### Tests
+
+- **Unit:**
+  - result: good, missing, malformed, unknown version, `isError`.
+  - routes: by name, default, `"message"`, none.
+  - the action as tool arguments and as message text.
+  - the theme table: each row, only the variables sent, and removal on change.
+  - layout height: `maxHeight`, `height`, fullscreen, none.
+  - the renderer HTML: SRI, `crossorigin`, and order.
+- **e2e:**
+  - nothing renders before initialize;
+  - light, dark, and a live switch;
+  - host variables override tokens;
+  - a tool-routed action applies new messages;
+  - a message-routed action;
+  - each error code;
+  - auto-resize reported to the host.
+
+### Steps
+
+- [x] Gate prefixes, plus the `[31]` failing-then-passing check.
+- [x] errors, result and router (test first).
+- [x] theme and size (test first).
+- [x] view, build and renderer, with `typecheck:mcp`.
+- [x] e2e host and spec, `test:e2e:mcp`, and the CI steps.
+- [x] Records: the history entry and CHANGELOG. ADR-251 waits for M3, as planned.
+- [ ] Full suites; push; the PR "Closes #105"; CI.

@@ -62,7 +62,7 @@ Within `version: 1`, everything in this section changes additively only. It is r
 ```
 
 - `messages` is required; `routes` is optional, but an action with no route is `OUTCROP_MCP_NO_ROUTE`.
-- Routes from a later result replace earlier ones for the surfaces that result touches.
+- Routes from a later result replace earlier ones for the surfaces that result touches. A result without `routes` leaves those surfaces' routes as they were, so an incremental reply need not repeat them.
 - A text summary in `content` is required by the guides, not checked by the view: it is what the model and UI-less hosts read.
 
 ### 5.2 Routes
@@ -117,10 +117,11 @@ Status colours, type sizes, weights, line heights and shadows stay unmapped in v
 
 | Problem | Code | Shown |
 |---|---|---|
-| `structuredContent.outcrop` missing, malformed, or unknown `version` | `OUTCROP_MCP_BAD_RESULT` | error card |
+| `structuredContent.outcrop` missing, malformed, or unknown `version` | `OUTCROP_MCP_BAD_RESULT` | error card; on the surface when a routed tool returned it |
 | action with no route | `OUTCROP_MCP_NO_ROUTE` | on the surface |
 | routed tool returns `isError` or throws | `OUTCROP_MCP_TOOL_ERROR` | on the surface, with the tool's text |
 | host connection fails | `OUTCROP_MCP_NOT_CONNECTED` | the view's only content |
+| the host rejects or fails a message route's `ui/message` | `OUTCROP_MCP_MESSAGE_FAILED` | on the surface |
 | adapter errors | as today (`OUTCROP_MOUNT_FAILED`, …) | as today |
 
 Every error goes to `console` with the prefix `[outcrop-mcp]` and to the host log through `app.sendLog`, so a server developer sees it in their MCP client. The view sends no analytics: it runs in someone else's app and has no `connectDomains`.
@@ -132,7 +133,7 @@ Sequential PRs against main, not stacked.
 | PR | Contents | Issue |
 |---|---|---|
 | M1 | Runtime bundles (§7), the local-only build directory and its gate check, lib-manifest and audit wiring. | #104 |
-| M2 | The view: `mcp/` sources (`bridge`, `theme`, `router`, `size`, `view`), `renderer.html`, `renderer.meta.json` update; the e2e test host on the SDK's `AppBridge`; unit and e2e tests (§10). | #105 |
+| M2 | The view: `mcp/src/` (`errors`, `result`, `router`, `theme` with sizing, `view`), `renderer.html` (`renderer.meta.json` unchanged: the view needs only the origins it already names); the e2e test host on the SDK's `AppBridge`; unit and e2e tests (§10). | #105 |
 | M3 | The example TypeScript MCP server (tested in CI), the C# example, `docs/MCP_APPS_INTEGRATION_GUIDE.md` (humans), `docs/MCP_APPS_AGENT_GUIDE.md` (coding agents), `CDN_CONTRACT.md` §, ADRs, knowledge records. | #106 |
 | M4 | Conversation emits the standard MCP Apps style variables beside `--mcp-*` (additive, labelled). | #107 |
 

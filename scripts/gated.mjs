@@ -31,6 +31,8 @@ export const GATES = {
 export const GATED = [
     { prefix: "lib/a2ui-runtime-", gate: "#36" },
     { prefix: "lib/mcp-ext-apps-", gate: "#36" },
+    { prefix: "mcp/renderer.html", gate: "#36" },
+    { prefix: "mcp/view/", gate: "#36" },
 ];
 
 /**

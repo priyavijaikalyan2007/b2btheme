@@ -25,4 +25,10 @@ describe("publication gate", () =>
         expect(gatedLeaks(["lib/a2ui-runtime-0.14.0.js", "lib/dompurify-3.4.17.js"]))
             .toEqual([{ path: "lib/a2ui-runtime-0.14.0.js", gate: "#36" }]);
     });
+
+    test("the MCP Apps view and its page are gated; renderer.meta.json is not (M2)", () =>
+    {
+        expect(gatedLeaks(["mcp/renderer.html", "mcp/view/v1.js", "mcp/renderer.meta.json"]))
+            .toEqual([{ path: "mcp/renderer.html", gate: "#36" }, { path: "mcp/view/v1.js", gate: "#36" }]);
+    });
 });

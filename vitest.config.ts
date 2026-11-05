@@ -9,13 +9,14 @@ export default defineConfig({
             "scripts/**/*.test.ts",
             "a2ui/**/*.test.ts",
             "agentdemo/**/*.test.ts",
+            "mcp/**/*.test.ts",
         ],
         exclude: ["node_modules", "dist"],
         globals: true,
         setupFiles: ["./tests/setup.ts"],
         coverage: {
             provider: "v8",
-            include: ["components/**/*.ts", "runtime/**/*.ts", "a2ui/**/*.ts"],
+            include: ["components/**/*.ts", "runtime/**/*.ts", "a2ui/**/*.ts", "mcp/src/**/*.ts"],
             exclude: [
                 "**/*.test.ts",
                 "components/diagramengine/src/**",
