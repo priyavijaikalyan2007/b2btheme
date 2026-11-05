@@ -101,7 +101,7 @@ class View
     readonly #processor: MessageProcessor;
     readonly #frames = new Map<string, Frame>();
     /** Routes from the latest result that touched each surface (spec §5.1). */
-    readonly #routes = new Map<string, Routes | undefined>();
+    readonly #routes = new Map<string, Routes>();
 
     constructor(app: App, root: HTMLElement, runtime: A2uiRuntimeGlobal, catalog: unknown, reporter: Reporter)
     {
@@ -128,7 +128,10 @@ class View
 
         this.#clear(from);
         this.#status.hidden = true;
-        parsed.surfaceIds.forEach((id) => this.#routes.set(id, parsed.routes));
+        // A result with routes replaces them for its surfaces; one without keeps theirs (spec §5.1).
+        const routes = parsed.routes;
+
+        if (routes !== undefined) { parsed.surfaceIds.forEach((id) => this.#routes.set(id, routes)); }
 
         for (const message of parsed.messages)
         {

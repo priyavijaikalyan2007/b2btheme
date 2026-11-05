@@ -146,7 +146,7 @@ test.describe("MCP Apps view", () =>
         await expect(view.locator("body")).toHaveCSS("color", "rgb(1, 2, 3)");
     });
 
-    test("a tool-routed action calls the tool and applies its result", async ({ page }) =>
+    test("a tool-routed action calls the tool and applies its result; a result without routes keeps them", async ({ page }) =>
     {
         const view = await open(page, { result: outcrop(deal("Awaiting approval"), { default: { tool: "crm_action" } }),
             tools: { crm_action: approved } });
@@ -154,9 +154,13 @@ test.describe("MCP Apps view", () =>
         await view.getByRole("button", { name: "Approve" }).click();
 
         await expect(view.getByText("Approved", { exact: true })).toBeVisible();
-        expect((await record(page)).calls).toEqual([{ name: "crm_action", arguments: { outcrop: { version: 1,
+        // That result had no routes, so the surface keeps the first result's: a second click is routed too.
+        await view.getByRole("button", { name: "Approve" }).click();
+        await expect.poll(async () => (await record(page)).calls.length).toBe(2);
+        await expect(view.locator("[data-surface=deal] .outcrop-mcp-surface-error")).toBeHidden();
+        expect((await record(page)).calls[0]).toEqual({ name: "crm_action", arguments: { outcrop: { version: 1,
             surfaceId: "deal", action: { version: "v0.9.1", action: expect.objectContaining({ name: "approve",
-                surfaceId: "deal", sourceComponentId: "approve", context: { id: 7 } }) } } } }]);
+                surfaceId: "deal", sourceComponentId: "approve", context: { id: 7 } }) } } } });
     });
 
     test("a message-routed action becomes a user turn", async ({ page }) =>

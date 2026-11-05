@@ -62,7 +62,7 @@ Within `version: 1`, everything in this section changes additively only. It is r
 ```
 
 - `messages` is required; `routes` is optional, but an action with no route is `OUTCROP_MCP_NO_ROUTE`.
-- Routes from a later result replace earlier ones for the surfaces that result touches.
+- Routes from a later result replace earlier ones for the surfaces that result touches. A result without `routes` leaves those surfaces' routes as they were, so an incremental reply need not repeat them.
 - A text summary in `content` is required by the guides, not checked by the view: it is what the model and UI-less hosts read.
 
 ### 5.2 Routes
@@ -117,7 +117,7 @@ Status colours, type sizes, weights, line heights and shadows stay unmapped in v
 
 | Problem | Code | Shown |
 |---|---|---|
-| `structuredContent.outcrop` missing, malformed, or unknown `version` | `OUTCROP_MCP_BAD_RESULT` | error card |
+| `structuredContent.outcrop` missing, malformed, or unknown `version` | `OUTCROP_MCP_BAD_RESULT` | error card; on the surface when a routed tool returned it |
 | action with no route | `OUTCROP_MCP_NO_ROUTE` | on the surface |
 | routed tool returns `isError` or throws | `OUTCROP_MCP_TOOL_ERROR` | on the surface, with the tool's text |
 | host connection fails | `OUTCROP_MCP_NOT_CONNECTED` | the view's only content |
