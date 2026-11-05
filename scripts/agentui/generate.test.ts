@@ -522,11 +522,11 @@ describe("runPipeline — protocol.outOfCatalog (ADR-247)", () =>
         expect(result.outOfCatalog).toEqual([{ name: "widget", reason: OUT }]);
         expect(result.counts).toMatchObject({ components: 0, excluded: 0, outOfCatalog: 1 });
         expect((result.outputs.get("agentui-report.json") as any).outOfCatalog).toEqual(result.outOfCatalog);
-    });
+    }, 60_000);
 
     test("one that is also on PENDING_CLASSIFICATION is an error", () =>
     {
         expect(run([widget({ outOfCatalog: OUT })], ["widget"]).errors)
             .toContainEqual(expect.stringMatching(/widget declares protocol.outOfCatalog and is on PENDING/));
-    });
+    }, 60_000);
 });

@@ -14,9 +14,6 @@ Created: 2026-11-05
 
 **MCP Apps** is the Model Context Protocol extension that lets a tool's result appear as interactive UI inside the AI app that called it. Hosts include Claude, ChatGPT and VS Code. This guide shows an MCP server, in any language, how to show **this library's components** there. The server writes no HTML and no JavaScript; it returns A2UI messages from its tools.
 
-> **Not served yet.** The view and its runtime are built and tested, but they are held back from the CDN until issue #36 clears. One of the view's runtime dependencies still requires a zod 3 release covered by an open advisory (ADR-250).
->
-> Until then, `https://static.outcrop.us/mcp/renderer.html` answers 404, and the example servers stop at startup because of it. Everything below is the contract that will apply once the view is served. It is tested against the local build today.
 
 ## 1. The 60-second version
 

@@ -155,8 +155,7 @@ const ASSETS = [
             'export { A2uiSurface, basicCatalog } from "@a2ui/lit/v0_9";',
         ].join("\n"),
         global: "A2uiRuntime",
-        gate: "#36",
-        note: "The A2UI runtime the MCP Apps view runs (#19). Gated: it holds web_core's zod 3",
+        note: "The A2UI runtime the MCP Apps view runs (#19). Holds web_core's zod 3, excused by ADR-252",
     },
     {
         name: "mcp-ext-apps",
@@ -166,8 +165,7 @@ const ASSETS = [
         entry: 'export { App, applyDocumentTheme, applyHostFonts, applyHostStyleVariables } '
             + 'from "@modelcontextprotocol/ext-apps";',
         global: "McpExtApps",
-        gate: "#36",
-        note: "The MCP Apps view's host bridge (#19). Gated with the view it serves",
+        note: "The MCP Apps view's host bridge (#19)",
     },
     {
         name: "signalr",
@@ -535,7 +533,14 @@ function runPlan(gated)
 
 async function main()
 {
-    const { assets, outDir, manifestPath } = runPlan(process.argv.includes("--gated"));
+    const gated = process.argv.includes("--gated");
+    const { assets, outDir, manifestPath } = runPlan(gated);
+
+    if (gated && assets.length === 0)
+    {
+        console.log("[vendor-closure] No asset names a gate; nothing to build into gated/.");
+        return;
+    }
 
     mkdirSync(outDir, { recursive: true });
 

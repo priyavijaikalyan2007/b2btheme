@@ -6,8 +6,8 @@
 /**
  * ⚓ TESTS: McpView in a browser (#19 M2, spec §10). The real renderer.html
  *    bytes run in a sandboxed srcdoc iframe under the SDK's AppBridge, with
- *    https://static.outcrop.us served from the local build: gated/ for
- *    gated paths, dist/ for the rest, with the CDN's CORS header. Covers
+ *    https://static.outcrop.us served from the local dist/, with the CDN's
+ *    CORS header. Covers
  *    the lifecycle, theming, both routes, every error code and auto-resize.
  *    The routes run against the example MCP server (M3), the one the
  *    integration guide shows: the page is its ui:// resource, and the
@@ -23,12 +23,11 @@ import { build } from "esbuild";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 
 import { createServer, RENDERER_URI } from "../mcp/examples/typescript/server";
-import { GATED_DIR, gatedLeaks } from "../scripts/gated.mjs";
 import type { StartOptions } from "./mcp-host/host";
 
 const CDN = "https://static.outcrop.us";
 const HOST = "https://host.test";
-const PAGE = join(GATED_DIR, "mcp/renderer.html");
+const PAGE = "dist/mcp/renderer.html";
 const CATALOG = `${CDN}/a2ui/catalog/v1.json`;
 const TYPES: Record<string, string> = { ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
     ".woff2": "font/woff2", ".woff": "font/woff", ".svg": "image/svg+xml", ".png": "image/png" };
@@ -78,7 +77,7 @@ function record(page: Page): Promise<{ initialized: boolean; initializeSeen: boo
 
 test.beforeAll(async () =>
 {
-    if (!existsSync(PAGE)) { throw new Error(`${PAGE} is absent. Run npm run build:gated.`); }
+    if (!existsSync(PAGE)) { throw new Error(`${PAGE} is absent. Run npm run build.`); }
 
     rendererHtml = readFileSync(PAGE, "utf8");
     hostJs = (await build({ entryPoints: ["tests/mcp-host/host.ts"], bundle: true, format: "iife", write: false,
@@ -94,11 +93,11 @@ test.beforeEach(async ({ page }) =>
         return path === "/host.js" ? route.fulfill({ body: hostJs, contentType: "text/javascript" })
             : route.fulfill({ body: HOST_HTML, contentType: "text/html" });
     });
-    // The CDN, from the local tree: gated paths from gated/, as they will be served once the gate lifts.
+    // The CDN, from the local build.
     await page.route(`${CDN}/**`, (route) =>
     {
         const path = decodeURIComponent(new URL(route.request().url()).pathname.slice(1));
-        const file = join(gatedLeaks([path]).length > 0 ? GATED_DIR : "dist", path);
+        const file = join("dist", path);
 
         if (!existsSync(file)) { return route.fulfill({ status: 404, body: `${file} not built` }); }
 

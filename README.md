@@ -221,11 +221,20 @@ Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2
 
 ▶ [Watch the war-room video (MP4, 2.3 MB)](https://static.outcrop.us/demo/media/a2ui/war-room.mp4). *Scripted, like the one above.*
 
-There's no public live demo yet. A browser host has to serve Google's A2UI renderer, and its current release depends on a zod version that a security advisory flags, which our vendor audit rightly refuses to serve ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until that clears, these recordings stand in, and you can run the playground locally with `npm run demo:a2ui`.
+There's no public live demo yet; it is on its way ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until then, these recordings stand in, and you can run the playground locally with `npm run demo:a2ui`.
 
 The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
 
-Support for MCP Apps hosts is in progress (#19).
+## AI Agents: MCP Apps Support
+
+MCP Apps hosts, such as Claude, ChatGPT and VS Code, can show these components inside a conversation. An MCP server in any language returns A2UI messages from a tool and links the tool to our view; it writes no HTML or JavaScript. The view takes the host's theme, and each action goes to a server tool or to the model, as the server chooses.
+
+| What | Where |
+|---|---|
+| The view (a server returns these bytes as its `ui://` resource) | `https://static.outcrop.us/mcp/renderer.html` and `renderer.meta.json` |
+| Server guide | [`docs/MCP_APPS_INTEGRATION_GUIDE.md`](docs/MCP_APPS_INTEGRATION_GUIDE.md) |
+| Rules for coding agents | [`docs/MCP_APPS_AGENT_GUIDE.md`](docs/MCP_APPS_AGENT_GUIDE.md) |
+| Example servers (TypeScript, C#) | [`mcp/examples/`](mcp/examples/) |
 
 ## CDN & Agent Discovery
 
