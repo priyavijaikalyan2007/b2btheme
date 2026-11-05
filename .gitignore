@@ -167,3 +167,6 @@ demopage-lighthouse-*.json
 
 # A2UI playground build output (#30)
 agentdemo/.out/
+
+# Built and tested, not yet served: held back by a publication gate (scripts/gated.mjs).
+/gated/

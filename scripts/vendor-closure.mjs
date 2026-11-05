@@ -31,6 +31,8 @@ import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, stat
 import { dirname, join } from "node:path";
 import { build } from "esbuild";
 
+import { GATED_DIR, GATES } from "./gated.mjs";
+
 const OUT_DIR = "dist/lib";
 const MANIFEST = "dist/lib-manifest.json";
 
@@ -141,6 +143,31 @@ const ASSETS = [
         entry: 'export * from "@maxgraph/core";',
         global: "maxgraph",
         note: "ESM-only; the apps' canvas already reads window.maxgraph",
+    },
+    {
+        name: "a2ui-runtime",
+        kind: "bundle",
+        pkg: "@a2ui/web_core",
+        members: ["@a2ui/lit"],
+        entry: [
+            'export { Catalog, MessageProcessor } from "@a2ui/web_core/v0_9";',
+            'export { BASIC_FUNCTIONS, basicCatalog as coreBasicCatalog } from "@a2ui/web_core/v0_9/basic_catalog";',
+            'export { A2uiSurface, basicCatalog } from "@a2ui/lit/v0_9";',
+        ].join("\n"),
+        global: "A2uiRuntime",
+        gate: "#36",
+        note: "The A2UI runtime the MCP Apps view runs (#19). Gated: it holds web_core's zod 3",
+    },
+    {
+        name: "mcp-ext-apps",
+        kind: "bundle",
+        pkg: "@modelcontextprotocol/ext-apps",
+        members: ["@modelcontextprotocol/core", "@modelcontextprotocol/client", "zod"],
+        entry: 'export { App, applyDocumentTheme, applyHostFonts, applyHostStyleVariables } '
+            + 'from "@modelcontextprotocol/ext-apps";',
+        global: "McpExtApps",
+        gate: "#36",
+        note: "The MCP Apps view's host bridge (#19). Gated with the view it serves",
     },
     {
         name: "signalr",
@@ -478,18 +505,48 @@ async function bundleAsset(asset, outFile)
     };
 }
 
+/**
+ * Which assets this run builds, and where.
+ *
+ * A gated asset (gated.mjs) is built only with `--gated`, into gated/,
+ * whose layout mirrors dist/. A plain run never writes one into dist/,
+ * because Cloudflare deploys whatever dist/ holds.
+ *
+ * @param {boolean} gated True for `--gated`.
+ * @returns {{assets: object[], outDir: string, manifestPath: string}}
+ */
+function runPlan(gated)
+{
+    for (const asset of ASSETS)
+    {
+        if (asset.gate && !GATES[asset.gate])
+        {
+            throw new Error(`[vendor-closure] ${asset.name} names gate ${asset.gate}, ` +
+                "which scripts/gated.mjs does not define. A gate needs a recorded reason.");
+        }
+    }
+
+    return {
+        assets: ASSETS.filter((asset) => Boolean(asset.gate) === gated),
+        outDir: gated ? join(GATED_DIR, "lib") : OUT_DIR,
+        manifestPath: gated ? join(GATED_DIR, "lib-manifest.json") : MANIFEST,
+    };
+}
+
 async function main()
 {
-    mkdirSync(OUT_DIR, { recursive: true });
+    const { assets, outDir, manifestPath } = runPlan(process.argv.includes("--gated"));
+
+    mkdirSync(outDir, { recursive: true });
 
     const manifest = { generated: null, assets: {} };
 
-    for (const asset of ASSETS)
+    for (const asset of assets)
     {
         const pkg = packageOf(asset);
         const version = versionOf(pkg);
         const fileName = `${asset.name}-${version}.js`;
-        const outFile = join(OUT_DIR, fileName);
+        const outFile = join(outDir, fileName);
 
         let inputs = 1;
 
@@ -501,7 +558,7 @@ async function main()
 
         if (asset.kind === "tree")
         {
-            const baseDir = join(OUT_DIR, `${asset.name}-${version}`);
+            const baseDir = join(outDir, `${asset.name}-${version}`);
             const entryFile = copyTree(asset, baseDir);
             const bytes = readFileSync(entryFile);
 
@@ -546,6 +603,7 @@ async function main()
             integrity: sriOf(bytes),
             ...(asset.global ? { global: asset.global } : {}),
             ...(asset.shared ? { shared: true } : {}),
+            ...(asset.gate ? { gate: asset.gate } : {}),
             packages,
             bytes: bytes.length,
             closure: "complete",
@@ -563,9 +621,9 @@ async function main()
     // Stamped last so a failed run leaves no manifest claiming success —
     // a degraded build must not report success (ADR-148, clause 1).
     manifest.generated = new Date().toISOString();
-    writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
+    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 
-    console.log(`  manifest -> ${MANIFEST}`);
+    console.log(`  manifest -> ${manifestPath}`);
 }
 
 main().catch((err) =>
