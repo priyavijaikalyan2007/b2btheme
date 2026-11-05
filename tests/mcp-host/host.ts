@@ -10,9 +10,10 @@
  * ⚓ COMPONENT: McpTestHost
  * 📜 PURPOSE: An MCP Apps host for the view's browser tests (#19 M2): the
  *    SDK's own AppBridge, the renderer page in a sandboxed srcdoc iframe as
- *    hosts load it, tool calls answered from fixtures, and a record of what
- *    the view sent. "reject" and "silent" modes answer ui/initialize with
- *    an error, or not at all, to test the view's lifecycle.
+ *    hosts load it, tool calls answered from fixtures or by the example
+ *    MCP server (M3), and a record of what the view sent. "reject" and
+ *    "silent" modes answer ui/initialize with an error, or not at all, to
+ *    test the view's lifecycle.
  * 🔗 RELATES: [[McpView]], tests/mcp-view.spec.ts
  * ⚡ FLOW: [spec] -> [window.mcpHost.start] -> [AppBridge <-> iframe]
  *          -> [window.mcpHost.record]
@@ -34,6 +35,8 @@ export interface StartOptions
     /** Tool name → result; "throw" makes the call fail at the protocol level. */
     tools?: Record<string, ToolResult | "throw">;
     messageError?: boolean;
+    /** Tool calls go to the example MCP server, through window.mcpServerCall, instead of `tools`. */
+    delegate?: boolean;
 }
 
 const record = {
@@ -46,6 +49,9 @@ const record = {
     sizes: [] as Array<{ width?: number; height?: number }>,
 };
 let bridge: AppBridge | null = null;
+
+/** Bound by the spec (page.exposeFunction) to a Client of the example server. */
+declare function mcpServerCall(name: string, args: unknown): Promise<unknown>;
 
 /** Opens the view: listens first, then loads the page. */
 async function start(opts: StartOptions): Promise<void>
@@ -67,6 +73,9 @@ async function connectBridge(iframe: HTMLIFrameElement, win: Window, opts: Start
     bridge.oncalltool = async (params) =>
     {
         record.calls.push({ name: params.name, arguments: params.arguments });
+
+        if (opts.delegate) { return await mcpServerCall(params.name, params.arguments) as never; }
+
         const result = opts.tools?.[params.name];
 
         if (result === undefined || result === "throw") { throw new Error(`tool ${params.name} failed in transport`); }

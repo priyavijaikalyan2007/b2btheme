@@ -873,6 +873,8 @@ const HAND_WRITTEN_DOCS = {
     "GETTING_STARTED.md": "Getting Started",
     "A2UI_INTEGRATION_GUIDE.md": "A2UI Integration Guide",
     "A2UI_PLAYGROUND.md": "A2UI Playground",
+    "MCP_APPS_INTEGRATION_GUIDE.md": "MCP Apps Integration Guide",
+    "MCP_APPS_AGENT_GUIDE.md": "MCP Apps Agent Reference",
     "CDN_INTEGRATION_GUIDE.md": "CDN Integration Guide",
     "APPS_TEAM_USAGE_GUIDE.md": "Apps Team Usage Guide",
     "BEGINNERS_GUIDE.md": "Beginners Guide",

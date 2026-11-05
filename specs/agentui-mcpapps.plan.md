@@ -208,4 +208,68 @@ Built on what M1 produced. The pinned runtime arrives as two IIFE globals, `McpE
 - [x] view, build and renderer, with `typecheck:mcp`.
 - [x] e2e host and spec, `test:e2e:mcp`, and the CI steps.
 - [x] Records: the history entry and CHANGELOG. ADR-251 waits for M3, as planned.
-- [ ] Full suites; push; the PR "Closes #105"; CI.
+- [x] Full suites; push; the PR "Closes #105"; CI.
+
+## M3 (#106): example servers, guides and the contract
+
+This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_*` codes, and the e2e host on `AppBridge` with its `tools` fixtures.
+
+### Decisions made while planning
+
+- **The example lives in two files.**
+  - `mcp/examples/typescript/deals.ts` holds the tool logic as plain functions over §5.1 results. It has no SDK imports.
+  - `server.ts` wires those functions to `McpServer` with `registerAppResource` and `registerAppTool` from `@modelcontextprotocol/ext-apps/server`. The SDK's `RESOURCE_MIME_TYPE` is `text/html;profile=mcp-app`, which matches the spec.
+- **The renderer is passed in, never bundled.**
+  - `createServer({ html, meta })` takes the page bytes and the `_meta.ui` block.
+  - `loadRenderer()` fetches `/mcp/renderer.html` and `/mcp/renderer.meta.json` from `https://static.outcrop.us`. A non-OK response throws. Until #36 clears, that fetch 404s, and the guide says so.
+  - The tests pass in `gated/mcp/renderer.html` and `dist/mcp/renderer.meta.json`.
+  - There is no embedded copy: it would go stale, and it would be fallback code.
+- **What the example demonstrates.** The `show_deal` tool, linked to `ui://outcrop-example/renderer`, returns one surface:
+  - a status Text;
+  - an Approve button, whose action routes to the `deal_action` tool;
+  - an Explain button, whose action routes as a `"message"`;
+  - a TreeView of documents with a lazy folder. Expanding it is a provider request, also routed to `deal_action`.
+
+  `deal_action` is app-only (`visibility: ["app"]`). It answers `approve` with a status update and `load` with `updateDataModel` at the `loadChildrenResult` path, which closes the provider-request case M2 left open in §10. Any other action name gets `isError` with a message naming the action.
+- **CI.**
+  - `mcp/examples/typescript/server.test.ts` (`@vitest-environment node`) connects a `Client` over `InMemoryTransport`. It lists the tools and resources, reads the resource (bytes and `_meta.ui`), and passes each tool result through `parseResult`.
+  - `mcp/examples/tsconfig.json` (`typecheck:mcp-examples`, part of `npm test`) typechecks the example.
+- **e2e.** The happy paths are served by the example server.
+  - The spec starts that same `Client` in Node and opens the view with the HTML it reads from the resource and the result of `show_deal`.
+  - The host gains `delegate: true`: tool calls go to `window.mcpServerCall`, which `page.exposeFunction` binds to `client.callTool`.
+  - The negative cases keep their M2 fixtures (`throw`, `isError`, malformed), so the example ships no broken tools for people to copy.
+- **The C# example.**
+  - It lives in `mcp/examples/csharp/` (`Program.cs`, `Deals.cs`, `OutcropExample.csproj`).
+  - It pins `ModelContextProtocol` and `ModelContextProtocol.Extensions.Apps` to 2.3.1 exactly.
+  - It is written against the Apps extension's real API, read from the package.
+  - It is built, and smoke-tested over stdio, locally with .NET 10.0.302. CI does not build it, and the guide says so with the date.
+  - `bin/` and `obj/` are git-ignored.
+- **The contract.** `CDN_CONTRACT.md` §2c gains two rows, `/mcp/renderer.html` and `/mcp/view/v1.js`, each reserved until #36. It also gains a "server contract" paragraph listing the §5 public names, all additive within `version: 1`:
+  - the result shape;
+  - both routes;
+  - the tool arguments;
+  - the message line;
+  - the five codes.
+- **ADR-251.** It records the server contract and the examples, as M3 of the spec. ADR-250 is the gate.
+
+### Files
+
+| File | Responsibility |
+|---|---|
+| `mcp/examples/typescript/deals.ts` | `showDeal()`, `dealAction(args)`, and the surface and route constants |
+| `mcp/examples/typescript/server.ts`, `main.ts` | `loadRenderer()` and `createServer(renderer)`; `main.ts` runs it over stdio (a separate file, so the Playwright spec, loaded as CommonJS, can import `server.ts`) |
+| `mcp/examples/typescript/server.test.ts` | the server over `InMemoryTransport` |
+| `mcp/examples/tsconfig.json` | `typecheck:mcp-examples` |
+| `mcp/examples/csharp/*` | the same server in C# |
+| `tests/mcp-host/host.ts`, `tests/mcp-view.spec.ts` | `delegate`; happy paths from the example; the provider request |
+| `docs/MCP_APPS_INTEGRATION_GUIDE.md`, `docs/MCP_APPS_AGENT_GUIDE.md`, `docs/INDEX.md` | the guides (spec §11) |
+| `CDN_CONTRACT.md`, `agentknowledge/*`, `CHANGELOG.md` | the contract, ADR-251, history |
+
+### Steps
+
+- [x] `deals.ts` and `server.ts`, test first: the server test, then the code. Add `typecheck:mcp-examples`.
+- [x] Host `delegate`, the spec's happy paths through the example, and the provider-request e2e.
+- [x] The C# example: read the package API, write it, build it, and smoke-test it over stdio.
+- [x] Both guides and the `INDEX.md` entries.
+- [x] `CDN_CONTRACT.md`, ADR-251, history and CHANGELOG.
+- [ ] Full suites; push; the PR "Closes #106"; CI.

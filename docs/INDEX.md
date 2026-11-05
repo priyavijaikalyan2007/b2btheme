@@ -66,6 +66,12 @@ colour icons) and the AWS, Azure and Google Cloud architecture icons. URL
 scheme, manifests, licences and attribution, and how to switch an app to the
 CDN-hosted icons.
 
+### 2d. **[MCP Apps Integration Guide](MCP_APPS_INTEGRATION_GUIDE.md)**
+Show these components inside MCP Apps hosts (Claude, ChatGPT, VS Code) from
+an MCP server in any language: the `/mcp/renderer.html` view, the tool
+result contract, action routes, theming, error codes, and TypeScript and C#
+examples. Not served until #36 clears.
+
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
 
@@ -100,6 +106,10 @@ Technical explanation of Sass deprecation warnings and why they are suppressed.
 
 ### 10. **[Agent Quick Reference](AGENT_QUICK_REF.md)** (auto-generated)
 Machine-parseable reference with dist paths, design tokens as key=value pairs, custom CSS class list, and component API signatures.
+
+### 10a. **[MCP Apps Agent Reference](MCP_APPS_AGENT_GUIDE.md)**
+Rules for wiring an MCP server to the MCP Apps view: exact names, the result
+shape, a routing decision table, error codes with fixes, common mistakes.
 
 ---
 
@@ -145,6 +155,8 @@ docs/
   CUSTOM_CLASSES.md            -- CSS class reference
   FONT_GUIDE.md               -- Font loading and swapping
   AGENT_QUICK_REF.md          -- Auto-generated agent quick reference
+  MCP_APPS_INTEGRATION_GUIDE.md -- MCP Apps view for MCP servers
+  MCP_APPS_AGENT_GUIDE.md     -- MCP Apps rules for coding agents
   APPS_TEAM_USAGE_GUIDE.md    -- Workflow contract for CDN consumers
   CUSTOMIZATION_GUIDE.md      -- How to override the theme
   TROUBLESHOOTING.md          -- Common issues and solutions
