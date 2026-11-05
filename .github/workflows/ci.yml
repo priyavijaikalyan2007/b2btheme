@@ -84,6 +84,9 @@ jobs:
       - name: Typecheck the MCP Apps view
         run: npm run typecheck:mcp
 
+      - name: Typecheck the MCP Apps example servers
+        run: npm run typecheck:mcp-examples
+
       - name: Run unit tests with coverage
         run: npm run test:unit:coverage
 
