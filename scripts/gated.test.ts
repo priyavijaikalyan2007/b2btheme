@@ -16,7 +16,8 @@ describe("publication gate", () =>
 {
     test("every gated prefix names a gate with a reason", () =>
     {
-        for (const { gate } of GATED) { expect(GATES[gate]).toMatch(/\S/); }
+        expect(GATED.length).toBeGreaterThan(0);
+        expect(GATED.filter(({ gate }) => !GATES[gate]?.trim())).toEqual([]);
     });
 
     test("a dist path under a gated prefix is a leak; others are not", () =>
