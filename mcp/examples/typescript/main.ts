@@ -19,12 +19,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 
 import { createServer, loadRenderer } from "./server";
 
-try
+async function main(): Promise<void>
 {
     await createServer(await loadRenderer()).connect(new StdioServerTransport());
 }
-catch (error)
+
+main().catch((error: unknown) =>
 {
     console.error("[outcrop-example]", error);
     process.exit(1);
-}
+});

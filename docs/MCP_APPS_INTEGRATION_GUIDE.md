@@ -65,7 +65,7 @@ The example is `mcp/examples/typescript/` in this repository, and CI runs it. It
 | `deals.ts` | the tools as plain functions over the result shape: `show_deal` and `deal_action` |
 | `main.ts` | the stdio entry point |
 
-The packages are `@modelcontextprotocol/server` 2.4.0 and `@modelcontextprotocol/ext-apps` 2.0.4. Run it with any TypeScript runner, for example `npx tsx mcp/examples/typescript/main.ts`.
+The packages are `@modelcontextprotocol/server` 2.4.0 and `@modelcontextprotocol/ext-apps` 2.0.4. Run it with a TypeScript runner, for example `npx tsx@4.23.15 mcp/examples/typescript/main.ts` (tsx is not a dependency of this repository).
 
 ### C#
 
@@ -74,7 +74,7 @@ The C# example, `mcp/examples/csharp/`, is the same server on `ModelContextProto
 | File | What it shows |
 |---|---|
 | `Program.cs` | load the renderer, then `AddMcpServer().WithStdioServerTransport().WithResources<RendererResource>().WithTools<DealTools>().WithMcpApps()` |
-| `Renderer.cs` | `Renderer.LoadAsync`, and the resource with its `_meta.ui` |
+| `Renderer.cs` | `Renderer.LoadAsync`, and the resource with its `_meta.ui`. This is set on the resource contents only; hosts give the content-level value precedence over the listing, which the TypeScript example also sets. |
 | `Deals.cs` | `[McpAppUi(ResourceUri = …)]` on each tool; `Visibility = [McpUiToolVisibility.App]` on `deal_action` |
 
 - The SDK marks its MCP Apps API experimental (`MCPEXP003`); the project file suppresses that diagnostic.
