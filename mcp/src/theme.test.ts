@@ -9,9 +9,11 @@
  *    the host stops sending goes back to the library's own.
  */
 
+import { existsSync, readFileSync } from "node:fs";
+
 import { beforeEach, describe, expect, test } from "vitest";
 
-import { applyHostContext, layoutHeight, themeDeclarations } from "./theme";
+import { applyHostContext, layoutHeight, THEME_MAP, themeDeclarations } from "./theme";
 
 describe("themeDeclarations", () =>
 {
@@ -27,7 +29,7 @@ describe("themeDeclarations", () =>
         }))).toEqual({
             "--theme-surface-bg": "#101", "--theme-surface-raised-bg": "#102", "--theme-surface-sunken-bg": "#103",
             "--theme-surface-inverse-bg": "#104", "--theme-text-primary": "#201", "--theme-text-secondary": "#202",
-            "--theme-text-muted": "#203", "--theme-text-on": "#204", "--theme-border-color": "#301",
+            "--theme-text-muted": "#203", "--theme-text-on-inverse": "#204", "--theme-border-color": "#301",
             "--bs-font-sans-serif": "Host Sans", "--bs-body-font-family": "Host Sans", "--bs-font-monospace": "Host Mono",
             "--bs-border-radius-sm": "2px", "--bs-border-radius": "4px", "--bs-border-radius-lg": "8px",
         });
@@ -38,6 +40,21 @@ describe("themeDeclarations", () =>
         expect(Object.fromEntries(themeDeclarations({ "--color-text-primary": "#201", "--color-text-danger": "#f00",
             "--color-border-primary": undefined }))).toEqual({ "--theme-text-primary": "#201" });
         expect(themeDeclarations(undefined).size).toBe(0);
+    });
+});
+
+describe("THEME_MAP", () =>
+{
+    test("every library token it writes is one the theme CSS declares", () =>
+    {
+        const css = "dist/css/custom.css";
+
+        if (!existsSync(css)) { throw new Error(`${css} is absent. Run npm run build.`); }
+
+        const declared = new Set(readFileSync(css, "utf8").match(/--[\w-]+(?=:)/g));
+        const undeclared = THEME_MAP.flatMap(([, tokens]) => tokens).filter((t) => !declared.has(t));
+
+        expect(undeclared).toEqual([]);
     });
 });
 
