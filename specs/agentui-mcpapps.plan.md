@@ -202,10 +202,10 @@ Built on what M1 produced. The pinned runtime arrives as two IIFE globals, `McpE
 
 ### Steps
 
-- [ ] Gate prefixes, plus the `[31]` failing-then-passing check.
-- [ ] errors, result and router (test first).
-- [ ] theme and size (test first).
-- [ ] view, build and renderer, with `typecheck:mcp`.
-- [ ] e2e host and spec, `test:e2e:mcp`, and the CI steps.
-- [ ] Records: the history entry and CHANGELOG. ADR-251 waits for M3, as planned.
+- [x] Gate prefixes, plus the `[31]` failing-then-passing check.
+- [x] errors, result and router (test first).
+- [x] theme and size (test first).
+- [x] view, build and renderer, with `typecheck:mcp`.
+- [x] e2e host and spec, `test:e2e:mcp`, and the CI steps.
+- [x] Records: the history entry and CHANGELOG. ADR-251 waits for M3, as planned.
 - [ ] Full suites; push; the PR "Closes #105"; CI.
