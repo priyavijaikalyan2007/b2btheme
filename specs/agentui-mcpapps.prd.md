@@ -107,8 +107,10 @@ Status colours, type sizes, weights, line heights and shadows stay unmapped in v
 
 ## 7. Runtime bundles
 
-- `a2ui-runtime-<version>`: `@a2ui/web_core` (v0_9 and the basic catalog) and `@a2ui/lit` v0_9, as one ESM bundle. `@a2ui/markdown-it`'s exact `dompurify` pin is overridden to 3.4.17, the version `/lib/dompurify` already serves.
-- `mcp-ext-apps-<version>`: `@modelcontextprotocol/ext-apps` `App` and style helpers, with its zod 4 peer (zod `>=4.6.6`).
+- `a2ui-runtime-<version>` (global `A2uiRuntime`, about 464 KB): `@a2ui/web_core` v0_9 with its basic catalog, and `@a2ui/lit` v0_9. It contains no markdown-it or DOMPurify, so the DOMPurify advisories in the dev tree don't reach it. It carries web_core's zod 3.25.76, which is what M1 gates.
+- `mcp-ext-apps-<version>` (global `McpExtApps`, about 665 KB): `@modelcontextprotocol/ext-apps` `App` and its style helpers, with `@modelcontextprotocol/core` and `client` 2.4.0 and zod 4.6.7.
+- Both are IIFE bundles assigning a global, like every other `/lib/` asset, so `integrity` on the `<script>` tag covers the whole closure (ADR-149).
+- zod 4.6.7 is a top-level devDependency. An npm override keeps `zod-to-json-schema` (web_core's only zod consumer outside web_core) on zod 3.25.76; without it the A2UI runtime would bundle two zods.
 - Exact pins; `lib-manifest.json` entries with SRI; `audit:vendor` covers them. While M1 holds, `audit:vendor` reports zod 3 as a served hit **in the local build**, and that report is the gate's evidence, not something to silence.
 
 ## 8. Errors, logging, privacy
