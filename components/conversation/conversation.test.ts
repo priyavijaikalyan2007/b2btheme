@@ -12,6 +12,7 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
+import { THEME_MAP } from "../../mcp/src/theme";
 import { createConversation, Conversation } from "./conversation";
 import type {
     ConversationOptions,
@@ -1031,6 +1032,60 @@ describe("Conversation surface contract (B7)", () =>
         conv.setState({});
         conv.setState(conv.getState());
         expect(renderedIds()).toEqual(["m1", "m2"]);
+        conv.destroy();
+    });
+});
+
+// ============================================================================
+// MCP APP STANDARD STYLE VARIABLES (#19 M4)
+// ============================================================================
+
+describe("Conversation MCP app standard style variables (#19 M4)", () =>
+{
+    /** The style block of the first MCP app iframe's srcdoc. */
+    function appStyle(): string
+    {
+        const srcdoc = container.querySelector("iframe")?.getAttribute("srcdoc") ?? "";
+
+        return /<style>(.*?)<\/style>/s.exec(srcdoc)?.[1] ?? "";
+    }
+
+    function openApp(): Conversation
+    {
+        const conv = createConversation(defaultOptions({ enableMcpApps: true }), container);
+
+        conv.addAppMessage("An app", { html: "<p>app</p>" });
+
+        return conv;
+    }
+
+    const root = document.documentElement;
+
+    afterEach(() => { THEME_MAP.flatMap(([, tokens]) => tokens).forEach((t) => root.style.removeProperty(t)); });
+
+    test("emits each MCP view host variable from the token the view maps it to, beside --mcp-*", () =>
+    {
+        THEME_MAP.flatMap(([, tokens]) => tokens).forEach((token) => root.style.setProperty(token, `v${token}`));
+
+        const conv = openApp();
+        const style = appStyle();
+
+        // The inverse of the view's map: each host name carries its first library token's value.
+        for (const [host, tokens] of THEME_MAP) { expect(style).toContain(`${host}: v${tokens[0]};`); }
+        expect(style.match(/--(color|font|border-radius)-[a-z-]+:/g)?.length).toBe(THEME_MAP.length);
+        expect(style).toContain("--mcp-background:");
+        conv.destroy();
+    });
+
+    test("leaves out a standard variable whose token has no value; the --mcp-* names are unchanged", () =>
+    {
+        const conv = openApp();
+        const style = appStyle();
+
+        expect(style).not.toMatch(/--(color|font|border-radius)-/);
+        expect(style.match(/--mcp-[a-z-]+:/g)).toEqual(["--mcp-primary:", "--mcp-background:", "--mcp-text:",
+            "--mcp-border:", "--mcp-surface-raised:", "--mcp-text-secondary:", "--mcp-font-family:",
+            "--mcp-font-size:"]);
         conv.destroy();
     });
 });
