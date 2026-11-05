@@ -50,6 +50,14 @@ interface McpExtAppsGlobal
     App: typeof App;
 }
 
+declare global
+{
+    /** Defined by /lib/a2ui-runtime-<version>.js. */
+    var A2uiRuntime: A2uiRuntimeGlobal | undefined;
+    /** Defined by /lib/mcp-ext-apps-<version>.js. */
+    var McpExtApps: McpExtAppsGlobal | undefined;
+}
+
 interface AdapterModule
 {
     createOutcropCatalog(webCore: OutcropWebCore, options: OutcropCatalogOptions): unknown;
@@ -236,8 +244,8 @@ class View
  */
 async function start(): Promise<void>
 {
-    const runtime = pageGlobal<A2uiRuntimeGlobal>("A2uiRuntime", "/lib/a2ui-runtime-<version>.js");
-    const extApps = pageGlobal<McpExtAppsGlobal>("McpExtApps", "/lib/mcp-ext-apps-<version>.js");
+    const runtime = pageGlobal(globalThis.A2uiRuntime, "A2uiRuntime", "/lib/a2ui-runtime-<version>.js");
+    const extApps = pageGlobal(globalThis.McpExtApps, "McpExtApps", "/lib/mcp-ext-apps-<version>.js");
     const root = document.getElementById(ROOT_ID);
 
     if (!root) { throw new Error(`renderer.html has no #${ROOT_ID} element.`); }
@@ -280,13 +288,11 @@ async function start(): Promise<void>
 }
 
 /** A global the page's pinned <script> defines; its absence is a broken page, not something to work around. */
-function pageGlobal<T>(name: string, path: string): T
+function pageGlobal<T>(value: T | undefined, name: string, path: string): T
 {
-    const value = (globalThis as Record<string, unknown>)[name];
-
     if (value === undefined) { throw new Error(`${name} is not defined: renderer.html must load ${path} first.`); }
 
-    return value as T;
+    return value;
 }
 
 /** A hidden alert line. */
