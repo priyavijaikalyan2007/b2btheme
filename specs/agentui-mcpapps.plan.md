@@ -221,7 +221,7 @@ This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_
   - `server.ts` wires those functions to `McpServer` with `registerAppResource` and `registerAppTool` from `@modelcontextprotocol/ext-apps/server`. The SDK's `RESOURCE_MIME_TYPE` is `text/html;profile=mcp-app`, which matches the spec.
 - **The renderer is passed in, never bundled.**
   - `createServer({ html, meta })` takes the page bytes and the `_meta.ui` block.
-  - `loadRenderer(cdn)` fetches `/mcp/renderer.html` and `/mcp/renderer.meta.json` from `https://static.outcrop.us`. A non-OK response throws. Until #36 clears, that fetch 404s, and the guide says so.
+  - `loadRenderer()` fetches `/mcp/renderer.html` and `/mcp/renderer.meta.json` from `https://static.outcrop.us`. A non-OK response throws. Until #36 clears, that fetch 404s, and the guide says so.
   - The tests pass in `gated/mcp/renderer.html` and `dist/mcp/renderer.meta.json`.
   - There is no embedded copy: it would go stale, and it would be fallback code.
 - **What the example demonstrates.** The `show_deal` tool, linked to `ui://outcrop-example/renderer`, returns one surface:
@@ -257,7 +257,7 @@ This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_
 | File | Responsibility |
 |---|---|
 | `mcp/examples/typescript/deals.ts` | `showDeal()`, `dealAction(args)`, and the surface and route constants |
-| `mcp/examples/typescript/server.ts` | `loadRenderer(cdn)`, `createServer(renderer)`, and `main()` over stdio |
+| `mcp/examples/typescript/server.ts`, `main.ts` | `loadRenderer()` and `createServer(renderer)`; `main.ts` runs it over stdio (a separate file, so the Playwright spec, loaded as CommonJS, can import `server.ts`) |
 | `mcp/examples/typescript/server.test.ts` | the server over `InMemoryTransport` |
 | `mcp/examples/tsconfig.json` | `typecheck:mcp-examples` |
 | `mcp/examples/csharp/*` | the same server in C# |
@@ -267,9 +267,9 @@ This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_
 
 ### Steps
 
-- [ ] `deals.ts` and `server.ts`, test first: the server test, then the code. Add `typecheck:mcp-examples`.
-- [ ] Host `delegate`, the spec's happy paths through the example, and the provider-request e2e.
-- [ ] The C# example: read the package API, write it, build it, and smoke-test it over stdio.
-- [ ] Both guides and the `INDEX.md` entries.
-- [ ] `CDN_CONTRACT.md`, ADR-251, history and CHANGELOG.
+- [x] `deals.ts` and `server.ts`, test first: the server test, then the code. Add `typecheck:mcp-examples`.
+- [x] Host `delegate`, the spec's happy paths through the example, and the provider-request e2e.
+- [x] The C# example: read the package API, write it, build it, and smoke-test it over stdio.
+- [x] Both guides and the `INDEX.md` entries.
+- [x] `CDN_CONTRACT.md`, ADR-251, history and CHANGELOG.
 - [ ] Full suites; push; the PR "Closes #106"; CI.
