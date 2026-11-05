@@ -33,7 +33,7 @@ export const THEME_MAP: ReadonlyArray<readonly [string, readonly string[]]> = [
     ["--color-text-primary", ["--theme-text-primary"]],
     ["--color-text-secondary", ["--theme-text-secondary"]],
     ["--color-text-tertiary", ["--theme-text-muted"]],
-    ["--color-text-inverse", ["--theme-text-on"]],
+    ["--color-text-inverse", ["--theme-text-on-inverse"]],
     ["--color-border-primary", ["--theme-border-color"]],
     ["--font-sans", ["--bs-font-sans-serif", "--bs-body-font-family"]],
     ["--font-mono", ["--bs-font-monospace"]],

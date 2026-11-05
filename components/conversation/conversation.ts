@@ -792,6 +792,50 @@ function buildCSPMetaTag(config: McpAppConfig): string
 }
 
 /**
+ * The MCP Apps standard style variables, each read from the library token it
+ * stands for (#19 M4, additive beside the --mcp-* names), so an app whose CSS
+ * uses the MCP Apps names (var(--color-text-primary) and so on) takes this
+ * page's theme. The inverse of the MCP view's THEME_MAP (mcp/src/theme.ts);
+ * a Conversation test holds the two tables together.
+ */
+const MCP_STANDARD_VARIABLES: ReadonlyArray<readonly [string, string]> = [
+    ["--color-background-primary", "--theme-surface-bg"],
+    ["--color-background-secondary", "--theme-surface-raised-bg"],
+    ["--color-background-tertiary", "--theme-surface-sunken-bg"],
+    ["--color-background-inverse", "--theme-surface-inverse-bg"],
+    ["--color-text-primary", "--theme-text-primary"],
+    ["--color-text-secondary", "--theme-text-secondary"],
+    ["--color-text-tertiary", "--theme-text-muted"],
+    ["--color-text-inverse", "--theme-text-on-inverse"],
+    ["--color-border-primary", "--theme-border-color"],
+    ["--font-sans", "--bs-font-sans-serif"],
+    ["--font-mono", "--bs-font-monospace"],
+    ["--border-radius-sm", "--bs-border-radius-sm"],
+    ["--border-radius-md", "--bs-border-radius"],
+    ["--border-radius-lg", "--bs-border-radius-lg"],
+];
+
+/**
+ * The standard variables whose library token has a value on the document
+ * root, where the --mcp-* theme tokens are read too (the app frame is not
+ * attached yet when its srcdoc is built). A token with no value is left
+ * out, as hosts leave out what they do not have.
+ */
+function standardStyleDeclarations(docCs: CSSStyleDeclaration): string[]
+{
+    const out: string[] = [];
+
+    for (const [name, token] of MCP_STANDARD_VARIABLES)
+    {
+        const value = docCs.getPropertyValue(token).trim();
+
+        if (value !== "") { out.push(`${name}: ${value};`); }
+    }
+
+    return out;
+}
+
+/**
  * Extracts Bootstrap theme values from computed styles on a reference
  * element and returns a CSS custom property block for MCP app theming.
  */
@@ -812,8 +856,8 @@ function buildThemeStyleBlock(refEl: HTMLElement): string
         "--mcp-font-family": cs.fontFamily || "sans-serif",
         "--mcp-font-size": cs.fontSize || "14px",
     };
-    const lines = Object.entries(vars)
-        .map(([k, v]) => `${k}: ${v};`).join(" ");
+    const lines = [...Object.entries(vars).map(([k, v]) => `${k}: ${v};`),
+        ...standardStyleDeclarations(docCs)].join(" ");
     const tableStyles = [
         "table { border-collapse: collapse; color: var(--mcp-text); }",
         "th, td { border: 1px solid var(--mcp-border);",

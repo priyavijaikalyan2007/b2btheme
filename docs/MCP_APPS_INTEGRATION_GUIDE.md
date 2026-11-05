@@ -134,7 +134,7 @@ The view applies the host's theme before it renders anything, and again whenever
 |---|---|
 | `theme` | `data-bs-theme` on `<html>`, and `color-scheme` |
 | `--color-background-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-surface-bg`, `--theme-surface-raised-bg`, `--theme-surface-sunken-bg`, `--theme-surface-inverse-bg` |
-| `--color-text-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-text-primary`, `--theme-text-secondary`, `--theme-text-muted`, `--theme-text-on` |
+| `--color-text-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-text-primary`, `--theme-text-secondary`, `--theme-text-muted`, `--theme-text-on-inverse` |
 | `--color-border-primary` | `--theme-border-color` |
 | `--font-sans`, `--font-mono` | `--bs-font-sans-serif` and `--bs-body-font-family`, `--bs-font-monospace` |
 | `--border-radius-sm`, `-md`, `-lg` | `--bs-border-radius-sm`, `--bs-border-radius`, `--bs-border-radius-lg` |

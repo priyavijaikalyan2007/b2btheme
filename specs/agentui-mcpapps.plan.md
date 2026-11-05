@@ -272,4 +272,20 @@ This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_
 - [x] The C# example: read the package API, write it, build it, and smoke-test it over stdio.
 - [x] Both guides and the `INDEX.md` entries.
 - [x] `CDN_CONTRACT.md`, ADR-251, history and CHANGELOG.
-- [ ] Full suites; push; the PR "Closes #106"; CI.
+- [x] Full suites; push; the PR "Closes #106"; CI.
+
+## M4 (#107): Conversation's standard style variables
+
+### Decisions made while planning
+
+- **What Conversation is.** Its MCP app iframe is not an MCP Apps host: the app gets a `<style>` block and `window.mcpBridge` in its `srcdoc`, with no `ui/initialize`. So the standard names go into that same style block, beside the unchanged `--mcp-*` names, where an app's CSS can use them.
+- **One derivation rule.** Each standard name is written from the library token the view's `THEME_MAP` maps it to; where `THEME_MAP` lists two tokens, Conversation reads the first. A Conversation test drives from `THEME_MAP`, so the tables cannot drift.
+- **Where the values come from.** They are read from the document root, as the existing theme tokens are: the frame element is not yet attached when its `srcdoc` is built. A token with no value is left out, as hosts leave out what they do not have.
+- **A fix found on the way.** `THEME_MAP` mapped `--color-text-inverse` to `--theme-text-on`, which the theme does not declare. It now maps to `--theme-text-on-inverse`, and a test fails if any mapped token is missing from the built CSS. The view is gated, so no consumer saw the old map.
+
+### Steps
+
+- [x] Fix the inverse-text mapping, with the declared-token test.
+- [x] Conversation's standard variables, with tests from `THEME_MAP`, and the README.
+- [x] Records: history and CHANGELOG.
+- [ ] Full suites; push; the PR "Closes #107"; CI.

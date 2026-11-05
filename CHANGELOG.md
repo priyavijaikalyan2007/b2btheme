@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Conversation: standard MCP Apps style variables (#19, M4)**: an MCP app's iframe now also gets `--color-background-*`, `--color-text-*`, `--color-border-primary`, `--font-sans`, `--font-mono` and `--border-radius-*` from the page's theme, so apps styled with the MCP Apps names follow it. Additive: the `--mcp-*` names are unchanged.
 - **MCP Apps example servers and guides (#19, M3, ADR-251)**: `mcp/examples/typescript/` is an MCP server that shows these components in MCP Apps hosts, tested in CI against the view; `mcp/examples/csharp/` is the same server on the .NET MCP SDK. `docs/MCP_APPS_INTEGRATION_GUIDE.md` (for developers) and `docs/MCP_APPS_AGENT_GUIDE.md` (for coding agents) document the server contract, now recorded in `CDN_CONTRACT.md` §2c. Still not served: publication waits for #36.
 - **MCP Apps renderer view (#19, M2)**: `mcp/src/` renders A2UI tool results inside MCP Apps hosts, in the host's theme, and routes component actions to a server tool or to the conversation as each result declares. `npm run build:gated` builds it with `renderer.html` into `gated/mcp/`; `npm run test:e2e:mcp` runs it under the MCP Apps SDK's own host bridge. Held back from `dist/` by #36 like the runtime. No change for current consumers.
 - **MCP Apps groundwork (#19, M1, ADR-250)**: the renderer view's A2UI runtime and MCP Apps bridge are built and audited by `npm run build:gated` and `npm run audit:gated`, into a git-ignored `gated/` directory. Nothing is served yet: publication waits for #36 (web_core still requires zod 3). Check `[31]` proves nothing gated reaches `dist/`. No change for current consumers.
@@ -60,6 +61,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **Agent-protocol artefacts** — per-component option schemas, an A2UI v0.9.1 catalog (static.outcrop.us/a2ui/catalog/v1.json) and MCP renderer metadata, generated and gated at build time. ADR-219.
 
 ### Fixed
+- **MCP Apps view (unpublished)**: a host's `--color-text-inverse` now sets `--theme-text-on-inverse`; it was mapped to `--theme-text-on`, which the theme does not declare.
 - **The cloud icons are served** (ADR-248). `cloud-icons/` was copied only by `build.sh`, which the CDN build does not run, so its files returned 404. They now live in `icon-packs/aws|azure|gcp` with clean names and a `legacy-map.json` from old paths to new; `cloud-icons/` is removed.
 - **CI check [29] accepts components out of the catalog.** It read only the report's `excluded` list, so the four components ADR-247 keeps out of the catalog failed it, and CI stopped at the structure checks from #90 to #93 (#94).
 - **MarkdownEditor's preview no longer loads code from unpkg.com.** Display mode and the Preview tab render through `Vditor.preview()`, which wasn't given the self-hosted `cdn` the editor uses. So Vditor fetched its markdown engine, lute, as a script from `unpkg.com`, which the editor's own rule forbids and a strict CSP blocks. Both now use this library's mirror.

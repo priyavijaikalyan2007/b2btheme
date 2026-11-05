@@ -507,7 +507,17 @@ When `showCanvas` is true, inline MCP apps display an "expand" button. Clicking 
 MCP app HTML is injected into a sandboxed iframe via `srcdoc`. The component automatically prepends:
 
 1. A **Content Security Policy** meta tag restricting resource access
-2. A **theme style block** injecting `--mcp-*` CSS custom properties (colours, fonts) computed from the host page's Bootstrap theme at runtime
+2. A **theme style block** injecting `--mcp-*` CSS custom properties (colours, fonts) computed from the host page's Bootstrap theme at runtime. Beside them it sets the MCP Apps standard style variables, each from the library token it stands for, so an app styled with the standard names follows the page's theme:
+
+    | Standard variable | From |
+    |---|---|
+    | `--color-background-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-surface-bg`, `--theme-surface-raised-bg`, `--theme-surface-sunken-bg`, `--theme-surface-inverse-bg` |
+    | `--color-text-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-text-primary`, `--theme-text-secondary`, `--theme-text-muted`, `--theme-text-on-inverse` |
+    | `--color-border-primary` | `--theme-border-color` |
+    | `--font-sans`, `--font-mono` | `--bs-font-sans-serif`, `--bs-font-monospace` |
+    | `--border-radius-sm`, `-md`, `-lg` | `--bs-border-radius-sm`, `--bs-border-radius`, `--bs-border-radius-lg` |
+
+    The values are read from the document root when the app opens. A token with no value is left out. The `--mcp-*` names are unchanged.
 3. A **bridge script** providing `window.mcpBridge.send(method, params)` and `window.mcpBridge.onMessage` for JSON-RPC 2.0 communication with the host
 
 Example MCP app HTML that communicates with the host:
