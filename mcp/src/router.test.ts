@@ -42,12 +42,12 @@ describe("what an action becomes", () =>
     test("a tool route's arguments carry the surface and the A2UI action message", () =>
     {
         expect(toolArguments(action)).toEqual({ outcrop: { version: 1, surfaceId: "deal",
-            action: { version: "v0.9", action } } });
+            action: { version: "v0.9.1", action } } });
     });
 
     test("a message route's text is one descriptive line, then the action as JSON", () =>
     {
         expect(messageText(action)).toBe("The user chose \"approve\" on \"ok\" in surface \"deal\".\n"
-            + JSON.stringify({ version: "v0.9", action }));
+            + JSON.stringify({ version: "v0.9.1", action }));
     });
 });

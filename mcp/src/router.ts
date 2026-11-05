@@ -22,7 +22,7 @@ import { OUTCROP_VERSION } from "./result";
 import type { Route, Routes } from "./result";
 
 /** The A2UI protocol version of the action messages the view sends. */
-const A2UI_VERSION = "v0.9";
+const A2UI_VERSION = "v0.9.1";
 
 /**
  * The route for an action: byName first, then the default.
