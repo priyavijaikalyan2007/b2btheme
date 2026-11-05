@@ -749,6 +749,19 @@ else
 fi
 echo ""
 
+# ── 31. Nothing a publication gate holds back is deployed (#19, M1) ──
+#
+# Cloudflare deploys dist/ as it stands. A gated file (scripts/gated.mjs)
+# is built into gated/ instead; finding one in dist/ means a gate was
+# bypassed, not lifted. Lifting a gate is a reviewed change to gated.mjs.
+echo "[31] Nothing held by a publication gate is in dist (specs/agentui-mcpapps.prd.md M1)"
+if node scripts/check-gated.mjs; then
+    pass "No gated file or lib-manifest URL is in dist"
+else
+    fail "a file a publication gate holds back is in dist (see above)"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"
