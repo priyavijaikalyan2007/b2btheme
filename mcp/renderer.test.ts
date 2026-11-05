@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 /**
- * ⚓ TESTS: McpViewBuild. The renderer page a server returns as its ui://
+ * ⚓ TESTS: McpRendererPage. The renderer page a server returns as its ui://
  *    resource text (spec §5.3): absolute URLs only, pinned runtime with SRI
  *    before the view, and no theme of its own.
  */
 
 import { describe, expect, test } from "vitest";
 
-import { rendererHtml } from "./build.mjs";
+import { rendererHtml } from "./renderer.mjs";
 
 const libs = [
     { url: "/lib/mcp-ext-apps-2.0.4.js", integrity: "sha384-AAA" },
@@ -25,10 +25,10 @@ describe("rendererHtml", () =>
 
     test("loads the runtime with SRI and CORS, in order, then the view as a module", () =>
     {
-        expect([...doc.querySelectorAll("script")].map((s) => [s.src, s.integrity, s.crossOrigin, s.type])).toEqual([
+        expect([...doc.querySelectorAll("script")].map((s) => [s.src, s.getAttribute("integrity"), s.crossOrigin, s.type])).toEqual([
             ["https://static.outcrop.us/lib/mcp-ext-apps-2.0.4.js", "sha384-AAA", "anonymous", ""],
             ["https://static.outcrop.us/lib/a2ui-runtime-0.14.0.js", "sha384-BBB", "anonymous", ""],
-            ["https://static.outcrop.us/mcp/view/v1.js", "", null, "module"],
+            ["https://static.outcrop.us/mcp/view/v1.js", null, null, "module"],
         ]);
     });
 
@@ -43,7 +43,9 @@ describe("rendererHtml", () =>
 
     test("every URL is absolute (hosts load the page by srcdoc) and nothing sets a theme", () =>
     {
-        expect(html).not.toMatch(/(src|href)="\//);
+        const urls = [...doc.querySelectorAll("[src], [href]")].map((el) => el.getAttribute("src") ?? el.getAttribute("href"));
+
+        expect(urls.filter((url) => !url?.startsWith("https://"))).toEqual([]);
         expect(html).not.toMatch(/data-bs-theme|theme-init/);
         expect(doc.getElementById("outcrop-mcp")).not.toBeNull();
     });

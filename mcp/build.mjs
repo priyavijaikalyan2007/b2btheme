@@ -7,7 +7,7 @@
  *    ESM file, and renderer.html, the thin page a server returns as its
  *    ui:// resource text (spec §5.3). Both are gated (#36), so they go to
  *    gated/mcp/, never dist/.
- * 🔗 RELATES: [[McpView]], [[PublicationGate]], [[VendorClosure]]
+ * 🔗 RELATES: [[McpView]], [[McpRendererPage]], [[PublicationGate]], [[VendorClosure]]
  * ⚡ FLOW: [gated/lib-manifest.json] -> [rendererHtml] -> [gated/mcp/renderer.html]
  *          [mcp/src/view.ts] -> [esbuild] -> [gated/mcp/view/v1.js]
  *
@@ -24,6 +24,7 @@ import { build } from "esbuild";
 
 import { CATALOG_ORIGIN } from "../scripts/agentui/catalog.mjs";
 import { GATED_DIR } from "../scripts/gated.mjs";
+import { rendererHtml } from "./renderer.mjs";
 
 const SRC = "mcp/src";
 const VIEW_OUT = join(GATED_DIR, "mcp/view/v1.js");
@@ -31,46 +32,6 @@ const PAGE_OUT = join(GATED_DIR, "mcp/renderer.html");
 const MANIFEST = join(GATED_DIR, "lib-manifest.json");
 /** The runtime, in load order: the host bridge, then A2UI. */
 const RUNTIME = ["mcp-ext-apps", "a2ui-runtime"];
-const FONTS = "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;"
-    + "1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap";
-
-/**
- * The renderer page. URLs are absolute: hosts load these bytes by srcdoc,
- * where a root-relative URL would resolve against the host. It sets no
- * theme; the view applies the host's after ui/initialize (spec §6).
- *
- * @param {string} origin The CDN origin, no trailing slash.
- * @param {Array<{url: string, integrity: string}>} libs The runtime, in load order.
- * @returns {string} The HTML.
- */
-export function rendererHtml(origin, libs)
-{
-    const scripts = libs.map(({ url, integrity }) =>
-        `<script src="${origin}${url}" integrity="${integrity}" crossorigin="anonymous"></script>`);
-
-    return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Outcrop</title>
-<link rel="stylesheet" href="${FONTS}">
-<link rel="stylesheet" href="${origin}/css/custom.css">
-<link rel="stylesheet" href="${origin}/icons/bootstrap-icons.css">
-<style>
-body { margin: 0; padding: 0.5rem; background: var(--theme-surface-bg); color: var(--theme-text-primary); }
-.outcrop-mcp-surface + .outcrop-mcp-surface { margin-top: 0.75rem; }
-</style>
-${scripts.join("\n")}
-<script type="module" src="${origin}/mcp/view/v1.js"></script>
-</head>
-<body>
-<main id="outcrop-mcp"></main>
-</body>
-</html>
-`;
-}
-
 /** Builds both files; fails if the gated runtime is not built or the view bundled anything outside mcp/src. */
 async function main()
 {
