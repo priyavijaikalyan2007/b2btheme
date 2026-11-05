@@ -1071,7 +1071,7 @@ describe("Conversation MCP app standard style variables (#19 M4)", () =>
         const style = appStyle();
 
         // The inverse of the view's map: each host name carries its first library token's value.
-        for (const [host, tokens] of THEME_MAP) { expect(style).toContain(`${host}: v${tokens[0]};`); }
+        expect(THEME_MAP.filter(([host, tokens]) => !style.includes(`${host}: v${tokens[0]};`))).toEqual([]);
         expect(style.match(/--(color|font|border-radius)-[a-z-]+:/g)?.length).toBe(THEME_MAP.length);
         expect(style).toContain("--mcp-background:");
         conv.destroy();
