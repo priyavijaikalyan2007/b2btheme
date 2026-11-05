@@ -132,7 +132,7 @@ Sequential PRs against main, not stacked.
 | PR | Contents | Issue |
 |---|---|---|
 | M1 | Runtime bundles (§7), the local-only build directory and its gate check, lib-manifest and audit wiring. | #104 |
-| M2 | The view: `mcp/` sources (`bridge`, `theme`, `router`, `size`, `view`), `renderer.html`, `renderer.meta.json` update; the e2e test host on the SDK's `AppBridge`; unit and e2e tests (§10). | #105 |
+| M2 | The view: `mcp/src/` (`errors`, `result`, `router`, `theme` with sizing, `view`), `renderer.html` (`renderer.meta.json` unchanged: the view needs only the origins it already names); the e2e test host on the SDK's `AppBridge`; unit and e2e tests (§10). | #105 |
 | M3 | The example TypeScript MCP server (tested in CI), the C# example, `docs/MCP_APPS_INTEGRATION_GUIDE.md` (humans), `docs/MCP_APPS_AGENT_GUIDE.md` (coding agents), `CDN_CONTRACT.md` §, ADRs, knowledge records. | #106 |
 | M4 | Conversation emits the standard MCP Apps style variables beside `--mcp-*` (additive, labelled). | #107 |
 
