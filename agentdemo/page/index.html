@@ -46,6 +46,8 @@
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script src="/components/logutility/logutility.js"></script>
     <script src="{{CODEMIRROR_URL}}"></script>
+    <!-- Google's A2UI renderer (web_core + Lit), vendored, pinned and audited (ADR-253). main.js bundles none of it. -->
+    <script src="{{A2UI_RUNTIME_URL}}" integrity="{{A2UI_RUNTIME_INTEGRITY}}" crossorigin="anonymous"></script>
     <script src="/components/toolbar/toolbar.js"></script>
     <script src="/components/splitlayout/splitlayout.js"></script>
     <script src="/components/codeeditor/codeeditor.js"></script>

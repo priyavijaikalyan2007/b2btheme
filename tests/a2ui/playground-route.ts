@@ -10,6 +10,8 @@
  *    agentdemo/.out by route, next to the dist/ tree the Playwright web
  *    server already serves at :8000. The page then loads the adapter and
  *    components from dist/ exactly as it does under `npm run demo:a2ui`.
+ *    `published` opens the copy `npm run build` puts at dist/demo/a2ui/,
+ *    the one the CDN serves (ADR-253).
  * 🔗 RELATES: [[A2uiPlayground]], [[A2uiHarness]]
  * ⚡ FLOW: [Playwright spec] -> [route /playground/*] -> [agentdemo/.out]
  * ----------------------------------------------------------------------------
@@ -34,8 +36,25 @@ export function buildOnce(): Promise<string>
     return built;
 }
 
-/** Routes /playground/* to the build, records CSP violations, opens the page and waits for it. */
-export async function openPlayground(page: Page): Promise<void>
+/** Routes /playground/* to the build (or opens the published copy), records CSP violations, waits for the page. */
+export async function openPlayground(page: Page, where: "local" | "published" = "local"): Promise<void>
+{
+    if (where === "local") { await routeLocal(page); }
+
+    await page.addInitScript(() =>
+    {
+        const w = window as unknown as { __csp: string[] };
+
+        w.__csp = [];
+        document.addEventListener("securitypolicyviolation",
+            (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+    });
+    await page.goto(`${ORIGIN}${where === "local" ? "/playground/" : "/demo/a2ui/"}`);
+    await page.waitForFunction(() => !!(window as unknown as { a2uiPlayground?: unknown }).a2uiPlayground);
+}
+
+/** Serves /playground/* from the local build. */
+async function routeLocal(page: Page): Promise<void>
 {
     const out = await buildOnce();
 
@@ -49,16 +68,6 @@ export async function openPlayground(page: Page): Promise<void>
         await route.fulfill({ contentType: TYPES[path.extname(file)] ?? "application/octet-stream",
             body: fs.readFileSync(file) });
     });
-    await page.addInitScript(() =>
-    {
-        const w = window as unknown as { __csp: string[] };
-
-        w.__csp = [];
-        document.addEventListener("securitypolicyviolation",
-            (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
-    });
-    await page.goto(`${ORIGIN}/playground/`);
-    await page.waitForFunction(() => !!(window as unknown as { a2uiPlayground?: unknown }).a2uiPlayground);
 }
 
 /** The CSP violations recorded so far. */

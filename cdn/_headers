@@ -75,6 +75,15 @@
   Cache-Control: public, max-age=300, stale-while-revalidate=86400
   Access-Control-Allow-Origin: *
 
+# The public A2UI playground (#36, ADR-253): an unversioned page rebuilt on
+# every deploy. Visitors paste their own API key into it, so no other site
+# may frame it (frame-ancestors cannot be set from the page's own meta CSP,
+# which already limits connect-src to the two provider APIs).
+/demo/a2ui/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Content-Security-Policy: frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+
 # Demo videos (#30 spec §7.4): an unversioned path whose content changes
 # when a scenario is re-recorded, so never immutable. A day's cache keeps a
 # long video off the origin; a re-recording shows within a day.
