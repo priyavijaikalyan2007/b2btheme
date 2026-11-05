@@ -81,6 +81,9 @@ jobs:
       - name: Typecheck the A2UI playground
         run: npm run typecheck:agentdemo
 
+      - name: Typecheck the MCP Apps view
+        run: npm run typecheck:mcp
+
       - name: Run unit tests with coverage
         run: npm run test:unit:coverage
 
@@ -104,6 +107,15 @@ jobs:
 
       - name: Run A2UI browser tests
         run: npm run test:e2e:a2ui
+
+      # The MCP Apps view (#19) is built and tested but held back from dist/
+      # by publication gate #36, so it builds into gated/ here, never in
+      # npm run build (which is what Cloudflare deploys).
+      - name: Build the gated MCP Apps view
+        run: npm run build:gated
+
+      - name: Run MCP Apps view browser tests
+        run: npm run test:e2e:mcp
 
       - name: Upload Playwright failure artifacts
         if: failure()
