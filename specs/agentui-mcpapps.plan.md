@@ -288,4 +288,4 @@ This milestone builds on what M2 produced: `parseResult`, the five `OUTCROP_MCP_
 - [x] Fix the inverse-text mapping, with the declared-token test.
 - [x] Conversation's standard variables, with tests from `THEME_MAP`, and the README.
 - [x] Records: history and CHANGELOG.
-- [ ] Full suites; push; the PR "Closes #107"; CI.
+- [x] Full suites; push; the PR "Closes #107"; CI.

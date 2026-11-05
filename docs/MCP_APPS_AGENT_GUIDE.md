@@ -14,7 +14,7 @@ Created: 2026-11-05
 
 Rules for a coding agent adding Outcrop UI to an MCP server. For the reasons behind them, read `MCP_APPS_INTEGRATION_GUIDE.md`.
 
-**Status:** not served until issue #36 clears (ADR-250). `/mcp/renderer.html` answers 404 until then. Do not work around that: no copy, no fallback.
+**If `/mcp/renderer.html` fails to fetch, stop.** Do not work around it: no copy, no fallback.
 
 ## Exact names
 

@@ -70,7 +70,7 @@ CDN-hosted icons.
 Show these components inside MCP Apps hosts (Claude, ChatGPT, VS Code) from
 an MCP server in any language: the `/mcp/renderer.html` view, the tool
 result contract, action routes, theming, error codes, and TypeScript and C#
-examples. Not served until #36 clears.
+examples.
 
 ### 2. **[Design Tokens](DESIGN_TOKENS.md)** (auto-generated)
 Every SCSS variable from `_variables.scss` — colours, typography, spacing, borders, component padding — grouped by category with resolved values.
