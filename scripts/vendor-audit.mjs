@@ -63,14 +63,17 @@
  * The same rule covers an absent manifest and an empty package set
  * (ADR-196).
  *
- * Usage: node scripts/vendor-audit.mjs
+ * Usage: node scripts/vendor-audit.mjs            the set dist/ serves (CI)
+ *        node scripts/vendor-audit.mjs --gated    the set a publication gate
+ *                                                 holds back (gated/, #19 M1)
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const MANIFEST = "dist/lib-manifest.json";
+const GATED_MANIFEST = "gated/lib-manifest.json";
 const AGENTUI_REPORT = "dist/agentui-report.json";
 const ADAPTER_ASSET = "a2ui/adapter (A2UI adapter bundle)";
 
@@ -287,9 +290,63 @@ function main()
     process.exit(1);
 }
 
+/**
+ * Audits what a publication gate holds back, one asset at a time.
+ *
+ * Unlike dist/, the gated set may hold one package at two versions in two
+ * assets: web_core's zod 3 in a2ui-runtime and the MCP SDK's zod 4 in
+ * mcp-ext-apps. One name-to-version map would keep only one of them, so
+ * each asset is audited on its own. Freshness is the lockfile's age against
+ * the manifest's: assertFresh reads top-level node_modules, which cannot see
+ * a nested copy.
+ *
+ * A FAIL here is the gate's evidence, not a CI failure: the gate exists
+ * because these files carry an advisory.
+ */
+function gatedMain()
+{
+    if (!existsSync(GATED_MANIFEST))
+    {
+        throw new Error(`${GATED_MANIFEST} is absent. Run \`npm run build:gated\` first.`);
+    }
+
+    const manifest = JSON.parse(readFileSync(GATED_MANIFEST, "utf8"));
+
+    if (Date.parse(manifest.generated) < statSync("package-lock.json").mtimeMs)
+    {
+        throw new Error(`${GATED_MANIFEST} is older than package-lock.json, so it may describe ` +
+            "versions no longer installed. Run `npm run build:gated`.");
+    }
+
+    const assets = Object.entries(manifest.assets ?? {});
+    if (assets.length === 0) { throw new Error(`${GATED_MANIFEST} lists no assets.`); }
+
+    const report = auditReport();
+    let failed = 0;
+
+    for (const [assetName, asset] of assets)
+    {
+        const served = new Map(Object.entries(asset.packages ?? {}));
+        const hits = servedHits(report.vulnerabilities ?? {}, served);
+
+        console.log(`[vendor-audit] ${assetName} (gate ${asset.gate}): ${served.size} package(s), ` +
+            `${hits.length} with an advisory`);
+
+        for (const { name, entry } of hits)
+        {
+            console.error(`  ${name}@${served.get(name)}  [${entry.severity}]`);
+            for (const via of entry.via ?? []) { console.error(`      ${describe(via)}`); }
+        }
+        failed += hits.length;
+    }
+
+    if (failed > 0) { process.exit(1); }
+    console.log("PASS: nothing the gate holds back carries an advisory. The gate can be reviewed for lifting.");
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
 {
-    try { main(); }
+    try { if (process.argv.includes("--gated")) { gatedMain(); } else { main(); } }
     catch (err)
     {
         console.error(`[vendor-audit] ${String(err.message ?? err)}`);
