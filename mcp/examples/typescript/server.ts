@@ -13,15 +13,12 @@
  *    links show_deal to it, and lets the view call deal_action. The
  *    integration guide shows this file; CI tests it.
  * 🔗 RELATES: [[ExampleDeals]], [[McpView]], docs/MCP_APPS_INTEGRATION_GUIDE.md
- * ⚡ FLOW: [loadRenderer] -> [createServer] -> [stdio]
+ * ⚡ FLOW: [main.ts] -> [loadRenderer] -> [createServer] -> [stdio]
  * ----------------------------------------------------------------------------
  */
 
-import { pathToFileURL } from "node:url";
-
 import { RESOURCE_MIME_TYPE, registerAppResource, registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/server";
-import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 
 import { dealAction, showDeal } from "./deals";
@@ -86,18 +83,4 @@ export function createServer(renderer: Renderer): McpServer
     }, async (args) => dealAction(args));
 
     return server;
-}
-
-async function main(): Promise<void>
-{
-    await createServer(await loadRenderer()).connect(new StdioServerTransport());
-}
-
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href)
-{
-    main().catch((error: unknown) =>
-    {
-        console.error("[outcrop-example]", error);
-        process.exit(1);
-    });
 }

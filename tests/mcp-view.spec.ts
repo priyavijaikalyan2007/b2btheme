@@ -9,6 +9,9 @@
  *    https://static.outcrop.us served from the local build: gated/ for
  *    gated paths, dist/ for the rest, with the CDN's CORS header. Covers
  *    the lifecycle, theming, both routes, every error code and auto-resize.
+ *    The routes run against the example MCP server (M3), the one the
+ *    integration guide shows: the page is its ui:// resource, and the
+ *    host forwards the view's tool calls to it.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -17,6 +20,9 @@ import { expect, test } from "@playwright/test";
 import type { FrameLocator, Page } from "@playwright/test";
 import { build } from "esbuild";
 
+import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
+
+import { createServer, RENDERER_URI } from "../mcp/examples/typescript/server";
 import { GATED_DIR, gatedLeaks } from "../scripts/gated.mjs";
 import type { StartOptions } from "./mcp-host/host";
 
@@ -55,15 +61,10 @@ function outcrop(messages: unknown[], routes?: unknown): StartOptions["result"]
         structuredContent: { outcrop: { version: 1, messages, ...(routes === undefined ? {} : { routes }) } } };
 }
 
-/** The status line after approval: a tool route's answer. */
-const approved = outcrop([{ version: "v0.9.1", updateComponents: { surfaceId: "deal", components: [
-    { id: "status", component: "Text", text: "Approved" }] } }]);
-
-async function open(page: Page, opts: Omit<StartOptions, "html" | "mode"> & { mode?: StartOptions["mode"] })
-    : Promise<FrameLocator>
+async function open(page: Page, opts: Partial<StartOptions>): Promise<FrameLocator>
 {
     await page.evaluate((o) => (window as never as { mcpHost: { start(x: unknown): Promise<void> } }).mcpHost.start(o),
-        { mode: "bridge", ...opts, html: rendererHtml });
+        { mode: "bridge", html: rendererHtml, ...opts });
 
     return page.frameLocator("#view");
 }
@@ -146,56 +147,6 @@ test.describe("MCP Apps view", () =>
         await expect(view.locator("body")).toHaveCSS("color", "rgb(1, 2, 3)");
     });
 
-    test("a tool-routed action calls the tool and applies its result; a result without routes keeps them", async ({ page }) =>
-    {
-        const view = await open(page, { result: outcrop(deal("Awaiting approval"), { default: { tool: "crm_action" } }),
-            tools: { crm_action: approved } });
-
-        await view.getByRole("button", { name: "Approve" }).click();
-
-        await expect(view.getByText("Approved", { exact: true })).toBeVisible();
-        // That result had no routes, so the surface keeps the first result's: a second click is routed too.
-        await view.getByRole("button", { name: "Approve" }).click();
-        await expect.poll(async () => (await record(page)).calls.length).toBe(2);
-        await expect(view.locator("[data-surface=deal] .outcrop-mcp-surface-error")).toBeHidden();
-        expect((await record(page)).calls[0]).toEqual({ name: "crm_action", arguments: { outcrop: { version: 1,
-            surfaceId: "deal", action: { version: "v0.9.1", action: expect.objectContaining({ name: "approve",
-                surfaceId: "deal", sourceComponentId: "approve", context: { id: 7 } }) } } } });
-    });
-
-    test("a message-routed action becomes a user turn", async ({ page }) =>
-    {
-        const view = await open(page, { result: outcrop(deal("Awaiting approval"),
-            { default: { tool: "crm_action" }, byName: { approve: "message" } }) });
-
-        await view.getByRole("button", { name: "Approve" }).click();
-
-        await expect.poll(async () => (await record(page)).messages.length).toBe(1);
-        expect((await record(page)).messages[0].content[0].text)
-            .toMatch(/^The user chose "approve" on "approve" in surface "deal"\.\n\{/);
-        expect((await record(page)).calls).toEqual([]);
-    });
-
-    test("a provider request routes like any action, and the tool's updateDataModel answers it", async ({ page }) =>
-    {
-        const tree = [
-            { version: "v0.9.1", createSurface: { surfaceId: "tree", catalogId: CATALOG } },
-            { version: "v0.9.1", updateComponents: { surfaceId: "tree", components: [{ id: "root",
-                component: "TreeView", eventData: { path: "/ev" }, loadChildrenResult: { path: "/answers/children" },
-                onLoadChildren: { event: { name: "load", context: { node: { path: "/ev/loadChildren" } } } },
-                roots: [{ id: "f", label: "Folder", kind: "folder", children: null, lazy: true }] }] } },
-        ];
-        const children = outcrop([{ version: "v0.9.1", updateDataModel: { surfaceId: "tree", path: "/answers/children",
-            value: [{ id: "c1", label: "Child one", kind: "item" }] } }]);
-        const view = await open(page, { result: outcrop(tree, { byName: { load: { tool: "tree_children" } } }),
-            tools: { tree_children: children } });
-
-        await view.locator("outcrop-tree-view li[data-node-id=\"f\"] > .treeview-node-row .treeview-node-toggle").click();
-
-        await expect(view.locator("outcrop-tree-view").getByText("Child one")).toBeVisible();
-        expect((await record(page)).calls).toEqual([expect.objectContaining({ name: "tree_children" })]);
-    });
-
     test("the view reports its size to the host", async ({ page }) =>
     {
         const view = await open(page, { result: outcrop(deal("Sized")) });
@@ -269,5 +220,72 @@ test.describe("MCP Apps view errors (spec §8)", () =>
         const view = await open(page, { mode: "reject" });
 
         await expect(view.locator("#outcrop-mcp")).toHaveText("This view couldn't connect to its host.");
+    });
+});
+
+test.describe("MCP Apps view with the example server", () =>
+{
+    let client: Client;
+
+    test.beforeEach(async ({ page }) =>
+    {
+        const meta = JSON.parse(readFileSync("dist/mcp/renderer.meta.json", "utf8")) as Record<string, unknown>;
+        const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
+
+        client = new Client({ name: "outcrop-test-host", version: "1.0.0" });
+        await createServer({ html: rendererHtml, meta }).connect(serverSide);
+        await client.connect(clientSide);
+        await page.exposeFunction("mcpServerCall",
+            (name: string, args: Record<string, unknown>) => client.callTool({ name, arguments: args }));
+    });
+
+    test.afterEach(async () => { await client.close(); });
+
+    /** As a host does it: the page from the tool's ui:// resource, then the tool's result. */
+    async function showDeal(page: Page): Promise<FrameLocator>
+    {
+        const [resource] = (await client.readResource({ uri: RENDERER_URI })).contents as Array<{ text: string }>;
+        const result = await client.callTool({ name: "show_deal" }) as StartOptions["result"];
+
+        return open(page, { html: resource.text, result, delegate: true });
+    }
+
+    test("a tool-routed action calls the tool and applies its result; a result without routes keeps them", async ({ page }) =>
+    {
+        const view = await showDeal(page);
+
+        await view.getByRole("button", { name: "Approve" }).click();
+
+        await expect(view.getByText("Deal 7: approved")).toBeVisible();
+        // That result had no routes, so the surface keeps show_deal's: a second click is routed too.
+        await view.getByRole("button", { name: "Approve" }).click();
+        await expect.poll(async () => (await record(page)).calls.length).toBe(2);
+        await expect(view.locator("[data-surface=deal] .outcrop-mcp-surface-error")).toBeHidden();
+        expect((await record(page)).calls[0]).toEqual({ name: "deal_action", arguments: { outcrop: { version: 1,
+            surfaceId: "deal", action: { version: "v0.9.1", action: expect.objectContaining({ name: "approve",
+                surfaceId: "deal", sourceComponentId: "approve", context: { deal: 7 } }) } } } });
+    });
+
+    test("a message-routed action becomes a user turn", async ({ page }) =>
+    {
+        const view = await showDeal(page);
+
+        await view.getByRole("button", { name: "Explain" }).click();
+
+        await expect.poll(async () => (await record(page)).messages.length).toBe(1);
+        expect((await record(page)).messages[0].content[0].text)
+            .toMatch(/^The user chose "explain" on "explain" in surface "deal"\.\n\{/);
+        expect((await record(page)).calls).toEqual([]);
+    });
+
+    test("a provider request routes like any action, and the tool's updateDataModel answers it", async ({ page }) =>
+    {
+        const view = await showDeal(page);
+
+        await view.locator("outcrop-tree-view li[data-node-id=\"contracts\"] > .treeview-node-row .treeview-node-toggle")
+            .click();
+
+        await expect(view.locator("outcrop-tree-view").getByText("Master services agreement.pdf")).toBeVisible();
+        expect((await record(page)).calls).toEqual([expect.objectContaining({ name: "deal_action" })]);
     });
 });
