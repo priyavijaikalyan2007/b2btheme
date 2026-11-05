@@ -49,9 +49,11 @@
     "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
+    "build:gated": "node scripts/vendor-closure.mjs --gated",
     "build:sri": "node scripts/sri-manifest.mjs",
     "sri:verify": "node scripts/sri-manifest.mjs --verify",
     "audit:vendor": "node scripts/vendor-audit.mjs",
+    "audit:gated": "node scripts/vendor-audit.mjs --gated",
     "icons:repack": "node scripts/icons/repack.mjs"
   },
   "keywords": [
@@ -74,10 +76,14 @@
   },
   "_comment_overrides": "undici is pinned to the 7.x line ON PURPOSE. The floor (7.24.1) is the security patch this override was created for; the CEILING matters just as much, because jsdom@29 requires undici ^7.24.3 and reaches into the internal path undici/lib/handler/wrap-handler.js, which undici 8 removed. This override previously read '>=7.24.1' with no upper bound, so it silently resolved to undici 8 and every one of the 142 test files failed to start — vitest then reported 'no tests' rather than a failure. Keep the caret. If you need to move to undici 8, upgrade jsdom first and verify the suite still COLLECTS tests, not merely that it passes.",
   "_comment_overrides_transitive": "source-map-js and shell-quote are overridden to clear advisories in packages no direct dependency pins tightly. source-map-js: five consumers (postcss, sass, jsdom, svgo, magicast) all admit ^1.x, and 1.2.2 patches an event-loop DoS. This override is also why the sass bump in DEBT-SEC-3 is NOT forced by security — sass accepts source-map-js '>=0.6.2 <2.0.0', so the advisory clears while sass stays at 1.95.1 and the shipped-CSS delta stays a deliberate choice rather than a side effect of an audit. shell-quote: npm-run-all requires ^1.6.1 and 1.11.0 patches a quote() command injection; npm-run-all drives build:css, so this one runs on every build. Neither package reaches the browser — 'dependencies' is empty by design and the browser closure is vendored into /lib.",
+  "_comment_overrides_zod": "zod-to-json-schema is pinned to zod 3.25.76 ON PURPOSE. Its only consumer is @a2ui/web_core, which runs zod 3. zod 4 is a top-level devDependency for the MCP Apps SDK (#19), and without this override npm dedupes zod-to-json-schema onto zod 4, so the A2UI runtime would carry two zods. Drop it when web_core moves to zod 4 (#36).",
   "overrides": {
     "undici": "^7.24.3",
     "source-map-js": "^1.2.2",
-    "shell-quote": "^1.11.0"
+    "shell-quote": "^1.11.0",
+    "zod-to-json-schema": {
+      "zod": "3.25.76"
+    }
   },
   "devDependencies": {
     "@a2ui/lit": "0.14.0",
@@ -102,6 +108,10 @@
     "@lezer/highlight": "1.2.5",
     "@maxgraph/core": "0.22.0",
     "@microsoft/signalr": "8.0.0",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/core": "2.4.0",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
+    "@modelcontextprotocol/server": "2.4.0",
     "@playwright/test": "^1.63.0",
     "@vitest/coverage-v8": "^4.1.12",
     "ajv": "8.20.0",
@@ -129,6 +139,7 @@
     "typia": "12.2.1",
     "vditor": "3.11.2",
     "vitest": "^4.1.12",
-    "wrangler": "^4.149.0"
+    "wrangler": "^4.149.0",
+    "zod": "4.6.7"
   }
 }
