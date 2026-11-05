@@ -170,3 +170,7 @@ agentdemo/.out/
 
 # Built and tested, not yet served: held back by a publication gate (scripts/gated.mjs).
 /gated/
+
+# The C# MCP example's build output
+mcp/examples/csharp/bin/
+mcp/examples/csharp/obj/
