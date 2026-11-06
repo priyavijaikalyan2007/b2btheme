@@ -488,6 +488,7 @@ export class GradientPicker implements GradientPickerHandle
     // DOM references
     private rootEl: HTMLElement | null = null;
     private triggerEl: HTMLElement | null = null;
+    /** The trigger swatch's gradient layer, drawn over its checkerboard. */
     private triggerSwatch: HTMLElement | null = null;
     private panelEl: HTMLElement | null = null;
     private previewGradient: HTMLElement | null = null;
@@ -845,10 +846,14 @@ export class GradientPicker implements GradientPickerHandle
             "aria-label": "Open gradient picker"
         });
 
-        this.triggerSwatch = createElement("span", "gradientpicker-trigger-swatch");
+        // The gradient is its own layer above the swatch's checkerboard, as in
+        // the panel preview: painted on the swatch itself, it sat underneath.
+        const swatch = createElement("span", "gradientpicker-trigger-swatch");
+        this.triggerSwatch = createElement("span", "gradientpicker-trigger-swatch-gradient");
+        swatch.appendChild(this.triggerSwatch);
         const chevron = createElement("i", "bi bi-chevron-down gradientpicker-chevron");
 
-        trigger.appendChild(this.triggerSwatch);
+        trigger.appendChild(swatch);
         trigger.appendChild(chevron);
         trigger.addEventListener("click", () => this.handleTriggerClick());
 

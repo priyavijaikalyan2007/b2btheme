@@ -31,6 +31,8 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/contextmenu/contextmenu.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
@@ -57,6 +59,11 @@
             <p class="text-muted">Theme-aware context menu with icons, shortcuts, sub-menus, and keyboard navigation.</p>
             <div id="demo-contextmenu-area" style="position: relative; min-height: 250px; border: 1px solid var(--theme-border-color); padding: 16px; display: flex; align-items: center; justify-content: center; cursor: context-menu; user-select: none; font-size: 14px; color: var(--bs-secondary-color);">
                 Right-click here to open context menu
+            </div>
+            <h2 class="mt-4">ContextMenu — Icon-pack icons</h2>
+            <p class="text-muted">The same <code>icon</code> option, given icon-pack classes such as <code>fluent-ui-cut-16-regular</code> (see <code>docs/ICON_PACKS.md</code>). The colour Document icon turns grey when disabled; a checked item still shows its checkmark; Rename is a bare Bootstrap Icons name.</p>
+            <div id="demo-contextmenu-packs" style="position: relative; min-height: 120px; border: 1px solid var(--theme-border-color); padding: 16px; display: flex; align-items: center; justify-content: center; cursor: context-menu; user-select: none; font-size: 14px; color: var(--bs-secondary-color);">
+                Right-click here for a menu with icon-pack icons
             </div>
             <pre class="demo-output mt-3 p-2" id="demo-output" style="font-size: 12px; max-height: 150px; overflow-y: auto;"></pre>
         </div>
@@ -127,6 +134,38 @@
             });
 
             log(LOG + " Menu opened at (" + e.clientX + ", " + e.clientY + ")");
+        });
+
+        var packItems = [
+            { id: "p-cut", label: "Cut", icon: "fluent-ui-cut-16-regular", shortcut: "Ctrl+X" },
+            { id: "p-copy", label: "Copy", icon: "fluent-ui-copy-16-regular", shortcut: "Ctrl+C" },
+            { id: "p-paste", label: "Paste", icon: "fluent-ui-clipboard-paste-16-regular", shortcut: "Ctrl+V" },
+            { id: "p-sep1", label: "", type: "separator" },
+            { id: "p-new", label: "New document", icon: "fluent-ui-document-add-16-color" },
+            { id: "p-locked", label: "Locked document", icon: "fluent-ui-document-lock-16-color", disabled: true },
+            { id: "p-pinned", label: "Pinned", icon: "fluent-ui-folder-add-16-regular", checked: true },
+            { id: "p-rename", label: "Rename", icon: "pencil" },
+            { id: "p-sep2", label: "", type: "separator" },
+            { id: "p-delete", label: "Delete", icon: "fluent-ui-delete-16-regular", shortcut: "Del", danger: true }
+        ];
+
+        document.getElementById("demo-contextmenu-packs").addEventListener("contextmenu", function(e)
+        {
+            e.preventDefault();
+            createContextMenu({
+                items: packItems.map(function(item)
+                {
+                    var copy = Object.assign({}, item);
+                    if (copy.type !== "separator")
+                    {
+                        copy.onClick = function(ci) { log(LOG + " Selected: " + ci.id + " (" + ci.label + ")"); };
+                    }
+                    return copy;
+                }),
+                x: e.clientX,
+                y: e.clientY,
+                onClose: function() { log(LOG + " Menu closed"); }
+            });
         });
 
         log(LOG + " Ready — right-click the area above to open the context menu");

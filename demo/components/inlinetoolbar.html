@@ -31,6 +31,8 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/inlinetoolbar/inlinetoolbar.css">
     <link rel="stylesheet" href="../../dist/components/relationshipmanager/relationshipmanager.css">
@@ -63,6 +65,12 @@
             <h2>InlineToolbar — Toggles &amp; Separators</h2>
             <p class="text-muted">Toolbar with toggle buttons and separators for formatting actions.</p>
             <div id="demo-toolbar-toggles" style="border: 1px solid var(--theme-border-color); padding: 8px;"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>InlineToolbar — Icon-pack icons</h2>
+            <p class="text-muted">The same <code>icon</code> option, given icon-pack classes such as <code>fluent-ui-folder-add-16-regular</code> (see <code>docs/ICON_PACKS.md</code>). Monochrome icons follow the text colour; the colour Table icon keeps its palette and turns grey when disabled; the last button is a bare Bootstrap Icons name, as before.</p>
+            <div id="demo-toolbar-packs" style="border: 1px solid var(--theme-border-color); padding: 8px;"></div>
         </div>
 
         <div class="demo-section">
@@ -121,6 +129,25 @@
                 { id: "sep4", icon: "", tooltip: "", type: "separator" },
                 { id: "filter", icon: "funnel", tooltip: "Filter", type: "toggle", onClick: function(item, active) { log(LOG + " Toggle: " + item.id + " = " + active); } }
             ],
+            size: "md"
+        });
+
+        createInlineToolbar({
+            container: document.getElementById("demo-toolbar-packs"),
+            items: [
+                { id: "new-folder", icon: "fluent-ui-folder-add-16-regular", tooltip: "New folder" },
+                { id: "expand-all", icon: "fluent-ui-arrow-expand-all-16-regular", tooltip: "Expand all" },
+                { id: "sort", icon: "fluent-ui-text-sort-ascending-16-regular", tooltip: "Sort" },
+                { id: "refresh", icon: "fluent-ui-arrow-clockwise-16-regular", tooltip: "Refresh" },
+                { id: "sep5", icon: "", tooltip: "", type: "separator" },
+                { id: "table", icon: "fluent-ui-table-16-color", tooltip: "Table" },
+                { id: "table-off", icon: "fluent-ui-table-16-color", tooltip: "Table (disabled)", disabled: true },
+                { id: "bootstrap", icon: "folder-plus", tooltip: "Bootstrap Icons name" }
+            ].map(function(item)
+            {
+                item.onClick = function(it) { log(LOG + " Clicked: " + it.id); };
+                return item;
+            }),
             size: "md"
         });
 

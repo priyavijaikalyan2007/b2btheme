@@ -31795,7 +31795,7 @@
         },
         "icon": {
           "type": "string",
-          "description": "Bootstrap icon name without the bi- prefix."
+          "description": "Icon: a Bootstrap Icons name without the bi- prefix (\"folder-plus\"), or\nCSS classes as the Ribbon takes them (\"bi bi-folder-plus\", or\n\"fluent-ui-folder-add-16-regular\" with that pack's stylesheet loaded)."
         },
         "tooltip": {
           "type": "string",

@@ -14,7 +14,7 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 
 ## Requirements
 
-- **Bootstrap Icons** — for icon rendering (`bi bi-*` classes)
+- **Bootstrap Icons** — for icon rendering (`bi bi-*` classes); icon-pack classes work when the pack's stylesheet is loaded
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
@@ -62,7 +62,7 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `id` | `string` | **required** | Unique item identifier |
-| `icon` | `string` | **required** | Bootstrap icon name (without `bi-` prefix) |
+| `icon` | `string` | **required** | A Bootstrap Icons name without the `bi-` prefix (`"folder-plus"`), or CSS classes such as `"bi bi-folder-plus"` or an icon-pack class (`"fluent-ui-folder-add-16-regular"`; see `docs/ICON_PACKS.md`) |
 | `tooltip` | `string` | **required** | Tooltip text (rendered as `title` attribute) |
 | `type` | `string` | `"button"` | `button`, `toggle`, `separator` |
 | `active` | `boolean` | `false` | Initial toggle state |

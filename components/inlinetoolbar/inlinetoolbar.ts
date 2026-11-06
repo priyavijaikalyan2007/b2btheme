@@ -69,7 +69,11 @@ export interface InlineToolbarItem
 {
     /** Unique identifier for this item. */
     id: string;
-    /** Bootstrap icon name without the bi- prefix. */
+    /**
+     * Icon: a Bootstrap Icons name without the bi- prefix ("folder-plus"), or
+     * CSS classes as the Ribbon takes them ("bi bi-folder-plus", or
+     * "fluent-ui-folder-add-16-regular" with that pack's stylesheet loaded).
+     */
     icon: string;
     /** Tooltip text shown on hover. */
     tooltip: string;
@@ -139,6 +143,22 @@ function createElement(tag: string, className?: string): HTMLElement
     return el;
 }
 
+/** Class prefixes taken as given: Bootstrap Icons and the CDN icon packs (docs/ICON_PACKS.md). */
+const ICON_CLASS_PREFIXES = ["bi-", "fluent-ui-", "fluent-emoji-", "aws-", "azure-", "gcp-"];
+
+/**
+ * The classes for an item's `icon`. A class string (it has a space, or a
+ * known prefix such as "fluent-ui-") is used as given, as the Ribbon does;
+ * a bare Bootstrap Icons name such as "folder-plus" gets "bi bi-" in front.
+ */
+function iconClassName(icon: string): string
+{
+    const trimmed = icon.trim();
+    const isClass = /\s/.test(trimmed) || ICON_CLASS_PREFIXES.some((p) => trimmed.startsWith(p));
+
+    return isClass ? trimmed.split(/\s+/).join(" ") : `bi bi-${trimmed}`;
+}
+
 /** Set multiple attributes on an element. */
 function setAttr(el: HTMLElement, attrs: Record<string, string>): void
 {
@@ -169,7 +189,7 @@ function buildButton(item: InlineToolbarItem): HTMLElement
         "aria-label": item.tooltip,
     });
 
-    const icon = createElement("i", `bi bi-${item.icon}`);
+    const icon = createElement("i", iconClassName(item.icon));
     setAttr(icon, { "aria-hidden": "true" });
     btn.appendChild(icon);
 
