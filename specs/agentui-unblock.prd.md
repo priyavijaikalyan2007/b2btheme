@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 > **Date:** 2026-11-05
 > **Epic:** #16. Closes #19 (MCP Apps publication) and #36 (public A2UI demos).
-> **Status:** directed by the user on 2026-11-05 (§2). Delivered in four PRs (§7): PR 1 (#112) and PR 2 (#113) merged; PR 3 in review.
+> **Status:** directed by the user on 2026-11-05 (§2). Delivered in four PRs (§7): PR 1 (#112), PR 2 (#113) and PR 3 (#114) merged; PR 4 in review.
 
 ## 1. Goal
 
@@ -18,7 +18,7 @@ Serve what #19 and #30 built, and show it:
 2. The MCP Apps view and its runtime move from `gated/` into `dist/`, so real MCP hosts can use them.
 3. The A2UI playground and scenarios are published at `/demo/a2ui/`.
 4. A local MCP Apps demo, `npm run demo:mcp`, shows the view across many component domains.
-5. Recordings of both demos come last.
+5. Recordings of both demos come last. The A2UI recordings (war-room, incident-triage) stand; PR 4 adds the MCP Apps demo video (user, 2026-11-06).
 
 ## 2. Decisions (user, 2026-11-05)
 

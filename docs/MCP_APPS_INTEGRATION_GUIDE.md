@@ -33,7 +33,7 @@ model ──calls──► your tool ──result: A2UI messages──► host �
 - **The view looks native.** It takes the host's light or dark theme, colours, fonts and radii; our tokens fill the gaps.
 - **You choose where each action goes:** back to one of your tools, which is fast and deterministic, or to the model as a user turn.
 
-To see it before you write a server, run `npm run build && npm run demo:mcp` in this repository and open <http://127.0.0.1:8125/host/>. A small host calls the tools of a demo server (`mcp/demo/`) over Streamable HTTP and shows each view: a service-health dashboard (metric cards, a gauge, charts, a timeline), orders (a DataGrid and a lazy TreeGrid), a meeting form (six pickers) and a brand editor (colour, gradient and font pickers). Buttons stand in for the model, and a log shows every JSON-RPC message between the host, the server and each view. The demo serves `dist/` as the CDN, so it shows your local build.
+To see it before you write a server, run `npm run build && npm run demo:mcp` in this repository and open <http://127.0.0.1:8125/host/>. A small host calls the tools of a demo server (`mcp/demo/`) over Streamable HTTP and shows each view: a service-health dashboard (metric cards, a gauge, charts, a timeline), orders (a DataGrid and a lazy TreeGrid), a meeting form (six pickers) and a brand editor (colour, gradient and font pickers). Buttons stand in for the model, and a log shows every JSON-RPC message between the host, the server and each view. The demo serves `dist/` as the CDN, so it shows your local build. A 65-second recording of it: <https://static.outcrop.us/demo/media/mcp/mcp-apps.mp4>.
 
 ## 2. How a host shows the view
 

@@ -14,8 +14,9 @@ __pycache__/
 
 # Screenshots used for Debugging
 *.png
-# ...except the A2UI demo posters, which the README shows (#30)
+# ...except the A2UI and MCP Apps demo posters, which the README shows (#30, #19)
 !docs/media/a2ui/*.png
+!docs/media/mcp/*.png
 
 # Repo Index & Metrics
 local/
