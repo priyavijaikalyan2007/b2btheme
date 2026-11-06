@@ -55,7 +55,9 @@ export function resolveRequest(url, roots, prefix = PREFIX)
     const rel = inPage ? decoded.slice(prefix.length) : decoded.slice(1);
     const file = path.resolve(root, rel === "" ? "index.html" : rel);
 
-    if (file !== root && !file.startsWith(`${root}${path.sep}`)) { return { status: 403 }; }
+    // Unconditional, so it proves containment (and CodeQL can see that it does): the root itself is a
+    // directory, never a file to serve, so refusing it changes nothing a client could use.
+    if (!file.startsWith(`${root}${path.sep}`)) { return { status: 403 }; }
 
     return fs.existsSync(file) && fs.statSync(file).isFile() ? { file } : { status: 404 };
 }

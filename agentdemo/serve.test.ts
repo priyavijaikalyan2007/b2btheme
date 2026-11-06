@@ -70,6 +70,7 @@ describe("resolveRequest", () =>
         "/%2e%2e/package.json",
         "/playground/..%2f..%2fpackage.json",
         "//etc/passwd",
+        "/playground/.",
     ])("%s is refused", (url) =>
     {
         expect(resolveRequest(url, roots())).toEqual({ status: 403 });
