@@ -238,6 +238,12 @@ MCP Apps hosts, such as Claude, ChatGPT and VS Code, can show these components i
 | Example servers (TypeScript, C#) | [`mcp/examples/`](mcp/examples/) |
 | Local demo: a host, a demo server and four domains (charts, grids, pickers, design) | `npm run build && npm run demo:mcp`, then <http://127.0.0.1:8125/host/> ([`mcp/demo/`](mcp/demo/)) |
 
+**The local demo (65 seconds):** the host calls each of the demo server's tools and shows its view: a service-health dashboard, orders in a DataGrid and a lazy TreeGrid, a meeting form with six pickers, and a brand editor. Actions go to the server or, as user turns, to the model, and the host's dark theme reaches every view. The JSON-RPC log on the right shows every message.
+
+[![Recorded from npm run demo:mcp: an MCP Apps host renders four tools' views. Click to play the video.](docs/media/mcp/mcp-apps.png)](https://static.outcrop.us/demo/media/mcp/mcp-apps.mp4)
+
+▶ [Watch the MCP Apps demo (MP4, 3.6 MB)](https://static.outcrop.us/demo/media/mcp/mcp-apps.mp4). *Recorded from `npm run demo:mcp`, with real MCP traffic; buttons stand in for the model.*
+
 ## CDN & Agent Discovery
 
 The theme is deployed to Cloudflare Workers on every push.
