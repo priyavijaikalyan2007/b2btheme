@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+SPDX-FileCopyrightText: 2026 Outcrop Inc
+SPDX-License-Identifier: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outcrop MCP Apps demo</title>
+<link rel="stylesheet" href="/css/custom.css">
+<link rel="stylesheet" href="/icons/bootstrap-icons.css">
+<style>
+body { margin: 0; background: var(--theme-surface-sunken-bg); color: var(--theme-text-primary); }
+.demo-header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--theme-border-color); background: var(--theme-surface-bg); }
+.demo-header h1 { font-size: 1rem; margin: 0 1rem 0 0; }
+.demo-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1; }
+.demo-main { display: grid; grid-template-columns: minmax(0, 1fr) 26rem; height: calc(100vh - 3.5rem); }
+.demo-conversation { overflow: auto; padding: 1rem; }
+.demo-hint { color: var(--theme-text-secondary); }
+.demo-turn { margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg); }
+.demo-turn-user { margin-left: 4rem; border-left: 3px solid var(--bs-primary); }
+.demo-turn-role { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--theme-text-secondary); }
+.demo-turn p { margin: 0.25rem 0 0.5rem; }
+.demo-view { display: block; width: 100%; height: 80px; border: 0; }
+.demo-error { color: var(--bs-danger); }
+.demo-log { display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--theme-border-color);
+    background: var(--theme-surface-bg); }
+.demo-log h2 { font-size: 0.875rem; margin: 0; padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--theme-border-color); }
+.demo-log-entries { flex: 1; overflow: auto; font-family: var(--bs-font-monospace); font-size: 0.75rem; }
+.demo-log-entry summary { padding: 0.125rem 0.75rem; cursor: pointer; white-space: nowrap; }
+.demo-log-in summary { color: var(--bs-success); }
+.demo-log-entry pre { margin: 0; padding: 0.25rem 0.75rem 0.5rem; white-space: pre-wrap; }
+@media (max-width: 900px) { .demo-main { grid-template-columns: 1fr; height: auto; } .demo-log { height: 40vh; } }
+</style>
+</head>
+<body>
+<header class="demo-header">
+    <h1>Outcrop MCP Apps demo</h1>
+    <div id="tools" class="demo-tools" role="toolbar" aria-label="Tools the model would call"></div>
+    <button id="theme" type="button" class="btn btn-outline-secondary btn-sm"></button>
+</header>
+<main class="demo-main">
+    <section id="conversation" class="demo-conversation" aria-label="Conversation">
+        <p class="demo-hint">Each button stands in for the model calling a tool. The host calls it on the demo
+            MCP server, reads the ui:// resource the tool names, and renders it in a sandboxed iframe.</p>
+    </section>
+    <aside class="demo-log" aria-label="JSON-RPC log">
+        <h2>JSON-RPC log</h2>
+        <div id="log-entries" class="demo-log-entries"></div>
+    </aside>
+</main>
+<script src="/host/host.js"></script>
+</body>
+</html>

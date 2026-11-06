@@ -22,7 +22,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PREFIX = "/playground/";
-const TYPES = {
+export const TYPES = {
     ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
     ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
     ".json": "application/json; charset=utf-8", ".jsonl": "application/x-ndjson; charset=utf-8",
@@ -35,9 +35,10 @@ const TYPES = {
  *
  * @param {string} url - The request URL path, possibly with a query.
  * @param {{distDir: string, outDir: string}} roots - The two served trees.
+ * @param {string} [prefix] - The path outDir is served under; the MCP demo serves its host page at another.
  * @returns {{file: string} | {status: 403 | 404}}
  */
-export function resolveRequest(url, roots)
+export function resolveRequest(url, roots, prefix = PREFIX)
 {
     let decoded;
 
@@ -49,12 +50,14 @@ export function resolveRequest(url, roots)
         return { status: 403 };
     }
 
-    const inPage = decoded.startsWith(PREFIX);
+    const inPage = decoded.startsWith(prefix);
     const root = path.resolve(inPage ? roots.outDir : roots.distDir);
-    const rel = inPage ? decoded.slice(PREFIX.length) : decoded.slice(1);
+    const rel = inPage ? decoded.slice(prefix.length) : decoded.slice(1);
     const file = path.resolve(root, rel === "" ? "index.html" : rel);
 
-    if (file !== root && !file.startsWith(`${root}${path.sep}`)) { return { status: 403 }; }
+    // Unconditional, so it proves containment (and CodeQL can see that it does): the root itself is a
+    // directory, never a file to serve, so refusing it changes nothing a client could use.
+    if (!file.startsWith(`${root}${path.sep}`)) { return { status: 403 }; }
 
     return fs.existsSync(file) && fs.statSync(file).isFile() ? { file } : { status: 404 };
 }

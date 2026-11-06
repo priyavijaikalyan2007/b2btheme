@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
 
 > **Date:** 2026-11-05
 > **Epic:** #16. Closes #19 (MCP Apps publication) and #36 (public A2UI demos).
-> **Status:** directed by the user on 2026-11-05 (§2). Delivered in four PRs (§7), each planned when reached.
+> **Status:** directed by the user on 2026-11-05 (§2). Delivered in four PRs (§7): PR 1 (#112) and PR 2 (#113) merged; PR 3 in review.
 
 ## 1. Goal
 
@@ -65,7 +65,7 @@ Merging PR 1 deploys the view. The example servers then start for real.
 
 ## 6. Local MCP Apps demo (PR 3)
 
-`npm run demo:mcp`: one local Node process serves the built `dist/` as the CDN, runs a demo MCP server over Streamable HTTP, and serves a host page. The host page uses the SDK's HTTP client and `AppBridge`, renders the view in a sandboxed `srcdoc` iframe, logs every JSON-RPC message, shows `ui/message` turns, and toggles light and dark host themes. Buttons stand in for the model. The demo server has its own tools across several domains (pickers, data grid, charts, timeline, tree and more); the guide's example server stays minimal. A Playwright spec runs it end to end. Planned when reached.
+`npm run demo:mcp`: one local Node process serves the built `dist/` as the CDN, runs a demo MCP server over Streamable HTTP, and serves a host page. The host page uses the SDK's HTTP client and `AppBridge`, renders the view in a sandboxed `srcdoc` iframe, logs every JSON-RPC message, shows `ui/message` turns, and toggles light and dark host themes. Buttons stand in for the model. The demo server has its own tools across several domains (pickers, data grid, charts, timeline, tree and more); the guide's example server stays minimal. A Playwright spec runs it end to end. Built as ADR-254: four domains (service health, orders, scheduling, branding); the renderer bytes name the local origin so the view runs from the local `dist/`.
 
 ## 7. Delivery
 
