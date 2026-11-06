@@ -201,7 +201,8 @@ build to work this way, and new components join as they are classified.
 | Adapter (ESM) | `https://static.outcrop.us/a2ui/adapter/v1.js` |
 | Host guide | [`docs/A2UI_INTEGRATION_GUIDE.md`](docs/A2UI_INTEGRATION_GUIDE.md) |
 | Rules for contributors | [`A2UI.md`](A2UI.md) |
-| Try it locally, check agent output, bring-your-own-key agent | [`docs/A2UI_PLAYGROUND.md`](docs/A2UI_PLAYGROUND.md) (`npm run demo:a2ui`, `npm run check:a2ui`) |
+| Live playground (bring your own key) | <https://static.outcrop.us/demo/a2ui/> |
+| Run it locally, check agent output | [`docs/A2UI_PLAYGROUND.md`](docs/A2UI_PLAYGROUND.md) (`npm run demo:a2ui`, `npm run check:a2ui`) |
 
 Here, an agent triages tonight's incidents in the playground. The agent's A2UI messages are on the left and the surface it builds is in the middle:
 1. You pick a service and a severity in a FormDialog.
@@ -221,7 +222,7 @@ Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2
 
 ▶ [Watch the war-room video (MP4, 2.3 MB)](https://static.outcrop.us/demo/media/a2ui/war-room.mp4). *Scripted, like the one above.*
 
-There's no public live demo yet; it is on its way ([#36](https://github.com/priyavijaikalyan2007/b2btheme/issues/36)). Until then, these recordings stand in, and you can run the playground locally with `npm run demo:a2ui`.
+**[Try the live playground](https://static.outcrop.us/demo/a2ui/)**: step through these scenarios, paste your own A2UI messages, or bring your own Claude or OpenAI key and watch an agent build UI. Your key goes only from your browser to the provider. You can also run it locally with `npm run demo:a2ui`.
 
 The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
 

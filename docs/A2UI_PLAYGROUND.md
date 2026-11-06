@@ -14,7 +14,7 @@ Created: 2026
 
 The playground is a local page where you can watch an AI agent build UI out of this library's components with A2UI. It shows the agent's messages, the components they render, the data model, and the actions and errors flowing back to the agent. Bring your own Claude or OpenAI key to drive it live, or replay a saved session with no key at all.
 
-It is **local developer tooling**. Nothing here is deployed. A public version is tracked in #36.
+**Try it live at <https://static.outcrop.us/demo/a2ui/>.** The public page and the local one are the same build: `npm run build` publishes it to `/demo/a2ui/` (ADR-253). The agent is bring-your-own-key: your key goes only from your browser to the provider you pick, never to this origin (§4).
 
 ## 1. Run it
 
@@ -25,7 +25,7 @@ npm run demo:a2ui      # builds the playground and serves it
 
 Then open **http://127.0.0.1:8124/playground/**. The server binds to `127.0.0.1` only. Use `PORT=<n>` to change the port.
 
-The page loads `/a2ui/adapter/v1.js`, the components and `/css/custom.css` from your local `dist/`, **exactly as a third-party host would**. It renders with Google's `@a2ui/lit` renderer and `@a2ui/web_core`, both pinned devDependencies.
+The page loads `/a2ui/adapter/v1.js`, the components and `/css/custom.css` from your local `dist/`, **exactly as a third-party host would**. It renders with Google's `@a2ui/lit` renderer and `@a2ui/web_core`, loaded from the vendored, pinned and audited `/lib/a2ui-runtime-<version>.js` with SRI; the page's own bundle contains no npm code, and its build fails if it ever does.
 
 ## 2. What you see
 

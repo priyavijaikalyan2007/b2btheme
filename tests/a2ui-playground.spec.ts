@@ -56,6 +56,19 @@ test.describe("A2UI playground", () =>
         expect(await cspViolations(page)).toEqual([]);
     });
 
+    test("the published copy at /demo/a2ui/ runs on the vendored runtime and renders, with no CSP violation", async ({ page }) =>
+    {
+        await openPlayground(page, "published");
+        await paste(page, [surface, ruler]);
+        await page.locator("#a2ui-paste").locator("..").getByRole("button", { name: "Apply" }).click();
+
+        await expect(page.locator('[data-surface="s"] outcrop-ruler .ruler').first()).toBeVisible();
+        expect(await page.evaluate(() => Object.keys((window as unknown as { A2uiRuntime: object }).A2uiRuntime).sort()))
+            .toEqual(["A2uiSurface", "BASIC_FUNCTIONS", "Catalog", "MessageProcessor", "basicCatalog", "coreBasicCatalog"]);
+        await expect(page.locator(".a2ui-toolbar select option")).not.toHaveCount(0);
+        expect(await cspViolations(page)).toEqual([]);
+    });
+
     test("a batch with an unknown component is rejected whole and renders nothing", async ({ page }) =>
     {
         await openPlayground(page);
