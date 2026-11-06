@@ -107,12 +107,12 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 - **Inlining with `fetch()`:** CORS is open. Every SVG here passes a safety check (no scripts, event handlers, `foreignObject` or external references), but treat inlined markup as you would any other HTML you insert.
 - **Caching:** a day, then stale-while-revalidate for a week. The paths carry no version, so a repack reaches browsers within a day.
 
-### In components: Ribbon, SymbolPicker, Toolbar
+### In components: Ribbon, Toolbar, InlineToolbar, ContextMenu, SymbolPicker
 
-Any component whose `icon` option takes CSS classes (Ribbon, Toolbar, Sidebar
-and others) shows a pack icon once the page loads that pack's stylesheet. The
-class is `<pack>-<name>-<size>-<variant>`, the icon's file name with the pack
-in front:
+Any component whose `icon` option takes CSS classes (Ribbon, Toolbar,
+InlineToolbar, ContextMenu, Sidebar and others) shows a pack icon once the page
+loads that pack's stylesheet. The class is `<pack>-<name>-<size>-<variant>`,
+the icon's file name with the pack in front:
 
 ```html
 <link rel="stylesheet" href="https://static.outcrop.us/icons/fluent-ui/fluent-ui-color.css" crossorigin="anonymous">
@@ -134,7 +134,11 @@ in front:
 
 - **Sizing:** an icon is a `1em` square, so it takes the size of the text around it. The Ribbon draws large-button icons at 24 px and small and mini ones at 15 px, so use the `24-` and `16-` classes there.
 - **Colour and theme:** colour icons keep their palette in light and dark themes. Monochrome icons are masks over `currentColor`, so they follow the text colour as Bootstrap Icons do.
-- **Disabled:** a disabled Ribbon control shows its icon in grey, as Office does.
+- **What `icon` takes:**
+  - **Ribbon:** one class or a class string (`"bi bi-scissors"`).
+  - **InlineToolbar and ContextMenu:** the same, and a bare Bootstrap Icons name (`"folder-plus"`) as before. A value with a space, or one that starts with `bi-` or a pack prefix (`fluent-ui-`, `fluent-emoji-`, `aws-`, `azure-`, `gcp-`), is used as given; anything else gets `bi bi-` in front. A checked ContextMenu item still shows its checkmark.
+  - **Toolbar:** one class (`"fluent-ui-cut-16-regular"` or `"bi-scissors"`). It adds `bi` itself, so a class string with a space does not work there.
+- **Disabled:** a disabled Ribbon control, InlineToolbar button or ContextMenu item shows a colour icon in grey, as Office does.
 - **SymbolPicker:** it finds the icons in any loaded pack stylesheet and files them by pack folder, for example "Data Charts (fluent-ui)". The selected item's `code` is the class to use. Don't load `fluent-emoji.css` on a page with a SymbolPicker: its "All" view draws every icon, about 57 MB of emoji artwork.
 - **`crossorigin="anonymous"`:** the icons show without it, but SymbolPicker can read a cross-origin stylesheet's classes only when the `<link>` carries it. The CDN sends the CORS headers.
 - **Coverage:** about 200 Fluent UI icons come in colour. Mix them with monochrome ones where no colour version exists, as the Ribbon demo does.

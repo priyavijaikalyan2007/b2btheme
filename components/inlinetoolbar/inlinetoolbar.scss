@@ -91,6 +91,13 @@
     pointer-events: none;
 }
 
+// Icon-pack colour icons keep their own palette (docs/ICON_PACKS.md); a
+// disabled button greys its icon, as the Ribbon does. A monochrome icon
+// follows the text colour, so only colour icons change.
+.inlinetoolbar-btn-disabled i {
+    filter: grayscale(1);
+}
+
 // ============================================================================
 // SEPARATOR — vertical 1px divider
 // ============================================================================

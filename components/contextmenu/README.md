@@ -15,7 +15,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 ## Requirements
 
 - **Bootstrap CSS** — for SCSS variables
-- **Bootstrap Icons** — item icons (`bi-*` classes)
+- **Bootstrap Icons** — item icons (`bi-*` classes); icon-pack classes work when the pack's stylesheet is loaded
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
@@ -71,7 +71,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 |--------|------|---------|-------------|
 | `id` | `string` | **required** | Unique identifier |
 | `label` | `string` | **required** | Display text |
-| `icon` | `string` | — | Bootstrap icon name (without `bi-` prefix) |
+| `icon` | `string` | — | A Bootstrap Icons name without the `bi-` prefix (`"folder-plus"`), or CSS classes such as `"bi bi-folder-plus"` or an icon-pack class (`"fluent-ui-folder-add-16-regular"`; see `docs/ICON_PACKS.md`) |
 | `shortcut` | `string` | — | Keyboard shortcut hint |
 | `disabled` | `boolean` | `false` | Disables the item |
 | `checked` | `boolean` | — | Checkmark state |

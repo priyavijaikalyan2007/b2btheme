@@ -65,6 +65,11 @@
     cursor: default;
 }
 
+// As in the Ribbon and InlineToolbar: a disabled item greys a colour icon.
+.contextmenu-item-disabled .contextmenu-icon i {
+    filter: grayscale(1);
+}
+
 .contextmenu-item-danger {
     color: var(--theme-danger-text);
 

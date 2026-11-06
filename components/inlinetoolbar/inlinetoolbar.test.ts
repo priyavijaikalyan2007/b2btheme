@@ -125,6 +125,19 @@ describe("item rendering", () =>
         expect(icon?.classList.contains("bi-funnel")).toBe(true);
     });
 
+    test.each([
+        ["funnel", "bi bi-funnel"],
+        ["bi bi-funnel", "bi bi-funnel"],
+        ["bi-funnel", "bi-funnel"],
+        ["fluent-ui-folder-add-16-regular", "fluent-ui-folder-add-16-regular"],
+        ["  fluent-ui-filter-16-regular   my-icon ", "fluent-ui-filter-16-regular my-icon"],
+    ])("icon %j renders with the classes %j", (icon, className) =>
+    {
+        createInlineToolbar({ container, items: [{ id: "a", icon, tooltip: "A" }] });
+
+        expect(getButtons(container)[0].querySelector("i")?.className).toBe(className);
+    });
+
     test("buttonHasTooltipViaTitle", () =>
     {
         createInlineToolbar({ container, items: sampleItems() });

@@ -208,6 +208,26 @@ describe("item rendering", () =>
         const icon = getMenuItems()[0].querySelector(".bi-file-earmark-plus");
         expect(icon).not.toBeNull();
     });
+
+    test.each([
+        ["file-earmark-plus", "bi bi-file-earmark-plus"],
+        ["bi bi-file-earmark-plus", "bi bi-file-earmark-plus"],
+        ["fluent-ui-folder-add-16-regular", "fluent-ui-folder-add-16-regular"],
+    ])("icon %j renders with the classes %j", (icon, className) =>
+    {
+        currentMenu = createContextMenu(baseOptions({ items: [{ id: "new", label: "New", icon }] }));
+
+        expect(getMenuItems()[0].querySelector(".contextmenu-icon i")?.className).toBe(className);
+    });
+
+    test("a checked item shows the checkmark, not its pack icon", () =>
+    {
+        currentMenu = createContextMenu(baseOptions({
+            items: [{ id: "opt", label: "Option", checked: true, icon: "fluent-ui-folder-add-16-regular" }],
+        }));
+
+        expect(getMenuItems()[0].querySelector(".contextmenu-icon i")?.className).toBe("bi bi-check-lg");
+    });
 });
 
 // ============================================================================
