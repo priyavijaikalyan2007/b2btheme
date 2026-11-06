@@ -31,6 +31,9 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
+    <link rel="stylesheet" href="../../dist/lib/font-awesome-6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/graphcanvas/graphcanvas.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
@@ -99,6 +102,16 @@
                 <button type="button" class="btn btn-sm btn-outline-primary" id="demo-icon-fit">Zoom to Fit</button>
             </div>
             <div id="demo-icon-graph" style="width:100%;height:400px;"></div>
+        </div>
+
+        <div class="demo-section" id="icon-class-section">
+            <h2>Icon Classes</h2>
+            <p>A node's <code>icon</code> can also be a full class string: Font Awesome (<code>fa-solid fa-user</code>), an icon-pack class such as <code>fluent-ui-person-16-regular</code> (see <code>docs/ICON_PACKS.md</code>), or <code>bi bi-star</code>. Load the stylesheet that defines the class. Font icons draw in their own font; monochrome pack icons follow the text colour; colour pack icons keep their palette.</p>
+
+            <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="demo-iconclass-fit">Zoom to Fit</button>
+            </div>
+            <div id="demo-iconclass-graph" style="width:100%;height:400px;"></div>
         </div>
 
     </main>
@@ -291,6 +304,42 @@
         });
 
         document.getElementById("demo-icon-fit").addEventListener("click", function() { iconGc.zoomToFit(); });
+    }
+
+    // ====================================================================
+    // Demo: Icon classes (Font Awesome, icon packs)
+    // ====================================================================
+
+    var iconClassNodes = [
+        { id: "c1", label: "Font Awesome", sublabel: "fa-solid fa-user", type: "test", color: "#2196F3", icon: "fa-solid fa-user" },
+        { id: "c2", label: "Font Awesome", sublabel: "fa-regular fa-calendar", type: "test", color: "#27AE60", icon: "fa-regular fa-calendar" },
+        { id: "c3", label: "Font Awesome", sublabel: "fa-brands fa-github", type: "test", color: "#E67E22", icon: "fa-brands fa-github" },
+        { id: "c4", label: "Fluent UI", sublabel: "person-16-regular", type: "test", color: "#8E44AD", icon: "fluent-ui-person-16-regular" },
+        { id: "c5", label: "Fluent UI colour", sublabel: "document-16-color", type: "test", color: "#C0392B", icon: "fluent-ui-document-16-color" },
+        { id: "c6", label: "BI class", sublabel: "bi bi-star", type: "test", color: "#1ABC9C", icon: "bi bi-star" }
+    ];
+    var iconClassEdges = [
+        { id: "ce1", sourceId: "c1", targetId: "c2", label: "test", type: "test" },
+        { id: "ce2", sourceId: "c2", targetId: "c3", label: "test", type: "test" },
+        { id: "ce3", sourceId: "c3", targetId: "c4", label: "test", type: "test" },
+        { id: "ce4", sourceId: "c4", targetId: "c5", label: "test", type: "test" },
+        { id: "ce5", sourceId: "c5", targetId: "c6", label: "test", type: "test" }
+    ];
+
+    var iconClassContainer = document.getElementById("demo-iconclass-graph");
+    if (iconClassContainer) {
+        var iconClassGc = createGraphCanvas({
+            container: iconClassContainer,
+            mode: "schema",
+            layout: "hierarchical",
+            layoutDirection: "LR",
+            nodes: iconClassNodes,
+            edges: iconClassEdges,
+            showEdgeLabels: false,
+            showNodeIcons: true
+        });
+
+        document.getElementById("demo-iconclass-fit").addEventListener("click", function() { iconClassGc.zoomToFit(); });
     }
 
     </script>

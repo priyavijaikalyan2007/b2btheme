@@ -9,7 +9,8 @@
  *             algorithms, zoom/pan, selection, edge creation, keyboard
  *             shortcuts, and export. Works in schema and instance modes.
  *             Multi-edge routing fans parallel edges via Bézier offsets.
- *             Icon name resolution maps CSS class names to Unicode glyphs.
+ *             Icon resolution draws a Bootstrap Icons name, a font class
+ *             (Font Awesome) or an icon-pack class (docs/ICON_PACKS.md).
  * 🔗 RELATES: [[GraphToolbar]], [[PropertyInspector]], [[TypeBadge]]
  * ⚡ FLOW: [Consumer] -> [createGraphCanvas()] -> [GraphCanvas handle]
  * ----------------------------------------------------------------------------
@@ -153,7 +154,12 @@ export interface GraphNode
     type: string;
     /** Namespace, for the group-by-namespace layout. */
     namespace?: string;
-    /** Bootstrap Icons class shown in the node. */
+    /**
+     * Icon shown in the node: a Bootstrap Icons name ("person" or "bi-person"),
+     * a Feather name, a single character, or a full icon class string such as
+     * "fa-solid fa-user" or "fluent-ui-person-16-regular". A class string has
+     * a space or an icon-pack prefix; its stylesheet must be on the page.
+     */
     icon?: string;
     /**
      * Node colour.
@@ -575,24 +581,57 @@ const FEATHER_TO_BI: Record<string, string> = {
     "book-open": "book"
 };
 
-/** Cache of resolved icon name → Unicode character. */
-const iconCache = new Map<string, string>();
+/**
+ * How a node icon is drawn. A glyph is SVG text in the icon's font; an
+ * icon-pack class is an image, either as is (colour) or as a mask over the
+ * text colour (monochrome), as its stylesheet draws it.
+ */
+type NodeIconDrawing =
+    | { kind: "glyph"; char: string; fontFamily: string; fontWeight: string }
+    | { kind: "image"; url: string }
+    | { kind: "mask"; url: string };
+
+/** Class prefixes of the CDN icon packs (docs/ICON_PACKS.md). */
+const ICON_PACK_PREFIXES = ["fluent-ui-", "fluent-emoji-", "aws-", "azure-", "gcp-"];
+
+/** The font Bootstrap Icons names are drawn in. */
+const BI_FONT = { fontFamily: "bootstrap-icons", fontWeight: "normal" };
+
+/** Counter for icon mask ids, unique across every GraphCanvas on the page. */
+let iconMaskSeq = 0;
+
+/** Cache of resolved icon → drawing. */
+const iconCache = new Map<string, NodeIconDrawing | null>();
 
 /**
- * Resolve an icon name to its Unicode character for SVG text rendering.
- * Accepts: single Unicode char, "bi-name", "name", or Feather name.
+ * True when `icon` is a full class string rather than a name: it has a
+ * space ("fa-solid fa-user", "bi bi-person") or an icon-pack prefix.
  */
-function resolveIconChar(name: string): string
+function isIconClassString(icon: string): boolean
 {
-    if (!name) { return ""; }
-    if (isSingleUnicodeChar(name)) { return name; }
+    const trimmed = icon.trim();
+    return /\s/.test(trimmed) || ICON_PACK_PREFIXES.some((p) => trimmed.startsWith(p));
+}
 
-    const cached = iconCache.get(name);
+/**
+ * Resolve a node icon to how it is drawn, or null when nothing on the page
+ * defines it. Names take the Bootstrap Icons path; class strings are read
+ * from the page's stylesheets.
+ */
+function resolveNodeIcon(icon: string): NodeIconDrawing | null
+{
+    if (!icon) { return null; }
+    if (isSingleUnicodeChar(icon)) { return { kind: "glyph", char: icon, ...BI_FONT }; }
+
+    const cached = iconCache.get(icon);
     if (cached !== undefined) { return cached; }
 
-    const biName = normalizeToBiName(name);
-    const resolved = lookupCssIconContent(biName);
-    iconCache.set(name, resolved);
+    const resolved = isIconClassString(icon)
+        ? probeIconClass(icon.trim().split(/\s+/).join(" "))
+        : resolveBiName(normalizeToBiName(icon));
+
+    // A class whose stylesheet has not loaded yet resolves later.
+    if (resolved || !isIconClassString(icon)) { iconCache.set(icon, resolved); }
     return resolved;
 }
 
@@ -611,22 +650,73 @@ function normalizeToBiName(name: string): string
     return biName;
 }
 
-/** Look up the CSS ::before content for a Bootstrap Icons class. */
-function lookupCssIconContent(biName: string): string
+/** A Bootstrap Icons name, drawn in the Bootstrap Icons font. */
+function resolveBiName(biName: string): NodeIconDrawing | null
+{
+    const style = probeIconStyles(`bi bi-${biName}`);
+    return style.char ? { kind: "glyph", char: style.char, ...BI_FONT } : null;
+}
+
+/** A class string, drawn as its stylesheet draws it. */
+function probeIconClass(className: string): NodeIconDrawing | null
+{
+    const style = probeIconStyles(className);
+    if (style.char)
+    {
+        return { kind: "glyph", char: style.char, fontFamily: style.fontFamily, fontWeight: style.fontWeight };
+    }
+
+    const mask = cssUrl(style.maskImage);
+    if (mask) { return { kind: "mask", url: mask }; }
+
+    const image = cssUrl(style.backgroundImage);
+    return image ? { kind: "image", url: image } : null;
+}
+
+interface IconStyles
+{
+    char: string;
+    fontFamily: string;
+    fontWeight: string;
+    maskImage: string;
+    backgroundImage: string;
+}
+
+/** Read an icon class's glyph (::before), font, mask and background from the page. */
+function probeIconStyles(className: string): IconStyles
 {
     const tmp = document.createElement("i");
-    tmp.className = `bi bi-${biName}`;
+    tmp.className = className;
     tmp.style.cssText = "position:absolute;visibility:hidden;pointer-events:none";
     document.body.appendChild(tmp);
 
-    const raw = getComputedStyle(tmp, "::before").content;
+    const before = getComputedStyle(tmp, "::before");
+    const own = getComputedStyle(tmp);
+    const styles: IconStyles = {
+        char: cssContentChar(before.content),
+        fontFamily: before.fontFamily,
+        fontWeight: before.fontWeight,
+        maskImage: own.maskImage || own.getPropertyValue("-webkit-mask-image"),
+        backgroundImage: own.backgroundImage
+    };
     document.body.removeChild(tmp);
+    return styles;
+}
 
+/** The text of a CSS `content` value, or "" when it has none. */
+function cssContentChar(raw: string | undefined): string
+{
     if (!raw || raw === "none" || raw === "normal") { return ""; }
 
     // CSS content strings are quoted — strip outer quotes
-    const ch = raw.replace(/^["']|["']$/g, "");
-    return ch || "";
+    return raw.replace(/^["']|["']$/g, "");
+}
+
+/** The URL of a CSS image value such as `url("a.svg")`, or "" when it has none. */
+function cssUrl(value: string | undefined): string
+{
+    const match = /^url\((["']?)(.*)\1\)$/.exec((value ?? "").trim());
+    return match ? match[2] : "";
 }
 
 // ============================================================================
@@ -1047,6 +1137,9 @@ class GraphCanvasImpl implements GraphCanvas
     // DOM refs
     private root: HTMLElement | null = null;
     private svg: SVGElement | null = null;
+    private defs: SVGElement | null = null;
+    /** One alpha mask per monochrome icon-pack image, by URL. */
+    private readonly iconMasks = new Map<string, string>();
     private transformG: SVGElement | null = null;
     private groupsG: SVGElement | null = null;
     private edgesG: SVGElement | null = null;
@@ -1137,6 +1230,7 @@ class GraphCanvasImpl implements GraphCanvas
         const defs = svgCreate("defs");
         this.buildArrowMarkers(defs);
         this.svg.appendChild(defs);
+        this.defs = defs;
 
         this.transformG = svgCreate("g", { class: "gc-transform" });
         this.groupsG = svgCreate("g", { class: "gc-groups" });
@@ -1653,6 +1747,8 @@ class GraphCanvasImpl implements GraphCanvas
         }
         this.root = null;
         this.svg = null;
+        this.defs = null;
+        this.iconMasks.clear();
         logInfo("Destroyed.");
     }
 
@@ -2252,22 +2348,60 @@ class GraphCanvasImpl implements GraphCanvas
 
     private buildNodeIcon(icon: string): SVGElement
     {
-        const resolved = resolveIconChar(icon);
-        if (!resolved)
+        const drawing = resolveNodeIcon(icon);
+        if (!drawing)
         {
             logDebug("Icon not resolved:", icon);
             return svgCreate("g", {});
         }
-        const text = svgCreate("text", {
-            x: "14",
-            y: String(this.nodeH / 2 + 4),
-            "font-family": "bootstrap-icons",
-            "font-size": "14",
-            fill: resolveThemeColor("--theme-text-secondary", "#475569"),
-            "text-anchor": "middle"
+        const fill = resolveThemeColor("--theme-text-secondary", "#475569");
+        if (drawing.kind === "glyph")
+        {
+            const text = svgCreate("text", {
+                x: "14",
+                y: String(this.nodeH / 2 + 4),
+                "font-family": drawing.fontFamily,
+                "font-size": "14",
+                fill,
+                "text-anchor": "middle"
+            });
+            if (drawing.fontWeight !== BI_FONT.fontWeight) { text.setAttribute("font-weight", drawing.fontWeight); }
+            text.textContent = drawing.char;
+            return text;
+        }
+
+        const box = { x: "7", y: String(this.nodeH / 2 - 7), width: "14", height: "14" };
+        if (drawing.kind === "image")
+        {
+            return svgCreate("image", { class: "gc-node-icon", ...box, href: drawing.url });
+        }
+        return svgCreate("rect", {
+            class: "gc-node-icon", ...box, fill, mask: `url(#${this.iconMaskId(drawing.url)})`
         });
-        text.textContent = resolved;
-        return text;
+    }
+
+    /**
+     * The id of the alpha mask that cuts a monochrome icon-pack image out of
+     * its rect. Pack images are black on transparent, so a luminance mask
+     * (the SVG default) would show a filled square with an icon-shaped hole.
+     */
+    private iconMaskId(url: string): string
+    {
+        const existing = this.iconMasks.get(url);
+        if (existing) { return existing; }
+
+        iconMaskSeq += 1;
+        const id = `gc-icon-mask-${iconMaskSeq}`;
+        const mask = svgCreate("mask", {
+            id, maskUnits: "objectBoundingBox", maskContentUnits: "objectBoundingBox",
+            x: "0", y: "0", width: "1", height: "1", style: "mask-type:alpha"
+        });
+        mask.appendChild(svgCreate("image", {
+            x: "0", y: "0", width: "1", height: "1", href: url, preserveAspectRatio: "xMidYMid meet"
+        }));
+        this.defs!.appendChild(mask);
+        this.iconMasks.set(url, id);
+        return id;
     }
 
     private buildNodeLabels(

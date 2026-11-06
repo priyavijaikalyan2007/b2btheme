@@ -1,9 +1,9 @@
-# InlineToolbar and ContextMenu cannot show icon-pack icons
+# InlineToolbar, ContextMenu and GraphCanvas cannot show icon-pack icons
 
 **Date**: 2026-11-06
-**Component**: InlineToolbar, ContextMenu (CDN components)
+**Component**: InlineToolbar, ContextMenu, GraphCanvas (CDN components)
 **Severity**: Medium (blocks adoption of the icon packs outside the Ribbon)
-**Status**: Fixed (branch fix/icon-classes-gradient-swatch): `icon` takes a class string or a bare name, as proposed
+**Status**: Fixed. InlineToolbar and ContextMenu in #115: `icon` takes a class string or a bare name, as proposed. GraphCanvas on branch feat/graphcanvas-icon-classes: a node's `icon` takes a class string (Font Awesome, icon packs)
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---
@@ -57,15 +57,27 @@ Either way:
 - Please update the two interface comments and the "In components" section of
   `docs/ICON_PACKS.md` to list InlineToolbar and ContextMenu.
 
+## GraphCanvas: needed too
+
+The apps let an admin choose the icon for an ontology type, and the Ontology
+Visualizer draws that icon on its GraphCanvas. The apps team wants the choice
+to include Font Awesome and the Fluent UI pack. That is blocked today:
+
+- `components/graphcanvas/graphcanvas.ts:618` (`lookupCssIconContent`) builds
+  `bi bi-${biName}` and reads that element's `::before` glyph. A Font Awesome
+  icon has a glyph, but not under a `bi` class. A Fluent UI icon is a CSS mask
+  and has no glyph at all.
+- So GraphCanvas needs to draw an icon from a full class: a font glyph for
+  Bootstrap Icons and Font Awesome, and the mask image for a pack icon.
+
+Until this ships, the apps offer only Bootstrap Icons for ontology types.
+
 ## Same pattern elsewhere, for your judgement
 
 The apps team does not need these now. They follow the same pattern, so the
 doc's claim does not hold for them either:
 
 - `components/typebadge/typebadge.ts:228` builds `bi bi-${icon}`.
-- `components/graphcanvas/graphcanvas.ts:618` reads the `::before` glyph of a
-  Bootstrap class. A mask-based pack icon has no glyph, so this cannot take
-  pack icons without a different approach.
 - The docked Toolbar adds `"bi"` and the icon as two separate classes
   (`components/toolbar/toolbar.ts:2741` and others). A single pack class works.
   A class string with a space, such as `"bi bi-plus"`, throws in
