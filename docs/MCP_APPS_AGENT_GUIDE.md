@@ -104,3 +104,4 @@ Logs are prefixed `[outcrop-mcp]` and arrive as host log notifications.
 
 - `mcp/examples/typescript/` (`server.ts`, `deals.ts`, `main.ts`): tested in CI.
 - `mcp/examples/csharp/`: `ModelContextProtocol` and `ModelContextProtocol.Extensions.Apps` 2.3.1. Not built in CI.
+- `mcp/demo/` (`npm run demo:mcp`): a local host and a demo server with four domains. `domains/*.mjs` are working payloads for DataGrid, TreeGrid, ChartPanel, Gauge, MetricCard, Timeline and nine pickers; `demo.test.ts` passes each through the A2UI checker.
