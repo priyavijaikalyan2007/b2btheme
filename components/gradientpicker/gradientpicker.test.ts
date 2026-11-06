@@ -104,6 +104,18 @@ describe("Factory & Lifecycle", () =>
         picker.destroy();
     });
 
+    test("the trigger swatch draws its gradient on a layer above the checkerboard, not on itself", () =>
+    {
+        const picker = createGradientPicker(CONTAINER_ID, { mode: "popup",
+            value: { type: "linear", angle: 90, stops: makeStops(["#1D4ED8", "#7C3AED"]) } });
+        const swatch = container.querySelector(".gradientpicker-trigger-swatch") as HTMLElement;
+        const layer = swatch.querySelector(":scope > .gradientpicker-trigger-swatch-gradient") as HTMLElement;
+
+        expect(layer.style.background).toContain("linear-gradient");
+        expect(swatch.style.background).toBe("");
+        picker.destroy();
+    });
+
     test("destroy cleans up", () =>
     {
         const picker = createGradientPicker(CONTAINER_ID);

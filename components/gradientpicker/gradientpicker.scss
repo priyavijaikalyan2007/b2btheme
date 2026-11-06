@@ -123,6 +123,12 @@
     }
 }
 
+// Above the checkerboard: positioned after ::before, so it paints over it.
+.gradientpicker-trigger-swatch-gradient {
+    position: absolute;
+    inset: 0;
+}
+
 .gradientpicker-chevron {
     font-size: 0.75em;
     color: var(--theme-text-muted);
