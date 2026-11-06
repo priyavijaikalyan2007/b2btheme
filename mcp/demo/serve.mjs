@@ -148,8 +148,8 @@ async function main()
     }
     catch (err)
     {
-        fail(err.code === "EADDRINUSE" ? `Port ${port} is in use. Stop whatever holds it, or run with PORT=<another port>.`
-            : String(err));
+        fail(err.code === "EADDRINUSE"
+            ? `Port ${port} is in use. Stop whatever holds it, or run with PORT=<another port>.` : String(err));
     }
 }
 

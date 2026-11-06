@@ -26,7 +26,8 @@ export async function buildHost(repo)
     fs.mkdirSync(out, { recursive: true });
     fs.copyFileSync(path.join(repo, "mcp", "demo", "page", "index.html"), path.join(out, "index.html"));
     await build({ entryPoints: [path.join(repo, "mcp", "demo", "page", "host.ts")], bundle: true, format: "iife",
-        platform: "browser", target: "es2022", sourcemap: true, outfile: path.join(out, "host.js"), logLevel: "warning" });
+        platform: "browser", target: "es2022", sourcemap: true, outfile: path.join(out, "host.js"),
+        logLevel: "warning" });
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])

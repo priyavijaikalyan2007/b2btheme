@@ -52,7 +52,8 @@ export function show()
         { id: "detail", component: "Text", text: "Select an order to see its detail." },
         { id: "stock", component: "TreeGrid", label: "Stock by warehouse", eventData: { path: "/ev" }, height: "180px",
             treeColumnLabel: "Location",
-            columns: [{ id: "sku", label: "SKUs" }, { id: "onHand", label: "On hand" }, { id: "reorder", label: "Reorder" }],
+            columns: [{ id: "sku", label: "SKUs" }, { id: "onHand", label: "On hand" },
+                { id: "reorder", label: "Reorder" }],
             nodes: [
                 { id: "reno", label: "Reno, NV", icon: "bi-building", lazy: true, children: null,
                     data: { sku: 310, onHand: 19_540, reorder: "1 aisle" } },

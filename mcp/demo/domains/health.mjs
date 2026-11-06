@@ -35,8 +35,8 @@ function reading(index)
             pulse: r.status !== "operational" },
         { id: "latency", component: "MetricCard", label: "p95 latency", value: r.latency, icon: "bi-stopwatch",
             size: "sm", sparkline: r.p95,
-            trend: { direction: index === 0 ? "up" : "down", text: index === 0 ? "+170% since 11:00" : "back to baseline",
-                intent: index === 0 ? "negative" : "positive" } },
+            trend: index === 0 ? { direction: "up", text: "+170% since 11:00", intent: "negative" }
+                : { direction: "down", text: "back to baseline", intent: "positive" } },
         { id: "errors", component: "MetricCard", label: "Error rate", value: r.errors, icon: "bi-exclamation-octagon",
             size: "sm" },
         { id: "budget", component: "Gauge", shape: "ring", size: "sm", mode: "value", value: r.budget, min: 0, max: 100,
@@ -46,7 +46,8 @@ function reading(index)
             ariaLabel: "Checkout latency, 09:00 to 16:00", categories: HOURS,
             series: [{ id: "p95", label: "p95 (ms)", data: r.p95, intent: "warning" },
                 { id: "p50", label: "p50 (ms)", data: r.p50, intent: "primary" }], yAxis: { label: "ms", min: 0 } },
-        { id: "refreshed", component: "Text", text: index === 0 ? "Reading at 16:00." : "Reading at 16:05, after Refresh." },
+        { id: "refreshed", component: "Text",
+            text: index === 0 ? "Reading at 16:00." : "Reading at 16:05, after Refresh." },
     ];
 }
 
@@ -54,12 +55,14 @@ function reading(index)
 export function show()
 {
     const components = [
-        { id: "root", component: "Column", children: ["head", "cards", "latencyChart", "regions", "deploys", "buttons", "refreshed"] },
+        { id: "root", component: "Column",
+            children: ["head", "cards", "latencyChart", "regions", "deploys", "buttons", "refreshed"] },
         { id: "head", component: "Row", align: "center", children: ["title", "status"] },
         { id: "title", component: "Text", variant: "h3", text: "Checkout service" },
         { id: "cards", component: "Row", children: ["latency", "errors", "budget"] },
         { id: "regions", component: "ChartPanel", kind: "bar", height: "180px",
-            ariaLabel: "Checkout requests by region, last hour", categories: ["us-east", "us-west", "eu-west", "ap-south"],
+            ariaLabel: "Checkout requests by region, last hour",
+            categories: ["us-east", "us-west", "eu-west", "ap-south"],
             series: [{ id: "ok", label: "Succeeded (k)", data: [412, 268, 305, 122], intent: "success" },
                 { id: "failed", label: "Failed (k)", data: [11, 3, 9, 2], intent: "danger" }] },
         { id: "deploys", component: "Timeline", start: "2026-11-06T09:00:00Z", end: "2026-11-06T16:00:00Z",
@@ -84,7 +87,10 @@ export function show()
 /** Refresh: the next reading. */
 export function act(name)
 {
-    if (name === "refresh") { return outcrop("Checkout is operational again: p95 190 ms.", [update(SURFACE, reading(1))]); }
+    if (name === "refresh")
+    {
+        return outcrop("Checkout is operational again: p95 190 ms.", [update(SURFACE, reading(1))]);
+    }
 
     return toolError(`The health view has no action ${JSON.stringify(name)}.`);
 }

@@ -34,9 +34,10 @@ import { parseResult } from "../src/result";
 import { contrastOnWhiteText } from "./domains/branding.mjs";
 import { createDemoServer, demoAction, DOMAINS, demoRenderer, RENDERER_URI } from "./server.mjs";
 
-type Result = { content: Array<{ text: string }>; isError?: boolean;
-    structuredContent?: { outcrop: { messages: Array<Record<string, any>>; routes?: { byName?: Record<string, string> } } } };
-type Component = { id: string; component: string; action?: { event: { name: string; context: Record<string, unknown> } } };
+type Outcrop = { messages: Array<Record<string, any>>; routes?: { byName?: Record<string, string> } };
+type Result = { content: Array<{ text: string }>; isError?: boolean; structuredContent?: { outcrop: Outcrop } };
+type Event = { name: string; context: Record<string, unknown> };
+type Component = { id: string; component: string; action?: { event: Event } };
 
 const ORIGIN = "http://127.0.0.1:8125";
 const MANIFEST = { assets: {
@@ -189,7 +190,8 @@ describe("domain answers", () =>
 
     test("branding: the contrast check passes dark blue and fails yellow", () =>
     {
-        const text = (hex: string) => (demoAction(actionArgs("brand", "check", { primary: hex })) as Result).content[0].text;
+        const text = (hex: string) =>
+            (demoAction(actionArgs("brand", "check", { primary: hex })) as Result).content[0].text;
 
         expect(text("#1D4ED8")).toContain("passes WCAG AA");
         expect(text("#FACC15")).toContain("fails WCAG AA");
@@ -199,7 +201,8 @@ describe("domain answers", () =>
 
     test("an action on a surface no domain owns is a tool error", () =>
     {
-        expect((demoAction(actionArgs("deal", "approve", {})) as Result).content[0].text).toBe('No demo surface "deal".');
+        expect((demoAction(actionArgs("deal", "approve", {})) as Result).content[0].text)
+            .toBe('No demo surface "deal".');
     });
 });
 
@@ -230,7 +233,8 @@ describe("demo server", () =>
     test("the ui:// resource loads everything from the local origin, which its CSP allows", async () =>
     {
         const read = await (await connect()).readResource({ uri: RENDERER_URI });
-        const [content] = read.contents as Array<{ text: string; _meta: { ui: { csp: { resourceDomains: string[] } } } }>;
+        type Content = { text: string; _meta: { ui: { csp: { resourceDomains: string[] } } } };
+        const [content] = read.contents as Content[];
 
         expect(content.text).not.toContain("static.outcrop.us");
         expect(content.text).toContain(`<script type="module" src="${ORIGIN}/mcp/view/v1.js"></script>`);

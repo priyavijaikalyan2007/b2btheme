@@ -84,7 +84,9 @@ function record(leg: string, direction: Direction, message: JSONRPCMessage): voi
     entry.className = `demo-log-entry demo-log-${direction}`;
     entry.dataset.leg = leg;
     entry.dataset.kind = kind;
-    summary.textContent = `${direction === "out" ? "→" : "←"} ${leg}  ${kind}${m.id === undefined ? "" : `  #${String(m.id)}`}`;
+    const id = m.id === undefined ? "" : `  #${String(m.id)}`;
+
+    summary.textContent = `${direction === "out" ? "→" : "←"} ${leg}  ${kind}${id}`;
     body.textContent = JSON.stringify(message, null, 2);
     entry.append(summary, body);
     logList.append(entry);

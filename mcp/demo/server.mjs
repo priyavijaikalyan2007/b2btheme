@@ -33,8 +33,8 @@ const FONT_ORIGINS = ["https://fonts.googleapis.com", "https://fonts.gstatic.com
 
 /** Each model-visible tool, its description, and the domain behind it. */
 export const DOMAINS = [
-    { tool: "show_service_health", description: "Show the checkout service's health: status, metrics, charts and deploys.",
-        domain: health },
+    { tool: "show_service_health",
+        description: "Show the checkout service's health: status, metrics, charts and deploys.", domain: health },
     { tool: "show_orders", description: "Show open orders and warehouse stock.", domain: orders },
     { tool: "plan_meeting", description: "Open a form to plan the design review meeting.", domain: scheduling },
     { tool: "edit_brand", description: "Open the brand editor for the spring campaign.", domain: branding },
@@ -69,7 +69,8 @@ const outcropArgs = z.object({
         version: z.literal(1),
         surfaceId: z.string(),
         action: z.object({ version: z.string(),
-            action: z.object({ name: z.string(), sourceComponentId: z.string(), context: z.record(z.string(), z.unknown()) }) }),
+            action: z.object({ name: z.string(), sourceComponentId: z.string(),
+                context: z.record(z.string(), z.unknown()) }) }),
     }),
 });
 

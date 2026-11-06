@@ -25,7 +25,8 @@ const FONTS = [
 export function show()
 {
     const components = [
-        { id: "root", component: "Column", children: ["title", "pickers", "fontCaption", "font", "verdict", "buttons"] },
+        { id: "root", component: "Column",
+            children: ["title", "pickers", "fontCaption", "font", "verdict", "buttons"] },
         { id: "title", component: "Text", variant: "h3", text: "Brand for the spring campaign" },
         { id: "pickers", component: "Row", children: ["primary", "hero"] },
         { id: "primary", component: "ColorPicker", label: "Primary", value: { path: "/brand/primary" },
