@@ -119,7 +119,7 @@
     "@modelcontextprotocol/server": "2.4.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "24.19.2",
-    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/coverage-v8": "^5.0.5",
     "ajv": "8.20.0",
     "autoprefixer": "^10.4.27",
     "bootstrap": "5.3.8",
