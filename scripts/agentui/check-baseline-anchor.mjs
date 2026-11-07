@@ -21,6 +21,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 
 import { diffCatalogs } from "./catalog-diff.mjs";
 
@@ -28,13 +29,32 @@ const PUBLISHED = "specs/agentui/published";
 const BASELINE = /^catalog-v\d+\.json$/;
 
 /**
+ * Narrowings of a published major accepted on purpose, each a security fix
+ * recorded in the specs/agentui-schema.prd.md decision log. An entry passes
+ * one breaking line only when the property's sole difference from the base
+ * branch is `from` becoming `to`; any other change to it still fails. Once
+ * the base branch has `to`, the entry matches nothing and stays as the record.
+ */
+export const ACCEPTED_NARROWINGS = [
+    {
+        file: "catalog-v1.json",
+        component: "TypeBadge",
+        prop: "icon",
+        from: "^[A-Za-z0-9 _-]+$",
+        to: "^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$",
+        reason: "Any spaces let an agent add arbitrary classes to the host page (2026-11-07).",
+    },
+];
+
+/**
  * Problems with the working tree's baselines against the base branch's.
  *
  * @param base    - Baseline file name to its parsed content on the base branch.
  * @param current - Baseline file name to its parsed content in the working tree (absent when deleted).
+ * @param narrowings - Narrowings accepted on purpose; see ACCEPTED_NARROWINGS.
  * @returns Problems; empty means pass.
  */
-export function anchorProblems(base, current)
+export function anchorProblems(base, current, narrowings = ACCEPTED_NARROWINGS)
 {
     return [...base].flatMap(([file, previous]) =>
     {
@@ -46,12 +66,33 @@ export function anchorProblems(base, current)
                 + "restore it from git."];
         }
 
-        const { breaking } = diffCatalogs(previous, next);
+        const breaking = diffCatalogs(previous, next).breaking
+            .filter((line) => !narrowings.some((n) => acceptsNarrowing(n, file, line, previous, next)));
 
         return breaking.length === 0 ? [] : [`${PUBLISHED}/${file} changed in ways that break hosts that `
             + `hard-coded it:\n  ${breaking.join("\n  ")}\nA breaking change needs a new major (CATALOG_MAJOR in `
             + "scripts/agentui/catalog.mjs); the published one stays as it was."];
     });
+}
+
+/** Whether a recorded narrowing covers one breaking line, exactly. */
+function acceptsNarrowing(narrowing, file, line, previous, next)
+{
+    const { component, prop, from, to } = narrowing;
+    const propOf = (catalog) => catalog.components?.[component]?.allOf?.[2]?.properties?.[prop];
+
+    return narrowing.file === file && line === `${component}.${prop} changed` && propOf(previous) !== undefined
+        && isDeepStrictEqual(withPattern(propOf(previous), from, to), propOf(next));
+}
+
+/** A copy of a schema with every `pattern` equal to `from` set to `to`. */
+function withPattern(node, from, to)
+{
+    if (Array.isArray(node)) { return node.map((n) => withPattern(n, from, to)); }
+    if (node === null || typeof node !== "object") { return node; }
+
+    return Object.fromEntries(Object.entries(node).map(([k, v]) =>
+        [k, k === "pattern" && v === from ? to : withPattern(v, from, to)]));
 }
 
 /** The base branch's baselines, read through git. */

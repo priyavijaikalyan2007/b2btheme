@@ -72,6 +72,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ### Fixed
 - **GradientPicker trigger swatch**: the swatch showed a checkerboard instead of its gradient, because the checkerboard (`::before`) painted over the swatch's own background. The gradient is now its own layer above the checkerboard, as in the panel preview.
+- **TypeBadge's agent-catalog `icon` no longer accepts arbitrary class lists**: #118 shipped `^[A-Za-z0-9 _-]+$` to catalog v1, which let an agent add any classes to the host page. v1 now takes `^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$`: a single class, or a Font Awesome pair. The baseline anchor accepts this one narrowing through a recorded entry, `ACCEPTED_NARROWINGS` in `scripts/agentui/check-baseline-anchor.mjs`; any other narrowing of a published major still fails. The JavaScript API is unchanged.
 - **MCP Apps view (unpublished)**: a host's `--color-text-inverse` now sets `--theme-text-on-inverse`; it was mapped to `--theme-text-on`, which the theme does not declare.
 - **The cloud icons are served** (ADR-248). `cloud-icons/` was copied only by `build.sh`, which the CDN build does not run, so its files returned 404. They now live in `icon-packs/aws|azure|gcp` with clean names and a `legacy-map.json` from old paths to new; `cloud-icons/` is removed.
 - **CI check [29] accepts components out of the catalog.** It read only the report's `excluded` list, so the four components ADR-247 keeps out of the catalog failed it, and CI stopped at the structure checks from #90 to #93 (#94).
