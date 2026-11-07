@@ -97,7 +97,10 @@ export interface LegendNodeType
     typeKey: string;
     /** Display label, e.g. "OKR". */
     displayName: string;
-    /** Bootstrap icon name (without "bi bi-" prefix). */
+    /**
+     * The type's icon, passed to TypeBadge: a Bootstrap Icons name such as
+     * "crosshair", or a full class string such as "fa-solid fa-user".
+     */
     icon: string;
     /** Hex color for the badge. */
     color: string;

@@ -82,7 +82,12 @@ export interface TypeBadgeOptions
     typeKey: string;
     /** Override display name. If omitted, extracted from typeKey. */
     displayName?: string;
-    /** Bootstrap icon name (without "bi bi-" prefix), e.g. "crosshair". */
+    /**
+     * A Bootstrap Icons name such as "crosshair", or a full class string such
+     * as "fa-solid fa-user" or "fluent-ui-people-team-16-regular" (a value
+     * with a space, or an icon-pack prefix). Load the stylesheet that
+     * defines a class on the page.
+     */
     icon?: string;
     /** Hex color for the badge, e.g. "#C0392B". */
     color?: string;
@@ -220,12 +225,29 @@ function hexToRgba(hex: string, alpha: number): string
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-/** Build icon element with Bootstrap icon class. */
+/** Icon-pack class prefixes (docs/ICON_PACKS.md); GraphCanvas uses the same list. */
+const ICON_PACK_PREFIXES = ["fluent-ui-", "fluent-emoji-", "aws-", "azure-", "gcp-"];
+
+/**
+ * The classes for `icon`. A class string (it has a space, or starts with an
+ * icon-pack prefix) is used as given, so "fa-solid fa-user" and
+ * "fluent-ui-people-team-16-regular" work; anything else is a Bootstrap
+ * Icons name and gets "bi bi-" in front, as before.
+ */
+function iconClassName(icon: string): string
+{
+    const trimmed = icon.trim();
+    const isClass = /\s/.test(trimmed) || ICON_PACK_PREFIXES.some((p) => trimmed.startsWith(p));
+
+    return isClass ? trimmed.split(/\s+/).join(" ") : `bi bi-${trimmed}`;
+}
+
+/** Build the icon element; the size class sizes every icon family. */
 function buildIcon(icon: string, size: TypeBadgeSize): HTMLElement
 {
     const sizeClass = `typebadge-icon-${size}`;
     const el = htmlEl("i", {
-        class: `bi bi-${icon} typebadge-icon ${sizeClass}`,
+        class: `${iconClassName(icon)} typebadge-icon ${sizeClass}`,
         "aria-hidden": "true"
     });
     return el;

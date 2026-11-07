@@ -26802,11 +26802,11 @@
               ]
             },
             "icon": {
-              "description": "Bootstrap icon name (without \"bi bi-\" prefix), e.g. \"crosshair\".",
+              "description": "A Bootstrap Icons name such as \"crosshair\", or a full class string such\nas \"fa-solid fa-user\" or \"fluent-ui-people-team-16-regular\" (a value\nwith a space, or an icon-pack prefix). Load the stylesheet that\ndefines a class on the page.",
               "anyOf": [
                 {
                   "type": "string",
-                  "pattern": "^[A-Za-z0-9_-]+$"
+                  "pattern": "^[A-Za-z0-9 _-]+$"
                 },
                 {
                   "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
@@ -31720,7 +31720,7 @@
         },
         "icon": {
           "type": "string",
-          "description": "Bootstrap icon name (without \"bi bi-\" prefix)."
+          "description": "The type's icon, passed to TypeBadge: a Bootstrap Icons name such as\n\"crosshair\", or a full class string such as \"fa-solid fa-user\"."
         },
         "color": {
           "type": "string",

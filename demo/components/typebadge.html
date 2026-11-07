@@ -31,6 +31,9 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
+    <link rel="stylesheet" href="../../dist/lib/font-awesome-6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/typebadge/typebadge.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
@@ -76,6 +79,12 @@
             </div>
         </div>
 
+        <div class="demo-section" id="typebadge-iconclass-section">
+            <h2>Icon Classes</h2>
+            <p><code>icon</code> can also be a full class string: Font Awesome (<code>fa-solid fa-user</code>) or an icon-pack class such as <code>fluent-ui-people-team-16-regular</code> (see <code>docs/ICON_PACKS.md</code>). Load the stylesheet that defines the class. Monochrome icons follow the badge's colour; colour pack icons keep their palette.</p>
+            <div class="row g-3 mb-3" id="demo-typebadge-iconclass"></div>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
@@ -103,6 +112,23 @@
                     showNamespace: size === "lg"
                 }));
             }
+        });
+    });
+
+    var tbIconClasses = [
+        { typeKey: "org.person", icon: "fa-solid fa-user", color: "#2471A3" },
+        { typeKey: "org.team", icon: "fluent-ui-people-team-16-regular", color: "#8E44AD" },
+        { typeKey: "work.document", icon: "fluent-ui-document-16-color", color: "#C0392B" },
+        { typeKey: "code.repository", icon: "fa-brands fa-github", color: "#1E8449" },
+        { typeKey: "strategy.okr", icon: "crosshair", color: "#B9770E" }
+    ];
+    var tbIconRow = document.getElementById("demo-typebadge-iconclass");
+    tbIconClasses.forEach(function(t) {
+        tbVariants.forEach(function(variant) {
+            var col = document.createElement("div");
+            col.className = "col-auto";
+            col.appendChild(createTypeBadge({ typeKey: t.typeKey, icon: t.icon, color: t.color, size: "md", variant: variant }));
+            tbIconRow.appendChild(col);
         });
     });
 

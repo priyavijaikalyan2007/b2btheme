@@ -26,7 +26,7 @@ document.getElementById("container").appendChild(badge);
 |--------|------|---------|-------------|
 | `typeKey` | `string` | — | Ontology type key, e.g. `"strategy.okr"` |
 | `displayName` | `string` | extracted from typeKey | Override display text |
-| `icon` | `string` | — | Bootstrap icon name (without `bi bi-` prefix) |
+| `icon` | `string` | — | A Bootstrap icon name (`"crosshair"`), or a full class string (`"fa-solid fa-user"`, `"fluent-ui-people-team-16-regular"`). See "Icons" below |
 | `color` | `string` | `"#475569"` | Hex color |
 | `size` | `"sm" \| "md" \| "lg"` | `"sm"` | Size variant (20/28/32px height) |
 | `variant` | `"filled" \| "outlined" \| "subtle"` | `"subtle"` | Visual variant |
@@ -58,9 +58,31 @@ document.getElementById("container").appendChild(badge);
 | `setData(slot, value)` | `void` | Throws: the badge has no data slots |
 | `destroy()` | `void` | Removes the badge |
 
+## Icons
+
+`icon` takes a Bootstrap Icons name, as before, or a full class string. A
+value with a space, or one that starts with an icon-pack prefix
+(`fluent-ui-`, `fluent-emoji-`, `aws-`, `azure-`, `gcp-`), is used as given.
+Anything else gets `bi bi-` in front. GraphCanvas uses the same rule, so one
+stored value works on a graph node and its badge.
+
+```js
+createTypeBadge({ typeKey: "org.person", icon: "fa-solid fa-user" });
+createTypeBadge({ typeKey: "org.team",   icon: "fluent-ui-people-team-16-regular" });
+createTypeBadge({ typeKey: "work.doc",   icon: "fluent-ui-document-16-color" });
+createTypeBadge({ typeKey: "goal.okr",   icon: "crosshair" });   // unchanged
+```
+
+- **Stylesheets:** load the one that defines the class. Font Awesome needs its
+  two-class form (`"fa-solid fa-user"`). For the packs, see `docs/ICON_PACKS.md`.
+- **Size:** the `sm`, `md` and `lg` sizes size every icon family. Use the `16-`
+  Fluent classes.
+- **Colour:** a monochrome icon follows the badge's icon colour. A colour icon
+  keeps its own palette.
+
 ## Over A2UI
 
-TypeBadge is in the A2UI catalog (ADR-243), mounted with `mountTypeBadge`. `color` must be hex and `icon` a Bootstrap icon name. Clicking a clickable badge, or pressing Enter or Space on it, sends `onClick` with `{ typeKey }`.
+TypeBadge is in the A2UI catalog (ADR-243), mounted with `mountTypeBadge`. `color` must be hex, and `icon` a Bootstrap icon name or a class string of letters, digits, `_`, `-` and spaces. Clicking a clickable badge, or pressing Enter or Space on it, sends `onClick` with `{ typeKey }`.
 
 ## Global
 

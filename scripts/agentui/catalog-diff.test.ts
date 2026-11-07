@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { descriptionsDiffer, diffCatalogs, versionProblem } from "./catalog-diff.mjs";
+import { descriptionsDiffer, diffCatalogs, patternWidens, versionProblem } from "./catalog-diff.mjs";
 
 function cat(props: Record<string, unknown>, required: string[] = ["component"], extra: Record<string, unknown> = {})
 {
@@ -55,6 +55,29 @@ describe("diffCatalogs", () =>
     {
         expect(diffCatalogs(BASE, cat({ pageSize: { description: "Rows.", oneOf: [{ type: "string" }] } })).breaking)
             .toEqual(["Widget.pageSize changed"]);
+    });
+    // A host that validated against the old pattern still sends values the new one accepts (TypeBadge.icon).
+    test("a prop whose pattern only widens is additive", () =>
+    {
+        const before = cat({ icon: { anyOf: [{ type: "string", pattern: "^[A-Za-z0-9_-]+$" }] } });
+        const after = cat({ icon: { description: "Now a class too.",
+            anyOf: [{ type: "string", pattern: "^[A-Za-z0-9 _-]+$" }] } });
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [], additive: ["Widget.icon widened"] });
+    });
+    test("a prop whose pattern narrows is breaking", () =>
+    {
+        const before = cat({ icon: { anyOf: [{ type: "string", pattern: "^[A-Za-z0-9 _-]+$" }] } });
+        const after = cat({ icon: { anyOf: [{ type: "string", pattern: "^[A-Za-z0-9_-]+$" }] } });
+
+        expect(diffCatalogs(before, after).breaking).toEqual(["Widget.icon changed"]);
+    });
+    test("a widened pattern beside another change is breaking", () =>
+    {
+        const before = cat({ icon: { anyOf: [{ type: "string", pattern: "^[a-z]+$" }] } });
+        const after = cat({ icon: { anyOf: [{ type: "string", pattern: "^[a-z ]+$", maxLength: 40 }] } });
+
+        expect(diffCatalogs(before, after).breaking).toEqual(["Widget.icon changed"]);
     });
     // TypeScript orders a literal union by internal type id, which any file in
     // the program can shift (readiness step 2 B1). Order is not meaning.
@@ -162,6 +185,30 @@ describe("diffCatalogs", () =>
         const prev = { ...BASE, $defs: { ...BASE.$defs, Widget__Col: { type: "object" } } };
         const next = { ...BASE, $defs: { ...BASE.$defs, Widget__Col: { type: "array" } } };
         expect(diffCatalogs(prev, next).breaking).toEqual(["$defs.Widget__Col changed"]);
+    });
+});
+
+describe("patternWidens", () =>
+{
+    test("a character class that gains characters widens", () =>
+    {
+        expect(patternWidens("^[A-Za-z0-9_-]+$", "^[A-Za-z0-9 _-]+$")).toBe(true);
+    });
+    test("+ to * widens, * to + does not", () =>
+    {
+        expect(patternWidens("^[a-z]+$", "^[a-z]*$")).toBe(true);
+        expect(patternWidens("^[a-z]*$", "^[a-z]+$")).toBe(false);
+    });
+    test("a character class that loses characters does not widen", () =>
+    {
+        expect(patternWidens("^[a-z0-9]+$", "^[a-z]+$")).toBe(false);
+    });
+    // Regex containment cannot be decided in general, so the gate says breaking.
+    test("any other pattern shape is never taken as widening", () =>
+    {
+        expect(patternWidens("^[a-z]+$", "^([a-z]+|x)$")).toBe(false);
+        expect(patternWidens("^[^a]+$", "^[^ab]+$")).toBe(false);
+        expect(patternWidens("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", "^#[0-9a-fA-F]+$")).toBe(false);
     });
 });
 

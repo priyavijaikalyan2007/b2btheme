@@ -64,7 +64,7 @@ const legend = createGraphLegend({
 |-------|------|-------------|
 | `typeKey` | `string` | Ontology type key, e.g. `"strategy.okr"` |
 | `displayName` | `string` | Display label, e.g. `"OKR"` |
-| `icon` | `string` | Bootstrap icon name (without `bi bi-` prefix) |
+| `icon` | `string` | A Bootstrap icon name, or a full class string such as `"fa-solid fa-user"`; drawn by TypeBadge (see its README) |
 | `color` | `string` | Hex color |
 | `count` | `number?` | Number of this type in the graph |
 | `status` | `string?` | `"active"`, `"planned"`, `"deprecated"`, or `"external"` |

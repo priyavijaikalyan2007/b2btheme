@@ -8,7 +8,8 @@
  *    components"). In a real browser, the Ribbon demo's colour icons draw as
  *    images, its monochrome ones as masks over the text colour, a disabled
  *    control greys its icon, SymbolPicker finds the loaded pack's icons, and
- *    GraphCanvas draws font, colour and monochrome icon classes in its SVG.
+ *    GraphCanvas draws font, colour and monochrome icon classes in its SVG,
+ *    and TypeBadge sizes and colours them like its Bootstrap icons.
  */
 
 import { test, expect } from "@playwright/test";
@@ -68,6 +69,38 @@ test.describe("icon packs in components", () =>
         await expect(rect).toBeVisible();
 
         await expect(node("c6").locator("text").first()).toHaveAttribute("font-family", "bootstrap-icons");
+    });
+
+    test("TypeBadge draws Font Awesome and pack icons at the badge's icon size", async ({ page }) =>
+    {
+        await page.goto("/demo/components/typebadge.html");
+        const row = page.locator("#demo-typebadge-iconclass");
+
+        const fa = row.locator("i.fa-solid.fa-user").first();
+        await expect(fa).toBeVisible();
+        const faStyle = await fa.evaluate((el) =>
+        {
+            const s = getComputedStyle(el, "::before");
+            return { content: s.content, font: s.fontFamily };
+        });
+        expect(faStyle.content).not.toBe("none");
+        expect(faStyle.font).toContain("Font Awesome 6 Free");
+
+        const mono = row.locator("i.fluent-ui-people-team-16-regular").first();
+        const monoStyle = await mono.evaluate((el) =>
+        {
+            const s = getComputedStyle(el);
+            return { mask: s.maskImage, bg: s.backgroundColor, color: s.color, width: s.width, size: s.fontSize };
+        });
+        expect(monoStyle.mask).toContain("people-team-16-regular.svg");
+        expect(monoStyle.bg).toBe(monoStyle.color);
+        // 1em wide; layout rounds widths to 1/64 px.
+        expect(parseFloat(monoStyle.width)).toBeCloseTo(parseFloat(monoStyle.size), 1);
+
+        const colour = row.locator("i.fluent-ui-document-16-color").first();
+        expect(await colour.evaluate((el) => getComputedStyle(el).backgroundImage))
+            .toContain("documents-files/document-16-color.svg");
+        await expect(row.locator("i.bi.bi-crosshair").first()).toBeVisible();
     });
 
     test("SymbolPicker lists the loaded pack's icons by folder", async ({ page }) =>
