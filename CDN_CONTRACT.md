@@ -301,7 +301,7 @@ A browser allows reading those rules only for a stylesheet loaded with
 ```html
 <link rel="stylesheet"
       href="https://static.knobby.io/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css"
-      integrity="<from lib-manifest.json>" crossorigin="anonymous">
+      integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
 ```
 
 The `/icons/` copy changes `font-display` from `block` to `swap`. The `/lib/`
