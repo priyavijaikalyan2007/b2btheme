@@ -108,7 +108,8 @@ test.describe("icon packs in components", () =>
     {
         await page.goto("/demo/components/explorerpicker.html");
         const root = page.locator("#demo-ep-iconclass");
-        const icon = (id: string) => root.locator(`.explorerpicker-node-row[data-node-id="${id}"] .explorerpicker-icon`);
+        const icon = (id: string) =>
+            root.locator(`.explorerpicker-node-row[data-node-id="${id}"] .explorerpicker-icon`);
 
         await expect(icon("ic-fa")).toHaveClass("fa-solid fa-file-code explorerpicker-icon");
         expect(await icon("ic-fa").evaluate((el) => getComputedStyle(el, "::before").fontFamily))

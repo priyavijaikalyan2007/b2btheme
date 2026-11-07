@@ -129,15 +129,74 @@ function onlyPatternsWiden(prev, next)
     return widened && sameish(prev, aligned);
 }
 
-/** The one pattern shape the gate can compare: a whole string of one character class, `^[...]+$` or `^[...]*$`. */
+/** A pattern that is a whole string of one character class, `^[...]+$` or `^[...]*$`. */
 const CHAR_CLASS_PATTERN = /^\^\[([^\]\\^]+)\]([+*])\$$/;
 
 /**
- * Whether `next` accepts every string `prev` accepts. Only the single
- * character class shape is understood; any other pattern change is
+ * Whether `next` accepts every string `prev` accepts. Two shapes are
+ * understood: one character class that gains characters (or `+` becoming
+ * `*`), and `^X$` becoming `^(?:X|Y)$`. Any other pattern change is
  * breaking, because regex containment cannot be decided in general.
  */
 export function patternWidens(prev, next)
+{
+    return charClassWidens(prev, next) || alternativeAdded(prev, next);
+}
+
+/**
+ * `^X$` to `^(?:X|Y)$`: the old pattern kept whole as the first
+ * alternative. X must have no top-level `|`, since `^a|b$` means
+ * `(^a)|(b$)`, which `^(?:a|b|c)$` does not contain.
+ */
+function alternativeAdded(prev, next)
+{
+    if (!prev.startsWith("^") || !prev.endsWith("$")) { return false; }
+
+    const x = prev.slice(1, -1);
+    const prefix = `^(?:${x}|`;
+
+    if (!next.startsWith(prefix) || !next.endsWith(")$") || next.length <= prefix.length + 2) { return false; }
+    if (!isAnchoredWhole(x)) { return false; }
+
+    try
+    {
+        new RegExp(next);
+    }
+    catch
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/** True when a pattern body has no top-level `|` and does not end in an escape that would swallow the `$`. */
+function isAnchoredWhole(body)
+{
+    let depth = 0;
+    let inClass = false;
+
+    for (let i = 0; i < body.length; i++)
+    {
+        const c = body[i];
+
+        if (c === "\\")
+        {
+            if (i === body.length - 1) { return false; }
+            i++;
+        }
+        else if (inClass) { inClass = c !== "]"; }
+        else if (c === "[") { inClass = true; }
+        else if (c === "(") { depth++; }
+        else if (c === ")") { depth--; }
+        else if (c === "|" && depth === 0) { return false; }
+    }
+
+    return depth === 0 && !inClass;
+}
+
+/** One character class that gains characters, or whose `+` becomes `*`. */
+function charClassWidens(prev, next)
 {
     const a = CHAR_CLASS_PATTERN.exec(prev);
     const b = CHAR_CLASS_PATTERN.exec(next);
