@@ -3496,7 +3496,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 ## Requirements
 
 - **Bootstrap CSS** — for SCSS variables
-- **Bootstrap Icons** — item icons (`bi-*` classes)
+- **Bootstrap Icons** — item icons (`bi-*` classes); icon-pack classes work when the pack's stylesheet is loaded
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
@@ -3552,7 +3552,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 |--------|------|---------|-------------|
 | `id` | `string` | **required** | Unique identifier |
 | `label` | `string` | **required** | Display text |
-| `icon` | `string` | — | Bootstrap icon name (without `bi-` prefix) |
+| `icon` | `string` | — | A Bootstrap Icons name without the `bi-` prefix (`"folder-plus"`), or CSS classes such as `"bi bi-folder-plus"` or an icon-pack class (`"fluent-ui-folder-add-16-regular"`; see `docs/ICON_PACKS.md`) |
 | `shortcut` | `string` | — | Keyboard shortcut hint |
 | `disabled` | `boolean` | `false` | Disables the item |
 | `checked` | `boolean` | — | Checkmark state |
@@ -4121,7 +4121,17 @@ When `showCanvas` is true, inline MCP apps display an "expand" button. Clicking 
 MCP app HTML is injected into a sandboxed iframe via `srcdoc`. The component automatically prepends:
 
 1. A **Content Security Policy** meta tag restricting resource access
-2. A **theme style block** injecting `--mcp-*` CSS custom properties (colours, fonts) computed from the host page's Bootstrap theme at runtime
+2. A **theme style block** injecting `--mcp-*` CSS custom properties (colours, fonts) computed from the host page's Bootstrap theme at runtime. Beside them it sets the MCP Apps standard style variables, each from the library token it stands for, so an app styled with the standard names follows the page's theme:
+
+    | Standard variable | From |
+    |---|---|
+    | `--color-background-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-surface-bg`, `--theme-surface-raised-bg`, `--theme-surface-sunken-bg`, `--theme-surface-inverse-bg` |
+    | `--color-text-primary`, `-secondary`, `-tertiary`, `-inverse` | `--theme-text-primary`, `--theme-text-secondary`, `--theme-text-muted`, `--theme-text-on-inverse` |
+    | `--color-border-primary` | `--theme-border-color` |
+    | `--font-sans`, `--font-mono` | `--bs-font-sans-serif`, `--bs-font-monospace` |
+    | `--border-radius-sm`, `-md`, `-lg` | `--bs-border-radius-sm`, `--bs-border-radius`, `--bs-border-radius-lg` |
+
+    The values are read from the document root when the app opens. A token with no value is left out. The `--mcp-*` names are unchanged.
 3. A **bridge script** providing `window.mcpBridge.send(method, params)` and `window.mcpBridge.onMessage` for JSON-RPC 2.0 communication with the host
 
 Example MCP app HTML that communicates with the host:
@@ -8595,6 +8605,24 @@ const canvas = createGraphCanvas({
 });
 ```
 
+## Node icons
+
+A node's `icon` takes any of:
+
+- a Bootstrap Icons name, `"person"` or `"bi-person"`, or a Feather name such as `"user"`;
+- a single character, such as an emoji;
+- a full icon class string: Font Awesome (`"fa-solid fa-user"`), an icon-pack class (`"fluent-ui-person-16-regular"`, see [docs/ICON_PACKS.md](../../docs/ICON_PACKS.md)) or `"bi bi-person"`.
+
+A value with a space, or one that starts with a pack prefix (`fluent-ui-`, `fluent-emoji-`, `aws-`, `azure-`, `gcp-`), is a class string. The page must load the stylesheet that defines it. GraphCanvas reads the class from the page and draws it as the stylesheet does:
+
+- **Font icons** (Bootstrap Icons, Font Awesome) are drawn as text in the icon's own font and weight.
+- **Monochrome pack icons** are drawn in the secondary text colour.
+- **Colour pack icons** keep their own palette.
+
+Font Awesome needs its two-class form (`"fa-solid fa-user"`, `"fa-brands fa-github"`); a lone `"fa-user"` has no font. A class whose stylesheet has not loaded yet draws no icon, and is drawn on the next render after it loads.
+
+`exportPNG()` draws no node icons: an SVG drawn as an image loads no fonts or outside images. This was already the case for Bootstrap Icons glyphs. `exportSVG()` keeps the icons, and they draw where the same stylesheets and fonts are loaded.
+
 ## Modes
 
 - **schema** — Type definitions and relationship edges (the meta-model)
@@ -9769,7 +9797,7 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 
 ## Requirements
 
-- **Bootstrap Icons** — for icon rendering (`bi bi-*` classes)
+- **Bootstrap Icons** — for icon rendering (`bi bi-*` classes); icon-pack classes work when the pack's stylesheet is loaded
 - Does **not** require Bootstrap JS.
 
 ## Quick Start
@@ -9817,7 +9845,7 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `id` | `string` | **required** | Unique item identifier |
-| `icon` | `string` | **required** | Bootstrap icon name (without `bi-` prefix) |
+| `icon` | `string` | **required** | A Bootstrap Icons name without the `bi-` prefix (`"folder-plus"`), or CSS classes such as `"bi bi-folder-plus"` or an icon-pack class (`"fluent-ui-folder-add-16-regular"`; see `docs/ICON_PACKS.md`) |
 | `tooltip` | `string` | **required** | Tooltip text (rendered as `title` attribute) |
 | `type` | `string` | `"button"` | `button`, `toggle`, `separator` |
 | `active` | `boolean` | `false` | Initial toggle state |
