@@ -45,7 +45,8 @@ const NODE_SCHEMA = {
         hasChildren: { type: "boolean", description: "True when the node has children, so it shows an expand "
             + "toggle. Without its children in staticNodes, expanding it sends onLoadChildren." },
         icon: { ...ICON, description: "Icon class for a resource: a Bootstrap Icons class (\"bi-file-earmark-code\"), "
-            + "an icon-pack class or a Font Awesome class pair (\"fa-solid fa-file\"); containers keep their folder icons." },
+            + "an icon-pack class or a Font Awesome class pair (\"fa-solid fa-file\"); "
+            + "containers keep their folder icons." },
         parentId: { ...NULLABLE_STRING, description: "The id of the node's parent, or null for a root." },
         breadcrumb: { type: "string", description: "A path shown under a search result." },
     },
