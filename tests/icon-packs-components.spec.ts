@@ -9,7 +9,8 @@
  *    images, its monochrome ones as masks over the text colour, a disabled
  *    control greys its icon, SymbolPicker finds the loaded pack's icons, and
  *    GraphCanvas draws font, colour and monochrome icon classes in its SVG,
- *    and TypeBadge sizes and colours them like its Bootstrap icons.
+ *    TypeBadge sizes and colours them like its Bootstrap icons, and
+ *    ExplorerPicker takes them from nodes and ontology types.
  */
 
 import { test, expect } from "@playwright/test";
@@ -101,6 +102,27 @@ test.describe("icon packs in components", () =>
         expect(await colour.evaluate((el) => getComputedStyle(el).backgroundImage))
             .toContain("documents-files/document-16-color.svg");
         await expect(row.locator("i.bi.bi-crosshair").first()).toBeVisible();
+    });
+
+    test("ExplorerPicker draws class strings and pack icons from nodes and ontology types", async ({ page }) =>
+    {
+        await page.goto("/demo/components/explorerpicker.html");
+        const root = page.locator("#demo-ep-iconclass");
+        const icon = (id: string) => root.locator(`.explorerpicker-node-row[data-node-id="${id}"] .explorerpicker-icon`);
+
+        await expect(icon("ic-fa")).toHaveClass("fa-solid fa-file-code explorerpicker-icon");
+        expect(await icon("ic-fa").evaluate((el) => getComputedStyle(el, "::before").fontFamily))
+            .toContain("Font Awesome 6 Free");
+        expect(await icon("ic-color").evaluate((el) => getComputedStyle(el).backgroundImage))
+            .toContain("documents-files/document-16-color.svg");
+        const mono = await icon("ic-mono").evaluate((el) =>
+        {
+            const s = getComputedStyle(el);
+            return { mask: s.maskImage, bg: s.backgroundColor, color: s.color };
+        });
+        expect(mono.mask).toContain("people-team-16-regular.svg");
+        expect(mono.bg).toBe(mono.color);
+        await expect(icon("ic-bi")).toHaveClass(/bi-diagram-3/);
     });
 
     test("SymbolPicker lists the loaded pack's icons by folder", async ({ page }) =>

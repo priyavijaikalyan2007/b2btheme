@@ -6883,8 +6883,8 @@
                       },
                       "icon": {
                         "type": "string",
-                        "pattern": "^[A-Za-z0-9_-]+$",
-                        "description": "Bootstrap Icons class for resources of this type."
+                        "pattern": "^[A-Za-z0-9 _-]+$",
+                        "description": "Icon class for resources of this type: a Bootstrap Icons class, an icon-pack class or a class string."
                       },
                       "color": {
                         "type": "string",
@@ -7044,8 +7044,8 @@
                       },
                       "icon": {
                         "type": "string",
-                        "pattern": "^[A-Za-z0-9_-]+$",
-                        "description": "Bootstrap Icons class for a resource (e.g. \"bi-file-earmark-code\"); containers keep their folder icons."
+                        "pattern": "^[A-Za-z0-9 _-]+$",
+                        "description": "Icon class for a resource: a Bootstrap Icons class (\"bi-file-earmark-code\"), an icon-pack class or a class string (\"fa-solid fa-file\"); containers keep their folder icons."
                       },
                       "parentId": {
                         "oneOf": [
@@ -31040,8 +31040,8 @@
         },
         "icon": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9_-]+$",
-          "description": "Bootstrap Icons class for a resource (e.g. \"bi-file-earmark-code\"); containers keep their folder icons."
+          "pattern": "^[A-Za-z0-9 _-]+$",
+          "description": "Icon class for a resource: a Bootstrap Icons class (\"bi-file-earmark-code\"), an icon-pack class\n(\"fluent-ui-document-16-regular\") or a class string (\"fa-solid fa-file\"); containers keep their\nfolder icons."
         },
         "parentId": {
           "oneOf": [
