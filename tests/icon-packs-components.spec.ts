@@ -7,7 +7,8 @@
  * ⚓ TESTS: Icon-pack classes in components (docs/ICON_PACKS.md, "In
  *    components"). In a real browser, the Ribbon demo's colour icons draw as
  *    images, its monochrome ones as masks over the text colour, a disabled
- *    control greys its icon, and SymbolPicker finds the loaded pack's icons.
+ *    control greys its icon, SymbolPicker finds the loaded pack's icons, and
+ *    GraphCanvas draws font, colour and monochrome icon classes in its SVG.
  */
 
 import { test, expect } from "@playwright/test";
@@ -41,6 +42,32 @@ test.describe("icon packs in components", () =>
         });
         expect(cutStyle.mask).toContain("text-editing/cut-16-regular.svg");
         expect(cutStyle.bg).toBe(cutStyle.color);
+    });
+
+    test("GraphCanvas draws Font Awesome glyphs and pack images and masks", async ({ page }) =>
+    {
+        await page.goto("/demo/components/graphcanvas.html");
+        const graph = page.locator("#demo-iconclass-graph");
+        const node = (id: string) => graph.locator(`[data-node-id="${id}"]`);
+
+        const fa = node("c1").locator("text").first();
+        await expect(fa).toHaveAttribute("font-family", /Font Awesome 6 Free/);
+        await expect(fa).toHaveAttribute("font-weight", "900");
+        await expect(node("c3").locator("text").first()).toHaveAttribute("font-family", /Font Awesome 6 Brands/);
+        expect(await fa.evaluate((el) => document.fonts.check(`900 14px ${el.getAttribute("font-family")}`)))
+            .toBe(true);
+
+        await expect(node("c5").locator("image.gc-node-icon"))
+            .toHaveAttribute("href", /fluent-ui\/documents-files\/document-16-color\.svg$/);
+
+        const rect = node("c4").locator("rect.gc-node-icon");
+        const maskId = (await rect.getAttribute("mask"))!.match(/^url\(#(.+)\)$/)![1];
+        const mask = graph.locator(`mask#${maskId}`);
+        await expect(mask).toHaveAttribute("style", "mask-type:alpha");
+        await expect(mask.locator("image")).toHaveAttribute("href", /person-16-regular\.svg$/);
+        await expect(rect).toBeVisible();
+
+        await expect(node("c6").locator("text").first()).toHaveAttribute("font-family", "bootstrap-icons");
     });
 
     test("SymbolPicker lists the loaded pack's icons by folder", async ({ page }) =>

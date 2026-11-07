@@ -31595,7 +31595,7 @@
         },
         "icon": {
           "type": "string",
-          "description": "Bootstrap Icons class shown in the node."
+          "description": "Icon shown in the node: a Bootstrap Icons name (\"person\" or \"bi-person\"),\na Feather name, a single character, or a full icon class string such as\n\"fa-solid fa-user\" or \"fluent-ui-person-16-regular\". A class string has\na space or an icon-pack prefix; its stylesheet must be on the page."
         },
         "color": {
           "type": "string",

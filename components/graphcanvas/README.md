@@ -26,6 +26,24 @@ const canvas = createGraphCanvas({
 });
 ```
 
+## Node icons
+
+A node's `icon` takes any of:
+
+- a Bootstrap Icons name, `"person"` or `"bi-person"`, or a Feather name such as `"user"`;
+- a single character, such as an emoji;
+- a full icon class string: Font Awesome (`"fa-solid fa-user"`), an icon-pack class (`"fluent-ui-person-16-regular"`, see [docs/ICON_PACKS.md](../../docs/ICON_PACKS.md)) or `"bi bi-person"`.
+
+A value with a space, or one that starts with a pack prefix (`fluent-ui-`, `fluent-emoji-`, `aws-`, `azure-`, `gcp-`), is a class string. The page must load the stylesheet that defines it. GraphCanvas reads the class from the page and draws it as the stylesheet does:
+
+- **Font icons** (Bootstrap Icons, Font Awesome) are drawn as text in the icon's own font and weight.
+- **Monochrome pack icons** are drawn in the secondary text colour.
+- **Colour pack icons** keep their own palette.
+
+Font Awesome needs its two-class form (`"fa-solid fa-user"`, `"fa-brands fa-github"`); a lone `"fa-user"` has no font. A class whose stylesheet has not loaded yet draws no icon, and is drawn on the next render after it loads.
+
+`exportPNG()` draws no node icons: an SVG drawn as an image loads no fonts or outside images. This was already the case for Bootstrap Icons glyphs. `exportSVG()` keeps the icons, and they draw where the same stylesheets and fonts are loaded.
+
 ## Modes
 
 - **schema** — Type definitions and relationship edges (the meta-model)
