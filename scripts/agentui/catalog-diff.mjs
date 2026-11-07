@@ -77,12 +77,105 @@ function diffComponent(name, prev, next, out)
     if (!sameish(entryShape(prev), entryShape(next))) { out.breaking.push(`${name} changed`); }
 
     diffMap(p.properties ?? {}, n.properties ?? {}, (prop) => `${name}.${prop}`, out, (prop) =>
-        sameish(p.properties[prop], n.properties[prop]) || out.breaking.push(`${name}.${prop} changed`));
+        diffProp(`${name}.${prop}`, p.properties[prop], n.properties[prop], out));
 
     for (const r of (n.required ?? []).filter((k) => !(p.required ?? []).includes(k)))
     {
         out.breaking.push(`${name}.${r} became required`);
     }
+}
+
+/** Same prop: unchanged, widened (every value it accepted is still accepted) or changed. */
+function diffProp(label, prev, next, out)
+{
+    if (sameish(prev, next)) { return; }
+
+    if (onlyPatternsWiden(prev, next)) { out.additive.push(`${label} widened`); }
+    else { out.breaking.push(`${label} changed`); }
+}
+
+/**
+ * Whether the two schemas differ only in string `pattern`s, each of which
+ * widens. `next` is copied with each widened pattern put back to the old
+ * one, and the copy must then equal `prev`.
+ */
+function onlyPatternsWiden(prev, next)
+{
+    let widened = false;
+
+    const align = (a, b) =>
+    {
+        if (!isNode(a) || !isNode(b)) { return b; }
+
+        const copy = Array.isArray(b) ? [] : {};
+
+        for (const k of Object.keys(b))
+        {
+            const isPattern = k === "pattern" && typeof a[k] === "string" && typeof b[k] === "string";
+
+            if (isPattern && a[k] !== b[k] && patternWidens(a[k], b[k]))
+            {
+                widened = true;
+                copy[k] = a[k];
+            }
+            else { copy[k] = align(a[k], b[k]); }
+        }
+
+        return copy;
+    };
+
+    const aligned = align(prev, next);
+
+    return widened && sameish(prev, aligned);
+}
+
+/** The one pattern shape the gate can compare: a whole string of one character class, `^[...]+$` or `^[...]*$`. */
+const CHAR_CLASS_PATTERN = /^\^\[([^\]\\^]+)\]([+*])\$$/;
+
+/**
+ * Whether `next` accepts every string `prev` accepts. Only the single
+ * character class shape is understood; any other pattern change is
+ * breaking, because regex containment cannot be decided in general.
+ */
+export function patternWidens(prev, next)
+{
+    const a = CHAR_CLASS_PATTERN.exec(prev);
+    const b = CHAR_CLASS_PATTERN.exec(next);
+
+    if (!a || !b) { return false; }
+
+    const quantifierWidens = a[2] === b[2] || (a[2] === "+" && b[2] === "*");
+    const before = charClassSet(a[1]);
+    const after = charClassSet(b[1]);
+
+    return quantifierWidens && before !== null && after !== null && [...before].every((c) => after.has(c));
+}
+
+/** The code points a character class body names: single characters and `x-y` ranges; null for a reversed range. */
+function charClassSet(body)
+{
+    const chars = Array.from(body);
+    const set = new Set();
+
+    for (let i = 0; i < chars.length; i++)
+    {
+        if (chars[i + 1] !== "-" || i + 2 >= chars.length)
+        {
+            set.add(chars[i].codePointAt(0));
+            continue;
+        }
+
+        const lo = chars[i].codePointAt(0);
+        const hi = chars[i + 2].codePointAt(0);
+
+        if (hi < lo) { return null; }
+
+        for (let c = lo; c <= hi; c++) { set.add(c); }
+
+        i += 2;
+    }
+
+    return set;
 }
 
 /** Our own entries carry their properties in allOf[2]; re-exports have none. */
