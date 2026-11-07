@@ -238,7 +238,7 @@ A component whose core behaviour depends on a host-only member (for example, cel
   - any other change to a component entry outside its properties and `required` (its `type`, `unevaluatedProperties`, any `allOf` member, or a new key beside `properties`), reported as `<Name> changed`
   - any change to a top-level catalog key other than `components`, `functions`, `$defs` and `description` (`$id`, `catalogId`, `title`, `$schema`), reported as `catalog <key> changed`
 - Description text is never a contract: a change to a `description` anywhere is not breaking.
-- A property whose only change is a `pattern` that widens is additive, reported as `<Name>.<prop> widened`. The gate understands one shape, a whole string of one character class (`^[...]+$` or `^[...]*$`): it widens when the new class names every character of the old one and `+` stays `+` or becomes `*`. Any other pattern change is breaking, because regex containment cannot be decided in general.
+- A property or `$defs` entry whose only change is a `pattern` that widens is additive, reported as `<Name>.<prop> widened` or `$defs.<Def> widened`. The gate understands one shape, a whole string of one character class (`^[...]+$` or `^[...]*$`): it widens when the new class names every character of the old one and `+` stays `+` or becomes `*`. Any other pattern change is breaking, because regex containment cannot be decided in general.
 - A breaking change fails the gate unless `N` was incremented in the same change.
 - When `N` increments, `v<N-1>.json` **stays published**, because hosts we cannot see have hard-coded its ID. Retiring an old catalog is a separate, deliberate decision, outside this spec.
 - Additive changes keep `N` and update the baseline in the same commit.

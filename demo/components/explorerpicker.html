@@ -31,6 +31,9 @@
 
     <link rel="stylesheet" href="../../dist/css/custom.css">
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-color.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
+    <link rel="stylesheet" href="../../dist/lib/font-awesome-6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/explorerpicker/explorerpicker.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
@@ -78,6 +81,13 @@
             <h2><i class="bi bi-search"></i> Search Mode</h2>
             <p class="text-muted mb-3">Type in the search bar to filter results. Breadcrumb paths under each result for disambiguation. Mock search API with 300ms debounce.</p>
             <div id="demo-ep-search" style="max-width: 600px;"></div>
+        </div>
+
+        <!-- Section 5: Icon Classes -->
+        <div class="demo-section" id="explorer-iconclass-section">
+            <h2><i class="bi bi-palette"></i> Icon Classes</h2>
+            <p class="text-muted mb-3">A resource's icon can be an icon-pack class such as <code>fluent-ui-document-16-color</code> or a class string such as <code>fa-solid fa-file-code</code>, from the node, its ontology type or <code>iconResolver</code> (see <code>docs/ICON_PACKS.md</code>). Load the stylesheet that defines the class.</p>
+            <div id="demo-ep-iconclass" style="max-width: 600px;"></div>
         </div>
 
     </main>
@@ -316,6 +326,41 @@
         }
     })();
 
+
+        // ── 5. Icon Classes ─────────────────────────────────────────────
+
+        if (document.getElementById("demo-ep-iconclass"))
+        {
+            var iconAsset = function(id, name, resourceType, icon)
+            {
+                var n = { id: id, name: name, nodeType: "ASSET_REF", resourceId: "res-" + id, resourceType: resourceType,
+                          sourceId: "src-" + id, url: null, linkType: null, hasChildren: false, parentId: null };
+                if (icon) { n.icon = icon; }
+                return n;
+            };
+            createExplorerPicker({
+                container: "demo-ep-iconclass",
+                mode: "single",
+                selectionTarget: "resource",
+                height: "420px",
+                staticNodes: [
+                    iconAsset("ic-fa", "Build script (node icon: fa-solid fa-file-code)", "code.file", "fa-solid fa-file-code"),
+                    iconAsset("ic-color", "Quarterly report (type icon: fluent-ui-document-16-color)", "docs.report"),
+                    iconAsset("ic-mono", "Team roster (type icon: fluent-ui-people-team-16-regular)", "org.roster"),
+                    iconAsset("ic-bi", "Network diagram (type icon: bi-diagram-3)", "diagrams.diagram")
+                ],
+                ontologyTypes: [
+                    { key: "docs.report", icon: "fluent-ui-document-16-color" },
+                    { key: "org.roster", icon: "fluent-ui-people-team-16-regular", color: "#8E44AD" },
+                    { key: "code.file", icon: "bi-file-earmark-code", color: "#1E8449" },
+                    { key: "diagrams.diagram", icon: "bi-diagram-3", color: "#2563EB" }
+                ],
+                onConfirm: function(selections)
+                {
+                    console.log("[ExplorerPicker Demo] Icon classes confirm:", selections);
+                }
+            });
+        }
     </script>
 </body>
 </html>

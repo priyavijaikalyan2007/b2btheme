@@ -201,13 +201,12 @@ function entryShape(entry)
     return { ...entry, allOf };
 }
 
-/** Component defs: removed or changed is breaking, added additive. */
+/** Component defs: removed or changed is breaking, added or widened additive. */
 function diffDefs(prev, next, out)
 {
     const keep = (m) => Object.fromEntries(Object.entries(m).filter(([k]) => !DERIVED_DEFS.has(k)));
 
-    diffMap(keep(prev), keep(next), (k) => `$defs.${k}`, out, (k) =>
-        sameish(prev[k], next[k]) || out.breaking.push(`$defs.${k} changed`));
+    diffMap(keep(prev), keep(next), (k) => `$defs.${k}`, out, (k) => diffProp(`$defs.${k}`, prev[k], next[k], out));
 }
 
 /**

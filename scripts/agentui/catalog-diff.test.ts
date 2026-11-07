@@ -72,6 +72,16 @@ describe("diffCatalogs", () =>
 
         expect(diffCatalogs(before, after).breaking).toEqual(["Widget.icon changed"]);
     });
+    test("a def whose pattern only widens is additive", () =>
+    {
+        const withDef = (pattern: string) => ({ ...BASE,
+            $defs: { ...BASE.$defs, Widget__Node: { type: "object", properties: { icon: { type: "string", pattern } } } } });
+
+        expect(diffCatalogs(withDef("^[a-z_-]+$"), withDef("^[a-z _-]+$")))
+            .toEqual({ breaking: [], additive: ["$defs.Widget__Node widened"] });
+        expect(diffCatalogs(withDef("^[a-z _-]+$"), withDef("^[a-z_-]+$")).breaking)
+            .toEqual(["$defs.Widget__Node changed"]);
+    });
     test("a widened pattern beside another change is breaking", () =>
     {
         const before = cat({ icon: { anyOf: [{ type: "string", pattern: "^[a-z]+$" }] } });

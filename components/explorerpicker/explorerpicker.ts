@@ -44,8 +44,10 @@ export interface ExplorerNode
     /** True when the node has children, so it shows an expand toggle. */
     hasChildren: boolean;
     /**
-     * Bootstrap Icons class for a resource (e.g. "bi-file-earmark-code"); containers keep their folder icons.
-     * @pattern ^[A-Za-z0-9_-]+$
+     * Icon class for a resource: a Bootstrap Icons class ("bi-file-earmark-code"), an icon-pack class
+     * ("fluent-ui-document-16-regular") or a class string ("fa-solid fa-file"); containers keep their
+     * folder icons.
+     * @pattern ^[A-Za-z0-9 _-]+$
      */
     icon?: string;
     /** The id of the node's parent, or null for a root. */
@@ -92,8 +94,8 @@ export interface OntologyTypeEntry
 {
     key: string;
     /**
-     * Bootstrap Icons class for resources of this type.
-     * @pattern ^[A-Za-z0-9_-]+$
+     * Icon class for resources of this type: a Bootstrap Icons class, an icon-pack class or a class string.
+     * @pattern ^[A-Za-z0-9 _-]+$
      */
     icon: string;
     color?: string;
@@ -164,7 +166,7 @@ export interface ExplorerPickerOptions
     height?: string;
     /** Extra CSS classes for the root element, separated by single spaces. */
     cssClass?: string;
-    /** Returns the icon class for a resource node, ahead of the node's own icon and the ontology's. */
+    /** Returns the icon class (or class string) for a resource node, ahead of the node's own icon and the ontology's. */
     iconResolver?: (node: ExplorerNode) => string | undefined;
     /** Base URL of the ontology API that resource type icons and colours load from. */
     ontologyApiBase?: string;
@@ -2021,9 +2023,10 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         row: HTMLElement, node: ExplorerNode,
         expanded: boolean): void
     {
-        const iconClass = this.resolveIcon(node, expanded);
+        // A class string such as "fa-solid fa-file" is several classes.
+        const iconClasses = this.resolveIcon(node, expanded).trim().split(/\s+/);
         const iconEl = createElement(
-            "i", [iconClass, "explorerpicker-icon"]);
+            "i", [...iconClasses, "explorerpicker-icon"]);
         const color = this.resolveIconColor(node);
         if (color)
         {
