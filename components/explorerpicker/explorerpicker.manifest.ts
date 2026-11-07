@@ -22,7 +22,9 @@ import type { CapabilityManifest } from "../../runtime/src/types";
 const NULLABLE_STRING = { oneOf: [{ const: null }, { type: "string" }] };
 
 /** A Bootstrap Icons class; it is written as a class token, so it is one word. */
-const ICON = { type: "string", pattern: "^[A-Za-z0-9 _-]+$" };
+// One word (a Bootstrap Icons or pack class) or Font Awesome's two-class form: an agent never sends a list of
+// arbitrary classes such as "bi-x text-danger" (b7-collab).
+const ICON = { type: "string", pattern: "^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$" };
 
 /** One node of staticNodes, closed: an agent's node that carries any other field is rejected. */
 const NODE_SCHEMA = {
@@ -43,7 +45,7 @@ const NODE_SCHEMA = {
         hasChildren: { type: "boolean", description: "True when the node has children, so it shows an expand "
             + "toggle. Without its children in staticNodes, expanding it sends onLoadChildren." },
         icon: { ...ICON, description: "Icon class for a resource: a Bootstrap Icons class (\"bi-file-earmark-code\"), "
-            + "an icon-pack class or a class string (\"fa-solid fa-file\"); containers keep their folder icons." },
+            + "an icon-pack class or a Font Awesome class pair (\"fa-solid fa-file\"); containers keep their folder icons." },
         parentId: { ...NULLABLE_STRING, description: "The id of the node's parent, or null for a root." },
         breadcrumb: { type: "string", description: "A path shown under a search result." },
     },
@@ -58,7 +60,7 @@ const TYPE_SCHEMA = {
     properties: {
         key: { type: "string", description: "The resource type key nodes name in resourceType." },
         icon: { ...ICON, description: "Icon class for resources of this type: a Bootstrap Icons class, an icon-pack "
-            + "class or a class string." },
+            + "class or a Font Awesome class pair." },
         color: { type: "string", pattern: "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
             description: "The icon's colour, as #RGB or #RRGGBB hex, such as \"#2E7D32\"." },
         parentTypeKey: { ...NULLABLE_STRING, description: "The parent type's key; resourceTypeFilter matches a "

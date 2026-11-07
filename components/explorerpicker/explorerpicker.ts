@@ -47,7 +47,7 @@ export interface ExplorerNode
      * Icon class for a resource: a Bootstrap Icons class ("bi-file-earmark-code"), an icon-pack class
      * ("fluent-ui-document-16-regular") or a class string ("fa-solid fa-file"); containers keep their
      * folder icons.
-     * @pattern ^[A-Za-z0-9 _-]+$
+     * @pattern ^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$
      */
     icon?: string;
     /** The id of the node's parent, or null for a root. */
@@ -95,7 +95,7 @@ export interface OntologyTypeEntry
     key: string;
     /**
      * Icon class for resources of this type: a Bootstrap Icons class, an icon-pack class or a class string.
-     * @pattern ^[A-Za-z0-9 _-]+$
+     * @pattern ^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$
      */
     icon: string;
     color?: string;
@@ -166,7 +166,7 @@ export interface ExplorerPickerOptions
     height?: string;
     /** Extra CSS classes for the root element, separated by single spaces. */
     cssClass?: string;
-    /** Returns the icon class (or class string) for a resource node, ahead of the node's own icon and the ontology's. */
+    /** Returns the icon class or class string for a resource node, ahead of the node's own icon and the ontology's. */
     iconResolver?: (node: ExplorerNode) => string | undefined;
     /** Base URL of the ontology API that resource type icons and colours load from. */
     ontologyApiBase?: string;
