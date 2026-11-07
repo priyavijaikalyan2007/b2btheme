@@ -316,6 +316,25 @@ const ASSETS = [
         ],
         note: "consolidates the two versions the apps load (6.4.0 and 6.5.1)",
     },
+    {
+        // Bootstrap Icons as a hashed, CORS-served stylesheet with its fonts
+        // beside it. /icons/bootstrap-icons.css stays for existing pages, but
+        // it is unversioned and sends no CORS header, so a page cannot load
+        // it with `crossorigin` to read its rules (the apps' icon pickers do)
+        // or pin it with an integrity hash. Copied verbatim from the npm
+        // package; /icons/ alone gets the font-display: swap edit.
+        name: "bootstrap-icons",
+        kind: "tree",
+        assetType: "stylesheet",
+        version: "1.13.1",
+        pkg: "bootstrap-icons",
+        entry: "bootstrap-icons.min.css",
+        include: [
+            { from: "node_modules/bootstrap-icons/font/bootstrap-icons.min.css", to: "bootstrap-icons.min.css" },
+            { from: "node_modules/bootstrap-icons/font/fonts", to: "fonts" },
+        ],
+        note: "the same release as /icons/bootstrap-icons.css, hashed and served with CORS",
+    },
 ];
 
 function versionOf(pkg)
