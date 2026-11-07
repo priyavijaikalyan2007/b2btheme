@@ -105,6 +105,25 @@ describe("TypeBadge icon", () =>
         expect(icon?.classList.contains("bi-crosshair")).toBe(true);
     });
 
+    test("BootstrapName_GetsBiPrefix", () =>
+    {
+        const icon = createTypeBadge(makeOptions({ icon: "crosshair" })).querySelector(".typebadge-icon");
+        expect(icon?.className).toBe("bi bi-crosshair typebadge-icon typebadge-icon-sm");
+    });
+
+    test("FontAwesomeClassString_UsedAsGiven", () =>
+    {
+        const icon = createTypeBadge(makeOptions({ icon: " fa-solid  fa-user " })).querySelector(".typebadge-icon");
+        expect(icon?.className).toBe("fa-solid fa-user typebadge-icon typebadge-icon-sm");
+    });
+
+    test("IconPackClass_UsedAsGiven", () =>
+    {
+        const el = createTypeBadge(makeOptions({ icon: "fluent-ui-document-16-color", size: "lg" }));
+        expect(el.querySelector(".typebadge-icon")?.className)
+            .toBe("fluent-ui-document-16-color typebadge-icon typebadge-icon-lg");
+    });
+
     test("WithoutIcon_NoIconElement", () =>
     {
         const el = createTypeBadge(makeOptions());
