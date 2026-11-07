@@ -61,7 +61,8 @@ export const TYPEBADGE_MANIFEST: CapabilityManifest =
                 description: "Hex colour for the badge, such as \"#C0392B\". Default: the theme's colour." },
             icon: { type: "string", pattern: "^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$",
                 description: "A Bootstrap icon name such as \"crosshair\", an icon-pack class such as "
-                    + "\"fluent-ui-people-team-16-regular\", or a Font Awesome class pair such as \"fa-solid fa-user\"." },
+                    + "\"fluent-ui-people-team-16-regular\", or a Font Awesome class pair such as "
+                    + "\"fa-solid fa-user\"." },
         },
     },
 
