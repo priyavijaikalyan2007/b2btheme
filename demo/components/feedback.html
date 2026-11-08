@@ -1,0 +1,212 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-Feedback
+  PURPOSE: Standalone demo page for the Feedback component: both scales, both
+           commit modes, the dialog, a summary, a failing save, Fluent icons.
+  RELATES: [[Feedback]], [[FormDialog]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-regular.css">
+    <link rel="stylesheet" href="../../dist/icons/fluent-ui/fluent-ui-16-filled.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../../dist/components/formdialog/formdialog.css">
+    <link rel="stylesheet" href="../../dist/components/feedback/feedback.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Feedback
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="feedback-thumbs-section">
+            <h2>Thumbs, then Submit</h2>
+            <p>Pick, change your mind, add a comment, then press Submit. <code>onFeedback</code> is called once, and the control locks only when the save resolves. This save takes a second.</p>
+            <div id="demo-feedback-thumbs"></div>
+        </div>
+
+        <div class="demo-section" id="feedback-stars-section">
+            <h2>Stars, sent on the first pick</h2>
+            <p><code>commit: "once"</code> with a 5-star scale and a summary. Arrow keys move between the stars; Space or Enter picks.</p>
+            <div id="demo-feedback-stars"></div>
+        </div>
+
+        <div class="demo-section" id="feedback-fail-section">
+            <h2>A save that fails</h2>
+            <p>The first save rejects. The error shows in place, the pick and the comment stay, and Submit tries again.</p>
+            <div id="demo-feedback-fail"></div>
+        </div>
+
+        <div class="demo-section" id="feedback-saved-section">
+            <h2>A stored rating</h2>
+            <p><code>initial</code> shows a rating given before, saved and locked. <code>reset()</code> unlocks it.</p>
+            <div id="demo-feedback-saved"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="demo-feedback-reset">reset()</button>
+        </div>
+
+        <div class="demo-section" id="feedback-fluent-section">
+            <h2>Fluent UI icons</h2>
+            <p>Every icon takes a Bootstrap Icons name or a full class, here Fluent UI's thumbs, flag and copy icons.</p>
+            <div id="demo-feedback-fluent"></div>
+        </div>
+
+        <div class="demo-section" id="feedback-dialog-section">
+            <h2>As a dialog</h2>
+            <p><code>showFeedbackDialog</code> asks for a 10-star rating and a comment, saved together in one call.</p>
+            <button type="button" class="btn btn-sm btn-primary" id="demo-feedback-dialog">Rate this result</button>
+            <span class="ms-2 text-secondary" id="demo-feedback-dialog-result"></span>
+        </div>
+
+        <div class="demo-section">
+            <h2>Saved</h2>
+            <p>What each control handed its caller.</p>
+            <pre class="small" id="demo-feedback-log"></pre>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/formdialog/formdialog.js"></script>
+    <script src="../../dist/components/feedback/feedback.js"></script>
+
+    <script>
+    // ====================================================================
+    // Feedback Demos
+    // ====================================================================
+
+    var feedbackLog = document.getElementById("demo-feedback-log");
+
+    function logSave(targetId, feedback)
+    {
+        feedbackLog.textContent += targetId + " " + JSON.stringify(feedback) + "\n";
+    }
+
+    function slowSave(ms)
+    {
+        return function(targetId, feedback)
+        {
+            return new Promise(function(resolve)
+            {
+                setTimeout(function() { logSave(targetId, feedback); resolve(); }, ms);
+            });
+        };
+    }
+
+    window.demoFeedbackThumbs = createFeedback({
+        container: document.getElementById("demo-feedback-thumbs"),
+        targetId: "generation-1",
+        onFeedback: slowSave(1000),
+        showCopy: true,
+        onCopy: function(id) { logSave(id, "copied"); }
+    });
+
+    window.demoFeedbackStars = createFeedback({
+        container: document.getElementById("demo-feedback-stars"),
+        targetId: "document-7",
+        scale: "stars",
+        commit: "once",
+        summary: { average: 4.26, count: 128 },
+        onFeedback: slowSave(300)
+    });
+
+    var failOnce = true;
+    window.demoFeedbackFail = createFeedback({
+        container: document.getElementById("demo-feedback-fail"),
+        targetId: "generation-2",
+        onFeedback: function(targetId, feedback)
+        {
+            if (failOnce)
+            {
+                failOnce = false;
+                return Promise.reject(new Error("the server did not answer"));
+            }
+            logSave(targetId, feedback);
+            return Promise.resolve();
+        }
+    });
+
+    window.demoFeedbackSaved = createFeedback({
+        container: document.getElementById("demo-feedback-saved"),
+        targetId: "generation-3",
+        initial: { sentiment: "positive" },
+        summary: { positive: 12, negative: 1 },
+        onFeedback: slowSave(300)
+    });
+    document.getElementById("demo-feedback-reset").addEventListener("click", function()
+    {
+        window.demoFeedbackSaved.reset();
+    });
+
+    window.demoFeedbackFluent = createFeedback({
+        container: document.getElementById("demo-feedback-fluent"),
+        targetId: "generation-4",
+        size: "md",
+        showCopy: true,
+        onFeedback: slowSave(300),
+        icons: {
+            positive: "fluent-ui-thumb-like-16-regular",
+            positiveActive: "fluent-ui-thumb-like-16-filled",
+            negative: "fluent-ui-thumb-dislike-16-regular",
+            negativeActive: "fluent-ui-thumb-dislike-16-filled",
+            comment: "fluent-ui-chat-16-regular",
+            report: "fluent-ui-flag-16-regular",
+            copy: "fluent-ui-copy-16-regular",
+            copied: "fluent-ui-copy-16-filled"
+        }
+    });
+
+    document.getElementById("demo-feedback-dialog").addEventListener("click", function()
+    {
+        showFeedbackDialog({
+            targetId: "diagram-9",
+            scale: "stars",
+            max: 10,
+            onFeedback: slowSave(300)
+        }).then(function(saved)
+        {
+            document.getElementById("demo-feedback-dialog-result").textContent =
+                saved ? "Saved " + saved.score + " of 10" : "Cancelled";
+        });
+    });
+    </script>
+</body>
+</html>

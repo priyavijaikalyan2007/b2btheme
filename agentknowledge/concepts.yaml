@@ -887,6 +887,11 @@
   anchor_file: "components/sprintpicker/sprintpicker.scss"
   related: ["SprintPicker", "EnterpriseTheme"]
 
+- name: "Feedback"
+  definition: "A rating (thumbs, or 5 or 10 stars), an optional comment and problem reports for any surface. Inline via createFeedback (role=toolbar) or as a dialog via showFeedbackDialog over FormDialog. One call per rating: commit 'submit' keeps picks local until Submit, 'once' sends the first pick; the control then locks (initial shows a stored rating locked; reset() unlocks). Honest saving: aria-busy while the caller's promise is pending, locked and announced on resolve, error in place with input kept on reject. onFeedback(targetId, feedback) or the single-object onSave({targetId, feedback}). Optional caller-supplied summary. Icons take names or full classes. In the A2UI catalog the save is a required ack provider (feedbackResult: true). CSS prefix feedback-."
+  anchor_file: "components/feedback/feedback.ts"
+  related: ["FormDialog", "InlineToolbar", "Conversation"]
+
 - name: "TypeBadge"
   definition: "Small inline chip/badge that visually identifies an ontology type via icon (Bootstrap Icons), hex color, and label extracted from typeKey's last segment. Three size variants (sm 20px, md 28px, lg 32px), three visual variants (filled solid background, outlined colored border, subtle 10% opacity background). Optional namespace display (showNamespace), clickable mode with keyboard activation. CSS prefix typebadge-. Factory createTypeBadge(). Consumed by GraphCanvas and RelationshipManager via window.createTypeBadge bridge. ~250 lines TS."
   anchor_file: "components/typebadge/typebadge.ts"

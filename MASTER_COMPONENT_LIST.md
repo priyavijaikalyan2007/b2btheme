@@ -1183,6 +1183,21 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Ontology type identification in graph visualizations, relationship lists, search results, breadcrumbs, and entity detail headers.
 
+## 20.11✅Feedback (Rating and Problem Reports)
+
+**Description**: A rating (thumbs, or 5 or 10 stars), an optional comment and problem reports for anything a page shows: an AI result, a document, a page.
+
+- **Two forms:** inline (`createFeedback`) or a dialog over FormDialog (`showFeedbackDialog`).
+- **One call per rating:** picks stay local until Submit, or the first pick is sent at once (`commit: "once"`); either way the control then locks.
+- **Honest saving:** it never sends anything itself. It shows a save as done only when the caller's promise resolves, and keeps the input with the error in place when it rejects.
+- **Display:** an optional summary of everyone's ratings ("12 likes", "4.3 (128 ratings)"), from numbers the caller supplies.
+- **Icons:** Bootstrap Icons, Font Awesome and icon-pack classes.
+- **Agents:** in the A2UI and MCP Apps catalog, where the agent acknowledges each save.
+
+**References**: ChatGPT and Claude response thumbs, Google Docs "Was this helpful?", app-store star ratings, GitHub issue report flows.
+
+**Use Cases:** Rating AI generations outside a chat, rating documents and help pages, reporting harmful or inaccurate results.
+
 # 21\. Layout Container Components
 
 ## 21.1 Background

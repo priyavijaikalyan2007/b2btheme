@@ -1,0 +1,116 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: FeedbackStyles
+ * 📜 PURPOSE: The inline feedback toolbar: thumbs or stars, summary counts,
+ *    Comment, Submit, Report and Copy, the comment panel, and the busy,
+ *    locked and error states. Colour comes only from theme tokens.
+ * 🔗 RELATES: [[Feedback]], [[InlineToolbar]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+
+.feedback {
+    display: inline-flex;
+    flex-direction: column;
+    gap: $sp-4;
+    color: var(--theme-text-secondary);
+    font-size: $font-size-sm;
+}
+
+.feedback-bar,
+.feedback-thumbs,
+.feedback-stars,
+.feedback-stars-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.feedback-bar { gap: $sp-4; flex-wrap: wrap; }
+.feedback-stars-wrap { gap: $sp-6; }
+
+.feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: $border-radius;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background-color 150ms ease, color 150ms ease;
+
+    &:hover:not(:disabled) {
+        background-color: var(--theme-hover-bg);
+        color: var(--theme-text-primary);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--theme-primary);
+        outline-offset: -1px;
+    }
+
+    &:disabled { cursor: default; }
+}
+
+.feedback-sm .feedback-btn { width: 28px; height: 28px; font-size: $font-size-sm; }
+.feedback-md .feedback-btn { width: 32px; height: 32px; font-size: $font-size-base; }
+
+.feedback-btn-active { color: var(--theme-primary); }
+
+// A disabled control dims, except a saved rating, which stays legible as the answer given.
+.feedback-btn:disabled:not(.feedback-btn-active):not(.feedback-btn-done) { opacity: 0.5; }
+
+.feedback-btn-done { color: var(--theme-text-muted); }
+
+// Hovering a star previews the score: it and the stars before it take the chosen colour.
+.feedback-stars:hover .feedback-star:not(:disabled) { color: var(--theme-primary); }
+.feedback-stars .feedback-star:hover ~ .feedback-star:not(:disabled) { color: var(--theme-text-secondary); }
+
+.feedback-btn.feedback-submit {
+    width: auto;
+    padding: 0 $sp-8;
+    background-color: var(--theme-primary);
+    color: var(--theme-text-on-primary);
+    font-weight: $font-weight-semibold;
+
+    &:hover:not(:disabled) {
+        background-color: var(--theme-primary-hover);
+        color: var(--theme-text-on-primary);
+    }
+}
+
+.feedback-summary {
+    color: var(--theme-text-muted);
+    font-size: $font-size-xs;
+    margin: 0 $sp-4 0 2px;
+    white-space: nowrap;
+}
+
+// Icon packs size to 1em, so a pack class sits at the button's font size.
+.feedback-icon { line-height: 1; }
+
+.feedback-status {
+    color: var(--theme-text-muted);
+    font-size: $font-size-xs;
+}
+
+.feedback-panel { min-width: 16rem; }
+.feedback-textarea { resize: vertical; }
+
+.feedback-error {
+    color: var(--theme-danger-text);
+    font-size: $font-size-xs;
+}
+
+.feedback[aria-busy="true"] { cursor: progress; }
+
+@media (prefers-reduced-motion: reduce) {
+    .feedback-btn { transition: none; }
+}
