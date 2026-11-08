@@ -36,9 +36,11 @@ export function entrySource(entry, cacheDir)
 {
     const pick = entry.pick.length > 0 ? entry.pick.map((n) => JSON.stringify(n)).join(" | ") : "never";
     // A provider's request goes under eventData (binding-only, no schema);
-    // only its answer, <request>Result, is typed: the awaited return.
-    const extras = entry.providers.map((p) =>
-        `    ${p.response}?: Awaited<ReturnType<NonNullable<Options[${JSON.stringify(p.option)}]>>>;`);
+    // only its answer, <request>Result, is typed: the awaited return, or
+    // true for an ack provider, whose callback answers nothing.
+    const extras = entry.providers.map((p) => (p.ack
+        ? `    ${p.response}?: true;`
+        : `    ${p.response}?: Awaited<ReturnType<NonNullable<Options[${JSON.stringify(p.option)}]>>>;`));
     const shape = extras.length > 0 ? [`Pick<Options, ${pick}> & {`, ...extras, "}"] : [`Pick<Options, ${pick}>`];
 
     return [

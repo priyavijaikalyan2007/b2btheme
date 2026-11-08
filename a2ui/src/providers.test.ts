@@ -137,6 +137,45 @@ describe("one request", () =>
     });
 });
 
+describe("ack", () =>
+{
+    const SAVE: AdapterProvider = { option: "onSave", request: "feedback", actionProp: "onFeedback",
+        resultProp: "feedbackResult", concurrency: "latest", ack: true };
+    const props = { onFeedback: { event: { name: "feedback", context: { f: { path: "/ev/feedback" } } } },
+        feedbackResult: { path: "/a/saved" }, eventData: { path: "/ev" } };
+    const acked = (timeoutMs = 30_000) =>
+    {
+        const rc = realContext(props);
+        const validators = { "Fake.feedbackResult": (v: unknown) => v === true };
+        const w = wireProviders(rc.ctx, fakeDescriptor({ providers: [SAVE] }), validators, timeoutMs);
+
+        return { rc, w };
+    };
+
+    test("the agent's true resolves the callback with no value", async () =>
+    {
+        const { rc, w } = acked();
+        const p = w.options.onSave({ targetId: "r1" });
+
+        expect(contextOf(rc.actions[0]).f).toEqual({ targetId: "r1" });
+        rc.setData("/a/saved", true);
+
+        await expect(p).resolves.toBeUndefined();
+    });
+
+    test("no acknowledgement in time rejects, so the component never shows it saved", async () =>
+    {
+        vi.useFakeTimers();
+        const { w } = acked(1000);
+        const t = track(w.options.onSave({ targetId: "r1" }));
+
+        await vi.advanceTimersByTimeAsync(1000);
+
+        expect(t.settled).toBe(true);
+        expect(String(t.error)).toMatch(/did not answer onFeedback/);
+    });
+});
+
 describe("concurrency", () =>
 {
     test("latest: a newer request replaces the waiting one, and the replaced one gets its answer", async () =>

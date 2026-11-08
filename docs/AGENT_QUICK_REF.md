@@ -85,6 +85,8 @@ components/explorerpicker/explorerpicker.css — explorerpicker component CSS
 components/explorerpicker/explorerpicker.js  — explorerpicker component JS
 components/facetsearch/facetsearch.css — facetsearch component CSS
 components/facetsearch/facetsearch.js  — facetsearch component JS
+components/feedback/feedback.css — feedback component CSS
+components/feedback/feedback.js  — feedback component JS
 components/fileexplorer/fileexplorer.css — fileexplorer component CSS
 components/fileexplorer/fileexplorer.js  — fileexplorer component JS
 components/fileupload/fileupload.css — fileupload component CSS
@@ -858,6 +860,13 @@ $control-height-xl=46px
 - JS: `components/facetsearch/facetsearch.js`
 - Globals: `createFacetSearch()`, `parseFacetQuery()`
 - Exports: `type FacetValueType`, `type FacetSearchSize`, `interface FacetDefinition`, `interface ParsedFacet`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `interface FacetSearchHandle`, `class FacetSearch`, `function createFacetSearch`
+
+### feedback
+
+- CSS: `components/feedback/feedback.css`
+- JS: `components/feedback/feedback.js`
+- Globals: `createFeedback()`, `showFeedbackDialog()`
+- Exports: `type FeedbackScale`, `interface FeedbackData`, `interface FeedbackEntry`, `interface FeedbackRating`, `type FeedbackSummary`, `interface FeedbackLabels`, `interface FeedbackIcons`, `interface FeedbackOptions`, `interface FeedbackDialogOptions`, `interface FeedbackHandle`, `function createFeedback`, `function showFeedbackDialog`
 
 ### fileexplorer
 

@@ -56,6 +56,7 @@ v0.9.1                                             — A2UI message version
 | pages, sorts, filters, loads children | `{ "tool": "<name>" }` | a data fetch |
 | asks "why", "explain", "suggest" | `"message"` | needs the model's judgement |
 | is any provider request (`on<Request>`) | `{ "tool": "<name>" }` | answer with `updateDataModel` at `<request>Result` |
+| asks you to act, such as Feedback's `onFeedback` (its `<request>Result` is `true`) | `{ "tool": "<name>" }` | store it, then write `true` at `<request>Result` |
 
 `byName` wins over `default`. An action with neither is `OUTCROP_MCP_NO_ROUTE`.
 

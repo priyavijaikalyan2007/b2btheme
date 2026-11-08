@@ -668,7 +668,7 @@ function validateAgent(m: Record<string, unknown>, issues: ValidationIssue[]): v
 }
 
 /** The keys a provider spec may carry; every catalog name derives from `request`. */
-const PROVIDER_KEYS: readonly string[] = ["request", "concurrency", "required"];
+const PROVIDER_KEYS: readonly string[] = ["request", "concurrency", "required", "ack"];
 
 /** How the A2UI adapter orders a provider's requests (ADR-225). */
 const PROVIDER_CONCURRENCY: readonly string[] = ["latest", "queue"];
@@ -726,7 +726,7 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
     }
 }
 
-/** Validates a provider spec's concurrency, required flag and keys; `request` is checked by the caller. */
+/** Validates a provider spec's concurrency, required and ack flags and keys; `request` is checked by the caller. */
 function validateProviderSpec(path: string, spec: Record<string, unknown>, issues: ValidationIssue[]): void
 {
     if (spec.concurrency !== undefined && !PROVIDER_CONCURRENCY.includes(spec.concurrency as string))
@@ -734,9 +734,12 @@ function validateProviderSpec(path: string, spec: Record<string, unknown>, issue
         issues.push(enumIssue(`${path}.concurrency`, spec.concurrency, PROVIDER_CONCURRENCY));
     }
 
-    if (spec.required !== undefined && typeof spec.required !== "boolean")
+    for (const flag of ["required", "ack"])
     {
-        issues.push(typeIssue(`${path}.required`, "a boolean", spec.required));
+        if (spec[flag] !== undefined && typeof spec[flag] !== "boolean")
+        {
+            issues.push(typeIssue(`${path}.${flag}`, "a boolean", spec[flag]));
+        }
     }
 
     unknownKeys(path, spec, PROVIDER_KEYS, issues);

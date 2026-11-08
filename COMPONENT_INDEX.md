@@ -2,7 +2,7 @@
 
 # Component Index
 
-125 implemented components. Use this file for quick lookup; see each component's README for full API details.
+126 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -171,6 +171,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | docviewer | Full-page three-column documentation layout. | `createDocViewer()` | [README](components/docviewer/README.md) |
 | dynamiccanvas | The rendered surface of the Dynamic UI layer. | `createDynamicCanvas()` | [README](components/dynamiccanvas/README.md) |
 | dynamicformswitcher | A reusable container that holds **N pre-defined forms ("variants")** and shows exactly **one at a time**. | `createDynamicFormSwitcher()` | [README](components/dynamicformswitcher/README.md) |
+| feedback | A rating (thumbs or stars), an optional comment and problem reports for anything a page shows: an AI result, a docume... | `createFeedback()`, `showFeedbackDialog()` | [README](components/feedback/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()` | [README](components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()` | [README](components/formdialog/README.md) |
 | graphcanvas | Interactive SVG graph visualization with multiple layout algorithms, zoom/pan, selection, edge creation, keyboard sho... | `createGraphCanvas()` | [README](components/graphcanvas/README.md) |

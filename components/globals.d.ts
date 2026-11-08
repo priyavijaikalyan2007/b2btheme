@@ -100,6 +100,7 @@ import type { EmptyState, createEmptyState } from "./emptystate/emptystate";
 import type { createErrorDialog, ErrorDialog, showErrorDialog } from "./errordialog/errordialog";
 import type { ExplorerPickerImpl, createExplorerPicker } from "./explorerpicker/explorerpicker";
 import type { FacetSearch, createFacetSearch, parseFacetQuery } from "./facetsearch/facetsearch";
+import type { createFeedback, showFeedbackDialog } from "./feedback/feedback";
 import type { FileExplorer, createFileExplorer } from "./fileexplorer/fileexplorer";
 import type { FileUpload, createFileUpload } from "./fileupload/fileupload";
 import type { FlexGridLayout, createFlexGridLayout } from "./flexgridlayout/flexgridlayout";
@@ -468,6 +469,10 @@ declare global
         /** Published by the FacetSearch component. */
         createFacetSearch?: typeof createFacetSearch;
         parseFacetQuery?: typeof parseFacetQuery;
+
+        /** Published by the Feedback component. */
+        createFeedback?: typeof createFeedback;
+        showFeedbackDialog?: typeof showFeedbackDialog;
 
         /** Published by the FileExplorer component. */
         createFileExplorer?: typeof createFileExplorer;

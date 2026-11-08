@@ -97,8 +97,11 @@ const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 0;
  * createErrorDialog's title and message (ADR-246). It refuses each one
  * when it is missing, and the unit tests prove that, but its control call
  * here throws on the missing window.bootstrap first, by the same rule.
+ * Three: createFeedback's targetId. It refuses a missing targetId (unit
+ * tests), but its control call throws first on the missing
+ * window.createFormDialog that its Report button needs, by the same rule.
  */
-const VERDICT_UNREACHABLE = 3;
+const VERDICT_UNREACHABLE = 4;
 
 /** Every required option the probe can supply a value for. */
 function requiredFields(r: Row): Field[]

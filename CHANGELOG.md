@@ -13,6 +13,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **Feedback component** (apps team request): a rating (thumbs, or 5 or 10 stars), an optional comment and problem reports for any surface. It is inline (`createFeedback`) or a dialog over FormDialog (`showFeedbackDialog`).
+  - **One call per rating:** picks stay local until Submit, or `commit: "once"` sends the first pick. Either way the control then locks; `reset()` unlocks it.
+  - **Honest saving:** a save shows as done only when the caller's promise resolves. A rejection shows the error in place and keeps the input.
+  - **Display:** an optional summary of everyone's ratings, from numbers the caller supplies.
+  - **Icons:** Bootstrap Icons, Font Awesome and icon-pack classes.
+  - **Agents:** in the A2UI and MCP Apps catalog, where the agent acknowledges each save.
+  - See `components/feedback/README.md` and `demo/components/feedback.html`.
+- **Agent providers can acknowledge (`ProviderSpec.ack`)**: a provider whose callback returns `Promise<void>` publishes `<request>Result` as `{ const: true }`. The agent writes `true` once it has acted, and the A2UI adapter resolves the callback with no value. The generator's new `provider-ack` check requires `ack` exactly when the answer is void. The catalog change is additive. See `specs/agentui-schema.prd.md` §3.2.
 - **Bootstrap Icons in `/lib/`** (apps team report): `/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css`, with its fonts beside it, is in `lib-manifest.json` with an integrity hash. Like every `/lib/` file, it is immutable and served with CORS. A page can load it with `crossorigin` and read its rules, which the apps' icon pickers need. `/icons/bootstrap-icons.css` does not change. `bootstrap-icons` is now pinned exactly at 1.13.1.
 - **TypeBadge and GraphLegend draw Font Awesome and icon-pack icons** (apps team request, for ontology-type icons): TypeBadge's `icon` now also takes a full class string, such as `"fa-solid fa-user"` or `"fluent-ui-people-team-16-regular"`, using GraphCanvas's rule (a value with a space or a pack prefix is used as given; anything else is a Bootstrap Icons name, as before). GraphLegend draws its rows with TypeBadge, so one stored value shows on the graph, in the type list and in the legend. The badge's `sm`, `md` and `lg` sizes size every icon family; monochrome icons follow the badge colour and colour icons keep their palette. In the A2UI catalog, `TypeBadge.icon` now accepts spaces (`^[A-Za-z0-9 _-]+$`).
 - **Catalog gate: a widened pattern is additive**: a property whose only change is a `pattern` that widens (one character class gaining characters, or `+` becoming `*`) is reported as `<Name>.<prop> widened` and keeps catalog v1. Any other pattern change is still breaking. See `specs/agentui-schema.prd.md` §5.3.

@@ -154,9 +154,10 @@ class ProviderChannel
         }
 
         const done = this.#finish();
-        const copy = structuredClone(value);
+        // An ack answer is only the agent saying it acted; the callback answers nothing.
+        const answer = this.#p.ack ? undefined : structuredClone(value);
 
-        done.settles.forEach((s) => s.resolve(copy));
+        done.settles.forEach((s) => s.resolve(answer));
         this.#next();
     }
 

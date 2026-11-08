@@ -439,6 +439,16 @@ describe("validateManifest — protocol field", () =>
         expect(res.issues.map((i) => i.path)).toEqual(["protocol.providers.onLoad.required"]);
     });
 
+    test("a provider's ack flag is a boolean", () =>
+    {
+        expect(validateManifest(base({ providers: { onSave: { request: "save", ack: true } } })).ok).toBe(true);
+
+        const res = validateManifest(base({ providers: { onSave: { request: "save", ack: 1 } } }));
+
+        expect(res.ok).toBe(false);
+        expect(res.issues.map((i) => i.path)).toEqual(["protocol.providers.onSave.ack"]);
+    });
+
     // Unknown keys are REJECTED, in a provider spec and in protocol itself.
     // Since 2026-10-25 every catalog name is derived (on<Request>,
     // <request>Result, eventData), so nothing in the generator reads a
