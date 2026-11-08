@@ -81,7 +81,7 @@ dialog.open();
 | `searchPlaceholder` | `string` | `"Search resources..."` | Search input placeholder |
 | `height` | `string` | `"400px"` | Picker height |
 | `cssClass` | `string` | — | Additional CSS class(es) |
-| `iconResolver` | `(node) => string \| undefined` | — | Custom icon resolver callback |
+| `iconResolver` | `(node) => string \| undefined` | — | Custom icon resolver callback; returns an icon class or class string (see "Icons") |
 | `ontologyApiBase` | `string` | `"/api/v1/ontology"` | Base URL for ontology API |
 | `ontologyTypes` | `OntologyTypeEntry[]` | — | Pre-loaded ontology types (skips API) |
 | `confirmButtonText` | `string \| (count) => string` | `"Select"` | Confirm button text |
@@ -168,9 +168,21 @@ interface ExplorerNode
     url: string | null;
     linkType: string | null;
     hasChildren: boolean;
+    icon?: string;
     parentId: string | null;
 }
 ```
+
+### Icons
+
+A resource's icon comes from `iconResolver`, then the node's `icon`, then its
+ontology type's `icon`, then its `linkType`. Each is a CSS class, as before
+(`"bi-file-earmark-code"`), an icon-pack class
+(`"fluent-ui-document-16-regular"`, see `docs/ICON_PACKS.md`) or a class
+string (`"fa-solid fa-file"`). Load the stylesheet that defines the class.
+Monochrome icons follow the type's colour; colour pack icons keep their
+palette. Use the `16-` Fluent classes. Folders and org units keep their
+Bootstrap icons.
 
 ### ExplorerPickerSelection
 
