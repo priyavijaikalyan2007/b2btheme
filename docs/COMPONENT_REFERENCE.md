@@ -18898,13 +18898,17 @@ The SymbolPicker automatically scans all loaded CSS stylesheets at initializatio
 ### How It Works
 
 1. On first instantiation, the picker scans `document.styleSheets` for CSS rules matching `.bi-*::before` and `.fa-*::before` selectors.
-2. Discovered icons are automatically categorized into heuristic groups (Arrows, Files, Communication, Media, People, Charts, Alerts, Technology, Commerce, Places, General).
+2. Discovered icons are automatically categorized into heuristic groups (Arrows, Files, Communication, Media, People, Charts, Alerts, Technology, Commerce, Places, General). Font Awesome brand icons get their own group, "Brands (FA)".
 3. Results are cached at the module level — subsequent picker instances reuse the cache.
 4. If no icon stylesheets are detected (e.g., Bootstrap Icons CSS is not loaded), the picker falls back to the built-in curated set of ~178 icons.
 
 ### Font Awesome Support
 
-When Font Awesome CSS is loaded, the picker detects the available style class (`fa-solid`, `fa-regular`, `fa-brands`, `fa-light`, or `fa-thin`) by probing the DOM. Icons render with the correct style prefix automatically.
+When Font Awesome CSS is loaded, the picker detects the available style class (`fa-solid`, `fa-regular`, `fa-brands`, `fa-light`, or `fa-thin`) by probing the DOM. Icons render with the correct style prefix automatically, and their `code` is the bare name, such as `"fa-user"`.
+
+Brand icons, such as GitHub, are drawn only by the brands font. The picker files them under "Brands (FA)", draws them with `fa-brands`, and gives each the full class as its `code`: `"fa-brands fa-github"`. It tells a brand by its place in the stylesheet: Font Awesome declares each font before the icons drawn in it, so a rule after the brands `@font-face` is a brand icon.
+
+A custom category's `char` may also be a full Font Awesome class, such as `"fa-brands fa-github"` or `"fa-regular fa-calendar"`. The cell draws it with exactly those classes.
 
 ```html
 <!-- Load Font Awesome alongside Bootstrap Icons. 6.5.1 is the only version

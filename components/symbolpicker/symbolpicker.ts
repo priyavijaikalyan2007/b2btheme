@@ -1025,20 +1025,28 @@ interface PackIcon
     category: string;
 }
 
-/** Scan all loaded stylesheets for Bootstrap Icon, Font Awesome and icon-pack class names. */
-function discoverIcons(): { bi: string[]; fa: string[]; packs: PackIcon[] }
+/** Icon class names found in the page's stylesheets, by family. */
+interface DiscoveredIcons
 {
-    const bi: string[] = [];
-    const fa: string[] = [];
+    bi: string[];
+    fa: string[];
+    /** Font Awesome brand icons ("fa-github"), drawn only in the brands font. */
+    faBrands: string[];
+}
+
+/** Scan all loaded stylesheets for Bootstrap Icon, Font Awesome and icon-pack class names. */
+function discoverIcons(): DiscoveredIcons & { packs: PackIcon[] }
+{
+    const found: DiscoveredIcons = { bi: [], fa: [], faBrands: [] };
     const packs: PackIcon[] = [];
 
     for (let i = 0; i < document.styleSheets.length; i++)
     {
-        extractIconsFromSheet(document.styleSheets[i], bi, fa);
+        extractIconsFromSheet(document.styleSheets[i], found);
         extractPackIconsFromSheet(document.styleSheets[i], packs);
     }
 
-    return { bi, fa, packs };
+    return { ...found, packs };
 }
 
 /** The base rule every icon-pack stylesheet opens with: [class^="<pack>-"],[class*=" <pack>-"]. */
@@ -1151,10 +1159,16 @@ function buildPackCategories(icons: PackIcon[]): SymbolCategory[]
     return [...byId.values()];
 }
 
-/** Extract icon class names from a single stylesheet's CSS rules. */
-function extractIconsFromSheet(
-    sheet: CSSStyleSheet, bi: string[], fa: string[]
-): void
+/** The family of Font Awesome's brands font ("Font Awesome 6 Brands"). */
+const FA_BRANDS_FAMILY = /awesome.*brands/i;
+
+/**
+ * Extract icon class names from a single stylesheet's CSS rules. Font
+ * Awesome declares each font, then the icon rules drawn in it, so a rule
+ * after the brands @font-face and before the next @font-face is a brand
+ * icon ("fa-github"), which has no glyph in the solid or regular font.
+ */
+function extractIconsFromSheet(sheet: CSSStyleSheet, found: DiscoveredIcons): void
 {
     let rules: CSSRuleList;
 
@@ -1168,13 +1182,19 @@ function extractIconsFromSheet(
         return;
     }
 
+    let inBrands = false;
+
     for (let i = 0; i < rules.length; i++)
     {
         const rule = rules[i];
 
-        if (rule instanceof CSSStyleRule)
+        if (rule instanceof CSSFontFaceRule)
         {
-            extractIconFromSelector(rule.selectorText, bi, fa);
+            inBrands = FA_BRANDS_FAMILY.test(rule.style.getPropertyValue("font-family"));
+        }
+        else if (rule instanceof CSSStyleRule)
+        {
+            extractIconFromSelector(rule.selectorText, found.bi, inBrands ? found.faBrands : found.fa);
         }
     }
 }
@@ -1271,6 +1291,22 @@ function buildDiscoveredCategories(
         }));
 }
 
+/**
+ * One category for the Font Awesome brand icons. Each item's char and code
+ * is the full class ("fa-brands fa-github"), since a brand draws only in the
+ * brands font and that is the class a consumer stores.
+ */
+function buildFaBrandsCategory(classNames: string[]): SymbolCategory
+{
+    const id = "ico-fa-brands";
+    const items = classNames.map((cls) =>
+    {
+        const code = `fa-brands ${cls}`;
+        return { char: code, name: humanizeName(cls), code, category: id };
+    });
+    return { id, label: "Brands (FA)", icon: "bi-badge-tm", items };
+}
+
 /** Discover icons from stylesheets, categorize, and cache the result. */
 function discoverAndCacheIcons(): SymbolCategory[]
 {
@@ -1279,7 +1315,7 @@ function discoverAndCacheIcons(): SymbolCategory[]
         return discoveredIconCache;
     }
 
-    const { bi, fa, packs } = discoverIcons();
+    const { bi, fa, faBrands, packs } = discoverIcons();
     const categories: SymbolCategory[] = [];
 
     if (bi.length > 0)
@@ -1294,6 +1330,12 @@ function discoverAndCacheIcons(): SymbolCategory[]
         const faCats = buildDiscoveredCategories(fa, "FA");
         categories.push(...faCats);
         logInfo("discovered", fa.length, "Font Awesome icons");
+    }
+
+    if (faBrands.length > 0)
+    {
+        categories.push(buildFaBrandsCategory(faBrands));
+        logInfo("discovered", faBrands.length, "Font Awesome brand icons");
     }
 
     if (packs.length > 0)
@@ -1356,7 +1398,9 @@ function createIconElement(item: SymbolItem): HTMLElement
 
     if (item.char.startsWith(ICON_PREFIX_FA))
     {
-        return createElement("i", [getFaStyle(), item.char]);
+        // A full class ("fa-brands fa-github") names its own style.
+        const classes = item.char.split(" ").filter(Boolean);
+        return createElement("i", classes.length > 1 ? classes : [getFaStyle(), item.char]);
     }
 
     return createElement("i", ["bi", item.char]);

@@ -142,7 +142,7 @@ the icon's file name with the pack in front:
   - **ExplorerPicker** (a resource's icon, from a node, an ontology type or `iconResolver`): one class or a class string, used as given (`"bi-file-earmark-code"`, `"fluent-ui-document-16-regular"`, `"fa-solid fa-file"`). It adds no `bi` prefix, so a bare Bootstrap name does not work there.
   - **Toolbar:** one class (`"fluent-ui-cut-16-regular"` or `"bi-scissors"`). It adds `bi` itself, so a class string with a space does not work there.
 - **Disabled:** a disabled Ribbon control, InlineToolbar button or ContextMenu item shows a colour icon in grey, as Office does.
-- **SymbolPicker:** it finds the icons in any loaded pack stylesheet and files them by pack folder, for example "Data Charts (fluent-ui)". The selected item's `code` is the class to use. Don't load `fluent-emoji.css` on a page with a SymbolPicker: its "All" view draws every icon, about 57 MB of emoji artwork.
+- **SymbolPicker:** it finds the icons in any loaded pack stylesheet and files them by pack folder, for example "Data Charts (fluent-ui)". The selected item's `code` is the class to use. With Font Awesome loaded, brand icons are under "Brands (FA)" with the full class as their `code`, such as `"fa-brands fa-github"`. Don't load `fluent-emoji.css` on a page with a SymbolPicker: its "All" view draws every icon, about 57 MB of emoji artwork.
 - **`crossorigin="anonymous"`:** the icons show without it, but SymbolPicker can read a cross-origin stylesheet's classes only when the `<link>` carries it. The CDN sends the CORS headers.
 - **Coverage:** about 200 Fluent UI icons come in colour. Mix them with monochrome ones where no colour version exists, as the Ribbon demo does.
 
