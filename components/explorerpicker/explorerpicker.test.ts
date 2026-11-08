@@ -928,6 +928,23 @@ describe("ontology integration", () =>
         picker.destroy();
     });
 
+    test("iconClassStrings_AddEveryClass", () =>
+    {
+        const picker = createExplorerPicker(defaultOpts({
+            staticNodes: [
+                { ...makeAsset("a1", "Asset One"), icon: " fa-solid  fa-file " },
+                { ...makeAsset("a2", "Asset Two"), icon: "fluent-ui-document-16-color" },
+            ],
+        }));
+
+        expect(queryNodeRow("a1")!.querySelector(".explorerpicker-icon")!.className)
+            .toBe("fa-solid fa-file explorerpicker-icon");
+        expect(queryNodeRow("a2")!.querySelector(".explorerpicker-icon")!.className)
+            .toBe("fluent-ui-document-16-color explorerpicker-icon");
+
+        picker.destroy();
+    });
+
     test("externalType_ShowsBadge", () =>
     {
         const ontologyTypes: OntologyTypeEntry[] = [

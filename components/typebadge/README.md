@@ -82,7 +82,7 @@ createTypeBadge({ typeKey: "goal.okr",   icon: "crosshair" });   // unchanged
 
 ## Over A2UI
 
-TypeBadge is in the A2UI catalog (ADR-243), mounted with `mountTypeBadge`. `color` must be hex, and `icon` a Bootstrap icon name or a class string of letters, digits, `_`, `-` and spaces. Clicking a clickable badge, or pressing Enter or Space on it, sends `onClick` with `{ typeKey }`.
+TypeBadge is in the A2UI catalog (ADR-243), mounted with `mountTypeBadge`. `color` must be hex, and `icon` one word (a Bootstrap icon name or a pack class) or a Font Awesome pair such as `"fa-solid fa-user"`. An agent cannot send any other list of classes. Clicking a clickable badge, or pressing Enter or Space on it, sends `onClick` with `{ typeKey }`.
 
 ## Global
 

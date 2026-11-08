@@ -121,6 +121,7 @@ Read `lib.assets` rather than this table — it is generated, this is not.
 | `cytoscape` | `window.cytoscape` | |
 | `chart.js` | `window.Chart` | Also at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | — (stylesheet) | `/lib/font-awesome-6.5.1/css/all.min.css`. See below. |
+| `bootstrap-icons` | — (stylesheet) | `/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css`, with its fonts beside it. Hashed and served with CORS, so a page that loads it with `crossorigin` can read its rules. `/icons/bootstrap-icons.css` stays for pages that need neither. |
 | `bootstrap` | `window.bootstrap` | Bootstrap's JS bundle with an SRI hash. A page that already loads `/js/bootstrap.bundle.min.js` must not load it again; a second copy doubles every `data-bs-toggle`. |
 
 ### Markdown editing
@@ -162,8 +163,8 @@ SVG icon packs are served at `/icons/<pack>/`: Fluent UI System Icons and the
 AWS, Azure and Google Cloud architecture icons, each with a manifest, its
 licence and attribution. See the [Icon Packs guide](ICON_PACKS.md).
 
-**Bootstrap and bootstrap-icons are NOT under `/lib/`.** They are already
-served, and have been for longer:
+**Bootstrap and bootstrap-icons are served at their original paths too**,
+and have been for longer:
 
 ```html
 <script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
@@ -171,7 +172,8 @@ served, and have been for longer:
 ```
 
 These are latest-channel paths, so they carry no hash for the reason given in
-§2. Migrating to them from `jsdelivr` is safe: this origin serves
+§2. For a hash, or to read the icon stylesheet's rules from another origin,
+use the `/lib/` entries `bootstrap` and `bootstrap-icons` from the manifest. Migrating to them from `jsdelivr` is safe: this origin serves
 bootstrap-icons 1.13.1, a strict superset of every `bi-` class the apps use.
 
 While verifying that, three `bi-` classes turned out to resolve in **neither**

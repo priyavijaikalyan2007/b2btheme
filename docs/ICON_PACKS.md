@@ -107,7 +107,7 @@ https://static.outcrop.us/icons/<pack>/<category>/<name>-<size>-<variant>.svg
 - **Inlining with `fetch()`:** CORS is open. Every SVG here passes a safety check (no scripts, event handlers, `foreignObject` or external references), but treat inlined markup as you would any other HTML you insert.
 - **Caching:** a day, then stale-while-revalidate for a week. The paths carry no version, so a repack reaches browsers within a day.
 
-### In components: Ribbon, Toolbar, InlineToolbar, ContextMenu, GraphCanvas, TypeBadge, SymbolPicker
+### In components: Ribbon, Toolbar, InlineToolbar, ContextMenu, GraphCanvas, TypeBadge, ExplorerPicker, SymbolPicker
 
 Any component whose `icon` option takes CSS classes (Ribbon, Toolbar,
 InlineToolbar, ContextMenu, Sidebar and others) shows a pack icon once the page
@@ -139,6 +139,7 @@ the icon's file name with the pack in front:
   - **InlineToolbar and ContextMenu:** the same, and a bare Bootstrap Icons name (`"folder-plus"`) as before. A value with a space, or one that starts with `bi-` or a pack prefix (`fluent-ui-`, `fluent-emoji-`, `aws-`, `azure-`, `gcp-`), is used as given; anything else gets `bi bi-` in front. A checked ContextMenu item still shows its checkmark.
   - **GraphCanvas** (a node's `icon`): the same rule as InlineToolbar, except a value starting with `bi-` stays a Bootstrap Icons name, as before. The class is drawn in the node's SVG: font icons (Bootstrap Icons, Font Awesome in its two-class form, `"fa-solid fa-user"`) as text in their own font, monochrome pack icons in the secondary text colour, colour ones as they are. `exportPNG()` draws no node icons. See the component README.
   - **TypeBadge and GraphLegend** (a node type's `icon`): the same rule as GraphCanvas, so one stored value shows on the graph, in the type list and in the legend. The badge's `sm`, `md` and `lg` sizes size every icon family; use the `16-` Fluent classes.
+  - **ExplorerPicker** (a resource's icon, from a node, an ontology type or `iconResolver`): one class or a class string, used as given (`"bi-file-earmark-code"`, `"fluent-ui-document-16-regular"`, `"fa-solid fa-file"`). It adds no `bi` prefix, so a bare Bootstrap name does not work there.
   - **Toolbar:** one class (`"fluent-ui-cut-16-regular"` or `"bi-scissors"`). It adds `bi` itself, so a class string with a space does not work there.
 - **Disabled:** a disabled Ribbon control, InlineToolbar button or ContextMenu item shows a colour icon in grey, as Office does.
 - **SymbolPicker:** it finds the icons in any loaded pack stylesheet and files them by pack folder, for example "Data Charts (fluent-ui)". The selected item's `code` is the class to use. Don't load `fluent-emoji.css` on a page with a SymbolPicker: its "All" view draws every icon, about 57 MB of emoji artwork.
