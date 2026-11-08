@@ -57,6 +57,10 @@ const OVERRIDES: Record<string, Record<string, unknown>> = {
     // nothing is asked.
     ExplorerPicker: { eventData: { path: "/ev" }, onLoadChildren: { event: { name: "children" } },
         loadChildrenResult: { path: "/answers/children" } },
+    // The save is a required provider, as ExplorerPicker's is. A summary has its scale's shape: the first summary
+    // arm sampled is the thumbs counts, and the first scale sampled is "stars" (const unions are sorted).
+    Feedback: { eventData: { path: "/ev" }, onFeedback: { event: { name: "feedback" } },
+        feedbackResult: { path: "/answers/feedback" }, scale: "thumbs" },
     // initialVariant must name one of the variants, which independent samples cannot arrange.
     DynamicFormSwitcher: { initialVariant: "a", variants: { a: { label: "A",
         fields: [{ name: "a", label: "A", type: "text" }] } } },
