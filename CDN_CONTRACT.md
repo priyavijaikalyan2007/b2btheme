@@ -255,6 +255,7 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
 | `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
 | `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
+| `bootstrap-icons` | 1.13.1 | The stylesheet, hashed, with its fonts beside it, at `/lib/bootstrap-icons-1.13.1/`. The same release as `/icons/bootstrap-icons.css`, served with CORS so a page loaded with `crossorigin` can read its rules. See below |
 | `bootstrap` | 5.3.8 | Bootstrap's JS bundle (`window.bootstrap`), the same file as `/js/bootstrap.bundle.min.js`, with an SRI hash. Marked `shared`: the A2UI adapter loads it for Toolbar and the dialogs only when the page has no `window.bootstrap`, because a second copy doubles Bootstrap's document-wide listeners (ADR-245) |
 
 `font-awesome` is CSS plus webfonts rather than a script, so it is served as a
@@ -274,13 +275,38 @@ package, so provenance is verifiable by diffing against it.
 
 ### Bootstrap and bootstrap-icons — use what this origin already serves
 
-Do **not** vendor these under `/lib/`. They are already published, and have
-been for longer than `/lib/` has existed:
+Both are published at their original paths, which have been served for
+longer than `/lib/` has existed:
 
 ```html
 <script src="https://static.knobby.io/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://static.knobby.io/icons/bootstrap-icons.css">
 ```
+
+Those paths are unversioned, so they cannot carry a hash, and
+`/icons/bootstrap-icons.css` sends no CORS header. Both are also in `/lib/`,
+with hashes in the manifest: `bootstrap` (above) and `bootstrap-icons`.
+
+`bootstrap-icons` is the same release's stylesheet, copied verbatim, at
+`/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css`, with its fonts at
+`fonts/` beside it. It is served immutable and with CORS. Use it when a page
+needs either of these:
+
+- an integrity hash;
+- to read the stylesheet's rules, through `document.styleSheets[n].cssRules`.
+
+A browser allows reading those rules only for a stylesheet loaded with
+`crossorigin` and answered with `Access-Control-Allow-Origin`.
+
+```html
+<link rel="stylesheet"
+      href="https://static.knobby.io/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css"
+      integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+```
+
+The `/icons/` copy changes `font-display` from `block` to `swap`. The `/lib/`
+copy keeps the package's `block`, so its icons stay invisible, not drawn as
+fallback glyphs, until the font arrives.
 
 Verified safe to migrate to, rather than assumed: this origin serves
 **bootstrap-icons 1.13.1**, which defines 2078 classes and is a **strict
