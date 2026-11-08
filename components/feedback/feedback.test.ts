@@ -34,7 +34,12 @@ function deferredSave()
         calls,
         onFeedback,
         resolve: async () => { settle!.resolve(); await Promise.resolve(); await Promise.resolve(); },
-        reject: async (msg: string) => { settle!.reject(new Error(msg)); await Promise.resolve(); await Promise.resolve(); },
+        reject: async (msg: string) =>
+        {
+            settle!.reject(new Error(msg));
+            await Promise.resolve();
+            await Promise.resolve();
+        },
     };
 }
 
@@ -316,7 +321,8 @@ describe("stars by keyboard", () =>
         expect(stars[2].getAttribute("aria-label")).toBe("3 of 5 stars");
 
         stars[0].focus();
-        const key = (k: string) => q(".feedback-stars").dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+        const key = (k: string) =>
+            q(".feedback-stars").dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
         key("ArrowRight");
         expect(document.activeElement).toBe(stars[1]);
         key("End");

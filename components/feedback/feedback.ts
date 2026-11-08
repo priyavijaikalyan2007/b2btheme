@@ -40,6 +40,7 @@ function _dbg(): boolean
     const f = window.__ebt_debug_logging;
     return f === undefined ? LOCAL_HOSTS.test(location.hostname) : !!f;
 }
+function _trc(): boolean { return !!window.__ebt_trace_logging; }
 function logInfo(...a: unknown[]): void
 {
     _lu ? _lu.info(...a) : console.log(new Date().toISOString(), "[INFO]", LOG_PREFIX, ...a);
@@ -56,9 +57,13 @@ function logDebug(...a: unknown[]): void
 {
     _lu ? _lu.debug(...a) : _dbg() && console.debug(new Date().toISOString(), "[DEBUG]", LOG_PREFIX, ...a);
 }
+function logTrace(...a: unknown[]): void
+{
+    _lu ? _lu.trace(...a) : _trc() && console.debug(new Date().toISOString(), "[TRACE]", LOG_PREFIX, ...a);
+}
 
 // LOG-4a: the shim preamble is uniform across components; see InlineToolbar.
-void [logInfo, logWarn, logError, logDebug];
+void [logInfo, logWarn, logError, logDebug, logTrace];
 
 /** How long the Copy button shows its "copied" state. */
 const COPIED_MS = 2000;
@@ -469,7 +474,8 @@ function checkRating(r: FeedbackRating | null | undefined, scale: FeedbackScale,
     if (!ok)
     {
         throw new Error(`${LOG_PREFIX} ${where}: the rating ${JSON.stringify(r)} does not fit the ${scale} scale; `
-            + (scale === "thumbs" ? "give sentiment \"positive\" or \"negative\"." : `give a whole score from 1 to ${max}.`));
+            + (scale === "thumbs" ? "give sentiment \"positive\" or \"negative\"."
+                : `give a whole score from 1 to ${max}.`));
     }
 }
 
@@ -626,6 +632,7 @@ class RatingControl
      */
     private onStarKey(e: KeyboardEvent): void
     {
+        logTrace("star keydown:", e.key);
         const at = this.buttons.indexOf(document.activeElement as HTMLButtonElement);
         if (at === -1) { return; }
 
@@ -957,9 +964,14 @@ class FeedbackImpl implements FeedbackHandle
         textarea.rows = 3;
         textarea.placeholder = this.labels.commentPlaceholder;
         textarea.setAttribute("aria-label", this.labels.comment);
-        textarea.addEventListener("input", () => this.refresh());
+        textarea.addEventListener("input", () =>
+        {
+            logTrace("comment input");
+            this.refresh();
+        });
         textarea.addEventListener("keydown", (e) =>
         {
+            logTrace("comment keydown:", e.key.length > 1 ? e.key : "(char)");
             if (e.key !== "Escape") { return; }
             e.preventDefault();
             this.setPanelOpen(false);
@@ -1115,7 +1127,9 @@ function openDialog(o: FeedbackDialogOptions | (FeedbackDialogOptions & { kind: 
     error.setAttribute("role", "alert");
     error.hidden = true;
 
-    const rating = kind === "rating" ? new RatingControl(scale, max, labels, icons, () => { error.hidden = true; }) : null;
+    const rating = kind === "rating"
+        ? new RatingControl(scale, max, labels, icons, () => { error.hidden = true; })
+        : null;
     if (rating && !isEmpty(o.initial)) { rating.setValue({ ...o.initial }); }
 
     // The rating sits in a .feedback root, which sizes its buttons as the inline form does.
@@ -1201,7 +1215,8 @@ export function createFeedback(options: FeedbackOptions): FeedbackHandle
 {
     if (!(options?.container instanceof HTMLElement))
     {
-        throw new Error(`${LOG_PREFIX} createFeedback: options.container is required. Pass the element to render into.`);
+        throw new Error(`${LOG_PREFIX} createFeedback: options.container is required. `
+            + "Pass the element to render into.");
     }
 
     checkCommon(options, "createFeedback");
