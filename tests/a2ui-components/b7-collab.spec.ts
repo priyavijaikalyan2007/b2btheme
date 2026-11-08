@@ -715,6 +715,19 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             await expect(page.locator(".text-danger")).toHaveCount(0);
         });
 
+    test("ExplorerPicker: a Font Awesome class pair or a pack class is an icon an agent may send", async ({ page }) =>
+    {
+        await mount(page, "ExplorerPicker", { ...EP, staticNodes: { path: "/nodes" } },
+            { nodes: [{ ...SPEC, icon: "fa-solid fa-file" }] });
+        await expect(page.locator(".explorerpicker-node-row .explorerpicker-icon"))
+            .toHaveClass("fa-solid fa-file explorerpicker-icon");
+
+        await answer(page, "/nodes", [{ ...SPEC, icon: "fluent-ui-document-16-regular" }]);
+        await expect(page.locator(".explorerpicker-node-row .explorerpicker-icon"))
+            .toHaveClass("fluent-ui-document-16-regular explorerpicker-icon");
+        expect(await errors(page)).toEqual([]);
+    });
+
     test("ExplorerPicker: an answer whose icon is not one word fails validation and renders nothing",
         async ({ page }) =>
         {

@@ -29,6 +29,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { GATED_DIR, GATES } from "./gated.mjs";
@@ -238,6 +239,59 @@ const ASSETS = [
         include: [
             { from: "node_modules/vditor/dist", to: "dist", exclude: ["types", "ts"] },
         ],
+        // Installed here and bundled into dist/index.min.js, so it is
+        // audited like any package.
+        members: ["diff-match-patch"],
+        /*
+         * The libraries vditor ships prebuilt under dist/js and injects when a
+         * note needs them. They are not installed here, so `packages` (and
+         * audit:vendor) cannot hold them; the manifest lists them under
+         * `bundled` instead, for licence notices. Each entry is proved
+         * against the served file by a `marker` it must contain or its
+         * `sha256` (a file with no version banner, matched byte for byte
+         * against the npm release), and every dist/js directory but vditor's
+         * own must be declared, so the next vditor bump that changes one
+         * fails here. An entry with a `source` is not on npm. A null
+         * `version` is a library whose release could not be identified.
+         * Prebuilt files may bundle further libraries (zrender in echarts,
+         * Raphael in flowchart.js, d3 and js-yaml in markmap); those are
+         * not listed.
+         */
+        bundled: [
+            { name: "abcjs", version: "5.10.3", file: "dist/js/abcjs/abcjs_basic.min.js",
+                marker: "abcjs_basic v5.10.3" },
+            { name: "echarts", version: "5.5.1", file: "dist/js/echarts/echarts.min.js",
+                marker: "t.version=\"5.5.1\"" },
+            { name: "flowchart.js", version: "1.14.1", file: "dist/js/flowchart.js/flowchart.min.js",
+                marker: "flowchart.js, v1.14.1" },
+            { name: "viz.js", version: "2.1.2", file: "dist/js/graphviz/viz.js",
+                marker: "Viz.js 2.1.2 (Graphviz 2.40.1" },
+            { name: "highlight.js", version: "11.7.0", file: "dist/js/highlight.js/highlight.min.js",
+                marker: "Highlight.js v11.7.0" },
+            { name: "highlightjs-sap-abap", version: "0.2.0", file: "dist/js/highlight.js/third-languages.js",
+                marker: "highlightjs-sap-abap@0.2.0" },
+            { name: "highlightjs-solidity", version: "2.0.5", file: "dist/js/highlight.js/third-languages.js",
+                marker: "highlightjs-solidity@2.0.5" },
+            { name: "katex", version: "0.16.9", file: "dist/js/katex/katex.min.js",
+                marker: "version:\"0.16.9\",render:" },
+            { name: "lute", version: "1.7.6", file: "dist/js/lute/lute.min.js",
+                source: "https://github.com/88250/lute", marker: "{k:\"Version\",v:new $String(\"1.7.6\")}" },
+            { name: "markmap-lib", version: "0.14.3", file: "dist/js/markmap/markmap.min.js",
+                marker: "markmap-lib v0.14.3" },
+            { name: "markmap-view", version: "0.14.3", file: "dist/js/markmap/markmap.min.js",
+                marker: "markmap-view v0.14.3" },
+            { name: "mathjax", version: "3.1.2", file: "dist/js/mathjax/tex-svg-full.js",
+                marker: "MathJax={version:\"3.1.2\"" },
+            { name: "mermaid", version: "11.6.0", file: "dist/js/mermaid/mermaid.min.js",
+                marker: "{name:\"mermaid\",version:\"11.6.0\"" },
+            { name: "plantuml-encoder", version: null, file: "dist/js/plantuml/plantuml-encoder.min.js",
+                sha256: "42c936291042379a95657ec1fbcfb622f425d40a9cef6dea575b41090695a2aa",
+                note: "its modules match the 1.2.6 release, but its bytes match no release" },
+            { name: "smiles-drawer", version: "2.1.7", file: "dist/js/smiles-drawer/smiles-drawer.min.js",
+                sha256: "955285fac52a7017b3c3658e2cb84bef7f1f76732f3f7cd565d1bb0903232dc2" },
+        ],
+        // vditor's own language packs and icon sets.
+        ownDirs: ["dist/js/i18n", "dist/js/icons"],
         note: "whole dist tree; set vditor's `cdn` option to /lib/vditor-3.11.2",
     },
     {
@@ -408,6 +462,51 @@ function copyTree(asset, baseDir)
     }
 
     return entryPath;
+}
+
+/**
+ * A tree's prebuilt libraries, proved against the files just copied: each
+ * entry's file holds its `marker` or has its `sha256`, and every directory
+ * beside them is declared. Throws on the first gap; a manifest that names a
+ * version the file does not carry is the defect this exists to prevent.
+ */
+export function bundledOf(asset, baseDir)
+{
+    if (!asset.bundled) { return null; }
+
+    const problems = [];
+
+    for (const b of asset.bundled)
+    {
+        const bytes = readFileSync(join(baseDir, b.file));
+        const proved = b.sha256
+            ? createHash("sha256").update(bytes).digest("hex") === b.sha256
+            : bytes.toString("utf8").includes(b.marker);
+
+        if (!proved) { problems.push(`${b.name}: ${b.file} no longer carries ${b.sha256 ? "its hash" : b.marker}`); }
+    }
+
+    const declared = new Set([...asset.ownDirs, ...asset.bundled.map((b) => dirname(b.file))]);
+    const dirs = readdirSync(join(baseDir, "dist/js")).map((d) => `dist/js/${d}`)
+        .filter((d) => statSync(join(baseDir, d)).isDirectory());
+
+    for (const d of dirs.filter((d) => !declared.has(d)))
+    {
+        problems.push(`${d} is served but no \`bundled\` entry names a file in it`);
+    }
+
+    if (problems.length > 0)
+    {
+        throw new Error(`[vendor-closure] ${asset.name}'s bundled libraries do not match the tree. `
+            + `Update \`bundled\` in scripts/vendor-closure.mjs:\n  ${problems.join("\n  ")}`);
+    }
+
+    return Object.fromEntries(asset.bundled.map(({ name, version, file, source, note }) => [name, {
+        version,
+        url: `/lib/${asset.name}-${asset.version}/${file}`,
+        ...(source ? { source } : {}),
+        ...(note ? { note } : {}),
+    }]));
 }
 
 function packageOf(asset)
@@ -585,6 +684,9 @@ async function main()
             const baseDir = join(outDir, `${asset.name}-${version}`);
             const entryFile = copyTree(asset, baseDir);
             const bytes = readFileSync(entryFile);
+            const bundled = bundledOf(asset, baseDir);
+
+            for (const member of asset.members ?? []) { packages[member] = versionOf(member); }
 
             manifest.assets[asset.name] = {
                 version,
@@ -592,7 +694,8 @@ async function main()
                 integrity: sriOf(bytes),
                 type: asset.assetType ?? "stylesheet",
                 ...(asset.global ? { global: asset.global } : {}),
-                packages: { [pkg]: version },
+                packages,
+                ...(bundled ? { bundled } : {}),
                 bytes: bytes.length,
                 // Honest: the stylesheet is hashed, the fonts it pulls are not.
                 closure: asset.assetType === "script"
@@ -650,8 +753,11 @@ async function main()
     console.log(`  manifest -> ${manifestPath}`);
 }
 
-main().catch((err) =>
+if (process.argv[1] === fileURLToPath(import.meta.url))
 {
-    console.error(String(err.message ?? err));
-    process.exit(1);
-});
+    main().catch((err) =>
+    {
+        console.error(String(err.message ?? err));
+        process.exit(1);
+    });
+}

@@ -72,6 +72,16 @@ describe("diffCatalogs", () =>
 
         expect(diffCatalogs(before, after).breaking).toEqual(["Widget.icon changed"]);
     });
+    test("a def whose pattern only widens is additive", () =>
+    {
+        const node = (pattern: string) => ({ type: "object", properties: { icon: { type: "string", pattern } } });
+        const withDef = (pattern: string) => ({ ...BASE, $defs: { ...BASE.$defs, Widget__Node: node(pattern) } });
+
+        expect(diffCatalogs(withDef("^[a-z_-]+$"), withDef("^[a-z _-]+$")))
+            .toEqual({ breaking: [], additive: ["$defs.Widget__Node widened"] });
+        expect(diffCatalogs(withDef("^[a-z _-]+$"), withDef("^[a-z_-]+$")).breaking)
+            .toEqual(["$defs.Widget__Node changed"]);
+    });
     test("a widened pattern beside another change is breaking", () =>
     {
         const before = cat({ icon: { anyOf: [{ type: "string", pattern: "^[a-z]+$" }] } });
@@ -198,6 +208,22 @@ describe("patternWidens", () =>
     {
         expect(patternWidens("^[a-z]+$", "^[a-z]*$")).toBe(true);
         expect(patternWidens("^[a-z]*$", "^[a-z]+$")).toBe(false);
+    });
+    test("an added alternative after the old pattern widens", () =>
+    {
+        const old = "^[A-Za-z0-9_-]+$";
+        const wider = "^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$";
+
+        expect(patternWidens(old, wider)).toBe(true);
+        expect(patternWidens(wider, old)).toBe(false);
+    });
+    test("an added alternative is strict: the old pattern first, whole, and without a top-level |", () =>
+    {
+        expect(patternWidens("^[a-z]+$", "^(?:[0-9]+|[a-z]+)$")).toBe(false);
+        expect(patternWidens("^a|b$", "^(?:a|b|c)$")).toBe(false);
+        expect(patternWidens("^[a-z]+$", "^(?:[a-z]+)$")).toBe(false);
+        expect(patternWidens("^[a-z]+$", "^(?:[a-z]+|(x)$")).toBe(false);
+        expect(patternWidens("^(?:a|b)$", "^(?:(?:a|b)|c)$")).toBe(true);
     });
     test("a character class that loses characters does not widen", () =>
     {

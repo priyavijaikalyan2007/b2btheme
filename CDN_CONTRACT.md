@@ -344,6 +344,41 @@ an `integrity` attribute. Serving them from this origin removes third-party
 trust, which is most of the value, but vditor cannot reach the same assurance
 as the single-file assets without patching it.
 
+**What the tree contains, for licence notices.** The vditor entry in the
+manifest has two lists:
+
+- `packages`: vditor and `diff-match-patch`, which `dist/index.min.js` bundles.
+  Both are installed here and checked by `npm run audit:vendor`, as every
+  other asset's `packages` are.
+- `bundled`: the libraries vditor ships prebuilt under `dist/js` and injects
+  when a note needs them, such as mermaid, katex, lute and highlight.js. Each
+  has a `version` and the `url` of its file. They are not installed here, so
+  `audit:vendor` does not check them.
+
+```json
+"bundled": {
+  "mermaid": { "version": "11.6.0", "url": "/lib/vditor-3.11.2/dist/js/mermaid/mermaid.min.js" },
+  "lute":    { "version": "1.7.6", "url": "…/dist/js/lute/lute.min.js", "source": "https://github.com/88250/lute" }
+}
+```
+
+How the build keeps `bundled` correct:
+
+- Each version is proved from the served file at build time, by a version
+  string the file must contain or by a byte-for-byte hash.
+- Every `dist/js` directory except vditor's own `i18n` and `icons` must be
+  listed, so a vditor upgrade that changes one fails the build.
+
+Exceptions:
+
+- An entry with `source` is not on npm; `source` is where it comes from.
+- A `version` of `null` means the release could not be identified; a `note`
+  says why. Today that is `plantuml-encoder`.
+
+A prebuilt file can itself bundle further libraries, such as zrender in
+echarts, Raphael in flowchart.js, and d3 and js-yaml in markmap. Those are not
+listed.
+
 ### Everything in the original request is now served
 
 Nothing from `2026-10-03-serve-the-dependency-closure.md` remains outstanding.

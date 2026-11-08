@@ -53,14 +53,16 @@ export const TYPEBADGE_MANIFEST: CapabilityManifest =
     protocol: {
         // The factory is mountTypeBadge, whose name would otherwise become the catalog name.
         name: "TypeBadge",
-        // The badge throws on a colour it cannot read, and the icon becomes part of a class attribute,
-        // so it takes class characters and spaces only (as ConfirmDialog's icon does).
+        // The badge throws on a colour it cannot read. The icon becomes part of a class attribute, so an agent
+        // may send one word (a Bootstrap name or a pack class) or Font Awesome's two-class form, never a list
+        // of arbitrary classes such as "bi-x position-fixed".
         schemas: {
             color: { type: "string", pattern: "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
                 description: "Hex colour for the badge, such as \"#C0392B\". Default: the theme's colour." },
-            icon: { type: "string", pattern: "^[A-Za-z0-9 _-]+$",
-                description: "A Bootstrap icon name such as \"crosshair\", or a full class string such as "
-                    + "\"fa-solid fa-user\" or \"fluent-ui-people-team-16-regular\"." },
+            icon: { type: "string", pattern: "^(?:[A-Za-z0-9_-]+|fa-(?:solid|regular|brands) fa-[a-z0-9-]+)$",
+                description: "A Bootstrap icon name such as \"crosshair\", an icon-pack class such as "
+                    + "\"fluent-ui-people-team-16-regular\", or a Font Awesome class pair such as "
+                    + "\"fa-solid fa-user\"." },
         },
     },
 
