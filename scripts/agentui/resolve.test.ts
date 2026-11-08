@@ -197,6 +197,26 @@ describe("resolve — providers", () =>
         expect(codes(manifest({ protocol: { providers: spec } }), [member("onSearch", "function", { arity: 2 })]))
             .toEqual([VIOLATION.PROVIDER_ARITY]);
     });
+    test("an ack provider, whose callback answers nothing, carries the flag into the surface", () =>
+    {
+        const ack = { onSave: { request: "feedback", ack: true } };
+
+        expect(resolveSurface(manifest({ protocol: { providers: ack } }),
+            [member("onSave", "function", { voidAnswer: true })]).providers).toEqual([{ option: "onSave",
+            request: "feedback", actionProp: "onFeedback", response: "feedbackResult", ack: true }]);
+    });
+    test("a provider whose callback answers nothing must declare ack", () =>
+    {
+        expect(codes(manifest({ protocol: { providers: spec } }),
+            [member("onSearch", "function", { voidAnswer: true })])).toEqual([VIOLATION.PROVIDER_ACK]);
+    });
+    test("ack on a provider that answers with data fails", () =>
+    {
+        const ack = { onSearch: { request: "search", ack: true } };
+
+        expect(codes(manifest({ protocol: { providers: ack } }), [member("onSearch", "function")]))
+            .toEqual([VIOLATION.PROVIDER_ACK]);
+    });
     test("pascal capitalises each word", () => { expect(pascal("row-activate")).toBe("RowActivate"); });
 });
 

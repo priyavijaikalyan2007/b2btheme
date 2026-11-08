@@ -189,6 +189,8 @@ The adapter reports through `surface.onError`. Forward each one to the agent as 
 | `OUTCROP_MOUNT_FAILED` | the factory is missing or threw, a handle method is missing, or the element sits in a shadow root | the component stays empty | read the message; render surfaces in the light DOM |
 | `OUTCROP_PROVIDER_TIMEOUT` (with `path`) | the agent did not answer a component's data request (`on<Request>`) within `providerTimeoutMs` | the component handles it as a failed load (TreeView: the node stays collapsed) | the agent answers at the `<request>Result` path, once per request; or raise `providerTimeoutMs` |
 
+Some requests ask the agent to *do* something rather than to send data, such as Feedback's `onFeedback`, which asks it to store a rating. Their `<request>Result` is `true` in the catalog. Write `true` once you have acted. The component shows the action as done only then; a timeout shows it as failed.
+
 While a bound value has not arrived yet, the component waits, empty, with `aria-busy="true"`. `web_core` itself warns `MISSING_DATA_BINDING`.
 
 **Cleared values are absent paths.** An A2UI data model cannot hold `null`: `set(path, null)` deletes the key. So for components whose `value` description says "When the user clears it, the path is deleted", the user clearing the field deletes the bound path, and your agent deleting the path clears the component. It is not a lost binding. Binding `value` to a path that does not exist yet mounts the component empty.

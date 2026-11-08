@@ -25,6 +25,7 @@ export const VIOLATION = Object.freeze({
     TOO_BROAD: "too-broad",
     MISSING_JSDOC: "missing-jsdoc",
     PROVIDER_ARITY: "provider-arity",
+    PROVIDER_ACK: "provider-ack",
     VALUE_BELOW_FIELD: "value-below-field",
     NAME_INVALID: "name-invalid",
     NAME_COLLISION: "name-collision",
@@ -165,9 +166,24 @@ function resolveProviders(ctx)
             return [];
         }
 
+        // An answer that carries nothing cannot be written (an undefined write is no answer), so the agent
+        // acknowledges with true instead; ack and a void answer go together.
+        const ack = spec.ack === true;
+
+        if (ack !== (m.voidAnswer === true))
+        {
+            violate(ctx, option, VIOLATION.PROVIDER_ACK, ack
+                ? "provider declares ack, but its callback answers with data. ack is for a callback that "
+                    + "returns Promise<void>; remove it so the agent's answer reaches the component."
+                : `provider's callback returns Promise<void>, so there is no answer to write at ${spec.request}`
+                    + "Result. Declare ack: true, and the agent acknowledges with true.");
+            return [];
+        }
+
         // required (ADR-234): the catalog requires on<Request>, <request>Result and eventData.
         return [{ option, request: spec.request, actionProp: `on${pascal(spec.request)}`,
-            response: `${spec.request}Result`, ...(spec.required === true ? { required: true } : {}) }];
+            response: `${spec.request}Result`, ...(spec.required === true ? { required: true } : {}),
+            ...(ack ? { ack: true } : {}) }];
     });
 }
 

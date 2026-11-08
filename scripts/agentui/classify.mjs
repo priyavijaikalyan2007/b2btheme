@@ -262,6 +262,8 @@ function classifyMember(ctx, symbol, location)
         cls,
         optional: (symbol.flags & ts.SymbolFlags.Optional) !== 0,
         arity: cls === MEMBER_CLASS.FUNCTION ? arityOf(type) : null,
+        // Whether the awaited answer carries nothing (Promise<void>), which an ack provider declares (ADR-219).
+        voidAnswer: cls === MEMBER_CLASS.FUNCTION ? answersVoid(ctx, type) : null,
         mixedArms: cls === MEMBER_CLASS.DATA ? unique(classes.filter((c) => c !== MEMBER_CLASS.DATA)) : [],
         hazards: hazardsOf(dataArms),
         jsdoc: ts.displayPartsToString(symbol.getDocumentationComment(ctx.checker)).trim(),
@@ -412,6 +414,18 @@ function arityOf(type)
     const signature = unionArms(type).flatMap((arm) => arm.getCallSignatures())[0];
 
     return signature ? signature.parameters.length : 0;
+}
+
+/** Whether the first call signature's awaited return is void or undefined. */
+function answersVoid(ctx, type)
+{
+    const signature = unionArms(type).flatMap((arm) => arm.getCallSignatures())[0];
+
+    if (!signature) { return false; }
+
+    const answer = ctx.checker.getAwaitedType(signature.getReturnType()) ?? signature.getReturnType();
+
+    return unionArms(answer).every((arm) => (arm.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)) !== 0);
 }
 
 /** The arms of a union, or the type itself. */

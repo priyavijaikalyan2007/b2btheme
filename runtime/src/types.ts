@@ -222,6 +222,17 @@ export interface ProviderSpec
      * (ExplorerPicker's onLoadChildren, ADR-234).
      */
     readonly required?: boolean;
+
+    /**
+     * Default false. True for a callback that returns Promise<void>: the
+     * component asks the host to act, such as to save feedback, and needs to
+     * know only that it did. An undefined write is no answer, so the catalog
+     * types `<request>Result` as `true`; the agent writes true once it has
+     * acted, and the component's promise resolves with no value. A timeout
+     * rejects it as for any provider. The generator requires ack exactly when
+     * the callback answers void (provider-ack).
+     */
+    readonly ack?: boolean;
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
