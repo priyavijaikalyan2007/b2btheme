@@ -3,7 +3,7 @@
 **Date**: 2026-11-07
 **Component**: CDN, `/icons/bootstrap-icons.css`
 **Severity**: Medium (the last library the apps still load from a public CDN)
-**Status**: Fixed on branch `fix/bootstrap-icons-lib`: the `bootstrap-icons` asset in `lib-manifest.json`, at `/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css` (the first option).
+**Status**: Fixed in #121, live 2026-11-08: the `bootstrap-icons` asset in `lib-manifest.json`, at `/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css` (the first option)
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---

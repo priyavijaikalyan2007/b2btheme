@@ -3,7 +3,7 @@
 **Date**: 2026-11-07
 **Component**: CDN, `/lib/vditor-3.11.2/` and `lib-manifest.json`
 **Severity**: Low (a licence notice gap, not a security one)
-**Status**: Fixed on branch `fix/vditor-manifest-packages`: `packages` adds diff-match-patch, and a new `bundled` field lists the prebuilt libraries (see `CDN_CONTRACT.md`). Lute is not on npm, so its entry carries `source`; plantuml-encoder's version is `null`. The apps generator needs a change to read `bundled`.
+**Status**: Fixed in #120, live 2026-11-08: `packages` adds diff-match-patch, and a new `bundled` field lists the prebuilt libraries (see `CDN_CONTRACT.md`). Lute is not on npm, so its entry carries `source`; plantuml-encoder's version is `null`. The apps generator needs a change to read `bundled`.
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---
