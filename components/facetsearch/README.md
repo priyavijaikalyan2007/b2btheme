@@ -104,7 +104,8 @@ createFacetSearch("search", {
 | `clear` | `() => void` | Clear all chips and input |
 | `focus` | `() => void` | Focus the input |
 | `addFacet` | `(key, value, label?) => void` | Add a facet chip programmatically. Without `label`, it shows the value's known label, else the value |
-| `removeFacet` | `(key) => void` | Remove a facet chip by key |
+| `removeFacet` | `(key, value?) => void` | Remove the chips on a key. With `value`, remove only the chips on that key with that value, such as one of several `type:` chips. `onFacetRemove` fires once per call |
+| `learnLabels` | `(key, values: FacetValue[]) => void` | Record labels learned after the bar was made, such as from a search answer. The chips that hold those values show the new labels at once. No `onFacetAdd`, `onFacetRemove` or `onChange` fires, and focus and the typed text stay |
 | `getFacets` | `() => ParsedFacet[]` | Get active facets |
 | `enable` | `() => void` | Enable the component |
 | `disable` | `() => void` | Disable the component |
@@ -119,6 +120,7 @@ createFacetSearch("search", {
 | `count>10` | Greater than |
 | `count<=100` | Less than or equal |
 | `author:"Jane Doe"` | Quoted value with spaces |
+| `title:"say \"hi\""` | A quote inside a quoted value is written `\"`. `getValue()` writes a value this way when it holds a space or a quote |
 | `bug fix` | Free text |
 
 ## Keyboard Interaction

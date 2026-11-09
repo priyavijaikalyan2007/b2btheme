@@ -531,3 +531,109 @@ describe("values with labels: the chip shows the label, the query keeps the valu
         fs.destroy();
     });
 });
+
+// ============================================================================
+// CHIP EDITING (apps report 2026-11-09, knobbyio/apps#375)
+// ============================================================================
+
+describe("quotes in a value, removing one chip, and labels learned later", () =>
+{
+    const chipTexts = () => Array.from(container.querySelectorAll(".facetsearch-chip-text"))
+        .map((el) => el.textContent);
+
+    test("a value with a quote is written so it reads back as the same value", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        fs.addFacet("author", 'say "hi"');
+        expect(fs.getValue()).toBe('author:"say \\"hi\\""');
+        expect(parseFacetQuery(fs.getValue(), makeFacets()).facets.map((f) => f.value)).toEqual(['say "hi"']);
+
+        fs.setValue(fs.getValue());
+        expect(fs.getFacets().map((f) => f.value)).toEqual(['say "hi"']);
+        fs.destroy();
+    });
+
+    test("a value with a quote and no space is quoted too; a plain value is not", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        fs.addFacet("author", 'o"neil');
+        expect(fs.getValue()).toBe('author:"o\\"neil"');
+        fs.removeFacet("author");
+        fs.addFacet("author", "ada");
+        expect(fs.getValue()).toBe("author:ada");
+        fs.destroy();
+    });
+
+    test("removeFacet with a value removes only that chip, and fires onFacetRemove once", () =>
+    {
+        const onFacetRemove = vi.fn();
+        const facets = makeFacets().map((f) => (f.key === "status" ? { ...f, multiple: true } : f));
+        const fs = createFacetSearch("test-facetsearch", { facets, onFacetRemove });
+        fs.addFacet("status", "open");
+        fs.addFacet("status", "closed");
+
+        fs.removeFacet("status", "closed");
+        expect(fs.getValue()).toBe("status:open");
+        expect(onFacetRemove.mock.calls).toEqual([["status"]]);
+
+        fs.removeFacet("status", "missing");
+        expect(onFacetRemove).toHaveBeenCalledTimes(1);
+
+        fs.addFacet("status", "closed");
+        fs.removeFacet("status");
+        expect(fs.getValue()).toBe("");
+        expect(onFacetRemove).toHaveBeenCalledTimes(2);
+        fs.destroy();
+    });
+
+    test("learnLabels relabels the chips at once, fires nothing, and keeps focus and the typed text", () =>
+    {
+        const onChange = vi.fn();
+        const onFacetAdd = vi.fn();
+        const onFacetRemove = vi.fn();
+        const fs = createFacetSearch("test-facetsearch", { ...makeOptions(), onChange, onFacetAdd, onFacetRemove });
+        fs.setValue("author:u42");
+        const input = fs.getElement()!.querySelector("input")!;
+        input.value = "draft text";
+        input.focus();
+        onChange.mockClear();
+
+        fs.learnLabels("author", [{ value: "u42", label: "Olive Owner" }, "plain"]);
+
+        expect(chipTexts()).toEqual(["author:Olive Owner"]);
+        expect(fs.getValue()).toBe("author:u42 draft text");
+        expect(input.value).toBe("draft text");
+        expect(document.activeElement).toBe(input);
+        expect(onChange).not.toHaveBeenCalled();
+        expect(onFacetAdd).not.toHaveBeenCalled();
+        expect(onFacetRemove).not.toHaveBeenCalled();
+        fs.destroy();
+    });
+
+    test("a learned label also applies to a chip added later, and replaces a label addFacet gave", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+        fs.addFacet("author", "u7", "Old Name");
+
+        fs.learnLabels("author", [{ value: "u7", label: "New Name" }, { value: "u9", label: "Nina" }]);
+        expect(chipTexts()).toEqual(["author:New Name"]);
+
+        fs.setValue("author:u9");
+        expect(chipTexts()).toEqual(["author:Nina"]);
+        fs.destroy();
+    });
+
+    test("learnLabels for an unknown key warns and changes nothing", () =>
+    {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+        fs.setValue("status:open");
+
+        expect(() => fs.learnLabels("nope", [{ value: "open", label: "Open" }])).not.toThrow();
+        expect(chipTexts()).toEqual(["status:open"]);
+        warn.mockRestore();
+        fs.destroy();
+    });
+});
