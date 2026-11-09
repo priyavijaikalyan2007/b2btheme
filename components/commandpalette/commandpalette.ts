@@ -6,7 +6,8 @@
  * ⚓ COMPONENT: CommandPalette
  * 📜 PURPOSE: Keyboard-first command palette (Ctrl+K omnibar) for searching
  *    and executing registered commands with fuzzy matching, categories,
- *    recent history, and match highlighting.
+ *    recent history, and match highlighting. An optional source adds results
+ *    a server ranked, shown as given (apps report 2026-11-09).
  * 🔗 RELATES: [[EnterpriseTheme]], [[CustomComponents]], [[Toolbar]]
  */
 
@@ -28,6 +29,23 @@ export interface PaletteCommand
     action: () => void | Promise<void>;
 }
 
+/**
+ * A result from `source`: something the person can open, ranked by whoever produced it. Shown as given, with no
+ * fuzzy filtering, reordering or highlighting.
+ */
+export interface PaletteResult
+{
+    id: string;
+    label: string;
+    /** A second line, such as where the item lives. */
+    description?: string;
+    /** A full icon class, such as "bi bi-diagram-3". */
+    icon?: string;
+    /** A group heading, such as "Diagrams". Groups keep the order their first result arrives in. */
+    category?: string;
+    action: () => void | Promise<void>;
+}
+
 export interface CommandPaletteOptions
 {
     commands?: PaletteCommand[];
@@ -46,6 +64,20 @@ export interface CommandPaletteOptions
     onClose?: () => void;
     onSelect?: (command: PaletteCommand) => void;
     onSearch?: (query: string) => void;
+
+    /**
+     * Called as the person types, after a short debounce, with the trimmed query and a signal that aborts when the
+     * query changes or the palette closes. Its results show after the matching commands, as given: not filtered,
+     * not reordered and not highlighted. An answer for a query the input no longer holds is dropped. A rejection
+     * shows sourceErrorText in the list. Not called for an empty query.
+     */
+    source?: (query: string, signal: AbortSignal) => Promise<PaletteResult[]>;
+    /** Shown while the source has not answered. Default: "Searching…". */
+    sourceLoadingText?: string;
+    /** Shown when the source answers with no results. Default: "No results". */
+    sourceEmptyText?: string;
+    /** Shown when the source fails. Default: "Search failed". */
+    sourceErrorText?: string;
 
     /** Override default key combos. Keys are action names, values are combo strings. */
     keyBindings?: Partial<Record<string, string>>;
@@ -109,6 +141,8 @@ const DEFAULT_WIDTH = "600px";
 const DEFAULT_BACKDROP_OPACITY = 0.5;
 const DEBOUNCE_THRESHOLD = 500;
 const DEBOUNCE_MS = 100;
+/** How long the input must rest before the source is asked. */
+const SOURCE_DEBOUNCE_MS = 200;
 const COOLDOWN_MS = 100;
 
 /** Default key bindings for command palette keyboard actions. */
@@ -377,6 +411,12 @@ export class CommandPalette implements CommandPaletteHandle
     private destroyed = false;
     private debounceTimer: number | null = null;
 
+    // The source's answer for the current query (apps report 2026-11-09).
+    private sourceState: "idle" | "loading" | "done" | "failed" = "idle";
+    private sourceResults: PaletteResult[] = [];
+    private sourceAbort: AbortController | null = null;
+    private sourceTimer: number | null = null;
+
     // ── Singleton ──────────────────────────────────────────────────
 
     static getInstance(): CommandPalette
@@ -493,6 +533,9 @@ export class CommandPalette implements CommandPaletteHandle
     {
         if (!this.open_) { return; }
         this.open_ = false;
+        this.cancelSource();
+        this.sourceState = "idle";
+        this.sourceResults = [];
         this.lastOpenTime = Date.now();
         this.teardownPaletteListeners();
         if (this.backdropEl) { this.backdropEl.remove(); }
@@ -711,6 +754,7 @@ export class CommandPalette implements CommandPaletteHandle
         {
             safeCallback(() => { this.opts.onSearch!(query); });
         }
+        if (this.opts.source) { this.askSource(query.trim()); }
         if (this.commands.size > DEBOUNCE_THRESHOLD)
         {
             this.debounceRender();
@@ -719,6 +763,54 @@ export class CommandPalette implements CommandPaletteHandle
         {
             this.renderResults();
         }
+    }
+
+    /**
+     * Asks the source for `query` after the input rests. The previous call is aborted first, so its answer, if it
+     * still arrives, is dropped, as is any answer for a query the input no longer holds.
+     */
+    private askSource(query: string): void
+    {
+        this.cancelSource();
+
+        if (query.length === 0) { this.sourceState = "idle"; this.sourceResults = []; return; }
+
+        this.sourceState = "loading";
+        this.sourceResults = [];
+        const controller = new AbortController();
+        this.sourceAbort = controller;
+        this.sourceTimer = window.setTimeout(() =>
+        {
+            this.sourceTimer = null;
+            const current = (): boolean => !controller.signal.aborted
+                && (this.inputEl ? this.inputEl.value.trim() : "") === query;
+            let answer: Promise<PaletteResult[]>;
+
+            try { answer = Promise.resolve(this.opts.source!(query, controller.signal)); }
+            catch (err) { answer = Promise.reject(err); }
+
+            answer.then((results) =>
+            {
+                if (!current()) { return; }
+                this.sourceState = "done";
+                this.sourceResults = Array.isArray(results) ? results : [];
+                logDebug("Source answered", this.sourceResults.length, "results");
+                this.renderResults();
+            }, (err: unknown) =>
+            {
+                if (!current()) { return; }
+                this.sourceState = "failed";
+                logWarn("Source failed:", err);
+                this.renderResults();
+            });
+        }, SOURCE_DEBOUNCE_MS);
+    }
+
+    /** Aborts the source call in flight, or the one waiting to start. */
+    private cancelSource(): void
+    {
+        if (this.sourceTimer !== null) { clearTimeout(this.sourceTimer); this.sourceTimer = null; }
+        if (this.sourceAbort) { this.sourceAbort.abort(); this.sourceAbort = null; }
     }
 
     private debounceRender(): void
@@ -841,6 +933,15 @@ export class CommandPalette implements CommandPaletteHandle
     {
         const el = this.visibleItems[this.highlightIdx];
         if (!el) { return; }
+        const resultId = el.getAttribute("data-result-id");
+        if (resultId !== null)
+        {
+            const result = this.sourceResults.find((r) => r.id === resultId);
+            if (!result) { return; }
+            this.close();
+            this.executeAction(result);
+            return;
+        }
         const cmdId = el.getAttribute("data-command-id") || "";
         const cmd = this.commands.get(cmdId);
         if (!cmd || cmd.disabled) { return; }
@@ -853,7 +954,7 @@ export class CommandPalette implements CommandPaletteHandle
         this.executeAction(cmd);
     }
 
-    private executeAction(cmd: PaletteCommand): void
+    private executeAction(cmd: PaletteCommand | PaletteResult): void
     {
         try
         {
@@ -924,12 +1025,95 @@ export class CommandPalette implements CommandPaletteHandle
         const scored = this.searchCommands(query);
         if (scored.length === 0)
         {
-            this.appendEmpty(frag, query);
+            // With a source, its own section says whether anything was found.
+            if (!this.opts.source) { this.appendEmpty(frag, query); }
+        }
+        else
+        {
+            const limit = this.showAll ? scored.length : this.opts.maxResults;
+            this.appendGroupedScored(frag, scored.slice(0, limit));
+        }
+        if (this.opts.source) { this.appendSourceSection(frag); }
+    }
+
+    /** The source's results after the commands, as given, or its loading, empty or failed state. */
+    private appendSourceSection(frag: DocumentFragment): void
+    {
+        if (this.sourceState === "loading")
+        {
+            this.appendSourceStatus(frag, this.opts.sourceLoadingText ?? "Searching…", "loading");
             return;
         }
-        const limit = this.showAll ? scored.length : this.opts.maxResults;
-        const visible = scored.slice(0, limit);
-        this.appendGroupedScored(frag, visible);
+        if (this.sourceState === "failed")
+        {
+            this.appendSourceStatus(frag, this.opts.sourceErrorText ?? "Search failed", "failed");
+            return;
+        }
+        if (this.sourceState !== "done") { return; }
+        if (this.sourceResults.length === 0)
+        {
+            this.appendSourceStatus(frag, this.opts.sourceEmptyText ?? "No results", "empty");
+            return;
+        }
+
+        let category: string | undefined;
+        for (const result of this.sourceResults)
+        {
+            if (this.opts.showCategories && result.category && result.category !== category)
+            {
+                this.appendCategoryHeader(frag, result.category);
+            }
+            category = result.category;
+            const el = this.buildResultItem(result);
+            frag.appendChild(el);
+            this.visibleItems.push(el);
+        }
+    }
+
+    private appendSourceStatus(frag: DocumentFragment, text: string, state: string): void
+    {
+        const el = createElement("div", CLS + "-empty " + CLS + "-source-" + state);
+        setAttr(el, "role", "status");
+        el.textContent = text;
+        frag.appendChild(el);
+    }
+
+    /** A source result's row: its label as given, its full icon class, its description. */
+    private buildResultItem(result: PaletteResult): HTMLElement
+    {
+        const el = createElement("div", CLS + "-item " + CLS + "-result");
+        el.id = CLS + "-result-" + result.id;
+        setAttr(el, "role", "option");
+        setAttr(el, "aria-selected", "false");
+        setAttr(el, "data-result-id", result.id);
+        if (result.icon)
+        {
+            const ic = createElement("i", result.icon + " " + CLS + "-item-icon");
+            setAttr(ic, "aria-hidden", "true");
+            el.appendChild(ic);
+        }
+        const content = createElement("div", CLS + "-item-content");
+        const label = createElement("span", CLS + "-item-label");
+        label.textContent = result.label;
+        content.appendChild(label);
+        if (result.description)
+        {
+            const desc = createElement("span", CLS + "-item-description");
+            desc.textContent = result.description;
+            content.appendChild(desc);
+        }
+        el.appendChild(content);
+        el.addEventListener("click", () =>
+        {
+            const idx = this.visibleItems.indexOf(el);
+            if (idx >= 0) { this.highlightIdx = idx; this.executeHighlighted(); }
+        });
+        el.addEventListener("mouseenter", () =>
+        {
+            const idx = this.visibleItems.indexOf(el);
+            if (idx >= 0) { this.setHighlight(idx); }
+        });
+        return el;
     }
 
     // ── Search ─────────────────────────────────────────────────────

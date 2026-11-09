@@ -36,6 +36,32 @@ CommandPalette.configure({
 openCommandPalette();
 ```
 
+### Results From a Server
+
+Pass `source` to search beyond the registered commands, such as everything a person can see. The palette calls it as the person types, after the input rests for 200 ms. It passes the trimmed query and an `AbortSignal`.
+
+```javascript
+configureCommandPalette({
+    commands: myCommands,
+    source: function(query, signal) {
+        return fetch("/api/search?q=" + encodeURIComponent(query), { signal })
+            .then(function(r) { return r.json(); })
+            .then(function(hits) {
+                return hits.map(function(h) {
+                    return { id: h.id, label: h.title, description: h.path, icon: "bi bi-file-earmark",
+                        category: h.kind, action: function() { location.href = h.url; } };
+                });
+            });
+    }
+});
+```
+
+- **Shown as given.** The results appear after the matching commands. They are not filtered, reordered or highlighted, because the source has already ranked them. Category headings keep the order of each category's first result.
+- **Stale answers are dropped.** When the query changes, the previous call's `signal` aborts. An answer for a query the input no longer holds is ignored.
+- **Every state shows in the list.** While the source has not answered, the list shows `sourceLoadingText`. If it answers with nothing, it shows `sourceEmptyText`, and if it fails, `sourceErrorText`. The failure is logged too.
+- **An empty query does not call the source.** The palette shows recent and all commands, as before.
+- A result is not added to the recent list, and `onSelect` is not called for it, because it is not a command.
+
 ### Register Commands Individually
 
 ```javascript
@@ -88,6 +114,23 @@ interface CommandPaletteOptions {
     onClose?: () => void;
     onSelect?: (command: PaletteCommand) => void;
     onSearch?: (query: string) => void;
+    source?: (query: string, signal: AbortSignal) => Promise<PaletteResult[]>;
+    sourceLoadingText?: string;   // Default: "Searching…"
+    sourceEmptyText?: string;     // Default: "No results"
+    sourceErrorText?: string;     // Default: "Search failed"
+}
+```
+
+### PaletteResult
+
+```typescript
+interface PaletteResult {
+    id: string;
+    label: string;
+    description?: string;   // a second line, such as where the item lives
+    icon?: string;          // a full class, such as "bi bi-diagram-3"
+    category?: string;      // a group heading, such as "Diagrams"
+    action: () => void | Promise<void>;
 }
 ```
 

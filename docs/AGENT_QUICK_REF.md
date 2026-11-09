@@ -733,7 +733,7 @@ $control-height-xl=46px
 - CSS: `components/commandpalette/commandpalette.css`
 - JS: `components/commandpalette/commandpalette.js`
 - Globals: `configureCommandPalette()`, `getCommandPalette()`, `openCommandPalette()`, `registerCommand()`, `registerCommands()`
-- Exports: `interface PaletteCommand`, `interface CommandPaletteOptions`, `interface CommandPaletteHandle`, `class CommandPalette`, `function openCommandPalette`, `function registerCommand`, `function registerCommands`, `function configureCommandPalette`, `function getCommandPalette`
+- Exports: `interface PaletteCommand`, `interface PaletteResult`, `interface CommandPaletteOptions`, `interface CommandPaletteHandle`, `class CommandPalette`, `function openCommandPalette`, `function registerCommand`, `function registerCommands`, `function configureCommandPalette`, `function getCommandPalette`
 
 ### commentoverlay
 
