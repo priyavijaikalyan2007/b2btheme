@@ -14,6 +14,7 @@
  */
 
 import { DRAFT_2020_12, mapRefs } from "./normalise.mjs";
+import { DEF_ALIASES } from "./def-aliases.mjs";
 import { VIOLATION } from "./resolve.mjs";
 
 // @config: CatalogIdentity — changing these changes a permanent public identifier (D7, D12).
@@ -66,10 +67,10 @@ export function catalogName(manifest)
  * @returns { catalog, violations }.
  */
 // @entrypoint
-export function buildCatalog({ basic, components, major })
+export function buildCatalog({ basic, components, major, aliases = DEF_ALIASES })
 {
     const violations = nameViolations(basic, components);
-    const ours = components.map(entryFor);
+    const ours = components.map((c) => entryFor(c, aliases));
     const id = catalogId(major);
     const all = sortKeys({ ...reexport(basic.components, "components"),
         ...Object.fromEntries(ours.map((o) => [o.name, o.entry])) });
@@ -80,7 +81,8 @@ export function buildCatalog({ basic, components, major })
             $schema: DRAFT_2020_12, $id: id, title: TITLE, description: guidance(components), catalogId: id,
             components: all, functions, $defs: rootDefs(all, functions, ours),
         },
-        violations: [...violations, ...defCollisions(ours), ...ours.flatMap((o) => o.violations)],
+        violations: [...violations, ...defCollisions(ours), ...aliasViolations(ours, aliases),
+            ...ours.flatMap((o) => o.violations)],
     };
 }
 
@@ -133,11 +135,51 @@ function defCollisions(ours)
     }));
 }
 
+/**
+ * Aliases that cannot work (#74): one no generated key uses (stale, so it
+ * must go), one that moves a key to another component's prefix, and two
+ * generated keys that an alias would give the same published name.
+ */
+function aliasViolations(ours, aliases)
+{
+    const used = new Set(ours.flatMap((o) => o.aliased));
+    const out = [];
+    const violation = (component, member, message) => ({ component, member, code: VIOLATION.DEF_ALIAS,
+        message: `${message} Fix DEF_ALIASES in scripts/agentui/def-aliases.mjs.` });
+
+    for (const [from, to] of Object.entries(aliases))
+    {
+        const prefix = from.slice(0, from.indexOf("__") + 2);
+
+        if (!to.startsWith(prefix))
+        {
+            out.push(violation(from, from, `The alias ${from} → ${to} leaves the ${prefix} prefix; an alias keeps `
+                + "a type inside its own component."));
+        }
+        if (!used.has(from))
+        {
+            out.push(violation(from, from, `The alias ${from} → ${to} matches no generated definition, so it is `
+                + "stale. Remove it."));
+        }
+    }
+
+    for (const o of ours)
+    {
+        for (const [key, sources] of Object.entries(o.defSources).filter(([, s]) => s.length > 1))
+        {
+            out.push(violation(o.name, key, `${sources.join(" and ")} would both be published as ${key}, so one `
+                + "would overwrite the other."));
+        }
+    }
+
+    return out;
+}
+
 /** One component entry plus its relocated defs and prop-collision violations. */
-function entryFor({ manifest, surface, schema })
+function entryFor({ manifest, surface, schema }, aliases)
 {
     const name = catalogName(manifest);
-    const { root, defs } = relocateDefs(schema, name);
+    const { root, defs, aliased, defSources } = relocateDefs(schema, name, aliases);
     const entries = [...dataProps(surface, root, manifest.name), ...eventDataProp(surface),
         ...channelProps(surface, manifest.name),
         ...providerProps(surface, name), ...actionProps(surface)];
@@ -145,7 +187,7 @@ function entryFor({ manifest, surface, schema })
     const dataNames = new Set(surface.dataProps.map((d) => d.name));
 
     return {
-        name, defs: { ...defs, ...providerDefs(surface, root, manifest.name, name) },
+        name, aliased, defSources, defs: { ...defs, ...providerDefs(surface, root, manifest.name, name) },
         violations: [...propCollisions(manifest, ["component", ...entries.map(([n]) => n)]),
             ...commonCollisions(manifest, surface)],
         entry: {
@@ -165,17 +207,27 @@ function entryFor({ manifest, surface, schema })
 
 /**
  * Moves a standalone schema's $defs under `<prefix>__` keys so they can live
- * at the catalog root, rewriting refs to match.
+ * at the catalog root, rewriting refs to match. A key in `aliases` keeps its
+ * published name instead (#74), for the definition and every ref to it.
+ *
+ * @returns { root, defs, aliased: the alias keys used, defSources: published key → generated keys }.
  */
-export function relocateDefs(schema, prefix)
+export function relocateDefs(schema, prefix, aliases = DEF_ALIASES)
 {
     const { $schema, $defs = {}, ...root } = schema;
     void $schema;
+    const published = (k) => aliases[`${prefix}__${k}`] ?? `${prefix}__${k}`;
     const rewrite = (node) => mapRefs(node, (ref) =>
-        (ref.startsWith("#/$defs/") ? `#/$defs/${prefix}__${ref.slice("#/$defs/".length)}` : ref));
+        (ref.startsWith("#/$defs/") ? `#/$defs/${published(ref.slice("#/$defs/".length))}` : ref));
+    const keys = Object.keys($defs);
+    const defSources = {};
+
+    for (const k of keys) { (defSources[published(k)] ??= []).push(`${prefix}__${k}`); }
 
     return { root: rewrite(root),
-        defs: Object.fromEntries(Object.entries($defs).map(([k, v]) => [`${prefix}__${k}`, rewrite(v)])) };
+        defs: Object.fromEntries(Object.entries($defs).map(([k, v]) => [published(k), rewrite(v)])),
+        aliased: keys.map((k) => `${prefix}__${k}`).filter((k) => k in aliases),
+        defSources };
 }
 
 /** A schema property the surface lists; absent means surface and schema disagree. */

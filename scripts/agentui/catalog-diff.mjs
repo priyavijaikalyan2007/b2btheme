@@ -264,8 +264,24 @@ function entryShape(entry)
 function diffDefs(prev, next, out)
 {
     const keep = (m) => Object.fromEntries(Object.entries(m).filter(([k]) => !DERIVED_DEFS.has(k)));
+    const [p, n] = [keep(prev), keep(next)];
+    const added = Object.keys(n).filter((k) => !(k in p));
 
-    diffMap(keep(prev), keep(next), (k) => `$defs.${k}`, out, (k) => diffProp(`$defs.${k}`, prev[k], next[k], out));
+    // A removed key is usually a renamed type (#74). Say how to keep its published name, and name the alias when
+    // an added key has the same schema.
+    for (const k of Object.keys(p).filter((key) => !(key in n)))
+    {
+        const twin = added.find((a) => sameish(p[k], n[a]));
+
+        out.breaking.push(twin
+            ? `$defs.${k} removed. $defs.${twin} was added with the same schema, so the type was probably `
+                + `renamed: add "${twin}": "${k}" to DEF_ALIASES in scripts/agentui/def-aliases.mjs to keep the `
+                + "published name"
+            : `$defs.${k} removed. If its type was renamed, map the new key to it in DEF_ALIASES in `
+                + "scripts/agentui/def-aliases.mjs to keep the published name");
+    }
+    for (const k of added) { out.additive.push(`$defs.${k} added`); }
+    for (const k of Object.keys(p).filter((key) => key in n)) { diffProp(`$defs.${k}`, prev[k], next[k], out); }
 }
 
 /**
