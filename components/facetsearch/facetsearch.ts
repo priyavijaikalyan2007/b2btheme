@@ -312,9 +312,11 @@ function readQuoted(raw: string, i: number): string
     let j = i + 1;
     while (j < raw.length)
     {
-        if (raw[j] === '\\' && j + 1 < raw.length && raw[j + 1] === '"')
+        // Inside quotes, \" and \\ are escapes, kept whole here and read by stripQuotes. A backslash before
+        // anything else is itself.
+        if (raw[j] === '\\' && j + 1 < raw.length && (raw[j + 1] === '"' || raw[j + 1] === '\\'))
         {
-            result += '\\"';
+            result += raw[j] + raw[j + 1];
             j += 2;
         }
         else if (raw[j] === '"')
@@ -338,7 +340,8 @@ function skipQuoted(raw: string, i: number): number
     let j = i + 1;
     while (j < raw.length)
     {
-        if (raw[j] === '\\' && j + 1 < raw.length && raw[j + 1] === '"')
+        // The same two escapes readQuoted keeps: \" and \\.
+        if (raw[j] === '\\' && j + 1 < raw.length && (raw[j + 1] === '"' || raw[j + 1] === '\\'))
         {
             j += 2;
         }
@@ -392,7 +395,7 @@ function stripQuotes(s: string): string
 {
     if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"')
     {
-        return s.substring(1, s.length - 1).replace(/\\"/g, '"');
+        return s.substring(1, s.length - 1).replace(/\\(["\\])/g, "$1");
     }
     return s;
 }
@@ -436,7 +439,13 @@ export interface FacetSearchHandle
     focus(): void;
     /** Adds a chip; `label` is what it shows, else the value's known label, else the value. */
     addFacet(key: string, value: string, label?: string): void;
-    removeFacet(key: string): void;
+    /** Removes the chips on `key`; with `value`, only the chips on `key` with that value. */
+    removeFacet(key: string, value?: string): void;
+    /**
+     * Records labels for a facet's values, learned after the bar was made, and relabels the chips that hold them
+     * at once. Fires no onFacetAdd, onFacetRemove or onChange, because nothing the person chose has changed.
+     */
+    learnLabels(key: string, values: FacetValue[]): void;
     getFacets(): ParsedFacet[];
     enable(): void;
     disable(): void;
@@ -508,7 +517,7 @@ export class FacetSearch implements FacetSearchHandle
         for (const fd of this.opts.facets)
         {
             this.facetMap.set(fd.key.toLowerCase(), fd);
-            this.learnLabels(fd.key, fd.values ?? []);
+            this.rememberLabels(fd.key, fd.values ?? []);
         }
 
         this.buildDOM();
@@ -641,7 +650,7 @@ export class FacetSearch implements FacetSearchHandle
     // ====================================================================
 
     /** Records each labelled value's label for `facetKey`, so a typed or restored chip can show it. */
-    private learnLabels(facetKey: string, values: FacetValue[]): void
+    private rememberLabels(facetKey: string, values: FacetValue[]): void
     {
         const key = facetKey.toLowerCase();
         for (const v of values)
@@ -670,10 +679,35 @@ export class FacetSearch implements FacetSearchHandle
             ...(label !== value ? { hint: value } : {}) };
     }
 
-    removeFacet(key: string): void
+    removeFacet(key: string, value?: string): void
     {
         if (this.destroyed) { return; }
-        this.removeChipByKey(key);
+        this.removeChipByKey(key, value);
+    }
+
+    learnLabels(key: string, values: FacetValue[]): void
+    {
+        if (this.destroyed) { return; }
+        const fd = this.facetMap.get(key.toLowerCase());
+        if (!fd)
+        {
+            logWarn("Facet key not found:", key);
+            return;
+        }
+        this.rememberLabels(fd.key, values);
+
+        // A learned label replaces the one a chip shows, even one addFacet gave it: it is the newer answer.
+        const labels = this.knownLabels.get(fd.key.toLowerCase());
+        let relabelled = 0;
+        this.chips = this.chips.map((c) =>
+        {
+            const label = c.key.toLowerCase() === fd.key.toLowerCase() ? labels?.get(c.value) : undefined;
+            if (label === undefined || label === c.label) { return c; }
+            relabelled++;
+            return { ...c, label };
+        });
+        if (relabelled > 0) { this.renderChips(); }
+        logDebug("Labels learned for", fd.key + ":", values.length, "values,", relabelled, "chips relabelled");
     }
 
     getFacets(): ParsedFacet[]
@@ -899,17 +933,18 @@ export class FacetSearch implements FacetSearchHandle
         }
     }
 
-    private removeChipByKey(key: string): void
+    /** Removes the chips on `key`, or with `value` only those holding it; one onFacetRemove per call. */
+    private removeChipByKey(key: string, value?: string): void
     {
         const before = this.chips.length;
         this.chips = this.chips.filter(
-            c => c.key.toLowerCase() !== key.toLowerCase());
+            c => c.key.toLowerCase() !== key.toLowerCase() || (value !== undefined && c.value !== value));
         if (this.chips.length < before)
         {
             this.renderChips();
             this.updateClearBtnVisibility();
             this.announce("Removed filter: " + key);
-            logInfo("Facet removed:", key);
+            logInfo("Facet removed:", key, value === undefined ? "" : value);
             if (this.opts.onFacetRemove)
             {
                 this.opts.onFacetRemove(key);
@@ -1054,8 +1089,11 @@ export class FacetSearch implements FacetSearchHandle
         for (const c of this.chips)
         {
             const prefix = c.negated ? "-" : "";
-            const val = c.value.includes(" ")
-                ? '"' + c.value + '"' : c.value;
+            // A value with a space or a quote is quoted. Inside the quotes a backslash is written \\ and a quote
+            // \", the two escapes parseFacetQuery reads (apps report 2026-11-09). Before, a quote broke the value in
+            // two, and a value ending in a backslash swallowed its closing quote.
+            const val = /[\s"]/.test(c.value)
+                ? '"' + c.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"' : c.value;
             parts.push(prefix + c.key + c.operator + val);
         }
         if (this.input && this.input.value.trim())
@@ -1237,7 +1275,7 @@ export class FacetSearch implements FacetSearchHandle
             fd.loadValues!(query)
                 .then(values =>
                 {
-                    this.learnLabels(fd.key, values);
+                    this.rememberLabels(fd.key, values);
                     this.suggestions = values.map((v) => this.valueSuggestion(fd, v));
                     this.renderDropdown();
                     this.announce(values.length + " values loaded");
