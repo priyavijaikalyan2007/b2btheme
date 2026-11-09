@@ -90,7 +90,7 @@ dialog.open();
 | `onCancel` | `() => void` | — | Called on cancel; passing it shows the Cancel button |
 | `onSelectionChange` | `(selections) => void` | — | Called on every selection change |
 | `onError` | `(error, context) => void` | — | Called when the initial load fails |
-| `staticNodes` | `ExplorerNode[]` | — | The initial tree, flat, each node naming its `parentId`; the tree, ontology, recent and starred items are not requested |
+| `staticNodes` | `ExplorerNode[]` | — | The initial tree, flat, each node naming its `parentId`; the tree, ontology, recent and starred items are not requested. A node it gives children opens with no request; any other node still asks `apiBase` for its children |
 | `onLoadChildren` | `({ nodeId }) => Promise<ExplorerNode[]>` | — | Loads one level: a node's children, or the roots when `nodeId` is `null`. With it nothing is requested from `apiBase` or `ontologyApiBase`: Recent and Starred are not shown, and search needs `onSearch`. Answers that list the node, an ancestor or another parent's child are cut to the real children |
 | `onSearch` | `({ query, cursor }) => Promise<{ results, cursor }>` | — | Answers a search instead of `apiBase/search`; a non-null `cursor` shows "Load more results" |
 | `cancellable` | `boolean` | `false` | Show the Cancel button without `onCancel` |

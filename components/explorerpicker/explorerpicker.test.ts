@@ -707,6 +707,36 @@ describe("API data layer", () =>
         picker.destroy();
     });
 
+    test("staticChildren_ExpandWithoutARequest", async () =>
+    {
+        // #59. A folder whose children staticNodes gives is loaded: opening it asks nothing of apiBase.
+        const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(apiList([])) });
+        const picker = createExplorerPicker(defaultOpts({ fetchFn: mockFetch }));
+        await vi.waitFor(() => { expect(queryTreeItems().length).toBeGreaterThan(0); });
+
+        await picker.expandNode("eng");
+        await picker.expandNode("platform");
+
+        expect(mockFetch.mock.calls.filter((c) => String(c[0]).includes("/children"))).toEqual([]);
+        expect(queryNodeRow("platform")).not.toBeNull();
+        expect(queryNodeRow("arch")).not.toBeNull();
+        expect(container.querySelector('[data-node-id="eng"]')?.getAttribute("aria-expanded")).toBe("true");
+        picker.destroy();
+    });
+
+    test("staticLeafFolder_StillAsksTheApiForItsChildren", async () =>
+    {
+        // Unchanged: a folder staticNodes gives no children is not loaded, so opening it still asks apiBase.
+        const mockFetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(apiList([])) });
+        const picker = createExplorerPicker(defaultOpts({ fetchFn: mockFetch }));
+        await vi.waitFor(() => { expect(queryTreeItems().length).toBeGreaterThan(0); });
+
+        await picker.expandNode("unassigned");
+
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/nodes/unassigned/children"), expect.anything());
+        picker.destroy();
+    });
+
     test("fetchError_ShowsErrorBanner", async () =>
     {
         const mockFetch = vi.fn().mockRejectedValue(

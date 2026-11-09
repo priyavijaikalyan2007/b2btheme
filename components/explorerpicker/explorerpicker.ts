@@ -188,8 +188,9 @@ export interface ExplorerPickerOptions
     cancelButtonText?: string;
     /**
      * The initial tree, as a flat list in which each node names its parentId (null for a root). With it, the
-     * tree, the ontology and the recent and starred items are not requested; expanding a node and searching
-     * still request apiBase unless onLoadChildren and onSearch answer them.
+     * tree, the ontology and the recent and starred items are not requested. A node it gives children opens
+     * with no request. Expanding any other node, and searching, still request apiBase unless onLoadChildren
+     * and onSearch answer them.
      */
     staticNodes?: ExplorerNode[];
     /**
@@ -1491,6 +1492,7 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
             // `resourceType` the server left off.
             this.populateFromNodes(
                 this.opts.staticNodes.filter((n) => this.matchesTypeFilter(n)));
+            this.markStaticChildrenLoaded(this.opts.staticNodes);
             this.renderTree();
             this.updateConfirmState();
             return;
@@ -1587,6 +1589,23 @@ export class ExplorerPickerImpl implements ExplorerPickerHandle
         if (data)
         {
             this.populateFromNodes(nodesOf(data, "/tree", this.reading));
+        }
+    }
+
+    /**
+     * #59, a labelled bug fix. A node whose children staticNodes gives is
+     * loaded, so opening it asks nothing of apiBase. Before, it requested
+     * `/nodes/<id>/children`: on a host without that endpoint the folder
+     * would not open, and on a host with it the server's children replaced
+     * the given ones. A folder staticNodes gives no children still asks.
+     * Read from the unfiltered list, so a folder whose children the type
+     * filter hides does not ask the server for them either.
+     */
+    private markStaticChildrenLoaded(nodes: ExplorerNode[]): void
+    {
+        for (const node of nodes)
+        {
+            if (node.parentId) { this.loadedSet.add(node.parentId); }
         }
     }
 
