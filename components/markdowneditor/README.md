@@ -46,10 +46,21 @@ origin. Either load `markdowneditor.js` from `https://static.knobby.io`,
 or mirror `/lib/vditor-3.11.2/` alongside it. The component will not
 silently reach for a public CDN to cover the gap.
 
-The lazily-injected chunks carry no `integrity` attribute. They are served
-from this origin rather than a third party, which is the guarantee on
-offer. The stylesheet above likewise carries no hash, because it is part of
-that tree rather than a separately published build.
+With the tag above, the chunks Vditor adds carry no `integrity` attribute.
+They are served from this origin rather than a third party. To have each
+chunk checked too, load Vditor's `vditor-integrity` entry in place of the
+tree's entry. It holds a hash for every chunk and adds it to each tag:
+
+```html
+<script src="https://static.knobby.io/lib/vditor-integrity-3.11.2.js"
+        integrity="sha384-bVs+HxsNugl+IJwcSL4cX9K+U0+KViSkI0lGbVt2e8TXahI5cJk7ATZRPOHbAB7o"
+        crossorigin="anonymous"></script>
+```
+
+The component needs no change for it. That entry refuses MathJax, and this
+component uses KaTeX. See "vditor" in `CDN_CONTRACT.md`. The stylesheet above
+carries no hash, because it is part of the tree. The `vditor-css` asset is
+the same file with a hash.
 
 ## Quick Start
 

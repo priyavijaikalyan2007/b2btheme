@@ -254,6 +254,7 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `marked` | 18.0.12 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
 | `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
 | `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
+| `vditor-integrity` | 3.11.2 | Vditor's entry with a hash for every chunk it loads, at `/lib/vditor-integrity-3.11.2.js`. Load it in place of `/lib/vditor-3.11.2/dist/index.min.js`. MathJax is refused. See below |
 | `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
 | `bootstrap-icons` | 1.13.1 | The stylesheet, hashed, with its fonts beside it, at `/lib/bootstrap-icons-1.13.1/`. The same release as `/icons/bootstrap-icons.css`, served with CORS so a page loaded with `crossorigin` can read its rules. See below |
 | `bootstrap` | 5.3.8 | Bootstrap's JS bundle (`window.bootstrap`), the same file as `/js/bootstrap.bundle.min.js`, with an SRI hash. Marked `shared`: the A2UI adapter loads it for Toolbar and the dialogs only when the page has no `window.bootstrap`, because a second copy doubles Bootstrap's document-wide listeners (ADR-245) |
@@ -322,7 +323,7 @@ render nothing today and are pre-existing defects rather than migration risk:
 | `bi-folder-open` | a Font Awesome name | `bi-folder2-open` |
 | `bi-trash-alt` | a Font Awesome name | `bi-trash` |
 
-### vditor — a whole tree, and a stated residual
+### vditor — a whole tree, and an entry that hashes it
 
 vditor cannot be one file. It hardcodes `https://unpkg.com/vditor@3.11.2` and
 lazily fetches its markdown engine (`lute`, 3.9 MB), icon set, language pack
@@ -338,11 +339,44 @@ Serving only the always-needed subset would have saved ~16 MB of deploy and
 broken silently the first time a user wrote a mermaid block, because the fetch
 would 404 against this origin instead of falling through to unpkg.
 
-**Known residual, stated rather than hidden:** the lazily-injected chunks
-carry **no SRI**, because vditor injects them itself and cannot be told to add
-an `integrity` attribute. Serving them from this origin removes third-party
-trust, which is most of the value, but vditor cannot reach the same assurance
-as the single-file assets without patching it.
+**The tree's own entry does not hash its chunks.** Vditor adds the tags for
+its chunks itself, with no `integrity` attribute. The tree is a verbatim copy
+of the npm release, so `/lib/vditor-3.11.2/dist/index.min.js` keeps that
+behaviour, and pages that pin its hash keep working.
+
+**`vditor-integrity` is the entry that does.** It is Vditor's entry with two
+changes, made at build time by `scripts/vditor-integrity.mjs`:
+
+- **A hash table.** It holds the SHA-384 of every script and stylesheet under
+  `dist/js/` and `dist/css/` in the tree, 329 files.
+- **Patched loaders.** Each script and stylesheet tag Vditor adds gets the
+  hash of its file and `crossorigin="anonymous"`. A file that is not in the
+  table is refused with an error, not loaded unchecked.
+
+The page hashes the entry, and the entry hashes the rest. Load it in place of
+the tree's entry, and keep `cdn` pointed at the tree:
+
+```html
+<script src="https://static.knobby.io/lib/vditor-integrity-3.11.2.js"
+        integrity="sha384-bVs+HxsNugl+IJwcSL4cX9K+U0+KViSkI0lGbVt2e8TXahI5cJk7ATZRPOHbAB7o"
+        crossorigin="anonymous"></script>
+```
+
+Take the hash from the manifest's `vditor-integrity` asset. Its `cdn` field
+names the tree it checks, `/lib/vditor-3.11.2`.
+
+Two behaviours differ from the tree's entry:
+
+- **MathJax is refused.** Vditor runs MathJax from downloaded text, which a
+  browser cannot check. Setting `math.engine` to `"MathJax"` throws an error
+  that says to use KaTeX. MarkdownEditor and Conversation already use KaTeX.
+- **The icon set loads without blocking.** Vditor fetched it with a
+  synchronous request. It now loads like any other script, so the toolbar
+  icons can appear a moment after the editor.
+
+Each patch must match Vditor's minified code exactly once, or the build fails.
+A Vditor upgrade therefore needs the patches rewritten, and cannot ship
+unchecked chunks by accident.
 
 **What the tree contains, for licence notices.** The vditor entry in the
 manifest has two lists:

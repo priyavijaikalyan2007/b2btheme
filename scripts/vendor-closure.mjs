@@ -33,6 +33,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { GATED_DIR, GATES } from "./gated.mjs";
+import { hashTable, patchEntry } from "./vditor-integrity.mjs";
 
 const OUT_DIR = "dist/lib";
 const MANIFEST = "dist/lib-manifest.json";
@@ -43,6 +44,8 @@ const MANIFEST = "dist/lib-manifest.json";
  *   "copy"   the package already ships a self-contained UMD/IIFE build.
  *   "bundle" the package is ESM; esbuild inlines its closure into an IIFE
  *            that assigns `global`.
+ *   "tree"   a directory, served whole, with one hashed entry.
+ *   "patch"  a tree's entry, edited by a script and served as its own file.
  *
  * Versions are pinned as devDependencies so the lockfile pins them and
  * `npm audit` covers them — a vendored library with a known CVE becomes our
@@ -223,11 +226,11 @@ const ASSETS = [
          * `types/` and `ts/` are excluded: typings and sources, never
          * fetched by a browser.
          *
-         * KNOWN RESIDUAL: the lazily-injected chunks carry no SRI, because
-         * vditor injects them itself. Serving them removes third-party
-         * trust, which is most of the value, but vditor cannot reach the
-         * same assurance as the single-file assets without patching it.
-         * Recorded in CDN_CONTRACT.md rather than hidden.
+         * The chunks this entry injects carry no SRI, because vditor adds
+         * their tags itself. A page that needs them checked loads the
+         * `vditor-integrity` asset below as its entry instead. That copy
+         * holds a hash for each chunk. This tree stays a verbatim copy of
+         * the npm release. Recorded in CDN_CONTRACT.md.
          */
         name: "vditor",
         kind: "tree",
@@ -310,6 +313,21 @@ const ASSETS = [
             { from: "node_modules/vditor/dist/index.css", to: "index.css" },
         ],
         note: "vditor's stylesheet, hashed, for MarkdownEditor over A2UI",
+    },
+    {
+        // Vditor's entry with a SHA-384 table of the tree above inside it,
+        // and its loaders patched to put the matching hash on every script
+        // and stylesheet they add (scripts/vditor-integrity.mjs). The page
+        // hashes this file, and this file hashes the rest. MathJax is
+        // refused, because vditor runs it from downloaded text. It must
+        // come after `vditor` here, because it hashes the copied tree.
+        name: "vditor-integrity",
+        kind: "patch",
+        tree: "vditor",
+        global: "Vditor",
+        pkg: "vditor",
+        members: ["diff-match-patch"],
+        note: "vditor's entry with a hash for every chunk it loads; set vditor's `cdn` option to /lib/vditor-3.11.2",
     },
     {
         name: "bootstrap",
@@ -707,6 +725,49 @@ async function main()
             const kb = String(Math.round(bytes.length / 1024)).padStart(4);
             const kind = asset.assetType === "script" ? "entry + lazy chunks" : "css + webfonts";
             console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB (${kind})`);
+            continue;
+        }
+
+        if (asset.kind === "patch")
+        {
+            const tree = ASSETS.find((a) => a.name === asset.tree);
+            const built = manifest.assets[asset.tree];
+
+            if (!tree || !built)
+            {
+                throw new Error(`[vendor-closure] ${asset.name} patches ${asset.tree}, `
+                    + "which must be listed and built before it.");
+            }
+
+            const baseDir = join(outDir, `${tree.name}-${built.version}`);
+            const table = hashTable(baseDir);
+            const source = readFileSync(join(baseDir, tree.entry), "utf8");
+
+            writeFileSync(outFile, patchEntry(source, table, built.version));
+
+            const bytes = readFileSync(outFile);
+
+            for (const member of asset.members ?? []) { packages[member] = versionOf(member); }
+
+            manifest.assets[asset.name] = {
+                version,
+                url: `/lib/${fileName}`,
+                integrity: sriOf(bytes),
+                global: asset.global,
+                packages,
+                ...(built.bundled ? { bundled: built.bundled } : {}),
+                bytes: bytes.length,
+                cdn: `/lib/${tree.name}-${built.version}`,
+                hashed: Object.keys(table).length,
+                closure: `entry hashed; each of the ${Object.keys(table).length} scripts and stylesheets `
+                    + `it can load from /lib/${tree.name}-${built.version} carries SRI from a table `
+                    + "inside the entry; MathJax is refused",
+                ...(asset.note ? { note: asset.note } : {}),
+            };
+
+            const kb = String(Math.round(bytes.length / 1024)).padStart(4);
+            console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB `
+                + `(${Object.keys(table).length} chunks hashed)`);
             continue;
         }
 
