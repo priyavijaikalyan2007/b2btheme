@@ -255,8 +255,12 @@ export class BannerBar implements BannerBarHandle
     private destroyed = false;
     private contained = false;
 
-    // Timers
+    // Timers. Every one is cancelled by destroy(), so none outlives the banner: a late one used to measure a
+    // detached element, or clear the height of the banner shown next.
     private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+    private slideInFrame: number | null = null;
+    private heightTimer: ReturnType<typeof setTimeout> | null = null;
+    private hideTimer: ReturnType<typeof setTimeout> | null = null;
 
     // DOM references
     private rootEl: HTMLElement | null = null;
@@ -346,12 +350,16 @@ export class BannerBar implements BannerBarHandle
         }
 
         this.clearAutoDismiss();
+        // A hide during the slide-in: the height must not be measured after the banner has gone.
+        this.clearSlideIn();
 
         // Slide out, then remove from DOM
         this.rootEl.classList.remove("bannerbar-visible");
 
-        setTimeout(() =>
+        if (this.hideTimer !== null) { clearTimeout(this.hideTimer); }
+        this.hideTimer = setTimeout(() =>
         {
+            this.hideTimer = null;
             if (this.rootEl && this.rootEl.parentNode)
             {
                 this.rootEl.parentNode.removeChild(this.rootEl);
@@ -382,6 +390,8 @@ export class BannerBar implements BannerBarHandle
 
         this.destroyed = true;
         this.clearAutoDismiss();
+        this.clearSlideIn();
+        if (this.hideTimer !== null) { clearTimeout(this.hideTimer); this.hideTimer = null; }
         this.removeFromDOM();
         this.releaseReferences();
         this.fireOnClose();
@@ -539,16 +549,28 @@ export class BannerBar implements BannerBarHandle
             return;
         }
 
-        requestAnimationFrame(() =>
+        this.slideInFrame = requestAnimationFrame(() =>
         {
+            this.slideInFrame = null;
             if (this.rootEl)
             {
                 this.rootEl.classList.add("bannerbar-visible");
             }
 
             // Measure height after transition completes
-            setTimeout(() => this.measureAndSetHeight(), TRANSITION_MS);
+            this.heightTimer = setTimeout(() =>
+            {
+                this.heightTimer = null;
+                this.measureAndSetHeight();
+            }, TRANSITION_MS);
         });
+    }
+
+    /** Cancels a slide-in that has not finished: its frame, and the height measurement after it. */
+    private clearSlideIn(): void
+    {
+        if (this.slideInFrame !== null) { cancelAnimationFrame(this.slideInFrame); this.slideInFrame = null; }
+        if (this.heightTimer !== null) { clearTimeout(this.heightTimer); this.heightTimer = null; }
     }
 
     /**
