@@ -277,3 +277,61 @@ describe("BannerBar ARIA", () =>
         banner.destroy();
     });
 });
+
+// ============================================================================
+// TIMERS ARE THE BANNER'S OWN
+// ============================================================================
+
+describe("BannerBar timers are cancelled with the banner", () =>
+{
+    const height = () => document.documentElement.style.getPropertyValue("--bannerbar-height");
+
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() =>
+    {
+        vi.useRealTimers();
+        document.documentElement.style.removeProperty("--bannerbar-height");
+    });
+
+    test("destroy during the slide-in leaves no timer behind and sets no height", () =>
+    {
+        const banner = new BannerBar(makeOptions());
+        banner.show(container);
+        banner.destroy();
+
+        expect(vi.getTimerCount()).toBe(0);
+        vi.advanceTimersByTime(1000);
+        expect(height()).toBe("");
+    });
+
+    test("hiding during the slide-in leaves no stale height once it is gone", () =>
+    {
+        const banner = new BannerBar(makeOptions());
+        banner.show(container);
+        banner.hide();
+
+        vi.advanceTimersByTime(1000);
+
+        expect(height()).toBe("");
+        expect(container.querySelector(".bannerbar")).toBeNull();
+        banner.destroy();
+    });
+
+    test("a hidden banner's pending removal does not clear the next banner's height", () =>
+    {
+        const first = new BannerBar(makeOptions());
+        first.show(container);
+        vi.advanceTimersByTime(1000);
+        first.hide();
+
+        // A contained banner measures at once; showing it replaces (destroys) the first.
+        const next = new BannerBar(makeOptions({ contained: true }));
+        next.show(container);
+        const measured = height();
+        vi.advanceTimersByTime(1000);
+
+        expect(measured).not.toBe("");
+        expect(height()).toBe(measured);
+        next.destroy();
+    });
+});

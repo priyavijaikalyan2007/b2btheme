@@ -137,6 +137,19 @@ function isDeliberate(message: string): boolean
     return /^Error:/.test(message);
 }
 
+/**
+ * Destroys what a probe call created, so none of its timers fires after the run: a BannerBar left alive measured
+ * its height once jsdom had gone, and CI failed on the unhandled error (2026-11-09). The probe measures the call,
+ * not the teardown, so a destroy that throws is not its finding.
+ */
+function release(handle: unknown): void
+{
+    const destroy = (handle as { destroy?: unknown } | null | undefined)?.destroy;
+    if (typeof destroy !== "function") { return; }
+    try { destroy.call(handle); }
+    catch { /* not what this probe measures */ }
+}
+
 /** Refusal messages, kept so the wording can be asserted as well as counted. */
 const refusals = new Map<string, string>();
 
@@ -163,7 +176,7 @@ async function verdictsFor(r: Row): Promise<Array<{ field: string; verdict: Verd
         const args = r.paramNames.map((_p, i) =>
             i === r.containerIndex ? value : (i === r.optionsIndex ? opts : {}));
 
-        try { fn(...args); return null; }
+        try { release(fn(...args)); return null; }
         catch (e) { return String(e); }
     };
 

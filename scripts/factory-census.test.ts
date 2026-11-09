@@ -90,6 +90,19 @@ type Verdict = "THROWS" | "OPAQUE" | "WARNS-AND-RETURNS" | "SILENT" | "UNREACHAB
 /** The refusal message, kept so its wording can be asserted as well as counted. */
 const refusals = new Map<string, { message: string; byId: boolean }>();
 
+/**
+ * Destroys what a probe call created, so none of its timers fires after the run: a BannerBar left alive measured
+ * its height once jsdom had gone, and CI failed on the unhandled error (2026-11-09). The probe measures the call,
+ * not the teardown, so a destroy that throws is not its finding.
+ */
+function release(handle: unknown): void
+{
+    const destroy = (handle as { destroy?: unknown } | null | undefined)?.destroy;
+    if (typeof destroy !== "function") { return; }
+    try { destroy.call(handle); }
+    catch { /* not what this probe measures */ }
+}
+
 async function verdictFor(r: Row): Promise<Verdict>
 {
     const mod = await import(`../components/${r.component}/${r.component}.ts`) as Record<string, unknown>;
@@ -124,7 +137,13 @@ async function verdictFor(r: Row): Promise<Verdict>
             return opts;
         });
 
-        try { fn(...args); return { threw: null, logs: [...logs] }; }
+        try
+        {
+            const handle = fn(...args);
+            const out = { threw: null, logs: [...logs] };
+            release(handle);
+            return out;
+        }
         catch (e) { return { threw: String(e), logs: [...logs] }; }
     };
 
