@@ -188,4 +188,5 @@ Every error is logged to the console with the prefix `[outcrop-mcp]` and sent to
 - [`MCP_APPS_AGENT_GUIDE.md`](MCP_APPS_AGENT_GUIDE.md): the same contract, as rules for coding agents.
 - [`A2UI_INTEGRATION_GUIDE.md`](A2UI_INTEGRATION_GUIDE.md): the components, the catalog and the adapter.
 - `CDN_CONTRACT.md` §2c: the public names and their change rules.
+- [`MCPUI.md`](../MCPUI.md): the rules the library follows to keep the view working.
 - The MCP Apps SDK documentation: <https://apps.extensions.modelcontextprotocol.io/api/>.

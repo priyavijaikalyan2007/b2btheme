@@ -235,6 +235,7 @@ MCP Apps hosts, such as Claude, ChatGPT and VS Code, can show these components i
 | The view (a server returns these bytes as its `ui://` resource) | `https://static.outcrop.us/mcp/renderer.html` and `renderer.meta.json` |
 | Server guide | [`docs/MCP_APPS_INTEGRATION_GUIDE.md`](docs/MCP_APPS_INTEGRATION_GUIDE.md) |
 | Rules for coding agents | [`docs/MCP_APPS_AGENT_GUIDE.md`](docs/MCP_APPS_AGENT_GUIDE.md) |
+| Rules for contributors | [`MCPUI.md`](MCPUI.md) |
 | Example servers (TypeScript, C#) | [`mcp/examples/`](mcp/examples/) |
 | Local demo: a host, a demo server and four domains (charts, grids, pickers, design) | `npm run build && npm run demo:mcp`, then <http://127.0.0.1:8125/host/> ([`mcp/demo/`](mcp/demo/)) |
 
