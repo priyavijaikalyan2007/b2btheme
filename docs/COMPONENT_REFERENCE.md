@@ -4133,6 +4133,8 @@ MCP app HTML is injected into a sandboxed iframe via `srcdoc`. The component aut
     | `--border-radius-sm`, `-md`, `-lg` | `--bs-border-radius-sm`, `--bs-border-radius`, `--bs-border-radius-lg` |
 
     The values are read from the document root when the app opens. A token with no value is left out. The `--mcp-*` names are unchanged.
+
+    The `--mcp-*` variables follow the same rule. Each is read from one source, such as `--theme-border-color` for `--mcp-border`. A source with no value leaves its variable out and logs a warning. There are no literal colours to fall back on, so load the theme CSS on any page that shows MCP apps.
 3. A **bridge script** providing `window.mcpBridge.send(method, params)` and `window.mcpBridge.onMessage` for JSON-RPC 2.0 communication with the host
 
 Example MCP app HTML that communicates with the host:

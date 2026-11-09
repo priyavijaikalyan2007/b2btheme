@@ -224,7 +224,7 @@ Every click is real, and the scenario replays as a CI test (`npm run test:e2e:a2
 
 **[Try the live playground](https://static.outcrop.us/demo/a2ui/)**: step through these scenarios, paste your own A2UI messages, or bring your own Claude or OpenAI key and watch an agent build UI. Your key goes only from your browser to the provider. You can also run it locally with `npm run demo:a2ui`.
 
-The catalog has 106 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
+The catalog has 107 components. The other 14, such as toasts and the command palette, are page-level, and each has its reason recorded in `scripts/agentui/no-manifest.mjs`.
 
 ## AI Agents: MCP Apps Support
 

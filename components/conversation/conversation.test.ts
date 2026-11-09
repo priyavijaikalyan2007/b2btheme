@@ -1077,15 +1077,46 @@ describe("Conversation MCP app standard style variables (#19 M4)", () =>
         conv.destroy();
     });
 
-    test("leaves out a standard variable whose token has no value; the --mcp-* names are unchanged", () =>
+    test("leaves out a variable whose source has no value, logs it, and writes no literal colour", () =>
     {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
         const conv = openApp();
         const style = appStyle();
 
         expect(style).not.toMatch(/--(color|font|border-radius)-/);
-        expect(style.match(/--mcp-[a-z-]+:/g)).toEqual(["--mcp-primary:", "--mcp-background:", "--mcp-text:",
-            "--mcp-border:", "--mcp-surface-raised:", "--mcp-text-secondary:", "--mcp-font-family:",
-            "--mcp-font-size:"]);
+        // The theme tokens these read are absent, so the variables are too. They had literal fallbacks.
+        for (const name of ["--mcp-primary", "--mcp-border", "--mcp-surface-raised", "--mcp-text-secondary"])
+        {
+            expect(style).not.toContain(`${name}:`);
+        }
+        expect(style).not.toMatch(/#1c7ed6|#ffffff|#0f172a|#cbd5e1|#f1f5f9|#334155/i);
+        expect(warn.mock.calls.map((c) => c.join(" ")).join("\n"))
+            .toMatch(/MCP app theme: no value for --mcp-primary, .*--mcp-border, --mcp-surface-raised, --mcp-text-secondary/);
         conv.destroy();
+        warn.mockRestore();
+    });
+
+    test("reads each --mcp-* variable from its one source", () =>
+    {
+        // Bootstrap sets --bs-primary on :root and a browser passes it down. jsdom does not, so a rule
+        // gives it to the frame's reference element directly.
+        const rule = Object.assign(document.createElement("style"), { textContent: "* { --bs-primary: rgb(1,2,3); }" });
+
+        document.head.append(rule);
+        root.style.setProperty("--theme-border-color", "rgb(4, 5, 6)");
+        root.style.setProperty("--theme-surface-raised-bg", "rgb(7, 8, 9)");
+        root.style.setProperty("--theme-text-secondary", "rgb(10, 11, 12)");
+
+        const conv = openApp();
+        const style = appStyle();
+
+        expect(style).toContain("--mcp-primary: rgb(1,2,3);");
+        expect(style).toContain("--mcp-border: rgb(4, 5, 6);");
+        expect(style).toContain("--mcp-surface-raised: rgb(7, 8, 9);");
+        expect(style).toContain("--mcp-text-secondary: rgb(10, 11, 12);");
+        conv.destroy();
+        rule.remove();
+        ["--theme-border-color", "--theme-surface-raised-bg", "--theme-text-secondary"]
+            .forEach((t) => root.style.removeProperty(t));
     });
 });

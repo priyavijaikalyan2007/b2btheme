@@ -83,7 +83,7 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
 
 ## Scope today
 
-- **In the catalog:** the 106 components that are. CommentOverlay, the one component left on `PENDING_CLASSIFICATION`, is tracked in #64.
+- **In the catalog:** the 107 components that are. CommentOverlay, the one component left on `PENDING_CLASSIFICATION`, is tracked in #64.
 - **Never in the catalog, by design:**
   - Four components declare `protocol.outOfCatalog` with a reason (ADR-247): FileUpload, GraphMinimap, HelpDrawer and NavRail.
   - Fourteen have no manifest, each with its reason in `NO_MANIFEST` (ADR-243).

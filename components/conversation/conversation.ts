@@ -836,6 +836,35 @@ function standardStyleDeclarations(docCs: CSSStyleDeclaration): string[]
 }
 
 /**
+ * The --mcp-* variables, each read from one source: the reference element's
+ * computed style, or a theme token on the document root. A source with no
+ * value leaves its variable out, as the standard variables do, and is
+ * logged. It does not get a literal colour: a page without the theme shows
+ * an unthemed app rather than one themed by values nobody chose.
+ */
+function legacyStyleDeclarations(cs: CSSStyleDeclaration, docCs: CSSStyleDeclaration): string[]
+{
+    const vars: ReadonlyArray<readonly [string, string]> = [
+        ["--mcp-primary", cs.getPropertyValue("--bs-primary").trim()],
+        ["--mcp-background", cs.backgroundColor],
+        ["--mcp-text", cs.color],
+        ["--mcp-border", docCs.getPropertyValue("--theme-border-color").trim()],
+        ["--mcp-surface-raised", docCs.getPropertyValue("--theme-surface-raised-bg").trim()],
+        ["--mcp-text-secondary", docCs.getPropertyValue("--theme-text-secondary").trim()],
+        ["--mcp-font-family", cs.fontFamily],
+        ["--mcp-font-size", cs.fontSize],
+    ];
+    const missing = vars.filter(([, value]) => value === "").map(([name]) => name);
+
+    if (missing.length > 0)
+    {
+        logWarn("MCP app theme: no value for", missing.join(", "), "(is the theme CSS loaded?)");
+    }
+
+    return vars.filter(([, value]) => value !== "").map(([name, value]) => `${name}: ${value};`);
+}
+
+/**
  * Extracts Bootstrap theme values from computed styles on a reference
  * element and returns a CSS custom property block for MCP app theming.
  */
@@ -843,21 +872,7 @@ function buildThemeStyleBlock(refEl: HTMLElement): string
 {
     const cs = getComputedStyle(refEl);
     const docCs = getComputedStyle(document.documentElement);
-    const vars: Record<string, string> = {
-        "--mcp-primary": cs.getPropertyValue("--bs-primary") || "#1c7ed6",
-        "--mcp-background": cs.backgroundColor || "#ffffff",
-        "--mcp-text": cs.color || "#0f172a",
-        "--mcp-border": docCs.getPropertyValue("--theme-border-color").trim()
-            || cs.borderColor || "#cbd5e1",
-        "--mcp-surface-raised": docCs.getPropertyValue("--theme-surface-raised-bg").trim()
-            || "#f1f5f9",
-        "--mcp-text-secondary": docCs.getPropertyValue("--theme-text-secondary").trim()
-            || "#334155",
-        "--mcp-font-family": cs.fontFamily || "sans-serif",
-        "--mcp-font-size": cs.fontSize || "14px",
-    };
-    const lines = [...Object.entries(vars).map(([k, v]) => `${k}: ${v};`),
-        ...standardStyleDeclarations(docCs)].join(" ");
+    const lines = [...legacyStyleDeclarations(cs, docCs), ...standardStyleDeclarations(docCs)].join(" ");
     const tableStyles = [
         "table { border-collapse: collapse; color: var(--mcp-text); }",
         "th, td { border: 1px solid var(--mcp-border);",
