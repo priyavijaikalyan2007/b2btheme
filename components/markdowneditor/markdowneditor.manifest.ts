@@ -93,7 +93,9 @@ export const MARKDOWNEDITOR_MANIFEST: CapabilityManifest =
                 + "information for an agent.",
         },
         // Vditor is the editor; DOMPurify sanitises its preview of agent-written markdown (ADR-230).
-        dependencies: { libraries: ["vditor", "vditor-css", "dompurify"] },
+        // vditor-integrity is Vditor's entry that hashes every chunk it loads, so the adapter's page
+        // checks lute and the renderers as well as the entry (CDN_CONTRACT.md, "vditor").
+        dependencies: { libraries: ["vditor-integrity", "vditor-css", "dompurify"] },
     },
 
     // Every scrolling region this component names (DEBT-DUI-5).

@@ -65,6 +65,11 @@ test.describe("B5 editors and forms under @a2ui/lit", () =>
             context: { p: expect.stringContaining("# Notes") } })]);
         await expect(page.locator('head link[href$="/lib/vditor-css-3.11.2/index.css"]'))
             .toHaveAttribute("integrity", /^sha384-/);
+        // The adapter loads the Vditor entry that hashes its chunks, so lute arrives checked too.
+        await expect(page.locator('head script[src$="/lib/vditor-integrity-3.11.2.js"]'))
+            .toHaveAttribute("integrity", /^sha384-/);
+        await expect(page.locator("#vditorLuteScript")).toHaveAttribute("integrity", /^sha384-/);
+        await expect(page.locator("#vditorLuteScript")).toHaveAttribute("crossorigin", "anonymous");
         expect(await errors(page)).toEqual([]);
     });
 

@@ -138,7 +138,8 @@ export const CONVERSATION_MANIFEST: CapabilityManifest =
         },
         // Vditor renders the assistant's markdown (KaTeX and its other renderers load from Vditor's own mirror
         // through its cdn option, ADR-149), with its stylesheet; DOMPurify sanitises the HTML copy (ADR-230).
-        dependencies: { libraries: ["vditor", "vditor-css", "dompurify"] },
+        // vditor-integrity is the entry that hashes every chunk it loads (CDN_CONTRACT.md, "vditor").
+        dependencies: { libraries: ["vditor-integrity", "vditor-css", "dompurify"] },
     },
 
     regions: [
