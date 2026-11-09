@@ -159,11 +159,21 @@ function resolveProviders(ctx)
             return [];   // reported by checkStaleDeclarations
         }
 
-        if (m.arity !== 1)
+        const params = spec.params;
+
+        if (params === undefined && m.arity !== 1)
         {
             violate(ctx, option, VIOLATION.PROVIDER_ARITY, `provider takes ${m.arity} parameters; a provider `
-                + `takes exactly one, which the component writes to <eventData path>/${spec.request}. Declare it `
-                + "in protocol.hostOnly instead, or give the component an additive single-object variant.");
+                + `takes one, which the component writes to <eventData path>/${spec.request}. Name each parameter `
+                + "in params, so the agent gets one object with those keys (#68), or declare it in protocol.hostOnly.");
+            return [];
+        }
+
+        if (params !== undefined && !paramsFit(params, m.arity))
+        {
+            violate(ctx, option, VIOLATION.PROVIDER_ARITY, `provider takes ${m.arity} parameters, but params is `
+                + `${JSON.stringify(params)}. params names each parameter once, in order, with an identifier, and `
+                + "only for a callback with two or more; a one-parameter callback's parameter is the request.");
             return [];
         }
 
@@ -184,8 +194,16 @@ function resolveProviders(ctx)
         // required (ADR-234): the catalog requires on<Request>, <request>Result and eventData.
         return [{ option, request: spec.request, actionProp: `on${pascal(spec.request)}`,
             response: `${spec.request}Result`, ...(spec.required === true ? { required: true } : {}),
-            ...(ack ? { ack: true } : {}) }];
+            ...(ack ? { ack: true } : {}), ...(params !== undefined ? { params: [...params] } : {}) }];
     });
+}
+
+/** Whether a provider's params name each of its two or more parameters once, in order, with an identifier. */
+function paramsFit(params, arity)
+{
+    return Array.isArray(params) && arity >= 2 && params.length === arity
+        && params.every((p) => typeof p === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(p))
+        && new Set(params).size === params.length;
 }
 
 /**

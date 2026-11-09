@@ -127,10 +127,10 @@ See the [FileExplorer Flat Mode Guide](../../docs/fileexplorer-flat-mode-guide.m
 | `onSelect` | `(files) => void` | -- | Selection change callback |
 | `onSelectionChange` | `(nodes) => void` | -- | Selection change (multi) |
 | `onOpen` | `(file) => void` | -- | File open callback |
-| `onRename` | `(file, name) => Promise<boolean>` | -- | Rename callback |
-| `onDelete` | `(files) => Promise<boolean>` | -- | Delete callback |
-| `onMove` | `(files, target) => Promise<boolean>` | -- | Move callback |
-| `onCreateFolder` | `(parent, name) => Promise<FileNode>` | -- | New folder callback |
+| `onRename` | `(file, name) => Promise<boolean>` | -- | Rename callback. Resolve `true` to keep the new name. A rejection keeps the old name |
+| `onDelete` | `(files) => Promise<boolean>` | -- | Delete callback. Resolve `true` to remove the files. A rejection removes nothing |
+| `onMove` | `(files, target) => Promise<boolean>` | -- | Declared, but the explorer never calls it. A drag ends in `onDrop` |
+| `onCreateFolder` | `(parent, name) => Promise<FileNode>` | -- | New folder callback. Resolve the new folder, or `null` to add nothing. A rejection adds nothing |
 | `onLoadChildren` | `(folder) => Promise<FileNode[]>` | -- | Lazy load callback |
 | `onUpload` | `(folder, files) => Promise<void>` | -- | Upload callback |
 | `onSort` | `(field, direction) => void` | -- | Sort change callback |
@@ -140,6 +140,21 @@ See the [FileExplorer Flat Mode Guide](../../docs/fileexplorer-flat-mode-guide.m
 | `onDragStart` | `(nodes) => void` | -- | Drag start callback |
 | `onDrop` | `(target, ids) => void` | -- | Drop on folder callback |
 | `onExternalDrop` | `(target, dataTransfer) => void` | -- | External drop callback |
+
+## Over A2UI (#68)
+
+An agent can now edit files and drive navigation. Each edit is offered only when the agent binds it, so an agent that binds none gets a browse-only explorer, as before.
+
+| The user… | The agent hears | The agent answers |
+|---|---|---|
+| renames a file | `onRename`, with the request `{ file, newName }` | `true` to keep the name, at `renameResult` |
+| deletes files | `onDelete`, with the files | `true` to remove them, at `deleteResult` |
+| presses New Folder | `onCreateFolder`, with `{ parent, name }` | the new folder, or `null`, at `createFolderResult` |
+| opens a folder given with no `children` | `onLoadChildren`, with the folder | its contents, at `loadChildrenResult` |
+| opens a folder | `onNavigate`, with the folder | in a flat listing, new `items` |
+| clicks a breadcrumb in a flat listing | `onBreadcrumb`, with the segment id (`null` is the root) | new `items` |
+
+The `navigate` and `breadcrumb` channels are also on `on()` for any host. Moving items and uploads stay with the host.
 
 ## API Methods
 

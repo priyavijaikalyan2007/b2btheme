@@ -29,7 +29,7 @@ import type { AdapterDescriptor, AdapterProvider, ComponentContextLike, Sub, Val
 /** The provider callbacks to pass to the factory, and how to let them go. */
 export interface WiredProviders
 {
-    readonly options: Record<string, (request: unknown) => Promise<unknown>>;
+    readonly options: Record<string, (...args: unknown[]) => Promise<unknown>>;
     release(): void;
 }
 
@@ -61,7 +61,7 @@ export function wireProviders(ctx: ComponentContextLike, descriptor: AdapterDesc
             `${descriptor.name}.${p.resultProp}`, { timeoutMs, eventPath }));
 
     return {
-        options: Object.fromEntries(channels.map((c) => [c.option, (r: unknown) => c.ask(r)])),
+        options: Object.fromEntries(channels.map((c) => [c.option, c.callback()])),
         release: () => channels.forEach((c) => c.release()),
     };
 }
@@ -94,6 +94,19 @@ class ProviderChannel
         this.#requestPath = `${where.eventPath}/${p.request}`;
         this.#resultPath = bindingPath(ctx.componentModel.properties[p.resultProp]) as string;
         this.#sub = ctx.dataContext.subscribeDynamicValue({ path: this.#resultPath }, (v) => this.#onResult(v));
+    }
+
+    /**
+     * The callback passed to the factory. A one-parameter callback's argument is the request. One with params
+     * packs its arguments into one object under those names (#68), so the agent reads one request.
+     */
+    callback(): (...args: unknown[]) => Promise<unknown>
+    {
+        const params = this.#p.params;
+
+        return params === undefined
+            ? (request: unknown) => this.ask(request)
+            : (...args: unknown[]) => this.ask(Object.fromEntries(params.map((name, i) => [name, args[i]])));
     }
 
     /** The callback the component calls: a promise of the agent's answer. */

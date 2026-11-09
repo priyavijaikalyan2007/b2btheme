@@ -846,7 +846,7 @@ describe("FileExplorer surface contract", () =>
         row("f1").click();
 
         expect(heard).not.toHaveBeenCalled();
-        expect(() => fe.on("navigate", () => undefined)).toThrow(/valid channels/);
+        expect(() => fe.on("rename", () => undefined)).toThrow(/valid channels/);
         fe.destroy();
     });
 
@@ -960,6 +960,98 @@ describe("onLoadChildren loads a folder whose children were never given (#69)", 
         await settle();
         expect(onLoadChildren).toHaveBeenCalledTimes(2);
         expect(fe.getItems().map((i) => i.id)).toEqual(["doc"]);
+        fe.destroy();
+    });
+});
+
+// ============================================================================
+// AGENT EDITS AND NAVIGATION (#68)
+// ============================================================================
+
+describe("navigate and breadcrumb channels, and rejected edits (#68)", () =>
+{
+    const flush = async (): Promise<void> => { for (let i = 0; i < 5; i++) { await Promise.resolve(); } };
+    const listingRow = (id: string) =>
+        container.querySelector<HTMLElement>(`.fileexplorer-listing [data-id="${id}"]`)!;
+
+    test("navigate_FiresAfterOnNavigate_WithAPlainCopy_AndNotOnRestore", () =>
+    {
+        const order: unknown[] = [];
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(),
+            onNavigate: (f) => order.push(["legacy", f.id]) }) as FileExplorer;
+        fe.on("navigate", (p) => order.push(["navigate", p]));
+
+        fe.navigate("root");
+        fe.setState({ currentFolderId: "root" });
+
+        expect(order).toEqual([["legacy", "root"], ["navigate", { id: "root", name: "Documents", type: "folder" }]]);
+        fe.destroy();
+    });
+
+    test("breadcrumb_ClickingASegment_FiresWithItsId", () =>
+    {
+        const heard: unknown[] = [];
+        const fe = createFileExplorer(container.id, { items: makeFlatItems(), breadcrumb: makeBreadcrumb() });
+        fe.on("breadcrumb", (p) => heard.push(p));
+
+        container.querySelectorAll<HTMLElement>("a.fileexplorer-breadcrumb-item")[0].click();
+
+        expect(heard).toEqual([null]);
+        fe.destroy();
+    });
+
+    test("rename_RejectedAnswer_KeepsTheOldName_AndClosesTheInput", async () =>
+    {
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(),
+            onRename: () => Promise.reject(new Error("timed out")) }) as FileExplorer;
+        fe.navigate("root");
+
+        fe.startRenamePublic("f1");
+        const input = container.querySelector<HTMLInputElement>(".fileexplorer-rename-input")!;
+        input.value = "renamed.md";
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        await flush();
+
+        expect(container.querySelector(".fileexplorer-rename-input")).toBeNull();
+        expect(listingRow("f1").textContent).toContain("readme.md");
+        expect(errors.mock.calls.flat().join(" ")).toContain("onRename failed for");
+        errors.mockRestore();
+        fe.destroy();
+    });
+
+    test("delete_RejectedAnswer_DeletesNothing_AndIsLogged", async () =>
+    {
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(),
+            onDelete: () => Promise.reject(new Error("timed out")) }) as FileExplorer;
+        fe.navigate("root");
+        fe.selectItem("f1");
+
+        container.querySelector(".fileexplorer-listing")!
+            .dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+        await flush();
+
+        expect(listingRow("f1")).not.toBeNull();
+        expect(errors.mock.calls.flat().join(" ")).toContain("onDelete failed for");
+        errors.mockRestore();
+        fe.destroy();
+    });
+
+    test("createFolder_RejectedAnswer_AddsNothing_AndIsLogged", async () =>
+    {
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const fe = createFileExplorer(container.id, { roots: makeFileTree(),
+            onCreateFolder: () => Promise.reject(new Error("timed out")) }) as FileExplorer;
+        fe.navigate("root");
+        const before = container.querySelectorAll(".fileexplorer-listing [data-id]").length;
+
+        container.querySelector<HTMLElement>(".fileexplorer-toolbar-btn[aria-label='New Folder']")!.click();
+        await flush();
+
+        expect(container.querySelectorAll(".fileexplorer-listing [data-id]").length).toBe(before);
+        expect(errors.mock.calls.flat().join(" ")).toContain("onCreateFolder failed in");
+        errors.mockRestore();
         fe.destroy();
     });
 });

@@ -337,7 +337,9 @@ function providerProps(surface, name)
 {
     return surface.providers.flatMap((p) => [
         [p.actionProp, { description: `Sent when the component needs "${p.request}" answered. Its request is `
-            + `at <eventData path>/${p.request}. Answer with updateDataModel at the path bound to ${p.response}.`,
+            + `at <eventData path>/${p.request}`
+            + (p.params ? `, an object with ${p.params.map((n) => `"${n}"`).join(", ")}` : "")
+            + `. Answer with updateDataModel at the path bound to ${p.response}.`,
         $ref: ACTION_REF }],
         [p.response, { description: `Bind to the path you will answer ${p.actionProp} at with updateDataModel, and `
             + `write a value matching #/$defs/${name}__${p.response} there. A literal cannot answer a request.`,

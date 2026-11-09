@@ -27,10 +27,14 @@
 
 // @semantic-marker fileexplorer-conformance-glue
 
-/** The slice of the handle the trigger drives. */
+/** The slice of the handle the triggers drive. */
 interface FileExplorerLike
 {
     getElement(): HTMLElement | null;
+    setData(slot: string, value: unknown): void;
+    navigate(folderId: string): void;
+    selectItem(id: string): void;
+    startRenamePublic(nodeId?: string): void;
 }
 
 /** A folder and a file at the top level, so the listing shows a file to select and open. */
@@ -39,12 +43,23 @@ const ROOTS = [
     { id: "readme", name: "readme.md", type: "file" },
 ];
 
+/** A tree for the provider requests (#68): a folder with no children, which loads when opened, and a file. */
+const REQUEST_ROOTS = [
+    { id: "lazy", name: "Lazy", type: "folder" },
+    { id: "readme", name: "readme.md", type: "file" },
+];
+
 export const CONFORMANCE_GLUE =
 {
     options: { roots: ROOTS },
 
-    // The tree to browse, and the file as the flat listing, which shows in place of the tree when set.
-    eventProps: { roots: ROOTS, items: [{ id: "readme", name: "readme.md", type: "file" }] },
+    // The tree to browse, and a flat listing of a folder and the file, which shows in place of the tree when set.
+    // The breadcrumb's first segment is a link (#68).
+    eventProps: {
+        roots: ROOTS,
+        items: [{ id: "flatdir", name: "Docs", type: "folder" }, { id: "readme", name: "readme.md", type: "file" }],
+        breadcrumb: [{ id: null, label: "Home" }, { id: "flatdir", label: "Docs" }],
+    },
 
     // A rewrite that keeps both and adds a file, and a flat listing (readiness step 3).
     slotSamples: {
@@ -52,18 +67,70 @@ export const CONFORMANCE_GLUE =
         items: [{ id: "flat", name: "flat.txt", type: "file" }],
     },
 
-    /** Clicks the file (select) or double-clicks it (open) in the listing (readiness step 3). */
+    /**
+     * Clicks the file (select) or double-clicks it (open), double-clicks the folder (navigate) in the listing,
+     * or clicks the first breadcrumb (breadcrumb, #68).
+     */
     trigger: (
         channel: string,
         handle: Record<string, unknown>): boolean =>
     {
-        const file = (handle as unknown as FileExplorerLike).getElement()
-            ?.querySelector<HTMLElement>(".fileexplorer-listing [data-id='readme']");
+        const root = (handle as unknown as FileExplorerLike).getElement();
+        const pick = (selector: string): HTMLElement | null => root?.querySelector<HTMLElement>(selector) ?? null;
+        const target = channel === "navigate" ? pick(".fileexplorer-listing [data-id='flatdir']")
+            : channel === "breadcrumb" ? pick("a.fileexplorer-breadcrumb-item")
+                : channel === "select" || channel === "open" ? pick(".fileexplorer-listing [data-id='readme']")
+                    : null;
 
-        if (!file || (channel !== "select" && channel !== "open")) { return false; }
+        if (!target) { return false; }
 
-        file.dispatchEvent(new MouseEvent(channel === "select" ? "click" : "dblclick", { bubbles: true }));
+        const type = channel === "select" || channel === "breadcrumb" ? "click" : "dblclick";
+        target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
 
         return true;
+    },
+
+    /**
+     * Makes the explorer ask each provider (#68), on the tree above: renames the file, deletes it with the
+     * Delete key, presses New Folder, and opens the folder that has no children.
+     */
+    request: (request: string, handle: Record<string, unknown>): boolean =>
+    {
+        const explorer = handle as unknown as FileExplorerLike;
+        explorer.setData("items", undefined);
+        explorer.setData("roots", REQUEST_ROOTS);
+        const root = explorer.getElement();
+
+        if (!root) { return false; }
+
+        if (request === "rename")
+        {
+            explorer.startRenamePublic("readme");
+            const input = root.querySelector<HTMLInputElement>(".fileexplorer-rename-input");
+            if (!input) { return false; }
+            input.value = "renamed.md";
+            input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+            return true;
+        }
+        if (request === "delete")
+        {
+            explorer.selectItem("readme");
+            const listing = root.querySelector<HTMLElement>(".fileexplorer-listing");
+            listing?.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true, cancelable: true }));
+            return listing !== null;
+        }
+        if (request === "createFolder")
+        {
+            const button = root.querySelector<HTMLElement>(".fileexplorer-toolbar-btn[aria-label='New Folder']");
+            button?.click();
+            return button !== null;
+        }
+        if (request === "loadChildren")
+        {
+            explorer.navigate("lazy");
+            return true;
+        }
+
+        return false;
     },
 };

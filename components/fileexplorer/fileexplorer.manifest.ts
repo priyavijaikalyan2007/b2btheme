@@ -55,16 +55,14 @@ function nodeSchema(depth: number): Record<string, unknown>
     };
 }
 
-/** Why the editing callbacks stay with the host (readiness step 3, the user's decision). */
-const EDIT = "Approves the edit in host code; without it the explorer does not offer it, so over A2UI it browses, "
-    + "selects and opens.";
 
 /**
- * Declared at `surface` conformance (readiness step 3, #21): selecting and
- * opening emit through an additive on(), the agent can replace the folder
- * tree or the flat listing in place, and the current folder, selection, view
- * mode and sort are its state, restored silently. Editing stays with the
- * host.
+ * Declared at `surface` conformance (readiness step 3, #21): selecting,
+ * opening and navigating emit through an additive on(), the agent can replace
+ * the folder tree or the flat listing in place, and the current folder,
+ * selection, view mode and sort are its state, restored silently. Since #68 the
+ * agent can approve renames, deletes and new folders, and load a folder's
+ * contents, as providers. Each is offered only when the agent binds it.
  */
 export const FILEEXPLORER_MANIFEST: CapabilityManifest =
 {
@@ -77,10 +75,11 @@ export const FILEEXPLORER_MANIFEST: CapabilityManifest =
 
     // What an agent's model reads to choose this component (ADR-222).
     agent: {
-        useWhen: "Let the user browse a folder tree you supply as roots, in grid, list or detail views with "
-            + "breadcrumbs and sorting; you hear what they select and which file they open.",
+        useWhen: "Let the user browse files you supply, as a tree, as a flat listing you replace per folder, or "
+            + "loaded per folder; you hear selections, opens and navigation, and approve renames, deletes and new "
+            + "folders.",
         avoidWhen: "For a hierarchy that is not files use TreeView; to pick items to attach use ExplorerPicker; "
-            + "renaming, moving and deleting are not available here.",
+            + "moving items and uploads are not available here.",
     },
 
     affords: [
@@ -95,6 +94,10 @@ export const FILEEXPLORER_MANIFEST: CapabilityManifest =
     emits: [
         { name: "select", payload: "collection", multi: false, legacyOption: "onSelectionChange" },
         { name: "open", payload: "record", multi: false, legacyOption: "onOpen" },
+        // #68: the folder the user opened. In a flat listing, answer with new items.
+        { name: "navigate", payload: "record", multi: false, legacyOption: "onNavigate" },
+        // #68: the breadcrumb segment clicked in a flat listing (null is the root). Answer with new items.
+        { name: "breadcrumb", payload: "scalar", multi: false, legacyOption: "onBreadcrumbNavigate" },
     ],
 
     // The data an agent rewrites, replaced in place (ADR-234).
@@ -107,21 +110,24 @@ export const FILEEXPLORER_MANIFEST: CapabilityManifest =
 
     // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 3).
     protocol: {
+        // #68. Each edit is offered only when its callback is given, so over A2UI only when the agent binds it.
+        // The agent approves with true (rename, delete) or answers the new folder (create), in order.
+        providers: {
+            onRename: { request: "rename", concurrency: "queue", params: ["file", "newName"] },
+            onDelete: { request: "delete", concurrency: "queue" },
+            onCreateFolder: { request: "createFolder", concurrency: "queue", params: ["parent", "name"] },
+            // A folder given with no children is loaded when opened; answer with its contents.
+            onLoadChildren: { request: "loadChildren", concurrency: "queue" },
+        },
         hostOnly: {
             contextMenuItems: "Each item runs host code on the selected files; an agent cannot supply it.",
-            onRename: EDIT,
-            onDelete: EDIT,
-            onMove: EDIT,
-            onCreateFolder: EDIT,
+            onMove: "Declared but never called by the explorer: a drag ends in onDrop, which moves items in host "
+                + "code.",
             onUpload: "Receives the files the user picks, which cannot reach an agent; without it there is no "
                 + "Upload.",
-            onLoadChildren: "Loads a folder's contents in host code when it is opened; over A2UI give the whole tree "
-                + "as roots (#68).",
-            onNavigate: "Fires when the user opens a folder; the currentFolderId state carries it.",
             onSelect: "Fires with the selection, as onSelectionChange does; the select event carries it.",
             onSort: "Fires when the user sorts; the sortField and sortDirection state carry it.",
             onViewModeChange: "Fires when the user switches view; the viewMode state carries it.",
-            onBreadcrumbNavigate: "Asks the host for another flat listing; over A2UI give the whole tree as roots.",
             onContextMenuAction: "Reports a host-defined context menu item; contextMenuItems is host-only.",
             onDragStart: "Starts a drag whose drop moves items in host code.",
             onDrop: "Moves the dragged items in host code.",

@@ -230,8 +230,9 @@ const DEFAULT_KEY_BINDINGS: Record<string, string> = {
 
 type SortField = "name" | "modified" | "size" | "type";
 
-/** The surface channels (readiness step 3). */
-type ExplorerChannel = "select" | "open";
+/** The surface channels (readiness step 3; navigate and breadcrumb, #68). */
+type ExplorerChannel = "select" | "open" | "navigate" | "breadcrumb";
+const EXPLORER_CHANNELS: readonly ExplorerChannel[] = ["select", "open", "navigate", "breadcrumb"];
 type ViewMode = "grid" | "list" | "detail";
 const DND_MIME = "application/x-fileexplorer";
 
@@ -443,7 +444,7 @@ export class FileExplorer implements FileExplorerHandle
     /** Folders whose onLoadChildren answer is pending (#69). */
     private readonly loadingFolders = new Set<string>();
     private readonly handlers: Record<ExplorerChannel, Set<(payload: unknown) => void>> =
-        { select: new Set(), open: new Set() };
+        { select: new Set(), open: new Set(), navigate: new Set(), breadcrumb: new Set() };
     /** True while setState restores state, which fires no callback. */
     private restoring = false;
     private breadcrumbSegments: BreadcrumbSegment[] | null = null;
@@ -607,8 +608,7 @@ export class FileExplorer implements FileExplorerHandle
         this.nodeMap.clear();
         this.parentMap.clear();
         this.selection.clear();
-        this.handlers.select.clear();
-        this.handlers.open.clear();
+        EXPLORER_CHANNELS.forEach((channel) => this.handlers[channel].clear());
         logInfo("Destroyed", this.id);
     }
 
@@ -639,6 +639,7 @@ export class FileExplorer implements FileExplorerHandle
         logInfo("Navigated to", folder.name,
             "(id:", folderId + ")");
         if (this.opts.onNavigate && !this.restoring) { this.opts.onNavigate(folder); }
+        if (!this.restoring) { this.emit("navigate", agentNode(folder)); }
     }
 
     getSelectedFiles(): FileNode[]
@@ -1281,6 +1282,7 @@ export class FileExplorer implements FileExplorerHandle
                     {
                         this.opts.onBreadcrumbNavigate(seg.id);
                     }
+                    this.emit("breadcrumb", seg.id);
                 });
                 this.breadcrumbsEl.appendChild(link);
                 this.appendBreadcrumbSep();
@@ -1698,17 +1700,19 @@ export class FileExplorer implements FileExplorerHandle
         if (this.flatItems) { this.indexFlatItems(this.flatItems); }
     }
 
-    /** Subscribes to "select" or "open"; returns the unsubscribe. */
+    /** Subscribes to "select", "open", "navigate" or "breadcrumb"; returns the unsubscribe. */
     on(channel: string, handler: (payload: unknown) => void): () => void
     {
-        if (channel !== "select" && channel !== "open")
+        if (!(EXPLORER_CHANNELS as readonly string[]).includes(channel))
         {
-            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are "select" and "open".`);
+            throw new Error(`${LOG_PREFIX} on("${channel}"): the valid channels are `
+                + `${EXPLORER_CHANNELS.map((c) => `"${c}"`).join(", ")}.`);
         }
 
-        this.handlers[channel].add(handler);
+        const handlers = this.handlers[channel as ExplorerChannel];
+        handlers.add(handler);
 
-        return () => { this.handlers[channel].delete(handler); };
+        return () => { handlers.delete(handler); };
     }
 
     /** The current folder, the selection, the view mode and the sort. */
@@ -2502,7 +2506,11 @@ export class FileExplorer implements FileExplorerHandle
                 this.cancelRename(nodeId);
                 return;
             }
-            const ok = await this.opts.onRename!(node, newName);
+            // A rejected answer keeps the old name, as a refusal does (#68). Before, the rejection went unhandled
+            // and the rename box stayed open.
+            let ok = false;
+            try { ok = await this.opts.onRename!(node, newName); }
+            catch (err) { logError("onRename failed for", node.id, err); }
             if (ok)
             {
                 node.name = newName;
@@ -2539,8 +2547,10 @@ export class FileExplorer implements FileExplorerHandle
     {
         if (!this.opts.onCreateFolder) { return; }
         const folder = this.getCurrentFolder();
-        const newFolder = await this.opts.onCreateFolder(
-            folder, "New Folder");
+        let newFolder: FileNode | null = null;
+        // A rejected answer adds nothing, as null does (#68). Before, the rejection went unhandled.
+        try { newFolder = await this.opts.onCreateFolder(folder, "New Folder"); }
+        catch (err) { logError("onCreateFolder failed in", folder.id, err); }
         if (newFolder)
         {
             this.addFile(newFolder, folder.id);
@@ -2728,12 +2738,13 @@ export class FileExplorer implements FileExplorerHandle
             n => !n.readOnly && !n.isSystem);
         if (sel.length > 0 && this.opts.onDelete)
         {
+            // A rejected answer deletes nothing, as false does (#68). Before, the rejection went unhandled.
             this.opts.onDelete(sel).then(ok =>
             {
                 if (!ok) { return; }
                 for (const f of sel) { this.removeFile(f.id); }
                 this.announce(sel.length + " items deleted");
-            });
+            }, (err: unknown) => { logError("onDelete failed for", sel.map((f) => f.id), err); });
         }
         return true;
     }
