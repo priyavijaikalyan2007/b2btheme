@@ -316,3 +316,57 @@ describe("$defs renames (#74)", () =>
             expect.stringMatching(/^\$defs\.Widget__Item removed\. If its type was renamed.*DEF_ALIASES/)]);
     });
 });
+
+describe("unions that widen (FacetSearch labelled values, apps report 2026-11-09)", () =>
+{
+    const LABELLED = { type: "object", properties: { value: { type: "string" }, label: { type: "string" } },
+        required: ["value", "label"] };
+
+    test("a string that may now also be an object is widened, also inside array items", () =>
+    {
+        const before = cat({ values: { type: "array", items: { type: "string" } } });
+        const after = cat({ values: { type: "array", items: { oneOf: [{ type: "string" }, LABELLED] } } });
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [], additive: ["Widget.values widened"] });
+    });
+
+    test("a union that gains an arm and keeps the others is widened", () =>
+    {
+        const before = cat({ v: { anyOf: [{ type: "string" }, { type: "number" }] } });
+        const after = cat({ v: { anyOf: [{ type: "number" }, { type: "string" }, LABELLED] } });
+
+        expect(diffCatalogs(before, after).additive).toEqual(["Widget.v widened"]);
+    });
+
+    test("a union that drops or changes an old arm is still breaking", () =>
+    {
+        const before = cat({ v: { anyOf: [{ type: "string" }, { type: "number" }] } });
+
+        expect(diffCatalogs(before, cat({ v: { anyOf: [{ type: "string" }, LABELLED] } })).breaking)
+            .toEqual(["Widget.v changed"]);
+        expect(diffCatalogs(cat({ v: { type: "string", maxLength: 5 } }),
+            cat({ v: { oneOf: [{ type: "string" }, LABELLED] } })).breaking).toEqual(["Widget.v changed"]);
+    });
+
+    test("a union that widens while something else narrows is breaking", () =>
+    {
+        const before = cat({ v: { type: "array", items: { type: "string" } } });
+        const after = cat({ v: { type: "array", maxItems: 3, items: { oneOf: [{ type: "string" }, LABELLED] } } });
+
+        expect(diffCatalogs(before, after).breaking).toEqual(["Widget.v changed"]);
+    });
+});
+
+describe("a widening union behind a new $ref", () =>
+{
+    test("an item that now refers to a new union keeping the old item is widened", () =>
+    {
+        const before = cat({ values: { type: "array", items: { type: "string" } } });
+        const after = { ...cat({ values: { type: "array", items: { $ref: "#/$defs/Widget__Value" } } }) };
+        after.$defs = { ...after.$defs, Widget__Value: { oneOf: [{ type: "string" },
+            { type: "object", properties: { value: { type: "string" } } }] } } as never;
+
+        expect(diffCatalogs(before, after)).toEqual({ breaking: [],
+            additive: ["Widget.values widened", "$defs.Widget__Value added"] });
+    });
+});

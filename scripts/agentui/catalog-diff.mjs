@@ -29,11 +29,13 @@ export function diffCatalogs(previous, next)
 {
     const out = { breaking: [], additive: [] };
 
+    const defs = next.$defs ?? {};
+
     diffMap(previous.components, next.components, (n) => `component ${n}`, out, (n) =>
-        diffComponent(n, previous.components[n], next.components[n], out));
+        diffComponent(n, previous.components[n], next.components[n], out, defs));
     diffMap(previous.functions ?? {}, next.functions ?? {}, (n) => `function ${n}`, out, (n) =>
         sameish(previous.functions[n], next.functions[n]) || out.breaking.push(`function ${n} changed`));
-    diffDefs(previous.$defs ?? {}, next.$defs ?? {}, out);
+    diffDefs(previous.$defs ?? {}, defs, out);
     diffTopLevel(previous, next, out);
 
     return out;
@@ -63,7 +65,7 @@ function diffMap(prev, next, format, out, onShared)
  * (type, unevaluatedProperties, every allOf member), then props, then
  * required. Re-exports compare whole.
  */
-function diffComponent(name, prev, next, out)
+function diffComponent(name, prev, next, out, defs)
 {
     const p = ownBlock(prev);
     const n = ownBlock(next);
@@ -77,7 +79,7 @@ function diffComponent(name, prev, next, out)
     if (!sameish(entryShape(prev), entryShape(next))) { out.breaking.push(`${name} changed`); }
 
     diffMap(p.properties ?? {}, n.properties ?? {}, (prop) => `${name}.${prop}`, out, (prop) =>
-        diffProp(`${name}.${prop}`, p.properties[prop], n.properties[prop], out));
+        diffProp(`${name}.${prop}`, p.properties[prop], n.properties[prop], out, defs));
 
     for (const r of (n.required ?? []).filter((k) => !(p.required ?? []).includes(k)))
     {
@@ -85,27 +87,64 @@ function diffComponent(name, prev, next, out)
     }
 }
 
-/** Same prop: unchanged, widened (every value it accepted is still accepted) or changed. */
-function diffProp(label, prev, next, out)
+/**
+ * Same prop: unchanged, widened (every value it accepted is still accepted) or changed. `defs` is the next
+ * catalog's $defs, which a widened union may sit behind as a new $ref.
+ */
+function diffProp(label, prev, next, out, defs)
 {
     if (sameish(prev, next)) { return; }
 
-    if (onlyPatternsWiden(prev, next)) { out.additive.push(`${label} widened`); }
+    if (onlyWidens(prev, next, defs)) { out.additive.push(`${label} widened`); }
     else { out.breaking.push(`${label} changed`); }
 }
 
+/** The union keys whose arms the widening rule understands. */
+const UNION_KEYS = ["oneOf", "anyOf"];
+
 /**
- * Whether the two schemas differ only in string `pattern`s, each of which
- * widens. `next` is copied with each widened pattern put back to the old
- * one, and the copy must then equal `prev`.
+ * Whether `next` keeps every `prev` arm and adds some: a schema that became a union with it as one arm, such as a
+ * string that may now also be { value, label }, or a union that gained arms. Every value the old schema accepted
+ * is still accepted (FacetSearch's labelled values, apps report 2026-11-09).
  */
-function onlyPatternsWiden(prev, next)
+function unionWidens(a, given, defs)
+{
+    // The union may be a new definition the property now refers to, such as FacetSearch__FacetValue.
+    const ref = typeof given.$ref === "string" && given.$ref.startsWith("#/$defs/") && !("$ref" in a)
+        ? defs[given.$ref.slice("#/$defs/".length)] : undefined;
+    const b = isNode(ref) ? ref : given;
+    const key = UNION_KEYS.find((k) => Array.isArray(b[k]));
+    if (!key) { return false; }
+
+    const oldArms = Array.isArray(a[key]) ? a[key] : (UNION_KEYS.some((k) => k in a) ? null : [a]);
+    if (!oldArms) { return false; }
+
+    const rest = Object.keys(b).filter((k) => k !== key && k !== "description");
+    const ownRest = Array.isArray(a[key]) ? rest.every((k) => sameish(a[k], b[k])) : rest.length === 0;
+
+    return ownRest && b[key].length > oldArms.length
+        && oldArms.every((arm) => b[key].some((candidate) => sameish(arm, candidate)));
+}
+
+/**
+ * Whether the two schemas differ only in ways that widen: string `pattern`s
+ * that widen, and unions that keep every old arm and add some. `next` is
+ * copied with each widening put back to the old form, and the copy must
+ * then equal `prev`.
+ */
+function onlyWidens(prev, next, defs = {})
 {
     let widened = false;
 
     const align = (a, b) =>
     {
         if (!isNode(a) || !isNode(b)) { return b; }
+
+        if (!Array.isArray(a) && !Array.isArray(b) && unionWidens(a, b, defs))
+        {
+            widened = true;
+            return a;
+        }
 
         const copy = Array.isArray(b) ? [] : {};
 
@@ -281,7 +320,7 @@ function diffDefs(prev, next, out)
                 + "scripts/agentui/def-aliases.mjs to keep the published name");
     }
     for (const k of added) { out.additive.push(`$defs.${k} added`); }
-    for (const k of Object.keys(p).filter((key) => key in n)) { diffProp(`$defs.${k}`, prev[k], next[k], out); }
+    for (const k of Object.keys(p).filter((key) => key in n)) { diffProp(`$defs.${k}`, prev[k], next[k], out, next); }
 }
 
 /**
