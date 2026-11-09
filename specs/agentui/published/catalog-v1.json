@@ -6951,7 +6951,7 @@
               ]
             },
             "staticNodes": {
-              "description": "The initial tree, as a flat list in which each node names its parentId (null for a root). With it, the\ntree, the ontology and the recent and starred items are not requested; expanding a node and searching\nstill request apiBase unless onLoadChildren and onSearch answer them.",
+              "description": "The initial tree, as a flat list in which each node names its parentId (null for a root). With it, the\ntree, the ontology and the recent and starred items are not requested. A node it gives children opens\nwith no request. Expanding any other node, and searching, still request apiBase unless onLoadChildren\nand onSearch answer them.",
               "anyOf": [
                 {
                   "type": "array",
