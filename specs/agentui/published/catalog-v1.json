@@ -31536,7 +31536,7 @@
         "values": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/FacetSearch__FacetValue"
           }
         },
         "icon": {
@@ -31587,6 +31587,30 @@
       ],
       "description": "Defines a single searchable facet.",
       "additionalProperties": false
+    },
+    "FacetSearch__FacetValue": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "label"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "A facet value: a plain string, or a stored value with the label a person reads, such as\n{ value: \"thinker.session\", label: \"Brainstorm Session\" }. The chip and the dropdown show the label, and the\nquery reports the value."
     },
     "FacetSearch__FacetValueType": {
       "oneOf": [

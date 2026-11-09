@@ -859,7 +859,7 @@ $control-height-xl=46px
 - CSS: `components/facetsearch/facetsearch.css`
 - JS: `components/facetsearch/facetsearch.js`
 - Globals: `createFacetSearch()`, `parseFacetQuery()`
-- Exports: `type FacetValueType`, `type FacetSearchSize`, `interface FacetDefinition`, `interface ParsedFacet`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `interface FacetSearchHandle`, `class FacetSearch`, `function createFacetSearch`
+- Exports: `type FacetValueType`, `type FacetSearchSize`, `type FacetValue`, `interface FacetDefinition`, `interface ParsedFacet`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `interface FacetSearchHandle`, `class FacetSearch`, `function createFacetSearch`
 
 ### feedback
 

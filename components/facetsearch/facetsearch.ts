@@ -25,14 +25,21 @@ export type FacetValueType = "text" | "enum" | "date" | "number" | "boolean";
 /** Size variant for the search bar. */
 export type FacetSearchSize = "sm" | "default" | "lg";
 
+/**
+ * A facet value: a plain string, or a stored value with the label a person reads, such as
+ * { value: "thinker.session", label: "Brainstorm Session" }. The chip and the dropdown show the label, and the
+ * query reports the value.
+ */
+export type FacetValue = string | { value: string; label: string };
+
 /** Defines a single searchable facet. */
 export interface FacetDefinition
 {
     key: string;
     label: string;
     valueType: FacetValueType;
-    values?: string[];
-    loadValues?: (query: string) => Promise<string[]>;
+    values?: FacetValue[];
+    loadValues?: (query: string) => Promise<FacetValue[]>;
     icon?: string;
     multiple?: boolean;
     defaultOperator?: ":" | "!:" | ">" | "<" | ">=" | "<=";
@@ -46,7 +53,10 @@ export interface ParsedFacet
 {
     key: string;
     operator: string;
+    /** What getQuery(), getValue() and onSearch report. */
     value: string;
+    /** What the chip shows, when the value has a known label. */
+    label?: string;
     negated: boolean;
 }
 
@@ -424,7 +434,8 @@ export interface FacetSearchHandle
     getQuery(): FacetSearchQuery;
     clear(): void;
     focus(): void;
-    addFacet(key: string, value: string): void;
+    /** Adds a chip; `label` is what it shows, else the value's known label, else the value. */
+    addFacet(key: string, value: string, label?: string): void;
     removeFacet(key: string): void;
     getFacets(): ParsedFacet[];
     enable(): void;
@@ -457,6 +468,8 @@ export class FacetSearch implements FacetSearchHandle
     private destroyed = false;
 
     private facetMap: Map<string, FacetDefinition>;
+    /** Known labels by lower-case facet key, then by value: from values, and from each loadValues answer. */
+    private readonly knownLabels = new Map<string, Map<string, string>>();
     private chips: ParsedFacet[] = [];
     private recentSearches: string[] = [];
     private suggestions: Suggestion[] = [];
@@ -495,6 +508,7 @@ export class FacetSearch implements FacetSearchHandle
         for (const fd of this.opts.facets)
         {
             this.facetMap.set(fd.key.toLowerCase(), fd);
+            this.learnLabels(fd.key, fd.values ?? []);
         }
 
         this.buildDOM();
@@ -582,7 +596,8 @@ export class FacetSearch implements FacetSearchHandle
     getQuery(): FacetSearchQuery
     {
         const raw = this.buildRawFromChipsAndInput();
-        return parseFacetQuery(raw, this.opts.facets);
+        const query = parseFacetQuery(raw, this.opts.facets);
+        return { ...query, facets: query.facets.map((f) => this.withLabel(f)) };
     }
 
     clear(): void
@@ -602,7 +617,7 @@ export class FacetSearch implements FacetSearchHandle
         if (this.input) { this.input.focus(); }
     }
 
-    addFacet(key: string, value: string): void
+    addFacet(key: string, value: string, label?: string): void
     {
         if (this.destroyed || this.opts.disabled) { return; }
         const fd = this.facetMap.get(key.toLowerCase());
@@ -616,8 +631,43 @@ export class FacetSearch implements FacetSearchHandle
             key: fd.key,
             operator: fd.defaultOperator || ":",
             value,
+            ...(label !== undefined ? { label } : {}),
             negated: false
         });
+    }
+
+    // ====================================================================
+    // VALUE LABELS (apps report 2026-11-09)
+    // ====================================================================
+
+    /** Records each labelled value's label for `facetKey`, so a typed or restored chip can show it. */
+    private learnLabels(facetKey: string, values: FacetValue[]): void
+    {
+        const key = facetKey.toLowerCase();
+        for (const v of values)
+        {
+            if (typeof v === "string") { continue; }
+            let labels = this.knownLabels.get(key);
+            if (!labels) { labels = new Map(); this.knownLabels.set(key, labels); }
+            labels.set(v.value, v.label);
+        }
+    }
+
+    /** The facet with its label: its own, else the value's known label, else none (the chip shows the value). */
+    private withLabel(facet: ParsedFacet): ParsedFacet
+    {
+        if (facet.label !== undefined) { return facet; }
+        const label = this.knownLabels.get(facet.key.toLowerCase())?.get(facet.value);
+        return label === undefined ? facet : { ...facet, label };
+    }
+
+    /** A value's dropdown suggestion: its label, with the value as the hint when the two differ. */
+    private valueSuggestion(fd: FacetDefinition, v: FacetValue): Suggestion
+    {
+        const value = typeof v === "string" ? v : v.value;
+        const label = typeof v === "string" ? v : v.label;
+        return { type: "facet-value", label, facetKey: fd.key, value,
+            ...(label !== value ? { hint: value } : {}) };
     }
 
     removeFacet(key: string): void
@@ -818,10 +868,11 @@ export class FacetSearch implements FacetSearchHandle
     // CHIP MANAGEMENT
     // ====================================================================
 
-    private addChip(facet: ParsedFacet): void
+    private addChip(added: ParsedFacet): void
     {
-        const fd = this.facetMap.get(facet.key.toLowerCase());
+        const fd = this.facetMap.get(added.key.toLowerCase());
         if (!fd) { return; }
+        const facet = this.withLabel(added);
 
         if (!fd.multiple)
         {
@@ -834,7 +885,7 @@ export class FacetSearch implements FacetSearchHandle
         this.updateClearBtnVisibility();
 
         const label = (facet.negated ? "-" : "") +
-            facet.key + facet.operator + facet.value;
+            facet.key + facet.operator + (facet.label ?? facet.value);
         this.announce("Added filter: " + label);
         logInfo("Facet added:", label);
 
@@ -930,9 +981,11 @@ export class FacetSearch implements FacetSearchHandle
 
         const text = createElement("span", ["facetsearch-chip-text"]);
         const display = (facet.negated ? "-" : "") +
-            facet.key + facet.operator + facet.value;
+            facet.key + facet.operator + (facet.label ?? facet.value);
         text.textContent = display;
-        setAttr(text, "title", display);
+        // The title names the stored value too, when the chip shows a label for it.
+        setAttr(text, "title", facet.label !== undefined && facet.label !== facet.value
+            ? display + " (" + facet.value + ")" : display);
         chip.appendChild(text);
 
         if (!this.opts.disabled)
@@ -975,7 +1028,7 @@ export class FacetSearch implements FacetSearchHandle
         }
 
         const query = parseFacetQuery(raw, this.opts.facets);
-        this.chips = query.facets;
+        this.chips = query.facets.map((f) => this.withLabel(f));
         this.renderChips();
         if (this.input) { this.input.value = query.text; }
         this.updateClearBtnVisibility();
@@ -1148,15 +1201,11 @@ export class FacetSearch implements FacetSearchHandle
 
         if (fd.values)
         {
+            // A labelled value matches on its label or its value.
             const lower = partial.toLowerCase();
-            const matches = fd.values.filter(
-                v => v.toLowerCase().includes(lower));
-            this.suggestions = matches.map(v => ({
-                type: "facet-value" as const,
-                label: v,
-                facetKey: fd.key,
-                value: v
-            }));
+            const matches = fd.values.filter((v) => (typeof v === "string" ? [v] : [v.label, v.value])
+                .some((t) => t.toLowerCase().includes(lower)));
+            this.suggestions = matches.map((v) => this.valueSuggestion(fd, v));
             this.renderDropdown();
         }
     }
@@ -1188,12 +1237,8 @@ export class FacetSearch implements FacetSearchHandle
             fd.loadValues!(query)
                 .then(values =>
                 {
-                    this.suggestions = values.map(v => ({
-                        type: "facet-value" as const,
-                        label: v,
-                        facetKey: fd.key,
-                        value: v
-                    }));
+                    this.learnLabels(fd.key, values);
+                    this.suggestions = values.map((v) => this.valueSuggestion(fd, v));
                     this.renderDropdown();
                     this.announce(values.length + " values loaded");
                 })
@@ -1415,6 +1460,7 @@ export class FacetSearch implements FacetSearchHandle
                 key: suggestion.facetKey,
                 operator: op,
                 value: suggestion.value,
+                ...(suggestion.label !== suggestion.value ? { label: suggestion.label } : {}),
                 negated: false
             });
             this.removeLastTokenFromInput();

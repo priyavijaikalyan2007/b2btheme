@@ -415,3 +415,119 @@ describe("surface contract (B6)", () =>
         fs.destroy();
     });
 });
+
+// ============================================================================
+// LABELLED VALUES (apps report 2026-11-09)
+// ============================================================================
+
+describe("values with labels: the chip shows the label, the query keeps the value", () =>
+{
+    const TYPES = [{ value: "thinker.session", label: "Brainstorm Session" },
+        { value: "diagram.flow", label: "Flow Diagram" }, "plain"];
+    const facets = (extra: Partial<FacetDefinition> = {}): FacetDefinition[] =>
+        [{ key: "type", label: "Type", valueType: "enum", values: TYPES, ...extra }];
+
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    const chipTexts = () => Array.from(container.querySelectorAll(".facetsearch-chip-text"))
+        .map((el) => el.textContent);
+    const items = () => Array.from(container.querySelectorAll(".facetsearch-dropdown-item")).map((el) => [
+        el.querySelector(".facetsearch-dropdown-item-label")?.textContent,
+        el.querySelector(".facetsearch-dropdown-item-hint")?.textContent ?? null]);
+
+    async function typeIn(fs: FacetSearch, text: string): Promise<HTMLInputElement>
+    {
+        const input = fs.getElement()!.querySelector("input")!;
+        input.value = text;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        await vi.advanceTimersByTimeAsync(300);
+        return input;
+    }
+
+    test("the dropdown shows labels, with the value beside a label that differs, and matches either", async () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", { facets: facets() });
+
+        await typeIn(fs, "type:");
+        expect(items()).toEqual([["Brainstorm Session", "thinker.session"], ["Flow Diagram", "diagram.flow"],
+            ["plain", null]]);
+
+        await typeIn(fs, "type:brainstorm");
+        expect(items()).toEqual([["Brainstorm Session", "thinker.session"]]);
+        await typeIn(fs, "type:diagram.");
+        expect(items()).toEqual([["Flow Diagram", "diagram.flow"]]);
+        fs.destroy();
+    });
+
+    test("picking a labelled value makes a chip that shows the label, and the query reports the value", async () =>
+    {
+        const onSearch = vi.fn();
+        const fs = createFacetSearch("test-facetsearch", { facets: facets(), onSearch });
+        const input = await typeIn(fs, "type:");
+
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(chipTexts()).toEqual(["type:Brainstorm Session"]);
+        expect(fs.getValue()).toBe("type:thinker.session");
+        expect(fs.getQuery().facets).toEqual([expect.objectContaining({ value: "thinker.session",
+            label: "Brainstorm Session" })]);
+        expect(onSearch.mock.calls[0][0].facets[0].value).toBe("thinker.session");
+        fs.destroy();
+    });
+
+    test("a typed or restored value takes its known label; an unknown or plain one shows the value", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", { facets: facets() });
+
+        fs.setValue("type:thinker.session");
+        expect(chipTexts()).toEqual(["type:Brainstorm Session"]);
+        fs.setValue("type:plain");
+        expect(chipTexts()).toEqual(["type:plain"]);
+        fs.setValue("type:unknown.kind");
+        expect(chipTexts()).toEqual(["type:unknown.kind"]);
+        fs.destroy();
+    });
+
+    test("labels from loadValues are learned, so a later typed value shows its label", async () =>
+    {
+        const loadValues = vi.fn().mockResolvedValue([{ value: "u42", label: "Olive Owner" }]);
+        const fs = createFacetSearch("test-facetsearch",
+            { facets: [{ key: "owner", label: "Owner", valueType: "text", loadValues }] });
+
+        await typeIn(fs, "owner:ol");
+        expect(items()).toEqual([["Olive Owner", "u42"]]);
+
+        fs.setValue("owner:u42");
+        expect(chipTexts()).toEqual(["owner:Olive Owner"]);
+        expect(fs.getValue()).toBe("owner:u42");
+        fs.destroy();
+    });
+
+    test("addFacet takes an optional label, else the known one", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", { facets: facets({ multiple: true }) });
+
+        fs.addFacet("type", "x.custom", "Custom Thing");
+        fs.addFacet("type", "diagram.flow");
+        fs.addFacet("type", "other");
+
+        expect(chipTexts()).toEqual(["type:Custom Thing", "type:Flow Diagram", "type:other"]);
+        expect(fs.getValue()).toBe("type:x.custom type:diagram.flow type:other");
+        fs.destroy();
+    });
+
+    test("string values behave as before: no label, no hint", async () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        await typeIn(fs, "status:");
+        expect(items()).toEqual([["open", null], ["closed", null]]);
+        fs.setValue("status:open");
+        expect(chipTexts()).toEqual(["status:open"]);
+        expect(fs.getFacets()).toEqual([{ key: "status", operator: ":", value: "open", negated: false }]);
+        fs.destroy();
+    });
+});
