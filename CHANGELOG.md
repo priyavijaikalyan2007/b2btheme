@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Added
+- **The demos page links the agent UI demos**: a new "Agent UI: A2UI & MCP Apps" section on `demo/index.html` links the live A2UI playground (`/demo/a2ui/`), the A2UI war-room video and the MCP Apps video. The MCP Apps demo itself runs only locally (`npm run demo:mcp`), so the page links its recording.
 - **Vditor entry that hashes its chunks (`vditor-integrity`)** (apps team report): `/lib/vditor-integrity-3.11.2.js` is Vditor's entry with a SHA-384 table of the 329 scripts and stylesheets in `/lib/vditor-3.11.2/`. Its loaders put the matching hash and `crossorigin` on every tag Vditor adds, such as lute, KaTeX, Mermaid and highlight.js. A file not in the table is refused. MathJax is refused with an error that says to use KaTeX, because Vditor runs it from downloaded text. The icon set now loads without blocking. Load it in place of the tree's entry and keep `cdn` at the tree. MarkdownEditor and Conversation need no change. The tree and its entry are unchanged, so pages that pin the old hash keep working. See "vditor" in `CDN_CONTRACT.md`.
 - **Feedback component** (apps team request): a rating (thumbs, or 5 or 10 stars), an optional comment and problem reports for any surface. It is inline (`createFeedback`) or a dialog over FormDialog (`showFeedbackDialog`).
   - **One call per rating:** picks stay local until Submit, or `commit: "once"` sends the first pick. Either way the control then locks; `reset()` unlocks it.
@@ -114,6 +115,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 - **ToolColorPicker over A2UI writes the picked colour's hex** to the bound `value`, instead of the whole colour object followed by `VALIDATION_FAILED` (#39). The catalog entry is unchanged; only its description gained the agent sentences.
 
 ### Changed
+- **The A2UI adapter loads Vditor through `vditor-integrity`**: MarkdownEditor and Conversation now name `vditor-integrity` in `protocol.dependencies.libraries`, in place of `vditor`. On an adapter page, lute, KaTeX, Mermaid and Vditor's other chunks now load with their hashes, as well as the entry. Both components use KaTeX, which that entry supports. Pages that load Vditor themselves do not change.
 - **CI now runs the A2UI browser tests** (`npm run test:e2e:a2ui`) on every pull request and push to `main`, so a catalog component can't join broken. The other e2e specs stay local. ADR-223.
 - **A manifest `mountMethod` naming a method the handle lacks now fails** instead of silently leaving the component unattached (`runtime/src/mount.ts`, shared by the conformance suite and the A2UI adapter). No component trips it. ADR-220.
 - **Conformance level is now computed; under-declaring fails the gate.** ADR-219.

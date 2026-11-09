@@ -75,4 +75,4 @@ function installVditorStandIn(): void
 }
 
 /** Installers by library name; a library without one runs its built file. */
-export const JSDOM_STANDINS: Readonly<Record<string, () => void>> = { vditor: installVditorStandIn };
+export const JSDOM_STANDINS: Readonly<Record<string, () => void>> = { "vditor-integrity": installVditorStandIn };

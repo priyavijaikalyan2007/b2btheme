@@ -578,6 +578,8 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             // The preview's renderers came from the library's own mirror, never from unpkg (B7-2).
             expect(fetched.filter((u) => u.includes("unpkg.com"))).toEqual([]);
             expect(fetched.some((u) => u.includes("/lib/vditor-3.11.2/dist/js/lute/"))).toBe(true);
+            // Through the hashing entry: each renderer tag carries its file's hash.
+            await expect(page.locator("#vditorLuteScript")).toHaveAttribute("integrity", /^sha384-/);
         });
 
     test("Conversation: at the bottom, the agent's reply scrolls into view", async ({ page }) =>
