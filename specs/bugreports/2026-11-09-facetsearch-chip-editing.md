@@ -4,7 +4,7 @@
 **Date:** 9 November 2026
 **Component:** `components/facetsearch`
 **Severity:** Low. The apps work around all three today, and each workaround costs something.
-**Status:** Fixed in #137: the writer escapes quotes, `removeFacet(key, value?)`, and `learnLabels(key, values)` (the second option). The `showKeysOnFocus` observation was not built
+**Status:** Fixed in #137: the writer escapes quotes and backslashes, `removeFacet(key, value?)`, and `learnLabels(key, values)` (the second option). The `showKeysOnFocus` observation was not built
 
 The apps' search page now draws every filter as a FacetSearch chip. The bar's text goes to the apps' API, which reads it and says what it applied, with a label for each value. The page then shows chips for what the API applied. Three gaps showed up while building it.
 

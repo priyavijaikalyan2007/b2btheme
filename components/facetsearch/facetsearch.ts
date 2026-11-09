@@ -312,9 +312,11 @@ function readQuoted(raw: string, i: number): string
     let j = i + 1;
     while (j < raw.length)
     {
-        if (raw[j] === '\\' && j + 1 < raw.length && raw[j + 1] === '"')
+        // Inside quotes, \" and \\ are escapes, kept whole here and read by stripQuotes. A backslash before
+        // anything else is itself.
+        if (raw[j] === '\\' && j + 1 < raw.length && (raw[j + 1] === '"' || raw[j + 1] === '\\'))
         {
-            result += '\\"';
+            result += raw[j] + raw[j + 1];
             j += 2;
         }
         else if (raw[j] === '"')
@@ -338,7 +340,8 @@ function skipQuoted(raw: string, i: number): number
     let j = i + 1;
     while (j < raw.length)
     {
-        if (raw[j] === '\\' && j + 1 < raw.length && raw[j + 1] === '"')
+        // The same two escapes readQuoted keeps: \" and \\.
+        if (raw[j] === '\\' && j + 1 < raw.length && (raw[j + 1] === '"' || raw[j + 1] === '\\'))
         {
             j += 2;
         }
@@ -392,7 +395,7 @@ function stripQuotes(s: string): string
 {
     if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"')
     {
-        return s.substring(1, s.length - 1).replace(/\\"/g, '"');
+        return s.substring(1, s.length - 1).replace(/\\(["\\])/g, "$1");
     }
     return s;
 }
@@ -1086,10 +1089,11 @@ export class FacetSearch implements FacetSearchHandle
         for (const c of this.chips)
         {
             const prefix = c.negated ? "-" : "";
-            // A value with a space or a quote is quoted, and a quote inside it is written \", which
-            // parseFacetQuery reads back (apps report 2026-11-09). Before, a quote broke the value in two.
+            // A value with a space or a quote is quoted. Inside the quotes a backslash is written \\ and a quote
+            // \", the two escapes parseFacetQuery reads (apps report 2026-11-09). Before, a quote broke the value in
+            // two, and a value ending in a backslash swallowed its closing quote.
             const val = /[\s"]/.test(c.value)
-                ? '"' + c.value.replace(/"/g, '\\"') + '"' : c.value;
+                ? '"' + c.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"' : c.value;
             parts.push(prefix + c.key + c.operator + val);
         }
         if (this.input && this.input.value.trim())

@@ -120,7 +120,7 @@ createFacetSearch("search", {
 | `count>10` | Greater than |
 | `count<=100` | Less than or equal |
 | `author:"Jane Doe"` | Quoted value with spaces |
-| `title:"say \"hi\""` | A quote inside a quoted value is written `\"`. `getValue()` writes a value this way when it holds a space or a quote |
+| `title:"say \"hi\""` | Inside quotes, `\"` is a quote and `\\` is a backslash. A backslash before any other character is itself. `getValue()` quotes a value that holds a space or a quote, and writes it with these escapes |
 | `bug fix` | Free text |
 
 ## Keyboard Interaction

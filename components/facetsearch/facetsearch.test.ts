@@ -566,6 +566,25 @@ describe("quotes in a value, removing one chip, and labels learned later", () =>
         fs.destroy();
     });
 
+    test("a backslash in a quoted value is written \\\\, so a value ending in one keeps its closing quote", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", makeOptions());
+
+        for (const value of ["a b\\", "C:\\Users\\x y", 'mix \\"quoted\\" end'])
+        {
+            fs.addFacet("author", value);
+            expect(parseFacetQuery(fs.getValue() + " tail", makeFacets()))
+                .toEqual(expect.objectContaining({ facets: [expect.objectContaining({ value })], text: "tail" }));
+            fs.removeFacet("author");
+        }
+        fs.destroy();
+    });
+
+    test("a single backslash before another character in typed text is itself", () =>
+    {
+        expect(parseFacetQuery('author:"C:\\Users"', makeFacets()).facets[0].value).toBe("C:\\Users");
+    });
+
     test("removeFacet with a value removes only that chip, and fires onFacetRemove once", () =>
     {
         const onFacetRemove = vi.fn();
