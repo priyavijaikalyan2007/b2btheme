@@ -7,8 +7,8 @@
  * ⚓ TESTS: Icon-pack classes in components (docs/ICON_PACKS.md, "In
  *    components"). In a real browser, the Ribbon demo's colour icons draw as
  *    images, its monochrome ones as masks over the text colour, a disabled
- *    control greys its icon, SymbolPicker finds the loaded pack's icons, and
- *    GraphCanvas draws font, colour and monochrome icon classes in its SVG,
+ *    control greys its icon, SymbolPicker finds the loaded pack's icons and
+ *    draws Font Awesome brands in the brands font, GraphCanvas draws font, colour and monochrome icon classes in its SVG,
  *    TypeBadge sizes and colours them like its Bootstrap icons, and
  *    ExplorerPicker takes them from nodes and ontology types.
  */
@@ -132,5 +132,30 @@ test.describe("icon packs in components", () =>
         const picker = page.locator("#symbolpicker-demo-icons");
         await expect(picker.locator("i.fluent-ui-table-24-color").first()).toBeVisible();
         await expect(picker).toContainText("Data Charts (fluent-ui)");
+    });
+
+    test("SymbolPicker draws Font Awesome brands in the brands font, as fa-brands", async ({ page }) =>
+    {
+        // Font Awesome must be on the page before the demo's first picker
+        // discovers icons, so it goes into the demo's head.
+        await page.route("**/demo/components/symbolpicker.html", async (route) =>
+        {
+            const html = await (await route.fetch()).text();
+            const link = '<link rel="stylesheet" href="/lib/font-awesome-6.5.1/css/all.min.css">';
+            await route.fulfill({ body: html.replace("</head>", `${link}</head>`), contentType: "text/html" });
+        });
+        await page.goto("/demo/components/symbolpicker.html");
+        const picker = page.locator("#symbolpicker-demo-icons");
+        await picker.locator("select").selectOption("ico-fa-brands");
+        const github = picker.locator('.symbolpicker-cell-icon[data-code="fa-brands fa-github"] i');
+        await expect(github).toBeVisible();
+        await expect(github).toHaveClass("fa-brands fa-github");
+        const font = await github.evaluate(async (el) =>
+        {
+            await document.fonts.ready;
+            return getComputedStyle(el, "::before").fontFamily;
+        });
+        expect(font).toContain("Font Awesome 6 Brands");
+        await expect(picker.locator('.symbolpicker-cell-icon[data-code="fa-github"]')).toHaveCount(0);
     });
 });
