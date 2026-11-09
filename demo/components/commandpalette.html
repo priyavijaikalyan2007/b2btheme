@@ -102,6 +102,24 @@
             ],
             onSelect: function(cmd) {
                 console.log("Command selected:", cmd.id);
+            },
+            // Results from a server, here a fixed list searched after a short delay. Type "plan" or "notes".
+            source: function(query, signal) {
+                var docs = [
+                    { id: "doc-q3", label: "Q3 planning", description: "Team A / Plans", icon: "bi bi-diagram-3", category: "Diagrams", words: "plan roadmap quarter" },
+                    { id: "doc-arch", label: "System architecture", description: "Platform / Design", icon: "bi bi-diagram-3", category: "Diagrams", words: "plan system design" },
+                    { id: "doc-notes", label: "Weekly sync", description: "Team A / Meetings", icon: "bi bi-journal-text", category: "Notes", words: "notes meeting plan" }
+                ];
+                return new Promise(function(resolve, reject) {
+                    var timer = setTimeout(function() {
+                        var q = query.toLowerCase();
+                        resolve(docs.filter(function(d) { return d.words.indexOf(q) >= 0; }).map(function(d) {
+                            return { id: d.id, label: d.label, description: d.description, icon: d.icon, category: d.category,
+                                action: function() { output.textContent = "Opened: " + d.label; } };
+                        }));
+                    }, 400);
+                    signal.addEventListener("abort", function() { clearTimeout(timer); reject(new DOMException("aborted", "AbortError")); });
+                });
             }
         });
 

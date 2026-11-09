@@ -17,7 +17,7 @@ import {
     registerCommand,
     registerCommands,
 } from "./commandpalette";
-import type { PaletteCommand, CommandPaletteOptions } from "./commandpalette";
+import type { PaletteCommand, CommandPaletteOptions, PaletteResult } from "./commandpalette";
 
 // ============================================================================
 // HELPERS
@@ -472,5 +472,151 @@ describe("CommandPalette edge cases", () =>
         inst.open();
         // Disabled commands are rendered but clicking does nothing
         expect(inst.getCommand("dis")?.disabled).toBe(true);
+    });
+});
+
+// ============================================================================
+// SOURCE (apps report 2026-11-09)
+// ============================================================================
+
+describe("source: results a server ranked, shown as given", () =>
+{
+    function result(id: string, label: string, extra: Partial<PaletteResult> = {}): PaletteResult
+    {
+        return { id, label, action: vi.fn(), ...extra };
+    }
+
+    function type(text: string): void
+    {
+        const input = getInput()!;
+        input.value = text;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    /** Lets the source's debounce pass and its promise settle. */
+    async function answer(): Promise<void>
+    {
+        await vi.advanceTimersByTimeAsync(250);
+    }
+
+    const texts = () => Array.from(document.querySelectorAll<HTMLElement>(".commandpalette-results > *"))
+        .map((el) => el.textContent?.trim());
+
+    test("shows the source's results after the matching commands, in the order given, unfiltered", async () =>
+    {
+        const source = vi.fn().mockResolvedValue([
+            result("d2", "Quarterly plan", { category: "Diagrams", description: "Team A / Plans" }),
+            result("n1", "Meeting notes", { category: "Notes" }),
+            result("d1", "Architecture", { category: "Diagrams" }),
+        ]);
+        const inst = new CommandPalette({ commands: [makeCommand("c1", "Open Settings")], source });
+        inst.open();
+
+        type("open");
+        await answer();
+
+        expect(source).toHaveBeenCalledWith("open", expect.any(AbortSignal));
+        expect(texts()).toEqual(["Other", "Open Settings", "Diagrams", "Quarterly planTeam A / Plans", "Notes",
+            "Meeting notes", "Diagrams", "Architecture"]);
+        inst.destroy();
+    });
+
+    test("waits for the input to rest, and asks once", async () =>
+    {
+        const source = vi.fn().mockResolvedValue([]);
+        const inst = new CommandPalette({ source });
+        inst.open();
+
+        type("a");
+        type("ar");
+        type("arc");
+        await vi.advanceTimersByTimeAsync(150);
+        expect(source).not.toHaveBeenCalled();
+
+        await answer();
+        expect(source.mock.calls).toEqual([["arc", expect.any(AbortSignal)]]);
+        inst.destroy();
+    });
+
+    test("shows loading, then empty, and a failure in the list", async () =>
+    {
+        let reject!: (e: Error) => void;
+        const source = vi.fn()
+            .mockResolvedValueOnce([])
+            .mockReturnValueOnce(new Promise((_r, j) => { reject = j; }));
+        const inst = new CommandPalette({ source, sourceLoadingText: "Looking…", sourceEmptyText: "Nothing here" });
+        inst.open();
+
+        type("x");
+        expect(texts()).toEqual(["Looking…"]);
+        await answer();
+        expect(texts()).toEqual(["Nothing here"]);
+
+        type("xy");
+        await answer();
+        reject(new Error("503"));
+        await vi.advanceTimersByTimeAsync(0);
+        expect(texts()).toEqual(["Search failed"]);
+        expect(document.querySelector(".commandpalette-source-failed")).not.toBeNull();
+        inst.destroy();
+    });
+
+    test("drops a slower answer for an older query, and aborts its signal", async () =>
+    {
+        let first!: (r: PaletteResult[]) => void;
+        const signals: AbortSignal[] = [];
+        const source = vi.fn((q: string, signal: AbortSignal) =>
+        {
+            signals.push(signal);
+            return q === "ol" ? new Promise<PaletteResult[]>((r) => { first = r; })
+                : Promise.resolve([result("new", "Newer")]);
+        });
+        const inst = new CommandPalette({ source });
+        inst.open();
+
+        type("ol");
+        await answer();
+        type("old");
+        await answer();
+        expect(signals[0].aborted).toBe(true);
+
+        first([result("stale", "Stale")]);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(texts()).toEqual(["Newer"]);
+        inst.destroy();
+    });
+
+    test("Enter runs the highlighted result's action and closes, without touching recents", async () =>
+    {
+        const hit = result("d1", "Architecture");
+        const inst = new CommandPalette({ source: vi.fn().mockResolvedValue([hit]) });
+        inst.open();
+
+        type("arch");
+        await answer();
+        document.querySelector(".commandpalette-container")!
+            .dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        expect(hit.action).toHaveBeenCalledTimes(1);
+        expect(inst.isOpen()).toBe(false);
+        inst.destroy();
+    });
+
+    test("an empty query does not ask the source; without a source nothing changes", async () =>
+    {
+        const source = vi.fn().mockResolvedValue([]);
+        const inst = new CommandPalette({ source });
+        inst.open();
+        type("   ");
+        await answer();
+        expect(source).not.toHaveBeenCalled();
+        inst.destroy();
+
+        const plain = new CommandPalette({ commands: [makeCommand("c1", "Open Settings")] });
+        plain.open();
+        type("zzz");
+        await answer();
+        expect(texts()).toEqual(["No commands found for \"zzz\""]);
+        plain.destroy();
     });
 });
