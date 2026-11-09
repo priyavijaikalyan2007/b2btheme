@@ -3,7 +3,7 @@
 **Date**: 2026-11-07
 **Component**: TypeBadge, GraphLegend (CDN components)
 **Severity**: Medium (the last block on ontology types using every icon family)
-**Status**: Fixed on branch `feat/typebadge-icon-classes` (TypeBadge takes class strings; GraphLegend docs updated)
+**Status**: Fixed in #118 and #119, live 2026-11-08 (TypeBadge takes class strings; GraphLegend docs updated; ExplorerPicker takes them too)
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---

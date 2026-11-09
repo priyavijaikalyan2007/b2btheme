@@ -3,7 +3,7 @@
 **Date**: 2026-11-07
 **Component**: AiFeedback (new CDN component)
 **Severity**: Medium (needed before the apps ship AI generation outside chat)
-**Status**: Requested
+**Status**: Shipped as Feedback (`createFeedback`) in #122, live 2026-11-08. Design and the differences from this request: `specs/feedback.prd.md`
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---

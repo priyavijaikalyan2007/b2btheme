@@ -1,7 +1,7 @@
 # Feedback: one rating and report control for any surface
 
 **Date**: 2026-11-07
-**Status**: Built on branch `feat/feedback` (2026-11-08)
+**Status**: Shipped in #122, live 2026-11-08
 **Request**: `specs/2026-11-07-aifeedback-component-requirements.md` (apps team)
 
 ## 1. Summary

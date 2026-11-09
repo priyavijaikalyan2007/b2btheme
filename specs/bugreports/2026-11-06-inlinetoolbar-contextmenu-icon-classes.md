@@ -3,7 +3,7 @@
 **Date**: 2026-11-06
 **Component**: InlineToolbar, ContextMenu, GraphCanvas (CDN components)
 **Severity**: Medium (blocks adoption of the icon packs outside the Ribbon)
-**Status**: Fixed. InlineToolbar and ContextMenu in #115: `icon` takes a class string or a bare name, as proposed. GraphCanvas on branch feat/graphcanvas-icon-classes: a node's `icon` takes a class string (Font Awesome, icon packs)
+**Status**: Fixed and live. InlineToolbar and ContextMenu in #115: `icon` takes a class string or a bare name, as proposed. GraphCanvas in #117: a node's `icon` takes a class string (Font Awesome, icon packs)
 **Filed by**: Apps team (knobby.io apps repo)
 
 ---
