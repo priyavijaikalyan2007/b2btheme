@@ -197,6 +197,27 @@ describe("resolve — providers", () =>
         expect(codes(manifest({ protocol: { providers: spec } }), [member("onSearch", "function", { arity: 2 })]))
             .toEqual([VIOLATION.PROVIDER_ARITY]);
     });
+    test("a two-parameter provider that names its params passes, and carries them (#68)", () =>
+    {
+        const named = { onRename: { request: "rename", params: ["file", "newName"] } };
+
+        expect(resolveSurface(manifest({ protocol: { providers: named } }),
+            [member("onRename", "function", { arity: 2 })]).providers).toEqual([{ option: "onRename",
+            request: "rename", actionProp: "onRename", response: "renameResult", params: ["file", "newName"] }]);
+    });
+    test.each([
+        ["too few names", ["file"], 2],
+        ["too many names", ["a", "b", "c"], 2],
+        ["a repeated name", ["file", "file"], 2],
+        ["a name that is not an identifier", ["file", "new name"], 2],
+        ["params on a one-parameter callback", ["query"], 1],
+    ])("params with %s fails", (_label, params, arity) =>
+    {
+        const named = { onRename: { request: "rename", params } };
+
+        expect(codes(manifest({ protocol: { providers: named } }), [member("onRename", "function", { arity })]))
+            .toEqual([VIOLATION.PROVIDER_ARITY]);
+    });
     test("an ack provider, whose callback answers nothing, carries the flag into the surface", () =>
     {
         const ack = { onSave: { request: "feedback", ack: true } };

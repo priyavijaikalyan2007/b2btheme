@@ -282,3 +282,27 @@ describe("failure", () =>
         expect(rc.errors).toEqual([]);
     });
 });
+
+describe("a provider with several parameters (#68)", () =>
+{
+    const RENAME: AdapterProvider = { option: "onRename", request: "rename", actionProp: "onRename",
+        resultProp: "renameResult", concurrency: "queue", params: ["file", "newName"] };
+    const PROPS = { onRename: { event: { name: "rename", context: {} } }, renameResult: { path: "/a/rename" },
+        eventData: { path: "/ev" } };
+
+    test("packs its arguments into one request under the param names, and resolves with the answer", async () =>
+    {
+        const rc = realContext(PROPS);
+        const w = wireProviders(rc.ctx, fakeDescriptor({ providers: [RENAME] }),
+            { "Fake.renameResult": (v) => typeof v === "boolean" }, 30_000);
+
+        const answer = track(w.options.onRename({ id: "f1", name: "a.txt" }, "b.txt"));
+        expect(rc.getData("/ev/rename")).toEqual({ file: { id: "f1", name: "a.txt" }, newName: "b.txt" });
+
+        rc.setData("/a/rename", true);
+        await flush();
+
+        expect(answer).toEqual({ settled: true, value: true });
+        w.release();
+    });
+});

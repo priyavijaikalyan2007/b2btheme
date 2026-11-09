@@ -436,7 +436,7 @@ member must be exactly one of:
 |---|---|---|
 | data | JSON-serialisable (a `Date` counts; it is sent as an ISO string) | write a JSDoc comment **on its own line above the member** — it is what the agent reads, and typia ignores a comment on the member's line |
 | event | named by an `emits[].legacyOption`, or the ADR-134 `onChange` beside `value` (one `onChange` may be both: a single callback in two roles) | nothing more |
-| provider | asks the host for data | declare it in `protocol.providers` as `{ request }`; exactly one parameter |
+| provider | asks the host for data | declare it in `protocol.providers` as `{ request }`; one parameter, or several named in `params` (ADR-256) |
 | host-only | needs something JSON cannot carry | declare it in `protocol.hostOnly` with a reason of at least 20 characters |
 | child slot | a layout's content: an element at an option path (`panels[].content`) | declare it in `protocol.children` as `"one"` or `"many"`; the catalog publishes A2UI's `ComponentId` and the adapter mounts that component there (ADR-238). A slot is a top-level option (`north`) or a path; a nested slot needs a closed `protocol.schemas` override for its option. A slot that also takes a string (`tabs[].content`) is a component id only over A2UI: leave the string arm out of the override, since text and an id look alike (ADR-239). |
 

@@ -214,6 +214,53 @@ test.describe("Step 3 components under @a2ui/lit", () =>
         expect(await errors(page)).toEqual([]);
     });
 
+    test("FileExplorer: renaming a file asks the agent, and its true keeps the new name (#68)", async ({ page }) =>
+    {
+        await mount(page, "FileExplorer", { ...EV, roots: { path: "/tree" },
+            onRename: { event: { name: "rename", context: { r: { path: "/ev/rename" } } } },
+            renameResult: { path: "/answers/rename" } }, { tree: TREE });
+        await page.locator(ROW("docs")).dblclick();
+        await page.locator(ROW("plan")).click();
+
+        await page.locator(ROW("plan")).press("F2");
+        await page.locator(".fileexplorer-rename-input").fill("roadmap.md");
+        await page.locator(".fileexplorer-rename-input").press("Enter");
+
+        await expect.poll(async () => (await actions(page)).map((a) => [a.name, (a.context as { r: unknown }).r]))
+            .toEqual([["rename", { file: expect.objectContaining({ id: "plan", name: "plan.md" }),
+                newName: "roadmap.md" }]]);
+        await write(page, "/answers/rename", true);
+
+        await expect(page.locator(ROW("plan"))).toContainText("roadmap.md");
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("FileExplorer: without onRename bound, there is no rename (#68)", async ({ page }) =>
+    {
+        await mount(page, "FileExplorer", { ...EV, roots: { path: "/tree" } }, { tree: TREE });
+        await page.locator(ROW("docs")).dblclick();
+        await page.locator(ROW("plan")).click();
+
+        await page.locator(ROW("plan")).press("F2");
+
+        await expect(page.locator(".fileexplorer-rename-input")).toHaveCount(0);
+        expect(await errors(page)).toEqual([]);
+    });
+
+    test("FileExplorer: in a flat listing, opening a folder sends onNavigate, and the agent's items replace it (#68)",
+        async ({ page }) =>
+        {
+            await mount(page, "FileExplorer", { ...EV, items: { path: "/items" }, onNavigate: act("went", "navigate") },
+                { items: [{ id: "docs", name: "Documents", type: "folder" }] });
+
+            await page.locator(ROW("docs")).dblclick();
+
+            await sent(page, [["went", { id: "docs", name: "Documents", type: "folder" }]]);
+            await write(page, "/items", [{ id: "plan", name: "plan.md", type: "file" }]);
+            await expect(page.locator(ROW("plan"))).toHaveCount(1);
+            expect(await errors(page)).toEqual([]);
+        });
+
     test("FileExplorer: the agent's rewrite of roots updates it in place, keeping the folder", async ({ page }) =>
     {
         await mount(page, "FileExplorer", { roots: { path: "/tree" } }, { tree: TREE });

@@ -255,6 +255,15 @@ interface ProviderSpec
      * the callback answers void (provider-ack).
      */
     readonly ack?: boolean;
+
+    /**
+     * Names for the callback's parameters when it takes more than one, in
+     * order (#68). The A2UI adapter passes the agent one request object with
+     * these keys, so `onRename(file, newName)` becomes the request
+     * `{ file, newName }`. The callback itself is unchanged. Leave it out for
+     * a one-parameter callback, whose parameter is the request.
+     */
+    readonly params?: readonly string[];
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */
@@ -3148,7 +3157,7 @@ function validateAgent(m: Record<string, unknown>, issues: ValidationIssue[]): v
 }
 
 /** The keys a provider spec may carry; every catalog name derives from `request`. */
-const PROVIDER_KEYS: readonly string[] = ["request", "concurrency", "required", "ack"];
+const PROVIDER_KEYS: readonly string[] = ["request", "concurrency", "required", "ack", "params"];
 
 /** How the A2UI adapter orders a provider's requests (ADR-225). */
 const PROVIDER_CONCURRENCY: readonly string[] = ["latest", "queue"];
@@ -3206,7 +3215,10 @@ function validateProviderMap(v: unknown, issues: ValidationIssue[]): void
     }
 }
 
-/** Validates a provider spec's concurrency, required and ack flags and keys; `request` is checked by the caller. */
+/**
+ * Validates a provider spec's concurrency, required and ack flags, its params (a list of strings; the generator
+ * checks them against the callback, #68) and its keys; `request` is checked by the caller.
+ */
 function validateProviderSpec(path: string, spec: Record<string, unknown>, issues: ValidationIssue[]): void
 {
     if (spec.concurrency !== undefined && !PROVIDER_CONCURRENCY.includes(spec.concurrency as string))
@@ -3220,6 +3232,12 @@ function validateProviderSpec(path: string, spec: Record<string, unknown>, issue
         {
             issues.push(typeIssue(`${path}.${flag}`, "a boolean", spec[flag]));
         }
+    }
+
+    if (spec.params !== undefined
+        && !(Array.isArray(spec.params) && spec.params.every((p) => typeof p === "string")))
+    {
+        issues.push(typeIssue(`${path}.params`, "an array of strings", spec.params));
     }
 
     unknownKeys(path, spec, PROVIDER_KEYS, issues);

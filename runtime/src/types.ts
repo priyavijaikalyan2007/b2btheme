@@ -233,6 +233,15 @@ export interface ProviderSpec
      * the callback answers void (provider-ack).
      */
     readonly ack?: boolean;
+
+    /**
+     * Names for the callback's parameters when it takes more than one, in
+     * order (#68). The A2UI adapter passes the agent one request object with
+     * these keys, so `onRename(file, newName)` becomes the request
+     * `{ file, newName }`. The callback itself is unchanged. Leave it out for
+     * a one-parameter callback, whose parameter is the request.
+     */
+    readonly params?: readonly string[];
 }
 
 /** How this component appears to agent protocols (A2UI, MCP Apps). ADR-219. */

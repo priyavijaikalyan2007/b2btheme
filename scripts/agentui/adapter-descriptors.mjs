@@ -144,10 +144,10 @@ function descriptorFor({ manifest, surface }, catalog, assetExists, libraries)
         ...((manifest.stateKeys ?? []).length > 0 ? { stateKeys: [...manifest.stateKeys] } : {}),
         events: surface.events.map(({ channel, option, actionProp, payloadInValue }) =>
             ({ channel, option, actionProp, payloadInValue })),
-        providers: surface.providers.map(({ option, request, actionProp, response, ack }) => ({ option, request,
-            actionProp, resultProp: response,
+        providers: surface.providers.map(({ option, request, actionProp, response, ack, params }) => ({ option,
+            request, actionProp, resultProp: response,
             concurrency: manifest.protocol?.providers?.[option]?.concurrency ?? "latest",
-            ...(ack ? { ack: true } : {}) })),
+            ...(ack ? { ack: true } : {}), ...(params ? { params } : {}) })),
         dates: datesFor(catalog, name, surface),
     };
 }
