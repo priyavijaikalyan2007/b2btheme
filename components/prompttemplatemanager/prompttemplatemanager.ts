@@ -109,6 +109,19 @@ export interface PromptTemplate
     metadata?: Record<string, unknown>;
 }
 
+/** What the Use button hands over: the selected template with its variables filled in (#58). */
+export interface PromptTemplateUse
+{
+    /** The template's id. */
+    id: string;
+    /** The template's name. */
+    name: string;
+    /** The prompt with each {{variable}} replaced by its filled value, as the preview shows it. */
+    content: string;
+    /** The filled values by variable name, as the form shows them. */
+    variables: Record<string, string>;
+}
+
 export interface PromptTemplateManagerOptions
 {
     /**
@@ -148,6 +161,12 @@ export interface PromptTemplateManagerOptions
     onLoadTemplates?: () => Promise<PromptTemplate[]>;
     onSelect?: (template: PromptTemplate) => void;
     onChange?: (template: PromptTemplate) => void;
+    /**
+     * Fires when the user presses Use: the selected template, with its variables filled in, is the one to use.
+     * The Use button shows only when this is given or something subscribes to the "use" channel, also in a
+     * read-only library.
+     */
+    onUse?: (use: PromptTemplateUse) => void;
 }
 
 // ============================================================================
@@ -257,7 +276,7 @@ function substituteVariables(
 // ============================================================================
 
 /** The channels on() accepts (surface contract, B7). */
-const SURFACE_CHANNELS = ["select", "save", "delete", "duplicate"] as const;
+const SURFACE_CHANNELS = ["select", "save", "delete", "duplicate", "use"] as const;
 type SurfaceChannel = typeof SURFACE_CHANNELS[number];
 
 /** True for a non-null object that is not an array. */
@@ -315,9 +334,10 @@ export interface PromptTemplateManagerHandle
      */
     setData(slot: string, value: unknown): void;
     /**
-     * Subscribes to "select" (the id), "save" (the saved template), "delete" (the id) or "duplicate" (the new
-     * template); any other channel throws. Each fires after its legacy callback, and without it; save, delete and
-     * duplicate only once the change has happened. Payloads are plain JSON copies. Returns the unsubscribe.
+     * Subscribes to "select" (the id), "save" (the saved template), "delete" (the id), "duplicate" (the new
+     * template) or "use" (a PromptTemplateUse); any other channel throws. A "use" subscriber shows the Use
+     * button. Each fires after its legacy callback, and without it; save, delete and duplicate only once the
+     * change has happened. Payloads are plain JSON copies. Returns the unsubscribe.
      */
     on(channel: string, handler: (payload: unknown) => void): () => void;
     /** { selected, variables, preview }: the selected id or null, filled values by template id, the preview open. */
@@ -346,6 +366,8 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         SURFACE_CHANNELS.map((channel) => [channel, new Set()]));
 
     // DOM
+    private detailHeaderEl: HTMLElement | null = null;
+    private useBtn: HTMLElement | null = null;
     private rootEl: HTMLElement | null = null;
     private splitEl: HTMLElement | null = null;
     private listPaneEl: HTMLElement | null = null;
@@ -640,7 +662,53 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
             header.appendChild(this.buildDetailActions());
         }
 
+        this.detailHeaderEl = header;
+        this.syncUseButton();
         return header;
+    }
+
+    /**
+     * Shows the Use button while something takes its answer: onUse, or a "use" subscriber (#58). With neither,
+     * the header is as it always was. It sits outside the read-only gate, because a read-only library is the
+     * main case: the user picks a template, fills it in and uses it.
+     */
+    private syncUseButton(): void
+    {
+        const wanted = this.opts.onUse !== undefined || this.channelHandlers.get("use")!.size > 0;
+
+        if (wanted && !this.useBtn && this.detailHeaderEl)
+        {
+            const btn = this.buildActionBtn("use", "bi-box-arrow-up-right", "Use template", "Use this template");
+            btn.appendChild(document.createTextNode("Use"));
+            this.detailHeaderEl.insertBefore(btn, this.nameInput!.nextSibling);
+            this.useBtn = btn;
+        }
+        else if (!wanted && this.useBtn)
+        {
+            this.useBtn.remove();
+            this.useBtn = null;
+        }
+    }
+
+    /** Hands over the selected template, filled in: onUse first, then the "use" subscribers (#58). */
+    private useSelected(): void
+    {
+        const tpl = this.getSelectedTemplate();
+        if (!tpl) { return; }
+
+        const use: PromptTemplateUse = {
+            id: tpl.id,
+            name: tpl.name,
+            content: this.getPreviewContent(),
+            variables: this.collectVariableValues(tpl.id),
+        };
+
+        logInfo("Use:", tpl.id);
+        if (this.opts.onUse)
+        {
+            safeCallback(() => { this.opts.onUse!({ ...use, variables: { ...use.variables } }); }, undefined);
+        }
+        this.emitChannel("use", () => ({ ...use, variables: { ...use.variables } }));
     }
 
     private buildDetailActions(): HTMLElement
@@ -1484,6 +1552,7 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         if (type === "save") { this.handleSave(); }
         else if (type === "duplicate") { this.handleDuplicate(); }
         else if (type === "delete") { this.handleDelete(); }
+        else if (type === "use") { this.useSelected(); }
     }
 
     // ========================================================================
@@ -2186,8 +2255,13 @@ export class PromptTemplateManager implements PromptTemplateManagerHandle
         }
 
         handlers.add(handler);
+        if (channel === "use") { this.syncUseButton(); }
 
-        return (): void => { handlers.delete(handler); };
+        return (): void =>
+        {
+            handlers.delete(handler);
+            if (channel === "use") { this.syncUseButton(); }
+        };
     }
 
     /** The selected id or null, the filled variable values by template id, and whether the preview is open. */

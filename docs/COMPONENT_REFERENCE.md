@@ -14410,6 +14410,24 @@ var manager = createPromptTemplateManager({
 }, "container");
 ```
 
+### Use a Template
+
+Pass `onUse` to show a **Use** button in the template header. The user picks a template, fills in its variables and presses Use. `onUse` then receives the template with its variables filled in. The button shows in a read-only library too, because a read-only library is the main case.
+
+```javascript
+var manager = createPromptTemplateManager({
+    templates: myTemplates,
+    readOnly: true,
+    onUse: function(use) {
+        // use = { id, name, content, variables }
+        // content is the prompt with each {{variable}} replaced, as the preview shows it.
+        sendPrompt(use.content);
+    }
+}, "container");
+```
+
+Without `onUse`, and with nothing subscribed to the `"use"` channel, there is no Use button, and the header is as before. Over A2UI the adapter listens on every channel, so the button always shows there. The agent hears it as `onUse`.
+
 ## Interfaces
 
 ### PromptVariable
@@ -14466,6 +14484,14 @@ interface PromptTemplateManagerOptions {
     onLoadTemplates?: () => Promise<PromptTemplate[]>;
     onSelect?: (template: PromptTemplate) => void;
     onChange?: (template: PromptTemplate) => void;
+    onUse?: (use: PromptTemplateUse) => void;   // Shows the Use button
+}
+
+interface PromptTemplateUse {
+    id: string;
+    name: string;
+    content: string;                      // The prompt, filled in
+    variables: Record<string, string>;    // The filled values
 }
 ```
 

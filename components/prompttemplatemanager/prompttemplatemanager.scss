@@ -97,6 +97,13 @@
 .promptmanager-btn-save:hover { color: $blue-600; }
 .promptmanager-btn-delete:hover { color: $red-600; }
 
+// The Use button (#58): a labelled primary action, so it reads as the way out of the library.
+.promptmanager-btn-use
+{
+    color: var(--theme-primary-text);
+    font-weight: $font-weight-semibold;
+}
+
 .promptmanager-btn-preview-active
 {
     color: var(--theme-primary-text);

@@ -7,8 +7,8 @@
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: PromptTemplateManager / ConformanceGlue
  * 📜 PURPOSE: The mount fixture and channel triggers for the conformance gate
- *    and A2UI G3: clicks a list item, then the Save, Delete and Duplicate
- *    buttons (readiness step 2 B7).
+ *    and A2UI G3: clicks a list item, then the Save, Delete, Duplicate and
+ *    Use buttons (readiness step 2 B7, #58).
  * 🔗 RELATES: [[PromptTemplateManager]], [[Conformance]]
  * ----------------------------------------------------------------------------
  */
@@ -35,6 +35,7 @@ const BUTTONS: Record<string, string> = {
     save: ".promptmanager-btn-save",
     delete: ".promptmanager-btn-delete",
     duplicate: ".promptmanager-btn-duplicate",
+    use: ".promptmanager-btn-use",
 };
 
 export const CONFORMANCE_GLUE =
@@ -85,8 +86,9 @@ export const CONFORMANCE_GLUE =
         const button = selector ? root.querySelector<HTMLElement>(selector) : null;
         if (!button) { return false; }
 
-        // The legacy callback is awaited before the channel fires; with none (over A2UI) it fires at once.
         button.click();
-        return "async";
+        // Use fires at once. Save, delete and duplicate await the legacy callback first; with none (over A2UI)
+        // they fire at once too.
+        return channel === "use" ? true : "async";
     },
 };

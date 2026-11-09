@@ -20,7 +20,7 @@ import type { CapabilityManifest } from "../../runtime/src/types";
 
 /**
  * Declared at `surface` conformance (readiness step 2 B7): selecting, saving,
- * deleting and duplicating a template emit through an additive on(); the
+ * deleting, duplicating and using (#58) a template emit through an additive on(); the
  * agent rewrites the list through the "templates" slot, which keeps the
  * user's selection (B7-1); the selection, filled variables and preview
  * restore through getState().
@@ -37,8 +37,8 @@ export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
     // What an agent's model reads to choose this component (ADR-222).
     agent: {
         useWhen: "Show a library of prompt templates with {{variable}} placeholders that the user can browse, edit, "
-            + "fill in, duplicate and delete; the agent supplies the templates and hears each select, save, delete "
-            + "and duplicate.",
+            + "fill in, duplicate and delete; the agent supplies the templates and hears each edit, and hears use: "
+            + "the template the user chose, filled in.",
         avoidWhen: "For a single free-text prompt use RichTextInput; for code use CodeEditor; set showImportExport "
             + "to false when the agent must see every template, since imports and exports stay in the browser.",
     },
@@ -49,6 +49,8 @@ export const PROMPTTEMPLATEMANAGER_MANIFEST: CapabilityManifest =
         { name: "save", payload: "record", multi: false, legacyOption: "onSave" },
         { name: "delete", payload: "scalar", multi: false, legacyOption: "onDelete" },
         { name: "duplicate", payload: "record", multi: false, legacyOption: "onDuplicate" },
+        // #58: the user's choice, with the variables filled in. The Use button shows only while it is heard.
+        { name: "use", payload: "record", multi: false, legacyOption: "onUse" },
     ],
     accepts: [
         { name: "templates", payload: "collection", required: false },
