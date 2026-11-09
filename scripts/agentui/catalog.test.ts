@@ -247,6 +247,61 @@ describe("catalog — component entry", () =>
     });
 });
 
+describe("catalog — $defs aliases keep published names (#74)", () =>
+{
+    /** SCHEMA with its Col type renamed, as an interface rename or a typia upgrade would. */
+    const RENAMED = { ...SCHEMA,
+        properties: { ...SCHEMA.properties, columns: { type: "array", items: { $ref: "#/$defs/Column" } } },
+        $defs: { Column: SCHEMA.$defs.Col } };
+    const components = [{ manifest: MANIFEST, surface: SURFACE, schema: RENAMED }];
+    const aliasProblems = (violations: Array<{ code: string; message: string }>) =>
+        violations.filter((v) => v.code === VIOLATION.DEF_ALIAS).map((v) => v.message);
+
+    test("an alias keeps the published key, for the definition and every ref to it", () =>
+    {
+        const { catalog, violations } = buildCatalog({ basic, components, major: 1,
+            aliases: { Widget__Column: "Widget__Col" } });
+
+        expect(Object.keys(catalog.$defs)).toContain("Widget__Col");
+        expect(Object.keys(catalog.$defs)).not.toContain("Widget__Column");
+        expect(ownProps(catalog, "Widget").columns).toEqual(ownProps(build().catalog, "Widget").columns);
+        expect(aliasProblems(violations)).toEqual([]);
+    });
+
+    test("with no aliases, the generated key is used as before", () =>
+    {
+        expect(Object.keys(buildCatalog({ basic, components, major: 1, aliases: {} }).catalog.$defs))
+            .toContain("Widget__Column");
+    });
+
+    test("an alias no generated key uses is stale and fails", () =>
+    {
+        const { violations } = buildCatalog({ basic,
+            components: [{ manifest: MANIFEST, surface: SURFACE, schema: SCHEMA }], major: 1,
+            aliases: { Widget__Gone: "Widget__Col" } });
+
+        expect(aliasProblems(violations)).toEqual([expect.stringMatching(/Widget__Gone → Widget__Col matches no/)]);
+    });
+
+    test("an alias that leaves its component's prefix fails", () =>
+    {
+        const { violations } = buildCatalog({ basic, components, major: 1,
+            aliases: { Widget__Column: "Other__Col" } });
+
+        expect(aliasProblems(violations)).toEqual([expect.stringMatching(/leaves the Widget__ prefix/)]);
+    });
+
+    test("two generated keys that would share a published name fail", () =>
+    {
+        const both = { ...RENAMED, $defs: { Column: SCHEMA.$defs.Col, Col: SCHEMA.$defs.Col } };
+        const { violations } = buildCatalog({ basic, major: 1, aliases: { Widget__Column: "Widget__Col" },
+            components: [{ manifest: MANIFEST, surface: SURFACE, schema: both }] });
+
+        expect(aliasProblems(violations)).toEqual([
+            expect.stringMatching(/Widget__Column and Widget__Col would both be published as Widget__Col/)]);
+    });
+});
+
 describe("catalog — guidance", () =>
 {
     test("describes affordances in words", () =>

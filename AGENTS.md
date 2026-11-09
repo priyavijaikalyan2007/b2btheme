@@ -473,7 +473,10 @@ from a `display`, so it is now a defect.
 retyping or newly requiring anything in it breaks hosts that hard-coded
 `https://static.outcrop.us/a2ui/catalog/v1.json`. The gate diffs every build
 against `specs/agentui/published/`, and a breaking change needs `CATALOG_MAJOR`
-raised in `scripts/agentui/catalog.mjs` (the old version stays published). Any
+raised in `scripts/agentui/catalog.mjs` (the old version stays published). A
+`$defs` key is `<Component>__<TypeName>`, so renaming an options type, or a
+typia upgrade, removes one. Do not raise the major for that: map the new key to
+the published one in `scripts/agentui/def-aliases.mjs` (ADR-255, #74). Any
 change, additive included, needs `npm run build:agentui -- --write-baseline`
 and the baseline committed in the same change. A published baseline is
 anchored to the base branch: CI (`npm run check:baselines -- <base ref>`) fails

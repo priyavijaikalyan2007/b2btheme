@@ -288,3 +288,31 @@ describe("versionProblem", () =>
     test("skipping a major is a problem", () => { expect(versionProblem(breaking, 1, 3)).toMatch(/one step/); });
     test("going back is a problem", () => { expect(versionProblem(breaking, 2, 1)).toMatch(/one step/); });
 });
+
+describe("$defs renames (#74)", () =>
+{
+    const withDefs = (defs: Record<string, unknown>) =>
+    {
+        const base = cat({});
+        return { ...base, $defs: { ...base.$defs, ...defs } };
+    };
+    const ITEM = { type: "object", properties: { id: { type: "string" } } };
+
+    test("a removed def with an added twin names the alias that keeps it", () =>
+    {
+        const diff = diffCatalogs(withDefs({ Widget__Item: ITEM }), withDefs({ Widget__ListItem: ITEM }));
+
+        expect(diff.breaking).toEqual([expect.stringMatching(new RegExp("^\\$defs\\.Widget__Item removed\\. "
+            + "\\$defs\\.Widget__ListItem was added with the same schema.*"
+            + 'add "Widget__ListItem": "Widget__Item" to DEF_ALIASES'))]);
+        expect(diff.additive).toEqual(["$defs.Widget__ListItem added"]);
+    });
+
+    test("a removed def with no twin is still breaking and points at DEF_ALIASES", () =>
+    {
+        const diff = diffCatalogs(withDefs({ Widget__Item: ITEM }), withDefs({}));
+
+        expect(diff.breaking).toEqual([
+            expect.stringMatching(/^\$defs\.Widget__Item removed\. If its type was renamed.*DEF_ALIASES/)]);
+    });
+});

@@ -31,6 +31,7 @@ export const VIOLATION = Object.freeze({
     NAME_COLLISION: "name-collision",
     PROP_COLLISION: "prop-collision",
     CHANGE_MISMATCH: "change-mismatch",
+    DEF_ALIAS: "def-alias",
 });
 
 /** "n/a" is not a reason (spec §3.3). */
