@@ -489,6 +489,13 @@ A prop updates in place only if the manifest declares it an `accepts` slot or a
 component. Gates G1–G3 fail the build if a catalog component would not work
 through the adapter. Never hand-write a wrapper; never edit `dist/a2ui/adapter/`.
 
+**MCP Apps hosts show the same catalog: read [`MCPUI.md`](MCPUI.md).** The
+MCP Apps view (#19, ADR-250 to ADR-254) renders the A2UI messages in each tool
+result through the same adapter, so a component needs no MCP code. The server
+contract (`structuredContent.outcrop`, its routes and its five error codes) is
+public and changes additively within `version: 1`. The view fetches nothing
+and bundles only `mcp/src/`.
+
 **Three more declarations (ADR-222, `specs/agentui-readiness.prd.md`):**
 
 - **`protocol.change`: when `onChange` is not the value.** The adapter writes
