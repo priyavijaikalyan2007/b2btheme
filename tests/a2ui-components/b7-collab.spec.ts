@@ -216,6 +216,21 @@ test.describe("B7 collaboration and AI under @a2ui/lit", () =>
             name: "Greeting (Copy)", content: "Hello {{name}}, welcome to {{place}}." })]]);
     });
 
+    test("PromptTemplateManager: in a read-only library, Use sends onUse with the filled template (#58)",
+        async ({ page }) =>
+        {
+            await mount(page, "PromptTemplateManager", { ...PTM, readOnly: true, onUse: act("use", "use") },
+                { templates: TEMPLATES });
+
+            await page.locator('.promptmanager-variable-input[data-variable="name"]').fill("Ada");
+            await page.locator('.promptmanager-variable-input[data-variable="place"]').fill("Paris");
+            await page.locator(".promptmanager-btn-use").click();
+
+            await sent(page, [["use", { id: "t1", name: "Greeting", content: "Hello Ada, welcome to Paris.",
+                variables: { name: "Ada", place: "Paris" } }]]);
+            await expect(page.locator(".promptmanager-btn-save")).toHaveCount(0);
+        });
+
     test("PromptTemplateManager: the agent's new templates keep the user's selection, draft, variables and preview",
         async ({ page }) =>
         {

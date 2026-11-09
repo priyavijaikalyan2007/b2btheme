@@ -1188,7 +1188,7 @@ $control-height-xl=46px
 - CSS: `components/prompttemplatemanager/prompttemplatemanager.css`
 - JS: `components/prompttemplatemanager/prompttemplatemanager.js`
 - Globals: `createPromptTemplateManager()`
-- Exports: `type PromptVariableType`, `interface PromptVariable`, `interface PromptTemplate`, `interface PromptTemplateManagerOptions`, `interface PromptTemplateManagerHandle`, `class PromptTemplateManager`, `function createPromptTemplateManager`
+- Exports: `type PromptVariableType`, `interface PromptVariable`, `interface PromptTemplate`, `interface PromptTemplateUse`, `interface PromptTemplateManagerOptions`, `interface PromptTemplateManagerHandle`, `class PromptTemplateManager`, `function createPromptTemplateManager`
 
 ### propertyinspector
 

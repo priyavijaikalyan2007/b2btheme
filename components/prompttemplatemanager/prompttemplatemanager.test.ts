@@ -555,7 +555,7 @@ describe("surface contract (B7)", () =>
     test("on_UnknownChannel_Throws_AndDestroyClearsHandlers", () =>
     {
         const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
-        expect(() => mgr.on("use", () => undefined)).toThrow(/unknown channel/);
+        expect(() => mgr.on("export", () => undefined)).toThrow(/unknown channel/);
 
         const seen: unknown[] = [];
         mgr.on("select", (p) => seen.push(p));
@@ -740,6 +740,89 @@ describe("surface contract (B7)", () =>
 
         mgr.setState({ selected: null });
         expect(mgr.getSelectedTemplate()).toBeNull();
+        mgr.destroy();
+    });
+});
+
+// ============================================================================
+// USE (#58)
+// ============================================================================
+
+describe("Use (#58)", () =>
+{
+    function useButton(): HTMLButtonElement | null
+    {
+        return container.querySelector<HTMLButtonElement>(".promptmanager-btn-use");
+    }
+
+    test("noOnUseAndNoSubscriber_NoUseButton", () =>
+    {
+        const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+
+        expect(useButton()).toBeNull();
+        mgr.destroy();
+    });
+
+    test("onUse_ShowsTheButton_EvenReadOnly_AndHandsOverTheFilledTemplate", () =>
+    {
+        const uses: unknown[] = [];
+        const mgr = createPromptTemplateManager(
+            makeOptions({ readOnly: true, onUse: (u) => uses.push(u) }), "test-promptmgr");
+        mgr.setState({ selected: "t1", variables: { t1: { name: "Ada", place: "Paris" } } });
+
+        useButton()!.click();
+
+        expect(uses).toEqual([{ id: "t1", name: "Greeting", content: "Hello Ada, welcome to Paris.",
+            variables: { name: "Ada", place: "Paris" } }]);
+        expect(container.querySelector(".promptmanager-btn-save")).toBeNull();
+        mgr.destroy();
+    });
+
+    test("useSubscriber_ShowsTheButtonWhileSubscribed_AndHearsAfterOnUse", () =>
+    {
+        const order: unknown[] = [];
+        const mgr = createPromptTemplateManager(
+            makeOptions({ onUse: (u) => order.push(["legacy", u.id]) }), "test-promptmgr");
+        const off = mgr.on("use", (p) => order.push(["use", (p as { id: string }).id]));
+
+        useButton()!.click();
+        expect(order).toEqual([["legacy", "t1"], ["use", "t1"]]);
+
+        off();
+        // onUse still takes the answer, so the button stays.
+        expect(useButton()).not.toBeNull();
+        mgr.destroy();
+    });
+
+    test("subscriberOnly_ButtonComesAndGoesWithTheSubscriber", () =>
+    {
+        const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+        const seen: unknown[] = [];
+        const off = mgr.on("use", (p) => seen.push(p));
+
+        expect(useButton()).not.toBeNull();
+        useButton()!.click();
+        // An unfilled variable stays as written, as the preview shows it.
+        expect(seen).toEqual([{ id: "t1", name: "Greeting", content: "Hello {{name}}, welcome to {{place}}.",
+            variables: {} }]);
+
+        off();
+        expect(useButton()).toBeNull();
+        mgr.destroy();
+    });
+
+    test("eachSubscriberGetsItsOwnCopy", () =>
+    {
+        const mgr = createPromptTemplateManager(makeOptions(), "test-promptmgr");
+        mgr.setState({ variables: { t1: { name: "Ada" } } });
+        let first: { variables: Record<string, string> } | undefined;
+        let second: { variables: Record<string, string> } | undefined;
+        mgr.on("use", (p) => { first = p as typeof first; first!.variables.name = "changed"; });
+        mgr.on("use", (p) => { second = p as typeof second; });
+
+        useButton()!.click();
+
+        expect(second!.variables.name).toBe("Ada");
         mgr.destroy();
     });
 });
