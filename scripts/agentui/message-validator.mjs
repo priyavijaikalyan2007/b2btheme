@@ -118,7 +118,13 @@ export async function writeMessageValidator(repoRoot)
     const out = path.join(repoRoot, MESSAGE_VALIDATOR_OUT);
 
     fs.mkdirSync(path.dirname(out), { recursive: true });
-    fs.writeFileSync(out, await bundleMessageValidator(source));
+
+    // Written to a temporary file, then renamed into place, so a reader sees the old file or the new one,
+    // never part of one. Parallel Playwright workers each regenerate it while others import it, and one
+    // imported a half-written module (2026-11-10).
+    const tmp = `${out}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, await bundleMessageValidator(source));
+    fs.renameSync(tmp, out);
 
     return out;
 }

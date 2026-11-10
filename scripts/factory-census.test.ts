@@ -182,6 +182,13 @@ async function verdictFor(r: Row): Promise<Verdict>
     return absent.logs.some((l) => MENTIONS.test(l)) ? "WARNS-AND-RETURNS" : "SILENT";
 }
 
+/**
+ * The census imports and probes every published factory in one test. It takes about 1 s alone, but under the full
+ * parallel unit run, transforming the components alone can pass vitest's 5 s default (2026-11-09/10). This is not
+ * a performance check, so it gets room. A hang still fails.
+ */
+const HEAVY_TIMEOUT_MS = 60_000;
+
 describe("the census reads a signature correctly", () =>
 {
     test("splitParams keeps a generic type argument whole", () =>
@@ -283,7 +290,7 @@ describe("ERR-1 — a factory given a container that is not there", () =>
         const blocked = unreachable.map((x) => `${x.r.component}/${x.r.name}`).sort().join("\n  ");
         expect(unreachable.length, `verdict unreachable:\n  ${blocked}`)
             .toBeLessThanOrEqual(VERDICT_UNREACHABLE);
-    });
+    }, HEAVY_TIMEOUT_MS);
 
     test("every refusal names the container it could not find", () =>
     {
