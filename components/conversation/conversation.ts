@@ -2698,6 +2698,10 @@ export class Conversation implements ConversationHandle
         const height = config.preferredHeight || DEFAULT_MCP_INLINE_HEIGHT;
         frame.style.maxHeight = `${height}px`;
 
+        // Attached first: McpAppFrame reads the theme from the frame's
+        // computed style, and a detached element has none in a browser.
+        body.appendChild(frame);
+
         const appFrame = new McpAppFrame(config, frame,
             this.handleMcpMessage.bind(this));
         this.mcpFrames.set(msgId, appFrame);
@@ -2706,7 +2710,6 @@ export class Conversation implements ConversationHandle
         {
             frame.appendChild(this.buildExpandButton(msgId, config));
         }
-        body.appendChild(frame);
         logDebug("MCP app inline:", appFrame.appId);
     }
 
