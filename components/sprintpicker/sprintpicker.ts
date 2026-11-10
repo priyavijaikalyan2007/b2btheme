@@ -67,7 +67,10 @@ export interface SprintValue
  */
 export interface SprintPickerOptions
 {
-    /** First sprint start date; must fall on weekStartDay. */
+    /**
+     * First sprint start date; must fall on weekStartDay. A date-only
+     * string such as "2026-01-05" is that calendar day in local time.
+     */
     anchorDate: Date | string;
     /** Sprint duration in weeks (1–8). Default: 2. */
     sprintLength?: number;
@@ -270,6 +273,14 @@ function daysInMonth(year: number, month: number): number
     return new Date(year, month + 1, 0).getDate();
 }
 
+/** A date-only ISO string, such as "2026-01-05". */
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * The anchor as local midnight of its calendar day. A date-only string
+ * names a calendar day, so it is read as one. `new Date("2026-01-05")`
+ * would read it as UTC midnight, which is January 4 west of UTC.
+ */
 function parseAnchorDate(input: Date | string): Date
 {
     if (input instanceof Date)
@@ -277,6 +288,11 @@ function parseAnchorDate(input: Date | string): Date
         return new Date(
             input.getFullYear(), input.getMonth(), input.getDate()
         );
+    }
+    const dateOnly = DATE_ONLY.exec(input);
+    if (dateOnly)
+    {
+        return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
     }
     const d = new Date(input);
     return new Date(d.getFullYear(), d.getMonth(), d.getDate());
