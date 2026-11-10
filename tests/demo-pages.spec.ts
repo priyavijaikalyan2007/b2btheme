@@ -97,6 +97,27 @@ function globalsFor(page: string): string[]
     return extractGlobals(readFileSync(source, "utf8")) as string[];
 }
 
+/**
+ * Errors a demo page throws on purpose, matched exactly, by page. The Conversation demos' MCP app crashes itself
+ * 3 s after it starts, to show how Conversation reports a crashed app. A page that loads slowly reaches that
+ * crash inside the wait below, so the test failed only on slow runs (2026-11-10). Any other error still fails.
+ */
+const DELIBERATE_ERRORS: Readonly<Record<string, readonly string[]>> = {
+    "demo/full-demo.html": ["Simulated MCP app crash: data feed disconnected"],
+    "demo/components/conversation.html": ["Simulated MCP app crash: data feed disconnected"],
+};
+
+/**
+ * The errors that are not one of the page's deliberate ones. The crash arrives as the uncaught error itself and as
+ * Conversation's own report of it ("[Conversation] MCP app error: … Uncaught Error: <message> …"), which carries a
+ * timestamp, so a deliberate message is matched inside the text.
+ */
+function unexpected(page: string, errors: string[]): string[]
+{
+    const allowed = DELIBERATE_ERRORS[page] ?? [];
+    return errors.filter((e) => !allowed.some((a) => e.includes(a)));
+}
+
 test.describe("every demo page loads clean", () =>
 {
     test("the page list is not empty", () =>
@@ -161,8 +182,8 @@ test.describe("every demo page loads clean", () =>
             await browserPage.waitForTimeout(400);
 
             expect(response?.status(), `${page} HTTP status`).toBe(200);
-            expect(pageErrors, `${page} uncaught errors`).toEqual([]);
-            expect(consoleErrors, `${page} console errors`).toEqual([]);
+            expect(unexpected(page, pageErrors), `${page} uncaught errors`).toEqual([]);
+            expect(unexpected(page, consoleErrors), `${page} console errors`).toEqual([]);
             expect(failedRequests, `${page} failed requests`).toEqual([]);
 
             // A page that loads silently and registers nothing is the

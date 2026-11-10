@@ -464,7 +464,10 @@ describe("fleet gate — manifest defaults are production data", () =>
                 + "consumers — move mount fixtures into "
                 + `components/${name}/${name}.conformance.ts under "options".`)
                 .toEqual([]);
-        });
+        },
+        // The first import of a manifest transforms its component's module graph. Under the full parallel unit
+        // run, that alone passed the 5 s default for a different component each time (2026-11-09/10).
+        30_000);
 });
 
 // ============================================================================

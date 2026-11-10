@@ -217,6 +217,13 @@ async function verdictsFor(r: Row): Promise<Array<{ field: string; verdict: Verd
     return out;
 }
 
+/**
+ * This probe imports and probes every published factory in one test. It takes about 1 s alone, but under the full
+ * parallel unit run, transforming the components alone can pass vitest's 5 s default (2026-11-09/10). This is not
+ * a performance check, so it gets room. A hang still fails.
+ */
+const HEAVY_TIMEOUT_MS = 60_000;
+
 describe("the census reads an options interface correctly", () =>
 {
     test("omittedKeys reads the second argument of an Omit", () =>
@@ -291,7 +298,7 @@ describe("ERR-1 — a factory given no value for a required option", () =>
             .toBeLessThanOrEqual(SILENT_DEFAULT_FOR_REQUIRED_OPTION);
         expect(unreachable.length, `verdict unreachable:\n  ${unreachable.map((x) => x.field).join("\n  ")}`)
             .toBeLessThanOrEqual(VERDICT_UNREACHABLE);
-    });
+    }, HEAVY_TIMEOUT_MS);
 
     test("every refusal names the option it wanted", () =>
     {

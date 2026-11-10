@@ -119,6 +119,8 @@ function literalArms(name: string): Record<string, Any>
 
 let catalog: Any;
 
+// Builds the catalog and imports every component, under 10 s alone. Under the full parallel unit run it passed
+// the 10 s hook default and skipped the whole file (2026-11-10).
 beforeAll(async () =>
 {
     observer = new MutationObserver((records) =>
@@ -143,7 +145,7 @@ beforeAll(async () =>
 
     vi.spyOn(console, "log").mockImplementation(() => undefined);
     vi.spyOn(console, "debug").mockImplementation(() => undefined);
-});
+}, 60_000);
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
