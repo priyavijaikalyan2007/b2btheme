@@ -89,6 +89,6 @@ Other readers want other files:
 ## Scope today
 
 - **Served** since ADR-252, when gate #36 lifted.
-- **Tested** under the SDK's `AppBridge`, in a local host page. No test runs it in Claude, ChatGPT or VS Code.
+- **Tested** under the SDK's `AppBridge`, in a local host page, in CI. By hand, it renders in VS Code: Copilot Chat in Agent mode, with `chat.mcp.apps.enabled` on (2026-11-10). Claude Desktop 4.23118 shows no local MCP App view at all, not even the official examples' (#136). ChatGPT is not tried yet.
 - **Shows** every component in the A2UI catalog. Components outside the catalog do not show. `A2UI.md` "Scope today" lists them.
 - **Deferred:** the mappings that are unmapped in v1 (rule 8). Agent-usable manifest actions wait for the action bar (#45), as they do over A2UI.

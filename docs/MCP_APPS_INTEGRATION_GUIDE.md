@@ -35,6 +35,34 @@ model ──calls──► your tool ──result: A2UI messages──► host �
 
 To see it before you write a server, run `npm run build && npm run demo:mcp` in this repository and open <http://127.0.0.1:8125/host/>. A small host calls the tools of a demo server (`mcp/demo/`) over Streamable HTTP and shows each view: a service-health dashboard (metric cards, a gauge, charts, a timeline), orders (a DataGrid and a lazy TreeGrid), a meeting form (six pickers) and a brand editor (colour, gradient and font pickers). Buttons stand in for the model, and a log shows every JSON-RPC message between the host, the server and each view. The demo serves `dist/` as the CDN, so it shows your local build. A 65-second recording of it: <https://static.outcrop.us/demo/media/mcp/mcp-apps.mp4>.
 
+### Try it in a real host
+
+| Host | Status (2026-11-10) |
+|---|---|
+| **VS Code**, with GitHub Copilot Chat | **Works.** The example server's deal view renders inline, in Agent mode |
+| **Claude Desktop** 4.23118, with a local server | **No view.** It shows no MCP App view from a local server, not even the official examples'. Only the `content` text appears. We have asked Anthropic, and #136 tracks it |
+
+To try the example server in VS Code:
+
+1. Install GitHub Copilot Chat and sign in. Copilot's free tier is enough.
+2. In Settings, turn on `chat.mcp.apps.enabled`. It is experimental, and off by default.
+3. Run **MCP: Open User Configuration** from the Command Palette, and add the server under `servers`, not `mcpServers`:
+   ```json
+   {
+     "servers": {
+       "outcrop-example": {
+         "type": "stdio",
+         "command": "npx",
+         "args": ["-y", "tsx@4.23.15", "<this repository>/mcp/examples/typescript/main.ts"]
+       }
+     }
+   }
+   ```
+4. Run **MCP: List Servers**, select the server and choose **Start**. Accept the trust prompt.
+5. Open Chat (⌃⌘I on a Mac), switch to **Agent** mode, and ask "Show me deal 7 for approval". The deal view renders in the chat.
+
+If `npx` is not found, give its full path, such as `/opt/homebrew/bin/npx`.
+
 ## 2. How a host shows the view
 
 1. Your server registers a resource, for example `ui://<your-server>/renderer`, with MIME type `text/html;profile=mcp-app`. The resource's text is the bytes of `/mcp/renderer.html`, and its `_meta.ui` is `/mcp/renderer.meta.json`.
@@ -163,7 +191,7 @@ Every error is logged to the console with the prefix `[outcrop-mcp]` and sent to
 | `OUTCROP_MCP_NOT_CONNECTED` | "This view couldn't connect to its host." | `ui/initialize` failed | the host does not support MCP Apps, or does not support this view |
 
 - **The adapter's own codes** (`OUTCROP_MOUNT_FAILED` and others) mean the same as in [`A2UI_INTEGRATION_GUIDE.md`](A2UI_INTEGRATION_GUIDE.md) §7.
-- **Nothing appears and there's no error?** The host probably has no MCP Apps support: it shows your `content` text instead.
+- **Nothing appears and there's no error?** The host probably has no MCP Apps support, so it shows your `content` text instead. Claude Desktop 4.23118 behaves this way for every local server, including the official MCP Apps examples (#136). Test in VS Code first (§1, "Try it in a real host"). If the official example renders in your host and yours does not, compare the two servers' `tools/list` and `resources/read` replies.
 
 ## 8. Adopting it
 
