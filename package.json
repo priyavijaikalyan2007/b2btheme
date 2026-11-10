@@ -118,7 +118,7 @@
     "@fortawesome/fontawesome-free": "6.5.1",
     "@lezer/highlight": "1.2.5",
     "@maxgraph/core": "0.22.0",
-    "@microsoft/signalr": "8.0.0",
+    "@microsoft/signalr": "10.0.11",
     "@modelcontextprotocol/client": "2.4.0",
     "@modelcontextprotocol/core": "2.4.0",
     "@modelcontextprotocol/ext-apps": "2.0.4",
