@@ -9,3 +9,15 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # typia 15 runs only as a Go plugin under ttsc, which needs TypeScript 7.
+      # scripts/agentui/schema.mjs drives typia's transformer in-process
+      # through the TypeScript 5.9 compiler API, so a move is a migration,
+      # not a bump (#101). Tracked in #146.
+      - dependency-name: "typia"
+        update-types: ["version-update:semver-major"]
+      # Served at /lib/signalr-<version>.js, and a build serves only the
+      # current version, so a major bump makes the pinned URL the apps load
+      # return 404. Move it together with the apps (#145). Tracked in #147.
+      - dependency-name: "@microsoft/signalr"
+        update-types: ["version-update:semver-major"]
