@@ -3250,13 +3250,16 @@ describe("gallery advanced", () =>
         ribbon.destroy();
     });
 
-    test("gallery_PreviewOption_RendersPreview", () =>
+    test("gallery_PreviewOption_RendersPreviewThroughDOMPurify", () =>
     {
+        // Shaped like DOMPurify's browser build: a function with a sanitize method.
+        const sanitize = vi.fn((html: string) => html.replace(" onclick=\"x()\"", ""));
+        vi.stubGlobal("DOMPurify", Object.assign(() => undefined, { sanitize }));
         const gallery: RibbonGallery = {
             type: "gallery",
             id: "gal-prev",
             options: [
-                { id: "a", label: "A", preview: "<b>Bold</b>" },
+                { id: "a", label: "A", preview: "<b onclick=\"x()\">Bold</b>" },
             ],
             inlineCount: 3,
         };
@@ -3267,8 +3270,34 @@ describe("gallery advanced", () =>
             })],
         }), "test-ribbon");
         const preview = container.querySelector(".ribbon-gallery-preview");
-        expect(preview).not.toBeNull();
+        expect(sanitize).toHaveBeenCalledWith("<b onclick=\"x()\">Bold</b>");
+        expect(preview?.innerHTML).toBe("<b>Bold</b>");
         ribbon.destroy();
+        vi.unstubAllGlobals();
+    });
+
+    // CodeQL js/incomplete-multi-character-sanitization and
+    // js/bad-tag-filter (alerts #3, #5). Without DOMPurify the preview
+    // went through two regexes, which `<scr<script>ipt>` and
+    // `</script >` pass. A preview needs DOMPurify, and says so.
+    test("gallery_PreviewOptionWithoutDOMPurify_Throws", () =>
+    {
+        vi.stubGlobal("DOMPurify", undefined);
+        const gallery: RibbonGallery = {
+            type: "gallery",
+            id: "gal-prev",
+            options: [
+                { id: "a", label: "A", preview: "<b>Bold</b>" },
+            ],
+            inlineCount: 3,
+        };
+        expect(() => createRibbon(makeOptions({
+            tabs: [makeTab({
+                id: "home",
+                groups: [makeGroup({ controls: [gallery] })],
+            })],
+        }), "test-ribbon")).toThrow(/gallery option "a" has preview HTML.*DOMPurify/s);
+        vi.unstubAllGlobals();
     });
 
     test("gallery_TextOnlyOption_ShowsLabelAsText", () =>

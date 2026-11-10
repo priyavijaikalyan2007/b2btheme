@@ -359,6 +359,37 @@ describe("clear", () =>
         expect(onChange).toHaveBeenCalled();
         picker.destroy();
     });
+
+    test("typedAllZeroText_OnBlur_Clears", () =>
+    {
+        const picker = new DurationPicker("test-durationpicker-container", {
+            pattern: "h-m",
+            value: { h: 2, m: 15 },
+        });
+        const input = container.querySelector(".durationpicker-input") as HTMLInputElement;
+
+        input.value = " 0h  0m ";
+        input.dispatchEvent(new Event("blur"));
+
+        expect(picker.getValue()).toEqual(expect.objectContaining({ h: 0, m: 0 }));
+        picker.destroy();
+    });
+
+    // CodeQL js/redos (alert #16). The old test, /^(0\w+\s*)+$/, could
+    // split a run of zeros many ways, so text a person typed could hang
+    // the page on blur. A run that fails late is the worst case.
+    test("longZeroRunThatFails_OnBlur_ReturnsQuickly", () =>
+    {
+        const picker = new DurationPicker("test-durationpicker-container", { pattern: "h-m" });
+        const input = container.querySelector(".durationpicker-input") as HTMLInputElement;
+
+        input.value = "0" + "00".repeat(20) + "!";
+        const start = performance.now();
+        input.dispatchEvent(new Event("blur"));
+
+        expect(performance.now() - start).toBeLessThan(500);
+        picker.destroy();
+    });
 });
 
 // ============================================================================

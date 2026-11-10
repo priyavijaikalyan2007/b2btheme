@@ -176,7 +176,21 @@ function removeDangerousElements(root: HTMLElement): void
     for (const el of els) { el.remove(); }
 }
 
-/** Remove on* event handlers and javascript: URLs. */
+/** Schemes that run script wherever a URL is followed. */
+const SCRIPT_SCHEME = /^(javascript|vbscript):/;
+
+/** Attributes the browser loads or follows as a URL. */
+const URL_ATTRIBUTES = new Set([
+    "href", "src", "action", "formaction", "xlink:href", "poster", "cite", "background",
+]);
+
+/**
+ * Control characters and whitespace, which a browser drops from a URL
+ * before it reads the scheme, so `java&#9;script:` runs as javascript:.
+ */
+const URL_IGNORED = /[\u0000- \u007f-\u009f]/g;
+
+/** Remove on* event handlers, script URLs, and data: URLs other than images. */
 function removeDangerousAttributes(root: HTMLElement): void
 {
     const all = root.querySelectorAll("*");
@@ -185,13 +199,28 @@ function removeDangerousAttributes(root: HTMLElement): void
         const attrs = Array.from(el.attributes);
         for (const attr of attrs)
         {
-            if (attr.name.startsWith("on")
-                || attr.value.trim().toLowerCase().startsWith("javascript:"))
+            if (isDangerousAttribute(el, attr))
             {
                 el.removeAttribute(attr.name);
             }
         }
     }
+}
+
+/**
+ * True for an event handler, a script scheme in any attribute, or a
+ * data: URL in a URL attribute. Only an image's own source keeps a
+ * data:image/ URL, which is how markdown embeds a picture.
+ */
+function isDangerousAttribute(el: Element, attr: Attr): boolean
+{
+    if (attr.name.startsWith("on")) { return true; }
+
+    const value = attr.value.replace(URL_IGNORED, "").toLowerCase();
+    if (SCRIPT_SCHEME.test(value)) { return true; }
+    if (!URL_ATTRIBUTES.has(attr.name) || !value.startsWith("data:")) { return false; }
+
+    return !(el.tagName === "IMG" && attr.name === "src" && value.startsWith("data:image/"));
 }
 
 // ============================================================================
