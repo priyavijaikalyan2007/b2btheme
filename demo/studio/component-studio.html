@@ -6098,19 +6098,22 @@
             var wrapper = document.createElement("div");
             wrapper.style.cssText = "font-size:13px;line-height:1.6;";
 
-            // Extract docs-container content from the full page
-            var match = html.match(/<div class="docs-container">([\s\S]*?)<\/div>\s*<script/);
+            // Parse the page into an inert document, then take its
+            // docs-container, or its body without nav. Regexes cannot
+            // strip tags reliably, and the parser can.
+            var doc = new DOMParser().parseFromString(html, "text/html");
+            var source = doc.querySelector(".docs-container");
 
-            if (match)
+            if (!source)
             {
-                wrapper.innerHTML = match[1];
+                source = doc.body;
+                source.querySelectorAll("nav").forEach(function(el) { el.remove(); });
             }
-            else
+            source.querySelectorAll("script").forEach(function(el) { el.remove(); });
+
+            while (source.firstChild)
             {
-                // Fallback: strip head/body tags and show as-is
-                wrapper.innerHTML = html.replace(/<head[\s\S]*?<\/head>/i, "")
-                    .replace(/<nav[\s\S]*?<\/nav>/i, "")
-                    .replace(/<script[\s\S]*?<\/script>/gi, "");
+                wrapper.appendChild(source.firstChild);
             }
 
             container.appendChild(wrapper);

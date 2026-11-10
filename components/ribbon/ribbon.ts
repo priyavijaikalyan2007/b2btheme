@@ -82,6 +82,7 @@ export interface RibbonGalleryOption
     icon?: string;
     tooltip?: string;
     color?: string;
+    /** HTML shown in the option. Needs DOMPurify loaded; without it the Ribbon throws. */
     preview?: string;
     disabled?: boolean;
 }
@@ -617,18 +618,24 @@ function clearChildren(el: HTMLElement): void
     while (el.firstChild) { el.removeChild(el.firstChild); }
 }
 
-function sanitiseHTML(html: string): string
+/**
+ * A gallery option's preview HTML, sanitised by DOMPurify. Without
+ * DOMPurify there is no safe way to insert the HTML, so this throws.
+ * The regexes that stood in for it let `<scr<script>ipt>` through.
+ */
+function sanitisePreview(opt: RibbonGalleryOption, html: string): string
 {
-    const w = window;
-    if (typeof w["DOMPurify"] === "object" && w["DOMPurify"] !== null)
+    // The browser build of DOMPurify is a function with a sanitize method,
+    // so this asks for the method rather than for an object.
+    const dp = window["DOMPurify"] as { sanitize?: (h: string) => string } | null | undefined;
+    if (typeof dp?.sanitize !== "function")
     {
-        const dp = w["DOMPurify"] as { sanitize: (h: string) => string };
-        return dp.sanitize(html);
+        throw new Error(
+            `${LOG_PREFIX} gallery option "${opt.id}" has preview HTML, which needs DOMPurify. `
+            + "Load DOMPurify (window.DOMPurify) before the Ribbon, or give the option an icon, "
+            + "a color or a label instead.");
     }
-    // Fallback: strip scripts/events but allow safe inline tags
-    return html
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/\bon\w+\s*=/gi, "data-removed=");
+    return dp.sanitize(html);
 }
 
 // ============================================================================
@@ -2209,7 +2216,7 @@ export class RibbonImpl implements Ribbon
         else if (opt.preview)
         {
             const prev = createElement("span", [`${CLS}-gallery-preview`]);
-            prev.innerHTML = sanitiseHTML(opt.preview);
+            prev.innerHTML = sanitisePreview(opt, opt.preview);
             btn.appendChild(prev);
         }
         else

@@ -307,6 +307,52 @@ describe("sanitize — XSS prevention", () =>
         expect(html).not.toContain("JaVaScRiPt:");
     });
 
+    // CodeQL js/incomplete-url-scheme-check (alert #7). The check read
+    // the raw value, so a tab inside the scheme passed it, and it never
+    // looked at vbscript: or data:. The browser drops the tab and runs
+    // the script.
+    test("stripsJavascriptUrlsWithControlCharacters", () =>
+    {
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => `<a href="java&#9;script:alert(1)">A</a><a href="&#1;javascript:alert(1)">B</a>`
+        ));
+        const handle = createMarkdownRenderer();
+        const html = handle.toHtml("anything");
+        expect(html).not.toContain("href");
+    });
+
+    test("stripsVbscriptUrls", () =>
+    {
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => `<a href="VBScript:msgbox(1)">Click</a>`
+        ));
+        const handle = createMarkdownRenderer();
+        const html = handle.toHtml("anything");
+        expect(html).not.toContain("href");
+    });
+
+    test("stripsDataUrlsOutsideImageSources", () =>
+    {
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => `<a href="data:text/html,<script>alert(1)</script>">A</a>`
+                + `<img src="data:text/html,x">`
+        ));
+        const handle = createMarkdownRenderer();
+        const html = handle.toHtml("anything");
+        expect(html).not.toContain("data:");
+    });
+
+    test("keepsImageDataUrlsOnImgSrc", () =>
+    {
+        vi.stubGlobal("marked", buildMarkedMock(
+            () => `<img src="data:image/png;base64,iVBORw0KGgo=" alt="Data: Q3">`
+        ));
+        const handle = createMarkdownRenderer();
+        const html = handle.toHtml("anything");
+        expect(html).toContain(`src="data:image/png;base64,iVBORw0KGgo="`);
+        expect(html).toContain(`alt="Data: Q3"`);
+    });
+
     test("preservesSafeContent", () =>
     {
         vi.stubGlobal("marked", buildMarkedMock(

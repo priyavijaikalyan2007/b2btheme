@@ -1572,9 +1572,14 @@ export class DurationPicker implements DurationPickerHandle
         this.parseAndApplyInput(text);
     }
 
+    /**
+     * True when every space-separated token starts with a zero, such as
+     * "0h 0m". One token at a time, because a single pattern over the
+     * whole text backtracks exponentially on a long run of zeros.
+     */
     private isAllZeroDisplay(text: string): boolean
     {
-        return /^(0\w+\s*)+$/.test(text.trim());
+        return text.trim().split(/\s+/).every((token) => /^0\w+$/.test(token));
     }
 
     private parseAndApplyInput(text: string): void

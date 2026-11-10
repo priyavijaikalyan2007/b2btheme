@@ -13586,11 +13586,19 @@
                         var title = btn.getAttribute("data-pi-title");
                         var sub = btn.getAttribute("data-pi-sub");
 
+                        // Built with DOM calls: the title and priority are page text,
+                        // and text read back into innerHTML would run as markup.
                         var detailsTab = document.createElement("div");
-                        detailsTab.innerHTML = "<p><strong>Title:</strong> " + btn.textContent + "</p>"
-                            + "<p><strong>Priority:</strong> " + sub + "</p>"
-                            + "<p><strong>Status:</strong> In Progress</p>"
-                            + "<p><strong>Assigned:</strong> Jane Smith</p>";
+                        [["Title", btn.textContent], ["Priority", sub],
+                            ["Status", "In Progress"], ["Assigned", "Jane Smith"]].forEach(function(row)
+                        {
+                            var p = document.createElement("p");
+                            var label = document.createElement("strong");
+                            label.textContent = row[0] + ":";
+                            p.appendChild(label);
+                            p.appendChild(document.createTextNode(" " + row[1]));
+                            detailsTab.appendChild(p);
+                        });
 
                         var historyTab = document.createElement("div");
                         historyTab.innerHTML = "<p>2026-02-28 — Created by admin</p>"

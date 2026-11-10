@@ -15059,6 +15059,16 @@ A Microsoft Office-style tabbed toolbar for organizing commands and controls int
 
 **Requires:** Bootstrap CSS (for SCSS variables), Bootstrap Icons CSS. Does **not** require a JavaScript framework.
 
+**A gallery option with `preview` HTML requires DOMPurify.** The Ribbon inserts that HTML only through `DOMPurify.sanitize()`. Without DOMPurify, a ribbon with a `preview` option throws and names the option. Load it before the Ribbon:
+
+```html
+<script src="https://static.knobby.io/lib/dompurify-3.4.17.js"
+        integrity="sha384-P0JNneQf81HOl9VwNXK76cQ9VMD6Nfsnepxb0cCOg8+UzEdzgPHAPV4wVQrvYQSx"
+        crossorigin="anonymous"></script>
+```
+
+Options with an icon, a color or a label need nothing extra.
+
 ## Quick Start
 
 ```html

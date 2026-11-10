@@ -12,6 +12,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Security
+- **Ribbon gallery previews need DOMPurify** (CodeQL alerts #3 and #5, ADR-258): a gallery option's `preview` HTML is inserted only through `DOMPurify.sanitize()`. Without DOMPurify, the Ribbon throws and names the option. Until now every page took a path of two regexes, which `<scr<script>ipt>` passes, because the check for DOMPurify missed its browser build, which is a function. Options with an icon, a color or a label need nothing extra. The Ribbon demo now loads DOMPurify.
+- **MarkdownRenderer blocks more script URLs** (alert #7): its sanitizer drops control characters and spaces before it reads a URL's scheme, so `java&#9;script:` no longer passes. It also removes `vbscript:` URLs, and `data:` URLs other than `data:image/` on an image's `src`.
+- **DurationPicker no longer hangs on a long run of zeros** (alert #16): the all-zero check on blur reads one token at a time, so typed text cannot make it backtrack exponentially.
+- **Demo pages build text with DOM calls** (alerts #4, #6, #11 and #14): the Property Inspector demos set the title and priority as text, and the Component Studio parses a docs page with `DOMParser` in place of regexes.
+
 ### Added
 - **The MCP Apps view renders in a real host**: tested in VS Code (GitHub Copilot Chat, Agent mode, `chat.mcp.apps.enabled`), where the example server's deal view renders inline. The server guide gains "Try it in a real host", with the VS Code steps and the status of each host. Claude Desktop 4.23118 shows no local MCP App view, not even the official examples' (#136).
 - **FacetSearch: remove one chip, and labels learned later** (apps team report): `removeFacet(key, value?)` removes only the chips on a key with that value, so one of several `type:` chips can go. `onFacetRemove` still fires once per call. `learnLabels(key, values)` records labels learned after the bar was made, such as from a search answer, and relabels the matching chips at once. It fires no callback, and keeps focus and the typed text.

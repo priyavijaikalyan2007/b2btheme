@@ -225,6 +225,25 @@ describe("the census reads a signature correctly", () =>
         expect(emptyFor("boolean")).toBe(false);
     });
 
+    test("emptyFor gives the first member of a string-literal union", () =>
+    {
+        expect(emptyFor("\"grid\" | \"list\"")).toBe("grid");
+        expect(emptyFor("\"a|b\" | \"c\"")).toBe("a|b");
+        expect(emptyFor("\"solo\"")).toBe("solo");
+        expect(emptyFor("\"grid\" | number")).toBeUndefined();
+    });
+
+    // CodeQL js/redos (alert #19). /^(\s*"[^"]*"\s*\|?)+$/ could match a
+    // run of literals with no pipes between them in many ways, so a type
+    // that failed late took seconds.
+    test("emptyFor answers a long run of literals that is not a union quickly", () =>
+    {
+        const start = performance.now();
+
+        expect(emptyFor("\"\"" + " \"\"".repeat(25) + "x")).toBeUndefined();
+        expect(performance.now() - start).toBeLessThan(500);
+    });
+
     test("emptyFor leaves a callback out rather than inventing one", () =>
     {
         // A component that needs a callback should say so, and a stub that

@@ -137,8 +137,10 @@ export function emptyFor(type, src = null)
 
     // A union of string literals. The first member is as good as any,
     // and a component that rejects it has said something worth knowing.
+    // Each member after the first needs its own pipe, so the pattern
+    // matches one way only and cannot backtrack exponentially.
     const literal = /^"([^"]*)"/.exec(t);
-    if (literal !== null && /^(\s*"[^"]*"\s*\|?)+$/.test(t)) { return literal[1]; }
+    if (literal !== null && /^"[^"]*"(\s*\|\s*"[^"]*")*$/.test(t)) { return literal[1]; }
 
     if (src !== null && /^[A-Z]\w*$/.test(t))
     {
