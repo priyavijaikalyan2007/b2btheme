@@ -245,7 +245,7 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 
 | Asset | Version | Note |
 |---|---|---|
-| `dompurify` | 3.4.16 | **Not the 3.2.4 the apps pin** — that version carries 19 open advisories including XSS bypasses |
+| `dompurify` | 3.4.17 | **Not the 3.2.4 the apps pin** — that version carries 19 open advisories including XSS bypasses. Required by Ribbon gallery `preview` HTML, which throws without it (2026-11-10, ADR-258) |
 | `maxgraph` | 0.22.0 | ESM bundled to IIFE; 240 inputs, zero externals |
 | `signalr` | 8.0.0 | |
 | `cytoscape` | 3.26.0 | Was missing from the original request |
