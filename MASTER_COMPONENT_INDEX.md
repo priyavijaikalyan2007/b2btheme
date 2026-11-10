@@ -4,7 +4,7 @@
 
 Compact status summary of the master component list. For full specs and descriptions, see [MASTER_COMPONENT_LIST.md](MASTER_COMPONENT_LIST.md).
 
-**117 implemented** of 246 component entries.
+**124 implemented** of 274 component entries.
 
 ## By Section
 
@@ -14,30 +14,31 @@ Compact status summary of the master component list. For full specs and descript
 | 2 | Progress | 7 | 7 | ✅Infinite Progress Modal, ✅Steppable Progress Modal, ✅Confirm Dialog, ✅Error Dialog, ✅Form Dialog, +2 more |
 | 3 | Data Entry & Display | 15 | 16 | ✅Editable Combo Box, ✅Multiselect Combo Box, ✅Non-Password Masked Entry & View, ⬜Query Builder (Structured), ✅Color Picker, +11 more |
 | 4 | Rich Content Editing | 3 | 4 | ✅Markdown Editor \+ Viewer with Tab & Side-by-Side Views, ✅Code Editor (JSON/YAML/General Purpose), ⬜Data Diff Viewer, ✅LaTeX Editor |
-| 5 | Data Grids & Tables | 1 | 3 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder |
+| 5 | Data Grids & Tables | 2 | 4 | ✅Data Grid, ⬜Composite Data Grid, ⬜Pivot Table Builder, ✅Visual Table Editor |
 | 6 | Tree Structures | 2 | 2 | ✅Tree View, ✅Tree Grid |
-| 7 | Toolbars & Status | 10 | 10 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +5 more |
+| 7 | Toolbars & Status | 11 | 11 | ✅Tool / Action Bar, ✅Status Bar, ✅Banner Bar, ✅Graph Toolbar, ✅LineWidthPicker, +6 more |
 | 8 | Containers | 3 | 3 | ✅Tabbed Panel (Top or Bottom Dock), ✅Sidebar (Left or Right Dock), ✅NavRail (App-level Primary Navigation) |
 | 9 | AI/ML Components | 3 | 10 | ✅Conversation Container with MCP UI, ⬜Inference Trace Panel, ✅Reasoning Accordion (Chain of Thought), ⬜Human-in-the-Loop (HITL) Queue, ⬜Model Performance Monitor, +5 more |
 | 10 | Metrics & Visualization | 8 | 9 | ✅Gauge (Time / Value), ✅KPI / Metric Card, ✅Chart Panel (Chart.js wrapper), ⬜Dashboard Grid, ✅SpineMap (Capability Map), +4 more |
 | 11 | Events & Activity | 2 | 3 | ✅Event Timeline, ✅Activity Feed, ⬜Changelog / Release Notes Display |
-| 12 | User Experience & Onboarding | 8 | 9 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +4 more |
+| 12 | User Experience & Onboarding | 9 | 10 | ✅Walkthrough (Guided Tour), ✅Command Palette (AI-Enhanced), ⬜Contextual Onboarding Hotspots, ✅Empty State, ✅Skeleton Loader, +5 more |
 | 13 | Filtering, Search & Tagging | 3 | 5 | ⬜Facet Filter Sidebar, ✅Facet-Aware Search Bar, ✅Freeform & Taxonomy Tagger, ⬜Saved Views / Saved Filters, ✅Search Box |
-| 14 | File & Content Management | 2 | 3 | ✅File Upload / Download Manager, ⬜Screenshot & Video Capture, ✅File Explorer / Asset Browser |
+| 14 | File & Content Management | 3 | 4 | ✅File Upload / Download Manager, ⬜Screenshot & Video Capture, ✅File Explorer / Asset Browser, ✅ExplorerPicker (Resource Selection) |
 | 15 | Workspace & Navigation | 4 | 6 | ✅Multi-Tenant Switcher, ⬜Draggable Workspace Tabs, ✅Breadcrumb Navigation (Contextual), ⬜Multi-Level Collapsible Sidebar, ✅User Menu, ✅App Launcher |
 | 16 | Governance & Security | 2 | 3 | ✅RBAC Permission Matrix, ✅Immutable Audit Log Viewer, ⬜Secret / API Key Manager |
-| 17 | Communication & Collaboration | 2 | 2 | ✅Notification Center (In-App Bell), ✅Commenting & Annotation Overlay |
+| 17 | Communication & Collaboration | 2 | 4 | ✅Notification Center (In-App Bell), ✅Commenting & Annotation Overlay, ⬜Comment Thread, ⬜Comment Panel |
 | 18 | Workflows & Automation | 1 | 3 | ⬜Visual Workflow Builder (Node Canvas), ✅Multi-Stage Stepper (Wizard), ⬜Approval Flow Indicator |
 | 19 | Layout & Presentation | 2 | 5 | ⬜Kanban Board, ⬜Calendar / Scheduler View, ⬜Comparison Table, ✅Property Inspector (Slide-out Drawer), ✅Split / Resizable Panes |
 | 20 | System Feedback & Indicators | 10 | 11 | ✅Status Badges & Health Indicators, ✅Toast / Snackbar Notifications, ⬜Inline Validation & Field-Level Feedback, ✅Pill (Inline Entity Reference), ✅RichTextInput (Lightweight Rich Text), +6 more |
-| 21 | Layout Container Components | 10 | 16 | ⬜Background, ⬜Layout Container Components, ✅Border Layout Container, ✅Box Layout Container (Stack), ✅Flow Layout Container (Wrap), +11 more |
+| 21 | Layout Container Components | 11 | 17 | ⬜Background, ⬜Layout Container Components, ✅Border Layout Container, ✅Box Layout Container (Stack), ✅Flow Layout Container (Wrap), +12 more |
 | 22 | Work, Execution & Automation Management | 1 | 29 | ⬜Work Item & Record Management, ⬜Dynamic Form Builder, ⬜Custom Field Definition Manager, ⬜Work Item Card (Configurable), ⬜Record Detail Page (Composable), +24 more |
 | 23 | Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure | 1 | 27 | ⬜Background, ⬜Strategic Goal & OKR Management, ⬜OKR Hierarchy Tree, ⬜Goal Progress Dashboard, ⬜Scenario Planner / What-If Comparator, +22 more |
 | 24 | Log Console & Enterprise Engagement | 1 | 11 | ⬜Background, ⬜Developer & Operations Tooling, ✅Log Console, ⬜Enterprise Engagement & Social, ⬜Social Post Composer, +6 more |
 | 25 | Smart Text Input Engine | 1 | 14 | ⬜Background, ✅Smart Text Input Engine (STIE), ⬜Sub-Systems, ⬜Trigger Registry, ⬜Input Adapter Interface, +9 more |
 | 26 | ERP, ITSM, Process Intelligence, Orchestration & Agentic Enterprise | 0 | 20 | ⬜Background & Research Sources, ⬜Process Mining & Intelligence, ⬜Process Discovery Map, ⬜BPMN Heatmap Overlay, ⬜Variant Explorer, +15 more |
 | 27 | Dynamic UI | 5 | 5 | ✅DynamicCanvas, ✅WorkspaceShell, ✅ChatDock, ✅StickyNote, ✅Annotation |
-| 28 | Public Surfaces | 2 | 2 | ✅Marketing Hero, ✅Site Footer |
+| 28 | Public Surfaces | 4 | 4 | ✅Marketing Hero, ✅Site Footer, ✅Auth Card (Login Surface Parity), ✅Theme Init (Pre-Paint Theme Script) |
+| 30 | Workflow System Components | 0 | 19 | ⬜Background, ⬜New Components, ⬜CEL Editor, ⬜Protected Value, ⬜Evidence-Linked Prose, +14 more |
 
 ## Implemented Components
 
@@ -49,11 +50,11 @@ Compact status summary of the master component list. For full specs and descript
 
 **4. Rich Content Editing:** 4.1 Markdown Editor \+ Viewer with Tab & Side-by-Side Views | 4.2 Code Editor (JSON/YAML/General Purpose) | 4.4 LaTeX Editor
 
-**5. Data Grids & Tables:** 5.1 Data Grid
+**5. Data Grids & Tables:** 5.1 Data Grid | 5.4 Visual Table Editor
 
 **6. Tree Structures:** 6.1 Tree View | 6.2 Tree Grid
 
-**7. Toolbars & Status:** 7.1 Tool / Action Bar | 7.2 Status Bar | 7.3 Banner Bar | 7.4 Graph Toolbar | 7.5 LineWidthPicker | 7.6 LineTypePicker | 7.7 LineShapePicker | 7.8 LineEndingPicker | 7.9 Magnifier | 7.10 Ruler
+**7. Toolbars & Status:** 7.1 Tool / Action Bar | 7.2 Status Bar | 7.3 Banner Bar | 7.4 Graph Toolbar | 7.5 LineWidthPicker | 7.6 LineTypePicker | 7.7 LineShapePicker | 7.8 LineEndingPicker | 7.9 Magnifier | 7.10 Ruler | 7.11 Inline Toolbar
 
 **8. Containers:** 8.1 Tabbed Panel (Top or Bottom Dock) | 8.2 Sidebar (Left or Right Dock) | 8.3 NavRail (App-level Primary Navigation)
 
@@ -63,11 +64,11 @@ Compact status summary of the master component list. For full specs and descript
 
 **11. Events & Activity:** 11.1 Event Timeline | 11.2 Activity Feed
 
-**12. User Experience & Onboarding:** 12.1 Walkthrough (Guided Tour) | 12.2 Command Palette (AI-Enhanced) | 12.4 Empty State | 12.5 Skeleton Loader | 12.6 DocViewer (Documentation Layout) | 12.7 HelpDrawer (Contextual Help Panel) | 12.8 HelpTooltip (Contextual Help Icon) | 12.9 HoverCard (Informational Hover Preview)
+**12. User Experience & Onboarding:** 12.1 Walkthrough (Guided Tour) | 12.2 Command Palette (AI-Enhanced) | 12.4 Empty State | 12.5 Skeleton Loader | 12.6 DocViewer (Documentation Layout) | 12.7 HelpDrawer (Contextual Help Panel) | 12.8 HelpTooltip (Contextual Help Icon) | 12.9 HoverCard (Informational Hover Preview) | 12.10 Context Menu
 
 **13. Filtering, Search & Tagging:** 13.2 Facet-Aware Search Bar | 13.3 Freeform & Taxonomy Tagger | 13.5 Search Box
 
-**14. File & Content Management:** 14.1 File Upload / Download Manager | 14.3 File Explorer / Asset Browser
+**14. File & Content Management:** 14.1 File Upload / Download Manager | 14.3 File Explorer / Asset Browser | 14.4 ExplorerPicker (Resource Selection)
 
 **15. Workspace & Navigation:** 15.1 Multi-Tenant Switcher | 15.3 Breadcrumb Navigation (Contextual) | 15.5 User Menu | 15.6 App Launcher
 
@@ -81,7 +82,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **20. System Feedback & Indicators:** 20.1 Status Badges & Health Indicators | 20.2 Toast / Snackbar Notifications | 20.4 Pill (Inline Entity Reference) | 20.5 RichTextInput (Lightweight Rich Text) | 20.6 PersonChip (Person Identity Chip) | 20.7 PeoplePicker (Person Selector) | 20.8 PresenceIndicator (Avatar Stack) | 20.9 ShareDialog (Share Modal) | 20.10 TypeBadge (Ontology Type Badge) | 20.11 Feedback (Rating and Problem Reports)
 
-**21. Layout Container Components:** 21.2.1 Border Layout Container | 21.2.2 Box Layout Container (Stack) | 21.2.3 Flow Layout Container (Wrap) | 21.2.4 Grid Layout Container (Uniform) | 21.2.5 Flex Grid Layout Container (Advanced) | 21.2.6 Card Layout Container (Indexed Stack) | 21.2.7 Layer Layout Container (Z-Stack) | 21.2.8 Anchor Layout Container (Constraint) | 21.2.9 Dock Layout Container (IDE-Style) | 21.2.10 Split Layout Container (Resizable Panes)
+**21. Layout Container Components:** 21.2.1 Border Layout Container | 21.2.2 Box Layout Container (Stack) | 21.2.3 Flow Layout Container (Wrap) | 21.2.4 Grid Layout Container (Uniform) | 21.2.5 Flex Grid Layout Container (Advanced) | 21.2.6 Card Layout Container (Indexed Stack) | 21.2.7 Layer Layout Container (Z-Stack) | 21.2.8 Anchor Layout Container (Constraint) | 21.2.9 Dock Layout Container (IDE-Style) | 21.2.10 Split Layout Container (Resizable Panes) | 21.2.11 Stack Layout (Collapsible Panels)
 
 **22. Work, Execution & Automation Management:** 22.1.5 Relationship / Link Manager
 
@@ -93,7 +94,7 @@ Compact status summary of the master component list. For full specs and descript
 
 **27. Dynamic UI:** 27.1 DynamicCanvas | 27.2 WorkspaceShell | 27.3 ChatDock | 27.4 StickyNote | 27.5 Annotation
 
-**28. Public Surfaces:** 28.1 Marketing Hero | 28.2 Site Footer
+**28. Public Surfaces:** 28.1 Marketing Hero | 28.2 Site Footer | 28.3 Auth Card (Login Surface Parity) | 28.4 Theme Init (Pre-Paint Theme Script)
 
 ## Not Yet Implemented
 
@@ -119,6 +120,8 @@ Compact status summary of the master component list. For full specs and descript
 
 **16. Governance & Security:** 16.3 Secret / API Key Manager
 
+**17. Communication & Collaboration:** 17.3 Comment Thread | 17.4 Comment Panel
+
 **18. Workflows & Automation:** 18.1 Visual Workflow Builder (Node Canvas) | 18.3 Approval Flow Indicator
 
 **19. Layout & Presentation:** 19.1 Kanban Board | 19.2 Calendar / Scheduler View | 19.3 Comparison Table
@@ -136,4 +139,6 @@ Compact status summary of the master component list. For full specs and descript
 **25. Smart Text Input Engine:** 25.1 Background | 25.3 Sub-Systems | 25.3.1 Trigger Registry | 25.3.2 Input Adapter Interface | 25.3.3 Trigger Detector | 25.3.4 Popover Coordinator | 25.3.5 Token Model | 25.3.6 Token Serializer | 25.3.7 Token Renderer | 25.3.8 Engine API | 25.3.9 Integration Examples | 25.4 Interaction with Existing Components | 25.4.1 Excluded Input Types
 
 **26. ERP, ITSM, Process Intelligence, Orchestration & Agentic Enterprise:** 26.1 Background & Research Sources | 26.2 Process Mining & Intelligence | 26.2.1 Process Discovery Map | 26.2.2 BPMN Heatmap Overlay | 26.2.3 Variant Explorer | 26.2.4 Conformance Overlay (As-Is vs. To-Be) | 26.3 Guided Operations & Contextual Actions | 26.3.1 Guided Decision Tree | 26.3.2 Related Actions Menu (Context-Sensitive) | 26.3.3 Worklet / Quick-Action Tile Grid | 26.4 Agentic Enterprise — Agent Management & Governance | 26.4.1 Agent Registry / Fleet Dashboard | 26.4.2 Agent Guardrail Configuration Panel | 26.4.3 Agent Execution Trace Viewer | 26.4.4 Human-in-the-Loop Intervention Panel | 26.5 Analytical Compositions & ERP Patterns | 26.5.1 Analytical List Page | 26.5.2 Business Process Instance Viewer | 26.6 Cross-Reference: Composition Patterns | 26.7 Research Notes: Components Considered But Already Covered
+
+**30. Workflow System Components:** 30.1 Background | 30.2 New Components | 30.2.1 CEL Editor | 30.2.2 Protected Value | 30.2.3 Evidence-Linked Prose | 30.2.4 Point-in-Time Control | 30.2.5 Evidence Panel | 30.2.6 Proposal Card | 30.2.7 Screen Builder (Planned, Tentative) | 30.2.8 Proposal Review | 30.3 Required Extensions to Existing Components | 30.3.1 GraphCanvas (10.5, 10.6) | 30.3.2 Form Dialog (2.5) and Multi-Stage Stepper (18.2) | 30.3.3 Chart Panel (10.2.1) | 30.3.4 Data Grid (5.1) | 30.3.5 Pill (20.4) | 30.3.6 Event Timeline (11.1) and Immutable Audit Log Viewer (16.2) | 30.4 Cross-Reference: How These Components Compose | 30.5 Names in the Addendum and in This Library
 
