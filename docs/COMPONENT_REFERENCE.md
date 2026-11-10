@@ -18149,7 +18149,7 @@ const picker = createSprintPicker("custom-sprint", {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `anchorDate` | `Date \| string` | **required** | First sprint start date |
+| `anchorDate` | `Date \| string` | **required** | First sprint start date. A date-only string such as `"2026-01-05"` is that calendar day in the browser's time zone. |
 | `sprintLength` | `1–8` | `2` | Sprint duration in weeks |
 | `weekStartDay` | `0–6` | `1` (Mon) | Week start day |
 | `mode` | `"start" \| "end"` | `"start"` | Date resolution mode |

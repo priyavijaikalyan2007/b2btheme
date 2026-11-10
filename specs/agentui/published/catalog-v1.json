@@ -21544,7 +21544,7 @@
               "const": "SprintPicker"
             },
             "anchorDate": {
-              "description": "First sprint start date; must fall on weekStartDay.",
+              "description": "First sprint start date; must fall on weekStartDay. A date-only\nstring such as \"2026-01-05\" is that calendar day in local time.",
               "anyOf": [
                 {
                   "type": "string"

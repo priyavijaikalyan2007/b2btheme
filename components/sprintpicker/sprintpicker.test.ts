@@ -395,6 +395,54 @@ describe("edge cases", () =>
         fromString.destroy();
     });
 
+    // A date-only string such as "2026-01-05" is UTC midnight to
+    // `new Date(string)`. West of UTC that instant falls on January 4,
+    // so the first sprint started a day early. CI runs in UTC, where
+    // the test above passes either way, so this one sets the zone.
+    test("dateOnlyStringAnchor_IsThatCalendarDay_InEveryTimezone", () =>
+    {
+        const saved = process.env.TZ;
+        try
+        {
+            for (const tz of ["America/Los_Angeles", "Pacific/Pago_Pago", "UTC", "Asia/Kolkata", "Pacific/Kiritimati"])
+            {
+                process.env.TZ = tz;
+                const picker = new SprintPicker("test-sprintpicker", { anchorDate: "2026-01-05" });
+                const start = picker.getSprints()[0].startDate;
+
+                expect([tz, start.getFullYear(), start.getMonth(), start.getDate()]).toEqual([tz, 2026, 0, 5]);
+
+                picker.setAnchorDate("2026-03-02");
+                const moved = picker.getSprints()[0].startDate;
+
+                expect([tz, moved.getMonth(), moved.getDate()]).toEqual([tz, 2, 2]);
+                picker.destroy();
+            }
+        }
+        finally
+        {
+            process.env.TZ = saved;
+        }
+    });
+
+    test("dateTimeStringAnchor_KeepsItsLocalDay", () =>
+    {
+        const saved = process.env.TZ;
+        try
+        {
+            process.env.TZ = "America/Los_Angeles";
+            const picker = new SprintPicker("test-sprintpicker", { anchorDate: "2026-01-05T09:30:00" });
+            const start = picker.getSprints()[0].startDate;
+
+            expect([start.getMonth(), start.getDate()]).toEqual([0, 5]);
+            picker.destroy();
+        }
+        finally
+        {
+            process.env.TZ = saved;
+        }
+    });
+
     test("setSprintLength_RecomputesSprints", () =>
     {
         const sp = new SprintPicker("test-sprintpicker", {
