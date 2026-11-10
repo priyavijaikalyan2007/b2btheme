@@ -58,9 +58,10 @@ export const AUDIT_EXCEPTIONS = [
         via: "@a2ui/markdown-it",
         package: "@a2ui/lit",
         version: "0.14.0",
-        reason: "npm reports @a2ui/lit through its dependency @a2ui/markdown-it, whose nested dompurify carries "
-            + "advisories. a2ui-runtime does not bundle @a2ui/markdown-it or that dompurify: its package list, read "
-            + "from esbuild's metafile, has neither, and the audit refuses this exception if it ever does.",
+        reason: "npm reports @a2ui/lit through its dependency @a2ui/markdown-it, which npm flags through its peer "
+            + "@a2ui/web_core and that package's zod chain. Its nested dompurify is overridden to the served copy in "
+            + "package.json. a2ui-runtime does not bundle @a2ui/markdown-it: its package list, read from esbuild's "
+            + "metafile, does not have it, and the audit refuses this exception if it ever does.",
         evidence: ["https://github.com/priyavijaikalyan2007/b2btheme/issues/36"],
         decided: "2026-11-05",
         reviewBy: "2027-02-03",
