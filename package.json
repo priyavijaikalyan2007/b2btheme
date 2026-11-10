@@ -91,6 +91,9 @@
     "shell-quote": "^1.11.0",
     "zod-to-json-schema": {
       "zod": "3.25.76"
+    },
+    "@a2ui/markdown-it": {
+      "dompurify": "$dompurify"
     }
   },
   "devDependencies": {
