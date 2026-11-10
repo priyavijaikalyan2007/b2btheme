@@ -115,7 +115,7 @@ Read `lib.assets` rather than this table — it is generated, this is not.
 
 | Asset | Global | Notes |
 |---|---|---|
-| `dompurify` | `window.DOMPurify` | Served at **3.4.16**. See the warning in §6. |
+| `dompurify` | `window.DOMPurify` | Served at **3.4.17**. Ribbon needs it for gallery `preview` HTML (§5). See the warning in §6. |
 | `maxgraph` | `window.maxgraph` | ESM bundled to IIFE; a drop-in for code already reading `window.maxgraph` |
 | `signalr` | `window.signalR` | |
 | `cytoscape` | `window.cytoscape` | |
@@ -409,6 +409,32 @@ The item types that declare `tooltip?` optional are unaffected: inputs,
 dropdowns, labels, checkboxes, switches, numbers and colour pickers each
 carry their own visible label.
 
+### Ribbon gallery previews require DOMPurify (2026-11-10, breaking)
+
+**A gallery option with `preview` HTML needs DOMPurify on the page.** The
+Ribbon inserts that HTML only through `DOMPurify.sanitize()`, and throws
+without it when it builds the gallery. Until now it fell back to two
+regexes, which `<scr<script>ipt>` passes. Its check for DOMPurify also
+missed the browser build, which is a function, so every page took the
+regexes, even pages that loaded DOMPurify (CodeQL alerts #3 and #5,
+ADR-258).
+
+```js
+// A gallery option with preview HTML, and no DOMPurify on the page,
+// now throws:
+//   [Ribbon] gallery option "heading1" has preview HTML, which needs
+//   DOMPurify. Load DOMPurify (window.DOMPurify) before the Ribbon, or
+//   give the option an icon, a color or a label instead.
+const DOMPurify = await loadLib("dompurify");   // or the static tag in §4
+createRibbon({ tabs: [...] }, "ribbon-host");
+```
+
+**To migrate**, load DOMPurify before the Ribbon, or replace `preview`
+with `icon`, `color` or a plain `label`. Pages that already load DOMPurify
+need no change. Their previews now go through it, as intended. Options
+without `preview` are unaffected, and the A2UI catalog does not expose
+`preview`.
+
 ### This library will now throw at you
 
 Two consequences of ADR-148 that consuming code must handle:
@@ -438,7 +464,7 @@ known holes, and moving where it is fetched from would not have closed one of
 them.
 
 **Check the version you depend on, not only the host you fetch it from.** This
-origin serves DOMPurify at 3.4.16; if your application pins an older one
+origin serves DOMPurify at 3.4.17; if your application pins an older one
 anywhere else, that pin is the exposure.
 
 ## 7. Using the components from an AI agent
