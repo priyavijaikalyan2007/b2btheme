@@ -162,6 +162,8 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases**: Audience segmentation, custom report filters, alert rule definition, dynamic user targeting.
 
+**Workflow use (§30)**: the builder mode of 30.2.1 CEL Editor. It stays a separate component that edits a JSON condition tree with no CEL in it, so other products can use it without CEL. 22.4.3 and 22.4.5 reuse it too.
+
 ## 3.5✅Color Picker
 
 **Description**: Color selection input supporting hex, RGB, HSL, and named colors with a visual palette, eyedropper, opacity slider, and preset swatches.
@@ -284,6 +286,8 @@ This document defines the complete set of reusable UI components for a Bootstrap
 
 **Use Cases:** Configuration version comparison, contract draft vs. published diff, audit trail change inspection, migration preview.
 
+**Workflow use (§30)**: compares versions in 30.2.1 CEL Editor, 30.2.4 Point-in-Time Control and 30.2.8 Proposal Review. The vendored CodeMirror has no merge or diff package, so building this needs a diff engine: a new served dependency, or one written here.
+
 ## 4.4✅LaTeX Editor
 
 **Description**: Dual-mode equation editor with WYSIWYG visual editing (MathLive) and source LaTeX mode. Live KaTeX preview, 12-category symbol palette with chemistry (mhchem), and styling toolbar for colour, bold, size, highlighting. DiagramEngine-embeddable.
@@ -317,6 +321,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 **References**: Microsoft Excel PivotTables, Google Sheets Pivot, Looker. 
 
 **Use Cases**: Ad-hoc sales reporting, budget analysis by department and quarter, customer cohort analysis.
+
+## 5.4✅Visual Table Editor
+
+**Description**: A compact, embeddable editor for styled tables, visual first. DataGrid manages data with sorting, filtering and paging. This component presents and edits a table as content. It has per-cell formatting, inline rich content, merged cells, presets, live aggregate summaries, undo and redo, and the clipboard. See `components/visualtableeditor/`.
+
+**References**: Tables in PowerPoint, Figma, draw.io and Notion.
+
+**Use Cases:** Tables inside documents and slides, styled comparison tables, small editable summaries in a dashboard.
 
 # 6\. Tree Structures
 
@@ -401,6 +413,14 @@ This document defines the complete set of reusable UI components for a Bootstrap
 **Description**: Canvas-based calibrated ruler with cursor tracking, multiple unit systems (px, mm, cm, in, pt), DPI-aware rendering. Horizontal and vertical orientations with configurable tick marks and numbered labels. Factory createRuler().
 
 **Use Cases:** Design tool measurement, document layout guides, image editor coordinates, CAD-style rulers.
+
+## 7.11✅Inline Toolbar
+
+**Description**: A compact toolbar that renders inside its container as a flex row. It suits sidebars, panel headers and other places where a docked toolbar does not fit. It takes icon-pack classes like the other toolbars. See `components/inlinetoolbar/`.
+
+**References**: Panel header actions in VS Code, Figma and JetBrains IDEs.
+
+**Use Cases:** Sidebar headers, panel actions, card and section action rows.
 
 # 8\. Containers
 
@@ -871,6 +891,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: Graph node/edge detail previews, timeline event previews, tree view row metadata, data grid cell detail, any "preview without committing to click" affordance.
 
+## 12.10✅Context Menu
+
+**Description**: An accessible context menu with icons, keyboard shortcuts, separators, sub-menus, checked and radio items, and viewport edge detection. It opens on right-click or from code. It takes icon-pack classes. See `components/contextmenu/`.
+
+**References**: Desktop context menus in macOS and Windows, VS Code, Figma.
+
+**Use Cases:** Right-click actions on rows, nodes and files, overflow menus, canvas actions.
+
 # 13\. Filtering, Search & Tagging
 
 ## 13.1 Facet Filter Sidebar
@@ -938,6 +966,14 @@ Each view is a rendering strategy over the same underlying tree.
 **References**: Google Drive, Dropbox, SharePoint, VS Code Explorer. 
 
 **Use Cases:** Document management, media asset libraries, template repositories, shared team resources.
+
+## 14.4✅ExplorerPicker (Resource Selection)
+
+**Description**: A resource picker that renders an explorer tree in picker mode. The user browses the hierarchy or searches by name, selects one or more resources, and confirms. It ships as one CSS and JS pair with no runtime dependency on other components, and takes icon-pack classes. See `components/explorerpicker/`.
+
+**References**: Google Drive "Move to" picker, SharePoint location picker, Azure resource pickers.
+
+**Use Cases:** Choosing a destination folder, linking a record to a resource, scoping a search or a permission to part of a hierarchy.
 
 # 15\. Workspace & Navigation
 
@@ -1032,6 +1068,54 @@ Each view is a rendering strategy over the same underlying tree.
 **References**: Figma (comments), Google Docs, Notion. 
 
 **Use Cases:** Design review, data annotation, document collaboration, cell-level discussion in spreadsheets.
+
+**Planned change**: the overlay's thread popover renders through 17.3 Comment Thread. The overlay shares its threads with 17.4 Comment Panel, so a pin and its row in the panel select together.
+
+## 17.3 Comment Thread
+
+**Description**: One discussion thread that can be placed anywhere. It can sit in the 17.2 overlay's popover, in 17.4 Comment Panel, or on a page such as 30.2.8 Proposal Review. A thread has a root comment and replies, and can name what it is about, such as a field, a change or a graph node. The host stores comments and decides who may edit, delete or resolve them.
+
+**Key Capabilities:**
+
+* Root comment and replies, with author, time and an edited marker.
+* @mentions through 22.6.1 Mention / Autocomplete Popover, built on 25 Smart Text Input Engine.
+* Resolve and reopen, edit and delete, each shown only when the host allows it.
+* An anchor label, such as "Field: Amount" or "Node: Approve", that reports `onOpenAnchor` when selected.
+* Authorship on each comment, by the shared contract in 30.1, so a comment written by the platform or an agent shows as such.
+* Protected spans through 30.2.2 Protected Value.
+* A required-comment mode, for decisions that need a reason, such as declining a proposal.
+
+**Contract:**
+
+* Options: `thread` (root, replies, resolved, anchor), `currentUser`, `mentionUsers`, `permissions`, `readOnly`.
+* Events: `onReply({ text, mentions })`, `onEdit({ commentId, text })`, `onDelete({ commentId })`, `onResolve({ resolved })`, `onOpenAnchor({ anchor })`.
+* States: `"loading"`, `"ready"`, `"empty"`, `"read-only"`.
+
+**References**: GitHub pull request review threads, Google Docs comment threads, Figma comments, Linear issue comments.
+
+**Use Cases:** Proposal discussion, review comments on a diff, record-level discussion, the thread inside a comment pin.
+
+## 17.4 Comment Panel
+
+**Description**: A panel that lists every thread on a page or record, beside the content. The user filters, sorts and groups threads, and selecting one shows it through 17.3 Comment Thread and brings its anchor into view. It stays in step with 17.2 Commenting & Annotation Overlay, so selecting a pin selects its row, and the reverse.
+
+**Key Capabilities:**
+
+* Filters: open, resolved, mine, mentioning me. Counts for each.
+* Sort by newest, oldest or position. Group by anchor, such as by field or by node.
+* Selecting a thread reports `onOpenAnchor`, so the host can scroll to the field or focus the node.
+* A "New comment" action for a thread that is not pinned to anything.
+* Docks in 8.2 Sidebar or 19.4 Property Inspector.
+
+**Contract:**
+
+* Options: `threads`, `filter`, `sort`, `groupBy`, `selectedThreadId`, plus the 17.3 options.
+* Events: `onSelectThread({ threadId })`, `onFilterChange({ filter })`, `onNewThread({ text, anchor? })`, `onOpenAnchor({ anchor })`, plus the 17.3 events.
+* States: `"loading"`, `"ready"`, `"empty"`.
+
+**References**: Google Docs comment sidebar, Figma comments panel, Notion comments panel, GitHub "Files changed" conversation list.
+
+**Use Cases:** Proposal review, document and design review, record discussion, reviewing every open comment before a release.
 
 # 18\. Workflows & Automation
 
@@ -1134,6 +1218,8 @@ Each view is a rendering strategy over the same underlying tree.
 **References**: Google Docs @mentions, GitHub issue references, Slack channel/user pills, Linear issue tags.
 
 **Use Cases:** @mention pills in text editors, issue/document references, tag chips, inline entity links, STIE token rendering.
+
+**Workflow use (§30)**: renders references in section 30, with the reference states in 30.3.5.
 
 ## 20.5✅RichTextInput (Lightweight Rich Text)
 
@@ -1557,6 +1643,14 @@ References (Web): VS Code (editor splits), CodeSandbox (editor \+ preview), Figm
 * Multi-panel workspaces (explorer | editor | console).  
 * Any layout where the user needs to control the relative proportions of adjacent content areas.
 
+### 21.2.11✅Stack Layout (Collapsible Panels)
+
+**Description**: A vertical stack of panels, each with a collapsible header (icon, title and chevron) and a content area. Dragging the dividers resizes the panels. A collapsed panel keeps only its 28px header, and the others grow to fill the space. It differs from 21.2.2 Box Layout, which stacks children with no headers. See `components/stacklayout/`.
+
+**References**: VS Code side bar sections, JetBrains tool window groups.
+
+**Use Cases:** Explorer, outline and properties panels in one sidebar, settings groups, inspector sections.
+
 ## 21.3 Composability Infrastructure
 
 ### 21.3.1 Layout Composition Rules
@@ -1582,16 +1676,16 @@ To make the above containers nestable and interoperable, all layout containers m
 
 | \# | Layout Container | Algorithm | Axis | Children | Closest CSS Equivalent |
 | :---- | :---- | :---- | :---- | :---- | :---- |
-| 21.1 | Border Layout | 5-region edge docking | Both | Named slots (N/S/E/W/C) | Grid with template areas |
-| 21.2 | Box Layout | Single-axis stack | H or V | Sequential | flex-direction: row/column |
-| 21.3 | Flow Layout | Wrapping flow | H or V | Sequential, wrapping | flex-wrap: wrap |
-| 21.4 | Grid Layout (Uniform) | Equal-sized cell matrix | Both | Grid cells | grid with 1fr tracks |
-| 21.5 | Flex Grid Layout | Variable row/col grid | Both | Positioned cells | grid with mixed tracks |
-| 21.6 | Card Layout | Single-visible stack | Z | Indexed/keyed | display: none toggling |
-| 21.7 | Layer Layout | Z-axis stacking (all visible) | Z | Positioned overlays | position: relative/absolute |
-| 21.8 | Anchor Layout | Edge-constraint positioning | Both | Independently positioned | position: absolute with insets |
-| 21.9 | Dock Layout | Recursive split/tab tree | Both | Dockable panels | No CSS equiv (GoldenLayout) |
-| 21.10 | Split Layout | Draggable dividers | H or V | Resizable panes | CSS resize (limited) |
+| 21.2.1 | Border Layout | 5-region edge docking | Both | Named slots (N/S/E/W/C) | Grid with template areas |
+| 21.2.2 | Box Layout | Single-axis stack | H or V | Sequential | flex-direction: row/column |
+| 21.2.3 | Flow Layout | Wrapping flow | H or V | Sequential, wrapping | flex-wrap: wrap |
+| 21.2.4 | Grid Layout (Uniform) | Equal-sized cell matrix | Both | Grid cells | grid with 1fr tracks |
+| 21.2.5 | Flex Grid Layout | Variable row/col grid | Both | Positioned cells | grid with mixed tracks |
+| 21.2.6 | Card Layout | Single-visible stack | Z | Indexed/keyed | display: none toggling |
+| 21.2.7 | Layer Layout | Z-axis stacking (all visible) | Z | Positioned overlays | position: relative/absolute |
+| 21.2.8 | Anchor Layout | Edge-constraint positioning | Both | Independently positioned | position: absolute with insets |
+| 21.2.9 | Dock Layout | Recursive split/tab tree | Both | Dockable panels | No CSS equiv (GoldenLayout) |
+| 21.2.10 | Split Layout | Draggable dividers | H or V | Resizable panes | CSS resize (limited) |
 
 ## 21.5 Priority & Implementation Order
 
@@ -1635,6 +1729,8 @@ This section identifies generic, reusable components distilled from patterns fou
 * Customer onboarding forms that adapt based on customer tier.  
 * Case intake forms where different case types show different fields.  
 * Any entity where form structure varies by context without code changes.
+
+**Workflow use (§30)**: this builder evaluates visibility rules in the component. Workflow forms resolve them in the host instead (30.3.2). 30.2.7 Screen Builder is a candidate to absorb it if forms become a screen type.
 
 ### 22.1.2 Custom Field Definition Manager
 
@@ -1874,6 +1970,8 @@ This section identifies generic, reusable components distilled from patterns fou
 * AI-flagged items requiring human review (pairs with existing HITL Queue component.  
 * Content moderation queues.
 
+**Workflow use (§30)**: shows 30.2.6 Proposal Cards as its rows for batch review, with a bulk decision and per-item exceptions.
+
 ## 22.4. Automation, Agents & Policy
 
 ### 22.4.1 Snippet / Template Manager
@@ -1943,6 +2041,8 @@ This section identifies generic, reusable components distilled from patterns fou
 * Automation triggers: "When ticket priority \= Critical AND no response in 15 min, escalate to on-call."  
 * Data validation rules: "Reject expense reports where amount \> $10,000 without VP approval."  
 * AI guardrails: "Block agent actions that modify production data without human confirmation."
+
+**Workflow use (§30)**: can host 30.2.1 CEL Editor for its conditions when the rules are CEL.
 
 ### 22.4.4 Decision Table
 
@@ -2099,47 +2199,47 @@ This section identifies generic, reusable components distilled from patterns fou
 
 The components in these sections are designed to work together and with existing components. Here are the key composition patterns:
 
-Record Detail Page (§22.4)  
+Record Detail Page (§22.1.4)  
 ├── Summary Header  
-│   ├── Case Lifecycle Stage Tracker (§24.1)  
-│   └── SLA Timer (§24.2)  
+│   ├── Case Lifecycle Stage Tracker (§22.3.1)  
+│   └── SLA Timer (§22.3.2)  
 ├── Tab: Details  
-│   └── Dynamic Form Builder (§22.1) — driven by Custom Fields (§22.2)  
+│   └── Dynamic Form Builder (§22.1.1) — driven by Custom Fields (§22.1.2)  
 ├── Tab: Activity  
-│   └── Rich Activity Log (§27.2) — with Mention Popover (§27.1)  
+│   └── Rich Activity Log (§22.6.2) — with Mention Popover (§22.6.1)  
 ├── Tab: Related  
-│   └── Relationship / Link Manager (§22.5)  
+│   └── Relationship / Link Manager (§22.1.5)  
 ├── Tab: Automation  
-│   └── Automation Rule Builder (§25.5)  
+│   └── Automation Rule Builder (§22.4.5)  
 └── Utility Panel (Right Dock)  
     ├── Followers widget  
     ├── Tags (Freeform & Taxonomy Tagger §13.3)  
-    ├── SLA Timer (§24.2)  
-    └── Snippet Quick-Insert (§25.1)
+    ├── SLA Timer (§22.3.2)  
+    └── Snippet Quick-Insert (§22.4.1)
 
 Project Management Workspace  
-├── Border Layout (§21.1)  
+├── Border Layout (§21.2.1)  
 │   ├── North: Tool/Action Bar (§7.1)  
 │   ├── West: Multi-Level Sidebar (§15.4) — with Triage badge count  
-│   ├── Center: Card Layout (§21.6) — switching between:  
-│   │   ├── Kanban Board (§19.1) — with Work Item Cards (§22.3)  
-│   │   ├── Backlog / Priority List (§23.2)  
-│   │   ├── Sprint / Cycle Board (§23.3)  
-│   │   ├── Gantt / Timeline (§23.1)  
+│   ├── Center: Card Layout (§21.2.6) — switching between:  
+│   │   ├── Kanban Board (§19.1) — with Work Item Cards (§22.1.3)  
+│   │   ├── Backlog / Priority List (§22.2.2)  
+│   │   ├── Sprint / Cycle Board (§22.2.3)  
+│   │   ├── Gantt / Timeline (§22.2.1)  
 │   │   └── Composite Data Grid (§5.2) — table view  
-│   ├── East: Property Inspector (§19.4) — with Dynamic Form (§22.1)  
-│   └── South: Split Layout (§21.10)  
-│       ├── Burndown Chart (§26.1)  
-│       └── Cumulative Flow Diagram (§26.3)
+│   ├── East: Property Inspector (§19.4) — with Dynamic Form (§22.1.1)  
+│   └── South: Split Layout (§21.2.10)  
+│       ├── Burndown Chart (§22.5.1)  
+│       └── Cumulative Flow Diagram (§22.5.3)
 
 Policy Administration  
-├── Policy Rule Editor (§25.3)  
+├── Policy Rule Editor (§22.4.3)  
 │   └── Condition builder reuses Query Builder (§3.4)  
-├── Decision Table (§25.4)  
+├── Decision Table (§22.4.4)  
 │   └── Test mode reuses Data Diff Viewer (§4.3) for before/after  
-├── Automation Rule Builder (§25.5)  
+├── Automation Rule Builder (§22.4.5)  
 │   └── Action palette reuses Workflow Builder nodes (§18.1)  
-└── Agent Workflow Monitor (§25.2)  
+└── Agent Workflow Monitor (§22.4.2)  
     └── Run detail reuses Inference Trace Panel (§9.2) \+ Steppable Progress (§2.2)
 
 # 23\. Operations, Strategy, Change Management, Approval, Orchestration & Infrastructure
@@ -2278,9 +2378,11 @@ Sections continue from the Work Management / CRM / Agents / Policy addendum (§2
 * Deployment gate approval before production push.  
 * Document review approval cards in publishing workflows.
 
+**Workflow use (§30)**: the base of 30.2.6 Proposal Card, which adds the plane, authorship, an evidence summary and an adjust action. It stays a separate component for approvals outside the change spine.
+
 ### 23.3.3 Change Request Tracker
 
-**Description**: A specialized work item view for tracking change requests through their lifecycle: submission → assessment → approval → implementation → review → closure. Combines the Case Lifecycle Stage Tracker (§24.1) with risk assessment fields, impact analysis, rollback plan documentation, and post-implementation review.
+**Description**: A specialized work item view for tracking change requests through their lifecycle: submission → assessment → approval → implementation → review → closure. Combines the Case Lifecycle Stage Tracker (§22.3.1) with risk assessment fields, impact analysis, rollback plan documentation, and post-implementation review.
 
 **Key Capabilities:**
 
@@ -2303,6 +2405,8 @@ Sections continue from the Work Management / CRM / Agents / Policy addendum (§2
 * Database migration change requests with rollback plans.  
 * Network/firewall change tracking with impact assessment.
 
+**Workflow use (§30)**: keeps the change lifecycle. Its approval stage uses 30.2.6 Proposal Card, and its review uses 30.2.8 Proposal Review.
+
 ## 23.4 Orchestration & Pipeline Management
 
 ### 23.4.1 Pipeline Execution Visualizer
@@ -2320,7 +2424,7 @@ Sections continue from the Work Management / CRM / Agents / Policy addendum (§2
 * Timeline overlay: horizontal time axis showing actual duration per stage.  
 * Retry/rollback controls: per-stage retry, skip, or rollback actions for failed stages.
 
-**Cross-References:** Topology rendering relates to Visual Workflow Builder but is read-only execution view. Step detail connects to Agent Workflow Monitor (§25.2) for live log streaming. Timing overlay connects to Gantt/Timeline Chart (§23.1).
+**Cross-References:** Topology rendering relates to Visual Workflow Builder but is read-only execution view. Step detail connects to Agent Workflow Monitor (§22.4.2) for live log streaming. Timing overlay connects to Gantt/Timeline Chart (§22.2.1).
 
 **References**: Harness Pipeline Studio execution view, GitHub Actions workflow run visualization, GitLab CI/CD pipeline graph, Azure DevOps pipeline run view, Jenkins Blue Ocean, CircleCI pipeline view, AWS CodePipeline.
 
@@ -2339,13 +2443,13 @@ Sections continue from the Work Management / CRM / Agents / Policy addendum (§2
 
 * Environment cards: one per environment showing name, tier (dev/staging/prod), deployed version, deployment timestamp, health status.  
 * Version comparison: which environments are on which version, highlighting version drift.  
-* Promotion flow: one-click promote from staging → production with approval gate (links to Approval Flow §29.1).  
+* Promotion flow: one-click promote from staging → production with approval gate (links to Approval Flow §23.3.1).  
 * Rollback: one-click rollback to previous version with confirmation.  
 * Lock/freeze: lock an environment to prevent deployments (e.g., during code freeze).  
 * Health indicators: integrated health check status (healthy, degraded, down) from monitoring systems.  
 * Deployment history: timeline of recent deployments per environment with success/failure.
 
-**Cross-References:** Environment cards use Card Layout patterns. Promotion with approval connects to Approval Flow Designer (§29.1). Health status relates to Status Dot/Badge (§2.1). Deployment timeline relates to Rich Activity Log (§27.2).
+**Cross-References:** Environment cards use Card Layout patterns. Promotion with approval connects to Approval Flow Designer (§23.3.1). Health status relates to Status Dot/Badge (§20.1). Deployment timeline relates to Rich Activity Log (§22.6.2).
 
 **References**: Harness CD environment management, Zeet environment dashboard, AWS Elastic Beanstalk environments, Heroku pipeline (review → staging → production), Vercel deployment dashboard, Netlify deploy contexts, ArgoCD application dashboard.
 
@@ -2369,7 +2473,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Auto-rollback rules: "If error rate \> 5% during canary, auto-rollback."  
 * Strategy history: which strategy was used for past deployments, with outcomes.
 
-**Cross-References:** Strategy selection feeds into Pipeline Execution Visualizer (§30.1). Auto-rollback rules reuse Automation Rule Builder (§25.5) pattern. Health parameters relate to SLA Timer (§24.2) concepts.
+**Cross-References:** Strategy selection feeds into Pipeline Execution Visualizer (§23.4.1). Auto-rollback rules reuse Automation Rule Builder (§22.4.5) pattern. Health parameters relate to SLA Timer (§22.3.2) concepts.
 
 **References**: Harness deployment strategies (canary, blue-green, rolling), Argo Rollouts, Flagger, Istio traffic management, Spinnaker deployment pipelines, AWS CodeDeploy strategies.
 
@@ -2392,11 +2496,11 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Search: full-text search across names, descriptions, tags, and tech stack.  
 * Filtering: by team, tier, lifecycle status, tech stack, domain/system, compliance status.  
 * Detail view: owner, description, dependencies (upstream/downstream), repositories, documentation links, on-call contacts, recent deployments, health status.  
-* Dependency graph: visualize service-to-service dependencies (links to Dependency Topology §31.4).  
+* Dependency graph: visualize service-to-service dependencies (links to Dependency Topology §23.5.4).  
 * Metadata extensibility: custom properties per entity type (cost center, data classification, SLA tier).  
 * Ownership clarity: every service has a designated team owner, with escalation contacts.
 
-**Cross-References:** Search and filtering reuse Search Input (§3.1) and Faceted Filter Panel (§3.2). Detail view follows Record Detail Page (§22.4) composable pattern. Dependency graph links to new Dependency Topology (§31.4). Metadata extends Custom Field Definition Manager (§22.2).
+**Cross-References:** Search and filtering reuse Search Input (§13.5) and Faceted Filter Panel (§13.1). Detail view follows Record Detail Page (§22.1.4) composable pattern. Dependency graph links to new Dependency Topology (§23.5.4). Metadata extends Custom Field Definition Manager (§22.1.2).
 
 **References**: OpsLevel Service Catalog, Backstage Software Catalog, Cortex service catalog, Port.io software catalog, Datadog Service Catalog, Spotify Backstage.
 
@@ -2420,7 +2524,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Comparison: compare scorecard across services within a team.  
 * Campaign integration: link scorecard checks to improvement campaigns (e.g., "Migrate all services to Node 20").
 
-**Cross-References:** Check results display reuses status indicators from Status Dot/Badge (§2.1). Progress tracking over time connects to Trend Chart concepts. Campaign integration links to Roadmap/Initiative View (§23.4).
+**Cross-References:** Check results display reuses status indicators from Status Dot/Badge (§20.1). Progress tracking over time connects to Trend Chart concepts. Campaign integration links to Roadmap/Initiative View (§22.2.4).
 
 **References**: OpsLevel Scorecards & Checks (80+ out-of-box checks), Cortex Scorecards, Backstage TechDocs \+ Scorecards, Port.io Scorecards, Spotify's golden path checks.
 
@@ -2442,11 +2546,11 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Allocation bars: per resource/team, showing committed capacity vs. available capacity.  
 * Over/under indicators: color-coded (red \= over 100%, yellow \= 80–100%, green \= healthy, grey \= under-utilized).  
 * Drag-to-allocate: drag a project allocation block onto a resource row to assign capacity.  
-* Scenario mode: create hypothetical allocations to evaluate feasibility before committing (links to Scenario Planner §28.3).  
+* Scenario mode: create hypothetical allocations to evaluate feasibility before committing (links to Scenario Planner §23.2.3).  
 * Roll-up views: aggregate by team, department, or skill group.  
-* Integration: pulls assignments from Sprint/Cycle Board (§23.3) and Backlog (§23.2).
+* Integration: pulls assignments from Sprint/Cycle Board (§22.2.3) and Backlog (§22.2.2).
 
-**Cross-References:** Time-axis visualization relates to Gantt/Timeline Chart (§23.1). Over-allocation highlighting connects to capacity indicators in Sprint/Cycle Board (§23.3). Scenario mode links to Scenario Planner (§28.3).
+**Cross-References:** Time-axis visualization relates to Gantt/Timeline Chart (§22.2.1). Over-allocation highlighting connects to capacity indicators in Sprint/Cycle Board (§22.2.3). Scenario mode links to Scenario Planner (§23.2.3).
 
 **References**: Planview resource and capacity planning, Asana Workload view, ClickUp Workload view, Monday.com resource management, Smartsheet resource management, Microsoft Project resource leveling, Tempo Planner for Jira.
 
@@ -2472,7 +2576,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Health overlay: color nodes by health status (healthy/degraded/down) for real-time ops view.  
 * Filtering: show only N-degree neighbors of a selected node to reduce complexity.
 
-**Cross-References:** Graph rendering relates to Node-Edge Diagram concepts. Impact analysis relates to Relationship / Link Manager (§22.5). Health overlay connects to Service Scorecard (§31.2). Grouping uses visual clustering.
+**Cross-References:** Graph rendering relates to Node-Edge Diagram concepts. Impact analysis relates to Relationship / Link Manager (§22.1.5). Health overlay connects to Service Scorecard (§23.5.2). Grouping uses visual clustering.
 
 **References**: OpsLevel dependency visualization, Backstage System Model, Datadog Service Map, AWS X-Ray service map, Dynatrace Smartscape, PagerDuty service graph, Istio service mesh visualization.
 
@@ -2499,7 +2603,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Comparison: side-by-side team comparison or benchmark against industry.  
 * Correlation view: plot two metrics against each other (e.g., deployment frequency vs. change failure rate) to identify trade-offs.
 
-**Cross-References:** Metric cards reuse Metric Gauge (§2.4) and KPI Sparkline (§2.3). Trend charts reuse existing chart components. Team comparison layout uses Box Layout (§21.2).
+**Cross-References:** Metric cards reuse Metric Gauge (§10.1) and KPI Sparkline (§10.2). Trend charts reuse existing chart components. Team comparison layout uses Box Layout (§21.2).
 
 **References**: LinearB DORA metrics dashboard (free tier), Jellyfish delivery metrics, Swarmia DORA \+ SPACE metrics, Sleuth DORA tracker, Cortex DORA scorecards, Google Cloud DORA quick check, Datadog DORA metrics.
 
@@ -2524,7 +2628,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Team/repo filter: break down by team, repository, or PR size.  
 * Trend: compare this period's breakdown to the previous period — "Review time increased by 40%."
 
-**Cross-References:** Segmented bar visualization is a specialized chart. Bottleneck identification concept relates to Cumulative Flow Diagram (§26.3). Percentile distribution could use box-plot or histogram sub-components.
+**Cross-References:** Segmented bar visualization is a specialized chart. Bottleneck identification concept relates to Cumulative Flow Diagram (§22.5.3). Percentile distribution could use box-plot or histogram sub-components.
 
 **References**: LinearB cycle time analytics, Sleuth cycle time breakdown, Swarmia development cycle time, Jellyfish workflow efficiency, GitHub Copilot Metrics (coding time), Pluralsight Flow (formerly GitPrime) cycle time.
 
@@ -2549,7 +2653,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Team comparison: compare allocation across teams to identify teams drowning in operational toil.  
 * Trend: "Tech debt allocation has been increasing for 3 consecutive quarters."
 
-**Cross-References:** Stacked area chart relates to Cumulative Flow Diagram (§26.3) rendering. Pie/donut chart is a standard chart component. Target overlay lines reuse Burndown (§26.1) ideal-line pattern.
+**Cross-References:** Stacked area chart relates to Cumulative Flow Diagram (§22.5.3) rendering. Pie/donut chart is a standard chart component. Target overlay lines reuse Burndown (§22.5.1) ideal-line pattern.
 
 **References**: Jellyfish engineering investment tracking, Planview investment allocation, LinearB resource allocation, Swarmia business outcomes module, Haystack investment breakdown, Faros engineering metrics.
 
@@ -2577,7 +2681,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Search: full-text search across all pages with snippet previews.  
 * Permissions: per-space and per-page access control (view, edit, admin).
 
-**Cross-References:** Rich text editing relates to mention/autocomplete popover (§27.1). Task lists integrate with work item creation. Page hierarchy uses Tree View (§6.1) for navigation. Version diff uses Data Diff Viewer (§4.3).
+**Cross-References:** Rich text editing relates to mention/autocomplete popover (§22.6.1). Task lists integrate with work item creation. Page hierarchy uses Tree View (§6.1) for navigation. Version diff uses Data Diff Viewer (§4.3).
 
 **References**: Confluence spaces and pages, Notion page hierarchy, GitBook documentation, Slite team wiki, Nuclino, Outline wiki, Coda documents, Almanac, Slab.
 
@@ -2603,7 +2707,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Templates: per-project-type templates (sprint update, initiative update, executive briefing).  
 * Reactions and comments: stakeholders can react (👍, ⚠️, 🔥) or add threaded comments.
 
-**Cross-References:** Status feed is a specialized form of Rich Activity Log (§27.2). Metrics snapshot pulls from Goal Progress Dashboard (§28.2). Comment threads use existing comment/discussion patterns.
+**Cross-References:** Status feed is a specialized form of Rich Activity Log (§22.6.2). Metrics snapshot pulls from Goal Progress Dashboard (§23.2.2). Comment threads use existing comment/discussion patterns.
 
 **References**: Linear Project Updates, Asana Status Updates, Monday.com project updates, Basecamp check-ins, Range.co check-ins, Lattice updates, Quantive OKR check-ins.
 
@@ -2628,7 +2732,7 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 * Collaborative: multiple operators can work on the same runbook instance simultaneously.  
 * Runbook library: browse and launch from a catalog of approved runbooks.
 
-**Cross-References:** Step progression relates to Steppable Progress (§2.2). Checklist rendering relates to the Checklist component if defined. Execution log connects to Rich Activity Log (§27.2). Command embedding relates to Snippet/Template Manager (§25.1) for command snippets.
+**Cross-References:** Step progression relates to Steppable Progress (§2.2). Checklist rendering relates to the Checklist component if defined. Execution log connects to Rich Activity Log (§22.6.2). Command embedding relates to Snippet/Template Manager (§22.4.1) for command snippets.
 
 **References**: PagerDuty Runbook Automation, Rundeck, Transposit incident runbooks, Shoreline.io, Confluence runbook templates (but non-interactive), OpsLevel Actions, FireHydrant runbooks.
 
@@ -2642,51 +2746,51 @@ D**e**scription: A configuration panel for selecting and parameterizing a deploy
 ## 23.8 Cross-Reference: How These Components Compose
 
 Strategic Planning Workspace  
-├── Border Layout (§21.1)  
+├── Border Layout (§21.2.1)  
 │   ├── North: Goal Period Selector (Q1 2026, Q2 2026...)  
-│   ├── West: OKR Hierarchy Tree (§28.1) — navigable sidebar  
-│   ├── Center: Card Layout (§21.6) — switching between:  
-│   │   ├── Goal Progress Dashboard (§28.2) — heatmap view  
-│   │   ├── Scenario Planner (§28.3) — side-by-side comparison  
-│   │   ├── Resource Capacity Planner (§31.3) — allocation bars  
-│   │   └── Investment Allocation Tracker (§32.3) — spend breakdown  
-│   └── East: Status Update Feed (§33.2) — async project updates
+│   ├── West: OKR Hierarchy Tree (§23.2.1) — navigable sidebar  
+│   ├── Center: Card Layout (§21.2.6) — switching between:  
+│   │   ├── Goal Progress Dashboard (§23.2.2) — heatmap view  
+│   │   ├── Scenario Planner (§23.2.3) — side-by-side comparison  
+│   │   ├── Resource Capacity Planner (§23.5.3) — allocation bars  
+│   │   └── Investment Allocation Tracker (§23.6.3) — spend breakdown  
+│   └── East: Status Update Feed (§23.7.2) — async project updates
 
 DevOps / Release Management Console  
-├── Split Layout (§21.10)  
-│   ├── Left Pane: Pipeline Execution Visualizer (§30.1)  
+├── Split Layout (§21.2.10)  
+│   ├── Left Pane: Pipeline Execution Visualizer (§23.4.1)  
 │   │   ├── Stage nodes with live status  
-│   │   ├── Approval Gate stages → Approval Task Card (§29.2)  
-│   │   └── Deployment stages → Deployment Strategy Selector (§30.3)  
+│   │   ├── Approval Gate stages → Approval Task Card (§23.3.2)  
+│   │   └── Deployment stages → Deployment Strategy Selector (§23.4.3)  
 │   └── Right Pane: Tabbed View  
-│       ├── Tab: Environments → Environment Manager (§30.2)  
-│       ├── Tab: Services → Service Catalog Browser (§31.1)  
-│       │   └── Detail → Service Scorecard (§31.2)  
-│       ├── Tab: Dependencies → Dependency Topology Map (§31.4)  
-│       └── Tab: Metrics → DORA Metrics Dashboard (§32.1)  
-│           └── Drill-down → Cycle Time Breakdown (§32.2)
+│       ├── Tab: Environments → Environment Manager (§23.4.2)  
+│       ├── Tab: Services → Service Catalog Browser (§23.5.1)  
+│       │   └── Detail → Service Scorecard (§23.5.2)  
+│       ├── Tab: Dependencies → Dependency Topology Map (§23.5.4)  
+│       └── Tab: Metrics → DORA Metrics Dashboard (§23.6.1)  
+│           └── Drill-down → Cycle Time Breakdown (§23.6.2)
 
 Change Management Flow  
-├── Change Request Tracker (§29.3)  
-│   ├── Stage: Submit → Dynamic Form (§22.1) with impact fields  
-│   ├── Stage: Assess → Risk matrix \+ Dependency Topology (§31.4) impact blast radius  
-│   ├── Stage: Approve → Approval Flow Designer (§29.1) drives approval chain  
-│   │   └── Approvers see → Approval Task Cards (§29.2)  
-│   ├── Stage: Implement → Pipeline Execution Visualizer (§30.1)  
-│   │   └── Deployment → Deployment Strategy Selector (§30.3)  
-│   ├── Stage: Verify → Runbook / Playbook Runner (§33.3) post-deploy checks  
-│   └── Stage: Close → Rich Activity Log (§27.2) full audit trail
+├── Change Request Tracker (§23.3.3)  
+│   ├── Stage: Submit → Dynamic Form (§22.1.1) with impact fields  
+│   ├── Stage: Assess → Risk matrix \+ Dependency Topology (§23.5.4) impact blast radius  
+│   ├── Stage: Approve → Approval Flow Designer (§23.3.1) drives approval chain  
+│   │   └── Approvers see → Approval Task Cards (§23.3.2)  
+│   ├── Stage: Implement → Pipeline Execution Visualizer (§23.4.1)  
+│   │   └── Deployment → Deployment Strategy Selector (§23.4.3)  
+│   ├── Stage: Verify → Runbook / Playbook Runner (§23.7.3) post-deploy checks  
+│   └── Stage: Close → Rich Activity Log (§22.6.2) full audit trail
 
 Operational Knowledge Hub  
 ├── Multi-Level Sidebar (§15.4) — space/section/page tree  
-├── Center: Knowledge Page Editor (§33.1)  
-│   ├── Embedded: Snippet Manager (§25.1) — command snippets in runbooks  
-│   ├── Embedded: Mention Popover (§27.1) — @people, \#issues  
+├── Center: Knowledge Page Editor (§23.7.1)  
+│   ├── Embedded: Snippet Manager (§22.4.1) — command snippets in runbooks  
+│   ├── Embedded: Mention Popover (§22.6.1) — @people, \#issues  
 │   └── Embedded: Mermaid/Diagram rendering (from diagramming tools)  
 ├── Right Panel: Page metadata  
 │   ├── Version history (Data Diff Viewer §4.3)  
 │   ├── Inline comments thread  
-│   └── Related pages / linked work items (Relationship Manager §22.5)
+│   └── Related pages / linked work items (Relationship Manager §22.1.5)
 
 # 24\. Log Console & Enterprise Engagement
 
@@ -2726,7 +2830,7 @@ This section adds a streaming log console component and enterprise social/engage
 * onLine — callback for each new log line (for external processing).  
 * colorScheme — mapping of level → color (overridable, defaults to standard: DEBUG=blue, INFO=green, WARN=yellow, ERROR=red).
 
-**Cross-References**: Virtual scrolling for performance relates to Composite Data Grid (§5.2) virtualization. Structured field expansion similar to JSON viewer in Inference Trace Panel (§9.2). Search highlighting reuses Search Input (§3.1) patterns. The Log Console is a natural child component within the Agent Workflow Monitor (§25.2), Pipeline Execution Visualizer (§30.1), and Runbook/Playbook Runner (§33.3).
+**Cross-References**: Virtual scrolling for performance relates to Composite Data Grid (§5.2) virtualization. Structured field expansion similar to JSON viewer in Inference Trace Panel (§9.2). Search highlighting reuses Search Input (§13.5) patterns. The Log Console is a natural child component within the Agent Workflow Monitor (§22.4.2), Pipeline Execution Visualizer (§23.4.1), and Runbook/Playbook Runner (§23.7.3).
 
 **References**: Browser DevTools Console, Docker docker logs \--follow, Datadog Log Tail, AWS CloudWatch Logs Insights live tail, Grafana Loki log viewer, Kibana Discover, Seq structured log viewer, VS Code Output/Terminal panel, Heroku heroku logs \--tail.
 
@@ -2736,7 +2840,7 @@ This section adds a streaming log console component and enterprise social/engage
 * CI/CD pipeline stage logs: viewing build or deployment output.  
 * Application debugging: streaming structured logs from a running service.  
 * Infrastructure monitoring: tailing system logs with level filtering.  
-* Embedded in Dock Layout (§21.9) as a bottom panel, IDE-style.
+* Embedded in Dock Layout (§21.2.9) as a bottom panel, IDE-style.
 
 ## 24.3 Enterprise Engagement & Social
 
@@ -2748,14 +2852,14 @@ This section adds a streaming log console component and enterprise social/engage
 
 * Post types: Standard update (text \+ media), Question (flagged for answers, best-answer marking), Announcement (pinnable, highlighted), Praise/Recognition (select recipient \+ badge), Poll (question \+ 2–6 options with optional deadline).  
 * Rich text: Bold, italic, links, bulleted lists, code inline. Not full document editing — intentionally lightweight.  
-* @mentions: Users, teams, groups — triggers notification to mentioned parties. Reuses Mention/Autocomplete Popover (§27.1).  
+* @mentions: Users, teams, groups — triggers notification to mentioned parties. Reuses Mention/Autocomplete Popover (§22.6.1).  
 * \#topics / hashtags: Tag posts with topics for discoverability and feed filtering.  
 * Attachments: Images (inline preview), files (download card), links (auto-preview with Open Graph card).  
 * Audience selector: Post to: Everyone, specific Group/Channel, specific Team, or External Community (if enabled).  
 * Scheduling: Post now or schedule for a future date/time.  
 * Draft auto-save.
 
-**Cross-References**: @mentions reuse Mention/Autocomplete Popover (§27.1). Rich text is a simplified subset of Knowledge Page Editor (§33.1). File attachments reuse existing upload patterns. Audience selector is a specialized dropdown.
+**Cross-References**: @mentions reuse Mention/Autocomplete Popover (§22.6.1). Rich text is a simplified subset of Knowledge Page Editor (§23.7.1). File attachments reuse existing upload patterns. Audience selector is a specialized dropdown.
 
 **References**: Yammer/Viva Engage post composer, Workplace by Meta post creation, Salesforce Chatter publisher, Slack message composer (adapted for social feed), Microsoft Teams community posts, Basecamp message board.
 
@@ -2783,7 +2887,7 @@ This section adds a streaming log console component and enterprise social/engage
 * Moderation indicators: Flagged-for-review badge, admin-removed placeholder.  
 * Infinite scroll with load-more.
 
-**Cross-References:** Post cards are a specialized variant of Work Item Card (§22.3) optimized for social content. Comment threads relate to Commenting & Annotation Overlay (§17.2). Feed pagination uses existing infinite-scroll patterns. Real-time updates relate to Activity Feed (§11.2) but with richer social engagement.
+**Cross-References:** Post cards are a specialized variant of Work Item Card (§22.1.3) optimized for social content. Comment threads relate to Commenting & Annotation Overlay (§17.2). Feed pagination uses existing infinite-scroll patterns. Real-time updates relate to Activity Feed (§11.2) but with richer social engagement.
 
 **References**: Yammer/Viva Engage home feed, Workplace by Meta News Feed, Salesforce Chatter feed, LinkedIn feed, Microsoft Teams community feed, Basecamp message board, Discourse topic list.
 
@@ -2809,7 +2913,7 @@ This section adds a streaming log console component and enterprise social/engage
 * Inline embedding: Renders within a social post card, knowledge page, or as a standalone widget.  
 * Edit/close controls: Author can edit options (before any votes), close early, or extend deadline.
 
-**Cross-References**: Embeds within Social Post Composer (§35.1) and Social Feed (§35.2). Can also embed in the Knowledge Page Editor (§33.1). The results bar chart is a simplified horizontal bar.
+**Cross-References**: Embeds within Social Post Composer (§24.3.1) and Social Feed (§24.3.2). Can also embed in the Knowledge Page Editor (§23.7.1). The results bar chart is a simplified horizontal bar.
 
 **References**: Yammer polls, Slack polls (Polly integration), Microsoft Teams Polls app, LinkedIn polls, Workplace by Meta polls, Google Forms (lightweight mode), Strawpoll.
 
@@ -2831,11 +2935,11 @@ This section adds a streaming log console component and enterprise social/engage
 * Message: Short praise message from the giver.  
 * Linked work: Optional link to the project, issue, or deliverable being recognized.  
 * Engagement: Others can add reactions (celebrate, applaud) and comments.  
-* Feed integration: Appears in Social Feed (§35.2) with visual distinction from regular posts.  
+* Feed integration: Appears in Social Feed (§24.3.2) with visual distinction from regular posts.  
 * Points/gamification (optional): Configurable point value per recognition, with leaderboards.  
 * Celebration animation: Optional confetti or sparkle animation on first view.
 
-**Cross-References:** Renders as a specialized card within Social Feed (§35.2). Reactions reuse the Social Feed reaction system. Badge categories are managed via admin configuration (similar to Custom Field Definition Manager §22.2 option lists).
+**Cross-References:** Renders as a specialized card within Social Feed (§24.3.2). Reactions reuse the Social Feed reaction system. Badge categories are managed via admin configuration (similar to Custom Field Definition Manager §22.1.2 option lists).
 
 **References**: Yammer Praise, Bonusly, Lattice Recognition, 15Five High Fives, Slack Kudos bots, Microsoft Teams Praise app, Workday Peakon recognition, Culture Amp Shoutouts.
 
@@ -2848,7 +2952,7 @@ This section adds a streaming log console component and enterprise social/engage
 
 ### 24.3.5 Announcement Banner (Targeted)
 
-**Description**: A contextual, targeted announcement component that displays important messages to specific audiences within the social platform or application. More sophisticated than the existing System Banner (§1.3) — supports rich content, audience targeting, scheduling, read-tracking, and acknowledgment requirements.
+**Description**: A contextual, targeted announcement component that displays important messages to specific audiences within the social platform or application. More sophisticated than the existing System Banner (§7.3) — supports rich content, audience targeting, scheduling, read-tracking, and acknowledgment requirements.
 
 **Key Capabilities:**
 
@@ -2861,7 +2965,7 @@ This section adds a streaming log console component and enterprise social/engage
 * Read tracking: Admin dashboard showing read/acknowledged rate per audience segment.  
 * Archive: Past announcements accessible in an announcement history view.
 
-**Cross-References:** Extends System Banner (§1.3) with targeting and acknowledgment. Places within Social Feed (§35.2) as pinned content. Read tracking could surface in Goal Progress Dashboard (§28.2) style metrics.
+**Cross-References:** Extends System Banner (§7.3) with targeting and acknowledgment. Places within Social Feed (§24.3.2) as pinned content. Read tracking could surface in Goal Progress Dashboard (§23.2.2) style metrics.
 
 **References**: Yammer announcements, Viva Engage featured conversations, Workplace by Meta important posts, Microsoft Teams channel announcements, Slack channel topic/announcements, SharePoint news, Staffbase employee communications.
 
@@ -2876,21 +2980,21 @@ This section adds a streaming log console component and enterprise social/engage
 ## 24.4 Cross-Reference: How These Components Compose
 
 Enterprise Engagement Platform  
-├── Border Layout (§21.1)  
-│   ├── North: Announcement Banner Targeted (§35.5) — critical/pinned  
+├── Border Layout (§21.2.1)  
+│   ├── North: Announcement Banner Targeted (§24.3.5) — critical/pinned  
 │   ├── West: Multi-Level Sidebar (§15.4)  
 │   │   ├── Home Feed  
 │   │   ├── Groups (Engineering, Product, All-Company...)  
 │   │   ├── Topics (\#launch, \#kudos, \#ask-anything...)  
 │   │   └── My Profile  
 │   ├── Center:  
-│   │   ├── Top: Social Post Composer (§35.1)  
+│   │   ├── Top: Social Post Composer (§24.3.1)  
 │   │   │   ├── Post type selector (Update, Question, Praise, Poll, Announcement)  
-│   │   │   ├── Rich text with @Mentions (§27.1)  
-│   │   │   └── Inline Poll / Survey Widget (§35.3)  
-│   │   └── Below: Social Feed (§35.2)  
+│   │   │   ├── Rich text with @Mentions (§22.6.1)  
+│   │   │   └── Inline Poll / Survey Widget (§24.3.3)  
+│   │   └── Below: Social Feed (§24.3.2)  
 │   │       ├── Post cards with reactions, comments, shares  
-│   │       ├── Praise / Recognition Cards (§35.4) — visually distinct  
+│   │       ├── Praise / Recognition Cards (§24.3.4) — visually distinct  
 │   │       └── Pinned Announcement posts  
 │   └── East: Contextual sidebar  
 │       ├── Trending topics  
@@ -2898,23 +3002,23 @@ Enterprise Engagement Platform
 │       └── Upcoming polls
 
 Agent / Pipeline Monitoring Panel (using existing layouts)  
-├── Dock Layout (§21.9)  
-│   ├── Center: Agent Workflow Monitor (§25.2) or Pipeline Visualizer (§30.1)  
-│   ├── Bottom dock panel: Log Console (§34.1) — tailing live output  
+├── Dock Layout (§21.2.9)  
+│   ├── Center: Agent Workflow Monitor (§22.4.2) or Pipeline Visualizer (§23.4.1)  
+│   ├── Bottom dock panel: Log Console (§24.2.1) — tailing live output  
 │   │   ├── Level filter: \[DEBUG\] \[INFO\] \[WARN\] \[ERROR\]  
 │   │   ├── Search box with regex  
 │   │   └── Auto-scroll with "↓ 47 new lines" badge  
 │   └── Right dock panel: Property Inspector (§19.4) — selected step details
 
-Side-by-Side Work (existing Split Layout §21.10)  
-├── Split Layout (§21.10, horizontal)  
-│   ├── Left pane: Knowledge Page Editor (§33.1) — writing a runbook  
-│   └── Right pane: Log Console (§34.1) — testing commands against live logs  
+Side-by-Side Work (existing Split Layout §21.2.10)  
+├── Split Layout (§21.2.10, horizontal)  
+│   ├── Left pane: Knowledge Page Editor (§23.7.1) — writing a runbook  
+│   └── Right pane: Log Console (§24.2.1) — testing commands against live logs  
 │   (divider draggable, both panes independently scrollable)
 
 ### 24.4.1 Note: Split Pane Coverage
 
-For side-by-side work, Split Layout Container (§21.10) is the designated component. It supports:
+For side-by-side work, Split Layout Container (§21.2.10) is the designated component. It supports:
 
 * Horizontal or vertical split direction.  
 * Draggable dividers with min/max size constraints.  
@@ -2922,7 +3026,7 @@ For side-by-side work, Split Layout Container (§21.10) is the designated compon
 * Nested splits (split within a split).  
 * Size persistence across sessions.
 
-**Example composition for side-by-side work:** Split Layout (horizontal) → \[Left: any component\] | \[Right: any component\]. This is the pattern used by VS Code editor splits, email clients (list | reading pane), and documentation tools (editor | preview). No additional component is needed — §21.10 is the building block, and any two components can be placed in its panes.
+**Example composition for side-by-side work:** Split Layout (horizontal) → \[Left: any component\] | \[Right: any component\]. This is the pattern used by VS Code editor splits, email clients (list | reading pane), and documentation tools (editor | preview). No additional component is needed — §21.2.10 is the building block, and any two components can be placed in its panes.
 
 # 25\. Smart Text Input Engine
 
@@ -3110,7 +3214,7 @@ Controls how tokens appear in the input during editing and in read-only display.
 
 **Attaching to a plain textarea:**
 
-| const engine \= new SmartTextInputEngine();engine.register(mentionTrigger);engine.register(resourceTrigger);engine.attach(document.getElementById('comment-textarea'));// Host renders autocomplete using existing Mention Popover (§27.1)engine.on('trigger:open', ({ triggerId, queryText, position }) \=\> {  autocompletePopover.show(position);  autocompletePopover.setQuery(queryText);});engine.on('trigger:query', ({ queryText }) \=\> {  autocompletePopover.setQuery(queryText);});engine.on('trigger:close', () \=\> {  autocompletePopover.hide();});autocompletePopover.on('select', (item) \=\> {  engine.resolve(item);  // Engine inserts the token}); |
+| const engine \= new SmartTextInputEngine();engine.register(mentionTrigger);engine.register(resourceTrigger);engine.attach(document.getElementById('comment-textarea'));// Host renders autocomplete using existing Mention Popover (§22.6.1)engine.on('trigger:open', ({ triggerId, queryText, position }) \=\> {  autocompletePopover.show(position);  autocompletePopover.setQuery(queryText);});engine.on('trigger:query', ({ queryText }) \=\> {  autocompletePopover.setQuery(queryText);});engine.on('trigger:close', () \=\> {  autocompletePopover.hide();});autocompletePopover.on('select', (item) \=\> {  engine.resolve(item);  // Engine inserts the token}); |
 | :---- |
 
 **Attaching to a ProseMirror rich text editor:**
@@ -3122,15 +3226,15 @@ Controls how tokens appear in the input during editing and in read-only display.
 
 | Existing Component | How STIE Integrates |
 | :---- | :---- |
-| Mention / Autocomplete Popover (§27.1) | The STIE replaces §27.1's built-in trigger detection and provides a more general engine. The Popover from §27.1 becomes the default UI that the host renders in response to STIE's trigger:open / trigger:query / trigger:close events. §27.1 is effectively the visual half; STIE is the behavioral half. |
-| Markdown Preview Editor (§10.1) | STIE attaches to the markdown editing pane. Tokens are serialized as markdown-link syntax which survives the markdown→HTML render pipeline. |
+| Mention / Autocomplete Popover (§22.6.1) | The STIE replaces §22.6.1's built-in trigger detection and provides a more general engine. The Popover from §22.6.1 becomes the default UI that the host renders in response to STIE's trigger:open / trigger:query / trigger:close events. §22.6.1 is effectively the visual half; STIE is the behavioral half. |
+| Markdown Preview Editor (§4.1) | STIE attaches to the markdown editing pane. Tokens are serialized as markdown-link syntax which survives the markdown→HTML render pipeline. |
 | Commenting & Annotation Overlay (§17.2) | Comment text inputs use STIE for @mentions and \#issue-linking within comments. |
-| Dynamic Form Builder (§22.1) | Text and rich-text fields in dynamic forms can have STIE attached. The form schema specifies which triggers are enabled per field. |
-| Knowledge Page Editor (§33.1) | The wiki editor uses STIE for all inline references. Block types like code blocks are in the suppressIn list — triggers don't fire inside them. |
-| Social Post Composer (§35.1) | Social posts use STIE for @mentions and \#topics. |
-| Snippet / Template Manager (§25.1) | The {{ trigger could invoke the template variable picker from the snippet system. |
-| Rich Activity Log (§27.2) | Rendered token links in activity entries are navigable to the referenced entity. |
-| Log Console (§34.1) | Excluded — log consoles are read-only output; STIE only attaches to writable text inputs. |
+| Dynamic Form Builder (§22.1.1) | Text and rich-text fields in dynamic forms can have STIE attached. The form schema specifies which triggers are enabled per field. |
+| Knowledge Page Editor (§23.7.1) | The wiki editor uses STIE for all inline references. Block types like code blocks are in the suppressIn list — triggers don't fire inside them. |
+| Social Post Composer (§24.3.1) | Social posts use STIE for @mentions and \#topics. |
+| Snippet / Template Manager (§22.4.1) | The {{ trigger could invoke the template variable picker from the snippet system. |
+| Rich Activity Log (§22.6.2) | Rendered token links in activity entries are navigable to the referenced entity. |
+| Log Console (§24.2.1) | Excluded — log consoles are read-only output; STIE only attaches to writable text inputs. |
 
 ### 25.4.1 Excluded Input Types
 
@@ -3142,7 +3246,7 @@ The STIE should never be attached to:
 * Select / dropdown / combo-box inputs  
 * File upload inputs  
 * Read-only / disabled text inputs  
-* The Log Console (§34.1) — read-only  
+* The Log Console (§24.2.1) — read-only  
 * Code editors in "output-only" mode (e.g., terminal/REPL output panes)
 
 The engine's attach() method should validate the target element and warn/throw if attached to an excluded type.
@@ -3189,12 +3293,12 @@ The map is rendered as a directed graph where nodes represent activities and edg
 * Rework loop detection: Automatically identifies and highlights loops (activity A → B → A) with loop count annotations.  
 * Bottleneck indicators: Nodes or edges with disproportionate wait times are visually flagged (e.g., pulsing outline, warning icon).
 
-**Cross-References:** Rendered as a read-only directed graph, sharing layout algorithms with Dependency Topology Map (§31.4). Could be embedded in a dashboard alongside DORA Metrics (§32.1). Edge/node encoding relates to the heatmap concept in BPMN Heatmap Overlay (§37.2).  
+**Cross-References:** Rendered as a read-only directed graph, sharing layout algorithms with Dependency Topology Map (§23.5.4). Could be embedded in a dashboard alongside DORA Metrics (§23.6.1). Edge/node encoding relates to the heatmap concept in BPMN Heatmap Overlay (§26.2.2).  
 References: SAP Signavio Process Discovery widget, Celonis process explorer, Disco (Fluxicon) process map, ProM framework, UiPath Process Mining, Microsoft Process Advisor.
 
 ### 26.2.2 BPMN Heatmap Overlay
 
-**Description**: Takes an existing BPMN process diagram (designed "to-be" model) and overlays aggregated execution data as a color-coded heatmap directly on the diagram's flow nodes and sequence flows. Unlike the Pipeline Execution Visualizer (§30.1) which shows live state of a single execution, this component shows aggregated analytics across many completed executions — answering "which parts of this process are slow/frequent/problematic on average?"
+**Description**: Takes an existing BPMN process diagram (designed "to-be" model) and overlays aggregated execution data as a color-coded heatmap directly on the diagram's flow nodes and sequence flows. Unlike the Pipeline Execution Visualizer (§23.4.1) which shows live state of a single execution, this component shows aggregated analytics across many completed executions — answering "which parts of this process are slow/frequent/problematic on average?"
 
 **Key Capabilities:**
 
@@ -3210,8 +3314,10 @@ References: SAP Signavio Process Discovery widget, Celonis process explorer, Dis
 * Hover details: Hovering over any node shows a tooltip with exact metrics (count, avg duration, p50/p90/p99, incident count, target vs. actual).  
 * Click to drill: Clicking a node opens a detail panel showing distribution histograms, outlier analysis, and links to individual case instances.
 
-**Cross-References:** The BPMN diagram rendering reuses patterns from Visual Workflow Builder (§18.1) but in read-only analytics mode. Target value comparison is conceptually similar to Goal Progress Dashboard (§28.2). The heatmap overlay concept could generalize to any node-and-edge diagram.  
+**Cross-References:** The BPMN diagram rendering reuses patterns from Visual Workflow Builder (§18.1) but in read-only analytics mode. Target value comparison is conceptually similar to Goal Progress Dashboard (§23.2.2). The heatmap overlay concept could generalize to any node-and-edge diagram.  
 References: Camunda Optimize heatmaps (frequency, duration, target overlays), SAP Signavio Process Conformance widget, Celonis process analysis, IBM Process Mining.
+
+**Workflow use (§30)**: built on the overlay values in 30.3.1, so GraphCanvas carries the heatmap and this entry configures it.
 
 ### 26.2.3 Variant Explorer
 
@@ -3227,7 +3333,7 @@ Description: A ranked list or parallel-flow visualization showing all distinct e
 * Aggregate statistics: Shows total variant count, top-N coverage (e.g., "the top 5 variants cover 80% of all cases"), and variant proliferation trend over time (growing variant count may indicate process drift).  
 * Variant grouping: Group similar variants by shared prefixes or suffixes to identify where processes diverge.
 
-**Cross-References:** Variant flows reuse directed-graph rendering from Process Discovery Map (§37.1). Conformance scoring connects to BPMN Heatmap Overlay (§37.2). Variant metrics feed into the Goal Progress Dashboard (§28.2) and Cycle Time Breakdown (§32.2).  
+**Cross-References:** Variant flows reuse directed-graph rendering from Process Discovery Map (§26.2.1). Conformance scoring connects to BPMN Heatmap Overlay (§26.2.2). Variant metrics feed into the Goal Progress Dashboard (§23.2.2) and Cycle Time Breakdown (§23.6.2).  
 **References**: SAP Signavio Variant Explorer widget, Celonis variant analysis, Disco variant view, ProM Variant Explorer plugin.
 
 ### 26.2.4 Conformance Overlay (As-Is vs. To-Be)
@@ -3246,15 +3352,17 @@ Description: A ranked list or parallel-flow visualization showing all distinct e
 * Case-level view: Select an individual case to see its specific path highlighted against the to-be model, with deviations annotated.  
 * Root cause linkage: For each deviation type, show correlated variables (e.g., "Cases that skipped the approval step were 73% from Region APAC" — uses the same variable correlation analysis as Camunda Optimize's outlier detection).
 
-**Cross-References:** To-be model rendering reuses BPMN Heatmap Overlay (§37.2) diagram renderer. Deviation details link to Rich Activity Log (§27.2) for case-level audit trails. Conformance scores can feed into Service Scorecard (§31.2) as compliance checks.  
+**Cross-References:** To-be model rendering reuses BPMN Heatmap Overlay (§26.2.2) diagram renderer. Deviation details link to Rich Activity Log (§22.6.2) for case-level audit trails. Conformance scores can feed into Service Scorecard (§23.5.2) as compliance checks.  
 References: SAP Signavio Process Conformance widget, Celonis conformance checking, Camunda Optimize outlier analysis, ProM conformance checker, IEEE Task Force on Process Mining conformance standard.
+
+**Workflow use (§30)**: built on the edge states and diff mode in 30.3.1.
 
 ## 26.3 Guided Operations & Contextual Actions
 
 ### 26.3.1 Guided Decision Tree
 
 **Description**: An interactive, branching questionnaire that guides users (typically support agents, operators, or process workers) step-by-step through diagnosis, troubleshooting, or decision-making. At each node, the user answers a question or performs a check; the answer determines the next question, branching until reaching a resolution (action to take, article to consult, escalation path).  
-Unlike the Runbook/Playbook Runner (§33.3) which follows a linear or lightly branching sequence of steps to execute, the Guided Decision Tree is fundamentally a diagnostic tool — its purpose is to determine which action to take by navigating a decision tree, not to execute a predefined procedure.
+Unlike the Runbook/Playbook Runner (§23.7.3) which follows a linear or lightly branching sequence of steps to execute, the Guided Decision Tree is fundamentally a diagnostic tool — its purpose is to determine which action to take by navigating a decision tree, not to execute a predefined procedure.
 
 **Key Capabilities:**
 
@@ -3266,7 +3374,7 @@ Unlike the Runbook/Playbook Runner (§33.3) which follows a linear or lightly br
 * Authoring UI: Tree editor for creating and editing decision trees, with drag-and-drop node reordering, bulk import from spreadsheet, and version control.  
 * Embeddable: Renders as a panel within a record detail page, agent workspace, or standalone page.
 
-**Cross-References:** The resolution actions integrate with Automation Rule Builder (§25.5). The tree editor is a specialized form of the Visual Workflow Builder (§18.1) constrained to tree topology. Can be embedded in the Record Detail Page (§22.4) as a sidebar panel.  
+**Cross-References:** The resolution actions integrate with Automation Rule Builder (§22.4.5). The tree editor is a specialized form of the Visual Workflow Builder (§18.1) constrained to tree topology. Can be embedded in the Record Detail Page (§22.1.4) as a sidebar panel.  
 References: ServiceNow Guided Decisions (decision tree within Agent Workspace), Salesforce Einstein Next Best Action, Freshdesk decision tree, Zingtree interactive decision trees, Pega Decisioning (Next-Best-Action).
 
 ### 26.3.2 Related Actions Menu (Context-Sensitive)
@@ -3285,14 +3393,14 @@ This is a pervasive pattern in ERP/HCM systems (Workday "Related Actions," Peopl
 * Recent and favorites: Track user's most-used actions per entity type and surface them at the top. Users can pin favorite actions.  
 * Keyboard accessible: Searchable action list (type to filter) for power users who know what action they want.
 
-**Cross-References:** Actions may launch the Dynamic Form Builder (§22.1) for data entry, the Case Lifecycle Stage Tracker (§24.1) for process visualization, or the Approval Flow (§29.1) for multi-step approvals. The menu itself is rendered as a popover or dropdown, similar to Mention/Autocomplete Popover (§27.1) but for actions rather than entities.
+**Cross-References:** Actions may launch the Dynamic Form Builder (§22.1.1) for data entry, the Case Lifecycle Stage Tracker (§22.3.1) for process visualization, or the Approval Flow (§23.3.1) for multi-step approvals. The menu itself is rendered as a popover or dropdown, similar to Mention/Autocomplete Popover (§22.6.1) but for actions rather than entities.
 
 **References**: Workday Related Actions menu (three-dot menu on any entity), PeopleSoft Related Actions, SAP Fiori "Actions" button with dynamic action list, ServiceNow "Related Links" and record context menu, Oracle Fusion Applications action menu.
 
 ### 26.3.3 Worklet / Quick-Action Tile Grid
 
 **Description**: A configurable grid of compact, role-based action tiles displayed on a homepage or dashboard. Each tile (worklet) provides a one-click entry point to a specific task, report, or process, with an optional summary metric or count badge. This is the enterprise equivalent of a phone's home screen — a personalized launchpad for an individual's most important daily actions.  
-Unlike a generic card grid (§21.6), worklets are specifically task-oriented and role-personalized — the set of tiles shown to an HR manager is completely different from those shown to a procurement officer.
+Unlike a generic card grid (§21.2.6), worklets are specifically task-oriented and role-personalized — the set of tiles shown to an HR manager is completely different from those shown to a procurement officer.
 
 **Key Capabilities:**
 
@@ -3303,14 +3411,14 @@ Unlike a generic card grid (§21.6), worklets are specifically task-oriented and
 * Tile types: Navigation tile (opens a page), report tile (shows a number and links to a report), process tile (launches a business process), notification tile (shows alert count), and composite tile (mini-chart \+ number \+ link).  
 * Configurable grid: Responsive grid layout (4–6 columns on desktop, 2 on tablet, 1 on mobile) with min/max tile sizes.
 
-**Cross-References:** Individual tile counts may come from the Triage/Inbox Queue (§24.3), approval pending counts from Approval Task Card (§29.2), or OKR progress from Goal Progress Dashboard (§28.2). The grid layout uses Card Layout Container (§21.6). Tiles serve as the "launch points" for Record Detail Pages (§22.4), reports, or process wizards.  
+**Cross-References:** Individual tile counts may come from the Triage/Inbox Queue (§22.3.3), approval pending counts from Approval Task Card (§23.3.2), or OKR progress from Goal Progress Dashboard (§23.2.2). The grid layout uses Card Layout Container (§21.2.6). Tiles serve as the "launch points" for Record Detail Pages (§22.1.4), reports, or process wizards.  
 **References**: SAP Fiori Launchpad tiles, Workday Worklets (homepage bubbles), ServiceNow configurable workspace widgets, PeopleSoft homepage tiles, Oracle Fusion Applications springboard.
 
 ## 26.4 Agentic Enterprise — Agent Management & Governance
 
 ### 26.4.1 Agent Registry / Fleet Dashboard
 
-**Description**: A centralized catalog and operational dashboard for all AI agents deployed within the organization. Analogous to the Service Catalog (§31.1) for microservices but purpose-built for AI agents, with metadata covering model configuration, tool access, guardrails, ownership, health, cost, and compliance status.
+**Description**: A centralized catalog and operational dashboard for all AI agents deployed within the organization. Analogous to the Service Catalog (§23.5.1) for microservices but purpose-built for AI agents, with metadata covering model configuration, tool access, guardrails, ownership, health, cost, and compliance status.
 
 **Key Capabilities:**
 
@@ -3319,11 +3427,11 @@ Unlike a generic card grid (§21.6), worklets are specifically task-oriented and
 * Health indicators: Per agent: active/healthy, degraded (high error rate), paused (admin-halted), cost warning (spending above budget). Aggregate fleet health as a top-level summary bar.  
 * Cost tracking: Per agent: token consumption (30-day rolling), API calls, compute cost, cost-per-task. Fleet-level aggregate. Budget caps with alerting.  
 * Usage metrics: Per agent: tasks completed, tasks escalated to human, average response time, user satisfaction score, error rate. Trend sparklines (7d, 30d, 90d).  
-* Compliance status: Per agent: guardrail configuration (linked to Guardrail Config §39.2), last audit date, PII exposure incidents, policy violation count.  
+* Compliance status: Per agent: guardrail configuration (linked to Guardrail Config §26.4.2), last audit date, PII exposure incidents, policy violation count.  
 * Lifecycle management: Pause, resume, retire, clone agent from the dashboard. Version history with rollback.  
 * Comparison view: Select 2–3 agents to compare metrics side-by-side (useful when evaluating A/B agent variants).
 
-**Cross-References:** Catalog structure mirrors Service Catalog Browser (§31.1). Health indicators use the same pattern as Environment Manager (§30.2). Cost tracking could feed into Investment Allocation Tracker (§32.3). Compliance dimension mirrors Service Scorecard (§31.2).  
+**Cross-References:** Catalog structure mirrors Service Catalog Browser (§23.5.1). Health indicators use the same pattern as Environment Manager (§23.4.2). Cost tracking could feed into Investment Allocation Tracker (§23.6.3). Compliance dimension mirrors Service Scorecard (§23.5.2).  
 **References**: Boomi AgentStudio agent registry, Microsoft Foundry Control Plane (fleet visibility, lifecycle management), Salesforce Agentforce model & asset registry, OpenAI Connector Registry, Kore.ai agent platform dashboard.
 
 ### 26.4.2 Agent Guardrail Configuration Panel
@@ -3341,7 +3449,7 @@ Unlike a generic card grid (§21.6), worklets are specifically task-oriented and
 * Simulation mode: "What would happen if..." — run a test scenario against the guardrail profile to see which rules would fire without actually executing.  
 * Version history: Full diff between guardrail versions with change author and rationale.
 
-**Cross-References:** The rule structure reuses Policy Rule Editor (§25.3) patterns (IF condition THEN action). Tool access toggles are similar to permission management in Custom Field Definition Manager (§22.2). Simulation mode mirrors Scenario Planner (§28.3). Guardrail profiles are linked per-agent from Agent Registry (§39.1).
+**Cross-References:** The rule structure reuses Policy Rule Editor (§22.4.3) patterns (IF condition THEN action). Tool access toggles are similar to permission management in Custom Field Definition Manager (§22.1.2). Simulation mode mirrors Scenario Planner (§23.2.3). Guardrail profiles are linked per-agent from Agent Registry (§26.4.1).
 
 **References**: Microsoft Foundry guardrails (content filters, task adherence, prompt injection detection), OpenAI AgentKit Guardrails (open-source modular safety layer), Salesforce Agentforce app guardrails (rate limiting, scoped permissions, telemetry), Guardrails AI (input/output validators), NIST AI hijacking evaluation framework.
 
@@ -3349,7 +3457,7 @@ Unlike a generic card grid (§21.6), worklets are specifically task-oriented and
 
 **Description**: A detailed, step-by-step trace visualization of a single agent execution run, showing every reasoning step, tool call, input/output, latency, token cost, and decision point. Designed for debugging, quality evaluation, and compliance auditing of agent behavior.
 
-Unlike the Agent Workflow Monitor (§25.2) which is a live dashboard showing status of multiple running agents, the Trace Viewer is a post-hoc forensic tool for deep-diving into a single completed (or failed) execution.
+Unlike the Agent Workflow Monitor (§22.4.2) which is a live dashboard showing status of multiple running agents, the Trace Viewer is a post-hoc forensic tool for deep-diving into a single completed (or failed) execution.
 
 **Key Capabilities:**
 
@@ -3362,13 +3470,13 @@ Unlike the Agent Workflow Monitor (§25.2) which is a live dashboard showing sta
 * Cost rollup: Total cost of the execution broken down by step (LLM calls, tool calls, compute).  
 * Guardrail audit trail: Shows every guardrail check that was evaluated during execution, with pass/fail/override results.
 
-**Cross-References:** Step-by-step layout relates to Inference Trace Panel (§9.2) but is much more detailed and covers tool calls, not just reasoning. Waterfall timing relates to Cycle Time Breakdown Chart (§32.2). Annotations and grading connect to Commenting & Annotation Overlay (§17.2). Guardrail audit links to Agent Guardrail Configuration Panel (§39.2).
+**Cross-References:** Step-by-step layout relates to Inference Trace Panel (§9.2) but is much more detailed and covers tool calls, not just reasoning. Waterfall timing relates to Cycle Time Breakdown Chart (§23.6.2). Annotations and grading connect to Commenting & Annotation Overlay (§17.2). Guardrail audit links to Agent Guardrail Configuration Panel (§26.4.2).
 
 **References**: LangSmith trace viewer (step-by-step LLM \+ tool traces with annotation), OpenAI Evals (trace grading, automated prompt optimization), Microsoft Foundry observability (monitoring, evaluating multi-agent systems), Arize Phoenix (LLM observability), Braintrust (eval and tracing), Weights & Biases Weave (agent tracing).
 
 ### 26.4.4 Human-in-the-Loop Intervention Panel
 
-**Description**: A structured decision interface presented to a human when an automated or agent workflow reaches a point requiring human judgment, input, or approval. More specialized than the Approval Task Card (§29.2) — this component is designed for real-time human-agent collaboration where the human needs full context about what the agent has done, what it wants to do next, and why it's asking for human input.
+**Description**: A structured decision interface presented to a human when an automated or agent workflow reaches a point requiring human judgment, input, or approval. More specialized than the Approval Task Card (§23.3.2) — this component is designed for real-time human-agent collaboration where the human needs full context about what the agent has done, what it wants to do next, and why it's asking for human input.
 
 **Key Capabilities:**
 
@@ -3380,9 +3488,11 @@ Unlike the Agent Workflow Monitor (§25.2) which is a live dashboard showing sta
 * Batch mode: When multiple similar interventions queue up, the human can review them in batch: see a table of pending decisions with key data columns, and approve/reject in bulk with optional exceptions.  
 * Feedback loop: After the human decides, the panel captures the decision rationale (optional comment) and feeds it back to the agent/system for learning and future automation of similar decisions.
 
-**Cross-References:** The approval action buttons extend Approval Task Card (§29.2). The context pane showing agent trace connects to Agent Execution Trace Viewer (§39.3). Batch mode extends Triage/Inbox Queue (§24.3). Time sensitivity uses SLA Timer (§24.2). The feedback capture integrates with the evaluation pipeline.
+**Cross-References:** The approval action buttons extend Approval Task Card (§23.3.2). The context pane showing agent trace connects to Agent Execution Trace Viewer (§26.4.3). Batch mode extends Triage/Inbox Queue (§22.3.3). Time sensitivity uses SLA Timer (§22.3.2). The feedback capture integrates with the evaluation pipeline.
 
 **References**: Orkes Conductor human task orchestration (human task forms with assignment policies, SLA chains), Camunda Tasklist (claim/complete/delegate user tasks in workflow), ServiceNow Agent Workspace recommended actions (AI suggests, human approves), Microsoft Foundry task adherence detection (detecting agent drift, requiring human correction), Pega case management human steps.
+
+**Workflow use (§30)**: shows the agent's context inside 30.2.8 Proposal Review for an external agent's proposal. It stays a separate component for live agent runs.
 
 ## 26.5 Analytical Compositions & ERP Patterns
 
@@ -3400,17 +3510,17 @@ Unlike the Agent Workflow Monitor (§25.2) which is a live dashboard showing sta
 * Switchable views: Toggle the main area between chart+table (split), chart-only, or table-only modes.  
 * Export: Export the current filtered view (all visible columns and rows) to CSV/XLSX/PDF.
 
-**Cross-References:** This is a composition recipe using existing components: KPI metrics from Metric Card (§2.1) or Summary Card (§2.2), chart from Chart Container (§2.3), table from Composite Data Grid (§5.2), and filters from Query Builder (§3.4) or Filter Bar (§14.1). The novel element is the cross-filtering coordinator — a behavioral layer that synchronizes filter state across all child components bidirectionally.
+**Cross-References:** This is a composition recipe using existing components: KPI metrics from Metric Card (§10.2) or Summary Card (§10.2), chart from Chart Container (§10.2.1), table from Composite Data Grid (§5.2), and filters from Query Builder (§3.4) or Filter Bar (§13.2). The novel element is the cross-filtering coordinator — a behavioral layer that synchronizes filter state across all child components bidirectionally.
 
 **References**: SAP Fiori Analytical List Page floorplan (KPI tags \+ visual filters \+ chart \+ table), SAP Fiori Overview Page (card-based), Workday analytical reports, Looker cross-filtering dashboards, Tableau dashboard actions.
 
 ### 26.5.2 Business Process Instance Viewer
 
-**Description**: A dedicated view showing the complete lifecycle of a single business process instance: all steps that have been completed, who completed them, when, with what data — plus the future steps that remain. This is distinct from the Rich Activity Log (§27.2) which shows chronological changes to an entity; the Business Process Instance Viewer is specifically about the process execution trajectory — a linear or branching sequence of designed steps with real execution data.
+**Description**: A dedicated view showing the complete lifecycle of a single business process instance: all steps that have been completed, who completed them, when, with what data — plus the future steps that remain. This is distinct from the Rich Activity Log (§22.6.2) which shows chronological changes to an entity; the Business Process Instance Viewer is specifically about the process execution trajectory — a linear or branching sequence of designed steps with real execution data.
 
 **Key Capabilities:**
 
-* Stage/step visualization: The designed process is shown as a horizontal or vertical step sequence (similar to Case Lifecycle Stage Tracker §24.1). Each step shows: step name, assigned actor, status (completed/in-progress/pending/skipped/error), completion timestamp, and elapsed duration.  
+* Stage/step visualization: The designed process is shown as a horizontal or vertical step sequence (similar to Case Lifecycle Stage Tracker §22.3.1). Each step shows: step name, assigned actor, status (completed/in-progress/pending/skipped/error), completion timestamp, and elapsed duration.  
 * Completed steps enrichment: For completed steps, show: who completed it, what data was entered/changed (diff view), approval decision (if applicable), and any comments.  
 * Current step highlight: The in-progress step is prominently highlighted with a pulsing indicator. Shows who currently owns it, how long it's been in this step, and any SLA countdown.  
 * Future steps preview: Steps not yet reached are shown as greyed-out with their expected actors and any conditions that determine whether they'll be reached (conditional branches shown as fork indicators).  
@@ -3418,22 +3528,22 @@ Unlike the Agent Workflow Monitor (§25.2) which is a live dashboard showing sta
 * Delegation trail: If any step was delegated, show the delegation chain (original assignee → delegate, with reason).  
 * Recall / send-back: If the process supports it, show controls to send a step back to a prior step (common in Workday/ServiceNow for corrections).
 
-**Cross-References:** Step visualization extends Case Lifecycle Stage Tracker (§24.1) with execution data. Step-level data diffs connect to Data Diff Viewer (§4.3). Delegation patterns from Workday/PeopleSoft. Approval steps link to Approval Task Card (§29.2). The full process view can be embedded in Record Detail Page (§22.4) as a "Process" tab.
+**Cross-References:** Step visualization extends Case Lifecycle Stage Tracker (§22.3.1) with execution data. Step-level data diffs connect to Data Diff Viewer (§4.3). Delegation patterns from Workday/PeopleSoft. Approval steps link to Approval Task Card (§23.3.2). The full process view can be embedded in Record Detail Page (§22.1.4) as a "Process" tab.
 
 **References**: Workday Business Process history (Process tab in inbox/archive showing step-by-step execution), ServiceNow Playbook Experience (stages with activities, completed/pending/locked), PeopleSoft Approval Monitor (chain of approvers with status), SAP workflow log.
 
 ## 26.6 Cross-Reference: Composition Patterns
 
 Process Intelligence Hub  
-├── Split Layout (§21.10, horizontal)  
+├── Split Layout (§21.2.10, horizontal)  
 │   ├── Left pane (60%):  
-│   │   ├── Tab: Discovery → Process Discovery Map (§37.1)  
+│   │   ├── Tab: Discovery → Process Discovery Map (§26.2.1)  
 │   │   │     (complexity slider, animation mode, click node to drill)  
-│   │   ├── Tab: Conformance → Conformance Overlay (§37.4)  
+│   │   ├── Tab: Conformance → Conformance Overlay (§26.2.4)  
 │   │   │     (BPMN model \+ actual paths, deviation highlights)  
-│   │   ├── Tab: Heatmap → BPMN Heatmap Overlay (§37.2)  
+│   │   ├── Tab: Heatmap → BPMN Heatmap Overlay (§26.2.2)  
 │   │   │     (frequency/duration/incident toggles, target lines)  
-│   │   └── Tab: Variants → Variant Explorer (§37.3)  
+│   │   └── Tab: Variants → Variant Explorer (§26.2.3)  
 │   │         (ranked variant list, conformance coloring, comparison)  
 │   └── Right pane (40%):  
 │       ├── Filter context (shared across all tabs)  
@@ -3441,59 +3551,59 @@ Process Intelligence Hub
 │       └── Case table (filterable by variant or node)
 
 Agent Operations Center  
-├── Border Layout (§21.1)  
-│   ├── North: Agent fleet health summary bar (from §39.1)  
-│   ├── West: Agent Registry (§39.1) — sidebar catalog  
+├── Border Layout (§21.2.1)  
+│   ├── North: Agent fleet health summary bar (from §26.4.1)  
+│   ├── West: Agent Registry (§26.4.1) — sidebar catalog  
 │   │   (searchable list of all agents with status indicators)  
 │   ├── Center: Selected agent detail view  
 │   │   ├── Tab: Overview → usage metrics, cost, satisfaction  
-│   │   ├── Tab: Guardrails → Guardrail Config Panel (§39.2)  
+│   │   ├── Tab: Guardrails → Guardrail Config Panel (§26.4.2)  
 │   │   ├── Tab: Traces → list of recent executions  
-│   │   │     (click to open Trace Viewer §39.3 in detail)  
-│   │   ├── Tab: Interventions → pending Human-in-the-Loop (§39.4)  
+│   │   │     (click to open Trace Viewer §26.4.3 in detail)  
+│   │   ├── Tab: Interventions → pending Human-in-the-Loop (§26.4.4)  
 │   │   │     (batch review mode for queued decisions)  
-│   │   └── Tab: Scorecard → Agent Service Scorecard (§31.2 adapted)  
-│   └── South: Log Console (§34.1) — tailing agent output
+│   │   └── Tab: Scorecard → Agent Service Scorecard (§23.5.2 adapted)  
+│   └── South: Log Console (§24.2.1) — tailing agent output
 
 ERP/HCM Workspace (Workday-style)  
-├── Border Layout (§21.1)  
-│   ├── North: Worklet / Quick-Action Tile Grid (§38.3)  
+├── Border Layout (§21.2.1)  
+│   ├── North: Worklet / Quick-Action Tile Grid (§26.3.3)  
 │   │     (role-personalized tiles: "My Team", "Time Off", "Expenses",  
 │   │      "Approvals (7)", "Open Reqs (3)", "Compensation")  
 │   ├── West: Multi-Level Sidebar (§15.4)  
 │   │     (process categories: HR, Finance, Procurement, IT)  
-│   ├── Center: Active record → Record Detail Page (§22.4)  
-│   │   ├── Related Actions Menu (§38.2) — on entity header  
+│   ├── Center: Active record → Record Detail Page (§22.1.4)  
+│   │   ├── Related Actions Menu (§26.3.2) — on entity header  
 │   │   │     (context-sensitive: shows "Promote", "Transfer", "Terminate"  
 │   │   │      only if role permits and state allows)  
-│   │   ├── Tab: Details → Dynamic Form (§22.1)  
-│   │   ├── Tab: Process → Business Process Instance Viewer (§40.2)  
+│   │   ├── Tab: Details → Dynamic Form (§22.1.1)  
+│   │   ├── Tab: Process → Business Process Instance Viewer (§26.5.2)  
 │   │   │     (step-by-step execution with who/when/what)  
-│   │   ├── Tab: Activity → Rich Activity Log (§27.2)  
-│   │   └── Tab: Related → Relationship Manager (§22.5)  
-│   └── East: Triage Inbox (§24.3)  
+│   │   ├── Tab: Activity → Rich Activity Log (§22.6.2)  
+│   │   └── Tab: Related → Relationship Manager (§22.1.5)  
+│   └── East: Triage Inbox (§22.3.3)  
 │         (pending approvals, to-dos, delegated tasks)
 
 Support Agent Workspace (ServiceNow-style)  
-├── Dock Layout (§21.9)  
-│   ├── Left dock: Case list / Triage Inbox (§24.3)  
-│   ├── Center: Selected case → Record Detail Page (§22.4)  
-│   │   ├── Tab: Details → Dynamic Form (§22.1)  
-│   │   ├── Tab: Playbook → Case Lifecycle Stage Tracker (§24.1)  
+├── Dock Layout (§21.2.9)  
+│   ├── Left dock: Case list / Triage Inbox (§22.3.3)  
+│   ├── Center: Selected case → Record Detail Page (§22.1.4)  
+│   │   ├── Tab: Details → Dynamic Form (§22.1.1)  
+│   │   ├── Tab: Playbook → Case Lifecycle Stage Tracker (§22.3.1)  
 │   │   │     (stages: Intake → Triage → Resolve → Verify → Close)  
-│   │   ├── Tab: Diagnose → Guided Decision Tree (§38.1)  
+│   │   ├── Tab: Diagnose → Guided Decision Tree (§26.3.1)  
 │   │   │     (interactive troubleshooting, auto-fills resolution fields)  
-│   │   ├── Tab: Process → Business Process Instance Viewer (§40.2)  
-│   │   └── Tab: Activity → Rich Activity Log (§27.2)  
+│   │   ├── Tab: Process → Business Process Instance Viewer (§26.5.2)  
+│   │   └── Tab: Activity → Rich Activity Log (§22.6.2)  
 │   ├── Right dock: AI Agent suggestion panel  
-│   │   ├── Agent recommendation → Human-in-the-Loop (§39.4)  
+│   │   ├── Agent recommendation → Human-in-the-Loop (§26.4.4)  
 │   │   │     (agent suggests resolution, agent provides confidence,  
 │   │   │      human approves/overrides/escalates)  
 │   │   └── Knowledge suggestions (search results)  
-│   └── Bottom dock: Log Console (§34.1) — for debugging integrations
+│   └── Bottom dock: Log Console (§24.2.1) — for debugging integrations
 
 Operational Analytics (SAP Analytical List Page pattern)  
-├── Analytical List Page (§40.1)  
+├── Analytical List Page (§26.5.1)  
 │   ├── KPI Header: \[Total Orders: 12,340 ↑5%\] \[Avg Cycle Time: 3.2d ↓12%\]  
 │   │                \[On-Time Rate: 94% →\] \[Open Issues: 47 ↑\]  
 │   ├── Visual Filter Bar: \[Status: bar chart\] \[Region: bar chart\]  
@@ -3502,7 +3612,7 @@ Operational Analytics (SAP Analytical List Page pattern)
 │   │     (click bar segment → filters table below)  
 │   └── Data Table: Composite Data Grid (§5.2)  
 │         (all individual orders matching current filters)  
-│         (click row → navigate to Record Detail Page §22.4)
+│         (click row → navigate to Record Detail Page §22.1.4)
 
 ## 26.7 Research Notes: Components Considered But Already Covered
 
@@ -3510,20 +3620,20 @@ The following patterns were identified during research but are already adequatel
 
 | Pattern Found | Platform(s) | Already Covered By |
 | :---- | :---- | :---- |
-| DMN Decision Table editor | Camunda | Decision Table (§25.4) |
+| DMN Decision Table editor | Camunda | Decision Table (§22.4.4) |
 | BPMN process designer | Camunda Modeler, Signavio | Visual Workflow Builder (§18.1) |
-| Task inbox / worklist | Workday, ServiceNow, Camunda Tasklist | Triage / Inbox Queue (§24.3) |
-| Case lifecycle stages | ServiceNow Playbooks, Pega | Case Lifecycle Stage Tracker (§24.1) |
-| SLA countdown | ServiceNow, Freshdesk | SLA Timer (§24.2) |
-| Pipeline execution view | Camunda Operate, Harness | Pipeline Execution Visualizer (§30.1) |
-| Approval workflow | ServiceNow, Workday, Camunda | Approval Flow Designer (§29.1) \+ Approval Task Card (§29.2) |
-| Org chart | Workday, PeopleSoft | Existing org chart patterns; Dependency Topology Map (§31.4) with hierarchical layout |
-| Service / API catalog | MuleSoft Anypoint, Backstage | Service Catalog Browser (§31.1) |
-| Runbook execution | ServiceNow, PagerDuty | Runbook / Playbook Runner (§33.3) |
-| Agent live monitoring | Orkes, Camunda Operate | Agent Workflow Monitor (§25.2) |
-| Event-driven automation rules | ServiceNow Flow Designer, Workday BP | Automation Rule Builder (§25.5) |
-| Knowledge wiki | ServiceNow Knowledge, Confluence | Knowledge Page Editor (§33.1) |
-| Deployment environments | Zeet, Harness, ArgoCD | Environment Manager (§30.2) |
+| Task inbox / worklist | Workday, ServiceNow, Camunda Tasklist | Triage / Inbox Queue (§22.3.3) |
+| Case lifecycle stages | ServiceNow Playbooks, Pega | Case Lifecycle Stage Tracker (§22.3.1) |
+| SLA countdown | ServiceNow, Freshdesk | SLA Timer (§22.3.2) |
+| Pipeline execution view | Camunda Operate, Harness | Pipeline Execution Visualizer (§23.4.1) |
+| Approval workflow | ServiceNow, Workday, Camunda | Approval Flow Designer (§23.3.1) \+ Approval Task Card (§23.3.2) |
+| Org chart | Workday, PeopleSoft | Existing org chart patterns; Dependency Topology Map (§23.5.4) with hierarchical layout |
+| Service / API catalog | MuleSoft Anypoint, Backstage | Service Catalog Browser (§23.5.1) |
+| Runbook execution | ServiceNow, PagerDuty | Runbook / Playbook Runner (§23.7.3) |
+| Agent live monitoring | Orkes, Camunda Operate | Agent Workflow Monitor (§22.4.2) |
+| Event-driven automation rules | ServiceNow Flow Designer, Workday BP | Automation Rule Builder (§22.4.5) |
+| Knowledge wiki | ServiceNow Knowledge, Confluence | Knowledge Page Editor (§23.7.1) |
+| Deployment environments | Zeet, Harness, ArgoCD | Environment Manager (§23.4.2) |
 
 # 27\. Dynamic UI
 
@@ -3541,7 +3651,7 @@ runtime that drives them lives in `runtime/` and is not a component.
 
 ## 27.2✅WorkspaceShell
 
-**Description**: Chrome for the workspace tier — canvas tabs with pinning, a new-canvas control, a content region the canvas mounts into, and a conditional history scrubber. Presentation only: holds no storage, every control emits and the host decides. NOT to be confused with TenantSwitcher (§4.x), which switches tenants; this switches canvases within one workspace.
+**Description**: Chrome for the workspace tier — canvas tabs with pinning, a new-canvas control, a content region the canvas mounts into, and a conditional history scrubber. Presentation only: holds no storage, every control emits and the host decides. NOT to be confused with TenantSwitcher (§15.1), which switches tenants; this switches canvases within one workspace.
 
 **References**: VS Code editor tabs, Figma pages, PostHog dashboard tabs.
 
@@ -3595,6 +3705,22 @@ columns. Each group is a `<nav>` named by its own heading. Unvisited links are m
 and visited links take the accent colour — a deliberate inversion of the usual
 convention (ADR-146, D5).
 
+## 28.3✅Auth Card (Login Surface Parity)
+
+**Description**: The canonical login card: brand header, error alert, identity-provider buttons, divider and footer link. One source drives both the app login and the Keycloak fallback login, so its class names and structure are a frozen contract (`CDN_CONTRACT.md` §2). Colors come from runtime `--bs-*` tokens, so it renders in light and dark mode. See `components/authcard/`.
+
+**References**: Keycloak login themes, Auth0 Universal Login.
+
+**Use Cases:** App login, identity-provider login pages, any sign-in surface that must match the app.
+
+## 28.4✅Theme Init (Pre-Paint Theme Script)
+
+**Description**: A tiny, dependency-free script that sets `data-bs-theme` on `<html>` before first paint. A page then opens in the user's theme, with no flash of the wrong mode. It reads the preference the app writes, so every page on the same domain, including the login pages, shows the same theme. See `components/themeinit/`.
+
+**References**: next-themes (its pre-paint theme script).
+
+**Use Cases:** Every page that loads the theme, login pages served by another system, static pages.
+
 # 29\. Summary Matrix
 
 | \# | Component | Category | Status |
@@ -3606,6 +3732,7 @@ convention (ADR-146, D5).
 | 1.5 | Timezone Picker | Pickers | DONE |
 | 1.6 | Period Picker | Pickers | DONE |
 | 1.7 | Sprint Picker | Pickers | DONE |
+| 1.8 | Layout Picker | Pickers | DONE |
 | 2.1 | Infinite Progress Modal | Progress | DONE |
 | 2.2 | Steppable Progress Modal | Progress | DONE |
 | 2.3 | Confirm Dialog | Progress | DONE |
@@ -3629,8 +3756,8 @@ convention (ADR-146, D5).
 | 3.14 | Tool Color Picker | Pickers | DONE |
 | 3.15 | Columns Picker | Pickers | DONE |
 | 3.16 | Spacing Picker | Pickers | DONE |
-| 4.1 | Markdown Editor \+ Viewer | Rich Content | DONE |
-| 4.2 | Code Editor (JSON/YAML) | Rich Content | DONE |
+| 4.1 | Markdown Editor \+ Viewer with Tab & Side-by-Side Views | Rich Content | DONE |
+| 4.2 | Code Editor (JSON/YAML/General Purpose) | Rich Content | DONE |
 | 4.3 | Data Diff Viewer | Rich Content | NEW |
 | 4.4 | LaTeX Editor | Rich Content | DONE |
 | 5.1 | Data Grid | Data Grids | DONE |
@@ -3649,40 +3776,41 @@ convention (ADR-146, D5).
 | 7.8 | LineEndingPicker | Toolbars | DONE |
 | 7.9 | Magnifier | Toolbars | DONE |
 | 7.10 | Ruler | Toolbars | DONE |
-| 8.1 | Tabbed Panel | Containers | DONE |
-| 8.2 | Sidebar (L/R Dock) | Containers | DONE |
-| 9.1 | Conversation Container (MCP) | AI/ML | DONE |
+| 7.11 | Inline Toolbar | Toolbars & Status | DONE |
+| 8.1 | Tabbed Panel (Top or Bottom Dock) | Containers | DONE |
+| 8.2 | Sidebar (Left or Right Dock) | Containers | DONE |
+| 8.3 | NavRail (App-level Primary Navigation) | Containers | DONE |
+| 9.1 | Conversation Container with MCP UI | AI/ML | DONE |
 | 9.2 | Inference Trace Panel | AI/ML | NEW |
-| 9.3 | Reasoning Accordion | AI/ML | DONE |
-| 9.4 | HITL Queue | AI/ML | NEW |
+| 9.3 | Reasoning Accordion (Chain of Thought) | AI/ML | DONE |
+| 9.4 | Human-in-the-Loop (HITL) Queue | AI/ML | NEW |
 | 9.5 | Model Performance Monitor | AI/ML | NEW |
 | 9.6 | Prompt Template Manager | AI/ML | DONE |
-| 9.7 | Reasoning Explorer (Tree-of-Thought) | AI/ML | NEW |
+| 9.7 | Reasoning Explorer (Composite Component) | AI/ML | NEW |
 | 9.8 | Beam / Lane View | AI/ML | NEW |
-| 9.9 | Reasoning Sankey Diagram — Addendum C | AI/ML | NEW |
-| 10.1 | Gauge (Time/Value) | Metrics | DONE |
-| 10.2 | KPI / Metric Card | Metrics | NEW |
-| 10.3 | Dashboard Grid (Widget Layout) | Metrics | NEW |
+| 9.9 | Reasoning Sankey Diagram | AI/ML | NEW |
+| 10.1 | Gauge (Time / Value) | Metrics | DONE |
+| 10.2 | KPI / Metric Card | Metrics | DONE |
+| 10.2.1 | Chart Panel (Chart.js wrapper) | Metrics & Visualization | DONE |
+| 10.3 | Dashboard Grid | Metrics | NEW |
 | 10.4 | SpineMap (Capability Map) | Metrics | DONE |
 | 10.5 | GraphCanvas (SVG Graph Visualization) | Metrics | DONE |
-| 10.6 | GraphCanvasMx (maxGraph Visualization) | Metrics | DONE |
+| 10.6 | GraphCanvasMx (maxGraph Graph Visualization) | Metrics | DONE |
 | 10.7 | Graph Legend | Metrics | DONE |
 | 10.8 | Graph Minimap | Metrics | DONE |
-| 12.6 | Context Menu | UX & Onboarding | DONE |
-| 7.7 | Inline Toolbar | Toolbars & Status | DONE |
-| 21.12 | Stack Layout | Layout Containers | DONE |
 | 11.1 | Event Timeline | Events | DONE |
 | 11.2 | Activity Feed | Events | DONE |
-| 11.3 | Changelog / Release Notes | Events | NEW |
+| 11.3 | Changelog / Release Notes Display | Events | NEW |
 | 12.1 | Walkthrough (Guided Tour) | UX | DONE |
-| 12.2 | Command Palette | UX | DONE |
-| 12.3 | Contextual Hotspots | UX | NEW |
+| 12.2 | Command Palette (AI-Enhanced) | UX | DONE |
+| 12.3 | Contextual Onboarding Hotspots | UX | NEW |
 | 12.4 | Empty State | UX | DONE |
 | 12.5 | Skeleton Loader | UX | DONE |
 | 12.6 | DocViewer (Documentation Layout) | UX | DONE |
 | 12.7 | HelpDrawer (Contextual Help Panel) | UX | DONE |
 | 12.8 | HelpTooltip (Contextual Help Icon) | UX | DONE |
 | 12.9 | HoverCard (Informational Hover Preview) | UX | DONE |
+| 12.10 | Context Menu | UX & Onboarding | DONE |
 | 13.1 | Facet Filter Sidebar | Filtering | NEW |
 | 13.2 | Facet-Aware Search Bar | Filtering | DONE |
 | 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |
@@ -3694,26 +3822,28 @@ convention (ADR-146, D5).
 | 14.4 | ExplorerPicker (Resource Selection) | Content | DONE |
 | 15.1 | Multi-Tenant Switcher | Navigation | DONE |
 | 15.2 | Draggable Workspace Tabs | Navigation | NEW |
-| 15.3 | Breadcrumb Navigation | Navigation | DONE |
+| 15.3 | Breadcrumb Navigation (Contextual) | Navigation | DONE |
 | 15.4 | Multi-Level Collapsible Sidebar | Navigation | NEW |
 | 15.5 | User Menu | Navigation | DONE |
 | 15.6 | App Launcher | Navigation | DONE |
 | 16.1 | RBAC Permission Matrix | Governance | DONE |
 | 16.2 | Immutable Audit Log Viewer | Governance | DONE |
 | 16.3 | Secret / API Key Manager | Governance | NEW |
-| 17.1 | Notification Center (Bell) | Communication | DONE |
+| 17.1 | Notification Center (In-App Bell) | Communication | DONE |
 | 17.2 | Commenting & Annotation Overlay | Communication | DONE |
-| 18.1 | Visual Workflow Builder | Workflows | NEW |
+| 17.3 | Comment Thread | Communication & Collaboration | NEW |
+| 17.4 | Comment Panel | Communication & Collaboration | NEW |
+| 18.1 | Visual Workflow Builder (Node Canvas) | Workflows | NEW |
 | 18.2 | Multi-Stage Stepper (Wizard) | Workflows | DONE |
 | 18.3 | Approval Flow Indicator | Workflows | NEW |
 | 19.1 | Kanban Board | Layout | NEW |
 | 19.2 | Calendar / Scheduler View | Layout | NEW |
 | 19.3 | Comparison Table | Layout | NEW |
-| 19.4 | Property Inspector (Drawer) | Layout | DONE |
+| 19.4 | Property Inspector (Slide-out Drawer) | Layout | DONE |
 | 19.5 | Split / Resizable Panes | Layout | DONE |
 | 20.1 | Status Badges & Health Indicators | Feedback | DONE |
 | 20.2 | Toast / Snackbar Notifications | Feedback | DONE |
-| 20.3 | Inline Validation & Field Feedback | Feedback | NEW |
+| 20.3 | Inline Validation & Field-Level Feedback | Feedback | NEW |
 | 20.4 | Pill (Inline Entity Reference) | Feedback | DONE |
 | 20.5 | RichTextInput (Lightweight Rich Text) | Input | DONE |
 | 20.6 | PersonChip (Person Identity Chip) | People | DONE |
@@ -3721,16 +3851,18 @@ convention (ADR-146, D5).
 | 20.8 | PresenceIndicator (Avatar Stack) | People | DONE |
 | 20.9 | ShareDialog (Share Modal) | People | DONE |
 | 20.10 | TypeBadge (Ontology Type Badge) | Feedback | DONE |
-| 21.1 | Border Layout Container | Layout Containers | DONE |
-| 21.2 | Box Layout Container | Layout Containers | DONE |
-| 21.3 | Flow Layout Container | Layout Containers | DONE |
-| 21.4 | Grid Layout Container (Uniform) | Layout Containers | DONE |
-| 21.5 | Flex Grid Layout Container | Layout Containers | DONE |
-| 21.6 | Card Layout Container | Layout Containers | DONE |
-| 21.7 | Layer Layout Container (Z-Stack) | Layout Containers | DONE |
-| 21.8 | Anchor Layout Container | Layout Containers | DONE |
-| 21.9 | Dock Layout Container (IDE-Style) | Layout Containers | DONE |
-| 21.10 | Split Layout Container | Layout Containers | DONE |
+| 20.11 | Feedback (Rating and Problem Reports) | System Feedback & Indicators | DONE |
+| 21.2.1 | Border Layout Container | Layout Containers | DONE |
+| 21.2.2 | Box Layout Container (Stack) | Layout Containers | DONE |
+| 21.2.3 | Flow Layout Container (Wrap) | Layout Containers | DONE |
+| 21.2.4 | Grid Layout Container (Uniform) | Layout Containers | DONE |
+| 21.2.5 | Flex Grid Layout Container (Advanced) | Layout Containers | DONE |
+| 21.2.6 | Card Layout Container (Indexed Stack) | Layout Containers | DONE |
+| 21.2.7 | Layer Layout Container (Z-Stack) | Layout Containers | DONE |
+| 21.2.8 | Anchor Layout Container (Constraint) | Layout Containers | DONE |
+| 21.2.9 | Dock Layout Container (IDE-Style) | Layout Containers | DONE |
+| 21.2.10 | Split Layout Container (Resizable Panes) | Layout Containers | DONE |
+| 21.2.11 | Stack Layout (Collapsible Panels) | Layout Containers | DONE |
 | 22.1.1 | Dynamic Form Builder | Work Item & Record | NEW |
 | 22.1.2 | Custom Field Definition Manager | Work Item & Record | NEW |
 | 22.1.3 | Work Item Card (Configurable) | Work Item & Record | NEW |
@@ -3747,54 +3879,386 @@ convention (ADR-146, D5).
 | 22.4.2 | Agent Workflow Monitor (Live) | Automation & Policy | NEW |
 | 22.4.3 | Policy Rule Editor | Automation & Policy | NEW |
 | 22.4.4 | Decision Table | Automation & Policy | NEW |
-| 22.4.5 | Automation Rule Builder (ECA) | Automation & Policy | NEW |
+| 22.4.5 | Automation Rule Builder (Event → Condition → Action) | Automation & Policy | NEW |
 | 22.5.1 | Burndown / Burnup Chart | Analytics | NEW |
 | 22.5.2 | Velocity Chart | Analytics | NEW |
-| 22.5.3 | Cumulative Flow Diagram | Analytics | NEW |
+| 22.5.3 | Cumulative Flow Diagram (CFD) | Analytics | NEW |
 | 22.6.1 | Mention / Autocomplete Popover | Communication | NEW |
 | 22.6.2 | Rich Activity Log (Unified) | Communication | NEW |
-| 28.1 | OKR Hierarchy Tree | Strategic Goals & OKR | NEW |
-| 28.2 | Goal Progress Dashboard | Strategic Goals & OKR | NEW |
-| 28.3 | Scenario Planner / What-If Comparator | Strategic Goals & OKR | NEW |
-| 29.1 | Approval Flow Designer | Approval & Change Mgmt | NEW |
-| 29.2 | Approval Task Card | Approval & Change Mgmt | NEW |
-| 29.3 | Change Request Tracker | Approval & Change Mgmt | NEW |
-| 30.1 | Pipeline Execution Visualizer | Orchestration & Pipeline | NEW |
-| 30.2 | Environment Manager | Orchestration & Pipeline | NEW |
-| 30.3 | Deployment Strategy Selector | Orchestration & Pipeline | NEW |
-| 31.1 | Service Catalog Browser | Service Catalog & Infra | NEW |
-| 31.2 | Service Scorecard | Service Catalog & Infra | NEW |
-| 31.3 | Resource Capacity Planner | Service Catalog & Infra | NEW |
-| 31.4 | Dependency Topology Map (GraphCanvas) | Service Catalog & Infra | DONE |
-| 32.1 | DORA Metrics Dashboard | Eng Intelligence & Flow | NEW |
-| 32.2 | Cycle Time Breakdown Chart | Eng Intelligence & Flow | NEW |
-| 32.3 | Investment Allocation Tracker | Eng Intelligence & Flow | NEW |
-| 33.1 | Knowledge Page Editor (Wiki) | Knowledge & Collaboration | NEW |
-| 33.2 | Status Update / Check-In Composer | Knowledge & Collaboration | NEW |
-| 33.3 | Runbook / Playbook Runner | Knowledge & Collaboration | NEW |
-| 34.1 | Log Console | Dev & Ops Tooling | DONE |
-| 35.1 | Social Post Composer | Enterprise Engagement | NEW |
-| 35.2 | Social Feed | Enterprise Engagement | NEW |
-| 35.3 | Poll / Survey Widget | Enterprise Engagement | NEW |
-| 35.4 | Praise / Recognition Card | Enterprise Engagement | NEW |
-| 35.5 | Announcement Banner (Targeted) | Enterprise Engagement | NEW |
-| 36.1 | Smart Text Input Engine | Behavioral / Non-UI | DONE |
-| 37.1 | Process Discovery Map | Process Mining | NEW |
-| 37.2 | BPMN Heatmap Overlay | Process Mining | NEW |
-| 37.3 | Variant Explorer | Process Mining | NEW |
-| 37.4 | Conformance Overlay (As-Is vs. To-Be) | Process Mining | NEW |
-| 38.1 | Guided Decision Tree | Guided Operations | NEW |
-| 38.2 | Related Actions Menu (Context-Sensitive) | ERP Patterns | NEW |
-| 38.3 | Worklet / Quick-Action Tile Grid | ERP Patterns | NEW |
-| 39.1 | Agent Registry / Fleet Dashboard | Agentic Enterprise | NEW |
-| 39.2 | Agent Guardrail Configuration Panel | Agentic Enterprise | NEW |
-| 39.3 | Agent Execution Trace Viewer | Agentic Enterprise | NEW |
-| 39.4 | Human-in-the-Loop Intervention Panel | Agentic Enterprise | NEW |
-| 40.1 | Analytical List Page | ERP Patterns | NEW |
-| 40.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
-| 41.1 | Auth Card (Login Surface Parity) | Identity & Auth | DONE |
-| 41.2 | Theme Init (Pre-Paint Theme Script) | Identity & Auth | DONE |
-| 42.1 | Marketing Hero | Public Surfaces | DONE |
-| 42.2 | Site Footer | Public Surfaces | DONE |
+| 23.2.1 | OKR Hierarchy Tree | Strategic Goals & OKR | NEW |
+| 23.2.2 | Goal Progress Dashboard | Strategic Goals & OKR | NEW |
+| 23.2.3 | Scenario Planner / What-If Comparator | Strategic Goals & OKR | NEW |
+| 23.3.1 | Approval Flow Designer | Approval & Change Mgmt | NEW |
+| 23.3.2 | Approval Task Card | Approval & Change Mgmt | NEW |
+| 23.3.3 | Change Request Tracker | Approval & Change Mgmt | NEW |
+| 23.4.1 | Pipeline Execution Visualizer | Orchestration & Pipeline | NEW |
+| 23.4.2 | Environment Manager | Orchestration & Pipeline | NEW |
+| 23.4.3 | Deployment Strategy Selector | Orchestration & Pipeline | NEW |
+| 23.5.1 | Service Catalog Browser | Service Catalog & Infra | NEW |
+| 23.5.2 | Service Scorecard | Service Catalog & Infra | NEW |
+| 23.5.3 | Resource Capacity Planner | Service Catalog & Infra | NEW |
+| 23.5.4 | Dependency Topology Map | Service Catalog & Infra | DONE |
+| 23.6.1 | DORA Metrics Dashboard | Eng Intelligence & Flow | NEW |
+| 23.6.2 | Cycle Time Breakdown Chart | Eng Intelligence & Flow | NEW |
+| 23.6.3 | Investment Allocation Tracker | Eng Intelligence & Flow | NEW |
+| 23.7.1 | Knowledge Page Editor (Structured Wiki) | Knowledge & Collaboration | NEW |
+| 23.7.2 | Status Update / Check-In Composer | Knowledge & Collaboration | NEW |
+| 23.7.3 | Runbook / Playbook Runner | Knowledge & Collaboration | NEW |
+| 24.2.1 | Log Console | Dev & Ops Tooling | DONE |
+| 24.3.1 | Social Post Composer | Enterprise Engagement | NEW |
+| 24.3.2 | Social Feed | Enterprise Engagement | NEW |
+| 24.3.3 | Poll / Survey Widget | Enterprise Engagement | NEW |
+| 24.3.4 | Praise / Recognition Card | Enterprise Engagement | NEW |
+| 24.3.5 | Announcement Banner (Targeted) | Enterprise Engagement | NEW |
+| 25.2 | Smart Text Input Engine (STIE) | Behavioral / Non-UI | DONE |
+| 26.2.1 | Process Discovery Map | Process Mining | NEW |
+| 26.2.2 | BPMN Heatmap Overlay | Process Mining | NEW |
+| 26.2.3 | Variant Explorer | Process Mining | NEW |
+| 26.2.4 | Conformance Overlay (As-Is vs. To-Be) | Process Mining | NEW |
+| 26.3.1 | Guided Decision Tree | Guided Operations | NEW |
+| 26.3.2 | Related Actions Menu (Context-Sensitive) | ERP Patterns | NEW |
+| 26.3.3 | Worklet / Quick-Action Tile Grid | ERP Patterns | NEW |
+| 26.4.1 | Agent Registry / Fleet Dashboard | Agentic Enterprise | NEW |
+| 26.4.2 | Agent Guardrail Configuration Panel | Agentic Enterprise | NEW |
+| 26.4.3 | Agent Execution Trace Viewer | Agentic Enterprise | NEW |
+| 26.4.4 | Human-in-the-Loop Intervention Panel | Agentic Enterprise | NEW |
+| 26.5.1 | Analytical List Page | ERP Patterns | NEW |
+| 26.5.2 | Business Process Instance Viewer | ERP / ITSM Patterns | NEW |
+| 27.1 | DynamicCanvas | Dynamic UI | DONE |
+| 27.2 | WorkspaceShell | Dynamic UI | DONE |
+| 27.3 | ChatDock | Dynamic UI | DONE |
+| 27.4 | StickyNote | Dynamic UI | DONE |
+| 27.5 | Annotation | Dynamic UI | DONE |
+| 28.1 | Marketing Hero | Public Surfaces | DONE |
+| 28.2 | Site Footer | Public Surfaces | DONE |
+| 28.3 | Auth Card (Login Surface Parity) | Identity & Auth | DONE |
+| 28.4 | Theme Init (Pre-Paint Theme Script) | Identity & Auth | DONE |
+| 30.2.1 | CEL Editor | Workflow System | NEW |
+| 30.2.2 | Protected Value | Workflow System | NEW |
+| 30.2.3 | Evidence-Linked Prose | Workflow System | NEW |
+| 30.2.4 | Point-in-Time Control | Workflow System | NEW |
+| 30.2.5 | Evidence Panel | Workflow System | NEW |
+| 30.2.6 | Proposal Card | Workflow System | NEW |
+| 30.2.7 | Screen Builder (Planned, Tentative) | Workflow System | NEW (tentative) |
+| 30.2.8 | Proposal Review | Workflow System | NEW |
+| 30.3.1 | GraphCanvas (10.5, 10.6) | Workflow System | NEW (extension) |
+| 30.3.2 | Form Dialog (2.5) and Multi-Stage Stepper (18.2) | Workflow System | NEW (extension) |
+| 30.3.3 | Chart Panel (10.2.1) | Workflow System | NEW (extension) |
+| 30.3.4 | Data Grid (5.1) | Workflow System | NEW (extension) |
+| 30.3.5 | Pill (20.4) | Workflow System | NEW (extension) |
+| 30.3.6 | Event Timeline (11.1) and Immutable Audit Log Viewer (16.2) | Workflow System | NEW (extension) |
 
-Revised library totals: 180 component entries (97 implemented, 83 planned). Implemented count includes 94 unique component directories covering pickers, progress, data entry, rich content, grids, trees, toolbars, containers, AI/ML, metrics, events, UX, filtering, content, navigation, governance, communication, workflows, layout, feedback, people, and layout containers.
+Library totals (2026-11-11): 222 entries. 124 are implemented, 92 are planned components, and 6 are planned extensions to existing components (30.3). The library has 126 component directories. Each row's number is its heading number above.
+
+# 30\. Workflow System Components
+
+## 30.1 Background
+
+This section adds what the workflow system needs beyond the existing catalog. The workflow system has five workstreams: the semantic kernel and its ledger, process-integrated apps, AI-powered change management, policy controls, and workflow insights. A second SaaS product needs the same workflow capabilities, so each entry is a reusable component with a contract, not a screen.
+
+The section comes from an addendum written outside this repository. It is adapted here in two ways:
+
+* **Smaller components first.** Each new component composes existing or planned smaller components rather than absorbing them. So 3.4 Query Builder, 4.3 Data Diff Viewer, 23.3.2 Approval Task Card and 26.4.4 Human-in-the-Loop Intervention Panel stay separate entries. Products outside the workflow system can then use them alone. The addendum's single "Proposal Card and Proposal Review" entry is split into 30.2.6 and 30.2.8 for the same reason.
+* **This library's conventions.** Options and fields are camelCase. String values are kebab-case. A component reports user actions through `on<Event>` callbacks and its `on(channel)` channels. A request that needs an answer from the host is a provider. A provider is an async option, called with a request and an `AbortSignal`, such as CommandPalette `source` or FacetSearch `loadValues`. Over A2UI, a provider becomes `on<Request>` with its answer at `<request>Result`, and a channel becomes `on<Channel>`. 30.5 maps each name in the addendum to the name used here.
+
+Four ground rules apply to every entry in this section:
+
+1. **Components carry no business logic.** The host resolves visibility, protection, entitlement, drift, conformance, health and authorship. The component receives a state and renders it.
+2. **Components consume and produce JSON.** Where a value's native form is a CEL expression, the component consumes and produces CEL text. The host translates between CEL and any other format it needs.
+3. **Components are theme-agnostic.** These entries specify behavior, contracts and use. The theme decides appearance.
+4. **A value the user may not see never reaches the component.** The host sends the filtered projection. No component renders a value and then hides it.
+
+Three shared contracts appear in several entries:
+
+**Protection.** Every data-bearing component accepts a `protection` per field:
+
+| `protection` | Meaning | Render rule |
+| :---- | :---- | :---- |
+| `"visible"` | The user may read the value | Render the value |
+| `"masked"` | The user may know the field has a value | Render a fixed-width mask. Never derive its length from the value. Offer no copy action. |
+| `"redacted"` | The user may know the field exists and why it is hidden | Render the label and the host's `reason` |
+| `"suppressed"` | An aggregate is withheld, for example because a group is below the minimum size | Render the label and the host's `reason` |
+
+A fifth case, absent, has no value: the host leaves the field out, and the component reserves no space for it. There is no client-side reveal. Visibility changes only when the host sends a new projection.
+
+**Authorship.** Rendered content can carry `authorship: { authoredBy, confirmed }`, where `authoredBy` is `"human"`, `"platform"` or `"external-agent"`, and `confirmed` is a boolean. Components expose authorship as data attributes for the theme. Where the host allows confirmation, they report it through `onConfirm`. Components do not decide how authorship looks.
+
+**Reference state.** A reference is a value that names another record. It carries a `referenceState` of `"current"`, `"drifted"` (the record changed since capture) or `"unresolvable"`. The host computes the state. The component renders it and offers navigation. 20.4 Pill renders references, with the extension in 30.3.5.
+
+## 30.2 New Components
+
+### 30.2.1 CEL Editor
+
+**Description**: An editor for one Common Expression Language (CEL) expression, with three synchronized modes: natural language, builder and code. All three read and write the same CEL text. The host supplies an environment schema: variables with types, functions, macros and enumerated values. The editor uses it for completion, value pickers and operator menus. Highlighting and tokenizing run in the component, from the CEL grammar. Semantic checks, translation and evaluation run in the host, through providers.
+
+**Built from:**
+
+* **Code mode:** 4.2 Code Editor with a CEL language mode. CodeMirror's stream parser, lint and autocomplete modules are already vendored, so CEL needs no new served dependency. Diagnostics from the host appear in the gutter.
+* **Builder mode:** 3.4 Query Builder, which stays a separate, CEL-agnostic component that edits a JSON condition tree. The CEL Editor maps the subset of CEL the builder can represent to and from that tree. When the expression holds anything outside that subset, builder mode turns read-only and offers "Edit in code". The editor never rewrites an expression to fit the builder.
+* **Natural-language mode:** a prompt input. The host answers with CEL marked `authoredBy: "platform"` and `confirmed: false`, which the user accepts, adjusts in another mode, or discards.
+* **Test panel:** a sample-context editor, the result, and an optional step trace from the host.
+* **Version comparison:** 4.3 Data Diff Viewer.
+
+**Contract:**
+
+* Options: `schema` (environment schema, JSON), `value` (CEL text), `modes`, `samples`, `readOnly`.
+* Providers: `translate({ text, schema }, signal)` answers CEL text with authorship. `compile({ value }, signal)` answers diagnostics with positions. `evaluate({ value, context }, signal)` answers a result and an optional trace.
+* Events: `onChange({ value, tree? })`, where `tree` is the builder's JSON when the user authored in builder mode. `onModeChange({ mode })`. `onAcceptProposal({ value })`.
+* States: `"valid"`, `"invalid"`, `"pending"`, `"builder-unavailable"`, `"read-only"`.
+
+**Cross-References**: 3.4 Query Builder (builder mode), 4.2 Code Editor (code mode), 4.3 Data Diff Viewer (versions). 22.4.3 Policy Rule Editor and 22.4.5 Automation Rule Builder can host it for their conditions. A saved expression enters the change spine as a proposal, through 30.2.6.
+
+**References**: Google CEL playground, Jira JQL editor, Segment audience builder, Monaco Editor diagnostics.
+
+**Use Cases:** Policy rules, timeline service-level constraints, condition subscriptions, routing conditions, field visibility rules (authored here, evaluated by the host), computed fields.
+
+### 30.2.2 Protected Value
+
+**Description**: A field-level primitive that renders one value in one protection state. It is the single implementation of masked, redacted and suppressed rendering, so every data-bearing component shows the same signal for a protected value. It never receives a value it may not show. It differs from 3.3 Non-Password Masked Entry, which lets the user reveal the value. This primitive offers no reveal.
+
+**Key Capabilities:**
+
+* Renders `"visible"`, `"masked"`, `"redacted"` and `"suppressed"` by the shared contract in 30.1.
+* A `type` hint gives `"masked"` a fixed width per type, never per value.
+* Shows the host's `reason` for `"redacted"` and `"suppressed"` on demand, through 12.9 HoverCard.
+* Optionally offers "Request access", which the host routes to its access flow.
+
+**Contract:**
+
+* Options: `protection`, `value` (only when `"visible"`), `reason`, `type`.
+* Events: `onRequestAccess()`.
+* States: the four protection values above.
+
+**Cross-References**: Used by 2.5 Form Dialog (30.3.2), 5.1 Data Grid (30.3.4), and 11.1 Event Timeline and 16.2 Immutable Audit Log Viewer (30.3.6). Also used by 30.2.3, 30.2.5, 30.2.6 and 17.3.
+
+**References**: Stripe dashboard masked keys (display only), Google Workspace DLP redaction markers.
+
+**Use Cases:** Entity forms and detail pages, inbox previews, ledger timelines, analytics tables with small-group suppression, evidence samples.
+
+### 30.2.3 Evidence-Linked Prose
+
+**Description**: A block of sentences in which each sentence carries references to the events, decisions or records that support it. It renders readable prose with an evidence marker per sentence. Selecting a marker opens the reference, and hovering shows a summary. Protected spans inside a sentence render through 30.2.2. The block carries authorship, because the platform usually writes it.
+
+**Built from:** 20.4 Pill for references, with reference states (30.3.5). 12.9 HoverCard for summaries. 30.2.2 Protected Value for protected spans. The token model of 25 Smart Text Input Engine can carry the inline references.
+
+**Key Capabilities:**
+
+* Sentence-level reference lists, each reference with an id, a type and a label.
+* Partial rendering when some references are unavailable to the user: the sentence stays, and its marker shows as unavailable.
+* Inline protected spans.
+* An optional "More detail" action that asks the host for the next level.
+
+**Contract:**
+
+* Options: `sentences` (each with `text`, `references` and `protectedSpans`), `authorship`.
+* Events: `onOpenReference({ reference })`, `onHoverReference({ reference })`, `onExpand()`.
+* States: `"loading"`, `"ready"`, `"partial"`, `"empty"`.
+
+**Cross-References**: Pairs with 10.2.1 Chart Panel when the host places a timeline chart below. Reads from the same event stream as 11.1 Event Timeline.
+
+**References**: Perplexity inline citations, Google Scholar snippet links, pinpoint citations in legal briefs.
+
+**Use Cases:** Instance narrative, process biography, change summary on a proposal, anomaly explanation.
+
+### 30.2.4 Point-in-Time Control
+
+**Description**: A control that sets an "as of" time for every projection on a page. The user picks a date, time and time zone, or snaps to a host marker, such as a version publication or a deployment. While the page is historical, a persistent banner shows the as-of time and offers "Return to live". The control reports the time, and the host refetches every projection. It also offers "Restore", which it reports as an intent. The host performs the restore as a new version.
+
+**Built from:** 1.1 Date Picker, 1.2 Time Picker and 1.5 Timezone Picker, all shipped. 7.3 Banner Bar for the persistent banner. 2.3 Confirm Dialog for the restore intent, with a required justification when the host asks for one.
+
+**Contract:**
+
+* Options: `asOf`, `markers`, `min`, `max`, `timeZone`, `canRestore`, `restoreNeedsJustification`.
+* Events: `onChange({ asOf })`, `onReturnToLive()`, `onRequestRestore({ asOf, justification })`.
+* States: `"live"`, `"historical"`, `"pending"`.
+
+**Cross-References**: Pairs with 4.3 Data Diff Viewer to compare two points in time.
+
+**References**: Grafana time range picker, Google Docs version history, Datadog time selector, Git history views.
+
+**Use Cases:** An auditor's view of a process as of a date, instance replay, baseline comparison, restoring a prior definition version.
+
+### 30.2.5 Evidence Panel
+
+**Description**: A panel that shows the evidence behind a proposal, an anomaly or an autonomy level. It shows observation counts, rates, baseline and observed windows, magnitude, confidence, and sample references. It renders the numbers it receives and computes nothing.
+
+**Built from:** 10.2 KPI / Metric Card for metric rows, with a comparison value as its secondary stat. 20.4 Pill and 30.2.2 Protected Value for samples. 10.2.1 Chart Panel for host-supplied series, using the band and distribution kinds in 30.3.3.
+
+**Contract:**
+
+* Options: `metrics` (label, value, unit, optional comparison), `windows` (baseline and observed), `samples` (with reference state and protection), `series` (optional).
+* Events: `onOpenSample({ sample })`, `onOpenChart()`.
+* States: `"loading"`, `"ready"`, `"partial"`, `"empty"`.
+
+**Cross-References**: Embedded in 30.2.6 Proposal Card (summary) and 30.2.8 Proposal Review (full).
+
+**References**: LangSmith evaluation summaries, Datadog anomaly detail cards, Optimizely experiment results.
+
+**Use Cases:** Proposal review, anomaly review, autonomy level display, justification of a service-level proposal.
+
+### 30.2.6 Proposal Card
+
+**Description**: The card for one proposed change in the change spine. It shows the change, and its proposer with authorship. It shows the plane it touches: `"definition"`, `"instance-operations"`, `"governance"` or `"data"`. It also shows an evidence summary, due information, and the decision actions the host allows. An anomaly card is a variant, with the plane `"observation"` and the actions accept, fold into baseline, or ignore.
+
+**Built from:** 23.3.2 Approval Task Card, which supplies the card anatomy, the actions and the required comment. The proposal adds the plane, authorship, the evidence summary (30.2.5) and the adjust action. For a batch, 22.3.3 Triage / Inbox Queue lists these cards as rows. It supplies the shared columns, and a bulk decision with per-item exceptions.
+
+**Key Capabilities:**
+
+* Actions: accept, adjust, decline, delegate, request information. The host decides which appear, and which require a comment.
+* Opens the full review in 30.2.8.
+* Appears inline in 9.1 Conversation Container and in 22.3.3 Triage / Inbox Queue.
+
+**Contract:**
+
+* Options: `proposalId`, `plane`, `title`, `summary`, `proposer`, `authorship`, `evidence`, `diffs`, `actions`, `due`, `commentRequired`.
+* Events: `onDecide({ action, comment, adjustments })`, `onOpenReview()`, `onOpenEvidence()`, `onOpenDiff({ diff })`, `onDelegate({ to })`.
+* States: `"pending"`, `"pending-confirmation"`, `"decided"`, `"expired"`, `"superseded"`.
+
+**Cross-References**: 23.3.2 Approval Task Card (base), 22.3.3 Triage / Inbox Queue (batch), 9.1 Conversation Container (inline). 23.3.3 Change Request Tracker keeps the lifecycle and uses this card at its approval stage.
+
+**References**: GitHub pull request review, Harness manual approval, ServiceNow approval records, LangSmith annotation queues.
+
+**Use Cases:** Definition change, policy change, service-level proposal, delegate proposal, anomaly review, external agent proposal.
+
+### 30.2.7 Screen Builder (Planned, Tentative)
+
+**Description**: A design-time editor that produces a screen specification. It reads a component manifest from the host. It offers a palette, a canvas of section 21 layout containers, a structure tree, a property inspector and a live preview. It exports the specification as JSON. Bindings are by name only: field ids and data source names from the project vocabulary. The builder never reads data. It is the 2.7 Ribbon Builder pattern applied to screens. The candidate specification format is the `CanvasDocument` of 27.1 DynamicCanvas, which would make DynamicCanvas the renderer for builder output.
+
+**Sequencing**: The specification schema comes first, the renderer second and the builder third. The builder is the schema's second consumer, after platform-generated screens. Whatever the builder saves enters the change spine as a proposal, through 30.2.6. If forms become a screen type, 22.1.1 Dynamic Form Builder is a candidate to retire into this component.
+
+**Built from:** 6.1 Tree View (structure), 19.4 Property Inspector (properties), section 21 layout containers (canvas), 27.1 DynamicCanvas (candidate renderer).
+
+**Contract:**
+
+* Options: `manifest`, `spec`, `vocabulary`, `sampleData`.
+* Events: `onChange({ spec })`, `onSave({ spec })`, `onExport({ spec })`, `onPreview()`.
+* States: `"valid"`, `"invalid"`, `"preview"`, `"read-only"`.
+
+**References**: Retool editor, Appsmith canvas, Salesforce Lightning App Builder, Figma-to-spec export tools.
+
+**Use Cases:** Author-edited front doors, app screens with declared bindings, human adjustment of platform-generated screens.
+
+### 30.2.8 Proposal Review
+
+**Description**: The full-page review of one proposal. It composes a diff, the evidence, an anchored discussion and the decision actions behind a confirmation. It is a composition of smaller components, in the way 22.1.4 Record Detail Page is.
+
+**Built from:**
+
+* **Diff:** 4.3 Data Diff Viewer, or GraphCanvas diff mode (30.3.1) for a process definition.
+* **Evidence:** 30.2.5 Evidence Panel.
+* **Discussion:** 17.4 Comment Panel and 17.3 Comment Thread, with threads anchored to a field, a delta or a graph node. 17.2 Commenting & Annotation Overlay places the pins on the diff.
+* **Decision:** the 30.2.6 Proposal Card actions, with 2.3 Confirm Dialog and a required comment where the host asks for one.
+* **Agent context:** for an external agent's proposal, 26.4.4 Human-in-the-Loop Intervention Panel shows what the agent did and why.
+
+**Contract:**
+
+* Options: the 30.2.6 options, plus `threads`.
+* Events: the 30.2.6 events, plus the 17.3 and 17.4 events.
+* States: the 30.2.6 states.
+
+**References**: GitHub pull request review, Gerrit change review, Figma comment review.
+
+**Use Cases:** Definition change review, policy change review, external agent proposal review.
+
+## 30.3 Required Extensions to Existing Components
+
+### 30.3.1 GraphCanvas (10.5, 10.6)
+
+The workflow system renders process definitions, running instances and definition changes on GraphCanvas. Each feature consumes document JSON and reports events. None derives layout from business data.
+
+* **Lane grouping:** group nodes by lane, with a per-lane edit state (`"editable"`, `"read-only"`, `"hidden"`) from the host. The existing group-by-namespace layout is the base.
+* **Port node type:** a node with a version label and a pin state. Selecting it reports `onOpenPortContract`.
+* **Edge states:** `"normal"`, `"drifted"`, `"unauthorized"`, `"never-executed"`, each with an entry in 10.7 Graph Legend.
+* **Overlay values:** a map from node or edge id to a value on a scale, drawn as intensity, with a legend. The host computes the values. 26.2.2 BPMN Heatmap Overlay and 26.2.4 Conformance Overlay are built on this and on edge states, not separately.
+* **Transient subgraphs:** a node that expands into a host-supplied subgraph and collapses back to a summary badge.
+* **Parent-child nesting:** grouped nodes inside a containment boundary, distinct from lanes.
+* **Diff mode:** two graph documents in. Each node and edge is tagged `"added"`, `"removed"`, `"changed"` or `"unchanged"`. They draw as an overlay or as synchronized side-by-side views, with next and previous change navigation.
+
+### 30.3.2 Form Dialog (2.5) and Multi-Stage Stepper (18.2)
+
+* **Repeated field groups** with add, remove and reorder, within host-declared minimum and maximum counts.
+* **Drafts:** a debounced `onDraft({ values, versionToken })`. The host decides where drafts are stored.
+* **Reference fields** with the shared reference states. An inline "Add new" opens another form, which returns the new id.
+* **Protection per field,** through 30.2.2.
+* **Refresh on trigger fields:** the form specification names the fields whose change needs the host. The form calls a `refresh({ values }, signal)` provider, and the host answers with a new field set. The affected sections show a pending state until the answer arrives. The form merges the new fields and keeps the values of fields that remain. No rule runs in the component. This differs from 22.1.1 Dynamic Form Builder, which evaluates visibility rules itself.
+* **Read-only context fields:** fields sourced from other tables are marked apart from bound fields, and never sent on submit.
+* **Help anchors** per field, which 12.7 HelpDrawer can scroll to.
+
+### 30.3.3 Chart Panel (10.2.1)
+
+* **Band kind:** a central line with a shaded band between two percentiles, such as the 50th and the 90th, and an optional target marker.
+* **Distribution kind:** a histogram or a cumulative curve, with a marker at the current value.
+* **Two-series timeline:** actual against expected per step, with step labels on the horizontal axis.
+* **Multi-track timeline** for correlation, or the same through tracks on 11.1 Event Timeline. The host picks one, not both.
+* The visually hidden table fallback carries over to every new kind.
+
+### 30.3.4 Data Grid (5.1)
+
+* **Edit session:** start a session and hold cell edits in a local buffer, with dirty markers. Show per-cell validation states from the host (20.3 Inline Validation). Commit one batch, with row version tokens.
+* **Conflict state** per row when the host rejects a commit, with the server's value beside the entered value.
+* **Discard session,** with confirmation through 2.3 Confirm Dialog.
+* **Protected and suppressed cells,** through 30.2.2.
+
+### 30.3.5 Pill (20.4)
+
+* **Reference states:** `referenceState` of `"current"`, `"drifted"` or `"unresolvable"`, from the host, exposed for the theme. A drifted pill can open the reference as captured or as it is now.
+* **Unavailable references:** a pill for a reference the user may not open shows as unavailable and opens nothing.
+
+### 30.3.6 Event Timeline (11.1) and Immutable Audit Log Viewer (16.2)
+
+* **Protected values** in event and change details, through 30.2.2.
+* **Authorship** on each entry, by the shared contract in 30.1.
+
+## 30.4 Cross-Reference: How These Components Compose
+
+```
+Instance outlook
+├── 22.3.1 Case Lifecycle Stage Tracker (position, holder, health)
+├── 30.2.3 Evidence-Linked Prose (narrative)
+├── 10.2.1 Chart Panel (two-series timeline, band forecast, 30.3.3)
+├── 30.2.5 Evidence Panel (comparative evidence)
+├── 30.2.6 Proposal Card (service-level proposal, delegate proposal)
+└── 30.2.4 Point-in-Time Control (replay)
+
+Proposal review
+├── 30.2.8 Proposal Review
+│   ├── 4.3 Data Diff Viewer, or GraphCanvas diff mode (30.3.1)
+│   ├── 30.2.5 Evidence Panel
+│   ├── 17.4 Comment Panel and 17.3 Comment Thread (anchored)
+│   ├── 30.2.6 Proposal Card actions, with 2.3 Confirm Dialog
+│   └── 26.4.4 Human-in-the-Loop Intervention Panel (external agents)
+├── 22.3.3 Triage / Inbox Queue (batch of 30.2.6 cards)
+└── 9.1 Conversation Container (inline card)
+
+Policy and condition authoring
+├── 30.2.1 CEL Editor
+│   ├── code mode: 4.2 Code Editor with a CEL language mode
+│   ├── builder mode: 3.4 Query Builder
+│   └── natural-language mode: host translation
+├── 22.4.3 Policy Rule Editor (hosts the CEL Editor for conditions)
+└── 30.2.6 Proposal Card (a saved expression enters the change spine)
+
+App screen
+├── 27.1 DynamicCanvas, or section 21 layout containers (renderer)
+├── 2.5 Form Dialog with 30.3.2
+├── 5.1 Data Grid with 30.3.4
+├── 30.2.2 Protected Value (every field)
+└── 30.2.7 Screen Builder (design time, tentative)
+```
+
+## 30.5 Names in the Addendum and in This Library
+
+The addendum's contracts used kebab-case event names and snake_case fields. This section uses the library's names:
+
+| Addendum | This library | Over A2UI |
+| :---- | :---- | :---- |
+| `authored_by`, `external_agent` | `authorship.authoredBy`, `"external-agent"` | the same, in the data model |
+| `request-translate`, `request-compile`, `request-evaluate` | providers `translate`, `compile`, `evaluate` | `onTranslate` and `translateResult`, and likewise |
+| `request-refresh` (Form Dialog) | provider `refresh` | `onRefresh` and `refreshResult` |
+| `change`, `mode-change`, `accept-proposal` | `onChange`, `onModeChange`, `onAcceptProposal` | `onChange`, `onModeChange`, `onAcceptProposal` |
+| `open-reference`, `hover-reference`, `expand` | `onOpenReference`, `onHoverReference`, `onExpand` | the same |
+| `return-to-live`, `request-restore` | `onReturnToLive`, `onRequestRestore` | the same |
+| `decide`, `open-review`, `open-evidence`, `open-diff`, `delegate` | `onDecide`, `onOpenReview`, `onOpenEvidence`, `onOpenDiff`, `onDelegate` | the same |
+| `request-access`, `confirm` | `onRequestAccess`, `onConfirm` | the same |
+| `draft`, `open-port-contract` | `onDraft`, `onOpenPortContract` | the same |
+| "Proposal Card and Proposal Review" (30.2.6) | 30.2.6 Proposal Card and 30.2.8 Proposal Review | |
