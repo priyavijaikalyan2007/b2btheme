@@ -209,8 +209,11 @@ test.describe("B8 app-shell components under @a2ui/lit", () =>
         await send(page, surface("t", { id: "root", component: "Ribbon", tabs: { path: "/tabs" } }, { tabs: [{
             id: "home", label: "Home",
             groups: [{ id: "g", label: "G", controls: [{ type: "custom", id: "x" }] }] }] }));
-        await expect.poll(() => errors(page)).toEqual([expect.objectContaining({ code: "VALIDATION_FAILED",
-            path: "/tabs" })]);
+        // web_core 0.15 also reports the rejected Ribbon on its surface, as well as throwing it.
+        await expect.poll(() => errors(page)).toEqual([
+            expect.objectContaining({ code: "VALIDATION_FAILED", surfaceId: "s",
+                message: expect.stringContaining("keyScope") }),
+            expect.objectContaining({ code: "VALIDATION_FAILED", surfaceId: "t", path: "/tabs" })]);
     });
 
     test("RibbonBuilder: adding a tab sends onChange with the config, and Export MD sends the Markdown",
