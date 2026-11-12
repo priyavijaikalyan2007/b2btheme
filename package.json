@@ -134,7 +134,7 @@
     "bootstrap-icons": "1.13.1",
     "chart.js": "4.5.1",
     "cssnano": "^9.9.0",
-    "cytoscape": "3.26.0",
+    "cytoscape": "3.34.4",
     "dompurify": "3.4.17",
     "esbuild": "0.28.2",
     "js-tiktoken": "1.0.21",
