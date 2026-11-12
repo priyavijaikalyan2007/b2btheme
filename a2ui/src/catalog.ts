@@ -22,6 +22,7 @@
 
 // @semantic-marker a2ui-adapter-catalog
 
+import { inlineBasicRefs } from "./basic-refs.mjs";
 import { outcropElementBase, type ElementEnv } from "./element";
 import { checkBase } from "./loader";
 import type { AdapterDescriptor, Validators } from "./types";
@@ -60,7 +61,6 @@ interface Entry { readonly name: string; readonly [key: string]: unknown }
 interface LoadedCatalog
 {
     readonly components: ReadonlyMap<string, Entry>;
-    withPeerCatalogs(peers: unknown[]): LoadedCatalog;
     withEntries(components: Entry[], functions: unknown): unknown;
 }
 interface CatalogClass { fromJson(json: unknown): LoadedCatalog }
@@ -88,7 +88,7 @@ export function createOutcropCatalogFrom(
 
     fixConfig(options);
 
-    const loaded = Catalog.fromJson(JSON.parse(embedded.catalogText)).withPeerCatalogs([basicCatalog]);
+    const loaded = Catalog.fromJson(inlineBasicRefs(JSON.parse(embedded.catalogText)));
     const byName = new Map(embedded.descriptors.map((d) => [d.name, d]));
     const entries = [...loaded.components.values()].map((api) =>
     {
@@ -144,7 +144,7 @@ function ourEntry(api: Entry, descriptor: AdapterDescriptor | undefined, validat
 function checkWebCore(webCore: OutcropWebCore): { Catalog: CatalogClass; basicCatalog: BasicCatalog }
 {
     const hint = "Pass { Catalog } from '@a2ui/web_core/v0_9' and { basicCatalog, BASIC_FUNCTIONS } from "
-        + "'@a2ui/web_core/v0_9/basic_catalog' (tested with 0.14.0).";
+        + "'@a2ui/web_core/v0_9/basic_catalog' (tested with 0.15.0).";
     const catalog: unknown = webCore?.Catalog;
     const basic = webCore?.basicCatalog as Partial<BasicCatalog> | undefined;
 

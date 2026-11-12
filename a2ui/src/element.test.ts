@@ -9,7 +9,7 @@
  *    the real factory, routes each later change through the descriptor's
  *    route, rebuilds only for create-time props, reports every failure as an
  *    A2UI error, and tears down on a real disconnect (spec §4, §5, §6).
- *    Contexts come from a real @a2ui/web_core 0.14.0 surface.
+ *    Contexts come from a real @a2ui/web_core 0.15.0 surface.
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";

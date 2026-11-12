@@ -56,7 +56,10 @@ export class Host
     {
         this.#opts = opts;
         // The catalog is built by the adapter or the checker; web_core's types cannot see that it is a Catalog.
-        this.#processor = new MessageProcessor([opts.catalog as never], (a: ActionPayload) => this.#action(a));
+        // reportErrorsOnly: web_core throws no error, and reports each once on the model, which relays surfaces'.
+        this.#processor = new MessageProcessor([opts.catalog as never], (a: ActionPayload) => this.#action(a),
+            { reportErrorsOnly: true });
+        this.#processor.model.onError.subscribe((e: A2uiErrorPayload) => this.#error({ ...e }));
         this.#processor.onSurfaceCreated((s) => this.#mount(s));
         this.#processor.onSurfaceDeleted((id) => this.#unmount(id));
     }
@@ -125,17 +128,10 @@ export class Host
         }
     }
 
-    /** Processes one message; a rejected message is reported as an error rather than stopping the batch. */
+    /** Processes one message; web_core reports a rejected one as an error, and the batch goes on. */
     #processOne(message: unknown): void
     {
-        try
-        {
-            this.#processor.processMessages([message] as never);
-        }
-        catch (err)
-        {
-            this.#error({ code: "MESSAGE_REJECTED", message: err instanceof Error ? err.message : String(err) });
-        }
+        this.#processor.processMessages([message] as never);
     }
 
     /** Shows a new surface in a captioned frame. */
@@ -152,7 +148,6 @@ export class Host
         frame.append(caption, view);
         this.#opts.surfacesEl.append(frame);
         this.#frames.set(surface.id, frame);
-        surface.onError.subscribe((e: A2uiErrorPayload) => this.#error({ surfaceId: surface.id, ...e }));
     }
 
     /** Removes a deleted surface's frame. */

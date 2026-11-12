@@ -35,8 +35,8 @@ Agent ──messages──► Host's MessageProcessor ──► Renderer ──�
 
 ## 2. Requirements
 
-- **`@a2ui/web_core` 0.14.x** in your app. That is the version the adapter is tested against. The adapter uses **your** copy and bundles none.
-- **A renderer:** `@a2ui/lit` 0.14.x or `@a2ui/react` 0.14.x, both tested end to end. For `@a2ui/angular`, turn on `useUniversalComponents: true`. It is expected to work, but it is **not yet tested**.
+- **`@a2ui/web_core` 0.15.x** in your app. That is the version the adapter is tested against. The adapter uses **your** copy and bundles none.
+- **A renderer:** `@a2ui/lit` 0.15.x or `@a2ui/react` 0.15.x, both tested end to end. For `@a2ui/angular`, turn on `useUniversalComponents: true`. It is expected to work, but it is **not yet tested**.
 - **The base theme on your page (required):**
 
   ```html
@@ -207,7 +207,7 @@ While a bound value has not arrived yet, the component waits, empty, with `aria-
 - **Actions are untrusted input** to your agent backend, like any form post. Validate them there.
 - **The adapter loads scripts only from your `assetBaseUrl`.**
 - **Agents cannot pass functions or elements**, because the catalog has none.
-- **`@a2ui/web_core` 0.14.0's dependency tree carries open advisories** (`zod`, and `dompurify` through `@a2ui/markdown-it`) as of 2026-10-26. Our adapter serves none of that code, but your app does. Track them as you would any dependency.
+- **`@a2ui/web_core` 0.15.0's dependency tree carries open advisories** (`zod`, and `dompurify` through `@a2ui/markdown-it`) as of 2026-11-12. Our adapter serves none of that code, but your app does. Track them as you would any dependency.
 
 ## 10. Related reading
 

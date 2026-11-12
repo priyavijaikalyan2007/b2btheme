@@ -42,7 +42,7 @@ type Component = { id: string; component: string; action?: { event: Event } };
 const ORIGIN = "http://127.0.0.1:8125";
 const MANIFEST = { assets: {
     "mcp-ext-apps": { url: "/lib/mcp-ext-apps-2.0.4.js", integrity: "sha384-ext" },
-    "a2ui-runtime": { url: "/lib/a2ui-runtime-0.14.0.js", integrity: "sha384-a2ui" } } };
+    "a2ui-runtime": { url: "/lib/a2ui-runtime-0.15.0.js", integrity: "sha384-a2ui" } } };
 let deps: CheckDeps;
 
 beforeAll(async () =>
@@ -238,7 +238,7 @@ describe("demo server", () =>
 
         expect(content.text).not.toContain("static.outcrop.us");
         expect(content.text).toContain(`<script type="module" src="${ORIGIN}/mcp/view/v1.js"></script>`);
-        expect(content.text).toContain(`src="${ORIGIN}/lib/a2ui-runtime-0.14.0.js" integrity="sha384-a2ui"`);
+        expect(content.text).toContain(`src="${ORIGIN}/lib/a2ui-runtime-0.15.0.js" integrity="sha384-a2ui"`);
         expect(content._meta.ui.csp.resourceDomains[0]).toBe(ORIGIN);
     });
 

@@ -23,7 +23,7 @@ describe("publication gate", () =>
 
     test("no gate is defined since #36 lifted (ADR-252); the MCP Apps view is not held", () =>
     {
-        expect(gatedLeaks(["lib/a2ui-runtime-0.14.0.js", "mcp/renderer.html", "mcp/view/v1.js"])).toEqual([]);
+        expect(gatedLeaks(["lib/a2ui-runtime-0.15.0.js", "mcp/renderer.html", "mcp/view/v1.js"])).toEqual([]);
     });
 
     test("a dist path under a gated prefix is a leak; others are not", () =>

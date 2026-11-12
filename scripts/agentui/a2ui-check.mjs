@@ -17,17 +17,22 @@
  *
  * WHY THE DRY RUN GOES ONE MESSAGE AT A TIME
  * ------------------------------------------
- * `processMessages` throws at the first bad message and stops. Feeding
- * messages singly records each failure against its own index and still
- * checks the rest against the surface state built so far.
+ * `processMessages` stops at the first bad message. Feeding messages
+ * singly records each failure against its own index and still checks the
+ * rest against the surface state built so far. The processor is built with
+ * `reportErrorsOnly`, so web_core reports each error once, on its model's
+ * onError, which also relays every surface's errors, and does not also
+ * throw it.
  *
  * WHY THERE IS A REFERENCES LAYER
  * -------------------------------
- * web_core 0.14.0 accepts a child ID that no component defines, and only
+ * web_core 0.15.0 accepts a child ID that no component defines, and only
  * the renderer ever notices. LLMs write such references often. Which props
  * hold references is read from the catalog schemas ($refs to common_types
  * ComponentId and ChildList), never listed by hand.
  */
+
+import { inlineBasicRefs } from "../../a2ui/src/basic-refs.mjs";
 
 export const MESSAGE_TYPES = ["createSurface", "updateComponents", "updateDataModel", "deleteSurface"];
 
@@ -239,7 +244,7 @@ function joinPath(prefix, rest)
  */
 export function linkSchemaOnly(catalogJson, webCore)
 {
-    const loaded = webCore.Catalog.fromJson(catalogJson).withPeerCatalogs([webCore.basicCatalog]);
+    const loaded = webCore.Catalog.fromJson(inlineBasicRefs(catalogJson));
     const entries = [...loaded.components.values()].map((api) =>
     {
         const basic = webCore.basicCatalog.components.get(api.name);
@@ -252,7 +257,7 @@ export function linkSchemaOnly(catalogJson, webCore)
 
 /**
  * Feeds the messages one at a time through a fresh MessageProcessor and
- * collects every throw and surface error against its message's index.
+ * collects every error it reports against its message's index.
  *
  * @param {unknown[]} messages - Server-to-client messages.
  * @param {object} webCore - { Catalog, MessageProcessor, basicCatalog, BASIC_FUNCTIONS }.
@@ -263,17 +268,16 @@ export function dryRun(messages, webCore, catalogJson)
 {
     const out = [];
     let current = 0;
-    const processor = new webCore.MessageProcessor([linkSchemaOnly(catalogJson, webCore)], () => undefined);
+    const processor = new webCore.MessageProcessor([linkSchemaOnly(catalogJson, webCore)], () => undefined,
+        { reportErrorsOnly: true });
 
-    processor.onSurfaceCreated((surface) => surface.onError.subscribe((e) =>
-        out.push(finding(current, e.path ?? "", "web_core", `${e.code}: ${e.message}`))));
+    processor.model.onError.subscribe((e) =>
+        out.push(finding(current, e.path ?? "", "web_core", `${e.code}: ${e.message}`)));
 
     messages.forEach((message, index) =>
     {
         current = index;
-
-        try { processor.processMessages([message]); }
-        catch (err) { out.push(finding(index, "", "web_core", String(err?.message ?? err))); }
+        processor.processMessages([message]);
     });
 
     return out;

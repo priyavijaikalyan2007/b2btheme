@@ -6,7 +6,7 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: A2uiHarnessLit
- * 📜 PURPOSE: E2E harness: Google's Lit renderer (@a2ui/lit 0.14.0) hosting outcrop
+ * 📜 PURPOSE: E2E harness: Google's Lit renderer (@a2ui/lit 0.15.0) hosting outcrop
  *    components through the built adapter.
  * 🔗 RELATES: [[A2uiHarness]], [[A2uiAdapter]]
  * ⚡ FLOW: [harness page] -> [startHost()] -> [A2uiSurface (Lit)]

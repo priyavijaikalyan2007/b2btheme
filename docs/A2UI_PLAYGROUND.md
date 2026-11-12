@@ -60,7 +60,7 @@ A message list is valid only when **all three layers** accept it:
 2. **web_core:** a headless dry run through Google's `MessageProcessor`, one message at a time. It catches what a schema cannot see, such as a message for a surface that was never created.
 3. **references:** child IDs that no component defines, and surfaces without a `root`. The props that hold references are read from the catalog schemas.
 
-When the schema and web_core layers disagree, the finding says which accepted and which rejected. The two disagree on purpose in one place: `web_core` 0.14.0 accepts an unknown function name, and the schema does not.
+When the schema and web_core layers disagree, the finding says which accepted and which rejected. The two disagree on purpose in one place: `web_core` 0.15.0 accepts an unknown function name, and the schema does not.
 
 The playground's **Check** button and the reference agent run the same module (`scripts/agentui/a2ui-check.mjs`). The agent receives the same text you see.
 
