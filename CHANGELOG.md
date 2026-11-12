@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Changed
+- **marked 18.1.3** (Dependabot #160): MarkdownRenderer's parser moves from 18.0.12, with upstream fixes for a quadratic scan on unmatched emphasis and for regex backtracking. It is now served at `/lib/marked-18.1.3.js`, and `/lib/marked-18.0.12.js` is no longer served. No known consumer pins that path. Components load it through `/lib-manifest.json`.
 - **A2UI renderers 0.15 (#155, ADR-259)**: `@a2ui/web_core`, `@a2ui/lit` and `@a2ui/react` move from 0.14.0 to 0.15.0 together, and the served runtime is now `/lib/a2ui-runtime-0.15.0.js`. web_core 0.15 no longer follows a `$ref` into another catalog, so the adapter copies the basic catalog's definitions into ours before loading it. It still links on a host's web_core 0.14. The playground, the MCP Apps view and the message checker now report each web_core error once, with web_core's own code, such as `VALIDATION_FAILED`, in place of `MESSAGE_REJECTED`. **MCP servers:** `/lib/a2ui-runtime-0.14.0.js` is no longer served. A server that fetched `/mcp/renderer.html` at startup before this deploy keeps a page that loads it, so restart the server once.
 
 ### Security
