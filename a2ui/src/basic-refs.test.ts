@@ -60,15 +60,10 @@ describe("inlineBasicRefs", () =>
 
     test("the vendored basic catalog is the one this web_core enforces", () =>
     {
-        for (const section of ["components", "functions", "$defs"])
-        {
-            expect(Object.keys(BASIC_JSON[section]).sort()).toEqual(Object.keys(CORE_BASIC_JSON[section] as object).sort());
-
-            for (const name of Object.keys(BASIC_JSON[section]))
-            {
-                expect(BASIC_JSON[section][name]).toEqual((CORE_BASIC_JSON as Any)[section][name]);
-            }
-        }
+        expect(Object.keys(BASIC_JSON.components)).toHaveLength(18);
+        expect(BASIC_JSON.components).toEqual(CORE_BASIC_JSON.components);
+        expect(BASIC_JSON.functions).toEqual(CORE_BASIC_JSON.functions);
+        expect(BASIC_JSON.$defs).toEqual(CORE_BASIC_JSON.$defs);
     });
 
     test("does not change its input", () =>
