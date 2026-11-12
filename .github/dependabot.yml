@@ -21,3 +21,10 @@ updates:
       # return 404. Move it together with the apps (#145). Tracked in #147.
       - dependency-name: "@microsoft/signalr"
         update-types: ["version-update:semver-major"]
+    groups:
+      # The A2UI packages move together. a2ui-runtime bundles web_core and
+      # lit, and one file cannot hold two versions of one package (#152).
+      # @a2ui/markdown-it may lag behind: see _comment_overrides_a2ui in
+      # package.json (#155).
+      a2ui:
+        patterns: ["@a2ui/*"]

@@ -81,8 +81,8 @@ describe("Host", () =>
         const result = host.apply([components([{ id: "root", component: "Text", text: "x" }], "nope"), surface()]);
 
         expect(result.applied).toBe(true);
-        expect(result.errors).toEqual([{ version: V, error: expect.objectContaining({ code: "MESSAGE_REJECTED",
-            message: expect.stringContaining("Surface not found") }) }]);
+        expect(result.errors).toEqual([{ version: V, error: expect.objectContaining({ code: "INTEGRITY_ERROR",
+            surfaceId: "nope", message: expect.stringContaining("Surface not found") }) }]);
         expect(host.surfaces()).toEqual(["s"]);
     });
 
@@ -137,7 +137,7 @@ describe("Host", () =>
         host.apply([components([], "nope")]);
 
         expect(seen).toHaveLength(1);
-        expect(seen[0][0].error.code).toBe("MESSAGE_REJECTED");
+        expect(seen[0][0].error.code).toBe("VALIDATION_FAILED");
         expect(seen[0][1]).toBe(true);
     });
 

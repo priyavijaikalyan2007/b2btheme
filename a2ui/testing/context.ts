@@ -8,7 +8,7 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: A2uiAdapter / TestContext (tests only)
- * 📜 PURPOSE: A real @a2ui/web_core 0.14.0 surface and ComponentContext for
+ * 📜 PURPOSE: A real @a2ui/web_core 0.15.0 surface and ComponentContext for
  *    one open-schema "Fake" component, plus a recording fake widget factory,
  *    so the element tests exercise web_core's genuine subscribeDynamicValue,
  *    set and dispatchAction rather than a hand-written double.

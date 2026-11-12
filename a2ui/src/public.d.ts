@@ -24,7 +24,7 @@ export type OutcropErrorCode =
     | "OUTCROP_MOUNT_FAILED"
     | "OUTCROP_PROVIDER_TIMEOUT";
 
-/** The members of @a2ui/web_core (0.14.x) the adapter needs. */
+/** The members of @a2ui/web_core (0.15.x) the adapter needs. */
 export interface OutcropWebCore
 {
     /** `Catalog` from '@a2ui/web_core/v0_9'. */

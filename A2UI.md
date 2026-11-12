@@ -93,5 +93,5 @@ The build also fails a catalog component on `change-mismatch` (its `onChange` is
   - The A2UI v1.0 codec is later.
   - `theme.primaryColor` is ignored by decision: components follow the host page's theme.
 - **Verified renderers:**
-  - `@a2ui/lit` and `@a2ui/react` 0.14.0, end to end (`npm run test:e2e:a2ui`).
+  - `@a2ui/lit` and `@a2ui/react` 0.15.0, end to end (`npm run test:e2e:a2ui`).
   - Angular should work with `useUniversalComponents: true`, but is not tested.

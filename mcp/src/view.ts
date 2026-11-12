@@ -110,7 +110,11 @@ class View
         this.#reporter = reporter;
         this.#status = root.appendChild(errorLine("outcrop-mcp-status"));
         // The adapter builds a web_core Catalog; its type is not visible across the CDN boundary.
-        this.#processor = new runtime.MessageProcessor([catalog as never], (a: ActionPayload) => this.#action(a));
+        // reportErrorsOnly: web_core throws no error, and reports each once on the model, which relays surfaces'.
+        this.#processor = new runtime.MessageProcessor([catalog as never], (a: ActionPayload) => this.#action(a),
+            { reportErrorsOnly: true });
+        this.#processor.model.onError.subscribe((e: A2uiErrorPayload) =>
+            this.#show(e.code, e.message, e.surfaceId ?? null));
         this.#processor.onSurfaceCreated((s) => this.#mount(s));
         this.#processor.onSurfaceDeleted((id) => this.#unmount(id));
     }
@@ -133,11 +137,8 @@ class View
 
         if (routes !== undefined) { parsed.surfaceIds.forEach((id) => this.#routes.set(id, routes)); }
 
-        for (const message of parsed.messages)
-        {
-            try { this.#processor.processMessages([message] as never); }
-            catch (err) { this.#show("MESSAGE_REJECTED", errorText(err), surfaceOf(message, this.#frames)); }
-        }
+        // One at a time: web_core stops a call at its first rejected message, and the rest still apply.
+        for (const message of parsed.messages) { this.#processor.processMessages([message] as never); }
     }
 
     /** Routes an action; every failure is shown on its surface and logged. */
@@ -206,7 +207,6 @@ class View
         frame.append(error, view);
         this.#root.append(frame);
         this.#frames.set(surface.id, { frame, error });
-        surface.onError.subscribe((e: A2uiErrorPayload) => this.#show(e.code, e.message, surface.id));
     }
 
     #unmount(surfaceId: string): void
@@ -311,14 +311,6 @@ function errorLine(className: string): HTMLElement
 }
 
 /** The surface a rejected message names, when it is already shown. */
-function surfaceOf(message: unknown, frames: ReadonlyMap<string, Frame>): string | null
-{
-    const op = Object.values((message ?? {}) as Record<string, unknown>)
-        .find((v): v is { surfaceId: string } => typeof (v as { surfaceId?: unknown })?.surfaceId === "string");
-
-    return op && frames.has(op.surfaceId) ? op.surfaceId : null;
-}
-
 function errorText(err: unknown): string
 {
     return err instanceof Error ? err.message : String(err);

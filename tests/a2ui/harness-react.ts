@@ -6,7 +6,7 @@
 /*
  * ----------------------------------------------------------------------------
  * ⚓ COMPONENT: A2uiHarnessReact
- * 📜 PURPOSE: E2E harness: Google's React renderer (@a2ui/react 0.14.0) hosting
+ * 📜 PURPOSE: E2E harness: Google's React renderer (@a2ui/react 0.15.0) hosting
  *    outcrop components through the built adapter.
  * 🔗 RELATES: [[A2uiHarness]], [[A2uiAdapter]]
  * ⚡ FLOW: [harness page] -> [startHost()] -> [A2uiSurface (React)]
