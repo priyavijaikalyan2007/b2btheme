@@ -38,6 +38,14 @@ export const COMMENTOVERLAY_MANIFEST: CapabilityManifest =
     actions: [],
     stateKeys: [],
 
+    // Out of the agent catalog by design (#64, ADR-260).
+    protocol: {
+        outOfCatalog: "It places each pin over a live anchorElement on the host page, so in an A2UI surface no "
+            + "pin can be created or placed. Comments an agent can read and write belong in the planned "
+            + "Comment Thread and Comment Panel (MASTER_COMPONENT_LIST.md 17.3 and 17.4), which attach them "
+            + "to ids.",
+    },
+
     regions: [
         "commentoverlay:thread-body",
         "commentoverlay:mention-dropdown",
