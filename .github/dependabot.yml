@@ -21,6 +21,11 @@ updates:
       # return 404. Move it together with the apps (#145). Tracked in #147.
       - dependency-name: "@microsoft/signalr"
         update-types: ["version-update:semver-major"]
+      # Served at /lib/font-awesome-<version>/, which the apps load on most
+      # pages with its hash, and a build serves only the current version, so
+      # a bump makes those URLs return 404 (#158). Tracked in #147.
+      - dependency-name: "@fortawesome/fontawesome-free"
+        update-types: ["version-update:semver-major"]
     groups:
       # The A2UI packages move together. a2ui-runtime bundles web_core and
       # lit, and one file cannot hold two versions of one package (#152).
