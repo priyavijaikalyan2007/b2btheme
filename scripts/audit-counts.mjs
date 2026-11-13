@@ -932,7 +932,8 @@ export const BASELINES = {
     // ADR-242 (2026-11-01): 31 -> 27, PropertyInspector classified (readiness step 4).
     // ADR-247 (2026-11-02): 27 -> 13, FileUpload, GraphMinimap, HelpDrawer and NavRail declare protocol.outOfCatalog
     // and are no longer classified.
-    unclassifiedOptions: 13,
+    // ADR-260 (2026-11-12): 13 -> 0, all of them CommentOverlay's, which is no longer classified (#64).
+    unclassifiedOptions: 0,
     // ADR-219 (2026-10-25): protocol-visible data props without JSDoc. Target 0.
     // Pinned exactly by the floor of the same value (2026-10-25).
     // ADR-228 (2026-10-28): 373 -> 343, PeoplePicker's and Tagger's options documented (B3).
@@ -952,7 +953,8 @@ export const BASELINES = {
     // ADR-237 (2026-10-30): 52 -> 32, PermissionMatrix's options documented (readiness step 3, #23).
     // ADR-237 (2026-10-30): 32 -> 31, the same rule: a pending member needing host code has no JSDoc check.
     // ADR-237 (2026-10-30): 31 -> 16, FileExplorer's options documented (readiness step 3, #21).
-    protocolPropsMissingJsdoc: 16,
+    // ADR-260 (2026-11-12): 16 -> 0, all of them CommentOverlay's, which is no longer classified (#64).
+    protocolPropsMissingJsdoc: 0,
     // ADR-222 (2026-10-27): pending components whose onChange is not their value (#39),
     // so the adapter would write the wrong type back. Target 0. Each is fixed by a
     // protocol.change declaration in its #20 batch. Pinned exactly by the floor of the same value.
@@ -1012,7 +1014,8 @@ export const BASELINES = {
     // ADR-241 (2026-10-31): 9 -> 6, DockLayout, FlowLayout and GridLayout classified (readiness step 4 L3).
     // ADR-242 (2026-11-01): 6 -> 5, PropertyInspector classified (readiness step 4).
     // ADR-247 (2026-11-02): 5 -> 1, four declare protocol.outOfCatalog; CommentOverlay remains.
-    componentsPendingClassification: 1,
+    // ADR-260 (2026-11-12): 1 -> 0, CommentOverlay declares protocol.outOfCatalog (#64).
+    componentsPendingClassification: 0,
 };
 
 /*
@@ -1131,11 +1134,12 @@ export const FLOORS = {
     // ADR-241 (2026-10-31): 31 and 6 once DockLayout, FlowLayout and GridLayout were classified (step 4 L3).
     // ADR-242 (2026-11-01): 27 and 5 once PropertyInspector was classified (readiness step 4).
     // ADR-247 (2026-11-02): 13 and 1 once four declared protocol.outOfCatalog.
-    unclassifiedOptions: 13,
-    protocolPropsMissingJsdoc: 16,
+    // ADR-260 (2026-11-12): 0, 0 and 0 once CommentOverlay declared protocol.outOfCatalog (#64).
+    unclassifiedOptions: 0,
+    protocolPropsMissingJsdoc: 0,
     changeMismatches: 0,
     componentsBelowRequiredLevel: 0,
-    componentsPendingClassification: 1,
+    componentsPendingClassification: 0,
 };
 
 /**
