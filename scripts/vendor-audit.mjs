@@ -88,6 +88,8 @@ import { AUDIT_EXCEPTIONS, exceptionKey, findException, isExpired, validateExcep
 import { GATES } from "./gated.mjs";
 
 const MANIFEST = "dist/lib-manifest.json";
+/** npm's own advisory lookup, which `npm audit` calls; it answers for any version, installed or not. */
+const BULK_ADVISORIES = "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk";
 const GATED_MANIFEST = "gated/lib-manifest.json";
 const AGENTUI_REPORT = "dist/agentui-report.json";
 const ADAPTER_ASSET = "a2ui/adapter (A2UI adapter bundle)";
@@ -421,15 +423,78 @@ function auditAll(assets, label)
     return { failed, used };
 }
 
-function main()
+/**
+ * Audits deprecated /lib/ versions (#147). They are no longer installed, so
+ * `npm audit` cannot see them; npm's advisory endpoint answers for their
+ * exact package versions instead. Exceptions apply as for a served asset.
+ *
+ * @param {{asset: string, version: string, packages: Object<string, string>}[]} entries - lib-manifest.json's deprecated.
+ * @param {typeof fetch} fetchImpl - fetch, or a stub in tests.
+ * @param {ReadonlyArray<object>} exceptions - AUDIT_EXCEPTIONS.
+ * @param {string} today - YYYY-MM-DD.
+ * @returns {Promise<{failures: string[], used: Set<string>}>}
+ */
+export async function auditDeprecated(entries, fetchImpl, exceptions, today)
+{
+    const failures = [];
+    const used = new Set();
+
+    for (const entry of entries)
+    {
+        const body = Object.fromEntries(Object.entries(entry.packages).map(([name, version]) => [name, [version]]));
+        const response = await fetchImpl(BULK_ADVISORIES, { method: "POST",
+            headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+
+        if (!response.ok)
+        {
+            throw new Error(`npm's advisory endpoint returned ${response.status}, so deprecated `
+                + `${entry.asset} ${entry.version} could not be audited.`);
+        }
+
+        const advisories = await response.json();
+
+        for (const [name, version] of Object.entries(entry.packages))
+        {
+            for (const advisory of advisories[name] ?? [])
+            {
+                const ghsa = advisory.url.slice(advisory.url.lastIndexOf("/") + 1);
+                const finding = `${name}@${version} [${advisory.severity}] ${ghsa} in deprecated ${entry.asset} `
+                    + `${entry.version}`;
+                const exception = findException(exceptions, { advisory: ghsa }, name, version);
+
+                if (!exception)
+                {
+                    failures.push(`${finding}. Retire it now with \`npm run lib:retire -- ${entry.asset}@${entry.version}\`, `
+                        + "or record an exception in scripts/audit-exceptions.mjs.");
+                }
+                else if (isExpired(exception, today))
+                {
+                    failures.push(`${finding}: its exception expired on ${exception.reviewBy}.`);
+                }
+                else { used.add(exceptionKey(exception)); }
+            }
+        }
+    }
+
+    return { failures, used };
+}
+
+async function main()
 {
     const assets = servedAssets();
     const packages = [...assets.values()].reduce((sum, served) => sum + served.size, 0);
 
     console.log(`[vendor-audit] ${packages} package(s) served from ${assets.size} asset(s) in ${MANIFEST}`);
 
-    const { failed, used } = auditAll(assets, "served in");
+    const audited = auditAll(assets, "served in");
+    const deprecated = JSON.parse(readFileSync(MANIFEST, "utf8")).deprecated ?? [];
+    const old = await auditDeprecated(deprecated, fetch, AUDIT_EXCEPTIONS, new Date().toISOString().slice(0, 10));
+    const used = new Set([...audited.used, ...old.used]);
+    const failed = audited.failed + old.failures.length;
     const unused = AUDIT_EXCEPTIONS.filter((entry) => !used.has(exceptionKey(entry)));
+
+    console.log(`[vendor-audit] ${deprecated.length} deprecated version(s) audited through npm's advisory endpoint`);
+    old.failures.forEach((failure) => console.error(`  ${failure}`));
 
     for (const exception of unused)
     {
@@ -484,10 +549,8 @@ function gatedMain()
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
 {
-    try { if (process.argv.includes("--gated")) { gatedMain(); } else { main(); } }
-    catch (err)
-    {
-        console.error(`[vendor-audit] ${String(err.message ?? err)}`);
-        process.exit(1);
-    }
+    const fail = (err) => { console.error(`[vendor-audit] ${String(err.message ?? err)}`); process.exit(1); };
+
+    try { if (process.argv.includes("--gated")) { gatedMain(); } else { main().catch(fail); } }
+    catch (err) { fail(err); }
 }

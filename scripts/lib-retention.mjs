@@ -228,7 +228,7 @@ export function noticeData(record, assets, today, generated)
         current: Object.fromEntries(Object.entries(assets).map(([asset, a]) =>
             [asset, { version: a.version, url: a.url }])),
         deprecated: record.deprecated.map((e) => ({
-            asset: e.asset, version: e.version, url: e.url, integrity: e.integrity,
+            asset: e.asset, version: e.version, url: e.url, integrity: e.integrity, packages: e.packages,
             deprecatedOn: e.deprecatedOn, retireAfter: e.retireAfter,
             daysRemaining: daysUntil(today, e.retireAfter),
             replacement: e.replacement, reason: e.reason,

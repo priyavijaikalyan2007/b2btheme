@@ -11,7 +11,7 @@
 
 import { describe, expect, test } from "vitest";
 
-import { auditAsset, installedVersions, servedHits } from "./vendor-audit.mjs";
+import { auditAsset, auditDeprecated, installedVersions, servedHits } from "./vendor-audit.mjs";
 
 const SERVED = new Map([["dompurify", "3.4.17"], ["codemirror", "6.0.1"]]);
 
@@ -177,5 +177,59 @@ describe("installedVersions", () =>
         const paths = ["node_modules/zod", "node_modules/@a2ui/web_core/node_modules/zod", "node_modules/zodiac"];
 
         expect(installedVersions("zod", paths, a2uiAt)).toEqual(["4.6.7", "3.25.76"]);
+    });
+});
+
+describe("auditDeprecated", () =>
+{
+    const ENTRY = { asset: "dompurify", version: "3.4.16", packages: { dompurify: "3.4.16" } };
+    const ADVISORY = { url: "https://github.com/advisories/GHSA-cg2g-xh64-v4q7", severity: "critical",
+        title: "t", vulnerable_versions: "<=3.4.16" };
+    const calls: unknown[] = [];
+    const fetchWith = (body: unknown, status = 200) => async (url: string, init: { body: string }) =>
+    {
+        calls.push({ url, body: JSON.parse(init.body) });
+
+        return new Response(JSON.stringify(body), { status });
+    };
+    const EXCEPTION = { advisory: "GHSA-cg2g-xh64-v4q7", package: "dompurify", version: "3.4.16", reason: "r",
+        evidence: ["https://e"], decided: "2026-11-01", reviewBy: "2027-01-01", adr: "ADR-1" };
+
+    test("asks npm's advisory endpoint about each deprecated version's exact packages", async () =>
+    {
+        calls.length = 0;
+        await auditDeprecated([ENTRY], fetchWith({}), [], "2026-12-01");
+
+        expect(calls).toEqual([{ url: "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+            body: { dompurify: ["3.4.16"] } }]);
+    });
+
+    test("an advisory no exception excuses fails, naming lib:retire", async () =>
+    {
+        const result = await auditDeprecated([ENTRY], fetchWith({ dompurify: [ADVISORY] }), [], "2026-12-01");
+
+        expect(result.failures).toEqual([expect.stringMatching(
+            /dompurify@3\.4\.16 \[critical\] GHSA-cg2g-xh64-v4q7 in deprecated dompurify 3\.4\.16.*npm run lib:retire -- dompurify@3\.4\.16/)]);
+    });
+
+    test("a matching exception excuses it until its review date", async () =>
+    {
+        const ok = await auditDeprecated([ENTRY], fetchWith({ dompurify: [ADVISORY] }), [EXCEPTION], "2026-12-01");
+        const late = await auditDeprecated([ENTRY], fetchWith({ dompurify: [ADVISORY] }), [EXCEPTION], "2027-01-02");
+
+        expect(ok).toEqual({ failures: [], used: new Set(["GHSA-cg2g-xh64-v4q7 on dompurify@3.4.16"]) });
+        expect(late.failures).toEqual([expect.stringMatching(/expired on 2027-01-01/)]);
+    });
+
+    test("an endpoint error is an error, not a pass", async () =>
+    {
+        await expect(auditDeprecated([ENTRY], fetchWith({}, 503), [], "2026-12-01")).rejects.toThrow(/returned 503/);
+    });
+
+    test("no deprecated version means no request", async () =>
+    {
+        calls.length = 0;
+        expect(await auditDeprecated([], fetchWith({}), [], "2026-12-01")).toEqual({ failures: [], used: new Set() });
+        expect(calls).toEqual([]);
     });
 });
