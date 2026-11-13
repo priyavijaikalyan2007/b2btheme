@@ -58,6 +58,8 @@
     "build:vendor": "node scripts/vendor-closure.mjs",
     "lib:record": "node scripts/vendor-closure.mjs --record",
     "lib:verify-live": "node scripts/lib-verify-live.mjs",
+    "lib:deprecate": "node scripts/lib-deprecate.mjs",
+    "lib:retire": "node scripts/lib-retire.mjs",
     "build:gated": "node scripts/vendor-closure.mjs --gated",
     "build:mcp": "node mcp/build.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",
