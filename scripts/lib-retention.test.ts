@@ -12,7 +12,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
-    addDays, currentProblems, daysUntil, dueSoon, headerRules, noticeData, noticeMarkdown, overdue,
+    addDays, cell, currentProblems, daysUntil, dueSoon, headerRules, noticeData, noticeMarkdown, overdue,
     retainedPath, retainedProblems, sriOf, summaryLines,
 } from "./lib-retention.mjs";
 
@@ -217,6 +217,15 @@ describe("headerRules", () =>
     test("a notice entry the record lacks is an error", () =>
     {
         expect(() => headerRules(notice, { ...record(), deprecated: [] })).toThrow(/record does not/);
+    });
+});
+
+describe("cell", () =>
+{
+    test("escapes backslashes before pipes, so text cannot end a table cell", () =>
+    {
+        expect(cell("a|b")).toBe("a\\|b");
+        expect(cell("a\\|b")).toBe("a\\\\\\|b");
     });
 });
 

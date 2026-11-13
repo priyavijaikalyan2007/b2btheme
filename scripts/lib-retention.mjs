@@ -283,10 +283,10 @@ export function headerRules(notice, record)
     }).join("\n\n");
 }
 
-/** A Markdown table cell, with pipes escaped. */
-function cell(text)
+/** A Markdown table cell: backslashes first, so an escaped pipe in the text cannot unescape. */
+export function cell(text)
 {
-    return String(text).replace(/\|/g, "\\|");
+    return String(text).replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 /** The human page, also served as Markdown for agents. */
