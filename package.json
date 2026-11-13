@@ -56,6 +56,8 @@
     "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
+    "lib:record": "node scripts/vendor-closure.mjs --record",
+    "lib:verify-live": "node scripts/lib-verify-live.mjs",
     "build:gated": "node scripts/vendor-closure.mjs --gated",
     "build:mcp": "node mcp/build.mjs",
     "build:sri": "node scripts/sri-manifest.mjs",

@@ -33,6 +33,8 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { GATED_DIR, GATES } from "./gated.mjs";
+import { RETAINED_DIR, currentProblems, noticeData, readRecord, retainedPath, retainedProblems, sriOf,
+    todayUtc, writeRecord } from "./lib-retention.mjs";
 import { hashTable, patchEntry } from "./vditor-integrity.mjs";
 
 const OUT_DIR = "dist/lib";
@@ -540,9 +542,62 @@ function packageOf(asset)
     return asset.pkg ?? `@${asset.name}/core`;
 }
 
-function sriOf(buffer)
+/** Every file under dir, as paths relative to it. */
+function filesUnder(dir)
 {
-    return "sha384-" + createHash("sha384").update(buffer).digest("base64");
+    return readdirSync(dir, { recursive: true }).map(String).filter((rel) => statSync(join(dir, rel)).isFile());
+}
+
+/** A tree's served files, path to SRI, read from the copy just made. */
+function treeFiles(baseDir, servedBase)
+{
+    return Object.fromEntries(filesUnder(baseDir).sort()
+        .map((rel) => [`${servedBase}/${rel}`, sriOf(readFileSync(join(baseDir, rel)))]));
+}
+
+/**
+ * Checks this build against cdn/lib-versions.json, or rewrites the record's
+ * `current` with `--record`; then serves each deprecated version's frozen
+ * bytes. specs/lib-retention.prd.md §6 (#147).
+ */
+function applyRetention(built, outDir, recording)
+{
+    const record = readRecord();
+
+    if (recording)
+    {
+        record.current = built;
+        writeRecord(record);
+        console.log(`  record   -> cdn/lib-versions.json (${Object.keys(built).length} current assets)`);
+    }
+    else
+    {
+        const problems = currentProblems(record, built);
+
+        if (problems.length > 0) { throw new Error(`[vendor-closure] ${problems.join("\n  ")}`); }
+    }
+
+    const retainedRoot = RETAINED_DIR;
+    const present = existsSync(retainedRoot) ? filesUnder(retainedRoot).map((rel) => `/lib/${rel}`) : [];
+    const read = (served) => (existsSync(retainedPath(served)) ? readFileSync(retainedPath(served)) : null);
+    const frozen = retainedProblems(record, read, () => present);
+
+    if (frozen.length > 0) { throw new Error(`[vendor-closure] ${frozen.join("\n  ")}`); }
+
+    for (const entry of record.deprecated)
+    {
+        for (const served of Object.keys(entry.files))
+        {
+            const dest = join(outDir, served.slice("/lib/".length));
+
+            mkdirSync(dirname(dest), { recursive: true });
+            copyFileSync(retainedPath(served), dest);
+        }
+
+        console.log(`  ${entry.asset.padEnd(12)} ${entry.version.padEnd(9)} deprecated, retires after ${entry.retireAfter}`);
+    }
+
+    return record;
 }
 
 /** Bundle an ESM package to a self-contained IIFE; assert the closure. */
@@ -670,6 +725,7 @@ function runPlan(gated)
 async function main()
 {
     const gated = process.argv.includes("--gated");
+    const recording = process.argv.includes("--record");
     const { assets, outDir, manifestPath } = runPlan(gated);
 
     if (gated && assets.length === 0)
@@ -681,6 +737,8 @@ async function main()
     mkdirSync(outDir, { recursive: true });
 
     const manifest = { generated: null, assets: {} };
+    // What this run wrote, per asset: served path to SRI (#147).
+    const published = {};
 
     for (const asset of assets)
     {
@@ -703,6 +761,8 @@ async function main()
             const entryFile = copyTree(asset, baseDir);
             const bytes = readFileSync(entryFile);
             const bundled = bundledOf(asset, baseDir);
+
+            published[asset.name] = { version, files: treeFiles(baseDir, `/lib/${asset.name}-${version}`) };
 
             for (const member of asset.members ?? []) { packages[member] = versionOf(member); }
 
@@ -747,6 +807,8 @@ async function main()
 
             const bytes = readFileSync(outFile);
 
+            published[asset.name] = { version, files: { [`/lib/${fileName}`]: sriOf(bytes) } };
+
             for (const member of asset.members ?? []) { packages[member] = versionOf(member); }
 
             manifest.assets[asset.name] = {
@@ -785,6 +847,8 @@ async function main()
 
         const bytes = readFileSync(outFile);
 
+        published[asset.name] = { version, files: { [`/lib/${fileName}`]: sriOf(bytes) } };
+
         manifest.assets[asset.name] = {
             version,
             url: `/lib/${fileName}`,
@@ -806,9 +870,21 @@ async function main()
         console.log(`  ${asset.name.padEnd(12)} ${version.padEnd(9)} ${kb} KB${detail}`);
     }
 
+    // A gated run publishes nothing to dist/, so it has no retention record.
+    const record = gated ? null : applyRetention(published, outDir, recording);
+    const generated = new Date().toISOString();
+
+    if (record)
+    {
+        const notice = noticeData(record, manifest.assets, todayUtc(), generated);
+
+        manifest.deprecated = notice.deprecated;
+        manifest.retired = notice.retired;
+    }
+
     // Stamped last so a failed run leaves no manifest claiming success —
     // a degraded build must not report success (ADR-148, clause 1).
-    manifest.generated = new Date().toISOString();
+    manifest.generated = generated;
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 
     console.log(`  manifest -> ${manifestPath}`);
