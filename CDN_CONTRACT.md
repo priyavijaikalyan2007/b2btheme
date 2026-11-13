@@ -251,7 +251,7 @@ The old artifact is not deleted. A page cached mid-rollout still resolves.
 | `cytoscape` | 3.26.0 | Was missing from the original request |
 | `chart.js` | 4.5.1 | Also still at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
-| `marked` | 18.0.12 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
+| `marked` | 18.1.3 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
 | `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
 | `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
 | `vditor-integrity` | 3.11.2 | Vditor's entry with a hash for every chunk it loads, at `/lib/vditor-integrity-3.11.2.js`. Load it in place of `/lib/vditor-3.11.2/dist/index.min.js`. MathJax is refused. The A2UI adapter loads it for MarkdownEditor and Conversation. See below |

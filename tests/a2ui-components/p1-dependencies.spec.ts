@@ -39,10 +39,12 @@ test.describe("Dependencies the adapter loads first", () =>
 
         await expect(page.locator(".docviewer-article h1")).toHaveText("Welcome");
         await expect(page.locator(".docviewer-article strong")).toHaveText("bold");
-        await expect(page.locator('head script[src$="/lib/marked-18.0.12.js"]'))
-            .toHaveAttribute("integrity", /^sha384-/);
-        await expect(page.locator('head script[src$="/lib/marked-18.0.12.js"]'))
-            .toHaveAttribute("crossorigin", "anonymous");
+        // Any vendored version: the path comes from /lib-manifest.json, so a bump does not touch this test.
+        const marked = page.locator('head script[src*="/lib/marked-"]');
+
+        await expect(marked).toHaveCount(1);
+        await expect(marked).toHaveAttribute("integrity", /^sha384-/);
+        await expect(marked).toHaveAttribute("crossorigin", "anonymous");
         expect(await errors(page)).toEqual([]);
     });
 
