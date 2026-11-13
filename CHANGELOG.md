@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Changed
+- **CommentOverlay stays out of the A2UI catalog (#64, ADR-260)**: it places pins over elements on the host page, which an A2UI surface cannot reach. It now declares `protocol.outOfCatalog` with that reason, so no component is left waiting for classification. Comments an agent can read and write belong in the planned Comment Thread and Comment Panel. CommentOverlay itself is unchanged.
 - **A2UI renderers 0.15 (#155, ADR-259)**: `@a2ui/web_core`, `@a2ui/lit` and `@a2ui/react` move from 0.14.0 to 0.15.0 together, and the served runtime is now `/lib/a2ui-runtime-0.15.0.js`. web_core 0.15 no longer follows a `$ref` into another catalog, so the adapter copies the basic catalog's definitions into ours before loading it. It still links on a host's web_core 0.14. The playground, the MCP Apps view and the message checker now report each web_core error once, with web_core's own code, such as `VALIDATION_FAILED`, in place of `MESSAGE_REJECTED`. **MCP servers:** `/lib/a2ui-runtime-0.14.0.js` is no longer served. A server that fetched `/mcp/renderer.html` at startup before this deploy keeps a page that loads it, so restart the server once.
 
 ### Security
