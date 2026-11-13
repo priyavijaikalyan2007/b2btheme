@@ -12,6 +12,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 
 ## [Unreleased]
 
+### Added
+- **Old `/lib/` versions keep serving for 60 days (#147, ADR-261)**: when a newer version replaces a vendored library, the old URL now keeps serving its exact bytes for 60 days instead of returning 404 on the next deploy. Every build publishes what is current, what is deprecated and how many days each has left, and what was retired recently:
+  - for agents: `/lib-deprecations.json`, and `deprecated` and `retired` fields in `/lib-manifest.json`
+  - in headers: `Deprecation`, `Sunset` and a successor `Link` on each deprecated path
+  - for people: `/docs/lib-deprecations.html`
+
+  The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
+
 ### Changed
 - **marked 18.1.3** (Dependabot #160): MarkdownRenderer's parser moves from 18.0.12, with upstream fixes for a quadratic scan on unmatched emphasis and for regex backtracking. It is now served at `/lib/marked-18.1.3.js`, and `/lib/marked-18.0.12.js` is no longer served. No known consumer pins that path. Components load it through `/lib-manifest.json`.
 - **CommentOverlay stays out of the A2UI catalog (#64, ADR-260)**: it places pins over elements on the host page, which an A2UI surface cannot reach. It now declares `protocol.outOfCatalog` with that reason, so no component is left waiting for classification. Comments an agent can read and write belong in the planned Comment Thread and Comment Panel. CommentOverlay itself is unchanged.

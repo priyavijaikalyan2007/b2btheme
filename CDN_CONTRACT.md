@@ -234,12 +234,32 @@ response and the tag fails to load. That is why `/lib/*` carries
 
 ### Bumping a version
 
-A version bump is a **new URL**, because the old path must keep serving the
-old bytes — that is what makes `immutable` honest. Consumers must update the
-URL and the hash **together**; reading both from the manifest in the same
-fetch does this for free, which is the main reason the manifest exists.
+A version bump is a **new URL**. Consumers must update the URL and the hash
+**together**. Reading both from the manifest in one fetch does this, which is
+the main reason the manifest exists.
 
-The old artifact is not deleted. A page cached mid-rollout still resolves.
+**The old version keeps serving its exact bytes for 60 days, then it is
+retired** (specs/lib-retention.prd.md, #147). After that date, any deploy may
+make its URL return 404. Until then:
+
+- `/lib-deprecations.json` lists every current version, every deprecated
+  version with its `retireAfter` date and `daysRemaining`, and the
+  retirements of the last 90 days. `/lib-manifest.json` carries the same
+  `deprecated` and `retired` fields beside `assets`.
+- Each deprecated path sends `Deprecation` (RFC 9745), `Sunset` (RFC 8594)
+  and, when one exists, `Link: <new URL>; rel="successor-version"`.
+- The page is at `/docs/lib-deprecations.html`. All three are generated on
+  every build from `cdn/lib-versions.json`, so they always agree.
+
+A version with a security advisory no exception excuses is retired at once,
+not after 60 days.
+
+The build enforces this. A new version without a deprecation, or a served
+file that changes bytes under the same URL, fails the build.
+`npm run lib:deprecate -- <asset> --reason "<why>"` freezes the old bytes
+from the live CDN, after checking each against its recorded hash.
+`npm run lib:retire -- <asset>@<version>` ends it. CI fails once a version is
+past its date.
 
 ### Currently served
 
