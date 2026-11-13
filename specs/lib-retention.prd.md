@@ -23,7 +23,7 @@ A build serves only the current version of each `/lib/` asset. When a version mo
 - A served file can never change bytes under the same URL.
 
 **Non-goals**
-- Usage analytics. A `lib:usage` report against Cloudflare's analytics is a follow-up issue. The free plan's analytics retention is not yet known.
+- Usage analytics. A `lib:usage` report against Cloudflare's analytics is a follow-up, #169. The free plan's analytics retention is not yet known.
 - Git LFS. See §9.
 - Versioned component releases (`/r/<version>/`), still deferred.
 - Removing the Dependabot ignore rules for SignalR and Font Awesome majors. Each can go once its bump is done through this process.
@@ -171,5 +171,5 @@ All notices are generated from `cdn/lib-versions.json` at build time. None is co
 
 ## 12. Follow-ups
 
-- Usage analytics (`lib:usage`) against Cloudflare, once the free plan's retention is known. A separate issue.
+- Usage analytics (`lib:usage`) against Cloudflare, once the free plan's retention is known (#169).
 - SignalR 8 to 10 (#145, #147) and Font Awesome 7 (#158) through this process, then their Dependabot ignore rules come out.
