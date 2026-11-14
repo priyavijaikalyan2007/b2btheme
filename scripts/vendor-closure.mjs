@@ -33,8 +33,8 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { GATED_DIR, GATES } from "./gated.mjs";
-import { RETAINED_DIR, currentProblems, noticeData, readRecord, retainedPath, retainedProblems, sriOf,
-    todayUtc, writeRecord } from "./lib-retention.mjs";
+import { RETAINED_DIR, currentProblems, noticeData, readRecord, recordCurrent, retainedPath, retainedProblems,
+    sriOf, todayUtc, writeRecord } from "./lib-retention.mjs";
 import { hashTable, patchEntry } from "./vditor-integrity.mjs";
 
 const OUT_DIR = "dist/lib";
@@ -556,19 +556,27 @@ function treeFiles(baseDir, servedBase)
 }
 
 /**
- * Checks this build against cdn/lib-versions.json, or rewrites the record's
+ * Checks this build against cdn/lib-versions.json, or updates the record's
  * `current` with `--record`; then serves each deprecated version's frozen
  * bytes. specs/lib-retention.prd.md §6 (#147).
+ *
+ * `--record` adds new assets only. `--record --moved a,b` also takes the new
+ * version of a and b, which lib:deprecate has just deprecated. Any other
+ * change is refused, so recording cannot skip a deprecation.
  */
-function applyRetention(built, outDir, recording)
+function applyRetention(built, outDir, recording, moved)
 {
     const record = readRecord();
 
     if (recording)
     {
-        record.current = built;
+        const { current, problems } = recordCurrent(record, built, moved);
+
+        if (problems.length > 0) { throw new Error(`[vendor-closure] ${problems.join("\n  ")}`); }
+
+        record.current = current;
         writeRecord(record);
-        console.log(`  record   -> cdn/lib-versions.json (${Object.keys(built).length} current assets)`);
+        console.log(`  record   -> cdn/lib-versions.json (${Object.keys(current).length} current assets)`);
     }
     else
     {
@@ -704,6 +712,22 @@ async function bundleAsset(asset, outFile)
  * @param {boolean} gated True for `--gated`.
  * @returns {{assets: object[], outDir: string, manifestPath: string}}
  */
+/**
+ * What a plain run would build from node_modules now, without building it:
+ * each asset's version and the package that version comes from (#147).
+ *
+ * @returns {Object<string, {version: string, namedBy: string}>}
+ */
+export function servedVersions()
+{
+    return Object.fromEntries(ASSETS.filter((asset) => !asset.gate).map((asset) =>
+    {
+        const pkg = packageOf(asset);
+
+        return [asset.name, { version: versionOf(pkg), namedBy: pkg }];
+    }));
+}
+
 function runPlan(gated)
 {
     for (const asset of ASSETS)
@@ -726,6 +750,8 @@ async function main()
 {
     const gated = process.argv.includes("--gated");
     const recording = process.argv.includes("--record");
+    const movedAt = process.argv.indexOf("--moved");
+    const moved = movedAt === -1 ? [] : process.argv[movedAt + 1].split(",");
     const { assets, outDir, manifestPath } = runPlan(gated);
 
     if (gated && assets.length === 0)
@@ -871,7 +897,7 @@ async function main()
     }
 
     // A gated run publishes nothing to dist/, so it has no retention record.
-    const record = gated ? null : applyRetention(published, outDir, recording);
+    const record = gated ? null : applyRetention(published, outDir, recording, moved);
     const generated = new Date().toISOString();
 
     if (record)

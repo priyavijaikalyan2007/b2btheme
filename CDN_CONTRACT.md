@@ -259,7 +259,7 @@ file that changes bytes under the same URL, fails the build.
 `npm run lib:deprecate -- <asset> --reason "<why>"` freezes the old bytes
 from the live CDN, after checking each against its recorded hash.
 `npm run lib:retire -- <asset>@<version>` ends it. CI fails once a version is
-past its date.
+past its date. The maintainers' runbook is [LIB_MAINTENANCE.md](LIB_MAINTENANCE.md).
 
 ### Currently served
 

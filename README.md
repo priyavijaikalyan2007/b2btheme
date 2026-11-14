@@ -272,6 +272,19 @@ All paths below are relative to the CDN base URL.
 
 Agents working in consumer repositories should fetch [`docs/AGENT_QUICK_REF.md`](https://theme.priyavijai-kalyan2007.workers.dev/docs/AGENT_QUICK_REF.md) from the CDN to discover available assets, design tokens, and component APIs. See [`USAGE.md`](USAGE.md) for full integration instructions and HTML boilerplate.
 
+## Maintaining the Vendored Libraries (`/lib/`)
+
+This CDN serves copies of third-party libraries under `/lib/`, such as SignalR, Chart.js and Font Awesome. Other sites load them by exact URL and SRI hash. So **a published file never changes, and an old version keeps serving for 60 days after an upgrade**. Every build publishes which versions are current, deprecated and retired, at [`/docs/lib-deprecations.html`](https://static.knobby.io/docs/lib-deprecations.html) and [`/lib-deprecations.json`](https://static.knobby.io/lib-deprecations.json).
+
+**To upgrade, add, remove or retire a library, follow [LIB_MAINTENANCE.md](LIB_MAINTENANCE.md).** It covers each operation as numbered steps, including Dependabot pull requests, and lists every error message with its fix. The build refuses any step you skip.
+
+| Command | What it does |
+|---|---|
+| `npm run lib:deprecate -- <asset> --reason "<why>"` | Keeps the old version of an upgraded library serving for 60 days |
+| `npm run lib:retire -- <asset>@<version>` | Ends a deprecated version once its 60 days are over |
+| `npm run lib:record` | Adds a new library to the record, `cdn/lib-versions.json` |
+| `npm run lib:verify-live` | Checks every served file on the live CDN against the record |
+
 ## Customization
 
 ### Color Palette

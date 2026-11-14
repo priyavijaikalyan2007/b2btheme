@@ -822,10 +822,16 @@ rather than an object literal still escapes it.
 
 Consumers pin `/lib/<name>-<version>` URLs with SRI hashes. A bump of a served
 package must not make the old URL return 404 on deploy
-(specs/lib-retention.prd.md, #147).
+(specs/lib-retention.prd.md, #147). **Step by step, with every error message:
+[LIB_MAINTENANCE.md](LIB_MAINTENANCE.md).**
 
-- **Bump with `npm run lib:deprecate -- <asset> --reason "<why>"`** on the
-  bump branch, a Dependabot branch included. It freezes the old bytes from
+- **Bump with `npm run lib:deprecate -- <asset> [<asset> ...] --reason "<why>"`**
+  on the bump branch, a Dependabot branch included. List every asset the build
+  names: one package can make several (vditor makes three, katex two).
+- **A bump of a package inside a bundle** (codemirror6, a2ui-runtime,
+  mcp-ext-apps) that does not move the bundle's naming package cannot ship:
+  the URL would not change. Close it, or move the naming package too
+  (LIB_MAINTENANCE.md, Operation C). It freezes the old bytes from
   the live CDN into `cdn/lib-retained/`, after checking each hash, and records
   the deprecation in `cdn/lib-versions.json` for 60 days. Commit both.
 - **The build refuses to skip it.** A new version without a deprecation, a

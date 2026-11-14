@@ -12,7 +12,10 @@
  * ⚡ FLOW: [record current] -> [live CDN bytes, hash-checked] -> [cdn/lib-retained]
  *          -> [record deprecated] -> [vendor-closure --record] -> [replacement]
  *
- * Usage: npm run lib:deprecate -- <asset> --reason "<why it moved>"
+ * Usage: npm run lib:deprecate -- <asset> [<asset> ...] --reason "<why it moved>"
+ *
+ * One package can name several assets (vditor names vditor, vditor-css and
+ * vditor-integrity). List every asset the build names, in one command.
  *
  * WHY THE BYTES COME FROM THE LIVE CDN
  * ------------------------------------
@@ -30,16 +33,19 @@ import { fileURLToPath } from "node:url";
 import { LIVE_ORIGIN, RECORD_PATH, RETAIN_DAYS, addDays, readRecord, retainedPath, todayUtc, writeRecord }
     from "./lib-retention.mjs";
 import { fetchVerified } from "./lib-verify-live.mjs";
+import { servedVersions } from "./vendor-closure.mjs";
 
 /**
  * Freezes the current version of an asset and records it as deprecated.
  * The record is written only after every file is proved and frozen.
  *
  * @param {string} asset - The asset name, as in lib-manifest.json.
- * @param {{fetchImpl: typeof fetch, today: string, reason: string, root?: string, origin?: string}} options
+ * @param {{fetchImpl: typeof fetch, today: string, reason: string, next: {version: string, namedBy: string}|null,
+ *     root?: string, origin?: string}} options - `next` is what node_modules would build now, or null when the
+ *     asset is being removed.
  * @returns {Promise<object>} The deprecated entry, with replacement null until the new version is recorded.
  */
-export async function deprecate(asset, { fetchImpl, today, reason, root = ".", origin = LIVE_ORIGIN })
+export async function deprecate(asset, { fetchImpl, today, reason, next, root = ".", origin = LIVE_ORIGIN })
 {
     if (!reason) { throw new Error("lib:deprecate needs a reason: --reason \"<why it moved>\"."); }
 
@@ -48,6 +54,13 @@ export async function deprecate(asset, { fetchImpl, today, reason, root = ".", o
     const current = record.current[asset];
 
     if (!current) { throw new Error(`lib:deprecate: ${asset} is not a current asset in ${RECORD_PATH}.`); }
+
+    if (next !== null && next.version === current.version)
+    {
+        throw new Error(`lib:deprecate: ${asset} is still ${current.version} in node_modules, so its URL would not `
+            + `change. A package inside it moved, but not ${next.namedBy}, whose version names the URL. Bump `
+            + `${next.namedBy} on the same branch, or close the bump. Nothing changed.`);
+    }
 
     const manifest = await (await fetchImpl(`${origin}/lib-manifest.json`)).json();
     const live = manifest.assets?.[asset];
@@ -94,38 +107,57 @@ function vendor(...flags)
 async function main()
 {
     const args = process.argv.slice(2);
-    const asset = args.find((a) => !a.startsWith("--"));
     const at = args.indexOf("--reason");
     const reason = at === -1 ? "" : args[at + 1];
+    const assets = args.filter((a, i) => !a.startsWith("--") && i !== at + 1);
 
-    if (!asset) { throw new Error("Usage: npm run lib:deprecate -- <asset> --reason \"<why it moved>\""); }
+    if (assets.length === 0)
+    {
+        throw new Error("Usage: npm run lib:deprecate -- <asset> [<asset> ...] --reason \"<why it moved>\"");
+    }
 
-    const entry = await deprecate(asset, { fetchImpl: fetch, today: todayUtc(), reason });
+    const next = servedVersions();
+    const entries = [];
 
-    // The new version is in node_modules; record it, then name it as the replacement.
-    vendor("--record");
+    // Every asset is proved and frozen before the record is rebuilt, so one bad asset stops all of them.
+    for (const asset of assets)
+    {
+        entries.push(await deprecate(asset, { fetchImpl: fetch, today: todayUtc(), reason, next: next[asset] ?? null }));
+    }
+
+    // The new versions are in node_modules; record exactly these, then name each replacement.
+    vendor("--record", "--moved", assets.join(","));
 
     const manifest = JSON.parse(readFileSync("dist/lib-manifest.json", "utf8"));
     const record = readRecord();
-    const saved = record.deprecated.find((e) => e.asset === asset && e.version === entry.version);
 
-    saved.replacement = manifest.assets[asset]?.url ?? null;
+    for (const entry of entries)
+    {
+        const saved = record.deprecated.find((e) => e.asset === entry.asset && e.version === entry.version);
+
+        saved.replacement = manifest.assets[entry.asset]?.url ?? null;
+        entry.replacement = saved.replacement;
+    }
+
     writeRecord(record);
     // A normal build last, so every gate passes on what is about to be committed.
     vendor();
 
-    const to = saved.replacement ? `\`${saved.replacement}\`` : "nothing";
+    for (const entry of entries)
+    {
+        const to = entry.replacement ? `\`${entry.replacement}\`` : "nothing";
 
-    console.log(`\n[lib:deprecate] ${asset} ${entry.version} is deprecated until ${entry.retireAfter}.`);
-    console.log("\nCHANGELOG line:\n");
-    console.log(`- **${asset} ${entry.version} deprecated**: \`${entry.url}\` keeps serving until `
-        + `${entry.retireAfter}, then returns 404. Move to ${to}. ${reason}`);
-    console.log("\nApps-team note (for ~/Work/knobby/apps/specs/bugreports/):\n");
-    console.log(`# ${asset} ${entry.version} is deprecated: move by ${entry.retireAfter}\n`);
-    console.log(`\`https://static.knobby.io${entry.url}\` keeps serving its exact bytes until ${entry.retireAfter}. `
-        + `After that date it returns 404. Replace it with ${to}, and take the URL and its \`integrity\` together `
-        + "from `https://static.knobby.io/lib-manifest.json`. Every page that loads the old URL must move. "
-        + `Reason: ${reason}`);
+        console.log(`\n[lib:deprecate] ${entry.asset} ${entry.version} is deprecated until ${entry.retireAfter}.`);
+        console.log("\nCHANGELOG line:\n");
+        console.log(`- **${entry.asset} ${entry.version} deprecated**: \`${entry.url}\` keeps serving until `
+            + `${entry.retireAfter}, then may return 404. Move to ${to}. ${reason}`);
+        console.log("\nApps-team note (for ~/Work/knobby/apps/specs/bugreports/):\n");
+        console.log(`# ${entry.asset} ${entry.version} is deprecated: move by ${entry.retireAfter}\n`);
+        console.log(`\`https://static.knobby.io${entry.url}\` keeps serving its exact bytes until `
+            + `${entry.retireAfter}. After that date it may return 404. Replace it with ${to}, and take the URL and `
+            + "its `integrity` together from `https://static.knobby.io/lib-manifest.json`. Every page that loads "
+            + `the old URL must move. Reason: ${reason}`);
+    }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url))
