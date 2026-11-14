@@ -185,7 +185,7 @@ textarea:focus-visible,
 // Raised by the apps team on 2026-10-23: the tokens existed, nothing in
 // this stylesheet used them, so there was no way to see what pairing was
 // intended. These classes are that reference rendering, and
-// demo/full-demo.html shows all eight in both themes.
+// demo/components/color-palette.html shows all eight in both themes.
 //
 // Assign a slot by STABLE KEY, not by position in a list. A category that
 // moves rows should not change colour.
