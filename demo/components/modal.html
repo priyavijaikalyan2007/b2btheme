@@ -53,12 +53,60 @@
 
         <div class="demo-section" id="modal-section">
             <h2>Modal</h2>
+            <p>A Bootstrap modal with <code>.modal-header-enterprise</code>, the dark header with an inverted close button.</p>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                 Launch Demo Modal
             </button>
         </div>
 
+        <div class="demo-section" id="modal-static-section">
+            <h2>Enterprise header, shown in place</h2>
+            <p>The same dialog drawn in the page, so both themes can be seen without opening it.</p>
+            <div class="modal position-static d-block" tabindex="-1" aria-label="Static modal example">
+                <div class="modal-dialog m-0">
+                    <div class="modal-content">
+                        <div class="modal-header modal-header-enterprise">
+                            <h5 class="modal-title">Confirm Action</h5>
+                            <button type="button" class="btn-close" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-0">Archive the selected project? It can be restored for 30 days.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                            <button type="button" class="btn btn-primary">Archive</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
+
+    <!-- Example Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-header-enterprise">
+                    <h5 class="modal-title" id="exampleModalLabel">Enterprise Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This is an example modal with the enterprise header style.</p>
+                    <form>
+                        <div class="mb-3">
+                            <label for="modalInput" class="form-label">Example Input</label>
+                            <input type="text" class="form-control" id="modalInput" placeholder="Enter text">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>

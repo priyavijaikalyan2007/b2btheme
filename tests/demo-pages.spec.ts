@@ -103,7 +103,6 @@ function globalsFor(page: string): string[]
  * crash inside the wait below, so the test failed only on slow runs (2026-11-10). Any other error still fails.
  */
 const DELIBERATE_ERRORS: Readonly<Record<string, readonly string[]>> = {
-    "demo/full-demo.html": ["Simulated MCP app crash: data feed disconnected"],
     "demo/components/conversation.html": ["Simulated MCP app crash: data feed disconnected"],
 };
 
@@ -126,11 +125,6 @@ test.describe("every demo page loads clean", () =>
         // below vacuous by simply not existing. ADR-196's lesson: a gate
         // that can pass by having no inputs has not been written yet.
         expect(PAGES.length).toBeGreaterThan(100);
-
-        // DEBT-DEMO-2. The glob is what left the flagship page
-        // untested for the life of this suite, so its presence is
-        // asserted by name rather than left to a count.
-        expect(PAGES).toContain("demo/full-demo.html");
 
         // PAT-1b. The glob above read `demo/components/*.html` and so
         // this suite never opened the four studio pages. Three of them

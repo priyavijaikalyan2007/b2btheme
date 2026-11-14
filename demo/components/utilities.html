@@ -1,0 +1,151 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-UtilityClasses
+  PURPOSE: Standalone demo page for the theme's utility classes in
+    docs/CUSTOM_CLASSES.md that no other page shows: the sidebar, the skip
+    link, and the compact form and layout classes.
+  RELATES: [[CustomClasses]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility Classes - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Utility Classes
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="utilities-sidebar-section">
+            <h2>Sidebar navigation</h2>
+            <p><code>.sidebar</code> styles a navigation column and its
+                <code>.nav-link</code> states. It fills the viewport height, so this
+                example sets <code>min-height: 0</code> to fit the page.</p>
+            <nav class="sidebar rounded" aria-label="Example sidebar" style="min-height: 0; max-width: 240px;">
+                <ul class="nav flex-column p-2">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#utilities-sidebar-section"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#utilities-sidebar-section"><i class="bi bi-people"></i> Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#utilities-sidebar-section"><i class="bi bi-gear"></i> Settings</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="demo-section" id="utilities-skiplink-section">
+            <h2>Skip link</h2>
+            <p><code>.skip-link</code> stays out of sight until it has keyboard
+                focus. Put it first in the page, pointing at the main content. In
+                this box, press the button and the link slides into view.</p>
+            <div class="position-relative overflow-hidden border rounded p-3 pt-5" id="demo-skiplink-box">
+                <a href="#utilities-forms-section" class="skip-link" id="demo-skiplink">Skip to main content</a>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="demo-skiplink-focus">Focus the skip link</button>
+            </div>
+        </div>
+
+        <div class="demo-section" id="utilities-forms-section">
+            <h2>Compact forms</h2>
+            <p><code>.form-inline-compact</code> lays out a filter bar on one line.</p>
+            <div class="form-inline-compact mb-3">
+                <div class="form-group">
+                    <input type="text" class="form-control form-control-sm" placeholder="Name" aria-label="Name">
+                </div>
+                <div class="form-group">
+                    <select class="form-select form-select-sm" aria-label="Status">
+                        <option>All Status</option>
+                        <option>Active</option>
+                    </select>
+                </div>
+                <button class="btn btn-sm btn-primary">Filter</button>
+            </div>
+
+            <p><code>.form-label-inline</code> puts a label and its input on one line.</p>
+            <div class="form-label-inline mb-3">
+                <label for="demo-inline-email">Email</label>
+                <input type="email" class="form-control form-control-sm" id="demo-inline-email">
+            </div>
+
+            <p><code>.btn-group-compact</code> is a button group with smaller padding and text.</p>
+            <div class="btn-group btn-group-compact" role="group" aria-label="Range">
+                <button class="btn btn-outline-secondary">Day</button>
+                <button class="btn btn-outline-secondary active">Week</button>
+                <button class="btn btn-outline-secondary">Month</button>
+            </div>
+        </div>
+
+        <div class="demo-section" id="utilities-layout-section">
+            <h2>Compact layout</h2>
+            <p><code>.layout-dense</code> puts 0.5rem between its children. Each card
+                below uses <code>.p-compact</code> for its padding.</p>
+            <div class="layout-dense mb-3">
+                <div class="card card-compact p-compact">First card</div>
+                <div class="card card-compact p-compact">Second card</div>
+                <div class="card card-compact p-compact">Third card</div>
+            </div>
+
+            <p><code>.text-compact</code> sets a tighter line height for dense text:</p>
+            <p class="text-compact border rounded p-compact" style="max-width: 420px;">This paragraph uses a
+                line height of 1.3, so a long block of metadata or help text takes less room
+                while staying readable.</p>
+
+            <p><code>.m-compact</code> gives a 0.5rem margin on every side:</p>
+            <div class="border rounded d-inline-block">
+                <span class="badge text-bg-secondary m-compact">Badge with .m-compact</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <script>
+    document.getElementById("demo-skiplink-focus").addEventListener("click", function()
+    {
+        document.getElementById("demo-skiplink").focus();
+    });
+    </script>
+</body>
+</html>
