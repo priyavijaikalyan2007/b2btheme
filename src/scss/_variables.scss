@@ -552,3 +552,16 @@ $control-height-sm: 30px !default;
 $control-height-md: 34px !default;
 $control-height-lg: 42px !default;
 $control-height-xl: 46px !default;
+
+// =============================================================================
+// ONTOLOGY RELATIONSHIP CATEGORIES
+// =============================================================================
+
+// Each relationship category takes one slot of the categorical palette
+// (--theme-group-*-N). A slot is a background and foreground pair, already
+// contrast-checked in both themes, so a category adds a name, not a colour.
+// Keyed by category name, so a category keeps its colour wherever it is
+// listed. Strategic keeps the indigo the apps used before (apps#249). The
+// map stays on one line, because the docs generator reads one line a variable.
+// Relationship category name to categorical palette slot, 1 to 8.
+$ontology-category-slots: (structural: 1, lifecycle: 2, dependency: 3, custom: 4, strategic: 5, identity: 6, knowledge: 7, ownership: 8) !default;
