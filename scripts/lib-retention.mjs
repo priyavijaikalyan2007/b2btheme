@@ -187,7 +187,9 @@ function fileProblems(asset, version, was, now)
         else if (was[path] !== sri)
         {
             problems.push(`${asset} ${version}: ${path} changed bytes under the same URL, which breaks every `
-                + "consumer's SRI hash. Find what changed the build, such as a tool upgrade.");
+                + "consumer's SRI hash. Either a package bundled inside it moved without the one that names its URL, "
+                + "or a build tool such as esbuild changed its output. See LIB_MAINTENANCE.md, \"A package inside a "
+                + "bundle\".");
         }
     }
 
