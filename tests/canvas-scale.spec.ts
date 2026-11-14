@@ -12,7 +12,8 @@
  * ----------------
  * Each scene is a grid of nodes, one row per level. Each node has an edge
  * from the node above it and, in every second column, one from the node
- * above and to the left. Both canvases get the same positions.
+ * above and to the left. Both canvases get the same grid. GraphCanvas
+ * spreads a short last row across the full width.
  *
  * - Build: from the create call to the first painted frame.
  * - Pan at the widest zoom: the whole scene, or as much as zoom 0.1 shows.
@@ -198,14 +199,16 @@ function round(ms: number): number
 }
 
 /**
- * One step per frame: move, then wait for two frames. Fails when `track`,
- * the node the gesture should move, did not move by (dx, dy), because a
- * pan that silently became a drag or a no-op measures the wrong thing.
+ * One step per frame: move, then wait for two frames. `track` must move by
+ * (dx, dy). `other` must move with it for a pan and stay put for a drag,
+ * because a pan that started on a node is a drag, and both move `track`.
+ * Both are found again after the gesture, since GraphCanvas redraws its
+ * nodes during a drag.
  */
-async function gesture(page: Page, from: { x: number; y: number }, dx: number, dy: number,
-    button: "left" | "middle", track: string): Promise<Frames>
+async function gesture(page: Page, kind: "pan" | "drag", from: { x: number; y: number }, dx: number, dy: number,
+    button: "left" | "middle", track: string, other: string): Promise<Frames>
 {
-    const before = await rectOf(page, track);
+    const before = [await rectOf(page, track), await rectOf(page, other)];
 
     await page.mouse.move(from.x, from.y);
     await startFrames(page);
@@ -219,13 +222,19 @@ async function gesture(page: Page, from: { x: number; y: number }, dx: number, d
 
     await page.mouse.up({ button });
     const frames = await stopFrames(page);
-    const after = await rectOf(page, track);
-    const moved = { x: after.x - before.x, y: after.y - before.y };
+    const after = [await rectOf(page, track), await rectOf(page, other)];
+    const expected = [{ x: dx, y: dy }, kind === "pan" ? { x: dx, y: dy } : { x: 0, y: 0 }];
 
-    if (Math.abs(moved.x - dx) > 2 || Math.abs(moved.y - dy) > 2)
+    [track, other].forEach((sel, i) =>
     {
-        throw new Error(`${track} moved (${round(moved.x)}, ${round(moved.y)}), not (${dx}, ${dy}).`);
-    }
+        const moved = { x: after[i].x - before[i].x, y: after[i].y - before[i].y };
+
+        if (Math.abs(moved.x - expected[i].x) > 2 || Math.abs(moved.y - expected[i].y) > 2)
+        {
+            throw new Error(`A ${kind} moved ${sel} by (${round(moved.x)}, ${round(moved.y)}), `
+                + `not (${expected[i].x}, ${expected[i].y}).`);
+        }
+    });
 
     return frames;
 }
@@ -342,6 +351,7 @@ async function measureGraphCanvas(page: Page, n: number): Promise<Result>
     const result: Partial<Result> = { canvas: "GraphCanvas", nodes: n, edges: edges.length, elements,
         buildMs: round(built.buildMs), loadMs: round(built.loadMs) };
     const mid = `.gc-node[data-node-id="n${middleNode(n)}"]`;
+    const first = '.gc-node[data-node-id="n0"]';
     const zoom = (): Promise<number> => page.evaluate(() =>
         (window as unknown as { __gc: { getZoomLevel(): number } }).__gc.getZoomLevel());
     const centerOn = async (): Promise<void> =>
@@ -358,15 +368,15 @@ async function measureGraphCanvas(page: Page, n: number): Promise<Result>
 
     result.idle = await idle(page);
     result.viewFit = await view(page, ".gc-node", await zoom());
-    result.panFit = await gesture(page, await gapBeside(page, mid), 300, 200, "left", mid);
+    result.panFit = await gesture(page, "pan", await gapBeside(page, mid), 300, 200, "left", mid, first);
 
     await centerOn();
     result.viewOne = await view(page, ".gc-node", await zoom());
-    result.panOne = await gesture(page, await gapBeside(page, mid), 300, 200, "left", mid);
+    result.panOne = await gesture(page, "pan", await gapBeside(page, mid), 300, 200, "left", mid, first);
     result.zoom = await wheel(page);
 
     await centerOn();
-    result.drag = await gesture(page, await centerOf(page, mid), 150, 100, "left", mid);
+    result.drag = await gesture(page, "drag", await centerOf(page, mid), 150, 100, "left", mid, first);
 
     if (n === SIZES[0])
     {
@@ -454,6 +464,7 @@ async function measureDiagramEngine(page: Page, n: number): Promise<Result>
 
     const id = `n${middleNode(n)}`;
     const mid = `[data-id="${id}"]`;
+    const first = '[data-id="n0"]';
     const zoom = (): Promise<number> => page.evaluate(() =>
         (window as unknown as { __de: { getZoomLevel(): number } }).__de.getZoomLevel());
     const centerOn = async (): Promise<void> =>
@@ -476,15 +487,15 @@ async function measureDiagramEngine(page: Page, n: number): Promise<Result>
 
     result.idle = await idle(page);
     result.viewFit = await view(page, '[data-id^="n"]', await zoom());
-    result.panFit = await gesture(page, await gapBeside(page, mid), 300, 200, "middle", mid);
+    result.panFit = await gesture(page, "pan", await gapBeside(page, mid), 300, 200, "middle", mid, first);
 
     await centerOn();
     result.viewOne = await view(page, '[data-id^="n"]', await zoom());
-    result.panOne = await gesture(page, await gapBeside(page, mid), 300, 200, "middle", mid);
+    result.panOne = await gesture(page, "pan", await gapBeside(page, mid), 300, 200, "middle", mid, first);
     result.zoom = await wheel(page);
 
     await centerOn();
-    result.drag = await gesture(page, await centerOf(page, mid), 150, 100, "left", mid);
+    result.drag = await gesture(page, "drag", await centerOf(page, mid), 150, 100, "left", mid, first);
 
     if (n === SIZES[0])
     {
@@ -562,7 +573,7 @@ test.describe("canvas scale", () =>
 {
     test.skip(!process.env.CANVAS_BENCH, "A measurement. Run it with `npm run bench:canvas`.");
 
-    test.afterAll(() => report());
+    test.afterAll(() => { if (process.env.CANVAS_BENCH) { report(); } });
 
     for (const n of SIZES)
     {
