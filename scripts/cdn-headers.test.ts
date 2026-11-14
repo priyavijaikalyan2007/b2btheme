@@ -9,6 +9,8 @@
  *    - /icons/bootstrap-icons.css sends CORS like its fonts and the icon
  *      packs, so `crossorigin` does not drop it (apps report 2026-11-14,
  *      item 3).
+ *    - /licenses/* sends CORS and text/plain, for the apps' notices build
+ *      (item 4).
  */
 // @vitest-environment node
 
@@ -51,5 +53,14 @@ describe("cdn/_headers", () =>
     test("the stylesheet keeps the default cache, as it changes in place", () =>
     {
         expect(rules.get("/icons/bootstrap-icons.css")?.has("cache-control")).toBe(false);
+    });
+
+    test("license texts send CORS and plain text, and are not immutable", () =>
+    {
+        const licenses = rules.get("/licenses/*");
+
+        expect(licenses?.get("access-control-allow-origin")).toBe("*");
+        expect(licenses?.get("content-type")).toBe("text/plain; charset=utf-8");
+        expect(licenses?.get("cache-control")).toBe("public, max-age=86400, stale-while-revalidate=604800");
     });
 });

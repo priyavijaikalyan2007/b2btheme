@@ -1,0 +1,382 @@
+{
+  "@a2ui/lit@0.15.0": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-qNFgAHaKjSeDVWHk0FBFHm29mAn+737x2Gbp+9TNXjXzpm7hSLlkHAnCRb15wg8b"
+    }
+  },
+  "@a2ui/web_core@0.15.0": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-qNFgAHaKjSeDVWHk0FBFHm29mAn+737x2Gbp+9TNXjXzpm7hSLlkHAnCRb15wg8b"
+    }
+  },
+  "@codemirror/autocomplete@6.20.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/commands@6.11.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-css@6.3.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-html@6.4.12": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-javascript@6.2.5": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-json@6.0.2": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-markdown@6.5.2": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-python@6.2.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lang-sql@6.10.0": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/language@6.13.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/lint@6.9.7": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/search@6.7.2": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/state@6.7.6": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/streamparser@6.0.0": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@codemirror/view@6.43.15": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-tTNhuolNG/bGMQsfmiWtxtKCVZo4MjraP2gd4qdcU0kZ0IpObSpi7+yqGEpuTSGV"
+    }
+  },
+  "@fortawesome/fontawesome-free@6.5.1": {
+    "license": "(CC-BY-4.0 AND OFL-1.1 AND MIT)",
+    "files": {
+      "LICENSE.txt": "sha384-Or7VAD6R0Ftu5RYAk5uAO3Tedf4Hg3mAt4kdNACpj3p3k14j3+ja8GRzmJ4C9Hp0"
+    }
+  },
+  "@lezer/common@1.5.3": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/css@1.3.9": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/highlight@1.2.5": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/html@1.3.13": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/javascript@1.5.6": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/json@1.0.3": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-DB7YElP6WWPR4qg20J9XzWmqB3FNV7Ns9HJBqUwUYuO41QnelsN3yZkGl5KgxYYm"
+    }
+  },
+  "@lezer/lr@1.4.11": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-cWcE/Xn9IRHZb4Uv3oi74da58O3HEmYcje50IVdL+LxvK1SHr9xltICxlC5g+i6g"
+    }
+  },
+  "@lezer/markdown@1.8.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-C63aQd/IkqI/CPTu+ywhQo3lOYl2hdaPon2XL6qtyJFtcEbFjogCut/WC6F0EcN9"
+    }
+  },
+  "@lezer/python@1.1.19": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-C63aQd/IkqI/CPTu+ywhQo3lOYl2hdaPon2XL6qtyJFtcEbFjogCut/WC6F0EcN9"
+    }
+  },
+  "@lit/context@1.1.6": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE": "sha384-Y+NzGSOPMHN66e2dtYbaem/ApSBPeIks3Ce5WbbKOt9HhN56XJWvp5uibHxLxFUl"
+    }
+  },
+  "@lit/reactive-element@2.1.2": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE": "sha384-awmuQe15DKS501PRGSEbvTWo4ZVZaWxu37ZqYkt+0uKUubanA8EpxBglXeMXugfR"
+    }
+  },
+  "@marijn/find-cluster-break@1.0.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-NLiloCh3/XD4ihM0S35vjRkmmbQLIR8SAEHdQRuEgJk9vriFNh9oPo2pRQtr/kzE"
+    }
+  },
+  "@maxgraph/core@0.22.0": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-FpFtzV8m58dpDyvTpZ8htCgBPTjkNp1plYQuZckY7SU0rnDgCYZJgZrAs69bWKU+"
+    }
+  },
+  "@microsoft/signalr@8.0.0": {
+    "license": "MIT",
+    "files": {
+      "LICENSE.txt": "sha384-3PqkQmCat3mFzthNdzL2wvZpxWsZ7i3VuFsqkMjGwWd0G8Aqibc3kYenU8ilX0EJ"
+    },
+    "source": "https://raw.githubusercontent.com/dotnet/aspnetcore/v8.0.0/LICENSE.txt"
+  },
+  "@modelcontextprotocol/client@2.4.0": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-CzJHdyLqKAH18vV0M5TaeyHs7NhWjIEQKw8AD9Nsi52/R8AchBPV6hvo1qEY5Tif"
+    }
+  },
+  "@modelcontextprotocol/core@2.4.0": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-CzJHdyLqKAH18vV0M5TaeyHs7NhWjIEQKw8AD9Nsi52/R8AchBPV6hvo1qEY5Tif"
+    }
+  },
+  "@modelcontextprotocol/ext-apps@2.0.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-CzJHdyLqKAH18vV0M5TaeyHs7NhWjIEQKw8AD9Nsi52/R8AchBPV6hvo1qEY5Tif"
+    }
+  },
+  "@preact/signals-core@1.14.5": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-LuA/O5Wq5fr3WuqoS5CvPTOKDAaHZrp6ZauNoM9pJo0A5CGHEXeI2B1tVV+npmO4"
+    }
+  },
+  "bootstrap-icons@1.13.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-LfT9QJSWg5rdFgGpoZQZYmAgmK8qoIufiu7WaZdEtHliNaP0yBEkDhBsr0PFCk4S"
+    }
+  },
+  "bootstrap@5.3.8": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-WyeULmOarnkxIWJQ6Byifrdakj+J3Z1ONoIjyqqdmUvfwML66D4izPruHb7zDZbG"
+    }
+  },
+  "chart.js@4.5.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE.md": "sha384-OkVNKEzJVHeD+74l3M5PpGUZo41MILTzZ1HFy8WjsWiTBQKiieUUB7mWw69IBHFS"
+    }
+  },
+  "crelt@1.0.7": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-Nse1J0x7d3qwB2Rq1urRkqd60DLMWh7BpUPvfDgW4qJWHmOpLlNGuf5zpv3GCgEd"
+    }
+  },
+  "cytoscape@3.26.0": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-zrR94qBMBYHayx2mGfvOM5UomuIDGrD8E6cGt1ndbx48FypMaF+KsRQvAgHiqqsC"
+    }
+  },
+  "diff-match-patch@1.0.5": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-WsFOgLm9W3NCvQJrEJkHSsOtId2eZb8jebP9zNWSdVDd60V4K/IwngQ75n0VaMBm"
+    }
+  },
+  "dompurify@3.4.17": {
+    "license": "(MPL-2.0 OR Apache-2.0)",
+    "files": {
+      "LICENSE": "sha384-II9e1ieUDl5AxyiVq3/FflTua1Sr0kMJ25e6imG7rXg7SiAsA2VemsvEqVsLqM7/",
+      "LICENSE-MPL": "sha384-m9HqVkzbVdcSnUlv/HEUIkMOdpyVFRFBRcAv/ucPmo4Th4y5ATdTfxBvFFZ+k4xe"
+    }
+  },
+  "eventsource-parser@3.1.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-G6D22tblSIVxMkz9A/NF0UAH8IEJvRFaNnCs+lVqtQwqggzXcSj0LC39fmzCckWl"
+    }
+  },
+  "eventsource@3.0.7": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-8PrFFS5wUE0KlGZjDTZMzUxOVBvJaf/NN3UplccYKi81OzMKYE0aEwCTxZpjLURC"
+    }
+  },
+  "jose@6.2.15": {
+    "license": "MIT",
+    "files": {
+      "LICENSE.md": "sha384-OTUdf/iqRZkusCv2tUiNJUGPcyvPy82w7BDkd1wCQQDCY36naHQqXPyPQQNSANcE"
+    }
+  },
+  "katex@0.19.0": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-8/FKNbIH5mozwy+sV5pgpgutNbMMGyLRBrS03uW5zky5crMM84tQVBEjiOEkDuqL"
+    }
+  },
+  "katex@0.19.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-8/FKNbIH5mozwy+sV5pgpgutNbMMGyLRBrS03uW5zky5crMM84tQVBEjiOEkDuqL"
+    }
+  },
+  "lit-element@4.2.2": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE": "sha384-awmuQe15DKS501PRGSEbvTWo4ZVZaWxu37ZqYkt+0uKUubanA8EpxBglXeMXugfR"
+    }
+  },
+  "lit-html@3.3.3": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE": "sha384-Vw2wvKLQVvlP4BuAka+RkJLlfFP+XngOG1hyeacsPn/SCQ8IR4XEf1OqmrZeYEgD"
+    }
+  },
+  "lit@3.3.3": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE": "sha384-awmuQe15DKS501PRGSEbvTWo4ZVZaWxu37ZqYkt+0uKUubanA8EpxBglXeMXugfR"
+    }
+  },
+  "marked@18.1.3": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-61EZB/aHzoKVT71zYfgKtxFiu+RWPSi9UH34kVJPMyzaTcFdbvH0liFiUwpiBNqY"
+    }
+  },
+  "pkce-challenge@5.0.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-qqG6gqX8URVtCyfKY0okCo5EtPT6lUD0w57ORCksFYyqYHK//hhMSpCwsryskXQx"
+    }
+  },
+  "redos-detector@6.1.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-AhdoUL3nFksN6m9JG/p+3qTMtFIzipY6/hVaSTIIQXXbEtWGXR4efV29vlXBQChV"
+    }
+  },
+  "signal-polyfill@0.2.2": {
+    "license": "Apache-2.0",
+    "files": {
+      "LICENSE": "sha384-JzL88ToziAz/4U6uAvgpyqXcYI1htX+/M8DeLerJf5t3kZmuZY0KnXePCjrHk2hW"
+    }
+  },
+  "signal-utils@0.21.1": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-kVwxQ7q/Dqbzbvt76yMTkkSXdAUZnDEh4Z3C+bEnGL7NWM5TgyH8YqnyO3g0I9ir"
+    }
+  },
+  "style-mod@4.1.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-QyT+53fHlMSIMSvYFrI6lERn+hj7impsM8wkgtBqyAQA9Xw79nV6AUsESycc7vzS"
+    }
+  },
+  "validate-color@2.2.4": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-3M2bd3ZR8SuuOOsxqGrxV8teHLEAknPUkJiz7T9H8HahQQtO1BQX38dKYjb3cayA"
+    }
+  },
+  "vditor@3.11.2": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-9RGuiRjVnT/hfhqZZiogaeBFUP8zskBQ6up4B8uTZyQNg5KWFXU0NKIVdUbqu8Or"
+    }
+  },
+  "w3c-keyname@2.2.8": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-DOK9fl5dDyDCogNNdOXElLVSywsESz6ta6PhNuHtdtG+Mg2Fh+B3FL1JBbNObRWe"
+    }
+  },
+  "zod-to-json-schema@3.25.2": {
+    "license": "ISC",
+    "files": {
+      "LICENSE": "sha384-MMHrCJ+ZXgbEDIQYUHClRPtPX+o0kfNTc2LPx76klvZN8yr+lLj9V1L6fHTNZsEc"
+    }
+  },
+  "zod@3.25.76": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-IMdChM4hCop9G0/hhpVHXkxkLhK949WmcROPB9rFAlhZQR+RdB7x5npN/xMxAUXU"
+    }
+  },
+  "zod@4.6.7": {
+    "license": "MIT",
+    "files": {
+      "LICENSE": "sha384-IMdChM4hCop9G0/hhpVHXkxkLhK949WmcROPB9rFAlhZQR+RdB7x5npN/xMxAUXU"
+    }
+  }
+}

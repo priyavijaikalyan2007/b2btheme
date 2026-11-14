@@ -841,6 +841,12 @@ package must not make the old URL return 404 on deploy
   have passed. Structure check [32] fails every pull request after the date.
 - **Never edit `cdn/lib-versions.json` or `cdn/lib-retained/` by hand.** The
   tools prove every byte against the live CDN or the recorded hash.
+- **License texts serve at `/licenses/<package>@<version>/`** for every
+  package in a current or deprecated asset. They are committed in
+  `cdn/licenses/` and indexed in `cdn/licenses.json`. `lib:record`,
+  `lib:deprecate` and `lib:retire` add and remove them, and the build fails on
+  a missing, changed or unused text. Edit them by hand only for a package
+  that ships no license file (LIB_MAINTENANCE.md, Operation F, step 5).
 - **Each deprecation needs** a CHANGELOG line and an apps-team note in
   `~/Work/knobby/apps/specs/bugreports/`. `lib:deprecate` prints both. Send
   the note only after the deploy is confirmed (LIB_MAINTENANCE.md Operation A,

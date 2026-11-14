@@ -58,6 +58,17 @@
   Cache-Control: no-cache
   Access-Control-Allow-Origin: *
 
+# License texts of the packages inside /lib/ assets, at /licenses/<package>@<version>/
+# (scripts/lib-licenses.mjs; apps report 2026-11-14, item 4). The apps' build
+# fetches them for its third-party notices, so CORS is open. A file such as
+# LICENSE has no extension, so the type is set here. Not immutable, unlike
+# /lib/: a text saved by hand, such as SignalR's, can still need a fix.
+/licenses/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Access-Control-Allow-Origin: *
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
+
 # Parity-critical "latest" assets: short freshness so fixes propagate to
 # auth.knobby.io within minutes, stale-while-revalidate keeps loads fast.
 /css/*

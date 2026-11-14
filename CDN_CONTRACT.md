@@ -161,6 +161,7 @@ rule.
 | `/vendor/*` | `max-age=86400, swr=604800` | Vendored libs change only on dependency upgrades. |
 | `/css/*`, `/js/*`, `/components/*` | `max-age=300, stale-while-revalidate=86400` | Parity-critical "latest": fixes reach auth.knobby.io within ~5 min, SWR keeps loads fast. |
 | `/build.json` | `no-cache` | Deploy introspection must always be fresh. |
+| `/licenses/*` | `max-age=86400, stale-while-revalidate=604800` + CORS `*`, `text/plain; charset=utf-8`, `nosniff` | License texts of the packages inside `/lib/` assets (see "License texts" below). Not immutable, because a text saved by hand can need a fix. A file such as `LICENSE` has no extension, so the type is set. |
 | `/a2ui/*`, `/schemas/*`, `/mcp/*` | `max-age=300, stale-while-revalidate=86400` + CORS `*` | Agent-protocol artefacts (§2c). Third-party tools fetch the catalog cross-origin, so CORS is open. |
 | `/icons/fluent-ui/*`, `/icons/fluent-emoji/*`, `/icons/aws/*`, `/icons/azure/*`, `/icons/gcp/*` | `max-age=86400, stale-while-revalidate=604800` + CORS `*`, `nosniff`, a `default-src 'none'` CSP | Icon packs (§2d). Unversioned paths, so never immutable; the CSP stops an SVG opened directly from running anything. |
 | Any path with no file (a 404) | `no-store` + CORS `*`, `nosniff` | A miss is never cached, so a file deployed later is found at once. These rules reach only files that exist. A path with no file is answered by [`cdn/not-found-worker.mjs`](./cdn/not-found-worker.mjs), which Cloudflare calls only when no file matches. Before it, a 404 took its path's rule, so a miss under `/lib/` was immutable for a year. |
@@ -262,6 +263,38 @@ file that changes bytes under the same URL, fails the build.
 from the live CDN, after checking each against its recorded hash.
 `npm run lib:retire -- <asset>@<version>` ends it. CI fails once a version is
 past its date. The maintainers' runbook is [LIB_MAINTENANCE.md](LIB_MAINTENANCE.md).
+
+### License texts
+
+Since 2026-11-14, this origin serves the license text of every package in
+`packages`, for current and deprecated versions alike. A build of
+third-party notices can then read only from this origin. Each asset in
+`assets`, and each entry in `deprecated`, has a `licenses` field keyed like
+its `packages`:
+
+```json
+"licenses": {
+  "dompurify": {
+    "license": "(MPL-2.0 OR Apache-2.0)",
+    "files": ["/licenses/dompurify@3.4.17/LICENSE", "/licenses/dompurify@3.4.17/LICENSE-MPL"]
+  }
+}
+```
+
+- `license` is the SPDX expression from that version's `package.json`.
+- `files` lists every license file the package ships, under its own name.
+  DOMPurify is dual-licensed and ships two.
+- The path is `/licenses/<package>@<version>/<file>`. A scoped package keeps
+  its scope, as in `/licenses/@microsoft/signalr@8.0.0/LICENSE.txt`.
+- A text serves for as long as some current or deprecated asset holds that
+  version. It is removed when the last one is retired.
+- `@microsoft/signalr` 8.0.0 ships no license file on npm. Its text is the
+  `LICENSE.txt` of `dotnet/aspnetcore` at tag `v8.0.0`, and
+  `cdn/licenses.json` records that source.
+
+The libraries that vditor ships prebuilt (`bundled`, below) have no license
+texts here. They are not installed as packages, so the build has no text to
+read.
 
 ### Currently served
 
@@ -410,7 +443,7 @@ manifest has two lists:
 - `bundled`: the libraries vditor ships prebuilt under `dist/js` and injects
   when a note needs them, such as mermaid, katex, lute and highlight.js. Each
   has a `version` and the `url` of its file. They are not installed here, so
-  `audit:vendor` does not check them.
+  `audit:vendor` does not check them, and `licenses` has no text for them.
 
 ```json
 "bundled": {

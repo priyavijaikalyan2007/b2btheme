@@ -10,10 +10,12 @@
  *    LIST_RETIRED_DAYS. specs/lib-retention.prd.md §7 (#147).
  * 🔗 RELATES: [[LibRetention]], [[LibDeprecate]]
  * ⚡ FLOW: [record deprecated] -> [delete cdn/lib-retained files] -> [record retired]
+ *          -> [vendor-closure --record removes license texts no asset holds]
  *
  * Usage: npm run lib:retire -- <asset>@<version>
  */
 
+import { spawnSync } from "node:child_process";
 import { readdirSync, rmdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,6 +77,10 @@ function main()
     if (split <= 0) { throw new Error("Usage: npm run lib:retire -- <asset>@<version>"); }
 
     const retired = retire(target.slice(0, split), target.slice(split + 1), { today: todayUtc() });
+    // Only a build knows which package versions the current assets hold, so it removes the license texts.
+    const run = spawnSync(process.execPath, ["scripts/vendor-closure.mjs", "--record"], { stdio: "inherit" });
+
+    if (run.status !== 0) { throw new Error("vendor-closure --record failed after the retirement. Fix it, then rerun it."); }
 
     console.log(`[lib:retire] ${retired.asset} ${retired.version} is retired. The next deploy stops serving `
         + `${retired.url}.`);
