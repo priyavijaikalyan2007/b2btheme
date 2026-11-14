@@ -443,3 +443,107 @@ describe("surface contract (B9)", () =>
         gc.destroy();
     });
 });
+
+// ============================================================================
+// FORCE LAYOUT — NODE BOXES (apps#249)
+// ============================================================================
+
+/** Each rendered node's box centre, from its translate(), with the default 160 × 48 size unless given. */
+function centres(w = 160, h = 48): Map<string, { x: number; y: number }>
+{
+    const out = new Map<string, { x: number; y: number }>();
+
+    container.querySelectorAll<SVGGElement>(".gc-node").forEach((g) =>
+    {
+        const [x, y] = /translate\(([^,]+), ([^)]+)\)/.exec(g.getAttribute("transform") ?? "")!.slice(1).map(Number);
+        out.set(g.dataset.nodeId!, { x: x + w / 2, y: y + h / 2 });
+    });
+    return out;
+}
+
+/** Pairs of free nodes whose boxes are closer than the 12 px gap. */
+function crowdedPairs(w = 160, h = 48, skip: string[] = []): string[]
+{
+    const list = [...centres(w, h)].filter(([id]) => !skip.includes(id));
+    const out: string[] = [];
+
+    list.forEach(([a, p], i) => list.slice(i + 1).forEach(([b, q]) =>
+    {
+        if (Math.abs(p.x - q.x) < w + 12 - 1e-6 && Math.abs(p.y - q.y) < h + 12 - 1e-6) { out.push(`${a}+${b}`); }
+    }));
+    return out;
+}
+
+/** A 40-node chain: dense enough that point forces alone leave boxes overlapping. */
+function chain(count = 40): { nodes: GraphNode[]; edges: GraphEdge[] }
+{
+    const nodes = Array.from({ length: count }, (_, i) => ({ id: `c${i}`, label: `C${i}`, type: "entity" }));
+    const edges = nodes.slice(1).map((n, i) => ({ id: `ce${i}`, sourceId: `c${i}`, targetId: n.id, type: "has" }));
+
+    return { nodes, edges };
+}
+
+describe("GraphCanvas force layout keeps node boxes apart", () =>
+{
+    test("forceLayout_DenseGraph_LeavesNoBoxesOverlapping_OnAnyRandomStart", () =>
+    {
+        const crowded: string[] = [];
+
+        for (let run = 0; run < 10; run++)
+        {
+            const gc = createGraphCanvas(makeOptions({ ...chain(), layout: "force" }));
+            crowded.push(...crowdedPairs());
+            gc.destroy();
+        }
+
+        expect(crowded).toEqual([]);
+    });
+
+    test("forceLayout_HonoursNodeSize_OnAnyRandomStart", () =>
+    {
+        const crowded: string[] = [];
+
+        for (let run = 0; run < 10; run++)
+        {
+            const gc = createGraphCanvas(makeOptions({ ...chain(), nodeSize: { width: 240, height: 80 } }));
+            crowded.push(...crowdedPairs(240, 80));
+            gc.destroy();
+        }
+
+        expect(crowded).toEqual([]);
+    });
+
+    test("forceLayout_TwoPinnedNodes_StayPut_AndFreeNodesMoveOffThem", () =>
+    {
+        const { nodes, edges } = chain(12);
+        nodes[0] = { ...nodes[0], pinned: true, x: 400, y: 300 };
+        nodes[1] = { ...nodes[1], pinned: true, x: 420, y: 300 };
+
+        const gc = createGraphCanvas(makeOptions({ nodes, edges }));
+        const at = centres();
+
+        expect(at.get("c1")!.x - at.get("c0")!.x).toBeCloseTo(20);
+        expect(crowdedPairs().filter((pair) => pair !== "c0+c1")).toEqual([]);
+        gc.destroy();
+    });
+
+    test("layoutSeed_SameSeed_GivesTheSameLayout_AndRelayoutRepeatsIt", () =>
+    {
+        const first = createGraphCanvas(makeOptions({ ...chain(), layoutSeed: 7 }));
+        const a = [...centres()];
+        first.relayout();
+        const again = [...centres()];
+        first.destroy();
+
+        const second = createGraphCanvas(makeOptions({ ...chain(), layoutSeed: 7 }));
+        const b = [...centres()];
+        second.destroy();
+
+        const other = createGraphCanvas(makeOptions({ ...chain(), layoutSeed: 8 }));
+        const c = [...centres()];
+        other.destroy();
+
+        expect([again, b]).toEqual([a, a]);
+        expect(c).not.toEqual(a);
+    });
+});
