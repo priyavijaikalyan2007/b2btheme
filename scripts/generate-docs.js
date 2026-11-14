@@ -969,4 +969,4 @@ if (require.main === module)
     main();
 }
 
-module.exports = { extractGlobals, extractExports, extractFactory };
+module.exports = { extractGlobals, extractExports, extractFactory, convertMarkdown, wrapHtml };

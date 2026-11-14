@@ -762,6 +762,20 @@ else
 fi
 echo ""
 
+# ── 32. No deprecated /lib/ version outstays its date (#147) ──
+#
+# A replaced /lib/ version keeps serving its exact bytes for 60 days
+# (specs/lib-retention.prd.md). After its retireAfter date this fails
+# every pull request until \`npm run lib:retire\` ends it. It never runs in
+# npm run build, so the calendar cannot block a deploy.
+echo "[32] No deprecated /lib/ version is past its retire date (specs/lib-retention.prd.md)"
+if node scripts/check-lib-retention.mjs; then
+    pass "Every deprecated /lib/ version is within its 60 days"
+else
+    fail "a deprecated /lib/ version is past its retire date (see above)"
+fi
+echo ""
+
 # ── Summary ──
 echo "==============================="
 echo "  PASS: $PASS"

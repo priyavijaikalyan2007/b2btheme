@@ -818,6 +818,26 @@ gained the assignment shape on 2026-10-16. A gate that passes is a ratchet
 rather than a clearance, because a fallback that fabricates through a field
 rather than an object literal still escapes it.
 
+## (CRITICAL) Served `/lib/` Versions — Deprecate, Never Drop
+
+Consumers pin `/lib/<name>-<version>` URLs with SRI hashes. A bump of a served
+package must not make the old URL return 404 on deploy
+(specs/lib-retention.prd.md, #147).
+
+- **Bump with `npm run lib:deprecate -- <asset> --reason "<why>"`** on the
+  bump branch, a Dependabot branch included. It freezes the old bytes from
+  the live CDN into `cdn/lib-retained/`, after checking each hash, and records
+  the deprecation in `cdn/lib-versions.json` for 60 days. Commit both.
+- **The build refuses to skip it.** A new version without a deprecation, a
+  served file that changes bytes under an unchanged URL, or a frozen file
+  that does not match its hash fails `npm run build:vendor`, naming the fix.
+- **Retire with `npm run lib:retire -- <asset>@<version>`** once the 60 days
+  have passed. Structure check [32] fails every pull request after the date.
+- **Never edit `cdn/lib-versions.json` or `cdn/lib-retained/` by hand.** The
+  tools prove every byte against the live CDN or the recorded hash.
+- **Each deprecation needs** a CHANGELOG line and an apps-team note in
+  `~/Work/knobby/apps/specs/bugreports/`. `lib:deprecate` prints both.
+
 ## Operating Style
 
 Use the **V-V-P-T-I-R-V-C** loop (Plan → Test → Implement → Refactor → Verify) for your core workflow. 
