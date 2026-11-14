@@ -192,10 +192,39 @@ dependency graph rather than claimed — see `specs/2026-10-04-dependency-closur
 
 ### Upgrading
 
-A version bump is a **new URL**. The old path keeps serving the old bytes
-forever, so a page cached mid-rollout still resolves. Because you read the URL
-and the hash from the same manifest fetch, you get both halves of the change
-at once — which is the failure mode this design exists to prevent.
+A version bump is a **new URL**. Because you read the URL and the hash from the
+same manifest fetch, you get both halves of the change at once, which is the
+failure mode this design exists to prevent.
+
+### Deprecations: you have 60 days
+
+When a newer version replaces one, **the old URL keeps serving its exact bytes
+for 60 days. After that, any deploy may make it return 404** (#147). A page that pins a URL and its hash
+keeps working through that window, and must move before it ends.
+
+How to find out, without reading this page again:
+
+- **Poll `https://static.knobby.io/lib-deprecations.json`.** For each
+  deprecated version it gives `url`, `retireAfter`, `daysRemaining`,
+  `replacement` and `reason`, and it lists retirements from the last 90 days.
+  `/lib-manifest.json` has the same `deprecated` and `retired` fields.
+- **Watch the response headers.** Every request to a deprecated path returns:
+
+  ```
+  Deprecation: @1796083200
+  Sunset: Sat, 30 Jan 2027 00:00:00 GMT
+  Link: </lib/signalr-10.0.11.js>; rel="successor-version"
+  ```
+
+  `Sunset` is the last day the path is guaranteed to serve. Any deploy after
+  it may make the path return 404.
+- **Read the page:** `https://static.knobby.io/docs/lib-deprecations.html`.
+
+Only a version with a security advisory skips the 60 days. It is retired at
+once, and the CHANGELOG says why.
+
+This repository's own components read the manifest, so they always load the
+current version and never see a deprecation.
 
 ### Libraries this origin does NOT serve
 

@@ -103,6 +103,23 @@ else
     if [ "$DEMO_MISSING" -eq 0 ]; then
         pass "All demo page links resolve, index and sibling alike"
     fi
+
+    # The other direction: every component page has a card in the index.
+    # demo/full-demo.html was retired because each of its sections already
+    # had its own page, yet 14 of those pages had no card, so the only way
+    # to reach them was the page being retired.
+    DEMO_UNLISTED=0
+    for demo in demo/components/*.html; do
+        case "$(basename "$demo")" in _*) continue;; esac
+        if ! grep -q "href=\"components/$(basename "$demo")\"" demo/index.html; then
+            fail "$demo has no card in demo/index.html"
+            DEMO_UNLISTED=$((DEMO_UNLISTED + 1))
+        fi
+    done
+
+    if [ "$DEMO_UNLISTED" -eq 0 ]; then
+        pass "Every demo/components page has a card in demo/index.html"
+    fi
 fi
 echo ""
 
@@ -759,6 +776,20 @@ if node scripts/check-gated.mjs; then
     pass "No gated file or lib-manifest URL is in dist"
 else
     fail "a file a publication gate holds back is in dist (see above)"
+fi
+echo ""
+
+# ── 32. No deprecated /lib/ version outstays its date (#147) ──
+#
+# A replaced /lib/ version keeps serving its exact bytes for 60 days
+# (specs/lib-retention.prd.md). After its retireAfter date this fails
+# every pull request until \`npm run lib:retire\` ends it. It never runs in
+# npm run build, so the calendar cannot block a deploy.
+echo "[32] No deprecated /lib/ version is past its retire date (specs/lib-retention.prd.md)"
+if node scripts/check-lib-retention.mjs; then
+    pass "Every deprecated /lib/ version is within its 60 days"
+else
+    fail "a deprecated /lib/ version is past its retire date (see above)"
 fi
 echo ""
 

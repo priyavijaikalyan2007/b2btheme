@@ -555,6 +555,8 @@ $control-height-sm=30px
 $control-height-md=34px
 $control-height-lg=42px
 $control-height-xl=46px
+# ONTOLOGY RELATIONSHIP CATEGORIES
+$ontology-category-slots=(structural: 1, lifecycle: 2, dependency: 3, custom: 4, strategic: 5, identity: 6, knowledge: 7, ownership: 8)
 ```
 
 ## Custom CSS Classes (from custom.scss)

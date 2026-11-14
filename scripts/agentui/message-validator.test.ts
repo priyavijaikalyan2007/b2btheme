@@ -97,6 +97,7 @@ describe("compileMessageValidator", () =>
 
 describe("the generated source", () =>
 {
+    // A full standalone compile of the catalog: 0.5 s locally, but 4.1 s and then past 5 s on CI under coverage.
     test("compiles nothing at runtime and requires only Ajv's runtime helpers", () =>
     {
         const source = compileMessageValidator(inputs);
@@ -104,7 +105,7 @@ describe("the generated source", () =>
 
         expect(source).not.toMatch(/new Function|\beval\(/);
         expect(required.every((s) => s.startsWith("ajv/dist/runtime/") || s === "fast-deep-equal")).toBe(true);
-    });
+    }, 60_000);
 
     test("binds the spec's relative catalog.json to the alias the envelope schema resolves it to", () =>
     {

@@ -8913,11 +8913,19 @@ Font Awesome needs its two-class form (`"fa-solid fa-user"`, `"fa-brands fa-gith
 
 | Layout | Description |
 |--------|-------------|
-| `force` | Spring-embedder with repulsion + spring attraction (default) |
+| `force` | Spring-embedder with repulsion + spring attraction (default). Node boxes do not overlap. |
 | `hierarchical` | BFS-based level assignment with configurable direction |
 | `radial` | Concentric rings from root nodes |
 | `dagre` | Delegates to `window.dagre` if loaded; falls back to hierarchical |
 | `group-by-namespace` | Groups nodes by namespace, grid arrangement, mini-force within |
+
+The force layout keeps every node box at least 12 px clear of the others, at the `nodeSize` you give, so a person can click each node. It still starts from random positions, so the same graph can lay out differently on each load. Pass `layoutSeed` to get the same layout every time, for example in tests:
+
+```javascript
+createGraphCanvas({ container, nodes, edges, layout: "force", layoutSeed: 1 });
+```
+
+Two `pinned` nodes stay where you put them, even when their boxes overlap. A free node moves off a pinned one.
 
 ## Keyboard Shortcuts
 

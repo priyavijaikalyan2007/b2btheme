@@ -1,0 +1,138 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-OntologyCategories
+  PURPOSE: Standalone demo page for the ontology relationship category
+    colours: the eight classes, their tokens, and a dark subtree (apps#249).
+  RELATES: [[OntologyCategoryTokens]], [[CategoricalPalette]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ontology Categories - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            Ontology Categories
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section" id="ontology-categories-section">
+            <h2>Relationship category badges</h2>
+            <p>One colour for each of the eight relationship categories. Apply
+                <code>theme-ontology-category-&lt;name&gt;</code>. It sets the
+                background, the text and the border together, and changes with
+                dark mode. Switch the theme in the header to see both.</p>
+            <div class="d-flex flex-wrap gap-2" id="demo-ontology-categories">
+                <span class="badge border theme-ontology-category-structural">Structural</span>
+                <span class="badge border theme-ontology-category-ownership">Ownership</span>
+                <span class="badge border theme-ontology-category-strategic">Strategic</span>
+                <span class="badge border theme-ontology-category-knowledge">Knowledge</span>
+                <span class="badge border theme-ontology-category-dependency">Dependency</span>
+                <span class="badge border theme-ontology-category-lifecycle">Lifecycle</span>
+                <span class="badge border theme-ontology-category-identity">Identity</span>
+                <span class="badge border theme-ontology-category-custom">Custom</span>
+            </div>
+        </div>
+
+        <div class="demo-section" id="ontology-categories-tokens-section">
+            <h2>The tokens</h2>
+            <p>A page that paints the colours itself reads
+                <code>--theme-ontology-category-&lt;name&gt;-bg</code>,
+                <code>-fg</code> and <code>-border</code>. Use the
+                <code>-fg</code> token only on the matching <code>-bg</code>.</p>
+            <div class="row g-2" id="demo-ontology-tokens"></div>
+        </div>
+
+        <div class="demo-section" id="ontology-categories-subtree-section">
+            <h2>Inside a dark subtree</h2>
+            <p>The badges below sit in a <code>data-bs-theme="dark"</code>
+                container, so they take the dark colours on a light page too.</p>
+            <div data-bs-theme="dark" class="p-3 rounded" style="background-color: var(--theme-surface-bg);">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge border theme-ontology-category-structural">Structural</span>
+                    <span class="badge border theme-ontology-category-strategic">Strategic</span>
+                    <span class="badge border theme-ontology-category-custom">Custom</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+
+    <script>
+    // ====================================================================
+    // Token cards: one per category, painted from its three tokens
+    // ====================================================================
+
+    var categories = ["structural", "ownership", "strategic", "knowledge",
+        "dependency", "lifecycle", "identity", "custom"];
+    var tokenRow = document.getElementById("demo-ontology-tokens");
+
+    categories.forEach(function(name)
+    {
+        var prefix = "--theme-ontology-category-" + name;
+        var col = document.createElement("div");
+        col.className = "col-12 col-md-6 col-lg-3";
+
+        var card = document.createElement("div");
+        card.className = "p-2 rounded border";
+        card.style.backgroundColor = "var(" + prefix + "-bg)";
+        card.style.color = "var(" + prefix + "-fg)";
+        card.style.borderColor = "var(" + prefix + "-border)";
+
+        var title = document.createElement("div");
+        title.className = "fw-semibold";
+        title.textContent = name;
+
+        var code = document.createElement("code");
+        code.className = "small";
+        code.style.color = "inherit";
+        code.textContent = prefix + "-bg / -fg / -border";
+
+        card.appendChild(title);
+        card.appendChild(code);
+        col.appendChild(card);
+        tokenRow.appendChild(col);
+    });
+    </script>
+</body>
+</html>

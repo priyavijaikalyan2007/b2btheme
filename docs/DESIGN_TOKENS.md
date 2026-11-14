@@ -342,3 +342,9 @@ _No variables in this section._
 | `$control-height-lg` | `42px` |  |
 | `$control-height-xl` | `46px` |  |
 
+## ONTOLOGY RELATIONSHIP CATEGORIES
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `$ontology-category-slots` | `(structural: 1, lifecycle: 2, dependency: 3, custom: 4, strategic: 5, identity: 6, knowledge: 7, ownership: 8)` | Relationship category name to categorical palette slot, 1 to 8. |
+

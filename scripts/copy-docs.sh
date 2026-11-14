@@ -63,7 +63,6 @@ if [ -f "$ROOT/demo/index.html" ]; then
         -e 's|shared/demo-shell|../demo/shared/demo-shell|g' \
         -e 's|href="components/|href="../demo/components/|g' \
         -e 's|href="studio/|href="../demo/studio/|g' \
-        -e 's|href="full-demo\.html"|href="../demo/full-demo.html"|g' \
         "$ROOT/demo/index.html" > "$DIST_DOCS/demo.html"
     echo "[CopyDocs] copied demo/index.html -> demo.html (paths rewritten for docs/)"
 fi
@@ -85,7 +84,7 @@ if [ -d "$DEMO_SRC" ]; then
         echo "[CopyDocs] copied demo/index.html (paths rewritten)"
     fi
 
-    # Copy top-level demo HTML files (all-components, full-demo, etc.)
+    # Copy top-level demo HTML files (dynamic-ui, visual-refresh, etc.)
     for top_html in "$DEMO_SRC"/*.html; do
         if [ -f "$top_html" ]; then
             base="$(basename "$top_html")"
