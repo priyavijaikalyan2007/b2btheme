@@ -30,16 +30,19 @@ import { fileURLToPath } from "node:url";
 import { LIVE_ORIGIN, RECORD_PATH, RETAIN_DAYS, addDays, readRecord, retainedPath, todayUtc, writeRecord }
     from "./lib-retention.mjs";
 import { fetchVerified } from "./lib-verify-live.mjs";
+import { servedVersions } from "./vendor-closure.mjs";
 
 /**
  * Freezes the current version of an asset and records it as deprecated.
  * The record is written only after every file is proved and frozen.
  *
  * @param {string} asset - The asset name, as in lib-manifest.json.
- * @param {{fetchImpl: typeof fetch, today: string, reason: string, root?: string, origin?: string}} options
+ * @param {{fetchImpl: typeof fetch, today: string, reason: string, next: {version: string, namedBy: string}|null,
+ *     root?: string, origin?: string}} options - `next` is what node_modules would build now, or null when the
+ *     asset is being removed.
  * @returns {Promise<object>} The deprecated entry, with replacement null until the new version is recorded.
  */
-export async function deprecate(asset, { fetchImpl, today, reason, root = ".", origin = LIVE_ORIGIN })
+export async function deprecate(asset, { fetchImpl, today, reason, next, root = ".", origin = LIVE_ORIGIN })
 {
     if (!reason) { throw new Error("lib:deprecate needs a reason: --reason \"<why it moved>\"."); }
 
@@ -48,6 +51,13 @@ export async function deprecate(asset, { fetchImpl, today, reason, root = ".", o
     const current = record.current[asset];
 
     if (!current) { throw new Error(`lib:deprecate: ${asset} is not a current asset in ${RECORD_PATH}.`); }
+
+    if (next !== null && next.version === current.version)
+    {
+        throw new Error(`lib:deprecate: ${asset} is still ${current.version} in node_modules, so its URL would not `
+            + `change. A package inside it moved, but not ${next.namedBy}, whose version names the URL. Bump `
+            + `${next.namedBy} on the same branch, or close the bump. Nothing changed.`);
+    }
 
     const manifest = await (await fetchImpl(`${origin}/lib-manifest.json`)).json();
     const live = manifest.assets?.[asset];
@@ -100,7 +110,8 @@ async function main()
 
     if (!asset) { throw new Error("Usage: npm run lib:deprecate -- <asset> --reason \"<why it moved>\""); }
 
-    const entry = await deprecate(asset, { fetchImpl: fetch, today: todayUtc(), reason });
+    const entry = await deprecate(asset, { fetchImpl: fetch, today: todayUtc(), reason,
+        next: servedVersions()[asset] ?? null });
 
     // The new version is in node_modules; record it, then name it as the replacement.
     vendor("--record");

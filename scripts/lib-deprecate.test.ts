@@ -7,6 +7,8 @@
  * ⚓ TESTS: LibDeprecate and LibRetire. Deprecating freezes the old version's
  *    bytes from the live CDN only when every hash matches, and retiring
  *    deletes them and lists the version as retired (#147).
+ *
+ * @vitest-environment node
  */
 
 import fs from "node:fs";
@@ -20,6 +22,7 @@ import { sriOf } from "./lib-retention.mjs";
 
 const OLD = Buffer.from("signalr 8 bytes");
 const ORIGIN = "https://cdn.test";
+const NEXT = { version: "10.0.11", namedBy: "@microsoft/signalr" };
 let root: string;
 
 /** A record with signalr 8.0.0 current, and one retirement 100 days before 2027-03-01. */
@@ -64,7 +67,7 @@ describe("deprecate", () =>
     test("freezes the old bytes and records the deprecation for 60 days", async () =>
     {
         const entry = await deprecate("signalr", { fetchImpl: liveFetch(OLD), today: "2026-12-01",
-            reason: "Client 10 (#145)", root, origin: ORIGIN });
+            reason: "Client 10 (#145)", root, origin: ORIGIN, next: NEXT });
 
         expect(fs.readFileSync(path.join(root, "cdn/lib-retained/signalr-8.0.0.js"))).toEqual(OLD);
         expect(entry).toEqual({ asset: "signalr", version: "8.0.0", url: "/lib/signalr-8.0.0.js",
@@ -80,7 +83,7 @@ describe("deprecate", () =>
         const before = fs.readFileSync(path.join(root, "cdn/lib-versions.json"), "utf8");
 
         await expect(deprecate("signalr", { fetchImpl: liveFetch(Buffer.from("other")), today: "2026-12-01",
-            reason: "r", root, origin: ORIGIN })).rejects.toThrow(/does not match its recorded hash/);
+            reason: "r", root, origin: ORIGIN, next: NEXT })).rejects.toThrow(/does not match its recorded hash/);
         expect(fs.readFileSync(path.join(root, "cdn/lib-versions.json"), "utf8")).toBe(before);
         expect(fs.existsSync(path.join(root, "cdn/lib-retained"))).toBe(false);
     });
@@ -88,15 +91,23 @@ describe("deprecate", () =>
     test("a live version other than the recorded one changes nothing", async () =>
     {
         await expect(deprecate("signalr", { fetchImpl: liveFetch(OLD, "9.0.0"), today: "2026-12-01",
-            reason: "r", root, origin: ORIGIN })).rejects.toThrow(/serves signalr 9\.0\.0.*records 8\.0\.0/);
+            reason: "r", root, origin: ORIGIN, next: NEXT })).rejects.toThrow(/serves signalr 9\.0\.0.*records 8\.0\.0/);
+    });
+
+    test("a version that has not moved is refused before anything changes", async () =>
+    {
+        await expect(deprecate("signalr", { fetchImpl: liveFetch(OLD), today: "2026-12-01", reason: "r", root,
+            origin: ORIGIN, next: { version: "8.0.0", namedBy: "@microsoft/signalr" } }))
+            .rejects.toThrow(/signalr is still 8\.0\.0.*Bump @microsoft\/signalr/);
+        expect(fs.existsSync(path.join(root, "cdn/lib-retained"))).toBe(false);
     });
 
     test("an asset the record does not have, or no reason, is an error", async () =>
     {
         await expect(deprecate("nope", { fetchImpl: liveFetch(OLD), today: "2026-12-01", reason: "r", root,
-            origin: ORIGIN })).rejects.toThrow(/nope is not a current asset/);
+            origin: ORIGIN, next: NEXT })).rejects.toThrow(/nope is not a current asset/);
         await expect(deprecate("signalr", { fetchImpl: liveFetch(OLD), today: "2026-12-01", reason: "", root,
-            origin: ORIGIN })).rejects.toThrow(/needs a reason/);
+            origin: ORIGIN, next: NEXT })).rejects.toThrow(/needs a reason/);
     });
 });
 
@@ -105,7 +116,7 @@ describe("retire", () =>
     test("deletes the frozen bytes, lists the version as retired, and prunes old retirements", async () =>
     {
         const entry = await deprecate("signalr", { fetchImpl: liveFetch(OLD), today: "2026-12-01",
-            reason: "Client 10", root, origin: ORIGIN });
+            reason: "Client 10", root, origin: ORIGIN, next: NEXT });
         const record = readRecord();
 
         record.deprecated[0].replacement = "/lib/signalr-10.0.11.js";

@@ -704,6 +704,22 @@ async function bundleAsset(asset, outFile)
  * @param {boolean} gated True for `--gated`.
  * @returns {{assets: object[], outDir: string, manifestPath: string}}
  */
+/**
+ * What a plain run would build from node_modules now, without building it:
+ * each asset's version and the package that version comes from (#147).
+ *
+ * @returns {Object<string, {version: string, namedBy: string}>}
+ */
+export function servedVersions()
+{
+    return Object.fromEntries(ASSETS.filter((asset) => !asset.gate).map((asset) =>
+    {
+        const pkg = packageOf(asset);
+
+        return [asset.name, { version: versionOf(pkg), namedBy: pkg }];
+    }));
+}
+
 function runPlan(gated)
 {
     for (const asset of ASSETS)

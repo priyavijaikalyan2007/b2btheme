@@ -108,6 +108,16 @@ export function retainedPath(servedPath)
 export function currentProblems(record, built)
 {
     const problems = [];
+    const deprecatedPaths = new Set(record.deprecated.flatMap((e) => Object.keys(e.files)));
+
+    for (const [asset, now] of Object.entries(built))
+    {
+        for (const path of Object.keys(now.files).filter((p) => deprecatedPaths.has(p)))
+        {
+            problems.push(`${path} is both current and deprecated, so one URL would have two hashes. A package `
+                + `inside ${asset} changed, but not the one its version comes from. Undo the deprecation and the bump.`);
+        }
+    }
 
     for (const [asset, now] of Object.entries(built))
     {

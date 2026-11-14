@@ -125,6 +125,16 @@ describe("currentProblems", () =>
         expect(problems).toEqual([expect.stringMatching(/katex.*npm run lib:record/)]);
     });
 
+    test("a deprecated path that is also a current path fails", () =>
+    {
+        const clash = { ...record(), current: {}, deprecated: [{ ...record().deprecated[0],
+            files: { "/lib/signalr-10.0.11.js": B } }] };
+
+        expect(currentProblems(clash, built("10.0.11", { "/lib/signalr-10.0.11.js": A }))).toEqual([
+            expect.stringMatching(/signalr-10\.0\.11\.js is both current and deprecated/),
+            expect.stringMatching(/signalr 10\.0\.11 is served but not in/)]);
+    });
+
     test("a recorded asset no longer built fails, naming lib:deprecate", () =>
     {
         expect(currentProblems(record(), {})).toEqual([expect.stringMatching(/signalr.*npm run lib:deprecate -- signalr/)]);
