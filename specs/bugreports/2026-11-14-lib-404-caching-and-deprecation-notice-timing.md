@@ -4,7 +4,7 @@
 **Date:** 14 November 2026
 **Component:** CDN (`/lib/` caching), `LIB_MAINTENANCE.md` Operation A, `/icons/bootstrap-icons.css`
 **Severity:** Medium for item 1. Low for items 2 and 3. Item 4 is a question.
-**Status:** Items 1 to 3 fixed (`fix/cdn-404-cors-notice-timing`). Item 4: the owner chose to serve licence texts, in a follow-up PR.
+**Status:** Items 1 to 3 fixed (`fix/cdn-404-cors-notice-timing`, #177). Item 4 fixed (`feat/cdn-license-texts`): license texts serve at `/licenses/`, and the manifest has a `licenses` field.
 
 Your deprecation policy works well for us. The `deprecated` list in the manifest, the `Deprecation`, `Sunset` and `Link` headers, and `/docs/lib-deprecations.html` give us everything we need. We will build a check on the manifest list (knobbyio/apps#378). The four items below are what we found around it.
 

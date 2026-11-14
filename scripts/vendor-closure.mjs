@@ -27,18 +27,21 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, statSync, existsSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 import { GATED_DIR, GATES } from "./gated.mjs";
+import { LICENSES_DIR, LICENSES_INDEX, applyPlan, licenseKey, licensePlan, licensesField, readIndex,
+    readLicenseSource, sameSource, treeProblems, unrecordedProblems } from "./lib-licenses.mjs";
 import { RETAINED_DIR, currentProblems, noticeData, readRecord, recordCurrent, retainedPath, retainedProblems,
     sriOf, todayUtc, writeRecord } from "./lib-retention.mjs";
 import { hashTable, patchEntry } from "./vditor-integrity.mjs";
 
 const OUT_DIR = "dist/lib";
 const MANIFEST = "dist/lib-manifest.json";
+const LICENSES_OUT = "dist/licenses";
 
 /**
  * The assets we serve. `kind` decides the strategy:
@@ -425,6 +428,8 @@ function versionOf(pkg)
  * `node_modules/<name>/package.json` would then report a version this
  * artifact does not contain.
  *
+ * `root` is that copy's directory, where its license file is.
+ *
  * Returns null for the synthetic `<stdin>` entry, which is our own code.
  */
 function packageOfInput(inputPath)
@@ -437,7 +442,7 @@ function packageOfInput(inputPath)
     const name = parts[0].startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0];
     const root = inputPath.slice(0, at) + "node_modules/" + name;
 
-    return { name, version: JSON.parse(
+    return { name, root, version: JSON.parse(
         readFileSync(`${root}/package.json`, "utf8")).version };
 }
 
@@ -658,6 +663,7 @@ async function bundleAsset(asset, outFile)
     // them, and a list maintained by hand answers for the half somebody
     // remembered. scripts/vendor-audit.mjs reads this set.
     const packages = new Map();
+    const roots = [];
 
     for (const inputPath of Object.keys(result.metafile.inputs))
     {
@@ -677,6 +683,7 @@ async function bundleAsset(asset, outFile)
         }
 
         packages.set(found.name, found.version);
+        roots.push({ key: licenseKey(found.name, found.version), root: found.root });
     }
 
     // A declared member that was not bundled means the pin list check
@@ -698,7 +705,69 @@ async function bundleAsset(asset, outFile)
             Object.values(result.metafile.outputs)[0].inputs).length,
         packages: Object.fromEntries([...packages].sort(
             (a, b) => a[0].localeCompare(b[0]))),
+        roots,
     };
+}
+
+/**
+ * The license gates, then the copy into dist/licenses/ (lib-licenses.mjs).
+ * `--record` first writes the texts a new package version needs, and
+ * removes those that no current or deprecated asset holds.
+ *
+ * @param {Map<string, Set<string>>} roots - Each package version a current asset holds, and where it was resolved.
+ * @param {object} record - The retention record, after applyRetention.
+ * @param {boolean} recording - True for `--record`.
+ * @returns {object} The index, as committed after this run.
+ */
+function applyLicenses(roots, record, recording)
+{
+    const current = new Map();
+
+    for (const [key, dirs] of roots)
+    {
+        const sources = [...dirs].map((dir) => ({ dir, source: readLicenseSource(dir) }));
+        const odd = sources.find(({ source }) => !sameSource(source, sources[0].source));
+
+        // npm installs one version at several paths. They are one package, so their license files must agree.
+        if (odd)
+        {
+            throw new Error(`[vendor-closure] ${key} is installed at ${sources[0].dir} and ${odd.dir} with `
+                + "different license files. One URL cannot serve both.");
+        }
+
+        current.set(key, sources[0].source);
+    }
+
+    const deprecated = new Set(record.deprecated.flatMap((entry) =>
+        Object.entries(entry.packages).map(([name, version]) => licenseKey(name, version))));
+    let index = readIndex();
+    const plan = licensePlan(index, current, deprecated);
+    const problems = [...plan.problems, ...(recording ? [] : unrecordedProblems(plan))];
+
+    if (problems.length > 0) { throw new Error(`[vendor-closure] ${problems.join("\n  ")}`); }
+
+    if (recording && (plan.add.size > 0 || plan.stray.length > 0))
+    {
+        index = applyPlan(index, plan);
+        console.log(`  licenses -> ${LICENSES_INDEX} (${plan.add.size} added, ${plan.stray.length} removed)`);
+    }
+
+    const present = existsSync(LICENSES_DIR) ? filesUnder(LICENSES_DIR) : [];
+    const read = (key, file) =>
+    {
+        const path = join(LICENSES_DIR, key, file);
+
+        return existsSync(path) ? readFileSync(path) : null;
+    };
+    const tree = treeProblems(index, read, present);
+
+    if (tree.length > 0) { throw new Error(`[vendor-closure] ${tree.join("\n  ")}`); }
+
+    rmSync(LICENSES_OUT, { recursive: true, force: true });
+    copyDirRecursive(LICENSES_DIR, LICENSES_OUT, []);
+    console.log(`  licenses ${String(Object.keys(index).length).padStart(3)} package versions -> ${LICENSES_OUT}`);
+
+    return index;
 }
 
 /**
@@ -764,6 +833,9 @@ async function main()
     const manifest = { generated: null, assets: {} };
     // What this run wrote, per asset: served path to SRI (#147).
     const published = {};
+    // Each package version a served asset holds, and where it was resolved.
+    const licenseRoots = new Map();
+    const noteRoot = (key, root) => licenseRoots.set(key, (licenseRoots.get(key) ?? new Set()).add(root));
 
     for (const asset of assets)
     {
@@ -779,6 +851,15 @@ async function main()
         // a `tree` asset ships one prebuilt package; a `bundle` reports
         // what esbuild actually pulled in.
         let packages = { [pkg]: version };
+
+        // A bundle's packages, and where each was resolved, come from esbuild below.
+        if (asset.kind !== "bundle")
+        {
+            for (const name of [pkg, ...(asset.members ?? [])])
+            {
+                noteRoot(licenseKey(name, versionOf(name)), `node_modules/${name}`);
+            }
+        }
 
         if (asset.kind === "tree")
         {
@@ -868,6 +949,7 @@ async function main()
             const built = await bundleAsset(asset, outFile);
             inputs = built.inputs;
             packages = built.packages;
+            built.roots.forEach(({ key, root }) => noteRoot(key, root));
         }
 
         const bytes = readFileSync(outFile);
@@ -902,8 +984,12 @@ async function main()
     if (record)
     {
         const notice = noticeData(record, manifest.assets, todayUtc(), generated);
+        const index = applyLicenses(licenseRoots, record, recording);
 
-        manifest.deprecated = notice.deprecated;
+        for (const asset of Object.values(manifest.assets)) { asset.licenses = licensesField(asset.packages, index); }
+
+        manifest.deprecated = notice.deprecated.map((entry) =>
+            ({ ...entry, licenses: licensesField(entry.packages, index) }));
         manifest.retired = notice.retired;
     }
 

@@ -153,6 +153,7 @@ If the line says **"changed bytes under the same URL"** instead, stop. Go to **O
    - It checks each file against the hash in the record. **If any file does not match, it stops and changes nothing.**
    - It saves the old files in `cdn/lib-retained/`.
    - It writes the deprecation into the record, with a retire date 60 days from today.
+   - It saves the license texts of the new version's packages in `cdn/licenses/`. The old version's texts stay, because the old files still serve.
    - It rebuilds, and checks everything again.
 3. It ends by printing, for each asset:
    - `[lib:deprecate] cytoscape 3.26.0 is deprecated until 2027-01-13.`
@@ -178,13 +179,14 @@ Do not send the apps-team note yet. Until the deploy, the manifest still lists t
    You should see exactly these:
    - `cdn/lib-versions.json`, modified
    - `cdn/lib-retained/`, new, holding the old files
+   - `cdn/licenses.json`, modified, and new folders in `cdn/licenses/`, if a package version is new
    - `CHANGELOG.md`, modified
 
    `package.json` and `package-lock.json` are already changed in Dependabot's commit.
 2. If you see anything else, stop and ask the owner before you continue.
 3. Stage the files. The structure checks only see files git knows about:
    ```bash
-   git add cdn/lib-versions.json cdn/lib-retained CHANGELOG.md
+   git add cdn/lib-versions.json cdn/lib-retained cdn/licenses.json cdn/licenses CHANGELOG.md
    ```
 4. Run the checks. Each one must pass:
    ```bash
@@ -348,7 +350,7 @@ cytoscape 3.26.0 was due to retire after 2027-01-13. Run `npm run lib:retire -- 
    ```bash
    npm run lib:retire -- cytoscape@3.26.0
    ```
-   It deletes the frozen files and moves the version to the "retired" list. It prints a CHANGELOG line.
+   It deletes the frozen files and moves the version to the "retired" list. Then it rebuilds, which deletes the license texts in `cdn/licenses/` that no other version holds. It prints a CHANGELOG line.
 5. Paste the CHANGELOG line under `## [Unreleased]`, `### Changed`, in `CHANGELOG.md`.
 6. Stage everything under `cdn/`, including the deleted files, then check:
    ```bash
@@ -411,12 +413,14 @@ Only the owner decides whether an advisory may be excused instead. An exception 
    ```bash
    npm run lib:record
    ```
-   This **only adds new assets**. It refuses any other change, so it cannot skip a deprecation.
+   This **only adds new assets**. It refuses any other change, so it cannot skip a deprecation. It also saves the license text of each package inside the new asset, in `cdn/licenses/`.
+
+   If it says "ships no license file", the package on npm has no license text. Find the license file in the package's source repository, at the tag of that exact version. Save it as `cdn/licenses/<package>@<version>/LICENSE.txt`. Then add an entry to `cdn/licenses.json`, with the SPDX expression from the package's `package.json`, the file's `sha384-` hash, and the `source` URL. Copy the `@microsoft/signalr@8.0.0` entry. Run `npm run lib:record` again.
 6. Check that only your asset was added:
    ```bash
-   git diff cdn/lib-versions.json
+   git diff cdn/lib-versions.json cdn/licenses.json
    ```
-   If any other asset changed, stop and ask the owner.
+   If any other asset changed, stop and ask the owner. Stage `cdn/licenses.json` and `cdn/licenses` with your other files.
 7. Add a row for it to the "Currently served" table in `CDN_CONTRACT.md`, and a CHANGELOG line.
 8. Stage, check, commit and open a pull request, as in Operation B, steps 6 to 8.
 
@@ -466,6 +470,10 @@ Find the start of the message in the left column.
 | `cdn/lib-retained/… does not match its recorded hash` | Someone edited a frozen file. | Undo your changes to `cdn/` (see below). |
 | `cdn/lib-retained/… is missing` | A frozen file was deleted. | Undo your changes to `cdn/` (see below). |
 | `… is in cdn/lib-retained but no deprecated entry names it` | A stray file is in the frozen folder. | Undo your changes to `cdn/` (see below). |
+| `… is served, but cdn/licenses.json has no license text for it` | A package version inside an asset has no saved license text. | Run `npm run lib:record`. `lib:deprecate` does this for you. |
+| `… is in cdn/licenses.json, but no current or deprecated asset holds it` | A license text is left over. | Run `npm run lib:record`. `lib:retire` does this for you. |
+| `… ships no license file` | The package on npm has no license text. | Operation F, step 5. |
+| `cdn/licenses/… is missing`, `… does not match its hash` or `… is not named in cdn/licenses.json`, or `… differ from the package's own` | Someone changed a license text or the index by hand. | Undo your changes to `cdn/` (see below). |
 | `lib:deprecate: … is still X in node_modules` | A bundle's address would not change. | Operation C. Nothing was changed. |
 | `lib:deprecate: https://static.knobby.io serves … but … records …` | The website and the record disagree about the version. | Wait a few minutes if `main` was just merged, then retry. Otherwise run Operation H and tell the owner. Nothing was changed. |
 | `… returned 404` or `… does not match its recorded hash` from `lib:deprecate` or `lib:verify-live` | A live file is missing or different. | Run Operation H. Do not continue. Tell the owner. Nothing was changed. |
@@ -479,11 +487,11 @@ Find the start of the message in the left column.
 **Undo your changes before you commit.** If a command left things in a bad state, put `cdn/` back as it was on your branch:
 
 ```bash
-git restore cdn/lib-versions.json
-git clean -fd cdn/lib-retained
+git restore cdn/lib-versions.json cdn/licenses.json cdn/licenses
+git clean -fd cdn/lib-retained cdn/licenses
 ```
 
-`git clean -fd cdn/lib-retained` deletes only the files in that folder that git does not know about yet. Check with `git status` that only the changes you expect are left.
+`git clean -fd` deletes only the files in those folders that git does not know about yet. Check with `git status` that only the changes you expect are left.
 
 ---
 
@@ -541,6 +549,7 @@ Every build publishes these. You never edit them, because they are made from the
 - Never change the bytes at a published `/lib/` address.
 - Never delete a published version without its 60 days, except for a security advisory.
 - Never edit `cdn/lib-versions.json` or `cdn/lib-retained/` by hand.
+- Never edit `cdn/licenses/` or `cdn/licenses.json` by hand. The one exception is a package that ships no license file (Operation F, step 5).
 - Never push past a failing check. Each one names the fix.
 - Always pin packages exactly (`--save-exact`).
 - Always add a CHANGELOG line for each deprecation, and send an apps-team note after its deploy.
