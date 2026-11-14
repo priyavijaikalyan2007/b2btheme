@@ -151,7 +151,8 @@ async function main()
         console.log("\nCHANGELOG line:\n");
         console.log(`- **${entry.asset} ${entry.version} deprecated**: \`${entry.url}\` keeps serving until `
             + `${entry.retireAfter}, then may return 404. Move to ${to}. ${reason}`);
-        console.log("\nApps-team note (for ~/Work/knobby/apps/specs/bugreports/):\n");
+        console.log("\nApps-team note (for ~/Work/knobby/apps/specs/bugreports/). Send it only after the deploy "
+            + "is confirmed, LIB_MAINTENANCE.md Operation A, step 8:\n");
         console.log(`# ${entry.asset} ${entry.version} is deprecated: move by ${entry.retireAfter}\n`);
         console.log(`\`https://static.knobby.io${entry.url}\` keeps serving its exact bytes until `
             + `${entry.retireAfter}. After that date it may return 404. Replace it with ${to}, and take the URL and `

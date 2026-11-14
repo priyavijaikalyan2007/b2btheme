@@ -9,11 +9,23 @@
 # NOTE: keep URL patterns DISJOINT — when multiple rules match a path,
 # Cloudflare appends headers from every matching rule, which would emit
 # duplicate Cache-Control headers.
+#
+# These rules reach only files that exist. A path with no file is answered by
+# cdn/not-found-worker.mjs, which sends a 404 with Cache-Control: no-store.
+# Before it, a miss took its path's rule, so a 404 under /lib/ was immutable.
 
 # Icon fonts: content changes only with the bootstrap-icons package version.
 # CORS header future-proofs cross-origin @font-face (auth.knobby.io) — R4.1.
 /icons/fonts/*
   Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# The Bootstrap Icons stylesheet at its unversioned path. CORS is open, like
+# its fonts and the icon packs, so a page may load it with `crossorigin` to
+# read its rules. Without the header the browser drops the stylesheet and
+# every icon disappears (apps report 2026-11-14, item 3). Its cache stays the
+# default: the file changes in place with the bootstrap-icons version.
+/icons/bootstrap-icons.css
   Access-Control-Allow-Origin: *
 
 # Vendored libraries (chart.js, ...) at UNVERSIONED paths: content changes on

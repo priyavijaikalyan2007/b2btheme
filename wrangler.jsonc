@@ -1,6 +1,8 @@
 {
   "name": "theme",
   "compatibility_date": "2025-12-10",
+  // Runs only when no file in dist/ matches: a 404 that no cache keeps.
+  "main": "./cdn/not-found-worker.mjs",
   "assets": {
     "directory": "./dist/"
   }

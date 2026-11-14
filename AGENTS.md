@@ -842,7 +842,9 @@ package must not make the old URL return 404 on deploy
 - **Never edit `cdn/lib-versions.json` or `cdn/lib-retained/` by hand.** The
   tools prove every byte against the live CDN or the recorded hash.
 - **Each deprecation needs** a CHANGELOG line and an apps-team note in
-  `~/Work/knobby/apps/specs/bugreports/`. `lib:deprecate` prints both.
+  `~/Work/knobby/apps/specs/bugreports/`. `lib:deprecate` prints both. Send
+  the note only after the deploy is confirmed (LIB_MAINTENANCE.md Operation A,
+  steps 7 and 8). Before it, the new URL returns 404.
 
 ## Operating Style
 
