@@ -144,6 +144,30 @@ Status indicator badges with semantic colours.
 | `.status-inactive` | `$gray-400` | white |
 | `.status-error` | `$red-600` | white |
 
+### `.theme-ontology-category-<name>`
+
+A relationship category badge, with one colour for each of the eight ontology categories (apps#249). The class sets the background, the text colour and the border together. The text on each background passes WCAG AA in light and dark mode.
+
+```html
+<span class="badge border theme-ontology-category-structural">Structural</span>
+<span class="badge border theme-ontology-category-strategic">Strategic</span>
+```
+
+Each category also has three tokens, for a page that paints the colours itself: `--theme-ontology-category-<name>-bg`, `-fg` and `-border`. Use the `-fg` token only on the matching `-bg`.
+
+| Category | Class | Slot |
+|----------|-------|------|
+| structural | `.theme-ontology-category-structural` | 1, blue |
+| lifecycle | `.theme-ontology-category-lifecycle` | 2, green |
+| dependency | `.theme-ontology-category-dependency` | 3, amber |
+| custom | `.theme-ontology-category-custom` | 4, pink |
+| strategic | `.theme-ontology-category-strategic` | 5, indigo |
+| identity | `.theme-ontology-category-identity` | 6, teal |
+| knowledge | `.theme-ontology-category-knowledge` | 7, purple |
+| ownership | `.theme-ontology-category-ownership` | 8, orange |
+
+Each category is a named slot of the categorical palette, `.theme-group-1` to `.theme-group-8`. So a category has the same colour as its slot. The mapping is `$ontology-category-slots` in `src/scss/_variables.scss`. The palette has eight slots, so a ninth category needs a new slot, not a reused one.
+
 ---
 
 ## Modals

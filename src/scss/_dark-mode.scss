@@ -480,6 +480,25 @@
 }
 
 // ============================================================================
+// ONTOLOGY RELATIONSHIP CATEGORIES (apps#249)
+// ============================================================================
+//
+// Named aliases of the categorical palette, one slot per category, mapped in
+// $ontology-category-slots. Declared on the dark scope as well as :root: a
+// var() alias resolves where it is declared, so an alias set only on :root
+// would keep the light slot inside a [data-bs-theme="dark"] subtree.
+
+:root,
+[data-bs-theme="dark"] {
+    @each $category, $slot in $ontology-category-slots
+    {
+        --theme-ontology-category-#{$category}-bg:     var(--theme-group-bg-#{$slot});
+        --theme-ontology-category-#{$category}-fg:     var(--theme-group-fg-#{$slot});
+        --theme-ontology-category-#{$category}-border: var(--theme-group-fg-#{$slot});
+    }
+}
+
+// ============================================================================
 // COMPONENT DARK OVERRIDES
 // (Appended as components are migrated in Phase 3)
 // ============================================================================

@@ -200,6 +200,22 @@ textarea:focus-visible,
     }
 }
 
+// The same pairs under ontology category names (apps#249). Every page that
+// shows a relationship category gets the same colour for it. Bootstrap's
+// `.border` sets its colour from --bs-border-color with !important, so the
+// class sets that variable too, and `badge border` takes the category border.
+
+@each $category, $slot in $ontology-category-slots
+{
+    .theme-ontology-category-#{$category}
+    {
+        --bs-border-color: var(--theme-ontology-category-#{$category}-border);
+        background-color: var(--theme-ontology-category-#{$category}-bg);
+        color: var(--theme-ontology-category-#{$category}-fg);
+        border-color: var(--theme-ontology-category-#{$category}-border);
+    }
+}
+
 // ============================================================================
 // OUTLINE AND LINK BUTTONS: FOREGROUND FROM THE THEME, NOT THE SWATCH
 // ============================================================================
