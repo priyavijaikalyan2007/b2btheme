@@ -497,13 +497,122 @@
       }
     },
     "katex": {
-      "version": "0.19.0",
+      "version": "0.19.1",
       "files": {
-        "/lib/katex-0.19.0.js": "sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk"
+        "/lib/katex-0.19.1.js": "sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE"
       }
     },
     "katex-css": {
+      "version": "0.19.1",
+      "files": {
+        "/lib/katex-css-0.19.1/fonts/KaTeX_AMS-Regular.ttf": "sha384-4HvaAg5sIo+ePC2KNUAHX4jdlj2ybM+9IydybFKNCWITmPi0cRigo/vlZerFfGmi",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_AMS-Regular.woff": "sha384-zzv6YlTIK2GVTGQkpvc0NSYe9dA7KZXEW2BvczWfxlIh461ItqQm6tLVCPwdqbIY",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_AMS-Regular.woff2": "sha384-PY9KakbvJJoGRFr9TsImY6e9PzVmMRFtphQ0xTPhQj7VgIR9nnPXP2nA4P49sNux",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Bold.ttf": "sha384-fk2geuLOgttbpdB5d/An1CnLBI+nr/OauHXIMjWgSrCq7zd9cAbNk0RPa0mvVewO",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Bold.woff": "sha384-ygS7CPHY5PC7fx0zaVMK1SjN7dDoFj/wXmgfn2uj079d7RBB4fZxFRWbkKVf41dH",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Bold.woff2": "sha384-GhFwF3Lk94gRRX3fKvK8qVRIaPRKBawaOWoLpTeJCC1rYaTrY7A8sjVjyaJCdvb0",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Regular.ttf": "sha384-P/mxa2P74e7Q/Nrraxf42MZR6BRDPj+6Y/8IK6gRZsP11tK3HCMWCjklTBZB/JTM",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Regular.woff": "sha384-elINKb/ePoYhbFIcBY07QsNMkfzB9swtlkO/R0l8HiKUUOoS9nvubtiGKXil1+rI",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Caligraphic-Regular.woff2": "sha384-0LpsQdZ8FRkW+0vIhMl+kNMsgYPhTA7pbCJDt43k6AHTpq7dv67sLl+bIaMuOiON",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Bold.ttf": "sha384-Zq+AdbMgMzJ0IJPXXIx3L2tAMHi23dEGbckSsEiXW5oGUHvrOyzHd93BmA+QCMxv",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Bold.woff": "sha384-MLc8yubx1XSYPhZ+gHfqw7OEEtpYlctAwBpAbkGKj2sa6rHidJJrq/R4kz6EQdvm",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Bold.woff2": "sha384-23N9yDc6628Shv+2pdeDIDYIXemJPKfZaANtneHGjhBoaxqeQsZQFBRLj+0/drG9",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Regular.ttf": "sha384-blyz/LtaFRdrehvymFg77DpI8i7KP11WnKs7brnbFhPgN2yghQrebswuoH3JW4Cm",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Regular.woff": "sha384-JvvjekoYao3shCriOx820kL3YhUXXqJ+4H2SjePh/Gw5wmec0lZabTSSSGx80SyM",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Fraktur-Regular.woff2": "sha384-N4B5/o3aSwC8EE7MIGghu2mB6cSIwYHNyiY9bhuVnozyLoHpYT+VEEjdYqJ+7mN7",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Bold.ttf": "sha384-H0sbiX9Nc+HBZQ/Hcnoo5XrAbQeXHHfm4vSjFnbcGFTc1RQNTTgAFou5eVy8YImZ",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Bold.woff": "sha384-t+Y0wR/F4tGlX27vTKgfEltk4j0Bj+LMZOlijbUQK7y5ZFlFM64IK1+XwdYAaOfr",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Bold.woff2": "sha384-MnzwPa3V5+Sly78huHTxfNszB+vQQmvhX4O4+m3UZ7LzQoA9wxEhsgxQsvW1y8dV",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-BoldItalic.ttf": "sha384-kHQQR+DfeO06KIwEQaObiQKQmA2AE2xgdK4WuLCevcqv2wM5lo5Q9+uBO58b2nhw",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-BoldItalic.woff": "sha384-jcZZbICEiFyNfyCr//GnL9SLbL0kfFYSIkJMFwIV7nsXKZVQPTz4EfiuFQdenBWl",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-BoldItalic.woff2": "sha384-XtHiL6YLLShFl6oq2ZOcqTQBsloU+AvJDaGE7Xz/76bt4BWZuJn8tsj7dHnKndKi",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Italic.ttf": "sha384-LqXfLspWnja5UgG70Sk9wInrBX6NYvn8B3Mp0io4DvrRxMC+gH3izBOKqBWTs3fD",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Italic.woff": "sha384-TM7Mvm4ASc5Ybmy581bes8AGl19eGiJcokfFUWB9daQDMsjiGgZN1PRpVSIYiDMh",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Italic.woff2": "sha384-pZ+saBD2/qiUjsKqk1z1NqixWQMZGxYCRcit0Dqfscp5Mj2xUX8bxMm8iKOYsAsQ",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Regular.ttf": "sha384-PXJWVi0kXWCuY/H/40C3LSgJgcbPJAC0AkGhL14lwslD/j9LPNhvN7xTZORmE7t4",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Regular.woff": "sha384-Q0HJ9A5ESTfdxrLfe5lAb04L9A0vY/5o4NWd0G5PJGr2sEMzXuhz2Iac62660prU",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Main-Regular.woff2": "sha384-K4rU/m6R4ygdFA2s4iphVuNOm4ksiQlo7BPut2DKbuGQFsmOTsh1vie2QdS8+qD/",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-BoldItalic.ttf": "sha384-SEMzanhxS5ILZ7gKz61N1o1JDyHx1I35pHN5XajDPn4exg/FykPSvxRQfQg825P9",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-BoldItalic.woff": "sha384-fwMc9fmQOR2gr8la3It1u0k2bDs8lIc7nGHNGHEsyHSDzOw+nV5A4TGCQilm96dn",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-BoldItalic.woff2": "sha384-/bG/IuB65SsDidFgz28e7vwT1pxHih+EkPgQpjqmDVtOaSsPi/CXI7uT4nJnozAI",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-Italic.ttf": "sha384-ALJuUcghT4AT8JnHQZ3It3fwBT4S9M19DpikJ94E2zoWlOZDMcbME/uCPQhIjh6e",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-Italic.woff": "sha384-uC2uQSWvpuK1FIJeSC20ULptMi4NYGjmEgcIg1hjqCZK8THdvh/Z1Jdqz0fhkeah",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Math-Italic.woff2": "sha384-ahAgpD3waV7F+QiHuM0WaQnVF/FMS0RXhS0dsThbGBuwv3RPHoxvT/8UGwzyOATH",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Bold.ttf": "sha384-GSLHS3JbC4uCKSDvfXaA2C+IQQ4pKOmCdLkka6sQGqifl39+vZaPbNnwt5gxYYAt",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Bold.woff": "sha384-4s2634eUcPzgWS4k0TflD0rpBwCU+kGlAxD6B0NnduqvBJSKWRjprGAiShUvez+W",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Bold.woff2": "sha384-FWRmzdMUcxpbgWzOqA1THk/7QOuMshS6cTUeprW3TVnzjVrGnO9oCvWhE9lEwgGX",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Italic.ttf": "sha384-TMYgwDtAAwpo33rwGJEFhtE8uvfFJngvVP3zuCF5blSX1WisrycpAdHWL+tpclzL",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Italic.woff": "sha384-8kOHfXeePvROApUzB1rq84cjeOxKWPXE2J7U6fd7bORfN11ywltyXpfFblsUrdwS",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Italic.woff2": "sha384-cIAn4buHZvRkXL5LFuK8pAPVzxv0niY78zTOBRHvRmalHZh9IYFAzZQPwNnHj05g",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Regular.ttf": "sha384-11xkyZ5gnrcUWPKj6q2+nQhL/c0nf5AnnaFIH+f1470KzzAt/aWT9wBekGQITe6C",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Regular.woff": "sha384-KVbq0PpRXNs54ATT+soP/YPOvWTUEACw5S7F6ORCzcOW7Mu0kSjqkIX8ZsD72pDG",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_SansSerif-Regular.woff2": "sha384-hFb2fFUxKsM3r80syP3hRUPdmRjMS09eYDF7almTU926xWabYjc1wdbrC7CaV5N/",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Script-Regular.ttf": "sha384-ajALH5GUriSRD/8mDWxqTIMgFVLgf8rD9AGtZMAjlZcRsxUlvLPZSMQ9GcZxbPfV",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Script-Regular.woff": "sha384-pUJC0ZXLxAtUYrIsxUjUTz7n1DwvTokhYetolDJHTyfqdU3xxfqqZui3QZ6Bto63",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Script-Regular.woff2": "sha384-A6AdZ/mywRJao07EiGdwk4swWZyx+X1pi9aYMAdEYNUcIzbZzbrOlEnIBFn2tUvI",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size1-Regular.ttf": "sha384-y99IQHoTIyDGDLbbj79IZyHIqkOAUOpY1dbZryOI14DPIuvBTdpaCz9XqiHynOC8",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size1-Regular.woff": "sha384-gbBwLw2kvlHUO0ewbTJLdfR6X2Z5UoY6ZMzQk0vtg9i1xdYy3NJXvcxTz0u70DbZ",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size1-Regular.woff2": "sha384-vXXP3yBdT6+htUbz5gNLFqA/PE6AUmW++GDGZTnxOaHX2IFPIG1ie1qo3Ra6QXHy",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size2-Regular.ttf": "sha384-Wt0vYQnaX7rcb51P4F5px/+x8Cn3HFgwlmtx8FWsGRDbYXd7EcC9KUVWxDhLaNOg",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size2-Regular.woff": "sha384-S5AWjEM+Gmynga7cIAH6FXyOCt9oZLQUcpDaAZQBUgmK8k/NjYi/zpFNI0ppFl5o",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size2-Regular.woff2": "sha384-hCKAtKJzh4FhbOKEWInGgZoaS+sek0VFv7B866K51w2+KRZ5E6GJcpWQHbEPGPZz",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size3-Regular.ttf": "sha384-VyJXOyBcY0oe4+HGFMHAxG48AlwCGWr1g0Lq1JlQF9g9cnYJCySSkP2ud/QDUKUX",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size3-Regular.woff": "sha384-1Kd5GmITD5ei9Lfp7Jf7cJZ7E2u9yW3v5Jk2soolHaZTpMoyrua7M8pDEsy+MrlM",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size3-Regular.woff2": "sha384-dJES0vnXQqt06SV8gVM87Qsddvp2jjMCSjJ/jfADNWOP1feq4AqxkHeo/HZRTeya",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size4-Regular.ttf": "sha384-grrp+LAfKSVDhNpdqxjjWCF4icHm3LbJKxmSUOEBZ01SzpKprWDhzTngYNISjaN+",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size4-Regular.woff": "sha384-eXy7t8oYcVxr4uwLqZIgfQwoP3TU7rsvakBaPdny6nYMd2aht/lkD6p8dfunIFhj",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Size4-Regular.woff2": "sha384-N0i7aW7M3/ioHKtRjR78Td+YATjbmUh0waMuUQOjBtv/bp4qTWd58I4etzZ71USy",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Typewriter-Regular.ttf": "sha384-M1Mu9xT3GeBbVXdxoPNd26izfLmsiOvKjMFEG/jO/FdVVU9CPWN86D6y1YHV6ND6",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Typewriter-Regular.woff": "sha384-QgC/S/s/0LtGE68JU5CbH+belZAEK/GG7h0vLciCKsllXeLvZpvlpiHbC61MSKsn",
+        "/lib/katex-css-0.19.1/fonts/KaTeX_Typewriter-Regular.woff2": "sha384-EwGF1si4JOX2592vVUMe7CnToRBlq2lo+w+8tVWLrJW5ZiwBuSry7Ozgs+cGHjmB",
+        "/lib/katex-css-0.19.1/katex.min.css": "sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG"
+      }
+    },
+    "font-awesome": {
+      "version": "6.5.1",
+      "files": {
+        "/lib/font-awesome-6.5.1/css/all.min.css": "sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g",
+        "/lib/font-awesome-6.5.1/webfonts/fa-brands-400.ttf": "sha384-z6ErMQpm9VO+PSzFwaRYqupTfPdf/8FqehfXiAegd1OsCVEwyxGfXRitsOAlSwL8",
+        "/lib/font-awesome-6.5.1/webfonts/fa-brands-400.woff2": "sha384-bkcB7e1rvHdmNnhkhQO4nuNk9I0RiTPMW8QUEuAB43yV0a+pj+4wcq0TqdEjkAG0",
+        "/lib/font-awesome-6.5.1/webfonts/fa-regular-400.ttf": "sha384-U8lQh2H28bJCCd0UDMYkUilXo/MkC+X4bagXkhsKG7nSiMTjR7PXEol7FOqOfiRv",
+        "/lib/font-awesome-6.5.1/webfonts/fa-regular-400.woff2": "sha384-2hgsGQjjgVclDGAvWslIa+GwYh3Bn/ztuvakT4ICpV95tadfxcw0WMPHsEKjsPVT",
+        "/lib/font-awesome-6.5.1/webfonts/fa-solid-900.ttf": "sha384-2VoAADNdfW/EPlkrhW8xHXpt8CCvqmFA3HH12T2EfU1VBBJfvTPNbKLxMk84zc5O",
+        "/lib/font-awesome-6.5.1/webfonts/fa-solid-900.woff2": "sha384-YxWlWCDksuL6Ljn1HkJNPH8l+jSRIWPpMpPw3pFa0QnmLXjwV/uPwpDm/b9vn/o1",
+        "/lib/font-awesome-6.5.1/webfonts/fa-v4compatibility.ttf": "sha384-fy+FP2ydsiGfVpPo1oIsziMqzjK/YDNdc4+l8weogolQQFKATFndVcYagbZVMF8z",
+        "/lib/font-awesome-6.5.1/webfonts/fa-v4compatibility.woff2": "sha384-6yorJ/xqzXG3JEHRf9/CTu1dz8bBnMqYf652Dy8345NBoSPcA7DDsScvfnCbJEOf"
+      }
+    },
+    "bootstrap-icons": {
+      "version": "1.13.1",
+      "files": {
+        "/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css": "sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk",
+        "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff": "sha384-IYfD9pNP/nesQsPyYtTdGCb4uhEWUmNF8GxaCvqcJFH+Of3c1b0VbH6hdHUonDSC",
+        "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff2": "sha384-xEoI56EFpIZiDZZKBZxsn3gO3u/FvXtOpHbtkMWmSdfzDw3x9XdVc3i70O9hm4SC"
+      }
+    }
+  },
+  "deprecated": [
+    {
+      "asset": "katex",
       "version": "0.19.0",
+      "url": "/lib/katex-0.19.0.js",
+      "integrity": "sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk",
+      "files": {
+        "/lib/katex-0.19.0.js": "sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk"
+      },
+      "packages": {
+        "katex": "0.19.0"
+      },
+      "deprecatedOn": "2026-11-14",
+      "retireAfter": "2027-01-13",
+      "replacement": "/lib/katex-0.19.1.js",
+      "reason": "Dependabot #168: upgrade to 0.19.1 for bug fixes."
+    },
+    {
+      "asset": "katex-css",
+      "version": "0.19.0",
+      "url": "/lib/katex-css-0.19.0/katex.min.css",
+      "integrity": "sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp",
       "files": {
         "/lib/katex-css-0.19.0/fonts/KaTeX_AMS-Regular.ttf": "sha384-4HvaAg5sIo+ePC2KNUAHX4jdlj2ybM+9IydybFKNCWITmPi0cRigo/vlZerFfGmi",
         "/lib/katex-css-0.19.0/fonts/KaTeX_AMS-Regular.woff": "sha384-zzv6YlTIK2GVTGQkpvc0NSYe9dA7KZXEW2BvczWfxlIh461ItqQm6tLVCPwdqbIY",
@@ -566,32 +675,16 @@
         "/lib/katex-css-0.19.0/fonts/KaTeX_Typewriter-Regular.woff": "sha384-QgC/S/s/0LtGE68JU5CbH+belZAEK/GG7h0vLciCKsllXeLvZpvlpiHbC61MSKsn",
         "/lib/katex-css-0.19.0/fonts/KaTeX_Typewriter-Regular.woff2": "sha384-EwGF1si4JOX2592vVUMe7CnToRBlq2lo+w+8tVWLrJW5ZiwBuSry7Ozgs+cGHjmB",
         "/lib/katex-css-0.19.0/katex.min.css": "sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp"
-      }
-    },
-    "font-awesome": {
-      "version": "6.5.1",
-      "files": {
-        "/lib/font-awesome-6.5.1/css/all.min.css": "sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g",
-        "/lib/font-awesome-6.5.1/webfonts/fa-brands-400.ttf": "sha384-z6ErMQpm9VO+PSzFwaRYqupTfPdf/8FqehfXiAegd1OsCVEwyxGfXRitsOAlSwL8",
-        "/lib/font-awesome-6.5.1/webfonts/fa-brands-400.woff2": "sha384-bkcB7e1rvHdmNnhkhQO4nuNk9I0RiTPMW8QUEuAB43yV0a+pj+4wcq0TqdEjkAG0",
-        "/lib/font-awesome-6.5.1/webfonts/fa-regular-400.ttf": "sha384-U8lQh2H28bJCCd0UDMYkUilXo/MkC+X4bagXkhsKG7nSiMTjR7PXEol7FOqOfiRv",
-        "/lib/font-awesome-6.5.1/webfonts/fa-regular-400.woff2": "sha384-2hgsGQjjgVclDGAvWslIa+GwYh3Bn/ztuvakT4ICpV95tadfxcw0WMPHsEKjsPVT",
-        "/lib/font-awesome-6.5.1/webfonts/fa-solid-900.ttf": "sha384-2VoAADNdfW/EPlkrhW8xHXpt8CCvqmFA3HH12T2EfU1VBBJfvTPNbKLxMk84zc5O",
-        "/lib/font-awesome-6.5.1/webfonts/fa-solid-900.woff2": "sha384-YxWlWCDksuL6Ljn1HkJNPH8l+jSRIWPpMpPw3pFa0QnmLXjwV/uPwpDm/b9vn/o1",
-        "/lib/font-awesome-6.5.1/webfonts/fa-v4compatibility.ttf": "sha384-fy+FP2ydsiGfVpPo1oIsziMqzjK/YDNdc4+l8weogolQQFKATFndVcYagbZVMF8z",
-        "/lib/font-awesome-6.5.1/webfonts/fa-v4compatibility.woff2": "sha384-6yorJ/xqzXG3JEHRf9/CTu1dz8bBnMqYf652Dy8345NBoSPcA7DDsScvfnCbJEOf"
-      }
-    },
-    "bootstrap-icons": {
-      "version": "1.13.1",
-      "files": {
-        "/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css": "sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk",
-        "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff": "sha384-IYfD9pNP/nesQsPyYtTdGCb4uhEWUmNF8GxaCvqcJFH+Of3c1b0VbH6hdHUonDSC",
-        "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff2": "sha384-xEoI56EFpIZiDZZKBZxsn3gO3u/FvXtOpHbtkMWmSdfzDw3x9XdVc3i70O9hm4SC"
-      }
+      },
+      "packages": {
+        "katex": "0.19.0"
+      },
+      "deprecatedOn": "2026-11-14",
+      "retireAfter": "2027-01-13",
+      "replacement": "/lib/katex-css-0.19.1/katex.min.css",
+      "reason": "Dependabot #168: upgrade to 0.19.1 for bug fixes."
     }
-  },
-  "deprecated": [],
+  ],
   "retired": [
     {
       "asset": "dompurify",

@@ -353,9 +353,8 @@ const ASSETS = [
     },
     {
         // LaTeX rendering (window.katex) for LatexEditor's preview and
-        // MarkdownRenderer's math (#51, ADR-230). 0.19.0 rather than 0.19.1:
-        // the newer one was six days old when pinned and fixes only a parsing
-        // edge case; every KaTeX advisory was patched by 0.18.2.
+        // MarkdownRenderer's math (#51, ADR-230). Every KaTeX advisory was
+        // patched by 0.18.2.
         name: "katex",
         kind: "copy",
         from: "node_modules/katex/dist/katex.min.js",
@@ -368,7 +367,7 @@ const ASSETS = [
         name: "katex-css",
         kind: "tree",
         assetType: "stylesheet",
-        version: "0.19.0",
+        version: "0.19.1",
         pkg: "katex",
         entry: "katex.min.css",
         include: [

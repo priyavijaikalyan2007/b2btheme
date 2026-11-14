@@ -272,10 +272,10 @@ past its date. The maintainers' runbook is [LIB_MAINTENANCE.md](LIB_MAINTENANCE.
 | `chart.js` | 4.5.1 | Also still at `/vendor/chart.js/` unversioned, for existing consumers |
 | `font-awesome` | 6.5.1 | CSS + webfonts at `/lib/font-awesome-6.5.1/`. Consolidates the two versions the apps load — verified a strict superset of all 92 `fa-` classes in use |
 | `marked` | 18.1.3 | MarkdownRenderer's parser (`window.marked`). The A2UI adapter loads it for DocViewer (ADR-230) |
-| `katex` | 0.19.0 | LaTeX rendering (`window.katex`); 0.19.0 over the six-day-old 0.19.1, which fixes only a parsing edge case. Every KaTeX advisory was patched by 0.18.2 |
+| `katex` | 0.19.1 | LaTeX rendering (`window.katex`). Every KaTeX advisory was patched by 0.18.2. 0.19.0 is deprecated until 2027-01-13 (Dependabot #168) |
 | `vditor-css` | 3.11.2 | Vditor's stylesheet with an SRI hash at `/lib/vditor-css-3.11.2/index.css`, for MarkdownEditor over A2UI (the vditor tree serves it unhashed) |
 | `vditor-integrity` | 3.11.2 | Vditor's entry with a hash for every chunk it loads, at `/lib/vditor-integrity-3.11.2.js`. Load it in place of `/lib/vditor-3.11.2/dist/index.min.js`. MathJax is refused. The A2UI adapter loads it for MarkdownEditor and Conversation. See below |
-| `katex-css` | 0.19.0 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.0/`; the stylesheet is hashed, the fonts cannot be |
+| `katex-css` | 0.19.1 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.1/`; the stylesheet is hashed, the fonts cannot be |
 | `bootstrap-icons` | 1.13.1 | The stylesheet, hashed, with its fonts beside it, at `/lib/bootstrap-icons-1.13.1/`. The same release as `/icons/bootstrap-icons.css`, served with CORS so a page loaded with `crossorigin` can read its rules. See below |
 | `bootstrap` | 5.3.8 | Bootstrap's JS bundle (`window.bootstrap`), the same file as `/js/bootstrap.bundle.min.js`, with an SRI hash. Marked `shared`: the A2UI adapter loads it for Toolbar and the dialogs only when the page has no `window.bootstrap`, because a second copy doubles Bootstrap's document-wide listeners (ADR-245) |
 

@@ -487,8 +487,8 @@ git clean -fd cdn/lib-retained
 | `vditor-integrity` | `vditor` | 3.11.2 | `/lib/vditor-integrity-3.11.2.js` |
 | `bootstrap` | `bootstrap` | 5.3.8 | `/lib/bootstrap-5.3.8.js` |
 | `marked` | `marked` | 18.1.3 | `/lib/marked-18.1.3.js` |
-| `katex` | `katex` | 0.19.0 | `/lib/katex-0.19.0.js` |
-| `katex-css` | `katex` | 0.19.0 | `/lib/katex-css-0.19.0/` |
+| `katex` | `katex` | 0.19.1 | `/lib/katex-0.19.1.js` |
+| `katex-css` | `katex` | 0.19.1 | `/lib/katex-css-0.19.1/` |
 | `font-awesome` | `@fortawesome/fontawesome-free` | 6.5.1 | `/lib/font-awesome-6.5.1/` |
 | `bootstrap-icons` | `bootstrap-icons` | 1.13.1 | `/lib/bootstrap-icons-1.13.1/` |
 
