@@ -59,7 +59,7 @@ function badges(seen: Record<string, { badge: Paint; slot: Paint }>): Record<str
 
 test("ontology category badges paint their slot in light, dark and a dark subtree", async ({ page }) =>
 {
-    await page.goto("/demo/full-demo.html");
+    await page.goto("/demo/components/ontologycategories.html");
     await page.evaluate(() => document.documentElement.setAttribute("data-bs-theme", "light"));
 
     const light = badges(await paints(page, false));
