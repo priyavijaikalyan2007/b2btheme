@@ -78,6 +78,16 @@ const FORCE_ITERATIONS = 150;
 const FORCE_REPULSION = 5000;
 const FORCE_SPRING = 0.01;
 const FORCE_DAMPING = 0.95;
+/** Clear space the force layout leaves between two node boxes, in px. */
+const NODE_GAP = 12;
+/** Most overlap-separation passes after the force iterations. A pass that moves nothing ends it early. */
+const SEPARATION_PASSES = 100;
+/**
+ * Extra px a separated pair moves past the gap. Without it, a node pressed
+ * between two others is pushed back and forth by halves, and the passes
+ * crawl towards the gap instead of reaching it.
+ */
+const SEPARATION_SLACK = 2;
 
 const DEFAULT_NODE_W = 160;
 const DEFAULT_NODE_H = 48;
@@ -261,6 +271,11 @@ export interface GraphCanvasOptions
     theme?: "light" | "dark";
     /** Node box size in px. */
     nodeSize?: { width: number; height: number };
+    /**
+     * Seeds the random start of the force and group-by-namespace layouts, so the same graph lays out the same
+     * way every time. Default: a new random start on each layout.
+     */
+    layoutSeed?: number;
     /**
      * Shows labels on edges; false hides them all.
      * @deprecated Prefer `edgeLabelDensity`. `false` still forces density = "none".
@@ -723,16 +738,27 @@ function cssUrl(value: string | undefined): string
 // LAYOUT ALGORITHMS — Pure functions returning Map<id, NodePos>
 // ============================================================================
 
-/** Spring-embedder force layout. O(N²) repulsion + spring edges. */
+/** The size of every node box, which the force layout keeps apart. */
+interface NodeBox { w: number; h: number }
+
+/**
+ * Spring-embedder force layout. O(N²) repulsion + spring edges, then a
+ * separation step. Repulsion treats each node as a point, so two boxes can
+ * settle on top of each other and one takes the other's clicks (apps#249).
+ * Springs rest at a box width apart, so connected nodes settle clear of each
+ * other and the separation step has little left to do.
+ */
 function runForceLayout(
     nodes: GraphNode[],
     edges: GraphEdge[],
     w: number,
-    h: number
+    h: number,
+    box: NodeBox,
+    random: () => number
 ): Map<string, NodePos>
 {
     const pos = new Map<string, NodePos>();
-    initRandomPositions(nodes, pos, w, h);
+    initRandomPositions(nodes, pos, w, h, random);
 
     const vel = new Map<string, { vx: number; vy: number }>();
     for (const n of nodes)
@@ -743,9 +769,10 @@ function runForceLayout(
     for (let iter = 0; iter < FORCE_ITERATIONS; iter++)
     {
         applyRepulsion(nodes, pos, vel);
-        applySpringForces(edges, pos, vel);
+        applySpringForces(edges, pos, vel, box.w + NODE_GAP);
         applyDampingStep(nodes, pos, vel);
     }
+    separateOverlaps(nodes, pos, box);
     centerPositions(pos, w, h);
     return pos;
 }
@@ -755,15 +782,91 @@ function initRandomPositions(
     nodes: GraphNode[],
     pos: Map<string, NodePos>,
     w: number,
-    h: number
+    h: number,
+    random: () => number
 ): void
 {
     for (const n of nodes)
     {
-        const px = n.x ?? (w * 0.2 + Math.random() * w * 0.6);
-        const py = n.y ?? (h * 0.2 + Math.random() * h * 0.6);
+        const px = n.x ?? (w * 0.2 + random() * w * 0.6);
+        const py = n.y ?? (h * 0.2 + random() * h * 0.6);
         pos.set(n.id, { x: px, y: py });
     }
+}
+
+/** A seeded random source (mulberry32), so a seeded layout repeats exactly. */
+function seededRandom(seed: number): () => number
+{
+    let t = seed >>> 0;
+
+    return () =>
+    {
+        t = (t + 0x6D2B79F5) >>> 0;
+        let r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+/**
+ * Pushes apart every pair of boxes closer than NODE_GAP, along the axis that
+ * needs the smaller move. A pinned node stays put and its partner moves the
+ * whole way. Two pinned nodes are where the caller put them, so they are left.
+ */
+function separateOverlaps(nodes: GraphNode[], pos: Map<string, NodePos>, box: NodeBox): void
+{
+    let overlaps = 0;
+
+    for (let pass = 0; pass < SEPARATION_PASSES; pass++)
+    {
+        overlaps = separatePass(nodes, pos, box);
+
+        if (overlaps === 0) { return; }
+    }
+
+    logWarn(`Force layout: ${overlaps} node pairs overlapped in the last of ${SEPARATION_PASSES} separation passes.`);
+}
+
+/** One sweep over every pair. Returns how many pairs it moved apart. */
+function separatePass(nodes: GraphNode[], pos: Map<string, NodePos>, box: NodeBox): number
+{
+    let moved = 0;
+
+    for (let i = 0; i < nodes.length; i++)
+    {
+        for (let j = i + 1; j < nodes.length; j++)
+        {
+            if (separatePair(nodes[i], nodes[j], pos, box)) { moved++; }
+        }
+    }
+    return moved;
+}
+
+/** Moves one pair apart if their boxes are closer than NODE_GAP. Returns true if it moved them. */
+function separatePair(a: GraphNode, b: GraphNode, pos: Map<string, NodePos>, box: NodeBox): boolean
+{
+    if (a.pinned && b.pinned) { return false; }
+
+    const p = pos.get(a.id)!;
+    const q = pos.get(b.id)!;
+    const dx = q.x - p.x;
+    const dy = q.y - p.y;
+    const needX = box.w + NODE_GAP - Math.abs(dx);
+    const needY = box.h + NODE_GAP - Math.abs(dy);
+
+    if (needX <= 0 || needY <= 0) { return false; }
+
+    // Coincident centres split the same way every time, so a seeded layout stays repeatable.
+    const alongX = needX <= needY;
+    const sign = (alongX ? dx : dy) < 0 ? -1 : 1;
+    const need = (alongX ? needX : needY) + SEPARATION_SLACK;
+    const shareA = a.pinned ? 0 : (b.pinned ? 1 : 0.5);
+    const shareB = 1 - shareA;
+
+    if (alongX) { p.x -= sign * need * shareA; q.x += sign * need * shareB; }
+    else { p.y -= sign * need * shareA; q.y += sign * need * shareB; }
+
+    return true;
 }
 
 /** Repulsion between all node pairs. */
@@ -797,7 +900,8 @@ function applyRepulsion(
 function applySpringForces(
     edges: GraphEdge[],
     pos: Map<string, NodePos>,
-    vel: Map<string, { vx: number; vy: number }>
+    vel: Map<string, { vx: number; vy: number }>,
+    rest: number
 ): void
 {
     for (const e of edges)
@@ -807,8 +911,10 @@ function applySpringForces(
         if (!a || !b) { continue; }
         const dx = b.x - a.x;
         const dy = b.y - a.y;
-        const fx = dx * FORCE_SPRING;
-        const fy = dy * FORCE_SPRING;
+        const d = Math.max(Math.hypot(dx, dy), 1);
+        const pull = FORCE_SPRING * (d - rest) / d;
+        const fx = dx * pull;
+        const fy = dy * pull;
         const va = vel.get(e.sourceId);
         const vb = vel.get(e.targetId);
         if (va) { va.vx += fx; va.vy += fy; }
@@ -1062,7 +1168,9 @@ function runGroupByNamespaceLayout(
     nodes: GraphNode[],
     edges: GraphEdge[],
     w: number,
-    h: number
+    h: number,
+    box: NodeBox,
+    random: () => number
 ): Map<string, NodePos>
 {
     const pos = new Map<string, NodePos>();
@@ -1084,7 +1192,7 @@ function runGroupByNamespaceLayout(
             const sids = new Set(groupNodes.map((n) => n.id));
             return sids.has(e.sourceId) && sids.has(e.targetId);
         });
-        const sub = runForceLayout(groupNodes, groupEdges, cellW, cellH);
+        const sub = runForceLayout(groupNodes, groupEdges, cellW, cellH, box, random);
         sub.forEach((p, id) =>
         {
             pos.set(id, { x: p.x + ox, y: p.y + oy });
@@ -1782,6 +1890,11 @@ class GraphCanvasImpl implements GraphCanvas
             }
         }
 
+        const box = { w: this.nodeW, h: this.nodeH };
+        // A fresh source from the seed on every layout, so a relayout repeats too.
+        const seed = this.opts.layoutSeed;
+        const random = seed === undefined ? Math.random : seededRandom(seed);
+
         switch (this.layout)
         {
             case "hierarchical":
@@ -1792,9 +1905,9 @@ class GraphCanvasImpl implements GraphCanvas
             case "radial":
                 return runRadialLayout(visible, this.edges, w, h);
             case "group-by-namespace":
-                return runGroupByNamespaceLayout(visible, this.edges, w, h);
+                return runGroupByNamespaceLayout(visible, this.edges, w, h, box, random);
             default:
-                return runForceLayout(visible, this.edges, w, h);
+                return runForceLayout(visible, this.edges, w, h, box, random);
         }
     }
 

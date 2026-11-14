@@ -13,11 +13,13 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Fixed
+- **GraphCanvas force layout no longer leaves nodes on top of each other** (apps#249). Its forces treated each node as a point, so two 160 × 48 boxes could settle overlapping, and the box on top took the other's clicks. It happened on some loads and not others. The layout now pushes apart any two boxes closer than 12 px after the forces settle, at the configured `nodeSize`. Edges now pull connected nodes to a box width apart, not onto each other, so graphs spread a little wider than before. `group-by-namespace` gets the same fix inside each group. Two `pinned` nodes are left where they were put.
 - **`/lib/` retention could skip a deprecation in two cases (#147).** Both were found while writing the runbook, before any deprecation was made.
   - `lib:deprecate` on vditor also accepted new `vditor-css` and `vditor-integrity` versions without deprecating them. Recording now adds new assets only, plus the ones `lib:deprecate` names, and `lib:deprecate` takes several assets.
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **GraphCanvas `layoutSeed`** (apps#249): a number that seeds the force layout's random start, so the same graph lays out the same way on every load and every `relayout()`. It is for host tests, so it is not in the A2UI catalog.
 - **`LIB_MAINTENANCE.md`, a step-by-step runbook for `/lib/`** (#147). It covers how to accept a Dependabot upgrade of a served library, upgrade one by hand, retire a version after 60 days or at once for an advisory, add or remove a library, and check the live CDN. It also lists every error message with its fix. The README links it.
 - **Old `/lib/` versions keep serving for 60 days (#147, ADR-261)**: when a newer version replaces a vendored library, the old URL now keeps serving its exact bytes for 60 days instead of returning 404 on the next deploy. Every build publishes what is current, what is deprecated and how many days each has left, and what was retired recently:
   - for agents: `/lib-deprecations.json`, and `deprecated` and `retired` fields in `/lib-manifest.json`
