@@ -12,7 +12,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
-    addDays, cell, currentProblems, daysUntil, dueSoon, headerRules, noticeData, noticeMarkdown, overdue,
+    addDays, cell, currentProblems, recordCurrent, daysUntil, dueSoon, headerRules, noticeData, noticeMarkdown, overdue,
     retainedPath, retainedProblems, sriOf, summaryLines,
 } from "./lib-retention.mjs";
 
@@ -138,6 +138,42 @@ describe("currentProblems", () =>
     test("a recorded asset no longer built fails, naming lib:deprecate", () =>
     {
         expect(currentProblems(record(), {})).toEqual([expect.stringMatching(/signalr.*npm run lib:deprecate -- signalr/)]);
+    });
+});
+
+describe("recordCurrent", () =>
+{
+    const KATEX = { version: "0.19.0", files: { "/lib/katex-0.19.0.js": A } };
+
+    test("adds a new asset and keeps an unchanged one", () =>
+    {
+        const built = { signalr: record().current.signalr, katex: KATEX };
+
+        expect(recordCurrent(record(), built, [])).toEqual({ current: built, problems: [] });
+    });
+
+    test("refuses a version change it was not told about, so a deprecation cannot be skipped", () =>
+    {
+        const built = { signalr: { version: "11.0.0", files: { "/lib/signalr-11.0.0.js": A } } };
+        const result = recordCurrent(record(), built, []);
+
+        expect(result.problems).toEqual([expect.stringMatching(/signalr moved from 10\.0\.11 to 11\.0\.0.*lib:deprecate -- signalr/)]);
+    });
+
+    test("takes the new version of each asset it was told moved, and drops one no longer built", () =>
+    {
+        const built = { signalr: { version: "11.0.0", files: { "/lib/signalr-11.0.0.js": A } } };
+
+        expect(recordCurrent(record(), built, ["signalr"])).toEqual({ current: built, problems: [] });
+        expect(recordCurrent(record(), {}, ["signalr"])).toEqual({ current: {}, problems: [] });
+    });
+
+    test("refuses changed bytes and an asset dropped without being told", () =>
+    {
+        const changed = { signalr: { version: "10.0.11", files: { "/lib/signalr-10.0.11.js": B } } };
+
+        expect(recordCurrent(record(), changed, []).problems).toEqual([expect.stringMatching(/changed bytes/)]);
+        expect(recordCurrent(record(), {}, []).problems).toEqual([expect.stringMatching(/no longer built/)]);
     });
 });
 

@@ -107,17 +107,7 @@ export function retainedPath(servedPath)
  */
 export function currentProblems(record, built)
 {
-    const problems = [];
-    const deprecatedPaths = new Set(record.deprecated.flatMap((e) => Object.keys(e.files)));
-
-    for (const [asset, now] of Object.entries(built))
-    {
-        for (const path of Object.keys(now.files).filter((p) => deprecatedPaths.has(p)))
-        {
-            problems.push(`${path} is both current and deprecated, so one URL would have two hashes. A package `
-                + `inside ${asset} changed, but not the one its version comes from. Undo the deprecation and the bump.`);
-        }
-    }
+    const problems = clashProblems(record, built);
 
     for (const [asset, now] of Object.entries(built))
     {
@@ -148,6 +138,42 @@ export function currentProblems(record, built)
     }
 
     return problems;
+}
+
+/** Built paths that a deprecated entry also serves, which would give one URL two hashes. */
+function clashProblems(record, built)
+{
+    const deprecatedPaths = new Set(record.deprecated.flatMap((e) => Object.keys(e.files)));
+
+    return Object.entries(built).flatMap(([asset, now]) => Object.keys(now.files)
+        .filter((path) => deprecatedPaths.has(path))
+        .map((path) => `${path} is both current and deprecated, so one URL would have two hashes. A package `
+            + `inside ${asset} changed, but not the one its version comes from. Undo the deprecation and the bump.`));
+}
+
+/**
+ * The record's new `current` after a build, for `--record`. It may add an
+ * asset the record does not have, and take the new version of each asset
+ * in `moved`, which lib:deprecate has just deprecated. Anything else that
+ * changed is refused exactly as the build refuses it, so recording can never
+ * skip a deprecation.
+ *
+ * @param {object} record - The record.
+ * @param {Object<string, {version: string, files: Object<string, string>}>} built - Each asset this build wrote.
+ * @param {string[]} moved - Assets whose new version (or removal) is expected.
+ * @returns {{current: object, problems: string[]}} The new current, unchanged when there are problems.
+ */
+export function recordCurrent(record, built, moved)
+{
+    const recorded = Object.fromEntries(Object.entries(record.current).filter(([a]) => !moved.includes(a)));
+    const checked = Object.fromEntries(Object.entries(built).filter(([a]) => a in recorded));
+    const problems = [...clashProblems(record, built),
+        ...currentProblems({ ...record, current: recorded, deprecated: [] }, checked)];
+
+    if (problems.length > 0) { return { current: record.current, problems }; }
+
+    return { current: Object.fromEntries(Object.entries(built).map(([a, now]) => [a, a in recorded ? recorded[a] : now])),
+        problems };
 }
 
 /** Files of one version that changed, appeared or vanished; a served file must never change under its URL. */
