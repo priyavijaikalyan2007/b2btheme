@@ -71,6 +71,7 @@ export const GRAPHCANVAS_MANIFEST: CapabilityManifest =
             onNodeHover: "Fires as the pointer enters and leaves a node; hover is not information for an agent.",
             onEdgeHover: "Fires as the pointer enters and leaves an edge; hover is not information for an agent.",
             onLayoutComplete: "Fires when a layout settles; a lifecycle signal, not information for an agent.",
+            layoutSeed: "Makes a host's tests lay out the same graph the same way each run; not a choice for an agent.",
             renderNodeTooltip: "A render hook; the built-in hover card applies instead.",
             renderEdgeTooltip: "A render hook; the built-in hover card applies instead.",
             "nodes[].properties": "An open record of extra fields; it has no schema an agent could follow.",
