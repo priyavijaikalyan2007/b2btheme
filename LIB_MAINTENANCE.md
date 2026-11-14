@@ -159,14 +159,15 @@ If the line says **"changed bytes under the same URL"** instead, stop. Go to **O
    - a **CHANGELOG line**
    - an **apps-team note**
 
-   Keep this terminal open. You need both texts in the next step.
+   You need the CHANGELOG line in the next step. Copy the apps-team note into a scratch file outside the repository. You send it in step 8, after the deploy.
 
 If it prints an error instead, nothing was changed. Look the error up in **section 11**.
 
-### Step 4. Write the two notes
+### Step 4. Write the CHANGELOG line
 
-1. Open `CHANGELOG.md`. Under `## [Unreleased]`, find `### Changed`. If it is not there, add it. Paste the CHANGELOG line under it.
-2. Create a new file in the **apps repository**, not this one: `~/Work/knobby/apps/specs/bugreports/<today>-<asset>-<old version>-deprecated.md`. Paste the apps-team note into it. An example name is `2026-11-14-cytoscape-3.26.0-deprecated.md`. The owner commits that file in the apps repository. Do not commit it yourself.
+Open `CHANGELOG.md`. Under `## [Unreleased]`, find `### Changed`. If it is not there, add it. Paste the CHANGELOG line under it.
+
+Do not send the apps-team note yet. Until the deploy, the manifest still lists the old version and the new URL returns 404. A team that followed the note now could not. Step 8 sends it.
 
 ### Step 5. Check your changes
 
@@ -208,14 +209,30 @@ Dependabot usually stops updating a pull request once someone else pushes to it.
 
 ### Step 7. Confirm it after the deploy
 
-Wait a few minutes after the merge, then do both of these.
+Wait a few minutes after the merge, then do all three of these.
 
 1. Check that the old file still serves, with its warning headers:
    ```bash
    curl -sI https://static.knobby.io/lib/cytoscape-3.26.0.js | grep -i -E "^(HTTP|deprecation|sunset|link)"
    ```
    You should see `HTTP/2 200`, a `deprecation:` line, a `sunset:` line and a `link:` line that names the new file.
-2. Open `https://static.knobby.io/docs/lib-deprecations.html` in a browser. The old version should be listed with about 60 days left.
+2. Check that the new file serves:
+   ```bash
+   curl -sI https://static.knobby.io/lib/cytoscape-3.34.4.js | grep -i -E "^HTTP"
+   ```
+   You should see `HTTP/2 200`.
+3. Open `https://static.knobby.io/docs/lib-deprecations.html` in a browser. The old version should be listed with about 60 days left.
+
+If any of these is wrong, stop and tell the owner. Do not send the apps-team note.
+
+### Step 8. Send the apps-team note
+
+Do this only after step 7 passes.
+
+1. Create a new file in the **apps repository**, not this one: `~/Work/knobby/apps/specs/bugreports/<today>-<asset>-<old version>-deprecated.md`. An example name is `2026-11-14-cytoscape-3.26.0-deprecated.md`.
+2. Paste the apps-team note from step 3 into it.
+3. Add which apps pages load the old URL, if you know. Search with the command in Operation D, step 2.
+4. The owner commits that file in the apps repository. Do not commit it yourself.
 
 ---
 
@@ -238,7 +255,7 @@ Use this when Dependabot did not open a pull request, or when you need a specifi
    npm run build:vendor
    ```
    If it says "changed bytes under the same URL" instead, go to **Operation C**.
-5. Do **Operation A, steps 3 to 5**: deprecate, write the two notes, check.
+5. Do **Operation A, steps 3 to 5**: deprecate, write the CHANGELOG line, check.
 6. Stage and commit everything, including the package files:
    ```bash
    git add package.json package-lock.json cdn/lib-versions.json cdn/lib-retained CHANGELOG.md
@@ -249,7 +266,7 @@ Use this when Dependabot did not open a pull request, or when you need a specifi
    ```bash
    gh pr create --fill
    ```
-8. Wait for green checks, merge, then do **Operation A, step 7**.
+8. Wait for green checks, merge, then do **Operation A, steps 7 and 8**: confirm the deploy, then send the apps-team note.
 
 The A2UI packages (`@a2ui/web_core`, `@a2ui/lit`, `@a2ui/react`) must always move together, to the same version.
 
@@ -362,7 +379,7 @@ cytoscape@3.26.0 [high] GHSA-xxxx-xxxx-xxxx in deprecated cytoscape 3.26.0. Reti
 1. Do **Operation D**, but skip step 2. A vulnerable file goes away even if pages still use it.
 2. In the CHANGELOG line, add the advisory and say that it was retired early. For example:
    > Retired at once for GHSA-xxxx-xxxx-xxxx.
-3. Tell the owner, and send the apps team a note naming the replacement.
+3. Tell the owner. After the deploy, send the apps team a note naming the replacement, as in Operation A, step 8.
 
 **Upgrading away from a vulnerable version.** If the **current** version has the advisory and you upgrade to a fixed one, do Operation A or B as usual. Then, on the same branch and before you commit, also run `lib:retire` for the old version. Otherwise the audit fails on the old vulnerable copy you just froze.
 
@@ -419,7 +436,7 @@ This works like an upgrade, but nothing replaces the old version. It still serve
    npm run lib:deprecate -- <asset> --reason "No longer served: <why>."
    ```
    Its replacement is "nothing", and the notices say so.
-6. Remove its row from `CDN_CONTRACT.md`. Then continue with **Operation A, steps 4 to 7**.
+6. Remove its row from `CDN_CONTRACT.md`. Then continue with **Operation A, steps 4 to 8**.
 
 ### Operation H: check the live website against the record
 
@@ -526,4 +543,4 @@ Every build publishes these. You never edit them, because they are made from the
 - Never edit `cdn/lib-versions.json` or `cdn/lib-retained/` by hand.
 - Never push past a failing check. Each one names the fix.
 - Always pin packages exactly (`--save-exact`).
-- Always add a CHANGELOG line, and an apps-team note for each deprecation.
+- Always add a CHANGELOG line for each deprecation, and send an apps-team note after its deploy.

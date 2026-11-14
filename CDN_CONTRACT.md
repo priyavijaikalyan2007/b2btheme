@@ -157,11 +157,13 @@ rule.
 | Path | Policy | Rationale |
 |---|---|---|
 | `/icons/fonts/*` | `max-age=31536000, immutable` + CORS `*` | Changes only with the bootstrap-icons package. |
+| `/icons/bootstrap-icons.css` | the default (`max-age=0, must-revalidate`) + CORS `*` | Changes in place with the bootstrap-icons package. CORS lets a page load it with `crossorigin` to read its rules, as its fonts and the icon packs already allow. |
 | `/vendor/*` | `max-age=86400, swr=604800` | Vendored libs change only on dependency upgrades. |
 | `/css/*`, `/js/*`, `/components/*` | `max-age=300, stale-while-revalidate=86400` | Parity-critical "latest": fixes reach auth.knobby.io within ~5 min, SWR keeps loads fast. |
 | `/build.json` | `no-cache` | Deploy introspection must always be fresh. |
 | `/a2ui/*`, `/schemas/*`, `/mcp/*` | `max-age=300, stale-while-revalidate=86400` + CORS `*` | Agent-protocol artefacts (§2c). Third-party tools fetch the catalog cross-origin, so CORS is open. |
 | `/icons/fluent-ui/*`, `/icons/fluent-emoji/*`, `/icons/aws/*`, `/icons/azure/*`, `/icons/gcp/*` | `max-age=86400, stale-while-revalidate=604800` + CORS `*`, `nosniff`, a `default-src 'none'` CSP | Icon packs (§2d). Unversioned paths, so never immutable; the CSP stops an SVG opened directly from running anything. |
+| Any path with no file (a 404) | `no-store` + CORS `*`, `nosniff` | A miss is never cached, so a file deployed later is found at once. These rules reach only files that exist. A path with no file is answered by [`cdn/not-found-worker.mjs`](./cdn/not-found-worker.mjs), which Cloudflare calls only when no file matches. Before it, a 404 took its path's rule, so a miss under `/lib/` was immutable for a year. |
 
 ## 4. Change protocol for the parity asset set
 
@@ -304,9 +306,10 @@ longer than `/lib/` has existed:
 <link rel="stylesheet" href="https://static.knobby.io/icons/bootstrap-icons.css">
 ```
 
-Those paths are unversioned, so they cannot carry a hash, and
-`/icons/bootstrap-icons.css` sends no CORS header. Both are also in `/lib/`,
-with hashes in the manifest: `bootstrap` (above) and `bootstrap-icons`.
+Those paths are unversioned, so they cannot carry a hash.
+`/icons/bootstrap-icons.css` sends CORS since 2026-11-14, so `crossorigin`
+on it no longer drops it. Both are also in `/lib/`, with hashes in the
+manifest: `bootstrap` (above) and `bootstrap-icons`.
 
 `bootstrap-icons` is the same release's stylesheet, copied verbatim, at
 `/lib/bootstrap-icons-1.13.1/bootstrap-icons.min.css`, with its fonts at
