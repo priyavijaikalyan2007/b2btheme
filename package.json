@@ -55,6 +55,7 @@
     "test:structure": "bash test-local.sh",
     "test:cdn": "bash test-cdn.sh",
     "test:contrast": "rm -rf coverage/contrast && npx playwright test tests/contrast-rendered.spec.ts && node scripts/contrast-report.mjs --verify",
+    "bench:canvas": "rm -rf coverage/canvas-scale && CANVAS_BENCH=1 npx playwright test tests/canvas-scale.spec.ts --workers=1",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:structure",
     "build:vendor": "node scripts/vendor-closure.mjs",
     "lib:record": "node scripts/vendor-closure.mjs --record",
