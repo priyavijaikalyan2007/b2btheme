@@ -151,7 +151,7 @@ describe("manifest field", () =>
 
         expect(licensesField({ "@scope/a": "1.0.0" }, index)).toEqual({ "@scope/a": {
             license: "(MPL-2.0 OR Apache-2.0)",
-            files: ["/licenses/@scope/a@1.0.0/LICENSE", "/licenses/@scope/a@1.0.0/LICENSE-MPL"] } });
+            files: ["/licenses/%40scope/a%401.0.0/LICENSE", "/licenses/%40scope/a%401.0.0/LICENSE-MPL"] } });
         expect(() => licensesField({ b: "1.0.0" }, index)).toThrow(/b@1\.0\.0 has no entry/);
     });
 

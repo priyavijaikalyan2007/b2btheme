@@ -41,10 +41,14 @@ export function licenseKey(name, version)
     return `${name}@${version}`;
 }
 
-/** The served path of one license file. */
+/**
+ * The served path of one license file, percent-encoded. Cloudflare answers
+ * a path with `@` in it with a 307 to its `%40` form, so the manifest gives
+ * that form, and a fetch needs no redirect.
+ */
 export function licenseUrl(key, file)
 {
-    return `/licenses/${key}/${file}`;
+    return "/licenses/" + [...key.split("/"), file].map(encodeURIComponent).join("/");
 }
 
 /**

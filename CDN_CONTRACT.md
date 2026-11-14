@@ -276,7 +276,7 @@ its `packages`:
 "licenses": {
   "dompurify": {
     "license": "(MPL-2.0 OR Apache-2.0)",
-    "files": ["/licenses/dompurify@3.4.17/LICENSE", "/licenses/dompurify@3.4.17/LICENSE-MPL"]
+    "files": ["/licenses/dompurify%403.4.17/LICENSE", "/licenses/dompurify%403.4.17/LICENSE-MPL"]
   }
 }
 ```
@@ -284,8 +284,11 @@ its `packages`:
 - `license` is the SPDX expression from that version's `package.json`.
 - `files` lists every license file the package ships, under its own name.
   DOMPurify is dual-licensed and ships two.
-- The path is `/licenses/<package>@<version>/<file>`. A scoped package keeps
-  its scope, as in `/licenses/@microsoft/signalr@8.0.0/LICENSE.txt`.
+- The path is `/licenses/<package>@<version>/<file>`, with each `@` written
+  as `%40`. A scoped package keeps its scope, as in
+  `/licenses/%40microsoft/signalr%408.0.0/LICENSE.txt`. Use the URLs in
+  `files` as they are. Cloudflare answers a path with a plain `@` with a
+  307 redirect to the `%40` form.
 - A text serves for as long as some current or deprecated asset holds that
   version. It is removed when the last one is retired.
 - `@microsoft/signalr` 8.0.0 ships no license file on npm. Its text is the
