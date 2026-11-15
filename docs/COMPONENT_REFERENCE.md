@@ -4643,8 +4643,11 @@ Universal vector canvas engine for diagramming, graph visualization, technical d
 
 ## Quick Start
 
+**Requires:** [GestureRecognizer](../gesturerecognizer/README.md). Load `gesturerecognizer.js` before `diagramengine.js`. The canvas reads its pointer events through it, and `createDiagramEngine` throws when it is missing.
+
 ```html
 <link rel="stylesheet" href="components/diagramengine/diagramengine.css">
+<script src="components/gesturerecognizer/gesturerecognizer.js"></script>
 <script src="components/diagramengine/diagramengine.js"></script>
 
 <div id="canvas" style="width: 100%; height: 600px;"></div>
@@ -4729,6 +4732,48 @@ engine.addObject({
 - **Pan** — click+drag, middle-mouse, Space+drag
 - **Zoom to fit**, zoom to selection, zoom to object
 - **Coordinate conversion** — `screenToCanvas()`, `canvasToScreen()`, `canvasToContainer()`
+
+### Input
+
+The canvas reads pointer events through GestureRecognizer, so mouse, touch and pen take one path. The gestures follow `TOUCH_EXPERIENCE.md` section 6.2.
+
+| Input | Touch | Mouse or pen |
+|---|---|---|
+| Tap or click on an object | Selects it when the finger lifts | Selects it on the press |
+| Tap or click on the background | Clears the selection | Clears the selection |
+| Double tap or double click on an object | Edits its text, or opens its embed | Edits its text, or opens its embed |
+| Drag on an object | Moves the selection | Moves the selection |
+| Drag on a handle | Resizes or rotates the object | Resizes or rotates the object |
+| Drag on the background, with the select tool | Pans the view | Draws a selection rectangle |
+| Long press, then drag, on the background | Draws a selection rectangle | Not used |
+| Two fingers | Pan and zoom at the same time. They never change an object. | Not used |
+| Middle-button drag | Not used | Pans the view, with any tool |
+| Wheel | Not used | Zooms at the pointer. #183 changes this. |
+
+- **Movement tolerance.** A move of more than 10 px for a finger, or 4 px for a mouse or a pen, starts a drag. A smaller move is a tap or a click.
+- **A second finger cancels a drag.** The object goes back to where it was, with no undo step. The two-finger gesture then starts.
+- **A cancel restores.** When the browser cancels the pointer, the drag puts back what it changed, with no undo step.
+- **A palm is ignored.** A touch while a pen is down does nothing, unless a second touch makes a two-finger gesture.
+- **The screen edge belongs to the browser.** A touch that starts within 20 px of the left or right screen edge does nothing.
+- **A drag can leave the canvas.** The canvas captures the pointer when a drag starts, so a drag released outside it still ends.
+- **Interactive embeds keep their pointer.** The canvas leaves a press inside an interactive embed alone, so the embedded component handles its own drags.
+
+**Pointer contract** (`UI_EXPERIENCE.md` section 22):
+
+- **Click:** a tap or a click selects, as in the table. `Shift`, `Ctrl` or `Cmd` with a click adds the object to the selection or removes it.
+- **Hover:** with a mouse or a pen, the hover card shows when `objectHoverCardMode` is on, and the pen tool shows its next segment. A finger has no hover.
+- **Drag:** a drag moves, resizes, rotates, draws, connects or pans, by the tool and the target.
+- **Non-drag alternative:** the arrow keys move the selection, 10 px with `Shift`. `Ctrl+A` selects all. `+`, `-` and `0` zoom. Resizing and rotating have no alternative in the canvas yet. The host can call `resizeObject` and `rotateObjectTo`.
+
+These touch behaviors are not done yet. Later changes under #184 add them:
+
+- Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
+- The view does not scroll when a drag reaches the canvas edge.
+- A long press opens no menu.
+- `Space` with a drag does not pan, although the tables below list it.
+- Handles and connection points keep their small target for a finger.
+- There is no `interactionMode` option.
+- A cancelled drag jumps back. It does not animate.
 
 ### Organisation
 
@@ -8527,6 +8572,7 @@ gestures.destroy();
 
 | Gesture | Callback | When |
 | :--- | :--- | :--- |
+| Press | `onPress` | A pointer goes down, and the recognizer follows it. Every other one-pointer callback for that pointer comes after it. Use it for the pressed state (section 10). |
 | Tap, or a click of the main button | `onTap` | The pointer goes down and up within the movement tolerance. A touch must lift before the long-press time. |
 | Double tap, or a double click | `onDoubleTap` | A second tap of the same pointer type within 300 ms and 24 px. It comes after that tap's `onTap`. A third tap starts a new pair. |
 | Long press | `onLongPress` | A touch pointer stays within the tolerance for 500 ms. No tap follows it. A mouse and a pen never long-press. |
@@ -8535,6 +8581,7 @@ gestures.destroy();
 | Cancelled drag | `onDragCancel` | A `pointercancel`, a second finger, or `cancel()`. Restore the state from before the drag (section 9, item 5). |
 | Two fingers | `onTwoFingerStart`, `onTwoFingerMove`, `onTwoFingerEnd` | Two touch pointers are down. Each report has the midpoint and the scale, so the pan and the zoom apply together (section 6.2). |
 | Cancelled two-finger gesture | `onTwoFingerCancel` | A `pointercancel` on either finger, or `cancel()`. |
+| Release | `onRelease` | The press is over, however it ended: a tap, a drag, a long press, a middle click, a cancel or a second finger. It comes last, after `onTap`, `onDoubleTap`, `onDragEnd` or `onDragCancel`. Each `onPress` has one `onRelease`. |
 
 A drag reports the `button` that went down, so a component can pan on a middle-button drag. The secondary button and the pen barrel button are left to the `contextmenu` event (section 9, item 8).
 
@@ -8565,7 +8612,7 @@ It throws when `element` is missing.
 
 ### Reports
 
-`PointerGesture` (tap, double tap, long press):
+`PointerGesture` (press, release, tap, double tap, long press):
 
 | Field | Description |
 | :--- | :--- |
@@ -8586,7 +8633,7 @@ A cancel keeps the last position. The `pointercancel` event's own position is no
 | Member | Description |
 | :--- | :--- |
 | `thresholds` | `GESTURE_THRESHOLDS`, frozen |
-| `cancel()` | Cancels the gesture in progress, with `onDragCancel` or `onTwoFingerCancel` |
+| `cancel()` | Cancels the gesture in progress, with `onDragCancel` then `onRelease`, or with `onTwoFingerCancel` |
 | `destroy()` | Removes the listeners and the timer. Safe to call more than once. |
 
 ### `GESTURE_THRESHOLDS`
