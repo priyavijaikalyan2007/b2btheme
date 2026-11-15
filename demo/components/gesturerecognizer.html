@@ -1,0 +1,215 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-GestureRecognizer
+  PURPOSE: Standalone demo page for the GestureRecognizer component. A pad
+           that names each gesture it recognizes, for a manual test on a
+           phone, a tablet and a trackpad (TOUCH_EXPERIENCE.md section 11).
+  RELATES: [[GestureRecognizer]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GestureRecognizer - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+
+    <style>
+    .gesture-demo-pad
+    {
+        position: relative;
+        height: 320px;
+        margin-top: 16px;
+        background: var(--theme-surface-bg);
+        border: 1px solid var(--theme-border-color);
+        border-radius: 2px;
+        /* An active zoomable surface handles each touch itself (section 9). */
+        touch-action: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        overflow: hidden;
+    }
+    .gesture-demo-dot
+    {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        margin: -6px 0 0 -6px;
+        border-radius: 50%;
+        background: var(--theme-primary);
+        pointer-events: none;
+    }
+    .gesture-demo-last
+    {
+        margin-top: 12px;
+        font-weight: 600;
+        color: var(--theme-text-primary);
+    }
+    .gesture-demo-log
+    {
+        max-height: 200px;
+        margin-top: 8px;
+        padding-left: 20px;
+        overflow: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.8125rem;
+        color: var(--theme-text-secondary);
+    }
+    </style>
+</head>
+<body class="demo-shell-body">
+
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            GestureRecognizer
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+
+    <main class="demo-main">
+
+        <div class="demo-section">
+            <h2>Try each gesture</h2>
+            <p class="text-muted">
+                Tap, double tap, long press, drag, or long press and then drag on the pad.
+                Put two fingers down to pan and pinch. A second finger during a drag
+                cancels the drag. With a pen, rest your palm on the pad while you draw.
+                The palm is ignored.
+            </p>
+            <div id="gesture-demo-pad" class="gesture-demo-pad" aria-describedby="gesture-demo-last"></div>
+            <div id="gesture-demo-last" class="gesture-demo-last" role="status">No gesture yet.</div>
+            <ol id="gesture-demo-log" class="gesture-demo-log" reversed></ol>
+            <button type="button" id="gesture-demo-clear" class="btn btn-sm btn-outline-secondary mt-2">
+                Clear the log
+            </button>
+        </div>
+
+        <div class="demo-section">
+            <h2>Thresholds</h2>
+            <p class="text-muted">
+                The values of <code>TOUCH_EXPERIENCE.md</code> section 7, read from the handle.
+            </p>
+            <table class="table table-sm">
+                <thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead>
+                <tbody id="gesture-demo-thresholds"></tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/gesturerecognizer/gesturerecognizer.js"></script>
+
+    <script>
+    (function()
+    {
+        "use strict";
+
+        var pad = document.getElementById("gesture-demo-pad");
+        var last = document.getElementById("gesture-demo-last");
+        var log = document.getElementById("gesture-demo-log");
+        var MAX_LOG = 50;
+
+        /** Shows a dot at a client position on the pad. */
+        function dot(x, y)
+        {
+            var rect = pad.getBoundingClientRect();
+            var d = document.createElement("div");
+
+            d.className = "gesture-demo-dot";
+            d.style.left = (x - rect.left) + "px";
+            d.style.top = (y - rect.top) + "px";
+            pad.appendChild(d);
+            setTimeout(function() { d.remove(); }, 600);
+        }
+
+        /** Names a gesture in the status line and adds it to the log. */
+        function report(text)
+        {
+            var item = document.createElement("li");
+
+            last.textContent = text;
+            item.textContent = text;
+            log.insertBefore(item, log.firstChild);
+
+            while (log.children.length > MAX_LOG) { log.lastChild.remove(); }
+        }
+
+        function where(g) { return Math.round(g.x) + ", " + Math.round(g.y); }
+
+        var gestures = createGestureRecognizer(pad, {
+            onTap: function(g) { dot(g.x, g.y); report("Tap (" + g.pointerType + ") at " + where(g)); },
+            onDoubleTap: function(g) { report("Double tap (" + g.pointerType + ")"); },
+            onLongPress: function(g) { dot(g.x, g.y); report("Long press at " + where(g)); },
+            onDragStart: function(g)
+            {
+                report("Drag start (" + g.pointerType + ", button " + g.button
+                    + (g.afterLongPress ? ", after a long press" : "") + ")");
+            },
+            onDragMove: function(g) { dot(g.x, g.y); },
+            onDragEnd: function(g) { report("Drag end at " + where(g)); },
+            onDragCancel: function() { report("Drag cancelled"); },
+            onTwoFingerStart: function() { report("Two fingers down"); },
+            onTwoFingerMove: function(g)
+            {
+                last.textContent = "Two fingers: pan " + Math.round(g.centerX - g.startCenterX)
+                    + ", " + Math.round(g.centerY - g.startCenterY) + ", zoom " + g.scale.toFixed(2);
+            },
+            onTwoFingerEnd: function(g) { report("Two fingers up, zoom " + g.scale.toFixed(2)); },
+            onTwoFingerCancel: function() { report("Two-finger gesture cancelled"); },
+        });
+
+        var rows = document.getElementById("gesture-demo-thresholds");
+
+        Object.keys(gestures.thresholds).forEach(function(name)
+        {
+            var tr = document.createElement("tr");
+            var k = document.createElement("td");
+            var v = document.createElement("td");
+
+            k.textContent = name;
+            v.textContent = String(gestures.thresholds[name]) + (/Ms$/.test(name) ? " ms" : " px");
+            tr.appendChild(k);
+            tr.appendChild(v);
+            rows.appendChild(tr);
+        });
+
+        document.getElementById("gesture-demo-clear").addEventListener("click", function()
+        {
+            log.textContent = "";
+            last.textContent = "No gesture yet.";
+        });
+    })();
+    </script>
+</body>
+</html>

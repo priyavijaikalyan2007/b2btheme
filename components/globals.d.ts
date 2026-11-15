@@ -108,6 +108,7 @@ import type { FlowLayout, createFlowLayout } from "./flowlayout/flowlayout";
 import type { FontDropdown, createFontDropdown } from "./fontdropdown/fontdropdown";
 import type { FormDialog, FormDialogOptions, createFormDialog } from "./formdialog/formdialog";
 import type { Gauge, createBarGauge, createGauge, createRingGauge, createTileGauge } from "./gauge/gauge";
+import type { createGestureRecognizer } from "./gesturerecognizer/gesturerecognizer";
 import type { GradientPicker, createGradientPicker } from "./gradientpicker/gradientpicker";
 import type { GraphCanvas, GraphCanvasOptions, createGraphCanvas } from "./graphcanvas/graphcanvas";
 import type { createGraphLegend } from "./graphlegend/graphlegend";
@@ -501,6 +502,9 @@ declare global
         createGauge?: typeof createGauge;
         createRingGauge?: typeof createRingGauge;
         createTileGauge?: typeof createTileGauge;
+
+        /** Published by the GestureRecognizer component. */
+        createGestureRecognizer?: typeof createGestureRecognizer;
 
         /** Published by the GradientPicker component. */
         createGradientPicker?: typeof createGradientPicker;
