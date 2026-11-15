@@ -121,16 +121,18 @@ describe("a click that only selects (#72)", () =>
 
     afterEach(() => { host.remove(); });
 
-    /** Presses and releases the mouse on the canvas, moving from `from` to `to`. */
+    /** Presses and releases the pointer on the canvas, moving from `from` to `to`. */
     function drag(from: [number, number], to: [number, number]): void
     {
         const svg = host.querySelector("svg")!;
-        const at = (type: string, [x, y]: [number, number]) =>
-            svg.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0 }));
+        const at = (type: string, [x, y]: [number, number]) => svg.dispatchEvent(new PointerEvent(type,
+            { bubbles: true, pointerId: 1, isPrimary: true, clientX: x, clientY: y, button: 0 }));
 
-        at("mousedown", from);
-        at("mousemove", to);
-        at("mouseup", to);
+        // jsdom has no pointer capture, which the canvas asks for on pointerdown.
+        svg.setPointerCapture = vi.fn();
+        at("pointerdown", from);
+        at("pointermove", to);
+        at("pointerup", to);
     }
 
     test("leavesTheUndoStackAndTheDirtyStateAlone_ButSelects", () =>

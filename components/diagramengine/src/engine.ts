@@ -289,6 +289,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     private defaultRenderStyle: "clean" | "sketch" = "clean";
     private activeEmbedObjectId: string | null = null;
 
+    /** Canvas position of the last pointer event, where a cancelled drag ends. */
+    private lastPointerPos: Point = { x: 0, y: 0 };
+
     /** Shared HoverCard handle (ADR-126). Lazily created when first needed. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private hoverCard: ReturnType<NonNullable<Window["createHoverCard"]>> | null = null;
@@ -3419,19 +3422,22 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     }
 
     /**
-     * Binds mouse, wheel, keyboard, and double-click events to the SVG canvas.
+     * Binds pointer, wheel, keyboard, and double-click events to the SVG
+     * canvas. Pointer events cover mouse, touch and pen with one path, so
+     * the tools see the same calls whatever the input device is (#176).
      */
     private bindCanvasEvents(): void
     {
         const svg = this.renderer.getSvgElement();
 
-        svg.addEventListener("mousedown", (e) => this.onMouseDown(e));
-        svg.addEventListener("mousemove", (e) =>
+        svg.addEventListener("pointerdown", (e) => this.onPointerDown(e));
+        svg.addEventListener("pointermove", (e) =>
         {
-            logTrace("mousemove handler:", { x: e.clientX, y: e.clientY });
-            this.onMouseMove(e);
+            logTrace("pointermove handler:", { x: e.clientX, y: e.clientY, type: e.pointerType });
+            this.onPointerMove(e);
         });
-        svg.addEventListener("mouseup", (e) => this.onMouseUp(e));
+        svg.addEventListener("pointerup", (e) => this.onPointerUp(e));
+        svg.addEventListener("pointercancel", (e) => this.onPointerCancel(e));
         svg.addEventListener("wheel", (e) =>
         {
             logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
@@ -3494,16 +3500,38 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     // ========================================================================
 
     /**
-     * Handles mousedown on the canvas. Exits embed interactive mode
-     * when clicking outside. Dispatches to the active tool.
+     * Handles pointerdown on the canvas. Exits embed interactive mode
+     * when pressing outside. Dispatches to the active tool.
      * Middle-click activates the pan tool temporarily.
+     *
+     * Only the primary pointer drives the tools. Each tool tracks one
+     * drag, so a second finger would restart the first finger's drag.
+     *
+     * The canvas captures the pointer, so a drag that leaves the canvas
+     * still ends here. An interactive embed keeps its own pointer: it
+     * handles its drags, such as a slider, and capture would take them.
      */
-    private onMouseDown(e: MouseEvent): void
+    private onPointerDown(e: PointerEvent): void
     {
+        if (!e.isPrimary)
+        {
+            logDebug("pointerdown ignored, not the primary pointer:", e.pointerType);
+            return;
+        }
+
         this.endInlineTextEdit();
         this.exitEmbedOnClickOutside(e);
 
+        // exitEmbedOnClickOutside cleared the active embed unless the
+        // press is inside it.
+        if (!this.activeEmbedObjectId)
+        {
+            this.renderer.getSvgElement().setPointerCapture(e.pointerId);
+        }
+
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
+
+        this.lastPointerPos = pos;
 
         if (e.button === 1)
         {
@@ -3518,9 +3546,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      * embed object. Checks whether the click target is inside the
      * embed container for the currently interactive embed.
      *
-     * @param e - The mousedown event.
+     * @param e - The pointerdown event.
      */
-    private exitEmbedOnClickOutside(e: MouseEvent): void
+    private exitEmbedOnClickOutside(e: PointerEvent): void
     {
         if (!this.activeEmbedObjectId)
         {
@@ -3538,16 +3566,50 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         }
     }
 
-    private onMouseMove(e: MouseEvent): void
+    private onPointerMove(e: PointerEvent): void
     {
+        if (!e.isPrimary)
+        {
+            return;
+        }
+
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
+
+        this.lastPointerPos = pos;
         this.toolManager.dispatchMouseMove(e, pos);
         this.updateHoverCard(pos);
     }
 
-    private onMouseUp(e: MouseEvent): void
+    private onPointerUp(e: PointerEvent): void
     {
-        const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
+        if (!e.isPrimary)
+        {
+            return;
+        }
+
+        this.endPointer(e, this.renderer.screenToCanvas(e.clientX, e.clientY));
+    }
+
+    /**
+     * The browser took the pointer, such as for a system gesture. The
+     * tool ends its drag as on pointerup, so no drag is left open. It
+     * ends at the last position seen, because a cancel event does not
+     * carry one the tools can use.
+     */
+    private onPointerCancel(e: PointerEvent): void
+    {
+        if (!e.isPrimary)
+        {
+            return;
+        }
+
+        logDebug("pointercancel:", e.pointerType);
+        this.endPointer(e, this.lastPointerPos);
+    }
+
+    /** Ends the active tool's drag at a canvas position. */
+    private endPointer(e: PointerEvent, pos: Point): void
+    {
         this.toolManager.dispatchMouseUp(e, pos);
 
         if (e.button === 1)
