@@ -4770,6 +4770,7 @@ These touch behaviors are not done yet. Later changes under #184 add them:
 - Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
 - The view does not scroll when a drag reaches the canvas edge.
 - A long press opens no menu.
+- A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
 - `Space` with a drag does not pan, although the tables below list it.
 - Handles and connection points keep their small target for a finger.
 - There is no `interactionMode` option.
