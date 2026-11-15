@@ -1828,3 +1828,7 @@
   definition: "A saved or scripted playground session (agentdemo/scenarios/<name>.jsonl, ADR-221): a header line with provenance live or scripted (a live one names provider, model and date) and media gif or video, then a2ui, user, say, finding, action and error lines. <name>.director.json holds the click, fill and select gestures for each action line. tests/a2ui/replay.ts replays it in CI and asserts every emitted action equals the recorded one; agentdemo/record/ records it and encodes a GIF for docs or an MP4 for the CDN (20 MB budget)."
   anchor_file: "tests/a2ui/replay.ts"
   related: ["A2uiPlayground", "A2uiHarness"]
+- name: "GestureRecognizer"
+  definition: "The shared gesture recognizer of TOUCH_EXPERIENCE.md (section 9 item 3, #182). createGestureRecognizer(element, callbacks) reads one element's pointer events and reports onTap, onDoubleTap, onLongPress (touch only, 500 ms), onDragStart/Move/End/Cancel (afterLongPress flag, button) and onTwoFingerStart/Move/End/Cancel (midpoint and scale together). It owns GESTURE_THRESHOLDS (section 7) and the only long-press timer. A second finger cancels a one-finger drag; a touch while a pen or mouse is down is ignored; pointercancel cancels; touches in the 20 px edge zone start nothing; capture on drag start. It sets no touch-action and reads no wheel. Not UI: NOT_MOUNTABLE and NO_MANIFEST."
+  anchor_file: "components/gesturerecognizer/gesturerecognizer.ts"
+  related: ["PointerGestureRegistry", "DiagramEngine"]

@@ -103,6 +103,11 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
     logutility:
         "Logging service. Returns a logger, not a rendered surface.",
 
+    gesturerecognizer:
+        "Input service (#182). createGestureRecognizer(element, callbacks) "
+        + "reads the pointer events of an element that another component "
+        + "owns. It renders nothing, so there is nothing for a canvas to mount.",
+
     typebadge:
         "Element builder. createTypeBadge(options) returns an HTMLElement for "
         + "the caller to place; there is no handle and nothing to destroy.",

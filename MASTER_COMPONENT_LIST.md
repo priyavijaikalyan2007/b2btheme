@@ -899,6 +899,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases:** Right-click actions on rows, nodes and files, overflow menus, canvas actions.
 
+## 12.11✅Gesture Recognizer (Touch, Mouse and Pen)
+
+**Description**: The shared gesture recognizer of `TOUCH_EXPERIENCE.md`. It reads the pointer events of one element and reports a tap, a double tap, a long press, a drag, a long press then a drag, and a two-finger gesture that pans and zooms together. It owns the thresholds of section 7 and the only long-press timer, so no component defines its own. A second finger during a drag cancels the drag. A touch while a pen is down is ignored. A `pointercancel` cancels the gesture. It renders nothing. See `components/gesturerecognizer/` (#182).
+
+**References**: iPadOS and macOS trackpad gestures, Visio and Figma canvas input, Hammer.js.
+
+**Use Cases:** Canvas input in DiagramEngine, GraphCanvas, SpineMap and Timeline, and long press for context menus in any component.
+
 # 13\. Filtering, Search & Tagging
 
 ## 13.1 Facet Filter Sidebar
@@ -3811,6 +3819,7 @@ convention (ADR-146, D5).
 | 12.8 | HelpTooltip (Contextual Help Icon) | UX | DONE |
 | 12.9 | HoverCard (Informational Hover Preview) | UX | DONE |
 | 12.10 | Context Menu | UX & Onboarding | DONE |
+| 12.11 | Gesture Recognizer (Touch, Mouse and Pen) | UX | DONE |
 | 13.1 | Facet Filter Sidebar | Filtering | NEW |
 | 13.2 | Facet-Aware Search Bar | Filtering | DONE |
 | 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |

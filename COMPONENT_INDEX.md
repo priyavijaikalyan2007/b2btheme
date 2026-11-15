@@ -2,7 +2,7 @@
 
 # Component Index
 
-126 implemented components. Use this file for quick lookup; see each component's README for full API details.
+127 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -174,6 +174,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | feedback | A rating (thumbs or stars), an optional comment and problem reports for anything a page shows: an AI result, a docume... | `createFeedback()`, `showFeedbackDialog()` | [README](components/feedback/README.md) |
 | fontdropdown | A dropdown where each font name renders in its own typeface, similar to the font picker in Google Docs. | `createFontDropdown()` | [README](components/fontdropdown/README.md) |
 | formdialog | A modal dialog optimized for form-based workflows (create, edit, invite, assign). | `createFormDialog()` | [README](components/formdialog/README.md) |
+| gesturerecognizer | The shared gesture recognizer that `TOUCH_EXPERIENCE.md` requires (section 9, item 3, and section 13, item 1). | `createGestureRecognizer()` | [README](components/gesturerecognizer/README.md) |
 | graphcanvas | Interactive SVG graph visualization with multiple layout algorithms, zoom/pan, selection, edge creation, keyboard sho... | `createGraphCanvas()` | [README](components/graphcanvas/README.md) |
 | graphlegend | Collapsible legend panel showing color/icon/shape key for graph node types and edge types. | `createGraphLegend()` | [README](components/graphlegend/README.md) |
 | graphminimap | A small, always-visible overview widget that shows a miniaturised view of the entire graph canvas. | `createGraphMinimap()` | [README](components/graphminimap/README.md) |
