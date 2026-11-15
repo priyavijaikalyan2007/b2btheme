@@ -769,16 +769,13 @@ describe("DiagramEngine — Stencils", () =>
         engine.setActiveTool("draw");
 
         const svg = container.querySelector("svg")!;
+        const pointer = { bubbles: true, pointerId: 1, isPrimary: true, button: 0 };
 
-        svg.dispatchEvent(new MouseEvent("mousedown", {
-            bubbles: true, clientX: 20, clientY: 20, button: 0,
-        }));
-        svg.dispatchEvent(new MouseEvent("mousemove", {
-            bubbles: true, clientX: 120, clientY: 90, button: 0,
-        }));
-        svg.dispatchEvent(new MouseEvent("mouseup", {
-            bubbles: true, clientX: 120, clientY: 90, button: 0,
-        }));
+        // jsdom has no pointer capture, which the canvas asks for on pointerdown.
+        svg.setPointerCapture = vi.fn();
+        svg.dispatchEvent(new PointerEvent("pointerdown", { ...pointer, clientX: 20, clientY: 20 }));
+        svg.dispatchEvent(new PointerEvent("pointermove", { ...pointer, clientX: 120, clientY: 90 }));
+        svg.dispatchEvent(new PointerEvent("pointerup", { ...pointer, clientX: 120, clientY: 90 }));
 
         const drawn = engine.getObjects();
 

@@ -26,10 +26,12 @@ function setupContainer(): HTMLDivElement
     return el;
 }
 
-function dispatchMouseMove(svg: SVGElement, x: number, y: number): void
+function dispatchPointerMove(svg: SVGElement, x: number, y: number): void
 {
-    svg.dispatchEvent(new MouseEvent("mousemove", {
+    svg.dispatchEvent(new PointerEvent("pointermove", {
         bubbles: true,
+        pointerId: 1,
+        isPrimary: true,
         clientX: x,
         clientY: y,
     }));
@@ -63,7 +65,7 @@ describe("DiagramEngine hover card — default mode is 'off'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         expect(document.querySelector(".hovercard")).toBeNull();
@@ -91,7 +93,7 @@ describe("DiagramEngine hover card — objectHoverCardMode: 'builtin'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         const card = document.querySelector(".hovercard");
@@ -118,11 +120,11 @@ describe("DiagramEngine hover card — objectHoverCardMode: 'builtin'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
         expect(document.querySelector(".hovercard-open")).not.toBeNull();
 
-        dispatchMouseMove(svg, 600, 500);
+        dispatchPointerMove(svg, 600, 500);
         vi.advanceTimersByTime(200);
         expect(document.querySelector(".hovercard-open")).toBeNull();
 
@@ -146,7 +148,7 @@ describe("DiagramEngine hover card — objectHoverCardMode: 'custom'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         expect(document.querySelector(".hovercard-title")?.textContent)
@@ -170,7 +172,7 @@ describe("DiagramEngine hover card — objectHoverCardMode: 'custom'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         expect(document.querySelector(".hovercard-open")).toBeNull();
@@ -191,7 +193,7 @@ describe("DiagramEngine hover card — objectHoverCardMode: 'custom'", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         const plain = document.querySelector<HTMLElement>(".hovercard-body-plain");
@@ -217,7 +219,7 @@ describe("DiagramEngine hover card — tool-state suppression", () =>
         engine.setActiveTool("draw");
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
 
         expect(document.querySelector(".hovercard-open")).toBeNull();
@@ -225,7 +227,7 @@ describe("DiagramEngine hover card — tool-state suppression", () =>
         engine.destroy();
     });
 
-    test("no card during an active drag; card reappears after mouseup", () =>
+    test("no card during an active drag; card reappears after pointerup", () =>
     {
         vi.useFakeTimers();
         const engine = createDiagramEngine(container, {
@@ -237,21 +239,23 @@ describe("DiagramEngine hover card — tool-state suppression", () =>
         });
         const svg = container.querySelector("svg")!;
 
+        // jsdom has no pointer capture, which the canvas asks for on pointerdown.
+        svg.setPointerCapture = vi.fn();
         // Start a drag by pressing on the object (select tool starts "move").
-        svg.dispatchEvent(new MouseEvent("mousedown", {
-            bubbles: true, clientX: 200, clientY: 150, button: 0,
+        svg.dispatchEvent(new PointerEvent("pointerdown", {
+            bubbles: true, pointerId: 1, isPrimary: true, clientX: 200, clientY: 150, button: 0,
         }));
         // Move while dragging — isInteracting() === true should suppress.
-        dispatchMouseMove(svg, 240, 160);
+        dispatchPointerMove(svg, 240, 160);
         vi.advanceTimersByTime(400);
         expect(document.querySelector(".hovercard-open")).toBeNull();
 
         // Release the drag.
-        svg.dispatchEvent(new MouseEvent("mouseup", {
-            bubbles: true, clientX: 240, clientY: 160, button: 0,
+        svg.dispatchEvent(new PointerEvent("pointerup", {
+            bubbles: true, pointerId: 1, isPrimary: true, clientX: 240, clientY: 160, button: 0,
         }));
-        // Next mousemove is no longer mid-interaction → card should appear.
-        dispatchMouseMove(svg, 240, 160);
+        // Next pointermove is no longer mid-interaction → card should appear.
+        dispatchPointerMove(svg, 240, 160);
         vi.advanceTimersByTime(400);
         expect(document.querySelector(".hovercard-open")).not.toBeNull();
 
@@ -277,7 +281,7 @@ describe("DiagramEngine hover card — resilience", () =>
 
         expect(() =>
         {
-            dispatchMouseMove(svg, 200, 150);
+            dispatchPointerMove(svg, 200, 150);
             vi.advanceTimersByTime(400);
         }).not.toThrow();
         expect(document.querySelector(".hovercard")).toBeNull();
@@ -297,7 +301,7 @@ describe("DiagramEngine hover card — resilience", () =>
         });
         const svg = container.querySelector("svg")!;
 
-        dispatchMouseMove(svg, 200, 150);
+        dispatchPointerMove(svg, 200, 150);
         vi.advanceTimersByTime(400);
         expect(document.querySelector(".hovercard")).not.toBeNull();
 

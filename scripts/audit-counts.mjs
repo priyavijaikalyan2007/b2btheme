@@ -723,7 +723,9 @@ export const BASELINES = {
     // setData("document"), three channels on on(), getState/setState and a coalesced change report) is new
     // public API in src/engine.ts, and the bundle carries it.
     // #72 (2026-10-30): 30857 -> 30876, the select tool records a move only when something moved.
-    diagramengineLines: 30876,
+    // #176 step 2 (2026-11-14): 30876 -> 30943, the canvas takes pointer events: capture, the primary
+    // pointer only, pointercancel, and the comments on why an interactive embed is not captured.
+    diagramengineLines: 30943,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

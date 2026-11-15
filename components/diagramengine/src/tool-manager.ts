@@ -22,6 +22,11 @@
 /**
  * Interface that all canvas tools must implement.
  * Tools are state machines — only one is active at a time.
+ *
+ * The engine listens for pointer events, so mouse, touch and pen all
+ * reach the onMouse* methods. Each `e` is a PointerEvent at run time.
+ * The methods keep their names and their MouseEvent type, which a
+ * PointerEvent extends, so tools written for mouse events still work.
  */
 export interface Tool
 {
