@@ -63,6 +63,7 @@ const BENCH_HTML = `<!doctype html>
 #host { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; }</style>
 </head><body><div id="host"></div>
 <script src="/components/graphcanvas/graphcanvas.js"></script>
+<script src="/components/gesturerecognizer/gesturerecognizer.js"></script>
 <script src="/components/diagramengine/diagramengine.js"></script>
 </body></html>`;
 

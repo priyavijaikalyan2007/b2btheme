@@ -153,6 +153,16 @@ export class MeasureTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the preview. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
+    }
+
+    /**
      * Handles key-down: Escape switches back to select tool.
      *
      * @param e - The originating keyboard event.

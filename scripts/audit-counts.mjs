@@ -725,7 +725,9 @@ export const BASELINES = {
     // #72 (2026-10-30): 30857 -> 30876, the select tool records a move only when something moved.
     // #176 step 2 (2026-11-14): 30876 -> 30943, the canvas takes pointer events: capture, the primary
     // pointer only, pointercancel, and the comments on why an interactive embed is not captured.
-    diagramengineLines: 30943,
+    // #184 (2026-11-15): 30943 -> 31284, the canvas reads its input through GestureRecognizer: the press, tap,
+    // drag, pinch and hover handlers, and an onCancel on each of the ten tools that restores a cancelled drag.
+    diagramengineLines: 31284,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

@@ -36,6 +36,7 @@ gestures.destroy();
 
 | Gesture | Callback | When |
 | :--- | :--- | :--- |
+| Press | `onPress` | A pointer goes down, and the recognizer follows it. Every other one-pointer callback for that pointer comes after it. Use it for the pressed state (section 10). |
 | Tap, or a click of the main button | `onTap` | The pointer goes down and up within the movement tolerance. A touch must lift before the long-press time. |
 | Double tap, or a double click | `onDoubleTap` | A second tap of the same pointer type within 300 ms and 24 px. It comes after that tap's `onTap`. A third tap starts a new pair. |
 | Long press | `onLongPress` | A touch pointer stays within the tolerance for 500 ms. No tap follows it. A mouse and a pen never long-press. |
@@ -44,6 +45,7 @@ gestures.destroy();
 | Cancelled drag | `onDragCancel` | A `pointercancel`, a second finger, or `cancel()`. Restore the state from before the drag (section 9, item 5). |
 | Two fingers | `onTwoFingerStart`, `onTwoFingerMove`, `onTwoFingerEnd` | Two touch pointers are down. Each report has the midpoint and the scale, so the pan and the zoom apply together (section 6.2). |
 | Cancelled two-finger gesture | `onTwoFingerCancel` | A `pointercancel` on either finger, or `cancel()`. |
+| Release | `onRelease` | The press is over, however it ended: a tap, a drag, a long press, a middle click, a cancel or a second finger. It comes last, after `onTap`, `onDoubleTap`, `onDragEnd` or `onDragCancel`. Each `onPress` has one `onRelease`. |
 
 A drag reports the `button` that went down, so a component can pan on a middle-button drag. The secondary button and the pen barrel button are left to the `contextmenu` event (section 9, item 8).
 
@@ -74,7 +76,7 @@ It throws when `element` is missing.
 
 ### Reports
 
-`PointerGesture` (tap, double tap, long press):
+`PointerGesture` (press, release, tap, double tap, long press):
 
 | Field | Description |
 | :--- | :--- |
@@ -95,7 +97,7 @@ A cancel keeps the last position. The `pointercancel` event's own position is no
 | Member | Description |
 | :--- | :--- |
 | `thresholds` | `GESTURE_THRESHOLDS`, frozen |
-| `cancel()` | Cancels the gesture in progress, with `onDragCancel` or `onTwoFingerCancel` |
+| `cancel()` | Cancels the gesture in progress, with `onDragCancel` then `onRelease`, or with `onTwoFingerCancel` |
 | `destroy()` | Removes the listeners and the timer. Safe to call more than once. |
 
 ### `GESTURE_THRESHOLDS`

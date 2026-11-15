@@ -316,6 +316,55 @@ export class SelectTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Put back what the drag moved,
+     * resized or rotated, and drop a rubber band without selecting.
+     * The selection that the press made stays.
+     */
+    public onCancel(): void
+    {
+        if (this.dragMode === "move")
+        {
+            for (const [id, start] of this.startBounds)
+            {
+                this.engine.moveObjectTo(id, { x: start.x, y: start.y });
+            }
+        }
+        else if (this.dragMode === "resize")
+        {
+            this.engine.resizeObject(this.targetObjectId, this.targetStartBounds);
+        }
+        else if (this.dragMode === "rotate")
+        {
+            this.engine.rotateObjectTo(this.targetObjectId, this.targetStartRotation);
+        }
+
+        this.engine.clearToolOverlay();
+        this.resetDragState();
+    }
+
+    /**
+     * Whether a press here would act on something: a handle, an object or
+     * a connector. A touch drag that starts elsewhere pans the view
+     * (TOUCH_EXPERIENCE.md rule 2).
+     *
+     * @param canvasPos - Position in canvas coordinate space.
+     * @returns true when the press would not start a rubber band.
+     */
+    public hitsTarget(canvasPos: Point): boolean
+    {
+        for (const obj of this.engine.getSelectedObjects())
+        {
+            if (this.hitTestHandles(canvasPos, obj) || this.hitTestRotationHandle(canvasPos, obj))
+            {
+                return true;
+            }
+        }
+
+        return this.engine.hitTestObject(canvasPos) !== null
+            || this.engine.hitTestConnector(canvasPos) !== null;
+    }
+
+    /**
      * Handle key-down: arrow nudge, delete, select-all, escape.
      *
      * @param e - The originating keyboard event.

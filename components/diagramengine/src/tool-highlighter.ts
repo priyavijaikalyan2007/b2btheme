@@ -197,6 +197,16 @@ export class HighlighterTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the stroke. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+    }
+
+    /**
      * Handles key-down: Escape cancels and returns to select tool.
      *
      * @param e - The originating keyboard event.

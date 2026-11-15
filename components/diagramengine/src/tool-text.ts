@@ -114,6 +114,15 @@ export class TextTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. A text object is placed on the
+     * press, as a click, so no drag is left to undo.
+     */
+    public onCancel(): void
+    {
+        // Nothing is in progress.
+    }
+
+    /**
      * Handle key-down: Escape switches back to the select tool.
      *
      * @param e - The originating keyboard event.

@@ -625,3 +625,120 @@ describe("cancel and lifecycle", () =>
         expect((errors[0] as Error).message).toBe("boom");
     });
 });
+
+// ============================================================================
+// PRESS AND RELEASE
+// ============================================================================
+
+describe("press and release", () =>
+{
+    /** The default recognizer, with onPress and onRelease recorded as well. */
+    function recognizeWithPress(): void
+    {
+        handle.destroy();
+        handle = recognize({
+            onPress: (g) => { calls.push("onPress"); last.onPress = g; },
+            onRelease: (g) => { calls.push("onRelease"); last.onRelease = g; },
+        });
+    }
+
+    beforeEach(recognizeWithPress);
+
+    test("aTap_IsPress_Tap_Release", () =>
+    {
+        fire("pointerdown", 100, 100);
+
+        expect(calls).toEqual(["onPress"]);
+        expect(last.onPress).toMatchObject({ pointerType: "touch", x: 100, y: 100, button: 0 });
+
+        fire("pointerup", 100, 100);
+
+        expect(calls).toEqual(["onPress", "onTap", "onRelease"]);
+    });
+
+    test("aDoubleTap_ReleasesAfterTheDoubleTap", () =>
+    {
+        fire("pointerdown", 100, 100);
+        fire("pointerup", 100, 100);
+        fire("pointerdown", 102, 101);
+        fire("pointerup", 102, 101);
+
+        expect(calls).toEqual(["onPress", "onTap", "onRelease", "onPress", "onTap", "onDoubleTap", "onRelease"]);
+    });
+
+    test("aDrag_ReleasesAfterTheDragEnd", () =>
+    {
+        fire("pointerdown", 100, 100);
+        fire("pointermove", 140, 100);
+        fire("pointerup", 140, 100);
+
+        expect(calls).toEqual(["onPress", "onDragStart", "onDragMove", "onDragEnd", "onRelease"]);
+        expect(last.onRelease).toMatchObject({ x: 140, y: 100, startX: 100 });
+    });
+
+    test("aLongPress_ThenALift_Releases", () =>
+    {
+        fire("pointerdown", 100, 100);
+        vi.advanceTimersByTime(GESTURE_THRESHOLDS.longPressMs);
+        fire("pointerup", 100, 100);
+
+        expect(calls).toEqual(["onPress", "onLongPress", "onRelease"]);
+    });
+
+    test("aMiddleClick_WithNoDrag_Releases_AndIsNoTap", () =>
+    {
+        fire("pointerdown", 100, 100, { pointerType: "mouse", button: 1 });
+        fire("pointerup", 100, 100, { pointerType: "mouse", button: 1 });
+
+        expect(calls).toEqual(["onPress", "onRelease"]);
+    });
+
+    test("pointercancel_BeforeADrag_Releases_WithNoCancel", () =>
+    {
+        fire("pointerdown", 100, 100);
+        fire("pointercancel", 0, 0);
+
+        expect(calls).toEqual(["onPress", "onRelease"]);
+    });
+
+    test("pointercancel_DuringADrag_ReleasesAfterTheCancel", () =>
+    {
+        fire("pointerdown", 100, 100);
+        fire("pointermove", 140, 100);
+        fire("pointercancel", 0, 0);
+
+        expect(calls).toEqual(["onPress", "onDragStart", "onDragMove", "onDragCancel", "onRelease"]);
+    });
+
+    test("aSecondFinger_ReleasesTheFirst_BeforeTheTwoFingerStart", () =>
+    {
+        fire("pointerdown", 100, 100);
+        fire("pointerdown", 200, 100, { pointerId: 2, isPrimary: false });
+
+        expect(calls).toEqual(["onPress", "onRelease", "onTwoFingerStart"]);
+    });
+
+    test("aPalm_WhileAPenIsDown_PressesNothing", () =>
+    {
+        fire("pointerdown", 100, 100, { pointerType: "pen" });
+        fire("pointerdown", 300, 300, { pointerId: 2 });
+
+        expect(calls).toEqual(["onPress"]);
+    });
+
+    test("aLostPointerup_ReleasesTheOldPress_BeforeTheNewOne", () =>
+    {
+        fire("pointerdown", 100, 100, { pointerType: "mouse" });
+        fire("pointerdown", 200, 200, { pointerType: "mouse" });
+
+        expect(calls).toEqual(["onPress", "onRelease", "onPress"]);
+    });
+
+    test("cancel_ReleasesThePress", () =>
+    {
+        fire("pointerdown", 100, 100);
+        handle.cancel();
+
+        expect(calls).toEqual(["onPress", "onRelease"]);
+    });
+});

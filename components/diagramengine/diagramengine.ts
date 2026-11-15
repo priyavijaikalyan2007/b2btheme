@@ -19130,6 +19130,55 @@ export class SelectTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Put back what the drag moved,
+     * resized or rotated, and drop a rubber band without selecting.
+     * The selection that the press made stays.
+     */
+    public onCancel(): void
+    {
+        if (this.dragMode === "move")
+        {
+            for (const [id, start] of this.startBounds)
+            {
+                this.engine.moveObjectTo(id, { x: start.x, y: start.y });
+            }
+        }
+        else if (this.dragMode === "resize")
+        {
+            this.engine.resizeObject(this.targetObjectId, this.targetStartBounds);
+        }
+        else if (this.dragMode === "rotate")
+        {
+            this.engine.rotateObjectTo(this.targetObjectId, this.targetStartRotation);
+        }
+
+        this.engine.clearToolOverlay();
+        this.resetDragState();
+    }
+
+    /**
+     * Whether a press here would act on something: a handle, an object or
+     * a connector. A touch drag that starts elsewhere pans the view
+     * (TOUCH_EXPERIENCE.md rule 2).
+     *
+     * @param canvasPos - Position in canvas coordinate space.
+     * @returns true when the press would not start a rubber band.
+     */
+    public hitsTarget(canvasPos: Point): boolean
+    {
+        for (const obj of this.engine.getSelectedObjects())
+        {
+            if (this.hitTestHandles(canvasPos, obj) || this.hitTestRotationHandle(canvasPos, obj))
+            {
+                return true;
+            }
+        }
+
+        return this.engine.hitTestObject(canvasPos) !== null
+            || this.engine.hitTestConnector(canvasPos) !== null;
+    }
+
+    /**
      * Handle key-down: arrow nudge, delete, select-all, escape.
      *
      * @param e - The originating keyboard event.
@@ -20052,6 +20101,17 @@ export class PanTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. The view stays where the pan
+     * took it.
+     */
+    public onCancel(): void
+    {
+        this.dragging = false;
+
+        this.restorePreviousTool();
+    }
+
+    /**
      * No keyboard handling for the pan tool.
      *
      * @param e - The originating keyboard event.
@@ -20343,6 +20403,16 @@ export class DrawTool implements Tool
             this.placeByClick(canvasPos);
         }
 
+        this.resetState();
+    }
+
+    /**
+     * The press stopped without a lift. Drop the preview and place
+     * nothing. The tool stays active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
         this.resetState();
     }
 
@@ -20661,6 +20731,15 @@ export class TextTool implements Tool
     public onMouseUp(_e: MouseEvent, _canvasPos: Point): void
     {
         // Text tool completes placement on mouse-down.
+    }
+
+    /**
+     * The press stopped without a lift. A text object is placed on the
+     * press, as a click, so no drag is left to undo.
+     */
+    public onCancel(): void
+    {
+        // Nothing is in progress.
     }
 
     /**
@@ -21059,6 +21138,16 @@ export class ConnectorTool implements Tool
         const targetPortId = this.findNearestPort(targetObj, canvasPos);
 
         this.createConnector(this.sourceObj, this.sourcePortId, targetObj, targetPortId);
+    }
+
+    /**
+     * The press stopped without a lift. Drop the preview. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
     }
 
     /**
@@ -21659,6 +21748,15 @@ export class PenTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. An anchor is placed on the press,
+     * as a click, so no drag is left to undo. The path so far stays.
+     */
+    public onCancel(): void
+    {
+        // Nothing is in progress beyond the anchors already placed.
+    }
+
+    /**
      * Handles key-down: Enter finalises the path, Escape cancels
      * and discards any points placed so far.
      *
@@ -22225,6 +22323,16 @@ export class BrushTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the stroke. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+    }
+
+    /**
      * Handles key-down: Escape cancels and returns to select tool.
      *
      * @param e - The originating keyboard event.
@@ -22746,6 +22854,20 @@ export class PaintbrushTool implements Tool
         }
 
         this.commitStroke();
+    }
+
+    /**
+     * The press stopped without a lift. Put the canvas back as it was
+     * before the stroke, and push no undo step.
+     */
+    public onCancel(): void
+    {
+        if (this.painting && this.activeObjectId)
+        {
+            this.restoreCanvasData(this.activeObjectId, this.beforeData);
+        }
+
+        this.resetState();
     }
 
     /**
@@ -23330,6 +23452,16 @@ export class HighlighterTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the stroke. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.resetState();
+        this.engine.clearToolOverlay();
+    }
+
+    /**
      * Handles key-down: Escape cancels and returns to select tool.
      *
      * @param e - The originating keyboard event.
@@ -23812,6 +23944,16 @@ export class MeasureTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the preview. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
+    }
+
+    /**
      * Handles key-down: Escape switches back to select tool.
      *
      * @param e - The originating keyboard event.
@@ -24027,6 +24169,14 @@ export interface Tool
     onMouseUp(e: MouseEvent, canvasPos: Point): void;
 
     /**
+     * The press stops without a lift: a `pointercancel`, a second finger,
+     * or a press the engine abandons. Undo what the press has done so far
+     * and push no undo step (TOUCH_EXPERIENCE.md section 9, item 5).
+     * No `onMouseUp` follows.
+     */
+    onCancel(): void;
+
+    /**
      * Handle keyboard events.
      *
      * @param e - The originating keyboard event.
@@ -24186,6 +24336,14 @@ export class ToolManager
     public dispatchMouseUp(e: MouseEvent, pos: Point): void
     {
         this.getActive()?.onMouseUp(e, pos);
+    }
+
+    /**
+     * Tell the active tool that its press stopped without a lift.
+     */
+    public dispatchCancel(): void
+    {
+        this.getActive()?.onCancel();
     }
 
     /**
@@ -25550,6 +25708,57 @@ function safeCallback<T extends unknown[]>(
 }
 
 // ============================================================================
+// GESTURES
+// ============================================================================
+
+// GestureRecognizer is its own component (#182), so its types come from
+// the window global rather than an import, which the bundle would strip.
+type GestureFactory = NonNullable<Window["createGestureRecognizer"]>;
+type Gestures = ReturnType<GestureFactory>;
+type GestureOptions = Parameters<GestureFactory>[1];
+type PointerReport = Parameters<NonNullable<GestureOptions["onTap"]>>[0];
+type DragReport = Parameters<NonNullable<GestureOptions["onDragStart"]>>[0];
+type TwoFingerReport = Parameters<NonNullable<GestureOptions["onTwoFingerStart"]>>[0];
+
+/**
+ * Returns the GestureRecognizer factory, which the canvas reads its
+ * pointer events through.
+ *
+ * @returns window.createGestureRecognizer.
+ * @throws When gesturerecognizer.js is not loaded.
+ */
+function requireGestureRecognizer(): GestureFactory
+{
+    if (typeof window.createGestureRecognizer !== "function")
+    {
+        throw new Error(`${LOG_PREFIX} DiagramEngine needs GestureRecognizer. Load `
+            + "components/gesturerecognizer/gesturerecognizer.js before diagramengine.js.");
+    }
+
+    return window.createGestureRecognizer;
+}
+
+/**
+ * A pointerdown where a gesture started, for a tool that gets the press
+ * only once a finger taps or drags. It carries the modifier keys of the
+ * gesture's latest event.
+ *
+ * @param g - The tap or the drag.
+ * @returns A pointerdown at the gesture's start.
+ */
+function pressEventAt(g: PointerReport): PointerEvent
+{
+    const e = g.event;
+
+    return new PointerEvent("pointerdown", {
+        pointerId: e.pointerId, pointerType: e.pointerType, isPrimary: true,
+        button: g.button, buttons: 1, clientX: g.startX, clientY: g.startY,
+        shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey,
+        pressure: e.pressure,
+    });
+}
+
+// ============================================================================
 // ENGINE IMPLEMENTATION
 // ============================================================================
 
@@ -25767,8 +25976,23 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     private defaultRenderStyle: "clean" | "sketch" = "clean";
     private activeEmbedObjectId: string | null = null;
 
-    /** Canvas position of the last pointer event, where a cancelled drag ends. */
-    private lastPointerPos: Point = { x: 0, y: 0 };
+    /** Reads the canvas's pointer events as gestures (TOUCH_EXPERIENCE.md, #184). */
+    private readonly gestures: Gestures;
+
+    /** Whether the active tool has a press that has not lifted or cancelled. */
+    private toolPressed = false;
+
+    /** Whether a press or a two-finger gesture is in progress. Hover waits for it. */
+    private pointerBusy = false;
+
+    /** Where a one-finger pan of the view last moved to, in screen pixels. */
+    private viewPan: Point | null = null;
+
+    /** The two-finger gesture's scale and center at its last move. */
+    private pinch: { scale: number; x: number; y: number } | null = null;
+
+    /** Whether a middle-button press switched to the pan tool. */
+    private middlePan = false;
 
     /** Shared HoverCard handle (ADR-126). Lazily created when first needed. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25785,6 +26009,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     constructor(container: HTMLElement, opts: DiagramEngineOptions)
     {
+        const createGestures = requireGestureRecognizer();
+
         this.instanceId = `${CLS}-${++instanceCounter}`;
         this.opts = opts;
 
@@ -25806,7 +26032,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.registerDefaultTools();
         this.toolManager.setActive("select");
 
-        this.bindCanvasEvents();
+        this.gestures = this.bindCanvasEvents(createGestures);
         this.observeThemeChanges();
         this.performInitialRender();
 
@@ -28708,6 +28934,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             this.themeObserver = null;
         }
 
+        this.gestures.destroy();
+
         if (this.hoverCard)
         {
             try { this.hoverCard.destroy(); }
@@ -28900,22 +29128,38 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     }
 
     /**
-     * Binds pointer, wheel, keyboard, and double-click events to the SVG
-     * canvas. Pointer events cover mouse, touch and pen with one path, so
-     * the tools see the same calls whatever the input device is (#176).
+     * Binds the canvas's input. The gesture recognizer reads the pointer
+     * events and reports a tap, a drag or a pinch, so mouse, touch and pen
+     * reach the tools through one path (TOUCH_EXPERIENCE.md, #184). A
+     * two-finger gesture never reaches a tool (section 6.2).
+     *
+     * @param createGestures - The GestureRecognizer factory.
+     * @returns The recognizer, which destroy() ends.
      */
-    private bindCanvasEvents(): void
+    private bindCanvasEvents(createGestures: GestureFactory): Gestures
     {
         const svg = this.renderer.getSvgElement();
+        const gestures = createGestures(svg, {
+            accept: (e) => this.acceptsPointer(e),
+            onPress: (g) => this.onGesturePress(g),
+            onTap: (g) => this.onGestureTap(g),
+            onDoubleTap: (g) => this.onDoubleClick(g.event),
+            onDragStart: (g) => this.onGestureDragStart(g),
+            onDragMove: (g) => this.onGestureDragMove(g),
+            onDragEnd: (g) => this.onGestureDragEnd(g),
+            onDragCancel: () => this.onGestureDragCancel(),
+            onRelease: () => this.onGestureRelease(),
+            onTwoFingerStart: (g) => this.onPinchStart(g),
+            onTwoFingerMove: (g) => this.onPinchMove(g),
+            onTwoFingerEnd: () => this.onPinchEnd(),
+            onTwoFingerCancel: () => this.onPinchEnd(),
+        });
 
-        svg.addEventListener("pointerdown", (e) => this.onPointerDown(e));
         svg.addEventListener("pointermove", (e) =>
         {
             logTrace("pointermove handler:", { x: e.clientX, y: e.clientY, type: e.pointerType });
-            this.onPointerMove(e);
+            this.onHoverMove(e);
         });
-        svg.addEventListener("pointerup", (e) => this.onPointerUp(e));
-        svg.addEventListener("pointercancel", (e) => this.onPointerCancel(e));
         svg.addEventListener("wheel", (e) =>
         {
             logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
@@ -28926,7 +29170,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             this.onKeyDown(e);
         });
-        svg.addEventListener("dblclick", (e) => this.onDoubleClick(e));
+
+        return gestures;
     }
 
     /**
@@ -28978,124 +29223,219 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     // ========================================================================
 
     /**
-     * Handles pointerdown on the canvas. Exits embed interactive mode
-     * when pressing outside. Dispatches to the active tool.
-     * Middle-click activates the pan tool temporarily.
-     *
-     * Only the primary pointer drives the tools. Each tool tracks one
-     * drag, so a second finger would restart the first finger's drag.
-     *
-     * The canvas captures the pointer, so a drag that leaves the canvas
-     * still ends here. An interactive embed keeps its own pointer: it
-     * handles its drags, such as a slider, and capture would take them.
-     */
-    private onPointerDown(e: PointerEvent): void
-    {
-        if (!e.isPrimary)
-        {
-            logDebug("pointerdown ignored, not the primary pointer:", e.pointerType);
-            return;
-        }
-
-        this.endInlineTextEdit();
-        this.exitEmbedOnClickOutside(e);
-
-        // exitEmbedOnClickOutside cleared the active embed unless the
-        // press is inside it.
-        if (!this.activeEmbedObjectId)
-        {
-            this.renderer.getSvgElement().setPointerCapture(e.pointerId);
-        }
-
-        const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
-
-        this.lastPointerPos = pos;
-
-        if (e.button === 1)
-        {
-            this.toolManager.setActive("pan");
-        }
-
-        this.toolManager.dispatchMouseDown(e, pos);
-    }
-
-    /**
-     * Exits embed interactive mode when clicking outside the active
-     * embed object. Checks whether the click target is inside the
-     * embed container for the currently interactive embed.
+     * An interactive embed keeps its own pointer. It handles its own
+     * drags, such as a slider, so the canvas leaves a press inside it
+     * alone.
      *
      * @param e - The pointerdown event.
+     * @returns false for a press inside the interactive embed.
      */
-    private exitEmbedOnClickOutside(e: PointerEvent): void
+    private acceptsPointer(e: PointerEvent): boolean
     {
         if (!this.activeEmbedObjectId)
         {
-            return;
+            return true;
         }
 
-        const target = e.target as Element;
         const embedContainer = this.renderer.getSvgElement().querySelector(
             `[data-embed-id="${this.activeEmbedObjectId}"]`
         );
 
-        if (!embedContainer || !embedContainer.contains(target))
+        return !embedContainer || !embedContainer.contains(e.target as Node);
+    }
+
+    /**
+     * A pointer went down. A press outside an interactive embed ends it.
+     * A mouse or a pen presses the tool at once, as a mouse always has.
+     * A finger reaches the tool only when it taps or drags, so a second
+     * finger finds nothing selected or moved (rule 1).
+     */
+    private onGesturePress(g: PointerReport): void
+    {
+        this.pointerBusy = true;
+        this.endInlineTextEdit();
+        this.hideHoverCard();
+
+        if (this.activeEmbedObjectId)
         {
             this.exitEmbedInteractive();
         }
+
+        if (g.pointerType === "touch")
+        {
+            return;
+        }
+
+        // The middle button pans with any tool, and the tool comes back on the release.
+        if (g.button === 1)
+        {
+            this.middlePan = true;
+            this.toolManager.setActive("pan");
+        }
+
+        this.pressTool(g.event, g.x, g.y);
     }
 
-    private onPointerMove(e: PointerEvent): void
+    /** A tap, or a click. A finger presses the tool here, where it went down. */
+    private onGestureTap(g: PointerReport): void
     {
-        if (!e.isPrimary)
+        if (!this.toolPressed)
+        {
+            this.pressTool(pressEventAt(g), g.startX, g.startY);
+        }
+
+        this.liftTool(g.event, g.x, g.y);
+    }
+
+    /**
+     * A drag starts. A finger on the background with the select tool pans
+     * the view (section 6.2). After a long press it draws the selection
+     * rectangle instead. Any other drag presses the tool where it went
+     * down, unless a mouse or a pen pressed it already.
+     */
+    private onGestureDragStart(g: DragReport): void
+    {
+        if (this.toolPressed)
+        {
+            return;
+        }
+
+        const start = this.renderer.screenToCanvas(g.startX, g.startY);
+        const select = this.toolManager.getToolByName("select") as SelectTool;
+
+        if (!g.afterLongPress && this.toolManager.getActive() === select && !select.hitsTarget(start))
+        {
+            this.viewPan = { x: g.startX, y: g.startY };
+            return;
+        }
+
+        this.pressTool(pressEventAt(g), g.startX, g.startY);
+    }
+
+    private onGestureDragMove(g: DragReport): void
+    {
+        if (this.viewPan)
+        {
+            this.panCanvas(g.x - this.viewPan.x, g.y - this.viewPan.y);
+            this.viewPan = { x: g.x, y: g.y };
+            return;
+        }
+
+        this.toolManager.dispatchMouseMove(g.event, this.renderer.screenToCanvas(g.x, g.y));
+    }
+
+    private onGestureDragEnd(g: DragReport): void
+    {
+        if (this.toolPressed)
+        {
+            this.liftTool(g.event, g.x, g.y);
+        }
+    }
+
+    /**
+     * The drag stopped without a lift: a pointercancel or a second finger.
+     * The tool restores what the drag changed (section 9, item 5). A pan
+     * of the view stays where it is.
+     */
+    private onGestureDragCancel(): void
+    {
+        if (this.toolPressed)
+        {
+            this.cancelTool();
+        }
+    }
+
+    /**
+     * The press is over. A press the tool still holds neither tapped nor
+     * dragged: a middle click, or a press that was abandoned. The tool
+     * cancels it.
+     */
+    private onGestureRelease(): void
+    {
+        if (this.toolPressed)
+        {
+            this.cancelTool();
+        }
+
+        if (this.middlePan)
+        {
+            this.middlePan = false;
+            this.toolManager.setActive("select");
+        }
+
+        this.viewPan = null;
+        this.pointerBusy = false;
+        this.hideHoverCard();
+    }
+
+    /** Presses the active tool at a screen position. */
+    private pressTool(e: PointerEvent, x: number, y: number): void
+    {
+        this.toolPressed = true;
+        this.toolManager.dispatchMouseDown(e, this.renderer.screenToCanvas(x, y));
+    }
+
+    /** Lifts the active tool's press at a screen position. */
+    private liftTool(e: PointerEvent, x: number, y: number): void
+    {
+        this.toolPressed = false;
+        this.toolManager.dispatchMouseUp(e, this.renderer.screenToCanvas(x, y));
+    }
+
+    /** Ends the active tool's press without a lift. */
+    private cancelTool(): void
+    {
+        logDebug("Tool press cancelled:", this.toolManager.getActiveName());
+        this.toolPressed = false;
+        this.toolManager.dispatchCancel();
+    }
+
+    /**
+     * Two fingers are down. The pan and the zoom apply at the same time,
+     * and neither reaches a tool (section 6.2).
+     */
+    private onPinchStart(g: TwoFingerReport): void
+    {
+        this.pointerBusy = true;
+        this.hideHoverCard();
+        this.pinch = { scale: g.scale, x: g.centerX, y: g.centerY };
+    }
+
+    /** Pans by the center's move, then zooms about the new center. */
+    private onPinchMove(g: TwoFingerReport): void
+    {
+        const last = this.pinch!;
+        const rect = this.renderer.getSvgElement().getBoundingClientRect();
+
+        this.renderer.pan(g.centerX - last.x, g.centerY - last.y);
+        this.renderer.zoomAt(g.scale / last.scale, g.centerX - rect.left, g.centerY - rect.top);
+        this.pinch = { scale: g.scale, x: g.centerX, y: g.centerY };
+        this.emitViewportChange();
+    }
+
+    /** The two-finger gesture ended or was cancelled. The view stays where it is. */
+    private onPinchEnd(): void
+    {
+        this.pinch = null;
+        this.pointerBusy = false;
+    }
+
+    /**
+     * A mouse or a pen moves with no press: the tool's hover feedback,
+     * such as the pen tool's next segment, and the hover card. A finger
+     * has no hover. A press reaches the tool through the recognizer.
+     */
+    private onHoverMove(e: PointerEvent): void
+    {
+        if (e.pointerType === "touch" || this.pointerBusy)
         {
             return;
         }
 
         const pos = this.renderer.screenToCanvas(e.clientX, e.clientY);
 
-        this.lastPointerPos = pos;
         this.toolManager.dispatchMouseMove(e, pos);
         this.updateHoverCard(pos);
-    }
-
-    private onPointerUp(e: PointerEvent): void
-    {
-        if (!e.isPrimary)
-        {
-            return;
-        }
-
-        this.endPointer(e, this.renderer.screenToCanvas(e.clientX, e.clientY));
-    }
-
-    /**
-     * The browser took the pointer, such as for a system gesture. The
-     * tool ends its drag as on pointerup, so no drag is left open. It
-     * ends at the last position seen, because a cancel event does not
-     * carry one the tools can use.
-     */
-    private onPointerCancel(e: PointerEvent): void
-    {
-        if (!e.isPrimary)
-        {
-            return;
-        }
-
-        logDebug("pointercancel:", e.pointerType);
-        this.endPointer(e, this.lastPointerPos);
-    }
-
-    /** Ends the active tool's drag at a canvas position. */
-    private endPointer(e: PointerEvent, pos: Point): void
-    {
-        this.toolManager.dispatchMouseUp(e, pos);
-
-        if (e.button === 1)
-        {
-            this.toolManager.setActive("select");
-        }
-
-        this.hideHoverCard();
     }
 
     /**
@@ -29187,7 +29527,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     }
 
     /**
-     * Handles double-click. Activates embed interactive mode if the
+     * Handles a double tap or a double click, which the gesture
+     * recognizer reports. Activates embed interactive mode if the
      * object has an embed definition, otherwise opens inline text
      * editing or delegates to the consumer callback.
      */

@@ -269,6 +269,16 @@ export class ConnectorTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the preview. The tool stays
+     * active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
+    }
+
+    /**
      * Handles key-down: Escape cancels the connector drawing.
      *
      * @param e - The originating keyboard event.

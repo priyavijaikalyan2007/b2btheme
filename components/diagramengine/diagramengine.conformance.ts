@@ -70,8 +70,15 @@ export const CONFORMANCE_GLUE =
                 const svg = d.getElement();
                 const rect = svg.getBoundingClientRect();
                 const vp = d.getViewport();
-                svg.dispatchEvent(new MouseEvent("dblclick", { bubbles: true,
-                    clientX: rect.left + vp.x + 140 * vp.zoom, clientY: rect.top + vp.y + 130 * vp.zoom }));
+                const at = { bubbles: true, pointerId: 1, isPrimary: true, pointerType: "mouse", button: 0,
+                    clientX: rect.left + vp.x + 140 * vp.zoom, clientY: rect.top + vp.y + 130 * vp.zoom };
+
+                // The gesture recognizer reports a double click from two clicks (#184).
+                for (const type of ["pointerdown", "pointerup", "pointerdown", "pointerup"])
+                {
+                    svg.dispatchEvent(new PointerEvent(type, at));
+                }
+
                 return true;
             }
             case "change":

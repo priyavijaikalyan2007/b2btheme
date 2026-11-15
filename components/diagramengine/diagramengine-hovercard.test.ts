@@ -12,6 +12,8 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createDiagramEngine } from "./diagramengine";
+// DiagramEngine reads `window.createGestureRecognizer`, and this registers the real one.
+import "../gesturerecognizer/gesturerecognizer";
 import { createHoverCard } from "../hovercard/hovercard";
 
 let container: HTMLDivElement;

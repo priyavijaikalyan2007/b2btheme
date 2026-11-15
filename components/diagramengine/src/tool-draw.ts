@@ -225,6 +225,16 @@ export class DrawTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Drop the preview and place
+     * nothing. The tool stays active.
+     */
+    public onCancel(): void
+    {
+        this.engine.clearToolOverlay();
+        this.resetState();
+    }
+
+    /**
      * Handle key-down: Escape cancels the draw operation.
      *
      * @param e - The originating keyboard event.

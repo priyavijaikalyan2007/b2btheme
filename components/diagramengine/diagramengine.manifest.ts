@@ -96,6 +96,8 @@ export const DIAGRAMENGINE_MANIFEST: CapabilityManifest =
 
     // How this component appears to agent protocols (ADR-219, ADR-222, readiness step 2 B9).
     protocol: {
+        // The canvas reads its pointer events through GestureRecognizer (#184).
+        dependencies: { components: ["gesturerecognizer"] },
         hostOnly: {
             data: "Template data the document's {{expressions}} read; an open record no schema can check. Over "
                 + "A2UI write the text itself.",

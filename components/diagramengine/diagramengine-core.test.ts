@@ -11,6 +11,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
 import { createDiagramEngine } from "./diagramengine";
+// DiagramEngine reads `window.createGestureRecognizer`, and this registers the real one.
+import "../gesturerecognizer/gesturerecognizer";
 
 // ============================================================================
 // HELPERS
