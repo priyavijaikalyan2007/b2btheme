@@ -135,9 +135,10 @@ describe("DiagramEngine pointer input (#176)", () =>
         expect(engine.getSelectedObjects().map((o) => o.id)).toEqual(["box"]);
     });
 
-    test("anInteractiveEmbed_KeepsItsPointer_AndAPressOutsideCapturesAgain", () =>
+    test("anInteractiveEmbed_KeepsItsPointer_AndAPressOutsideCapturesAgain", async () =>
     {
-        (window as unknown as Record<string, unknown>).createPointerTestWidget = () => ({});
+        (window as unknown as Record<string, unknown>).createPointerTestWidget =
+            () => ({ getElement: () => document.createElement("div") });
         engine.registerEmbeddableComponent("pointer-test-widget", {
             factory: "createPointerTestWidget",
             label: "Pointer Test Widget",
@@ -162,6 +163,9 @@ describe("DiagramEngine pointer input (#176)", () =>
 
         expect(svg.setPointerCapture).toHaveBeenCalledTimes(1);
 
+        // The embed mounts from a requestAnimationFrame callback, so the
+        // factory stays until that has run.
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
         delete (window as unknown as Record<string, unknown>).createPointerTestWidget;
     });
 });
