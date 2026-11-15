@@ -192,6 +192,8 @@ every box below is ticked:
 - [ ] Options accept `onChange?: (value: unknown) => void` and the component fires it on every value change (user + programmatic).
 - [ ] At least one test asserts the component round-trips through `createDynamicFormSwitcher` (auto-discovery happy path).
 - [ ] The README and the agentknowledge `concepts.yaml` entry note compliance with this convention.
+- [ ] Touch experience (TOUCH_EXPERIENCE.md) and keyboard (KEYBOARD.md) experience are both consistent. 
+- [ ] UX is consistent (UI_EXPERIENCE.md).
 
 ### Spec / ADR
 
