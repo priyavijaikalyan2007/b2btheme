@@ -7,7 +7,7 @@
  * Covers: Phase 5 (UI component stencils) and Phase 6 (additional page frames).
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createDiagramEngine } from "./diagramengine";
 
 // ============================================================================
@@ -118,16 +118,13 @@ describe("DiagramEngine — UI Component Stencils", () =>
         engine.setActiveTool("draw");
 
         const svg = container.querySelector("svg")!;
+        const pointer = { bubbles: true, pointerId: 1, isPrimary: true, button: 0 };
 
-        svg.dispatchEvent(new MouseEvent("mousedown", {
-            bubbles: true, clientX: 10, clientY: 10, button: 0,
-        }));
-        svg.dispatchEvent(new MouseEvent("mousemove", {
-            bubbles: true, clientX: 210, clientY: 130, button: 0,
-        }));
-        svg.dispatchEvent(new MouseEvent("mouseup", {
-            bubbles: true, clientX: 210, clientY: 130, button: 0,
-        }));
+        // jsdom has no pointer capture, which the canvas asks for on pointerdown.
+        svg.setPointerCapture = vi.fn();
+        svg.dispatchEvent(new PointerEvent("pointerdown", { ...pointer, clientX: 10, clientY: 10 }));
+        svg.dispatchEvent(new PointerEvent("pointermove", { ...pointer, clientX: 210, clientY: 130 }));
+        svg.dispatchEvent(new PointerEvent("pointerup", { ...pointer, clientX: 210, clientY: 130 }));
 
         const drawn = engine.getObjects();
 

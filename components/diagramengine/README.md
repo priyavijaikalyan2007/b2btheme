@@ -91,6 +91,20 @@ engine.addObject({
 - **Zoom to fit**, zoom to selection, zoom to object
 - **Coordinate conversion** — `screenToCanvas()`, `canvasToScreen()`, `canvasToContainer()`
 
+### Input
+
+- **Mouse, touch and pen** — the canvas listens for pointer events, so each tool works with a finger or a pen as it does with a mouse
+- **A drag can leave the canvas** — the canvas captures the pointer, so a drag released outside it still ends
+- **Interactive embeds keep their pointer** — the canvas does not capture a press inside an interactive embed, so the embedded component handles its own drags
+
+Touch input does not yet follow `TOUCH_EXPERIENCE.md`. These behaviors are interim, and #184 replaces them:
+
+- Only the primary pointer drives the tools. A second finger is ignored, so there is no two-finger pan or pinch zoom yet.
+- A one-finger drag on the background draws a selection rectangle. It should pan the view.
+- A cancelled pointer ends the drag where the pointer last was. It should restore the state from before the drag.
+- Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
+- The view does not scroll when a drag reaches the canvas edge.
+
 ### Organisation
 
 - **Groups** with collapse/expand, nested groups

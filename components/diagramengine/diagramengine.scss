@@ -38,6 +38,9 @@
     outline: none;
     cursor: default;
     background-color: var(--theme-body-bg);
+    // The canvas handles touch itself. Without this the browser scrolls
+    // or zooms the page on a touch drag and cancels the pointer.
+    touch-action: none;
 
     &:focus-visible
     {
