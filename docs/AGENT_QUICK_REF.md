@@ -101,6 +101,8 @@ components/formdialog/formdialog.css — formdialog component CSS
 components/formdialog/formdialog.js  — formdialog component JS
 components/gauge/gauge.css — gauge component CSS
 components/gauge/gauge.js  — gauge component JS
+components/gesturerecognizer/gesturerecognizer.css — gesturerecognizer component CSS
+components/gesturerecognizer/gesturerecognizer.js  — gesturerecognizer component JS
 components/gradientpicker/gradientpicker.css — gradientpicker component CSS
 components/gradientpicker/gradientpicker.js  — gradientpicker component JS
 components/graphcanvas/graphcanvas.css — graphcanvas component CSS
@@ -918,6 +920,13 @@ $ontology-category-slots=(structural: 1, lifecycle: 2, dependency: 3, custom: 4,
 - JS: `components/gauge/gauge.js`
 - Globals: `createBarGauge()`, `createGauge()`, `createRingGauge()`, `createTileGauge()`
 - Exports: `type GaugeShape`, `type GaugeMode`, `type GaugeSize`, `type BarOrientation`, `interface GaugeThreshold`, `interface GaugeOptions`, `interface GaugeHandle`, `class Gauge`, `function createGauge`, `function createTileGauge`, `function createRingGauge`, `function createBarGauge`
+
+### gesturerecognizer
+
+- CSS: `components/gesturerecognizer/gesturerecognizer.css`
+- JS: `components/gesturerecognizer/gesturerecognizer.js`
+- Globals: `createGestureRecognizer()`
+- Exports: `const GESTURE_THRESHOLDS`, `interface PointerGesture`, `interface DragGesture`, `interface TwoFingerGesture`, `interface GestureRecognizerOptions`, `interface GestureRecognizerHandle`, `function createGestureRecognizer`
 
 ### gradientpicker
 
