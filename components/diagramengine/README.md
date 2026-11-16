@@ -124,6 +124,17 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
   - Keyboard focus also makes the canvas active.
   - Escape, or focus that leaves the canvas, makes it inactive again.
   - Without `embedded`, the canvas is always active.
+- **The interaction mode limits what a person can change.** The app sets `interactionMode`, by the task and the person's permissions, never by the screen size (`TOUCH_EXPERIENCE.md` section 3). `setInteractionMode` changes it later. `editable: false` is the same as `"view"`, and `interactionMode` wins when both are set.
+
+  | Mode | A person can |
+  |---|---|
+  | `"edit"` (default) | Do everything |
+  | `"view"` | Select, open, pan, zoom and measure. A one-finger drag on an object pans the view. A mouse drag on an object moves nothing. The selection shows its outline with no handles. Arrow keys, Delete, undo and redo by keyboard, inline text edit and the drawing tools do nothing. |
+  | `"comment"` | The same as `"view"`. The canvas has no comment gesture yet, so the host adds comments with `addComment`. |
+
+  - A switch out of edit mode cancels a drag in progress, ends an inline text edit and gives a drawing tool way to the select tool.
+  - The mode limits gestures and keys only. Every API method works in every mode.
+  - The engine has no toolbar, so the app shows the mode and the control that changes it.
 - **Interactive embeds keep their pointer.** The canvas leaves a press inside an interactive embed alone, so the embedded component handles its own drags.
 
 **Pointer contract** (`UI_EXPERIENCE.md` section 22):
@@ -138,7 +149,6 @@ These touch behaviors are not done yet. Later changes under #184 add them:
 - A long press opens no menu.
 - A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
 - Handles and connection points keep their small target for a finger.
-- There is no `interactionMode` option.
 
 ### Organisation
 
@@ -383,8 +393,10 @@ presentation: {
 
 | Method | Description |
 |--------|-------------|
-| `setActiveTool(name)` | Switch active tool (cursor updates automatically) |
+| `setActiveTool(name)` | Switch active tool (cursor updates automatically). Outside edit mode, only `select`, `pan` and `measure` start. |
 | `getActiveTool()` | Current tool name |
+| `setInteractionMode(mode)` | Set `"view"`, `"comment"` or `"edit"`. Throws for any other value. |
+| `getInteractionMode()` | The current mode |
 | `getToolInstance(name)` | Get tool instance for property configuration |
 | `setDrawShape(type)` | Set shape type for draw tool |
 
@@ -476,6 +488,7 @@ presentation: {
 | `selection:change` | { objects, connectors } |
 | `viewport:change` | ViewportState |
 | `tool:change` | tool name string |
+| `interactionMode:change` | `"view"`, `"comment"` or `"edit"` |
 | `history:undo` / `history:redo` | — |
 | `dirty:change` | boolean |
 | `text:edit:start` / `text:edit:end` | DiagramObject |

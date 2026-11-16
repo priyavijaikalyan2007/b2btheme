@@ -16,7 +16,8 @@
  *   - a drag held near the edge scrolls the view, and `Space` with a
  *     mouse drag pans it;
  *   - a finger or the wheel on an inactive embedded canvas scrolls the
- *     page, and a tap makes the canvas take the finger.
+ *     page, and a tap makes the canvas take the finger;
+ *   - in view mode, a finger on an object pans and a mouse moves nothing.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -45,18 +46,18 @@ const HTML = `<!doctype html>
 /** The box starts at (50, 50), 100 by 60, at zoom 1 with no pan. */
 const BOX = { x: 50, y: 50, width: 100, height: 60 };
 
-async function open(page: Page, embedded = false): Promise<void>
+async function open(page: Page, embedded = false, interactionMode = "edit"): Promise<void>
 {
     await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
     await page.goto(PAGE);
-    await page.evaluate(({ bounds, embedded }) =>
+    await page.evaluate(({ bounds, embedded, interactionMode }) =>
     {
         const w = window as unknown as Record<string, any>;
 
         w.__engine = w.createDiagramEngine("host",
-            { embedded, snapping: { grid: false, objects: false, guides: false } });
+            { embedded, interactionMode, snapping: { grid: false, objects: false, guides: false } });
         w.__engine.addObject({ id: "box", presentation: { shape: "rectangle", bounds } });
-    }, { bounds: BOX, embedded });
+    }, { bounds: BOX, embedded, interactionMode });
 }
 
 type Point = { x: number; y: number };
@@ -384,5 +385,36 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
 
         await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
         expect(await engineCall(page, "getZoomLevel")).toBe(1);
+    });
+
+
+    test("in view mode a finger on the box pans, and a mouse drag moves nothing", async ({ page }) =>
+    {
+        await open(page, false, "view");
+
+        const c = await boxCenter(page);
+        const cdp = await page.context().newCDPSession(page);
+
+        await touch(cdp, "touchStart", [c]);
+
+        for (let i = 1; i <= 4; i += 1)
+        {
+            await touch(cdp, "touchMove", [{ x: c.x + (i * 10), y: c.y + (i * 5) }]);
+        }
+
+        await touch(cdp, "touchEnd", []);
+
+        await expect.poll(() => engineCall(page, "getViewport")).toEqual({ x: 40, y: 20, zoom: 1 });
+
+        const moved = await boxCenter(page);
+
+        await page.mouse.move(moved.x, moved.y);
+        await page.mouse.down();
+        await page.mouse.move(moved.x + 40, moved.y + 20, { steps: 4 });
+        await page.mouse.up();
+
+        expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
+        expect(await selectedIds(page)).toEqual(["box"]);
+        expect(await engineCall(page, "canUndo")).toBe(false);
     });
 });

@@ -206,6 +206,8 @@ export interface DiagramEngineHandle
     canUndo(): boolean;
     canRedo(): boolean;
     getActiveTool(): string;
+    setInteractionMode(mode: DiagramInteractionMode): void;
+    getInteractionMode(): DiagramInteractionMode;
     getToolInstance(name: string): unknown;
     loadStencilPack(name: string): void;
     registerStencilPack(name: string, shapes: ShapeDefinition[]): void;
@@ -361,6 +363,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** The element the canvas is mounted in. Focus inside it keeps an embedded canvas active. */
     private readonly host: HTMLElement;
 
+    /** What a person may do on the canvas (TOUCH_EXPERIENCE.md section 3). */
+    private mode: DiagramInteractionMode;
+
     /** Whether the canvas takes touch and the wheel. An embedded canvas starts inactive (section 6.2). */
     private active = true;
 
@@ -399,6 +404,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 
         this.instanceId = `${CLS}-${++instanceCounter}`;
         this.opts = opts;
+        this.mode = opts.interactionMode === undefined
+            ? (opts.editable === false ? "view" : "edit")
+            : checkInteractionMode(opts.interactionMode);
 
         this.events = new EventBus();
         this.undoStack = new UndoStack();
@@ -409,6 +417,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         container.classList.add(`${CLS}-container`);
         this.host = container;
         this.renderer = new RenderEngine(container);
+        this.renderer.getSvgElement().setAttribute("data-interaction-mode", this.mode);
         this.setCanvasActive(!opts.embedded);
 
         this.doc = opts.document
@@ -802,8 +811,20 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     setActiveTool(name: string): void
     {
+        if (!this.canEdit() && !VIEW_TOOLS.has(name))
+        {
+            logWarn(`The ${name} tool changes the diagram, so it does not start in ${this.mode} mode.`);
+            return;
+        }
+
         this.toolManager.setActive(name);
         this.events.emit("tool:change", name);
+    }
+
+    /** Whether the interaction mode lets a person change the diagram. */
+    canEdit(): boolean
+    {
+        return this.mode === "edit";
     }
 
     /**
@@ -1320,6 +1341,52 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     getActiveTool(): string
     {
         return this.toolManager.getActiveName();
+    }
+
+    /**
+     * Sets what a person may do on the canvas (TOUCH_EXPERIENCE.md
+     * section 3). Outside edit mode, a drag in progress is cancelled,
+     * an inline text edit ends, a tool that changes the diagram gives
+     * way to the select tool, and the selection loses its handles.
+     *
+     * @param mode - "view", "comment" or "edit".
+     */
+    setInteractionMode(mode: DiagramInteractionMode): void
+    {
+        checkInteractionMode(mode);
+
+        if (mode === this.mode)
+        {
+            return;
+        }
+
+        this.mode = mode;
+        this.renderer.getSvgElement().setAttribute("data-interaction-mode", mode);
+
+        if (!this.canEdit())
+        {
+            if (this.toolPressed)
+            {
+                this.cancelTool();
+            }
+
+            this.endInlineTextEdit();
+
+            if (!VIEW_TOOLS.has(this.toolManager.getActiveName()))
+            {
+                this.setActiveTool("select");
+            }
+        }
+
+        this.renderer.renderSelectionHandles(this.getSelectedObjects(), this.canEdit());
+        logInfo("Interaction mode:", mode);
+        this.events.emit("interactionMode:change", mode);
+    }
+
+    /** What a person may do on the canvas: "view", "comment" or "edit". */
+    getInteractionMode(): DiagramInteractionMode
+    {
+        return this.mode;
     }
 
     /**
@@ -3722,9 +3789,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 
     /**
      * A drag starts. A finger on the background with the select tool pans
-     * the view (section 6.2). After a long press it draws the selection
-     * rectangle instead. Any other drag presses the tool where it went
-     * down, unless a mouse or a pen pressed it already.
+     * the view (section 6.2). So does a finger on an object outside edit
+     * mode, because the object cannot move (section 3). After a long
+     * press the finger draws the selection rectangle instead. Any other
+     * drag presses the tool where it went down, unless a mouse or a pen
+     * pressed it already.
      */
     private onGestureDragStart(g: DragReport): void
     {
@@ -3738,7 +3807,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         const start = this.renderer.screenToCanvas(g.startX, g.startY);
         const select = this.toolManager.getToolByName("select") as SelectTool;
 
-        if (!g.afterLongPress && this.toolManager.getActive() === select && !select.hitsTarget(start))
+        if (!g.afterLongPress && this.toolManager.getActive() === select
+            && (!this.canEdit() || !select.hitsTarget(start)))
         {
             this.viewPan = { x: g.startX, y: g.startY };
             return;
@@ -4169,15 +4239,16 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         }
 
         const ctrl = e.ctrlKey || e.metaKey;
+        const edit = this.canEdit();
 
-        if (ctrl && e.key === "z" && !e.shiftKey)
+        if (edit && ctrl && e.key === "z" && !e.shiftKey)
         {
             this.undo();
             e.preventDefault();
             return true;
         }
 
-        if ((ctrl && e.key === "y") || (ctrl && e.key === "z" && e.shiftKey))
+        if (edit && ((ctrl && e.key === "y") || (ctrl && e.key === "z" && e.shiftKey)))
         {
             this.redo();
             e.preventDefault();
@@ -4233,7 +4304,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         {
             safeCallback(this.opts.onObjectDoubleClick, obj);
         }
-        else if (this.opts.textEditable !== false)
+        else if (this.opts.textEditable !== false && this.canEdit())
         {
             this.startInlineTextEdit(obj.id);
         }
@@ -4347,7 +4418,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     {
         const selected = this.getSelectedObjects();
 
-        this.renderer.renderSelectionHandles(selected);
+        this.renderer.renderSelectionHandles(selected, this.canEdit());
         this.renderSelectedConnectorHighlights();
 
         safeCallback(this.opts.onSelectionChange, selected, []);
@@ -5039,6 +5110,30 @@ function rectsIntersect(a: Rect, b: Rect): boolean
         && a.y < b.y + b.height
         && a.y + a.height > b.y
     );
+}
+
+// ============================================================================
+// INTERACTION MODE
+// ============================================================================
+
+/** The tools that change nothing in the diagram, so they run in every mode. */
+const VIEW_TOOLS: ReadonlySet<string> = new Set(["select", "pan", "measure"]);
+
+/**
+ * Throws for a mode that is not one of the three. A misspelled mode
+ * would otherwise make the canvas read-only with no word why.
+ *
+ * @param mode - The mode the caller passed.
+ * @returns The same mode.
+ */
+function checkInteractionMode(mode: DiagramInteractionMode): DiagramInteractionMode
+{
+    if (mode !== "view" && mode !== "comment" && mode !== "edit")
+    {
+        throw new Error(`${LOG_PREFIX} interactionMode must be "view", "comment" or "edit", not "${String(mode)}".`);
+    }
+
+    return mode;
 }
 
 // ============================================================================

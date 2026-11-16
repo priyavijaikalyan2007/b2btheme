@@ -739,3 +739,210 @@ describe("DiagramEngine embedded canvas (#184)", () =>
         outside.remove();
     });
 });
+
+describe("DiagramEngine interaction mode (#184)", () =>
+{
+    /** Replaces the canvas with one in these options, with the same box. */
+    function remake(opts: Parameters<typeof createDiagramEngine>[1]): void
+    {
+        engine.destroy();
+        host.replaceChildren();
+        engine = createDiagramEngine(host.id, opts);
+        engine.addObject({ id: "box", presentation: { shape: "rectangle",
+            bounds: { x: 50, y: 50, width: 100, height: 60 } } });
+        svg = host.querySelector("svg")!;
+        svg.setPointerCapture = vi.fn();
+    }
+
+    function key(k: string, init: KeyboardEventInit = {}): void
+    {
+        svg.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, ...init }));
+    }
+
+    /** The parts drawn for the box's selection: the outline, then any handles. */
+    function selectionParts(): number
+    {
+        return svg.querySelector('[data-selection-id="box"]')?.childElementCount ?? 0;
+    }
+
+    test("theMode_IsEdit_ByDefault_AndEditableFalseMeansView", () =>
+    {
+        expect(engine.getInteractionMode()).toBe("edit");
+
+        remake({ editable: false });
+
+        expect(engine.getInteractionMode()).toBe("view");
+        expect(svg.getAttribute("data-interaction-mode")).toBe("view");
+
+        remake({ editable: false, interactionMode: "edit" });
+
+        expect(engine.getInteractionMode()).toBe("edit");
+    });
+
+    test("aModeThatIsNotOneOfTheThree_Throws", () =>
+    {
+        expect(() => engine.setInteractionMode("read" as "view")).toThrow(/"view", "comment" or "edit", not "read"/);
+        expect(engine.getInteractionMode()).toBe("edit");
+        expect(() => remake({ interactionMode: "Edit" as "edit" })).toThrow(/not "Edit"/);
+    });
+
+    test("inView_AFingerDragOnTheBox_PansTheView", () =>
+    {
+        remake({ interactionMode: "view" });
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointerup", 140, 100);
+
+        expect(engine.getViewport()).toMatchObject({ x: 40, y: 20 });
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+    });
+
+    test("inComment_AFingerDragOnTheBox_PansTheView", () =>
+    {
+        remake({ interactionMode: "comment" });
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointerup", 140, 100);
+
+        expect(engine.getViewport()).toMatchObject({ x: 40, y: 20 });
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+    });
+
+    test("inView_AMouseSelects_AndItsDragMovesNothing", () =>
+    {
+        remake({ interactionMode: "view" });
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+
+        expect(selected()).toEqual(["box"]);
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.canUndo()).toBe(false);
+    });
+
+    test("inView_TheSelectionHasNoHandles_AndACornerDragResizesNothing", () =>
+    {
+        engine.select(["box"]);
+
+        expect(selectionParts()).toBeGreaterThan(1);
+
+        engine.setInteractionMode("view");
+
+        expect(selectionParts()).toBe(1);
+
+        engine.clearSelection();
+        engine.select(["box"]);
+
+        expect(selectionParts()).toBe(1);
+
+        // The bottom-right handle was at (150, 110).
+        pointer("pointerdown", 150, 110, MOUSE);
+        pointer("pointermove", 190, 140, MOUSE);
+        pointer("pointerup", 190, 140, MOUSE);
+
+        expect(box()).toMatchObject({ x: 50, y: 50, width: 100, height: 60 });
+
+        engine.setInteractionMode("edit");
+
+        expect(selectionParts()).toBeGreaterThan(1);
+    });
+
+    test("inView_KeysChangeNothing_ButSelectAllWorks", () =>
+    {
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+        engine.undo();
+        engine.setInteractionMode("view");
+        key("y", { ctrlKey: true });
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+
+        engine.redo();
+        engine.select(["box"]);
+
+        key("ArrowRight");
+        key("Delete");
+        key("z", { ctrlKey: true });
+
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+        expect(engine.getObjects()).toHaveLength(1);
+
+        engine.clearSelection();
+        key("a", { ctrlKey: true });
+
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("inView_ADoubleTap_DoesNotEditTheText", () =>
+    {
+        remake({ interactionMode: "view" });
+        pointer("pointerdown", 100, 80);
+        pointer("pointerup", 100, 80);
+        pointer("pointerdown", 102, 81);
+        pointer("pointerup", 102, 81);
+
+        expect(host.querySelector(".de-inline-edit")).toBeNull();
+    });
+
+    test("inView_OnlyTheToolsThatChangeNothing_Start", () =>
+    {
+        remake({ interactionMode: "view" });
+        engine.setActiveTool("draw");
+
+        expect(engine.getActiveTool()).toBe("select");
+
+        engine.setActiveTool("measure");
+
+        expect(engine.getActiveTool()).toBe("measure");
+    });
+
+    test("switchingToView_GivesTheDrawToolWayToSelect_AndSaysSo", () =>
+    {
+        const heard: unknown[] = [];
+
+        engine.on("interactionMode:change", (mode: unknown) => heard.push(mode));
+        engine.setActiveTool("draw");
+        engine.setInteractionMode("view");
+
+        expect(engine.getActiveTool()).toBe("select");
+        expect(heard).toEqual(["view"]);
+
+        engine.setInteractionMode("view");
+
+        expect(heard).toEqual(["view"]);
+    });
+
+    test("switchingToView_DuringADrag_PutsTheBoxBack", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        engine.setInteractionMode("view");
+        pointer("pointermove", 180, 120);
+        pointer("pointerup", 180, 120);
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.canUndo()).toBe(false);
+    });
+
+    test("inView_ALongPressThenADrag_StillSelects", () =>
+    {
+        remake({ interactionMode: "view" });
+        vi.useFakeTimers();
+
+        try
+        {
+            pointer("pointerdown", 30, 30);
+            vi.advanceTimersByTime(500);
+            pointer("pointermove", 200, 200);
+            pointer("pointerup", 200, 200);
+        }
+        finally
+        {
+            vi.useRealTimers();
+        }
+
+        expect(selected()).toEqual(["box"]);
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+    });
+});

@@ -65,6 +65,12 @@
     cursor: move;
 }
 
+// Outside edit mode an object can be selected, not moved.
+.de-canvas:not([data-interaction-mode="edit"]) .de-object
+{
+    cursor: pointer;
+}
+
 // ============================================================================
 // SELECTION HANDLES
 // ============================================================================

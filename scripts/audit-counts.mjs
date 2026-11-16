@@ -731,7 +731,9 @@ export const BASELINES = {
     // cancelled move, and `Space` with a drag to pan.
     // #184 part 3 (2026-11-16): 31528 -> 31627, the `embedded` option: an inactive canvas that leaves
     // touch and the wheel to the page until a tap, a click or keyboard focus.
-    diagramengineLines: 31627,
+    // #184 part 4 (2026-11-16): 31627 -> 31752, `interactionMode` (view, comment, edit) and its
+    // setter, with the gates in SelectTool, the outline-only selection and the mode check.
+    diagramengineLines: 31752,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
