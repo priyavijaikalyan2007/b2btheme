@@ -12,7 +12,9 @@
  *     the browser from taking the touch for a scroll;
  *   - the touch gestures of TOUCH_EXPERIENCE.md section 6.2: a tap, a long
  *     press then a drag, a drag on the background, a pinch, and a second
- *     finger during a drag (section 11, item 13).
+ *     finger during a drag (section 11, item 13);
+ *   - a drag held near the edge scrolls the view, and `Space` with a
+ *     mouse drag pans it.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -250,5 +252,78 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
 
         expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
         expect(await engineCall(page, "canUndo")).toBe(false);
+    });
+
+
+    test("a finger held near the right edge scrolls the view and keeps the box under it", async ({ page }) =>
+    {
+        await open(page);
+
+        const c = await boxCenter(page);
+        const cdp = await page.context().newCDPSession(page);
+
+        await touch(cdp, "touchStart", [c]);
+
+        for (let x = c.x + 40; x <= 390; x += 40)
+        {
+            await touch(cdp, "touchMove", [{ x, y: c.y }]);
+        }
+
+        await touch(cdp, "touchMove", [{ x: 390, y: c.y }]);
+        // The finger stays still. Auto-scroll runs on frames, not on moves.
+        await expect.poll(async () => (await engineCall<{ x: number }>(page, "getViewport")).x)
+            .toBeLessThan(-100);
+        await touch(cdp, "touchEnd", []);
+
+        const vp = await engineCall<{ x: number; y: number }>(page, "getViewport");
+        const r = (await page.locator('[data-id="box"]').boundingBox())!;
+
+        // The box is still under the finger, at the same offset as at the press.
+        expect(r.x + (r.width / 2)).toBeCloseTo(390, 0);
+        expect(vp.y).toBe(0);
+        expect(await page.evaluate(() => window.scrollX)).toBe(0);
+    });
+
+    test("a cancelled touch drag slides the box back to its start", async ({ page }) =>
+    {
+        await open(page);
+
+        const c = await boxCenter(page);
+        const cdp = await page.context().newCDPSession(page);
+        const drawn = () => page.locator('[data-id="box"]').getAttribute("transform");
+
+        await touch(cdp, "touchStart", [c]);
+
+        for (let i = 1; i <= 4; i += 1)
+        {
+            await touch(cdp, "touchMove", [{ x: c.x + (i * 20), y: c.y }]);
+        }
+
+        await expect.poll(async () => (await boxBounds(page)).x).toBe(BOX.x + 80);
+        await touch(cdp, "touchCancel", []);
+
+        // The document is back at once, and the drawing follows it.
+        expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
+        expect(await drawn()).toMatch(/^translate\([\d.]+, 0\) translate\(50, 50\)$/);
+        await expect.poll(drawn).toBe("translate(50, 50)");
+    });
+
+    test("Space with a mouse drag on the box pans the view and leaves the box", async ({ page }) =>
+    {
+        await open(page);
+
+        const c = await boxCenter(page);
+
+        await page.locator("#host svg").focus();
+        await page.keyboard.down(" ");
+        await page.mouse.move(c.x, c.y);
+        await page.mouse.down();
+        await page.mouse.move(c.x + 40, c.y + 20, { steps: 4 });
+        await page.mouse.up();
+        await page.keyboard.up(" ");
+
+        expect(await engineCall(page, "getViewport")).toEqual({ x: 40, y: 20, zoom: 1 });
+        expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
     });
 });

@@ -25991,8 +25991,21 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** The two-finger gesture's scale and center at its last move. */
     private pinch: { scale: number; x: number; y: number } | null = null;
 
-    /** Whether a middle-button press switched to the pan tool. */
-    private middlePan = false;
+    /** The tool that a middle-button or `Space` press switched from to pan. It comes back on the release. */
+    private panFrom: string | null = null;
+
+    /** Whether `Space` is down on the canvas, so a primary press pans (section 5). */
+    private spaceHeld = false;
+
+    /** Where a tool's drag last moved, in screen pixels. Auto-scroll moves the tool there again. */
+    private dragAt: { x: number; y: number; event: PointerEvent } | null = null;
+
+    /** The auto-scroll frame request, and the time of the last frame. */
+    private autoScroll: { frame: number; time: number | null } | null = null;
+
+    /** Objects going back to their start after a cancelled move (section 10). */
+    private returning: { frame: number; start: number | null;
+        items: { id: string; el: Element; base: string; dx: number; dy: number }[] } | null = null;
 
     /** Shared HoverCard handle (ADR-126). Lazily created when first needed. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28935,6 +28948,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         }
 
         this.gestures.destroy();
+        this.stopAutoScroll();
+        this.finishReturn();
 
         if (this.hoverCard)
         {
@@ -29170,6 +29185,18 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
             this.onKeyDown(e);
         });
+        svg.addEventListener("keyup", (e) =>
+        {
+            if (e.key === " ")
+            {
+                this.spaceHeld = false;
+            }
+        });
+        // A keyup that lands elsewhere must not leave the next drag panning.
+        svg.addEventListener("blur", () =>
+        {
+            this.spaceHeld = false;
+        });
 
         return gestures;
     }
@@ -29253,6 +29280,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     private onGesturePress(g: PointerReport): void
     {
         this.pointerBusy = true;
+        this.finishReturn();
         this.endInlineTextEdit();
         this.hideHoverCard();
 
@@ -29266,10 +29294,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             return;
         }
 
-        // The middle button pans with any tool, and the tool comes back on the release.
-        if (g.button === 1)
+        // The middle button, or `Space` with the primary button, pans with
+        // any tool (section 5). The tool comes back on the release.
+        if (g.button === 1 || (g.button === 0 && this.spaceHeld))
         {
-            this.middlePan = true;
+            this.panFrom = this.toolManager.getActiveName();
             this.toolManager.setActive("pan");
         }
 
@@ -29322,6 +29351,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         }
 
         this.toolManager.dispatchMouseMove(g.event, this.renderer.screenToCanvas(g.x, g.y));
+
+        if (this.toolPressed && this.toolManager.getActiveName() !== "pan")
+        {
+            this.dragAt = { x: g.x, y: g.y, event: g.event };
+            this.startAutoScroll();
+        }
     }
 
     private onGestureDragEnd(g: DragReport): void
@@ -29352,15 +29387,17 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onGestureRelease(): void
     {
+        this.stopAutoScroll();
+
         if (this.toolPressed)
         {
             this.cancelTool();
         }
 
-        if (this.middlePan)
+        if (this.panFrom !== null)
         {
-            this.middlePan = false;
-            this.toolManager.setActive("select");
+            this.toolManager.setActive(this.panFrom);
+            this.panFrom = null;
         }
 
         this.viewPan = null;
@@ -29382,12 +29419,194 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.toolManager.dispatchMouseUp(e, this.renderer.screenToCanvas(x, y));
     }
 
-    /** Ends the active tool's press without a lift. */
+    /**
+     * Ends the active tool's press without a lift. The tool restores the
+     * document at once. Each object that the cancel moved is then drawn
+     * where the drag left it, and slides to its restored place, so a
+     * person sees where it went (section 10).
+     */
     private cancelTool(): void
     {
         logDebug("Tool press cancelled:", this.toolManager.getActiveName());
+
+        const before = new Map(this.doc.objects.map((o) => [o.id, { ...o.presentation.bounds }]));
+
         this.toolPressed = false;
         this.toolManager.dispatchCancel();
+        this.startReturn(before);
+    }
+
+    // ========================================================================
+    // PRIVATE — AUTO-SCROLL AND RETURN
+    // ========================================================================
+
+    /**
+     * Scrolls the view while a tool's drag is near the canvas edge. A
+     * still pointer sends no moves, so a frame loop does the scroll. Each
+     * frame moves the tool to the same screen position again, so the
+     * dragged object stays under the pointer (section 6.2).
+     */
+    private startAutoScroll(): void
+    {
+        if (this.autoScroll || !this.dragAt)
+        {
+            return;
+        }
+
+        const step = this.edgeVelocity(this.dragAt.x, this.dragAt.y);
+
+        if (step.x === 0 && step.y === 0)
+        {
+            return;
+        }
+
+        this.autoScroll = { frame: requestAnimationFrame((t) => this.autoScrollFrame(t)), time: null };
+    }
+
+    private autoScrollFrame(time: number): void
+    {
+        const scroll = this.autoScroll!;
+        const at = this.dragAt!;
+        const v = this.edgeVelocity(at.x, at.y);
+
+        if (v.x === 0 && v.y === 0)
+        {
+            this.autoScroll = null;
+            return;
+        }
+
+        const seconds = Math.min(scroll.time === null ? 1000 / 60 : time - scroll.time,
+            AUTO_SCROLL_MAX_FRAME_MS) / 1000;
+
+        this.panCanvas(v.x * seconds, v.y * seconds);
+        this.toolManager.dispatchMouseMove(at.event, this.renderer.screenToCanvas(at.x, at.y));
+        scroll.time = time;
+        scroll.frame = requestAnimationFrame((t) => this.autoScrollFrame(t));
+    }
+
+    private stopAutoScroll(): void
+    {
+        if (this.autoScroll)
+        {
+            cancelAnimationFrame(this.autoScroll.frame);
+            this.autoScroll = null;
+        }
+
+        this.dragAt = null;
+    }
+
+    /**
+     * The view's scroll speed for a pointer at a screen position, in
+     * pixels a second. It grows from nothing at the inside of the zone to
+     * the full speed at the edge, and stays at the full speed past it. A
+     * pointer near the right edge moves the content left, to show more
+     * on the right.
+     */
+    private edgeVelocity(x: number, y: number): Point
+    {
+        const rect = this.renderer.getSvgElement().getBoundingClientRect();
+        const speed = (inside: number): number => inside >= AUTO_SCROLL_ZONE
+            ? 0
+            : AUTO_SCROLL_MAX_SPEED * (1 - (Math.max(inside, 0) / AUTO_SCROLL_ZONE));
+
+        return {
+            x: speed(x - rect.left) - speed(rect.right - x),
+            y: speed(y - rect.top) - speed(rect.bottom - y),
+        };
+    }
+
+    /**
+     * Slides each object that a cancel moved back from where the drag
+     * left it. The document is already restored, so this changes only
+     * the drawing. An object whose size changed snaps, because the rule
+     * is for a move. With reduced motion, every object snaps.
+     *
+     * @param before - Each object's bounds before the cancel.
+     */
+    private startReturn(before: Map<string, Rect>): void
+    {
+        this.finishReturn();
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        {
+            return;
+        }
+
+        const svg = this.renderer.getSvgElement();
+        const items = [];
+
+        for (const obj of this.doc.objects)
+        {
+            const was = before.get(obj.id);
+            const now = obj.presentation.bounds;
+            const el = svg.querySelector(`[data-id="${obj.id}"]`);
+
+            if (!was || !el || (was.x === now.x && was.y === now.y)
+                || was.width !== now.width || was.height !== now.height)
+            {
+                continue;
+            }
+
+            items.push({ id: obj.id, el, base: el.getAttribute("transform") ?? "",
+                dx: was.x - now.x, dy: was.y - now.y });
+        }
+
+        if (items.length === 0)
+        {
+            return;
+        }
+
+        this.returning = { frame: 0, start: null, items };
+        this.returnFrame(null);
+    }
+
+    /** Draws one frame of the return. It eases out, so it slows at the end. */
+    private returnFrame(time: number | null): void
+    {
+        const ret = this.returning!;
+
+        ret.start ??= time;
+
+        const t = (time === null || ret.start === null) ? 0 : (time - ret.start) / RETURN_DURATION_MS;
+
+        if (t >= 1)
+        {
+            this.finishReturn();
+            return;
+        }
+
+        const left = (1 - t) ** 3;
+
+        for (const item of ret.items)
+        {
+            item.el.setAttribute("transform", `translate(${item.dx * left}, ${item.dy * left}) ${item.base}`);
+        }
+
+        ret.frame = requestAnimationFrame((next) => this.returnFrame(next));
+    }
+
+    /** Ends a return at once. Each object is drawn from the document again. */
+    private finishReturn(): void
+    {
+        const ret = this.returning;
+
+        if (!ret)
+        {
+            return;
+        }
+
+        this.returning = null;
+        cancelAnimationFrame(ret.frame);
+
+        for (const item of ret.items)
+        {
+            const obj = this.getObjectById(item.id);
+
+            if (obj)
+            {
+                this.rerenderObject(obj);
+            }
+        }
     }
 
     /**
@@ -29462,6 +29681,15 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onKeyDown(e: KeyboardEvent): void
     {
+        // `Space` held on the canvas makes the next primary drag pan
+        // (section 5). A key in an embed inside the canvas is its own.
+        if (e.key === " " && e.target === this.renderer.getSvgElement())
+        {
+            this.spaceHeld = true;
+            e.preventDefault();
+            return;
+        }
+
         if (this.handleGlobalShortcut(e))
         {
             return;
@@ -30358,6 +30586,22 @@ function rectsIntersect(a: Rect, b: Rect): boolean
         && a.y + a.height > b.y
     );
 }
+
+// ============================================================================
+// POINTER — CONSTANTS
+// ============================================================================
+
+/** How near the canvas edge a drag scrolls the view, in CSS pixels (TOUCH_EXPERIENCE.md section 7). */
+const AUTO_SCROLL_ZONE = 48;
+
+/** How fast the view scrolls with the pointer at the edge or past it, in CSS pixels a second. */
+const AUTO_SCROLL_MAX_SPEED = 960;
+
+/** The longest frame that auto-scroll counts, so a slow frame does not jump the view. */
+const AUTO_SCROLL_MAX_FRAME_MS = 50;
+
+/** How long a cancelled move takes to go back to its start (section 10). */
+const RETURN_DURATION_MS = 150;
 
 // ============================================================================
 // LAYOUT — CONSTANTS
