@@ -946,3 +946,166 @@ describe("DiagramEngine interaction mode (#184)", () =>
         expect(box()).toMatchObject({ x: 50, y: 50 });
     });
 });
+
+describe("DiagramEngine touch targets (#184)", () =>
+{
+    /** A drag from one point to another, with one pointer type. */
+    function drag(from: [number, number], to: [number, number], init: PointerEventInit = {}): void
+    {
+        pointer("pointerdown", from[0], from[1], init);
+        pointer("pointermove", to[0], to[1], init);
+        pointer("pointerup", to[0], to[1], init);
+    }
+
+    /** Adds a 20 by 20 box at (300, 50), and selects it. */
+    function selectSmallBox(): void
+    {
+        engine.addObject({ id: "small", presentation: { shape: "rectangle",
+            bounds: { x: 300, y: 50, width: 20, height: 20 } } });
+        engine.select(["small"]);
+    }
+
+    function small(): { x: number; y: number; width: number; height: number }
+    {
+        return { ...engine.getObjectById("small")!.presentation.bounds };
+    }
+
+    test("aFinger_FifteenPixelsOutsideACorner_Resizes_AndAMouseThereDoesNot", () =>
+    {
+        engine.select(["box"]);
+        // The bottom-right handle is at (150, 110).
+        drag([165, 110], [185, 130], MOUSE);
+
+        expect(box()).toMatchObject({ x: 50, y: 50, width: 100, height: 60 });
+
+        // The mouse drew a selection rectangle, which cleared the selection.
+        engine.select(["box"]);
+        drag([165, 110], [185, 130]);
+
+        // The corner follows the finger.
+        expect(box()).toMatchObject({ x: 50, y: 50, width: 135, height: 80 });
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0 });
+    });
+
+    test("aFingersTap_BesideAHandle_KeepsTheSelection_AndAddsNoUndoStep", () =>
+    {
+        engine.select(["box"]);
+        pointer("pointerdown", 165, 110);
+        pointer("pointerup", 165, 110);
+
+        expect(selected()).toEqual(["box"]);
+        expect(engine.canUndo()).toBe(false);
+    });
+
+    test("aFinger_InsideASmallSelectedBox_MovesIt", () =>
+    {
+        selectSmallBox();
+        // The centre is 10 pixels from each edge handle.
+        drag([310, 60], [340, 80]);
+
+        expect(small()).toEqual({ x: 330, y: 70, width: 20, height: 20 });
+    });
+
+    test("theNearestHandle_Wins_WhenAFingersTargetsOverlap", () =>
+    {
+        selectSmallBox();
+        // 5.4 pixels from the top-right handle, 13 from the top one.
+        drag([322, 45], [342, 25]);
+
+        // The top-right corner follows the finger. The top handle would
+        // have kept the width.
+        expect(small()).toEqual({ x: 300, y: 25, width: 42, height: 45 });
+    });
+
+    test("theRotationHandle_Wins_WhereItsTargetOverlapsTheTopHandle", () =>
+    {
+        engine.select(["box"]);
+        // 7 pixels from the rotation handle at (100, 25), 18 from the top handle.
+        drag([100, 32], [160, 80]);
+
+        const obj = engine.getObjectById("box")!.presentation;
+
+        expect(obj.rotation).not.toBe(0);
+        expect(obj.bounds).toEqual({ x: 50, y: 50, width: 100, height: 60 });
+    });
+
+    test("aFingersTarget_Is44ScreenPixels_AtAnyZoom", () =>
+    {
+        engine.setZoomLevel(2);
+        engine.select(["box"]);
+
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0, zoom: 2 });
+
+        // The bottom-right handle is at (300, 220) on the screen. 30
+        // pixels away is outside the target, so the finger pans.
+        drag([330, 220], [350, 240]);
+
+        expect(box()).toMatchObject({ width: 100, height: 60 });
+        expect(engine.getViewport()).toMatchObject({ x: 20, y: 20 });
+
+        // After that pan of (20, 20), the handle is at (320, 240) on the
+        // screen. 20 pixels away is inside the target, so the finger
+        // resizes. The corner follows it to (170, 120) on the canvas.
+        drag([340, 240], [360, 260]);
+
+        expect(box()).toMatchObject({ width: 120, height: 70 });
+    });
+
+    test("aFingersTarget_IsNeverSmallerThanAMouses_AtHighZoom", () =>
+    {
+        // At zoom 6, a 44-pixel target is 7.3 canvas pixels wide. The
+        // mouse's target is 12 wide, so the finger keeps the mouse's.
+        engine.setZoomLevel(6);
+        engine.select(["box"]);
+        // 5 canvas pixels right of the bottom-right handle at (900, 660).
+        drag([930, 660], [990, 660]);
+
+        expect(box()).toMatchObject({ width: 115 });
+    });
+
+    test("aFinger_LiftedBesideAConnectionPoint_Connects_AndAMouseDoesNot", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        engine.setActiveTool("connect");
+        // b2's west point is at (250, 80). The lift is 10 pixels left of it.
+        drag([100, 80], [240, 80], MOUSE);
+
+        expect(engine.getConnectors()).toHaveLength(0);
+
+        engine.setActiveTool("connect");
+        drag([100, 80], [240, 80]);
+
+        expect(engine.getConnectors().map((c) => c.presentation))
+            .toEqual([expect.objectContaining({ sourceId: "box", targetId: "b2", targetPort: "port-w" })]);
+    });
+
+    test("aConnectionPointsTarget_Is44ScreenPixels_AtAnyZoom", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        engine.setZoomLevel(2);
+        engine.setActiveTool("connect");
+        // b2's west point is at (500, 160) on the screen. A lift 30
+        // pixels left of it is outside the target.
+        drag([200, 160], [470, 160]);
+
+        expect(engine.getConnectors()).toHaveLength(0);
+
+        drag([200, 160], [480, 160]);
+
+        expect(engine.getConnectors().map((c) => c.presentation.targetId)).toEqual(["b2"]);
+    });
+
+    test("aFinger_PressedBesideAConnectionPoint_StartsTheConnector", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        engine.setActiveTool("connect");
+        // The box's east point is at (150, 80). The press is 10 pixels right of it.
+        drag([160, 80], [300, 80]);
+
+        expect(engine.getConnectors().map((c) => c.presentation))
+            .toEqual([expect.objectContaining({ sourceId: "box", sourcePort: "port-e", targetId: "b2" })]);
+    });
+});

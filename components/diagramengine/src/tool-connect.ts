@@ -120,6 +120,12 @@ const CONNECT_DEFAULT_COLOR = "#495057";
 /** Radius for port indicator circles. */
 const PORT_INDICATOR_RADIUS = 5;
 
+/**
+ * Touch target of a connection point for a finger, in screen pixels
+ * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn point stays small.
+ */
+const PORT_TOUCH_TARGET_PX = 44;
+
 /** Distance threshold for showing port indicators on nearby objects. */
 const PORT_INDICATOR_RANGE = 80;
 
@@ -143,6 +149,8 @@ const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
  * 4. Source and target must be different objects.
  * 5. Escape cancels the operation.
  * 6. After creation, the tool switches to "select".
+ * 7. A finger may also press or lift up to 22 screen pixels outside an
+ *    object, beside one of its connection points.
  */
 export class ConnectorTool implements Tool
 {
@@ -207,20 +215,20 @@ export class ConnectorTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(e: MouseEvent, canvasPos: Point): void
     {
-        const hitObj = this.engine.hitTestObject(canvasPos);
+        const source = this.findConnectionEnd(canvasPos, (e as PointerEvent).pointerType);
 
-        if (!hitObj)
+        if (!source)
         {
             return;
         }
 
         this.dragging = true;
-        this.sourceObj = hitObj;
-        this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
+        this.sourceObj = source.obj;
+        this.sourcePortId = source.portId;
 
-        logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
+        logConnectDebug("Source:", source.obj.id, "port:", this.sourcePortId);
     }
 
     /**
@@ -243,10 +251,10 @@ export class ConnectorTool implements Tool
     /**
      * Handles mouse-up: identify the target object and create the connector.
      *
-     * @param _e - The originating mouse event (unused).
+     * @param e - The originating mouse event.
      * @param canvasPos - Mouse position where the drag ended.
      */
-    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging || !this.sourceObj)
         {
@@ -255,17 +263,15 @@ export class ConnectorTool implements Tool
 
         this.engine.clearToolOverlay();
 
-        const targetObj = this.engine.hitTestObject(canvasPos);
+        const target = this.findConnectionEnd(canvasPos, (e as PointerEvent).pointerType);
 
-        if (!targetObj || targetObj.id === this.sourceObj.id)
+        if (!target || target.obj.id === this.sourceObj.id)
         {
-            this.cancelConnection(targetObj);
+            this.cancelConnection(target ? target.obj : null);
             return;
         }
 
-        const targetPortId = this.findNearestPort(targetObj, canvasPos);
-
-        this.createConnector(this.sourceObj, this.sourcePortId, targetObj, targetPortId);
+        this.createConnector(this.sourceObj, this.sourcePortId, target.obj, target.portId);
     }
 
     /**
@@ -300,6 +306,70 @@ export class ConnectorTool implements Tool
     // ========================================================================
     // PRIVATE — PORT RESOLUTION
     // ========================================================================
+
+    /**
+     * Finds the object and port at one end of a connector. A press on an
+     * object takes its nearest port. A finger also takes a connection
+     * point within 22 screen pixels outside an object.
+     *
+     * @param pos - The press or lift position in canvas coordinates.
+     * @param pointerType - The pointer type of the press or lift.
+     * @returns The object and port, or null.
+     */
+    private findConnectionEnd(
+        pos: Point,
+        pointerType: string): { obj: DiagramObject; portId: string | undefined } | null
+    {
+        const obj = this.engine.hitTestObject(pos);
+
+        if (obj)
+        {
+            return { obj, portId: this.findNearestPort(obj, pos) };
+        }
+
+        return (pointerType === "touch") ? this.hitTestPortTarget(pos) : null;
+    }
+
+    /**
+     * Finds the edge port nearest a point, within a finger's target, on
+     * any visible object.
+     *
+     * @param pos - The point in canvas coordinates.
+     * @returns The object and port, or null when none is in reach.
+     */
+    private hitTestPortTarget(pos: Point): { obj: DiagramObject; portId: string } | null
+    {
+        const radius = Math.max(PORT_INDICATOR_RADIUS, (PORT_TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel());
+        let best: { obj: DiagramObject; portId: string } | null = null;
+        let bestSq = radius * radius;
+
+        for (const obj of this.engine.getVisibleObjects())
+        {
+            const shapeDef = this.engine.getShapeDef(obj.presentation.shape);
+
+            if (!shapeDef)
+            {
+                continue;
+            }
+
+            const b = obj.presentation.bounds;
+
+            for (const port of shapeDef.getPorts(b))
+            {
+                const dx = pos.x - (b.x + (port.position.x * b.width));
+                const dy = pos.y - (b.y + (port.position.y * b.height));
+                const dSq = (dx * dx) + (dy * dy);
+
+                if ((port.id !== "port-c") && (dSq <= bestSq))
+                {
+                    best = { obj, portId: port.id };
+                    bestSq = dSq;
+                }
+            }
+        }
+
+        return best;
+    }
 
     /**
      * Finds the nearest connection port on an object to a given point.

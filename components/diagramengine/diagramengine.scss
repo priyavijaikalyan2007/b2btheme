@@ -42,6 +42,12 @@
     // or zooms the page on a touch drag and cancels the pointer.
     touch-action: none;
 
+    // A long press on a shape or a handle opens no text selection and no
+    // callout (TOUCH_EXPERIENCE.md section 9, item 15). The inline text
+    // editor sits outside the svg, so it keeps both.
+    user-select: none;
+    -webkit-touch-callout: none;
+
     // An embedded canvas waits for a tap before it takes touch, so a
     // finger on it scrolls the page (TOUCH_EXPERIENCE.md section 9).
     &.de-canvas-inactive
@@ -69,6 +75,13 @@
 .de-canvas:not([data-interaction-mode="edit"]) .de-object
 {
     cursor: pointer;
+}
+
+// An embedded component is not a shape. Its text stays selectable.
+.de-embed-container
+{
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 // ============================================================================
