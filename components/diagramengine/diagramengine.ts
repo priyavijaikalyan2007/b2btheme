@@ -18888,6 +18888,9 @@ export interface EngineForTools
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
 
+    /** The view's zoom level, to size a finger's handle target. */
+    getZoomLevel(): number;
+
     /** Check whether an object is currently selected. */
     isSelected(id: string): boolean;
 
@@ -18981,6 +18984,12 @@ export interface EngineForTools
 /** Pixel radius for detecting a resize handle hit. */
 const HANDLE_HIT_RADIUS = 6;
 
+/**
+ * Touch target of a handle for a finger, in screen pixels
+ * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn handle stays small.
+ */
+const TOUCH_TARGET_PX = 44;
+
 /** Wraps any degree value into [0, 360). */
 function normaliseDegrees(degrees: number): number
 {
@@ -19000,6 +19009,13 @@ type DragMode = "none" | "move" | "resize" | "rotate" | "rubber-band";
 
 /** Identifies one of the 8 bounding-box resize handles. */
 type HandleId = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+/** A handle under a press: a resize handle, or the rotation handle. */
+interface HandleHit
+{
+    obj: DiagramObject;
+    handle: HandleId | "rotate";
+}
 
 // ============================================================================
 // PUBLIC API
@@ -19086,7 +19102,7 @@ export class SelectTool implements Tool
         this.dragStart = canvasPos;
 
         // Outside edit mode there are no handles to grab.
-        if (this.engine.canEdit() && (this.tryStartResize(canvasPos) || this.tryStartRotation(canvasPos)))
+        if (this.engine.canEdit() && this.tryStartHandleDrag(canvasPos, (e as PointerEvent).pointerType))
         {
             return;
         }
@@ -19197,19 +19213,14 @@ export class SelectTool implements Tool
      * (TOUCH_EXPERIENCE.md rule 2).
      *
      * @param canvasPos - Position in canvas coordinate space.
+     * @param pointerType - The press's pointer type. A finger gets the
+     *   larger handle target.
      * @returns true when the press would not start a rubber band.
      */
-    public hitsTarget(canvasPos: Point): boolean
+    public hitsTarget(canvasPos: Point, pointerType: string): boolean
     {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            if (this.hitTestHandles(canvasPos, obj) || this.hitTestRotationHandle(canvasPos, obj))
-            {
-                return true;
-            }
-        }
-
-        return this.engine.hitTestObject(canvasPos) !== null
+        return this.hitTestHandle(canvasPos, pointerType) !== null
+            || this.engine.hitTestObject(canvasPos) !== null
             || this.engine.hitTestConnector(canvasPos) !== null;
     }
 
@@ -19449,53 +19460,81 @@ export class SelectTool implements Tool
     // ========================================================================
 
     /**
-     * Test whether the cursor is over a resize handle of a selected
-     * object and, if so, begin a resize drag.
+     * Begin a resize or a rotation drag if the press is on a handle of
+     * a selected object.
      *
-     * @param canvasPos - Mouse position in canvas space.
-     * @returns true if a resize drag was started.
+     * @param canvasPos - Press position in canvas space.
+     * @param pointerType - The press's pointer type.
+     * @returns true if a drag was started.
      */
-    private tryStartResize(canvasPos: Point): boolean
+    private tryStartHandleDrag(canvasPos: Point, pointerType: string): boolean
     {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            const handle = this.hitTestHandles(canvasPos, obj);
+        const hit = this.hitTestHandle(canvasPos, pointerType);
 
-            if (handle)
-            {
-                this.beginResizeDrag(obj, handle);
-                return true;
-            }
+        if (!hit)
+        {
+            return false;
         }
 
-        return false;
+        if (hit.handle === "rotate")
+        {
+            this.beginRotateDrag(hit.obj, canvasPos);
+        }
+        else
+        {
+            this.beginResizeDrag(hit.obj, hit.handle);
+        }
+
+        return true;
     }
 
     /**
-     * Test all 8 handles of an object for a hit.
+     * Find the handle nearest a press, among the resize and rotation
+     * handles of every selected object. The nearest wins, because a
+     * finger's targets overlap on a small object.
      *
-     * @param canvasPos - Mouse position in canvas space.
-     * @param obj - The object whose handles to test.
-     * @returns The handle ID if hit, or null.
+     * A finger's target is 44 screen pixels, but only outside the
+     * object. Inside it, the target keeps the mouse size, so a finger
+     * on a small selected object still moves it.
+     *
+     * @param canvasPos - Press position in canvas space.
+     * @param pointerType - The press's pointer type.
+     * @returns The handle under the press, or null.
      */
-    private hitTestHandles(
-        canvasPos: Point,
-        obj: DiagramObject): HandleId | null
+    private hitTestHandle(canvasPos: Point, pointerType: string): HandleHit | null
     {
-        const handles = this.computeHandlePositions(obj.presentation.bounds);
+        const outside = (pointerType === "touch")
+            ? Math.max(HANDLE_HIT_RADIUS, (TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel())
+            : HANDLE_HIT_RADIUS;
+        let best: HandleHit | null = null;
+        let bestSq = Infinity;
 
-        for (const [id, pos] of handles)
+        for (const obj of this.engine.getSelectedObjects())
         {
-            const dx = canvasPos.x - pos.x;
-            const dy = canvasPos.y - pos.y;
+            const b = obj.presentation.bounds;
+            const inside = (canvasPos.x > b.x) && (canvasPos.x < b.x + b.width)
+                && (canvasPos.y > b.y) && (canvasPos.y < b.y + b.height);
+            const radius = inside ? HANDLE_HIT_RADIUS : outside;
+            const targets: Array<[HandleId | "rotate", Point]> = [
+                ...this.computeHandlePositions(b),
+                ["rotate", { x: b.x + (b.width / 2), y: b.y - ROTATION_HANDLE_OFFSET }],
+            ];
 
-            if ((dx * dx + dy * dy) <= (HANDLE_HIT_RADIUS * HANDLE_HIT_RADIUS))
+            for (const [handle, pos] of targets)
             {
-                return id;
+                const dx = canvasPos.x - pos.x;
+                const dy = canvasPos.y - pos.y;
+                const dSq = (dx * dx) + (dy * dy);
+
+                if ((dSq <= radius * radius) && (dSq < bestSq))
+                {
+                    best = { obj, handle };
+                    bestSq = dSq;
+                }
             }
         }
 
-        return null;
+        return best;
     }
 
     /**
@@ -19649,6 +19688,7 @@ export class SelectTool implements Tool
     private finishResizeDrag(): void
     {
         const obj = this.engine.getObjectById(this.targetObjectId);
+        const start = this.targetStartBounds;
 
         if (!obj)
         {
@@ -19656,6 +19696,14 @@ export class SelectTool implements Tool
         }
 
         const after = obj.presentation.bounds;
+
+        // A press on a handle that changed nothing is not a resize, as
+        // with a move (#72). A finger's tap beside a handle lands here.
+        if (after.x === start.x && after.y === start.y
+            && after.width === start.width && after.height === start.height)
+        {
+            return;
+        }
 
         this.engine.pushResizeUndo(
             this.targetObjectId,
@@ -19667,50 +19715,6 @@ export class SelectTool implements Tool
     // ========================================================================
     // ROTATION DRAG
     // ========================================================================
-
-    /**
-     * Test whether the cursor is over the rotation handle and, if so,
-     * begin a rotation drag.
-     *
-     * The rotation handle sits at (centerX, top - ROTATION_HANDLE_OFFSET).
-     *
-     * @param canvasPos - Mouse position in canvas space.
-     * @returns true if a rotation drag was started.
-     */
-    private tryStartRotation(canvasPos: Point): boolean
-    {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            if (this.hitTestRotationHandle(canvasPos, obj))
-            {
-                this.beginRotateDrag(obj, canvasPos);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Test whether a point is within hit radius of the rotation handle.
-     *
-     * @param canvasPos - Mouse position in canvas space.
-     * @param obj - The object whose rotation handle to test.
-     * @returns true if the rotation handle is hit.
-     */
-    private hitTestRotationHandle(
-        canvasPos: Point,
-        obj: DiagramObject): boolean
-    {
-        const b = obj.presentation.bounds;
-        const handleX = b.x + (b.width / 2);
-        const handleY = b.y - ROTATION_HANDLE_OFFSET;
-
-        const dx = canvasPos.x - handleX;
-        const dy = canvasPos.y - handleY;
-
-        return (dx * dx + dy * dy) <= (HANDLE_HIT_RADIUS * HANDLE_HIT_RADIUS);
-    }
 
     /**
      * Enter rotation drag mode for the given object.
@@ -19744,7 +19748,7 @@ export class SelectTool implements Tool
     private handleRotateDrag(canvasPos: Point): void
     {
         // (CRITICAL) THIS USED TO SET THE ABSOLUTE ANGLE TO THE
-        // CURSOR, AND `hitTestRotationHandle` PLACES THE HANDLE DUE
+        // CURSOR, AND `hitTestHandle` PLACES THE HANDLE DUE
         // NORTH OF THE UNROTATED BOUNDS. So grabbing the handle of
         // an object already at 45 degrees set its rotation to
         // roughly 0 on the first pointer move -- the shape SNAPPED
@@ -21031,6 +21035,12 @@ const CONNECT_DEFAULT_COLOR = "#495057";
 /** Radius for port indicator circles. */
 const PORT_INDICATOR_RADIUS = 5;
 
+/**
+ * Touch target of a connection point for a finger, in screen pixels
+ * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn point stays small.
+ */
+const PORT_TOUCH_TARGET_PX = 44;
+
 /** Distance threshold for showing port indicators on nearby objects. */
 const PORT_INDICATOR_RANGE = 80;
 
@@ -21054,6 +21064,8 @@ const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
  * 4. Source and target must be different objects.
  * 5. Escape cancels the operation.
  * 6. After creation, the tool switches to "select".
+ * 7. A finger may also press or lift up to 22 screen pixels outside an
+ *    object, beside one of its connection points.
  */
 export class ConnectorTool implements Tool
 {
@@ -21118,20 +21130,20 @@ export class ConnectorTool implements Tool
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseDown(_e: MouseEvent, canvasPos: Point): void
+    public onMouseDown(e: MouseEvent, canvasPos: Point): void
     {
-        const hitObj = this.engine.hitTestObject(canvasPos);
+        const source = this.findConnectionEnd(canvasPos, (e as PointerEvent).pointerType);
 
-        if (!hitObj)
+        if (!source)
         {
             return;
         }
 
         this.dragging = true;
-        this.sourceObj = hitObj;
-        this.sourcePortId = this.findNearestPort(hitObj, canvasPos);
+        this.sourceObj = source.obj;
+        this.sourcePortId = source.portId;
 
-        logConnectDebug("Source:", hitObj.id, "port:", this.sourcePortId);
+        logConnectDebug("Source:", source.obj.id, "port:", this.sourcePortId);
     }
 
     /**
@@ -21154,10 +21166,10 @@ export class ConnectorTool implements Tool
     /**
      * Handles mouse-up: identify the target object and create the connector.
      *
-     * @param _e - The originating mouse event (unused).
+     * @param e - The originating mouse event.
      * @param canvasPos - Mouse position where the drag ended.
      */
-    public onMouseUp(_e: MouseEvent, canvasPos: Point): void
+    public onMouseUp(e: MouseEvent, canvasPos: Point): void
     {
         if (!this.dragging || !this.sourceObj)
         {
@@ -21166,17 +21178,15 @@ export class ConnectorTool implements Tool
 
         this.engine.clearToolOverlay();
 
-        const targetObj = this.engine.hitTestObject(canvasPos);
+        const target = this.findConnectionEnd(canvasPos, (e as PointerEvent).pointerType);
 
-        if (!targetObj || targetObj.id === this.sourceObj.id)
+        if (!target || target.obj.id === this.sourceObj.id)
         {
-            this.cancelConnection(targetObj);
+            this.cancelConnection(target ? target.obj : null);
             return;
         }
 
-        const targetPortId = this.findNearestPort(targetObj, canvasPos);
-
-        this.createConnector(this.sourceObj, this.sourcePortId, targetObj, targetPortId);
+        this.createConnector(this.sourceObj, this.sourcePortId, target.obj, target.portId);
     }
 
     /**
@@ -21211,6 +21221,70 @@ export class ConnectorTool implements Tool
     // ========================================================================
     // PRIVATE — PORT RESOLUTION
     // ========================================================================
+
+    /**
+     * Finds the object and port at one end of a connector. A press on an
+     * object takes its nearest port. A finger also takes a connection
+     * point within 22 screen pixels outside an object.
+     *
+     * @param pos - The press or lift position in canvas coordinates.
+     * @param pointerType - The pointer type of the press or lift.
+     * @returns The object and port, or null.
+     */
+    private findConnectionEnd(
+        pos: Point,
+        pointerType: string): { obj: DiagramObject; portId: string | undefined } | null
+    {
+        const obj = this.engine.hitTestObject(pos);
+
+        if (obj)
+        {
+            return { obj, portId: this.findNearestPort(obj, pos) };
+        }
+
+        return (pointerType === "touch") ? this.hitTestPortTarget(pos) : null;
+    }
+
+    /**
+     * Finds the edge port nearest a point, within a finger's target, on
+     * any visible object.
+     *
+     * @param pos - The point in canvas coordinates.
+     * @returns The object and port, or null when none is in reach.
+     */
+    private hitTestPortTarget(pos: Point): { obj: DiagramObject; portId: string } | null
+    {
+        const radius = Math.max(PORT_INDICATOR_RADIUS, (PORT_TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel());
+        let best: { obj: DiagramObject; portId: string } | null = null;
+        let bestSq = radius * radius;
+
+        for (const obj of this.engine.getVisibleObjects())
+        {
+            const shapeDef = this.engine.getShapeDef(obj.presentation.shape);
+
+            if (!shapeDef)
+            {
+                continue;
+            }
+
+            const b = obj.presentation.bounds;
+
+            for (const port of shapeDef.getPorts(b))
+            {
+                const dx = pos.x - (b.x + (port.position.x * b.width));
+                const dy = pos.y - (b.y + (port.position.y * b.height));
+                const dSq = (dx * dx) + (dy * dy);
+
+                if ((port.id !== "port-c") && (dSq <= bestSq))
+                {
+                    best = { obj, portId: port.id };
+                    bestSq = dSq;
+                }
+            }
+        }
+
+        return best;
+    }
 
     /**
      * Finds the nearest connection port on an object to a given point.
@@ -29483,7 +29557,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         const select = this.toolManager.getToolByName("select") as SelectTool;
 
         if (!g.afterLongPress && this.toolManager.getActive() === select
-            && (!this.canEdit() || !select.hitsTarget(start)))
+            && (!this.canEdit() || !select.hitsTarget(start, g.pointerType)))
         {
             this.viewPan = { x: g.startX, y: g.startY };
             return;

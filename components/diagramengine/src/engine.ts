@@ -3808,7 +3808,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         const select = this.toolManager.getToolByName("select") as SelectTool;
 
         if (!g.afterLongPress && this.toolManager.getActive() === select
-            && (!this.canEdit() || !select.hitsTarget(start)))
+            && (!this.canEdit() || !select.hitsTarget(start, g.pointerType)))
         {
             this.viewPan = { x: g.startX, y: g.startY };
             return;

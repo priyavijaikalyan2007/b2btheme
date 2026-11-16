@@ -17,7 +17,9 @@
  *     mouse drag pans it;
  *   - a finger or the wheel on an inactive embedded canvas scrolls the
  *     page, and a tap makes the canvas take the finger;
- *   - in view mode, a finger on an object pans and a mouse moves nothing.
+ *   - in view mode, a finger on an object pans and a mouse moves nothing;
+ *   - a finger beside a handle grabs it, and a long press on a shape
+ *     selects no text.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -416,5 +418,47 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
         expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
         expect(await selectedIds(page)).toEqual(["box"]);
         expect(await engineCall(page, "canUndo")).toBe(false);
+    });
+
+    test("a finger 15 pixels outside a corner resizes, and the canvas selects no text", async ({ page }) =>
+    {
+        await open(page);
+        await page.evaluate(() => (window as unknown as Record<string, any>).__engine.select(["box"]));
+
+        const cdp = await page.context().newCDPSession(page);
+
+        // The bottom-right handle is at (150, 110), and the box ends there.
+        await touch(cdp, "touchStart", [{ x: 165, y: 110 }]);
+
+        for (let i = 1; i <= 4; i += 1)
+        {
+            await touch(cdp, "touchMove", [{ x: 165 + (i * 10), y: 110 + (i * 5) }]);
+        }
+
+        await touch(cdp, "touchEnd", []);
+
+        // The corner follows the finger to (205, 130).
+        await expect.poll(() => page.evaluate(() =>
+            (window as unknown as Record<string, any>).__engine.getObjectById("box").presentation.bounds))
+            .toEqual({ x: BOX.x, y: BOX.y, width: 155, height: 80 });
+        expect(await engineCall(page, "getViewport")).toEqual({ x: 0, y: 0, zoom: 1 });
+
+        const userSelect = await page.evaluate(() =>
+        {
+            const svg = document.querySelector("#host svg")!;
+            const fo = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+            const embed = document.createElement("div");
+
+            embed.className = "de-embed-container";
+            fo.appendChild(embed);
+            svg.appendChild(fo);
+
+            return {
+                shape: getComputedStyle(document.querySelector('[data-id="box"]')!).userSelect,
+                embed: getComputedStyle(embed).userSelect,
+            };
+        });
+
+        expect(userSelect).toEqual({ shape: "none", embed: "text" });
     });
 });

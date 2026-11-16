@@ -733,7 +733,10 @@ export const BASELINES = {
     // touch and the wheel to the page until a tap, a click or keyboard focus.
     // #184 part 4 (2026-11-16): 31627 -> 31752, `interactionMode` (view, comment, edit) and its
     // setter, with the gates in SelectTool, the outline-only selection and the mode check.
-    diagramengineLines: 31752,
+    // #184 part 5 (2026-11-16): 31752 -> 31826, a finger's 44 px target on handles and
+    // connection points, with one nearest-handle search in SelectTool for resize and rotation,
+    // and no undo step for a handle press that resized nothing.
+    diagramengineLines: 31826,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

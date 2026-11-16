@@ -34,6 +34,9 @@ export interface EngineForTools
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
 
+    /** The view's zoom level, to size a finger's handle target. */
+    getZoomLevel(): number;
+
     /** Check whether an object is currently selected. */
     isSelected(id: string): boolean;
 
@@ -129,6 +132,12 @@ const NUDGE_SHIFT_PX = 10;
 /** Pixel radius for detecting a resize handle hit. */
 const HANDLE_HIT_RADIUS = 6;
 
+/**
+ * Touch target of a handle for a finger, in screen pixels
+ * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn handle stays small.
+ */
+const TOUCH_TARGET_PX = 44;
+
 /** Wraps any degree value into [0, 360). */
 function normaliseDegrees(degrees: number): number
 {
@@ -150,6 +159,13 @@ type DragMode = "none" | "move" | "resize" | "rotate" | "rubber-band";
 
 /** Identifies one of the 8 bounding-box resize handles. */
 type HandleId = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+/** A handle under a press: a resize handle, or the rotation handle. */
+interface HandleHit
+{
+    obj: DiagramObject;
+    handle: HandleId | "rotate";
+}
 
 // ============================================================================
 // PUBLIC API
@@ -236,7 +252,7 @@ export class SelectTool implements Tool
         this.dragStart = canvasPos;
 
         // Outside edit mode there are no handles to grab.
-        if (this.engine.canEdit() && (this.tryStartResize(canvasPos) || this.tryStartRotation(canvasPos)))
+        if (this.engine.canEdit() && this.tryStartHandleDrag(canvasPos, (e as PointerEvent).pointerType))
         {
             return;
         }
@@ -347,19 +363,14 @@ export class SelectTool implements Tool
      * (TOUCH_EXPERIENCE.md rule 2).
      *
      * @param canvasPos - Position in canvas coordinate space.
+     * @param pointerType - The press's pointer type. A finger gets the
+     *   larger handle target.
      * @returns true when the press would not start a rubber band.
      */
-    public hitsTarget(canvasPos: Point): boolean
+    public hitsTarget(canvasPos: Point, pointerType: string): boolean
     {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            if (this.hitTestHandles(canvasPos, obj) || this.hitTestRotationHandle(canvasPos, obj))
-            {
-                return true;
-            }
-        }
-
-        return this.engine.hitTestObject(canvasPos) !== null
+        return this.hitTestHandle(canvasPos, pointerType) !== null
+            || this.engine.hitTestObject(canvasPos) !== null
             || this.engine.hitTestConnector(canvasPos) !== null;
     }
 
@@ -599,53 +610,81 @@ export class SelectTool implements Tool
     // ========================================================================
 
     /**
-     * Test whether the cursor is over a resize handle of a selected
-     * object and, if so, begin a resize drag.
+     * Begin a resize or a rotation drag if the press is on a handle of
+     * a selected object.
      *
-     * @param canvasPos - Mouse position in canvas space.
-     * @returns true if a resize drag was started.
+     * @param canvasPos - Press position in canvas space.
+     * @param pointerType - The press's pointer type.
+     * @returns true if a drag was started.
      */
-    private tryStartResize(canvasPos: Point): boolean
+    private tryStartHandleDrag(canvasPos: Point, pointerType: string): boolean
     {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            const handle = this.hitTestHandles(canvasPos, obj);
+        const hit = this.hitTestHandle(canvasPos, pointerType);
 
-            if (handle)
-            {
-                this.beginResizeDrag(obj, handle);
-                return true;
-            }
+        if (!hit)
+        {
+            return false;
         }
 
-        return false;
+        if (hit.handle === "rotate")
+        {
+            this.beginRotateDrag(hit.obj, canvasPos);
+        }
+        else
+        {
+            this.beginResizeDrag(hit.obj, hit.handle);
+        }
+
+        return true;
     }
 
     /**
-     * Test all 8 handles of an object for a hit.
+     * Find the handle nearest a press, among the resize and rotation
+     * handles of every selected object. The nearest wins, because a
+     * finger's targets overlap on a small object.
      *
-     * @param canvasPos - Mouse position in canvas space.
-     * @param obj - The object whose handles to test.
-     * @returns The handle ID if hit, or null.
+     * A finger's target is 44 screen pixels, but only outside the
+     * object. Inside it, the target keeps the mouse size, so a finger
+     * on a small selected object still moves it.
+     *
+     * @param canvasPos - Press position in canvas space.
+     * @param pointerType - The press's pointer type.
+     * @returns The handle under the press, or null.
      */
-    private hitTestHandles(
-        canvasPos: Point,
-        obj: DiagramObject): HandleId | null
+    private hitTestHandle(canvasPos: Point, pointerType: string): HandleHit | null
     {
-        const handles = this.computeHandlePositions(obj.presentation.bounds);
+        const outside = (pointerType === "touch")
+            ? Math.max(HANDLE_HIT_RADIUS, (TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel())
+            : HANDLE_HIT_RADIUS;
+        let best: HandleHit | null = null;
+        let bestSq = Infinity;
 
-        for (const [id, pos] of handles)
+        for (const obj of this.engine.getSelectedObjects())
         {
-            const dx = canvasPos.x - pos.x;
-            const dy = canvasPos.y - pos.y;
+            const b = obj.presentation.bounds;
+            const inside = (canvasPos.x > b.x) && (canvasPos.x < b.x + b.width)
+                && (canvasPos.y > b.y) && (canvasPos.y < b.y + b.height);
+            const radius = inside ? HANDLE_HIT_RADIUS : outside;
+            const targets: Array<[HandleId | "rotate", Point]> = [
+                ...this.computeHandlePositions(b),
+                ["rotate", { x: b.x + (b.width / 2), y: b.y - ROTATION_HANDLE_OFFSET }],
+            ];
 
-            if ((dx * dx + dy * dy) <= (HANDLE_HIT_RADIUS * HANDLE_HIT_RADIUS))
+            for (const [handle, pos] of targets)
             {
-                return id;
+                const dx = canvasPos.x - pos.x;
+                const dy = canvasPos.y - pos.y;
+                const dSq = (dx * dx) + (dy * dy);
+
+                if ((dSq <= radius * radius) && (dSq < bestSq))
+                {
+                    best = { obj, handle };
+                    bestSq = dSq;
+                }
             }
         }
 
-        return null;
+        return best;
     }
 
     /**
@@ -799,6 +838,7 @@ export class SelectTool implements Tool
     private finishResizeDrag(): void
     {
         const obj = this.engine.getObjectById(this.targetObjectId);
+        const start = this.targetStartBounds;
 
         if (!obj)
         {
@@ -806,6 +846,14 @@ export class SelectTool implements Tool
         }
 
         const after = obj.presentation.bounds;
+
+        // A press on a handle that changed nothing is not a resize, as
+        // with a move (#72). A finger's tap beside a handle lands here.
+        if (after.x === start.x && after.y === start.y
+            && after.width === start.width && after.height === start.height)
+        {
+            return;
+        }
 
         this.engine.pushResizeUndo(
             this.targetObjectId,
@@ -817,50 +865,6 @@ export class SelectTool implements Tool
     // ========================================================================
     // ROTATION DRAG
     // ========================================================================
-
-    /**
-     * Test whether the cursor is over the rotation handle and, if so,
-     * begin a rotation drag.
-     *
-     * The rotation handle sits at (centerX, top - ROTATION_HANDLE_OFFSET).
-     *
-     * @param canvasPos - Mouse position in canvas space.
-     * @returns true if a rotation drag was started.
-     */
-    private tryStartRotation(canvasPos: Point): boolean
-    {
-        for (const obj of this.engine.getSelectedObjects())
-        {
-            if (this.hitTestRotationHandle(canvasPos, obj))
-            {
-                this.beginRotateDrag(obj, canvasPos);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Test whether a point is within hit radius of the rotation handle.
-     *
-     * @param canvasPos - Mouse position in canvas space.
-     * @param obj - The object whose rotation handle to test.
-     * @returns true if the rotation handle is hit.
-     */
-    private hitTestRotationHandle(
-        canvasPos: Point,
-        obj: DiagramObject): boolean
-    {
-        const b = obj.presentation.bounds;
-        const handleX = b.x + (b.width / 2);
-        const handleY = b.y - ROTATION_HANDLE_OFFSET;
-
-        const dx = canvasPos.x - handleX;
-        const dy = canvasPos.y - handleY;
-
-        return (dx * dx + dy * dy) <= (HANDLE_HIT_RADIUS * HANDLE_HIT_RADIUS);
-    }
 
     /**
      * Enter rotation drag mode for the given object.
@@ -894,7 +898,7 @@ export class SelectTool implements Tool
     private handleRotateDrag(canvasPos: Point): void
     {
         // (CRITICAL) THIS USED TO SET THE ABSOLUTE ANGLE TO THE
-        // CURSOR, AND `hitTestRotationHandle` PLACES THE HANDLE DUE
+        // CURSOR, AND `hitTestHandle` PLACES THE HANDLE DUE
         // NORTH OF THE UNROTATED BOUNDS. So grabbing the handle of
         // an object already at 45 degrees set its rotation to
         // roughly 0 on the first pointer move -- the shape SNAPPED
