@@ -2486,7 +2486,7 @@ export class RenderEngine
 
         for (const pos of positions)
         {
-            g.appendChild(this.createResizeHandle(pos.x, pos.y, pos.cursor));
+            g.appendChild(this.createResizeHandle(pos.x, pos.y));
         }
     }
 
@@ -2497,33 +2497,34 @@ export class RenderEngine
      * @returns An array of handle position objects.
      */
     private computeHandlePositions(
-        b: Rect): Array<{ x: number; y: number; cursor: string }>
+        b: Rect): Array<{ x: number; y: number }>
     {
         const w = b.width;
         const h = b.height;
         const mid = HANDLE_SIZE / 2;
 
         return [
-            { x: -mid, y: -mid, cursor: "nw-resize" },
-            { x: (w / 2) - mid, y: -mid, cursor: "n-resize" },
-            { x: w - mid, y: -mid, cursor: "ne-resize" },
-            { x: w - mid, y: (h / 2) - mid, cursor: "e-resize" },
-            { x: w - mid, y: h - mid, cursor: "se-resize" },
-            { x: (w / 2) - mid, y: h - mid, cursor: "s-resize" },
-            { x: -mid, y: h - mid, cursor: "sw-resize" },
-            { x: -mid, y: (h / 2) - mid, cursor: "w-resize" }
+            { x: -mid, y: -mid },
+            { x: (w / 2) - mid, y: -mid },
+            { x: w - mid, y: -mid },
+            { x: w - mid, y: (h / 2) - mid },
+            { x: w - mid, y: h - mid },
+            { x: (w / 2) - mid, y: h - mid },
+            { x: -mid, y: h - mid },
+            { x: -mid, y: (h / 2) - mid }
         ];
     }
 
     /**
      * Create a single resize handle (filled square).
      *
+     * The select tool sets the cursor over it (#191).
+     *
      * @param x - X position of the handle.
      * @param y - Y position of the handle.
-     * @param cursor - CSS cursor style for the handle.
      * @returns An SVG rect element for the handle.
      */
-    private createResizeHandle(x: number, y: number, cursor: string): SVGElement
+    private createResizeHandle(x: number, y: number): SVGElement
     {
         return svgCreate("rect", {
             x: String(x),
@@ -2532,8 +2533,7 @@ export class RenderEngine
             height: String(HANDLE_SIZE),
             fill: "#ffffff",
             stroke: "var(--bs-primary, #0d6efd)",
-            "stroke-width": "1",
-            cursor: cursor
+            "stroke-width": "1"
         });
     }
 
@@ -2565,8 +2565,7 @@ export class RenderEngine
             r: String(ROTATION_HANDLE_RADIUS),
             fill: "#ffffff",
             stroke: "var(--bs-primary, #0d6efd)",
-            "stroke-width": "1",
-            cursor: "grab"
+            "stroke-width": "1"
         });
 
         g.appendChild(stem);

@@ -17969,7 +17969,7 @@ export class RenderEngine
 
         for (const pos of positions)
         {
-            g.appendChild(this.createResizeHandle(pos.x, pos.y, pos.cursor));
+            g.appendChild(this.createResizeHandle(pos.x, pos.y));
         }
     }
 
@@ -17980,33 +17980,34 @@ export class RenderEngine
      * @returns An array of handle position objects.
      */
     private computeHandlePositions(
-        b: Rect): Array<{ x: number; y: number; cursor: string }>
+        b: Rect): Array<{ x: number; y: number }>
     {
         const w = b.width;
         const h = b.height;
         const mid = HANDLE_SIZE / 2;
 
         return [
-            { x: -mid, y: -mid, cursor: "nw-resize" },
-            { x: (w / 2) - mid, y: -mid, cursor: "n-resize" },
-            { x: w - mid, y: -mid, cursor: "ne-resize" },
-            { x: w - mid, y: (h / 2) - mid, cursor: "e-resize" },
-            { x: w - mid, y: h - mid, cursor: "se-resize" },
-            { x: (w / 2) - mid, y: h - mid, cursor: "s-resize" },
-            { x: -mid, y: h - mid, cursor: "sw-resize" },
-            { x: -mid, y: (h / 2) - mid, cursor: "w-resize" }
+            { x: -mid, y: -mid },
+            { x: (w / 2) - mid, y: -mid },
+            { x: w - mid, y: -mid },
+            { x: w - mid, y: (h / 2) - mid },
+            { x: w - mid, y: h - mid },
+            { x: (w / 2) - mid, y: h - mid },
+            { x: -mid, y: h - mid },
+            { x: -mid, y: (h / 2) - mid }
         ];
     }
 
     /**
      * Create a single resize handle (filled square).
      *
+     * The select tool sets the cursor over it (#191).
+     *
      * @param x - X position of the handle.
      * @param y - Y position of the handle.
-     * @param cursor - CSS cursor style for the handle.
      * @returns An SVG rect element for the handle.
      */
-    private createResizeHandle(x: number, y: number, cursor: string): SVGElement
+    private createResizeHandle(x: number, y: number): SVGElement
     {
         return svgCreate("rect", {
             x: String(x),
@@ -18015,8 +18016,7 @@ export class RenderEngine
             height: String(HANDLE_SIZE),
             fill: "#ffffff",
             stroke: "var(--bs-primary, #0d6efd)",
-            "stroke-width": "1",
-            cursor: cursor
+            "stroke-width": "1"
         });
     }
 
@@ -18048,8 +18048,7 @@ export class RenderEngine
             r: String(ROTATION_HANDLE_RADIUS),
             fill: "#ffffff",
             stroke: "var(--bs-primary, #0d6efd)",
-            "stroke-width": "1",
-            cursor: "grab"
+            "stroke-width": "1"
         });
 
         g.appendChild(stem);
@@ -18888,8 +18887,11 @@ export interface EngineForTools
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
 
-    /** The view's zoom level, to size a finger's handle target. */
+    /** The view's zoom level, to size a handle's target. */
     getZoomLevel(): number;
+
+    /** Set the canvas cursor until the next tool change or hover. */
+    setCanvasCursor(cursor: string): void;
 
     /** Check whether an object is currently selected. */
     isSelected(id: string): boolean;
@@ -18985,10 +18987,29 @@ export interface EngineForTools
 const HANDLE_HIT_RADIUS = 6;
 
 /**
- * Touch target of a handle for a finger, in screen pixels
- * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn handle stays small.
+ * Target of a handle or a connection point, in screen pixels
+ * (TOUCH_EXPERIENCE.md section 7): 44 for a finger, 24 for a mouse or a
+ * pen. The drawn handle stays small.
  */
 const TOUCH_TARGET_PX = 44;
+const FINE_TARGET_PX = 24;
+
+/**
+ * The radius, in canvas units, of a handle's or a connection point's
+ * target outside the object. It is the same size on the screen at any
+ * zoom, and never smaller than `floor`.
+ *
+ * @param pointerType - The pointer type of the press or the hover.
+ * @param zoom - The view's zoom level.
+ * @param floor - The smallest radius, in canvas units.
+ * @returns The radius in canvas units.
+ */
+function targetRadius(pointerType: string, zoom: number, floor: number): number
+{
+    const px = (pointerType === "touch") ? TOUCH_TARGET_PX : FINE_TARGET_PX;
+
+    return Math.max(floor, (px / 2) / zoom);
+}
 
 /** Wraps any degree value into [0, 360). */
 function normaliseDegrees(degrees: number): number
@@ -19016,6 +19037,13 @@ interface HandleHit
     obj: DiagramObject;
     handle: HandleId | "rotate";
 }
+
+/** The cursor over each handle. */
+const HANDLE_CURSORS: Record<HandleId | "rotate", string> = {
+    nw: "nw-resize", n: "n-resize", ne: "ne-resize", e: "e-resize",
+    se: "se-resize", s: "s-resize", sw: "sw-resize", w: "w-resize",
+    rotate: "grab",
+};
 
 // ============================================================================
 // PUBLIC API
@@ -19127,14 +19155,19 @@ export class SelectTool implements Tool
     }
 
     /**
-     * Handle mouse-move: delegate to the active drag mode handler.
+     * Handle mouse-move: delegate to the active drag mode handler. A
+     * move with no drag is a mouse or a pen hover, and sets the cursor.
      *
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(e: MouseEvent, canvasPos: Point): void
     {
-        if (this.dragMode === "move")
+        if (this.dragMode === "none")
+        {
+            this.engine.setCanvasCursor(this.cursorAt(canvasPos, (e as PointerEvent).pointerType));
+        }
+        else if (this.dragMode === "move")
         {
             this.handleMoveDrag(canvasPos);
         }
@@ -19222,6 +19255,33 @@ export class SelectTool implements Tool
         return this.hitTestHandle(canvasPos, pointerType) !== null
             || this.engine.hitTestObject(canvasPos) !== null
             || this.engine.hitTestConnector(canvasPos) !== null;
+    }
+
+    /**
+     * The cursor for a hover, from the same hit tests as a press: a
+     * handle's resize cursor, `grab` on the rotation handle, `move` on an
+     * object, or `pointer` on one outside edit mode.
+     *
+     * @param canvasPos - Hover position in canvas space.
+     * @param pointerType - The hover's pointer type.
+     * @returns A CSS cursor.
+     */
+    private cursorAt(canvasPos: Point, pointerType: string): string
+    {
+        const canEdit = this.engine.canEdit();
+        const hit = canEdit ? this.hitTestHandle(canvasPos, pointerType) : null;
+
+        if (hit)
+        {
+            return HANDLE_CURSORS[hit.handle];
+        }
+
+        if (this.engine.hitTestObject(canvasPos))
+        {
+            return canEdit ? "move" : "pointer";
+        }
+
+        return this.cursor;
     }
 
     /**
@@ -19490,12 +19550,12 @@ export class SelectTool implements Tool
 
     /**
      * Find the handle nearest a press, among the resize and rotation
-     * handles of every selected object. The nearest wins, because a
-     * finger's targets overlap on a small object.
+     * handles of every selected object. The nearest wins, because the
+     * targets overlap on a small object.
      *
-     * A finger's target is 44 screen pixels, but only outside the
-     * object. Inside it, the target keeps the mouse size, so a finger
-     * on a small selected object still moves it.
+     * The target is 44 screen pixels for a finger and 24 for a mouse or
+     * a pen, but only outside the object. Inside it, the target keeps a
+     * radius of 6, so a press on a small selected object still moves it.
      *
      * @param canvasPos - Press position in canvas space.
      * @param pointerType - The press's pointer type.
@@ -19503,9 +19563,7 @@ export class SelectTool implements Tool
      */
     private hitTestHandle(canvasPos: Point, pointerType: string): HandleHit | null
     {
-        const outside = (pointerType === "touch")
-            ? Math.max(HANDLE_HIT_RADIUS, (TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel())
-            : HANDLE_HIT_RADIUS;
+        const outside = targetRadius(pointerType, this.engine.getZoomLevel(), HANDLE_HIT_RADIUS);
         let best: HandleHit | null = null;
         let bestSq = Infinity;
 
@@ -21035,12 +21093,6 @@ const CONNECT_DEFAULT_COLOR = "#495057";
 /** Radius for port indicator circles. */
 const PORT_INDICATOR_RADIUS = 5;
 
-/**
- * Touch target of a connection point for a finger, in screen pixels
- * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn point stays small.
- */
-const PORT_TOUCH_TARGET_PX = 44;
-
 /** Distance threshold for showing port indicators on nearby objects. */
 const PORT_INDICATOR_RANGE = 80;
 
@@ -21064,8 +21116,9 @@ const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
  * 4. Source and target must be different objects.
  * 5. Escape cancels the operation.
  * 6. After creation, the tool switches to "select".
- * 7. A finger may also press or lift up to 22 screen pixels outside an
- *    object, beside one of its connection points.
+ * 7. A press or a lift may also land outside an object, beside one of
+ *    its connection points: up to 22 screen pixels for a finger, and 12
+ *    for a mouse or a pen.
  */
 export class ConnectorTool implements Tool
 {
@@ -21224,8 +21277,9 @@ export class ConnectorTool implements Tool
 
     /**
      * Finds the object and port at one end of a connector. A press on an
-     * object takes its nearest port. A finger also takes a connection
-     * point within 22 screen pixels outside an object.
+     * object takes its nearest port. A press beside an object takes a
+     * connection point within its target: 22 screen pixels for a
+     * finger, and 12 for a mouse or a pen.
      *
      * @param pos - The press or lift position in canvas coordinates.
      * @param pointerType - The pointer type of the press or lift.
@@ -21242,19 +21296,22 @@ export class ConnectorTool implements Tool
             return { obj, portId: this.findNearestPort(obj, pos) };
         }
 
-        return (pointerType === "touch") ? this.hitTestPortTarget(pos) : null;
+        return this.hitTestPortTarget(pos, pointerType);
     }
 
     /**
-     * Finds the edge port nearest a point, within a finger's target, on
-     * any visible object.
+     * Finds the edge port nearest a point, within the pointer's target,
+     * on any visible object.
      *
      * @param pos - The point in canvas coordinates.
+     * @param pointerType - The pointer type of the press or lift.
      * @returns The object and port, or null when none is in reach.
      */
-    private hitTestPortTarget(pos: Point): { obj: DiagramObject; portId: string } | null
+    private hitTestPortTarget(
+        pos: Point,
+        pointerType: string): { obj: DiagramObject; portId: string } | null
     {
-        const radius = Math.max(PORT_INDICATOR_RADIUS, (PORT_TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel());
+        const radius = targetRadius(pointerType, this.engine.getZoomLevel(), PORT_INDICATOR_RADIUS);
         let best: { obj: DiagramObject; portId: string } | null = null;
         let bestSq = radius * radius;
 
@@ -24516,10 +24573,21 @@ export class ToolManager
         this.applyCursor(tool.cursor);
     }
 
-    /** Apply the tool's cursor to the SVG canvas element. */
+    /**
+     * Set the canvas cursor, for the active tool's hover. The next tool
+     * change sets that tool's cursor.
+     *
+     * @param cursor - A CSS cursor.
+     */
+    public setCursor(cursor: string): void
+    {
+        this.applyCursor(cursor);
+    }
+
+    /** Apply a cursor to the SVG canvas element. */
     private applyCursor(cursor: string): void
     {
-        if (this.svgEl)
+        if (this.svgEl && this.svgEl.style.cursor !== cursor)
         {
             this.svgEl.style.cursor = cursor;
         }
@@ -26574,6 +26642,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     canEdit(): boolean
     {
         return this.mode === "edit";
+    }
+
+    /** Sets the canvas cursor for the active tool's hover. */
+    setCanvasCursor(cursor: string): void
+    {
+        this.toolManager.setCursor(cursor);
     }
 
     /**

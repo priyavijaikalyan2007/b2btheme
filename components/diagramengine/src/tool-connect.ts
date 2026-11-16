@@ -120,12 +120,6 @@ const CONNECT_DEFAULT_COLOR = "#495057";
 /** Radius for port indicator circles. */
 const PORT_INDICATOR_RADIUS = 5;
 
-/**
- * Touch target of a connection point for a finger, in screen pixels
- * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn point stays small.
- */
-const PORT_TOUCH_TARGET_PX = 44;
-
 /** Distance threshold for showing port indicators on nearby objects. */
 const PORT_INDICATOR_RANGE = 80;
 
@@ -149,8 +143,9 @@ const PORT_INDICATOR_STROKE = "var(--bs-primary, #0d6efd)";
  * 4. Source and target must be different objects.
  * 5. Escape cancels the operation.
  * 6. After creation, the tool switches to "select".
- * 7. A finger may also press or lift up to 22 screen pixels outside an
- *    object, beside one of its connection points.
+ * 7. A press or a lift may also land outside an object, beside one of
+ *    its connection points: up to 22 screen pixels for a finger, and 12
+ *    for a mouse or a pen.
  */
 export class ConnectorTool implements Tool
 {
@@ -309,8 +304,9 @@ export class ConnectorTool implements Tool
 
     /**
      * Finds the object and port at one end of a connector. A press on an
-     * object takes its nearest port. A finger also takes a connection
-     * point within 22 screen pixels outside an object.
+     * object takes its nearest port. A press beside an object takes a
+     * connection point within its target: 22 screen pixels for a
+     * finger, and 12 for a mouse or a pen.
      *
      * @param pos - The press or lift position in canvas coordinates.
      * @param pointerType - The pointer type of the press or lift.
@@ -327,19 +323,22 @@ export class ConnectorTool implements Tool
             return { obj, portId: this.findNearestPort(obj, pos) };
         }
 
-        return (pointerType === "touch") ? this.hitTestPortTarget(pos) : null;
+        return this.hitTestPortTarget(pos, pointerType);
     }
 
     /**
-     * Finds the edge port nearest a point, within a finger's target, on
-     * any visible object.
+     * Finds the edge port nearest a point, within the pointer's target,
+     * on any visible object.
      *
      * @param pos - The point in canvas coordinates.
+     * @param pointerType - The pointer type of the press or lift.
      * @returns The object and port, or null when none is in reach.
      */
-    private hitTestPortTarget(pos: Point): { obj: DiagramObject; portId: string } | null
+    private hitTestPortTarget(
+        pos: Point,
+        pointerType: string): { obj: DiagramObject; portId: string } | null
     {
-        const radius = Math.max(PORT_INDICATOR_RADIUS, (PORT_TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel());
+        const radius = targetRadius(pointerType, this.engine.getZoomLevel(), PORT_INDICATOR_RADIUS);
         let best: { obj: DiagramObject; portId: string } | null = null;
         let bestSq = radius * radius;
 
