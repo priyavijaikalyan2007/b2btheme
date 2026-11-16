@@ -1218,6 +1218,7 @@ describe("SelectTool rotation", () =>
         const tool = new SelectTool({
             getSelectedObjects: () => [obj],
             canEdit: () => true,
+            getZoomLevel: () => 1,
             hitTestObject: () => null,
             hitTestConnector: () => null,
             rotateObjectTo: (_id: string, deg: number) => { applied = deg; },

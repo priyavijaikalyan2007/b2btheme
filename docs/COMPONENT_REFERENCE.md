@@ -4756,12 +4756,12 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 - **A drag near the edge scrolls the view.** Within 48 px of the canvas edge, a drag that moves, resizes, draws or selects scrolls the view, and the object stays under the pointer. The speed grows to 960 px a second at the edge, and stays at that past it. A pan never scrolls this way.
 - **A palm is ignored.** A touch while a pen is down does nothing, unless a second touch makes a two-finger gesture.
 - **The screen edge belongs to the browser.** A touch that starts within 20 px of the left or right screen edge does nothing.
-- **A finger has a 44 px target on handles and connection points.** The drawn handle stays small (`TOUCH_EXPERIENCE.md` sections 6.2 and 7).
-  - A finger grabs a resize or rotation handle up to 22 screen px outside the object. Inside the object, the target keeps the mouse size, so a finger on a small selected object still moves it.
+- **Handles and connection points have a 44 px target for a finger, and 24 px for a mouse or a pen.** The drawn handle stays small (`TOUCH_EXPERIENCE.md` sections 6.2 and 7).
+  - A press grabs a resize or rotation handle up to 22 screen px outside the object for a finger, or 12 px for a mouse or a pen. Inside the object, the target has a radius of 6, so a press on a small selected object still moves it.
   - Where two targets overlap, the nearest handle wins.
-  - With the connect tool, a finger can press or lift up to 22 screen px outside an object, beside one of its connection points.
-  - The target is in screen pixels, so it stays 44 px at any zoom, and is never smaller than the mouse's target.
-  - A mouse or a pen keeps the small target.
+  - With the connect tool, a press or a lift can land outside an object, beside one of its connection points, by the same distances.
+  - The target is in screen pixels, so it keeps its size at any zoom. It is never smaller than a radius of 6 on the canvas.
+- **The cursor shows what a press does.** With the select tool, a mouse or a pen over a handle's target shows its resize cursor, or `grab` for the rotation handle. Over an object it shows `move`, or `pointer` outside edit mode. The cursor comes from the same hit tests as the press. Other tools keep their own cursor.
 - **A long press selects no text.** The canvas sets `user-select: none` and `-webkit-touch-callout: none`. An embedded component keeps text selection, and so does the inline text editor.
 - **A drag can leave the canvas.** The canvas captures the pointer when a drag starts, so a drag released outside it still ends.
 - **An embedded canvas waits for a tap.** Pass `embedded: true` when the canvas sits in a page that scrolls. The canvas then starts inactive, with `touch-action: manipulation`: a finger on it scrolls or zooms the page, and so does the wheel.

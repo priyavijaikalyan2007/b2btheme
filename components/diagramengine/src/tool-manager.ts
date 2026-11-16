@@ -301,10 +301,21 @@ export class ToolManager
         this.applyCursor(tool.cursor);
     }
 
-    /** Apply the tool's cursor to the SVG canvas element. */
+    /**
+     * Set the canvas cursor, for the active tool's hover. The next tool
+     * change sets that tool's cursor.
+     *
+     * @param cursor - A CSS cursor.
+     */
+    public setCursor(cursor: string): void
+    {
+        this.applyCursor(cursor);
+    }
+
+    /** Apply a cursor to the SVG canvas element. */
     private applyCursor(cursor: string): void
     {
-        if (this.svgEl)
+        if (this.svgEl && this.svgEl.style.cursor !== cursor)
         {
             this.svgEl.style.cursor = cursor;
         }
