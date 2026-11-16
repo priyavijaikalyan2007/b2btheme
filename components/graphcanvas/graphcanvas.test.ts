@@ -527,17 +527,20 @@ describe("GraphCanvas force layout keeps node boxes apart", () =>
         gc.destroy();
     });
 
-    test("forceLayout_NoNodeIsFlungFar_OnAnySeed", () =>
+    test("forceLayout_NoNodeIsFlungFar_OnTheSeedsThatUsedTo", () =>
     {
         // A 40-node tree, three children a parent. Two nodes that started a
         // few px apart could push each other thousands of px in one step,
         // so the layout spanned more than the 0.1 zoom limit can fit (#193).
+        // Before the cap, these seeds of seeds 1 to 300 spanned 4,067 to
+        // 26,728 px. All 300 took too long for CI with coverage (#196).
+        const flung = [23, 37, 62, 75, 88, 89, 143, 152, 239, 273];
         const nodes = Array.from({ length: 40 }, (_, i) => ({ id: `t${i}`, label: `T${i}`, type: "entity" }));
         const edges = nodes.slice(1).map((n, i) =>
             ({ id: `te${i}`, sourceId: `t${Math.floor(i / 3)}`, targetId: n.id, type: "has" }));
         const wide: string[] = [];
 
-        for (let seed = 1; seed <= 300; seed++)
+        for (const seed of flung)
         {
             const gc = createGraphCanvas(makeOptions({ nodes, edges, layout: "force", layoutSeed: seed }));
             const at = [...centres().values()];
