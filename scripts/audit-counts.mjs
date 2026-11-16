@@ -727,7 +727,9 @@ export const BASELINES = {
     // pointer only, pointercancel, and the comments on why an interactive embed is not captured.
     // #184 (2026-11-15): 30943 -> 31284, the canvas reads its input through GestureRecognizer: the press, tap,
     // drag, pinch and hover handlers, and an onCancel on each of the ten tools that restores a cancelled drag.
-    diagramengineLines: 31284,
+    // #184 part 2 (2026-11-16): 31284 -> 31528, auto-scroll at the canvas edge, the slide back of a
+    // cancelled move, and `Space` with a drag to pan.
+    diagramengineLines: 31528,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

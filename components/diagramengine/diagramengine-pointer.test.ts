@@ -328,3 +328,238 @@ describe("DiagramEngine pointer input (#176, #184)", () =>
         delete (window as unknown as Record<string, unknown>).createPointerTestWidget;
     });
 });
+
+describe("DiagramEngine auto-scroll, return and Space (#184)", () =>
+{
+    /** jsdom gives the canvas no size, so these tests give it 400 by 300. */
+    function sizeCanvas(): void
+    {
+        svg.getBoundingClientRect = () => new DOMRect(0, 0, 400, 300);
+    }
+
+    function boxTransform(): string | null
+    {
+        return svg.querySelector('[data-id="box"]')!.getAttribute("transform");
+    }
+
+    function key(type: string, k: string, target: Element = svg): void
+    {
+        target.dispatchEvent(new KeyboardEvent(type, { key: k, bubbles: true }));
+    }
+
+    beforeEach(() =>
+    {
+        vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] });
+        sizeCanvas();
+    });
+
+    afterEach(() =>
+    {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    test("aStillDrag_NearTheRightEdge_ScrollsTheView_AndKeepsTheBoxUnderThePointer", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 390, 80);
+
+        expect(box().x).toBe(340);
+
+        vi.advanceTimersByTime(200);
+
+        const vp = engine.getViewport();
+
+        // 10 px from the edge, the view moves left at most of the full speed.
+        expect(vp.x).toBeLessThan(-100);
+        expect(vp.y).toBe(0);
+        // The point under the pointer is (390 - vp.x) in the canvas, and
+        // the box moved with it from where the press grabbed it.
+        expect(box().x).toBeCloseTo(50 + (390 - vp.x) - 100);
+
+        pointer("pointerup", 390, 80);
+        vi.advanceTimersByTime(200);
+
+        expect(engine.getViewport().x).toBe(vp.x);
+        expect(engine.canUndo()).toBe(true);
+    });
+
+    test("aDrag_PastTheEdge_ScrollsAtTheFullSpeed", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 100, 400);
+        vi.advanceTimersByTime(500);
+        pointer("pointerup", 100, 400);
+
+        // 960 px a second, so half a second moves about 480.
+        expect(engine.getViewport().y).toBeCloseTo(-480, -1);
+        expect(engine.getViewport().x).toBe(0);
+    });
+
+    test("aSlowFrame_ScrollsNoMoreThanFiftyMilliseconds", () =>
+    {
+        const frames: FrameRequestCallback[] = [];
+
+        vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => frames.push(cb));
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 100, 400);
+        // The first frame counts as one 60 Hz frame, so 16 px.
+        frames.shift()!(1000);
+        // A tab that comes back after two seconds counts 50 ms, so 48 px.
+        frames.shift()!(3000);
+
+        expect(engine.getViewport().y).toBeCloseTo(-64);
+    });
+
+    test("aStillDrag_AwayFromTheEdge_DoesNotScroll", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 200, 150);
+        vi.advanceTimersByTime(200);
+
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0 });
+    });
+
+    test("aBackgroundPan_NearTheEdge_DoesNotAutoScroll", () =>
+    {
+        pointer("pointerdown", 300, 250);
+        pointer("pointermove", 390, 250);
+        vi.advanceTimersByTime(200);
+
+        expect(engine.getViewport()).toMatchObject({ x: 90, y: 0 });
+    });
+
+    test("aSecondFinger_StopsTheAutoScroll", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 390, 80);
+        vi.advanceTimersByTime(100);
+        pointer("pointerdown", 200, 150, SECOND);
+
+        const x = engine.getViewport().x;
+
+        vi.advanceTimersByTime(200);
+
+        expect(engine.getViewport().x).toBe(x);
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+    });
+
+    test("aCancelledMove_SlidesBack_AndEndsAtTheStart", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointercancel", 140, 100);
+
+        // The document is back at once. The drawing starts where the drag left it.
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(boxTransform()).toBe("translate(40, 20) translate(50, 50)");
+
+        vi.advanceTimersByTime(80);
+
+        const [, dx] = /^translate\(([\d.]+), [\d.]+\)/.exec(boxTransform()!)!;
+
+        expect(Number(dx)).toBeGreaterThan(0);
+        expect(Number(dx)).toBeLessThan(40);
+
+        vi.advanceTimersByTime(200);
+
+        expect(boxTransform()).toBe("translate(50, 50)");
+    });
+
+    test("aCancelledMove_WithReducedMotion_Snaps", () =>
+    {
+        vi.spyOn(window, "matchMedia").mockImplementation((query) =>
+            ({ matches: query === "(prefers-reduced-motion: reduce)" }) as MediaQueryList);
+
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointercancel", 140, 100);
+
+        expect(boxTransform()).toBe("translate(50, 50)");
+    });
+
+    test("aPress_DuringTheReturn_EndsIt", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointercancel", 140, 100);
+        pointer("pointerdown", 300, 250, MOUSE);
+
+        expect(boxTransform()).toBe("translate(50, 50)");
+    });
+
+    test("aCancelledResize_Snaps", () =>
+    {
+        engine.select(["box"]);
+        // The top-left handle is at (50, 50). Its drag moves the box and changes its size.
+        pointer("pointerdown", 50, 50, MOUSE);
+        pointer("pointermove", 30, 40, MOUSE);
+
+        expect(box()).toMatchObject({ x: 30, y: 40 });
+
+        pointer("pointercancel", 30, 40, MOUSE);
+
+        expect(box()).toMatchObject({ x: 50, y: 50, width: 100, height: 60 });
+        expect(boxTransform()).toBe("translate(50, 50)");
+    });
+
+    test("spaceAndAPrimaryDrag_PansWithAnyTool_AndTheToolComesBack", () =>
+    {
+        engine.setActiveTool("draw");
+        key("keydown", " ");
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+
+        expect(engine.getViewport()).toMatchObject({ x: 40, y: 20 });
+        expect(engine.getObjects()).toHaveLength(1);
+        expect(engine.getActiveTool()).toBe("draw");
+    });
+
+    test("aSpacePan_NearTheEdge_DoesNotAutoScroll", () =>
+    {
+        key("keydown", " ");
+        pointer("pointerdown", 300, 150, MOUSE);
+        pointer("pointermove", 390, 150, MOUSE);
+        vi.advanceTimersByTime(200);
+
+        expect(engine.getViewport()).toMatchObject({ x: 90, y: 0 });
+    });
+
+    test("spaceUp_OrABlur_EndsThePan", () =>
+    {
+        key("keydown", " ");
+        key("keyup", " ");
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+
+        key("keydown", " ");
+        svg.dispatchEvent(new FocusEvent("blur"));
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+
+        expect(box()).toMatchObject({ x: 130, y: 90 });
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0 });
+    });
+
+    test("spaceInAnElementInsideTheCanvas_IsThatElementsKey", () =>
+    {
+        const field = document.createElement("div");
+
+        svg.appendChild(field);
+
+        const typed = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+
+        field.dispatchEvent(typed);
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointermove", 140, 100, MOUSE);
+        pointer("pointerup", 140, 100, MOUSE);
+
+        expect(typed.defaultPrevented).toBe(false);
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+    });
+});

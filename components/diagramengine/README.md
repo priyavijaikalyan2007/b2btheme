@@ -108,12 +108,13 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 | Drag on the background, with the select tool | Pans the view | Draws a selection rectangle |
 | Long press, then drag, on the background | Draws a selection rectangle | Not used |
 | Two fingers | Pan and zoom at the same time. They never change an object. | Not used |
-| Middle-button drag | Not used | Pans the view, with any tool |
+| Middle-button drag, or `Space` with a drag | Not used | Pans the view, with any tool. The tool comes back on the release. |
 | Wheel | Not used | Zooms at the pointer. #183 changes this. |
 
 - **Movement tolerance.** A move of more than 10 px for a finger, or 4 px for a mouse or a pen, starts a drag. A smaller move is a tap or a click.
 - **A second finger cancels a drag.** The object goes back to where it was, with no undo step. The two-finger gesture then starts.
-- **A cancel restores.** When the browser cancels the pointer, the drag puts back what it changed, with no undo step.
+- **A cancel restores.** When the browser cancels the pointer, the drag puts back what it changed, with no undo step. A moved object slides back in 150 ms, so a person sees where it went. With reduced motion it snaps back. A resize snaps back.
+- **A drag near the edge scrolls the view.** Within 48 px of the canvas edge, a drag that moves, resizes, draws or selects scrolls the view, and the object stays under the pointer. The speed grows to 960 px a second at the edge, and stays at that past it. A pan never scrolls this way.
 - **A palm is ignored.** A touch while a pen is down does nothing, unless a second touch makes a two-finger gesture.
 - **The screen edge belongs to the browser.** A touch that starts within 20 px of the left or right screen edge does nothing.
 - **A drag can leave the canvas.** The canvas captures the pointer when a drag starts, so a drag released outside it still ends.
@@ -129,13 +130,10 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 These touch behaviors are not done yet. Later changes under #184 add them:
 
 - Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
-- The view does not scroll when a drag reaches the canvas edge.
 - A long press opens no menu.
 - A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
-- `Space` with a drag does not pan, although the tables below list it.
 - Handles and connection points keep their small target for a finger.
 - There is no `interactionMode` option.
-- A cancelled drag jumps back. It does not animate.
 
 ### Organisation
 
