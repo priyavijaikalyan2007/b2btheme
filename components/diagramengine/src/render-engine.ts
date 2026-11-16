@@ -509,14 +509,16 @@ export class RenderEngine
      * selected objects. Clears any previous overlay first.
      *
      * @param objects - The currently selected diagram objects.
+     * @param withHandles - false draws the outline only, for a canvas
+     *     that a person cannot edit.
      */
-    public renderSelectionHandles(objects: DiagramObject[]): void
+    public renderSelectionHandles(objects: DiagramObject[], withHandles: boolean): void
     {
         this.clearOverlay();
 
         for (const obj of objects)
         {
-            this.renderSingleSelection(obj);
+            this.renderSingleSelection(obj, withHandles);
         }
     }
 
@@ -2431,8 +2433,9 @@ export class RenderEngine
      * 8 resize handles, and a rotation handle.
      *
      * @param obj - The selected diagram object.
+     * @param withHandles - false leaves out the resize and rotation handles.
      */
-    private renderSingleSelection(obj: DiagramObject): void
+    private renderSingleSelection(obj: DiagramObject, withHandles: boolean): void
     {
         const b = obj.presentation.bounds;
         const g = svgCreate("g", { "data-selection-id": obj.id }) as SVGGElement;
@@ -2441,8 +2444,11 @@ export class RenderEngine
 
         g.appendChild(this.createSelectionOutline(b));
 
-        this.appendResizeHandles(g, b);
-        this.appendRotationHandle(g, b);
+        if (withHandles)
+        {
+            this.appendResizeHandles(g, b);
+            this.appendRotationHandle(g, b);
+        }
 
         this.overlayLayer.appendChild(g);
     }

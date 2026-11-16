@@ -5117,10 +5117,34 @@
               ]
             },
             "editable": {
-              "description": "Master edit switch. false = read-only viewer.",
+              "description": "Master edit switch. `false` is the same as `interactionMode: \"view\"`.\n`interactionMode` wins when both are set.",
               "anyOf": [
                 {
                   "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
+            "interactionMode": {
+              "description": "What a person may do on the canvas: \"view\", \"comment\" or \"edit\".\nDefault \"edit\". The app sets it, by the task and the person's\npermissions, never by the screen size (TOUCH_EXPERIENCE.md section\n3). `setInteractionMode` changes it later. The mode limits gestures\nand keys only. Every API method still works.",
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "const": "comment"
+                    },
+                    {
+                      "const": "edit"
+                    },
+                    {
+                      "const": "view"
+                    }
+                  ]
                 },
                 {
                   "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"

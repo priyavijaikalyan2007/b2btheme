@@ -943,6 +943,15 @@ export type DiagramHoverRenderResult =
     | string
     | null;
 
+/**
+ * What a person may do on the canvas (TOUCH_EXPERIENCE.md section 3).
+ * "view": select, open, pan, zoom and measure. No gesture changes the
+ * diagram. "comment": the same, because the canvas has no comment
+ * gesture yet. The host adds comments with `addComment`. "edit": every
+ * action.
+ */
+export type DiagramInteractionMode = "view" | "comment" | "edit";
+
 /** Mode selector for the DiagramEngine hover card. */
 export type DiagramHoverCardMode = "builtin" | "custom" | "off";
 
@@ -964,8 +973,20 @@ export interface DiagramEngineOptions
     /** Enabled tool names. */
     tools?: string[];
 
-    /** Master edit switch. false = read-only viewer. */
+    /**
+     * Master edit switch. `false` is the same as `interactionMode: "view"`.
+     * `interactionMode` wins when both are set.
+     */
     editable?: boolean;
+
+    /**
+     * What a person may do on the canvas: "view", "comment" or "edit".
+     * Default "edit". The app sets it, by the task and the person's
+     * permissions, never by the screen size (TOUCH_EXPERIENCE.md section
+     * 3). `setInteractionMode` changes it later. The mode limits gestures
+     * and keys only. Every API method still works.
+     */
+    interactionMode?: DiagramInteractionMode;
 
     /** Whether connectors can be created. */
     connectable?: boolean;

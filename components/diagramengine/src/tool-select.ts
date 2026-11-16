@@ -28,6 +28,9 @@
  */
 export interface EngineForTools
 {
+    /** Whether the interaction mode lets a person change the diagram. */
+    canEdit(): boolean;
+
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
 
@@ -232,12 +235,8 @@ export class SelectTool implements Tool
     {
         this.dragStart = canvasPos;
 
-        if (this.tryStartResize(canvasPos))
-        {
-            return;
-        }
-
-        if (this.tryStartRotation(canvasPos))
+        // Outside edit mode there are no handles to grab.
+        if (this.engine.canEdit() && (this.tryStartResize(canvasPos) || this.tryStartRotation(canvasPos)))
         {
             return;
         }
@@ -418,7 +417,11 @@ export class SelectTool implements Tool
             this.engine.addToSelection(hitObj.id);
         }
 
-        this.startMoveDrag();
+        // Outside edit mode a press selects, and its drag moves nothing.
+        if (this.engine.canEdit())
+        {
+            this.startMoveDrag();
+        }
     }
 
     /**
@@ -997,7 +1000,7 @@ export class SelectTool implements Tool
     {
         const delta = this.arrowKeyToDelta(e);
 
-        if (!delta)
+        if (!delta || !this.engine.canEdit())
         {
             return false;
         }
@@ -1041,7 +1044,7 @@ export class SelectTool implements Tool
      */
     private handleDeleteKey(e: KeyboardEvent): boolean
     {
-        if (e.key !== "Delete" && e.key !== "Backspace")
+        if ((e.key !== "Delete" && e.key !== "Backspace") || !this.engine.canEdit())
         {
             return false;
         }
