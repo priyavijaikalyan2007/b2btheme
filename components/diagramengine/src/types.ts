@@ -989,6 +989,15 @@ export interface DiagramEngineOptions
     snapping?: Partial<SnappingConfig>;
 
     /**
+     * The canvas sits in a page that scrolls. It then starts inactive: a
+     * finger scrolls the page across it, and so does the wheel. A tap, a
+     * click or keyboard focus makes it active. Escape, or focus that
+     * leaves the canvas, makes it inactive again (TOUCH_EXPERIENCE.md
+     * section 6.2). Default false: the canvas is always active.
+     */
+    embedded?: boolean;
+
+    /**
      * Custom content renderer for objects. Called before the
      * default renderer. Return true to suppress default rendering.
      *

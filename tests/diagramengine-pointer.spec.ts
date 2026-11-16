@@ -14,7 +14,9 @@
  *     press then a drag, a drag on the background, a pinch, and a second
  *     finger during a drag (section 11, item 13);
  *   - a drag held near the edge scrolls the view, and `Space` with a
- *     mouse drag pans it.
+ *     mouse drag pans it;
+ *   - a finger or the wheel on an inactive embedded canvas scrolls the
+ *     page, and a tap makes the canvas take the finger.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -43,17 +45,18 @@ const HTML = `<!doctype html>
 /** The box starts at (50, 50), 100 by 60, at zoom 1 with no pan. */
 const BOX = { x: 50, y: 50, width: 100, height: 60 };
 
-async function open(page: Page): Promise<void>
+async function open(page: Page, embedded = false): Promise<void>
 {
     await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
     await page.goto(PAGE);
-    await page.evaluate((bounds) =>
+    await page.evaluate(({ bounds, embedded }) =>
     {
         const w = window as unknown as Record<string, any>;
 
-        w.__engine = w.createDiagramEngine("host", { snapping: { grid: false, objects: false, guides: false } });
+        w.__engine = w.createDiagramEngine("host",
+            { embedded, snapping: { grid: false, objects: false, guides: false } });
         w.__engine.addObject({ id: "box", presentation: { shape: "rectangle", bounds } });
-    }, BOX);
+    }, { bounds: BOX, embedded });
 }
 
 type Point = { x: number; y: number };
@@ -325,5 +328,61 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
         expect(await engineCall(page, "getViewport")).toEqual({ x: 40, y: 20, zoom: 1 });
         expect(await boxBounds(page)).toEqual({ x: BOX.x, y: BOX.y });
         expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+
+    test("a finger on an inactive embedded canvas scrolls the page", async ({ page }) =>
+    {
+        await open(page, true);
+
+        const cdp = await page.context().newCDPSession(page);
+
+        await touch(cdp, "touchStart", [{ x: 300, y: 250 }]);
+
+        for (let i = 1; i <= 8; i += 1)
+        {
+            await touch(cdp, "touchMove", [{ x: 300, y: 250 - (i * 20) }]);
+        }
+
+        await touch(cdp, "touchEnd", []);
+
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+        expect(await engineCall(page, "getViewport")).toEqual({ x: 0, y: 0, zoom: 1 });
+    });
+
+    test("a tap activates an embedded canvas, and then a finger moves the box", async ({ page }) =>
+    {
+        await open(page, true);
+
+        const c = await boxCenter(page);
+        const cdp = await page.context().newCDPSession(page);
+
+        await touch(cdp, "touchStart", [c]);
+        await touch(cdp, "touchEnd", []);
+
+        expect(await selectedIds(page)).toEqual([]);
+        await expect(page.locator("#host svg")).not.toHaveClass(/de-canvas-inactive/);
+
+        await touch(cdp, "touchStart", [c]);
+
+        for (let i = 1; i <= 4; i += 1)
+        {
+            await touch(cdp, "touchMove", [{ x: c.x + (i * 10), y: c.y + (i * 10) }]);
+        }
+
+        await touch(cdp, "touchEnd", []);
+
+        expect(await boxBounds(page)).toEqual({ x: BOX.x + 40, y: BOX.y + 40 });
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+    test("the wheel on an inactive embedded canvas scrolls the page", async ({ page }) =>
+    {
+        await open(page, true);
+        await page.mouse.move(300, 250);
+        await page.mouse.wheel(0, 200);
+
+        await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+        expect(await engineCall(page, "getZoomLevel")).toBe(1);
     });
 });

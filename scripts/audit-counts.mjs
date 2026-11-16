@@ -729,7 +729,9 @@ export const BASELINES = {
     // drag, pinch and hover handlers, and an onCancel on each of the ten tools that restores a cancelled drag.
     // #184 part 2 (2026-11-16): 31284 -> 31528, auto-scroll at the canvas edge, the slide back of a
     // cancelled move, and `Space` with a drag to pan.
-    diagramengineLines: 31528,
+    // #184 part 3 (2026-11-16): 31528 -> 31627, the `embedded` option: an inactive canvas that leaves
+    // touch and the wheel to the page until a tap, a click or keyboard focus.
+    diagramengineLines: 31627,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

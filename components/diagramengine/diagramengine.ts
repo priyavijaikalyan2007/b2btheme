@@ -1030,6 +1030,15 @@ export interface DiagramEngineOptions
     snapping?: Partial<SnappingConfig>;
 
     /**
+     * The canvas sits in a page that scrolls. It then starts inactive: a
+     * finger scrolls the page across it, and so does the wheel. A tap, a
+     * click or keyboard focus makes it active. Escape, or focus that
+     * leaves the canvas, makes it inactive again (TOUCH_EXPERIENCE.md
+     * section 6.2). Default false: the canvas is always active.
+     */
+    embedded?: boolean;
+
+    /**
      * Custom content renderer for objects. Called before the
      * default renderer. Return true to suppress default rendering.
      *
@@ -25994,6 +26003,15 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** The tool that a middle-button or `Space` press switched from to pan. It comes back on the release. */
     private panFrom: string | null = null;
 
+    /** The element the canvas is mounted in. Focus inside it keeps an embedded canvas active. */
+    private readonly host: HTMLElement;
+
+    /** Whether the canvas takes touch and the wheel. An embedded canvas starts inactive (section 6.2). */
+    private active = true;
+
+    /** Whether the press in progress is a finger on an inactive canvas. It can only activate the canvas. */
+    private touchWhileInactive = false;
+
     /** Whether `Space` is down on the canvas, so a primary press pans (section 5). */
     private spaceHeld = false;
 
@@ -26034,7 +26052,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         registerExtendedShapes(this.shapeRegistry);
 
         container.classList.add(`${CLS}-container`);
+        this.host = container;
         this.renderer = new RenderEngine(container);
+        this.setCanvasActive(!opts.embedded);
 
         this.doc = opts.document
             ? this.cloneDoc(opts.document)
@@ -29197,6 +29217,18 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         {
             this.spaceHeld = false;
         });
+        // Keyboard focus makes an embedded canvas active. Focus that
+        // leaves makes it inactive, so the page scrolls again. Focus that
+        // moves within the host, such as into the inline text editor,
+        // goes out and comes back in, so the canvas stays active.
+        this.host.addEventListener("focusin", () => this.setCanvasActive(true));
+        this.host.addEventListener("focusout", () =>
+        {
+            if (this.opts.embedded)
+            {
+                this.setCanvasActive(false);
+            }
+        });
 
         return gestures;
     }
@@ -29279,6 +29311,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onGesturePress(g: PointerReport): void
     {
+        // Read before ending the text edit, whose removal can move focus.
+        const wasActive = this.active;
+
         this.pointerBusy = true;
         this.finishReturn();
         this.endInlineTextEdit();
@@ -29291,8 +29326,13 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 
         if (g.pointerType === "touch")
         {
+            this.touchWhileInactive = !wasActive;
             return;
         }
+
+        // A mouse or a pen cannot scroll the page by a drag, so its press
+        // activates an embedded canvas and acts at once.
+        this.setCanvasActive(true);
 
         // The middle button, or `Space` with the primary button, pans with
         // any tool (section 5). The tool comes back on the release.
@@ -29308,6 +29348,15 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** A tap, or a click. A finger presses the tool here, where it went down. */
     private onGestureTap(g: PointerReport): void
     {
+        // A finger's first tap on an inactive canvas only activates it.
+        // The finger may have meant to scroll the page.
+        if (this.touchWhileInactive)
+        {
+            this.setCanvasActive(true);
+            this.renderer.getSvgElement().focus({ preventScroll: true });
+            return;
+        }
+
         if (!this.toolPressed)
         {
             this.pressTool(pressEventAt(g), g.startX, g.startY);
@@ -29324,7 +29373,9 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onGestureDragStart(g: DragReport): void
     {
-        if (this.toolPressed)
+        // The browser takes a finger's drag on an inactive canvas for a
+        // scroll, and cancels the pointer. Until it does, nothing acts.
+        if (this.toolPressed || this.touchWhileInactive)
         {
             return;
         }
@@ -29347,6 +29398,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         {
             this.panCanvas(g.x - this.viewPan.x, g.y - this.viewPan.y);
             this.viewPan = { x: g.x, y: g.y };
+            return;
+        }
+
+        if (!this.toolPressed)
+        {
             return;
         }
 
@@ -29401,6 +29457,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         }
 
         this.viewPan = null;
+        this.touchWhileInactive = false;
         this.pointerBusy = false;
         this.hideHoverCard();
     }
@@ -29434,6 +29491,23 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.toolPressed = false;
         this.toolManager.dispatchCancel();
         this.startReturn(before);
+    }
+
+    /**
+     * Makes the canvas active or inactive. An inactive canvas lets the
+     * browser scroll and zoom the page on a touch (`touch-action:
+     * manipulation`), and leaves the wheel to the page.
+     */
+    private setCanvasActive(active: boolean): void
+    {
+        if (active === this.active)
+        {
+            return;
+        }
+
+        this.active = active;
+        this.renderer.getSvgElement().classList.toggle(`${CLS}-canvas-inactive`, !active);
+        logDebug("Canvas", active ? "active" : "inactive");
     }
 
     // ========================================================================
@@ -29615,6 +29689,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onPinchStart(g: TwoFingerReport): void
     {
+        // On an inactive canvas, two fingers zoom the page. The browser does that.
+        if (!this.active)
+        {
+            return;
+        }
+
         this.pointerBusy = true;
         this.hideHoverCard();
         this.pinch = { scale: g.scale, x: g.centerX, y: g.centerY };
@@ -29623,7 +29703,13 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** Pans by the center's move, then zooms about the new center. */
     private onPinchMove(g: TwoFingerReport): void
     {
-        const last = this.pinch!;
+        const last = this.pinch;
+
+        if (!last)
+        {
+            return;
+        }
+
         const rect = this.renderer.getSvgElement().getBoundingClientRect();
 
         this.renderer.pan(g.centerX - last.x, g.centerY - last.y);
@@ -29662,6 +29748,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      */
     private onWheel(e: WheelEvent): void
     {
+        // On an inactive canvas, the wheel scrolls the page.
+        if (!this.active)
+        {
+            return;
+        }
+
         e.preventDefault();
 
         const factor = e.deltaY < 0
@@ -29693,6 +29785,13 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         if (this.handleGlobalShortcut(e))
         {
             return;
+        }
+
+        // Escape also gives an embedded canvas back to the page. The tool
+        // still gets it, to cancel what it was doing.
+        if (e.key === "Escape" && this.opts.embedded)
+        {
+            this.setCanvasActive(false);
         }
 
         this.toolManager.dispatchKeyDown(e);

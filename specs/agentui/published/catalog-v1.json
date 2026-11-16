@@ -5264,6 +5264,20 @@
                 }
               ]
             },
+            "embedded": {
+              "description": "The canvas sits in a page that scrolls. It then starts inactive: a\nfinger scrolls the page across it, and so does the wheel. A tap, a\nclick or keyboard focus makes it active. Escape, or focus that\nleaves the canvas, makes it inactive again (TOUCH_EXPERIENCE.md\nsection 6.2). Default false: the canvas is always active.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
             "objectHoverCardMode": {
               "description": "Hover card display mode for objects and connectors (ADR-126).\n\"off\" (default) — no hover card; editing flow is untouched.\n\"builtin\" — show a card with label, shape, and semantic data.\n\"custom\" — call `renderObjectHoverCard` / `renderConnectorHoverCard`.\n\nSuppressed automatically when the active tool is not \"select\" or\nwhen a drag/pan/connect interaction is in progress.",
               "anyOf": [
