@@ -78,6 +78,13 @@ const FORCE_ITERATIONS = 150;
 const FORCE_REPULSION = 5000;
 const FORCE_SPRING = 0.01;
 const FORCE_DAMPING = 0.95;
+/**
+ * Farthest a node moves in one force iteration, in px. Repulsion grows as
+ * 1 / distance², so two nodes that start a few px apart push each other
+ * thousands of px in one step. The layout then spans more than the 0.1
+ * zoom limit can fit, and nodes fall off the screen (#193).
+ */
+const FORCE_MAX_STEP = 50;
 /** Clear space the force layout leaves between two node boxes, in px. */
 const NODE_GAP = 12;
 /** Most overlap-separation passes after the force iterations. A pass that moves nothing ends it early. */
@@ -936,6 +943,15 @@ function applyDampingStep(
         const p = pos.get(n.id)!;
         v.vx *= FORCE_DAMPING;
         v.vy *= FORCE_DAMPING;
+
+        const speed = Math.hypot(v.vx, v.vy);
+
+        if (speed > FORCE_MAX_STEP)
+        {
+            v.vx *= FORCE_MAX_STEP / speed;
+            v.vy *= FORCE_MAX_STEP / speed;
+        }
+
         p.x += v.vx;
         p.y += v.vy;
     }

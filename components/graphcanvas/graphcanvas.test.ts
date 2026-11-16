@@ -527,6 +527,31 @@ describe("GraphCanvas force layout keeps node boxes apart", () =>
         gc.destroy();
     });
 
+    test("forceLayout_NoNodeIsFlungFar_OnAnySeed", () =>
+    {
+        // A 40-node tree, three children a parent. Two nodes that started a
+        // few px apart could push each other thousands of px in one step,
+        // so the layout spanned more than the 0.1 zoom limit can fit (#193).
+        const nodes = Array.from({ length: 40 }, (_, i) => ({ id: `t${i}`, label: `T${i}`, type: "entity" }));
+        const edges = nodes.slice(1).map((n, i) =>
+            ({ id: `te${i}`, sourceId: `t${Math.floor(i / 3)}`, targetId: n.id, type: "has" }));
+        const wide: string[] = [];
+
+        for (let seed = 1; seed <= 300; seed++)
+        {
+            const gc = createGraphCanvas(makeOptions({ nodes, edges, layout: "force", layoutSeed: seed }));
+            const at = [...centres().values()];
+            const span = Math.max(
+                Math.max(...at.map((p) => p.x)) - Math.min(...at.map((p) => p.x)),
+                Math.max(...at.map((p) => p.y)) - Math.min(...at.map((p) => p.y)));
+
+            if (span > 4000) { wide.push(`seed ${seed}: ${Math.round(span)} px`); }
+            gc.destroy();
+        }
+
+        expect(wide).toEqual([]);
+    });
+
     test("layoutSeed_SameSeed_GivesTheSameLayout_AndRelayoutRepeatsIt", () =>
     {
         const first = createGraphCanvas(makeOptions({ ...chain(), layoutSeed: 7 }));
