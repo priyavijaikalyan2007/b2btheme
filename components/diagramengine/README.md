@@ -107,6 +107,7 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 | Drag on a handle | Resizes or rotates the object | Resizes or rotates the object |
 | Drag on the background, with the select tool | Pans the view | Draws a selection rectangle |
 | Long press, then drag, on the background | Draws a selection rectangle | Not used |
+| Long press, then lift, or a right-click | Opens the app's context menu for the object, the connector or the canvas, on the lift | Opens it at once, with a right-click or a pen's barrel button |
 | Two fingers | Pan and zoom at the same time. They never change an object. | Not used |
 | Middle-button drag, or `Space` with a drag | Not used | Pans the view, with any tool. The tool comes back on the release. |
 | Wheel | Not used | Zooms at the pointer. #183 changes this. |
@@ -151,10 +152,32 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 - **Drag:** a drag moves, resizes, rotates, draws, connects or pans, by the tool and the target.
 - **Non-drag alternative:** the arrow keys move the selection, 10 px with `Shift`. `Ctrl+A` selects all. `+`, `-` and `0` zoom. Resizing and rotating have no alternative in the canvas yet. The host can call `resizeObject` and `rotateObjectTo`.
 
-These touch behaviors are not done yet. Later changes under #184 add them:
+**Context menu.** The engine has no menu of its own. Pass `onContextMenu`, and the app opens its menu (`TOUCH_EXPERIENCE.md` rule 3):
 
-- A long press opens no menu.
-- A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
+```javascript
+createDiagramEngine("host", {
+    onContextMenu: (request) =>
+    {
+        // request.target is "object", "connector" or "canvas".
+        // request.object or request.connector is the target, already selected.
+        // request.clientX and request.clientY are where to open the menu.
+        // request.canvasPoint is the same point on the canvas, for "Paste here".
+        myMenu.open(request.clientX, request.clientY, itemsFor(request));
+    },
+});
+```
+
+- A finger's long press opens the menu on the lift. A drag after the long press still draws the selection rectangle or moves the object, and opens no menu. A second finger or a cancel opens no menu either.
+- A right-click, or a pen's barrel button, opens the menu at once. The browser's own menu does not open.
+- An object or a connector under the point is selected first, unless it was selected already. A selection of several objects stays as it is.
+- Without `onContextMenu`, a right-click shows the browser's menu, as before, and a long press opens nothing.
+- The menu opens in view and comment mode too. The app picks its items by `getInteractionMode()`.
+
+**Feedback for a finger** (`TOUCH_EXPERIENCE.md` section 10). A finger has no hover, and selects only on the lift. So:
+
+- A finger's press on an object shows the outline its tap would select, dimmed, at once. The outline has the class `de-pressed-outline`.
+- A long press lifts the object under the finger with a shadow, before the finger moves, when a drag could move it. The object has the class `de-lifted` until the lift. In view and comment mode nothing lifts.
+- An app can restyle both classes.
 
 ### Organisation
 

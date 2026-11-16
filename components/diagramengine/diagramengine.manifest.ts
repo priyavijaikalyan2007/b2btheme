@@ -110,6 +110,8 @@ export const DIAGRAMENGINE_MANIFEST: CapabilityManifest =
             onChange: "The component never calls this option.",
             onViewportChange: "Fires as the user zooms or pans; that is view state, which the viewport state key "
                 + "restores.",
+            onContextMenu: "Asks the host page to draw its own menu at a screen point. A surface has no page menu "
+                + "to draw, so without it a right-click shows the browser's menu, as before.",
             "document.data": "Template data the document's {{expressions}} read; an open record no schema can check.",
             "document.objects[].semantic.data": "An open record of domain data; it has no schema an agent could "
                 + "follow.",

@@ -21,7 +21,10 @@
  *   - a finger beside a handle grabs it, and a long press on a shape
  *     selects no text;
  *   - the cursor under a real mouse comes from the same hit tests as a
- *     press, and a drawing tool keeps its own.
+ *     press, and a drawing tool keeps its own;
+ *   - a finger's press shows the outline at once, its long press lifts
+ *     the box and opens the app's menu on the lift, and a right-click
+ *     opens it too.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -58,8 +61,10 @@ async function open(page: Page, embedded = false, interactionMode = "edit"): Pro
     {
         const w = window as unknown as Record<string, any>;
 
+        w.__menus = [];
         w.__engine = w.createDiagramEngine("host",
-            { embedded, interactionMode, snapping: { grid: false, objects: false, guides: false } });
+            { embedded, interactionMode, snapping: { grid: false, objects: false, guides: false },
+                onContextMenu: (r: { target: string }) => w.__menus.push(r.target) });
         w.__engine.addObject({ id: "box", presentation: { shape: "rectangle", bounds } });
     }, { bounds: BOX, embedded, interactionMode });
 }
@@ -488,5 +493,32 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
         await page.evaluate(() => (window as unknown as Record<string, any>).__engine.setActiveTool("draw"));
 
         expect(await cursorAt(100, 80)).toBe("crosshair");
+    });
+
+    test("a long press opens the app's menu on the lift, and so does a right-click", async ({ page }) =>
+    {
+        await open(page);
+
+        const cdp = await page.context().newCDPSession(page);
+        const state = () => page.evaluate(() => ({
+            pressed: document.querySelector(".de-pressed-outline") !== null,
+            lifted: document.querySelector('[data-id="box"]')!.classList.contains("de-lifted"),
+            menus: (window as unknown as Record<string, any>).__menus,
+        }));
+
+        await touch(cdp, "touchStart", [{ x: 100, y: 80 }]);
+
+        expect(await state()).toEqual({ pressed: true, lifted: false, menus: [] });
+
+        await expect.poll(state, { timeout: 2000 }).toEqual({ pressed: false, lifted: true, menus: [] });
+
+        await touch(cdp, "touchEnd", []);
+
+        expect(await state()).toEqual({ pressed: false, lifted: false, menus: ["object"] });
+
+        await page.mouse.click(300, 200, { button: "right" });
+
+        expect(await state()).toMatchObject({ menus: ["object", "canvas"] });
+        expect(await selectedIds(page)).toEqual(["box"]);
     });
 });

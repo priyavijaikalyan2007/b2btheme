@@ -372,6 +372,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** Whether the press in progress is a finger on an inactive canvas. It can only activate the canvas. */
     private touchWhileInactive = false;
 
+    /** The pointer type of the press in progress, or null. */
+    private pressPointerType: string | null = null;
+
+    /** A finger's long press that no drag has followed. Its lift opens the context menu. */
+    private longPressAt: { x: number; y: number } | null = null;
+
     /** Whether `Space` is down on the canvas, so a primary press pans (section 5). */
     private spaceHeld = false;
 
@@ -3611,7 +3617,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             onDragMove: (g) => this.onGestureDragMove(g),
             onDragEnd: (g) => this.onGestureDragEnd(g),
             onDragCancel: () => this.onGestureDragCancel(),
-            onRelease: () => this.onGestureRelease(),
+            onLongPress: (g) => this.onGestureLongPress(g),
+            onRelease: (g) => this.onGestureRelease(g),
             onTwoFingerStart: (g) => this.onPinchStart(g),
             onTwoFingerMove: (g) => this.onPinchMove(g),
             onTwoFingerEnd: () => this.onPinchEnd(),
@@ -3623,6 +3630,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             logTrace("pointermove handler:", { x: e.clientX, y: e.clientY, type: e.pointerType });
             this.onHoverMove(e);
         });
+        svg.addEventListener("contextmenu", (e) => this.onContextMenuEvent(e));
         svg.addEventListener("wheel", (e) =>
         {
             logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
@@ -3717,7 +3725,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      * @param e - The pointerdown event.
      * @returns false for a press inside the interactive embed.
      */
-    private acceptsPointer(e: PointerEvent): boolean
+    private acceptsPointer(e: Event): boolean
     {
         if (!this.activeEmbedObjectId)
         {
@@ -3743,6 +3751,7 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         const wasActive = this.active;
 
         this.pointerBusy = true;
+        this.pressPointerType = g.pointerType;
         this.finishReturn();
         this.endInlineTextEdit();
         this.hideHoverCard();
@@ -3755,6 +3764,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         if (g.pointerType === "touch")
         {
             this.touchWhileInactive = !wasActive;
+
+            if (wasActive)
+            {
+                this.showPressed(g.x, g.y);
+            }
+
             return;
         }
 
@@ -3809,6 +3824,10 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         {
             return;
         }
+
+        // A drag after a long press is not a menu (section 6.2).
+        this.longPressAt = null;
+        this.renderer.renderPressedOutline(null);
 
         const start = this.renderer.screenToCanvas(g.startX, g.startY);
         const select = this.toolManager.getToolByName("select") as SelectTool;
@@ -3872,8 +3891,15 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
      * dragged: a middle click, or a press that was abandoned. The tool
      * cancels it.
      */
-    private onGestureRelease(): void
+    private onGestureRelease(g: PointerReport): void
     {
+        // Only a lift opens the menu. A cancel or a second finger does not.
+        const menuAt = (g.event.type === "pointerup") ? this.longPressAt : null;
+
+        this.longPressAt = null;
+        this.pressPointerType = null;
+        this.renderer.renderPressedOutline(null);
+        this.renderer.setLiftedObject(null);
         this.stopAutoScroll();
 
         if (this.toolPressed)
@@ -3891,6 +3917,133 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.touchWhileInactive = false;
         this.pointerBusy = false;
         this.hideHoverCard();
+
+        if (menuAt)
+        {
+            this.openContextMenu(menuAt.x, menuAt.y);
+        }
+    }
+
+    /**
+     * A finger's press on an object shows the outline that a tap would
+     * select, dimmed, at once (section 10). A finger selects only on the
+     * lift, so without it the press shows nothing.
+     */
+    private showPressed(x: number, y: number): void
+    {
+        const obj = (this.toolManager.getActiveName() === "select")
+            ? this.hitTestObject(this.renderer.screenToCanvas(x, y))
+            : null;
+
+        this.renderer.renderPressedOutline(obj ? obj.presentation.bounds : null);
+    }
+
+    /**
+     * A finger held still for the long-press time. The object under it
+     * lifts, if a drag could move it. The menu opens on the lift, so a
+     * drag can still follow (section 6.2): it draws the selection
+     * rectangle on the background, and moves the object.
+     */
+    private onGestureLongPress(g: PointerReport): void
+    {
+        if (this.touchWhileInactive)
+        {
+            return;
+        }
+
+        this.renderer.renderPressedOutline(null);
+        this.longPressAt = { x: g.x, y: g.y };
+
+        if (this.canEdit() && this.toolManager.getActiveName() === "select")
+        {
+            const obj = this.hitTestObject(this.renderer.screenToCanvas(g.x, g.y));
+
+            this.renderer.setLiftedObject(obj ? obj.id : null);
+        }
+    }
+
+    /**
+     * A right-click, a pen's barrel button, or the context-menu key. With
+     * `onContextMenu` set, it opens the app's menu instead of the
+     * browser's. A finger's long press opens the menu on its lift, so the
+     * browser's `contextmenu` for a touch is dropped (rule 8).
+     */
+    private onContextMenuEvent(e: MouseEvent): void
+    {
+        if (!this.opts.onContextMenu || !this.acceptsPointer(e))
+        {
+            return;
+        }
+
+        e.preventDefault();
+
+        if (this.pressPointerType === "touch")
+        {
+            return;
+        }
+
+        this.setCanvasActive(true);
+        this.openContextMenu(e.clientX, e.clientY);
+    }
+
+    /**
+     * Selects what is under a point, unless it is selected already, and
+     * asks the app to open its menu there.
+     *
+     * @param x - Client x of the point.
+     * @param y - Client y of the point.
+     */
+    private openContextMenu(x: number, y: number): void
+    {
+        if (!this.opts.onContextMenu)
+        {
+            return;
+        }
+
+        const canvasPoint = this.renderer.screenToCanvas(x, y);
+        const object = this.hitTestObject(canvasPoint);
+        const connector = object ? null : this.hitTestConnector(canvasPoint);
+        const request: DiagramContextMenuRequest = { target: "canvas", clientX: x, clientY: y, canvasPoint };
+
+        if (object)
+        {
+            if (!this.isSelected(object.id))
+            {
+                this.selectOnly(object.id, false);
+            }
+
+            request.target = "object";
+            request.object = object;
+        }
+        else if (connector)
+        {
+            if (!this.isConnectorSelected(connector.id))
+            {
+                this.selectOnly(connector.id, true);
+            }
+
+            request.target = "connector";
+            request.connector = connector;
+        }
+
+        logDebug("Context menu:", request.target);
+        safeCallback(this.opts.onContextMenu, request);
+    }
+
+    /** Replaces the selection with one object or one connector. */
+    private selectOnly(id: string, isConnector: boolean): void
+    {
+        this.selectedIds.clear();
+        this.selectedConnectorIds.clear();
+
+        if (isConnector)
+        {
+            this.addConnectorToSelection(id);
+        }
+        else
+        {
+            this.addToSelection(id);
+        }
     }
 
     /** Presses the active tool at a screen position. */

@@ -738,7 +738,9 @@ export const BASELINES = {
     // and no undo step for a handle press that resized nothing.
     // #191 and #192 (2026-11-16): 31826 -> 31900, the select tool's hover cursor from the
     // same hit tests as a press, and a 24 px target for a mouse or a pen.
-    diagramengineLines: 31900,
+    // #184 part 6 (2026-11-16): 31900 -> 32135, `onContextMenu` from a long press or a right-click,
+    // and a finger's pressed outline and lifted state (TOUCH_EXPERIENCE.md section 10).
+    diagramengineLines: 32135,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

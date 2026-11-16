@@ -70,6 +70,24 @@
 // same hit tests as a press (#191). The stylesheet sets none, so a
 // drawing tool keeps its crosshair over a shape.
 
+// A finger's press shows the outline that its tap would select, dimmed,
+// at once (TOUCH_EXPERIENCE.md section 10). An app can restyle it.
+.de-pressed-outline
+{
+    fill: none;
+    stroke: var(--bs-primary, #0d6efd);
+    stroke-width: 1;
+    stroke-dasharray: 4 2;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+// The end of a long press lifts the object, before the finger moves.
+.de-lifted
+{
+    filter: drop-shadow(0 4px 8px rgba(var(--theme-text-primary-rgb), 0.3));
+}
+
 // An embedded component is not a shape. Its text stays selectable.
 .de-embed-container
 {
