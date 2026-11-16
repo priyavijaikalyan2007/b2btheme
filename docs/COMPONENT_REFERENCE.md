@@ -4757,6 +4757,12 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 - **A palm is ignored.** A touch while a pen is down does nothing, unless a second touch makes a two-finger gesture.
 - **The screen edge belongs to the browser.** A touch that starts within 20 px of the left or right screen edge does nothing.
 - **A drag can leave the canvas.** The canvas captures the pointer when a drag starts, so a drag released outside it still ends.
+- **An embedded canvas waits for a tap.** Pass `embedded: true` when the canvas sits in a page that scrolls. The canvas then starts inactive, with `touch-action: manipulation`: a finger on it scrolls or zooms the page, and so does the wheel.
+  - A finger's first tap only makes the canvas active, because the finger may have meant to scroll. The next tap or drag acts.
+  - A mouse or pen press makes the canvas active and acts at once, because it cannot scroll the page.
+  - Keyboard focus also makes the canvas active.
+  - Escape, or focus that leaves the canvas, makes it inactive again.
+  - Without `embedded`, the canvas is always active.
 - **Interactive embeds keep their pointer.** The canvas leaves a press inside an interactive embed alone, so the embedded component handles its own drags.
 
 **Pointer contract** (`UI_EXPERIENCE.md` section 22):
@@ -4768,7 +4774,6 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 
 These touch behaviors are not done yet. Later changes under #184 add them:
 
-- Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
 - A long press opens no menu.
 - A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
 - Handles and connection points keep their small target for a finger.

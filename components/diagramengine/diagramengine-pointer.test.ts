@@ -563,3 +563,179 @@ describe("DiagramEngine auto-scroll, return and Space (#184)", () =>
         expect(box()).toMatchObject({ x: 90, y: 70 });
     });
 });
+
+describe("DiagramEngine embedded canvas (#184)", () =>
+{
+    /** Replaces the canvas with an embedded one that has the same box. */
+    function embed(): void
+    {
+        engine.destroy();
+        host.replaceChildren();
+        engine = createDiagramEngine(host.id, { embedded: true });
+        engine.addObject({ id: "box", presentation: { shape: "rectangle",
+            bounds: { x: 50, y: 50, width: 100, height: 60 } } });
+        svg = host.querySelector("svg")!;
+        svg.setPointerCapture = vi.fn();
+    }
+
+    function inactive(): boolean
+    {
+        return svg.classList.contains("de-canvas-inactive");
+    }
+
+    function wheel(): WheelEvent
+    {
+        const e = new WheelEvent("wheel", { deltaY: -100, clientX: 100, clientY: 80, bubbles: true, cancelable: true });
+
+        svg.dispatchEvent(e);
+        return e;
+    }
+
+    test("aCanvas_IsActive_UnlessEmbedded", () =>
+    {
+        expect(inactive()).toBe(false);
+
+        embed();
+
+        expect(inactive()).toBe(true);
+    });
+
+    test("anInactiveCanvas_LeavesTheWheelToThePage", () =>
+    {
+        embed();
+
+        expect(wheel().defaultPrevented).toBe(false);
+        expect(engine.getZoomLevel()).toBe(1);
+    });
+
+    test("anInactiveCanvas_IgnoresATouchDrag_AndTwoFingers", () =>
+    {
+        embed();
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointerup", 140, 100);
+
+        pointer("pointerdown", 250, 200);
+        pointer("pointerdown", 300, 200, SECOND);
+        pointer("pointermove", 350, 200, SECOND);
+        pointer("pointerup", 350, 200, SECOND);
+        pointer("pointerup", 250, 200);
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.getViewport()).toEqual({ x: 0, y: 0, zoom: 1 });
+        expect(inactive()).toBe(true);
+    });
+
+    test("aFirstTap_OnlyActivates_AndTheNextTapSelects", () =>
+    {
+        embed();
+        pointer("pointerdown", 100, 80);
+        pointer("pointerup", 100, 80);
+
+        expect(inactive()).toBe(false);
+        expect(selected()).toEqual([]);
+        expect(document.activeElement).toBe(svg);
+
+        pointer("pointerdown", 100, 80);
+        pointer("pointerup", 100, 80);
+
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("aTouchDrag_OnAnInactiveCanvas_ReachesNoTool", () =>
+    {
+        embed();
+
+        const tool = engine.getToolInstance("select") as { onMouseMove: () => void };
+        const moved = vi.spyOn(tool, "onMouseMove");
+
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+        pointer("pointermove", 160, 110);
+        pointer("pointerup", 160, 110);
+
+        expect(moved).not.toHaveBeenCalled();
+    });
+
+    test("aMouseClick_AfterTheActivatingTap_IsAWholeClick", () =>
+    {
+        embed();
+        pointer("pointerdown", 100, 80);
+        pointer("pointerup", 100, 80);
+
+        const tool = engine.getToolInstance("select") as { onMouseUp: () => void };
+        const lifted = vi.spyOn(tool, "onMouseUp");
+
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointerup", 100, 80, MOUSE);
+
+        expect(selected()).toEqual(["box"]);
+        expect(lifted).toHaveBeenCalledTimes(1);
+    });
+
+    test("aMousePress_ActivatesAndSelects", () =>
+    {
+        embed();
+        pointer("pointerdown", 100, 80, MOUSE);
+        pointer("pointerup", 100, 80, MOUSE);
+
+        expect(inactive()).toBe(false);
+        expect(selected()).toEqual(["box"]);
+        expect(wheel().defaultPrevented).toBe(true);
+    });
+
+    test("keyboardFocus_Activates_AndFocusLeavingTheHost_Deactivates", () =>
+    {
+        embed();
+
+        const outside = document.createElement("button");
+
+        document.body.appendChild(outside);
+        svg.focus();
+
+        expect(inactive()).toBe(false);
+
+        outside.focus();
+
+        expect(inactive()).toBe(true);
+        outside.remove();
+    });
+
+    test("focusMovingWithinTheHost_KeepsTheCanvasActive", () =>
+    {
+        embed();
+
+        const editor = document.createElement("textarea");
+
+        host.appendChild(editor);
+        svg.focus();
+        editor.focus();
+
+        expect(inactive()).toBe(false);
+    });
+
+    test("escape_Deactivates_AnEmbeddedCanvas_Only", () =>
+    {
+        svg.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+        expect(inactive()).toBe(false);
+
+        embed();
+        svg.focus();
+        svg.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+        expect(inactive()).toBe(true);
+    });
+
+    test("aCanvasThatIsNotEmbedded_StaysActive_WhenFocusLeaves", () =>
+    {
+        const outside = document.createElement("button");
+
+        document.body.appendChild(outside);
+        svg.focus();
+        outside.focus();
+
+        expect(inactive()).toBe(false);
+        outside.remove();
+    });
+});
