@@ -143,6 +143,18 @@ export interface TwoFingerGesture
 /** The callbacks, and the filter. Every member is optional. */
 export interface GestureRecognizerOptions
 {
+    /**
+     * A pointer went down, and the recognizer follows it. The other
+     * one-pointer callbacks for this pointer come after it. Use it for the
+     * pressed state (section 10).
+     */
+    onPress?: (gesture: PointerGesture) => void;
+    /**
+     * The press is over, however it ended. It comes last, after any
+     * `onTap`, `onDoubleTap`, `onDragEnd` or `onDragCancel`. Each `onPress`
+     * has one `onRelease`, unless a callback throws.
+     */
+    onRelease?: (gesture: PointerGesture) => void;
     /** A tap, or a click of the main button. */
     onTap?: (gesture: PointerGesture) => void;
     /** A second tap within the time and the distance. It comes after that tap's `onTap`. */
@@ -315,7 +327,7 @@ export function createGestureRecognizer(
         }
     }
 
-    function startPrimary(t: Tracked): void
+    function startPrimary(t: Tracked, event: PointerEvent): void
     {
         primary = t;
         phase = "pressed";
@@ -325,6 +337,8 @@ export function createGestureRecognizer(
         {
             longPressTimer = setTimeout(onLongPressTime, GESTURE_THRESHOLDS.longPressMs);
         }
+
+        options.onPress?.(pointerGesture(t, event));
     }
 
     function onLongPressTime(): void
@@ -352,11 +366,15 @@ export function createGestureRecognizer(
         clearLongPress();
         primary = null;
 
-        if (t && wasDragging)
+        if (!t) { return; }
+
+        if (wasDragging)
         {
             logDebug("Drag cancelled:", reason);
             options.onDragCancel?.(dragGesture(t, event, dragAfterLongPress));
         }
+
+        options.onRelease?.(pointerGesture(t, event));
     }
 
     function moveAndMaybeDrag(t: Tracked, event: PointerEvent): void
@@ -391,13 +409,13 @@ export function createGestureRecognizer(
         {
             logDebug("Drag end");
             options.onDragEnd?.(dragGesture(t, event, dragAfterLongPress));
-            return;
         }
-
-        if (lifted === "pressed" && t.button === BUTTON_PRIMARY)
+        else if (lifted === "pressed" && t.button === BUTTON_PRIMARY)
         {
             tap(t, event);
         }
+
+        options.onRelease?.(pointerGesture(t, event));
     }
 
     function tap(t: Tracked, event: PointerEvent): void
@@ -504,7 +522,7 @@ export function createGestureRecognizer(
             return;
         }
 
-        startPrimary(t);
+        startPrimary(t, e);
     }
 
     function downTouch(t: Tracked, e: PointerEvent): void
@@ -540,7 +558,7 @@ export function createGestureRecognizer(
             return;
         }
 
-        startPrimary(t);
+        startPrimary(t, e);
     }
 
     function onPointerMove(e: PointerEvent): void

@@ -201,6 +201,15 @@ export class PenTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. An anchor is placed on the press,
+     * as a click, so no drag is left to undo. The path so far stays.
+     */
+    public onCancel(): void
+    {
+        // Nothing is in progress beyond the anchors already placed.
+    }
+
+    /**
      * Handles key-down: Enter finalises the path, Escape cancels
      * and discards any points placed so far.
      *

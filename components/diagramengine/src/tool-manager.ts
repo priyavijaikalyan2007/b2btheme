@@ -67,6 +67,14 @@ export interface Tool
     onMouseUp(e: MouseEvent, canvasPos: Point): void;
 
     /**
+     * The press stops without a lift: a `pointercancel`, a second finger,
+     * or a press the engine abandons. Undo what the press has done so far
+     * and push no undo step (TOUCH_EXPERIENCE.md section 9, item 5).
+     * No `onMouseUp` follows.
+     */
+    onCancel(): void;
+
+    /**
      * Handle keyboard events.
      *
      * @param e - The originating keyboard event.
@@ -226,6 +234,14 @@ export class ToolManager
     public dispatchMouseUp(e: MouseEvent, pos: Point): void
     {
         this.getActive()?.onMouseUp(e, pos);
+    }
+
+    /**
+     * Tell the active tool that its press stopped without a lift.
+     */
+    public dispatchCancel(): void
+    {
+        this.getActive()?.onCancel();
     }
 
     /**

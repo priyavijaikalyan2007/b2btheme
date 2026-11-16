@@ -161,6 +161,17 @@ export class PanTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. The view stays where the pan
+     * took it.
+     */
+    public onCancel(): void
+    {
+        this.dragging = false;
+
+        this.restorePreviousTool();
+    }
+
+    /**
      * No keyboard handling for the pan tool.
      *
      * @param e - The originating keyboard event.

@@ -14,6 +14,8 @@
 
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { createDiagramEngine } from "./diagramengine";
+// DiagramEngine reads `window.createGestureRecognizer`, and this registers the real one.
+import "../gesturerecognizer/gesturerecognizer";
 
 type Globals = Record<string, unknown>;
 

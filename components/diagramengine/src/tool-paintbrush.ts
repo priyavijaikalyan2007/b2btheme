@@ -199,6 +199,20 @@ export class PaintbrushTool implements Tool
     }
 
     /**
+     * The press stopped without a lift. Put the canvas back as it was
+     * before the stroke, and push no undo step.
+     */
+    public onCancel(): void
+    {
+        if (this.painting && this.activeObjectId)
+        {
+            this.restoreCanvasData(this.activeObjectId, this.beforeData);
+        }
+
+        this.resetState();
+    }
+
+    /**
      * Handles key-down: Escape cancels and returns to select tool.
      *
      * @param e - The originating keyboard event.

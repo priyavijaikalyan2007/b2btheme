@@ -3,14 +3,18 @@
  * SPDX-License-Identifier: MIT
  */
 /**
- * ⚓ TESTS: DiagramEngine pointer input (#176, step 2). The canvas listens
- * for pointer events, so mouse, touch and pen take one path. It captures
- * the pointer, lets only the primary pointer drive the tools, and ends a
- * cancelled drag. An interactive embed keeps its own pointer.
+ * ⚓ TESTS: DiagramEngine pointer input (#176, #184). The canvas reads its
+ * pointer events through GestureRecognizer and follows TOUCH_EXPERIENCE.md:
+ * the movement tolerance, a finger on the background pans, two fingers pan
+ * and zoom and touch no object, a second finger or a pointercancel puts a
+ * drag back, and a palm is ignored while a pen is down. A mouse presses
+ * the tool at once. An interactive embed keeps its own pointer.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { createDiagramEngine } from "./diagramengine";
+// DiagramEngine reads `window.createGestureRecognizer`, and this registers the real one.
+import "../gesturerecognizer/gesturerecognizer";
 
 type Engine = ReturnType<typeof createDiagramEngine>;
 
@@ -56,86 +60,233 @@ afterEach(() =>
     host.remove();
 });
 
-describe("DiagramEngine pointer input (#176)", () =>
+/** The box's bounds. */
+function box(): { x: number; y: number; width: number; height: number }
 {
-    test("pointerdown_CapturesThePointer_SoADragThatLeavesTheCanvasStillEnds", () =>
+    return { ...engine.getObjectById("box")!.presentation.bounds };
+}
+
+function selected(): string[]
+{
+    return engine.getSelectedObjects().map((o) => o.id);
+}
+
+const MOUSE = { pointerType: "mouse" };
+const SECOND = { pointerId: 2, isPrimary: false };
+
+describe("DiagramEngine pointer input (#176, #184)", () =>
+{
+    test("theFactory_WithoutGestureRecognizer_SaysWhatToLoad", () =>
+    {
+        const w = window as { createGestureRecognizer?: unknown };
+        const real = w.createGestureRecognizer;
+
+        delete w.createGestureRecognizer;
+
+        try
+        {
+            expect(() => createDiagramEngine(host.id, {}))
+                .toThrow(/Load components\/gesturerecognizer\/gesturerecognizer\.js before diagramengine\.js/);
+        }
+        finally
+        {
+            w.createGestureRecognizer = real;
+        }
+    });
+
+    test("aTouchDrag_OnAnObject_MovesIt_AndCapturesThePointer", () =>
     {
         pointer("pointerdown", 100, 80, { pointerId: 7 });
+        pointer("pointermove", 140, 100, { pointerId: 7 });
+        pointer("pointerup", 140, 100, { pointerId: 7 });
 
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+        expect(engine.canUndo()).toBe(true);
         expect(svg.setPointerCapture).toHaveBeenCalledWith(7);
     });
 
-    test("aTouchDrag_MovesTheBox", () =>
+    test("aTouchWithinTheTolerance_MovesNothing_AndTapsToSelect", () =>
     {
         pointer("pointerdown", 100, 80);
-        pointer("pointermove", 140, 100);
-        pointer("pointerup", 140, 100);
+        pointer("pointermove", 106, 86);
 
-        expect(engine.getObjectById("box")!.presentation.bounds.x).not.toBe(50);
-        expect(engine.canUndo()).toBe(true);
+        expect(selected()).toEqual([]);
+
+        pointer("pointerup", 106, 86);
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(selected()).toEqual(["box"]);
+        expect(engine.canUndo()).toBe(false);
     });
 
-    test("aSecondFinger_DuringADrag_IsIgnored", () =>
+    test("aMousePress_SelectsAtOnce_AndMovesOnlyPastFourPixels", () =>
     {
-        // The same drag with one finger, on its own canvas, gives the
-        // bounds the two-finger drag must end with.
-        const other = document.createElement("div");
+        pointer("pointerdown", 100, 80, MOUSE);
 
-        other.id = host.id + "-alone";
-        document.body.appendChild(other);
+        expect(selected()).toEqual(["box"]);
 
-        const alone = createWithBox(other.id);
-        const aloneSvg = other.querySelector("svg")!;
+        pointer("pointermove", 103, 80, MOUSE);
 
-        aloneSvg.setPointerCapture = vi.fn();
-        pointer("pointerdown", 100, 80, {}, aloneSvg);
-        pointer("pointermove", 140, 100, {}, aloneSvg);
-        pointer("pointerup", 140, 100, {}, aloneSvg);
+        expect(box().x).toBe(50);
 
-        const second = { pointerId: 2, isPrimary: false };
+        pointer("pointermove", 120, 80, MOUSE);
+        pointer("pointerup", 120, 80, MOUSE);
 
-        pointer("pointerdown", 100, 80);
-        pointer("pointerdown", 400, 400, second);
-        pointer("pointermove", 500, 500, second);
-        pointer("pointermove", 140, 100);
-        pointer("pointerup", 500, 500, second);
-        pointer("pointerup", 140, 100);
-
-        expect(engine.getObjectById("box")!.presentation.bounds)
-            .toEqual(alone.getObjectById("box")!.presentation.bounds);
-        expect(engine.getSelectedObjects().map((o) => o.id)).toEqual(["box"]);
-        expect(svg.setPointerCapture).toHaveBeenCalledTimes(1);
-
-        alone.destroy();
-        other.remove();
+        expect(box().x).toBe(70);
     });
 
-    test("pointercancel_EndsTheDrag_WhereThePointerLastWas", () =>
+    test("aTouchDrag_OnTheBackground_PansTheView_AndKeepsTheSelection", () =>
+    {
+        engine.select(["box"]);
+        pointer("pointerdown", 300, 300);
+        pointer("pointermove", 340, 320);
+        pointer("pointermove", 350, 330);
+        pointer("pointerup", 350, 330);
+
+        expect(engine.getViewport()).toMatchObject({ x: 50, y: 30, zoom: 1 });
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("aTouchTap_OnTheBackground_ClearsTheSelection", () =>
+    {
+        engine.select(["box"]);
+        pointer("pointerdown", 300, 300);
+        pointer("pointerup", 300, 300);
+
+        expect(selected()).toEqual([]);
+    });
+
+    test("aMouseDrag_OnTheBackground_DrawsTheSelectionRectangle", () =>
+    {
+        pointer("pointerdown", 10, 10, MOUSE);
+        pointer("pointermove", 200, 200, MOUSE);
+        pointer("pointerup", 200, 200, MOUSE);
+
+        expect(selected()).toEqual(["box"]);
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0 });
+    });
+
+    test("aLongPress_ThenADrag_OnTheBackground_DrawsTheSelectionRectangle", () =>
+    {
+        vi.useFakeTimers();
+
+        try
+        {
+            // Clear of the 20 px edge zone, where a touch starts nothing.
+            pointer("pointerdown", 30, 30);
+            vi.advanceTimersByTime(500);
+            pointer("pointermove", 200, 200);
+            pointer("pointerup", 200, 200);
+        }
+        finally
+        {
+            vi.useRealTimers();
+        }
+
+        expect(selected()).toEqual(["box"]);
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0 });
+    });
+
+    test("twoFingers_PanAndZoomAtOnce_AndTouchNoObject", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointerdown", 200, 80, SECOND);
+
+        // The spread doubles, and the center moves 50 to the right.
+        pointer("pointermove", 300, 80, SECOND);
+        pointer("pointerup", 300, 80, SECOND);
+        pointer("pointerup", 100, 80);
+
+        // The view pans 50 with the center, then doubles about (200, 80).
+        expect(engine.getViewport()).toEqual({ x: -100, y: -80, zoom: 2 });
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(selected()).toEqual([]);
+        expect(engine.canUndo()).toBe(false);
+    });
+
+    test("aSecondFinger_DuringADrag_PutsTheObjectBack_ThenPinches", () =>
     {
         pointer("pointerdown", 100, 80);
         pointer("pointermove", 140, 100);
 
-        const moved = { ...engine.getObjectById("box")!.presentation.bounds };
+        expect(box().x).toBe(90);
 
+        pointer("pointerdown", 300, 100, SECOND);
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+
+        pointer("pointermove", 200, 100);
+        pointer("pointermove", 400, 100, SECOND);
+        pointer("pointerup", 400, 100, SECOND);
+        pointer("pointerup", 200, 100);
+
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.canUndo()).toBe(false);
+        expect(engine.getZoomLevel()).toBeCloseTo(200 / 160);
+    });
+
+    test("pointercancel_DuringADrag_PutsTheObjectBack_WithNoUndo", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
         pointer("pointercancel", 0, 0);
         pointer("pointermove", 300, 300);
 
-        expect(engine.getObjectById("box")!.presentation.bounds).toEqual(moved);
-        expect(engine.canUndo()).toBe(true);
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.canUndo()).toBe(false);
     });
 
-    test("pointercancel_DuringARubberBand_SelectsUpToTheLastPosition", () =>
+    test("pointercancel_DuringASelectionRectangle_SelectsNothing", () =>
     {
-        // A cancel event's own position is not where the drag was. Here
-        // it is (0, 0), and a band to (0, 0) would select nothing.
-        pointer("pointerdown", 10, 10);
-        pointer("pointermove", 200, 200);
-        pointer("pointercancel", 0, 0);
+        pointer("pointerdown", 10, 10, MOUSE);
+        pointer("pointermove", 200, 200, MOUSE);
+        pointer("pointercancel", 0, 0, MOUSE);
 
-        expect(engine.getSelectedObjects().map((o) => o.id)).toEqual(["box"]);
+        expect(selected()).toEqual([]);
+        expect(svg.querySelector(".de-tool-overlay")?.childElementCount ?? 0).toBe(0);
     });
 
-    test("anInteractiveEmbed_KeepsItsPointer_AndAPressOutsideCapturesAgain", async () =>
+    test("aPalm_WhileAPenIsDown_DoesNothing", () =>
+    {
+        const pen = { pointerId: 5, pointerType: "pen" };
+        const palm = { pointerId: 6, isPrimary: true };
+
+        pointer("pointerdown", 100, 80, pen);
+        pointer("pointerdown", 300, 300, palm);
+        pointer("pointermove", 400, 400, palm);
+        pointer("pointermove", 140, 100, pen);
+        pointer("pointerup", 400, 400, palm);
+        pointer("pointerup", 140, 100, pen);
+
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+        expect(engine.getViewport()).toMatchObject({ x: 0, y: 0, zoom: 1 });
+    });
+
+    test("aDoubleTap_OnAnObject_EditsItsText", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointerup", 100, 80);
+        pointer("pointerdown", 102, 81);
+        pointer("pointerup", 102, 81);
+
+        expect(host.querySelector(".de-inline-edit")).not.toBeNull();
+    });
+
+    test("aMiddleDrag_PansWithAnyTool_AndTheSelectToolComesBack", () =>
+    {
+        const middle = { pointerType: "mouse", button: 1 };
+
+        pointer("pointerdown", 100, 80, middle);
+        pointer("pointermove", 140, 100, middle);
+        pointer("pointerup", 140, 100, middle);
+
+        expect(engine.getViewport()).toMatchObject({ x: 40, y: 20 });
+        expect(box()).toMatchObject({ x: 50, y: 50 });
+        expect(engine.getActiveTool()).toBe("select");
+    });
+
+    test("anInteractiveEmbed_KeepsItsPointer_AndAPressOutsideEndsIt", async () =>
     {
         (window as unknown as Record<string, unknown>).createPointerTestWidget =
             () => ({ getElement: () => document.createElement("div") });
@@ -153,15 +304,23 @@ describe("DiagramEngine pointer input (#176)", () =>
         engine.toggleEmbedInteractive("widget");
 
         const inside = svg.querySelector('[data-embed-id="widget"]')!;
+        const interactive = (): boolean =>
+            (inside.querySelector(".de-embed-container") as HTMLElement).style.pointerEvents === "auto";
+
+        expect(interactive()).toBe(true);
 
         pointer("pointerdown", 400, 350, {}, inside);
-        pointer("pointerup", 400, 350, {}, inside);
+        pointer("pointermove", 450, 350, {}, inside);
+        pointer("pointerup", 450, 350, {}, inside);
 
         expect(svg.setPointerCapture).not.toHaveBeenCalled();
+        expect(engine.getObjectById("widget")!.presentation.bounds.x).toBe(300);
+        expect(interactive()).toBe(true);
 
-        pointer("pointerdown", 10, 10);
+        pointer("pointerdown", 30, 30);
+        pointer("pointerup", 30, 30);
 
-        expect(svg.setPointerCapture).toHaveBeenCalledTimes(1);
+        expect(interactive()).toBe(false);
 
         // The embed mounts from a requestAnimationFrame callback, so the
         // factory stays until that has run.

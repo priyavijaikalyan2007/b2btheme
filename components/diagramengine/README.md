@@ -4,8 +4,11 @@ Universal vector canvas engine for diagramming, graph visualization, technical d
 
 ## Quick Start
 
+**Requires:** [GestureRecognizer](../gesturerecognizer/README.md). Load `gesturerecognizer.js` before `diagramengine.js`. The canvas reads its pointer events through it, and `createDiagramEngine` throws when it is missing.
+
 ```html
 <link rel="stylesheet" href="components/diagramengine/diagramengine.css">
+<script src="components/gesturerecognizer/gesturerecognizer.js"></script>
 <script src="components/diagramengine/diagramengine.js"></script>
 
 <div id="canvas" style="width: 100%; height: 600px;"></div>
@@ -93,17 +96,46 @@ engine.addObject({
 
 ### Input
 
-- **Mouse, touch and pen** — the canvas listens for pointer events, so each tool works with a finger or a pen as it does with a mouse
-- **A drag can leave the canvas** — the canvas captures the pointer, so a drag released outside it still ends
-- **Interactive embeds keep their pointer** — the canvas does not capture a press inside an interactive embed, so the embedded component handles its own drags
+The canvas reads pointer events through GestureRecognizer, so mouse, touch and pen take one path. The gestures follow `TOUCH_EXPERIENCE.md` section 6.2.
 
-Touch input does not yet follow `TOUCH_EXPERIENCE.md`. These behaviors are interim, and #184 replaces them:
+| Input | Touch | Mouse or pen |
+|---|---|---|
+| Tap or click on an object | Selects it when the finger lifts | Selects it on the press |
+| Tap or click on the background | Clears the selection | Clears the selection |
+| Double tap or double click on an object | Edits its text, or opens its embed | Edits its text, or opens its embed |
+| Drag on an object | Moves the selection | Moves the selection |
+| Drag on a handle | Resizes or rotates the object | Resizes or rotates the object |
+| Drag on the background, with the select tool | Pans the view | Draws a selection rectangle |
+| Long press, then drag, on the background | Draws a selection rectangle | Not used |
+| Two fingers | Pan and zoom at the same time. They never change an object. | Not used |
+| Middle-button drag | Not used | Pans the view, with any tool |
+| Wheel | Not used | Zooms at the pointer. #183 changes this. |
 
-- Only the primary pointer drives the tools. A second finger is ignored, so there is no two-finger pan or pinch zoom yet.
-- A one-finger drag on the background draws a selection rectangle. It should pan the view.
-- A cancelled pointer ends the drag where the pointer last was. It should restore the state from before the drag.
+- **Movement tolerance.** A move of more than 10 px for a finger, or 4 px for a mouse or a pen, starts a drag. A smaller move is a tap or a click.
+- **A second finger cancels a drag.** The object goes back to where it was, with no undo step. The two-finger gesture then starts.
+- **A cancel restores.** When the browser cancels the pointer, the drag puts back what it changed, with no undo step.
+- **A palm is ignored.** A touch while a pen is down does nothing, unless a second touch makes a two-finger gesture.
+- **The screen edge belongs to the browser.** A touch that starts within 20 px of the left or right screen edge does nothing.
+- **A drag can leave the canvas.** The canvas captures the pointer when a drag starts, so a drag released outside it still ends.
+- **Interactive embeds keep their pointer.** The canvas leaves a press inside an interactive embed alone, so the embedded component handles its own drags.
+
+**Pointer contract** (`UI_EXPERIENCE.md` section 22):
+
+- **Click:** a tap or a click selects, as in the table. `Shift`, `Ctrl` or `Cmd` with a click adds the object to the selection or removes it.
+- **Hover:** with a mouse or a pen, the hover card shows when `objectHoverCardMode` is on, and the pen tool shows its next segment. A finger has no hover.
+- **Drag:** a drag moves, resizes, rotates, draws, connects or pans, by the tool and the target.
+- **Non-drag alternative:** the arrow keys move the selection, 10 px with `Shift`. `Ctrl+A` selects all. `+`, `-` and `0` zoom. Resizing and rotating have no alternative in the canvas yet. The host can call `resizeObject` and `rotateObjectTo`.
+
+These touch behaviors are not done yet. Later changes under #184 add them:
+
 - Every canvas sets `touch-action: none`, so the page cannot scroll across an embedded canvas.
 - The view does not scroll when a drag reaches the canvas edge.
+- A long press opens no menu.
+- A finger shows no pressed state before it taps or drags (`TOUCH_EXPERIENCE.md` section 10).
+- `Space` with a drag does not pan, although the tables below list it.
+- Handles and connection points keep their small target for a finger.
+- There is no `interactionMode` option.
+- A cancelled drag jumps back. It does not animate.
 
 ### Organisation
 
