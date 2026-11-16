@@ -827,6 +827,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         return this.mode === "edit";
     }
 
+    /** Sets the canvas cursor for the active tool's hover. */
+    setCanvasCursor(cursor: string): void
+    {
+        this.toolManager.setCursor(cursor);
+    }
+
     /**
      * Computes and renders alignment guides for the moving bounds.
      * Called by SelectTool during drag operations.

@@ -34,8 +34,11 @@ export interface EngineForTools
     /** Hit-test a canvas point and return the topmost object, or null. */
     hitTestObject(canvasPos: Point): DiagramObject | null;
 
-    /** The view's zoom level, to size a finger's handle target. */
+    /** The view's zoom level, to size a handle's target. */
     getZoomLevel(): number;
+
+    /** Set the canvas cursor until the next tool change or hover. */
+    setCanvasCursor(cursor: string): void;
 
     /** Check whether an object is currently selected. */
     isSelected(id: string): boolean;
@@ -133,10 +136,29 @@ const NUDGE_SHIFT_PX = 10;
 const HANDLE_HIT_RADIUS = 6;
 
 /**
- * Touch target of a handle for a finger, in screen pixels
- * (TOUCH_EXPERIENCE.md sections 6.2 and 7). The drawn handle stays small.
+ * Target of a handle or a connection point, in screen pixels
+ * (TOUCH_EXPERIENCE.md section 7): 44 for a finger, 24 for a mouse or a
+ * pen. The drawn handle stays small.
  */
 const TOUCH_TARGET_PX = 44;
+const FINE_TARGET_PX = 24;
+
+/**
+ * The radius, in canvas units, of a handle's or a connection point's
+ * target outside the object. It is the same size on the screen at any
+ * zoom, and never smaller than `floor`.
+ *
+ * @param pointerType - The pointer type of the press or the hover.
+ * @param zoom - The view's zoom level.
+ * @param floor - The smallest radius, in canvas units.
+ * @returns The radius in canvas units.
+ */
+function targetRadius(pointerType: string, zoom: number, floor: number): number
+{
+    const px = (pointerType === "touch") ? TOUCH_TARGET_PX : FINE_TARGET_PX;
+
+    return Math.max(floor, (px / 2) / zoom);
+}
 
 /** Wraps any degree value into [0, 360). */
 function normaliseDegrees(degrees: number): number
@@ -166,6 +188,13 @@ interface HandleHit
     obj: DiagramObject;
     handle: HandleId | "rotate";
 }
+
+/** The cursor over each handle. */
+const HANDLE_CURSORS: Record<HandleId | "rotate", string> = {
+    nw: "nw-resize", n: "n-resize", ne: "ne-resize", e: "e-resize",
+    se: "se-resize", s: "s-resize", sw: "sw-resize", w: "w-resize",
+    rotate: "grab",
+};
 
 // ============================================================================
 // PUBLIC API
@@ -277,14 +306,19 @@ export class SelectTool implements Tool
     }
 
     /**
-     * Handle mouse-move: delegate to the active drag mode handler.
+     * Handle mouse-move: delegate to the active drag mode handler. A
+     * move with no drag is a mouse or a pen hover, and sets the cursor.
      *
      * @param e - The originating mouse event.
      * @param canvasPos - Mouse position in canvas coordinate space.
      */
-    public onMouseMove(_e: MouseEvent, canvasPos: Point): void
+    public onMouseMove(e: MouseEvent, canvasPos: Point): void
     {
-        if (this.dragMode === "move")
+        if (this.dragMode === "none")
+        {
+            this.engine.setCanvasCursor(this.cursorAt(canvasPos, (e as PointerEvent).pointerType));
+        }
+        else if (this.dragMode === "move")
         {
             this.handleMoveDrag(canvasPos);
         }
@@ -372,6 +406,33 @@ export class SelectTool implements Tool
         return this.hitTestHandle(canvasPos, pointerType) !== null
             || this.engine.hitTestObject(canvasPos) !== null
             || this.engine.hitTestConnector(canvasPos) !== null;
+    }
+
+    /**
+     * The cursor for a hover, from the same hit tests as a press: a
+     * handle's resize cursor, `grab` on the rotation handle, `move` on an
+     * object, or `pointer` on one outside edit mode.
+     *
+     * @param canvasPos - Hover position in canvas space.
+     * @param pointerType - The hover's pointer type.
+     * @returns A CSS cursor.
+     */
+    private cursorAt(canvasPos: Point, pointerType: string): string
+    {
+        const canEdit = this.engine.canEdit();
+        const hit = canEdit ? this.hitTestHandle(canvasPos, pointerType) : null;
+
+        if (hit)
+        {
+            return HANDLE_CURSORS[hit.handle];
+        }
+
+        if (this.engine.hitTestObject(canvasPos))
+        {
+            return canEdit ? "move" : "pointer";
+        }
+
+        return this.cursor;
     }
 
     /**
@@ -640,12 +701,12 @@ export class SelectTool implements Tool
 
     /**
      * Find the handle nearest a press, among the resize and rotation
-     * handles of every selected object. The nearest wins, because a
-     * finger's targets overlap on a small object.
+     * handles of every selected object. The nearest wins, because the
+     * targets overlap on a small object.
      *
-     * A finger's target is 44 screen pixels, but only outside the
-     * object. Inside it, the target keeps the mouse size, so a finger
-     * on a small selected object still moves it.
+     * The target is 44 screen pixels for a finger and 24 for a mouse or
+     * a pen, but only outside the object. Inside it, the target keeps a
+     * radius of 6, so a press on a small selected object still moves it.
      *
      * @param canvasPos - Press position in canvas space.
      * @param pointerType - The press's pointer type.
@@ -653,9 +714,7 @@ export class SelectTool implements Tool
      */
     private hitTestHandle(canvasPos: Point, pointerType: string): HandleHit | null
     {
-        const outside = (pointerType === "touch")
-            ? Math.max(HANDLE_HIT_RADIUS, (TOUCH_TARGET_PX / 2) / this.engine.getZoomLevel())
-            : HANDLE_HIT_RADIUS;
+        const outside = targetRadius(pointerType, this.engine.getZoomLevel(), HANDLE_HIT_RADIUS);
         let best: HandleHit | null = null;
         let bestSq = Infinity;
 

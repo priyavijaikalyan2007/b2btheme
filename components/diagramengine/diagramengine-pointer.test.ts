@@ -1063,18 +1063,19 @@ describe("DiagramEngine touch targets (#184)", () =>
         expect(box()).toMatchObject({ width: 115 });
     });
 
-    test("aFinger_LiftedBesideAConnectionPoint_Connects_AndAMouseDoesNot", () =>
+    test("aFinger_LiftedBesideAConnectionPoint_Connects_AndAMouseThereDoesNot", () =>
     {
         engine.addObject({ id: "b2", presentation: { shape: "rectangle",
             bounds: { x: 250, y: 50, width: 100, height: 60 } } });
         engine.setActiveTool("connect");
-        // b2's west point is at (250, 80). The lift is 10 pixels left of it.
-        drag([100, 80], [240, 80], MOUSE);
+        // b2's west point is at (250, 80). The lift is 15 pixels left of
+        // it: inside a finger's target, outside a mouse's.
+        drag([100, 80], [235, 80], MOUSE);
 
         expect(engine.getConnectors()).toHaveLength(0);
 
         engine.setActiveTool("connect");
-        drag([100, 80], [240, 80]);
+        drag([100, 80], [235, 80]);
 
         expect(engine.getConnectors().map((c) => c.presentation))
             .toEqual([expect.objectContaining({ sourceId: "box", targetId: "b2", targetPort: "port-w" })]);
@@ -1107,5 +1108,124 @@ describe("DiagramEngine touch targets (#184)", () =>
 
         expect(engine.getConnectors().map((c) => c.presentation))
             .toEqual([expect.objectContaining({ sourceId: "box", sourcePort: "port-e", targetId: "b2" })]);
+    });
+});
+
+describe("DiagramEngine mouse targets and the cursor (#191, #192)", () =>
+{
+    function drag(from: [number, number], to: [number, number], init: PointerEventInit = MOUSE): void
+    {
+        pointer("pointerdown", from[0], from[1], init);
+        pointer("pointermove", to[0], to[1], init);
+        pointer("pointerup", to[0], to[1], init);
+    }
+
+    /** A move with no button held, and the cursor it leaves. */
+    function hover(x: number, y: number, init: PointerEventInit = MOUSE): string
+    {
+        pointer("pointermove", x, y, { buttons: 0, ...init });
+
+        return svg.style.cursor;
+    }
+
+    test("aMouse_TenPixelsOutsideACorner_Resizes", () =>
+    {
+        engine.select(["box"]);
+        // The bottom-right handle is at (150, 110).
+        drag([160, 110], [180, 130]);
+
+        expect(box()).toMatchObject({ x: 50, y: 50, width: 130, height: 80 });
+    });
+
+    test("aMousesTarget_Is24ScreenPixels_WhenZoomedOut", () =>
+    {
+        engine.setZoomLevel(0.5);
+        engine.select(["box"]);
+        // The bottom-right handle is at (75, 55) on the screen. 15 pixels
+        // away is outside the target, so the mouse draws a selection
+        // rectangle, which clears the selection.
+        drag([90, 55], [100, 65]);
+
+        expect(box()).toMatchObject({ width: 100, height: 60 });
+
+        engine.select(["box"]);
+        // 10 pixels away is inside it. The corner follows the mouse to
+        // (190, 130) on the canvas.
+        drag([85, 55], [95, 65]);
+
+        expect(box()).toMatchObject({ width: 140, height: 80 });
+    });
+
+    test("aMousesTarget_IsNeverSmallerThanBefore_WhenZoomedIn", () =>
+    {
+        // At zoom 4, a 24-pixel target is 6 canvas pixels wide, half the
+        // old radius of 6.
+        engine.setZoomLevel(4);
+        engine.select(["box"]);
+        // 5 canvas pixels right of the bottom-right handle at (600, 440).
+        drag([620, 440], [660, 440]);
+
+        expect(box()).toMatchObject({ width: 115 });
+    });
+
+    test("aMouseInsideTheBox_NearACorner_StillMovesIt", () =>
+    {
+        engine.select(["box"]);
+        // 11 pixels inside the bottom-right corner.
+        drag([142, 102], [162, 112]);
+
+        expect(box()).toEqual({ x: 70, y: 60, width: 100, height: 60 });
+    });
+
+    test("aMouse_LiftedTenPixelsBesideAConnectionPoint_Connects", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        engine.setActiveTool("connect");
+        drag([100, 80], [240, 80]);
+
+        expect(engine.getConnectors().map((c) => c.presentation))
+            .toEqual([expect.objectContaining({ targetId: "b2", targetPort: "port-w" })]);
+    });
+
+    test("theCursor_FollowsTheSameHitTestsAsAPress", () =>
+    {
+        expect(hover(100, 80)).toBe("move");
+        expect(hover(300, 200)).toBe("default");
+
+        engine.select(["box"]);
+
+        // 10 pixels outside the bottom-right handle, inside its target.
+        expect(hover(160, 110)).toBe("se-resize");
+        // 15 pixels outside is past a mouse's target, as a press there is.
+        expect(hover(165, 110)).toBe("default");
+        expect(hover(50, 80)).toBe("w-resize");
+        expect(hover(100, 25)).toBe("grab");
+        // A pen hovers as a mouse does.
+        expect(hover(300, 200, { pointerType: "pen" })).toBe("default");
+        // A finger has no hover, so it leaves the cursor alone.
+        expect(hover(100, 80, { pointerType: "touch" })).toBe("default");
+    });
+
+    test("outsideEditMode_TheCursorOverAnObject_IsPointer_AndShowsNoHandle", () =>
+    {
+        engine.select(["box"]);
+        engine.setInteractionMode("view");
+
+        expect(hover(100, 80)).toBe("pointer");
+        expect(hover(150, 110)).toBe("pointer");
+        expect(hover(160, 110)).toBe("default");
+    });
+
+    test("aDrawingTool_KeepsItsCursor_OverAShape", () =>
+    {
+        engine.setActiveTool("draw");
+
+        expect(hover(100, 80)).toBe("crosshair");
+
+        engine.setActiveTool("select");
+
+        expect(svg.style.cursor).toBe("default");
+        expect(hover(100, 80)).toBe("move");
     });
 });

@@ -736,7 +736,9 @@ export const BASELINES = {
     // #184 part 5 (2026-11-16): 31752 -> 31826, a finger's 44 px target on handles and
     // connection points, with one nearest-handle search in SelectTool for resize and rotation,
     // and no undo step for a handle press that resized nothing.
-    diagramengineLines: 31826,
+    // #191 and #192 (2026-11-16): 31826 -> 31900, the select tool's hover cursor from the
+    // same hit tests as a press, and a 24 px target for a mouse or a pen.
+    diagramengineLines: 31900,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

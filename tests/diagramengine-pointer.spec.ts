@@ -19,7 +19,9 @@
  *     page, and a tap makes the canvas take the finger;
  *   - in view mode, a finger on an object pans and a mouse moves nothing;
  *   - a finger beside a handle grabs it, and a long press on a shape
- *     selects no text.
+ *     selects no text;
+ *   - the cursor under a real mouse comes from the same hit tests as a
+ *     press, and a drawing tool keeps its own.
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -460,5 +462,31 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
         });
 
         expect(userSelect).toEqual({ shape: "none", embed: "text" });
+    });
+
+    test("the cursor under the mouse shows what a press does", async ({ page }) =>
+    {
+        await open(page);
+
+        /** Moves the mouse there, and reads the cursor of the element under it. */
+        const cursorAt = async (x: number, y: number): Promise<string> =>
+        {
+            await page.mouse.move(x, y);
+
+            return page.evaluate(([px, py]) => getComputedStyle(document.elementFromPoint(px, py)!).cursor, [x, y]);
+        };
+
+        expect(await cursorAt(100, 80)).toBe("move");
+        expect(await cursorAt(300, 200)).toBe("default");
+
+        await page.evaluate(() => (window as unknown as Record<string, any>).__engine.select(["box"]));
+
+        // 10 pixels outside the bottom-right handle at (150, 110).
+        expect(await cursorAt(160, 110)).toBe("se-resize");
+        expect(await cursorAt(100, 25)).toBe("grab");
+
+        await page.evaluate(() => (window as unknown as Record<string, any>).__engine.setActiveTool("draw"));
+
+        expect(await cursorAt(100, 80)).toBe("crosshair");
     });
 });

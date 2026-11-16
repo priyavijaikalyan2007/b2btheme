@@ -66,16 +66,9 @@
 // OBJECTS
 // ============================================================================
 
-.de-object
-{
-    cursor: move;
-}
-
-// Outside edit mode an object can be selected, not moved.
-.de-canvas:not([data-interaction-mode="edit"]) .de-object
-{
-    cursor: pointer;
-}
+// The select tool sets the cursor over a shape or a handle, from the
+// same hit tests as a press (#191). The stylesheet sets none, so a
+// drawing tool keeps its crosshair over a shape.
 
 // An embedded component is not a shape. Its text stays selectable.
 .de-embed-container
@@ -85,26 +78,12 @@
 }
 
 // ============================================================================
-// SELECTION HANDLES
-// ============================================================================
-
-.de-handle
-{
-    pointer-events: all;
-}
-
-// ============================================================================
 // OVERLAY
 // ============================================================================
 
 .de-overlay
 {
     pointer-events: none;
-
-    .de-handle
-    {
-        pointer-events: all;
-    }
 }
 
 .de-tool-overlay
