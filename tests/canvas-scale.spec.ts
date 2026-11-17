@@ -21,7 +21,7 @@
  *   the rest off it. If only the first pan is slow, the fix is drawing less
  *   detail when zoomed out. If both are slow, the fix is skipping what is
  *   off the screen.
- * - Wheel zoom, and dragging one node.
+ * - `Ctrl` + wheel zoom, and dragging one node.
  *
  * Input is real: `page.mouse` sends both pointer and mouse events. After
  * each step the test waits for two frames. A recorder logs the time of
@@ -245,6 +245,8 @@ async function wheel(page: Page): Promise<Frames>
     const vp = page.viewportSize()!;
 
     await page.mouse.move(vp.width / 2, vp.height / 2);
+    // A plain wheel pans both canvases (#183, #181). `Ctrl` makes it zoom (#200).
+    await page.keyboard.down("Control");
     await startFrames(page);
 
     for (let i = 0; i < WHEEL_STEPS; i++)
@@ -253,7 +255,10 @@ async function wheel(page: Page): Promise<Frames>
         await settle(page);
     }
 
-    return stopFrames(page);
+    const frames = await stopFrames(page);
+
+    await page.keyboard.up("Control");
+    return frames;
 }
 
 async function idle(page: Page): Promise<Frames>
