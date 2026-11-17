@@ -9187,7 +9187,9 @@ Two `pinned` nodes stay where you put them, even when their boxes overlap. A fre
 - **Ctrl+click** — Multi-select
 - **Drag node** — Move and pin position
 - **Shift+drag canvas** — Rubber-band selection
-- **Scroll wheel** — Zoom (focal point under cursor)
+- **Wheel, or a trackpad scroll with two fingers** — Pan. `Shift` with the wheel pans sideways. Before #181 the wheel zoomed.
+- **`Ctrl` or `Cmd` with the wheel, or a trackpad pinch** — Zoom around the pointer. A wheel notch zooms one 15% step, and a pinch zooms in small steps that follow the fingers. Safari's pinch events zoom the same way.
+- `panEnabled: false` leaves the wheel to the page, and `zoomEnabled: false` leaves `Ctrl` with the wheel and a pinch to the page.
 - **Click+drag canvas** — Pan
 - **Right-click** — Context menu
 - **Double-click node** — Triggers `onNodeDoubleClick`
@@ -18083,6 +18085,9 @@ Same as SpineHub but with `children?: SpineBranch[]` instead of `branches`.
 | Double-click | Open popover in edit mode (editable) |
 | Shift + drag | Draw connection between nodes (editable) |
 | Drag node | Reposition node (editable) |
+| Drag the background | Pan |
+| Wheel, or a trackpad scroll with two fingers | Pan. `Shift` with the wheel pans sideways. Before #181 the wheel zoomed. |
+| `Ctrl` or `Cmd` with the wheel, or a trackpad pinch | Zoom around the pointer. A notch zooms one 15% step, and a pinch zooms in small steps. Safari's pinch events zoom the same way. |
 
 ## Accessibility
 
