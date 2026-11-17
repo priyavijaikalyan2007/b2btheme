@@ -294,6 +294,18 @@ void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/**
+ * Safari on macOS sends a trackpad pinch as these events instead of
+ * `Ctrl` + wheel. The DOM library has no type for them. `scale` is 1
+ * when the pinch starts.
+ */
+interface SafariGestureEvent extends UIEvent
+{
+    readonly scale: number;
+    readonly clientX: number;
+    readonly clientY: number;
+}
+
 const DEFAULT_HUB_SPACING = 180;
 const DEFAULT_BRANCH_SPACING = 50;
 const DEFAULT_BRANCH_LENGTH = 140;
@@ -301,6 +313,10 @@ const DEFAULT_SIDEBAR_WIDTH = 320;
 const DEFAULT_MIN_ZOOM = 0.1;
 const DEFAULT_MAX_ZOOM = 3.0;
 const ZOOM_STEP = 0.15;
+/** The pixels of one line, for a wheel that reports its delta in lines. */
+const WHEEL_LINE_PX = 16;
+/** The delta of one mouse wheel notch. `Ctrl` + a notch zooms one step, and a larger delta no more. */
+const WHEEL_NOTCH_PX = 100;
 const PAN_STEP = 40;
 const FIT_PADDING = 60;
 const CONN_CURVE_OFFSET = 40;
@@ -2420,6 +2436,12 @@ export class SpineMap implements SpineMapHandle
 
     // Bound handlers for cleanup
     private boundWheel!: (e: WheelEvent) => void;
+    private boundPinchStart!: (e: Event) => void;
+    private boundPinchChange!: (e: Event) => void;
+    private boundPinchEnd!: () => void;
+
+    /** The scale of Safari's trackpad pinch at its last change, or null when none is in progress. */
+    private safariPinchScale: number | null = null;
     private boundPointerDown!: (e: PointerEvent) => void;
     private boundPointerMove!: (e: PointerEvent) => void;
     private boundPointerUp!: (e: PointerEvent) => void;
@@ -3780,15 +3802,65 @@ export class SpineMap implements SpineMapHandle
         }
     }
 
+    /**
+     * The wheel pans, and `Shift` + wheel pans sideways. A trackpad's
+     * two-finger scroll pans both ways. `Ctrl` or `Cmd` + wheel zooms
+     * around the pointer, and so does a trackpad pinch in Chrome, Edge
+     * and Firefox (TOUCH_EXPERIENCE.md sections 5 and 6.2).
+     */
     private onWheel(e: WheelEvent): void
     {
-        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
+        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY, ctrl: e.ctrlKey });
         e.preventDefault();
-        const dir = e.deltaY < 0 ? 1 : -1;
-        const factor = 1 + dir * ZOOM_STEP;
+
+        const unit = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? WHEEL_LINE_PX
+            : (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) ? this.svgEl.getBoundingClientRect().height : 1;
+
+        if (e.ctrlKey || e.metaKey)
+        {
+            // Safari's own pinch is zooming already.
+            if (this.safariPinchScale !== null) { return; }
+            const notches = Math.max(-1, Math.min(1, (e.deltaY * unit) / WHEEL_NOTCH_PX));
+            this.zoomAtClient(Math.pow(1 + ZOOM_STEP, -notches), e.clientX, e.clientY);
+            return;
+        }
+
+        // Most browsers swap the axes for `Shift` + wheel. Some do not.
+        const swap = e.shiftKey && e.deltaX === 0;
+        this.zoom.tx -= (swap ? e.deltaY : e.deltaX) * unit;
+        this.zoom.ty -= (swap ? 0 : e.deltaY) * unit;
+        this.applyTransform();
+    }
+
+    /**
+     * A trackpad pinch starts in Safari on macOS (TOUCH_EXPERIENCE.md
+     * section 9, item 14). Safari on iOS sends the same events for two
+     * fingers, so a pinch during a press is not taken as a zoom.
+     */
+    private onSafariPinchStart(e: SafariGestureEvent): void
+    {
+        if (this.isPanning || this.isDragging) { return; }
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+    }
+
+    /** Zooms by the change in the pinch's scale, around the pointer. */
+    private onSafariPinchChange(e: SafariGestureEvent): void
+    {
+        const last = this.safariPinchScale;
+
+        if (last === null) { return; }
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+        this.zoomAtClient(e.scale / last, e.clientX, e.clientY);
+    }
+
+    /** Zooms by a factor around a point in client coordinates, within the zoom limits. */
+    private zoomAtClient(factor: number, clientX: number, clientY: number): void
+    {
         const rect = this.svgEl.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
+        const mx = clientX - rect.left;
+        const my = clientY - rect.top;
 
         const oldScale = this.zoom.scale;
         const newScale = Math.max(this.opts.minZoom,
@@ -4788,13 +4860,21 @@ export class SpineMap implements SpineMapHandle
     private bindEvents(): void
     {
         this.boundWheel = (e) => this.onWheel(e);
+        this.boundPinchStart = (e) => this.onSafariPinchStart(e as SafariGestureEvent);
+        this.boundPinchChange = (e) => this.onSafariPinchChange(e as SafariGestureEvent);
+        this.boundPinchEnd = () => { this.safariPinchScale = null; };
         this.boundPointerDown = (e) => this.onPointerDown(e);
         this.boundPointerMove = (e) => this.onPointerMove(e);
         this.boundPointerUp = (e) => this.onPointerUp(e);
         this.boundKeyDown = (e) => this.onKeyDown(e);
 
+        // Not passive, only so that `Ctrl` + wheel does not zoom the page
+        // (TOUCH_EXPERIENCE.md section 9, item 13).
         this.svgEl.addEventListener("wheel", this.boundWheel,
             { passive: false });
+        this.svgEl.addEventListener("gesturestart", this.boundPinchStart);
+        this.svgEl.addEventListener("gesturechange", this.boundPinchChange);
+        this.svgEl.addEventListener("gestureend", this.boundPinchEnd);
         this.svgEl.addEventListener("pointerdown", this.boundPointerDown);
         window.addEventListener("pointermove", this.boundPointerMove);
         window.addEventListener("pointerup", this.boundPointerUp);
@@ -4813,6 +4893,9 @@ export class SpineMap implements SpineMapHandle
     private unbindEvents(): void
     {
         this.svgEl.removeEventListener("wheel", this.boundWheel);
+        this.svgEl.removeEventListener("gesturestart", this.boundPinchStart);
+        this.svgEl.removeEventListener("gesturechange", this.boundPinchChange);
+        this.svgEl.removeEventListener("gestureend", this.boundPinchEnd);
         this.svgEl.removeEventListener("pointerdown",
             this.boundPointerDown);
         window.removeEventListener("pointermove", this.boundPointerMove);

@@ -307,6 +307,9 @@ Same as SpineHub but with `children?: SpineBranch[]` instead of `branches`.
 | Double-click | Open popover in edit mode (editable) |
 | Shift + drag | Draw connection between nodes (editable) |
 | Drag node | Reposition node (editable) |
+| Drag the background | Pan |
+| Wheel, or a trackpad scroll with two fingers | Pan. `Shift` with the wheel pans sideways. Before #181 the wheel zoomed. |
+| `Ctrl` or `Cmd` with the wheel, or a trackpad pinch | Zoom around the pointer. A notch zooms one 15% step, and a pinch zooms in small steps. Safari's pinch events zoom the same way. |
 
 ## Accessibility
 

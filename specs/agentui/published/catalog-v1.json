@@ -10892,7 +10892,7 @@
               ]
             },
             "zoomEnabled": {
-              "description": "Lets the user zoom with the wheel. Default: true.",
+              "description": "Lets the user zoom with `Ctrl` + wheel or a trackpad pinch. When\nfalse, the page takes them. Default: true.",
               "anyOf": [
                 {
                   "type": "boolean"
@@ -10906,7 +10906,7 @@
               ]
             },
             "panEnabled": {
-              "description": "Lets the user pan by dragging the background. Default: true.",
+              "description": "Lets the user pan by dragging the background or with the wheel.\nWhen false, the wheel scrolls the page. Default: true.",
               "anyOf": [
                 {
                   "type": "boolean"

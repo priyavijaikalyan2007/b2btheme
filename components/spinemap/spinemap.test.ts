@@ -1204,3 +1204,128 @@ describe("surface contract (B9)", () =>
         map.destroy();
     });
 });
+
+// ============================================================================
+// WHEEL AND TRACKPAD (#181)
+// ============================================================================
+
+describe("SpineMap wheel and trackpad pinch (#181)", () =>
+{
+    type Zoom = { scale: number; tx: number; ty: number };
+
+    let map: ReturnType<typeof createSpineMap>;
+    let zoomed: ReturnType<typeof vi.fn>;
+
+    beforeEach(() =>
+    {
+        zoomed = vi.fn();
+        map = createSpineMap({ container, data: buildTestData(), onZoomChange: zoomed });
+        map.setState({ zoom: { scale: 1, tx: 0, ty: 0 } });
+    });
+
+    afterEach(() =>
+    {
+        map.destroy();
+    });
+
+    function view(): Zoom
+    {
+        return map.getState().zoom as Zoom;
+    }
+
+    function svg(): SVGSVGElement
+    {
+        return getSvg(map.getElement())!;
+    }
+
+    function wheel(init: WheelEventInit): WheelEvent
+    {
+        const e = new WheelEvent("wheel", { clientX: 100, clientY: 80,
+            bubbles: true, cancelable: true, ...init });
+
+        svg().dispatchEvent(e);
+        return e;
+    }
+
+    function safari(type: string, scale: number): Event
+    {
+        const e = new Event(type, { bubbles: true, cancelable: true });
+
+        Object.assign(e, { scale, clientX: 100, clientY: 80 });
+        svg().dispatchEvent(e);
+        return e;
+    }
+
+    /** How far the view is from a zoom by `factor` about (100, 80), from the start. */
+    function offFromZoom(factor: number): number
+    {
+        const now = view();
+
+        return Math.max(Math.abs(now.scale - factor), Math.abs(now.tx - (100 - (100 * factor))),
+            Math.abs(now.ty - (80 - (80 * factor))));
+    }
+
+    test("theWheel_Pans_AndShiftPansSideways_EitherWayTheBrowserSendsIt", () =>
+    {
+        const e = wheel({ deltaY: 100 });
+
+        expect(e.defaultPrevented).toBe(true);
+        expect(view()).toEqual({ scale: 1, tx: 0, ty: -100 });
+
+        wheel({ deltaY: 40, shiftKey: true });
+        wheel({ deltaX: 10, shiftKey: true });
+
+        expect(view()).toEqual({ scale: 1, tx: -50, ty: -100 });
+        expect(zoomed).not.toHaveBeenCalled();
+    });
+
+    test("aTrackpadScroll_PansBothWays_AndLinesAreSixteenPixels", () =>
+    {
+        wheel({ deltaX: 30, deltaY: -20 });
+        wheel({ deltaY: 2, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+        expect(view()).toEqual({ scale: 1, tx: -30, ty: 20 - 32 });
+    });
+
+    test("ctrlAndTheWheel_ZoomsOneStepAtMost_AroundThePointer", () =>
+    {
+        expect(wheel({ deltaY: -1000, ctrlKey: true }).defaultPrevented).toBe(true);
+        expect(offFromZoom(1.15)).toBeLessThan(1e-9);
+        expect(zoomed).toHaveBeenCalledTimes(1);
+    });
+
+    test("cmdAndAPinchOnATrackpad_ZoomByAPartOfAStep", () =>
+    {
+        wheel({ deltaY: 10, metaKey: true });
+
+        expect(offFromZoom(Math.pow(1.15, -0.1))).toBeLessThan(1e-9);
+    });
+
+    test("aPinchOnATrackpad_InSafari_ZoomsOnce_AndCtrlWheelZoomsAgainAfter", () =>
+    {
+        expect(safari("gesturestart", 1).defaultPrevented).toBe(true);
+        expect(safari("gesturechange", 1.5).defaultPrevented).toBe(true);
+        safari("gesturechange", 2);
+        wheel({ deltaY: -100, ctrlKey: true });
+
+        expect(offFromZoom(2)).toBeLessThan(1e-9);
+        expect(zoomed).toHaveBeenLastCalledWith(2);
+
+        safari("gestureend", 2);
+        wheel({ deltaY: -100, ctrlKey: true });
+
+        expect(view().scale).toBeCloseTo(2.3, 9);
+    });
+
+    test("safarisPinch_DuringAPress_IsNotAZoom", () =>
+    {
+        svg().dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0,
+            clientX: 5, clientY: 5, pointerId: 1 }));
+        safari("gesturestart", 1);
+        safari("gesturechange", 2);
+        safari("gestureend", 2);
+        window.dispatchEvent(new PointerEvent("pointerup", { clientX: 5, clientY: 5, pointerId: 1 }));
+
+        expect(view().scale).toBe(1);
+    });
+});

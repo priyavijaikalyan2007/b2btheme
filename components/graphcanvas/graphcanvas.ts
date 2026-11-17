@@ -69,9 +69,25 @@ void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/**
+ * Safari on macOS sends a trackpad pinch as these events instead of
+ * `Ctrl` + wheel. The DOM library has no type for them. `scale` is 1
+ * when the pinch starts.
+ */
+interface SafariGestureEvent extends UIEvent
+{
+    readonly scale: number;
+    readonly clientX: number;
+    readonly clientY: number;
+}
+
 const DEFAULT_MIN_ZOOM = 0.1;
 const DEFAULT_MAX_ZOOM = 4.0;
 const ZOOM_STEP = 0.15;
+/** The pixels of one line, for a wheel that reports its delta in lines. */
+const WHEEL_LINE_PX = 16;
+/** The delta of one mouse wheel notch. `Ctrl` + a notch zooms one step, and a larger delta no more. */
+const WHEEL_NOTCH_PX = 100;
 const FIT_PADDING = 40;
 const NUDGE_PX = 10;
 const FORCE_ITERATIONS = 150;
@@ -300,9 +316,15 @@ export interface GraphCanvasOptions
     showLegend?: boolean;
     /** Field of properties to group nodes by. */
     groupByField?: string;
-    /** Lets the user zoom with the wheel. Default: true. */
+    /**
+     * Lets the user zoom with `Ctrl` + wheel or a trackpad pinch. When
+     * false, the page takes them. Default: true.
+     */
     zoomEnabled?: boolean;
-    /** Lets the user pan by dragging the background. Default: true. */
+    /**
+     * Lets the user pan by dragging the background or with the wheel.
+     * When false, the wheel scrolls the page. Default: true.
+     */
     panEnabled?: boolean;
     /** Lets the user select nodes and edges. Default: true. */
     selectEnabled?: boolean;
@@ -1306,6 +1328,12 @@ class GraphCanvasImpl implements GraphCanvas
     private boundPointerUp: ((e: PointerEvent) => void) | null = null;
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
     private boundContextMenu: ((e: MouseEvent) => void) | null = null;
+    private boundPinchStart: ((e: Event) => void) | null = null;
+    private boundPinchChange: ((e: Event) => void) | null = null;
+    private boundPinchEnd: (() => void) | null = null;
+
+    /** The scale of Safari's trackpad pinch at its last change, or null when none is in progress. */
+    private safariPinchScale: number | null = null;
 
     constructor(opts: GraphCanvasOptions)
     {
@@ -1447,8 +1475,16 @@ class GraphCanvasImpl implements GraphCanvas
         this.boundPointerUp = (e) => { this.onPointerUp(e); };
         this.boundKeyDown = (e) => { this.onKeyDown(e); };
         this.boundContextMenu = (e) => { this.onContextMenuEvent(e); };
+        this.boundPinchStart = (e) => { this.onSafariPinchStart(e as SafariGestureEvent); };
+        this.boundPinchChange = (e) => { this.onSafariPinchChange(e as SafariGestureEvent); };
+        this.boundPinchEnd = () => { this.safariPinchScale = null; };
 
+        // Not passive, only so that `Ctrl` + wheel does not zoom the page
+        // (TOUCH_EXPERIENCE.md section 9, item 13).
         this.root!.addEventListener("wheel", this.boundWheel, { passive: false });
+        this.root!.addEventListener("gesturestart", this.boundPinchStart);
+        this.root!.addEventListener("gesturechange", this.boundPinchChange);
+        this.root!.addEventListener("gestureend", this.boundPinchEnd);
         this.root!.addEventListener("pointerdown", this.boundPointerDown);
         this.root!.addEventListener("pointermove", this.boundPointerMove);
         this.root!.addEventListener("pointerup", this.boundPointerUp);
@@ -1465,6 +1501,9 @@ class GraphCanvasImpl implements GraphCanvas
         if (this.boundPointerUp) { this.root.removeEventListener("pointerup", this.boundPointerUp); }
         if (this.boundKeyDown) { this.root.removeEventListener("keydown", this.boundKeyDown); }
         if (this.boundContextMenu) { this.root.removeEventListener("contextmenu", this.boundContextMenu); }
+        if (this.boundPinchStart) { this.root.removeEventListener("gesturestart", this.boundPinchStart); }
+        if (this.boundPinchChange) { this.root.removeEventListener("gesturechange", this.boundPinchChange); }
+        if (this.boundPinchEnd) { this.root.removeEventListener("gestureend", this.boundPinchEnd); }
     }
 
     // ====================================================================
@@ -2647,24 +2686,75 @@ class GraphCanvasImpl implements GraphCanvas
         );
     }
 
+    /**
+     * The wheel pans, and `Shift` + wheel pans sideways. A trackpad's
+     * two-finger scroll pans both ways. `Ctrl` or `Cmd` + wheel zooms
+     * around the pointer, and so does a trackpad pinch in Chrome, Edge
+     * and Firefox (TOUCH_EXPERIENCE.md sections 5 and 6.2). With
+     * `panEnabled` or `zoomEnabled` false, that input is left to the page.
+     */
     private onWheel(e: WheelEvent): void
     {
-        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
-        if (this.opts.zoomEnabled === false) { return; }
+        logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY, ctrl: e.ctrlKey });
+        const zoom = e.ctrlKey || e.metaKey;
+
+        if (zoom ? this.opts.zoomEnabled === false : this.opts.panEnabled === false) { return; }
         e.preventDefault();
-        const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
-        const newScale = Math.max(
-            this.minZoom,
-            Math.min(this.maxZoom, this.viewport.scale + delta)
-        );
+
+        const unit = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? WHEEL_LINE_PX
+            : (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) ? this.root!.getBoundingClientRect().height : 1;
+
+        if (zoom)
+        {
+            // Safari's own pinch is zooming already.
+            if (this.safariPinchScale !== null) { return; }
+            const notches = Math.max(-1, Math.min(1, (e.deltaY * unit) / WHEEL_NOTCH_PX));
+            this.zoomAtClient(Math.pow(1 + ZOOM_STEP, -notches), e.clientX, e.clientY);
+            return;
+        }
+
+        // Most browsers swap the axes for `Shift` + wheel. Some do not.
+        const swap = e.shiftKey && e.deltaX === 0;
+        this.viewport.tx -= (swap ? e.deltaY : e.deltaX) * unit;
+        this.viewport.ty -= (swap ? 0 : e.deltaY) * unit;
+        this.applyTransform();
+    }
+
+    /** Zooms by a factor around a point in client coordinates, within the zoom limits. */
+    private zoomAtClient(factor: number, clientX: number, clientY: number): void
+    {
+        const newScale = Math.max(this.minZoom, Math.min(this.maxZoom, this.viewport.scale * factor));
         const rect = this.root!.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
+        const mx = clientX - rect.left;
+        const my = clientY - rect.top;
         const ratio = newScale / this.viewport.scale;
         this.viewport.tx = mx - (mx - this.viewport.tx) * ratio;
         this.viewport.ty = my - (my - this.viewport.ty) * ratio;
         this.viewport.scale = newScale;
         this.applyTransform();
+    }
+
+    /**
+     * A trackpad pinch starts in Safari on macOS (TOUCH_EXPERIENCE.md
+     * section 9, item 14). Safari on iOS sends the same events for two
+     * fingers, so a pinch during a press is not taken as a zoom.
+     */
+    private onSafariPinchStart(e: SafariGestureEvent): void
+    {
+        if (this.opts.zoomEnabled === false || this.isPanning || this.isDragging) { return; }
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+    }
+
+    /** Zooms by the change in the pinch's scale, around the pointer. */
+    private onSafariPinchChange(e: SafariGestureEvent): void
+    {
+        const last = this.safariPinchScale;
+
+        if (last === null) { return; }
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+        this.zoomAtClient(e.scale / last, e.clientX, e.clientY);
     }
 
     private startPan(e: PointerEvent): void
