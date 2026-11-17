@@ -60,6 +60,61 @@ export interface ParsedFacet
     negated: boolean;
 }
 
+/**
+ * The language the bar reads and writes. "facet" is today's `key:value` syntax. "query" is the apps' query
+ * language (knobbyio/apps#379), whose meaning the host's Parse call decides.
+ */
+export type FacetSearchSyntax = "facet" | "query";
+
+/** A value in a query-language tree, in the shape the apps' Parse call writes. */
+export interface QueryValue
+{
+    text?: string;
+    number?: number;
+    boolean?: boolean;
+    /** YYYY-MM-DD, with `time` and `zone` when the query has them. */
+    date?: string;
+    time?: string;
+    zone?: string;
+    /** A time in UTC, such as 2026-11-01T03:30:00Z. */
+    instant?: string;
+    /** A relative date: an anchor such as "today" or "now", and an ISO 8601 duration such as "-P30D". */
+    relative?: { anchor: string; duration: string };
+    resource?: string;
+    var?: string;
+    param?: string;
+}
+
+/** A node of a query-language tree, as the apps' Parse call returns it. `span` indexes the parsed text. */
+export interface QueryNode
+{
+    kind: string;
+    children?: QueryNode[];
+    child?: QueryNode;
+    phrase?: string;
+    key?: string;
+    /** The operator's name, such as "Equals", "In" or "OnOrAfter". */
+    op?: string;
+    value?: QueryValue;
+    values?: QueryValue[];
+    link?: QueryNode;
+    where?: QueryNode;
+    span?: { start: number; end: number };
+}
+
+/** A query-language tree: its root, and the variables after `return`. */
+export interface QueryTree
+{
+    root?: QueryNode;
+    return?: string[];
+}
+
+/** A chip, and with `syntax: "query"` the value as the standard spelling writes it, when it came from a tree. */
+interface Chip extends ParsedFacet
+{
+    literal?: string;
+}
+
 /** Structured result of parsing the search bar input. */
 export interface FacetSearchQuery
 {
@@ -93,6 +148,12 @@ export interface FacetSearchOptions
     disabled?: boolean;
     /** Extra CSS class added to the root element. Default: none. */
     cssClass?: string;
+    /**
+     * The language the bar reads and writes. "facet" (default) is today's `key:value` syntax. "query" is the
+     * apps' query language: the bar never parses typed text itself, the host passes the API's parse with
+     * `setParsed`, and the bar writes its chips in the language's standard spelling.
+     */
+    syntax?: FacetSearchSyntax;
     onSearch?: (query: FacetSearchQuery) => void;
     onChange?: (value: string) => void;
     onFacetAdd?: (key: string, value: string) => void;
@@ -152,6 +213,100 @@ function logTrace(...a: unknown[]): void
 void [logInfo, logWarn, logError, logDebug, logTrace];
 
 const OPERATORS = [">=", "<=", "!:", ">", "<", ":"];
+
+// ============================================================================
+// THE QUERY LANGUAGE (#204, knobbyio/apps#379)
+// ============================================================================
+//
+// The API decides what a query means. These write the chips the bar holds in
+// the language's standard spelling, as the apps' StandardPrinter does, and
+// nothing here reads typed text.
+
+/** The word form of each operator, as the standard spelling writes it. */
+const QUERY_OP_WORDS = new Set([
+    "equals", "not-equals", "greater-than", "greater-or-equal", "less-than", "less-or-equal",
+    "after", "before", "on", "on-or-after", "on-or-before", "in", "contains", "starts-with", "ends-with",
+    "descendant-of", "is", "is-not", "exists", "missing",
+]);
+
+/** Operators a chip on one key can join into `key in (…)`: today's default `:`, `equals` and `in`. */
+const JOINS_INTO_IN = new Set([":", "equals", "in"]);
+
+/** A relative date's ISO 8601 duration, such as -P30D or PT6H. */
+const QUERY_DURATION = /^(-?)P(T?)(\d+)([HDWMY])$/;
+
+/** The language's unit for each duration unit: hours, days, weeks, months and years. */
+const QUERY_UNITS: Record<string, string> = { H: "h", D: "d", W: "w", M: "mo", Y: "y" };
+
+/** An operator's word from its name in the tree, such as "OnOrAfter" to "on-or-after"; null when unknown. */
+function queryOpWord(name: string): string | null
+{
+    const word = (name === "Equals") ? "equals"
+        : (name === "NotEquals") ? "not-equals"
+            : name.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+
+    return QUERY_OP_WORDS.has(word) ? word : null;
+}
+
+/** Quotes text as the language does: a backslash is written \\ and a quote \", backslashes first. */
+function quoteQueryText(text: string): string
+{
+    return '"' + text.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+}
+
+/** A relative date as the language writes it, such as -30d, +2mo, now or today, without its zone. */
+function relativeQueryText(relative: { anchor: string; duration: string }): string | null
+{
+    if (relative.anchor === "today" || relative.anchor === "yesterday") { return relative.anchor; }
+
+    const m = QUERY_DURATION.exec(relative.duration);
+
+    if (!m) { return null; }
+    if (Number(m[3]) === 0) { return "now"; }
+    return (m[1] === "-" ? "-" : "+") + m[3] + QUERY_UNITS[m[4]];
+}
+
+/** A tree value as the standard spelling writes it; null for a form this bar does not know. */
+function queryValueText(v: QueryValue): string | null
+{
+    const zone = (v.zone !== undefined) ? "@" + v.zone : "";
+
+    if (v.text !== undefined) { return quoteQueryText(v.text); }
+    if (v.number !== undefined) { return String(v.number); }
+    if (v.boolean !== undefined) { return v.boolean ? "true" : "false"; }
+    if (v.date !== undefined) { return v.date + (v.time !== undefined ? "T" + v.time : "") + zone; }
+    if (v.instant !== undefined) { return v.instant; }
+    if (v.relative !== undefined)
+    {
+        const text = relativeQueryText(v.relative);
+        return (text === null) ? null : text + zone;
+    }
+    if (v.resource !== undefined) { return quoteQueryText(v.resource); }
+    if (v.var !== undefined) { return "?" + v.var; }
+    if (v.param !== undefined) { return "$" + v.param; }
+    return null;
+}
+
+/**
+ * Whether typed text has an `or` outside quotes and brackets. Only `and`, `or` and `not` are reserved in
+ * the language, so such text must be bracketed beside the chips, or `or` would take the chips into it.
+ */
+function hasTopLevelOr(text: string): boolean
+{
+    let depth = 0;
+
+    for (let i = 0; i < text.length; i++)
+    {
+        const ch = text[i];
+
+        if (ch === '"') { i = skipQuoted(text, i) - 1; }
+        else if (ch === "(") { depth++; }
+        else if (ch === ")") { depth = Math.max(0, depth - 1); }
+        else if (depth === 0 && /^or(?![\w.\/-])/i.test(text.slice(i, i + 3))
+            && (i === 0 || /[\s()]/.test(text[i - 1]))) { return true; }
+    }
+    return false;
+}
 let instanceCounter = 0;
 
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
@@ -390,6 +545,17 @@ function parseToken(
     return null;
 }
 
+/**
+ * What a chip shows: `key:value` for today's operators, `equals` and `in`, and `key word value` for any
+ * other word form of the query language, such as `created_at on-or-after 2026-11-01`.
+ */
+function chipDisplay(facet: ParsedFacet): string
+{
+    const op = facet.operator;
+    const shown = (op === "equals" || op === "in") ? ":" : /^[a-z]/.test(op) ? " " + op + " " : op;
+    return (facet.negated ? "-" : "") + facet.key + shown + (facet.label ?? facet.value);
+}
+
 /** Strip surrounding double quotes from a value. */
 function stripQuotes(s: string): string
 {
@@ -447,6 +613,14 @@ export interface FacetSearchHandle
      */
     learnLabels(key: string, values: FacetValue[]): void;
     getFacets(): ParsedFacet[];
+    /**
+     * With `syntax: "query"`, draws chips from the API's parse of `text`: each top-level filter on a known
+     * facet becomes a chip, one for each value, and the rest stays in the input as the text it came from.
+     * Returns false and changes nothing when `text` is no longer the bar's value, because a newer input wins,
+     * or when the tree cannot be split. Fires no onChange or onFacetAdd, because the query means the same.
+     * Throws with any other syntax.
+     */
+    setParsed(parsed: { text: string; tree: QueryTree }): boolean;
     enable(): void;
     disable(): void;
 
@@ -479,7 +653,7 @@ export class FacetSearch implements FacetSearchHandle
     private facetMap: Map<string, FacetDefinition>;
     /** Known labels by lower-case facet key, then by value: from values, and from each loadValues answer. */
     private readonly knownLabels = new Map<string, Map<string, string>>();
-    private chips: ParsedFacet[] = [];
+    private chips: Chip[] = [];
     private recentSearches: string[] = [];
     private suggestions: Suggestion[] = [];
     private highlightIdx = -1;
@@ -605,6 +779,11 @@ export class FacetSearch implements FacetSearchHandle
     getQuery(): FacetSearchQuery
     {
         const raw = this.buildRawFromChipsAndInput();
+        if (this.opts.syntax === "query")
+        {
+            // The API reads the query. The bar reports its chips as they are, and the rest as typed.
+            return { text: this.input?.value.trim() ?? "", facets: this.getFacets(), raw };
+        }
         const query = parseFacetQuery(raw, this.opts.facets);
         return { ...query, facets: query.facets.map((f) => this.withLabel(f)) };
     }
@@ -663,7 +842,7 @@ export class FacetSearch implements FacetSearchHandle
     }
 
     /** The facet with its label: its own, else the value's known label, else none (the chip shows the value). */
-    private withLabel(facet: ParsedFacet): ParsedFacet
+    private withLabel<T extends ParsedFacet>(facet: T): T
     {
         if (facet.label !== undefined) { return facet; }
         const label = this.knownLabels.get(facet.key.toLowerCase())?.get(facet.value);
@@ -712,9 +891,83 @@ export class FacetSearch implements FacetSearchHandle
 
     getFacets(): ParsedFacet[]
     {
-        return this.chips.slice();
+        return this.chips.map(({ literal: _literal, ...facet }) => facet);
     }
 
+    setParsed(parsed: { text: string; tree: QueryTree }): boolean
+    {
+        if (this.opts.syntax !== "query")
+        {
+            throw new Error(`${LOG_PREFIX} setParsed: the bar reads the API's parse only with syntax: "query".`);
+        }
+        if (this.destroyed || !this.input) { return false; }
+        if (parsed.text !== this.getValue())
+        {
+            logDebug("A parse of older text was dropped, because the newer input wins.");
+            return false;
+        }
+
+        const root = parsed.tree.root;
+        if (!root || (parsed.tree.return?.length ?? 0) > 0)
+        {
+            return false;
+        }
+
+        const chips: Chip[] = [];
+        const rest: string[] = [];
+        for (const node of (root.kind === "and") ? (root.children ?? []) : [root])
+        {
+            const made = this.chipsFromNode(node, chips);
+            if (made)
+            {
+                chips.push(...made);
+                continue;
+            }
+            if (!node.span)
+            {
+                logDebug("A node outside the chips has no span, so the text stays as typed.");
+                return false;
+            }
+            // A group's span leaves out its brackets, so they are written back.
+            const piece = parsed.text.slice(node.span.start, node.span.end);
+            rest.push((node.kind === "and" || node.kind === "or") ? "(" + piece + ")" : piece);
+        }
+
+        this.chips = chips;
+        this.input.value = rest.join(" ");
+        this.renderChips();
+        this.updateClearBtnVisibility();
+        logDebug("Parse applied:", chips.length, "chips,", rest.length, "parts as text");
+        return true;
+    }
+
+    /**
+     * The chips for a top-level node, one for each value, or null when it stays text: anything but a filter
+     * or a negated filter on a known facet, with no `link`, a value this bar can write, and room on its key.
+     */
+    private chipsFromNode(node: QueryNode, made: Chip[]): Chip[] | null
+    {
+        const negated = node.kind === "not";
+        const f = negated ? node.child : node;
+        if (!f || f.kind !== "filter" || f.link || !f.key || !f.op) { return null; }
+
+        const fd = this.facetMap.get(f.key.toLowerCase());
+        const op = queryOpWord(f.op);
+        const values = f.values ?? (f.value ? [f.value] : []);
+        if (!fd || !op || values.length === 0 || (op !== "in" && values.length > 1)) { return null; }
+
+        const onKey = made.filter((c) => c.key === fd.key).length;
+        if (!fd.multiple && onKey + values.length > 1) { return null; }
+
+        const chips: Chip[] = [];
+        for (const v of values)
+        {
+            const literal = queryValueText(v);
+            if (literal === null) { return null; }
+            chips.push(this.withLabel({ key: fd.key, operator: op, value: v.text ?? literal, negated, literal }));
+        }
+        return chips;
+    }
     enable(): void
     {
         if (this.destroyed) { return; }
@@ -918,8 +1171,7 @@ export class FacetSearch implements FacetSearchHandle
         this.renderChips();
         this.updateClearBtnVisibility();
 
-        const label = (facet.negated ? "-" : "") +
-            facet.key + facet.operator + (facet.label ?? facet.value);
+        const label = chipDisplay(facet);
         this.announce("Added filter: " + label);
         logInfo("Facet added:", label);
 
@@ -1015,8 +1267,7 @@ export class FacetSearch implements FacetSearchHandle
         }
 
         const text = createElement("span", ["facetsearch-chip-text"]);
-        const display = (facet.negated ? "-" : "") +
-            facet.key + facet.operator + (facet.label ?? facet.value);
+        const display = chipDisplay(facet);
         text.textContent = display;
         // The title names the stored value too, when the chip shows a label for it.
         setAttr(text, "title", facet.label !== undefined && facet.label !== facet.value
@@ -1056,6 +1307,15 @@ export class FacetSearch implements FacetSearchHandle
 
     private parseAndChipify(raw: string): void
     {
+        if (this.opts.syntax === "query")
+        {
+            // The bar never reads the language. The host's parse draws the chips (setParsed).
+            this.chips = [];
+            this.renderChips();
+            if (this.input) { this.input.value = raw; }
+            this.updateClearBtnVisibility();
+            return;
+        }
         if (!this.opts.showFacetChips)
         {
             if (this.input) { this.input.value = raw; }
@@ -1072,7 +1332,7 @@ export class FacetSearch implements FacetSearchHandle
     /** Re-parse input, extract new facets, leave free text. */
     private tryExtractFacets(): void
     {
-        if (!this.input || !this.opts.showFacetChips) { return; }
+        if (!this.input || !this.opts.showFacetChips || this.opts.syntax === "query") { return; }
         const text = this.input.value;
         const query = parseFacetQuery(text, this.opts.facets);
 
@@ -1085,6 +1345,7 @@ export class FacetSearch implements FacetSearchHandle
 
     private buildRawFromChipsAndInput(): string
     {
+        if (this.opts.syntax === "query") { return this.buildQueryText(); }
         const parts: string[] = [];
         for (const c of this.chips)
         {
@@ -1101,6 +1362,55 @@ export class FacetSearch implements FacetSearchHandle
             parts.push(this.input.value.trim());
         }
         return parts.join(" ");
+    }
+
+    /**
+     * The chips in the query language, joined by `and`, then the typed text. Several chips on one key, from
+     * `:`, `equals` or `in`, join into `key in (…)`, which means "either" (spec §6). A chip the bar made
+     * keeps `:`, because only the API knows a key's default operator.
+     */
+    private buildQueryText(): string
+    {
+        const groups = new Map<string, Chip[]>();
+        for (const c of this.chips)
+        {
+            // A key is a word, so a space cannot be part of one.
+            const id = c.key.toLowerCase() + (c.negated ? " not" : "");
+            groups.set(id, [...(groups.get(id) ?? []), c]);
+        }
+
+        const parts: string[] = [];
+        for (const group of groups.values())
+        {
+            const joinable = group.filter((c) => JOINS_INTO_IN.has(c.operator));
+            const joined = joinable.length > 1 || joinable.some((c) => c.operator === "in");
+            const not = group[0].negated ? "not " : "";
+            if (joined)
+            {
+                parts.push(not + group[0].key + " in (" + joinable.map((c) => this.chipLiteral(c)).join(", ") + ")");
+            }
+            for (const c of group)
+            {
+                if (joined && JOINS_INTO_IN.has(c.operator)) { continue; }
+                const word = /^[a-z]/.test(c.operator);
+                parts.push(not + c.key + (word ? " " + c.operator + " " : c.operator) + this.chipLiteral(c));
+            }
+        }
+
+        const typed = this.input?.value.trim() ?? "";
+        if (typed)
+        {
+            parts.push((parts.length > 0 && hasTopLevelOr(typed)) ? "(" + typed + ")" : typed);
+        }
+        return parts.join(" and ");
+    }
+
+    /** A chip's value as the language writes it: from the tree, else by its facet's value type. */
+    private chipLiteral(c: Chip): string
+    {
+        if (c.literal !== undefined) { return c.literal; }
+        const type = this.facetMap.get(c.key.toLowerCase())?.valueType;
+        return (type === "number" || type === "date" || type === "boolean") ? c.value : quoteQueryText(c.value);
     }
 
     // ====================================================================

@@ -6788,6 +6788,7 @@ createFacetSearch("search", {
 | `size` | `"sm" \| "default" \| "lg"` | `"default"` | Size variant |
 | `disabled` | `boolean` | `false` | Disable all interaction |
 | `cssClass` | `string` | `undefined` | Additional CSS class |
+| `syntax` | `"facet" \| "query"` | `"facet"` | The language the bar reads and writes. `"query"` is the apps' query language. See [The query language](#the-query-language) |
 | `onSearch` | `(query) => void` | `undefined` | Submit callback |
 | `onChange` | `(value) => void` | `undefined` | Input change callback |
 | `onFacetAdd` | `(key, value) => void` | `undefined` | Facet added callback |
@@ -6810,6 +6811,7 @@ createFacetSearch("search", {
 | `removeFacet` | `(key, value?) => void` | Remove the chips on a key. With `value`, remove only the chips on that key with that value, such as one of several `type:` chips. `onFacetRemove` fires once per call |
 | `learnLabels` | `(key, values: FacetValue[]) => void` | Record labels learned after the bar was made, such as from a search answer. The chips that hold those values show the new labels at once. No `onFacetAdd`, `onFacetRemove` or `onChange` fires, and focus and the typed text stay |
 | `getFacets` | `() => ParsedFacet[]` | Get active facets |
+| `setParsed` | `({ text, tree }) => boolean` | With `syntax: "query"`, draws chips from the API's parse of `text`. See [The query language](#the-query-language). Throws with the default syntax |
 | `enable` | `() => void` | Enable the component |
 | `disable` | `() => void` | Disable the component |
 
@@ -6825,6 +6827,50 @@ createFacetSearch("search", {
 | `author:"Jane Doe"` | Quoted value with spaces |
 | `title:"say \"hi\""` | Inside quotes, `\"` is a quote and `\\` is a backslash. A backslash before any other character is itself. `getValue()` quotes a value that holds a space or a quote, and writes it with these escapes |
 | `bug fix` | Free text |
+
+## The query language
+
+`syntax: "query"` switches the bar to the apps' query language (knobbyio/apps#379). The language's spec is `specs/search/query-language.spec.md` in knobbyio/apps. **The API decides what a query means.** The bar never parses typed text in this mode. The host calls the API's Parse, and passes the answer to the bar.
+
+```javascript
+const bar = createFacetSearch("search", {
+    facets, syntax: "query",
+    onChange: (text) => debounceParse(text),
+    onSearch: (query) => runSearch(query.raw),
+});
+
+async function parse(text)
+{
+    const answer = await api.post("/api/v1/search/query/parse", { text, zone, mode: "search" });
+
+    // Errors have no tree. The bar keeps the text as typed.
+    if (answer.tree) { bar.setParsed({ text, tree: answer.tree }); }
+}
+```
+
+**Chips from the tree.** `setParsed` turns each top-level filter on a known facet into a chip: one chip for each value, so `type in ("a", "b")` shows two chips. A negated filter becomes a negated chip. Everything else stays in the input as the exact text it came from, such as free text, an `or` group, a nested search, a filter with `link`, `exists`, and a filter on a key with no facet. A key without `multiple` keeps a second filter on it as text.
+
+**When it changes nothing.** `setParsed` returns `false` and changes nothing in two cases:
+
+- **The text has changed.** If `text` is no longer the bar's value, the person typed after the parse began, and the newer input wins (`UI_EXPERIENCE.md` section 2.8).
+- **The tree cannot be split.** This is a tree with `return`, or a node outside the chips that has no `span`.
+
+It fires no `onChange` or `onFacetAdd`, because the query means the same.
+
+**What the bar writes.** `getValue()` writes the chips, joined by `and`, then the typed text:
+
+| Chips | `getValue()` |
+|---|---|
+| From the tree: `type equals "note"`, `created_at on 2026-11-15@Asia/Kolkata` | `type equals "note" and created_at on 2026-11-15@Asia/Kolkata`, the API's standard spelling |
+| Two chips on `type`, from `addFacet` or the dropdown | `type in ("note", "task")`, which means "either". Two filters on one key mean "both" (spec section 6) |
+| One chip from `addFacet` | `type:"task"`. The bar keeps `:`, because only the API knows a key's default operator, such as `descendant-of` for `within` |
+| A chip, and typed text with `or` | `type:"note" and (budget or forecast)`. The text is bracketed, so `or` does not take the chip into it |
+
+A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean`.
+
+**After a search,** show the API's text for the query it ran. Call `setValue(apiText)` to put the text in the bar, then parse it and call `setParsed`. **Buttons outside the bar** call `addFacet(key, value)` and `removeFacet(key, value)`, as before. Two chips on one key then write `in`.
+
+`getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
 
 ## Keyboard Interaction
 
