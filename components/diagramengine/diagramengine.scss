@@ -63,6 +63,65 @@
 }
 
 // ============================================================================
+// ZOOM BUTTONS
+// ============================================================================
+
+// Shown with `zoomControls: true`: the tap alternative to a pinch and to
+// `Ctrl` + wheel (TOUCH_EXPERIENCE.md section 8).
+.de-zoom-controls
+{
+    position: absolute;
+    right: $sp-8;
+    bottom: $sp-8;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.de-zoom-button
+{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $control-height-sm;
+    height: $control-height-sm;
+    padding: 0;
+    border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius;
+    background-color: var(--theme-surface-bg);
+    color: var(--theme-text-secondary);
+    font-size: $font-size-base;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: $box-shadow-sm;
+    touch-action: manipulation;
+    user-select: none;
+
+    @media (hover: hover)
+    {
+        &:hover
+        {
+            background-color: var(--theme-active-bg);
+            color: var(--theme-text-primary);
+        }
+    }
+
+    &:focus-visible
+    {
+        outline: 2px solid var(--theme-focus-border);
+        outline-offset: 1px;
+    }
+
+    // A finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
+    @media (any-pointer: coarse)
+    {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+// ============================================================================
 // OBJECTS
 // ============================================================================
 

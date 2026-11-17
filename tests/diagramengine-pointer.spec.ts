@@ -24,7 +24,10 @@
  *     press, and a drawing tool keeps its own;
  *   - a finger's press shows the outline at once, its long press lifts
  *     the box and opens the app's menu on the lift, and a right-click
- *     opens it too.
+ *     opens it too;
+ *   - the wheel pans the canvas and not the page, `Ctrl` with the wheel
+ *     zooms the canvas and not the page, and the zoom buttons are 44 px
+ *     for a finger (#183).
  * Touch goes through the Chrome DevTools Protocol, because Playwright's
  * touchscreen sends one finger and no moves.
  */
@@ -53,20 +56,21 @@ const HTML = `<!doctype html>
 /** The box starts at (50, 50), 100 by 60, at zoom 1 with no pan. */
 const BOX = { x: 50, y: 50, width: 100, height: 60 };
 
-async function open(page: Page, embedded = false, interactionMode = "edit"): Promise<void>
+async function open(page: Page, embedded = false, interactionMode = "edit",
+    zoomControls = false): Promise<void>
 {
     await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
     await page.goto(PAGE);
-    await page.evaluate(({ bounds, embedded, interactionMode }) =>
+    await page.evaluate(({ bounds, embedded, interactionMode, zoomControls }) =>
     {
         const w = window as unknown as Record<string, any>;
 
         w.__menus = [];
         w.__engine = w.createDiagramEngine("host",
-            { embedded, interactionMode, snapping: { grid: false, objects: false, guides: false },
+            { embedded, interactionMode, zoomControls, snapping: { grid: false, objects: false, guides: false },
                 onContextMenu: (r: { target: string }) => w.__menus.push(r.target) });
         w.__engine.addObject({ id: "box", presentation: { shape: "rectangle", bounds } });
-    }, { bounds: BOX, embedded, interactionMode });
+    }, { bounds: BOX, embedded, interactionMode, zoomControls });
 }
 
 type Point = { x: number; y: number };
@@ -520,5 +524,56 @@ test.describe("DiagramEngine pointer input (#176, #184)", () =>
 
         expect(await state()).toMatchObject({ menus: ["object", "canvas"] });
         expect(await selectedIds(page)).toEqual(["box"]);
+    });
+
+    test("the wheel pans the canvas, not the page, and Ctrl with the wheel zooms it", async ({ page }) =>
+    {
+        await open(page);
+        await page.mouse.move(300, 250);
+        await page.mouse.wheel(0, 200);
+
+        await expect.poll(() => engineCall<{ y: number }>(page, "getViewport")).toMatchObject({ y: -200, zoom: 1 });
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+        await page.keyboard.down("Control");
+        await page.mouse.wheel(0, -100);
+        await page.keyboard.up("Control");
+
+        await expect.poll(() => engineCall<number>(page, "getZoomLevel")).toBeCloseTo(1.15, 6);
+        expect(await page.evaluate(() => window.visualViewport!.scale)).toBe(1);
+        expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    });
+
+    test("the zoom buttons sit in the corner and zoom the canvas", async ({ page }) =>
+    {
+        await open(page, false, "edit", true);
+
+        const zoomIn = page.getByRole("button", { name: "Zoom in" });
+        const box = (await zoomIn.boundingBox())!;
+
+        // A mouse gets the small button. It sits inside the 400 by 300 canvas.
+        expect(box.width).toBe(30);
+        expect(box.x + box.width).toBeLessThanOrEqual(400);
+        expect(box.y + box.height).toBeLessThanOrEqual(300);
+
+        await zoomIn.click();
+
+        expect(await engineCall<number>(page, "getZoomLevel")).toBeCloseTo(1.15, 6);
+        expect(await selectedIds(page)).toEqual([]);
+    });
+});
+
+test.describe("DiagramEngine zoom buttons on a touch screen (#183)", () =>
+{
+    test.use({ hasTouch: true });
+
+    test("the zoom buttons are 44 px for a finger", async ({ page }) =>
+    {
+        await open(page, false, "edit", true);
+
+        const sizes = await page.locator(".de-zoom-button").evaluateAll((buttons) =>
+            buttons.map((b) => [b.getBoundingClientRect().width, b.getBoundingClientRect().height]));
+
+        expect(sizes).toEqual([[44, 44], [44, 44], [44, 44]]);
     });
 });

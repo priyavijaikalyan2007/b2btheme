@@ -68,6 +68,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
 
 ### Changed
+- **The wheel now pans a DiagramEngine canvas, and `Ctrl` with the wheel zooms it** (#183, part of #176). Before, the wheel zoomed. **If you use a mouse on a diagram, hold `Ctrl`, or `Cmd` on macOS, to zoom with the wheel.** This follows `TOUCH_EXPERIENCE.md` section 14: a trackpad's two-finger scroll now pans a diagram, as it pans a timeline, and as two fingers do on a touch screen. No app uses DiagramEngine yet.
+  - The wheel pans up and down, and `Shift` with the wheel pans sideways. A trackpad scroll pans both ways.
+  - `Ctrl` or `Cmd` with the wheel zooms around the pointer, one 15% step a notch. A trackpad pinch zooms in small steps that follow the fingers. Before, each event of a pinch zoomed a whole step.
+  - In Safari on macOS, a trackpad pinch now zooms the canvas, from `gesturestart` and `gesturechange`. Before, it zoomed the page.
+  - A new `zoomControls` option shows zoom in, zoom out and fit-to-view buttons in the corner of the canvas, the tap alternative to a pinch (`TOUCH_EXPERIENCE.md` section 8). It is off by default, so no canvas changes how it looks.
 - **The apps-team note for a deprecation is sent after its deploy** (apps report 2026-11-14, item 2). `LIB_MAINTENANCE.md` Operation A wrote it in step 4, before the merge. For KaTeX, the note named a URL that returned 404 for about 90 minutes. Step 4 now writes only the CHANGELOG line. A new step 8 sends the note once step 7 confirms the deploy, and `lib:deprecate` says so when it prints the note.
 - **KaTeX 0.19.1** (Dependabot #168): the LaTeX renderer for LatexEditor's preview and MarkdownRenderer's math moves from 0.19.0, for upstream bug fixes. It is served at `/lib/katex-0.19.1.js` and `/lib/katex-css-0.19.1/katex.min.css`.
 - **katex 0.19.0 deprecated**: `/lib/katex-0.19.0.js` keeps serving until 2027-01-13, then may return 404. Move to `/lib/katex-0.19.1.js`. Dependabot #168: upgrade to 0.19.1 for bug fixes.

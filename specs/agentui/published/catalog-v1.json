@@ -5302,6 +5302,20 @@
                 }
               ]
             },
+            "zoomControls": {
+              "description": "Shows zoom in, zoom out and fit-to-view buttons in the bottom right\ncorner of the canvas. They are the tap alternative to a pinch and\nto `Ctrl` + wheel (TOUCH_EXPERIENCE.md section 8). Default false.\nLeave it off when the app's own toolbar has these buttons and calls\n`zoomIn`, `zoomOut` and `zoomToFit`.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
             "objectHoverCardMode": {
               "description": "Hover card display mode for objects and connectors (ADR-126).\n\"off\" (default) — no hover card; editing flow is untouched.\n\"builtin\" — show a card with label, shape, and semantic data.\n\"custom\" — call `renderObjectHoverCard` / `renderConnectorHoverCard`.\n\nSuppressed automatically when the active tool is not \"select\" or\nwhen a drag/pan/connect interaction is in progress.",
               "anyOf": [
