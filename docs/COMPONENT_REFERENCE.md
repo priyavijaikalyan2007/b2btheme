@@ -4749,7 +4749,8 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 | Long press, then lift, or a right-click | Opens the app's context menu for the object, the connector or the canvas, on the lift | Opens it at once, with a right-click or a pen's barrel button |
 | Two fingers | Pan and zoom at the same time. They never change an object. | Not used |
 | Middle-button drag, or `Space` with a drag | Not used | Pans the view, with any tool. The tool comes back on the release. |
-| Wheel | Not used | Zooms at the pointer. #183 changes this. |
+| Wheel, or a trackpad scroll with two fingers | Not used | Pans the view. `Shift` with the wheel pans it sideways. |
+| `Ctrl` or `Cmd` with the wheel, or a trackpad pinch | Not used | Zooms around the pointer |
 
 - **Movement tolerance.** A move of more than 10 px for a finger, or 4 px for a mouse or a pen, starts a drag. A smaller move is a tap or a click.
 - **A second finger cancels a drag.** The object goes back to where it was, with no undo step. The two-finger gesture then starts.
@@ -4782,6 +4783,11 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
   - A switch out of edit mode cancels a drag in progress, ends an inline text edit and gives a drawing tool way to the select tool.
   - The mode limits gestures and keys only. Every API method works in every mode.
   - The engine has no toolbar, so the app shows the mode and the control that changes it.
+- **The wheel pans, and `Ctrl` with the wheel zooms** (`TOUCH_EXPERIENCE.md` sections 5 and 6.2). Before #183 the wheel zoomed. A trackpad now does the same as two fingers on a touch screen.
+  - A wheel notch with `Ctrl` or `Cmd` zooms one step of 15%, and a larger delta no more. A trackpad pinch zooms by a part of a step, so the zoom follows the fingers.
+  - Chrome, Edge and Firefox send a trackpad pinch as `Ctrl` with the wheel. Safari on macOS sends `gesturestart` and `gesturechange`, and the canvas zooms the same way for both.
+  - The wheel listener is not passive, only so that `Ctrl` with the wheel does not zoom the page.
+- **Zoom buttons.** Pass `zoomControls: true` to show zoom in, zoom out and fit-to-view buttons in the bottom right corner of the canvas. They are the tap alternative to a pinch (`TOUCH_EXPERIENCE.md` section 8). They are 44 px on a device with a touch screen. Leave them off when the app's toolbar has these buttons and calls `zoomIn`, `zoomOut` and `zoomToFit`.
 - **Interactive embeds keep their pointer.** The canvas leaves a press inside an interactive embed alone, so the embedded component handles its own drags.
 
 **Pointer contract** (`UI_EXPERIENCE.md` section 22):
@@ -4789,7 +4795,7 @@ The canvas reads pointer events through GestureRecognizer, so mouse, touch and p
 - **Click:** a tap or a click selects, as in the table. `Shift`, `Ctrl` or `Cmd` with a click adds the object to the selection or removes it.
 - **Hover:** with a mouse or a pen, the hover card shows when `objectHoverCardMode` is on, and the pen tool shows its next segment. A finger has no hover.
 - **Drag:** a drag moves, resizes, rotates, draws, connects or pans, by the tool and the target.
-- **Non-drag alternative:** the arrow keys move the selection, 10 px with `Shift`. `Ctrl+A` selects all. `+`, `-` and `0` zoom. Resizing and rotating have no alternative in the canvas yet. The host can call `resizeObject` and `rotateObjectTo`.
+- **Non-drag alternative:** the arrow keys move the selection, 10 px with `Shift`. `Ctrl+A` selects all. `+`, `-` and `0` zoom, and so do the buttons of `zoomControls`. Resizing and rotating have no alternative in the canvas yet. The host can call `resizeObject` and `rotateObjectTo`.
 
 **Context menu.** The engine has no menu of its own. Pass `onContextMenu`, and the app opens its menu (`TOUCH_EXPERIENCE.md` rule 3):
 
@@ -4870,7 +4876,7 @@ Custom shapes can be registered via `registerStencilPack(name, shapes)`.
 | Paintbrush | `paintbrush` | crosshair | Raster painting inside paintable shapes; configurable size, hardness, alpha |
 | Measure | `measure` | crosshair | Click+drag to measure distances |
 | Pan | `pan` | grab | Drag to pan canvas; also via middle-mouse or Space+drag |
-| Zoom | — | — | Scroll wheel, +/-, 0 for zoom-to-fit |
+| Zoom | — | — | Ctrl+wheel or a pinch, +/-, 0 for zoom-to-fit |
 
 ### Tool Configuration
 
@@ -5185,7 +5191,8 @@ presentation: {
 | - | Zoom out |
 | 0 | Zoom to fit |
 | Middle-click drag | Pan |
-| Scroll wheel | Zoom at cursor position |
+| Wheel / Shift+wheel | Pan up and down / sideways |
+| Ctrl+wheel (Cmd+wheel on macOS) | Zoom at cursor position |
 | Space+drag | Pan |
 | Enter | Finalise pen path |
 | Escape | Cancel current tool operation |
